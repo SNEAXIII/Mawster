@@ -3,13 +3,19 @@ from typing import Optional
 
 import jwt
 from fastapi.security import OAuth2PasswordBearer
-from jwt.exceptions import ExpiredSignatureError
+from jwt.exceptions import (
+    DecodeError,
+    ExpiredSignatureError,
+    InvalidAlgorithmError,
+    InvalidSignatureError,
+)
 
 from src.Messages.jwt_messages import (
     EXPIRED_EXCEPTION,
     CREDENTIALS_EXCEPTION,
     CANT_FIND_USER_TOKEN_EXCEPTION,
     INVALID_ROLE_EXCEPTION,
+    INVALID_TOKEN_EXCEPTION,
 )
 from src.enums.Roles import Roles
 from src.models import User
@@ -47,9 +53,15 @@ class JWTService:
     @classmethod
     def decode_jwt(cls, token: str) -> dict:
         try:
-            data = jwt.decode(token, SECRET.SECRET_KEY, algorithms=[SECRET.ALGORITHM])
+            data = jwt.decode(
+                token,
+                SECRET.SECRET_KEY,
+                algorithms=[SECRET.ALGORITHM],
+            )
         except ExpiredSignatureError:
             raise EXPIRED_EXCEPTION
+        except (InvalidSignatureError, InvalidAlgorithmError, DecodeError):
+            raise INVALID_TOKEN_EXCEPTION
         if data.get("sub") is None:
             raise CANT_FIND_USER_TOKEN_EXCEPTION
         if data.get("role") not in Roles.__members__.values():

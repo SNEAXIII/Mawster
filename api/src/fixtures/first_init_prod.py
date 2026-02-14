@@ -13,12 +13,18 @@ sync_engine = create_engine(
 )
 
 master_account = "misterbalise"
-password_to_update = random_string = ''.join(choices(ascii_letters + digits, k=100))
+# Generate a password that is exactly 72 characters or less for bcrypt compatibility
+password_to_update = ''.join(choices(ascii_letters + digits, k=72))
+print(f"DEBUG: Password length: {len(password_to_update)}")
+
+# Use bcrypt directly instead of crypt_context to avoid backend issues
+import bcrypt
+hashed_password = bcrypt.hashpw(password_to_update.encode('utf-8'), bcrypt.gensalt(rounds=SECRET.BCRYPT_HASH_ROUND)).decode('utf-8')
 
 admin = User(
     email="misterbalise2@gmail.com",
     login=master_account,
-    hashed_password=crypt_context.hash(password_to_update,rounds= SECRET.BCRYPT_HASH_ROUND),
+    hashed_password=hashed_password,
     role=Roles.ADMIN,
 )
 

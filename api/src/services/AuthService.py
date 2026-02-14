@@ -25,6 +25,9 @@ class AuthService:
         )
         if not user:
             raise CREDENTIALS_EXCEPTION
+        if not user.hashed_password:
+            # Utilisateur OAuth (Discord) sans mot de passe local
+            raise CREDENTIALS_EXCEPTION
         is_correct_password = await PasswordService.verify_password(
             password, user.hashed_password
         )

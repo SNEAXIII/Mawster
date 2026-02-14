@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List, Optional, TYPE_CHECKING
 from sqlmodel import Relationship, Field, SQLModel
 
+from src.enums.AuthProvider import AuthProvider
 from src.enums.Roles import Roles
 
 if TYPE_CHECKING:
@@ -16,12 +17,17 @@ class User(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     login: str = Field(unique=True)
     email: str = Field(unique=True)
-    hashed_password: str
+    hashed_password: Optional[str] = Field(default=None)
     disabled_at: Optional[datetime] = Field(default=None)
     deleted_at: Optional[datetime] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.now)
     last_login_date: Optional[datetime] = Field(default=None)
     role: Roles = Field(default=Roles.USER)
+
+    # OAuth fields
+    discord_id: Optional[str] = Field(default=None, unique=True, index=True)
+    auth_provider: AuthProvider = Field(default=AuthProvider.LOCAL)
+    avatar_url: Optional[str] = Field(default=None)
 
     # Relations
     articles: List["Article"] = Relationship(back_populates="user")

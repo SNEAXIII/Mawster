@@ -72,3 +72,12 @@ class UserAdminViewAllUsers(BaseModel):
     total_users: int = Field(default=1)
     total_pages: int = Field(default=1)
     current_page: int = Field(default=1)
+
+
+class DiscordLoginRequest(BaseModel):
+    """DTO pour la connexion via Discord OAuth2.
+    Reçu depuis le serveur NextAuth après le flow OAuth Discord."""
+    discord_id: str = Field(..., examples=["123456789012345678"])
+    email: EmailStr = Field(..., examples=["user@discord.com"])
+    username: str = Field(..., examples=["DiscordUser"])
+    avatar_url: Optional[str] = Field(default=None, examples=["https://cdn.discordapp.com/avatars/123/abc.png"])
