@@ -9,6 +9,7 @@ declare module 'next-auth' {
       email: string;
       role: string;
     };
+    error?: string;
   }
 
   interface User {
@@ -23,6 +24,8 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT {
     accessToken: string;
+    accessTokenExpires: number;
+    expired: boolean;
     user_id: string;
     sub: string;
     email: string;
