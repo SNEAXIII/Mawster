@@ -9,7 +9,7 @@ IS_PROD = os.getenv("MODE") == "prod"
 
 
 class Settings(BaseSettings):
-    MARIADB_DATABASE: str = Field(... if IS_PROD else "cesi-zen")
+    MARIADB_DATABASE: str = Field(... if IS_PROD else "mawster")
     MARIADB_USER: str = Field(... if IS_PROD else "user")
     MARIADB_PASSWORD: str = Field(... if IS_PROD else "password")
     MARIADB_ROOT_PASSWORD: str = Field(... if IS_PROD else "rootpassword")
