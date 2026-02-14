@@ -33,13 +33,18 @@ async def read_users_me(
 async def discord_login(discord_data: DiscordLoginRequest, session: SessionDep) -> LoginResponse:
     """Authentification via Discord OAuth2.
 
-    Appelé par le serveur NextAuth après un flow OAuth Discord réussi.
-    Crée automatiquement le compte utilisateur si c'est un premier login.
+    Appele par le serveur NextAuth apres un flow OAuth Discord reussi.
+    Verifie le token d'acces Discord aupres de l'API Discord avant de
+    creer/retrouver l'utilisateur. Aucune donnee profil n'est acceptee
+    directement du client.
 
     Returns:
-        LoginResponse: JWT backend signé pour les appels API subséquents
+        LoginResponse: JWT backend signe pour les appels API subsequents
     """
-    user = await DiscordAuthService.get_or_create_discord_user(session, discord_data)
+    # Verification du token aupres de Discord
+    discord_profile = await DiscordAuthService.verify_discord_token(discord_data.access_token)
+
+    user = await DiscordAuthService.get_or_create_discord_user(session, discord_profile)
     access_token = JWTService.create_access_token(user)
     return LoginResponse(
         token_type="bearer",

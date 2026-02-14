@@ -3,6 +3,7 @@ import string
 from datetime import datetime
 from typing import Optional
 
+import httpx
 from fastapi import HTTPException
 from sqlmodel import select
 from starlette import status
@@ -12,22 +13,61 @@ from src.enums.Roles import Roles
 from src.models import User, LoginLog
 from src.utils.db import SessionDep
 
+DISCORD_API_URL = "https://discord.com/api/v10"
 
 EMAIL_CONFLICT_EXCEPTION = HTTPException(
     status_code=status.HTTP_409_CONFLICT,
-    detail="Un compte avec cette adresse email existe déjà.",
+    detail="Un compte avec cette adresse email existe deja.",
+)
+
+DISCORD_TOKEN_INVALID_EXCEPTION = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Le token Discord est invalide ou expire.",
+)
+
+DISCORD_API_ERROR_EXCEPTION = HTTPException(
+    status_code=status.HTTP_502_BAD_GATEWAY,
+    detail="Impossible de verifier le token aupres de Discord.",
 )
 
 
 class DiscordAuthService:
-    """Service gérant l'authentification via Discord OAuth2.
+    """Service gerant l'authentification via Discord OAuth2.
 
-    Responsabilités :
+    Responsabilites :
+    - Verification du token d'acces Discord aupres de l'API Discord
     - Recherche d'un utilisateur par son discord_id
-    - Création automatique d'un compte si premier login Discord
+    - Creation automatique d'un compte si premier login Discord
     - Gestion des conflits email
     - Normalisation du username Discord en login compatible
     """
+
+    @classmethod
+    async def verify_discord_token(cls, access_token: str) -> dict:
+        """Verifie le token d'acces Discord en appelant l'API Discord /users/@me.
+
+        Returns:
+            dict avec les cles : id, username, email, avatar (brutes depuis Discord)
+
+        Raises:
+            HTTPException 401: Token invalide ou expire
+            HTTPException 502: Erreur de communication avec Discord
+        """
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(
+                    f"{DISCORD_API_URL}/users/@me",
+                    headers={"Authorization": f"Bearer {access_token}"},
+                )
+        except httpx.RequestError:
+            raise DISCORD_API_ERROR_EXCEPTION
+
+        if response.status_code == 401:
+            raise DISCORD_TOKEN_INVALID_EXCEPTION
+        if response.status_code != 200:
+            raise DISCORD_API_ERROR_EXCEPTION
+
+        return response.json()
 
     @classmethod
     async def get_user_by_discord_id(
@@ -80,26 +120,37 @@ class DiscordAuthService:
     async def get_or_create_discord_user(
         cls,
         session: SessionDep,
-        discord_data: DiscordLoginRequest,
+        discord_profile: dict,
     ) -> User:
-        """Trouve ou crée un utilisateur à partir des données Discord.
+        """Trouve ou cree un utilisateur a partir du profil Discord verifie.
+
+        Args:
+            discord_profile: Profil brut retourne par Discord API /users/@me
 
         Flow :
-        1. Cherche par discord_id → si trouvé, retourne l'utilisateur existant
-        2. Vérifie que l'email n'est pas déjà utilisé
-        3. Si email libre → crée un nouveau compte Discord
-        4. Si email pris → retourne une erreur 409 Conflict
+        1. Cherche par discord_id -> si trouve, retourne l'utilisateur existant
+        2. Verifie que l'email n'est pas deja utilise
+        3. Si email libre -> cree un nouveau compte Discord
+        4. Si email pris -> retourne une erreur 409 Conflict
 
         Raises:
-            HTTPException 409: Si l'email est déjà utilisé par un autre compte
+            HTTPException 409: Si l'email est deja utilise par un autre compte
         """
-        # 1. Recherche par discord_id (utilisateur Discord connu)
-        existing_user = await cls.get_user_by_discord_id(
-            session, discord_data.discord_id
+        discord_id = str(discord_profile["id"])
+        email = discord_profile.get("email") or f"{discord_id}@discord.placeholder"
+        username = discord_profile.get("username") or discord_profile.get("global_name") or f"discord_{discord_id}"
+        avatar_hash = discord_profile.get("avatar")
+        avatar_url = (
+            f"https://cdn.discordapp.com/avatars/{discord_id}/{avatar_hash}.png"
+            if avatar_hash
+            else None
         )
+
+        # 1. Recherche par discord_id (utilisateur Discord connu)
+        existing_user = await cls.get_user_by_discord_id(session, discord_id)
         if existing_user:
-            # Mettre à jour les infos Discord (avatar, email éventuellement)
-            existing_user.avatar_url = discord_data.avatar_url
+            # Mettre a jour les infos Discord (avatar, email eventuellement)
+            existing_user.avatar_url = avatar_url
             existing_user.set_last_login_date(datetime.now())
             login_log = LoginLog(user=existing_user)
             session.add(login_log)
@@ -107,23 +158,23 @@ class DiscordAuthService:
             await session.refresh(existing_user)
             return existing_user
 
-        # 2. Vérifier qu'il n'y a pas de conflit email
-        sql = select(User).where(User.email == discord_data.email)
+        # 2. Verifier qu'il n'y a pas de conflit email
+        sql = select(User).where(User.email == email)
         result = await session.exec(sql)
         email_user = result.first()
         if email_user:
             raise EMAIL_CONFLICT_EXCEPTION
 
-        # 3. Créer un nouveau compte Discord
+        # 3. Creer un nouveau compte Discord
         unique_login = await cls._generate_unique_login(
-            session, discord_data.username
+            session, username
         )
 
         new_user = User(
             login=unique_login,
-            email=discord_data.email,
-            discord_id=discord_data.discord_id,
-            avatar_url=discord_data.avatar_url,
+            email=email,
+            discord_id=discord_id,
+            avatar_url=avatar_url,
             role=Roles.USER,
         )
         new_user.set_last_login_date(datetime.now())

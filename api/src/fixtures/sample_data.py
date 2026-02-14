@@ -7,7 +7,7 @@ from typing import List
 from enum import Enum
 from src.enums.Roles import Roles
 from src.security.secrets import SECRET
-from src.models import Article, Category, User, LoginLog, ExerciseCoherenceCardiac
+from src.models import User, LoginLog
 
 sync_engine = create_engine(
     f"mysql+pymysql://{SECRET.MARIADB_USER}:{SECRET.MARIADB_PASSWORD}@{SECRET.MARIADB_HOST}/{SECRET.MARIADB_DATABASE}",
@@ -45,7 +45,7 @@ def create_sample_users(rolls: int) -> List[User]:
 
     users = []
     for role, state, index in product(roles, states, range(rolls)):
-        id_bonus = f"{randint(0, 9999)}".zfill(4) # NOSONAR
+        id_bonus = f"{randint(0, 9999)}".zfill(4)  # NOSONAR
         name = f"{(fake.first_name())}_{id_bonus}"
         email = f"{name}@gmail.com"
         discord_id = f"sample_discord_{name}_{id_bonus}"
@@ -63,63 +63,6 @@ def create_sample_users(rolls: int) -> List[User]:
                 user.disabled_at = fake.date_time(end_datetime=NOW)
         users.append(user)
     return users
-
-
-def get_admins(users: List[User]) -> List[User]:
-    return [_user for _user in users if _user.role == Roles.ADMIN.value]
-
-
-def create_sample_categories():
-    return [
-        Category(label="Actualités"),
-        Category(label="Bien-être"),
-        Category(label="Conseils"),
-        Category(label="Méditation"),
-        Category(label="Respiration"),
-        Category(label="Spiritualité"),
-    ]
-
-
-def create_sample_articles(
-    users: List[User], categories: List[Category], rolls: int
-) -> List[Article]:
-    articles = []
-    for user, category, index in product(users, categories, range(rolls)):
-        article = Article(
-            title=fake.text(max_nb_chars=50),
-            content=fake.text(max_nb_chars=100),
-            created_at=fake.date_time(end_datetime=NOW),
-            id_user=user.id,
-            id_category=category.id,
-        )
-        articles.append(article)
-    return articles
-
-
-def create_sample_exercises() -> List[ExerciseCoherenceCardiac]:
-    return [
-        ExerciseCoherenceCardiac(
-            name="Respiration 748",
-            duration_inspiration=7,
-            duration_apnea=4,
-            duration_expiration=8,
-            number_cycles=15,  # (7+4+8)*15 ~= 300 seconds
-        ),
-        ExerciseCoherenceCardiac(
-            name="Respiration 505",
-            duration_inspiration=5,
-            duration_apnea=0,
-            duration_expiration=5.0,
-            number_cycles=30,  # (5+5)*30 ~= 300 seconds
-        ),
-        ExerciseCoherenceCardiac(
-            name="Respiration 406",
-            duration_inspiration=5,
-            duration_apnea=0,
-            duration_expiration=5.0,
-            number_cycles=30,  # (4+6)*30 ~= 300 seconds
-        ),
-    ]
 
 
 def create_sample_login_logs(users: List[User], rolls: int) -> List[LoginLog]:
@@ -143,27 +86,11 @@ def load_sample_data():
             session.add(user)
             print("🚀 Creating users")
             all_users = create_sample_users(rolls=5)
-            admins = get_admins(all_users)
             for elem in all_users:
                 session.add(elem)
             session.commit()
             print("✅ Users loaded with success !")
-            categories = create_sample_categories()
-            for elem in categories:
-                session.add(elem)
-            session.commit()
-            print("✅ Categories loaded with success !")
-            articles = create_sample_articles(admins, categories, rolls=1)
-            for elem in articles:
-                session.add(elem)
-            session.commit()
-            print("✅ Articles loaded with success !")
             login_logs = create_sample_login_logs(all_users, rolls=4)
-            exercises = create_sample_exercises()
-            for elem in exercises:
-                session.add(elem)
-            session.commit()
-            print("✅ Exercises loaded with success !")
             for elem in login_logs:
                 session.add(elem)
             session.commit()

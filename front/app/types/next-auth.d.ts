@@ -8,6 +8,9 @@ declare module 'next-auth' {
       name: string;
       email: string;
       role: string;
+      avatar_url: string | null;
+      discord_id: string;
+      created_at: string | null;
     };
     error?: string;
   }
@@ -30,5 +33,8 @@ declare module 'next-auth/jwt' {
     sub: string;
     email: string;
     role: string;
+    avatar_url: string | null;
+    discord_id: string;
+    created_at: string | null;
   }
 }

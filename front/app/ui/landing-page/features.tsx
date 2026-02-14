@@ -1,23 +1,23 @@
 import { cn } from '@/app/lib/utils';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { LightBulbIcon } from '@heroicons/react/24/outline';
-import { BookOpenIcon, ChartBarIcon } from 'lucide-react';
+import { HeartPulseIcon, ShieldCheckIcon } from 'lucide-react';
 
 const features = [
   {
-    name: 'Ressources pratiques',
+    name: 'Authentification sécurisée',
     description:
-      'Explorez des fiches concrètes et faciles à appliquer pour améliorer votre bien-être au quotidien.',
-    icon: BookOpenIcon,
+      "Connectez-vous en toute sécurité via votre compte Discord grâce à notre système d'authentification OAuth2.",
+    icon: ShieldCheckIcon,
   },
   {
-    name: 'Exercices de respiration',
+    name: 'Suivi de bien-être',
     description:
-      'Pratiquez des techniques de respiration guidées pour réduire le stress et renforcer votre équilibre intérieur.',
-    icon: ChartBarIcon,
+      'Suivez votre progression et accédez à votre tableau de bord personnalisé pour améliorer votre quotidien.',
+    icon: HeartPulseIcon,
   },
   {
-    name: 'Conseils d’experts',
+    name: "Conseils d'experts",
     description:
       'Profitez de recommandations fiables, validées par des professionnels de la santé et du bien-être.',
     icon: LightBulbIcon,

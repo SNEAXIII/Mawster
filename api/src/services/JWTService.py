@@ -51,6 +51,9 @@ class JWTService:
                 "sub": user.login,
                 "email": user.email,
                 "role": user.role,
+                "avatar_url": user.avatar_url,
+                "discord_id": user.discord_id,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
             },
             expires_delta=access_token_expires,
         )

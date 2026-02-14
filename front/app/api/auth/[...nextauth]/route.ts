@@ -8,6 +8,9 @@ interface JwtPayload {
   sub: string;
   email: string;
   role: string;
+  avatar_url: string | null;
+  discord_id: string;
+  created_at: string | null;
 }
 
 export const {
@@ -25,24 +28,16 @@ export const {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account, profile }: { token: any; user: any; account: any; profile?: any }) {
+    async jwt({ token, user, account, profile }: { token: any; user: any; account?: any; profile?: any }) {
       // Login via Discord OAuth
-      if (account?.provider === 'discord' && profile) {
+      if (account?.provider === 'discord' && account.access_token) {
         try {
-          // Appeler le backend FastAPI pour créer/retrouver l'utilisateur
-          const discordProfile = {
-            discord_id: profile.id,
-            email: profile.email || `${profile.id}@discord.placeholder`,
-            username: profile.username || profile.global_name || `discord_${profile.id}`,
-            avatar_url: profile.avatar
-              ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
-              : null,
-          };
-
+          // Envoyer uniquement le token d'acces Discord au backend
+          // Le backend verifie le token directement aupres de Discord
           const res = await fetch(`${SERVER_API_URL}/auth/discord`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(discordProfile),
+            body: JSON.stringify({ access_token: account.access_token }),
           });
 
           if (!res.ok) {
@@ -65,6 +60,9 @@ export const {
             name: decoded.sub,
             email: decoded.email,
             role: decoded.role,
+            avatar_url: decoded.avatar_url,
+            discord_id: decoded.discord_id,
+            created_at: decoded.created_at,
             accessToken: data.access_token,
             accessTokenExpires: Date.now() + 60 * 60 * 1000,
             expired: false,
@@ -99,6 +97,9 @@ export const {
           name: token.name,
           email: token.email,
           role: token.role,
+          avatar_url: token.avatar_url,
+          discord_id: token.discord_id,
+          created_at: token.created_at,
         },
         accessToken: token.accessToken,
       };
@@ -135,6 +136,9 @@ declare module 'next-auth' {
       name: string;
       email: string;
       role: string;
+      avatar_url: string | null;
+      discord_id: string;
+      created_at: string | null;
     };
     accessToken: string;
     expired: boolean;

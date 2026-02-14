@@ -7,7 +7,6 @@ from src.enums.Roles import Roles
 
 if TYPE_CHECKING:
     from src.models.LoginLog import LoginLog
-    from src.models.Articles import Article
 
 
 class User(SQLModel, table=True):
@@ -27,7 +26,6 @@ class User(SQLModel, table=True):
     avatar_url: Optional[str] = Field(default=None)
 
     # Relations
-    articles: List["Article"] = Relationship(back_populates="user")
     connexions: List["LoginLog"] = Relationship(back_populates="user")
 
     def set_last_login_date(self, date: datetime):

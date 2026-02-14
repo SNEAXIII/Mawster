@@ -1,6 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+from starlette import status
+
 from src.Messages.user_messages import (
     TARGET_USER_DELETED_SUCCESSFULLY,
 )
@@ -18,11 +21,25 @@ user_controller = APIRouter(
     ],
 )
 
+CONFIRMATION_TEXT = "SUPPRIMER"
+
+
+class DeleteAccountRequest(BaseModel):
+    """DTO pour la suppression de compte.
+    L'utilisateur doit envoyer le texte de confirmation exact."""
+    confirmation: str = Field(..., examples=[CONFIRMATION_TEXT])
+
 
 @user_controller.delete("/delete", status_code=200)
 async def delete_user(
+    body: DeleteAccountRequest,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
+    if body.confirmation != CONFIRMATION_TEXT:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Vous devez saisir '{CONFIRMATION_TEXT}' pour confirmer la suppression.",
+        )
     await UserService.self_delete(session, current_user)
     return {"message": TARGET_USER_DELETED_SUCCESSFULLY}

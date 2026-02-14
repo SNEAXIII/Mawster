@@ -79,11 +79,12 @@ export const getUsers = async (
   }
 };
 
-export const deleteAccount = async (token?: string): Promise<true> => {
+export const deleteAccount = async (token?: string, confirmation?: string): Promise<true> => {
   try {
     const response = await fetch(`${CLIENT_API_URL}/user/delete`, {
       method: 'DELETE',
       headers: getHeaders(token),
+      body: JSON.stringify({ confirmation: confirmation ?? '' }),
     });
 
     if (!response.ok) {

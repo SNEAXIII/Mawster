@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 
 
 # User
@@ -14,12 +13,6 @@ ADMIN_EMAIL  = f"{ADMIN_LOGIN}@gmail.com"
 DISCORD_ID = "discord_123456"
 
 FAKE_TOKEN = "FAKE_TOKEN"  # For unit test purpose
-
-# Article
-LABEL = "label"
-CREATED_AT = datetime.now()
-TITLE = "title"
-CONTENT = "content"
 
 # User pagination
 UNKNOWN_ROLE = "unknown"

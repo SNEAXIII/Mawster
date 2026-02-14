@@ -18,6 +18,9 @@ class UserBaseResponse(BaseModel):
 
 class UserProfile(UserBaseResponse):
     last_login_date: Optional[datetime] = Field(default=None)
+    created_at: datetime = Field()
+    discord_id: str = Field()
+    avatar_url: Optional[str] = Field(default=None)
 
 
 class UserAdminViewSingleUser(UserBaseResponse):
@@ -37,8 +40,6 @@ class UserAdminViewAllUsers(BaseModel):
 
 class DiscordLoginRequest(BaseModel):
     """DTO pour la connexion via Discord OAuth2.
-    Reçu depuis le serveur NextAuth après le flow OAuth Discord."""
-    discord_id: str = Field(..., examples=["123456789012345678"])
-    email: EmailStr = Field(..., examples=["user@discord.com"])
-    username: str = Field(..., examples=["DiscordUser"])
-    avatar_url: Optional[str] = Field(default=None, examples=["https://cdn.discordapp.com/avatars/123/abc.png"])
+    Le frontend envoie le token d'acces Discord ; le backend le verifie
+    directement aupres de l'API Discord pour garantir l'authenticite."""
+    access_token: str = Field(..., examples=["ya29.a0AfH6SM..."])
