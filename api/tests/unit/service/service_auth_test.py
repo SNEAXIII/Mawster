@@ -12,7 +12,6 @@ from src.enums.Roles import Roles
 from src.models import User
 from src.services.AuthService import AuthService
 from tests.unit.service.mocks.jwt_mock import decode_service_mock
-from tests.unit.service.mocks.password_mock import verify_password_mock
 from tests.unit.service.mocks.session_mock import session_mock
 from tests.unit.service.mocks.users_mock import get_user_with_validity_check_mock
 from tests.unit.service.service_jwt_test import get_user
@@ -20,81 +19,16 @@ from tests.unit.service.service_jwt_test import get_user
 from tests.utils.utils_constant import (
     UNKNOWN_ROLE,
     FAKE_TOKEN,
-    HASHED_PASSWORD,
-    PLAIN_PASSWORD,
+    DISCORD_ID,
     LOGIN,
     EMAIL,
 )
 
 
 @pytest.mark.asyncio
-async def test_authenticate_user_success(mocker):
-    # Arrange
-    user = get_user()
-    mock_get_user = get_user_with_validity_check_mock(mocker, user)
-    mock_verify = verify_password_mock(mocker, True)
-    mock_session = session_mock(mocker)
-
-    assert user.last_login_date is None
-    current_time = datetime.now()
-
-    # Act
-    return_value = await AuthService.authenticate_user(
-        mock_session, LOGIN, PLAIN_PASSWORD
-    )
-
-    # Assert
-    mock_get_user.assert_called_once_with(mock_session, LOGIN)
-    mock_verify.assert_called_once_with(PLAIN_PASSWORD, user.hashed_password)
-    mock_session.commit.assert_called_once_with()
-    assert return_value is user
-    # Last login date check
-    assert isinstance(user.last_login_date, datetime)
-    delta = (user.last_login_date - current_time).total_seconds()
-    assert 0 <= delta < 1
-
-
-@pytest.mark.asyncio
-async def test_authenticate_user_nonexistent(mocker):
-    # Arrange
-    mock_get_user = get_user_with_validity_check_mock(mocker, None)
-    mock_verify = verify_password_mock(mocker, True)
-    mock_session = session_mock(mocker)
-
-    # Act
-    with pytest.raises(JwtCredentialsError) as error:
-        await AuthService.authenticate_user(mock_session, LOGIN, PLAIN_PASSWORD)
-
-    # Arrange
-    assert error.value.detail == str(CREDENTIALS_EXCEPTION)
-    mock_get_user.assert_called_once_with(mock_session, LOGIN)
-    mock_verify.assert_not_called()
-    mock_session.commit.assert_not_called()
-
-
-@pytest.mark.asyncio
-async def test_authenticate_user_wrong_password(mocker):
-    # Arrange
-    user = get_user()
-    mock_get_user = get_user_with_validity_check_mock(mocker, user)
-    mock_verify = verify_password_mock(mocker, False)
-    mock_session = session_mock(mocker)
-
-    # Act
-    with pytest.raises(JwtCredentialsError) as error:
-        await AuthService.authenticate_user(mock_session, LOGIN, PLAIN_PASSWORD)
-
-    # Assert
-    assert error.value.detail == str(CREDENTIALS_EXCEPTION)
-    mock_get_user.assert_called_once_with(mock_session, LOGIN)
-    mock_verify.assert_called_once_with(PLAIN_PASSWORD, user.hashed_password)
-    mock_session.commit.assert_not_called()
-
-
-@pytest.mark.asyncio
 async def test_get_current_user_in_jwt_success(mocker):
     # Arrange
-    user = User(login=LOGIN, email=EMAIL, hashed_password=HASHED_PASSWORD)
+    user = User(login=LOGIN, email=EMAIL, discord_id=DISCORD_ID)
     mock_decode = decode_service_mock(mocker, {"sub": LOGIN})
     mock_get_user = get_user_with_validity_check_mock(mocker, user)
     mock_session = session_mock(mocker)

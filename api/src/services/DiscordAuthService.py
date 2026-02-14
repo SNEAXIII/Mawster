@@ -8,7 +8,6 @@ from sqlmodel import select
 from starlette import status
 
 from src.dto.dto_utilisateurs import DiscordLoginRequest
-from src.enums.AuthProvider import AuthProvider
 from src.enums.Roles import Roles
 from src.models import User, LoginLog
 from src.utils.db import SessionDep
@@ -16,8 +15,7 @@ from src.utils.db import SessionDep
 
 EMAIL_CONFLICT_EXCEPTION = HTTPException(
     status_code=status.HTTP_409_CONFLICT,
-    detail="Un compte avec cette adresse email existe déjà. "
-    "Connectez-vous avec vos identifiants classiques.",
+    detail="Un compte avec cette adresse email existe déjà.",
 )
 
 
@@ -27,7 +25,7 @@ class DiscordAuthService:
     Responsabilités :
     - Recherche d'un utilisateur par son discord_id
     - Création automatique d'un compte si premier login Discord
-    - Gestion des conflits email (compte local existant)
+    - Gestion des conflits email
     - Normalisation du username Discord en login compatible
     """
 
@@ -88,12 +86,12 @@ class DiscordAuthService:
 
         Flow :
         1. Cherche par discord_id → si trouvé, retourne l'utilisateur existant
-        2. Vérifie que l'email n'est pas déjà utilisé par un compte local
+        2. Vérifie que l'email n'est pas déjà utilisé
         3. Si email libre → crée un nouveau compte Discord
         4. Si email pris → retourne une erreur 409 Conflict
 
         Raises:
-            HTTPException 409: Si l'email est déjà utilisé par un compte local
+            HTTPException 409: Si l'email est déjà utilisé par un autre compte
         """
         # 1. Recherche par discord_id (utilisateur Discord connu)
         existing_user = await cls.get_user_by_discord_id(
@@ -124,9 +122,7 @@ class DiscordAuthService:
         new_user = User(
             login=unique_login,
             email=discord_data.email,
-            hashed_password=None,
             discord_id=discord_data.discord_id,
-            auth_provider=AuthProvider.DISCORD,
             avatar_url=discord_data.avatar_url,
             role=Roles.USER,
         )

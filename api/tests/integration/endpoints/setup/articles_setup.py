@@ -4,7 +4,7 @@ from tests.utils.utils_db import load_objects
 
 
 from tests.utils.utils_constant import (
-    HASHED_PASSWORD,
+    DISCORD_ID,
     CONTENT,
     LABEL,
     LOGIN,
@@ -20,7 +20,7 @@ def get_basic_user(id: Optional[str] = None) -> User:
         id=id if id else USER_ID,
         login=LOGIN,
         email=EMAIL,
-        hashed_password=HASHED_PASSWORD,
+        discord_id=DISCORD_ID,
     )
 
 

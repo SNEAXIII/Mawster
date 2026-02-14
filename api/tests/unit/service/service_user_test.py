@@ -3,7 +3,7 @@ from datetime import datetime
 import pytest
 from fastapi.exceptions import RequestValidationError
 
-from src.dto.dto_utilisateurs import CreateUser, UserAdminViewSingleUser
+from src.dto.dto_utilisateurs import UserAdminViewSingleUser
 from src.enums.Roles import Roles
 from src.Messages.user_messages import (
     TARGET_USER_DOESNT_EXISTS,
@@ -24,10 +24,6 @@ from src.Messages.validators_messages import (
 )
 from src.models import User
 from src.services.UserService import UserService
-from tests.unit.service.mocks.password_mock import (
-    get_string_hash_mock,
-    verify_password_mock,
-)
 from tests.unit.service.mocks.session_mock import session_mock
 from tests.unit.service.mocks.users_mock import (
     get_user_by_email_mock,
@@ -38,8 +34,7 @@ from tests.unit.service.mocks.users_mock import (
 )
 
 from tests.utils.utils_constant import (
-    PASSWORD,
-    HASHED_PASSWORD,
+    DISCORD_ID,
     LOGIN,
     ROLE,
     USER_ID,
@@ -48,73 +43,6 @@ from tests.utils.utils_constant import (
     STATUS,
     PAGE,
 )
-
-
-def get_create_user():
-    return CreateUser(
-        login=LOGIN, email=EMAIL, password=PASSWORD, confirm_password=PASSWORD
-    )
-
-
-@pytest.mark.asyncio
-async def test_create_user_register_user_success(mocker):
-    # Arrange
-    create_user = get_create_user()
-    mock_get_user_email = get_user_by_email_mock(mocker, False)
-    mock_get_user_login = get_user_by_login_mock(mocker, False)
-    mock_get_string_hash = get_string_hash_mock(mocker, HASHED_PASSWORD)
-    mock_session = session_mock(mocker)
-    expected_result = User(**create_user.model_dump(), hashed_password=HASHED_PASSWORD)
-
-    # Act
-    return_value = await UserService.create_user_register(mock_session, create_user)
-
-    # Ignore certain values
-    expected_result.id = None
-    return_value.id = None
-    expected_result.created_at = None
-    return_value.created_at = None
-
-    # Assert
-    assert return_value == expected_result
-    mock_get_user_email.assert_called_once_with(mock_session, create_user.email)
-    mock_get_user_login.assert_called_once_with(mock_session, create_user.login)
-    mock_get_string_hash.assert_called_once_with(PASSWORD)
-    mock_session.add.assert_called_once_with(return_value)
-    mock_session.commit.assert_called_once_with()
-    mock_session.refresh.assert_called_once_with(return_value)
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "is_find_by_email,is_find_by_login,expected_error",
-    [
-        (True, False, [EMAIL_ALREADY_EXISTS_ERROR]),
-        (False, True, [LOGIN_ALREADY_EXISTS_ERROR]),
-        (True, True, [EMAIL_ALREADY_EXISTS_ERROR, LOGIN_ALREADY_EXISTS_ERROR]),
-    ],
-    ids=["email", "login", "email_login"],
-)
-async def test_create_user_register_user_found_by_error(
-    mocker,
-    is_find_by_email,
-    is_find_by_login,
-    expected_error,
-):
-    # Arrange
-    create_user = get_create_user()
-    mock_get_user_email = get_user_by_email_mock(mocker, is_find_by_email)
-    mock_get_user_login = get_user_by_login_mock(mocker, is_find_by_login)
-    mock_session = session_mock(mocker)
-
-    # Act
-    with pytest.raises(RequestValidationError) as error:
-        await UserService.create_user_register(mock_session, create_user)
-
-    # Assert
-    assert error.value.errors() == expected_error
-    mock_get_user_email.assert_called_once_with(mock_session, create_user.email)
-    mock_get_user_login.assert_called_once_with(mock_session, create_user.login)
 
 
 @pytest.mark.asyncio
@@ -173,7 +101,7 @@ async def test_get_users_with_pagination(mocker):
     # Arrange
     total_user_result = 45
     user_list_for_mock = [
-        User(id=USER_ID, login=LOGIN, email=EMAIL, hashed_password=HASHED_PASSWORD)
+        User(id=USER_ID, login=LOGIN, email=EMAIL, discord_id=DISCORD_ID)
         for _ in range(10)
     ]
     expected_list_result = [
@@ -301,42 +229,17 @@ async def test_self_delete_success(mocker, use_time_machine):
     # Arrange
     current_time = datetime.now()
     current_user = User(
-        id=USER_ID, login=LOGIN, email=EMAIL, hashed_password=HASHED_PASSWORD
+        id=USER_ID, login=LOGIN, email=EMAIL, discord_id=DISCORD_ID
     )
     mock_session = session_mock(mocker)
-    mock_verify = verify_password_mock(mocker, True)
 
     # Act
-    result = await UserService.self_delete(mock_session, current_user, PASSWORD)
+    result = await UserService.self_delete(mock_session, current_user)
 
     # Assert
     assert result is True
     assert current_user.deleted_at == current_time
-    mock_verify.assert_called_once_with(PASSWORD, HASHED_PASSWORD)
     mock_session.commit.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_self_delete_wrong_credentials(mocker):
-    # Arrange
-    deleted_at = datetime(2023, 1, 1, 12, 0, 0)
-    current_user = User(
-        id=USER_ID,
-        login=LOGIN,
-        email=EMAIL,
-        hashed_password=HASHED_PASSWORD,
-        deleted_at=deleted_at,
-    )
-    mock_session = session_mock(mocker)
-    mock_verify = verify_password_mock(mocker, False)
-
-    # Act
-    with pytest.raises(RequestValidationError):
-        await UserService.self_delete(mock_session, current_user, PASSWORD)
-    # Assert
-    assert current_user.deleted_at == deleted_at
-    mock_verify.assert_called_once_with(PASSWORD, HASHED_PASSWORD)
-    mock_session.commit.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -347,20 +250,18 @@ async def test_self_delete_already_deleted(mocker):
         id=USER_ID,
         login=LOGIN,
         email=EMAIL,
-        hashed_password=HASHED_PASSWORD,
+        discord_id=DISCORD_ID,
         deleted_at=deleted_at,
     )
     mock_session = session_mock(mocker)
-    mock_verify = verify_password_mock(mocker, True)
 
     # Act
     with pytest.raises(UserAdminError) as error:
-        await UserService.self_delete(mock_session, current_user, PASSWORD)
+        await UserService.self_delete(mock_session, current_user)
 
     # Assert
     assert error.value.detail == str(TARGET_USER_IS_ALREADY_DELETED)
     assert current_user.deleted_at == deleted_at
-    mock_verify.assert_called_once_with(PASSWORD, HASHED_PASSWORD)
     mock_session.commit.assert_not_called()
 
 

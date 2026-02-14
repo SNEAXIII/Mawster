@@ -7,7 +7,6 @@ from typing import List
 from enum import Enum
 from src.enums.Roles import Roles
 from src.security.secrets import SECRET
-from src.services.PasswordService import crypt_context
 from src.models import Article, Category, User, LoginLog, ExerciseCoherenceCardiac
 
 sync_engine = create_engine(
@@ -23,24 +22,19 @@ class States(str, Enum):
     DELETED = "deleted"
 
 
-PASSWORD = "test" # NOSONAR
 NOW = datetime.now()
-
-
-def hash_with_low_security(password: str) -> str:
-    return crypt_context.hash(password)
 
 
 admin = User(
     email="admin@email.com",
     login="admin",
-    hashed_password=hash_with_low_security(PASSWORD),
+    discord_id="sample_admin_discord_id",
     role=Roles.ADMIN,
 )
 user = User(
     email="user@email.com",
     login="user",
-    hashed_password=hash_with_low_security(PASSWORD),
+    discord_id="sample_user_discord_id",
     role=Roles.USER,
 )
 
@@ -54,12 +48,12 @@ def create_sample_users(rolls: int) -> List[User]:
         id_bonus = f"{randint(0, 9999)}".zfill(4) # NOSONAR
         name = f"{(fake.first_name())}_{id_bonus}"
         email = f"{name}@gmail.com"
-        password = hash_with_low_security(PASSWORD)
+        discord_id = f"sample_discord_{name}_{id_bonus}"
         user = User(
             login=name,
             email=email,
             role=role,
-            hashed_password=password,
+            discord_id=discord_id,
             created_at=fake.date_time(end_datetime=NOW),
         )
         match state:

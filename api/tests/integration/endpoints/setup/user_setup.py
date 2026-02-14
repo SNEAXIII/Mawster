@@ -8,7 +8,7 @@ from tests.utils.utils_db import load_objects
 
 
 from tests.utils.utils_constant import (
-    HASHED_PASSWORD,
+    DISCORD_ID,
     USER_LOGIN,
     USER_EMAIL,
     ADMIN_LOGIN,
@@ -29,7 +29,7 @@ def get_generic_user(
         id=USER_ID if is_base_id else uuid.uuid4(),
         login=login or USER_LOGIN,
         email=email or USER_EMAIL,
-        hashed_password=HASHED_PASSWORD,
+        discord_id=DISCORD_ID,
         role=role or Roles.USER,
         disabled_at=disabled_at,
         deleted_at=deleted_at,

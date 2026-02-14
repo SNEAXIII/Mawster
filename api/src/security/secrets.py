@@ -18,7 +18,6 @@ class Settings(BaseSettings):
     SECRET_KEY: str = Field(... if IS_PROD else "dev-secret-key")
     ALGORITHM: str = Field(... if IS_PROD else "HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(... if IS_PROD else 60, le=60)
-    BCRYPT_HASH_ROUND: int = Field(... if IS_PROD else 8, ge=12 if IS_PROD else 8)
     model_config = SettingsConfigDict(env_file=api_file)
 
 

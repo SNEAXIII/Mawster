@@ -1,11 +1,7 @@
-from random import choices
-from string import ascii_letters, digits
-
 from sqlmodel import create_engine, Session
 from typing import List
 from src.enums.Roles import Roles
 from src.security.secrets import SECRET
-from src.services.PasswordService import crypt_context
 from src.models import Category, User, ExerciseCoherenceCardiac
 
 sync_engine = create_engine(
@@ -13,18 +9,11 @@ sync_engine = create_engine(
 )
 
 master_account = "misterbalise"
-# Generate a password that is exactly 72 characters or less for bcrypt compatibility
-password_to_update = ''.join(choices(ascii_letters + digits, k=72))
-print(f"DEBUG: Password length: {len(password_to_update)}")
-
-# Use bcrypt directly instead of crypt_context to avoid backend issues
-import bcrypt
-hashed_password = bcrypt.hashpw(password_to_update.encode('utf-8'), bcrypt.gensalt(rounds=SECRET.BCRYPT_HASH_ROUND)).decode('utf-8')
 
 admin = User(
     email="misterbalise2@gmail.com",
     login=master_account,
-    hashed_password=hashed_password,
+    discord_id="admin_discord_id_placeholder",
     role=Roles.ADMIN,
 )
 
@@ -81,7 +70,7 @@ def load_sample_data():
             session.commit()
             print("✅ Exercises loaded with success !")
         print("✅ Sample data loaded with success !")
-        print(f"⚠ Don't forget to update the master account {master_account} with the password {password_to_update}")
+        print(f"⚠ Master account '{master_account}' created. Update discord_id to link with your Discord account.")
 
 
     except Exception as e:

@@ -2,57 +2,18 @@ import uuid
 from typing import Optional
 
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 
 from src.enums.Roles import Roles
-from src.validators.user_validator import (
-    login_validator,
-    correct_email_validator,
-    password_validator,
-    verify_password_match,
-    verify_old_password_not_match,
-)
 
 EXAMPLE_EMAIL = "user@gmail.com"
-EXAMPLE_PASSWORD = "Securepass1!" # NOSONAR
-
-
-class Password(BaseModel):
-    password_validator = field_validator("password", mode="after")(password_validator)
-    password: str = Field(examples=[EXAMPLE_PASSWORD])
-
-
-class Passwords(Password):
-    confirm_password_validator = field_validator("confirm_password", mode="after")(
-        verify_password_match
-    )
-    confirm_password: str = Field(examples=[EXAMPLE_PASSWORD])
-
-
-class ResetPassword(Passwords):
-    verify_old_password_validator = field_validator("old_password", mode="after")(
-        verify_old_password_not_match
-    )
-    old_password: str = Field(examples=[EXAMPLE_PASSWORD])
-
-
-class CreateUser(Passwords):
-    login_validator = field_validator("login", mode="after")(login_validator)
-    login: str = Field(examples=["User"])
-
-    email_validator = field_validator("email", mode="before")(correct_email_validator)
-    email: EmailStr = Field(examples=[EXAMPLE_EMAIL])
 
 
 class UserBaseResponse(BaseModel):
     login: str = Field(examples=["User"])
     email: EmailStr = Field(examples=[EXAMPLE_EMAIL])
     role: Roles = Field(examples=[Roles.USER.value])
-
-
-class SuccessfullyCreatedUtilisateur(UserBaseResponse):
-    created_at: datetime
 
 
 class UserProfile(UserBaseResponse):

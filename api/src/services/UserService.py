@@ -19,17 +19,13 @@ from src.Messages.user_messages import (
 from src.Messages.validators_messages import (
     EMAIL_ALREADY_EXISTS_ERROR,
     LOGIN_ALREADY_EXISTS_ERROR,
-    PASSWORD_WRONG_IN_DATABASE,
 )
 from src.enums.Roles import Roles
 from src.models import User
 from src.dto.dto_utilisateurs import (
-    CreateUser,
     UserAdminViewAllUsers,
     UserAdminViewSingleUser,
-    ResetPassword,
 )
-from src.services.PasswordService import PasswordService
 from src.utils.db import SessionDep
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy import func
@@ -40,27 +36,6 @@ ENABLED_STATUS = "enabled"
 
 
 class UserService:
-    @classmethod
-    async def create_user_register(
-        cls, session: SessionDep, create_user: CreateUser
-    ) -> User:
-        errors = []
-        user_by_email = await UserService.get_user_by_email(session, create_user.email)
-        if user_by_email:
-            errors.append(EMAIL_ALREADY_EXISTS_ERROR)
-        user_by_login = await UserService.get_user_by_login(session, create_user.login)
-        if user_by_login:
-            errors.append(LOGIN_ALREADY_EXISTS_ERROR)
-        if errors:
-            raise RequestValidationError(errors=errors)
-        user_dict = create_user.model_dump()
-        hashed_password = await PasswordService.get_string_hash(create_user.password)
-        new_user = User(**user_dict, hashed_password=hashed_password)
-        session.add(new_user)
-        await session.commit()
-        await session.refresh(new_user)
-        return new_user
-
     @classmethod
     async def get_user(cls, session: SessionDep, user_id: uuid.UUID) -> Optional[User]:
         result = await session.get(User, user_id)
@@ -138,34 +113,11 @@ class UserService:
 
     @classmethod
     async def self_delete(
-        cls, session: SessionDep, current_user: User, password: str
+        cls, session: SessionDep, current_user: User,
     ) -> True:
-        is_correct_password = await PasswordService.verify_password(
-            password, current_user.hashed_password
-        )
-        if is_correct_password is not True:
-            raise RequestValidationError(errors=[PASSWORD_WRONG_IN_DATABASE])
         if current_user.deleted_at:
             raise TARGET_USER_IS_ALREADY_DELETED
         current_user.deleted_at = datetime.now()
-        await session.commit()
-        return True
-
-    @classmethod
-    async def self_patch_reset_password(
-        cls, session: SessionDep, current_user: User, reset_password_dto: ResetPassword
-    ) -> True:
-        is_correct_password = await PasswordService.verify_password(
-            reset_password_dto.old_password, current_user.hashed_password
-        )
-        if is_correct_password is not True:
-            raise RequestValidationError(errors=[PASSWORD_WRONG_IN_DATABASE])
-        if current_user.deleted_at:
-            raise TARGET_USER_IS_ALREADY_DELETED
-        new_hashed_password = await PasswordService.get_string_hash(
-            reset_password_dto.password
-        )
-        current_user.hashed_password = new_hashed_password
         await session.commit()
         return True
 

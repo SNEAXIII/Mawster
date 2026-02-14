@@ -1,5 +1,4 @@
 import NextAuth from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
 import Discord from 'next-auth/providers/discord';
 import jwt from 'jsonwebtoken';
 import { SERVER_API_URL } from '@/next.config';
@@ -24,77 +23,9 @@ export const {
         },
       },
     }),
-    Credentials({
-      name: 'Credentials',
-      credentials: {
-        username: { label: "Nom d'utilisateur", type: 'text' },
-        password: { label: 'Mot de passe', type: 'password' },
-      },
-      async authorize(credentials) {
-        if (!credentials?.username || !credentials?.password) return null;
-
-        try {
-          const username = typeof credentials.username === 'string' ? credentials.username : '';
-          const password = typeof credentials.password === 'string' ? credentials.password : '';
-
-          if (!username || !password) return null;
-
-          const formData = new URLSearchParams();
-          formData.append('grant_type', 'password');
-          formData.append('username', username);
-          formData.append('password', password);
-
-          const res = await fetch(`${SERVER_API_URL}/auth/login`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: formData,
-          });
-
-          const data = await res.json();
-
-          if (!res.ok || !data.access_token) {
-            return null;
-          }
-
-          const decoded = jwt.decode(data.access_token) as JwtPayload | null;
-
-          if (!decoded) {
-            console.error('Impossible de décoder le JWT');
-            return null;
-          }
-
-          return {
-            id: decoded.user_id,
-            name: decoded.sub,
-            email: decoded.email,
-            role: decoded.role,
-            accessToken: data.access_token,
-          };
-        } catch (error) {
-          console.error('Erreur de connexion:', error);
-          return null;
-        }
-      },
-    }),
   ],
   callbacks: {
     async jwt({ token, user, account, profile }: { token: any; user: any; account: any; profile?: any }) {
-      // Login via Credentials (existant)
-      if (user && account?.provider === 'credentials') {
-        return {
-          ...token,
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          accessToken: user.accessToken,
-          accessTokenExpires: Date.now() + 60 * 60 * 1000,
-          expired: false,
-        };
-      }
-
       // Login via Discord OAuth
       if (account?.provider === 'discord' && profile) {
         try {

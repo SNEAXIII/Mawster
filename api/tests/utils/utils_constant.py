@@ -6,17 +6,12 @@ from datetime import datetime
 USER_ID = uuid.uuid4()
 LOGIN = "login"
 EMAIL = f"{LOGIN}@gmail.com"
-WRONG_PASSWORD = "WrongPassword"
 USER_LOGIN  = "user"
 USER_EMAIL = f"{USER_LOGIN}@gmail.com"
 ADMIN_LOGIN  = "admin"
 ADMIN_EMAIL  = f"{ADMIN_LOGIN}@gmail.com"
 
-
-# Password
-PASSWORD = "ComplexPassword1!" # NOSONAR
-PLAIN_PASSWORD = "password" # NOSONAR
-HASHED_PASSWORD = "$2b$04$c5i699sDUICKICmOARITy.wCpNpnp8U/hXlqWtHmvgZBtXc4iUF0y" # NOSONAR
+DISCORD_ID = "discord_123456"
 
 FAKE_TOKEN = "FAKE_TOKEN"  # For unit test purpose
 

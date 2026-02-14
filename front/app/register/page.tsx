@@ -1,71 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Loader, Eye, EyeOff } from 'lucide-react';
-import styles from '@/app/ui/form.module.css';
+import { signIn } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { registerUser } from '../services/users';
-import { MdErrorOutline } from 'react-icons/md';
 import { BiUserPlus } from 'react-icons/bi';
 
-export default function RegisterPage() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [formData, setFormData] = useState({
-    login: '',
-    email: '',
-    password: '',
-    confirm_password: '',
-  });
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const inputErrorClass = 'border-red-500';
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-    setFieldErrors({});
-
-    try {
-      await registerUser(formData);
-      router.push('/login?registered=true');
-    } catch (err) {
-      if (err instanceof Error) {
-        const error = err as Error & { validationErrors?: Record<string, { message: string }> };
-
-        if (error.validationErrors) {
-          // Convertir les erreurs de validation en un format plus simple pour l'affichage
-          const errors: Record<string, string> = {};
-          Object.entries(error.validationErrors).forEach(([field, error]) => {
-            console.log(field, error);
-            errors[field] = error.message;
-          });
-          setFieldErrors(errors);
-        } else {
-          setError(error.message);
-        }
-      } else {
-        setError('Une erreur inattendue est survenue');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+function RegisterPageContent() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') ?? '/';
 
   return (
     <div className='h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6'>
@@ -73,158 +17,37 @@ export default function RegisterPage() {
         <CardHeader className='space-y-1'>
           <div className='flex justify-center mb-2'>
             <div className='w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center'>
-            <BiUserPlus className="w-12 h-12"/>
+              <BiUserPlus className='w-12 h-12' />
             </div>
           </div>
           <CardTitle className='text-2xl font-bold text-center text-gray-800'>
             Créer un compte
           </CardTitle>
           <p className='text-sm text-center text-gray-500'>
-            Remplissez le formulaire pour créer votre compte
+            Connectez-vous avec Discord pour créer automatiquement votre compte
           </p>
         </CardHeader>
         <CardContent className='px-4 sm:px-6 py-4'>
-          <form
-            className='space-y-4'
-            onSubmit={handleSubmit}
+          <Button
+            type='button'
+            className='w-full flex items-center justify-center gap-2 h-12 text-base'
+            onClick={() => signIn('discord', { callbackUrl })}
           >
-            {error && (
-              <Alert variant='destructive'>
-                <AlertTitle className='flex items-center'>
-                  <MdErrorOutline className='mr-1' />
-                  Erreur
-                </AlertTitle>
-                <AlertDescription className='mt-1'>{error}</AlertDescription>
-              </Alert>
-            )}
-            <div className='space-y-4'>
-              <div>
-                <label
-                  htmlFor='login'
-                  className={styles.labelBase}
-                >
-                  Nom d'utilisateur
-                </label>
-                <Input
-                  id='login'
-                  name='login'
-                  type='text'
-                  required
-                  value={formData.login}
-                  onChange={handleChange}
-                  className={`${styles.inputBase} ${fieldErrors.login ? inputErrorClass : ''}`}
-                />
-                {fieldErrors.login && (
-                  <p className='mt-1 text-sm text-red-600'>{fieldErrors.login}</p>
-                )}
-              </div>
-              <div>
-                <label
-                  htmlFor='email'
-                  className={styles.labelBase}
-                >
-                  Adresse email
-                </label>
-                <Input
-                  id='email'
-                  name='email'
-                  type='text'
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={`${styles.inputBase} ${fieldErrors.email ? inputErrorClass : ''}`}
-                />
-                {fieldErrors.email && (
-                  <p className='mt-1 text-sm text-red-600'>{fieldErrors.email}</p>
-                )}
-              </div>
-              <div>
-                <label
-                  htmlFor='password'
-                  className={styles.labelBase}
-                >
-                  Mot de passe
-                </label>
-                <div className="relative">
-                  <Input
-                    id='password'
-                    name='password'
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={formData.password}
-                    onChange={handleChange}
-                    className={`${styles.inputBase} ${fieldErrors.password ? inputErrorClass : ''} pr-10`}
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    onClick={() => setShowPassword(!showPassword)}
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-                {fieldErrors.password && (
-                  <p className='mt-1 text-sm text-red-600'>{fieldErrors.password}</p>
-                )}
-              </div>
-              <div>
-                <label
-                  htmlFor='confirm_password'
-                  className={styles.labelBase}
-                >
-                  Confirmer le mot de passe
-                </label>
-                <div className="relative">
-                  <Input
-                    id='confirm_password'
-                    name='confirm_password'
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    required
-                    value={formData.confirm_password}
-                    onChange={handleChange}
-                    className={`${styles.inputBase} ${fieldErrors.confirm_password ? inputErrorClass : ''} pr-10`}
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    tabIndex={-1}
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-                {fieldErrors.confirm_password && (
-                  <p className='mt-1 text-sm text-red-600'>{fieldErrors.confirm_password}</p>
-                )}
-              </div>
-            </div>
-            <Button
-              type='submit'
-              className={styles.buttonBase}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader className='w-5 h-5 mr-2 animate-spin' />
-                  Création en cours...
-                </>
-              ) : (
-                'Créer un compte'
-              )}
-            </Button>
-            <div className='text-center text-sm mt-4'>
-              <span className='text-gray-600'>Déjà un compte ? </span>
-              <Link
-                href='/login'
-                className='text-primary hover:underline font-medium'
-              >
-                Se connecter
-              </Link>
-            </div>
-          </form>
+            <svg className='w-5 h-5' viewBox='0 0 24 24' fill='currentColor'>
+              <path d='M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z' />
+            </svg>
+            S'inscrire avec Discord
+          </Button>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterPageContent />
+    </Suspense>
   );
 }

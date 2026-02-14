@@ -2,7 +2,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import jwt
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt.exceptions import (
     DecodeError,
     ExpiredSignatureError,
@@ -21,7 +22,11 @@ from src.enums.Roles import Roles
 from src.models import User
 from src.security.secrets import SECRET
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+_http_bearer = HTTPBearer()
+
+
+async def oauth2_scheme(credentials: HTTPAuthorizationCredentials = Depends(_http_bearer)) -> str:
+    return credentials.credentials
 
 
 class JWTService:
