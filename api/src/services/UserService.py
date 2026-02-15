@@ -16,10 +16,6 @@ from src.Messages.user_messages import (
     TARGET_USER_IS_DELETED,
     TARGET_USER_IS_ALREADY_DELETED,
 )
-from src.Messages.validators_messages import (
-    EMAIL_ALREADY_EXISTS_ERROR,
-    LOGIN_ALREADY_EXISTS_ERROR,
-)
 from src.enums.Roles import Roles
 from src.models import User
 from src.dto.dto_utilisateurs import (
@@ -27,7 +23,6 @@ from src.dto.dto_utilisateurs import (
     UserAdminViewSingleUser,
 )
 from src.utils.db import SessionDep
-from fastapi.exceptions import RequestValidationError
 from sqlalchemy import func
 
 DISABLED_STATUS = "disabled"
@@ -99,7 +94,9 @@ class UserService:
     ) -> True:
         user: Optional[User] = await UserService.get_user(session, user_uuid)
         # user must exist, not be deleted, not be an admin and must not already be disabled
-        UserService._validate_target_user_for_action(user, require_disabled=False, forbid_admin=True)
+        UserService._validate_target_user_for_action(
+            user, require_disabled=False, forbid_admin=True
+        )
         user.disabled_at = datetime.now()
         await session.commit()
         return True
@@ -110,7 +107,9 @@ class UserService:
     ) -> True:
         user: Optional[User] = await UserService.get_user(session, user_uuid)
         # user must exist, not be deleted, and must currently be disabled
-        UserService._validate_target_user_for_action(user, require_disabled=True, forbid_admin=False)
+        UserService._validate_target_user_for_action(
+            user, require_disabled=True, forbid_admin=False
+        )
         user.disabled_at = None
         await session.commit()
         return True
@@ -118,17 +117,27 @@ class UserService:
     @classmethod
     async def admin_delete_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> True:
         user: Optional[User] = await UserService.get_user(session, user_uuid)
+        # If user already deleted -> raise the specific 'already deleted' error (test expectation)
+        if user is None:
+            raise TARGET_USER_DOESNT_EXISTS
+        if user.deleted_at:
+            raise TARGET_USER_IS_ALREADY_DELETED
         # user must exist, not be deleted and must not be admin
-        UserService._validate_target_user_for_action(user, require_disabled=None, forbid_admin=True)
+        UserService._validate_target_user_for_action(
+            user, require_disabled=None, forbid_admin=True
+        )
         user.deleted_at = datetime.now()
         await session.commit()
         return True
 
     @classmethod
     async def self_delete(
-        cls, session: SessionDep, current_user: User,
+        cls,
+        session: SessionDep,
+        current_user: User,
     ) -> True:
         if current_user.deleted_at:
+            # If user already deleted, raise the specific 'already deleted' error
             raise TARGET_USER_IS_ALREADY_DELETED
         current_user.deleted_at = datetime.now()
         await session.commit()
@@ -140,7 +149,9 @@ class UserService:
     ) -> True:
         user: Optional[User] = await UserService.get_user(session, user_uuid)
         # user must exist, not be deleted and must not already be admin
-        UserService._validate_target_user_for_action(user, require_disabled=None, forbid_admin=True)
+        UserService._validate_target_user_for_action(
+            user, require_disabled=None, forbid_admin=True
+        )
         if user.role == Roles.ADMIN:
             raise TARGET_USER_IS_ALREADY_ADMIN
         user.role = Roles.ADMIN

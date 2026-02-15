@@ -31,8 +31,11 @@ async def oauth2_scheme(credentials: HTTPAuthorizationCredentials = Depends(_htt
 
 class JWTService:
     @classmethod
-    def create_token(cls, data: dict, expires_delta: timedelta) -> str:
+    def create_token(cls, data: dict, expires_delta: Optional[timedelta] = None) -> str:
+        """Create a JWT token. If expires_delta is None, use default from settings."""
         to_encode = data.copy()
+        if expires_delta is None:
+            expires_delta = timedelta(minutes=SECRET.ACCESS_TOKEN_EXPIRE_MINUTES)
         expire = datetime.now(tz=timezone.utc) + expires_delta
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(
@@ -51,9 +54,6 @@ class JWTService:
                 "sub": user.login,
                 "email": user.email,
                 "role": user.role,
-                "avatar_url": user.avatar_url,
-                "discord_id": user.discord_id,
-                "created_at": user.created_at.isoformat() if user.created_at else None,
             },
             expires_delta=access_token_expires,
         )
