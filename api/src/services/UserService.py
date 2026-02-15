@@ -67,18 +67,39 @@ class UserService:
         return result.first()
 
     @classmethod
-    async def admin_patch_disable_user(
-        cls, session: SessionDep, user_uuid: uuid.UUID
-    ) -> True:
-        user: Optional[User] = await UserService.get_user(session, user_uuid)
+    def _validate_target_user_for_action(
+        cls,
+        user: Optional[User],
+        require_disabled: Optional[bool] = None,
+        forbid_admin: bool = True,
+    ) -> None:
+        """Validate a target user before performing admin operations.
+
+        Parameters:
+        - user: the User object or None
+        - require_disabled: if True, user must be disabled (otherwise raise ALREADY_ENABLED);
+                            if False, user must NOT be disabled (otherwise raise ALREADY_DISABLED);
+                            if None, no disabled-state check is performed.
+        - forbid_admin: if True, raise if target is an ADMIN (preserves previous checks).
+        """
         if user is None:
             raise TARGET_USER_DOESNT_EXISTS
         if user.deleted_at:
             raise TARGET_USER_IS_DELETED
-        if user.role == Roles.ADMIN:
+        if forbid_admin and user.role == Roles.ADMIN:
             raise TARGET_USER_IS_ADMIN
-        if user.disabled_at:
+        if require_disabled is True and not user.disabled_at:
+            raise TARGET_USER_IS_ALREADY_ENABLED
+        if require_disabled is False and user.disabled_at:
             raise TARGET_USER_IS_ALREADY_DISABLED
+
+    @classmethod
+    async def admin_patch_disable_user(
+        cls, session: SessionDep, user_uuid: uuid.UUID
+    ) -> True:
+        user: Optional[User] = await UserService.get_user(session, user_uuid)
+        # user must exist, not be deleted, not be an admin and must not already be disabled
+        UserService._validate_target_user_for_action(user, require_disabled=False, forbid_admin=True)
         user.disabled_at = datetime.now()
         await session.commit()
         return True
@@ -88,12 +109,8 @@ class UserService:
         cls, session: SessionDep, user_uuid: uuid.UUID
     ) -> True:
         user: Optional[User] = await UserService.get_user(session, user_uuid)
-        if user is None:
-            raise TARGET_USER_DOESNT_EXISTS
-        if user.deleted_at:
-            raise TARGET_USER_IS_DELETED
-        if not user.disabled_at:
-            raise TARGET_USER_IS_ALREADY_ENABLED
+        # user must exist, not be deleted, and must currently be disabled
+        UserService._validate_target_user_for_action(user, require_disabled=True, forbid_admin=False)
         user.disabled_at = None
         await session.commit()
         return True
@@ -101,12 +118,8 @@ class UserService:
     @classmethod
     async def admin_delete_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> True:
         user: Optional[User] = await UserService.get_user(session, user_uuid)
-        if user is None:
-            raise TARGET_USER_DOESNT_EXISTS
-        if user.deleted_at:
-            raise TARGET_USER_IS_ALREADY_DELETED
-        if user.role == Roles.ADMIN:
-            raise TARGET_USER_IS_ADMIN
+        # user must exist, not be deleted and must not be admin
+        UserService._validate_target_user_for_action(user, require_disabled=None, forbid_admin=True)
         user.deleted_at = datetime.now()
         await session.commit()
         return True
@@ -126,10 +139,8 @@ class UserService:
         cls, session: SessionDep, user_uuid: uuid.UUID
     ) -> True:
         user: Optional[User] = await UserService.get_user(session, user_uuid)
-        if user is None:
-            raise TARGET_USER_DOESNT_EXISTS
-        if user.deleted_at:
-            raise TARGET_USER_IS_DELETED
+        # user must exist, not be deleted and must not already be admin
+        UserService._validate_target_user_for_action(user, require_disabled=None, forbid_admin=True)
         if user.role == Roles.ADMIN:
             raise TARGET_USER_IS_ALREADY_ADMIN
         user.role = Roles.ADMIN
