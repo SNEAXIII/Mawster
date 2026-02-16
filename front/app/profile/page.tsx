@@ -70,7 +70,7 @@ export default function ProfilePage() {
     setError('');
 
     try {
-      await deleteAccount(session?.accessToken, confirmationInput);
+      await deleteAccount(confirmationInput);
       await signOut({ redirect: false });
       router.push('/');
       router.refresh();

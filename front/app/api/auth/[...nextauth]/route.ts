@@ -89,6 +89,39 @@ export const {
           error: 'TokenExpiredError',
         };
       }
+
+      // Si on a un accessToken backend, demander le profil au backend
+      // pour s'assurer que la session NextAuth reflète l'état serveur
+      try {
+        if (token.accessToken) {
+          const res = await fetch(`${SERVER_API_URL}/auth/session`, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${token.accessToken}`,
+            },
+          });
+
+          if (res.ok) {
+            const userProfile = await res.json();
+            return {
+              ...session,
+              user: {
+                ...session.user,
+                id: userProfile.id ?? token.id,
+                name: userProfile.username ?? token.name,
+                email: userProfile.email ?? token.email,
+                role: userProfile.role ?? token.role,
+                avatar_url: userProfile.avatar_url ?? token.avatar_url,
+                discord_id: userProfile.discord_id ?? token.discord_id,
+                created_at: userProfile.created_at ?? token.created_at,
+              },
+            };
+          }
+        }
+      } catch (e) {
+        console.error('Erreur en synchronisant la session avec /auth/session :', e);
+      }
+
       return {
         ...session,
         user: {
@@ -101,7 +134,8 @@ export const {
           discord_id: token.discord_id,
           created_at: token.created_at,
         },
-        accessToken: token.accessToken,
+        // accessToken volontairement absent : le JWT backend
+        // reste côté serveur et est utilisé via /api/back proxy
       };
     },
   },
@@ -140,7 +174,6 @@ declare module 'next-auth' {
       discord_id: string;
       created_at: string | null;
     };
-    accessToken: string;
-    expired: boolean;
+    error?: string;
   }
 }

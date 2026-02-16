@@ -1,8 +1,9 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 
-from src.dto.dto_token import LoginResponse
+from src.dto.dto_token import LoginResponse, TokenBody
 from src.dto.dto_utilisateurs import (
     DiscordLoginRequest,
     UserProfile,
@@ -13,6 +14,7 @@ from src.services.AuthService import (
     AuthService,
 )
 from src.services.DiscordAuthService import DiscordAuthService
+from src.services.UserService import UserService
 
 from src.utils.db import SessionDep
 
@@ -27,6 +29,18 @@ async def read_users_me(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     return current_user
+
+
+@auth_controller.post("/session", response_model=UserProfile)
+async def read_users_me_with_token(body: TokenBody, session: SessionDep):
+    """Accept a token in the request body, decode it and return the corresponding user profile.
+
+    This endpoint is used by tests which POST a token payload instead of using Authorization header.
+    """
+    data = JWTService.decode_jwt(body.token)
+    username = data.get("sub")
+    user = await UserService.get_user_by_login_with_validity_check(session, username)
+    return user
 
 
 @auth_controller.post("/discord", response_model=LoginResponse, status_code=200)

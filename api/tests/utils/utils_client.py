@@ -21,5 +21,5 @@ async def execute_post_request(route: str, payload: dict) -> Response:
     async with get_test_client() as client:
         return await client.post(
             route,
-            data=payload,
+            json=payload,
         )

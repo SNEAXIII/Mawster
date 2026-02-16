@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Power, Trash, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { disableUser, enableUser, deleteUser, promoteToAdmin } from '@/app/services/users';
-import { useSession } from 'next-auth/react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ConfirmationDialog } from '@/app/ui/dashboard/dialogs/confirmation-dialog';
 
@@ -39,7 +38,6 @@ export const UserActions: React.FC<UserActionsProps> = ({
   isDeleted = false,
   loadUsers,
 }) => {
-  const { data: session } = useSession();
   const initialLoadingState = {
     [UserAction.DISABLE]: false,
     [UserAction.ENABLE]: false,
@@ -55,22 +53,22 @@ export const UserActions: React.FC<UserActionsProps> = ({
 
       switch (action) {
         case UserAction.DISABLE:
-          await disableUser(userId, session?.accessToken);
+          await disableUser(userId);
           setIsDisableDialogOpen(false);
           loadUsers();
           break;
         case UserAction.ENABLE:
-          await enableUser(userId, session?.accessToken);
+          await enableUser(userId);
           setIsDisableDialogOpen(false);
           loadUsers();
           break;
         case UserAction.DELETE:
-          await deleteUser(userId, session?.accessToken);
+          await deleteUser(userId);
           setIsDeleteDialogOpen(false);
           loadUsers();
           break;
         case UserAction.PROMOTE:
-          await promoteToAdmin(userId, session?.accessToken);
+          await promoteToAdmin(userId);
           setIsPromoteToAdminDialogOpen(false);
           loadUsers();
           break;

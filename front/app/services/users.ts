@@ -1,6 +1,6 @@
 import { possibleRoles, possibleStatus } from '@/app/ui/dashboard/table/table-header';
-import { getHeaders } from '@/app/lib/utils';
-import { CLIENT_API_URL } from '@/next.config';
+
+// ─── Types ───────────────────────────────────────────────
 export interface User {
   login: string;
   email: string;
@@ -24,13 +24,9 @@ interface ApiError {
   message?: string;
   statusCode?: number;
 }
-interface ValidationError {
-  type: string;
-  message: string;
-}
 
 export interface ValidationErrors {
-  [key: string]: ValidationError;
+  [key: string]: { type: string; message: string };
 }
 
 export interface ApiErrorResponse {
@@ -38,125 +34,89 @@ export interface ApiErrorResponse {
   errors: ValidationErrors;
 }
 
+// ─── Helpers ─────────────────────────────────────────────
+// Tous les appels passent par le proxy Next.js /api/back
+// Le JWT backend est injecté côté serveur, jamais côté client.
+const PROXY = '/api/back';
+
+const jsonHeaders: HeadersInit = {
+  Accept: 'application/json',
+  'Content-Type': 'application/json',
+};
+
+async function throwOnError(response: Response, fallback: string) {
+  if (response.ok) return;
+  const data: ApiError = await response.json().catch(() => ({}));
+  const msg = data.message ?? data.detail ?? fallback;
+  const err = new Error(`Erreur ${response.status}: ${msg}`);
+  (err as any).status = response.status;
+  throw err;
+}
+
+// ─── API ─────────────────────────────────────────────────
 export const getUsers = async (
   page: number = 1,
   size: number = 10,
   status: string | null = null,
   role: string | null = null,
-  token?: string
 ): Promise<FetchUsersResponse> => {
-  try {
-    const query_status = status && status !== possibleStatus[0].value ? `&status=${status}` : '';
-    const query_role = role && role !== possibleRoles[0].value ? `&role=${role}` : '';
-    const url = `${CLIENT_API_URL}/admin/users?page=${page}&size=${size}${query_status}${query_role}`;
-    const headers = getHeaders(token);
-    const response = await fetch(url, {
-      headers,
-      mode: 'cors',
-    });
+  const qs = new URLSearchParams({ page: String(page), size: String(size) });
+  if (status && status !== possibleStatus[0].value) qs.set('status', status);
+  if (role && role !== possibleRoles[0].value) qs.set('role', role);
 
-    if (!response.ok) {
-      let errorData: ApiError = {};
-      try {
-        errorData = await response.json();
-        console.error('API Error:', errorData);
-      } catch (e) {
-        console.error('Failed to parse error response:', e);
-      }
-
-      const errorMessage = errorData.message ?? errorData.message ?? 'Erreur inconnue';
-      const error = new Error(`Erreur ${response.status}: ${errorMessage}`);
-      (error as any).status = response.status;
-      throw error;
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Erreur dans getUsers:', error);
-    throw error instanceof Error
-      ? error
-      : new Error('Une erreur inattendue est survenue lors de la récupération des utilisateurs');
-  }
+  const response = await fetch(`${PROXY}/admin/users?${qs}`, { headers: jsonHeaders });
+  await throwOnError(response, 'Erreur lors de la récupération des utilisateurs');
+  return response.json();
 };
 
-export const deleteAccount = async (token?: string, confirmation?: string): Promise<true> => {
-  try {
-    const response = await fetch(`${CLIENT_API_URL}/user/delete`, {
-      method: 'DELETE',
-      headers: getHeaders(token),
-      body: JSON.stringify({ confirmation: confirmation ?? '' }),
-    });
-
-    if (!response.ok) {
-      const errorData: ApiError = await response.json().catch(() => ({}));
-      throw new Error(errorData.message ?? 'Erreur lors de la suppression du compte');
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error deleting account:', error);
-    throw error;
-  }
-};
-
-export const disableUser = async (userId: string, token?: string): Promise<true> => {
-  const response = await fetch(`${CLIENT_API_URL}/admin/users/disable/${userId}`, {
-    method: 'PATCH',
-    headers: getHeaders(token),
-  });
-
-  if (!response.ok) {
-    const errorData: ApiError = await response.json().catch(() => ({}));
-    throw new Error(errorData.message ?? "Erreur lors de la désactivation de l'utilisateur");
-  }
-
-  return true;
-};
-
-export const enableUser = async (userId: string, token?: string): Promise<true> => {
-  const response = await fetch(`${CLIENT_API_URL}/admin/users/enable/${userId}`, {
-    method: 'PATCH',
-    headers: getHeaders(token),
-  });
-
-  if (!response.ok) {
-    const errorData: ApiError = await response.json().catch(() => ({}));
-    throw new Error(errorData.message ?? "Erreur lors de la réactivation de l'utilisateur");
-  }
-
-  return true;
-};
-
-export const deleteUser = async (userId: string, token?: string): Promise<true> => {
-  const response = await fetch(`${CLIENT_API_URL}/admin/users/delete/${userId}`, {
+export const deleteAccount = async (confirmation?: string): Promise<true> => {
+  const response = await fetch(`${PROXY}/user/delete`, {
     method: 'DELETE',
-    headers: getHeaders(token),
+    headers: jsonHeaders,
+    body: JSON.stringify({ confirmation: confirmation ?? '' }),
   });
-
-  if (!response.ok) {
-    const errorData: ApiError = await response.json().catch(() => ({}));
-    throw new Error(errorData.message ?? "Erreur lors de la suppression de l'utilisateur");
-  }
-
+  await throwOnError(response, 'Erreur lors de la suppression du compte');
   return true;
 };
 
-export const promoteToAdmin = async (userId: string, token?: string): Promise<true> => {
-  const body = JSON.stringify({
-    user_uuid_to_promote: userId,
-  });
-  const response = await fetch(`${CLIENT_API_URL}/admin/users/promote/${userId}`, {
+export const disableUser = async (userId: string): Promise<true> => {
+  const response = await fetch(`${PROXY}/admin/users/disable/${userId}`, {
     method: 'PATCH',
-    headers: getHeaders(token),
-    body,
+    headers: jsonHeaders,
   });
+  await throwOnError(response, "Erreur lors de la désactivation de l'utilisateur");
+  return true;
+};
 
+export const enableUser = async (userId: string): Promise<true> => {
+  const response = await fetch(`${PROXY}/admin/users/enable/${userId}`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, "Erreur lors de la réactivation de l'utilisateur");
+  return true;
+};
+
+export const deleteUser = async (userId: string): Promise<true> => {
+  const response = await fetch(`${PROXY}/admin/users/delete/${userId}`, {
+    method: 'DELETE',
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, "Erreur lors de la suppression de l'utilisateur");
+  return true;
+};
+
+export const promoteToAdmin = async (userId: string): Promise<true> => {
+  const response = await fetch(`${PROXY}/admin/users/promote/${userId}`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+    body: JSON.stringify({ user_uuid_to_promote: userId }),
+  });
   if (!response.ok) {
     const errorData: ApiErrorResponse = await response.json().catch(() => ({
       message: 'Erreur lors de la promotion en administrateur',
       errors: {},
     }));
-
     const error = new Error(
       errorData.message ?? 'Erreur lors de la promotion en administrateur'
     ) as Error & { validationErrors?: ValidationErrors };

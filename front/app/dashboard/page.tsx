@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { getUsers, promoteToAdmin, User } from '@/app/services/users';
+import { getUsers, User } from '@/app/services/users';
 import Loading from '@/app/dashboard/loading';
 import RenderUserDashboard from '@/app/ui/dashboard/table/render-user-dashboard';
 import PaginationControls from '@/app/ui/dashboard/pagination/pagination-controls';
@@ -41,7 +41,6 @@ useEffect(() => {
   const loadUsers = async () => {
     setCanReset(false);
     setFetchUsersError('');
-    const token = session?.accessToken;
     if (!users) {
       setIsLoading(true);
     }
@@ -51,7 +50,6 @@ useEffect(() => {
         usersPerPage,
         selectedStatus,
         selectedRole,
-        token
       );
       setUsers(data.users);
       setCurrentPage(Math.min(currentPage, data.total_pages));
