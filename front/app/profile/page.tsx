@@ -7,22 +7,24 @@ import { deleteAccount } from '@/app/services/users';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Input } from '@/components/ui/input';
 import { Loader } from 'lucide-react';
 import { LuLogOut, LuTrash2, LuShield, LuMail, LuUser, LuCalendar, LuHash } from 'react-icons/lu';
 import { FaDiscord } from 'react-icons/fa';
+
+// TODO for user self deletion only
+// import { Separator } from '@/components/ui/separator';
+// import {
+//   AlertDialog,
+//   AlertDialogAction,
+//   AlertDialogCancel,
+//   AlertDialogContent,
+//   AlertDialogDescription,
+//   AlertDialogFooter,
+//   AlertDialogHeader,
+//   AlertDialogTitle,
+//   AlertDialogTrigger,
+// } from '@/components/ui/alert-dialog';
+// import { Input } from '@/components/ui/input';
 
 const CONFIRMATION_TEXT = 'SUPPRIMER';
 
