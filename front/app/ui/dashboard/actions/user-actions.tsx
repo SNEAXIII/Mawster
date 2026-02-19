@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { disableUser, enableUser, deleteUser, promoteToAdmin } from '@/app/services/users';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ConfirmationDialog } from '@/app/ui/dashboard/dialogs/confirmation-dialog';
+import { useI18n } from '@/app/i18n';
 
 const UserAction = {
   DISABLE: 'disable',
@@ -46,6 +47,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
   } as const;
 
   const [isLoading, setIsLoading] = useState<Record<UserAction, boolean>>(initialLoadingState);
+  const { t } = useI18n();
 
   const handleAction = async (action: UserAction, userId: string) => {
     try {
@@ -101,8 +103,8 @@ export const UserActions: React.FC<UserActionsProps> = ({
               </div>
             </TooltipTrigger>
             <TooltipContent>
-              {isAdmin && <p>Cet utilisateur est un administrateur</p>}
-              {isDeleted && <p>Cet utilisateur est supprimé</p>}
+              {isAdmin && <p>{t.dashboard.actions.isAdmin}</p>}
+              {isDeleted && <p>{t.dashboard.actions.isDeleted}</p>}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -132,7 +134,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
                   disabled={isLoading.promote}
                 >
                   <UserPlus className='mr-2 h-4 w-4' />
-                  Promouvoir administrateur
+                  {t.dashboard.actions.promote}
                 </DropdownMenuItem>
                 {isDisabled ? (
                   <DropdownMenuItem
@@ -141,7 +143,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
                     disabled={isLoading.enable}
                   >
                     <Power className='mr-2 h-4 w-4' />
-                    Activer
+                    {t.dashboard.actions.enable}
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem
@@ -150,7 +152,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
                     disabled={isLoading.disable}
                   >
                     <Power className='mr-2 h-4 w-4' />
-                    Désactiver
+                    {t.dashboard.actions.disable}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem
@@ -159,7 +161,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
                   disabled={isLoading.delete}
                 >
                   <Trash className='mr-2 h-4 w-4' />
-                  Supprimer
+                  {t.dashboard.actions.delete}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             )}
@@ -171,40 +173,40 @@ export const UserActions: React.FC<UserActionsProps> = ({
           <ConfirmationDialog
             open={isDisableDialogOpen}
             onOpenChange={setIsDisableDialogOpen}
-            title="Activer l'utilisateur"
-            description='Êtes-vous sûr de vouloir réactiver cet utilisateur ?'
+            title={t.dashboard.dialogs.enableUser}
+            description={t.dashboard.dialogs.enableUserDesc}
             onConfirm={() => handleAction(UserAction.ENABLE, userId)}
-            confirmText="Activer"
+            confirmText={t.dashboard.actions.enable}
           />
         ) : (
           <ConfirmationDialog
             open={isDisableDialogOpen}
             onOpenChange={setIsDisableDialogOpen}
-            title="Désactiver l'utilisateur"
-            description='Êtes-vous sûr de vouloir désactiver cet utilisateur ?'
+            title={t.dashboard.dialogs.disableUser}
+            description={t.dashboard.dialogs.disableUserDesc}
             onConfirm={() => handleAction(UserAction.DISABLE, userId)}
-            confirmText="Désactiver"
+            confirmText={t.dashboard.actions.disable}
           />
         )}
 
         <ConfirmationDialog
           open={isDeleteDialogOpen}
           onOpenChange={setIsDeleteDialogOpen}
-          title="Supprimer l'utilisateur"
-          description='Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.'
+          title={t.dashboard.dialogs.deleteUser}
+          description={t.dashboard.dialogs.deleteUserDesc}
           onConfirm={() => handleAction(UserAction.DELETE, userId)}
           variant='destructive'
-          confirmText='Supprimer'
+          confirmText={t.common.delete}
         />
 
 
         <ConfirmationDialog
           open={isPromoteToAdminDialogOpen}
           onOpenChange={setIsPromoteToAdminDialogOpen}
-          title='Promouvoir en administrateur'
-          description='Êtes-vous sûr de vouloir promouvoir cet utilisateur en administrateur ?'
+          title={t.dashboard.dialogs.promoteUser}
+          description={t.dashboard.dialogs.promoteUserDesc}
           onConfirm={() => handleAction(UserAction.PROMOTE, userId)}
-          confirmText='Promouvoir'
+          confirmText={t.dashboard.actions.promote}
         />
 
       </div>

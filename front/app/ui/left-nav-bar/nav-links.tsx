@@ -3,6 +3,7 @@ import { MdOutlineAdminPanelSettings, MdPersonOutline } from 'react-icons/md';
 import { IoHomeOutline } from 'react-icons/io5';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useI18n } from '@/app/i18n';
 
 import clsx from 'clsx';
 
@@ -22,12 +23,13 @@ interface NavLinksProps {
 
 export default function NavLinks({ userRole }: Readonly<NavLinksProps>) {
   const pathname = usePathname();
+  const { t } = useI18n();
 
   const links = [
-    { name: 'Accueil', href: '/', icon: IoHomeOutline, role: Role.all },
-    { name: 'Mon Profil', href: '/profile', icon: MdPersonOutline, role: Role.user },
+    { name: t.nav.home, href: '/', icon: IoHomeOutline, role: Role.all },
+    { name: t.nav.profile, href: '/profile', icon: MdPersonOutline, role: Role.user },
     {
-      name: 'Administration',
+      name: t.nav.administration,
       href: '/dashboard',
       icon: MdOutlineAdminPanelSettings,
       role: Role.admin,

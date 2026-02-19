@@ -1,15 +1,18 @@
+'use client';
+
 import { TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import DropdownRadioMenu from '@/app/ui/dashboard/pagination/dropdown-radio-menu';
 import React from 'react';
+import { useI18n } from '@/app/i18n';
 
 export const possibleStatus = [
-  { value: 'all', label: 'Tous' },
-  { value: 'enabled', label: 'Activé' },
-  { value: 'disabled', label: 'Désactivé' },
-  { value: 'deleted', label: 'Supprimé' },
+  { value: 'all', label: 'all' },
+  { value: 'enabled', label: 'enabled' },
+  { value: 'disabled', label: 'disabled' },
+  { value: 'deleted', label: 'deleted' },
 ];
 export const possibleRoles = [
-  { value: 'all', label: 'Tous' },
+  { value: 'all', label: 'all' },
   { value: 'user', label: 'user' },
   { value: 'admin', label: 'admin' },
 ];
@@ -32,27 +35,39 @@ export default function TableHeaderUsers({
   role,
   onRoleChange,
 }: AllSelectorProps) {
+  const { t } = useI18n();
+
+  const translatedStatus = possibleStatus.map(s => ({
+    value: s.value,
+    label: t.dashboard.status[s.value as keyof typeof t.dashboard.status],
+  }));
+
+  const translatedRoles = possibleRoles.map(r => ({
+    value: r.value,
+    label: t.dashboard.roles[r.value as keyof typeof t.dashboard.roles],
+  }));
+
   return (
     <TableHeader>
       <TableRow>
-        <TableHead>Login</TableHead>
-        <TableHead>Email</TableHead>
+        <TableHead>{t.dashboard.tableHeaders.login}</TableHead>
+        <TableHead>{t.dashboard.tableHeaders.email}</TableHead>
         <TableHead>
           <DropdownRadioMenu
-            labelButton={'Rôle'}
-            labelDescription={'Sélectionnez un rôle'}
-            possibleValues={possibleRoles}
+            labelButton={t.dashboard.tableHeaders.role}
+            labelDescription={t.dashboard.pagination.selectRole}
+            possibleValues={translatedRoles}
             selectedValue={role}
             setValue={onRoleChange}
           />
         </TableHead>
-        <TableHead>Création</TableHead>
-        <TableHead>Dernière connexion</TableHead>
+        <TableHead>{t.dashboard.tableHeaders.creation}</TableHead>
+        <TableHead>{t.dashboard.tableHeaders.lastLogin}</TableHead>
         <TableHead>
           <DropdownRadioMenu
-            labelButton={'Status'}
-            labelDescription={"Nombre d'utilisateurs par page"}
-            possibleValues={possibleStatus}
+            labelButton={t.dashboard.tableHeaders.status}
+            labelDescription={t.dashboard.pagination.usersPerPage}
+            possibleValues={translatedStatus}
             selectedValue={status}
             setValue={onStatusChange}
           />

@@ -7,9 +7,12 @@ import MainMawsterLogo from '@/app/ui/MawsterLogo';
 import { Button } from '@/components/ui/button';
 import { VscSignIn, VscSignOut } from 'react-icons/vsc';
 import NavLinks, { Role } from './nav-links';
+import LanguageSwitcher from '@/app/ui/language-switcher';
+import { useI18n } from '@/app/i18n';
 
 export default function SideNavBar() {
   const { data: session } = useSession();
+  const { t } = useI18n();
   const userRole: Role = session?.user.role as Role || Role.all;
   const router = useRouter();
   const buttonBaseClasses =
@@ -20,22 +23,25 @@ export default function SideNavBar() {
       router.push('/');
       router.refresh();
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
+      console.error('Sign out error:', error);
     }
   };
 
   return (
     <div className='flex h-full flex-col px-3 py-4 md:px-2'>
       {/* Logo Section */}
-      <Link
-        href='/'
-        className='mb-2 flex h-20 items-center rounded-md bg-blue-400 p-4 transition hover:bg-blue-500 w-full'
-        aria-label='Accueil'
-      >
-        <div className='w-full'>
-          <MainMawsterLogo />
-        </div>
-      </Link>
+      <div className='mb-2 flex items-center gap-2'>
+        <Link
+          href='/'
+          className='flex h-20 flex-1 items-center rounded-md bg-blue-400 p-4 transition hover:bg-blue-500'
+          aria-label={t.nav.home}
+        >
+          <div className='w-full'>
+            <MainMawsterLogo />
+          </div>
+        </Link>
+        <LanguageSwitcher />
+      </div>
 
       {/* Navigation Links Section */}
       <div className='flex grow flex-row justify-between space-x-2 md:flex-col md:space-x-0 md:space-y-2'>
@@ -51,20 +57,19 @@ export default function SideNavBar() {
             type='button'
             onClick={handleSignOut}
             className={`${buttonBaseClasses} bg-gray-50 text-gray-700 hover:bg-red-50 hover:text-red-600`}
-            aria-label='Se déconnecter'
+            aria-label={t.nav.signOut}
           >
-            {/* TODO trouver un moyen de fix la taille versin mobile*/}
             <VscSignOut className='w-6 h-6' />
-            <span className='hidden md:block'>Se déconnecter</span>
+            <span className='hidden md:block'>{t.nav.signOut}</span>
           </Button>
         ) : (
           <Link
             href='/login'
             className={`${buttonBaseClasses} bg-blue-400 text-white hover:bg-blue-500`}
-            aria-label='Se connecter'
+            aria-label={t.nav.signIn}
           >
             <VscSignIn className='w-6 h-6' />
-            <span className='hidden md:block'>Se connecter</span>
+            <span className='hidden md:block'>{t.nav.signIn}</span>
           </Link>
         )}
       </div>

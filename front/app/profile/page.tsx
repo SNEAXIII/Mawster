@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader } from 'lucide-react';
 import { LuLogOut, LuTrash2, LuShield, LuMail, LuUser, LuCalendar, LuHash } from 'react-icons/lu';
 import { FaDiscord } from 'react-icons/fa';
+import { useI18n } from '@/app/i18n';
 
 // TODO for user self deletion only
 // import { Separator } from '@/components/ui/separator';
@@ -26,19 +27,7 @@ import { FaDiscord } from 'react-icons/fa';
 // } from '@/components/ui/alert-dialog';
 // import { Input } from '@/components/ui/input';
 
-const CONFIRMATION_TEXT = 'SUPPRIMER';
-
-function formatDate(dateString: string | null | undefined): string {
-  if (!dateString) return 'Non disponible';
-  try {
-    return new Intl.DateTimeFormat('fr-FR', {
-      dateStyle: 'long',
-      timeStyle: 'short',
-    }).format(new Date(dateString));
-  } catch {
-    return 'Date invalide';
-  }
-}
+const CONFIRMATION_TEXT = 'DELETE';
 
 function getInitials(name: string | undefined | null): string {
   if (!name) return '?';
@@ -53,10 +42,23 @@ function getInitials(name: string | undefined | null): string {
 export default function ProfilePage() {
   const pathname = usePathname();
   const router = useRouter();
+  const { locale, t } = useI18n();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [confirmationInput, setConfirmationInput] = useState('');
   const [error, setError] = useState('');
+
+  function formatDate(dateString: string | null | undefined): string {
+    if (!dateString) return t.common.notAvailable;
+    try {
+      return new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
+        dateStyle: 'long',
+        timeStyle: 'short',
+      }).format(new Date(dateString));
+    } catch {
+      return t.common.invalidDate;
+    }
+  }
 
   const { data: session, status } = useSession({
     required: true,
@@ -77,11 +79,11 @@ export default function ProfilePage() {
       router.push('/');
       router.refresh();
     } catch (error) {
-      console.error('Erreur lors de la suppression du compte:', error);
+      console.error('Error deleting account:', error);
       setError(
         error instanceof Error
           ? error.message
-          : 'Une erreur est survenue lors de la suppression du compte'
+          : t.profile.deleteError
       );
       setIsDeleting(false);
     }
@@ -117,11 +119,11 @@ export default function ProfilePage() {
               </AvatarFallback>
             </Avatar>
             <div className="text-center sm:text-left space-y-1">
-              <h1 className="text-2xl font-bold text-gray-900">{user?.name ?? 'Utilisateur'}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{user?.name ?? t.profile.user}</h1>
               <p className="text-gray-500">{user?.email ?? ''}</p>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                 <LuShield className="h-3 w-3" />
-                {user?.role?.toLowerCase() ?? 'utilisateur'}
+                {user?.role?.toLowerCase() ?? t.profile.user.toLowerCase()}
               </span>
             </div>
           </div>
@@ -131,14 +133,14 @@ export default function ProfilePage() {
       {/* Informations du compte */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Informations du compte</CardTitle>
+          <CardTitle className="text-lg">{t.profile.accountInfo}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InfoRow icon={<LuUser className="h-4 w-4" />} label="Nom d'utilisateur" value={user?.name} />
-            <InfoRow icon={<LuMail className="h-4 w-4" />} label="Email" value={user?.email} />
-            <InfoRow icon={<FaDiscord className="h-4 w-4" />} label="Discord ID" value={user?.discord_id} />
-            <InfoRow icon={<LuCalendar className="h-4 w-4" />} label="Membre depuis" value={formatDate(user?.created_at)} />
+            <InfoRow icon={<LuUser className="h-4 w-4" />} label={t.profile.username} value={user?.name} fallback={t.common.notAvailable} />
+            <InfoRow icon={<LuMail className="h-4 w-4" />} label={t.profile.email} value={user?.email} fallback={t.common.notAvailable} />
+            <InfoRow icon={<FaDiscord className="h-4 w-4" />} label={t.profile.discordId} value={user?.discord_id} fallback={t.common.notAvailable} />
+            <InfoRow icon={<LuCalendar className="h-4 w-4" />} label={t.profile.memberSince} value={formatDate(user?.created_at)} fallback={t.common.notAvailable} />
           </div>
         </CardContent>
       </Card>
@@ -146,19 +148,19 @@ export default function ProfilePage() {
       {/* Connexion Discord */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Connexion Discord</CardTitle>
+          <CardTitle className="text-lg">{t.profile.discordConnection}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-3 p-3 rounded-lg bg-[#5865F2]/10 border border-[#5865F2]/20">
             <FaDiscord className="h-6 w-6 text-[#5865F2]" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Compte Discord connecte</p>
+              <p className="text-sm font-medium text-gray-900">{t.profile.discordConnected}</p>
               <p className="text-xs text-gray-500">
-                ID: {user?.discord_id ?? 'Non disponible'}
+                ID: {user?.discord_id ?? t.common.notAvailable}
               </p>
             </div>
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-              Actif
+              {t.common.active}
             </span>
           </div>
         </CardContent>
@@ -167,7 +169,7 @@ export default function ProfilePage() {
       {/* Bouton deconnexion */}
       <Button variant="outline" className="w-full" onClick={handleSignOut}>
         <LuLogOut className="mr-2 h-4 w-4" />
-        Se deconnecter
+        {t.profile.signOut}
       </Button>
 
       {/* Zone de danger */}
@@ -268,17 +270,19 @@ function InfoRow({
   icon,
   label,
   value,
+  fallback = 'N/A',
 }: {
   icon: React.ReactNode;
   label: string;
   value: string | null | undefined;
+  fallback?: string;
 }) {
   return (
     <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
       <div className="mt-0.5 text-gray-400">{icon}</div>
       <div className="min-w-0">
         <p className="text-xs font-medium text-gray-500">{label}</p>
-        <p className="mt-0.5 text-sm text-gray-900 truncate">{value ?? 'Non disponible'}</p>
+        <p className="mt-0.5 text-sm text-gray-900 truncate">{value ?? fallback}</p>
       </div>
     </div>
   );

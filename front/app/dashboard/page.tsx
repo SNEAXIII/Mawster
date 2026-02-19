@@ -7,6 +7,7 @@ import PaginationControls from '@/app/ui/dashboard/pagination/pagination-control
 import { possibleRoles, possibleStatus } from '@/app/ui/dashboard/table/table-header';
 import { useSession } from 'next-auth/react';
 import { redirect, usePathname } from 'next/navigation';
+import { useI18n } from '@/app/i18n';
 
 const BASE_CURRENT_PAGE = 1;
 const BASE_TOTAL_PAGE = 1;
@@ -15,6 +16,7 @@ const BASE_SELECTED_STATUS = possibleStatus[0].value;
 const BASE_SELECTED_ROLE = possibleRoles[0].value;
 export default function UsersPage() {
   const pathname = usePathname();
+  const { t } = useI18n();
   const { data: session, status } = useSession({
     required: true,
     onUnauthenticated() {
@@ -55,12 +57,12 @@ useEffect(() => {
       setCurrentPage(Math.min(currentPage, data.total_pages));
       setTotalPage(data.total_pages);
     } catch (error) {
-      console.error('Erreur lors du chargement des utilisateurs:', error);
+      console.error('Error loading users:', error);
       let errorMessage: string;
       if ((error as Error & { status?: number }).status === 401) {
-        errorMessage = 'Non autorisé';
+        errorMessage = t.dashboard.errors.unauthorized;
       } else {
-        errorMessage = 'Une erreur est survenue lors du chargement des utilisateurs';
+        errorMessage = t.dashboard.errors.loadError;
       }
       setFetchUsersError(errorMessage);
     } finally {

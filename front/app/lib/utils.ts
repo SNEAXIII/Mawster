@@ -9,14 +9,14 @@ export const truncateString = (str: string, maxLength: number): string => {
   return str.length > maxLength ? `${str.slice(0, maxLength)}...` : str;
 };
 
-export const formatDateInFrenchShort = (date: string): string =>
-  new Date(date).toLocaleString('fr-FR', {
+export const formatDateShort = (date: string, locale: string = 'en'): string =>
+  new Date(date).toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
 
-export const formatDateInFrenchLong = (dateString: string) => {
+export const formatDateLong = (dateString: string, locale: string = 'en'): string => {
   const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'long',
@@ -24,5 +24,5 @@ export const formatDateInFrenchLong = (dateString: string) => {
     hour: '2-digit',
     minute: '2-digit',
   };
-  return new Date(dateString).toLocaleDateString('fr-FR', options);
+  return new Date(dateString).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', options);
 };
