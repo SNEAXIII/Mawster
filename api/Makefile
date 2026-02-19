@@ -1,9 +1,13 @@
 ifeq ($(OS), Windows_NT)
-    VENV_PYTHON := venv/Scripts/python.exe
+    VENV_PYTHON_FOLDER := venv_win
+    VENV_PYTHON_EXECUTABLE := $(VENV_PYTHON_FOLDER)/Scripts/python.exe
+    PYTHON_EXECUTABLE := python
 else
-    VENV_PYTHON := venv/bin/python
+    VENV_PYTHON_FOLDER := venv_linux
+    VENV_PYTHON_EXECUTABLE := $(VENV_PYTHON_FOLDER)/bin/python
+    PYTHON_EXECUTABLE := python3
 endif
-RUN_MODULE := $(VENV_PYTHON) -m
+RUN_MODULE := $(VENV_PYTHON_EXECUTABLE) -m
 help:
 	@echo "run-dev	-->	run the server in dev mode with auto reload"
 	@echo "create-mig	-->	create fresh new migration"
@@ -18,7 +22,7 @@ help:
 	@echo "reset-db	-->	reset the database"
 
 create-venv:
-	python -m venv venv
+	$(PYTHON_EXECUTABLE) -m venv $(VENV_PYTHON_FOLDER)
 
 dl-prod-reqs:
 	$(RUN_MODULE) pip install -r requirements.txt

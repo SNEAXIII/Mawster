@@ -45,6 +45,28 @@ class GameAccountService:
     ) -> Optional[GameAccount]:
         return await session.get(GameAccount, game_account_id)
 
+    @classmethod
+    async def update_game_account(
+        cls,
+        session: SessionDep,
+        game_account: GameAccount,
+        game_pseudo: str,
+        is_primary: bool,
+    ) -> GameAccount:
+        game_account.game_pseudo = game_pseudo
+        game_account.is_primary = is_primary
+        session.add(game_account)
+        await session.commit()
+        await session.refresh(game_account)
+        return game_account
+
+    @classmethod
+    async def delete_game_account(
+        cls, session: SessionDep, game_account: GameAccount
+    ) -> None:
+        await session.delete(game_account)
+        await session.commit()
+
 
 class AllianceService:
     @classmethod
@@ -70,6 +92,38 @@ class AllianceService:
         cls, session: SessionDep, alliance_id: int
     ) -> Optional[Alliance]:
         return await session.get(Alliance, alliance_id)
+
+    @classmethod
+    async def get_all_alliances(
+        cls, session: SessionDep
+    ) -> list[Alliance]:
+        sql = select(Alliance)
+        result = await session.exec(sql)
+        return result.all()
+
+    @classmethod
+    async def update_alliance(
+        cls,
+        session: SessionDep,
+        alliance: Alliance,
+        name: str,
+        tag: str,
+        description: Optional[str] = None,
+    ) -> Alliance:
+        alliance.name = name
+        alliance.tag = tag
+        alliance.description = description
+        session.add(alliance)
+        await session.commit()
+        await session.refresh(alliance)
+        return alliance
+
+    @classmethod
+    async def delete_alliance(
+        cls, session: SessionDep, alliance: Alliance
+    ) -> None:
+        await session.delete(alliance)
+        await session.commit()
 
 
 class ChampionUserService:
@@ -122,3 +176,35 @@ class ChampionUserService:
         )
         result = await session.exec(sql)
         return result.all()
+
+    @classmethod
+    async def get_champion_user(
+        cls, session: SessionDep, champion_user_id: int
+    ) -> Optional[ChampionUser]:
+        return await session.get(ChampionUser, champion_user_id)
+
+    @classmethod
+    async def update_champion_user(
+        cls,
+        session: SessionDep,
+        champion_user: ChampionUser,
+        stars: int,
+        rank: int,
+        level: int,
+        signature: int,
+    ) -> ChampionUser:
+        champion_user.stars = stars
+        champion_user.rank = rank
+        champion_user.level = level
+        champion_user.signature = signature
+        session.add(champion_user)
+        await session.commit()
+        await session.refresh(champion_user)
+        return champion_user
+
+    @classmethod
+    async def delete_champion_user(
+        cls, session: SessionDep, champion_user: ChampionUser
+    ) -> None:
+        await session.delete(champion_user)
+        await session.commit()

@@ -10,7 +10,9 @@ from src.Messages.validators_messages import VALIDATION_ERROR
 from src.controllers.admin_controller import admin_controller
 from src.controllers.auth_controller import auth_controller
 from src.controllers.user_controller import user_controller
-from src.controllers.game_controller import game_controller
+from src.controllers.game_account_controller import game_account_controller
+from src.controllers.alliance_controller import alliance_controller
+from src.controllers.champion_user_controller import champion_user_controller
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -31,7 +33,9 @@ app.add_middleware(
 app.include_router(admin_controller)
 app.include_router(auth_controller)
 app.include_router(user_controller)
-app.include_router(game_controller)
+app.include_router(game_account_controller)
+app.include_router(alliance_controller)
+app.include_router(champion_user_controller)
 
 ic(app.routes)
 
@@ -45,16 +49,16 @@ def custom_openapi():
         description="Documentation for Mawster api backend",
         routes=app.routes,
     )
-    ## Uncomment this code if you want to paste
-    ## jwt instead of login and password in swagger doc
-    # openapi_schema["components"]["securitySchemes"] = {
-    #     "BearerAuth": {
-    #         "type": "http",
-    #         "scheme": "bearer",
-    #         "bearerFormat": "JWT"
-    #     }
-    # }
-    # openapi_schema["security"] = [{"bearerAuth": []}]
+    # Uncomment this code if you want to paste
+    # jwt instead of login and password in swagger doc
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT"
+        }
+    }
+    openapi_schema["security"] = [{"bearerAuth": []}]
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
