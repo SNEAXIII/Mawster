@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
-import MainCesiZenLogo from '@/app/ui/CesiZenLogo';
+import MainMawsterLogo from '@/app/ui/MawsterLogo';
 import { Button } from '@/components/ui/button';
 import { VscSignIn, VscSignOut } from 'react-icons/vsc';
 import NavLinks, { Role } from './nav-links';
@@ -33,7 +33,7 @@ export default function SideNavBar() {
         aria-label='Accueil'
       >
         <div className='w-full'>
-          <MainCesiZenLogo />
+          <MainMawsterLogo />
         </div>
       </Link>
 

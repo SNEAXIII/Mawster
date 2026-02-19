@@ -38,9 +38,9 @@ def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(
-        title="Cesi Zen",
+        title="Mawster",
         version="1.0.0",
-        description="Documentation for Cesi Zen api backend",
+        description="Documentation for Mawster api backend",
         routes=app.routes,
     )
     ## Uncomment this code if you want to paste

@@ -20,11 +20,21 @@ entity "alliance" as alliance <<table>> {
 entity "utilisateur" as utilisateur <<table>> {
   * id_utilisateur : int <<PK>>
   --
-  * alliance_id : int <<FK>>
-  pseudo_jeu : varchar(50)
+  discord_id : varchar(50) <<UNIQUE>>
+  discord_username : varchar(100)
   email : varchar(255)
   role : enum('Membre','Adjoint','Chef','Admin')
   last_active : timestamp
+}
+
+entity "compte_jeu" as compte_jeu <<table>> {
+  * id_compte_jeu : int <<PK>>
+  --
+  * utilisateur_id : int <<FK>>
+  * alliance_id : int <<FK>>
+  pseudo_jeu : varchar(50)
+  est_principal : boolean
+  created_at : timestamp
 }
 
 entity "champion" as champion <<table>> {
@@ -38,7 +48,7 @@ entity "champion" as champion <<table>> {
 entity "champion_utilisateur" as roster <<table>> {
   * id_champion_utilisateur : int <<PK>>
   --
-  * utilisateur_id : int <<FK>>
+  * compte_jeu_id : int <<FK>>
   * champion_id : int <<FK>>
   etoiles : tinyint
   rang : tinyint
@@ -74,7 +84,7 @@ entity "placement_defense" as placement <<table>> {
   --
   * noeud_id : int <<FK>>
   * champion_utilisateur_id : int <<FK>>
-  * utilisateur_responsable_id : int <<FK>>
+  * compte_jeu_responsable_id : int <<FK>>
   ordre : tinyint
   statut : varchar(20)
   notes_strategie : text
@@ -82,12 +92,13 @@ entity "placement_defense" as placement <<table>> {
 }
 
 ' ==================== RELATIONS ====================
-alliance ||--o{ utilisateur
-utilisateur ||--o{ roster
+utilisateur ||--o{ compte_jeu
+alliance ||--o{ compte_jeu
+compte_jeu ||--o{ roster
 champion ||--o{ roster
 config ||--o{ noeud
 noeud ||--o{ placement
 roster ||--o{ placement
-utilisateur ||--o{ placement : "responsable"
+compte_jeu ||--o{ placement : "responsable"
 
 @enduml

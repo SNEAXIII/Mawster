@@ -169,6 +169,7 @@ export default function ProfilePage() {
       </Button>
 
       {/* Zone de danger */}
+      {/* TODO redo it properly with a confirmation dialog and better UI/UX
       <Card className="border-red-200">
         <CardHeader>
           <CardTitle className="text-lg text-red-700">Zone de danger</CardTitle>
@@ -256,7 +257,7 @@ export default function ProfilePage() {
             </AlertDialog>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }

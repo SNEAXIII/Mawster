@@ -1,4 +1,4 @@
-# Rapport de sécurité – Projet Cesi Zen (Front + API + Infra + Tests)
+# Rapport de sécurité – Projet Mawster (Front + API + Infra + Tests)
 
 Date d'analyse : 2026-02-13  
 Dernière mise à jour : 2026-02-13  
@@ -7,7 +7,7 @@ Analystes : Audit automatisé complet du code source
 ## Portée de l'analyse
 | Couche | Technologies | Fichiers analysés |
 |--------|-------------|-------------------|
-| Front-end | Next.js 14, NextAuth, TipTap, Tailwind | middleware, services, pages, composants, config |
+| Front-end | Next.js 14, NextAuth, Tailwind | middleware, services, pages, composants, config |
 | API Backend | FastAPI, SQLModel, PyJWT, Bleach, Passlib/bcrypt | controllers, services, models, DTOs, validators, fixtures |
 | Infrastructure | Docker Compose, Caddy, MariaDB, Watchtower, phpMyAdmin | Dockerfiles, compose.yaml, Caddyfile, env files |
 | Tests | Pytest, SQLite (tests isolés) | conftest, utils, intégration |
@@ -138,7 +138,7 @@ Analystes : Audit automatisé complet du code source
 
 ### H-01 — `dangerouslySetInnerHTML` en fallback (XSS stocké)
 - **Score : 3/10** | **CWE-79 (Cross-site Scripting - Stored)**
-- **Constat** : Le composant `RichTextContent` utilise `dangerouslySetInnerHTML` comme fallback quand l'éditeur TipTap n'est pas initialisé. Le contenu provient de l'API (articles créés par des admins).
+- **Constat** : Le composant `RichTextContent` utilise `dangerouslySetInnerHTML` comme fallback. Le contenu provient de l'API (articles créés par des admins).
 - **Impact** : Si la sanitization backend (Bleach) est contournée ou si un futur développeur ajoute un tag autorisé dangereux, tout visiteur de l'article exécutera du JavaScript malveillant. Combiné avec le token d'accès exposé côté client (H-02), un XSS pourrait voler le bearer token API.
 - **Facteur atténuant** : La sanitization Bleach est en place côté serveur et est stricte (aucun attribut autorisé). Le risque est résiduel mais viole le principe de défense en profondeur.
 - **Remédiation** : Ajouter `DOMPurify` côté client avant le `dangerouslySetInnerHTML`, ou supprimer le fallback.
@@ -174,7 +174,7 @@ Analystes : Audit automatisé complet du code source
 
 ### H-06 — IP publique du serveur hardcodée dans le Dockerfile
 - **Score : 4/10** | **CWE-215 (Insertion of Sensitive Information Into Debugging Code)**
-- **Constat** : L'adresse IP `92.112.192.100` est hardcodée dans le `front.Dockerfile` (lignes 26 et 40). Cette IP est intégrée dans l'image Docker publiée sur Docker Hub (`sneaxiii/cesi-zen-front`).
+- **Constat** : L'adresse IP `92.112.192.100` est hardcodée dans le `front.Dockerfile` (lignes 26 et 40). Cette IP est intégrée dans l'image Docker publiée sur Docker Hub (`sneaxiii/mawster-front`).
 - **Impact** : Révélation de l'infrastructure, permet le ciblage direct du serveur, contournement éventuel de DNS/WAF.
 - **Remédiation** : Passer cette valeur via une variable d'environnement à l'exécution, ne pas la builder dans l'image.
 - Référence : [front/front.Dockerfile](front/front.Dockerfile#L26), [front/front.Dockerfile](front/front.Dockerfile#L40)
@@ -256,7 +256,7 @@ Analystes : Audit automatisé complet du code source
 
 ### M-10 — Tabnabbing (`target="_blank"` sans `rel="noopener noreferrer"`)
 - **Score : 5/10** | **CWE-1022 (Use of Web Link to Untrusted Target)**
-- **Constat** : L'extension TipTap Link est configurée avec `openOnClick: true` et `target: '_blank'` mais sans `rel: 'noopener noreferrer'`.
+- **Constat** : Les liens avec `target: '_blank'` sont configurés avec `openOnClick: true` mais sans `rel: 'noopener noreferrer'`.
 - **Impact** : Une page ouverte via un lien dans un article peut accéder à `window.opener` et rediriger l'onglet original (tabnabbing).
 - **Remédiation** : Ajouter `rel: 'noopener noreferrer'` dans les HTMLAttributes de l'extension Link.
 - Référence : [front/app/ui/html-viewer/RichTextContent.tsx](front/app/ui/html-viewer/RichTextContent.tsx#L14-L20)

@@ -8,17 +8,28 @@
     + tag : str
     + description : str
     --
-    + utilisateurs : List[Utilisateur]
+    + membres : List[CompteJeu]
     + configurations : List[ConfigurationDefense]
   }
 
   class Utilisateur {
     + id_utilisateur : int
-    + pseudo_jeu : str
+    + discord_id : str
+    + discord_username : str
     + email : str
     + role : UserRole
-    + alliance_id : int
     --
+    + comptes_jeu : List[CompteJeu]
+  }
+
+  class CompteJeu {
+    + id_compte_jeu : int
+    + utilisateur_id : int
+    + alliance_id : int
+    + pseudo_jeu : str
+    + est_principal : bool
+    --
+    + utilisateur : Utilisateur
     + alliance : Alliance
     + roster : List[ChampionUtilisateur]
     + placements_responsables : List[PlacementDefense]
@@ -35,7 +46,7 @@
 
   class ChampionUtilisateur {
     + id_champion_utilisateur : int
-    + utilisateur_id : int
+    + compte_jeu_id : int
     + champion_id : int
     + etoiles : int
     + rang : int
@@ -44,7 +55,7 @@
     + prestige : int
     + est_favori : bool
     --
-    + utilisateur : Utilisateur
+    + compte_jeu : CompteJeu
     + champion : Champion
     + placements : List[PlacementDefense]
   }
@@ -74,23 +85,24 @@
     + id_placement : int
     + noeud_id : int
     + champion_utilisateur_id : int
-    + utilisateur_responsable_id : int
+    + compte_jeu_responsable_id : int
     + ordre : int
     + statut : PlacementStatus
     + notes_strategie : str
     --
     + noeud : Noeud
     + champion_utilisateur : ChampionUtilisateur
-    + responsable : Utilisateur
+    + responsable : CompteJeu
   }
 
 
-Alliance "1" *-- "N" Utilisateur
-Utilisateur "1" *-- "N" ChampionUtilisateur
+Utilisateur "1" *-- "N" CompteJeu
+Alliance "1" *-- "N" CompteJeu
+CompteJeu "1" *-- "N" ChampionUtilisateur
 Champion "1" *-- "N" ChampionUtilisateur
 ConfigurationDefense "1" *-- "N" Noeud
 Noeud "1" *-- "N" PlacementDefense
 ChampionUtilisateur "1" *-- "N" PlacementDefense
-Utilisateur "1" --> "N" PlacementDefense : responsable
+CompteJeu "1" --> "N" PlacementDefense : responsable
 
 @enduml

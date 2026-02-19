@@ -1,7 +1,7 @@
-# 🔐 Guide d'intégration Discord OAuth2 — Cesi Zen
+# 🔐 Guide d'intégration Discord OAuth2 — Mawster
 
 > **Date** : 2026-02-13  
-> **Projet** : Cesi Zen — Projet fil rouge CESI Ingénieur  
+> **Projet** : Mawster — Projet fil rouge CESI Ingénieur  
 > **Stack** : Next.js 14 + NextAuth v5 β25 / FastAPI + PyJWT / MariaDB / Docker + Caddy
 
 ---
@@ -122,7 +122,7 @@
 ### Étape par étape
 
 1. Aller sur **https://discord.com/developers/applications**
-2. Cliquer **"New Application"** → nommer `Cesi Zen`
+2. Cliquer **"New Application"** → nommer `Mawster`
 3. Onglet **OAuth2** :
    - Copier le **Client ID** (public)
    - Copier le **Client Secret** (⚠️ ne jamais commiter)
