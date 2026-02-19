@@ -2,16 +2,12 @@ from datetime import datetime
 from itertools import product
 from random import randint
 from faker import Faker
-from sqlmodel import create_engine, Session
+from sqlmodel import Session
 from typing import List
 from enum import Enum
 from src.enums.Roles import Roles
-from src.security.secrets import SECRET
 from src.models import User, LoginLog
-
-sync_engine = create_engine(
-    f"mysql+pymysql://{SECRET.MARIADB_USER}:{SECRET.MARIADB_PASSWORD}@{SECRET.MARIADB_HOST}/{SECRET.MARIADB_DATABASE}",
-)
+from src.fixtures import sync_engine
 
 fake = Faker(locale="en")
 

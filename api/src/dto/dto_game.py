@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, Field
@@ -13,7 +14,7 @@ class GameAccountCreateRequest(BaseModel):
 
 class GameAccountResponse(BaseModel):
     id: int
-    user_id: str
+    user_id: uuid.UUID
     alliance_id: Optional[int] = None
     game_pseudo: str
     is_primary: bool

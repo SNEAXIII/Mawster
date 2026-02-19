@@ -4,12 +4,8 @@ import src.models  # noqa: F401
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import text
-from sqlmodel import Session, SQLModel, create_engine
-from src.security.secrets import SECRET
-
-engine = create_engine(
-    f"mysql+pymysql://{SECRET.MARIADB_USER}:{SECRET.MARIADB_PASSWORD}@localhost/{SECRET.MARIADB_DATABASE}",
-)
+from sqlmodel import Session, SQLModel
+from src.fixtures import sync_engine as engine
 
 alembic_cfg = Config("alembic.ini")
 

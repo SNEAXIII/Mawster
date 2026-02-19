@@ -1,11 +1,7 @@
-from sqlmodel import create_engine, Session
+from sqlmodel import Session
 from src.enums.Roles import Roles
-from src.security.secrets import SECRET
 from src.models import User
-
-sync_engine = create_engine(
-    f"mysql+pymysql://{SECRET.MARIADB_USER}:{SECRET.MARIADB_PASSWORD}@{SECRET.MARIADB_HOST}/{SECRET.MARIADB_DATABASE}",
-)
+from src.fixtures import sync_engine
 
 master_account = "misterbalise"
 
