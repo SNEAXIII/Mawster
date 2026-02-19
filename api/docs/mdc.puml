@@ -1,0 +1,80 @@
+@startuml MCD_MCOC
+title Modèle Conceptuel de Données - MCOC Alliance Manager
+hide circle
+skinparam shadowing false
+skinparam monochrome true
+
+entity "Alliance" as alliance {
+  * id_alliance <<PK>>
+  --
+  nom
+  tag
+  description
+}
+
+entity "Utilisateur" as utilisateur {
+  * id_utilisateur <<PK>>
+  --
+  pseudo_jeu
+  email
+  role
+  * alliance_id <<FK>>
+}
+
+entity "Champion" as champion {
+  * id_champion <<PK>>
+  --
+  nom
+  classe
+  image_url
+}
+
+entity "ChampionUtilisateur\n(roster)" as roster {
+  * id_champion_utilisateur <<PK>>
+  --
+  * utilisateur_id <<FK>>
+  * champion_id <<FK>>
+  etoiles
+  rang
+  niveau
+  signature
+}
+
+entity "ConfigurationDefense" as config {
+  * id_config <<PK>>
+  --
+  * alliance_id <<FK>>
+  nom
+  type
+  est_active
+}
+
+entity "Noeud" as noeud {
+  * id_noeud <<PK>>
+  --
+  * config_id <<FK>>
+  numero
+  description_buffs
+}
+
+entity "PlacementDefense" as placement {
+  * id_placement <<PK>>
+  --
+  * noeud_id <<FK>>
+  * champion_utilisateur_id <<FK>>
+  * utilisateur_responsable_id <<FK>>
+  ordre
+  statut
+  notes_strategie
+}
+
+alliance ||--o{ utilisateur : "contient"
+utilisateur ||--o{ roster : "possède"
+champion ||--o{ roster : "est_instance_de"
+config ||--o{ noeud : "comprend"
+noeud ||--o{ placement : "a"
+roster ||--o{ placement : "est_placé_sur"
+utilisateur ||--o{ placement : "est_responsable_de"
+
+
+@enduml

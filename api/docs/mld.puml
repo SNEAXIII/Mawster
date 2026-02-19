@@ -1,0 +1,93 @@
+@startuml MLD_MCOC
+left to right direction
+skinparam shadowing false
+skinparam monochrome true
+skinparam class {
+    BackgroundColor #F8F8F8
+    BorderColor #333333
+    FontColor #222222
+}
+
+entity "alliance" as alliance <<table>> {
+  * id_alliance : int <<PK>>
+  --
+  nom : varchar(100)
+  tag : varchar(10)
+  description : text
+  created_at : timestamp
+}
+
+entity "utilisateur" as utilisateur <<table>> {
+  * id_utilisateur : int <<PK>>
+  --
+  * alliance_id : int <<FK>>
+  pseudo_jeu : varchar(50)
+  email : varchar(255)
+  role : enum('Membre','Adjoint','Chef','Admin')
+  last_active : timestamp
+}
+
+entity "champion" as champion <<table>> {
+  * id_champion : int <<PK>>
+  --
+  nom : varchar(100)
+  classe : varchar(20)
+  image_url : varchar(500)
+}
+
+entity "champion_utilisateur" as roster <<table>> {
+  * id_champion_utilisateur : int <<PK>>
+  --
+  * utilisateur_id : int <<FK>>
+  * champion_id : int <<FK>>
+  etoiles : tinyint
+  rang : tinyint
+  niveau : smallint
+  signature : smallint
+  prestige : int
+  est_favori : boolean
+  notes_personnelles : text
+}
+
+entity "configuration_defense" as config <<table>> {
+  * id_config : int <<PK>>
+  --
+  * alliance_id : int <<FK>>
+  * created_by : int <<FK>>
+  nom : varchar(150)
+  type : varchar(30)
+  est_active : boolean
+  date_debut : date
+  date_fin : date
+}
+
+entity "noeud" as noeud <<table>> {
+  * id_noeud : int <<PK>>
+  --
+  * config_id : int <<FK>>
+  numero : varchar(20)
+  description_buffs : text
+}
+
+entity "placement_defense" as placement <<table>> {
+  * id_placement : int <<PK>>
+  --
+  * noeud_id : int <<FK>>
+  * champion_utilisateur_id : int <<FK>>
+  * utilisateur_responsable_id : int <<FK>>
+  ordre : tinyint
+  statut : varchar(20)
+  notes_strategie : text
+  date_placement : timestamp
+}
+
+' ==================== RELATIONS ====================
+alliance ||--o{ utilisateur
+utilisateur ||--o{ roster
+champion ||--o{ roster
+config ||--o{ noeud
+noeud ||--o{ placement
+roster ||--o{ placement
+utilisateur ||--o{ placement : "responsable"
+
+@enduml

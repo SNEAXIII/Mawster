@@ -1,0 +1,96 @@
+@startuml Class_FastAPI
+
+
+
+  class Alliance {
+    + id_alliance : int
+    + nom : str
+    + tag : str
+    + description : str
+    --
+    + utilisateurs : List[Utilisateur]
+    + configurations : List[ConfigurationDefense]
+  }
+
+  class Utilisateur {
+    + id_utilisateur : int
+    + pseudo_jeu : str
+    + email : str
+    + role : UserRole
+    + alliance_id : int
+    --
+    + alliance : Alliance
+    + roster : List[ChampionUtilisateur]
+    + placements_responsables : List[PlacementDefense]
+  }
+
+  class Champion {
+    + id_champion : int
+    + nom : str
+    + classe : ChampionClass
+    + image_url : str
+    --
+    + instances : List[ChampionUtilisateur]
+  }
+
+  class ChampionUtilisateur {
+    + id_champion_utilisateur : int
+    + utilisateur_id : int
+    + champion_id : int
+    + etoiles : int
+    + rang : int
+    + niveau : int
+    + signature : int
+    + prestige : int
+    + est_favori : bool
+    --
+    + utilisateur : Utilisateur
+    + champion : Champion
+    + placements : List[PlacementDefense]
+  }
+
+  class ConfigurationDefense {
+    + id_config : int
+    + alliance_id : int
+    + nom : str
+    + type : DefenseType
+    + est_active : bool
+    --
+    + alliance : Alliance
+    + noeuds : List[Noeud]
+  }
+
+  class Noeud {
+    + id_noeud : int
+    + config_id : int
+    + numero : str
+    + description_buffs : str
+    --
+    + configuration : ConfigurationDefense
+    + placements : List[PlacementDefense]
+  }
+
+  class PlacementDefense {
+    + id_placement : int
+    + noeud_id : int
+    + champion_utilisateur_id : int
+    + utilisateur_responsable_id : int
+    + ordre : int
+    + statut : PlacementStatus
+    + notes_strategie : str
+    --
+    + noeud : Noeud
+    + champion_utilisateur : ChampionUtilisateur
+    + responsable : Utilisateur
+  }
+
+
+Alliance "1" *-- "N" Utilisateur
+Utilisateur "1" *-- "N" ChampionUtilisateur
+Champion "1" *-- "N" ChampionUtilisateur
+ConfigurationDefense "1" *-- "N" Noeud
+Noeud "1" *-- "N" PlacementDefense
+ChampionUtilisateur "1" *-- "N" PlacementDefense
+Utilisateur "1" --> "N" PlacementDefense : responsable
+
+@enduml
