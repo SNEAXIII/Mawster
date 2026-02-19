@@ -21,7 +21,7 @@ from src.security.secrets import SECRET
 
 ic(f"Targeted db: {SECRET.MARIADB_DATABASE}")
 
-app = FastAPI()
+app = FastAPI(title="Mawster", version="1.0.0")
 origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -49,16 +49,6 @@ def custom_openapi():
         description="Documentation for Mawster api backend",
         routes=app.routes,
     )
-    # Uncomment this code if you want to paste
-    # jwt instead of login and password in swagger doc
-    openapi_schema["components"]["securitySchemes"] = {
-        "BearerAuth": {
-            "type": "http",
-            "scheme": "bearer",
-            "bearerFormat": "JWT"
-        }
-    }
-    openapi_schema["security"] = [{"bearerAuth": []}]
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
@@ -90,7 +80,6 @@ async def validation_exception_handler(request, exc):
         if not location_list:
             raise ValueError(f"loc parameter is not correct:\n {error}")
         location = location_list[-1]
-        # Remove useless error type in final message for display purpose
         error_type = error.get("type").capitalize().replace("_", " ")
         error_message = error.get("msg").removeprefix(f"{error_type}, ")
         errors_dict[location] = {"type": error.get("type"), "message": error_message}
