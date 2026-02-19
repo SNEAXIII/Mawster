@@ -8,96 +8,111 @@ skinparam class {
     FontColor #222222
 }
 
-entity "alliance" as alliance <<table>> {
-  * id_alliance : int <<PK>>
+entity "user" as user <<table>> {
+  * id : uuid <<PK>>
   --
-  nom : varchar(100)
-  tag : varchar(10)
-  description : text
-  created_at : timestamp
-}
-
-entity "utilisateur" as utilisateur <<table>> {
-  * id_utilisateur : int <<PK>>
-  --
+  login : varchar(100) <<UNIQUE>>
+  email : varchar(255) <<UNIQUE>>
   discord_id : varchar(50) <<UNIQUE>>
-  discord_username : varchar(100)
-  email : varchar(255)
-  role : enum('Membre','Adjoint','Chef','Admin')
-  last_active : timestamp
+  avatar_url : varchar(500)
+  role : enum('USER','ADMIN')
+  disabled_at : timestamp (nullable)
+  deleted_at : timestamp (nullable)
+  created_at : timestamp
+  last_login_date : timestamp (nullable)
 }
 
-entity "compte_jeu" as compte_jeu <<table>> {
-  * id_compte_jeu : int <<PK>>
+entity "login_log" as login_log <<table>> {
+  * id : int <<PK>> AUTO_INCREMENT
   --
-  * utilisateur_id : int <<FK>>
-  * alliance_id : int <<FK>>
-  pseudo_jeu : varchar(50)
-  est_principal : boolean
+  * id_user : uuid <<FK>> → user.id
+  date_connexion : timestamp
+}
+
+entity "alliance" as alliance <<table>> {
+  * id : int <<PK>> AUTO_INCREMENT
+  --
+  name : varchar(100)
+  tag : varchar(10)
+  description : text (nullable)
+  created_at : timestamp
+  ' TODO: add url later
+}
+
+entity "game_account" as game_account <<table>> {
+  * id : int <<PK>> AUTO_INCREMENT
+  --
+  * user_id : uuid <<FK>> → user.id
+  alliance_id : int <<FK>> → alliance.id (nullable)
+  game_pseudo : varchar(50)
+  is_primary : boolean
   created_at : timestamp
 }
 
 entity "champion" as champion <<table>> {
-  * id_champion : int <<PK>>
+  * id : int <<PK>> AUTO_INCREMENT
   --
-  nom : varchar(100)
-  classe : varchar(20)
-  image_url : varchar(500)
+  name : varchar(100)
+  champion_class : varchar(20)
+  image_url : varchar(500) (nullable)
+  is_7_star : boolean
 }
 
-entity "champion_utilisateur" as roster <<table>> {
-  * id_champion_utilisateur : int <<PK>>
+entity "champion_user" as roster <<table>> {
+  * id : int <<PK>> AUTO_INCREMENT
   --
-  * compte_jeu_id : int <<FK>>
-  * champion_id : int <<FK>>
-  etoiles : tinyint
-  rang : tinyint
-  niveau : smallint
+  * game_account_id : int <<FK>> → game_account.id
+  * champion_id : int <<FK>> → champion.id
+  stars : tinyint
+  rank : tinyint
+  level : smallint
   signature : smallint
-  prestige : int
-  est_favori : boolean
-  notes_personnelles : text
 }
 
-entity "configuration_defense" as config <<table>> {
-  * id_config : int <<PK>>
+entity "defense_configuration" as config <<table>> {
+  * id : int <<PK>> AUTO_INCREMENT
   --
-  * alliance_id : int <<FK>>
-  * created_by : int <<FK>>
-  nom : varchar(150)
+  * alliance_id : int <<FK>> → alliance.id
+  name : varchar(150)
   type : varchar(30)
-  est_active : boolean
-  date_debut : date
-  date_fin : date
+  is_active : boolean
+  start_date : date
+  end_date : date
 }
 
-entity "noeud" as noeud <<table>> {
-  * id_noeud : int <<PK>>
+entity "node" as node <<table>> {
+  * id : int <<PK>> AUTO_INCREMENT
   --
-  * config_id : int <<FK>>
-  numero : varchar(20)
-  description_buffs : text
+  * config_id : int <<FK>> → defense_configuration.id
+  number : varchar(20)
+  buff_description : text
 }
 
-entity "placement_defense" as placement <<table>> {
-  * id_placement : int <<PK>>
+entity "defense_placement" as placement <<table>> {
+  * id : int <<PK>> AUTO_INCREMENT
   --
-  * noeud_id : int <<FK>>
-  * champion_utilisateur_id : int <<FK>>
-  * compte_jeu_responsable_id : int <<FK>>
-  ordre : tinyint
-  statut : varchar(20)
-  notes_strategie : text
-  date_placement : timestamp
+  * node_id : int <<FK>> → node.id
+  * champion_user_id : int <<FK>> → champion_user.id
+  * responsible_game_account_id : int <<FK>> → game_account.id
+  order : tinyint
+  status : varchar(20)
+  strategy_notes : text
+  placement_date : timestamp
 }
 
 ' ==================== RELATIONS ====================
-utilisateur ||--o{ compte_jeu
-alliance ||--o{ compte_jeu
-compte_jeu ||--o{ roster
+user ||--o{ login_log
+user ||--o{ game_account
+alliance ||--o{ game_account
+game_account ||--o{ roster
 champion ||--o{ roster
-config ||--o{ noeud
-noeud ||--o{ placement
+alliance ||--o{ config
+config ||--o{ node
+node ||--o{ placement
+roster ||--o{ placement
+game_account ||--o{ placement
+
+@enduml
 roster ||--o{ placement
 compte_jeu ||--o{ placement : "responsable"
 

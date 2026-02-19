@@ -1,90 +1,105 @@
 @startuml MCD_MCOC
-title Modèle Conceptuel de Données - Mawster Alliance Manager
+title Conceptual Data Model - Mawster Alliance Manager
 hide circle
 skinparam shadowing false
 skinparam monochrome true
 
-entity "Alliance" as alliance {
-  * id_alliance <<PK>>
+entity "User" as user {
+  * id <<PK>> (UUID)
   --
-  nom
+  login
+  email
+  discord_id
+  avatar_url
+  role
+  disabled_at
+  deleted_at
+  created_at
+  last_login_date
+}
+
+entity "LoginLog" as login_log {
+  * id <<PK>>
+  --
+  * user_id <<FK>>
+  connection_date
+}
+
+entity "Alliance" as alliance {
+  * id <<PK>>
+  --
+  name
   tag
   description
+  ' TODO: add url later
 }
 
-entity "Utilisateur" as utilisateur {
-  * id_utilisateur <<PK>>
+entity "GameAccount" as game_account {
+  * id <<PK>>
   --
-  discord_id
-  discord_username
-  email
-  role
-}
-
-entity "CompteJeu" as compte_jeu {
-  * id_compte_jeu <<PK>>
-  --
-  * utilisateur_id <<FK>>
-  * alliance_id <<FK>>
-  pseudo_jeu
-  est_principal
+  * user_id <<FK>>
+  alliance_id <<FK>> (nullable)
+  game_pseudo
+  is_primary
 }
 
 entity "Champion" as champion {
-  * id_champion <<PK>>
+  * id <<PK>>
   --
-  nom
-  classe
+  name
+  champion_class
   image_url
+  is_7_star
 }
 
-entity "ChampionUtilisateur\n(roster)" as roster {
-  * id_champion_utilisateur <<PK>>
+entity "ChampionUser\n(roster)" as roster {
+  * id <<PK>>
   --
-  * compte_jeu_id <<FK>>
+  * game_account_id <<FK>>
   * champion_id <<FK>>
-  etoiles
-  rang
-  niveau
+  stars
+  rank
+  level
   signature
 }
 
-entity "ConfigurationDefense" as config {
-  * id_config <<PK>>
+entity "DefenseConfiguration" as config {
+  * id <<PK>>
   --
   * alliance_id <<FK>>
-  nom
+  name
   type
-  est_active
+  is_active
 }
 
-entity "Noeud" as noeud {
-  * id_noeud <<PK>>
+entity "Node" as node {
+  * id <<PK>>
   --
   * config_id <<FK>>
-  numero
-  description_buffs
+  number
+  buff_description
 }
 
-entity "PlacementDefense" as placement {
-  * id_placement <<PK>>
+entity "DefensePlacement" as placement {
+  * id <<PK>>
   --
-  * noeud_id <<FK>>
-  * champion_utilisateur_id <<FK>>
-  * compte_jeu_responsable_id <<FK>>
-  ordre
-  statut
-  notes_strategie
+  * node_id <<FK>>
+  * champion_user_id <<FK>>
+  * responsible_game_account_id <<FK>>
+  order
+  status
+  strategy_notes
 }
 
-utilisateur ||--o{ compte_jeu : "possède"
-alliance ||--o{ compte_jeu : "contient"
-compte_jeu ||--o{ roster : "a_dans_son_roster"
-champion ||--o{ roster : "est_instance_de"
-config ||--o{ noeud : "comprend"
-noeud ||--o{ placement : "a"
-roster ||--o{ placement : "est_placé_sur"
-compte_jeu ||--o{ placement : "est_responsable_de"
-
+user ||--o{ login_log : "logs"
+user ||--o{ game_account : "owns"
+alliance ||--o{ game_account : "contains"
+game_account ||--o{ roster : "has_in_roster"
+champion ||--o{ roster : "is_instance_of"
+config ||--o{ node : "includes"
+node ||--o{ placement : "has"
+roster ||--o{ placement : "is_placed_on"
+game_account ||--o{ placement : "is_responsible_for"
+alliance ||--o{ config : "has"
 
 @enduml

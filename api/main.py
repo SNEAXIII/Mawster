@@ -10,6 +10,7 @@ from src.Messages.validators_messages import VALIDATION_ERROR
 from src.controllers.admin_controller import admin_controller
 from src.controllers.auth_controller import auth_controller
 from src.controllers.user_controller import user_controller
+from src.controllers.game_controller import game_controller
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -30,6 +31,7 @@ app.add_middleware(
 app.include_router(admin_controller)
 app.include_router(auth_controller)
 app.include_router(user_controller)
+app.include_router(game_controller)
 
 ic(app.routes)
 

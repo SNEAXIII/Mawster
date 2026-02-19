@@ -7,6 +7,7 @@ from src.enums.Roles import Roles
 
 if TYPE_CHECKING:
     from src.models.LoginLog import LoginLog
+    from src.models.GameAccount import GameAccount
 
 
 class User(SQLModel, table=True):
@@ -27,6 +28,7 @@ class User(SQLModel, table=True):
 
     # Relations
     connexions: List["LoginLog"] = Relationship(back_populates="user")
+    game_accounts: List["GameAccount"] = Relationship(back_populates="user")
 
     def set_last_login_date(self, date: datetime):
         self.last_login_date = date
