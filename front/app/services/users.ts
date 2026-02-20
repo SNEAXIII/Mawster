@@ -1,4 +1,4 @@
-import { possibleRoles, possibleStatus } from '@/app/ui/dashboard/table/table-header';
+import { possibleRoles, possibleStatus } from '@/app/lib/constants';
 
 // ─── Types ───────────────────────────────────────────────
 export interface User {

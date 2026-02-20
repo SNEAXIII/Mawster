@@ -4,7 +4,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
 import { LuChevronFirst, LuChevronLast } from 'react-icons/lu';
-import PageNumberSelector from '@/app/ui/dashboard/pagination/page-number-selector';
+import PageNumberSelector from '@/components/dashboard/pagination/page-number-selector';
 import { GrPowerReset } from 'react-icons/gr';
 import { useI18n } from '@/app/i18n';
 

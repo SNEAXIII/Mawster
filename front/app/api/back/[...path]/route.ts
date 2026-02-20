@@ -51,9 +51,14 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
       body: body || undefined,
     });
 
+    // 204 No Content — renvoyer directement sans body
+    if (res.status === 204) {
+      return new NextResponse(null, { status: 204 });
+    }
+
     const data = await res.text();
 
-    return new NextResponse(data, {
+    return new NextResponse(data || null, {
       status: res.status,
       headers: {
         'Content-Type': res.headers.get('content-type') ?? 'application/json',

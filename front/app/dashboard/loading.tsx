@@ -1,6 +1,6 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import TableHeaderUsers, { possibleStatus } from '@/app/ui/dashboard/table/table-header';
+import TableHeaderUsers from '@/components/dashboard/table/table-header';
 import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 

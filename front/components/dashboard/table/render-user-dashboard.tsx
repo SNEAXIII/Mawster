@@ -1,8 +1,8 @@
 import React from 'react';
 import { User } from '@/app/services/users';
 import { Table, TableBody } from '@/components/ui/table';
-import { UserRow } from '@/app/ui/dashboard/table/user-row';
-import TableHeaderUsers, { AllSelectorProps } from '@/app/ui/dashboard/table/table-header';
+import { UserRow } from '@/components/dashboard/table/user-row';
+import TableHeaderUsers, { AllSelectorProps } from '@/components/dashboard/table/table-header';
 
 interface RenderUserDashboardProps {
   users: User[];

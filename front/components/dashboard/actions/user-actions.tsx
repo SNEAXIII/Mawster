@@ -12,7 +12,7 @@ import { MoreHorizontal, Power, Trash, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { disableUser, enableUser, deleteUser, promoteToAdmin } from '@/app/services/users';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ConfirmationDialog } from '@/app/ui/dashboard/dialogs/confirmation-dialog';
+import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useI18n } from '@/app/i18n';
 
 const UserAction = {

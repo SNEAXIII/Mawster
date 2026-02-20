@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import DropdownRadioMenu from '@/app/ui/dashboard/pagination/dropdown-radio-menu';
+import DropdownRadioMenu from '@/components/dashboard/pagination/dropdown-radio-menu';
 import { useI18n } from '@/app/i18n';
 
 interface PageNumberSelectorProps {

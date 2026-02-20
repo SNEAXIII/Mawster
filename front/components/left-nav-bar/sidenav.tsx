@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
-import MainMawsterLogo from '@/app/ui/MawsterLogo';
+import MainMawsterLogo from '@/components/MawsterLogo';
 import { Button } from '@/components/ui/button';
 import { VscSignIn, VscSignOut } from 'react-icons/vsc';
 import NavLinks, { Role } from './nav-links';
-import LanguageSwitcher from '@/app/ui/language-switcher';
+import LanguageSwitcher from '@/components/language-switcher';
 import { useI18n } from '@/app/i18n';
 
 export default function SideNavBar() {

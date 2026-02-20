@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { getUsers, User } from '@/app/services/users';
 import Loading from '@/app/dashboard/loading';
-import RenderUserDashboard from '@/app/ui/dashboard/table/render-user-dashboard';
-import PaginationControls from '@/app/ui/dashboard/pagination/pagination-controls';
-import { possibleRoles, possibleStatus } from '@/app/ui/dashboard/table/table-header';
+import RenderUserDashboard from '@/components/dashboard/table/render-user-dashboard';
+import PaginationControls from '@/components/dashboard/pagination/pagination-controls';
+import { possibleRoles, possibleStatus } from '@/app/lib/constants';
 import { useSession } from 'next-auth/react';
 import { redirect, usePathname } from 'next/navigation';
 import { useI18n } from '@/app/i18n';

@@ -7,8 +7,8 @@ import {
   RowUserLogin,
   RowUserRole,
   UserStatusBadge,
-} from '@/app/ui/dashboard/table/user-cells';
-import { UserActions } from '@/app/ui/dashboard/actions/user-actions';
+} from '@/components/dashboard/table/user-cells';
+import { UserActions } from '@/components/dashboard/actions/user-actions';
 
 interface UserRowProps {
   readonly user: Readonly<User>;

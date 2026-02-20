@@ -1,21 +1,12 @@
 'use client';
 
 import { TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import DropdownRadioMenu from '@/app/ui/dashboard/pagination/dropdown-radio-menu';
+import DropdownRadioMenu from '@/components/dashboard/pagination/dropdown-radio-menu';
 import React from 'react';
 import { useI18n } from '@/app/i18n';
+import { possibleStatus, possibleRoles } from '@/app/lib/constants';
 
-export const possibleStatus = [
-  { value: 'all', label: 'all' },
-  { value: 'enabled', label: 'enabled' },
-  { value: 'disabled', label: 'disabled' },
-  { value: 'deleted', label: 'deleted' },
-];
-export const possibleRoles = [
-  { value: 'all', label: 'all' },
-  { value: 'user', label: 'user' },
-  { value: 'admin', label: 'admin' },
-];
+export { possibleStatus, possibleRoles };
 
 interface StatusSelectorProps {
   status: string;
