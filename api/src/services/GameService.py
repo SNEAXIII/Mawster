@@ -3,10 +3,12 @@ from typing import Optional
 
 from fastapi import HTTPException
 from sqlmodel import select
+from sqlalchemy.orm import selectinload
 from starlette import status
 
 from src.models.GameAccount import GameAccount
 from src.models.Alliance import Alliance
+from src.models.AllianceAdjoint import AllianceAdjoint
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.utils.db import SessionDep
@@ -70,32 +72,62 @@ class GameAccountService:
 
 class AllianceService:
     @classmethod
+    async def _load_alliance_with_relations(
+        cls, session: SessionDep, alliance_id: uuid.UUID
+    ) -> Optional[Alliance]:
+        """Load an alliance with owner and adjoints eagerly loaded."""
+        sql = (
+            select(Alliance)
+            .where(Alliance.id == alliance_id)
+            .options(
+                selectinload(Alliance.owner),  # type: ignore[arg-type]
+                selectinload(Alliance.adjoints).selectinload(AllianceAdjoint.game_account),  # type: ignore[arg-type]
+            )
+        )
+        result = await session.exec(sql)
+        return result.first()
+
+    @classmethod
     async def create_alliance(
         cls,
         session: SessionDep,
         name: str,
         tag: str,
+        owner_id: uuid.UUID,
     ) -> Alliance:
+        # Verify owner game account exists
+        owner = await session.get(GameAccount, owner_id)
+        if owner is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Owner game account not found",
+            )
         alliance = Alliance(
             name=name,
             tag=tag,
+            owner_id=owner_id,
         )
         session.add(alliance)
         await session.commit()
-        await session.refresh(alliance)
-        return alliance
+        return await cls._load_alliance_with_relations(session, alliance.id)
 
     @classmethod
     async def get_alliance(
         cls, session: SessionDep, alliance_id: uuid.UUID
     ) -> Optional[Alliance]:
-        return await session.get(Alliance, alliance_id)
+        return await cls._load_alliance_with_relations(session, alliance_id)
 
     @classmethod
     async def get_all_alliances(
         cls, session: SessionDep
     ) -> list[Alliance]:
-        sql = select(Alliance)
+        sql = (
+            select(Alliance)
+            .options(
+                selectinload(Alliance.owner),  # type: ignore[arg-type]
+                selectinload(Alliance.adjoints).selectinload(AllianceAdjoint.game_account),  # type: ignore[arg-type]
+            )
+        )
         result = await session.exec(sql)
         return result.all()
 
@@ -111,8 +143,7 @@ class AllianceService:
         alliance.tag = tag
         session.add(alliance)
         await session.commit()
-        await session.refresh(alliance)
-        return alliance
+        return await cls._load_alliance_with_relations(session, alliance.id)
 
     @classmethod
     async def delete_alliance(
@@ -120,6 +151,65 @@ class AllianceService:
     ) -> None:
         await session.delete(alliance)
         await session.commit()
+
+    @classmethod
+    async def add_adjoint(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        game_account_id: uuid.UUID,
+    ) -> Alliance:
+        """Add a game account as adjoint of the alliance."""
+        # Verify game account exists
+        game_account = await session.get(GameAccount, game_account_id)
+        if game_account is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Game account not found",
+            )
+        # Check not already adjoint
+        existing = await session.exec(
+            select(AllianceAdjoint).where(
+                AllianceAdjoint.alliance_id == alliance_id,
+                AllianceAdjoint.game_account_id == game_account_id,
+            )
+        )
+        if existing.first() is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Game account is already an adjoint of this alliance",
+            )
+        adjoint = AllianceAdjoint(
+            alliance_id=alliance_id,
+            game_account_id=game_account_id,
+        )
+        session.add(adjoint)
+        await session.commit()
+        return await cls._load_alliance_with_relations(session, alliance_id)
+
+    @classmethod
+    async def remove_adjoint(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        game_account_id: uuid.UUID,
+    ) -> Alliance:
+        """Remove a game account from the alliance's adjoints."""
+        result = await session.exec(
+            select(AllianceAdjoint).where(
+                AllianceAdjoint.alliance_id == alliance_id,
+                AllianceAdjoint.game_account_id == game_account_id,
+            )
+        )
+        adjoint = result.first()
+        if adjoint is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="This game account is not an adjoint of this alliance",
+            )
+        await session.delete(adjoint)
+        await session.commit()
+        return await cls._load_alliance_with_relations(session, alliance_id)
 
 
 class ChampionUserService:

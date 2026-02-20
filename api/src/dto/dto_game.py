@@ -24,16 +24,37 @@ class GameAccountResponse(BaseModel):
 # ---- Alliance DTOs ----
 
 class AllianceCreateRequest(BaseModel):
-    """DTO to create a new alliance. URL will be added later (TODO)."""
+    """DTO to create a new alliance. The owner is the game account that creates it."""
     name: str = Field(..., max_length=100, examples=["My Alliance"])
     tag: str = Field(..., max_length=10, examples=["ALLY"])
+    owner_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
+
+
+class AllianceAdjointResponse(BaseModel):
+    id: uuid.UUID
+    game_account_id: uuid.UUID
+    game_pseudo: str
+    assigned_at: datetime
 
 
 class AllianceResponse(BaseModel):
     id: uuid.UUID
     name: str
     tag: str
+    owner_id: uuid.UUID
+    owner_pseudo: str
     created_at: datetime
+    adjoints: list[AllianceAdjointResponse] = []
+
+
+class AllianceAddAdjointRequest(BaseModel):
+    """DTO to add an adjoint (deputy) to an alliance."""
+    game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
+
+
+class AllianceRemoveAdjointRequest(BaseModel):
+    """DTO to remove an adjoint from an alliance."""
+    game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
 
 
 # ---- Champion User DTOs ----

@@ -8,6 +8,7 @@ else
     PYTHON_EXECUTABLE := python3
 endif
 RUN_MODULE := $(VENV_PYTHON_EXECUTABLE) -m
+MIGRATION_MESSAGE := "init"
 help:
 	@echo "run-dev	-->	run the server in dev mode with auto reload"
 	@echo "create-mig	-->	create fresh new migration"
@@ -34,7 +35,7 @@ run-dev:
 	$(RUN_MODULE) fastapi dev --reload
 
 create-mig:
-	$(RUN_MODULE) alembic revision --autogenerate -m "init"
+	$(RUN_MODULE) alembic revision --autogenerate -m "$(MIGRATION_MESSAGE)"
 
 migrate:
 	$(RUN_MODULE) alembic upgrade head

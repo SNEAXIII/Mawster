@@ -7,17 +7,28 @@ import { useI18n } from '@/app/i18n';
 import { toast } from 'sonner';
 import {
   type Alliance,
+  type GameAccount,
   getAllAlliances,
+  getMyGameAccounts,
   createAlliance,
   deleteAlliance,
+  addAdjoint,
+  removeAdjoint,
 } from '@/app/services/game';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { Loader, Plus, Trash2, Shield } from 'lucide-react';
+import { Loader, Plus, Trash2, Shield, Crown, UserPlus, X } from 'lucide-react';
 
 export default function AlliancesPage() {
   const pathname = usePathname();
@@ -30,6 +41,7 @@ export default function AlliancesPage() {
   });
 
   const [alliances, setAlliances] = useState<Alliance[]>([]);
+  const [gameAccounts, setGameAccounts] = useState<GameAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -37,6 +49,11 @@ export default function AlliancesPage() {
   // Form state
   const [name, setName] = useState('');
   const [tag, setTag] = useState('');
+  const [ownerId, setOwnerId] = useState('');
+
+  // Adjoint management
+  const [adjointAllianceId, setAdjointAllianceId] = useState<string | null>(null);
+  const [adjointAccountId, setAdjointAccountId] = useState('');
 
   const fetchAlliances = async () => {
     try {
@@ -49,19 +66,32 @@ export default function AlliancesPage() {
     }
   };
 
+  const fetchGameAccounts = async () => {
+    try {
+      const data = await getMyGameAccounts();
+      setGameAccounts(data);
+      if (data.length > 0 && !ownerId) {
+        setOwnerId(data[0].id);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     if (status === 'authenticated') {
       fetchAlliances();
+      fetchGameAccounts();
     }
   }, [status]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !tag.trim()) return;
+    if (!name.trim() || !tag.trim() || !ownerId) return;
 
     setCreating(true);
     try {
-      await createAlliance(name.trim(), tag.trim());
+      await createAlliance(name.trim(), tag.trim(), ownerId);
       toast.success(t.game.alliances.createSuccess);
       setName('');
       setTag('');
@@ -84,6 +114,31 @@ export default function AlliancesPage() {
     } catch (err) {
       console.error(err);
       toast.error(t.game.alliances.deleteError);
+    }
+  };
+
+  const handleAddAdjoint = async (allianceId: string) => {
+    if (!adjointAccountId) return;
+    try {
+      await addAdjoint(allianceId, adjointAccountId);
+      toast.success(t.game.alliances.adjointAddSuccess);
+      setAdjointAllianceId(null);
+      setAdjointAccountId('');
+      await fetchAlliances();
+    } catch (err) {
+      console.error(err);
+      toast.error(t.game.alliances.adjointAddError);
+    }
+  };
+
+  const handleRemoveAdjoint = async (allianceId: string, gameAccountId: string) => {
+    try {
+      await removeAdjoint(allianceId, gameAccountId);
+      toast.success(t.game.alliances.adjointRemoveSuccess);
+      await fetchAlliances();
+    } catch (err) {
+      console.error(err);
+      toast.error(t.game.alliances.adjointRemoveError);
     }
   };
 
@@ -122,44 +177,63 @@ export default function AlliancesPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">{t.game.alliances.name}</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={t.game.alliances.namePlaceholder}
-                  maxLength={100}
-                  required
-                  disabled={creating}
-                />
+          {gameAccounts.length === 0 ? (
+            <p className="text-sm text-gray-500">{t.game.alliances.noGameAccount}</p>
+          ) : (
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">{t.game.alliances.name}</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder={t.game.alliances.namePlaceholder}
+                    maxLength={100}
+                    required
+                    disabled={creating}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tag">{t.game.alliances.tag}</Label>
+                  <Input
+                    id="tag"
+                    value={tag}
+                    onChange={(e) => setTag(e.target.value.toUpperCase())}
+                    placeholder={t.game.alliances.tagPlaceholder}
+                    maxLength={10}
+                    required
+                    disabled={creating}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t.game.alliances.owner}</Label>
+                  <Select value={ownerId} onValueChange={setOwnerId} disabled={creating}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t.game.alliances.selectOwner} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {gameAccounts.map((acc) => (
+                        <SelectItem key={acc.id} value={acc.id}>
+                          {acc.game_pseudo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="tag">{t.game.alliances.tag}</Label>
-                <Input
-                  id="tag"
-                  value={tag}
-                  onChange={(e) => setTag(e.target.value.toUpperCase())}
-                  placeholder={t.game.alliances.tagPlaceholder}
-                  maxLength={10}
-                  required
-                  disabled={creating}
-                />
-              </div>
-            </div>
-            <Button type="submit" disabled={creating || !name.trim() || !tag.trim()}>
-              {creating ? (
-                <>
-                  <Loader className="w-4 h-4 mr-2 animate-spin" />
-                  {t.game.alliances.creating}
-                </>
-              ) : (
-                t.game.alliances.createButton
-              )}
-            </Button>
-          </form>
+              <Button type="submit" disabled={creating || !name.trim() || !tag.trim() || !ownerId}>
+                {creating ? (
+                  <>
+                    <Loader className="w-4 h-4 mr-2 animate-spin" />
+                    {t.game.alliances.creating}
+                  </>
+                ) : (
+                  t.game.alliances.createButton
+                )}
+              </Button>
+            </form>
+          )}
         </CardContent>
       </Card>
 
@@ -175,7 +249,7 @@ export default function AlliancesPage() {
         <div className="space-y-3">
           {alliances.map((alliance) => (
             <Card key={alliance.id}>
-              <CardContent className="py-4">
+              <CardContent className="py-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Shield className="h-5 w-5 text-purple-500" />
@@ -186,9 +260,12 @@ export default function AlliancesPage() {
                           [{alliance.tag}]
                         </span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {formatDate(alliance.created_at)}
-                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Crown className="h-3 w-3 text-yellow-500" />
+                        <span className="text-xs text-gray-600">{alliance.owner_pseudo}</span>
+                        <span className="text-xs text-gray-400">·</span>
+                        <span className="text-xs text-gray-400">{formatDate(alliance.created_at)}</span>
+                      </div>
                     </div>
                   </div>
                   <Button
@@ -199,6 +276,83 @@ export default function AlliancesPage() {
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
+                </div>
+
+                {/* Adjoints section */}
+                <div className="border-t pt-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <UserPlus className="h-4 w-4 text-blue-500" />
+                    <span className="text-sm font-medium text-gray-700">
+                      {t.game.alliances.adjoints} ({alliance.adjoints.length})
+                    </span>
+                  </div>
+
+                  {alliance.adjoints.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {alliance.adjoints.map((adj) => (
+                        <span
+                          key={adj.id}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-700"
+                        >
+                          {adj.game_pseudo}
+                          <button
+                            onClick={() => handleRemoveAdjoint(alliance.id, adj.game_account_id)}
+                            className="ml-1 hover:text-red-500 cursor-pointer"
+                            aria-label={`${t.game.alliances.removeAdjoint} ${adj.game_pseudo}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add adjoint inline */}
+                  {adjointAllianceId === alliance.id ? (
+                    <div className="flex items-center gap-2">
+                      <Select value={adjointAccountId} onValueChange={setAdjointAccountId}>
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder={t.game.alliances.selectAdjoint} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {gameAccounts
+                            .filter(
+                              (acc) =>
+                                acc.id !== alliance.owner_id &&
+                                !alliance.adjoints.some((a) => a.game_account_id === acc.id),
+                            )
+                            .map((acc) => (
+                              <SelectItem key={acc.id} value={acc.id}>
+                                {acc.game_pseudo}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        size="sm"
+                        disabled={!adjointAccountId}
+                        onClick={() => handleAddAdjoint(alliance.id)}
+                      >
+                        {t.game.alliances.addAdjointButton}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => { setAdjointAllianceId(null); setAdjointAccountId(''); }}
+                      >
+                        {t.common.cancel}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setAdjointAllianceId(alliance.id)}
+                    >
+                      <UserPlus className="h-3 w-3 mr-1" />
+                      {t.game.alliances.addAdjoint}
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

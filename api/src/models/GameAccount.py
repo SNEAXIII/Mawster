@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from src.models.User import User
     from src.models.Alliance import Alliance
     from src.models.ChampionUser import ChampionUser
+    from src.models.AllianceAdjoint import AllianceAdjoint
 
 
 class GameAccount(SQLModel, table=True):
@@ -21,5 +22,13 @@ class GameAccount(SQLModel, table=True):
 
     # Relations
     user: "User" = Relationship(back_populates="game_accounts")
-    alliance: Optional["Alliance"] = Relationship(back_populates="members")
+    alliance: Optional["Alliance"] = Relationship(
+        back_populates="members",
+        sa_relationship_kwargs={"foreign_keys": "[GameAccount.alliance_id]"},
+    )
+    owned_alliance: Optional["Alliance"] = Relationship(
+        back_populates="owner",
+        sa_relationship_kwargs={"foreign_keys": "[Alliance.owner_id]"},
+    )
     roster: List["ChampionUser"] = Relationship(back_populates="game_account")
+    adjoint_entries: List["AllianceAdjoint"] = Relationship(back_populates="game_account")

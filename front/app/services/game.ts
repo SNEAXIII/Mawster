@@ -12,7 +12,17 @@ export interface Alliance {
   id: string;
   name: string;
   tag: string;
+  owner_id: string;
+  owner_pseudo: string;
   created_at: string;
+  adjoints: AllianceAdjoint[];
+}
+
+export interface AllianceAdjoint {
+  id: string;
+  game_account_id: string;
+  game_pseudo: string;
+  assigned_at: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────
@@ -70,11 +80,12 @@ export async function getAllAlliances(): Promise<Alliance[]> {
 export async function createAlliance(
   name: string,
   tag: string,
+  owner_id: string,
 ): Promise<Alliance> {
   const response = await fetch(`${PROXY}/alliances`, {
     method: 'POST',
     headers: jsonHeaders,
-    body: JSON.stringify({ name, tag }),
+    body: JSON.stringify({ name, tag, owner_id }),
   });
   await throwOnError(response, "Erreur lors de la création de l'alliance");
   return response.json();
@@ -86,4 +97,30 @@ export async function deleteAlliance(id: string): Promise<void> {
     headers: jsonHeaders,
   });
   await throwOnError(response, "Erreur lors de la suppression de l'alliance");
+}
+
+export async function addAdjoint(
+  allianceId: string,
+  gameAccountId: string,
+): Promise<Alliance> {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/adjoints`, {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify({ game_account_id: gameAccountId }),
+  });
+  await throwOnError(response, "Erreur lors de l'ajout de l'adjoint");
+  return response.json();
+}
+
+export async function removeAdjoint(
+  allianceId: string,
+  gameAccountId: string,
+): Promise<Alliance> {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/adjoints`, {
+    method: 'DELETE',
+    headers: jsonHeaders,
+    body: JSON.stringify({ game_account_id: gameAccountId }),
+  });
+  await throwOnError(response, "Erreur lors du retrait de l'adjoint");
+  return response.json();
 }
