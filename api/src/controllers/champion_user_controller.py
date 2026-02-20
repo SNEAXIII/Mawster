@@ -1,3 +1,4 @@
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -58,7 +59,7 @@ async def create_champion_user(
     response_model=list[ChampionUserResponse],
 )
 async def get_roster_by_game_account(
-    game_account_id: int,
+    game_account_id: uuid.UUID,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
@@ -80,7 +81,7 @@ async def get_roster_by_game_account(
     response_model=ChampionUserResponse,
 )
 async def get_champion_user(
-    champion_user_id: int,
+    champion_user_id: uuid.UUID,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
@@ -100,7 +101,7 @@ async def get_champion_user(
     response_model=ChampionUserResponse,
 )
 async def update_champion_user(
-    champion_user_id: int,
+    champion_user_id: uuid.UUID,
     body: ChampionUserCreateRequest,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
@@ -127,7 +128,7 @@ async def update_champion_user(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_champion_user(
-    champion_user_id: int,
+    champion_user_id: uuid.UUID,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):

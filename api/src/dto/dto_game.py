@@ -13,9 +13,9 @@ class GameAccountCreateRequest(BaseModel):
 
 
 class GameAccountResponse(BaseModel):
-    id: int
+    id: uuid.UUID
     user_id: uuid.UUID
-    alliance_id: Optional[int] = None
+    alliance_id: Optional[uuid.UUID] = None
     game_pseudo: str
     is_primary: bool
     created_at: datetime
@@ -27,14 +27,12 @@ class AllianceCreateRequest(BaseModel):
     """DTO to create a new alliance. URL will be added later (TODO)."""
     name: str = Field(..., max_length=100, examples=["My Alliance"])
     tag: str = Field(..., max_length=10, examples=["ALLY"])
-    description: Optional[str] = Field(default=None, examples=["A great alliance"])
 
 
 class AllianceResponse(BaseModel):
-    id: int
+    id: uuid.UUID
     name: str
     tag: str
-    description: Optional[str] = None
     created_at: datetime
 
 
@@ -42,8 +40,8 @@ class AllianceResponse(BaseModel):
 
 class ChampionUserCreateRequest(BaseModel):
     """DTO to add a champion to a game account roster."""
-    game_account_id: int = Field(..., examples=[1])
-    champion_id: int = Field(..., examples=[1])
+    game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
+    champion_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440001"])
     stars: int = Field(default=0, ge=0, le=7, examples=[5])
     rank: int = Field(default=1, ge=1, le=6, examples=[5])
     level: int = Field(default=1, ge=1, examples=[65])
@@ -51,9 +49,9 @@ class ChampionUserCreateRequest(BaseModel):
 
 
 class ChampionUserResponse(BaseModel):
-    id: int
-    game_account_id: int
-    champion_id: int
+    id: uuid.UUID
+    game_account_id: uuid.UUID
+    champion_id: uuid.UUID
     stars: int
     rank: int
     level: int

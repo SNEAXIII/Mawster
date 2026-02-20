@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class LoginLog(SQLModel, table=True):
     __tablename__ = "login_log"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     date_connexion:datetime = Field(default_factory=datetime.now)
     id_user: uuid.UUID = Field(foreign_key="user.id")
 

@@ -95,8 +95,6 @@ const en = {
       namePlaceholder: 'e.g. Mighty Warriors',
       tag: 'Tag',
       tagPlaceholder: 'e.g. MW',
-      descriptionField: 'Description',
-      descriptionPlaceholder: 'Describe your alliance (optional)',
       createTitle: 'Create an Alliance',
       createButton: 'Create alliance',
       creating: 'Creating...',

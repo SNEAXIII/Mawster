@@ -1,18 +1,17 @@
 // ─── Types ───────────────────────────────────────────────
 export interface GameAccount {
-  id: number;
+  id: string;
   user_id: string;
-  alliance_id: number | null;
+  alliance_id: string | null;
   game_pseudo: string;
   is_primary: boolean;
   created_at: string;
 }
 
 export interface Alliance {
-  id: number;
+  id: string;
   name: string;
   tag: string;
-  description: string | null;
   created_at: string;
 }
 
@@ -53,7 +52,7 @@ export async function createGameAccount(
   return response.json();
 }
 
-export async function deleteGameAccount(id: number): Promise<void> {
+export async function deleteGameAccount(id: string): Promise<void> {
   const response = await fetch(`${PROXY}/game-accounts/${id}`, {
     method: 'DELETE',
     headers: jsonHeaders,
@@ -71,18 +70,17 @@ export async function getAllAlliances(): Promise<Alliance[]> {
 export async function createAlliance(
   name: string,
   tag: string,
-  description?: string,
 ): Promise<Alliance> {
   const response = await fetch(`${PROXY}/alliances`, {
     method: 'POST',
     headers: jsonHeaders,
-    body: JSON.stringify({ name, tag, description: description || null }),
+    body: JSON.stringify({ name, tag }),
   });
   await throwOnError(response, "Erreur lors de la création de l'alliance");
   return response.json();
 }
 
-export async function deleteAlliance(id: number): Promise<void> {
+export async function deleteAlliance(id: string): Promise<void> {
   const response = await fetch(`${PROXY}/alliances/${id}`, {
     method: 'DELETE',
     headers: jsonHeaders,

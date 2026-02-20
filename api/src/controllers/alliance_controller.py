@@ -1,3 +1,4 @@
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -37,7 +38,6 @@ async def create_alliance(
         session=session,
         name=body.name,
         tag=body.tag,
-        description=body.description,
     )
 
 
@@ -58,7 +58,7 @@ async def get_all_alliances(
     response_model=AllianceResponse,
 )
 async def get_alliance(
-    alliance_id: int,
+    alliance_id: uuid.UUID,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
@@ -74,7 +74,7 @@ async def get_alliance(
     response_model=AllianceResponse,
 )
 async def update_alliance(
-    alliance_id: int,
+    alliance_id: uuid.UUID,
     body: AllianceCreateRequest,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
@@ -88,7 +88,6 @@ async def update_alliance(
         alliance=alliance,
         name=body.name,
         tag=body.tag,
-        description=body.description,
     )
 
 
@@ -97,7 +96,7 @@ async def update_alliance(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_alliance(
-    alliance_id: int,
+    alliance_id: uuid.UUID,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):

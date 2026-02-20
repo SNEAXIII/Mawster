@@ -16,19 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { Loader, Plus, Trash2, Shield } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 
 export default function AlliancesPage() {
   const pathname = usePathname();
@@ -43,11 +32,11 @@ export default function AlliancesPage() {
   const [alliances, setAlliances] = useState<Alliance[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   // Form state
   const [name, setName] = useState('');
   const [tag, setTag] = useState('');
-  const [description, setDescription] = useState('');
 
   const fetchAlliances = async () => {
     try {
@@ -72,11 +61,10 @@ export default function AlliancesPage() {
 
     setCreating(true);
     try {
-      await createAlliance(name.trim(), tag.trim(), description.trim() || undefined);
+      await createAlliance(name.trim(), tag.trim());
       toast.success(t.game.alliances.createSuccess);
       setName('');
       setTag('');
-      setDescription('');
       await fetchAlliances();
     } catch (err) {
       console.error(err);
@@ -86,10 +74,12 @@ export default function AlliancesPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await deleteAlliance(id);
+      await deleteAlliance(deleteTarget);
       toast.success(t.game.alliances.deleteSuccess);
+      setDeleteTarget(null);
       await fetchAlliances();
     } catch (err) {
       console.error(err);
@@ -159,17 +149,6 @@ export default function AlliancesPage() {
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">{t.game.alliances.descriptionField}</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={t.game.alliances.descriptionPlaceholder}
-                rows={3}
-                disabled={creating}
-              />
-            </div>
             <Button type="submit" disabled={creating || !name.trim() || !tag.trim()}>
               {creating ? (
                 <>
@@ -207,44 +186,36 @@ export default function AlliancesPage() {
                           [{alliance.tag}]
                         </span>
                       </div>
-                      {alliance.description && (
-                        <p className="text-sm text-gray-500 mt-0.5">{alliance.description}</p>
-                      )}
                       <p className="text-xs text-gray-400 mt-1">
                         {formatDate(alliance.created_at)}
                       </p>
                     </div>
                   </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>{t.common.confirm}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          {t.game.alliances.deleteConfirm}
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(alliance.id)}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          {t.common.delete}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => setDeleteTarget(alliance.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Delete confirmation dialog */}
+      <ConfirmationDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title={t.common.confirm}
+        description={t.game.alliances.deleteConfirm}
+        onConfirm={handleDelete}
+        variant="destructive"
+        confirmText={t.common.delete}
+      />
     </div>
   );
 }

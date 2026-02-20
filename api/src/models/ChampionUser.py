@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional, TYPE_CHECKING
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -9,9 +10,9 @@ if TYPE_CHECKING:
 class ChampionUser(SQLModel, table=True):
     __tablename__ = "champion_user"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    game_account_id: int = Field(foreign_key="game_account.id")
-    champion_id: int = Field(foreign_key="champion.id")
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
+    champion_id: uuid.UUID = Field(foreign_key="champion.id")
     stars: int = Field(default=0)
     rank: int = Field(default=1)
     level: int = Field(default=1)

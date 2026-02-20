@@ -98,8 +98,6 @@ const fr: Translations = {
       namePlaceholder: 'ex: Guerriers Puissants',
       tag: 'Tag',
       tagPlaceholder: 'ex: GP',
-      descriptionField: 'Description',
-      descriptionPlaceholder: 'Décrivez votre alliance (optionnel)',
       createTitle: 'Créer une alliance',
       createButton: 'Créer l\'alliance',
       creating: 'Création...',

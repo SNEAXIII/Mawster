@@ -16,18 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { Loader, Plus, Trash2, Gamepad2, Star } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 
 export default function GameAccountsPage() {
   const pathname = usePathname();
@@ -42,6 +32,7 @@ export default function GameAccountsPage() {
   const [accounts, setAccounts] = useState<GameAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   // Form state
   const [pseudo, setPseudo] = useState('');
@@ -83,10 +74,12 @@ export default function GameAccountsPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await deleteGameAccount(id);
+      await deleteGameAccount(deleteTarget);
       toast.success(t.game.accounts.deleteSuccess);
+      setDeleteTarget(null);
       await fetchAccounts();
     } catch (err) {
       console.error(err);
@@ -175,12 +168,7 @@ export default function GameAccountsPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Gamepad2 className="h-5 w-5 text-blue-500" />
-                    <div>
-                      <p className="font-medium text-gray-900">{account.game_pseudo}</p>
-                      <p className="text-xs text-gray-500">
-                        ID: {account.id}
-                      </p>
-                    </div>
+                    <p className="font-medium text-gray-900">{account.game_pseudo}</p>
                     {account.is_primary && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                         <Star className="h-3 w-3" />
@@ -188,36 +176,31 @@ export default function GameAccountsPage() {
                       </span>
                     )}
                   </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>{t.common.confirm}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          {t.game.accounts.deleteConfirm}
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(account.id)}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          {t.common.delete}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => setDeleteTarget(account.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Delete confirmation dialog */}
+      <ConfirmationDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title={t.common.confirm}
+        description={t.game.accounts.deleteConfirm}
+        onConfirm={handleDelete}
+        variant="destructive"
+        confirmText={t.common.delete}
+      />
     </div>
   );
 }

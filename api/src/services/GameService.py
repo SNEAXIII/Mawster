@@ -41,7 +41,7 @@ class GameAccountService:
 
     @classmethod
     async def get_game_account(
-        cls, session: SessionDep, game_account_id: int
+        cls, session: SessionDep, game_account_id: uuid.UUID
     ) -> Optional[GameAccount]:
         return await session.get(GameAccount, game_account_id)
 
@@ -75,12 +75,10 @@ class AllianceService:
         session: SessionDep,
         name: str,
         tag: str,
-        description: Optional[str] = None,
     ) -> Alliance:
         alliance = Alliance(
             name=name,
             tag=tag,
-            description=description,
         )
         session.add(alliance)
         await session.commit()
@@ -89,7 +87,7 @@ class AllianceService:
 
     @classmethod
     async def get_alliance(
-        cls, session: SessionDep, alliance_id: int
+        cls, session: SessionDep, alliance_id: uuid.UUID
     ) -> Optional[Alliance]:
         return await session.get(Alliance, alliance_id)
 
@@ -108,11 +106,9 @@ class AllianceService:
         alliance: Alliance,
         name: str,
         tag: str,
-        description: Optional[str] = None,
     ) -> Alliance:
         alliance.name = name
         alliance.tag = tag
-        alliance.description = description
         session.add(alliance)
         await session.commit()
         await session.refresh(alliance)
@@ -131,8 +127,8 @@ class ChampionUserService:
     async def create_champion_user(
         cls,
         session: SessionDep,
-        game_account_id: int,
-        champion_id: int,
+        game_account_id: uuid.UUID,
+        champion_id: uuid.UUID,
         stars: int = 0,
         rank: int = 1,
         level: int = 1,
@@ -169,7 +165,7 @@ class ChampionUserService:
 
     @classmethod
     async def get_roster_by_game_account(
-        cls, session: SessionDep, game_account_id: int
+        cls, session: SessionDep, game_account_id: uuid.UUID
     ) -> list[ChampionUser]:
         sql = select(ChampionUser).where(
             ChampionUser.game_account_id == game_account_id
@@ -179,7 +175,7 @@ class ChampionUserService:
 
     @classmethod
     async def get_champion_user(
-        cls, session: SessionDep, champion_user_id: int
+        cls, session: SessionDep, champion_user_id: uuid.UUID
     ) -> Optional[ChampionUser]:
         return await session.get(ChampionUser, champion_user_id)
 
