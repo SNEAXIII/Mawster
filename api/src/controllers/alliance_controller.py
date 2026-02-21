@@ -5,10 +5,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
 from src.dto.dto_game import (
-    AllianceAddAdjointRequest,
-    AllianceAdjointResponse,
+    AllianceAddOfficerRequest,
+    AllianceOfficerResponse,
     AllianceCreateRequest,
-    AllianceRemoveAdjointRequest,
+    AllianceRemoveOfficerRequest,
     AllianceResponse,
 )
 from src.models import User
@@ -36,14 +36,14 @@ def _to_response(alliance: Alliance) -> AllianceResponse:
         owner_id=alliance.owner_id,
         owner_pseudo=alliance.owner.game_pseudo,
         created_at=alliance.created_at,
-        adjoints=[
-            AllianceAdjointResponse(
+        officers=[
+            AllianceOfficerResponse(
                 id=adj.id,
                 game_account_id=adj.game_account_id,
                 game_pseudo=adj.game_account.game_pseudo,
                 assigned_at=adj.assigned_at,
             )
-            for adj in alliance.adjoints
+            for adj in alliance.officers
         ],
     )
 
@@ -136,16 +136,16 @@ async def delete_alliance(
     await AllianceService.delete_alliance(session, alliance)
 
 
-# ---- Adjoint management ----
+# ---- Officer management ----
 
 @alliance_controller.post(
-    "/{alliance_id}/adjoints",
+    "/{alliance_id}/officers",
     response_model=AllianceResponse,
     status_code=status.HTTP_201_CREATED,
 )
 async def add_adjoint(
     alliance_id: uuid.UUID,
-    body: AllianceAddAdjointRequest,
+    body: AllianceAddOfficerRequest,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
@@ -162,12 +162,12 @@ async def add_adjoint(
 
 
 @alliance_controller.delete(
-    "/{alliance_id}/adjoints",
+    "/{alliance_id}/officers",
     response_model=AllianceResponse,
 )
 async def remove_adjoint(
     alliance_id: uuid.UUID,
-    body: AllianceRemoveAdjointRequest,
+    body: AllianceRemoveOfficerRequest,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):

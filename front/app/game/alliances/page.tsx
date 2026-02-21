@@ -12,8 +12,8 @@ import {
   getMyGameAccounts,
   createAlliance,
   deleteAlliance,
-  addAdjoint,
-  removeAdjoint,
+  addOfficer,
+  removeOfficer,
 } from '@/app/services/game';
 
 import { Button } from '@/components/ui/button';
@@ -51,9 +51,9 @@ export default function AlliancesPage() {
   const [tag, setTag] = useState('');
   const [ownerId, setOwnerId] = useState('');
 
-  // Adjoint management
-  const [adjointAllianceId, setAdjointAllianceId] = useState<string | null>(null);
-  const [adjointAccountId, setAdjointAccountId] = useState('');
+  // Officer management
+  const [adjointAllianceId, setOfficerAllianceId] = useState<string | null>(null);
+  const [adjointAccountId, setOfficerAccountId] = useState('');
 
   const fetchAlliances = async () => {
     try {
@@ -117,13 +117,13 @@ export default function AlliancesPage() {
     }
   };
 
-  const handleAddAdjoint = async (allianceId: string) => {
+  const handleAddOfficer = async (allianceId: string) => {
     if (!adjointAccountId) return;
     try {
-      await addAdjoint(allianceId, adjointAccountId);
+      await addOfficer(allianceId, adjointAccountId);
       toast.success(t.game.alliances.adjointAddSuccess);
-      setAdjointAllianceId(null);
-      setAdjointAccountId('');
+      setOfficerAllianceId(null);
+      setOfficerAccountId('');
       await fetchAlliances();
     } catch (err) {
       console.error(err);
@@ -131,9 +131,9 @@ export default function AlliancesPage() {
     }
   };
 
-  const handleRemoveAdjoint = async (allianceId: string, gameAccountId: string) => {
+  const handleRemoveOfficer = async (allianceId: string, gameAccountId: string) => {
     try {
-      await removeAdjoint(allianceId, gameAccountId);
+      await removeOfficer(allianceId, gameAccountId);
       toast.success(t.game.alliances.adjointRemoveSuccess);
       await fetchAlliances();
     } catch (err) {
@@ -278,27 +278,27 @@ export default function AlliancesPage() {
                   </Button>
                 </div>
 
-                {/* Adjoints section */}
+                {/* Officers section */}
                 <div className="border-t pt-3">
                   <div className="flex items-center gap-2 mb-2">
                     <UserPlus className="h-4 w-4 text-blue-500" />
                     <span className="text-sm font-medium text-gray-700">
-                      {t.game.alliances.adjoints} ({alliance.adjoints.length})
+                      {t.game.alliances.officers} ({alliance.officers.length})
                     </span>
                   </div>
 
-                  {alliance.adjoints.length > 0 && (
+                  {alliance.officers.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-2">
-                      {alliance.adjoints.map((adj) => (
+                      {alliance.officers.map((adj) => (
                         <span
                           key={adj.id}
                           className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-700"
                         >
                           {adj.game_pseudo}
                           <button
-                            onClick={() => handleRemoveAdjoint(alliance.id, adj.game_account_id)}
+                            onClick={() => handleRemoveOfficer(alliance.id, adj.game_account_id)}
                             className="ml-1 hover:text-red-500 cursor-pointer"
-                            aria-label={`${t.game.alliances.removeAdjoint} ${adj.game_pseudo}`}
+                            aria-label={`${t.game.alliances.removeOfficer} ${adj.game_pseudo}`}
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -310,16 +310,16 @@ export default function AlliancesPage() {
                   {/* Add adjoint inline */}
                   {adjointAllianceId === alliance.id ? (
                     <div className="flex items-center gap-2">
-                      <Select value={adjointAccountId} onValueChange={setAdjointAccountId}>
+                      <Select value={adjointAccountId} onValueChange={setOfficerAccountId}>
                         <SelectTrigger className="w-48">
-                          <SelectValue placeholder={t.game.alliances.selectAdjoint} />
+                          <SelectValue placeholder={t.game.alliances.selectOfficer} />
                         </SelectTrigger>
                         <SelectContent>
                           {gameAccounts
                             .filter(
                               (acc) =>
                                 acc.id !== alliance.owner_id &&
-                                !alliance.adjoints.some((a) => a.game_account_id === acc.id),
+                                !alliance.officers.some((a) => a.game_account_id === acc.id),
                             )
                             .map((acc) => (
                               <SelectItem key={acc.id} value={acc.id}>
@@ -331,14 +331,14 @@ export default function AlliancesPage() {
                       <Button
                         size="sm"
                         disabled={!adjointAccountId}
-                        onClick={() => handleAddAdjoint(alliance.id)}
+                        onClick={() => handleAddOfficer(alliance.id)}
                       >
-                        {t.game.alliances.addAdjointButton}
+                        {t.game.alliances.addOfficerButton}
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => { setAdjointAllianceId(null); setAdjointAccountId(''); }}
+                        onClick={() => { setOfficerAllianceId(null); setOfficerAccountId(''); }}
                       >
                         {t.common.cancel}
                       </Button>
@@ -347,10 +347,10 @@ export default function AlliancesPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setAdjointAllianceId(alliance.id)}
+                      onClick={() => setOfficerAllianceId(alliance.id)}
                     >
                       <UserPlus className="h-3 w-3 mr-1" />
-                      {t.game.alliances.addAdjoint}
+                      {t.game.alliances.addOfficer}
                     </Button>
                   )}
                 </div>

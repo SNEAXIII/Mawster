@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from src.models.GameAccount import GameAccount
 
 
-class AllianceAdjoint(SQLModel, table=True):
+class AllianceOfficer(SQLModel, table=True):
     """Association table: a game account designated as adjoint (deputy) of an alliance."""
     __tablename__ = "alliance_adjoint"
 
@@ -18,5 +18,5 @@ class AllianceAdjoint(SQLModel, table=True):
     assigned_at: datetime = Field(default_factory=datetime.now)
 
     # Relations
-    alliance: "Alliance" = Relationship(back_populates="adjoints")
+    alliance: "Alliance" = Relationship(back_populates="officers")
     game_account: "GameAccount" = Relationship(back_populates="adjoint_entries")

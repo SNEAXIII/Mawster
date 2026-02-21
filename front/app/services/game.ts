@@ -15,10 +15,10 @@ export interface Alliance {
   owner_id: string;
   owner_pseudo: string;
   created_at: string;
-  adjoints: AllianceAdjoint[];
+  officers: AllianceOfficer[];
 }
 
-export interface AllianceAdjoint {
+export interface AllianceOfficer {
   id: string;
   game_account_id: string;
   game_pseudo: string;
@@ -99,11 +99,11 @@ export async function deleteAlliance(id: string): Promise<void> {
   await throwOnError(response, "Erreur lors de la suppression de l'alliance");
 }
 
-export async function addAdjoint(
+export async function addOfficer(
   allianceId: string,
   gameAccountId: string,
 ): Promise<Alliance> {
-  const response = await fetch(`${PROXY}/alliances/${allianceId}/adjoints`, {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/officers`, {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify({ game_account_id: gameAccountId }),
@@ -112,11 +112,11 @@ export async function addAdjoint(
   return response.json();
 }
 
-export async function removeAdjoint(
+export async function removeOfficer(
   allianceId: string,
   gameAccountId: string,
 ): Promise<Alliance> {
-  const response = await fetch(`${PROXY}/alliances/${allianceId}/adjoints`, {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/officers`, {
     method: 'DELETE',
     headers: jsonHeaders,
     body: JSON.stringify({ game_account_id: gameAccountId }),

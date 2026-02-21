@@ -8,7 +8,7 @@ from starlette import status
 
 from src.models.GameAccount import GameAccount
 from src.models.Alliance import Alliance
-from src.models.AllianceAdjoint import AllianceAdjoint
+from src.models.AllianceOfficer import AllianceOfficer
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.utils.db import SessionDep
@@ -75,13 +75,13 @@ class AllianceService:
     async def _load_alliance_with_relations(
         cls, session: SessionDep, alliance_id: uuid.UUID
     ) -> Optional[Alliance]:
-        """Load an alliance with owner and adjoints eagerly loaded."""
+        """Load an alliance with owner and officers eagerly loaded."""
         sql = (
             select(Alliance)
             .where(Alliance.id == alliance_id)
             .options(
                 selectinload(Alliance.owner),  # type: ignore[arg-type]
-                selectinload(Alliance.adjoints).selectinload(AllianceAdjoint.game_account),  # type: ignore[arg-type]
+                selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
             )
         )
         result = await session.exec(sql)
@@ -125,7 +125,7 @@ class AllianceService:
             select(Alliance)
             .options(
                 selectinload(Alliance.owner),  # type: ignore[arg-type]
-                selectinload(Alliance.adjoints).selectinload(AllianceAdjoint.game_account),  # type: ignore[arg-type]
+                selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
             )
         )
         result = await session.exec(sql)
@@ -169,9 +169,9 @@ class AllianceService:
             )
         # Check not already adjoint
         existing = await session.exec(
-            select(AllianceAdjoint).where(
-                AllianceAdjoint.alliance_id == alliance_id,
-                AllianceAdjoint.game_account_id == game_account_id,
+            select(AllianceOfficer).where(
+                AllianceOfficer.alliance_id == alliance_id,
+                AllianceOfficer.game_account_id == game_account_id,
             )
         )
         if existing.first() is not None:
@@ -179,7 +179,7 @@ class AllianceService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Game account is already an adjoint of this alliance",
             )
-        adjoint = AllianceAdjoint(
+        adjoint = AllianceOfficer(
             alliance_id=alliance_id,
             game_account_id=game_account_id,
         )
@@ -194,11 +194,11 @@ class AllianceService:
         alliance_id: uuid.UUID,
         game_account_id: uuid.UUID,
     ) -> Alliance:
-        """Remove a game account from the alliance's adjoints."""
+        """Remove a game account from the alliance's officers."""
         result = await session.exec(
-            select(AllianceAdjoint).where(
-                AllianceAdjoint.alliance_id == alliance_id,
-                AllianceAdjoint.game_account_id == game_account_id,
+            select(AllianceOfficer).where(
+                AllianceOfficer.alliance_id == alliance_id,
+                AllianceOfficer.game_account_id == game_account_id,
             )
         )
         adjoint = result.first()

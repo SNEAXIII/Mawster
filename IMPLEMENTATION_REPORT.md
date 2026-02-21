@@ -55,7 +55,7 @@ All three diagram files were updated to:
 | Language | French | English |
 | User PK type | `int` | `UUID` |
 | User fields | discord_username | login, avatar_url, disabled_at, deleted_at, etc. |
-| Role enum | Membre/Adjoint/Chef/Admin | USER/ADMIN |
+| Role enum | Membre/Officer/Chef/Admin | USER/ADMIN |
 | LoginLog | Missing | Added |
 | GameAccount.alliance_id | Required FK | **Nullable** FK |
 | Alliance | Had `image_url` | Has `description` + TODO for url |

@@ -6,7 +6,7 @@ from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from src.models.GameAccount import GameAccount
-    from src.models.AllianceAdjoint import AllianceAdjoint
+    from src.models.AllianceOfficer import AllianceOfficer
 
 
 class Alliance(SQLModel, table=True):
@@ -34,4 +34,4 @@ class Alliance(SQLModel, table=True):
         back_populates="alliance",
         sa_relationship_kwargs={"foreign_keys": "[GameAccount.alliance_id]"},
     )
-    adjoints: List["AllianceAdjoint"] = Relationship(back_populates="alliance")
+    officers: List["AllianceOfficer"] = Relationship(back_populates="alliance")

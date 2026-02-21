@@ -30,7 +30,7 @@ class AllianceCreateRequest(BaseModel):
     owner_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
 
 
-class AllianceAdjointResponse(BaseModel):
+class AllianceOfficerResponse(BaseModel):
     id: uuid.UUID
     game_account_id: uuid.UUID
     game_pseudo: str
@@ -44,15 +44,15 @@ class AllianceResponse(BaseModel):
     owner_id: uuid.UUID
     owner_pseudo: str
     created_at: datetime
-    adjoints: list[AllianceAdjointResponse] = []
+    officers: list[AllianceOfficerResponse] = []
 
 
-class AllianceAddAdjointRequest(BaseModel):
+class AllianceAddOfficerRequest(BaseModel):
     """DTO to add an adjoint (deputy) to an alliance."""
     game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
 
 
-class AllianceRemoveAdjointRequest(BaseModel):
+class AllianceRemoveOfficerRequest(BaseModel):
     """DTO to remove an adjoint from an alliance."""
     game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
 
