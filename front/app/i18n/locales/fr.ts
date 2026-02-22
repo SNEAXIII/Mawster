@@ -26,6 +26,7 @@ const fr: Translations = {
     gameAccounts: 'Comptes de jeu',
     alliances: 'Alliances',
     administration: 'Administration',
+    champions: 'Champions',
     signIn: 'Se connecter',
     signOut: 'Se déconnecter',
   },
@@ -203,6 +204,27 @@ const fr: Translations = {
     errors: {
       unauthorized: 'Non autorisé',
       loadError: 'Une erreur est survenue lors du chargement des utilisateurs',
+    },
+  },
+
+  // Gestion des champions
+  champions: {
+    title: 'Gestion des Champions',
+    classFilter: 'Classe',
+    selectClass: 'Filtrer par classe',
+    searchPlaceholder: 'Rechercher par nom ou alias...',
+    empty: 'Aucun champion trouvé.',
+    tableHeaders: {
+      image: 'Image',
+      name: 'Nom',
+      class: 'Classe',
+      alias: 'Alias',
+      actions: 'Actions',
+    },
+    deleteConfirmTitle: 'Supprimer le champion',
+    deleteConfirmDesc: 'Êtes-vous sûr de vouloir supprimer {name} ? Cette action est irréversible.',
+    errors: {
+      loadError: 'Une erreur est survenue lors du chargement des champions',
     },
   },
 } as const;

@@ -1,9 +1,11 @@
 from time import perf_counter
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
+from fastapi.staticfiles import StaticFiles
 from icecream import ic
 from starlette.middleware.base import _StreamingResponse
 from src.Messages.validators_messages import VALIDATION_ERROR
@@ -13,6 +15,7 @@ from src.controllers.user_controller import user_controller
 from src.controllers.game_account_controller import game_account_controller
 from src.controllers.alliance_controller import alliance_controller
 from src.controllers.champion_user_controller import champion_user_controller
+from src.controllers.champion_controller import champion_controller
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -36,6 +39,12 @@ app.include_router(user_controller)
 app.include_router(game_account_controller)
 app.include_router(alliance_controller)
 app.include_router(champion_user_controller)
+app.include_router(champion_controller)
+
+# Mount static files for champion images
+static_dir = Path(__file__).resolve().parent / "static"
+static_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 ic(app.routes)
 

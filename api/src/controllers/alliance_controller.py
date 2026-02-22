@@ -18,7 +18,7 @@ from src.dto.dto_game import (
 from src.models import User
 from src.models.Alliance import Alliance
 from src.services.AuthService import AuthService
-from src.services.GameService import AllianceService
+from src.services.AllianceService import AllianceService
 from src.utils.db import SessionDep
 
 alliance_controller = APIRouter(

@@ -6,7 +6,7 @@ import pytest
 from fastapi import HTTPException
 
 from src.models.GameAccount import GameAccount
-from src.services.GameService import GameAccountService, MAX_GAME_ACCOUNTS_PER_USER
+from src.services.GameAccountService import GameAccountService, MAX_GAME_ACCOUNTS_PER_USER
 from tests.utils.utils_constant import USER_ID, GAME_PSEUDO, GAME_PSEUDO_2
 
 

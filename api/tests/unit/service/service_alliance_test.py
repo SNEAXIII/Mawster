@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from src.models.Alliance import Alliance
 from src.models.AllianceOfficer import AllianceOfficer
 from src.models.GameAccount import GameAccount
-from src.services.GameService import AllianceService, MAX_MEMBERS_PER_GROUP
+from src.services.AllianceService import AllianceService, MAX_MEMBERS_PER_GROUP, MAX_MEMBERS_PER_ALLIANCE
 from tests.utils.utils_constant import (
     USER_ID,
     USER2_ID,
@@ -282,15 +282,16 @@ class TestCreateAlliance:
 class TestAddMember:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "account_exists, already_in_alliance, expected_status",
+        "account_exists, already_in_alliance, current_member_count, expected_status",
         [
-            (True, False, None),
-            (False, False, 404),
-            (True, True, 409),
+            (True, False, 0, None),
+            (False, False, 0, 404),
+            (True, True, 0, 409),
+            (True, False, MAX_MEMBERS_PER_ALLIANCE, 409),
         ],
-        ids=["success", "account_not_found", "already_in_alliance"],
+        ids=["success", "account_not_found", "already_in_alliance", "alliance_full"],
     )
-    async def test_add_member(self, mocker, account_exists, already_in_alliance, expected_status):
+    async def test_add_member(self, mocker, account_exists, already_in_alliance, current_member_count, expected_status):
         session = _mock_session(mocker)
         alliance_id = uuid.uuid4()
         ga_id = uuid.uuid4()
@@ -304,6 +305,12 @@ class TestAddMember:
             acc = None
 
         session.get.return_value = acc
+
+        # Mock the member count query (used after account checks pass)
+        if account_exists and not already_in_alliance:
+            count_mock = mocker.MagicMock()
+            count_mock.one.return_value = current_member_count
+            session.exec.return_value = count_mock
 
         if expected_status is None:
             mocker.patch.object(

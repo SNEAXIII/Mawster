@@ -11,7 +11,7 @@ from src.dto.dto_game import (
 from src.models import User
 from src.models.GameAccount import GameAccount
 from src.services.AuthService import AuthService
-from src.services.GameService import GameAccountService
+from src.services.GameAccountService import GameAccountService
 from src.utils.db import SessionDep
 
 game_account_controller = APIRouter(

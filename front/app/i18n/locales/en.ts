@@ -24,6 +24,7 @@ const en = {
     gameAccounts: 'Game Accounts',
     alliances: 'Alliances',
     administration: 'Administration',
+    champions: 'Champions',
     signIn: 'Sign in',
     signOut: 'Sign out',
   },
@@ -198,6 +199,27 @@ const en = {
     errors: {
       unauthorized: 'Unauthorized',
       loadError: 'An error occurred while loading users',
+    },
+  },
+
+  // Champions management
+  champions: {
+    title: 'Champions Management',
+    classFilter: 'Class',
+    selectClass: 'Filter by class',
+    searchPlaceholder: 'Search by name or alias...',
+    empty: 'No champions found.',
+    tableHeaders: {
+      image: 'Image',
+      name: 'Name',
+      class: 'Class',
+      alias: 'Aliases',
+      actions: 'Actions',
+    },
+    deleteConfirmTitle: 'Delete champion',
+    deleteConfirmDesc: 'Are you sure you want to delete {name}? This action is irreversible.',
+    errors: {
+      loadError: 'An error occurred while loading champions',
     },
   },
 } as const;

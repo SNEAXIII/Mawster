@@ -2,17 +2,13 @@
 
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { deleteAccount } from '@/app/services/users';
 import { formatDateLong } from '@/app/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
-import { TextConfirmationDialog } from '@/components/text-confirmation-dialog';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { useRequiredSession } from '@/hooks/use-required-session';
-import { LuLogOut, LuTrash2, LuShield, LuMail, LuUser, LuCalendar } from 'react-icons/lu';
+import { LuLogOut, LuShield, LuMail, LuUser, LuCalendar } from 'react-icons/lu';
 import { FaDiscord } from 'react-icons/fa';
 import { useI18n } from '@/app/i18n';
 
@@ -29,31 +25,8 @@ function getInitials(name: string | undefined | null): string {
 export default function ProfilePage() {
   const router = useRouter();
   const { locale, t } = useI18n();
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState('');
 
   const { data: session, status } = useRequiredSession();
-
-  const handleDeleteAccount = async () => {
-    setIsDeleting(true);
-    setDeleteError('');
-
-    try {
-      await deleteAccount(t.profile.deleteConfirmation);
-      await signOut({ redirect: false });
-      router.push('/');
-      router.refresh();
-    } catch (error) {
-      console.error('Error deleting account:', error);
-      setDeleteError(
-        error instanceof Error
-          ? error.message
-          : t.profile.deleteError
-      );
-      setIsDeleting(false);
-    }
-  };
 
   const handleSignOut = () => {
     signOut({
@@ -112,43 +85,6 @@ export default function ProfilePage() {
         <LuLogOut className="mr-2 h-4 w-4" />
         {t.profile.signOut}
       </Button>
-
-      {/* Zone de danger */}
-      <Separator />
-      <Card className="border-red-200">
-        <CardHeader>
-          <CardTitle className="text-lg text-red-700">{t.profile.dangerZone}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-            <h3 className="font-medium text-red-800">{t.profile.deleteAccount}</h3>
-            <p className="text-sm text-red-600 mt-1 mb-4">
-              {t.profile.deleteWarning}
-            </p>
-            <Button
-              variant="destructive"
-              onClick={() => setIsDeleteDialogOpen(true)}
-            >
-              <LuTrash2 className="mr-2 h-4 w-4" />
-              {t.profile.deleteAccount}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <TextConfirmationDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={(open) => { if (!isDeleting) { setIsDeleteDialogOpen(open); if (!open) setDeleteError(''); } }}
-        title={t.common.confirm}
-        description={t.profile.deleteWarning}
-        onConfirm={handleDeleteAccount}
-        confirmationWord={t.profile.deleteConfirmation}
-        inputLabel={t.profile.deleteWarning}
-        confirmText={t.common.delete}
-        variant="destructive"
-        isLoading={isDeleting}
-        error={deleteError}
-      />
     </div>
   );
 }

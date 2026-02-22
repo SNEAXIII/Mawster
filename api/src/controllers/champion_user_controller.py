@@ -10,7 +10,8 @@ from src.dto.dto_game import (
 )
 from src.models import User
 from src.services.AuthService import AuthService
-from src.services.GameService import GameAccountService, ChampionUserService
+from src.services.GameAccountService import GameAccountService
+from src.services.ChampionUserService import ChampionUserService
 from src.utils.db import SessionDep
 
 champion_user_controller = APIRouter(

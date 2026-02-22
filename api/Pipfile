@@ -24,6 +24,7 @@ pytest-mock = "*"
 pytest-cov = "*"
 Faker = "*"
 time-machine = "*"
+beautifulsoup4 = "*"
 
 [requires]
 python_version = "3.12"
