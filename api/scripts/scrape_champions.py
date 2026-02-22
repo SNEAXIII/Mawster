@@ -4,32 +4,31 @@ Outputs a JSON file and downloads portrait images into a folder.
 
 Usage:
     cd api
-    python -m scripts.scrape_champions
+    python scripts/scrape_champions.py
 
-Requires: requests, beautifulsoup4, lxml
-    pip install requests beautifulsoup4 lxml
+Requires: curl_cffi, beautifulsoup4, lxml
+    pip install curl_cffi beautifulsoup4 lxml
 """
 
 import json
 import os
 import re
+import sys
 import time
 from pathlib import Path
-from urllib.parse import unquote
 
-import requests
+from curl_cffi import requests as cffi_requests
 from bs4 import BeautifulSoup
+
+# Add parent dir to sys.path so we can import src.enums
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.enums.ChampionClass import ChampionClass  # noqa: E402
 
 WIKI_URL = "https://marvel-contestofchampions.fandom.com/wiki/List_of_Champions"
 OUTPUT_DIR = Path(__file__).resolve().parent.parent / "static" / "champions"
 JSON_OUTPUT = Path(__file__).resolve().parent.parent / "scripts" / "champions.json"
 
-VALID_CLASSES = {"Science", "Cosmic", "Mutant", "Skill", "Tech", "Mystic"}
-
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-}
+VALID_CLASSES = {c.value for c in ChampionClass}
 
 
 def clean_image_url(url: str) -> str:
@@ -51,7 +50,7 @@ def download_image(url: str, filepath: Path) -> bool:
     if filepath.exists():
         return True
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp = cffi_requests.get(url, impersonate="chrome", timeout=30)
         resp.raise_for_status()
         filepath.write_bytes(resp.content)
         return True
@@ -63,21 +62,61 @@ def download_image(url: str, filepath: Path) -> bool:
 def scrape_champions() -> list[dict]:
     """Scrape the wiki and return a list of champion dicts."""
     print(f"Fetching {WIKI_URL} ...")
-    resp = requests.get(WIKI_URL, headers=HEADERS, timeout=60)
+    resp = cffi_requests.get(WIKI_URL, impersonate="chrome", timeout=60)
     resp.raise_for_status()
+    print(f"  [DEBUG] Response status: {resp.status_code}, length: {len(resp.text)}")
+
     soup = BeautifulSoup(resp.text, "lxml")
 
-    # Find the main playable champions table
-    # The first big table in the page after "List of Playable Champions" heading
     champions = []
     seen_names = set()
 
-    # Find all sortable tables (the main champion table is sortable)
+    # --- Try multiple strategies to find the champions table ---
+    # Strategy 1: table with class "sortable"
     tables = soup.find_all("table", class_="sortable")
+    print(f"  [DEBUG] Tables with class='sortable': {len(tables)}")
 
-    for table in tables:
+    # Strategy 2: tables inside #mw-content-text
+    if not tables:
+        content_div = soup.find("div", id="mw-content-text")
+        if content_div:
+            parser_output = content_div.find("div", class_="mw-parser-output")
+            if parser_output:
+                tables = parser_output.find_all("table", recursive=False)
+                print(f"  [DEBUG] Tables in mw-parser-output: {len(tables)}")
+            else:
+                tables = content_div.find_all("table")
+                print(f"  [DEBUG] Tables in mw-content-text: {len(tables)}")
+        else:
+            tables = soup.find_all("table")
+            print(f"  [DEBUG] All tables in page: {len(tables)}")
+
+    # Strategy 3: any table with class containing "wiki"
+    if not tables:
+        tables = soup.find_all("table", class_=re.compile(r"wiki|article|fandom", re.I))
+        print(f"  [DEBUG] Tables with wiki/article/fandom class: {len(tables)}")
+
+    if not tables:
+        print("  [ERROR] No tables found at all!")
+        # Debug: print first 2000 chars of page
+        print(f"  [DEBUG] Page start:\n{resp.text[:2000]}")
+        return champions
+
+    for table_idx, table in enumerate(tables):
+        # Debug: show table attributes
+        table_classes = table.get("class", [])
+        print(f"\n  [DEBUG] Processing table {table_idx} (classes={table_classes})")
+
         rows = table.find_all("tr")
-        for row in rows:
+        print(f"  [DEBUG] Rows in table: {len(rows)}")
+
+        # Show header row for debugging
+        if rows:
+            header_cells = rows[0].find_all(["th", "td"])
+            header_texts = [c.get_text(strip=True)[:30] for c in header_cells]
+            print(f"  [DEBUG] Header cells ({len(header_cells)}): {header_texts}")
+
+        for row_idx, row in enumerate(rows):
             cells = row.find_all("td")
             if len(cells) < 5:
                 continue
@@ -101,14 +140,28 @@ def scrape_champions() -> list[dict]:
             if not name or name in seen_names:
                 continue
 
-            # Extract class - check the text content of the last cell
+            # Debug first few rows
+            if len(champions) < 3:
+                print(f"  [DEBUG] Row {row_idx}: name='{name}', cells={len(cells)}")
+                for ci, c in enumerate(cells):
+                    print(f"    cell[{ci}] text='{c.get_text(strip=True)[:50]}'")
+
+            # Extract class
             class_cell = cells[4]
             class_text = class_cell.get_text(separator=" ", strip=True)
 
-            # Check for multiple classes (skip multi-class champions)
+            # Also try extracting from the class link title attribute
+            class_link = class_cell.find("a")
+            if class_link:
+                class_title = class_link.get("title", "")
+                if class_title in VALID_CLASSES:
+                    class_text = class_title
+
             class_matches = [c for c in VALID_CLASSES if c in class_text]
             if len(class_matches) != 1:
-                print(f"  [SKIP] {name}: {'multiple classes' if len(class_matches) > 1 else 'no valid class'} ({class_text})")
+                print(
+                    f"  [SKIP] {name}: {'multiple classes' if len(class_matches) > 1 else 'no valid class'} ({class_text})"
+                )
                 continue
 
             champion_class = class_matches[0]
@@ -132,13 +185,16 @@ def scrape_champions() -> list[dict]:
                 continue
 
             seen_names.add(name)
-            champions.append({
-                "name": name,
-                "champion_class": champion_class,
-                "release_date": release_date,
-                "portrait_url": portrait_url,
-            })
+            champions.append(
+                {
+                    "name": name,
+                    "champion_class": champion_class,
+                    "release_date": release_date,
+                    "portrait_url": portrait_url,
+                }
+            )
 
+    print(f"\n  [DEBUG] Total champions collected: {len(champions)}")
     return champions
 
 

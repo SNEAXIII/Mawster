@@ -31,10 +31,10 @@ export default function NavLinks({ userRole }: Readonly<NavLinksProps>) {
     { name: t.nav.profile, href: '/profile', icon: MdPersonOutline, role: Role.user },
     { name: t.nav.gameAccounts, href: '/game/accounts', icon: IoGameControllerOutline, role: Role.user },
     { name: t.nav.alliances, href: '/game/alliances', icon: RiShieldLine, role: Role.user },
-    { name: t.nav.champions, href: '/dashboard/champions', icon: IoTrophyOutline, role: Role.admin },
+    { name: t.nav.champions, href: '/admin/champions', icon: IoTrophyOutline, role: Role.admin },
     {
       name: t.nav.administration,
-      href: '/dashboard',
+      href: '/admin/dashboard',
       icon: MdOutlineAdminPanelSettings,
       role: Role.admin,
     },

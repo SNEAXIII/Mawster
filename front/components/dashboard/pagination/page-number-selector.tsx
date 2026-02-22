@@ -7,20 +7,21 @@ import { useI18n } from '@/app/i18n';
 interface PageNumberSelectorProps {
   usersPerPage: number;
   onValueChange: (value: string) => void;
+  defaultSize?: number;
 }
 
 export default function PageNumberSelector({
   usersPerPage,
   onValueChange,
+  defaultSize = 10,
 }: PageNumberSelectorProps) {
   const { t } = useI18n();
 
-  const options = [
-    { value: '5', label: '5' },
-    { value: '10', label: `10 ${t.dashboard.pagination.default}` },
-    { value: '20', label: '20' },
-    { value: '50', label: '50' },
-  ];
+  const sizes = [5, 10, 20, 50, 100];
+  const options = sizes.map((s) => ({
+    value: String(s),
+    label: s === defaultSize ? `${s} ${t.dashboard.pagination.default}` : String(s),
+  }));
 
   return (
     <DropdownRadioMenu

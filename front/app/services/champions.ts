@@ -39,14 +39,18 @@ async function throwOnError(response: Response, fallback: string) {
 }
 
 // ─── Champion classes ────────────────────────────────────
+export enum ChampionClass {
+  SCIENCE = 'Science',
+  COSMIC = 'Cosmic',
+  MUTANT = 'Mutant',
+  SKILL = 'Skill',
+  TECH = 'Tech',
+  MYSTIC = 'Mystic',
+}
+
 export const championClasses = [
   { value: 'all', label: 'All' },
-  { value: 'Science', label: 'Science' },
-  { value: 'Cosmic', label: 'Cosmic' },
-  { value: 'Mutant', label: 'Mutant' },
-  { value: 'Skill', label: 'Skill' },
-  { value: 'Tech', label: 'Tech' },
-  { value: 'Mystic', label: 'Mystic' },
+  ...Object.values(ChampionClass).map((c) => ({ value: c, label: c })),
 ];
 
 // ─── API ─────────────────────────────────────────────────

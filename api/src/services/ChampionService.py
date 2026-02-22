@@ -13,11 +13,12 @@ from src.dto.dto_game import (
     ChampionResponse,
     ChampionLoadRequest,
 )
+from src.enums.ChampionClass import ChampionClass
 from src.models.Champion import Champion
 from src.utils.db import SessionDep
 
 
-VALID_CLASSES = {"Science", "Cosmic", "Mutant", "Skill", "Tech", "Mystic"}
+VALID_CLASSES = {c.value for c in ChampionClass}
 
 
 class ChampionService:

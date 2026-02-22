@@ -18,7 +18,7 @@ import { FiCheck, FiEdit2, FiSearch, FiTrash2, FiX } from 'react-icons/fi';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 
 const BASE_PAGE = 1;
-const BASE_SIZE = 20;
+const BASE_SIZE = 10;
 const BASE_CLASS = 'all';
 
 // Map champion class to a color
@@ -156,13 +156,6 @@ export default function ChampionsPage() {
       console.error('Error deleting champion:', err);
     }
   }
-
-  const perPageOptions = [
-    { value: '10', label: '10' },
-    { value: '20', label: '20' },
-    { value: '50', label: '50' },
-    { value: '100', label: '100' },
-  ];
 
   return (
     <div className="space-y-4">
