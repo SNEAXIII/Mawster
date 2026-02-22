@@ -13,7 +13,9 @@ import { useI18n } from '@/app/i18n';
 export default function SideNavBar() {
   const { data: session } = useSession();
   const { t } = useI18n();
-  const userRole: Role = session?.user.role as Role || Role.all;
+  // Considérer la session comme invalide si le backend n'a pas authentifié
+  const isAuthenticated = session && !session.error && session.user;
+  const userRole: Role = (isAuthenticated ? session.user.role as Role : null) || Role.all;
   const router = useRouter();
   const buttonBaseClasses =
     'flex h-[48px] items-center justify-center gap-2 rounded-md p-3 text-sm font-medium transition md:justify-start md:p-2 md:px-3';
@@ -52,7 +54,7 @@ export default function SideNavBar() {
         ></div>
 
         {/* Session-specific Section */}
-        {session ? (
+        {isAuthenticated ? (
           <Button
             type='button'
             onClick={handleSignOut}

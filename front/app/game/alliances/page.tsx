@@ -77,7 +77,10 @@ export default function AlliancesPage() {
   const [excludeTarget, setExcludeTarget] = useState<{ allianceId: string; gameAccountId: string; pseudo: string } | null>(null);
 
   // Leave alliance confirmation
-  const [leaveTarget, setLeaveTarget] = useState<{ allianceId: string; gameAccountId: string } | null>(null);
+  const [leaveTarget, setLeaveTarget] = useState<{ allianceId: string; gameAccountId: string; pseudo: string } | null>(null);
+
+  // Promote officer confirmation
+  const [promoteTarget, setPromoteTarget] = useState<{ allianceId: string; gameAccountId: string; pseudo: string } | null>(null);
 
   const myAccountIds = new Set(myAccounts.map((a) => a.id));
 
@@ -164,6 +167,7 @@ export default function AlliancesPage() {
     try {
       await addOfficer(allianceId, gameAccountId);
       toast.success(t.game.alliances.adjointAddSuccess);
+      setPromoteTarget(null);
       await fetchAlliances();
     } catch (err: any) {
       console.error(err);
@@ -217,10 +221,11 @@ export default function AlliancesPage() {
   };
 
   // ---- Groups ----
-  const handleSetGroup = async (allianceId: string, gameAccountId: string, group: number | null) => {
+  const handleSetGroup = async (allianceId: string, gameAccountId: string, group: number | null, pseudo: string) => {
     try {
       await setMemberGroup(allianceId, gameAccountId, group);
-      toast.success(t.game.alliances.groupSetSuccess);
+      const groupLabel = group ? `${t.game.alliances.group} ${group}` : t.game.alliances.noGroup;
+      toast.success(t.game.alliances.groupSetSuccess.replace('{pseudo}', pseudo).replace('{group}', groupLabel));
       await fetchAlliances();
     } catch (err: any) {
       console.error(err);
@@ -432,7 +437,7 @@ export default function AlliancesPage() {
                                               variant="ghost"
                                               size="icon"
                                               className="h-7 w-7 text-blue-400 hover:text-blue-600 hover:bg-blue-50"
-                                              onClick={() => handlePromoteOfficer(alliance.id, member.id)}
+                                              onClick={() => setPromoteTarget({ allianceId: alliance.id, gameAccountId: member.id, pseudo: member.game_pseudo })}
                                             >
                                               <ShieldCheck className="h-3.5 w-3.5" />
                                             </Button>
@@ -453,7 +458,7 @@ export default function AlliancesPage() {
                                               variant="ghost"
                                               size="icon"
                                               className="h-7 w-7 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                                              onClick={() => setLeaveTarget({ allianceId: alliance.id, gameAccountId: member.id })}
+                                              onClick={() => setLeaveTarget({ allianceId: alliance.id, gameAccountId: member.id, pseudo: member.game_pseudo })}
                                             >
                                               <UserMinus className="h-3.5 w-3.5" />
                                             </Button>
@@ -483,7 +488,7 @@ export default function AlliancesPage() {
                                   {/* Group selector */}
                                   <Select
                                     value={member.alliance_group?.toString() ?? 'none'}
-                                    onValueChange={(val) => handleSetGroup(alliance.id, member.id, val === 'none' ? null : parseInt(val))}
+                                    onValueChange={(val) => handleSetGroup(alliance.id, member.id, val === 'none' ? null : parseInt(val), member.game_pseudo)}
                                   >
                                     <SelectTrigger className="h-7 w-24 text-xs">
                                       <SelectValue />
@@ -514,7 +519,7 @@ export default function AlliancesPage() {
         open={!!leaveTarget}
         onOpenChange={(open) => { if (!open) setLeaveTarget(null); }}
         title={t.common.confirm}
-        description={t.game.alliances.leaveConfirm}
+        description={t.game.alliances.leaveConfirm.replace('{pseudo}', leaveTarget?.pseudo ?? '')}
         onConfirm={() => {
           if (leaveTarget) {
             handleRemoveMember(leaveTarget.allianceId, leaveTarget.gameAccountId);
@@ -522,6 +527,20 @@ export default function AlliancesPage() {
         }}
         variant="destructive"
         confirmText={t.game.alliances.leaveAlliance}
+      />
+
+      {/* Promote officer confirmation */}
+      <ConfirmationDialog
+        open={!!promoteTarget}
+        onOpenChange={(open) => { if (!open) setPromoteTarget(null); }}
+        title={t.common.confirm}
+        description={t.game.alliances.promoteOfficerConfirm.replace('{pseudo}', promoteTarget?.pseudo ?? '')}
+        onConfirm={() => {
+          if (promoteTarget) {
+            handlePromoteOfficer(promoteTarget.allianceId, promoteTarget.gameAccountId);
+          }
+        }}
+        confirmText={t.game.alliances.promoteOfficer}
       />
 
       {/* Exclude member confirmation — requires typing "confirmer" */}

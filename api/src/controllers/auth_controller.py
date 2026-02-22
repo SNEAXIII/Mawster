@@ -2,7 +2,7 @@ from typing import Annotated
 import logging
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from src.security import IS_PROD
 
 from src.dto.dto_token import LoginResponse, TokenBody
 from src.dto.dto_utilisateurs import (
@@ -64,12 +64,12 @@ async def discord_login(discord_data: DiscordLoginRequest, session: SessionDep) 
     user = await DiscordAuthService.get_or_create_discord_user(session, discord_profile)
     access_token = JWTService.create_access_token(user)
 
-    # TODO: ⚠️⚠️⚠️ RETIRER CE LOG AVANT LA MISE EN PRODUCTION ⚠️⚠️⚠️
-    logger.warning("=" * 80)
-    logger.warning("⚠️  DEBUG JWT — À RETIRER AVANT PRODUCTION ⚠️")
-    logger.warning("User: %s (discord_id: %s)", user.login, user.discord_id)
-    logger.warning("JWT: %s", access_token)
-    logger.warning("=" * 80)
+    if not IS_PROD:
+        logger.warning("=" * 80)
+        logger.warning("⚠️  DEBUG JWT — À RETIRER AVANT PRODUCTION ⚠️")
+        logger.warning("User: %s (discord_id: %s)", user.login, user.discord_id)
+        logger.warning("JWT: %s", access_token)
+        logger.warning("=" * 80)
 
     return LoginResponse(
         token_type="bearer",

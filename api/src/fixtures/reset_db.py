@@ -12,12 +12,15 @@ alembic_cfg = Config("alembic.ini")
 
 def reset():
     print("🚀 Resetting database")
-    SQLModel.metadata.drop_all(engine)
-    try:
-        with Session(engine) as session:
-            session.exec(text("drop table alembic_version"))
-    except OperationalError:
-        pass
+    with engine.connect() as conn:
+        conn.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+        SQLModel.metadata.drop_all(conn)
+        try:
+            conn.execute(text("DROP TABLE IF EXISTS alembic_version"))
+        except OperationalError:
+            pass
+        conn.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+        conn.commit()
     print("✅ Database reset with success !")
     print("🚀 Start migration")
     command.upgrade(alembic_cfg, "head")

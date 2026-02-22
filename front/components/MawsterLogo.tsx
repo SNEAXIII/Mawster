@@ -11,7 +11,7 @@ export default function MainMawsterLogo({ className = '' }: MainMawsterLogoProps
       aria-label='Mawster Logo'
     >
       <Image
-        src='/logos/main_logo.png'
+        src='/logos/main_logo.svg'
         alt='Logo Mawster'
         width={48}
         height={48}

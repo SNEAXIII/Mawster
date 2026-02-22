@@ -107,27 +107,6 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      {/* Connexion Discord */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{t.profile.discordConnection}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-[#5865F2]/10 border border-[#5865F2]/20">
-            <FaDiscord className="h-6 w-6 text-[#5865F2]" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">{t.profile.discordConnected}</p>
-              <p className="text-xs text-gray-500">
-                ID: {user?.discord_id ?? t.common.notAvailable}
-              </p>
-            </div>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-              {t.common.active}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Bouton deconnexion */}
       <Button variant="outline" className="w-full" onClick={handleSignOut}>
         <LuLogOut className="mr-2 h-4 w-4" />

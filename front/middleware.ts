@@ -12,7 +12,7 @@ function isPathMatching(path: string, paths: string[]): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-  const isTokenExpired = token?.expired;
+  const isTokenExpired = token?.expired || !token?.backendAuthenticated;
 
   console.log('Middleware triggered for path:', pathname);
   console.log('Token status:', isTokenExpired ? 'expired' : 'valid');
