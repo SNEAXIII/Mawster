@@ -1,33 +1,20 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
-import { redirect, usePathname, useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { deleteAccount } from '@/app/services/users';
+import { formatDateLong } from '@/app/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader } from 'lucide-react';
-import { LuLogOut, LuTrash2, LuShield, LuMail, LuUser, LuCalendar, LuHash } from 'react-icons/lu';
+import { Separator } from '@/components/ui/separator';
+import { TextConfirmationDialog } from '@/components/text-confirmation-dialog';
+import { FullPageSpinner } from '@/components/full-page-spinner';
+import { useRequiredSession } from '@/hooks/use-required-session';
+import { LuLogOut, LuTrash2, LuShield, LuMail, LuUser, LuCalendar } from 'react-icons/lu';
 import { FaDiscord } from 'react-icons/fa';
 import { useI18n } from '@/app/i18n';
-
-// TODO for user self deletion only
-// import { Separator } from '@/components/ui/separator';
-// import {
-//   AlertDialog,
-//   AlertDialogAction,
-//   AlertDialogCancel,
-//   AlertDialogContent,
-//   AlertDialogDescription,
-//   AlertDialogFooter,
-//   AlertDialogHeader,
-//   AlertDialogTitle,
-//   AlertDialogTrigger,
-// } from '@/components/ui/alert-dialog';
-// import { Input } from '@/components/ui/input';
-
-const CONFIRMATION_TEXT = 'DELETE';
 
 function getInitials(name: string | undefined | null): string {
   if (!name) return '?';
@@ -40,47 +27,26 @@ function getInitials(name: string | undefined | null): string {
 }
 
 export default function ProfilePage() {
-  const pathname = usePathname();
   const router = useRouter();
   const { locale, t } = useI18n();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [confirmationInput, setConfirmationInput] = useState('');
-  const [error, setError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
 
-  function formatDate(dateString: string | null | undefined): string {
-    if (!dateString) return t.common.notAvailable;
-    try {
-      return new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
-        dateStyle: 'long',
-        timeStyle: 'short',
-      }).format(new Date(dateString));
-    } catch {
-      return t.common.invalidDate;
-    }
-  }
-
-  const { data: session, status } = useSession({
-    required: true,
-    onUnauthenticated() {
-      redirect(`/login?callbackUrl=${pathname}`);
-    },
-  });
+  const { data: session, status } = useRequiredSession();
 
   const handleDeleteAccount = async () => {
-    if (confirmationInput !== CONFIRMATION_TEXT) return;
-
     setIsDeleting(true);
-    setError('');
+    setDeleteError('');
 
     try {
-      await deleteAccount(confirmationInput);
+      await deleteAccount(t.profile.deleteConfirmation);
       await signOut({ redirect: false });
       router.push('/');
       router.refresh();
     } catch (error) {
       console.error('Error deleting account:', error);
-      setError(
+      setDeleteError(
         error instanceof Error
           ? error.message
           : t.profile.deleteError
@@ -97,11 +63,7 @@ export default function ProfilePage() {
   };
 
   if (status === 'loading') {
-    return (
-      <div className="flex justify-center items-center h-full">
-        <Loader className="w-6 h-6 animate-spin text-gray-400" />
-      </div>
-    );
+    return <FullPageSpinner />;
   }
 
   const user = session?.user;
@@ -140,7 +102,7 @@ export default function ProfilePage() {
             <InfoRow icon={<LuUser className="h-4 w-4" />} label={t.profile.username} value={user?.name} fallback={t.common.notAvailable} />
             <InfoRow icon={<LuMail className="h-4 w-4" />} label={t.profile.email} value={user?.email} fallback={t.common.notAvailable} />
             <InfoRow icon={<FaDiscord className="h-4 w-4" />} label={t.profile.discordId} value={user?.discord_id} fallback={t.common.notAvailable} />
-            <InfoRow icon={<LuCalendar className="h-4 w-4" />} label={t.profile.memberSince} value={formatDate(user?.created_at)} fallback={t.common.notAvailable} />
+            <InfoRow icon={<LuCalendar className="h-4 w-4" />} label={t.profile.memberSince} value={user?.created_at ? formatDateLong(user.created_at, locale) : t.common.notAvailable} fallback={t.common.notAvailable} />
           </div>
         </CardContent>
       </Card>
@@ -173,95 +135,41 @@ export default function ProfilePage() {
       </Button>
 
       {/* Zone de danger */}
-      {/* TODO redo it properly with a confirmation dialog and better UI/UX
+      <Separator />
       <Card className="border-red-200">
         <CardHeader>
-          <CardTitle className="text-lg text-red-700">Zone de danger</CardTitle>
+          <CardTitle className="text-lg text-red-700">{t.profile.dangerZone}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-            <h3 className="font-medium text-red-800">Supprimer mon compte</h3>
+            <h3 className="font-medium text-red-800">{t.profile.deleteAccount}</h3>
             <p className="text-sm text-red-600 mt-1 mb-4">
-              Cette action est irreversible. Toutes vos donnees seront definitivement supprimees.
+              {t.profile.deleteWarning}
             </p>
-
-            <AlertDialog
-              open={isDeleteDialogOpen}
-              onOpenChange={(open) => {
-                if (!isDeleting) {
-                  setIsDeleteDialogOpen(open);
-                  if (!open) {
-                    setError('');
-                    setConfirmationInput('');
-                  }
-                }
-              }}
+            <Button
+              variant="destructive"
+              onClick={() => setIsDeleteDialogOpen(true)}
             >
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="destructive"
-                  className="whitespace-normal text-left min-h-[2.5rem] h-auto py-2"
-                >
-                  <LuTrash2 className="flex-shrink-0 -ml-1 mr-2 h-4 w-4" />
-                  <span className="break-words">Supprimer mon compte</span>
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="max-w-md">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-lg font-semibold text-gray-900">
-                    Etes-vous absolument sur ?
-                  </AlertDialogTitle>
-                  <AlertDialogDescription asChild>
-                    <div className="text-gray-600 space-y-3">
-                      <p>
-                        Cette action est irreversible. Toutes vos donnees seront definitivement supprimees.
-                      </p>
-                      <p className="text-sm font-medium text-gray-700">
-                        Tapez <span className="font-mono font-bold text-red-600">{CONFIRMATION_TEXT}</span> pour confirmer :
-                      </p>
-                      <Input
-                        value={confirmationInput}
-                        onChange={(e) => setConfirmationInput(e.target.value)}
-                        placeholder={CONFIRMATION_TEXT}
-                        className="font-mono"
-                        disabled={isDeleting}
-                        autoComplete="off"
-                      />
-                      {error && <p className="text-sm text-red-600">{error}</p>}
-                    </div>
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2">
-                  <AlertDialogCancel
-                    disabled={isDeleting}
-                    className="w-full mt-0 sm:w-auto bg-white hover:bg-gray-50 text-gray-700 border-gray-300"
-                    onClick={() => {
-                      setError('');
-                      setConfirmationInput('');
-                    }}
-                  >
-                    Annuler
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClickCapture={handleDeleteAccount}
-                    disabled={isDeleting || confirmationInput !== CONFIRMATION_TEXT}
-                    className="w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-white disabled:opacity-50"
-                  >
-                    {isDeleting ? (
-                      <>
-                        <Loader className="w-4 h-4 mr-2 animate-spin" />
-                        Suppression...
-                      </>
-                    ) : (
-                      'Supprimer definitivement'
-                    )}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+              <LuTrash2 className="mr-2 h-4 w-4" />
+              {t.profile.deleteAccount}
+            </Button>
           </div>
         </CardContent>
-      </Card> */}
+      </Card>
+
+      <TextConfirmationDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => { if (!isDeleting) { setIsDeleteDialogOpen(open); if (!open) setDeleteError(''); } }}
+        title={t.common.confirm}
+        description={t.profile.deleteWarning}
+        onConfirm={handleDeleteAccount}
+        confirmationWord={t.profile.deleteConfirmation}
+        inputLabel={t.profile.deleteWarning}
+        confirmText={t.common.delete}
+        variant="destructive"
+        isLoading={isDeleting}
+        error={deleteError}
+      />
     </div>
   );
 }

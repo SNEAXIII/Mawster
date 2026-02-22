@@ -16,6 +16,11 @@ export const formatDateShort = (date: string, locale: string = 'en'): string =>
     day: 'numeric',
   });
 
+export const formatDateMedium = (date: string, locale: string = 'en'): string =>
+  new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
+    dateStyle: 'medium',
+  }).format(new Date(date));
+
 export const formatDateLong = (dateString: string, locale: string = 'en'): string => {
   const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',

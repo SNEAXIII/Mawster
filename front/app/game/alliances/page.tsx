@@ -1,7 +1,5 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
-import { redirect, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { toast } from 'sonner';
@@ -19,6 +17,7 @@ import {
   removeMember,
   setMemberGroup,
 } from '@/app/services/game';
+import { formatDateMedium } from '@/app/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,17 +36,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
+import { TextConfirmationDialog } from '@/components/text-confirmation-dialog';
+import { FullPageSpinner } from '@/components/full-page-spinner';
+import { useRequiredSession } from '@/hooks/use-required-session';
 import {
   Loader, Plus, Shield, Crown, UserPlus, Users, UserMinus,
   ChevronDown, ChevronUp, ShieldCheck, ShieldMinus,
@@ -60,14 +52,8 @@ const GROUP_COLORS: Record<number, string> = {
 };
 
 export default function AlliancesPage() {
-  const pathname = usePathname();
   const { locale, t } = useI18n();
-  const { status } = useSession({
-    required: true,
-    onUnauthenticated() {
-      redirect(`/login?callbackUrl=${pathname}`);
-    },
-  });
+  const { status } = useRequiredSession();
 
   const [alliances, setAlliances] = useState<Alliance[]>([]);
   const [myAccounts, setMyAccounts] = useState<GameAccount[]>([]);
@@ -89,7 +75,6 @@ export default function AlliancesPage() {
 
   // Exclude confirmation with text input
   const [excludeTarget, setExcludeTarget] = useState<{ allianceId: string; gameAccountId: string; pseudo: string } | null>(null);
-  const [excludeConfirmText, setExcludeConfirmText] = useState('');
 
   // Leave alliance confirmation
   const [leaveTarget, setLeaveTarget] = useState<{ allianceId: string; gameAccountId: string } | null>(null);
@@ -223,7 +208,6 @@ export default function AlliancesPage() {
       await removeMember(allianceId, gameAccountId);
       toast.success(t.game.alliances.memberRemoveSuccess);
       setExcludeTarget(null);
-      setExcludeConfirmText('');
       setLeaveTarget(null);
       await Promise.all([fetchAlliances(), fetchEligibleMembers(), fetchMyAccounts()]);
     } catch (err: any) {
@@ -244,16 +228,6 @@ export default function AlliancesPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      return new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
-        dateStyle: 'medium',
-      }).format(new Date(dateString));
-    } catch {
-      return dateString;
-    }
-  };
-
   /** Check if the current user is the owner of an alliance */
   const isOwner = (alliance: Alliance) => myAccountIds.has(alliance.owner_id);
 
@@ -262,11 +236,7 @@ export default function AlliancesPage() {
     isOwner(alliance) || alliance.officers.some((o) => myAccountIds.has(o.game_account_id));
 
   if (status === 'loading' || loading) {
-    return (
-      <div className="flex justify-center items-center h-full">
-        <Loader className="w-6 h-6 animate-spin text-gray-400" />
-      </div>
-    );
+    return <FullPageSpinner />;
   }
 
   return (
@@ -362,7 +332,7 @@ export default function AlliancesPage() {
                         <Crown className="h-3 w-3 text-yellow-500" />
                         <span className="text-xs text-gray-600">{alliance.owner_pseudo}</span>
                         <span className="text-xs text-gray-400">·</span>
-                        <span className="text-xs text-gray-400">{formatDate(alliance.created_at)}</span>
+                        <span className="text-xs text-gray-400">{formatDateMedium(alliance.created_at, locale)}</span>
                       </div>
                     </div>
                   </div>
@@ -555,44 +525,21 @@ export default function AlliancesPage() {
       />
 
       {/* Exclude member confirmation — requires typing "confirmer" */}
-      <AlertDialog
+      <TextConfirmationDialog
         open={!!excludeTarget}
-        onOpenChange={(open) => { if (!open) { setExcludeTarget(null); setExcludeConfirmText(''); } }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t.common.confirm}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t.game.alliances.excludeConfirm.replace('{pseudo}', excludeTarget?.pseudo ?? '')}
-            </AlertDialogDescription>
-            <div className="mt-3 space-y-2">
-              <Label className="text-sm text-gray-600">{t.game.alliances.excludeTypeConfirm}</Label>
-              <Input
-                value={excludeConfirmText}
-                onChange={(e) => setExcludeConfirmText(e.target.value)}
-                placeholder={t.game.alliances.excludeTypeConfirmPlaceholder}
-                autoFocus
-              />
-            </div>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => { setExcludeTarget(null); setExcludeConfirmText(''); }}>
-              {t.common.cancel}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
-              disabled={excludeConfirmText.toLowerCase() !== t.game.alliances.excludeTypeConfirmPlaceholder.toLowerCase()}
-              onClick={() => {
-                if (excludeTarget) {
-                  handleRemoveMember(excludeTarget.allianceId, excludeTarget.gameAccountId);
-                }
-              }}
-            >
-              {t.game.alliances.excludeMember}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onOpenChange={(open) => { if (!open) setExcludeTarget(null); }}
+        title={t.common.confirm}
+        description={t.game.alliances.excludeConfirm.replace('{pseudo}', excludeTarget?.pseudo ?? '')}
+        onConfirm={() => {
+          if (excludeTarget) {
+            handleRemoveMember(excludeTarget.allianceId, excludeTarget.gameAccountId);
+          }
+        }}
+        confirmationWord={t.game.alliances.excludeTypeConfirmPlaceholder}
+        inputLabel={t.game.alliances.excludeTypeConfirm}
+        confirmText={t.game.alliances.excludeMember}
+        variant="destructive"
+      />
     </div>
   );
 }

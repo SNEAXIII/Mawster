@@ -1,7 +1,5 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
-import { redirect, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { toast } from 'sonner';
@@ -18,17 +16,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
+import { FullPageSpinner } from '@/components/full-page-spinner';
+import { useRequiredSession } from '@/hooks/use-required-session';
 import { Loader, Plus, Trash2, Gamepad2, Star, Pencil, Check, X } from 'lucide-react';
 
 export default function GameAccountsPage() {
-  const pathname = usePathname();
   const { t } = useI18n();
-  const { status } = useSession({
-    required: true,
-    onUnauthenticated() {
-      redirect(`/login?callbackUrl=${pathname}`);
-    },
-  });
+  const { status } = useRequiredSession();
 
   const [accounts, setAccounts] = useState<GameAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,11 +111,7 @@ export default function GameAccountsPage() {
   };
 
   if (status === 'loading' || loading) {
-    return (
-      <div className="flex justify-center items-center h-full">
-        <Loader className="w-6 h-6 animate-spin text-gray-400" />
-      </div>
-    );
+    return <FullPageSpinner />;
   }
 
   return (
