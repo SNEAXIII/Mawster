@@ -8,7 +8,7 @@ master_account = "misterbalise"
 admin = User(
     email="misterbalise2@gmail.com",
     login=master_account,
-    discord_id="admin_discord_id_placeholder",
+    discord_id="403941390586871808",
     role=Roles.ADMIN,
 )
 

@@ -16,6 +16,7 @@ class GameAccountResponse(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID
     alliance_id: Optional[uuid.UUID] = None
+    alliance_group: Optional[int] = None
     game_pseudo: str
     is_primary: bool
     created_at: datetime
@@ -28,6 +29,15 @@ class AllianceCreateRequest(BaseModel):
     name: str = Field(..., max_length=100, examples=["My Alliance"])
     tag: str = Field(..., max_length=10, examples=["ALLY"])
     owner_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
+
+
+class AllianceMemberResponse(BaseModel):
+    """A member of an alliance (game account with group info)."""
+    id: uuid.UUID
+    game_pseudo: str
+    alliance_group: Optional[int] = None
+    is_owner: bool = False
+    is_officer: bool = False
 
 
 class AllianceOfficerResponse(BaseModel):
@@ -45,6 +55,8 @@ class AllianceResponse(BaseModel):
     owner_pseudo: str
     created_at: datetime
     officers: list[AllianceOfficerResponse] = []
+    members: list[AllianceMemberResponse] = []
+    member_count: int = 0
 
 
 class AllianceAddOfficerRequest(BaseModel):
@@ -55,6 +67,16 @@ class AllianceAddOfficerRequest(BaseModel):
 class AllianceRemoveOfficerRequest(BaseModel):
     """DTO to remove an adjoint from an alliance."""
     game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
+
+
+class AllianceAddMemberRequest(BaseModel):
+    """DTO to add a game account as member of the alliance."""
+    game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
+
+
+class AllianceSetGroupRequest(BaseModel):
+    """DTO to assign a member to a group (1, 2, 3) or remove from group (null)."""
+    group: Optional[int] = Field(None, ge=1, le=3, examples=[1])
 
 
 # ---- Champion User DTOs ----

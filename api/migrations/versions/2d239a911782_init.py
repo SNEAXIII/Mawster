@@ -1,8 +1,8 @@
 """init
 
-Revision ID: b119f79dc19e
+Revision ID: 2d239a911782
 Revises: 
-Create Date: 2026-02-20 01:50:58.281080
+Create Date: 2026-02-22 01:08:53.426423
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel  # noqa: F401
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'b119f79dc19e'
+revision: str = '2d239a911782'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -59,6 +59,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.Column('alliance_id', sa.Uuid(), nullable=True),
+    sa.Column('alliance_group', sa.Integer(), nullable=True),
     sa.Column('game_pseudo', sqlmodel.sql.sqltypes.AutoString(length=50), nullable=False),
     sa.Column('is_primary', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),

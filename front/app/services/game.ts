@@ -3,9 +3,18 @@ export interface GameAccount {
   id: string;
   user_id: string;
   alliance_id: string | null;
+  alliance_group: number | null;
   game_pseudo: string;
   is_primary: boolean;
   created_at: string;
+}
+
+export interface AllianceMember {
+  id: string;
+  game_pseudo: string;
+  alliance_group: number | null;
+  is_owner: boolean;
+  is_officer: boolean;
 }
 
 export interface Alliance {
@@ -16,6 +25,8 @@ export interface Alliance {
   owner_pseudo: string;
   created_at: string;
   officers: AllianceOfficer[];
+  members: AllianceMember[];
+  member_count: number;
 }
 
 export interface AllianceOfficer {
@@ -99,6 +110,52 @@ export async function deleteAlliance(id: string): Promise<void> {
   await throwOnError(response, "Erreur lors de la suppression de l'alliance");
 }
 
+// ─── Eligibility ─────────────────────────────────────────
+export async function getEligibleOwners(): Promise<GameAccount[]> {
+  const response = await fetch(`${PROXY}/alliances/eligible-owners`, { headers: jsonHeaders });
+  await throwOnError(response, 'Erreur lors de la récupération des comptes éligibles');
+  return response.json();
+}
+
+export async function getEligibleOfficers(allianceId: string): Promise<GameAccount[]> {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/eligible-officers`, { headers: jsonHeaders });
+  await throwOnError(response, 'Erreur lors de la récupération des officiers éligibles');
+  return response.json();
+}
+
+export async function getEligibleMembers(): Promise<GameAccount[]> {
+  const response = await fetch(`${PROXY}/alliances/eligible-members`, { headers: jsonHeaders });
+  await throwOnError(response, 'Erreur lors de la récupération des membres éligibles');
+  return response.json();
+}
+
+// ─── Members ─────────────────────────────────────────────
+export async function addMember(
+  allianceId: string,
+  gameAccountId: string,
+): Promise<Alliance> {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/members`, {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify({ game_account_id: gameAccountId }),
+  });
+  await throwOnError(response, "Erreur lors de l'ajout du membre");
+  return response.json();
+}
+
+export async function removeMember(
+  allianceId: string,
+  gameAccountId: string,
+): Promise<Alliance> {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/members/${gameAccountId}`, {
+    method: 'DELETE',
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, 'Erreur lors du retrait du membre');
+  return response.json();
+}
+
+// ─── Officers ────────────────────────────────────────────
 export async function addOfficer(
   allianceId: string,
   gameAccountId: string,
@@ -122,5 +179,23 @@ export async function removeOfficer(
     body: JSON.stringify({ game_account_id: gameAccountId }),
   });
   await throwOnError(response, "Erreur lors du retrait de l'adjoint");
+  return response.json();
+}
+
+// ─── Groups ──────────────────────────────────────────────
+export async function setMemberGroup(
+  allianceId: string,
+  gameAccountId: string,
+  group: number | null,
+): Promise<Alliance> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/members/${gameAccountId}/group`,
+    {
+      method: 'PATCH',
+      headers: jsonHeaders,
+      body: JSON.stringify({ group }),
+    },
+  );
+  await throwOnError(response, 'Erreur lors du changement de groupe');
   return response.json();
 }
