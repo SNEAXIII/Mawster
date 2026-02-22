@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getUsers, User } from '@/app/services/users';
 import Loading from '@/app/admin/dashboard/loading';
 import RenderUserDashboard from '@/components/dashboard/table/render-user-dashboard';
@@ -39,6 +39,7 @@ useEffect(() => {
   const [selectedRole, setSelectedRole] = useState(BASE_SELECTED_ROLE);
   const [canReset, setCanReset] = useState(false);
   const [fetchUsersError, setFetchUsersError] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadUsers = async () => {
     setCanReset(false);
@@ -78,9 +79,14 @@ useEffect(() => {
   };
 
   useEffect(() => {
-    if (sessionReady) {
+    if (!sessionReady) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
       loadUsers();
-    }
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [sessionReady, currentPage, usersPerPage, selectedStatus, selectedRole]);
 
   function resetPagination() {

@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   getChampions,
   updateChampionAlias,
@@ -55,6 +55,7 @@ export default function ChampionsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [error, setError] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [canReset, setCanReset] = useState(false);
 
   // Alias editing
@@ -92,7 +93,14 @@ export default function ChampionsPage() {
   }, [currentPage, perPage, selectedClass, searchQuery, sessionReady]);
 
   useEffect(() => {
-    if (sessionReady) loadChampionsList();
+    if (!sessionReady) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      loadChampionsList();
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [sessionReady, currentPage, perPage, selectedClass, searchQuery]);
 
   function resetPagination() {
@@ -113,13 +121,10 @@ export default function ChampionsPage() {
     setCurrentPage(1);
   }
 
-  function handleSearch() {
-    setSearchQuery(searchInput);
+  function handleSearchInput(value: string) {
+    setSearchInput(value);
+    setSearchQuery(value);
     setCurrentPage(1);
-  }
-
-  function handleSearchKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter') handleSearch();
   }
 
   // Alias editing
@@ -186,17 +191,14 @@ export default function ChampionsPage() {
           selectedValue={selectedClass}
           setValue={handleClassChange}
         />
-        <div className="flex gap-2">
+        <div className="relative">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
             placeholder={t.champions.searchPlaceholder}
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
-            className="w-64"
+            onChange={(e) => handleSearchInput(e.target.value)}
+            className="w-64 pl-9"
           />
-          <Button variant="outline" onClick={handleSearch}>
-            <FiSearch />
-          </Button>
         </div>
       </div>
 
@@ -229,7 +231,7 @@ export default function ChampionsPage() {
                   <td className="p-3">
                     {champion.image_url ? (
                       <img
-                        src={`/api/back${champion.image_url}`}
+                        src={champion.image_url}
                         alt={champion.name}
                         className="w-10 h-10 rounded object-cover"
                         onError={(e) => {
