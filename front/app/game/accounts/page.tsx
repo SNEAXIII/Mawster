@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { useRequiredSession } from '@/hooks/use-required-session';
-import { Loader, Plus, Trash2, Gamepad2, Star, Pencil, Check, X } from 'lucide-react';
+import { Loader, Plus, Trash2, Gamepad2, Star, Pencil, Check, X, Shield } from 'lucide-react';
 
 export default function GameAccountsPage() {
   const { t } = useI18n();
@@ -218,6 +218,12 @@ export default function GameAccountsPage() {
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                             <Star className="h-3 w-3" />
                             {t.game.accounts.primary}
+                          </span>
+                        )}
+                        {account.alliance_tag && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" title={account.alliance_name ?? ''}>
+                            <Shield className="h-3 w-3" />
+                            [{account.alliance_tag}]
                           </span>
                         )}
                       </>

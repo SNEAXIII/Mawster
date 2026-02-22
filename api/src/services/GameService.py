@@ -52,7 +52,12 @@ class GameAccountService:
     async def get_game_accounts_by_user(
         cls, session: SessionDep, user_id: uuid.UUID
     ) -> list[GameAccount]:
-        sql = select(GameAccount).where(GameAccount.user_id == user_id)
+        sql = (
+            select(GameAccount)
+            .where(GameAccount.user_id == user_id)
+            .options(selectinload(GameAccount.alliance))  # type: ignore[arg-type]
+            .order_by(GameAccount.is_primary.desc())  # type: ignore[union-attr]
+        )
         result = await session.exec(sql)
         return result.all()
 
@@ -141,6 +146,37 @@ class AllianceService:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Only the alliance owner can perform this action",
+            )
+
+    @classmethod
+    async def _assert_can_remove_member(
+        cls, session: SessionDep, alliance: Alliance, current_user_id: uuid.UUID, target_game_account_id: uuid.UUID
+    ) -> None:
+        """Check that the current user can remove the target member.
+        - The owner can remove anyone (except themselves, handled elsewhere).
+        - An officer can remove regular members but NOT other officers."""
+        user_accounts = await session.exec(
+            select(GameAccount).where(GameAccount.user_id == current_user_id)
+        )
+        user_account_ids = {acc.id for acc in user_accounts.all()}
+
+        # Owner can remove anyone
+        if alliance.owner_id in user_account_ids:
+            return
+
+        # Check if caller is officer
+        officer_ids = {off.game_account_id for off in alliance.officers}
+        if not (user_account_ids & officer_ids):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the alliance owner or an officer can perform this action",
+            )
+
+        # Caller is officer — cannot remove another officer
+        if target_game_account_id in officer_ids:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="An officer cannot remove another officer",
             )
 
     @classmethod

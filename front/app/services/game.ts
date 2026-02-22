@@ -4,6 +4,8 @@ export interface GameAccount {
   user_id: string;
   alliance_id: string | null;
   alliance_group: number | null;
+  alliance_tag: string | null;
+  alliance_name: string | null;
   game_pseudo: string;
   is_primary: boolean;
   created_at: string;

@@ -249,12 +249,13 @@ async def remove_member(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Remove a member from the alliance. Only the owner or an officer can remove members.
+    """Remove a member from the alliance. Owner can remove anyone.
+    Officers can remove regular members but NOT other officers.
     Cannot remove the owner."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
-    await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
+    await AllianceService._assert_can_remove_member(session, alliance, current_user.id, game_account_id)
     updated = await AllianceService.remove_member(
         session=session,
         alliance_id=alliance_id,

@@ -17,6 +17,8 @@ class GameAccountResponse(BaseModel):
     user_id: uuid.UUID
     alliance_id: Optional[uuid.UUID] = None
     alliance_group: Optional[int] = None
+    alliance_tag: Optional[str] = None
+    alliance_name: Optional[str] = None
     game_pseudo: str
     is_primary: bool
     created_at: datetime
