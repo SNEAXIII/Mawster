@@ -11,6 +11,7 @@ export interface GameAccount {
 
 export interface AllianceMember {
   id: string;
+  user_id: string;
   game_pseudo: string;
   alliance_group: number | null;
   is_owner: boolean;
@@ -38,6 +39,7 @@ export interface AllianceOfficer {
 
 // ─── Helpers ─────────────────────────────────────────────
 const PROXY = '/api/back';
+const IS_DEV = process.env.NODE_ENV === 'development';
 
 const jsonHeaders: HeadersInit = {
   Accept: 'application/json',
@@ -53,9 +55,19 @@ async function throwOnError(response: Response, fallback: string) {
   throw err;
 }
 
+async function debugFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  if (IS_DEV) {
+    const method = init?.method ?? 'GET';
+    const url = typeof input === 'string' ? input : input.toString();
+    const payload = init?.body ? JSON.parse(init.body as string) : undefined;
+    console.debug(`[API] ${method} ${url}`, payload ?? '');
+  }
+  return fetch(input, init);
+}
+
 // ─── Game Accounts ───────────────────────────────────────
 export async function getMyGameAccounts(): Promise<GameAccount[]> {
-  const response = await fetch(`${PROXY}/game-accounts`, { headers: jsonHeaders });
+  const response = await debugFetch(`${PROXY}/game-accounts`, { headers: jsonHeaders });
   await throwOnError(response, 'Erreur lors de la récupération des comptes de jeu');
   return response.json();
 }
@@ -64,7 +76,7 @@ export async function createGameAccount(
   game_pseudo: string,
   is_primary: boolean = false,
 ): Promise<GameAccount> {
-  const response = await fetch(`${PROXY}/game-accounts`, {
+  const response = await debugFetch(`${PROXY}/game-accounts`, {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify({ game_pseudo, is_primary }),
@@ -73,8 +85,22 @@ export async function createGameAccount(
   return response.json();
 }
 
+export async function updateGameAccount(
+  id: string,
+  game_pseudo: string,
+  is_primary: boolean,
+): Promise<GameAccount> {
+  const response = await debugFetch(`${PROXY}/game-accounts/${id}`, {
+    method: 'PUT',
+    headers: jsonHeaders,
+    body: JSON.stringify({ game_pseudo, is_primary }),
+  });
+  await throwOnError(response, 'Erreur lors de la mise à jour du compte de jeu');
+  return response.json();
+}
+
 export async function deleteGameAccount(id: string): Promise<void> {
-  const response = await fetch(`${PROXY}/game-accounts/${id}`, {
+  const response = await debugFetch(`${PROXY}/game-accounts/${id}`, {
     method: 'DELETE',
     headers: jsonHeaders,
   });
@@ -83,8 +109,14 @@ export async function deleteGameAccount(id: string): Promise<void> {
 
 // ─── Alliances ───────────────────────────────────────────
 export async function getAllAlliances(): Promise<Alliance[]> {
-  const response = await fetch(`${PROXY}/alliances`, { headers: jsonHeaders });
+  const response = await debugFetch(`${PROXY}/alliances`, { headers: jsonHeaders });
   await throwOnError(response, 'Erreur lors de la récupération des alliances');
+  return response.json();
+}
+
+export async function getMyAlliances(): Promise<Alliance[]> {
+  const response = await debugFetch(`${PROXY}/alliances/mine`, { headers: jsonHeaders });
+  await throwOnError(response, 'Erreur lors de la récupération de vos alliances');
   return response.json();
 }
 
@@ -93,7 +125,7 @@ export async function createAlliance(
   tag: string,
   owner_id: string,
 ): Promise<Alliance> {
-  const response = await fetch(`${PROXY}/alliances`, {
+  const response = await debugFetch(`${PROXY}/alliances`, {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify({ name, tag, owner_id }),
@@ -103,7 +135,7 @@ export async function createAlliance(
 }
 
 export async function deleteAlliance(id: string): Promise<void> {
-  const response = await fetch(`${PROXY}/alliances/${id}`, {
+  const response = await debugFetch(`${PROXY}/alliances/${id}`, {
     method: 'DELETE',
     headers: jsonHeaders,
   });
@@ -112,19 +144,19 @@ export async function deleteAlliance(id: string): Promise<void> {
 
 // ─── Eligibility ─────────────────────────────────────────
 export async function getEligibleOwners(): Promise<GameAccount[]> {
-  const response = await fetch(`${PROXY}/alliances/eligible-owners`, { headers: jsonHeaders });
+  const response = await debugFetch(`${PROXY}/alliances/eligible-owners`, { headers: jsonHeaders });
   await throwOnError(response, 'Erreur lors de la récupération des comptes éligibles');
   return response.json();
 }
 
 export async function getEligibleOfficers(allianceId: string): Promise<GameAccount[]> {
-  const response = await fetch(`${PROXY}/alliances/${allianceId}/eligible-officers`, { headers: jsonHeaders });
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/eligible-officers`, { headers: jsonHeaders });
   await throwOnError(response, 'Erreur lors de la récupération des officiers éligibles');
   return response.json();
 }
 
 export async function getEligibleMembers(): Promise<GameAccount[]> {
-  const response = await fetch(`${PROXY}/alliances/eligible-members`, { headers: jsonHeaders });
+  const response = await debugFetch(`${PROXY}/alliances/eligible-members`, { headers: jsonHeaders });
   await throwOnError(response, 'Erreur lors de la récupération des membres éligibles');
   return response.json();
 }
@@ -134,7 +166,7 @@ export async function addMember(
   allianceId: string,
   gameAccountId: string,
 ): Promise<Alliance> {
-  const response = await fetch(`${PROXY}/alliances/${allianceId}/members`, {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/members`, {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify({ game_account_id: gameAccountId }),
@@ -147,7 +179,7 @@ export async function removeMember(
   allianceId: string,
   gameAccountId: string,
 ): Promise<Alliance> {
-  const response = await fetch(`${PROXY}/alliances/${allianceId}/members/${gameAccountId}`, {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/members/${gameAccountId}`, {
     method: 'DELETE',
     headers: jsonHeaders,
   });
@@ -160,7 +192,7 @@ export async function addOfficer(
   allianceId: string,
   gameAccountId: string,
 ): Promise<Alliance> {
-  const response = await fetch(`${PROXY}/alliances/${allianceId}/officers`, {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/officers`, {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify({ game_account_id: gameAccountId }),
@@ -173,7 +205,7 @@ export async function removeOfficer(
   allianceId: string,
   gameAccountId: string,
 ): Promise<Alliance> {
-  const response = await fetch(`${PROXY}/alliances/${allianceId}/officers`, {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/officers`, {
     method: 'DELETE',
     headers: jsonHeaders,
     body: JSON.stringify({ game_account_id: gameAccountId }),
@@ -188,7 +220,7 @@ export async function setMemberGroup(
   gameAccountId: string,
   group: number | null,
 ): Promise<Alliance> {
-  const response = await fetch(
+  const response = await debugFetch(
     `${PROXY}/alliances/${allianceId}/members/${gameAccountId}/group`,
     {
       method: 'PATCH',

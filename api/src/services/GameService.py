@@ -17,6 +17,9 @@ from src.utils.db import SessionDep
 MAX_MEMBERS_PER_GROUP = 10
 
 
+MAX_GAME_ACCOUNTS_PER_USER = 10
+
+
 class GameAccountService:
     @classmethod
     async def create_game_account(
@@ -26,6 +29,15 @@ class GameAccountService:
         game_pseudo: str,
         is_primary: bool = False,
     ) -> GameAccount:
+        # Enforce max accounts limit
+        existing = await session.exec(
+            select(GameAccount).where(GameAccount.user_id == user_id)
+        )
+        if len(existing.all()) >= MAX_GAME_ACCOUNTS_PER_USER:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Maximum {MAX_GAME_ACCOUNTS_PER_USER} game accounts allowed per user",
+            )
         game_account = GameAccount(
             user_id=user_id,
             game_pseudo=game_pseudo,
@@ -186,6 +198,31 @@ class AllianceService:
     ) -> list[Alliance]:
         sql = (
             select(Alliance)
+            .options(
+                selectinload(Alliance.owner),  # type: ignore[arg-type]
+                selectinload(Alliance.members),  # type: ignore[arg-type]
+                selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
+            )
+        )
+        result = await session.exec(sql)
+        return result.all()
+
+    @classmethod
+    async def get_my_alliances(
+        cls, session: SessionDep, user_id: uuid.UUID
+    ) -> list[Alliance]:
+        """Return only alliances where the user has at least one game account as member."""
+        user_accounts = await session.exec(
+            select(GameAccount.alliance_id)
+            .where(GameAccount.user_id == user_id)
+            .where(GameAccount.alliance_id.isnot(None))  # type: ignore[union-attr]
+        )
+        alliance_ids = {aid for aid in user_accounts.all() if aid is not None}
+        if not alliance_ids:
+            return []
+        sql = (
+            select(Alliance)
+            .where(Alliance.id.in_(alliance_ids))  # type: ignore[union-attr]
             .options(
                 selectinload(Alliance.owner),  # type: ignore[arg-type]
                 selectinload(Alliance.members),  # type: ignore[arg-type]

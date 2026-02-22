@@ -53,6 +53,7 @@ def _to_response(alliance: Alliance) -> AllianceResponse:
         members=[
             AllianceMemberResponse(
                 id=m.id,
+                user_id=m.user_id,
                 game_pseudo=m.game_pseudo,
                 alliance_group=m.alliance_group,
                 is_owner=(m.id == alliance.owner_id),
@@ -138,6 +139,19 @@ async def get_all_alliances(
 ):
     """Get all alliances."""
     alliances = await AllianceService.get_all_alliances(session)
+    return [_to_response(a) for a in alliances]
+
+
+@alliance_controller.get(
+    "/mine",
+    response_model=list[AllianceResponse],
+)
+async def get_my_alliances(
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Get only alliances where the current user has a game account as a member."""
+    alliances = await AllianceService.get_my_alliances(session, current_user.id)
     return [_to_response(a) for a in alliances]
 
 

@@ -34,6 +34,7 @@ class AllianceCreateRequest(BaseModel):
 class AllianceMemberResponse(BaseModel):
     """A member of an alliance (game account with group info)."""
     id: uuid.UUID
+    user_id: uuid.UUID
     game_pseudo: str
     alliance_group: Optional[int] = None
     is_owner: bool = False
