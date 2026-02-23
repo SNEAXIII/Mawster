@@ -30,6 +30,7 @@ dev = [
     "beautifulsoup4",
     "curl_cffi",
     "lxml",
+    "Pillow",
 ]
 
 [build-system]

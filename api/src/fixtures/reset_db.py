@@ -14,11 +14,13 @@ def reset():
     print("🚀 Resetting database")
     with engine.connect() as conn:
         conn.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
-        SQLModel.metadata.drop_all(conn)
-        try:
-            conn.execute(text("DROP TABLE IF EXISTS alembic_version"))
-        except OperationalError:
-            pass
+        result = conn.execute(text(
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema = DATABASE()"
+        ))
+        tables = [row[0] for row in result]
+        for table in tables:
+            conn.execute(text(f"DROP TABLE IF EXISTS `{table}`"))
         conn.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
         conn.commit()
     print("✅ Database reset with success !")

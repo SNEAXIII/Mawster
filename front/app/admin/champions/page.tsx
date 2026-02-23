@@ -4,8 +4,11 @@ import {
   getChampions,
   updateChampionAlias,
   deleteChampion,
+  loadChampions,
+  exportAllChampions,
   Champion,
   championClasses,
+  getChampionImageUrl,
 } from '@/app/services/champions';
 import PaginationControls from '@/components/dashboard/pagination/pagination-controls';
 import DropdownRadioMenu from '@/components/dashboard/pagination/dropdown-radio-menu';
@@ -14,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { useSession } from 'next-auth/react';
 import { redirect, usePathname } from 'next/navigation';
 import { useI18n } from '@/app/i18n';
-import { FiCheck, FiEdit2, FiSearch, FiTrash2, FiX } from 'react-icons/fi';
+import { FiCheck, FiDownload, FiEdit2, FiSearch, FiTrash2, FiUpload, FiX } from 'react-icons/fi';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 
 const BASE_PAGE = 1;
@@ -57,6 +60,10 @@ export default function ChampionsPage() {
   const [error, setError] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [canReset, setCanReset] = useState(false);
+
+  // Import/Export
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Alias editing
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -162,6 +169,48 @@ export default function ChampionsPage() {
     }
   }
 
+  async function handleExport() {
+    try {
+      const data = await exportAllChampions();
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `champions_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error exporting champions:', err);
+      setError(t.champions.errors.exportError);
+    }
+  }
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    setError('');
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text) as { name: string; champion_class: string; image_filename?: string | null }[];
+      if (!Array.isArray(data)) throw new Error('Invalid JSON: expected an array');
+      const payload = data.map((c) => ({
+        name: c.name,
+        champion_class: c.champion_class,
+        image_filename: c.image_filename ?? null,
+      }));
+      await loadChampions(payload);
+      await loadChampionsList();
+    } catch (err) {
+      console.error('Error importing champions:', err);
+      setError(t.champions.errors.importError);
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">{t.champions.title}</h1>
@@ -179,6 +228,23 @@ export default function ChampionsPage() {
           onNextPage={() => setCurrentPage((p) => p + 1)}
           onLastPage={() => setCurrentPage(totalPage)}
           onResetPagination={resetPagination}
+        />
+      </div>
+
+      {/* Import/Export row */}
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={handleExport}>
+          <FiDownload className="mr-1" /> {t.champions.exportJson}
+        </Button>
+        <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing}>
+          <FiUpload className="mr-1" /> {importing ? t.common.loading : t.champions.importJson}
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          className="hidden"
+          onChange={handleImport}
         />
       </div>
 
@@ -231,7 +297,7 @@ export default function ChampionsPage() {
                   <td className="p-3">
                     {champion.image_url ? (
                       <img
-                        src={champion.image_url}
+                        src={getChampionImageUrl(champion.image_url, 40) ?? ''}
                         alt={champion.name}
                         className="w-10 h-10 rounded object-cover"
                         onError={(e) => {

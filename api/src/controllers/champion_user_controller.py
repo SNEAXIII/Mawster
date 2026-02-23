@@ -6,7 +6,9 @@ from starlette import status
 
 from src.dto.dto_game import (
     ChampionUserCreateRequest,
+    ChampionUserBulkRequest,
     ChampionUserResponse,
+    ChampionUserDetailResponse,
 )
 from src.models import User
 from src.services.AuthService import AuthService
@@ -44,27 +46,78 @@ async def create_champion_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only add champions to your own game accounts",
         )
-    return await ChampionUserService.create_champion_user(
+    result = await ChampionUserService.create_champion_user(
         session=session,
         game_account_id=body.game_account_id,
         champion_id=body.champion_id,
-        stars=body.stars,
-        rank=body.rank,
-        level=body.level,
+        rarity=body.rarity,
         signature=body.signature,
     )
+    return ChampionUserResponse(
+        id=result.id,
+        game_account_id=result.game_account_id,
+        champion_id=result.champion_id,
+        rarity=result.rarity,
+        signature=result.signature,
+    )
+
+
+@champion_user_controller.post(
+    "/bulk",
+    response_model=list[ChampionUserResponse],
+    status_code=status.HTTP_201_CREATED,
+)
+async def bulk_add_champions(
+    body: ChampionUserBulkRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Add multiple champions to a game account's roster at once.
+    Deduplicates within the request (first occurrence wins).
+    If a champion+rarity already exists, updates the signature."""
+    game_account = await GameAccountService.get_game_account(session, body.game_account_id)
+    if game_account is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game account not found")
+    if game_account.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only add champions to your own game accounts",
+        )
+    champions_data = [
+        {
+            "champion_id": entry.champion_id,
+            "rarity": entry.rarity,
+            "signature": entry.signature,
+        }
+        for entry in body.champions
+    ]
+    entries = await ChampionUserService.bulk_add_champions(
+        session=session,
+        game_account_id=body.game_account_id,
+        champions=champions_data,
+    )
+    return [
+        ChampionUserResponse(
+            id=e.id,
+            game_account_id=e.game_account_id,
+            champion_id=e.champion_id,
+            rarity=e.rarity,
+            signature=e.signature,
+        )
+        for e in entries
+    ]
 
 
 @champion_user_controller.get(
     "/by-account/{game_account_id}",
-    response_model=list[ChampionUserResponse],
+    response_model=list[ChampionUserDetailResponse],
 )
 async def get_roster_by_game_account(
     game_account_id: uuid.UUID,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Get all champions in a game account's roster.
+    """Get all champions in a game account's roster with champion details.
     The game account must belong to the current user."""
     game_account = await GameAccountService.get_game_account(session, game_account_id)
     if game_account is None:
@@ -74,7 +127,20 @@ async def get_roster_by_game_account(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only view your own roster",
         )
-    return await ChampionUserService.get_roster_by_game_account(session, game_account_id)
+    entries = await ChampionUserService.get_roster_by_game_account(session, game_account_id)
+    return [
+        ChampionUserDetailResponse(
+            id=e.id,
+            game_account_id=e.game_account_id,
+            champion_id=e.champion_id,
+            rarity=e.rarity,
+            signature=e.signature,
+            champion_name=e.champion.name,
+            champion_class=e.champion.champion_class,
+            image_url=e.champion.image_url,
+        )
+        for e in entries
+    ]
 
 
 @champion_user_controller.get(
@@ -94,7 +160,13 @@ async def get_champion_user(
     game_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
     if game_account is None or game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
-    return champion_user
+    return ChampionUserResponse(
+        id=champion_user.id,
+        game_account_id=champion_user.game_account_id,
+        champion_id=champion_user.champion_id,
+        rarity=champion_user.rarity,
+        signature=champion_user.signature,
+    )
 
 
 @champion_user_controller.put(
@@ -107,20 +179,25 @@ async def update_champion_user(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Update a champion user entry (stars, rank, level, signature)."""
+    """Update a champion user entry (rarity, signature)."""
     champion_user = await ChampionUserService.get_champion_user(session, champion_user_id)
     if champion_user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
     game_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
     if game_account is None or game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
-    return await ChampionUserService.update_champion_user(
+    updated = await ChampionUserService.update_champion_user(
         session=session,
         champion_user=champion_user,
-        stars=body.stars,
-        rank=body.rank,
-        level=body.level,
+        rarity=body.rarity,
         signature=body.signature,
+    )
+    return ChampionUserResponse(
+        id=updated.id,
+        game_account_id=updated.game_account_id,
+        champion_id=updated.champion_id,
+        rarity=updated.rarity,
+        signature=updated.signature,
     )
 
 

@@ -93,6 +93,19 @@ export const loadChampions = async (
   return response.json();
 };
 
+export const exportAllChampions = async (): Promise<{ name: string; champion_class: string; image_url: string | null; alias: string | null }[]> => {
+  // Fetch all champions in one big page (no images, just data)
+  const response = await fetch(`${PROXY}/admin/champions?page=1&size=9999`, { headers: jsonHeaders });
+  await throwOnError(response, 'Erreur lors de l\'export des champions');
+  const data: FetchChampionsResponse = await response.json();
+  return data.champions.map((c) => ({
+    name: c.name,
+    champion_class: c.champion_class,
+    image_url: c.image_url,
+    alias: c.alias,
+  }));
+};
+
 export const deleteChampion = async (championId: string): Promise<void> => {
   const response = await fetch(`${PROXY}/admin/champions/${championId}`, {
     method: 'DELETE',
@@ -100,3 +113,21 @@ export const deleteChampion = async (championId: string): Promise<void> => {
   });
   await throwOnError(response, 'Erreur lors de la suppression du champion');
 };
+
+/**
+ * Build a sized champion image URL.
+ * Converts e.g. "/static/champions/cyclops_blue_team.png"
+ * into "/static/champions/cyclops_blue_team_40x40.png" when size=40.
+ * If no size is given or imageUrl is null, returns the original URL.
+ */
+export function getChampionImageUrl(
+  imageUrl: string | null | undefined,
+  size?: number,
+): string | null {
+  if (!imageUrl) return null;
+  if (!size) return imageUrl;
+  // Insert _NxN before the file extension
+  const dotIndex = imageUrl.lastIndexOf('.');
+  if (dotIndex === -1) return `${imageUrl}_${size}x${size}.png`;
+  return `${imageUrl.substring(0, dotIndex)}_${size}x${size}${imageUrl.substring(dotIndex)}`;
+}

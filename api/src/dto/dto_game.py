@@ -88,20 +88,41 @@ class ChampionUserCreateRequest(BaseModel):
     """DTO to add a champion to a game account roster."""
     game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
     champion_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440001"])
-    stars: int = Field(default=0, ge=0, le=7, examples=[5])
-    rank: int = Field(default=1, ge=1, le=6, examples=[5])
-    level: int = Field(default=1, ge=1, examples=[65])
+    rarity: str = Field(..., examples=["6r4"])
     signature: int = Field(default=0, ge=0, examples=[200])
+
+
+class ChampionUserBulkEntry(BaseModel):
+    """Single entry in a bulk roster add request."""
+    champion_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440001"])
+    rarity: str = Field(..., examples=["6r4"])
+    signature: int = Field(default=0, ge=0, examples=[200])
+
+
+class ChampionUserBulkRequest(BaseModel):
+    """DTO to add multiple champions to a game account roster at once."""
+    game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
+    champions: list[ChampionUserBulkEntry] = Field(..., min_length=1)
 
 
 class ChampionUserResponse(BaseModel):
     id: uuid.UUID
     game_account_id: uuid.UUID
     champion_id: uuid.UUID
-    stars: int
-    rank: int
-    level: int
+    rarity: str
     signature: int
+
+
+class ChampionUserDetailResponse(BaseModel):
+    """Roster entry with champion details for display."""
+    id: uuid.UUID
+    game_account_id: uuid.UUID
+    champion_id: uuid.UUID
+    rarity: str
+    signature: int
+    champion_name: str
+    champion_class: str
+    image_url: Optional[str] = None
 
 
 # ---- Champion DTOs ----

@@ -2,1591 +2,1591 @@
   {
     "name": "Void",
     "champion_class": "Science",
-    "image_filename": "void.png"
+    "image_filename": "void"
   },
   {
     "name": "Groot",
     "champion_class": "Cosmic",
-    "image_filename": "groot.png"
+    "image_filename": "groot"
   },
   {
     "name": "Spider-Man (Miles Morales)",
     "champion_class": "Science",
-    "image_filename": "spider-man_miles_morales.png"
+    "image_filename": "spider-man_miles_morales"
   },
   {
     "name": "Cyclops (Blue Team)",
     "champion_class": "Mutant",
-    "image_filename": "cyclops_blue_team.png"
+    "image_filename": "cyclops_blue_team"
   },
   {
     "name": "Old Man Logan",
     "champion_class": "Mutant",
-    "image_filename": "old_man_logan.png"
+    "image_filename": "old_man_logan"
   },
   {
     "name": "Venompool",
     "champion_class": "Cosmic",
-    "image_filename": "venompool.png"
+    "image_filename": "venompool"
   },
   {
     "name": "She-Hulk",
     "champion_class": "Science",
-    "image_filename": "she-hulk.png"
+    "image_filename": "she-hulk"
   },
   {
     "name": "Wolverine (X-23)",
     "champion_class": "Mutant",
-    "image_filename": "wolverine_x-23.png"
+    "image_filename": "wolverine_x-23"
   },
   {
     "name": "Ms. Marvel (Kamala Khan)",
     "champion_class": "Cosmic",
-    "image_filename": "ms_marvel_kamala_khan.png"
+    "image_filename": "ms_marvel_kamala_khan"
   },
   {
     "name": "Agent Venom",
     "champion_class": "Skill",
-    "image_filename": "agent_venom.png"
+    "image_filename": "agent_venom"
   },
   {
     "name": "Red Hulk",
     "champion_class": "Science",
-    "image_filename": "red_hulk.png"
+    "image_filename": "red_hulk"
   },
   {
     "name": "Crossbones",
     "champion_class": "Skill",
-    "image_filename": "crossbones.png"
+    "image_filename": "crossbones"
   },
   {
     "name": "Black Panther (Civil War)",
     "champion_class": "Skill",
-    "image_filename": "black_panther_civil_war.png"
+    "image_filename": "black_panther_civil_war"
   },
   {
     "name": "Falcon",
     "champion_class": "Skill",
-    "image_filename": "falcon.png"
+    "image_filename": "falcon"
   },
   {
     "name": "Civil Warrior",
     "champion_class": "Tech",
-    "image_filename": "civil_warrior.png"
+    "image_filename": "civil_warrior"
   },
   {
     "name": "Nightcrawler",
     "champion_class": "Mutant",
-    "image_filename": "nightcrawler.png"
+    "image_filename": "nightcrawler"
   },
   {
     "name": "Iron Fist (Immortal)",
     "champion_class": "Mystic",
-    "image_filename": "iron_fist_immortal.png"
+    "image_filename": "iron_fist_immortal"
   },
   {
     "name": "Loki",
     "champion_class": "Mystic",
-    "image_filename": "loki.png"
+    "image_filename": "loki"
   },
   {
     "name": "Gambit",
     "champion_class": "Mutant",
-    "image_filename": "gambit.png"
+    "image_filename": "gambit"
   },
   {
     "name": "Karnak",
     "champion_class": "Skill",
-    "image_filename": "karnak.png"
+    "image_filename": "karnak"
   },
   {
     "name": "Rogue",
     "champion_class": "Mutant",
-    "image_filename": "rogue.png"
+    "image_filename": "rogue"
   },
   {
     "name": "Quake",
     "champion_class": "Science",
-    "image_filename": "quake.png"
+    "image_filename": "quake"
   },
   {
     "name": "Ultron (Classic)",
     "champion_class": "Tech",
-    "image_filename": "ultron_classic.png"
+    "image_filename": "ultron_classic"
   },
   {
     "name": "Phoenix",
     "champion_class": "Cosmic",
-    "image_filename": "phoenix.png"
+    "image_filename": "phoenix"
   },
   {
     "name": "Ghost Rider",
     "champion_class": "Mystic",
-    "image_filename": "ghost_rider.png"
+    "image_filename": "ghost_rider"
   },
   {
     "name": "Mordo",
     "champion_class": "Mystic",
-    "image_filename": "mordo.png"
+    "image_filename": "mordo"
   },
   {
     "name": "Doctor Voodoo",
     "champion_class": "Mystic",
-    "image_filename": "doctor_voodoo.png"
+    "image_filename": "doctor_voodoo"
   },
   {
     "name": "Hyperion",
     "champion_class": "Cosmic",
-    "image_filename": "hyperion.png"
+    "image_filename": "hyperion"
   },
   {
     "name": "Howard the Duck",
     "champion_class": "Tech",
-    "image_filename": "howard_the_duck.png"
+    "image_filename": "howard_the_duck"
   },
   {
     "name": "Gwenpool",
     "champion_class": "Skill",
-    "image_filename": "gwenpool.png"
+    "image_filename": "gwenpool"
   },
   {
     "name": "Cable",
     "champion_class": "Mutant",
-    "image_filename": "cable.png"
+    "image_filename": "cable"
   },
   {
     "name": "The Hood",
     "champion_class": "Mystic",
-    "image_filename": "the_hood.png"
+    "image_filename": "the_hood"
   },
   {
     "name": "Iceman",
     "champion_class": "Mutant",
-    "image_filename": "iceman.png"
+    "image_filename": "iceman"
   },
   {
     "name": "Dormammu",
     "champion_class": "Mystic",
-    "image_filename": "dormammu.png"
+    "image_filename": "dormammu"
   },
   {
     "name": "Archangel",
     "champion_class": "Mutant",
-    "image_filename": "archangel.png"
+    "image_filename": "archangel"
   },
   {
     "name": "Spider-Man (Stark Enhanced)",
     "champion_class": "Tech",
-    "image_filename": "spider-man_stark_enhanced.png"
+    "image_filename": "spider-man_stark_enhanced"
   },
   {
     "name": "Vulture",
     "champion_class": "Tech",
-    "image_filename": "vulture.png"
+    "image_filename": "vulture"
   },
   {
     "name": "Nebula",
     "champion_class": "Tech",
-    "image_filename": "nebula.png"
+    "image_filename": "nebula"
   },
   {
     "name": "Angela",
     "champion_class": "Cosmic",
-    "image_filename": "angela.png"
+    "image_filename": "angela"
   },
   {
     "name": "Carnage",
     "champion_class": "Cosmic",
-    "image_filename": "carnage.png"
+    "image_filename": "carnage"
   },
   {
     "name": "King Groot",
     "champion_class": "Cosmic",
-    "image_filename": "king_groot.png"
+    "image_filename": "king_groot"
   },
   {
     "name": "Medusa",
     "champion_class": "Cosmic",
-    "image_filename": "medusa.png"
+    "image_filename": "medusa"
   },
   {
     "name": "Morningstar",
     "champion_class": "Mystic",
-    "image_filename": "morningstar.png"
+    "image_filename": "morningstar"
   },
   {
     "name": "M.O.D.O.K.",
     "champion_class": "Science",
-    "image_filename": "m_o_d_o_k.png"
+    "image_filename": "m_o_d_o_k"
   },
   {
     "name": "Mephisto",
     "champion_class": "Mystic",
-    "image_filename": "mephisto.png"
+    "image_filename": "mephisto"
   },
   {
     "name": "Psylocke",
     "champion_class": "Mutant",
-    "image_filename": "psylocke.png"
+    "image_filename": "psylocke"
   },
   {
     "name": "Kingpin",
     "champion_class": "Skill",
-    "image_filename": "kingpin.png"
+    "image_filename": "kingpin"
   },
   {
     "name": "Hela",
     "champion_class": "Cosmic",
-    "image_filename": "hela.png"
+    "image_filename": "hela"
   },
   {
     "name": "Thor (Ragnarok)",
     "champion_class": "Skill",
-    "image_filename": "thor_ragnarok.png"
+    "image_filename": "thor_ragnarok"
   },
   {
     "name": "Hulk (Ragnarok)",
     "champion_class": "Science",
-    "image_filename": "hulk_ragnarok.png"
+    "image_filename": "hulk_ragnarok"
   },
   {
     "name": "Sabretooth",
     "champion_class": "Mutant",
-    "image_filename": "sabretooth.png"
+    "image_filename": "sabretooth"
   },
   {
     "name": "Doctor Octopus",
     "champion_class": "Tech",
-    "image_filename": "doctor_octopus.png"
+    "image_filename": "doctor_octopus"
   },
   {
     "name": "Bishop",
     "champion_class": "Mutant",
-    "image_filename": "bishop.png"
+    "image_filename": "bishop"
   },
   {
     "name": "Taskmaster",
     "champion_class": "Skill",
-    "image_filename": "taskmaster.png"
+    "image_filename": "taskmaster"
   },
   {
     "name": "Yondu",
     "champion_class": "Tech",
-    "image_filename": "yondu.png"
+    "image_filename": "yondu"
   },
   {
     "name": "Captain America (Infinity War)",
     "champion_class": "Science",
-    "image_filename": "captain_america_infinity_war.png"
+    "image_filename": "captain_america_infinity_war"
   },
   {
     "name": "Green Goblin",
     "champion_class": "Tech",
-    "image_filename": "green_goblin.png"
+    "image_filename": "green_goblin"
   },
   {
     "name": "Yellowjacket",
     "champion_class": "Science",
-    "image_filename": "yellowjacket.png"
+    "image_filename": "yellowjacket"
   },
   {
     "name": "Ant-Man",
     "champion_class": "Science",
-    "image_filename": "ant-man.png"
+    "image_filename": "ant-man"
   },
   {
     "name": "Domino",
     "champion_class": "Mutant",
-    "image_filename": "domino.png"
+    "image_filename": "domino"
   },
   {
     "name": "Deadpool",
     "champion_class": "Mutant",
-    "image_filename": "deadpool.png"
+    "image_filename": "deadpool"
   },
   {
     "name": "Colossus",
     "champion_class": "Mutant",
-    "image_filename": "colossus.png"
+    "image_filename": "colossus"
   },
   {
     "name": "Cyclops (New Xavier School)",
     "champion_class": "Mutant",
-    "image_filename": "cyclops_new_xavier_school.png"
+    "image_filename": "cyclops_new_xavier_school"
   },
   {
     "name": "Wolverine",
     "champion_class": "Mutant",
-    "image_filename": "wolverine.png"
+    "image_filename": "wolverine"
   },
   {
     "name": "Magneto",
     "champion_class": "Mutant",
-    "image_filename": "magneto.png"
+    "image_filename": "magneto"
   },
   {
     "name": "Deadpool (X-Force)",
     "champion_class": "Mutant",
-    "image_filename": "deadpool_x-force.png"
+    "image_filename": "deadpool_x-force"
   },
   {
     "name": "Goldpool",
     "champion_class": "Mutant",
-    "image_filename": "goldpool.png"
+    "image_filename": "goldpool"
   },
   {
     "name": "Magik",
     "champion_class": "Mystic",
-    "image_filename": "magik.png"
+    "image_filename": "magik"
   },
   {
     "name": "Blade",
     "champion_class": "Skill",
-    "image_filename": "blade.png"
+    "image_filename": "blade"
   },
   {
     "name": "Winter Soldier",
     "champion_class": "Skill",
-    "image_filename": "winter_soldier.png"
+    "image_filename": "winter_soldier"
   },
   {
     "name": "Black Panther",
     "champion_class": "Skill",
-    "image_filename": "black_panther.png"
+    "image_filename": "black_panther"
   },
   {
     "name": "Daredevil (Classic)",
     "champion_class": "Skill",
-    "image_filename": "daredevil_classic.png"
+    "image_filename": "daredevil_classic"
   },
   {
     "name": "Moon Knight",
     "champion_class": "Skill",
-    "image_filename": "moon_knight.png"
+    "image_filename": "moon_knight"
   },
   {
     "name": "Elektra",
     "champion_class": "Skill",
-    "image_filename": "elektra.png"
+    "image_filename": "elektra"
   },
   {
     "name": "Wasp",
     "champion_class": "Science",
-    "image_filename": "wasp.png"
+    "image_filename": "wasp"
   },
   {
     "name": "Captain America",
     "champion_class": "Science",
-    "image_filename": "captain_america.png"
+    "image_filename": "captain_america"
   },
   {
     "name": "Electro",
     "champion_class": "Science",
-    "image_filename": "electro.png"
+    "image_filename": "electro"
   },
   {
     "name": "Joe Fixit",
     "champion_class": "Science",
-    "image_filename": "joe_fixit.png"
+    "image_filename": "joe_fixit"
   },
   {
     "name": "Killmonger",
     "champion_class": "Skill",
-    "image_filename": "killmonger.png"
+    "image_filename": "killmonger"
   },
   {
     "name": "Black Bolt",
     "champion_class": "Cosmic",
-    "image_filename": "black_bolt.png"
+    "image_filename": "black_bolt"
   },
   {
     "name": "Gamora",
     "champion_class": "Cosmic",
-    "image_filename": "gamora.png"
+    "image_filename": "gamora"
   },
   {
     "name": "Ronan",
     "champion_class": "Cosmic",
-    "image_filename": "ronan.png"
+    "image_filename": "ronan"
   },
   {
     "name": "Thanos",
     "champion_class": "Cosmic",
-    "image_filename": "thanos.png"
+    "image_filename": "thanos"
   },
   {
     "name": "Ms. Marvel",
     "champion_class": "Cosmic",
-    "image_filename": "ms_marvel.png"
+    "image_filename": "ms_marvel"
   },
   {
     "name": "Spider-Man (Symbiote)",
     "champion_class": "Cosmic",
-    "image_filename": "spider-man_symbiote.png"
+    "image_filename": "spider-man_symbiote"
   },
   {
     "name": "Iron Fist",
     "champion_class": "Mystic",
-    "image_filename": "iron_fist.png"
+    "image_filename": "iron_fist"
   },
   {
     "name": "Unstoppable Colossus",
     "champion_class": "Mystic",
-    "image_filename": "unstoppable_colossus.png"
+    "image_filename": "unstoppable_colossus"
   },
   {
     "name": "Guillotine",
     "champion_class": "Mystic",
-    "image_filename": "guillotine.png"
+    "image_filename": "guillotine"
   },
   {
     "name": "Thor (Jane Foster)",
     "champion_class": "Mystic",
-    "image_filename": "thor_jane_foster.png"
+    "image_filename": "thor_jane_foster"
   },
   {
     "name": "Iron Man",
     "champion_class": "Tech",
-    "image_filename": "iron_man.png"
+    "image_filename": "iron_man"
   },
   {
     "name": "Vision",
     "champion_class": "Tech",
-    "image_filename": "vision.png"
+    "image_filename": "vision"
   },
   {
     "name": "Star-Lord",
     "champion_class": "Tech",
-    "image_filename": "star-lord.png"
+    "image_filename": "star-lord"
   },
   {
     "name": "Ultron",
     "champion_class": "Tech",
-    "image_filename": "ultron.png"
+    "image_filename": "ultron"
   },
   {
     "name": "Hulkbuster",
     "champion_class": "Tech",
-    "image_filename": "hulkbuster.png"
+    "image_filename": "hulkbuster"
   },
   {
     "name": "Iron Patriot",
     "champion_class": "Tech",
-    "image_filename": "iron_patriot.png"
+    "image_filename": "iron_patriot"
   },
   {
     "name": "Vision (Age of Ultron)",
     "champion_class": "Tech",
-    "image_filename": "vision_age_of_ultron.png"
+    "image_filename": "vision_age_of_ultron"
   },
   {
     "name": "War Machine",
     "champion_class": "Tech",
-    "image_filename": "war_machine.png"
+    "image_filename": "war_machine"
   },
   {
     "name": "Ghost",
     "champion_class": "Tech",
-    "image_filename": "ghost.png"
+    "image_filename": "ghost"
   },
   {
     "name": "Sentinel",
     "champion_class": "Tech",
-    "image_filename": "sentinel.png"
+    "image_filename": "sentinel"
   },
   {
     "name": "Masacre",
     "champion_class": "Skill",
-    "image_filename": "masacre.png"
+    "image_filename": "masacre"
   },
   {
     "name": "Iron Man (Infinity War)",
     "champion_class": "Tech",
-    "image_filename": "iron_man_infinity_war.png"
+    "image_filename": "iron_man_infinity_war"
   },
   {
     "name": "Corvus Glaive",
     "champion_class": "Cosmic",
-    "image_filename": "corvus_glaive.png"
+    "image_filename": "corvus_glaive"
   },
   {
     "name": "Proxima Midnight",
     "champion_class": "Cosmic",
-    "image_filename": "proxima_midnight.png"
+    "image_filename": "proxima_midnight"
   },
   {
     "name": "Wolverine (Weapon X)",
     "champion_class": "Mutant",
-    "image_filename": "wolverine_weapon_x.png"
+    "image_filename": "wolverine_weapon_x"
   },
   {
     "name": "Heimdall",
     "champion_class": "Cosmic",
-    "image_filename": "heimdall.png"
+    "image_filename": "heimdall"
   },
   {
     "name": "Korg",
     "champion_class": "Skill",
-    "image_filename": "korg.png"
+    "image_filename": "korg"
   },
   {
     "name": "Red Skull",
     "champion_class": "Tech",
-    "image_filename": "red_skull.png"
+    "image_filename": "red_skull"
   },
   {
     "name": "Omega Red",
     "champion_class": "Mutant",
-    "image_filename": "omega_red.png"
+    "image_filename": "omega_red"
   },
   {
     "name": "Ægon",
     "champion_class": "Skill",
-    "image_filename": "gon.png"
+    "image_filename": "gon"
   },
   {
     "name": "Thing",
     "champion_class": "Science",
-    "image_filename": "thing.png"
+    "image_filename": "thing"
   },
   {
     "name": "Diablo",
     "champion_class": "Mystic",
-    "image_filename": "diablo.png"
+    "image_filename": "diablo"
   },
   {
     "name": "Captain Marvel (Classic)",
     "champion_class": "Cosmic",
-    "image_filename": "captain_marvel_classic.png"
+    "image_filename": "captain_marvel_classic"
   },
   {
     "name": "Captain Marvel",
     "champion_class": "Cosmic",
-    "image_filename": "captain_marvel.png"
+    "image_filename": "captain_marvel"
   },
   {
     "name": "Venom",
     "champion_class": "Cosmic",
-    "image_filename": "venom.png"
+    "image_filename": "venom"
   },
   {
     "name": "Ronin",
     "champion_class": "Skill",
-    "image_filename": "ronin.png"
+    "image_filename": "ronin"
   },
   {
     "name": "Cull Obsidian",
     "champion_class": "Cosmic",
-    "image_filename": "cull_obsidian.png"
+    "image_filename": "cull_obsidian"
   },
   {
     "name": "Ebony Maw",
     "champion_class": "Mystic",
-    "image_filename": "ebony_maw.png"
+    "image_filename": "ebony_maw"
   },
   {
     "name": "Human Torch",
     "champion_class": "Science",
-    "image_filename": "human_torch.png"
+    "image_filename": "human_torch"
   },
   {
     "name": "Annihilus",
     "champion_class": "Cosmic",
-    "image_filename": "annihilus.png"
+    "image_filename": "annihilus"
   },
   {
     "name": "Nick Fury",
     "champion_class": "Skill",
-    "image_filename": "nick_fury.png"
+    "image_filename": "nick_fury"
   },
   {
     "name": "Havok",
     "champion_class": "Mutant",
-    "image_filename": "havok.png"
+    "image_filename": "havok"
   },
   {
     "name": "Mister Sinister",
     "champion_class": "Mutant",
-    "image_filename": "mister_sinister.png"
+    "image_filename": "mister_sinister"
   },
   {
     "name": "Punisher 2099",
     "champion_class": "Tech",
-    "image_filename": "punisher_2099.png"
+    "image_filename": "punisher_2099"
   },
   {
     "name": "Invisible Woman",
     "champion_class": "Science",
-    "image_filename": "invisible_woman.png"
+    "image_filename": "invisible_woman"
   },
   {
     "name": "Namor",
     "champion_class": "Mutant",
-    "image_filename": "namor.png"
+    "image_filename": "namor"
   },
   {
     "name": "Mysterio",
     "champion_class": "Tech",
-    "image_filename": "mysterio.png"
+    "image_filename": "mysterio"
   },
   {
     "name": "Spider-Man (Stealth Suit)",
     "champion_class": "Skill",
-    "image_filename": "spider-man_stealth_suit.png"
+    "image_filename": "spider-man_stealth_suit"
   },
   {
     "name": "Spider-Man (Classic)",
     "champion_class": "Science",
-    "image_filename": "spider-man_classic.png"
+    "image_filename": "spider-man_classic"
   },
   {
     "name": "Sunspot",
     "champion_class": "Mutant",
-    "image_filename": "sunspot.png"
+    "image_filename": "sunspot"
   },
   {
     "name": "Warlock",
     "champion_class": "Tech",
-    "image_filename": "warlock.png"
+    "image_filename": "warlock"
   },
   {
     "name": "Vision (Aarkus)",
     "champion_class": "Cosmic",
-    "image_filename": "vision_aarkus.png"
+    "image_filename": "vision_aarkus"
   },
   {
     "name": "Emma Frost",
     "champion_class": "Mutant",
-    "image_filename": "emma_frost.png"
+    "image_filename": "emma_frost"
   },
   {
     "name": "Beast",
     "champion_class": "Mutant",
-    "image_filename": "beast.png"
+    "image_filename": "beast"
   },
   {
     "name": "Black Widow (Claire Voyant)",
     "champion_class": "Mystic",
-    "image_filename": "black_widow_claire_voyant.png"
+    "image_filename": "black_widow_claire_voyant"
   },
   {
     "name": "Doctor Doom",
     "champion_class": "Mystic",
-    "image_filename": "doctor_doom.png"
+    "image_filename": "doctor_doom"
   },
   {
     "name": "Elsa Bloodstone",
     "champion_class": "Skill",
-    "image_filename": "elsa_bloodstone.png"
+    "image_filename": "elsa_bloodstone"
   },
   {
     "name": "Man-Thing",
     "champion_class": "Mystic",
-    "image_filename": "man-thing.png"
+    "image_filename": "man-thing"
   },
   {
     "name": "Mister Fantastic",
     "champion_class": "Science",
-    "image_filename": "mister_fantastic.png"
+    "image_filename": "mister_fantastic"
   },
   {
     "name": "Guillotine 2099",
     "champion_class": "Tech",
-    "image_filename": "guillotine_2099.png"
+    "image_filename": "guillotine_2099"
   },
   {
     "name": "Silver Surfer",
     "champion_class": "Cosmic",
-    "image_filename": "silver_surfer.png"
+    "image_filename": "silver_surfer"
   },
   {
     "name": "Squirrel Girl",
     "champion_class": "Skill",
-    "image_filename": "squirrel_girl.png"
+    "image_filename": "squirrel_girl"
   },
   {
     "name": "Nova",
     "champion_class": "Cosmic",
-    "image_filename": "nova.png"
+    "image_filename": "nova"
   },
   {
     "name": "Longshot",
     "champion_class": "Mystic",
-    "image_filename": "longshot.png"
+    "image_filename": "longshot"
   },
   {
     "name": "Mojo",
     "champion_class": "Mystic",
-    "image_filename": "mojo.png"
+    "image_filename": "mojo"
   },
   {
     "name": "Mole Man",
     "champion_class": "Skill",
-    "image_filename": "mole_man.png"
+    "image_filename": "mole_man"
   },
   {
     "name": "Terrax",
     "champion_class": "Cosmic",
-    "image_filename": "terrax.png"
+    "image_filename": "terrax"
   },
   {
     "name": "Storm (Pyramid X)",
     "champion_class": "Mutant",
-    "image_filename": "storm_pyramid_x.png"
+    "image_filename": "storm_pyramid_x"
   },
   {
     "name": "Sorcerer Supreme",
     "champion_class": "Mystic",
-    "image_filename": "sorcerer_supreme.png"
+    "image_filename": "sorcerer_supreme"
   },
   {
     "name": "Red Guardian",
     "champion_class": "Science",
-    "image_filename": "red_guardian.png"
+    "image_filename": "red_guardian"
   },
   {
     "name": "Black Widow (Deadly Origin)",
     "champion_class": "Skill",
-    "image_filename": "black_widow_deadly_origin.png"
+    "image_filename": "black_widow_deadly_origin"
   },
   {
     "name": "Tigra",
     "champion_class": "Mystic",
-    "image_filename": "tigra.png"
+    "image_filename": "tigra"
   },
   {
     "name": "Hit-Monkey",
     "champion_class": "Skill",
-    "image_filename": "hit-monkey.png"
+    "image_filename": "hit-monkey"
   },
   {
     "name": "Guardian",
     "champion_class": "Tech",
-    "image_filename": "guardian.png"
+    "image_filename": "guardian"
   },
   {
     "name": "Sasquatch",
     "champion_class": "Mystic",
-    "image_filename": "sasquatch.png"
+    "image_filename": "sasquatch"
   },
   {
     "name": "Dragon Man",
     "champion_class": "Mystic",
-    "image_filename": "dragon_man.png"
+    "image_filename": "dragon_man"
   },
   {
     "name": "Platinumpool",
     "champion_class": "Mutant",
-    "image_filename": "platinumpool.png"
+    "image_filename": "platinumpool"
   },
   {
     "name": "Air-Walker",
     "champion_class": "Cosmic",
-    "image_filename": "air-walker.png"
+    "image_filename": "air-walker"
   },
   {
     "name": "Magneto (House of X)",
     "champion_class": "Mutant",
-    "image_filename": "magneto_house_of_x.png"
+    "image_filename": "magneto_house_of_x"
   },
   {
     "name": "Professor X",
     "champion_class": "Mutant",
-    "image_filename": "professor_x.png"
+    "image_filename": "professor_x"
   },
   {
     "name": "Apocalypse",
     "champion_class": "Mutant",
-    "image_filename": "apocalypse.png"
+    "image_filename": "apocalypse"
   },
   {
     "name": "Cosmic Ghost Rider",
     "champion_class": "Cosmic",
-    "image_filename": "cosmic_ghost_rider.png"
+    "image_filename": "cosmic_ghost_rider"
   },
   {
     "name": "Red Goblin",
     "champion_class": "Cosmic",
-    "image_filename": "red_goblin.png"
+    "image_filename": "red_goblin"
   },
   {
     "name": "Hulk (Immortal)",
     "champion_class": "Science",
-    "image_filename": "hulk_immortal.png"
+    "image_filename": "hulk_immortal"
   },
   {
     "name": "Abomination (Immortal)",
     "champion_class": "Science",
-    "image_filename": "abomination_immortal.png"
+    "image_filename": "abomination_immortal"
   },
   {
     "name": "Daredevil (Hell's Kitchen)",
     "champion_class": "Skill",
-    "image_filename": "daredevil_hell_s_kitchen.png"
+    "image_filename": "daredevil_hell_s_kitchen"
   },
   {
     "name": "Scarlet Witch (Classic)",
     "champion_class": "Mystic",
-    "image_filename": "scarlet_witch_classic.png"
+    "image_filename": "scarlet_witch_classic"
   },
   {
     "name": "Spider-Ham",
     "champion_class": "Science",
-    "image_filename": "spider-ham.png"
+    "image_filename": "spider-ham"
   },
   {
     "name": "Jubilee",
     "champion_class": "Mutant",
-    "image_filename": "jubilee.png"
+    "image_filename": "jubilee"
   },
   {
     "name": "Stryfe",
     "champion_class": "Mutant",
-    "image_filename": "stryfe.png"
+    "image_filename": "stryfe"
   },
   {
     "name": "Jessica Jones",
     "champion_class": "Science",
-    "image_filename": "jessica_jones.png"
+    "image_filename": "jessica_jones"
   },
   {
     "name": "Psycho-Man",
     "champion_class": "Tech",
-    "image_filename": "psycho-man.png"
+    "image_filename": "psycho-man"
   },
   {
     "name": "Super-Skrull",
     "champion_class": "Cosmic",
-    "image_filename": "super-skrull.png"
+    "image_filename": "super-skrull"
   },
   {
     "name": "Mangog",
     "champion_class": "Mystic",
-    "image_filename": "mangog.png"
+    "image_filename": "mangog"
   },
   {
     "name": "Odin",
     "champion_class": "Cosmic",
-    "image_filename": "odin.png"
+    "image_filename": "odin"
   },
   {
     "name": "Scarlet Witch",
     "champion_class": "Mystic",
-    "image_filename": "scarlet_witch.png"
+    "image_filename": "scarlet_witch"
   },
   {
     "name": "Jabari Panther",
     "champion_class": "Skill",
-    "image_filename": "jabari_panther.png"
+    "image_filename": "jabari_panther"
   },
   {
     "name": "Silver Centurion",
     "champion_class": "Tech",
-    "image_filename": "silver_centurion.png"
+    "image_filename": "silver_centurion"
   },
   {
     "name": "Shang-Chi",
     "champion_class": "Skill",
-    "image_filename": "shang-chi.png"
+    "image_filename": "shang-chi"
   },
   {
     "name": "Mister Negative",
     "champion_class": "Science",
-    "image_filename": "mister_negative.png"
+    "image_filename": "mister_negative"
   },
   {
     "name": "Purgatory",
     "champion_class": "Mystic",
-    "image_filename": "purgatory.png"
+    "image_filename": "purgatory"
   },
   {
     "name": "The Overseer",
     "champion_class": "Science",
-    "image_filename": "the_overseer.png"
+    "image_filename": "the_overseer"
   },
   {
     "name": "America Chavez",
     "champion_class": "Mystic",
-    "image_filename": "america_chavez.png"
+    "image_filename": "america_chavez"
   },
   {
     "name": "Hercules",
     "champion_class": "Cosmic",
-    "image_filename": "hercules.png"
+    "image_filename": "hercules"
   },
   {
     "name": "Spider-Man 2099",
     "champion_class": "Science",
-    "image_filename": "spider-man_2099.png"
+    "image_filename": "spider-man_2099"
   },
   {
     "name": "Peni Parker",
     "champion_class": "Tech",
-    "image_filename": "peni_parker.png"
+    "image_filename": "peni_parker"
   },
   {
     "name": "Nimrod",
     "champion_class": "Tech",
-    "image_filename": "nimrod.png"
+    "image_filename": "nimrod"
   },
   {
     "name": "Kitty Pryde",
     "champion_class": "Mutant",
-    "image_filename": "kitty_pryde.png"
+    "image_filename": "kitty_pryde"
   },
   {
     "name": "Knull",
     "champion_class": "Cosmic",
-    "image_filename": "knull.png"
+    "image_filename": "knull"
   },
   {
     "name": "Anti-Venom",
     "champion_class": "Science",
-    "image_filename": "anti-venom.png"
+    "image_filename": "anti-venom"
   },
   {
     "name": "Sersi",
     "champion_class": "Cosmic",
-    "image_filename": "sersi.png"
+    "image_filename": "sersi"
   },
   {
     "name": "Ikaris",
     "champion_class": "Cosmic",
-    "image_filename": "ikaris.png"
+    "image_filename": "ikaris"
   },
   {
     "name": "Kraven",
     "champion_class": "Skill",
-    "image_filename": "kraven.png"
+    "image_filename": "kraven"
   },
   {
     "name": "Toad",
     "champion_class": "Mutant",
-    "image_filename": "toad.png"
+    "image_filename": "toad"
   },
   {
     "name": "Sauron",
     "champion_class": "Mutant",
-    "image_filename": "sauron.png"
+    "image_filename": "sauron"
   },
   {
     "name": "Captain America (Sam Wilson)",
     "champion_class": "Tech",
-    "image_filename": "captain_america_sam_wilson.png"
+    "image_filename": "captain_america_sam_wilson"
   },
   {
     "name": "Misty Knight",
     "champion_class": "Skill",
-    "image_filename": "misty_knight.png"
+    "image_filename": "misty_knight"
   },
   {
     "name": "Captain Britain",
     "champion_class": "Mutant",
-    "image_filename": "captain_britain.png"
+    "image_filename": "captain_britain"
   },
   {
     "name": "Omega Sentinel",
     "champion_class": "Tech",
-    "image_filename": "omega_sentinel.png"
+    "image_filename": "omega_sentinel"
   },
   {
     "name": "Black Cat",
     "champion_class": "Skill",
-    "image_filename": "black_cat.png"
+    "image_filename": "black_cat"
   },
   {
     "name": "Scorpion",
     "champion_class": "Science",
-    "image_filename": "scorpion.png"
+    "image_filename": "scorpion"
   },
   {
     "name": "Wong",
     "champion_class": "Mystic",
-    "image_filename": "wong.png"
+    "image_filename": "wong"
   },
   {
     "name": "Rintrah",
     "champion_class": "Mystic",
-    "image_filename": "rintrah.png"
+    "image_filename": "rintrah"
   },
   {
     "name": "Hulkling",
     "champion_class": "Cosmic",
-    "image_filename": "hulkling.png"
+    "image_filename": "hulkling"
   },
   {
     "name": "Wiccan",
     "champion_class": "Mystic",
-    "image_filename": "wiccan.png"
+    "image_filename": "wiccan"
   },
   {
     "name": "Valkyrie",
     "champion_class": "Skill",
-    "image_filename": "valkyrie.png"
+    "image_filename": "valkyrie"
   },
   {
     "name": "Gorr",
     "champion_class": "Cosmic",
-    "image_filename": "gorr.png"
+    "image_filename": "gorr"
   },
   {
     "name": "Galan",
     "champion_class": "Cosmic",
-    "image_filename": "galan.png"
+    "image_filename": "galan"
   },
   {
     "name": "Quicksilver",
     "champion_class": "Science",
-    "image_filename": "quicksilver.png"
+    "image_filename": "quicksilver"
   },
   {
     "name": "Titania",
     "champion_class": "Science",
-    "image_filename": "titania.png"
+    "image_filename": "titania"
   },
   {
     "name": "Iron Man (Infamous)",
     "champion_class": "Tech",
-    "image_filename": "iron_man_infamous.png"
+    "image_filename": "iron_man_infamous"
   },
   {
     "name": "Spider-Man (Supreme)",
     "champion_class": "Mystic",
-    "image_filename": "spider-man_supreme.png"
+    "image_filename": "spider-man_supreme"
   },
   {
     "name": "Spot",
     "champion_class": "Science",
-    "image_filename": "spot.png"
+    "image_filename": "spot"
   },
   {
     "name": "Shuri",
     "champion_class": "Tech",
-    "image_filename": "shuri.png"
+    "image_filename": "shuri"
   },
   {
     "name": "Attuma",
     "champion_class": "Skill",
-    "image_filename": "attuma.png"
+    "image_filename": "attuma"
   },
   {
     "name": "Mantis",
     "champion_class": "Skill",
-    "image_filename": "mantis.png"
+    "image_filename": "mantis"
   },
   {
     "name": "Absorbing Man",
     "champion_class": "Mystic",
-    "image_filename": "absorbing_man.png"
+    "image_filename": "absorbing_man"
   },
   {
     "name": "Baron Zemo",
     "champion_class": "Skill",
-    "image_filename": "baron_zemo.png"
+    "image_filename": "baron_zemo"
   },
   {
     "name": "Cassie Lang",
     "champion_class": "Science",
-    "image_filename": "cassie_lang.png"
+    "image_filename": "cassie_lang"
   },
   {
     "name": "Ant-Man (Future)",
     "champion_class": "Tech",
-    "image_filename": "ant-man_future.png"
+    "image_filename": "ant-man_future"
   },
   {
     "name": "Viv Vision",
     "champion_class": "Tech",
-    "image_filename": "viv_vision.png"
+    "image_filename": "viv_vision"
   },
   {
     "name": "Kate Bishop",
     "champion_class": "Skill",
-    "image_filename": "kate_bishop.png"
+    "image_filename": "kate_bishop"
   },
   {
     "name": "Darkhawk",
     "champion_class": "Tech",
-    "image_filename": "darkhawk.png"
+    "image_filename": "darkhawk"
   },
   {
     "name": "Doctor Strange",
     "champion_class": "Mystic",
-    "image_filename": "doctor_strange.png"
+    "image_filename": "doctor_strange"
   },
   {
     "name": "Shocker",
     "champion_class": "Tech",
-    "image_filename": "shocker.png"
+    "image_filename": "shocker"
   },
   {
     "name": "Drax",
     "champion_class": "Cosmic",
-    "image_filename": "drax.png"
+    "image_filename": "drax"
   },
   {
     "name": "Sandman",
     "champion_class": "Science",
-    "image_filename": "sandman.png"
+    "image_filename": "sandman"
   },
   {
     "name": "Black Widow",
     "champion_class": "Skill",
-    "image_filename": "black_widow.png"
+    "image_filename": "black_widow"
   },
   {
     "name": "Hawkeye",
     "champion_class": "Skill",
-    "image_filename": "hawkeye.png"
+    "image_filename": "hawkeye"
   },
   {
     "name": "Hulk",
     "champion_class": "Science",
-    "image_filename": "hulk.png"
+    "image_filename": "hulk"
   },
   {
     "name": "Moondragon",
     "champion_class": "Skill",
-    "image_filename": "moondragon.png"
+    "image_filename": "moondragon"
   },
   {
     "name": "Punisher",
     "champion_class": "Skill",
-    "image_filename": "punisher.png"
+    "image_filename": "punisher"
   },
   {
     "name": "Luke Cage",
     "champion_class": "Science",
-    "image_filename": "luke_cage.png"
+    "image_filename": "luke_cage"
   },
   {
     "name": "Juggernaut",
     "champion_class": "Mystic",
-    "image_filename": "juggernaut.png"
+    "image_filename": "juggernaut"
   },
   {
     "name": "Kang the Conqueror",
     "champion_class": "Tech",
-    "image_filename": "kang_the_conqueror.png"
+    "image_filename": "kang_the_conqueror"
   },
   {
     "name": "Adam Warlock",
     "champion_class": "Cosmic",
-    "image_filename": "adam_warlock.png"
+    "image_filename": "adam_warlock"
   },
   {
     "name": "Dani Moonstar",
     "champion_class": "Mutant",
-    "image_filename": "dani_moonstar.png"
+    "image_filename": "dani_moonstar"
   },
   {
     "name": "Lady Deathstrike",
     "champion_class": "Tech",
-    "image_filename": "lady_deathstrike.png"
+    "image_filename": "lady_deathstrike"
   },
   {
     "name": "Night Thrasher",
     "champion_class": "Skill",
-    "image_filename": "night_thrasher.png"
+    "image_filename": "night_thrasher"
   },
   {
     "name": "Spider-Gwen",
     "champion_class": "Science",
-    "image_filename": "spider-gwen.png"
+    "image_filename": "spider-gwen"
   },
   {
     "name": "Silk",
     "champion_class": "Science",
-    "image_filename": "silk.png"
+    "image_filename": "silk"
   },
   {
     "name": "Kindred",
     "champion_class": "Mystic",
-    "image_filename": "kindred.png"
+    "image_filename": "kindred"
   },
   {
     "name": "Vox",
     "champion_class": "Cosmic",
-    "image_filename": "vox.png"
+    "image_filename": "vox"
   },
   {
     "name": "Gladiator",
     "champion_class": "Cosmic",
-    "image_filename": "gladiator.png"
+    "image_filename": "gladiator"
   },
   {
     "name": "Photon",
     "champion_class": "Science",
-    "image_filename": "photon.png"
+    "image_filename": "photon"
   },
   {
     "name": "Werewolf By Night",
     "champion_class": "Mystic",
-    "image_filename": "werewolf_by_night.png"
+    "image_filename": "werewolf_by_night"
   },
   {
     "name": "Morbius",
     "champion_class": "Science",
-    "image_filename": "morbius.png"
+    "image_filename": "morbius"
   },
   {
     "name": "Maestro (Cosmic)",
     "champion_class": "Cosmic",
-    "image_filename": "maestro_cosmic.png"
+    "image_filename": "maestro_cosmic"
   },
   {
     "name": "Kushala",
     "champion_class": "Mystic",
-    "image_filename": "kushala.png"
+    "image_filename": "kushala"
   },
   {
     "name": "Chee'ilth",
     "champion_class": "Skill",
-    "image_filename": "chee_ilth.png"
+    "image_filename": "chee_ilth"
   },
   {
     "name": "Bullseye",
     "champion_class": "Skill",
-    "image_filename": "bullseye.png"
+    "image_filename": "bullseye"
   },
   {
     "name": "White Tiger",
     "champion_class": "Mystic",
-    "image_filename": "white_tiger.png"
+    "image_filename": "white_tiger"
   },
   {
     "name": "Onslaught",
     "champion_class": "Mutant",
-    "image_filename": "onslaught.png"
+    "image_filename": "onslaught"
   },
   {
     "name": "Guillotine (Deathless)",
     "champion_class": "Mystic",
-    "image_filename": "guillotine_deathless.png"
+    "image_filename": "guillotine_deathless"
   },
   {
     "name": "Dust",
     "champion_class": "Mutant",
-    "image_filename": "dust.png"
+    "image_filename": "dust"
   },
   {
     "name": "Ironheart",
     "champion_class": "Tech",
-    "image_filename": "ironheart.png"
+    "image_filename": "ironheart"
   },
   {
     "name": "The Serpent",
     "champion_class": "Cosmic",
-    "image_filename": "the_serpent.png"
+    "image_filename": "the_serpent"
   },
   {
     "name": "The Destroyer",
     "champion_class": "Mystic",
-    "image_filename": "the_destroyer.png"
+    "image_filename": "the_destroyer"
   },
   {
     "name": "King Groot (Deathless)",
     "champion_class": "Cosmic",
-    "image_filename": "king_groot_deathless.png"
+    "image_filename": "king_groot_deathless"
   },
   {
     "name": "Spider-Punk",
     "champion_class": "Science",
-    "image_filename": "spider-punk.png"
+    "image_filename": "spider-punk"
   },
   {
     "name": "Prowler",
     "champion_class": "Tech",
-    "image_filename": "prowler.png"
+    "image_filename": "prowler"
   },
   {
     "name": "Negasonic Teenage Warhead",
     "champion_class": "Mutant",
-    "image_filename": "negasonic_teenage_warhead.png"
+    "image_filename": "negasonic_teenage_warhead"
   },
   {
     "name": "Silver Sable",
     "champion_class": "Skill",
-    "image_filename": "silver_sable.png"
+    "image_filename": "silver_sable"
   },
   {
     "name": "Arcade",
     "champion_class": "Tech",
-    "image_filename": "arcade.png"
+    "image_filename": "arcade"
   },
   {
     "name": "Northstar",
     "champion_class": "Mutant",
-    "image_filename": "northstar.png"
+    "image_filename": "northstar"
   },
   {
     "name": "Patriot",
     "champion_class": "Skill",
-    "image_filename": "patriot.png"
+    "image_filename": "patriot"
   },
   {
     "name": "The Leader",
     "champion_class": "Science",
-    "image_filename": "the_leader.png"
+    "image_filename": "the_leader"
   },
   {
     "name": "Beta Ray Bill",
     "champion_class": "Cosmic",
-    "image_filename": "beta_ray_bill.png"
+    "image_filename": "beta_ray_bill"
   },
   {
     "name": "Enchantress",
     "champion_class": "Mystic",
-    "image_filename": "enchantress.png"
+    "image_filename": "enchantress"
   },
   {
     "name": "Count Nefaria",
     "champion_class": "Science",
-    "image_filename": "count_nefaria.png"
+    "image_filename": "count_nefaria"
   },
   {
     "name": "Shathra",
     "champion_class": "Mystic",
-    "image_filename": "shathra.png"
+    "image_filename": "shathra"
   },
   {
     "name": "Scream",
     "champion_class": "Cosmic",
-    "image_filename": "scream.png"
+    "image_filename": "scream"
   },
   {
     "name": "Jack O'Lantern",
     "champion_class": "Tech",
-    "image_filename": "jack_o_lantern.png"
+    "image_filename": "jack_o_lantern"
   },
   {
     "name": "She-Hulk (Deathless)",
     "champion_class": "Science",
-    "image_filename": "she-hulk_deathless.png"
+    "image_filename": "she-hulk_deathless"
   },
   {
     "name": "Dazzler",
     "champion_class": "Mutant",
-    "image_filename": "dazzler.png"
+    "image_filename": "dazzler"
   },
   {
     "name": "Spiral",
     "champion_class": "Mystic",
-    "image_filename": "spiral.png"
+    "image_filename": "spiral"
   },
   {
     "name": "Henchpool",
     "champion_class": "Cosmic",
-    "image_filename": "henchpool.png"
+    "image_filename": "henchpool"
   },
   {
     "name": "Isophyne",
     "champion_class": "Mystic",
-    "image_filename": "isophyne.png"
+    "image_filename": "isophyne"
   },
   {
     "name": "Thanos (Deathless)",
     "champion_class": "Cosmic",
-    "image_filename": "thanos_deathless.png"
+    "image_filename": "thanos_deathless"
   },
   {
     "name": "Okoye",
     "champion_class": "Skill",
-    "image_filename": "okoye.png"
+    "image_filename": "okoye"
   },
   {
     "name": "Gentle",
     "champion_class": "Mutant",
-    "image_filename": "gentle.png"
+    "image_filename": "gentle"
   },
   {
     "name": "Arnim Zola",
     "champion_class": "Tech",
-    "image_filename": "arnim_zola.png"
+    "image_filename": "arnim_zola"
   },
   {
     "name": "Falcon (Joaquín Torres)",
     "champion_class": "Science",
-    "image_filename": "falcon_joaqu_n_torres.png"
+    "image_filename": "falcon_joaqu_n_torres"
   },
   {
     "name": "Jean Grey",
     "champion_class": "Mutant",
-    "image_filename": "jean_grey.png"
+    "image_filename": "jean_grey"
   },
   {
     "name": "Bastion",
     "champion_class": "Tech",
-    "image_filename": "bastion.png"
+    "image_filename": "bastion"
   },
   {
     "name": "Spider-Woman (Jessica Drew)",
     "champion_class": "Science",
-    "image_filename": "spider-woman_jessica_drew.png"
+    "image_filename": "spider-woman_jessica_drew"
   },
   {
     "name": "Lumatrix",
     "champion_class": "Skill",
-    "image_filename": "lumatrix.png"
+    "image_filename": "lumatrix"
   },
   {
     "name": "Dark Phoenix",
     "champion_class": "Cosmic",
-    "image_filename": "dark_phoenix.png"
+    "image_filename": "dark_phoenix"
   },
   {
     "name": "Yelena Belova",
     "champion_class": "Skill",
-    "image_filename": "yelena_belova.png"
+    "image_filename": "yelena_belova"
   },
   {
     "name": "Vision (Deathless)",
     "champion_class": "Tech",
-    "image_filename": "vision_deathless.png"
+    "image_filename": "vision_deathless"
   },
   {
     "name": "Symbiote Supreme",
     "champion_class": "Mystic",
-    "image_filename": "symbiote_supreme.png"
+    "image_filename": "symbiote_supreme"
   },
   {
     "name": "Abomination",
     "champion_class": "Science",
-    "image_filename": "abomination.png"
+    "image_filename": "abomination"
   },
   {
     "name": "Rhino",
     "champion_class": "Science",
-    "image_filename": "rhino.png"
+    "image_filename": "rhino"
   },
   {
     "name": "Superior Iron Man",
     "champion_class": "Cosmic",
-    "image_filename": "superior_iron_man.png"
+    "image_filename": "superior_iron_man"
   },
   {
     "name": "Nico Minoru",
     "champion_class": "Mystic",
-    "image_filename": "nico_minoru.png"
+    "image_filename": "nico_minoru"
   },
   {
     "name": "Karolina Dean",
     "champion_class": "Cosmic",
-    "image_filename": "karolina_dean.png"
+    "image_filename": "karolina_dean"
   },
   {
     "name": "Captain America (WWII)",
     "champion_class": "Science",
-    "image_filename": "captain_america_wwii.png"
+    "image_filename": "captain_america_wwii"
   },
   {
     "name": "The Maker",
     "champion_class": "Tech",
-    "image_filename": "the_maker.png"
+    "image_filename": "the_maker"
   },
   {
     "name": "High Evolutionary",
     "champion_class": "Science",
-    "image_filename": "high_evolutionary.png"
+    "image_filename": "high_evolutionary"
   },
   {
     "name": "Doombot",
     "champion_class": "Cosmic",
-    "image_filename": "doombot.png"
+    "image_filename": "doombot"
   },
   {
     "name": "Solvarch",
     "champion_class": "Tech",
-    "image_filename": "solvarch.png"
+    "image_filename": "solvarch"
   },
   {
     "name": "Cassandra Nova",
     "champion_class": "Mutant",
-    "image_filename": "cassandra_nova.png"
+    "image_filename": "cassandra_nova"
   },
   {
     "name": "Silver Samurai",
     "champion_class": "Mutant",
-    "image_filename": "silver_samurai.png"
+    "image_filename": "silver_samurai"
   },
   {
     "name": "Mr. Knight",
     "champion_class": "Skill",
-    "image_filename": "mr_knight.png"
+    "image_filename": "mr_knight"
   },
   {
     "name": "Dracula",
     "champion_class": "Mystic",
-    "image_filename": "dracula.png"
+    "image_filename": "dracula"
   },
   {
     "name": "Franken-Castle",
     "champion_class": "Skill",
-    "image_filename": "franken-castle.png"
+    "image_filename": "franken-castle"
   },
   {
     "name": "Rocket Raccoon",
     "champion_class": "Tech",
-    "image_filename": "rocket_raccoon.png"
+    "image_filename": "rocket_raccoon"
   },
   {
     "name": "Sentry",
     "champion_class": "Science",
-    "image_filename": "sentry.png"
+    "image_filename": "sentry"
   },
   {
     "name": "Lizard",
     "champion_class": "Science",
-    "image_filename": "lizard.png"
+    "image_filename": "lizard"
   },
   {
     "name": "Spider-Man (Pavitr Prabhakar)",
     "champion_class": "Mystic",
-    "image_filename": "spider-man_pavitr_prabhakar.png"
+    "image_filename": "spider-man_pavitr_prabhakar"
   },
   {
     "name": "Imperiosa",
     "champion_class": "Cosmic",
-    "image_filename": "imperiosa.png"
+    "image_filename": "imperiosa"
   },
   {
     "name": "Spider-Slayer (J. Jonah Jameson)",
     "champion_class": "Tech",
-    "image_filename": "spider-slayer_j_jonah_jameson.png"
+    "image_filename": "spider-slayer_j_jonah_jameson"
   },
   {
     "name": "Star-Lord (Stellar-Forged)",
     "champion_class": "Skill",
-    "image_filename": "star-lord_stellar-forged.png"
+    "image_filename": "star-lord_stellar-forged"
   },
   {
     "name": "Storm",
     "champion_class": "Mutant",
-    "image_filename": "storm.png"
+    "image_filename": "storm"
   },
   {
     "name": "The Champion",
     "champion_class": "Cosmic",
-    "image_filename": "the_champion.png"
+    "image_filename": "the_champion"
   },
   {
     "name": "M'Baku",
     "champion_class": "Skill",
-    "image_filename": "m_baku.png"
+    "image_filename": "m_baku"
   },
   {
     "name": "Blue Marvel",
     "champion_class": "Science",
-    "image_filename": "blue_marvel.png"
+    "image_filename": "blue_marvel"
   },
   {
     "name": "Thor",
     "champion_class": "Cosmic",
-    "image_filename": "thor.png"
+    "image_filename": "thor"
   },
   {
     "name": "Venom the Duck",
     "champion_class": "Cosmic",
-    "image_filename": "venom_the_duck.png"
+    "image_filename": "venom_the_duck"
   }
 ]

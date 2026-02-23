@@ -13,10 +13,14 @@ class ChampionUser(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
-    stars: int = Field(default=0)
+    stars: int = Field(default=6)
     rank: int = Field(default=1)
-    level: int = Field(default=1)
     signature: int = Field(default=0)
+
+    @property
+    def rarity(self) -> str:
+        """Build rarity code from stars + rank, e.g. 7 + 5 → '7r5'."""
+        return f"{self.stars}r{self.rank}"
 
     # Relations
     game_account: "GameAccount" = Relationship(back_populates="roster")

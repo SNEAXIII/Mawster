@@ -144,7 +144,15 @@ class ChampionService:
                 continue
 
             existing = await cls.get_champion_by_name(session, data.name)
-            image_url = f"/static/champions/{data.image_filename}" if data.image_filename else None
+            # image_filename is the base name without extension (e.g. "cyclops_blue_team")
+            # Append .png to build the full static URL
+            if data.image_filename:
+                fname = data.image_filename
+                if not fname.endswith(".png"):
+                    fname = fname + ".png"
+                image_url = f"/static/champions/{fname}"
+            else:
+                image_url = None
 
             if existing:
                 existing.champion_class = data.champion_class
