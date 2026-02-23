@@ -16,7 +16,7 @@ install:
 	uv sync --no-dev
 
 install-dev:
-	uv sync
+	uv sync --extra dev
 
 run-dev:
 	uv run fastapi dev --reload
