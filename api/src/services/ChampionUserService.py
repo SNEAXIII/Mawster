@@ -7,6 +7,7 @@ from sqlmodel import select, and_
 from sqlalchemy.orm import selectinload
 from starlette import status
 
+from src.services.ChampionService import ChampionService
 from src.enums.ChampionRarity import ChampionRarity
 from src.models.GameAccount import GameAccount
 from src.models.Champion import Champion
@@ -124,27 +125,27 @@ class ChampionUserService:
             )
 
         results = []
-        seen = set()  # (champion_id, stars) tuples already processed
+        seen = set()  # (champion_name_lower, stars) tuples already processed
 
         for entry in champions:
-            champion_id = entry["champion_id"]
+            champion_name = entry["champion_name"]
             rarity = entry["rarity"]
             signature = entry.get("signature", 0)
 
             stars, rank = cls._parse_rarity(rarity)
 
             # Dedup within same request: skip duplicates (unique per champion+stars)
-            key = (str(champion_id), stars)
+            key = (champion_name.lower(), stars)
             if key in seen:
                 continue
             seen.add(key)
 
-            # Verify champion exists
-            champion = await session.get(Champion, champion_id)
+            # Resolve champion by name
+            champion = await ChampionService.get_champion_by_name(session, champion_name)
             if champion is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Champion {champion_id} not found",
+                    detail=f"Champion '{champion_name}' not found",
                 )
 
             # Check if exists in DB (unique per champion+stars)
@@ -152,7 +153,7 @@ class ChampionUserService:
                 select(ChampionUser).where(
                     and_(
                         ChampionUser.game_account_id == game_account_id,
-                        ChampionUser.champion_id == champion_id,
+                        ChampionUser.champion_id == champion.id,
                         ChampionUser.stars == stars,
                     )
                 )
@@ -167,7 +168,7 @@ class ChampionUserService:
             else:
                 champion_user = ChampionUser(
                     game_account_id=game_account_id,
-                    champion_id=champion_id,
+                    champion_id=champion.id,
                     stars=stars,
                     rank=rank,
                     signature=signature,

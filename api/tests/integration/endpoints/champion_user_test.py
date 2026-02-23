@@ -223,8 +223,8 @@ class TestBulkAddChampions:
             {
                 "game_account_id": str(acc.id),
                 "champions": [
-                    {"champion_id": str(champ1.id), "rarity": "6r4", "signature": 0},
-                    {"champion_id": str(champ2.id), "rarity": "7r3", "signature": 200},
+                    {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 0},
+                    {"champion_name": "Wolverine", "rarity": "7r3", "signature": 200},
                 ],
             },
             headers=HEADERS,
@@ -245,8 +245,8 @@ class TestBulkAddChampions:
             {
                 "game_account_id": str(acc.id),
                 "champions": [
-                    {"champion_id": str(champ.id), "rarity": "6r4", "signature": 100},
-                    {"champion_id": str(champ.id), "rarity": "6r4", "signature": 999},
+                    {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 100},
+                    {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 999},
                 ],
             },
             headers=HEADERS,
@@ -269,7 +269,7 @@ class TestBulkAddChampions:
             {
                 "game_account_id": str(acc.id),
                 "champions": [
-                    {"champion_id": str(champ.id), "rarity": "6r4", "signature": 200},
+                    {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 200},
                 ],
             },
             headers=HEADERS,
@@ -286,7 +286,7 @@ class TestBulkAddChampions:
             {
                 "game_account_id": str(uuid.uuid4()),
                 "champions": [
-                    {"champion_id": str(uuid.uuid4()), "rarity": "6r4"},
+                    {"champion_name": "Spider-Man", "rarity": "6r4"},
                 ],
             },
         )
@@ -304,7 +304,7 @@ class TestBulkAddChampions:
             {
                 "game_account_id": str(acc.id),
                 "champions": [
-                    {"champion_id": str(champ.id), "rarity": "6r4"},
+                    {"champion_name": "Spider-Man", "rarity": "6r4"},
                 ],
             },
             headers=HEADERS,
@@ -323,8 +323,8 @@ class TestBulkAddChampions:
             {
                 "game_account_id": str(acc.id),
                 "champions": [
-                    {"champion_id": str(champ.id), "rarity": "6r4", "signature": 0},
-                    {"champion_id": str(champ.id), "rarity": "7r3", "signature": 200},
+                    {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 0},
+                    {"champion_name": "Spider-Man", "rarity": "7r3", "signature": 200},
                 ],
             },
             headers=HEADERS,

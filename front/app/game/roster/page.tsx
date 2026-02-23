@@ -9,11 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import ChampionPortrait from '@/components/champion-portrait';
+import RosterImportExport from '@/components/roster-import-export';
 import { getMyGameAccounts, GameAccount } from '@/app/services/game';
 import {
   getRoster,
   searchChampions,
-  addChampionToRoster,
+  updateChampionInRoster,
   deleteRosterEntry,
   RosterEntry,
   RARITIES,
@@ -24,7 +25,7 @@ import {
   shortenChampionName,
 } from '@/app/services/roster';
 import { Champion, getChampionImageUrl } from '@/app/services/champions';
-import { FiTrash2, FiSearch, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { FiTrash2, FiSearch, FiChevronDown, FiChevronUp, FiEdit2 } from 'react-icons/fi';
 
 export default function RosterPage() {
   const { data: session, status: authStatus } = useSession();
@@ -116,12 +117,12 @@ export default function RosterPage() {
     }
   }, [showAddForm]);
 
-  const handleAddChampion = useCallback(async () => {
+  const handleAddOrUpdateChampion = useCallback(async () => {
     if (!selectedAccountId || !selectedChampion) return;
     setAdding(true);
     setError(null);
     try {
-      await addChampionToRoster(
+      await updateChampionInRoster(
         selectedAccountId,
         selectedChampion.id,
         selectedRarity,
@@ -130,7 +131,7 @@ export default function RosterPage() {
       // Refresh roster
       const updated = await getRoster(selectedAccountId);
       setRoster(updated);
-      toast.success(`${selectedChampion.name} ajouté / mis à jour`);
+      toast.success(t.roster.addSuccess.replace('{name}', selectedChampion.name));
       // Reset champion selection but keep the form open
       setSelectedChampion(null);
       setChampionSearch('');
@@ -153,7 +154,7 @@ export default function RosterPage() {
       await deleteRosterEntry(deleteTarget.id);
       const updated = await getRoster(selectedAccountId);
       setRoster(updated);
-      toast.success(`${name} retiré du roster`);
+      toast.success(t.roster.removeSuccess.replace('{name}', name));
     } catch (e: any) {
       toast.error(e.message || t.roster.errors.deleteError);
       setError(e.message || t.roster.errors.deleteError);
@@ -161,6 +162,24 @@ export default function RosterPage() {
       setDeleteTarget(null);
     }
   }, [deleteTarget, selectedAccountId]);
+
+  // Pre-fill the add form with an existing roster entry for quick editing
+  const startEditEntry = useCallback((entry: RosterEntry) => {
+    // Find the champion in search results or create a minimal object
+    const champion: Champion = {
+      id: entry.champion_id,
+      name: entry.champion_name,
+      champion_class: entry.champion_class,
+      image_url: entry.image_url,
+      is_7_star: entry.rarity.startsWith('7'),
+      alias: null,
+    };
+    setSelectedChampion(champion);
+    setChampionSearch(entry.champion_name);
+    setSelectedRarity(entry.rarity);
+    setSignatureValue(entry.signature);
+    setShowAddForm(true);
+  }, []);
 
   // Group roster by rarity, sorted descending (7r5 first → 6r4 last)
   const groupedRoster = (() => {
@@ -191,7 +210,16 @@ export default function RosterPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">{t.roster.title}</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold">{t.roster.title}</h1>
+        {selectedAccountId && (
+          <RosterImportExport
+            roster={roster}
+            selectedAccountId={selectedAccountId}
+            onRosterUpdated={setRoster}
+          />
+        )}
+      </div>
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
@@ -282,16 +310,43 @@ export default function RosterPage() {
                 )}
 
                 {selectedChampion && (
-                  <div className="mt-1 flex items-center gap-2 text-sm text-green-700">
-                    {selectedChampion.image_url && (
-                      <img
-                        src={getChampionImageUrl(selectedChampion.image_url, 40) ?? ''}
-                        alt={selectedChampion.name}
-                        className="w-6 h-6 rounded"
-                      />
-                    )}
-                    <span className="font-medium">{selectedChampion.name}</span>
-                    <span className="text-gray-400">({selectedChampion.champion_class})</span>
+                  <div className="mt-1">
+                    <div className="flex items-center gap-2 text-sm text-green-700">
+                      {selectedChampion.image_url && (
+                        <img
+                          src={getChampionImageUrl(selectedChampion.image_url, 40) ?? ''}
+                          alt={selectedChampion.name}
+                          className="w-6 h-6 rounded"
+                        />
+                      )}
+                      <span className="font-medium">{selectedChampion.name}</span>
+                      <span className="text-gray-400">({selectedChampion.champion_class})</span>
+                    </div>
+                    {/* Show existing roster entries for this champion */}
+                    {(() => {
+                      const existingEntries = roster.filter(
+                        (r) => r.champion_id === selectedChampion.id,
+                      );
+                      if (existingEntries.length === 0) return null;
+                      return (
+                        <div className="mt-1.5 ml-8 space-y-0.5">
+                          <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                            {t.roster.alreadyInRoster}
+                          </span>
+                          {existingEntries.map((entry) => (
+                            <div
+                              key={entry.id}
+                              className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1"
+                            >
+                              <span className={`font-semibold ${getClassColors(entry.champion_class).text}`}>
+                                {RARITY_LABELS[entry.rarity] ?? entry.rarity}
+                              </span>
+                              <span>· sig {entry.signature}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
@@ -348,10 +403,10 @@ export default function RosterPage() {
               {/* Submit */}
               <div className="flex gap-2">
                 <Button
-                  onClick={handleAddChampion}
+                  onClick={handleAddOrUpdateChampion}
                   disabled={!selectedChampion || adding}
                 >
-                  {adding ? t.common.loading : t.roster.add}
+                  {adding ? t.common.loading : t.roster.addOrUpdateButton}
                 </Button>
               </div>
             </div>
@@ -381,14 +436,23 @@ export default function RosterPage() {
                           key={entry.id}
                           className={`rounded-md bg-gray-900 ${classColors.border} border-[3px] shadow hover:shadow-lg transition-shadow relative group overflow-hidden`}
                         >
-                          {/* Delete button */}
-                          <button
-                            className="absolute top-0.5 right-0.5 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity z-20 bg-black/50 rounded-full p-0.5"
-                            onClick={() => setDeleteTarget(entry)}
-                            title={t.common.delete}
-                          >
-                            <FiTrash2 size={10} />
-                          </button>
+                          {/* Action buttons */}
+                          <div className="absolute top-0.5 right-0.5 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                            <button
+                              className="text-blue-400 hover:text-blue-300 bg-black/50 rounded-full p-0.5"
+                              onClick={() => startEditEntry(entry)}
+                              title="Edit"
+                            >
+                              <FiEdit2 size={10} />
+                            </button>
+                            <button
+                              className="text-red-400 hover:text-red-600 bg-black/50 rounded-full p-0.5"
+                              onClick={() => setDeleteTarget(entry)}
+                              title={t.common.delete}
+                            >
+                              <FiTrash2 size={10} />
+                            </button>
+                          </div>
 
                           {/* Champion portrait with frame */}
                           <div className="flex justify-center pt-1">
@@ -396,7 +460,7 @@ export default function RosterPage() {
                               imageUrl={entry.image_url}
                               name={entry.champion_name}
                               rarity={entry.rarity}
-                              size={48}
+                              size={56}
                             />
                           </div>
 

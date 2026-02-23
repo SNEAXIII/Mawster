@@ -93,8 +93,8 @@ class ChampionUserCreateRequest(BaseModel):
 
 
 class ChampionUserBulkEntry(BaseModel):
-    """Single entry in a bulk roster add request."""
-    champion_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440001"])
+    """Single entry in a bulk roster update request."""
+    champion_name: str = Field(..., examples=["Spider-Man"])
     rarity: str = Field(..., examples=["6r4"])
     signature: int = Field(default=0, ge=0, examples=[200])
 

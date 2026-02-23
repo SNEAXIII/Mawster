@@ -179,19 +179,21 @@ class TestBulkAddChampions:
     @pytest.mark.asyncio
     async def test_bulk_add_ok(self, mocker):
         session = _mock_session(mocker)
-        session.get.side_effect = [
-            _make_game_account(),
-            _make_champion(),
-            _make_champion(),
-        ]
+        session.get.return_value = _make_game_account()
+        # Mock ChampionService.get_champion_by_name to return a champion
+        champion = _make_champion()
+        mocker.patch(
+            "src.services.ChampionUserService.ChampionService.get_champion_by_name",
+            return_value=champion,
+        )
         # No existing entries
         result_mock = mocker.MagicMock()
         result_mock.first.return_value = None
         session.exec.return_value = result_mock
 
         champions = [
-            {"champion_id": CHAMPION_ID, "rarity": "6r4", "signature": 0},
-            {"champion_id": CHAMPION_ID, "rarity": "6r5", "signature": 200},
+            {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 0},
+            {"champion_name": "Spider-Man", "rarity": "6r5", "signature": 200},
         ]
 
         results = await ChampionUserService.bulk_add_champions(
@@ -207,17 +209,19 @@ class TestBulkAddChampions:
     async def test_bulk_dedup_same_request(self, mocker):
         """If same champion+rarity appears twice, only first occurrence is kept."""
         session = _mock_session(mocker)
-        session.get.side_effect = [
-            _make_game_account(),
-            _make_champion(),
-        ]
+        session.get.return_value = _make_game_account()
+        champion = _make_champion()
+        mocker.patch(
+            "src.services.ChampionUserService.ChampionService.get_champion_by_name",
+            return_value=champion,
+        )
         result_mock = mocker.MagicMock()
         result_mock.first.return_value = None
         session.exec.return_value = result_mock
 
         champions = [
-            {"champion_id": CHAMPION_ID, "rarity": "6r4", "signature": 100},
-            {"champion_id": CHAMPION_ID, "rarity": "6r4", "signature": 200},  # duplicate
+            {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 100},
+            {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 200},  # duplicate
         ]
 
         results = await ChampionUserService.bulk_add_champions(
@@ -232,13 +236,18 @@ class TestBulkAddChampions:
         """If champion+rarity already in DB, update its signature."""
         session = _mock_session(mocker)
         existing = _make_champion_user(rarity="6r4", signature=0)
-        session.get.side_effect = [_make_game_account(), _make_champion()]
+        session.get.return_value = _make_game_account()
+        champion = _make_champion()
+        mocker.patch(
+            "src.services.ChampionUserService.ChampionService.get_champion_by_name",
+            return_value=champion,
+        )
         result_mock = mocker.MagicMock()
         result_mock.first.return_value = existing
         session.exec.return_value = result_mock
 
         champions = [
-            {"champion_id": CHAMPION_ID, "rarity": "6r4", "signature": 200},
+            {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 200},
         ]
 
         results = await ChampionUserService.bulk_add_champions(
@@ -255,29 +264,33 @@ class TestBulkAddChampions:
 
         with pytest.raises(HTTPException) as exc:
             await ChampionUserService.bulk_add_champions(
-                session, GAME_ACCOUNT_ID, [{"champion_id": CHAMPION_ID, "rarity": "6r4"}]
+                session, GAME_ACCOUNT_ID, [{"champion_name": "Spider-Man", "rarity": "6r4"}]
             )
         assert exc.value.status_code == 404
 
     @pytest.mark.asyncio
     async def test_bulk_invalid_rarity(self, mocker):
         session = _mock_session(mocker)
-        session.get.side_effect = [_make_game_account()]
+        session.get.return_value = _make_game_account()
 
         with pytest.raises(HTTPException) as exc:
             await ChampionUserService.bulk_add_champions(
-                session, GAME_ACCOUNT_ID, [{"champion_id": CHAMPION_ID, "rarity": "invalid"}]
+                session, GAME_ACCOUNT_ID, [{"champion_name": "Spider-Man", "rarity": "invalid"}]
             )
         assert exc.value.status_code == 400
 
     @pytest.mark.asyncio
     async def test_bulk_champion_not_found(self, mocker):
         session = _mock_session(mocker)
-        session.get.side_effect = [_make_game_account(), None]
+        session.get.return_value = _make_game_account()
+        mocker.patch(
+            "src.services.ChampionUserService.ChampionService.get_champion_by_name",
+            return_value=None,
+        )
 
         with pytest.raises(HTTPException) as exc:
             await ChampionUserService.bulk_add_champions(
-                session, GAME_ACCOUNT_ID, [{"champion_id": CHAMPION_ID, "rarity": "6r4"}]
+                session, GAME_ACCOUNT_ID, [{"champion_name": "NonExistentChamp", "rarity": "6r4"}]
             )
         assert exc.value.status_code == 404
 

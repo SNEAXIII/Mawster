@@ -354,31 +354,32 @@ export default function ChampionsPage() {
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1">
-                        <span className="text-gray-600 text-xs">
-                          {champion.alias || '-'}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => startEditAlias(champion)}
-                        >
-                          <FiEdit2 className="w-3 h-3" />
-                        </Button>
-                      </div>
+                      <span className="text-gray-600 text-xs">
+                        {champion.alias || '-'}
+                      </span>
                     )}
                   </td>
 
                   {/* Actions */}
                   <td className="p-3">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDeleteTarget(champion)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <FiTrash2 />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => startEditAlias(champion)}
+                        title="Edit alias"
+                      >
+                        <FiEdit2 className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeleteTarget(champion)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <FiTrash2 />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

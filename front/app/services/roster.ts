@@ -100,7 +100,7 @@ export interface RosterEntry {
 }
 
 export interface BulkChampionEntry {
-  champion_id: string;
+  champion_name: string;
   rarity: string;
   signature: number;
 }
@@ -154,7 +154,7 @@ export const getRoster = async (
   return response.json();
 };
 
-export const addChampionToRoster = async (
+export const updateChampionInRoster = async (
   gameAccountId: string,
   championId: string,
   rarity: string,
@@ -170,11 +170,11 @@ export const addChampionToRoster = async (
       signature,
     }),
   });
-  await throwOnError(response, "Erreur lors de l'ajout au roster");
+  await throwOnError(response, "Erreur lors de la mise à jour du roster");
   return response.json();
 };
 
-export const bulkAddToRoster = async (
+export const bulkUpdateRoster = async (
   gameAccountId: string,
   champions: BulkChampionEntry[],
 ): Promise<RosterEntry[]> => {
@@ -186,7 +186,7 @@ export const bulkAddToRoster = async (
       champions,
     }),
   });
-  await throwOnError(response, "Erreur lors de l'ajout en masse au roster");
+  await throwOnError(response, "Erreur lors de la mise à jour en masse du roster");
   return response.json();
 };
 

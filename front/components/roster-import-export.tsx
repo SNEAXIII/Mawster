@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { useI18n } from '@/app/i18n';
 import { FiDownload, FiUpload, FiArrowRight, FiCheck, FiX, FiAlertTriangle } from 'react-icons/fi';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +16,7 @@ import {
 import ChampionPortrait from '@/components/champion-portrait';
 import {
   RosterEntry,
-  bulkAddToRoster,
+  bulkUpdateRoster,
   getRoster,
   BulkChampionEntry,
   RARITY_LABELS,
@@ -25,21 +26,17 @@ import {
 } from '@/app/services/roster';
 import { getChampionImageUrl } from '@/app/services/champions';
 
-// ─── Export format ───────────────────────────────────────
+// ─── Export format (simplified) ──────────────────────────
 export interface RosterExportEntry {
-  champion_id: string;
   champion_name: string;
-  champion_class: string;
   rarity: string;
   signature: number;
-  image_url: string | null;
 }
 
 // ─── Preview row ─────────────────────────────────────────
 interface PreviewRow {
-  champion_id: string;
   champion_name: string;
-  champion_class: string;
+  champion_class: string | null;
   image_url: string | null;
   // imported data
   newRarity: string;
@@ -71,6 +68,7 @@ export default function RosterImportExport({
   selectedAccountId,
   onRosterUpdated,
 }: RosterImportExportProps) {
+  const { t } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Preview dialog
@@ -85,17 +83,14 @@ export default function RosterImportExport({
   // ── Export ─────────────────────────────────────────────
   const handleExport = useCallback(() => {
     if (roster.length === 0) {
-      toast.warning('Roster vide, rien à exporter');
+      toast.warning(t.roster.importExport.emptyExport);
       return;
     }
 
     const data: RosterExportEntry[] = roster.map((e) => ({
-      champion_id: e.champion_id,
       champion_name: e.champion_name,
-      champion_class: e.champion_class,
       rarity: e.rarity,
       signature: e.signature,
-      image_url: e.image_url,
     }));
 
     const json = JSON.stringify(data, null, 2);
@@ -109,8 +104,8 @@ export default function RosterImportExport({
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    toast.success(`${data.length} champion(s) exporté(s)`);
-  }, [roster]);
+    toast.success(t.roster.importExport.exportedCount.replace('{count}', String(data.length)));
+  }, [roster, t]);
 
   // ── Import: parse + validate + build preview ───────────
   const handleFileSelected = useCallback(
@@ -128,15 +123,15 @@ export default function RosterImportExport({
         try {
           parsed = JSON.parse(text);
         } catch {
-          throw new Error('Le fichier n\'est pas un JSON valide.');
+          throw new Error(t.roster.importExport.invalidJson);
         }
 
         if (!Array.isArray(parsed)) {
-          throw new Error('Le JSON doit être un tableau de champions.');
+          throw new Error(t.roster.importExport.notArray);
         }
 
         if (parsed.length === 0) {
-          throw new Error('Le fichier ne contient aucun champion.');
+          throw new Error(t.roster.importExport.emptyFile);
         }
 
         // Validate each entry
@@ -148,66 +143,59 @@ export default function RosterImportExport({
           const idx = i + 1;
 
           if (!item || typeof item !== 'object') {
-            errors.push(`Entrée #${idx}: doit être un objet.`);
+            errors.push(t.roster.importExport.entryNotObject.replace('{idx}', String(idx)));
             continue;
           }
 
           const obj = item as Record<string, unknown>;
 
-          if (!obj.champion_id || typeof obj.champion_id !== 'string') {
-            errors.push(`Entrée #${idx}: "champion_id" manquant ou invalide.`);
-            continue;
-          }
           if (!obj.champion_name || typeof obj.champion_name !== 'string') {
-            errors.push(`Entrée #${idx}: "champion_name" manquant ou invalide.`);
+            errors.push(t.roster.importExport.missingChampionName.replace('{idx}', String(idx)));
             continue;
           }
           if (!obj.rarity || typeof obj.rarity !== 'string') {
-            errors.push(`Entrée #${idx}: "rarity" manquant ou invalide.`);
+            errors.push(t.roster.importExport.missingRarity.replace('{idx}', String(idx)));
             continue;
           }
           if (!obj.rarity.match(/^[67]r[1-5]$/)) {
-            errors.push(`Entrée #${idx} (${obj.champion_name}): rarity "${obj.rarity}" invalide (attendu 6r4, 7r1, etc.).`);
+            errors.push(t.roster.importExport.invalidRarity.replace('{idx}', String(idx)).replace('{name}', obj.champion_name as string).replace('{rarity}', obj.rarity as string));
             continue;
           }
           if (obj.signature !== undefined && (typeof obj.signature !== 'number' || obj.signature < 0)) {
-            errors.push(`Entrée #${idx} (${obj.champion_name}): "signature" doit être un nombre >= 0.`);
+            errors.push(t.roster.importExport.invalidSignature.replace('{idx}', String(idx)).replace('{name}', obj.champion_name as string));
             continue;
           }
 
           entries.push({
-            champion_id: obj.champion_id as string,
             champion_name: obj.champion_name as string,
-            champion_class: (obj.champion_class as string) || 'Unknown',
             rarity: obj.rarity as string,
             signature: (typeof obj.signature === 'number' ? obj.signature : 0),
-            image_url: (obj.image_url as string | null) ?? null,
           });
         }
 
         if (errors.length > 0 && entries.length === 0) {
-          throw new Error(`Toutes les entrées sont invalides:\n${errors.join('\n')}`);
+          throw new Error(`${t.roster.importExport.allInvalid}\n${errors.join('\n')}`);
         }
 
         if (errors.length > 0) {
-          toast.warning(`${errors.length} entrée(s) ignorée(s) car invalide(s).`);
+          toast.warning(t.roster.importExport.skippedEntries.replace('{count}', String(errors.length)));
         }
 
-        // Deduplicate: keep last occurrence per (champion_id, stars)
+        // Deduplicate: keep last occurrence per (champion_name, stars)
         const deduped = new Map<string, RosterExportEntry>();
         for (const entry of entries) {
           const stars = entry.rarity.charAt(0);
-          const key = `${entry.champion_id}_${stars}`;
+          const key = `${entry.champion_name.toLowerCase()}_${stars}`;
           deduped.set(key, entry);
         }
         const uniqueEntries = Array.from(deduped.values());
 
         // Build preview rows
         const rows: PreviewRow[] = uniqueEntries.map((entry) => {
-          // Find existing entry in current roster matching champion_id + star level
+          // Find existing entry in current roster matching champion_name + star level
           const stars = entry.rarity.charAt(0);
           const existing = roster.find(
-            (r) => r.champion_id === entry.champion_id && r.rarity.charAt(0) === stars,
+            (r) => r.champion_name.toLowerCase() === entry.champion_name.toLowerCase() && r.rarity.charAt(0) === stars,
           );
 
           const isNew = !existing;
@@ -215,11 +203,15 @@ export default function RosterImportExport({
             existing!.rarity !== entry.rarity || existing!.signature !== entry.signature
           );
 
+          // Resolve champion class and image from the roster (any star level)
+          const rosterMatch = roster.find(
+            (r) => r.champion_name.toLowerCase() === entry.champion_name.toLowerCase(),
+          );
+
           return {
-            champion_id: entry.champion_id,
             champion_name: entry.champion_name,
-            champion_class: entry.champion_class,
-            image_url: entry.image_url,
+            champion_class: rosterMatch?.champion_class ?? null,
+            image_url: rosterMatch?.image_url ?? null,
             newRarity: entry.rarity,
             newSignature: entry.signature,
             oldRarity: existing?.rarity ?? null,
@@ -239,10 +231,10 @@ export default function RosterImportExport({
         setPreviewRows(rows);
         setPreviewOpen(true);
       } catch (err: any) {
-        toast.error(err.message || 'Erreur lors de la lecture du fichier');
+        toast.error(err.message || t.roster.importExport.fileReadError);
       }
     },
-    [roster],
+    [roster, t],
   );
 
   // ── Execute import via bulk API ────────────────────────
@@ -257,20 +249,20 @@ export default function RosterImportExport({
       const toSend = previewRows.filter((r) => r.isNew || r.hasChanges);
 
       if (toSend.length === 0) {
-        toast.info('Aucun changement à appliquer.');
+        toast.info(t.roster.importExport.noChanges);
         setPreviewOpen(false);
         setImporting(false);
         return;
       }
 
       const champions: BulkChampionEntry[] = toSend.map((r) => ({
-        champion_id: r.champion_id,
+        champion_name: r.champion_name,
         rarity: r.newRarity,
         signature: r.newSignature,
       }));
 
       try {
-        await bulkAddToRoster(selectedAccountId, champions);
+        await bulkUpdateRoster(selectedAccountId, champions);
 
         // All succeeded (bulk is atomic)
         for (const row of toSend) {
@@ -296,7 +288,7 @@ export default function RosterImportExport({
             champion_name: row.champion_name,
             success: false,
             isNew: row.isNew,
-            error: err.message || 'Erreur serveur',
+            error: err.message || t.roster.importExport.serverError,
           });
         }
       }
@@ -314,7 +306,7 @@ export default function RosterImportExport({
       setImportResults(results);
       setReportOpen(true);
     }
-  }, [previewRows, selectedAccountId, onRosterUpdated]);
+  }, [previewRows, selectedAccountId, onRosterUpdated, t]);
 
   // ── Summary counts ─────────────────────────────────────
   const previewNewCount = previewRows.filter((r) => r.isNew).length;
@@ -339,11 +331,11 @@ export default function RosterImportExport({
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={handleExport}>
           <FiDownload className="mr-1.5" size={14} />
-          Export JSON
+          {t.roster.importExport.exportJson}
         </Button>
         <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
           <FiUpload className="mr-1.5" size={14} />
-          Import JSON
+          {t.roster.importExport.importJson}
         </Button>
       </div>
 
@@ -351,20 +343,20 @@ export default function RosterImportExport({
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Aperçu de l&apos;import</DialogTitle>
+            <DialogTitle>{t.roster.importExport.previewTitle}</DialogTitle>
             <DialogDescription>
-              {previewRows.length} champion(s) détecté(s) —{' '}
-              <span className="text-green-600 font-medium">{previewNewCount} nouveau(x)</span>,{' '}
-              <span className="text-blue-600 font-medium">{previewChangeCount} mise(s) à jour</span>,{' '}
-              <span className="text-gray-500">{previewUnchangedCount} inchangé(s)</span>
+              {t.roster.importExport.detectedCount.replace('{count}', String(previewRows.length))} —{' '}
+              <span className="text-green-600 font-medium">{t.roster.importExport.newCount.replace('{count}', String(previewNewCount))}</span>,{' '}
+              <span className="text-blue-600 font-medium">{t.roster.importExport.updateCount.replace('{count}', String(previewChangeCount))}</span>,{' '}
+              <span className="text-gray-500">{t.roster.importExport.unchangedCount.replace('{count}', String(previewUnchangedCount))}</span>
             </DialogDescription>
           </DialogHeader>
 
           {/* Scrollable list */}
-          <div className="flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700 -mx-6 px-6">
+          <div className="flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700 px-2">
             {previewRows.map((row) => (
               <div
-                key={`${row.champion_id}_${row.newRarity}`}
+                key={`${row.champion_name}_${row.newRarity}`}
                 className={`py-2.5 flex items-center gap-3 ${
                   row.isNew
                     ? 'bg-green-50 dark:bg-green-950/30'
@@ -388,8 +380,8 @@ export default function RosterImportExport({
                   <p className="text-sm font-semibold truncate" title={row.champion_name}>
                     {shortenChampionName(row.champion_name)}
                   </p>
-                  <p className={`text-xs ${getClassColors(row.champion_class).text}`}>
-                    {row.champion_class}
+                  <p className={`text-xs ${getClassColors(row.champion_class ?? 'Unknown').text}`}>
+                    {row.champion_class ?? 'Unknown'}
                   </p>
                 </div>
 
@@ -398,7 +390,7 @@ export default function RosterImportExport({
                   {row.isNew ? (
                     <div>
                       <span className="inline-flex items-center gap-1 bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-0.5">
-                        NEW
+                        {t.roster.importExport.badgeNew}
                       </span>
                       <div className="text-gray-600 dark:text-gray-300">
                         {RARITY_LABELS[row.newRarity] ?? row.newRarity} · sig {row.newSignature}
@@ -427,7 +419,7 @@ export default function RosterImportExport({
                       )}
                     </div>
                   ) : (
-                    <span className="text-gray-400 italic">inchangé</span>
+                    <span className="text-gray-400 italic">{t.roster.importExport.badgeUnchanged}</span>
                   )}
                 </div>
               </div>
@@ -436,10 +428,10 @@ export default function RosterImportExport({
 
           <DialogFooter className="pt-3 border-t">
             <Button variant="outline" onClick={() => setPreviewOpen(false)} disabled={importing}>
-              Annuler
+              {t.roster.importExport.cancel}
             </Button>
             <Button onClick={executeImport} disabled={importing || (previewChangeCount + previewNewCount === 0)}>
-              {importing ? 'Import en cours…' : `Importer ${previewNewCount + previewChangeCount} champion(s)`}
+              {importing ? t.roster.importExport.importing : t.roster.importExport.importButton.replace('{count}', String(previewNewCount + previewChangeCount))}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -449,22 +441,22 @@ export default function RosterImportExport({
       <Dialog open={reportOpen} onOpenChange={setReportOpen}>
         <DialogContent className="max-w-lg max-h-[80vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Compte-rendu de l&apos;import</DialogTitle>
-            <DialogDescription className="flex items-center gap-3">
+            <DialogTitle>{t.roster.importExport.reportTitle}</DialogTitle>
+            <DialogDescription className="flex items-center gap-3 mt-1">
               {reportSuccessCount > 0 && (
                 <span className="inline-flex items-center gap-1 text-green-600 font-medium">
-                  <FiCheck size={14} /> {reportSuccessCount} réussi(s)
+                  <FiCheck size={14} /> {t.roster.importExport.successCount.replace('{count}', String(reportSuccessCount))}
                 </span>
               )}
               {reportFailCount > 0 && (
                 <span className="inline-flex items-center gap-1 text-red-600 font-medium">
-                  <FiX size={14} /> {reportFailCount} échoué(s)
+                  <FiX size={14} /> {t.roster.importExport.failCount.replace('{count}', String(reportFailCount))}
                 </span>
               )}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700 -mx-6 px-6">
+          <div className="flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700 px-2">
             {importResults.map((result, idx) => (
               <div
                 key={idx}
@@ -502,16 +494,16 @@ export default function RosterImportExport({
                   {result.success ? (
                     result.isNew ? (
                       <span className="text-[10px] font-bold bg-green-600 text-white px-1.5 py-0.5 rounded-full">
-                        AJOUTÉ
+                        {t.roster.importExport.badgeAdded}
                       </span>
                     ) : (
                       <span className="text-[10px] font-bold bg-blue-600 text-white px-1.5 py-0.5 rounded-full">
-                        MIS À JOUR
+                        {t.roster.importExport.badgeUpdated}
                       </span>
                     )
                   ) : (
                     <span className="text-[10px] font-bold bg-red-600 text-white px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                      <FiAlertTriangle size={9} /> ERREUR
+                      <FiAlertTriangle size={9} /> {t.roster.importExport.badgeError}
                     </span>
                   )}
                 </div>
@@ -520,7 +512,7 @@ export default function RosterImportExport({
           </div>
 
           <DialogFooter className="pt-3 border-t">
-            <Button onClick={() => setReportOpen(false)}>Fermer</Button>
+            <Button onClick={() => setReportOpen(false)}>{t.roster.importExport.close}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

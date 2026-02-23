@@ -85,7 +85,7 @@ async def bulk_add_champions(
         )
     champions_data = [
         {
-            "champion_id": entry.champion_id,
+            "champion_name": entry.champion_name,
             "rarity": entry.rarity,
             "signature": entry.signature,
         }
