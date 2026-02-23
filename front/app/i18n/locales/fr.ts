@@ -240,6 +240,7 @@ const fr: Translations = {
     chooseAccount: '-- Choisir un compte --',
     noAccounts: 'Vous devez d\'abord créer un compte de jeu pour gérer votre roster.',
     addChampion: 'Ajouter un champion',
+    addOrUpdate: 'Ajouter / Mettre à jour un champion',
     champion: 'Champion',
     searchChampion: 'Rechercher un champion...',
     rarity: 'Rareté',

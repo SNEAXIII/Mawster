@@ -235,6 +235,7 @@ const en = {
     chooseAccount: '-- Choose an account --',
     noAccounts: 'You need to create a game account first to manage your roster.',
     addChampion: 'Add Champion',
+    addOrUpdate: 'Add / Update a Champion',
     champion: 'Champion',
     searchChampion: 'Search a champion...',
     rarity: 'Rarity',

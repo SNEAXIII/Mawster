@@ -26,6 +26,68 @@ export const RARITY_LABELS: Record<string, string> = {
 
 export const SIGNATURE_PRESETS = [0, 20, 200];
 
+/** Tailwind classes for each rarity tier */
+export const RARITY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  '6r4': { bg: 'bg-purple-600',  text: 'text-white', border: 'border-purple-500' },
+  '6r5': { bg: 'bg-red-600',     text: 'text-white', border: 'border-red-500' },
+  '7r1': { bg: 'bg-blue-500',    text: 'text-white', border: 'border-blue-400' },
+  '7r2': { bg: 'bg-green-500',   text: 'text-white', border: 'border-green-400' },
+  '7r3': { bg: 'bg-yellow-500',  text: 'text-black', border: 'border-yellow-400' },
+  '7r4': { bg: 'bg-orange-500',  text: 'text-white', border: 'border-orange-400' },
+  '7r5': { bg: 'bg-rose-700',    text: 'text-white', border: 'border-rose-600' },
+};
+
+// ─── Champion classes ────────────────────────────────────
+export enum ChampionClass {
+  SKILL = 'Skill',
+  COSMIC = 'Cosmic',
+  MUTANT = 'Mutant',
+  MYSTIC = 'Mystic',
+  TECH = 'Tech',
+  SCIENCE = 'Science',
+}
+
+/** Tailwind color config per champion class */
+export const CLASS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  Skill:   { bg: 'bg-red-600',     text: 'text-white', border: 'border-red-500' },
+  Cosmic:  { bg: 'bg-cyan-400',    text: 'text-black', border: 'border-cyan-300' },
+  Mutant:  { bg: 'bg-yellow-400',  text: 'text-black', border: 'border-yellow-300' },
+  Mystic:  { bg: 'bg-purple-600',  text: 'text-white', border: 'border-purple-500' },
+  Tech:    { bg: 'bg-blue-800',    text: 'text-white', border: 'border-blue-700' },
+  Science: { bg: 'bg-green-600',   text: 'text-white', border: 'border-green-500' },
+};
+
+/** Return class colors with a safe fallback */
+export function getClassColors(championClass: string) {
+  return CLASS_COLORS[championClass] ?? { bg: 'bg-gray-500', text: 'text-white', border: 'border-gray-400' };
+}
+
+/** Frame image URL per star level */
+export function getStarFrameUrl(rarity: string): string {
+  const stars = rarity.charAt(0); // '6' or '7'
+  return `/static/frame/${stars}_stars.png`;
+}
+
+/** Extract the rank part from a rarity string, e.g. '7r5' → 'R5' */
+export function getRankLabel(rarity: string): string {
+  const parts = rarity.match(/(\d+)r(\d+)/);
+  if (!parts) return rarity.toUpperCase();
+  return `R${parts[2]}`;
+}
+
+/** Shorten a champion name for card display.
+ *  Removes parenthesized suffixes: "Spider-Woman (Jessica Drew)" → "Spider-Woman" */
+export function shortenChampionName(name: string): string {
+  return name.replace(/\s*\(.*\)\s*$/, '').trim();
+}
+
+/** Numeric sort value for a rarity string (higher = better). Used for descending sort. */
+export function raritySortValue(rarity: string): number {
+  const parts = rarity.match(/(\d+)r(\d+)/);
+  if (!parts) return 0;
+  return parseInt(parts[1]) * 10 + parseInt(parts[2]);
+}
+
 export interface RosterEntry {
   id: string;
   game_account_id: string;

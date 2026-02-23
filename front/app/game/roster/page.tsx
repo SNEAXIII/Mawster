@@ -3,10 +3,12 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
+import { toast } from 'sonner';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
+import ChampionPortrait from '@/components/champion-portrait';
 import { getMyGameAccounts, GameAccount } from '@/app/services/game';
 import {
   getRoster,
@@ -17,9 +19,12 @@ import {
   RARITIES,
   RARITY_LABELS,
   SIGNATURE_PRESETS,
+  raritySortValue,
+  getClassColors,
+  shortenChampionName,
 } from '@/app/services/roster';
 import { Champion, getChampionImageUrl } from '@/app/services/champions';
-import { FiTrash2, FiPlus, FiSearch } from 'react-icons/fi';
+import { FiTrash2, FiSearch, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 
 export default function RosterPage() {
   const { data: session, status: authStatus } = useSession();
@@ -43,6 +48,7 @@ export default function RosterPage() {
   const [signatureValue, setSignatureValue] = useState<number>(0);
   const [adding, setAdding] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Delete
   const [deleteTarget, setDeleteTarget] = useState<RosterEntry | null>(null);
@@ -103,6 +109,13 @@ export default function RosterPage() {
     };
   }, [championSearch]);
 
+  // Auto-focus search input when add form opens
+  useEffect(() => {
+    if (showAddForm) {
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    }
+  }, [showAddForm]);
+
   const handleAddChampion = useCallback(async () => {
     if (!selectedAccountId || !selectedChampion) return;
     setAdding(true);
@@ -117,14 +130,16 @@ export default function RosterPage() {
       // Refresh roster
       const updated = await getRoster(selectedAccountId);
       setRoster(updated);
-      // Reset form
+      toast.success(`${selectedChampion.name} ajouté / mis à jour`);
+      // Reset champion selection but keep the form open
       setSelectedChampion(null);
       setChampionSearch('');
       setSearchResults([]);
-      setSelectedRarity(RARITIES[0]);
       setSignatureValue(0);
-      setShowAddForm(false);
+      // Re-focus search input for quick next add
+      setTimeout(() => searchInputRef.current?.focus(), 50);
     } catch (e: any) {
+      toast.error(e.message || t.roster.errors.addError);
       setError(e.message || t.roster.errors.addError);
     } finally {
       setAdding(false);
@@ -133,26 +148,29 @@ export default function RosterPage() {
 
   const confirmDelete = useCallback(async () => {
     if (!deleteTarget || !selectedAccountId) return;
+    const name = deleteTarget.champion_name;
     try {
       await deleteRosterEntry(deleteTarget.id);
       const updated = await getRoster(selectedAccountId);
       setRoster(updated);
+      toast.success(`${name} retiré du roster`);
     } catch (e: any) {
+      toast.error(e.message || t.roster.errors.deleteError);
       setError(e.message || t.roster.errors.deleteError);
     } finally {
       setDeleteTarget(null);
     }
   }, [deleteTarget, selectedAccountId]);
 
-  // Group roster by rarity for display
-  const groupedRoster = RARITIES.reduce(
-    (acc, rarity) => {
+  // Group roster by rarity, sorted descending (7r5 first → 6r4 last)
+  const groupedRoster = (() => {
+    const groups: Record<string, RosterEntry[]> = {};
+    for (const rarity of [...RARITIES].reverse()) {
       const entries = roster.filter((r) => r.rarity === rarity);
-      if (entries.length > 0) acc[rarity] = entries;
-      return acc;
-    },
-    {} as Record<string, RosterEntry[]>,
-  );
+      if (entries.length > 0) groups[rarity] = entries;
+    }
+    return Object.entries(groups) as [string, RosterEntry[]][];
+  })();
 
   if (authStatus === 'loading' || loadingAccounts) {
     return (
@@ -205,36 +223,36 @@ export default function RosterPage() {
 
       {selectedAccountId && (
         <>
-          {/* Add champion button */}
-          <div className="mb-4">
-            <Button onClick={() => setShowAddForm(!showAddForm)}>
-              <FiPlus className="mr-1" />
-              {t.roster.addChampion}
-            </Button>
-          </div>
+          {/* Foldable add / update champion section */}
+          <div className="mb-6 border rounded-lg overflow-hidden">
+            <button
+              className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors font-semibold text-left"
+              onClick={() => setShowAddForm(!showAddForm)}
+            >
+              <span>{t.roster.addOrUpdate}</span>
+              {showAddForm ? <FiChevronUp size={18} /> : <FiChevronDown size={18} />}
+            </button>
 
-          {/* Add champion form */}
-          {showAddForm && (
-            <div className="border rounded-lg p-4 mb-6 bg-gray-50">
-              <h3 className="text-lg font-semibold mb-3">{t.roster.addChampion}</h3>
-
-              {/* Champion search */}
-              <div className="mb-3">
-                <label className="block text-sm font-medium mb-1">
-                  {t.roster.champion}
-                </label>
-                <div className="relative">
-                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <Input
-                    className="pl-9"
-                    placeholder={t.roster.searchChampion}
-                    value={championSearch}
-                    onChange={(e) => {
-                      setChampionSearch(e.target.value);
-                      setSelectedChampion(null);
-                    }}
-                  />
-                </div>
+            {showAddForm && (
+              <div className="p-4 border-t bg-white">
+                {/* Champion search */}
+                <div className="mb-3">
+                  <label className="block text-sm font-medium mb-1">
+                    {t.roster.champion}
+                  </label>
+                  <div className="relative">
+                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Input
+                      ref={searchInputRef}
+                      className="pl-9"
+                      placeholder={t.roster.searchChampion}
+                      value={championSearch}
+                      onChange={(e) => {
+                        setChampionSearch(e.target.value);
+                        setSelectedChampion(null);
+                      }}
+                    />
+                  </div>
 
                 {/* Search results dropdown */}
                 {searchResults.length > 0 && !selectedChampion && (
@@ -335,20 +353,10 @@ export default function RosterPage() {
                 >
                   {adding ? t.common.loading : t.roster.add}
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowAddForm(false);
-                    setSelectedChampion(null);
-                    setChampionSearch('');
-                    setSearchResults([]);
-                  }}
-                >
-                  {t.common.cancel}
-                </Button>
               </div>
             </div>
           )}
+          </div>
 
           {/* Roster visualization */}
           {loadingRoster ? (
@@ -357,51 +365,61 @@ export default function RosterPage() {
             <p className="text-gray-500">{t.roster.empty}</p>
           ) : (
             <div className="space-y-6">
-              {Object.entries(groupedRoster).map(([rarity, entries]) => (
+              {groupedRoster.map(([rarity, entries]) => (
                 <div key={rarity}>
                   <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                    <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-sm">
+                    <span className="bg-gray-800 text-yellow-400 px-3 py-0.5 rounded-md text-sm font-bold">
                       {RARITY_LABELS[rarity]}
                     </span>
                     <span className="text-sm text-gray-400">({entries.length})</span>
                   </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {entries.map((entry) => (
-                      <div
-                        key={entry.id}
-                        className="border rounded-lg p-3 bg-white shadow-sm hover:shadow-md transition-shadow relative group"
-                      >
-                        <button
-                          className="absolute top-1 right-1 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => setDeleteTarget(entry)}
-                          title={t.common.delete}
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2">
+                    {entries.map((entry) => {
+                      const classColors = getClassColors(entry.champion_class);
+                      return (
+                        <div
+                          key={entry.id}
+                          className={`rounded-md bg-gray-900 ${classColors.border} border-[3px] shadow hover:shadow-lg transition-shadow relative group overflow-hidden`}
                         >
-                          <FiTrash2 size={14} />
-                        </button>
-                        <div className="flex flex-col items-center text-center">
-                          {entry.image_url ? (
-                            <img
-                              src={getChampionImageUrl(entry.image_url, 40) ?? ''}
-                              alt={entry.champion_name}
-                              className="w-12 h-12 rounded-full object-cover mb-1"
+                          {/* Delete button */}
+                          <button
+                            className="absolute top-0.5 right-0.5 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity z-20 bg-black/50 rounded-full p-0.5"
+                            onClick={() => setDeleteTarget(entry)}
+                            title={t.common.delete}
+                          >
+                            <FiTrash2 size={10} />
+                          </button>
+
+                          {/* Champion portrait with frame */}
+                          <div className="flex justify-center pt-1">
+                            <ChampionPortrait
+                              imageUrl={entry.image_url}
+                              name={entry.champion_name}
+                              rarity={entry.rarity}
+                              size={48}
                             />
-                          ) : (
-                            <div className="w-12 h-12 rounded-full bg-gray-200 mb-1 flex items-center justify-center text-gray-400 text-xs">
-                              ?
-                            </div>
-                          )}
-                          <p className="text-sm font-medium truncate w-full">
-                            {entry.champion_name}
+                          </div>
+
+                          {/* Name (shortened) */}
+                          <p className="text-[10px] font-semibold text-white text-center truncate px-0.5 mt-0.5" title={entry.champion_name}>
+                            {shortenChampionName(entry.champion_name)}
                           </p>
-                          <p className="text-xs text-gray-400">{entry.champion_class}</p>
-                          {entry.signature > 0 && (
-                            <p className="text-xs text-amber-600 font-medium">
-                              sig {entry.signature}
-                            </p>
-                          )}
+
+                          {/* Signature */}
+                          <div className="flex justify-center pb-1">
+                            {entry.signature > 0 ? (
+                              <span className="text-amber-400 text-[9px] font-semibold">
+                                sig {entry.signature}
+                              </span>
+                            ) : (
+                              <span className="text-white/50 text-[9px]">
+                                sig 0
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               ))}

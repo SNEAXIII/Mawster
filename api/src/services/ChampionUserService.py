@@ -72,19 +72,19 @@ class ChampionUserService:
                 detail="Champion not found",
             )
 
-        # Check if same champion + stars + rank already exists → update signature
+        # Check if same champion + stars already exists → update rank & signature
         existing = await session.exec(
             select(ChampionUser).where(
                 and_(
                     ChampionUser.game_account_id == game_account_id,
                     ChampionUser.champion_id == champion_id,
                     ChampionUser.stars == stars,
-                    ChampionUser.rank == rank,
                 )
             )
         )
         existing_entry = existing.first()
         if existing_entry is not None:
+            existing_entry.rank = rank
             existing_entry.signature = signature
             session.add(existing_entry)
             await session.commit()
@@ -124,7 +124,7 @@ class ChampionUserService:
             )
 
         results = []
-        seen = set()  # (champion_id, stars, rank) tuples already processed
+        seen = set()  # (champion_id, stars) tuples already processed
 
         for entry in champions:
             champion_id = entry["champion_id"]
@@ -133,8 +133,8 @@ class ChampionUserService:
 
             stars, rank = cls._parse_rarity(rarity)
 
-            # Dedup within same request: skip duplicates
-            key = (str(champion_id), stars, rank)
+            # Dedup within same request: skip duplicates (unique per champion+stars)
+            key = (str(champion_id), stars)
             if key in seen:
                 continue
             seen.add(key)
@@ -147,20 +147,20 @@ class ChampionUserService:
                     detail=f"Champion {champion_id} not found",
                 )
 
-            # Check if exists in DB
+            # Check if exists in DB (unique per champion+stars)
             existing = await session.exec(
                 select(ChampionUser).where(
                     and_(
                         ChampionUser.game_account_id == game_account_id,
                         ChampionUser.champion_id == champion_id,
                         ChampionUser.stars == stars,
-                        ChampionUser.rank == rank,
                     )
                 )
             )
             existing_entry = existing.first()
 
             if existing_entry is not None:
+                existing_entry.rank = rank
                 existing_entry.signature = signature
                 session.add(existing_entry)
                 results.append(existing_entry)
