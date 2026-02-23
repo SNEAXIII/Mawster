@@ -436,3 +436,45 @@ class TestDeleteRoster:
         count = await ChampionUserService.delete_roster(session, GAME_ACCOUNT_ID)
 
         assert count == 0
+
+
+# =========================================================================
+# upgrade_champion_rank
+# =========================================================================
+
+
+class TestUpgradeChampionRank:
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "before,after",
+        [
+            ("6r4", "6r5"),
+            ("7r1", "7r2"),
+            ("7r2", "7r3"),
+            ("7r3", "7r4"),
+            ("7r4", "7r5"),
+        ],
+    )
+    async def test_upgrade_ok(self, mocker, before, after):
+        session = _mock_session(mocker)
+        entry = _make_champion_user(rarity=before, signature=42)
+
+        result = await ChampionUserService.upgrade_champion_rank(session, entry)
+
+        assert result.rarity == after
+        assert result.signature == 42  # preserved
+        session.add.assert_called_once_with(entry)
+        session.commit.assert_awaited_once()
+        session.refresh.assert_awaited_once_with(entry)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("rarity", ["6r5", "7r5"])
+    async def test_upgrade_max_rank_raises_400(self, mocker, rarity):
+        session = _mock_session(mocker)
+        entry = _make_champion_user(rarity=rarity)
+
+        with pytest.raises(HTTPException) as exc_info:
+            await ChampionUserService.upgrade_champion_rank(session, entry)
+
+        assert exc_info.value.status_code == 400
+        assert "maximum rank" in exc_info.value.detail.lower()

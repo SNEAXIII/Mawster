@@ -191,3 +191,23 @@ async def delete_champion_user(
     if game_account is None or game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
     await ChampionUserService.delete_champion_user(session, champion_user)
+
+
+@champion_user_controller.patch(
+    "/{champion_user_id}/upgrade",
+    response_model=ChampionUserResponse,
+)
+async def upgrade_champion_rank(
+    champion_user_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Upgrade a champion to the next rank (e.g. 7r2 → 7r3)."""
+    champion_user = await ChampionUserService.get_champion_user(session, champion_user_id)
+    if champion_user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+    game_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
+    if game_account is None or game_account.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
+    upgraded = await ChampionUserService.upgrade_champion_rank(session, champion_user)
+    return ChampionUserResponse.from_model(upgraded)

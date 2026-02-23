@@ -199,3 +199,24 @@ export const deleteRosterEntry = async (
   });
   await throwOnError(response, 'Erreur lors de la suppression du roster');
 };
+
+/** Compute the next rarity (one rank up). Returns null if already max. */
+export function getNextRarity(rarity: string): string | null {
+  const idx = RARITIES.indexOf(rarity as ChampionRarity);
+  if (idx < 0 || idx >= RARITIES.length - 1) return null;
+  return RARITIES[idx + 1];
+}
+
+export const upgradeChampionRank = async (
+  championUserId: string,
+): Promise<RosterEntry> => {
+  const response = await fetch(
+    `${PROXY}/champion-users/${championUserId}/upgrade`,
+    {
+      method: 'PATCH',
+      headers: jsonHeaders,
+    },
+  );
+  await throwOnError(response, "Erreur lors de l'amélioration du champion");
+  return response.json();
+};

@@ -247,6 +247,11 @@ const en = {
     deleteConfirmTitle: 'Remove from roster',
     deleteConfirmDesc: 'Are you sure you want to remove {name} from your roster?',
     alreadyInRoster: 'Already in roster:',
+    upgrade: 'Upgrade rank',
+    upgradeSuccess: '{name} upgraded to {rarity}',
+    upgradeConfirmTitle: 'Upgrade champion rank',
+    upgradeConfirmDesc: 'Do you want to upgrade {name} from {from} to {to}?',
+    upgradeConfirmButton: 'Upgrade',
     importExport: {
       exportJson: 'Export JSON',
       importJson: 'Import JSON',
@@ -288,6 +293,7 @@ const en = {
       loadRoster: 'An error occurred while loading your roster',
       addError: 'An error occurred while updating the champion',
       deleteError: 'An error occurred while removing the champion',
+      upgradeError: 'An error occurred while upgrading the champion',
     },
   },
 } as const;

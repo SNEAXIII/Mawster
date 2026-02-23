@@ -15,6 +15,7 @@ from tests.utils.utils_client import (
     execute_post_request,
     execute_put_request,
     execute_delete_request,
+    execute_patch_request,
 )
 from tests.utils.utils_constant import (
     USER_ID,
@@ -535,3 +536,118 @@ class TestDeleteChampionUser:
             f"/champion-users/{entry.id}", headers=HEADERS
         )
         assert response.status_code == 403
+
+
+# =========================================================================
+# PATCH /champion-users/{id}/upgrade
+# =========================================================================
+
+
+class TestUpgradeChampionRank:
+    @pytest.mark.asyncio
+    async def test_upgrade_ok(self, session):
+        """7r2 → 7r3"""
+        await _setup_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await _push_champion()
+        entry = await _push_champion_user(acc.id, champ.id, "7r2", signature=50)
+
+        response = await execute_patch_request(
+            f"/champion-users/{entry.id}/upgrade", {}, headers=HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["rarity"] == "7r3"
+        assert body["signature"] == 50  # signature preserved
+
+    @pytest.mark.asyncio
+    async def test_upgrade_6r4_to_6r5(self, session):
+        """6r4 → 6r5"""
+        await _setup_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await _push_champion()
+        entry = await _push_champion_user(acc.id, champ.id, "6r4")
+
+        response = await execute_patch_request(
+            f"/champion-users/{entry.id}/upgrade", {}, headers=HEADERS
+        )
+        assert response.status_code == 200
+        assert response.json()["rarity"] == "6r5"
+
+    @pytest.mark.asyncio
+    async def test_upgrade_max_rank_returns_400(self, session):
+        """7r5 is max → 400"""
+        await _setup_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await _push_champion()
+        entry = await _push_champion_user(acc.id, champ.id, "7r5")
+
+        response = await execute_patch_request(
+            f"/champion-users/{entry.id}/upgrade", {}, headers=HEADERS
+        )
+        assert response.status_code == 400
+        assert "maximum rank" in response.json()["message"].lower()
+
+    @pytest.mark.asyncio
+    async def test_upgrade_6r5_max_for_6_star_returns_400(self, session):
+        """6r5 is max for 6-star → 400 (6r6 is not a valid rarity)"""
+        await _setup_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await _push_champion()
+        entry = await _push_champion_user(acc.id, champ.id, "6r5")
+
+        response = await execute_patch_request(
+            f"/champion-users/{entry.id}/upgrade", {}, headers=HEADERS
+        )
+        assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_upgrade_not_found_404(self, session):
+        await _setup_user()
+        response = await execute_patch_request(
+            f"/champion-users/{uuid.uuid4()}/upgrade", {}, headers=HEADERS
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_upgrade_not_own_champion_403(self, session):
+        await _setup_user()
+        await _setup_user2()
+        acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        champ = await _push_champion()
+        entry = await _push_champion_user(acc.id, champ.id, "7r1")
+
+        response = await execute_patch_request(
+            f"/champion-users/{entry.id}/upgrade", {}, headers=HEADERS
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_upgrade_without_auth_returns_401(self, session):
+        await _setup_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await _push_champion()
+        entry = await _push_champion_user(acc.id, champ.id, "7r1")
+
+        response = await execute_patch_request(
+            f"/champion-users/{entry.id}/upgrade", {}
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_upgrade_preserves_champion_id(self, session):
+        """Ensure upgrade only changes rank, not champion_id or game_account_id."""
+        await _setup_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await _push_champion()
+        entry = await _push_champion_user(acc.id, champ.id, "7r1", signature=100)
+
+        response = await execute_patch_request(
+            f"/champion-users/{entry.id}/upgrade", {}, headers=HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["champion_id"] == str(champ.id)
+        assert body["game_account_id"] == str(acc.id)
+        assert body["rarity"] == "7r2"
+        assert body["signature"] == 100

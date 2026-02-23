@@ -252,6 +252,11 @@ const fr: Translations = {
     deleteConfirmTitle: 'Retirer du roster',
     deleteConfirmDesc: 'Êtes-vous sûr de vouloir retirer {name} de votre roster ?',
     alreadyInRoster: 'Déjà dans le roster :',
+    upgrade: 'Améliorer le rang',
+    upgradeSuccess: '{name} amélioré en {rarity}',
+    upgradeConfirmTitle: 'Améliorer le rang du champion',
+    upgradeConfirmDesc: 'Voulez-vous passer {name} du rang {from} à {to} ?',
+    upgradeConfirmButton: 'Améliorer',
     importExport: {
       exportJson: 'Exporter JSON',
       importJson: 'Importer JSON',
@@ -293,6 +298,7 @@ const fr: Translations = {
       loadRoster: 'Une erreur est survenue lors du chargement de votre roster',
       addError: "Une erreur est survenue lors de la mise à jour du champion",
       deleteError: 'Une erreur est survenue lors de la suppression du champion',
+      upgradeError: "Une erreur est survenue lors de l'amélioration du champion",
     },
   },
 } as const;

@@ -224,6 +224,33 @@ class ChampionUserService:
         await session.commit()
 
     @classmethod
+    async def upgrade_champion_rank(
+        cls, session: SessionDep, champion_user: ChampionUser
+    ) -> ChampionUser:
+        """Promote a champion to the next rank (e.g. 7r2 → 7r3).
+
+        Raises 400 if the champion is already at the maximum rank for its star level.
+        """
+        current_rarity = champion_user.rarity  # e.g. "7r2"
+        stars, rank = cls._parse_rarity(current_rarity)
+
+        # Build the next rarity string
+        next_rank = rank + 1
+        next_rarity = f"{stars}r{next_rank}"
+
+        if next_rarity not in VALID_RARITIES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Champion is already at maximum rank ({current_rarity})",
+            )
+
+        champion_user.rank = next_rank
+        session.add(champion_user)
+        await session.commit()
+        await session.refresh(champion_user)
+        return champion_user
+
+    @classmethod
     async def delete_roster(
         cls, session: SessionDep, game_account_id: uuid.UUID
     ) -> int:

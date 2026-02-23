@@ -25,7 +25,11 @@ import {
   shortenChampionName,
 } from '@/app/services/roster';
 import { Champion, getChampionImageUrl } from '@/app/services/champions';
-import { FiTrash2, FiSearch, FiChevronDown, FiChevronUp, FiEdit2 } from 'react-icons/fi';
+import { FiTrash2, FiSearch, FiChevronDown, FiChevronUp, FiEdit2, FiArrowUp } from 'react-icons/fi';
+import {
+  upgradeChampionRank,
+  getNextRarity,
+} from '@/app/services/roster';
 
 export default function RosterPage() {
   const { data: session, status: authStatus } = useSession();
@@ -50,9 +54,14 @@ export default function RosterPage() {
   const [adding, setAdding] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const addFormRef = useRef<HTMLDivElement>(null);
 
   // Delete
   const [deleteTarget, setDeleteTarget] = useState<RosterEntry | null>(null);
+
+  // Upgrade
+  const [upgradeTarget, setUpgradeTarget] = useState<RosterEntry | null>(null);
+  const [upgrading, setUpgrading] = useState(false);
 
   // Error
   const [error, setError] = useState<string | null>(null);
@@ -179,7 +188,33 @@ export default function RosterPage() {
     setSelectedRarity(entry.rarity);
     setSignatureValue(entry.signature);
     setShowAddForm(true);
+    setTimeout(() => {
+      addFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      searchInputRef.current?.focus();
+    }, 100);
   }, []);
+
+  const confirmUpgrade = useCallback(async () => {
+    if (!upgradeTarget || !selectedAccountId) return;
+    const nextRarity = getNextRarity(upgradeTarget.rarity);
+    if (!nextRarity) return;
+    setUpgrading(true);
+    try {
+      await upgradeChampionRank(upgradeTarget.id);
+      const updated = await getRoster(selectedAccountId);
+      setRoster(updated);
+      toast.success(
+        t.roster.upgradeSuccess
+          .replace('{name}', upgradeTarget.champion_name)
+          .replace('{rarity}', RARITY_LABELS[nextRarity] ?? nextRarity),
+      );
+    } catch (e: any) {
+      toast.error(e.message || t.roster.errors.upgradeError);
+    } finally {
+      setUpgrading(false);
+      setUpgradeTarget(null);
+    }
+  }, [upgradeTarget, selectedAccountId]);
 
   // Group roster by rarity, sorted descending (7r5 first → 6r4 last)
   const groupedRoster = (() => {
@@ -252,7 +287,7 @@ export default function RosterPage() {
       {selectedAccountId && (
         <>
           {/* Foldable add / update champion section */}
-          <div className="mb-6 border rounded-lg overflow-hidden">
+          <div ref={addFormRef} className="mb-6 border rounded-lg overflow-hidden">
             <button
               className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors font-semibold text-left"
               onClick={() => setShowAddForm(!showAddForm)}
@@ -336,12 +371,12 @@ export default function RosterPage() {
                           {existingEntries.map((entry) => (
                             <div
                               key={entry.id}
-                              className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1"
+                              className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1"
                             >
                               <span className={`font-semibold ${getClassColors(entry.champion_class).text}`}>
                                 {RARITY_LABELS[entry.rarity] ?? entry.rarity}
                               </span>
-                              <span>· sig {entry.signature}</span>
+                              <span className="text-amber-600 dark:text-amber-400">· sig {entry.signature}</span>
                             </div>
                           ))}
                         </div>
@@ -437,20 +472,29 @@ export default function RosterPage() {
                           className={`rounded-md bg-gray-900 ${classColors.border} border-[3px] shadow hover:shadow-lg transition-shadow relative group overflow-hidden`}
                         >
                           {/* Action buttons */}
-                          <div className="absolute top-0.5 right-0.5 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                          <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                            {getNextRarity(entry.rarity) && (
+                              <button
+                                className="text-green-400 hover:text-green-300 bg-black/60 rounded-full p-1"
+                                onClick={() => setUpgradeTarget(entry)}
+                                title={t.roster.upgrade}
+                              >
+                                <FiArrowUp size={14} />
+                              </button>
+                            )}
                             <button
-                              className="text-blue-400 hover:text-blue-300 bg-black/50 rounded-full p-0.5"
+                              className="text-blue-400 hover:text-blue-300 bg-black/60 rounded-full p-1"
                               onClick={() => startEditEntry(entry)}
                               title="Edit"
                             >
-                              <FiEdit2 size={10} />
+                              <FiEdit2 size={14} />
                             </button>
                             <button
-                              className="text-red-400 hover:text-red-600 bg-black/50 rounded-full p-0.5"
+                              className="text-red-400 hover:text-red-600 bg-black/60 rounded-full p-1"
                               onClick={() => setDeleteTarget(entry)}
                               title={t.common.delete}
                             >
-                              <FiTrash2 size={10} />
+                              <FiTrash2 size={14} />
                             </button>
                           </div>
 
@@ -460,7 +504,7 @@ export default function RosterPage() {
                               imageUrl={entry.image_url}
                               name={entry.champion_name}
                               rarity={entry.rarity}
-                              size={56}
+                              size={72}
                             />
                           </div>
 
@@ -505,6 +549,24 @@ export default function RosterPage() {
         cancelText={t.common.cancel}
         onConfirm={confirmDelete}
         variant="destructive"
+      />
+
+      {/* Upgrade confirmation dialog */}
+      <ConfirmationDialog
+        open={upgradeTarget !== null}
+        onOpenChange={(open) => !open && setUpgradeTarget(null)}
+        title={t.roster.upgradeConfirmTitle}
+        description={
+          upgradeTarget
+            ? t.roster.upgradeConfirmDesc
+                .replace('{name}', upgradeTarget.champion_name)
+                .replace('{from}', RARITY_LABELS[upgradeTarget.rarity] ?? upgradeTarget.rarity)
+                .replace('{to}', RARITY_LABELS[getNextRarity(upgradeTarget.rarity) ?? ''] ?? '')
+            : ''
+        }
+        confirmText={t.roster.upgradeConfirmButton}
+        cancelText={t.common.cancel}
+        onConfirm={confirmUpgrade}
       />
     </div>
   );
