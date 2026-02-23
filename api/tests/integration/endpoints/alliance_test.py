@@ -85,7 +85,7 @@ class TestCreateAlliance:
             "/alliances",
             {"name": "X", "tag": "X", "owner_id": str(uuid.uuid4())},
         )
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(

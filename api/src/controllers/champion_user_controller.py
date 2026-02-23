@@ -53,13 +53,7 @@ async def create_champion_user(
         rarity=body.rarity,
         signature=body.signature,
     )
-    return ChampionUserResponse(
-        id=result.id,
-        game_account_id=result.game_account_id,
-        champion_id=result.champion_id,
-        rarity=result.rarity,
-        signature=result.signature,
-    )
+    return ChampionUserResponse.from_model(result)
 
 
 @champion_user_controller.post(
@@ -96,16 +90,7 @@ async def bulk_add_champions(
         game_account_id=body.game_account_id,
         champions=champions_data,
     )
-    return [
-        ChampionUserResponse(
-            id=e.id,
-            game_account_id=e.game_account_id,
-            champion_id=e.champion_id,
-            rarity=e.rarity,
-            signature=e.signature,
-        )
-        for e in entries
-    ]
+    return [ChampionUserResponse.from_model(e) for e in entries]
 
 
 @champion_user_controller.get(
@@ -160,13 +145,7 @@ async def get_champion_user(
     game_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
     if game_account is None or game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
-    return ChampionUserResponse(
-        id=champion_user.id,
-        game_account_id=champion_user.game_account_id,
-        champion_id=champion_user.champion_id,
-        rarity=champion_user.rarity,
-        signature=champion_user.signature,
-    )
+    return ChampionUserResponse.from_model(champion_user)
 
 
 @champion_user_controller.put(
@@ -192,13 +171,7 @@ async def update_champion_user(
         rarity=body.rarity,
         signature=body.signature,
     )
-    return ChampionUserResponse(
-        id=updated.id,
-        game_account_id=updated.game_account_id,
-        champion_id=updated.champion_id,
-        rarity=updated.rarity,
-        signature=updated.signature,
-    )
+    return ChampionUserResponse.from_model(updated)
 
 
 @champion_user_controller.delete(

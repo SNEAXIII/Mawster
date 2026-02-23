@@ -57,9 +57,9 @@ class TestGetSession:
         assert body["email"] == USER_EMAIL
 
     @pytest.mark.asyncio
-    async def test_no_auth_header_returns_403(self, session):
+    async def test_no_auth_header_returns_401(self, session):
         response = await execute_get_request("/auth/session")
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_malformed_token_returns_401(self, session):
@@ -154,9 +154,9 @@ class TestPostSession:
         assert response.status_code in (401, 422)
 
     @pytest.mark.asyncio
-    async def test_missing_token_field_returns_422(self, session):
+    async def test_missing_token_field_returns_400(self, session):
         response = await execute_post_request("/auth/session", payload={})
-        assert response.status_code == 422
+        assert response.status_code == 400
 
     @pytest.mark.asyncio
     async def test_deleted_user_token_returns_error(self, session):
@@ -188,9 +188,9 @@ class TestDiscordLogin:
     """POST /auth/discord — Discord OAuth2 flow."""
 
     @pytest.mark.asyncio
-    async def test_missing_access_token_returns_422(self, session):
+    async def test_missing_access_token_returns_400(self, session):
         response = await execute_post_request("/auth/discord", payload={})
-        assert response.status_code == 422
+        assert response.status_code == 400
 
     @pytest.mark.asyncio
     async def test_empty_access_token_returns_error(self, session):

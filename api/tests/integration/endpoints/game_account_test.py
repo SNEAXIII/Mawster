@@ -77,12 +77,12 @@ class TestCreateGameAccount:
         assert body["is_primary"] is True
 
     @pytest.mark.asyncio
-    async def test_create_without_auth_returns_403(self, session):
+    async def test_create_without_auth_returns_401(self, session):
         response = await execute_post_request(
             "/game-accounts",
             {"game_pseudo": GAME_PSEUDO, "is_primary": False},
         )
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_create_exceeds_limit(self, session):

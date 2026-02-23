@@ -6,7 +6,6 @@ from sqlmodel import select, or_
 
 from src.Messages.champion_messages import (
     CHAMPION_NOT_FOUND,
-    CHAMPION_NAME_ALREADY_EXISTS,
 )
 from src.dto.dto_game import (
     ChampionAdminViewAll,

@@ -1,7 +1,7 @@
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.dto.dto_utilisateurs import UserAdminViewAllUsers
 from src.enums.Roles import Roles
@@ -28,19 +28,11 @@ admin_controller = APIRouter(
 @admin_controller.get("/users", status_code=200, response_model=UserAdminViewAllUsers)
 async def get_users(
     session: SessionDep,
-    page: int = 1,
-    size: int = 10,
+    page: int = Query(default=1, ge=1),
+    size: int = Query(default=10, ge=1),
     status: Optional[str] = None,
     role: Optional[Roles] = None,
 ):
-    if page < 1:
-        raise HTTPException(
-            status_code=400, detail="Le numéro de la page doit être positif"
-        )
-    if size < 1:
-        raise HTTPException(
-            status_code=400, detail="Le taille de la page doit être positif"
-        )
     result = await UserService.get_users_with_pagination(
         session, page, size, status, role
     )

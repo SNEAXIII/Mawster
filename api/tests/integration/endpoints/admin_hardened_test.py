@@ -25,6 +25,8 @@ from tests.utils.utils_constant import (
     USER2_ID,
     USER2_LOGIN,
     USER2_EMAIL,
+    ADMIN_LOGIN,
+    ADMIN_EMAIL,
     DISCORD_ID_2,
 )
 from tests.utils.utils_db import get_test_session, load_objects
@@ -32,11 +34,12 @@ from tests.utils.utils_db import get_test_session, load_objects
 app.dependency_overrides[get_session] = get_test_session
 
 USER_HEADERS = create_auth_headers(role=Roles.USER)
-ADMIN_HEADERS = create_auth_headers(role=Roles.ADMIN)
+ADMIN_HEADERS = create_auth_headers(login=ADMIN_LOGIN, user_id=str(USER_ID), email=ADMIN_EMAIL, role=Roles.ADMIN)
 
 
 async def _setup_admin():
-    await push_one_admin()
+    admin = get_generic_user(is_base_id=True, login=ADMIN_LOGIN, email=ADMIN_EMAIL, role=Roles.ADMIN)
+    await load_objects([admin])
 
 
 async def _setup_user():
@@ -76,9 +79,9 @@ class TestGetUsersHardened:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_no_auth_returns_403(self, session):
+    async def test_no_auth_returns_401(self, session):
         response = await execute_get_request("/admin/users")
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -178,7 +181,7 @@ class TestDisableUserHardened:
         response = await execute_patch_request(
             "/admin/users/disable/not-a-uuid", {}, headers=ADMIN_HEADERS
         )
-        assert response.status_code == 422
+        assert response.status_code == 400
 
 
 # =========================================================================
@@ -328,4 +331,4 @@ class TestPromoteUserHardened:
         response = await execute_patch_request(
             "/admin/users/promote/not-a-uuid", {}, headers=ADMIN_HEADERS
         )
-        assert response.status_code == 422
+        assert response.status_code == 400

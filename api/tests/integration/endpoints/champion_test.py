@@ -92,12 +92,12 @@ class TestGetChampions:
         response = await execute_get_request(
             "/admin/champions?page=1&size=10", headers=USER_HEADERS
         )
-        assert response.status_code == 401
+        assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_no_auth_returns_403(self, session):
+    async def test_no_auth_returns_401(self, session):
         response = await execute_get_request("/admin/champions?page=1&size=10")
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -240,7 +240,7 @@ class TestGetChampionById:
         response = await execute_get_request(
             f"/admin/champions/{uuid.uuid4()}", headers=USER_HEADERS
         )
-        assert response.status_code == 401
+        assert response.status_code == 403
 
 
 # =========================================================================
@@ -303,7 +303,7 @@ class TestUpdateAlias:
             payload={"alias": "test"},
             headers=USER_HEADERS,
         )
-        assert response.status_code == 401
+        assert response.status_code == 403
 
 
 # =========================================================================
@@ -372,7 +372,7 @@ class TestLoadChampions:
         response = await execute_post_request(
             "/admin/champions/load", payload=payload, headers=USER_HEADERS
         )
-        assert response.status_code == 401
+        assert response.status_code == 403
 
 
 # =========================================================================
@@ -411,4 +411,4 @@ class TestDeleteChampion:
         response = await execute_delete_request(
             f"/admin/champions/{uuid.uuid4()}", headers=USER_HEADERS
         )
-        assert response.status_code == 401
+        assert response.status_code == 403

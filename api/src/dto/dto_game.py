@@ -112,6 +112,16 @@ class ChampionUserResponse(BaseModel):
     rarity: str
     signature: int
 
+    @classmethod
+    def from_model(cls, m) -> "ChampionUserResponse":
+        return cls(
+            id=m.id,
+            game_account_id=m.game_account_id,
+            champion_id=m.champion_id,
+            rarity=m.rarity,
+            signature=m.signature,
+        )
+
 
 class ChampionUserDetailResponse(BaseModel):
     """Roster entry with champion details for display."""

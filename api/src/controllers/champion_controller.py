@@ -1,7 +1,7 @@
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.dto.dto_game import (
     ChampionAdminViewAll,
@@ -31,19 +31,11 @@ champion_controller = APIRouter(
 @champion_controller.get("", status_code=200, response_model=ChampionAdminViewAll)
 async def get_champions(
     session: SessionDep,
-    page: int = 1,
-    size: int = 20,
+    page: int = Query(default=1, ge=1),
+    size: int = Query(default=20, ge=1),
     champion_class: Optional[str] = None,
     search: Optional[str] = None,
 ):
-    if page < 1:
-        raise HTTPException(
-            status_code=400, detail="Le numéro de la page doit être positif"
-        )
-    if size < 1:
-        raise HTTPException(
-            status_code=400, detail="La taille de la page doit être positive"
-        )
     return await ChampionService.get_champions_with_pagination(
         session, page, size, champion_class, search
     )

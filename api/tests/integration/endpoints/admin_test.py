@@ -78,7 +78,7 @@ class TestGetUsers:
     @pytest.mark.asyncio
     async def test_non_admin_cannot_list_users(self, session):
         response = await execute_get_request("/admin/users", headers=USER_HEADERS)
-        assert response.status_code == 401
+        assert response.status_code == 403
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(

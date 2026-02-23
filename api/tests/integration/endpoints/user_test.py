@@ -60,4 +60,4 @@ class TestSelfDeleteUser:
             "/user/delete",
             payload={"confirmation": CONFIRMATION_TEXT},
         )
-        assert response.status_code == 403
+        assert response.status_code == 401

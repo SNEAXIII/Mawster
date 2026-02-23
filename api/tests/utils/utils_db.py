@@ -66,17 +66,18 @@ def reset_test_db():
         # If drop_all fails (e.g., first run), ignore and proceed to create_all
         print(f"Warning during drop_all in reset_test_db: {e}")
     SQLModel.metadata.create_all(sqlite_sync_engine)
-    # Reset SQLite AUTOINCREMENT sequences (if present) to restart indexes from 1.
 
+    # Truncate all tables to ensure clean state even if drop_all silently failed
     with sqlite_sync_engine.begin() as conn:
-        # Check if sqlite_sequence table exists (only on SQLite with AUTOINCREMENT)
+        for table in reversed(SQLModel.metadata.sorted_tables):
+            conn.execute(text(f"DELETE FROM [{table.name}]"))
+        # Reset SQLite AUTOINCREMENT sequences (if present)
         result = conn.execute(
             text("SELECT name FROM sqlite_master WHERE type='table' AND name=:name"),
             {"name": "sqlite_sequence"},
         )
         row = result.first()
         if row:
-            # Delete sequence entries to reset autoincrement counters
             conn.execute(text("DELETE FROM sqlite_sequence"))
 
 

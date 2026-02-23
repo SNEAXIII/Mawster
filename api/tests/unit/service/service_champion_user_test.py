@@ -193,7 +193,7 @@ class TestBulkAddChampions:
 
         champions = [
             {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 0},
-            {"champion_name": "Spider-Man", "rarity": "6r5", "signature": 200},
+            {"champion_name": "Spider-Man", "rarity": "7r3", "signature": 200},
         ]
 
         results = await ChampionUserService.bulk_add_champions(
@@ -202,7 +202,7 @@ class TestBulkAddChampions:
 
         assert len(results) == 2
         assert results[0].rarity == "6r4"
-        assert results[1].rarity == "6r5"
+        assert results[1].rarity == "7r3"
         session.commit.assert_awaited_once()
 
     @pytest.mark.asyncio

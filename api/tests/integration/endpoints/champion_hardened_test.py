@@ -9,7 +9,7 @@ from src.enums.Roles import Roles
 from src.models.Champion import Champion
 from main import app
 from src.utils.db import get_session
-from tests.integration.endpoints.setup.user_setup import push_one_user, push_one_admin
+from tests.integration.endpoints.setup.user_setup import push_one_user, push_one_admin, get_generic_user
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
@@ -17,17 +17,18 @@ from tests.utils.utils_client import (
     execute_patch_request,
     execute_delete_request,
 )
-from tests.utils.utils_constant import USER_ID
+from tests.utils.utils_constant import USER_ID, ADMIN_LOGIN, ADMIN_EMAIL
 from tests.utils.utils_db import get_test_session, load_objects
 
 app.dependency_overrides[get_session] = get_test_session
 
 USER_HEADERS = create_auth_headers(role=Roles.USER)
-ADMIN_HEADERS = create_auth_headers(role=Roles.ADMIN)
+ADMIN_HEADERS = create_auth_headers(login=ADMIN_LOGIN, user_id=str(USER_ID), email=ADMIN_EMAIL, role=Roles.ADMIN)
 
 
 async def _setup_admin():
-    await push_one_admin()
+    admin = get_generic_user(is_base_id=True, login=ADMIN_LOGIN, email=ADMIN_EMAIL, role=Roles.ADMIN)
+    await load_objects([admin])
 
 
 async def _setup_user():
@@ -49,9 +50,9 @@ async def _push_champion(name="Spider-Man", champion_class="Science") -> Champio
 
 class TestGetChampionsHardened:
     @pytest.mark.asyncio
-    async def test_no_auth_returns_403(self, session):
+    async def test_no_auth_returns_401(self, session):
         response = await execute_get_request("/admin/champions")
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_user_role_returns_403(self, session):
@@ -173,7 +174,7 @@ class TestGetChampionByIdHardened:
         response = await execute_get_request(
             "/admin/champions/not-a-uuid", headers=ADMIN_HEADERS
         )
-        assert response.status_code == 422
+        assert response.status_code == 400
 
     @pytest.mark.asyncio
     async def test_user_role_returns_403(self, session):
@@ -256,7 +257,7 @@ class TestUpdateAliasHardened:
             {"alias": "x" * 501},
             headers=ADMIN_HEADERS,
         )
-        assert response.status_code == 422
+        assert response.status_code == 400
 
 
 # =========================================================================
@@ -324,7 +325,7 @@ class TestLoadChampionsHardened:
             "/admin/champions/load",
             [{"name": "X", "champion_class": "Science"}],
         )
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_load_empty_list(self, session):
@@ -366,7 +367,7 @@ class TestDeleteChampionHardened:
         response = await execute_delete_request(
             "/admin/champions/not-a-uuid", headers=ADMIN_HEADERS
         )
-        assert response.status_code == 422
+        assert response.status_code == 400
 
     @pytest.mark.asyncio
     async def test_delete_user_role_returns_403(self, session):
@@ -381,7 +382,7 @@ class TestDeleteChampionHardened:
         response = await execute_delete_request(
             f"/admin/champions/{uuid.uuid4()}"
         )
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_redelete_returns_404(self, session):

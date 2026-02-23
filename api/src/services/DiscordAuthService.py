@@ -8,7 +8,6 @@ from fastapi import HTTPException
 from sqlmodel import select
 from starlette import status
 
-from src.dto.dto_utilisateurs import DiscordLoginRequest
 from src.enums.Roles import Roles
 from src.models import User, LoginLog
 from src.utils.db import SessionDep

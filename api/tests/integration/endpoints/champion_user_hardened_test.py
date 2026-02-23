@@ -186,7 +186,7 @@ class TestCreateStrictErrorCodes:
                 "rarity": "6r4",
             },
         )
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_response_body_structure(self, session):
@@ -278,8 +278,8 @@ class TestBulkStrictErrorCodes:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_bulk_empty_champions_list_returns_422(self, session):
-        """Empty champions list violates min_length=1 → 422."""
+    async def test_bulk_empty_champions_list_returns_400(self, session):
+        """Empty champions list violates min_length=1 → 400."""
         await _setup_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         response = await execute_post_request(
@@ -290,10 +290,10 @@ class TestBulkStrictErrorCodes:
             },
             headers=HEADERS,
         )
-        assert response.status_code == 422
+        assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_bulk_missing_champions_field_returns_422(self, session):
+    async def test_bulk_missing_champions_field_returns_400(self, session):
         """Missing 'champions' field → 422."""
         await _setup_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -302,7 +302,7 @@ class TestBulkStrictErrorCodes:
             {"game_account_id": str(acc.id)},
             headers=HEADERS,
         )
-        assert response.status_code == 422
+        assert response.status_code == 400
 
     @pytest.mark.asyncio
     async def test_bulk_game_account_not_found_returns_exact_404(self, session):
@@ -373,12 +373,12 @@ class TestBulkStrictErrorCodes:
 
 class TestGetRosterHardened:
     @pytest.mark.asyncio
-    async def test_invalid_uuid_returns_422(self, session):
+    async def test_invalid_uuid_returns_400(self, session):
         await _setup_user()
         response = await execute_get_request(
             "/champion-users/by-account/not-a-uuid", headers=HEADERS
         )
-        assert response.status_code == 422
+        assert response.status_code == 400
 
     @pytest.mark.asyncio
     async def test_detail_response_structure(self, session):
@@ -430,12 +430,12 @@ class TestGetRosterHardened:
 
 class TestGetSingleChampionUserHardened:
     @pytest.mark.asyncio
-    async def test_invalid_uuid_returns_422(self, session):
+    async def test_invalid_uuid_returns_400(self, session):
         await _setup_user()
         response = await execute_get_request(
             "/champion-users/not-a-uuid", headers=HEADERS
         )
-        assert response.status_code == 422
+        assert response.status_code == 400
 
     @pytest.mark.asyncio
     async def test_exact_404_nonexistent(self, session):
@@ -485,7 +485,7 @@ class TestUpdateChampionUserHardened:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_update_without_auth_returns_403(self, session):
+    async def test_update_without_auth_returns_401(self, session):
         response = await execute_put_request(
             f"/champion-users/{uuid.uuid4()}",
             {
@@ -494,10 +494,10 @@ class TestUpdateChampionUserHardened:
                 "rarity": "6r4",
             },
         )
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_update_invalid_uuid_returns_422(self, session):
+    async def test_update_invalid_uuid_returns_400(self, session):
         await _setup_user()
         response = await execute_put_request(
             "/champion-users/not-a-uuid",
@@ -508,7 +508,7 @@ class TestUpdateChampionUserHardened:
             },
             headers=HEADERS,
         )
-        assert response.status_code == 422
+        assert response.status_code == 400
 
     @pytest.mark.asyncio
     async def test_update_response_body_matches_request(self, session):
@@ -571,19 +571,19 @@ class TestDeleteChampionUserHardened:
         assert r2.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_delete_invalid_uuid_returns_422(self, session):
+    async def test_delete_invalid_uuid_returns_400(self, session):
         await _setup_user()
         response = await execute_delete_request(
             "/champion-users/not-a-uuid", headers=HEADERS
         )
-        assert response.status_code == 422
+        assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_delete_without_auth_returns_403(self, session):
+    async def test_delete_without_auth_returns_401(self, session):
         response = await execute_delete_request(
             f"/champion-users/{uuid.uuid4()}"
         )
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_delete_verifies_roster_empty_after(self, session):

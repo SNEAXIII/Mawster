@@ -120,7 +120,7 @@ class TestCreateChampionUser:
         assert body["signature"] == 200
 
     @pytest.mark.asyncio
-    async def test_create_without_auth_returns_403(self, session):
+    async def test_create_without_auth_returns_401(self, session):
         response = await execute_post_request(
             "/champion-users",
             {
@@ -129,7 +129,7 @@ class TestCreateChampionUser:
                 "rarity": "6r4",
             },
         )
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_create_invalid_rarity(self, session):
@@ -280,7 +280,7 @@ class TestBulkAddChampions:
         assert body[0]["signature"] == 200
 
     @pytest.mark.asyncio
-    async def test_bulk_without_auth_returns_403(self, session):
+    async def test_bulk_without_auth_returns_401(self, session):
         response = await execute_post_request(
             "/champion-users/bulk",
             {
@@ -290,7 +290,7 @@ class TestBulkAddChampions:
                 ],
             },
         )
-        assert response.status_code == 403
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_bulk_not_own_account_returns_403(self, session):
