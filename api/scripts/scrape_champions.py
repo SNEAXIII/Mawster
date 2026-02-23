@@ -2,12 +2,16 @@
 Scrape MCOC wiki for champion data and portrait images.
 Outputs a JSON file and downloads portrait images into a folder.
 
+Interactive mode:
+    1. Download images and data from the wiki
+    2. Resize all images to a custom size (e.g. 40x40)
+
 Usage:
     cd api
     python scripts/scrape_champions.py
 
-Requires: curl_cffi, beautifulsoup4, lxml
-    pip install curl_cffi beautifulsoup4 lxml
+Requires: curl_cffi, beautifulsoup4, lxml, Pillow (for resize)
+    pip install curl_cffi beautifulsoup4 lxml Pillow
 """
 
 import json
@@ -16,9 +20,6 @@ import re
 import sys
 import time
 from pathlib import Path
-
-from curl_cffi import requests as cffi_requests
-from bs4 import BeautifulSoup
 
 # Add parent dir to sys.path so we can import src.enums
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -47,6 +48,8 @@ def sanitize_filename(name: str) -> str:
 
 def download_image(url: str, filepath: Path) -> bool:
     """Download an image. Returns True on success."""
+    from curl_cffi import requests as cffi_requests
+
     if filepath.exists():
         return True
     try:
@@ -61,6 +64,9 @@ def download_image(url: str, filepath: Path) -> bool:
 
 def scrape_champions() -> list[dict]:
     """Scrape the wiki and return a list of champion dicts."""
+    from curl_cffi import requests as cffi_requests
+    from bs4 import BeautifulSoup
+
     print(f"Fetching {WIKI_URL} ...")
     resp = cffi_requests.get(WIKI_URL, impersonate="chrome", timeout=60)
     resp.raise_for_status()
@@ -98,19 +104,16 @@ def scrape_champions() -> list[dict]:
 
     if not tables:
         print("  [ERROR] No tables found at all!")
-        # Debug: print first 2000 chars of page
         print(f"  [DEBUG] Page start:\n{resp.text[:2000]}")
         return champions
 
     for table_idx, table in enumerate(tables):
-        # Debug: show table attributes
         table_classes = table.get("class", [])
         print(f"\n  [DEBUG] Processing table {table_idx} (classes={table_classes})")
 
         rows = table.find_all("tr")
         print(f"  [DEBUG] Rows in table: {len(rows)}")
 
-        # Show header row for debugging
         if rows:
             header_cells = rows[0].find_all(["th", "td"])
             header_texts = [c.get_text(strip=True)[:30] for c in header_cells]
@@ -127,7 +130,6 @@ def scrape_champions() -> list[dict]:
             # Cell 3: release date
             # Cell 4: class
 
-            # Extract name
             name_cell = cells[2]
             name_link = name_cell.find("a")
             if name_link:
@@ -140,17 +142,14 @@ def scrape_champions() -> list[dict]:
             if not name or name in seen_names:
                 continue
 
-            # Debug first few rows
             if len(champions) < 3:
                 print(f"  [DEBUG] Row {row_idx}: name='{name}', cells={len(cells)}")
                 for ci, c in enumerate(cells):
                     print(f"    cell[{ci}] text='{c.get_text(strip=True)[:50]}'")
 
-            # Extract class
             class_cell = cells[4]
             class_text = class_cell.get_text(separator=" ", strip=True)
 
-            # Also try extracting from the class link title attribute
             class_link = class_cell.find("a")
             if class_link:
                 class_title = class_link.get("title", "")
@@ -166,16 +165,13 @@ def scrape_champions() -> list[dict]:
 
             champion_class = class_matches[0]
 
-            # Extract release date
             date_cell = cells[3]
             release_date = date_cell.get_text(strip=True)
 
-            # Extract portrait image URL
             portrait_cell = cells[0]
             portrait_img = portrait_cell.find("img")
             portrait_url = None
             if portrait_img:
-                # Try data-src first (lazy loaded), then src
                 portrait_url = portrait_img.get("data-src") or portrait_img.get("src")
                 if portrait_url:
                     portrait_url = clean_image_url(portrait_url)
@@ -198,16 +194,17 @@ def scrape_champions() -> list[dict]:
     return champions
 
 
-def main():
+def action_download():
+    """Download champion images and data from the wiki."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     champions = scrape_champions()
     print(f"\nFound {len(champions)} champions with single class and valid image.\n")
 
-    # Download images and build final JSON
     final_data = []
     for i, champ in enumerate(champions, 1):
-        filename = sanitize_filename(champ["name"]) + ".png"
+        base_name = sanitize_filename(champ["name"])
+        filename = base_name + ".png"
         filepath = OUTPUT_DIR / filename
 
         print(f"  [{i}/{len(champions)}] {champ['name']} ({champ['champion_class']})")
@@ -217,15 +214,14 @@ def main():
         entry = {
             "name": champ["name"],
             "champion_class": champ["champion_class"],
-            "image_filename": filename if success else None,
+            "image_filename": base_name if success else None,
         }
         final_data.append(entry)
 
-        # Be polite to the server
         if i % 10 == 0:
             time.sleep(0.5)
 
-    # Write JSON
+    # Write JSON (image_filename without extension for flexible size usage)
     JSON_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     with open(JSON_OUTPUT, "w", encoding="utf-8") as f:
         json.dump(final_data, f, indent=2, ensure_ascii=False)
@@ -233,6 +229,92 @@ def main():
     print(f"\nDone! JSON saved to {JSON_OUTPUT}")
     print(f"Images saved to {OUTPUT_DIR}")
     print(f"Total champions: {len(final_data)}")
+
+
+def action_resize():
+    """Resize all champion images to a given size based on the JSON data."""
+    try:
+        from PIL import Image
+    except ImportError:
+        print("Pillow is required for resizing. Install it with: pip install Pillow")
+        return
+
+    size_input = input("Enter the desired size (e.g. 40 for 40x40): ").strip()
+    try:
+        size = int(size_input)
+        if size < 1:
+            raise ValueError
+    except ValueError:
+        print("Invalid size. Please enter a positive integer.")
+        return
+
+    if not JSON_OUTPUT.exists():
+        print(f"JSON file not found: {JSON_OUTPUT}")
+        print("Run the download action first.")
+        return
+
+    with open(JSON_OUTPUT, "r", encoding="utf-8") as f:
+        champions_data = json.load(f)
+
+    resized_count = 0
+    skipped_count = 0
+    error_count = 0
+
+    print(f"\nResizing {len(champions_data)} champion images to {size}x{size}...\n")
+
+    for champ in champions_data:
+        base_name = champ.get("image_filename")
+        if not base_name:
+            skipped_count += 1
+            continue
+
+        # Source is always the original .png
+        source_path = OUTPUT_DIR / f"{base_name}.png"
+        # Output: <base_name>_NxN.png
+        output_filename = f"{base_name}_{size}x{size}.png"
+        output_path = OUTPUT_DIR / output_filename
+
+        if not source_path.exists():
+            print(f"  [MISS] {source_path.name} not found, skipping")
+            error_count += 1
+            continue
+
+        if output_path.exists():
+            skipped_count += 1
+            continue
+
+        try:
+            with Image.open(source_path) as img:
+                resized = img.resize((size, size), Image.LANCZOS)
+                resized.save(output_path, "PNG")
+            resized_count += 1
+            if resized_count % 20 == 0:
+                print(f"  Resized {resized_count} images...")
+        except Exception as e:
+            print(f"  [ERROR] Failed to resize {source_path.name}: {e}")
+            error_count += 1
+
+    print(f"\nDone! Resized: {resized_count}, Skipped (already exist): {skipped_count}, Errors: {error_count}")
+    print(f"Output directory: {OUTPUT_DIR}")
+    print(f"Format: <name>_{size}x{size}.png")
+
+
+def main():
+    print("=== MCOC Champion Scraper ===")
+    print()
+    print("Choose an action:")
+    print("  1. Download images and data from the wiki")
+    print("  2. Resize all images to a custom size (e.g. 40x40)")
+    print()
+
+    choice = input("Enter your choice (1 or 2): ").strip()
+
+    if choice == "1":
+        action_download()
+    elif choice == "2":
+        action_resize()
+    else:
+        print("Invalid choice. Please enter 1 or 2.")
 
 
 if __name__ == "__main__":
