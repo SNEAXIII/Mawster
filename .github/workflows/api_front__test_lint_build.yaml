@@ -18,6 +18,8 @@ jobs:
   lint-test:
     name: Lint & Test
     runs-on: ubuntu-latest
+    env:
+      MODE: dev
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
