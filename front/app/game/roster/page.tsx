@@ -373,7 +373,7 @@ export default function RosterPage() {
                               key={entry.id}
                               className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1"
                             >
-                              <span className={`font-semibold ${getClassColors(entry.champion_class).text}`}>
+                              <span className={"font-semibold text-amber-600 dark:text-amber-400"}>
                                 {RARITY_LABELS[entry.rarity] ?? entry.rarity}
                               </span>
                               <span className="text-amber-600 dark:text-amber-400">· sig {entry.signature}</span>
