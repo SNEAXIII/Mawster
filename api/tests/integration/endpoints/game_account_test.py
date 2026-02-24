@@ -14,8 +14,7 @@ from tests.utils.utils_client import (
     execute_get_request,
     execute_post_request,
     execute_put_request,
-    execute_delete_request,
-    execute_request,
+    execute_delete_request
 )
 from tests.utils.utils_constant import (
     USER_ID,
