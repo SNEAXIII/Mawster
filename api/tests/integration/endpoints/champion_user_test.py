@@ -19,8 +19,6 @@ from tests.utils.utils_client import (
 )
 from tests.utils.utils_constant import (
     USER_ID,
-    USER_LOGIN,
-    USER_EMAIL,
     USER2_ID,
     USER2_LOGIN,
     USER2_EMAIL,
@@ -305,8 +303,8 @@ class TestBulkAddChampions:
     async def test_bulk_add_ok(self, session):
         await _setup_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        champ1 = await _push_champion("Spider-Man", "Science")
-        champ2 = await _push_champion("Wolverine", "Mutant")
+        await _push_champion("Spider-Man", "Science")
+        await _push_champion("Wolverine", "Mutant")
 
         response = await execute_post_request(
             "/champion-users/bulk",
@@ -328,7 +326,7 @@ class TestBulkAddChampions:
         """Same champion+rarity in one request → only first kept."""
         await _setup_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        champ = await _push_champion()
+        await _push_champion()
 
         response = await execute_post_request(
             "/champion-users/bulk",
@@ -387,7 +385,7 @@ class TestBulkAddChampions:
         await _setup_user()
         await _setup_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
-        champ = await _push_champion()
+        await _push_champion()
 
         response = await execute_post_request(
             "/champion-users/bulk",
@@ -406,7 +404,7 @@ class TestBulkAddChampions:
         """Same champion with different rarities should create separate entries."""
         await _setup_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        champ = await _push_champion()
+        await _push_champion()
 
         response = await execute_post_request(
             "/champion-users/bulk",
@@ -446,7 +444,7 @@ class TestBulkAddChampions:
     async def test_bulk_invalid_rarity_returns_400(self, session):
         await _setup_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        champ = await _push_champion()
+        await _push_champion()
         response = await execute_post_request(
             "/champion-users/bulk",
             {
@@ -489,7 +487,7 @@ class TestBulkAddChampions:
     @pytest.mark.asyncio
     async def test_bulk_game_account_not_found_returns_404(self, session):
         await _setup_user()
-        champ = await _push_champion()
+        await _push_champion()
         response = await execute_post_request(
             "/champion-users/bulk",
             {
@@ -507,8 +505,8 @@ class TestBulkAddChampions:
         """Verify bulk response is a list of ChampionUserResponse objects."""
         await _setup_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        champ1 = await _push_champion("Hulk", "Science")
-        champ2 = await _push_champion("Thor", "Cosmic")
+        await _push_champion("Hulk", "Science")
+        await _push_champion("Thor", "Cosmic")
         response = await execute_post_request(
             "/champion-users/bulk",
             {
@@ -532,7 +530,7 @@ class TestBulkAddChampions:
         """If any champion in the bulk request is invalid, the whole request should fail atomically."""
         await _setup_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        champ = await _push_champion()
+        await _push_champion()
         response = await execute_post_request(
             "/champion-users/bulk",
             {

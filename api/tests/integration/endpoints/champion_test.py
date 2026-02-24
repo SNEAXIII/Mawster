@@ -98,7 +98,7 @@ class TestGetChampions:
         ],
         ids=["page_zero", "page_negative", "size_zero", "size_negative"],
     )
-    async def test_pagination_validation(self, session, params, expected_code):
+    async def test_pagination_validation_page_size_expected_status_400(self, session, params, expected_code):
         await _setup_admin()
         response = await execute_get_request(
             f"/admin/champions{params}", headers=ADMIN_HEADERS
@@ -140,7 +140,7 @@ class TestGetChampions:
         [(1, 10, 200), (0, 10, 400), (1, 0, 400)],
         ids=["valid", "page_zero", "size_zero"],
     )
-    async def test_pagination_validation(self, session, page, size, expected_status):
+    async def test_pagination_validation_page_size_expected_status(self, session, page, size, expected_status):
         await _setup_admin()
         response = await execute_get_request(
             f"/admin/champions?page={page}&size={size}", headers=ADMIN_HEADERS

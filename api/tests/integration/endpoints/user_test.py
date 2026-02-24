@@ -8,7 +8,6 @@ from tests.utils.utils_client import (
     create_auth_headers,
     execute_delete_request,
 )
-from tests.utils.utils_constant import USER_LOGIN, USER_ID, USER_EMAIL
 from tests.utils.utils_db import get_test_session
 
 app.dependency_overrides[get_session] = get_test_session

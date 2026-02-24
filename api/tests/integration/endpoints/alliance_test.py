@@ -4,7 +4,6 @@ import uuid
 import pytest
 
 from main import app
-from src.enums.Roles import Roles
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.user_setup import get_generic_user
 from tests.integration.endpoints.setup.game_setup import (
@@ -28,7 +27,6 @@ from tests.utils.utils_constant import (
     USER2_ID,
     USER2_LOGIN,
     USER2_EMAIL,
-    DISCORD_ID,
     DISCORD_ID_2,
     GAME_PSEUDO,
     GAME_PSEUDO_2,
@@ -379,7 +377,7 @@ class TestRemoveMember:
     async def test_regular_member_cannot_remove(self, session):
         await _setup_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
-        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         u3_id = uuid.uuid4()
         u3 = get_generic_user(login="user3", email="user3@gmail.com")
@@ -563,7 +561,7 @@ class TestEligibility:
     async def test_eligible_officers(self, session):
         await _setup_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
-        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_get_request(
             f"/alliances/{alliance.id}/eligible-officers", headers=HEADERS_USER1

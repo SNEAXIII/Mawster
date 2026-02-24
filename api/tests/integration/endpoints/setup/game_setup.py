@@ -8,11 +8,9 @@ from src.models.GameAccount import GameAccount
 from tests.utils.utils_constant import (
     GAME_PSEUDO,
     GAME_PSEUDO_2,
-    GAME_PSEUDO_3,
     ALLIANCE_NAME,
     ALLIANCE_TAG,
     USER_ID,
-    USER2_ID,
 )
 from tests.utils.utils_db import load_objects
 

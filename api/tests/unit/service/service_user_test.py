@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import pytest
-from fastapi.exceptions import RequestValidationError
 
 from src.dto.dto_utilisateurs import UserAdminViewSingleUser
 from src.enums.Roles import Roles
@@ -18,15 +17,10 @@ from src.Messages.user_messages import (
     UserAdminError,
     UserLoginError,
 )
-from src.Messages.validators_messages import (
-    EMAIL_ALREADY_EXISTS_ERROR,
-    LOGIN_ALREADY_EXISTS_ERROR,
-)
 from src.models import User
 from src.services.UserService import UserService
 from tests.unit.service.mocks.session_mock import session_mock
 from tests.unit.service.mocks.users_mock import (
-    get_user_by_email_mock,
     get_user_by_login_mock,
     get_users_paginated_mock,
     get_total_users_mock,

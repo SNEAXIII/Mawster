@@ -23,7 +23,6 @@ from tests.utils.utils_constant import (
     USER2_EMAIL,
     ADMIN_LOGIN,
     ADMIN_EMAIL,
-    DISCORD_ID,
     DISCORD_ID_2,
 )
 from tests.utils.utils_db import get_test_session, load_objects

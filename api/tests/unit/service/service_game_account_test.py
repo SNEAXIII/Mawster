@@ -1,6 +1,5 @@
 """Unit tests for GameAccountService using mocked sessions."""
 import uuid
-from unittest.mock import MagicMock, AsyncMock
 
 import pytest
 from fastapi import HTTPException

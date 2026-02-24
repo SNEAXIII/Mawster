@@ -1,6 +1,5 @@
 """Unit tests for AllianceService — access control and business logic."""
 import uuid
-from unittest.mock import MagicMock
 
 import pytest
 from fastapi import HTTPException
@@ -14,7 +13,6 @@ from tests.utils.utils_constant import (
     USER2_ID,
     GAME_PSEUDO,
     GAME_PSEUDO_2,
-    GAME_PSEUDO_3,
     ALLIANCE_NAME,
     ALLIANCE_TAG,
 )

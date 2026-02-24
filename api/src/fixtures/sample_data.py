@@ -124,7 +124,7 @@ def load_sample_data():
             print(f"✅ {len(game_accounts)} users created (1 admin + {len(game_accounts) - 1} users)")
             print(f"✅ {len(game_accounts)} game accounts created")
             print(f"✅ Alliance '{alliance_name}' [{alliance_tag}] created with {len(game_accounts)} members")
-            print(f"✅ Admin: misterbalise (Mr DrBalise) — discord_id: 403941390586871808")
+            print("✅ Admin: misterbalise (Mr DrBalise) — discord_id: 403941390586871808")
             print("✅ Sample data loaded with success!")
 
     except Exception as e:

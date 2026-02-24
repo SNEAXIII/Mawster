@@ -15,7 +15,6 @@ Requires: curl_cffi, beautifulsoup4, lxml, Pillow (for resize)
 """
 
 import json
-import os
 import re
 import sys
 import time

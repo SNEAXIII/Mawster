@@ -1,10 +1,7 @@
-from datetime import datetime
 
 import pytest
 
 from src.Messages.jwt_messages import (
-    JwtCredentialsError,
-    CREDENTIALS_EXCEPTION,
     JwtError,
     INSUFFISANT_ROLE_EXCEPTION,
 )
@@ -14,7 +11,6 @@ from src.services.AuthService import AuthService
 from tests.unit.service.mocks.jwt_mock import decode_service_mock
 from tests.unit.service.mocks.session_mock import session_mock
 from tests.unit.service.mocks.users_mock import get_user_with_validity_check_mock
-from tests.unit.service.service_jwt_test import get_user
 
 from tests.utils.utils_constant import (
     UNKNOWN_ROLE,

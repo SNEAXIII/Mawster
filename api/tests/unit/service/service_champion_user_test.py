@@ -1,11 +1,9 @@
 """Unit tests for ChampionUserService using mocked sessions."""
 import uuid
-from unittest.mock import MagicMock
 
 import pytest
 from fastapi import HTTPException
 
-from src.enums.ChampionRarity import ChampionRarity
 from src.models.Champion import Champion
 from src.models.GameAccount import GameAccount
 from src.models.ChampionUser import ChampionUser
