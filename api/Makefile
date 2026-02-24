@@ -7,7 +7,8 @@ help:
 	@echo "fixtures     --> load all fixtures for dev purposes"
 	@echo "init-db      --> load one user and basic bdd"
 	@echo "cancel-last  --> cancel last executed migration"
-	@echo "test-cov     --> run the test coverage"
+	@echo "test         --> run tests in parallel (4 workers)"
+	@echo "test-cov     --> run test coverage (single-threaded)"
 	@echo "install      --> install prod dependencies (uv sync)"
 	@echo "install-dev  --> install prod + dev dependencies"
 	@echo "reset-db     --> reset the database"
@@ -38,6 +39,9 @@ init-db:
 
 cancel-last:
 	uv run alembic downgrade -1
+
+test:
+	uv run pytest tests -n 4 -v --tb=short
 
 test-cov:
 	uv run pytest tests --cov --cov-report term-missing -v

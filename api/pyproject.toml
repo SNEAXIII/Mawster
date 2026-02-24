@@ -17,6 +17,7 @@ dependencies = [
     "bleach",
     "sentry-sdk",
     "pytest>=9.0.2",
+    "pytest-xdist[dev]>=3.8.0",
 ]
 
 [project.optional-dependencies]
@@ -26,6 +27,7 @@ dev = [
     "pytest-asyncio",
     "pytest-mock",
     "pytest-cov",
+    "pytest-xdist",
     "faker",
     "time-machine",
     "beautifulsoup4",

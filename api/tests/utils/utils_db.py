@@ -1,6 +1,5 @@
 import os
 import time
-import uuid
 from typing import List
 
 from sqlmodel import SQLModel, create_engine
@@ -12,13 +11,18 @@ from sqlalchemy import text
 
 IS_ECHO = False
 IS_ECHO_ASYNC = False
-DB_NAME = "test.db"
+
+# ── Per-worker DB name (pytest-xdist support) ──────────────────────────
+# Each xdist worker gets PYTEST_XDIST_WORKER env var (gw0, gw1, …).
+# When running without xdist the var is absent → single "test.db".
+_worker = os.environ.get("PYTEST_XDIST_WORKER", "")
+DB_NAME = f"test_{_worker}.db" if _worker else "test.db"
 
 sqlite_sync_engine = create_engine(
-    f"sqlite:///{DB_NAME}", echo=IS_ECHO, query_cache_size=0
+    f"sqlite:///{DB_NAME}", echo=IS_ECHO,
 )
 sqlite_async_engine = create_async_engine(
-    url=f"sqlite+aiosqlite:///{DB_NAME}", echo=IS_ECHO_ASYNC, query_cache_size=0
+    url=f"sqlite+aiosqlite:///{DB_NAME}", echo=IS_ECHO_ASYNC,
 )
 
 Session = sessionmaker(
@@ -27,14 +31,12 @@ Session = sessionmaker(
     expire_on_commit=False,
 )
 
+# Track whether the schema has already been created in this process.
+_schema_ready = False
+
 
 def delete_db(retries: int = 20, delay: float = 0.2):
-    """No-op for test runs: we no longer delete the DB file on disk.
-
-    Tests now reset the schema using SQLModel.metadata.drop_all/create_all
-    (truncate behaviour). If you really want to delete the file, set
-    the TEST_DELETE_DB env var and the function will attempt removal.
-    """
+    """Delete the DB file on disk (opt-in via TEST_DELETE_DB env var)."""
     if os.getenv("TEST_DELETE_DB") in ("1", "true", "True"):
         if os.path.exists(DB_NAME):
             for attempt in range(retries):
@@ -46,39 +48,41 @@ def delete_db(retries: int = 20, delay: float = 0.2):
             os.remove(DB_NAME)
 
 
-def reset_test_db():
-    global sqlite_async_engine, sqlite_sync_engine
-    if sqlite_sync_engine:
-        try:
-            sqlite_sync_engine.dispose()
-        except Exception as e:
-            print(f"Failed disposing sync engine: {e}")
-    if sqlite_async_engine:
-        try:
-            sqlite_async_engine.sync_engine.dispose()
-        except Exception as e:
-            print(f"Failed disposing async engine: {e}")
-    # Instead of removing the DB file, we drop all tables and recreate them.
-    # This gives a truncate-like behaviour and keeps the same DB file.
-    try:
-        SQLModel.metadata.drop_all(sqlite_sync_engine)
-    except Exception as e:
-        # If drop_all fails (e.g., first run), ignore and proceed to create_all
-        print(f"Warning during drop_all in reset_test_db: {e}")
-    SQLModel.metadata.create_all(sqlite_sync_engine)
+def ensure_schema():
+    """Create all tables once per process (idempotent)."""
+    global _schema_ready
+    if not _schema_ready:
+        SQLModel.metadata.create_all(sqlite_sync_engine)
+        _schema_ready = True
 
-    # Truncate all tables to ensure clean state even if drop_all silently failed
+
+def _truncate_all():
+    """Fast truncation: DELETE rows from every table + reset sequences.
+
+    Much faster than DROP ALL / CREATE ALL on every test.
+    """
     with sqlite_sync_engine.begin() as conn:
+        # Disable FK checks for speed during truncation
+        conn.execute(text("PRAGMA foreign_keys = OFF"))
         for table in reversed(SQLModel.metadata.sorted_tables):
-            conn.execute(text(f"DELETE FROM [{table.name}]"))
-        # Reset SQLite AUTOINCREMENT sequences (if present)
+            conn.execute(text(f'DELETE FROM "{table.name}"'))
+        # Reset SQLite AUTOINCREMENT sequences
         result = conn.execute(
-            text("SELECT name FROM sqlite_master WHERE type='table' AND name=:name"),
-            {"name": "sqlite_sequence"},
+            text("SELECT name FROM sqlite_master WHERE type='table' AND name='sqlite_sequence'")
         )
-        row = result.first()
-        if row:
+        if result.first():
             conn.execute(text("DELETE FROM sqlite_sequence"))
+        conn.execute(text("PRAGMA foreign_keys = ON"))
+
+
+def reset_test_db():
+    """Prepare a clean DB for a single test function.
+
+    First call: creates schema.  Every call: truncates all rows.
+    No more engine dispose / DROP ALL / CREATE ALL per test.
+    """
+    ensure_schema()
+    _truncate_all()
 
 
 
