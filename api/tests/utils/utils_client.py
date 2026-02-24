@@ -8,9 +8,21 @@ from src.enums.Roles import Roles
 from src.services.JWTService import JWTService
 from tests.utils.utils_constant import USER_LOGIN, USER_ID, USER_EMAIL
 
+# Module-level shared client set by a fixture to avoid recreating AsyncClient per request
+_SHARED_CLIENT: Optional[AsyncClient] = None
+
 
 @asynccontextmanager
 async def get_test_client() -> AsyncClient:
+    """Yield the shared `AsyncClient` when available, otherwise create a temporary one.
+
+    This allows tests to reuse a single client per test (via a fixture) while
+    keeping a fallback for callers that don't rely on the fixture.
+    """
+    global _SHARED_CLIENT
+    if _SHARED_CLIENT is not None:
+        yield _SHARED_CLIENT
+        return
     async with AsyncClient(
         transport=ASGITransport(app=app, raise_app_exceptions=False),
         base_url="http://test",
