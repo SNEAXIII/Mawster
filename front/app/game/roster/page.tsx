@@ -10,6 +10,9 @@ import { Input } from '@/components/ui/input';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import ChampionPortrait from '@/components/champion-portrait';
 import RosterImportExport from '@/components/roster-import-export';
+import { ErrorBanner } from '@/components/error-banner';
+import { SearchInput } from '@/components/search-input';
+import { CollapsibleSection } from '@/components/collapsible-section';
 import { getMyGameAccounts, GameAccount } from '@/app/services/game';
 import {
   getRoster,
@@ -25,7 +28,7 @@ import {
   shortenChampionName,
 } from '@/app/services/roster';
 import { Champion, getChampionImageUrl } from '@/app/services/champions';
-import { FiTrash2, FiSearch, FiChevronDown, FiChevronUp, FiEdit2, FiArrowUp } from 'react-icons/fi';
+import { FiTrash2, FiChevronDown, FiChevronUp, FiEdit2, FiArrowUp } from 'react-icons/fi';
 import {
   upgradeChampionRank,
   getNextRarity,
@@ -257,12 +260,7 @@ export default function RosterPage() {
       </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
-          {error}
-          <button className="ml-2 font-bold" onClick={() => setError(null)}>
-            &times;
-          </button>
-        </div>
+        <ErrorBanner message={error} onDismiss={() => setError(null)} className="mb-4" />
       )}
 
       {/* Account selector - only show if multiple accounts */}
@@ -287,35 +285,26 @@ export default function RosterPage() {
       {selectedAccountId && (
         <>
           {/* Foldable add / update champion section */}
-          <div ref={addFormRef} className="mb-6 border rounded-lg overflow-hidden">
-            <button
-              className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors font-semibold text-left"
-              onClick={() => setShowAddForm(!showAddForm)}
+          <div ref={addFormRef} className="mb-6">
+            <CollapsibleSection
+              title={t.roster.addOrUpdate}
+              open={showAddForm}
+              onOpenChange={setShowAddForm}
             >
-              <span>{t.roster.addOrUpdate}</span>
-              {showAddForm ? <FiChevronUp size={18} /> : <FiChevronDown size={18} />}
-            </button>
-
-            {showAddForm && (
-              <div className="p-4 border-t bg-white">
                 {/* Champion search */}
                 <div className="mb-3">
                   <label className="block text-sm font-medium mb-1">
                     {t.roster.champion}
                   </label>
-                  <div className="relative">
-                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <Input
-                      ref={searchInputRef}
-                      className="pl-9"
-                      placeholder={t.roster.searchChampion}
-                      value={championSearch}
-                      onChange={(e) => {
-                        setChampionSearch(e.target.value);
-                        setSelectedChampion(null);
-                      }}
-                    />
-                  </div>
+                  <SearchInput
+                    ref={searchInputRef}
+                    placeholder={t.roster.searchChampion}
+                    value={championSearch}
+                    onChange={(val) => {
+                      setChampionSearch(val);
+                      setSelectedChampion(null);
+                    }}
+                  />
 
                 {/* Search results dropdown */}
                 {searchResults.length > 0 && !selectedChampion && (
@@ -444,8 +433,7 @@ export default function RosterPage() {
                   {adding ? t.common.loading : t.roster.addOrUpdateButton}
                 </Button>
               </div>
-            </div>
-          )}
+            </CollapsibleSection>
           </div>
 
           {/* Roster visualization */}

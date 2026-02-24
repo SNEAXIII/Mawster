@@ -17,22 +17,18 @@ import { Input } from '@/components/ui/input';
 import { useSession } from 'next-auth/react';
 import { redirect, usePathname } from 'next/navigation';
 import { useI18n } from '@/app/i18n';
-import { FiCheck, FiDownload, FiEdit2, FiSearch, FiTrash2, FiUpload, FiX } from 'react-icons/fi';
+import { FiCheck, FiDownload, FiEdit2, FiTrash2, FiUpload, FiX } from 'react-icons/fi';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
+import { SearchInput } from '@/components/search-input';
+import { ErrorBanner } from '@/components/error-banner';
+import { ClassBadge } from '@/components/class-badge';
+import { ActionIconButton } from '@/components/action-icon-button';
 
 const BASE_PAGE = 1;
 const BASE_SIZE = 10;
 const BASE_CLASS = 'all';
 
-// Map champion class to a color
-const classColors: Record<string, string> = {
-  Science: 'bg-green-100 text-green-800',
-  Cosmic: 'bg-purple-100 text-purple-800',
-  Mutant: 'bg-yellow-100 text-yellow-800',
-  Skill: 'bg-red-100 text-red-800',
-  Tech: 'bg-blue-100 text-blue-800',
-  Mystic: 'bg-pink-100 text-pink-800',
-};
+
 
 export default function ChampionsPage() {
   const pathname = usePathname();
@@ -213,7 +209,6 @@ export default function ChampionsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">{t.champions.title}</h1>
 
       {/* Controls row */}
       <div className="flex flex-col lg:flex-row gap-3">
@@ -257,21 +252,16 @@ export default function ChampionsPage() {
           selectedValue={selectedClass}
           setValue={handleClassChange}
         />
-        <div className="relative">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder={t.champions.searchPlaceholder}
-            value={searchInput}
-            onChange={(e) => handleSearchInput(e.target.value)}
-            className="w-64 pl-9"
-          />
-        </div>
+        <SearchInput
+          placeholder={t.champions.searchPlaceholder}
+          value={searchInput}
+          onChange={handleSearchInput}
+          className="w-64"
+        />
       </div>
 
       {/* Error */}
-      {error && (
-        <div className="text-red-500 text-sm py-2">{error}</div>
-      )}
+      {error && <ErrorBanner message={error} variant="inline" />}
 
       {/* Table */}
       {isLoading ? (
@@ -316,13 +306,7 @@ export default function ChampionsPage() {
 
                   {/* Class */}
                   <td className="p-3">
-                    <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                        classColors[champion.champion_class] || 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {champion.champion_class}
-                    </span>
+                    <ClassBadge championClass={champion.champion_class} />
                   </td>
 
                   {/* Alias */}
@@ -363,22 +347,16 @@ export default function ChampionsPage() {
                   {/* Actions */}
                   <td className="p-3">
                     <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      <ActionIconButton
+                        icon={<FiEdit2 className="w-3.5 h-3.5" />}
                         onClick={() => startEditAlias(champion)}
                         title="Edit alias"
-                      >
-                        <FiEdit2 className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      />
+                      <ActionIconButton
+                        icon={<FiTrash2 />}
                         onClick={() => setDeleteTarget(champion)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <FiTrash2 />
-                      </Button>
+                        variant="danger"
+                      />
                     </div>
                   </td>
                 </tr>
