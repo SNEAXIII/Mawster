@@ -1,185 +1,134 @@
-from datetime import datetime
-from itertools import product
-from random import randint
-from faker import Faker
-from sqlmodel import create_engine, Session
-from typing import List
-from enum import Enum
-from src.enums.Roles import Roles
-from src.security.secrets import SECRET
-from src.services.PasswordService import crypt_context
-from src.models import Article, Category, User, LoginLog, ExerciseCoherenceCardiac
+"""
+Seed script: creates 30 users (1 admin + 29 users), each with 1 game account,
+and one alliance led by the admin's account.
 
-sync_engine = create_engine(
-    f"mysql+pymysql://{SECRET.MARIADB_USER}:{SECRET.MARIADB_PASSWORD}@{SECRET.MARIADB_HOST}/{SECRET.MARIADB_DATABASE}",
-)
+Usage:
+    make fixtures
+    # or
+    python -m src.fixtures.sample_data
+"""
+
+from datetime import datetime
+from random import randint, choice
+
+from faker import Faker
+from sqlmodel import Session
+
+from src.enums.Roles import Roles
+from src.models import User, LoginLog
+from src.models.GameAccount import GameAccount
+from src.models.Alliance import Alliance
+from src.fixtures import sync_engine
 
 fake = Faker(locale="en")
-
-
-class States(str, Enum):
-    ACTIVE = "active"
-    DISABLED = "disabled"
-    DELETED = "deleted"
-
-
-PASSWORD = "test" # NOSONAR
 NOW = datetime.now()
 
+# ──────────────────────────── Pseudos de jeu réalistes ────────────────────────
+GAME_PSEUDOS = [
+    "DarkPhoenix", "XMutant77", "CosmicGhost", "IronWill",
+    "ViperStrike", "ShadowClaw", "NovaBlade", "ThunderFist",
+    "CrimsonWolf", "FrostBite99", "SteelNerve", "BlazeFury",
+    "StormBreaker", "VenomPulse", "TitanForce", "HawkEyeX",
+    "NightCrawlr", "WolfGangX", "QuantumRage", "AbyssWalkr",
+    "MysticFlare", "NeonSurge", "OmegaPrime", "CyberVortex",
+    "PlasmaDuke", "RuneKnight", "AstralKing", "ZeroGravity",
+    "EchoPhantom",
+]
 
-def hash_with_low_security(password: str) -> str:
-    return crypt_context.hash(password)
-
-
-admin = User(
-    email="admin@email.com",
-    login="admin",
-    hashed_password=hash_with_low_security(PASSWORD),
-    role=Roles.ADMIN,
-)
-user = User(
-    email="user@email.com",
-    login="user",
-    hashed_password=hash_with_low_security(PASSWORD),
-    role=Roles.USER,
-)
-
-
-def create_sample_users(rolls: int) -> List[User]:
-    states = States.__members__.values()
-    roles = Roles.__members__.values()
-
-    users = []
-    for role, state, index in product(roles, states, range(rolls)):
-        id_bonus = f"{randint(0, 9999)}".zfill(4) # NOSONAR
-        name = f"{(fake.first_name())}_{id_bonus}"
-        email = f"{name}@gmail.com"
-        password = hash_with_low_security(PASSWORD)
-        user = User(
-            login=name,
-            email=email,
-            role=role,
-            hashed_password=password,
-            created_at=fake.date_time(end_datetime=NOW),
-        )
-        match state:
-            case States.DELETED:
-                user.deleted_at = fake.date_time(end_datetime=NOW)
-            case States.DISABLED:
-                user.disabled_at = fake.date_time(end_datetime=NOW)
-        users.append(user)
-    return users
-
-
-def get_admins(users: List[User]) -> List[User]:
-    return [_user for _user in users if _user.role == Roles.ADMIN.value]
-
-
-def create_sample_categories():
-    return [
-        Category(label="Actualités"),
-        Category(label="Bien-être"),
-        Category(label="Conseils"),
-        Category(label="Méditation"),
-        Category(label="Respiration"),
-        Category(label="Spiritualité"),
-    ]
-
-
-def create_sample_articles(
-    users: List[User], categories: List[Category], rolls: int
-) -> List[Article]:
-    articles = []
-    for user, category, index in product(users, categories, range(rolls)):
-        article = Article(
-            title=fake.text(max_nb_chars=50),
-            content=fake.text(max_nb_chars=100),
-            created_at=fake.date_time(end_datetime=NOW),
-            id_user=user.id,
-            id_category=category.id,
-        )
-        articles.append(article)
-    return articles
-
-
-def create_sample_exercises() -> List[ExerciseCoherenceCardiac]:
-    return [
-        ExerciseCoherenceCardiac(
-            name="Respiration 748",
-            duration_inspiration=7,
-            duration_apnea=4,
-            duration_expiration=8,
-            number_cycles=15,  # (7+4+8)*15 ~= 300 seconds
-        ),
-        ExerciseCoherenceCardiac(
-            name="Respiration 505",
-            duration_inspiration=5,
-            duration_apnea=0,
-            duration_expiration=5.0,
-            number_cycles=30,  # (5+5)*30 ~= 300 seconds
-        ),
-        ExerciseCoherenceCardiac(
-            name="Respiration 406",
-            duration_inspiration=5,
-            duration_apnea=0,
-            duration_expiration=5.0,
-            number_cycles=30,  # (4+6)*30 ~= 300 seconds
-        ),
-    ]
-
-
-def create_sample_login_logs(users: List[User], rolls: int) -> List[LoginLog]:
-    logs = []
-    for user, _ in product(users, range(rolls)):
-        date = fake.date_time(end_datetime=NOW)
-        user.last_login_date = date
-        logs.append(
-            LoginLog(
-                id_user=user.id,
-                date_connexion=fake.date_time(end_datetime=NOW),
-            )
-        )
-    return logs
+ALLIANCE_NAMES = [
+    ("Elite 33", "E33"),
+]
 
 
 def load_sample_data():
+    """Create 30 users, 30 game accounts, 1 alliance."""
     try:
         with Session(sync_engine) as session:
+            # ─────────────── 1. Admin (toi) ───────────────
+            print("🚀 Creating admin account (misterbalise)...")
+            admin = User(
+                email="misterbalise2@gmail.com",
+                login="misterbalise",
+                discord_id="403941390586871808",
+                role=Roles.ADMIN,
+                created_at=fake.date_time_between(start_date="-1y", end_date=NOW),
+                last_login_date=NOW,
+            )
             session.add(admin)
-            session.add(user)
-            print("🚀 Creating users")
-            all_users = create_sample_users(rolls=5)
-            admins = get_admins(all_users)
-            for elem in all_users:
-                session.add(elem)
-            session.commit()
-            print("✅ Users loaded with success !")
-            categories = create_sample_categories()
-            for elem in categories:
-                session.add(elem)
-            session.commit()
-            print("✅ Categories loaded with success !")
-            articles = create_sample_articles(admins, categories, rolls=1)
-            for elem in articles:
-                session.add(elem)
-            session.commit()
-            print("✅ Articles loaded with success !")
-            login_logs = create_sample_login_logs(all_users, rolls=4)
-            exercises = create_sample_exercises()
-            for elem in exercises:
-                session.add(elem)
-            session.commit()
-            print("✅ Exercises loaded with success !")
-            for elem in login_logs:
-                session.add(elem)
-            session.commit()
-            print("✅ Login logs loaded with success !")
+            session.flush()  # get admin.id
 
-        print("✅ Sample data loaded with success !")
+            admin_game = GameAccount(
+                user_id=admin.id,
+                game_pseudo="Mr DrBalise",
+                is_primary=True,
+            )
+            session.add(admin_game)
+            session.flush()  # get admin_game.id
+
+            # ─────────────── 2. 29 other users ───────────────
+            print("🚀 Creating 29 users with game accounts...")
+            game_accounts = [admin_game]  # collect all for alliance membership
+
+            for i, pseudo in enumerate(GAME_PSEUDOS):
+                suffix = f"{randint(0, 9999):04d}"
+                first = fake.first_name()
+                login = f"{first}_{suffix}"
+                email = f"{login.lower()}@gmail.com"
+                discord_id = f"discord_{login}_{suffix}"
+
+                user = User(
+                    login=login,
+                    email=email,
+                    discord_id=discord_id,
+                    role=Roles.USER,
+                    created_at=fake.date_time_between(start_date="-1y", end_date=NOW),
+                    last_login_date=fake.date_time_between(start_date="-30d", end_date=NOW),
+                )
+                session.add(user)
+                session.flush()
+
+                ga = GameAccount(
+                    user_id=user.id,
+                    game_pseudo=pseudo,
+                    is_primary=True,
+                )
+                session.add(ga)
+                session.flush()
+                game_accounts.append(ga)
+
+                # Login log
+                session.add(LoginLog(
+                    id_user=user.id,
+                    date_connexion=fake.date_time_between(start_date="-30d", end_date=NOW),
+                ))
+
+            # ─────────────── 3. Alliance ───────────────
+            print("🚀 Creating alliance 'Elite 33' [E33]...")
+            alliance_name, alliance_tag = ALLIANCE_NAMES[0]
+            alliance = Alliance(
+                name=alliance_name,
+                tag=alliance_tag,
+                owner_id=admin_game.id,
+            )
+            session.add(alliance)
+            session.flush()
+
+            # Put admin + all 29 members in the alliance (30 total)
+            for ga in game_accounts:
+                ga.alliance_id = alliance.id
+                ga.alliance_group = choice([1, 2, 3])
+                session.add(ga)
+
+            session.commit()
+
+            print(f"✅ {len(game_accounts)} users created (1 admin + {len(game_accounts) - 1} users)")
+            print(f"✅ {len(game_accounts)} game accounts created")
+            print(f"✅ Alliance '{alliance_name}' [{alliance_tag}] created with {len(game_accounts)} members")
+            print("✅ Admin: misterbalise (Mr DrBalise) — discord_id: 403941390586871808")
+            print("✅ Sample data loaded with success!")
 
     except Exception as e:
-        session.rollback()
-        print(f"❌ Error loading sample data : {e}")
+        print(f"❌ Error loading sample data: {e}")
         raise
 
 

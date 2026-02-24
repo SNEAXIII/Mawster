@@ -1,0 +1,1904 @@
+[
+  {
+    "name": "Abomination",
+    "champion_class": "Science",
+    "image_url": "/static/champions/abomination.png",
+    "alias": null
+  },
+  {
+    "name": "Abomination (Immortal)",
+    "champion_class": "Science",
+    "image_url": "/static/champions/abomination_immortal.png",
+    "alias": null
+  },
+  {
+    "name": "Absorbing Man",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/absorbing_man.png",
+    "alias": "absman"
+  },
+  {
+    "name": "Adam Warlock",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/adam_warlock.png",
+    "alias": null
+  },
+  {
+    "name": "Ægon",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/gon.png",
+    "alias": "aegon"
+  },
+  {
+    "name": "Agent Venom",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/agent_venom.png",
+    "alias": null
+  },
+  {
+    "name": "Air-Walker",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/air-walker.png",
+    "alias": null
+  },
+  {
+    "name": "America Chavez",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/america_chavez.png",
+    "alias": null
+  },
+  {
+    "name": "Angela",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/angela.png",
+    "alias": null
+  },
+  {
+    "name": "Annihilus",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/annihilus.png",
+    "alias": "fantman"
+  },
+  {
+    "name": "Ant-Man",
+    "champion_class": "Science",
+    "image_url": "/static/champions/ant-man.png",
+    "alias": "AntMan;Ant Man"
+  },
+  {
+    "name": "Ant-Man (Future)",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/ant-man_future.png",
+    "alias": "fantman;AntMan;Ant Man"
+  },
+  {
+    "name": "Anti-Venom",
+    "champion_class": "Science",
+    "image_url": "/static/champions/anti-venom.png",
+    "alias": "AntiVenom;Anti Venom"
+  },
+  {
+    "name": "Apocalypse",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/apocalypse.png",
+    "alias": null
+  },
+  {
+    "name": "Arcade",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/arcade.png",
+    "alias": null
+  },
+  {
+    "name": "Archangel",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/archangel.png",
+    "alias": null
+  },
+  {
+    "name": "Arnim Zola",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/arnim_zola.png",
+    "alias": null
+  },
+  {
+    "name": "Attuma",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/attuma.png",
+    "alias": null
+  },
+  {
+    "name": "Baron Zemo",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/baron_zemo.png",
+    "alias": null
+  },
+  {
+    "name": "Bastion",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/bastion.png",
+    "alias": null
+  },
+  {
+    "name": "Beast",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/beast.png",
+    "alias": null
+  },
+  {
+    "name": "Beta Ray Bill",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/beta_ray_bill.png",
+    "alias": null
+  },
+  {
+    "name": "Bishop",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/bishop.png",
+    "alias": null
+  },
+  {
+    "name": "Black Bolt",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/black_bolt.png",
+    "alias": null
+  },
+  {
+    "name": "Black Cat",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/black_cat.png",
+    "alias": null
+  },
+  {
+    "name": "Black Panther",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/black_panther.png",
+    "alias": null
+  },
+  {
+    "name": "Black Panther (Civil War)",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/black_panther_civil_war.png",
+    "alias": "bpcw"
+  },
+  {
+    "name": "Black Widow",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/black_widow.png",
+    "alias": null
+  },
+  {
+    "name": "Black Widow (Claire Voyant)",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/black_widow_claire_voyant.png",
+    "alias": "bwcv"
+  },
+  {
+    "name": "Black Widow (Deadly Origin)",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/black_widow_deadly_origin.png",
+    "alias": null
+  },
+  {
+    "name": "Blade",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/blade.png",
+    "alias": null
+  },
+  {
+    "name": "Blue Marvel",
+    "champion_class": "Science",
+    "image_url": "/static/champions/blue_marvel.png",
+    "alias": null
+  },
+  {
+    "name": "Bullseye",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/bullseye.png",
+    "alias": null
+  },
+  {
+    "name": "Cable",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/cable.png",
+    "alias": null
+  },
+  {
+    "name": "Captain America",
+    "champion_class": "Science",
+    "image_url": "/static/champions/captain_america.png",
+    "alias": null
+  },
+  {
+    "name": "Captain America (Infinity War)",
+    "champion_class": "Science",
+    "image_url": "/static/champions/captain_america_infinity_war.png",
+    "alias": null
+  },
+  {
+    "name": "Captain America (Sam Wilson)",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/captain_america_sam_wilson.png",
+    "alias": null
+  },
+  {
+    "name": "Captain America (WWII)",
+    "champion_class": "Science",
+    "image_url": "/static/champions/captain_america_wwii.png",
+    "alias": null
+  },
+  {
+    "name": "Captain Britain",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/captain_britain.png",
+    "alias": null
+  },
+  {
+    "name": "Captain Marvel",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/captain_marvel.png",
+    "alias": null
+  },
+  {
+    "name": "Captain Marvel (Classic)",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/captain_marvel_classic.png",
+    "alias": null
+  },
+  {
+    "name": "Carnage",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/carnage.png",
+    "alias": null
+  },
+  {
+    "name": "Cassandra Nova",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/cassandra_nova.png",
+    "alias": null
+  },
+  {
+    "name": "Cassie Lang",
+    "champion_class": "Science",
+    "image_url": "/static/champions/cassie_lang.png",
+    "alias": null
+  },
+  {
+    "name": "Chee'ilth",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/chee_ilth.png",
+    "alias": null
+  },
+  {
+    "name": "Civil Warrior",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/civil_warrior.png",
+    "alias": null
+  },
+  {
+    "name": "Colossus",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/colossus.png",
+    "alias": null
+  },
+  {
+    "name": "Corvus Glaive",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/corvus_glaive.png",
+    "alias": null
+  },
+  {
+    "name": "Cosmic Ghost Rider",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/cosmic_ghost_rider.png",
+    "alias": "CGR"
+  },
+  {
+    "name": "Count Nefaria",
+    "champion_class": "Science",
+    "image_url": "/static/champions/count_nefaria.png",
+    "alias": null
+  },
+  {
+    "name": "Crossbones",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/crossbones.png",
+    "alias": null
+  },
+  {
+    "name": "Cull Obsidian",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/cull_obsidian.png",
+    "alias": null
+  },
+  {
+    "name": "Cyclops (Blue Team)",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/cyclops_blue_team.png",
+    "alias": null
+  },
+  {
+    "name": "Cyclops (New Xavier School)",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/cyclops_new_xavier_school.png",
+    "alias": null
+  },
+  {
+    "name": "Dani Moonstar",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/dani_moonstar.png",
+    "alias": null
+  },
+  {
+    "name": "Daredevil (Classic)",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/daredevil_classic.png",
+    "alias": null
+  },
+  {
+    "name": "Daredevil (Hell's Kitchen)",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/daredevil_hell_s_kitchen.png",
+    "alias": null
+  },
+  {
+    "name": "Dark Phoenix",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/dark_phoenix.png",
+    "alias": null
+  },
+  {
+    "name": "Darkhawk",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/darkhawk.png",
+    "alias": null
+  },
+  {
+    "name": "Dazzler",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/dazzler.png",
+    "alias": "piou"
+  },
+  {
+    "name": "Deadpool",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/deadpool.png",
+    "alias": null
+  },
+  {
+    "name": "Deadpool (X-Force)",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/deadpool_x-force.png",
+    "alias": null
+  },
+  {
+    "name": "Diablo",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/diablo.png",
+    "alias": null
+  },
+  {
+    "name": "Doctor Doom",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/doctor_doom.png",
+    "alias": null
+  },
+  {
+    "name": "Doctor Octopus",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/doctor_octopus.png",
+    "alias": null
+  },
+  {
+    "name": "Doctor Strange",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/doctor_strange.png",
+    "alias": null
+  },
+  {
+    "name": "Doctor Voodoo",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/doctor_voodoo.png",
+    "alias": null
+  },
+  {
+    "name": "Domino",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/domino.png",
+    "alias": null
+  },
+  {
+    "name": "Doombot",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/doombot.png",
+    "alias": null
+  },
+  {
+    "name": "Dormammu",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/dormammu.png",
+    "alias": null
+  },
+  {
+    "name": "Dracula",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/dracula.png",
+    "alias": null
+  },
+  {
+    "name": "Dragon Man",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/dragon_man.png",
+    "alias": null
+  },
+  {
+    "name": "Drax",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/drax.png",
+    "alias": null
+  },
+  {
+    "name": "Dust",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/dust.png",
+    "alias": null
+  },
+  {
+    "name": "Ebony Maw",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/ebony_maw.png",
+    "alias": null
+  },
+  {
+    "name": "Electro",
+    "champion_class": "Science",
+    "image_url": "/static/champions/electro.png",
+    "alias": null
+  },
+  {
+    "name": "Elektra",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/elektra.png",
+    "alias": null
+  },
+  {
+    "name": "Elsa Bloodstone",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/elsa_bloodstone.png",
+    "alias": null
+  },
+  {
+    "name": "Emma Frost",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/emma_frost.png",
+    "alias": null
+  },
+  {
+    "name": "Enchantress",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/enchantress.png",
+    "alias": null
+  },
+  {
+    "name": "Falcon",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/falcon.png",
+    "alias": null
+  },
+  {
+    "name": "Falcon (Joaquín Torres)",
+    "champion_class": "Science",
+    "image_url": "/static/champions/falcon_joaqu_n_torres.png",
+    "alias": null
+  },
+  {
+    "name": "Franken-Castle",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/franken-castle.png",
+    "alias": null
+  },
+  {
+    "name": "Galan",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/galan.png",
+    "alias": null
+  },
+  {
+    "name": "Gambit",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/gambit.png",
+    "alias": null
+  },
+  {
+    "name": "Gamora",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/gamora.png",
+    "alias": null
+  },
+  {
+    "name": "Gentle",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/gentle.png",
+    "alias": null
+  },
+  {
+    "name": "Ghost",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/ghost.png",
+    "alias": null
+  },
+  {
+    "name": "Ghost Rider",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/ghost_rider.png",
+    "alias": "gr"
+  },
+  {
+    "name": "Gladiator",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/gladiator.png",
+    "alias": null
+  },
+  {
+    "name": "Goldpool",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/goldpool.png",
+    "alias": null
+  },
+  {
+    "name": "Gorr",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/gorr.png",
+    "alias": null
+  },
+  {
+    "name": "Green Goblin",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/green_goblin.png",
+    "alias": null
+  },
+  {
+    "name": "Groot",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/groot.png",
+    "alias": null
+  },
+  {
+    "name": "Guardian",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/guardian.png",
+    "alias": null
+  },
+  {
+    "name": "Guillotine",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/guillotine.png",
+    "alias": null
+  },
+  {
+    "name": "Guillotine (Deathless)",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/guillotine_deathless.png",
+    "alias": null
+  },
+  {
+    "name": "Guillotine 2099",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/guillotine_2099.png",
+    "alias": null
+  },
+  {
+    "name": "Gwenpool",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/gwenpool.png",
+    "alias": null
+  },
+  {
+    "name": "Havok",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/havok.png",
+    "alias": null
+  },
+  {
+    "name": "Hawkeye",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/hawkeye.png",
+    "alias": null
+  },
+  {
+    "name": "Heimdall",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/heimdall.png",
+    "alias": null
+  },
+  {
+    "name": "Hela",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/hela.png",
+    "alias": null
+  },
+  {
+    "name": "Hercules",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/hercules.png",
+    "alias": null
+  },
+  {
+    "name": "High Evolutionary",
+    "champion_class": "Science",
+    "image_url": "/static/champions/high_evolutionary.png",
+    "alias": null
+  },
+  {
+    "name": "Hit-Monkey",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/hit-monkey.png",
+    "alias": "HitMonkey;Hit Monkey"
+  },
+  {
+    "name": "Howard the Duck",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/howard_the_duck.png",
+    "alias": null
+  },
+  {
+    "name": "Hulk",
+    "champion_class": "Science",
+    "image_url": "/static/champions/hulk.png",
+    "alias": null
+  },
+  {
+    "name": "Hulk (Immortal)",
+    "champion_class": "Science",
+    "image_url": "/static/champions/hulk_immortal.png",
+    "alias": null
+  },
+  {
+    "name": "Hulk (Ragnarok)",
+    "champion_class": "Science",
+    "image_url": "/static/champions/hulk_ragnarok.png",
+    "alias": null
+  },
+  {
+    "name": "Hulkbuster",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/hulkbuster.png",
+    "alias": null
+  },
+  {
+    "name": "Hulkling",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/hulkling.png",
+    "alias": null
+  },
+  {
+    "name": "Human Torch",
+    "champion_class": "Science",
+    "image_url": "/static/champions/human_torch.png",
+    "alias": null
+  },
+  {
+    "name": "Hyperion",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/hyperion.png",
+    "alias": null
+  },
+  {
+    "name": "Iceman",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/iceman.png",
+    "alias": null
+  },
+  {
+    "name": "Ikaris",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/ikaris.png",
+    "alias": null
+  },
+  {
+    "name": "Imperiosa",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/imperiosa.png",
+    "alias": null
+  },
+  {
+    "name": "Invisible Woman",
+    "champion_class": "Science",
+    "image_url": "/static/champions/invisible_woman.png",
+    "alias": null
+  },
+  {
+    "name": "Iron Fist",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/iron_fist.png",
+    "alias": null
+  },
+  {
+    "name": "Iron Fist (Immortal)",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/iron_fist_immortal.png",
+    "alias": null
+  },
+  {
+    "name": "Iron Man",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/iron_man.png",
+    "alias": null
+  },
+  {
+    "name": "Iron Man (Infamous)",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/iron_man_infamous.png",
+    "alias": "idoom"
+  },
+  {
+    "name": "Iron Man (Infinity War)",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/iron_man_infinity_war.png",
+    "alias": "imiw"
+  },
+  {
+    "name": "Iron Patriot",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/iron_patriot.png",
+    "alias": null
+  },
+  {
+    "name": "Ironheart",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/ironheart.png",
+    "alias": null
+  },
+  {
+    "name": "Isophyne",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/isophyne.png",
+    "alias": null
+  },
+  {
+    "name": "Jabari Panther",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/jabari_panther.png",
+    "alias": null
+  },
+  {
+    "name": "Jack O'Lantern",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/jack_o_lantern.png",
+    "alias": null
+  },
+  {
+    "name": "Jean Grey",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/jean_grey.png",
+    "alias": null
+  },
+  {
+    "name": "Jessica Jones",
+    "champion_class": "Science",
+    "image_url": "/static/champions/jessica_jones.png",
+    "alias": null
+  },
+  {
+    "name": "Joe Fixit",
+    "champion_class": "Science",
+    "image_url": "/static/champions/joe_fixit.png",
+    "alias": null
+  },
+  {
+    "name": "Jubilee",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/jubilee.png",
+    "alias": null
+  },
+  {
+    "name": "Juggernaut",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/juggernaut.png",
+    "alias": "juggs"
+  },
+  {
+    "name": "Kang the Conqueror",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/kang_the_conqueror.png",
+    "alias": null
+  },
+  {
+    "name": "Karnak",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/karnak.png",
+    "alias": null
+  },
+  {
+    "name": "Karolina Dean",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/karolina_dean.png",
+    "alias": null
+  },
+  {
+    "name": "Kate Bishop",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/kate_bishop.png",
+    "alias": null
+  },
+  {
+    "name": "Killmonger",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/killmonger.png",
+    "alias": null
+  },
+  {
+    "name": "Kindred",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/kindred.png",
+    "alias": null
+  },
+  {
+    "name": "King Groot",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/king_groot.png",
+    "alias": null
+  },
+  {
+    "name": "King Groot (Deathless)",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/king_groot_deathless.png",
+    "alias": null
+  },
+  {
+    "name": "Kingpin",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/kingpin.png",
+    "alias": null
+  },
+  {
+    "name": "Kitty Pryde",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/kitty_pryde.png",
+    "alias": null
+  },
+  {
+    "name": "Knull",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/knull.png",
+    "alias": null
+  },
+  {
+    "name": "Korg",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/korg.png",
+    "alias": null
+  },
+  {
+    "name": "Kraven",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/kraven.png",
+    "alias": null
+  },
+  {
+    "name": "Kushala",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/kushala.png",
+    "alias": null
+  },
+  {
+    "name": "Lady Deathstrike",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/lady_deathstrike.png",
+    "alias": null
+  },
+  {
+    "name": "Lizard",
+    "champion_class": "Science",
+    "image_url": "/static/champions/lizard.png",
+    "alias": null
+  },
+  {
+    "name": "Loki",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/loki.png",
+    "alias": null
+  },
+  {
+    "name": "Longshot",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/longshot.png",
+    "alias": null
+  },
+  {
+    "name": "Luke Cage",
+    "champion_class": "Science",
+    "image_url": "/static/champions/luke_cage.png",
+    "alias": null
+  },
+  {
+    "name": "Lumatrix",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/lumatrix.png",
+    "alias": null
+  },
+  {
+    "name": "M.O.D.O.K.",
+    "champion_class": "Science",
+    "image_url": "/static/champions/m_o_d_o_k.png",
+    "alias": null
+  },
+  {
+    "name": "M'Baku",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/m_baku.png",
+    "alias": null
+  },
+  {
+    "name": "Maestro (Cosmic)",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/maestro_cosmic.png",
+    "alias": null
+  },
+  {
+    "name": "Magik",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/magik.png",
+    "alias": null
+  },
+  {
+    "name": "Magneto",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/magneto.png",
+    "alias": null
+  },
+  {
+    "name": "Magneto (House of X)",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/magneto_house_of_x.png",
+    "alias": null
+  },
+  {
+    "name": "Man-Thing",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/man-thing.png",
+    "alias": null
+  },
+  {
+    "name": "Mangog",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/mangog.png",
+    "alias": null
+  },
+  {
+    "name": "Mantis",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/mantis.png",
+    "alias": null
+  },
+  {
+    "name": "Masacre",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/masacre.png",
+    "alias": null
+  },
+  {
+    "name": "Medusa",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/medusa.png",
+    "alias": null
+  },
+  {
+    "name": "Mephisto",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/mephisto.png",
+    "alias": null
+  },
+  {
+    "name": "Mister Fantastic",
+    "champion_class": "Science",
+    "image_url": "/static/champions/mister_fantastic.png",
+    "alias": null
+  },
+  {
+    "name": "Mister Negative",
+    "champion_class": "Science",
+    "image_url": "/static/champions/mister_negative.png",
+    "alias": null
+  },
+  {
+    "name": "Mister Sinister",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/mister_sinister.png",
+    "alias": null
+  },
+  {
+    "name": "Misty Knight",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/misty_knight.png",
+    "alias": null
+  },
+  {
+    "name": "Mojo",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/mojo.png",
+    "alias": null
+  },
+  {
+    "name": "Mole Man",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/mole_man.png",
+    "alias": null
+  },
+  {
+    "name": "Moon Knight",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/moon_knight.png",
+    "alias": null
+  },
+  {
+    "name": "Moondragon",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/moondragon.png",
+    "alias": null
+  },
+  {
+    "name": "Morbius",
+    "champion_class": "Science",
+    "image_url": "/static/champions/morbius.png",
+    "alias": null
+  },
+  {
+    "name": "Mordo",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/mordo.png",
+    "alias": null
+  },
+  {
+    "name": "Morningstar",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/morningstar.png",
+    "alias": null
+  },
+  {
+    "name": "Mr. Knight",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/mr_knight.png",
+    "alias": null
+  },
+  {
+    "name": "Ms. Marvel",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/ms_marvel.png",
+    "alias": null
+  },
+  {
+    "name": "Ms. Marvel (Kamala Khan)",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/ms_marvel_kamala_khan.png",
+    "alias": null
+  },
+  {
+    "name": "Mysterio",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/mysterio.png",
+    "alias": null
+  },
+  {
+    "name": "Namor",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/namor.png",
+    "alias": null
+  },
+  {
+    "name": "Nebula",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/nebula.png",
+    "alias": null
+  },
+  {
+    "name": "Negasonic Teenage Warhead",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/negasonic_teenage_warhead.png",
+    "alias": null
+  },
+  {
+    "name": "Nick Fury",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/nick_fury.png",
+    "alias": null
+  },
+  {
+    "name": "Nico Minoru",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/nico_minoru.png",
+    "alias": null
+  },
+  {
+    "name": "Night Thrasher",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/night_thrasher.png",
+    "alias": null
+  },
+  {
+    "name": "Nightcrawler",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/nightcrawler.png",
+    "alias": null
+  },
+  {
+    "name": "Nimrod",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/nimrod.png",
+    "alias": null
+  },
+  {
+    "name": "Northstar",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/northstar.png",
+    "alias": null
+  },
+  {
+    "name": "Nova",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/nova.png",
+    "alias": null
+  },
+  {
+    "name": "Odin",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/odin.png",
+    "alias": null
+  },
+  {
+    "name": "Okoye",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/okoye.png",
+    "alias": null
+  },
+  {
+    "name": "Old Man Logan",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/old_man_logan.png",
+    "alias": null
+  },
+  {
+    "name": "Omega Red",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/omega_red.png",
+    "alias": null
+  },
+  {
+    "name": "Omega Sentinel",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/omega_sentinel.png",
+    "alias": null
+  },
+  {
+    "name": "Onslaught",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/onslaught.png",
+    "alias": null
+  },
+  {
+    "name": "Patriot",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/patriot.png",
+    "alias": null
+  },
+  {
+    "name": "Peni Parker",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/peni_parker.png",
+    "alias": null
+  },
+  {
+    "name": "Phoenix",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/phoenix.png",
+    "alias": null
+  },
+  {
+    "name": "Photon",
+    "champion_class": "Science",
+    "image_url": "/static/champions/photon.png",
+    "alias": null
+  },
+  {
+    "name": "Platinumpool",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/platinumpool.png",
+    "alias": null
+  },
+  {
+    "name": "Professor X",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/professor_x.png",
+    "alias": null
+  },
+  {
+    "name": "Prowler",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/prowler.png",
+    "alias": null
+  },
+  {
+    "name": "Proxima Midnight",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/proxima_midnight.png",
+    "alias": null
+  },
+  {
+    "name": "Psycho-Man",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/psycho-man.png",
+    "alias": null
+  },
+  {
+    "name": "Psylocke",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/psylocke.png",
+    "alias": null
+  },
+  {
+    "name": "Punisher",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/punisher.png",
+    "alias": null
+  },
+  {
+    "name": "Punisher 2099",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/punisher_2099.png",
+    "alias": null
+  },
+  {
+    "name": "Purgatory",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/purgatory.png",
+    "alias": null
+  },
+  {
+    "name": "Quake",
+    "champion_class": "Science",
+    "image_url": "/static/champions/quake.png",
+    "alias": null
+  },
+  {
+    "name": "Quicksilver",
+    "champion_class": "Science",
+    "image_url": "/static/champions/quicksilver.png",
+    "alias": null
+  },
+  {
+    "name": "Red Goblin",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/red_goblin.png",
+    "alias": null
+  },
+  {
+    "name": "Red Guardian",
+    "champion_class": "Science",
+    "image_url": "/static/champions/red_guardian.png",
+    "alias": null
+  },
+  {
+    "name": "Red Hulk",
+    "champion_class": "Science",
+    "image_url": "/static/champions/red_hulk.png",
+    "alias": null
+  },
+  {
+    "name": "Red Skull",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/red_skull.png",
+    "alias": null
+  },
+  {
+    "name": "Rhino",
+    "champion_class": "Science",
+    "image_url": "/static/champions/rhino.png",
+    "alias": null
+  },
+  {
+    "name": "Rintrah",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/rintrah.png",
+    "alias": null
+  },
+  {
+    "name": "Rocket Raccoon",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/rocket_raccoon.png",
+    "alias": null
+  },
+  {
+    "name": "Rogue",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/rogue.png",
+    "alias": null
+  },
+  {
+    "name": "Ronan",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/ronan.png",
+    "alias": null
+  },
+  {
+    "name": "Ronin",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/ronin.png",
+    "alias": null
+  },
+  {
+    "name": "Sabretooth",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/sabretooth.png",
+    "alias": null
+  },
+  {
+    "name": "Sandman",
+    "champion_class": "Science",
+    "image_url": "/static/champions/sandman.png",
+    "alias": null
+  },
+  {
+    "name": "Sasquatch",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/sasquatch.png",
+    "alias": null
+  },
+  {
+    "name": "Sauron",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/sauron.png",
+    "alias": null
+  },
+  {
+    "name": "Scarlet Witch",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/scarlet_witch.png",
+    "alias": null
+  },
+  {
+    "name": "Scarlet Witch (Classic)",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/scarlet_witch_classic.png",
+    "alias": null
+  },
+  {
+    "name": "Scorpion",
+    "champion_class": "Science",
+    "image_url": "/static/champions/scorpion.png",
+    "alias": null
+  },
+  {
+    "name": "Scream",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/scream.png",
+    "alias": null
+  },
+  {
+    "name": "Sentinel",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/sentinel.png",
+    "alias": null
+  },
+  {
+    "name": "Sentry",
+    "champion_class": "Science",
+    "image_url": "/static/champions/sentry.png",
+    "alias": null
+  },
+  {
+    "name": "Sersi",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/sersi.png",
+    "alias": null
+  },
+  {
+    "name": "Shang-Chi",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/shang-chi.png",
+    "alias": "shangshi;shang shi"
+  },
+  {
+    "name": "Shathra",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/shathra.png",
+    "alias": null
+  },
+  {
+    "name": "She-Hulk",
+    "champion_class": "Science",
+    "image_url": "/static/champions/she-hulk.png",
+    "alias": "shehulk;she hulk"
+  },
+  {
+    "name": "She-Hulk (Deathless)",
+    "champion_class": "Science",
+    "image_url": "/static/champions/she-hulk_deathless.png",
+    "alias": "shehulk;she hulk"
+  },
+  {
+    "name": "Shocker",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/shocker.png",
+    "alias": null
+  },
+  {
+    "name": "Shuri",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/shuri.png",
+    "alias": null
+  },
+  {
+    "name": "Silk",
+    "champion_class": "Science",
+    "image_url": "/static/champions/silk.png",
+    "alias": null
+  },
+  {
+    "name": "Silver Centurion",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/silver_centurion.png",
+    "alias": null
+  },
+  {
+    "name": "Silver Sable",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/silver_sable.png",
+    "alias": null
+  },
+  {
+    "name": "Silver Samurai",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/silver_samurai.png",
+    "alias": null
+  },
+  {
+    "name": "Silver Surfer",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/silver_surfer.png",
+    "alias": null
+  },
+  {
+    "name": "Solvarch",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/solvarch.png",
+    "alias": null
+  },
+  {
+    "name": "Sorcerer Supreme",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/sorcerer_supreme.png",
+    "alias": null
+  },
+  {
+    "name": "Spider-Gwen",
+    "champion_class": "Science",
+    "image_url": "/static/champions/spider-gwen.png",
+    "alias": null
+  },
+  {
+    "name": "Spider-Ham",
+    "champion_class": "Science",
+    "image_url": "/static/champions/spider-ham.png",
+    "alias": "SpiderHam;Spider Ham"
+  },
+  {
+    "name": "Spider-Man (Classic)",
+    "champion_class": "Science",
+    "image_url": "/static/champions/spider-man_classic.png",
+    "alias": "SpiderMan;Spider Man"
+  },
+  {
+    "name": "Spider-Man (Miles Morales)",
+    "champion_class": "Science",
+    "image_url": "/static/champions/spider-man_miles_morales.png",
+    "alias": "SpiderMan;Spider Man"
+  },
+  {
+    "name": "Spider-Man (Pavitr Prabhakar)",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/spider-man_pavitr_prabhakar.png",
+    "alias": "SpiderMan;Spider Man"
+  },
+  {
+    "name": "Spider-Man (Stark Enhanced)",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/spider-man_stark_enhanced.png",
+    "alias": "SpiderMan;Spider Man;sparky;starky"
+  },
+  {
+    "name": "Spider-Man (Stealth Suit)",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/spider-man_stealth_suit.png",
+    "alias": "SpiderMan;Spider Man"
+  },
+  {
+    "name": "Spider-Man (Supreme)",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/spider-man_supreme.png",
+    "alias": "SpiderMan;Spider Man"
+  },
+  {
+    "name": "Spider-Man (Symbiote)",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/spider-man_symbiote.png",
+    "alias": "SpiderMan;Spider Man"
+  },
+  {
+    "name": "Spider-Man 2099",
+    "champion_class": "Science",
+    "image_url": "/static/champions/spider-man_2099.png",
+    "alias": "SpiderMan;Spider Man"
+  },
+  {
+    "name": "Spider-Punk",
+    "champion_class": "Science",
+    "image_url": "/static/champions/spider-punk.png",
+    "alias": "SpiderMan;Spider Man"
+  },
+  {
+    "name": "Spider-Slayer (J. Jonah Jameson)",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/spider-slayer_j_jonah_jameson.png",
+    "alias": "SpiderSlayer;Spider Slayer"
+  },
+  {
+    "name": "Spider-Woman (Jessica Drew)",
+    "champion_class": "Science",
+    "image_url": "/static/champions/spider-woman_jessica_drew.png",
+    "alias": "sw;SpiderWoman;Spider Woman"
+  },
+  {
+    "name": "Spiral",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/spiral.png",
+    "alias": null
+  },
+  {
+    "name": "Spot",
+    "champion_class": "Science",
+    "image_url": "/static/champions/spot.png",
+    "alias": null
+  },
+  {
+    "name": "Squirrel Girl",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/squirrel_girl.png",
+    "alias": null
+  },
+  {
+    "name": "Star-Lord",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/star-lord.png",
+    "alias": null
+  },
+  {
+    "name": "Star-Lord (Stellar-Forged)",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/star-lord_stellar-forged.png",
+    "alias": null
+  },
+  {
+    "name": "Storm",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/storm.png",
+    "alias": null
+  },
+  {
+    "name": "Storm (Pyramid X)",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/storm_pyramid_x.png",
+    "alias": null
+  },
+  {
+    "name": "Stryfe",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/stryfe.png",
+    "alias": null
+  },
+  {
+    "name": "Sunspot",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/sunspot.png",
+    "alias": null
+  },
+  {
+    "name": "Super-Skrull",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/super-skrull.png",
+    "alias": null
+  },
+  {
+    "name": "Superior Iron Man",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/superior_iron_man.png",
+    "alias": null
+  },
+  {
+    "name": "Symbiote Supreme",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/symbiote_supreme.png",
+    "alias": null
+  },
+  {
+    "name": "Taskmaster",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/taskmaster.png",
+    "alias": null
+  },
+  {
+    "name": "Terrax",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/terrax.png",
+    "alias": null
+  },
+  {
+    "name": "Thanos",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/thanos.png",
+    "alias": null
+  },
+  {
+    "name": "Thanos (Deathless)",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/thanos_deathless.png",
+    "alias": "Danos"
+  },
+  {
+    "name": "The Champion",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/the_champion.png",
+    "alias": null
+  },
+  {
+    "name": "The Destroyer",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/the_destroyer.png",
+    "alias": null
+  },
+  {
+    "name": "The Hood",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/the_hood.png",
+    "alias": null
+  },
+  {
+    "name": "The Leader",
+    "champion_class": "Science",
+    "image_url": "/static/champions/the_leader.png",
+    "alias": null
+  },
+  {
+    "name": "The Maker",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/the_maker.png",
+    "alias": null
+  },
+  {
+    "name": "The Overseer",
+    "champion_class": "Science",
+    "image_url": "/static/champions/the_overseer.png",
+    "alias": null
+  },
+  {
+    "name": "The Serpent",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/the_serpent.png",
+    "alias": null
+  },
+  {
+    "name": "Thing",
+    "champion_class": "Science",
+    "image_url": "/static/champions/thing.png",
+    "alias": null
+  },
+  {
+    "name": "Thor",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/thor.png",
+    "alias": null
+  },
+  {
+    "name": "Thor (Jane Foster)",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/thor_jane_foster.png",
+    "alias": null
+  },
+  {
+    "name": "Thor (Ragnarok)",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/thor_ragnarok.png",
+    "alias": null
+  },
+  {
+    "name": "Tigra",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/tigra.png",
+    "alias": null
+  },
+  {
+    "name": "Titania",
+    "champion_class": "Science",
+    "image_url": "/static/champions/titania.png",
+    "alias": null
+  },
+  {
+    "name": "Toad",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/toad.png",
+    "alias": null
+  },
+  {
+    "name": "Ultron",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/ultron.png",
+    "alias": null
+  },
+  {
+    "name": "Ultron (Classic)",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/ultron_classic.png",
+    "alias": null
+  },
+  {
+    "name": "Unstoppable Colossus",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/unstoppable_colossus.png",
+    "alias": null
+  },
+  {
+    "name": "Valkyrie",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/valkyrie.png",
+    "alias": null
+  },
+  {
+    "name": "Venom",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/venom.png",
+    "alias": null
+  },
+  {
+    "name": "Venom the Duck",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/venom_the_duck.png",
+    "alias": null
+  },
+  {
+    "name": "Venompool",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/venompool.png",
+    "alias": null
+  },
+  {
+    "name": "Vision",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/vision.png",
+    "alias": null
+  },
+  {
+    "name": "Vision (Aarkus)",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/vision_aarkus.png",
+    "alias": null
+  },
+  {
+    "name": "Vision (Age of Ultron)",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/vision_age_of_ultron.png",
+    "alias": null
+  },
+  {
+    "name": "Vision (Deathless)",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/vision_deathless.png",
+    "alias": null
+  },
+  {
+    "name": "Viv Vision",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/viv_vision.png",
+    "alias": null
+  },
+  {
+    "name": "Void",
+    "champion_class": "Science",
+    "image_url": "/static/champions/void.png",
+    "alias": null
+  },
+  {
+    "name": "Vox",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/vox.png",
+    "alias": null
+  },
+  {
+    "name": "Vulture",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/vulture.png",
+    "alias": null
+  },
+  {
+    "name": "War Machine",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/war_machine.png",
+    "alias": null
+  },
+  {
+    "name": "Warlock",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/warlock.png",
+    "alias": null
+  },
+  {
+    "name": "Wasp",
+    "champion_class": "Science",
+    "image_url": "/static/champions/wasp.png",
+    "alias": null
+  },
+  {
+    "name": "Werewolf By Night",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/werewolf_by_night.png",
+    "alias": "wolfy"
+  },
+  {
+    "name": "White Tiger",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/white_tiger.png",
+    "alias": null
+  },
+  {
+    "name": "Wiccan",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/wiccan.png",
+    "alias": null
+  },
+  {
+    "name": "Winter Soldier",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/winter_soldier.png",
+    "alias": null
+  },
+  {
+    "name": "Wolverine",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/wolverine.png",
+    "alias": null
+  },
+  {
+    "name": "Wolverine (Weapon X)",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/wolverine_weapon_x.png",
+    "alias": null
+  },
+  {
+    "name": "Wolverine (X-23)",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/wolverine_x-23.png",
+    "alias": "x23"
+  },
+  {
+    "name": "Wong",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/wong.png",
+    "alias": null
+  },
+  {
+    "name": "Yelena Belova",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/yelena_belova.png",
+    "alias": null
+  },
+  {
+    "name": "Yellowjacket",
+    "champion_class": "Science",
+    "image_url": "/static/champions/yellowjacket.png",
+    "alias": null
+  },
+  {
+    "name": "Yondu",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/yondu.png",
+    "alias": null
+  }
+]

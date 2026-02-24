@@ -1,6 +1,6 @@
 import '@/app/ui/global.css';
 import { inter } from '@/app/ui/fonts';
-import SideNavBar from '@/app/ui/left-nav-bar/sidenav';
+import SideNavBar from '@/components/left-nav-bar/sidenav';
 import { Providers } from './providers';
 import { Toaster } from '@/components/ui/sonner';
 interface RootLayoutProps {
@@ -9,7 +9,7 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang='fr'>
+    <html lang='en'>
       <body className={`${inter.className} antialiased`}>
         <Providers>
           <div className='flex h-screen flex-col md:flex-row md:overflow-hidden'>

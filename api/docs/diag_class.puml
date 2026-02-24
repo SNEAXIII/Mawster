@@ -1,0 +1,124 @@
+@startuml Class_FastAPI
+
+  class User {
+    + id : UUID <<PK>>
+    + login : str
+    + email : str
+    + discord_id : str
+    + avatar_url : Optional[str]
+    + role : Roles (USER | ADMIN)
+    + disabled_at : Optional[datetime]
+    + deleted_at : Optional[datetime]
+    + created_at : datetime
+    + last_login_date : Optional[datetime]
+    --
+    + connexions : List[LoginLog]
+    + game_accounts : List[GameAccount]
+  }
+
+  class LoginLog {
+    + id : int <<PK>>
+    + date_connexion : datetime
+    + id_user : UUID <<FK>>
+    --
+    + user : User
+  }
+
+  class Alliance {
+    + id : int <<PK>>
+    + name : str
+    + tag : str
+    + description : Optional[str]
+    + created_at : datetime
+    ' TODO: add url later
+    --
+    + members : List[GameAccount]
+    + configurations : List[DefenseConfiguration]
+  }
+
+  class GameAccount {
+    + id : int <<PK>>
+    + user_id : UUID <<FK>>
+    + alliance_id : Optional[int] <<FK>>
+    + game_pseudo : str
+    + is_primary : bool
+    + created_at : datetime
+    --
+    + user : User
+    + alliance : Optional[Alliance]
+    + roster : List[ChampionUser]
+    + responsible_placements : List[DefensePlacement]
+  }
+
+  class Champion {
+    + id : int <<PK>>
+    + name : str
+    + champion_class : str
+    + image_url : Optional[str]
+    + is_7_star : bool
+    --
+    + instances : List[ChampionUser]
+  }
+
+  class ChampionUser {
+    + id : int <<PK>>
+    + game_account_id : int <<FK>>
+    + champion_id : int <<FK>>
+    + stars : int
+    + rank : int
+    + level : int
+    + signature : int
+    --
+    + game_account : GameAccount
+    + champion : Champion
+    + placements : List[DefensePlacement]
+  }
+
+  class DefenseConfiguration {
+    + id : int <<PK>>
+    + alliance_id : int <<FK>>
+    + name : str
+    + type : str
+    + is_active : bool
+    --
+    + alliance : Alliance
+    + nodes : List[Node]
+  }
+
+  class Node {
+    + id : int <<PK>>
+    + config_id : int <<FK>>
+    + number : str
+    + buff_description : str
+    --
+    + configuration : DefenseConfiguration
+    + placements : List[DefensePlacement]
+  }
+
+  class DefensePlacement {
+    + id : int <<PK>>
+    + node_id : int <<FK>>
+    + champion_user_id : int <<FK>>
+    + responsible_game_account_id : int <<FK>>
+    + order : int
+    + status : str
+    + strategy_notes : str
+    --
+    + node : Node
+    + champion_user : ChampionUser
+    + responsible : GameAccount
+  }
+
+
+User "1" *-- "N" LoginLog
+User "1" *-- "N" GameAccount
+Alliance "1" *-- "N" GameAccount
+GameAccount "1" *-- "N" ChampionUser
+Champion "1" *-- "N" ChampionUser
+Alliance "1" *-- "N" DefenseConfiguration
+DefenseConfiguration "1" *-- "N" Node
+Node "1" *-- "N" DefensePlacement
+ChampionUser "1" *-- "N" DefensePlacement
+GameAccount "1" --> "N" DefensePlacement : responsible
+
+@enduml

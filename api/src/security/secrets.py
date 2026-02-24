@@ -9,16 +9,15 @@ IS_PROD = os.getenv("MODE") == "prod"
 
 
 class Settings(BaseSettings):
-    MARIADB_DATABASE: str = Field(... if IS_PROD else "cesi-zen")
+    MARIADB_DATABASE: str = Field(... if IS_PROD else "mawster")
     MARIADB_USER: str = Field(... if IS_PROD else "user")
     MARIADB_PASSWORD: str = Field(... if IS_PROD else "password")
     MARIADB_ROOT_PASSWORD: str = Field(... if IS_PROD else "rootpassword")
     MARIADB_PORT: int = Field(... if IS_PROD else 3306)
     MARIADB_HOST: str = Field("mariadb" if IS_PROD else "localhost")
-    SECRET_KEY: str = Field(... if IS_PROD else "dev-secret-key")
+    SECRET_KEY: str = Field(... if IS_PROD else "dev-secret-key_dev-secret-key_dev-secret-key")
     ALGORITHM: str = Field(... if IS_PROD else "HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(... if IS_PROD else 60, le=60)
-    BCRYPT_HASH_ROUND: int = Field(... if IS_PROD else 8, ge=12 if IS_PROD else 8)
     model_config = SettingsConfigDict(env_file=api_file)
 
 

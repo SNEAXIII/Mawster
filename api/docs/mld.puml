@@ -1,0 +1,119 @@
+@startuml MLD_MCOC
+left to right direction
+skinparam shadowing false
+skinparam monochrome true
+skinparam class {
+    BackgroundColor #F8F8F8
+    BorderColor #333333
+    FontColor #222222
+}
+
+entity "user" as user <<table>> {
+  * id : uuid <<PK>>
+  --
+  login : varchar(100) <<UNIQUE>>
+  email : varchar(255) <<UNIQUE>>
+  discord_id : varchar(50) <<UNIQUE>>
+  avatar_url : varchar(500)
+  role : enum('USER','ADMIN')
+  disabled_at : timestamp (nullable)
+  deleted_at : timestamp (nullable)
+  created_at : timestamp
+  last_login_date : timestamp (nullable)
+}
+
+entity "login_log" as login_log <<table>> {
+  * id : int <<PK>> AUTO_INCREMENT
+  --
+  * id_user : uuid <<FK>> → user.id
+  date_connexion : timestamp
+}
+
+entity "alliance" as alliance <<table>> {
+  * id : int <<PK>> AUTO_INCREMENT
+  --
+  name : varchar(100)
+  tag : varchar(10)
+  description : text (nullable)
+  created_at : timestamp
+  ' TODO: add url later
+}
+
+entity "game_account" as game_account <<table>> {
+  * id : int <<PK>> AUTO_INCREMENT
+  --
+  * user_id : uuid <<FK>> → user.id
+  alliance_id : int <<FK>> → alliance.id (nullable)
+  game_pseudo : varchar(50)
+  is_primary : boolean
+  created_at : timestamp
+}
+
+entity "champion" as champion <<table>> {
+  * id : int <<PK>> AUTO_INCREMENT
+  --
+  name : varchar(100)
+  champion_class : varchar(20)
+  image_url : varchar(500) (nullable)
+  is_7_star : boolean
+}
+
+entity "champion_user" as roster <<table>> {
+  * id : int <<PK>> AUTO_INCREMENT
+  --
+  * game_account_id : int <<FK>> → game_account.id
+  * champion_id : int <<FK>> → champion.id
+  stars : tinyint
+  rank : tinyint
+  level : smallint
+  signature : smallint
+}
+
+entity "defense_configuration" as config <<table>> {
+  * id : int <<PK>> AUTO_INCREMENT
+  --
+  * alliance_id : int <<FK>> → alliance.id
+  name : varchar(150)
+  type : varchar(30)
+  is_active : boolean
+  start_date : date
+  end_date : date
+}
+
+entity "node" as node <<table>> {
+  * id : int <<PK>> AUTO_INCREMENT
+  --
+  * config_id : int <<FK>> → defense_configuration.id
+  number : varchar(20)
+  buff_description : text
+}
+
+entity "defense_placement" as placement <<table>> {
+  * id : int <<PK>> AUTO_INCREMENT
+  --
+  * node_id : int <<FK>> → node.id
+  * champion_user_id : int <<FK>> → champion_user.id
+  * responsible_game_account_id : int <<FK>> → game_account.id
+  order : tinyint
+  status : varchar(20)
+  strategy_notes : text
+  placement_date : timestamp
+}
+
+' ==================== RELATIONS ====================
+user ||--o{ login_log
+user ||--o{ game_account
+alliance ||--o{ game_account
+game_account ||--o{ roster
+champion ||--o{ roster
+alliance ||--o{ config
+config ||--o{ node
+node ||--o{ placement
+roster ||--o{ placement
+game_account ||--o{ placement
+
+@enduml
+roster ||--o{ placement
+compte_jeu ||--o{ placement : "responsable"
+
+@enduml
