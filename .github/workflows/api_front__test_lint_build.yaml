@@ -30,7 +30,7 @@ jobs:
           enable-cache: true
       - name: Install dev dependencies
         working-directory: ${{ env.WORKDIR }}
-        run: uv sync --dev
+        run: uv sync --extra dev
       - name: Run Ruff linter
         uses: astral-sh/ruff-action@v3
         with:

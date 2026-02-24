@@ -1,7 +1,7 @@
 [project]
-name = "cesi-zen-api"
+name = "mawster-api"
 version = "0.1.0"
-description = "CesiZen API - MCOC Alliance Management"
+description = "Mawster API - MCOC Alliance Management"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]",
@@ -16,8 +16,6 @@ dependencies = [
     "alembic",
     "bleach",
     "sentry-sdk",
-    "pytest>=9.0.2",
-    "pytest-xdist[dev]>=3.8.0",
 ]
 
 [project.optional-dependencies]
@@ -28,6 +26,7 @@ dev = [
     "pytest-mock",
     "pytest-cov",
     "pytest-xdist",
+    "pytest-mock",
     "faker",
     "time-machine",
     "beautifulsoup4",
