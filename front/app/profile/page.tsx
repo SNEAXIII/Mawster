@@ -1,413 +1,111 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
-import { redirect, usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { deleteAccount, resetUserPassword } from '@/app/services/users';
+import { signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { formatDateLong } from '@/app/lib/utils';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader } from 'lucide-react';
-import { LuKeyRound, LuLogOut, LuTrash2 } from 'react-icons/lu';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { FullPageSpinner } from '@/components/full-page-spinner';
+import { useRequiredSession } from '@/hooks/use-required-session';
+import { LuLogOut, LuShield, LuMail, LuUser, LuCalendar } from 'react-icons/lu';
+import { FaDiscord } from 'react-icons/fa';
+import { useI18n } from '@/app/i18n';
+
+function getInitials(name: string | undefined | null): string {
+  if (!name) return '?';
+  return name
+    .split(/[\s_-]+/)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
 
 export default function ProfilePage() {
-  const pathname = usePathname();
   const router = useRouter();
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-  const [password, setPassword] = useState('');
-  const [oldPassword, setOldPassword] = useState('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const { locale, t } = useI18n();
 
-  const { data: session, status } = useSession({
-    required: true,
-    onUnauthenticated() {
-      redirect(`/login?callbackUrl=${pathname}`);
-    },
-  });
-
-  const handleDeleteAccount = async () => {
-    if (!password) {
-      setError('Veuillez entrer votre mot de passe');
-      return;
-    }
-
-    setIsDeleting(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      await deleteAccount(password, session?.accessToken);
-      await signOut({ redirect: false });
-      router.push('/');
-      router.refresh();
-    } catch (error) {
-      console.error('Erreur lors de la suppression du compte:', error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : 'Une erreur est survenue lors de la suppression du compte'
-      );
-      setIsDeleting(false);
-    }
-  };
+  const { data: session, status } = useRequiredSession();
 
   const handleSignOut = () => {
     signOut({
       callbackUrl: '/',
-      redirect: true
+      redirect: true,
     });
   };
 
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
-  const handleResetPassword = async () => {
-    // Réinitialiser les erreurs
-    setError('');
-    setFieldErrors({});
-
-    // Validation côté client
-    if (!oldPassword || !password || !confirmNewPassword) {
-      setError('Veuillez remplir tous les champs');
-      return;
-    }
-
-    setIsResetting(true);
-    setSuccess('');
-
-    try {
-      await resetUserPassword(
-        {
-          old_password: oldPassword,
-          password: password,
-          confirm_password: confirmNewPassword,
-        },
-        session?.accessToken
-      );
-
-      setSuccess('Votre mot de passe a été mis à jour avec succès');
-      setPassword('');
-      setOldPassword('');
-      setConfirmNewPassword('');
-      setIsResetDialogOpen(false);
-    } catch (error) {
-      console.error('Erreur lors de la réinitialisation du mot de passe:', error);
-
-      if (error instanceof Error) {
-        const apiError = error as {
-          message?: string;
-          validationErrors?: Record<string, { message: string }>;
-        };
-
-        if (apiError.validationErrors) {
-          const errors: Record<string, string> = {};
-          Object.entries(apiError.validationErrors).forEach(([field, error]) => {
-            errors[field] = error?.message || 'Erreur de validation';
-          });
-
-          setFieldErrors(errors);
-          setError(apiError.message || 'Des erreurs de validation sont présentes');
-          return;
-        }
-      }
-
-      // Gestion des autres types d'erreurs
-      setError(
-        error instanceof Error
-          ? error.message
-          : 'Une erreur est survenue lors de la réinitialisation du mot de passe'
-      );
-    } finally {
-      setIsResetting(false);
-    }
-  };
-
   if (status === 'loading') {
-    return <div className='flex justify-center items-center h-full'>Chargement...</div>;
+    return <FullPageSpinner />;
   }
 
+  const user = session?.user;
+
   return (
-    <div className='max-w-4xl mx-auto p-6'>
-      <div className='bg-white rounded-lg shadow-md p-6'>
-        <h1 className='text-2xl font-bold mb-6 text-gray-800'>Mon Profil</h1>
-
-        <div className='space-y-6'>
-          <div className='border-b pb-6'>
-            <h2 className='text-lg font-semibold mb-4 text-gray-700'>Informations du compte</h2>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-              <div>
-                <p className='text-sm font-medium text-gray-500'>Nom d'utilisateur</p>
-                <p className='mt-1 text-gray-800'>{session?.user?.name || 'Non défini'}</p>
-              </div>
-              <div>
-                <p className='text-sm font-medium text-gray-500'>Email</p>
-                <p className='mt-1 text-gray-800'>{session?.user?.email || 'Non défini'}</p>
-              </div>
-              <div>
-                <p className='text-sm font-medium text-gray-500'>Rôle</p>
-                <p className='mt-1 text-gray-800 capitalize'>
-                  {session?.user?.role ? (
-                    <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
-                      {session.user.role.toLowerCase()}
-                    </span>
-                  ) : (
-                    'Non défini'
-                  )}
-                </p>
-              </div>
+    <div className="max-w-3xl mx-auto p-6 space-y-6">
+      {/* En-tête profil avec avatar */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            <Avatar className="h-24 w-24 ring-2 ring-offset-2 ring-blue-200">
+              <AvatarImage src={user?.avatar_url ?? undefined} alt={user?.name ?? 'Avatar'} />
+              <AvatarFallback className="text-2xl font-bold bg-blue-100 text-blue-700">
+                {getInitials(user?.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="text-center sm:text-left space-y-1">
+              <h1 className="text-2xl font-bold text-gray-900">{user?.name ?? t.profile.user}</h1>
+              <p className="text-gray-500">{user?.email ?? ''}</p>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <LuShield className="h-3 w-3" />
+                {user?.role?.toLowerCase() ?? t.profile.user.toLowerCase()}
+              </span>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          <div className='flex justify-end'>
-            <Button
-              variant="destructive"
-              className="w-full mt-4"
-              onClick={handleSignOut}
-            >
-              <LuLogOut className="mr-2 h-4 w-4" />
-              Se déconnecter
-            </Button>
+      {/* Informations du compte */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">{t.profile.accountInfo}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InfoRow icon={<LuUser className="h-4 w-4" />} label={t.profile.username} value={user?.name} fallback={t.common.notAvailable} />
+            <InfoRow icon={<LuMail className="h-4 w-4" />} label={t.profile.email} value={user?.email} fallback={t.common.notAvailable} />
+            <InfoRow icon={<FaDiscord className="h-4 w-4" />} label={t.profile.discordId} value={user?.discord_id} fallback={t.common.notAvailable} />
+            <InfoRow icon={<LuCalendar className="h-4 w-4" />} label={t.profile.memberSince} value={user?.created_at ? formatDateLong(user.created_at, locale) : t.common.notAvailable} fallback={t.common.notAvailable} />
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Section de sécurité */}
-          <div className='border-t border-gray-200 pt-6'>
-            <h2 className='text-lg font-semibold mb-4 text-gray-700'>Sécurité</h2>
-            <div className='bg-blue-50 p-4 rounded-md border border-blue-200 mb-6'>
-              <h3 className='font-medium text-blue-800'>Réinitialiser le mot de passe</h3>
-              <p className='text-sm text-blue-600 mt-1 mb-3'>
-                Vous pouvez réinitialiser votre mot de passe en suivant les instructions ci-dessous.
-              </p>
+      {/* Bouton deconnexion */}
+      <Button variant="outline" className="w-full" onClick={handleSignOut}>
+        <LuLogOut className="mr-2 h-4 w-4" />
+        {t.profile.signOut}
+      </Button>
+    </div>
+  );
+}
 
-              <AlertDialog
-                open={isResetDialogOpen}
-                onOpenChange={(open) => {
-                  if (!isResetting) {
-                    setIsResetDialogOpen(open);
-                    if (!open) {
-                      setError('');
-                      setSuccess('');
-                      setPassword('');
-                      setOldPassword('');
-                      setConfirmNewPassword('');
-                    }
-                  }
-                }}
-              >
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant='outline'
-                    className='text-blue-700 border-blue-300 hover:bg-blue-50 whitespace-normal text-left min-h-[2.5rem] h-auto py-2'
-                  >
-                    <LuKeyRound className='flex-shrink-0 -ml-1 mr-2 h-4 w-4' />
-                    <span className='break-words'>Changer mon mot de passe</span>
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className='max-w-md'>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className='text-lg font-semibold text-gray-900'>
-                      Changer le mot de passe
-                    </AlertDialogTitle>
-                    <div className='space-y-4 py-2'>
-                      <div className='space-y-2'>
-                        <Label htmlFor='current-password' className='text-sm font-medium text-gray-700'>
-                          Mot de passe actuel
-                        </Label>
-                        <Input
-                          id='current-password'
-                          type='password'
-                          value={oldPassword}
-                          onChange={(e) => setOldPassword(e.target.value)}
-                          placeholder='Entrez votre mot de passe actuel'
-                          className={`${fieldErrors.old_password ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-                          disabled={isResetting}
-                        />
-                        {fieldErrors.old_password && (
-                          <p className='mt-1 text-sm text-red-600'>{fieldErrors.old_password}</p>
-                        )}
-                      </div>
-
-                      <div className='space-y-2'>
-                        <Label htmlFor='new-password' className='text-sm font-medium text-gray-700'>
-                          Nouveau mot de passe
-                        </Label>
-                        <Input
-                          id='new-password'
-                          type='password'
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder='Entrez votre nouveau mot de passe'
-                          className={`${fieldErrors.password ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-                          disabled={isResetting}
-                        />
-                        {fieldErrors.password && (
-                          <p className='mt-1 text-sm text-red-600'>{fieldErrors.password}</p>
-                        )}
-                      </div>
-
-                      <div className='space-y-2'>
-                        <Label htmlFor='confirm-password' className='text-sm font-medium text-gray-700'>
-                          Confirmez le mot de passe
-                        </Label>
-                        <Input
-                          id='confirm-password'
-                          type='password'
-                          value={confirmNewPassword}
-                          onChange={(e) => setConfirmNewPassword(e.target.value)}
-                          placeholder='Confirmez votre nouveau mot de passe'
-                          className={`${fieldErrors.confirm_password ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-                          disabled={isResetting}
-                        />
-                        {fieldErrors.confirm_password && (
-                          <p className='mt-1 text-sm text-red-600'>{fieldErrors.confirm_password}</p>
-                        )}
-                      </div>
-
-                      {error && !Object.keys(fieldErrors).length && (
-                        <div className='p-3 text-sm text-red-700 bg-red-100 border border-red-200 rounded-md'>
-                          {error}
-                        </div>
-                      )}
-                    </div>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter className='flex flex-col-reverse sm:flex-row sm:justify-between gap-2'>
-                    <AlertDialogCancel
-                      disabled={isResetting}
-                      className='w-full mt-0 sm:w-auto bg-white hover:bg-gray-50 text-gray-700 border-gray-300'
-                      onClick={() => {
-                        setError('');
-                        setSuccess('');
-                        setPassword('');
-                        setOldPassword('');
-                        setConfirmNewPassword('');
-                      }}
-                    >
-                      Annuler
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClickCapture={handleResetPassword}
-                      disabled={isResetting || !oldPassword || !password || !confirmNewPassword}
-                      className='w-full sm:w-auto bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-white'
-                    >
-                      {isResetting ? (
-                        <>
-                          <Loader className='w-4 h-4 mr-2 animate-spin' />
-                          Enregistrement...
-                        </>
-                      ) : (
-                        'Enregistrer les modifications'
-                      )}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-              {success && <p className='mt-2 text-sm text-green-600'>{success}</p>}
-            </div>
-          </div>
-
-          {/* Section de suppression de compte */}
-          <div className='border-t border-red-200 pt-6'>
-            <h2 className='text-lg font-semibold mb-4 text-red-700'>Zone de danger</h2>
-            <div className='bg-red-50 p-4 rounded-md border border-red-200'>
-              <h3 className='font-medium text-red-800'>Supprimer mon compte</h3>
-              <p className='text-sm text-red-600 mt-1 mb-3'>
-                Cette action est irréversible. Toutes vos données seront définitivement supprimées.
-              </p>
-
-              <AlertDialog
-                open={isDeleteDialogOpen}
-                onOpenChange={(open) => {
-                  if (!isDeleting) {
-                    setIsDeleteDialogOpen(open);
-                    if (!open) {
-                      setPassword('');
-                      setError('');
-                      setSuccess('');
-                    }
-                  }
-                }}
-              >
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant='destructive'
-                    className='whitespace-normal text-left min-h-[2.5rem] h-auto py-2'
-                  >
-                    <LuTrash2 className='flex-shrink-0 -ml-1 mr-2 h-4 w-4' />
-                    <span className='break-words'>Supprimer mon compte</span>
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className='max-w-md'>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className='text-lg font-semibold text-gray-900'>
-                      Êtes-vous absolument sûr ?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription className='text-gray-600'>
-                      Cette action est irréversible. Toutes vos données seront définitivement supprimées.
-                      <div className='mt-4 space-y-2'>
-                        <Label htmlFor='password' className='text-sm font-medium text-gray-700'>
-                          Confirmez votre mot de passe
-                        </Label>
-                        <Input
-                          id='password'
-                          type='password'
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder='Votre mot de passe'
-                          className={`${error ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-red-500 focus:border-transparent`}
-                        />
-                        {error && <p className='mt-1 text-sm text-red-600'>{error}</p>}
-                      </div>
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter className='flex flex-col-reverse sm:flex-row sm:justify-between gap-2'>
-                    <AlertDialogCancel
-                      disabled={isDeleting}
-                      className='w-full mt-0 sm:w-auto bg-white hover:bg-gray-50 text-gray-700 border-gray-300'
-                      onClick={(e) => {
-                        if (!isDeleting) {
-                          setPassword('');
-                          setError('');
-                        } else {
-                          e.preventDefault();
-                        }
-                      }}
-                    >
-                      Annuler
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClickCapture={handleDeleteAccount}
-                      disabled={isDeleting || !password}
-                      className='w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-white'
-                    >
-                      {isDeleting ? (
-                        <>
-                          <Loader className='w-4 h-4 mr-2 animate-spin' />
-                          Suppression...
-                        </>
-                      ) : (
-                        'Supprimer définitivement'
-                      )}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </div>
-        </div>
+function InfoRow({
+  icon,
+  label,
+  value,
+  fallback = 'N/A',
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | null | undefined;
+  fallback?: string;
+}) {
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
+      <div className="mt-0.5 text-gray-400">{icon}</div>
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-gray-500">{label}</p>
+        <p className="mt-0.5 text-sm text-gray-900 truncate">{value ?? fallback}</p>
       </div>
     </div>
   );

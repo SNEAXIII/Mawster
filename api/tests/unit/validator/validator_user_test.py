@@ -1,133 +1,27 @@
 import pytest
 from email_validator import EmailSyntaxError
-from fastapi.exceptions import RequestValidationError
 
 from src.Messages.user_messages import (
-    PASSWORD_WRONG_SIZE,
-    PASSWORD_NEED_SPECIAL,
-    PASSWORD_NEED_DIGIT,
-    PASSWORD_NEED_UPPER,
-    PASSWORD_NEED_LOWER,
     NOT_STR,
     EMAIL_INVALID,
     LOGIN_WRONG_SIZE,
     LOGIN_NON_ALPHANUM,
 )
 
-from src.Messages.validators_messages import PASSWORD_UNEQUAL_ERROR
 from src.validators.user_validator import (
-    password_validator,
-    MAX_PASSWORD_LENGHT,
-    MIN_PASSWORD_LENGHT,
-    SPECIAL_CHARS,
-    verify_password_match,
     correct_email_validator,
     login_validator,
     MIN_LOGIN_LENGHT,
     MAX_LOGIN_LENGHT,
 )
-from tests.utils.utils_constant import PASSWORD, WRONG_PASSWORD, LOGIN, EMAIL
-
-# For passwords tests
-password_wrong_size = PASSWORD_WRONG_SIZE % (MIN_PASSWORD_LENGHT, MAX_PASSWORD_LENGHT)
-password_need_special = PASSWORD_NEED_SPECIAL % SPECIAL_CHARS
-
-all_password_error = (
-    password_wrong_size,
-    PASSWORD_NEED_DIGIT,
-    PASSWORD_NEED_UPPER,
-    PASSWORD_NEED_LOWER,
-    password_need_special,
-)
+from tests.utils.utils_constant import LOGIN, EMAIL
 
 # For login tests
 login_wrong_size = LOGIN_WRONG_SIZE % (MIN_LOGIN_LENGHT, MAX_LOGIN_LENGHT)
 
 
-def compare_digest_mock(mocker, return_value: bool):
-    return mocker.patch("hmac.compare_digest", return_value=return_value)
-
-
 def validate_email_mock(mocker):
     return mocker.patch("email_validator.validate_email")
-
-
-def test_password_validator_success():
-    # Arrange
-    password = "Complex1A!" # NOSONAR
-
-    # Act
-    result = password_validator(password)
-
-    # Assert
-    assert password is result
-
-
-@pytest.mark.parametrize(
-    "password, expected_errors",
-    [
-        (1, [NOT_STR]),
-        ("Secure1!", [password_wrong_size]),
-        ("Se1!" * MAX_PASSWORD_LENGHT, [password_wrong_size]),
-        ("Securized!", [PASSWORD_NEED_DIGIT]),
-        ("securized1!", [PASSWORD_NEED_UPPER]),
-        ("SECURIZED1!", [PASSWORD_NEED_LOWER]),
-        ("Securized1", [password_need_special]),
-        (" ", all_password_error),
-    ],
-    ids=[
-        "password_not_str",
-        "password_wrong_too_short",
-        "password_wrong_too_long",
-        "password_need_digit",
-        "password_need_upper",
-        "password_need_lower",
-        "password_need_special",
-        "all_errors",
-    ],
-)
-def test_password_validator_wrong(password, expected_errors: list[str]):
-    # Act
-    with pytest.raises(ValueError) as error:
-        password_validator(password)
-
-    # Assert
-    for possible_error in all_password_error:
-        if possible_error in expected_errors:
-            assert possible_error in str(error.value), (
-                f"`{possible_error}` should NOT be in `{error.value}`"
-            )
-        else:
-            assert possible_error not in str(error.value), (
-                f"`{possible_error}` should be in `{error.value}`"
-            )
-
-
-def test_verify_password_match_success(mocker):
-    # Arrange
-    mock_compare_digest = compare_digest_mock(mocker, True)
-    values = mocker.Mock(data={"password": PASSWORD})
-
-    # Act
-    result = verify_password_match(PASSWORD, values)
-
-    # Assert
-    assert PASSWORD is result
-    mock_compare_digest.assert_called_once_with(PASSWORD, PASSWORD)
-
-
-def test_verify_password_match_error(mocker):
-    # Arrange
-    mock_compare_digest = compare_digest_mock(mocker, False)
-    values = mocker.Mock(data={"password": WRONG_PASSWORD})
-
-    # Act
-    with pytest.raises(RequestValidationError) as error:
-        verify_password_match(PASSWORD, values)
-
-    # Assert
-    assert error.value.errors() == [PASSWORD_UNEQUAL_ERROR]
-    mock_compare_digest.assert_called_once_with(WRONG_PASSWORD, PASSWORD)
 
 
 def test_email_validator_success(mocker):
@@ -189,9 +83,9 @@ def test_login_validator_success():
     ],
     ids=[
         "login_not_str",
-        "password_wrong_too_short",
-        "password_wrong_too_long",
-        "password_non_alphanum",
+        "login_wrong_too_short",
+        "login_wrong_too_long",
+        "login_non_alphanum",
     ],
 )
 def test_login_validator_error(login, error_message):

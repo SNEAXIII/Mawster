@@ -1,0 +1,3 @@
+uv run pytest -n auto --dist=loadscope
+uv run pytest -q --durations=50
+uv run pytest -n 2 -q --durations=50

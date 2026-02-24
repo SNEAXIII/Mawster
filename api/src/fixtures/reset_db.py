@@ -1,27 +1,25 @@
-from sqlalchemy.exc import OperationalError
-
 import src.models  # noqa: F401
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import text
-from sqlmodel import Session, SQLModel, create_engine
-from src.security.secrets import SECRET
-
-engine = create_engine(
-    f"mysql+pymysql://{SECRET.MARIADB_USER}:{SECRET.MARIADB_PASSWORD}@localhost/{SECRET.MARIADB_DATABASE}",
-)
+from src.fixtures import sync_engine as engine
 
 alembic_cfg = Config("alembic.ini")
 
 
 def reset():
     print("🚀 Resetting database")
-    SQLModel.metadata.drop_all(engine)
-    try:
-        with Session(engine) as session:
-            session.exec(text("drop table alembic_version"))
-    except OperationalError:
-        pass
+    with engine.connect() as conn:
+        conn.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+        result = conn.execute(text(
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema = DATABASE()"
+        ))
+        tables = [row[0] for row in result]
+        for table in tables:
+            conn.execute(text(f"DROP TABLE IF EXISTS `{table}`"))
+        conn.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+        conn.commit()
     print("✅ Database reset with success !")
     print("🚀 Start migration")
     command.upgrade(alembic_cfg, "head")

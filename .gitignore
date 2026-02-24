@@ -1,5 +1,5 @@
 **/.vscode/*
-test.db
+test*.db
 .idea
 data/db/*
 .coverage
@@ -139,7 +139,7 @@ celerybeat.pid
 front.env
 .venv
 env/
-venv/
+api/*venv*/**
 ENV/
 env.bak/
 venv.bak/

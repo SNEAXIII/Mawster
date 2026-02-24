@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
-const PUBLIC_PATHS = ['/', '/api/auth', '/login', '/register', '/articles', '/breathing'];
-const ADMIN_PATHS = ['/dashboard', '/admin', '/articles/create'];
+const PUBLIC_PATHS = ['/', '/api/auth', '/login', '/register'];
+const ADMIN_PATHS = ['/admin'];
 
 function isPathMatching(path: string, paths: string[]): boolean {
   return paths.some((basePath) => path === basePath || path.startsWith(`${basePath}/`));
@@ -12,7 +12,7 @@ function isPathMatching(path: string, paths: string[]): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-  const isTokenExpired = token?.expired;
+  const isTokenExpired = token?.expired || !token?.backendAuthenticated;
 
   console.log('Middleware triggered for path:', pathname);
   console.log('Token status:', isTokenExpired ? 'expired' : 'valid');

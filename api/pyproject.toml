@@ -1,0 +1,52 @@
+[project]
+name = "mawster-api"
+version = "0.1.0"
+description = "Mawster API - MCOC Alliance Management"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]",
+    "pyjwt",
+    "passlib[bcrypt]>=1.7.4,<2.0.0",
+    "python-multipart",
+    "pydantic-settings",
+    "sqlmodel",
+    "aiomysql",
+    "icecream",
+    "pymysql",
+    "alembic",
+    "bleach",
+    "sentry-sdk",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "aiosqlite",
+    "pytest-asyncio",
+    "pytest-mock",
+    "pytest-cov",
+    "pytest-xdist",
+    "pytest-mock",
+    "faker",
+    "time-machine",
+    "beautifulsoup4",
+    "curl_cffi",
+    "lxml",
+    "Pillow",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["tests/*", "migrations/*", "scripts/*"]
+concurrency = ["greenlet", "thread"]

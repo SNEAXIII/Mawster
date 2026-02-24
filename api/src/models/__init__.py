@@ -1,6 +1,8 @@
 from src.models.User import User  # noqa: F401
-from src.models.ExerciseCoherenceCardiac import ExerciseCoherenceCardiac  # noqa: F401
 from src.models.LoginLog import LoginLog  # noqa: F401
-from src.models.Category import Category  # noqa: F401
-from src.models.Articles import Article  # noqa: F401
+from src.models.GameAccount import GameAccount  # noqa: F401
+from src.models.Alliance import Alliance  # noqa: F401
+from src.models.Champion import Champion  # noqa: F401
+from src.models.ChampionUser import ChampionUser  # noqa: F401
+from src.models.AllianceOfficer import AllianceOfficer  # noqa: F401
 from sqlmodel import SQLModel  # noqa: F401

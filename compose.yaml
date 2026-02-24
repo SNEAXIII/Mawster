@@ -28,7 +28,7 @@ services:
       - "com.centurylinklabs.watchtower.enable=false"
 
   api:
-    image: sneaxiii/cesi-zen-api:latest
+    image: sneaxiii/mawster-api:latest
 #    build:
 #      context: ./api/
 #      dockerfile: api.Dockerfile
@@ -44,7 +44,7 @@ services:
       - "com.centurylinklabs.watchtower.enable=true"
 
   front:
-    image: sneaxiii/cesi-zen-front:latest
+    image: sneaxiii/mawster-front:latest
 #    build:
 #      context: ./front
 #      dockerfile: front.Dockerfile
