@@ -15,6 +15,7 @@ IS_ECHO_ASYNC = False
 # ── Per-worker DB name (pytest-xdist support) ──────────────────────────
 # Each xdist worker gets PYTEST_XDIST_WORKER env var (gw0, gw1, …).
 # When running without xdist the var is absent → single "test.db".
+os.makedirs("temp", exist_ok=True)
 _worker = os.environ.get("PYTEST_XDIST_WORKER", "")
 DB_NAME = f"temp/test_{_worker}.db" if _worker else "temp/test.db"
 
