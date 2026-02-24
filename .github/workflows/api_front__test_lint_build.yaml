@@ -31,9 +31,6 @@ jobs:
       - name: Install dev dependencies
         working-directory: ${{ env.WORKDIR }}
         run: uv sync --dev
-      - name: Setup environment variables
-        working-directory: ${{ env.WORKDIR }}
-        run: mv api.env.example api.env
       - name: Run Ruff linter
         uses: astral-sh/ruff-action@v3
         with:
