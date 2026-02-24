@@ -1,7 +1,15 @@
 [run]
+source = src
 omit =
     */__init__.py
     tests/*
+    migrations/*
+    scripts/*
+    fixtures/*
+    Messages/*
+concurrency =
+    greenlet
+    thread
 
 [report]
 exclude_also =

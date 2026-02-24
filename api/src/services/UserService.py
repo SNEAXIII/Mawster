@@ -16,22 +16,13 @@ from src.Messages.user_messages import (
     TARGET_USER_IS_DELETED,
     TARGET_USER_IS_ALREADY_DELETED,
 )
-from src.Messages.validators_messages import (
-    EMAIL_ALREADY_EXISTS_ERROR,
-    LOGIN_ALREADY_EXISTS_ERROR,
-    PASSWORD_WRONG_IN_DATABASE,
-)
 from src.enums.Roles import Roles
 from src.models import User
 from src.dto.dto_utilisateurs import (
-    CreateUser,
     UserAdminViewAllUsers,
     UserAdminViewSingleUser,
-    ResetPassword,
 )
-from src.services.PasswordService import PasswordService
 from src.utils.db import SessionDep
-from fastapi.exceptions import RequestValidationError
 from sqlalchemy import func
 
 DISABLED_STATUS = "disabled"
@@ -40,27 +31,6 @@ ENABLED_STATUS = "enabled"
 
 
 class UserService:
-    @classmethod
-    async def create_user_register(
-        cls, session: SessionDep, create_user: CreateUser
-    ) -> User:
-        errors = []
-        user_by_email = await UserService.get_user_by_email(session, create_user.email)
-        if user_by_email:
-            errors.append(EMAIL_ALREADY_EXISTS_ERROR)
-        user_by_login = await UserService.get_user_by_login(session, create_user.login)
-        if user_by_login:
-            errors.append(LOGIN_ALREADY_EXISTS_ERROR)
-        if errors:
-            raise RequestValidationError(errors=errors)
-        user_dict = create_user.model_dump()
-        hashed_password = await PasswordService.get_string_hash(create_user.password)
-        new_user = User(**user_dict, hashed_password=hashed_password)
-        session.add(new_user)
-        await session.commit()
-        await session.refresh(new_user)
-        return new_user
-
     @classmethod
     async def get_user(cls, session: SessionDep, user_id: uuid.UUID) -> Optional[User]:
         result = await session.get(User, user_id)
@@ -92,18 +62,41 @@ class UserService:
         return result.first()
 
     @classmethod
-    async def admin_patch_disable_user(
-        cls, session: SessionDep, user_uuid: uuid.UUID
-    ) -> True:
-        user: Optional[User] = await UserService.get_user(session, user_uuid)
+    def _validate_target_user_for_action(
+        cls,
+        user: Optional[User],
+        require_disabled: Optional[bool] = None,
+        forbid_admin: bool = True,
+    ) -> None:
+        """Validate a target user before performing admin operations.
+
+        Parameters:
+        - user: the User object or None
+        - require_disabled: if True, user must be disabled (otherwise raise ALREADY_ENABLED);
+                            if False, user must NOT be disabled (otherwise raise ALREADY_DISABLED);
+                            if None, no disabled-state check is performed.
+        - forbid_admin: if True, raise if target is an ADMIN (preserves previous checks).
+        """
         if user is None:
             raise TARGET_USER_DOESNT_EXISTS
         if user.deleted_at:
             raise TARGET_USER_IS_DELETED
-        if user.role == Roles.ADMIN:
+        if forbid_admin and user.role == Roles.ADMIN:
             raise TARGET_USER_IS_ADMIN
-        if user.disabled_at:
+        if require_disabled is True and not user.disabled_at:
+            raise TARGET_USER_IS_ALREADY_ENABLED
+        if require_disabled is False and user.disabled_at:
             raise TARGET_USER_IS_ALREADY_DISABLED
+
+    @classmethod
+    async def admin_patch_disable_user(
+        cls, session: SessionDep, user_uuid: uuid.UUID
+    ) -> True:
+        user: Optional[User] = await UserService.get_user(session, user_uuid)
+        # user must exist, not be deleted, not be an admin and must not already be disabled
+        UserService._validate_target_user_for_action(
+            user, require_disabled=False, forbid_admin=True
+        )
         user.disabled_at = datetime.now()
         await session.commit()
         return True
@@ -113,12 +106,10 @@ class UserService:
         cls, session: SessionDep, user_uuid: uuid.UUID
     ) -> True:
         user: Optional[User] = await UserService.get_user(session, user_uuid)
-        if user is None:
-            raise TARGET_USER_DOESNT_EXISTS
-        if user.deleted_at:
-            raise TARGET_USER_IS_DELETED
-        if not user.disabled_at:
-            raise TARGET_USER_IS_ALREADY_ENABLED
+        # user must exist, not be deleted, and must currently be disabled
+        UserService._validate_target_user_for_action(
+            user, require_disabled=True, forbid_admin=False
+        )
         user.disabled_at = None
         await session.commit()
         return True
@@ -126,46 +117,29 @@ class UserService:
     @classmethod
     async def admin_delete_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> True:
         user: Optional[User] = await UserService.get_user(session, user_uuid)
+        # If user already deleted -> raise the specific 'already deleted' error (test expectation)
         if user is None:
             raise TARGET_USER_DOESNT_EXISTS
         if user.deleted_at:
             raise TARGET_USER_IS_ALREADY_DELETED
-        if user.role == Roles.ADMIN:
-            raise TARGET_USER_IS_ADMIN
+        # user must exist, not be deleted and must not be admin
+        UserService._validate_target_user_for_action(
+            user, require_disabled=None, forbid_admin=True
+        )
         user.deleted_at = datetime.now()
         await session.commit()
         return True
 
     @classmethod
     async def self_delete(
-        cls, session: SessionDep, current_user: User, password: str
+        cls,
+        session: SessionDep,
+        current_user: User,
     ) -> True:
-        is_correct_password = await PasswordService.verify_password(
-            password, current_user.hashed_password
-        )
-        if is_correct_password is not True:
-            raise RequestValidationError(errors=[PASSWORD_WRONG_IN_DATABASE])
         if current_user.deleted_at:
+            # If user already deleted, raise the specific 'already deleted' error
             raise TARGET_USER_IS_ALREADY_DELETED
         current_user.deleted_at = datetime.now()
-        await session.commit()
-        return True
-
-    @classmethod
-    async def self_patch_reset_password(
-        cls, session: SessionDep, current_user: User, reset_password_dto: ResetPassword
-    ) -> True:
-        is_correct_password = await PasswordService.verify_password(
-            reset_password_dto.old_password, current_user.hashed_password
-        )
-        if is_correct_password is not True:
-            raise RequestValidationError(errors=[PASSWORD_WRONG_IN_DATABASE])
-        if current_user.deleted_at:
-            raise TARGET_USER_IS_ALREADY_DELETED
-        new_hashed_password = await PasswordService.get_string_hash(
-            reset_password_dto.password
-        )
-        current_user.hashed_password = new_hashed_password
         await session.commit()
         return True
 
@@ -174,10 +148,10 @@ class UserService:
         cls, session: SessionDep, user_uuid: uuid.UUID
     ) -> True:
         user: Optional[User] = await UserService.get_user(session, user_uuid)
-        if user is None:
-            raise TARGET_USER_DOESNT_EXISTS
-        if user.deleted_at:
-            raise TARGET_USER_IS_DELETED
+        # user must exist, not be deleted and must not already be admin
+        UserService._validate_target_user_for_action(
+            user, require_disabled=None, forbid_admin=True
+        )
         if user.role == Roles.ADMIN:
             raise TARGET_USER_IS_ALREADY_ADMIN
         user.role = Roles.ADMIN

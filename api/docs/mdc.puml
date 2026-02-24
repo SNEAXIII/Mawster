@@ -1,0 +1,105 @@
+@startuml MCD_MCOC
+title Conceptual Data Model - Mawster Alliance Manager
+hide circle
+skinparam shadowing false
+skinparam monochrome true
+
+entity "User" as user {
+  * id <<PK>> (UUID)
+  --
+  login
+  email
+  discord_id
+  avatar_url
+  role
+  disabled_at
+  deleted_at
+  created_at
+  last_login_date
+}
+
+entity "LoginLog" as login_log {
+  * id <<PK>>
+  --
+  * user_id <<FK>>
+  connection_date
+}
+
+entity "Alliance" as alliance {
+  * id <<PK>>
+  --
+  name
+  tag
+  description
+  ' TODO: add url later
+}
+
+entity "GameAccount" as game_account {
+  * id <<PK>>
+  --
+  * user_id <<FK>>
+  alliance_id <<FK>> (nullable)
+  game_pseudo
+  is_primary
+}
+
+entity "Champion" as champion {
+  * id <<PK>>
+  --
+  name
+  champion_class
+  image_url
+  is_7_star
+}
+
+entity "ChampionUser\n(roster)" as roster {
+  * id <<PK>>
+  --
+  * game_account_id <<FK>>
+  * champion_id <<FK>>
+  stars
+  rank
+  level
+  signature
+}
+
+entity "DefenseConfiguration" as config {
+  * id <<PK>>
+  --
+  * alliance_id <<FK>>
+  name
+  type
+  is_active
+}
+
+entity "Node" as node {
+  * id <<PK>>
+  --
+  * config_id <<FK>>
+  number
+  buff_description
+}
+
+entity "DefensePlacement" as placement {
+  * id <<PK>>
+  --
+  * node_id <<FK>>
+  * champion_user_id <<FK>>
+  * responsible_game_account_id <<FK>>
+  order
+  status
+  strategy_notes
+}
+
+user ||--o{ login_log : "logs"
+user ||--o{ game_account : "owns"
+alliance ||--o{ game_account : "contains"
+game_account ||--o{ roster : "has_in_roster"
+champion ||--o{ roster : "is_instance_of"
+config ||--o{ node : "includes"
+node ||--o{ placement : "has"
+roster ||--o{ placement : "is_placed_on"
+game_account ||--o{ placement : "is_responsible_for"
+alliance ||--o{ config : "has"
+
+@enduml
