@@ -87,3 +87,21 @@ async def execute_delete_request(
                 content=__import__("json").dumps(payload),
             )
         return await client.delete(route, headers=headers)
+
+
+async def execute_request(
+    method: str, url: str, payload=None, headers=None,
+) -> Response:
+    """Generic request dispatcher for parametrized access-control tests."""
+    method = method.upper()
+    if method == "GET":
+        return await execute_get_request(url, headers=headers)
+    if method == "POST":
+        return await execute_post_request(url, payload=payload or {}, headers=headers)
+    if method == "PUT":
+        return await execute_put_request(url, payload=payload or {}, headers=headers)
+    if method == "PATCH":
+        return await execute_patch_request(url, payload=payload or {}, headers=headers)
+    if method == "DELETE":
+        return await execute_delete_request(url, headers=headers, payload=payload)
+    raise ValueError(f"Unsupported HTTP method: {method}")

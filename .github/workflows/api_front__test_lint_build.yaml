@@ -36,9 +36,12 @@ jobs:
         uses: astral-sh/ruff-action@v3
         with:
           src: ${{ env.WORKDIR }}
-      - name: Run tests
+      - name: Run unit tests
         working-directory: ${{ env.WORKDIR }}
-        run: uv run pytest
+        run: uv run pytest tests/unit -v --tb=short
+      - name: Run integration tests
+        working-directory: ${{ env.WORKDIR }}
+        run: uv run pytest tests/integration -v --tb=short
   changes:
     if: github.ref_name == 'release'
     name: Detect changed paths

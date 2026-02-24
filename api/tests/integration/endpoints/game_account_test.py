@@ -3,9 +3,8 @@ import uuid
 import pytest
 
 from main import app
-from src.enums.Roles import Roles
 from src.utils.db import get_session
-from tests.integration.endpoints.setup.user_setup import push_one_user
+from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2
 from tests.integration.endpoints.setup.game_setup import (
     push_game_account,
     push_alliance_with_owner,
@@ -16,18 +15,15 @@ from tests.utils.utils_client import (
     execute_post_request,
     execute_put_request,
     execute_delete_request,
+    execute_request,
 )
 from tests.utils.utils_constant import (
     USER_ID,
     USER2_ID,
-    USER2_LOGIN,
-    USER2_EMAIL,
-    DISCORD_ID_2,
     GAME_PSEUDO,
     GAME_PSEUDO_2,
 )
-from tests.utils.utils_db import get_test_session, load_objects
-from tests.integration.endpoints.setup.user_setup import get_generic_user
+from tests.utils.utils_db import get_test_session
 
 app.dependency_overrides[get_session] = get_test_session
 
@@ -41,18 +37,6 @@ HEADERS = create_auth_headers()
 async def _setup_user():
     """Insert the standard test user."""
     await push_one_user()
-
-
-async def _setup_user2():
-    """Insert a second user."""
-    user2 = get_generic_user(
-        login=USER2_LOGIN,
-        email=USER2_EMAIL,
-        role=Roles.USER,
-    )
-    user2.id = USER2_ID
-    user2.discord_id = DISCORD_ID_2
-    await load_objects([user2])
 
 
 # =========================================================================
@@ -229,7 +213,7 @@ class TestGetMyGameAccounts:
     async def test_does_not_return_other_users_accounts(self, session):
         """A user should not see another user's accounts."""
         await _setup_user()
-        await _setup_user2()
+        await push_user2()
         await push_game_account(user_id=USER2_ID, game_pseudo="OtherPlayer")
 
         response = await execute_get_request("/game-accounts", headers=HEADERS)
@@ -257,7 +241,7 @@ class TestGetSingleGameAccount:
     @pytest.mark.asyncio
     async def test_get_other_users_account_returns_403(self, session):
         await _setup_user()
-        await _setup_user2()
+        await push_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo="Other")
 
         response = await execute_get_request(
@@ -306,7 +290,7 @@ class TestUpdateGameAccount:
     @pytest.mark.asyncio
     async def test_update_other_users_account_returns_403(self, session):
         await _setup_user()
-        await _setup_user2()
+        await push_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo="Other")
 
         response = await execute_put_request(
@@ -386,7 +370,7 @@ class TestDeleteGameAccount:
     @pytest.mark.asyncio
     async def test_delete_other_users_account_returns_403(self, session):
         await _setup_user()
-        await _setup_user2()
+        await push_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo="Other")
 
         response = await execute_delete_request(

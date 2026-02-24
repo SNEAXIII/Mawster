@@ -4,6 +4,7 @@ from typing import Optional
 
 from src.models.Alliance import Alliance
 from src.models.AllianceOfficer import AllianceOfficer
+from src.models.Champion import Champion
 from src.models.GameAccount import GameAccount
 from tests.utils.utils_constant import (
     GAME_PSEUDO,
@@ -131,3 +132,36 @@ async def push_officer(
     officer = get_officer(alliance_id=alliance.id, game_account_id=game_account.id)
     await load_objects([officer])
     return officer
+
+
+# ---------------------------------------------------------------------------
+# Champions
+# ---------------------------------------------------------------------------
+
+def get_champion(
+    name: str = "Spider-Man",
+    champion_class: str = "Science",
+    champion_id: uuid.UUID | None = None,
+    image_url: str | None = None,
+    is_7_star: bool = False,
+    alias: str | None = None,
+) -> Champion:
+    return Champion(
+        id=champion_id or uuid.uuid4(),
+        name=name,
+        champion_class=champion_class,
+        image_url=image_url,
+        is_7_star=is_7_star,
+        alias=alias,
+    )
+
+
+async def push_champion(
+    name: str = "Spider-Man",
+    champion_class: str = "Science",
+    **kwargs,
+) -> Champion:
+    """Insert a single champion and return it."""
+    champ = get_champion(name=name, champion_class=champion_class, **kwargs)
+    await load_objects([champ])
+    return champ
