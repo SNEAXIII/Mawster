@@ -7,7 +7,7 @@ from main import app
 from src.enums.Roles import Roles
 from src.models.Champion import Champion
 from src.utils.db import get_session
-from tests.integration.endpoints.setup.user_setup import get_generic_user
+from tests.integration.endpoints.setup.user_setup import get_generic_user, push_one_user
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
@@ -64,12 +64,47 @@ async def _setup_champions(champions: list[Champion]):
     await load_objects(champions)
 
 
+async def _setup_user():
+    await push_one_user()
+
+
+async def _push_champion(name="Spider-Man", champion_class="Science") -> Champion:
+    champ = Champion(
+        id=uuid.uuid4(), name=name, champion_class=champion_class, is_7_star=False
+    )
+    await load_objects([champ])
+    return champ
+
+
 # =========================================================================
 # GET /admin/champions — list with pagination
 # =========================================================================
 
 
 class TestGetChampions:
+    @pytest.mark.asyncio
+    async def test_no_auth_returns_401(self, session):
+        response = await execute_get_request("/admin/champions")
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "params,expected_code",
+        [
+            ("?page=0", 400),
+            ("?page=-1", 400),
+            ("?size=0", 400),
+            ("?size=-5", 400),
+        ],
+        ids=["page_zero", "page_negative", "size_zero", "size_negative"],
+    )
+    async def test_pagination_validation(self, session, params, expected_code):
+        await _setup_admin()
+        response = await execute_get_request(
+            f"/admin/champions{params}", headers=ADMIN_HEADERS
+        )
+        assert response.status_code == expected_code
+
     @pytest.mark.asyncio
     async def test_admin_can_list_champions(self, session):
         await _setup_admin()
@@ -242,6 +277,28 @@ class TestGetChampionById:
         )
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
+    async def test_invalid_uuid_returns_400(self, session):
+        await _setup_admin()
+        response = await execute_get_request(
+            "/admin/champions/not-a-uuid", headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_response_body_structure(self, session):
+        await _setup_admin()
+        champ = await _push_champion("Hulk", "Science")
+        response = await execute_get_request(
+            f"/admin/champions/{champ.id}", headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        expected = {"id", "name", "champion_class", "image_url", "is_7_star", "alias"}
+        assert expected.issubset(body.keys())
+        assert body["name"] == "Hulk"
+        assert body["champion_class"] == "Science"
+
 
 # =========================================================================
 # PATCH /admin/champions/{champion_id}/alias — update alias
@@ -304,6 +361,18 @@ class TestUpdateAlias:
             headers=USER_HEADERS,
         )
         assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_alias_too_long_returns_400(self, session):
+        """alias has max_length=500 in DTO."""
+        await _setup_admin()
+        champ = await _push_champion()
+        response = await execute_patch_request(
+            f"/admin/champions/{champ.id}/alias",
+            payload={"alias": "x" * 501},
+            headers=ADMIN_HEADERS,
+        )
+        assert response.status_code == 400
 
 
 # =========================================================================
@@ -374,6 +443,24 @@ class TestLoadChampions:
         )
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
+    async def test_load_no_auth_returns_401(self, session):
+        response = await execute_post_request(
+            "/admin/champions/load",
+            payload=[{"name": "X", "champion_class": "Science"}],
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_load_empty_list(self, session):
+        await _setup_admin()
+        response = await execute_post_request(
+            "/admin/champions/load", payload=[], headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["created"] == 0
+
 
 # =========================================================================
 # DELETE /admin/champions/{champion_id}
@@ -412,3 +499,32 @@ class TestDeleteChampion:
             f"/admin/champions/{uuid.uuid4()}", headers=USER_HEADERS
         )
         assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_delete_invalid_uuid_returns_400(self, session):
+        await _setup_admin()
+        response = await execute_delete_request(
+            "/admin/champions/not-a-uuid", headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_delete_no_auth_returns_401(self, session):
+        response = await execute_delete_request(
+            f"/admin/champions/{uuid.uuid4()}"
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_redelete_returns_404(self, session):
+        """Deleting the same champion twice -> 404."""
+        await _setup_admin()
+        champ = await _push_champion()
+        r1 = await execute_delete_request(
+            f"/admin/champions/{champ.id}", headers=ADMIN_HEADERS
+        )
+        assert r1.status_code == 200
+        r2 = await execute_delete_request(
+            f"/admin/champions/{champ.id}", headers=ADMIN_HEADERS
+        )
+        assert r2.status_code == 404

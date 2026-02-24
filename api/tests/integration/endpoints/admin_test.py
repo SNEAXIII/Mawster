@@ -81,6 +81,11 @@ class TestGetUsers:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
+    async def test_no_auth_returns_401(self, session):
+        response = await execute_get_request("/admin/users")
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "page, size, expected_status",
         [
@@ -96,6 +101,19 @@ class TestGetUsers:
             f"/admin/users?page={page}&size={size}", headers=ADMIN_HEADERS
         )
         assert response.status_code == expected_status
+
+    @pytest.mark.asyncio
+    async def test_response_structure(self, session):
+        await _setup_admin()
+        await _setup_user()
+        response = await execute_get_request("/admin/users", headers=ADMIN_HEADERS)
+        assert response.status_code == 200
+        body = response.json()
+        assert "users" in body
+        assert "total_users" in body
+        assert "total_pages" in body
+        assert "current_page" in body
+        assert body["total_users"] >= 1
 
 
 # =========================================================================
@@ -148,6 +166,21 @@ class TestDisableUser:
         )
         assert response.status_code == expected_status
 
+    @pytest.mark.asyncio
+    async def test_disable_user_role_returns_403(self, session):
+        response = await execute_patch_request(
+            f"/admin/users/disable/{uuid.uuid4()}", {}, headers=USER_HEADERS
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_disable_invalid_uuid_returns_400(self, session):
+        await _setup_admin()
+        response = await execute_patch_request(
+            "/admin/users/disable/not-a-uuid", {}, headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 400
+
 
 # =========================================================================
 # PATCH /admin/users/enable/{uuid}
@@ -191,6 +224,13 @@ class TestEnableUser:
             f"/admin/users/enable/{target_id}", {}, headers=ADMIN_HEADERS
         )
         assert response.status_code == expected_status
+
+    @pytest.mark.asyncio
+    async def test_enable_user_role_returns_403(self, session):
+        response = await execute_patch_request(
+            f"/admin/users/enable/{uuid.uuid4()}", {}, headers=USER_HEADERS
+        )
+        assert response.status_code == 403
 
 
 # =========================================================================
@@ -239,6 +279,13 @@ class TestAdminDeleteUser:
         )
         assert response.status_code == expected_status
 
+    @pytest.mark.asyncio
+    async def test_delete_user_role_returns_403(self, session):
+        response = await execute_delete_request(
+            f"/admin/users/delete/{uuid.uuid4()}", headers=USER_HEADERS
+        )
+        assert response.status_code == 403
+
 
 # =========================================================================
 # PATCH /admin/users/promote/{uuid}
@@ -285,3 +332,18 @@ class TestPromoteUser:
             f"/admin/users/promote/{target_id}", {}, headers=ADMIN_HEADERS
         )
         assert response.status_code == expected_status
+
+    @pytest.mark.asyncio
+    async def test_promote_user_role_returns_403(self, session):
+        response = await execute_patch_request(
+            f"/admin/users/promote/{uuid.uuid4()}", {}, headers=USER_HEADERS
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_promote_invalid_uuid_returns_400(self, session):
+        await _setup_admin()
+        response = await execute_patch_request(
+            "/admin/users/promote/not-a-uuid", {}, headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 400
