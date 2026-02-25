@@ -48,18 +48,18 @@ export enum ChampionClass {
 }
 
 /** Tailwind color config per champion class */
-export const CLASS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Skill:   { bg: 'bg-red-600',     text: 'text-white', border: 'border-red-500' },
-  Cosmic:  { bg: 'bg-cyan-400',    text: 'text-black', border: 'border-cyan-300' },
-  Mutant:  { bg: 'bg-yellow-400',  text: 'text-black', border: 'border-yellow-300' },
-  Mystic:  { bg: 'bg-purple-600',  text: 'text-white', border: 'border-purple-500' },
-  Tech:    { bg: 'bg-blue-800',    text: 'text-white', border: 'border-blue-700' },
-  Science: { bg: 'bg-green-600',   text: 'text-white', border: 'border-green-500' },
+export const CLASS_COLORS: Record<string, { bg: string; text: string; border: string; label: string }> = {
+  Skill:   { bg: 'bg-red-600',     text: 'text-white', border: 'border-red-500',    label: 'text-red-600 dark:text-red-400' },
+  Cosmic:  { bg: 'bg-cyan-400',    text: 'text-black', border: 'border-cyan-300',   label: 'text-cyan-600 dark:text-cyan-400' },
+  Mutant:  { bg: 'bg-yellow-400',  text: 'text-black', border: 'border-yellow-300', label: 'text-yellow-600 dark:text-yellow-400' },
+  Mystic:  { bg: 'bg-purple-600',  text: 'text-white', border: 'border-purple-500', label: 'text-purple-600 dark:text-purple-400' },
+  Tech:    { bg: 'bg-blue-800',    text: 'text-white', border: 'border-blue-700',   label: 'text-blue-700 dark:text-blue-400' },
+  Science: { bg: 'bg-green-600',   text: 'text-white', border: 'border-green-500',  label: 'text-green-600 dark:text-green-400' },
 };
 
 /** Return class colors with a safe fallback */
 export function getClassColors(championClass: string) {
-  return CLASS_COLORS[championClass] ?? { bg: 'bg-gray-500', text: 'text-white', border: 'border-gray-400' };
+  return CLASS_COLORS[championClass] ?? { bg: 'bg-gray-500', text: 'text-white', border: 'border-gray-400', label: 'text-gray-500 dark:text-gray-400' };
 }
 
 /** Frame image URL per star level */
@@ -200,11 +200,17 @@ export const deleteRosterEntry = async (
   await throwOnError(response, 'Erreur lors de la suppression du roster');
 };
 
-/** Compute the next rarity (one rank up). Returns null if already max. */
+/** Compute the next rarity (one rank up within the same star level).
+ *  A 6★ champion stays 6★ — cannot jump to 7★.
+ *  Returns null if already at max rank for that star level. */
 export function getNextRarity(rarity: string): string | null {
-  const idx = RARITIES.indexOf(rarity as ChampionRarity);
-  if (idx < 0 || idx >= RARITIES.length - 1) return null;
-  return RARITIES[idx + 1];
+  const parts = rarity.match(/^(\d+)r(\d+)$/);
+  if (!parts) return null;
+  const stars = parts[1];
+  const rank = parseInt(parts[2]);
+  const nextRarity = `${stars}r${rank + 1}` as ChampionRarity;
+  if (!RARITIES.includes(nextRarity)) return null;
+  return nextRarity;
 }
 
 export const upgradeChampionRank = async (

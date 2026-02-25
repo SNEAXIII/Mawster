@@ -290,6 +290,7 @@ const fr: Translations = {
       failCount: '{count} échoué(s)',
       badgeAdded: 'AJOUTÉ',
       badgeUpdated: 'MIS À JOUR',
+      badgeSkipped: 'IGNORÉ',
       badgeError: 'ERREUR',
       close: 'Fermer',
     },

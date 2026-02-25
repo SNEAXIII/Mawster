@@ -184,10 +184,19 @@ class TestBulkAddChampions:
             "src.services.ChampionUserService.ChampionService.get_champion_by_name",
             return_value=champion,
         )
-        # No existing entries
-        result_mock = mocker.MagicMock()
-        result_mock.first.return_value = None
-        session.exec.return_value = result_mock
+        # No existing entries (.first() returns None for each check)
+        check_mock_1 = mocker.MagicMock()
+        check_mock_1.first.return_value = None
+        check_mock_2 = mocker.MagicMock()
+        check_mock_2.first.return_value = None
+        # Eager-loading after commit (.one() returns the champion_user)
+        cu_1 = _make_champion_user(rarity="6r4", signature=0)
+        cu_2 = _make_champion_user(rarity="7r3", signature=200)
+        load_mock_1 = mocker.MagicMock()
+        load_mock_1.one.return_value = cu_1
+        load_mock_2 = mocker.MagicMock()
+        load_mock_2.one.return_value = cu_2
+        session.exec.side_effect = [check_mock_1, check_mock_2, load_mock_1, load_mock_2]
 
         champions = [
             {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 0},
@@ -213,9 +222,13 @@ class TestBulkAddChampions:
             "src.services.ChampionUserService.ChampionService.get_champion_by_name",
             return_value=champion,
         )
-        result_mock = mocker.MagicMock()
-        result_mock.first.return_value = None
-        session.exec.return_value = result_mock
+        # Only 1 unique entry after dedup
+        check_mock = mocker.MagicMock()
+        check_mock.first.return_value = None
+        cu = _make_champion_user(rarity="6r4", signature=100)
+        load_mock = mocker.MagicMock()
+        load_mock.one.return_value = cu
+        session.exec.side_effect = [check_mock, load_mock]
 
         champions = [
             {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 100},
@@ -240,9 +253,14 @@ class TestBulkAddChampions:
             "src.services.ChampionUserService.ChampionService.get_champion_by_name",
             return_value=champion,
         )
-        result_mock = mocker.MagicMock()
-        result_mock.first.return_value = existing
-        session.exec.return_value = result_mock
+        # Check existing returns the existing entry
+        check_mock = mocker.MagicMock()
+        check_mock.first.return_value = existing
+        # Eager-loading returns updated entry
+        updated = _make_champion_user(rarity="6r4", signature=200)
+        load_mock = mocker.MagicMock()
+        load_mock.one.return_value = updated
+        session.exec.side_effect = [check_mock, load_mock]
 
         champions = [
             {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 200},

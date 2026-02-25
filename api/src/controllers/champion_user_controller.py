@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
-from src.dto.dto_game import (
+from src.dto.dto_champion_user import (
     ChampionUserCreateRequest,
     ChampionUserBulkRequest,
     ChampionUserResponse,
@@ -58,7 +58,7 @@ async def create_champion_user(
 
 @champion_user_controller.post(
     "/bulk",
-    response_model=list[ChampionUserResponse],
+    response_model=list[ChampionUserDetailResponse],
     status_code=status.HTTP_201_CREATED,
 )
 async def bulk_add_champions(
@@ -90,7 +90,19 @@ async def bulk_add_champions(
         game_account_id=body.game_account_id,
         champions=champions_data,
     )
-    return [ChampionUserResponse.from_model(e) for e in entries]
+    return [
+        ChampionUserDetailResponse(
+            id=e.id,
+            game_account_id=e.game_account_id,
+            champion_id=e.champion_id,
+            rarity=e.rarity,
+            signature=e.signature,
+            champion_name=e.champion.name,
+            champion_class=e.champion.champion_class,
+            image_url=e.champion.image_url,
+        )
+        for e in entries
+    ]
 
 
 @champion_user_controller.get(

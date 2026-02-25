@@ -245,6 +245,7 @@ export default function RosterPage() {
           <RosterImportExport
             roster={roster}
             selectedAccountId={selectedAccountId}
+            selectedAccountName={accounts.find((a) => a.id === selectedAccountId)?.game_pseudo ?? ''}
             onRosterUpdated={setRoster}
           />
         )}

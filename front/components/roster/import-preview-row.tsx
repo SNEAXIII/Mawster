@@ -54,7 +54,7 @@ export default function ImportPreviewRow({ row }: ImportPreviewRowProps) {
         <p className="text-sm font-semibold truncate" title={row.champion_name}>
           {shortenChampionName(row.champion_name)}
         </p>
-        <p className={`text-xs ${getClassColors(row.champion_class ?? 'Unknown').text}`}>
+        <p className={`text-xs ${getClassColors(row.champion_class ?? 'Unknown').label}`}>
           {row.champion_class ?? 'Unknown'}
         </p>
       </div>

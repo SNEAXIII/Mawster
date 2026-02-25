@@ -285,6 +285,7 @@ const en = {
       failCount: '{count} failed',
       badgeAdded: 'ADDED',
       badgeUpdated: 'UPDATED',
+      badgeSkipped: 'SKIPPED',
       badgeError: 'ERROR',
       close: 'Close',
     },

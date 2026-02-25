@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
-from src.dto.dto_game import (
+from src.dto.dto_alliance import (
     AllianceAddMemberRequest,
     AllianceAddOfficerRequest,
     AllianceMemberResponse,
@@ -13,8 +13,8 @@ from src.dto.dto_game import (
     AllianceRemoveOfficerRequest,
     AllianceResponse,
     AllianceSetGroupRequest,
-    GameAccountResponse,
 )
+from src.dto.dto_game_account import GameAccountResponse
 from src.models import User
 from src.models.Alliance import Alliance
 from src.services.AuthService import AuthService
