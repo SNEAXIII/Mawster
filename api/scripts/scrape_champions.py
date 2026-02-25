@@ -220,7 +220,6 @@ def action_download():
         if i % 10 == 0:
             time.sleep(0.5)
 
-    # Write JSON (image_filename without extension for flexible size usage)
     JSON_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     with open(JSON_OUTPUT, "w", encoding="utf-8") as f:
         json.dump(final_data, f, indent=2, ensure_ascii=False)
@@ -262,7 +261,7 @@ def action_resize():
     print(f"\nResizing {len(champions_data)} champion images to {size}x{size}...\n")
 
     for champ in champions_data:
-        base_name = champ.get("image_filename")
+        base_name = champ.get("image_url")
         if not base_name:
             skipped_count += 1
             continue
