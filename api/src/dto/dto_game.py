@@ -1,168 +1,37 @@
-import uuid
-from typing import Optional
-from datetime import datetime
-from pydantic import BaseModel, Field
+# ──────────────────────────────────────────────────────────
+# Backward-compatible re-exports – DTOs are now split into
+# dedicated modules per model.  Import from the specific
+# module when possible.
+# ──────────────────────────────────────────────────────────
 
+from src.dto.dto_game_account import (          # noqa: F401
+    GameAccountCreateRequest,
+    GameAccountResponse,
+)
 
-# ---- Game Account DTOs ----
+from src.dto.dto_alliance import (              # noqa: F401
+    AllianceCreateRequest,
+    AllianceMemberResponse,
+    AllianceOfficerResponse,
+    AllianceResponse,
+    AllianceAddOfficerRequest,
+    AllianceRemoveOfficerRequest,
+    AllianceAddMemberRequest,
+    AllianceSetGroupRequest,
+)
 
-class GameAccountCreateRequest(BaseModel):
-    """DTO to create a new game account. Only a pseudo is required."""
-    game_pseudo: str = Field(..., max_length=50, examples=["MyGamePseudo"])
-    is_primary: bool = Field(default=False, examples=[True])
+from src.dto.dto_champion_user import (         # noqa: F401
+    ChampionUserCreateRequest,
+    ChampionUserBulkEntry,
+    ChampionUserBulkRequest,
+    ChampionUserResponse,
+    ChampionUserDetailResponse,
+)
 
-
-class GameAccountResponse(BaseModel):
-    id: uuid.UUID
-    user_id: uuid.UUID
-    alliance_id: Optional[uuid.UUID] = None
-    alliance_group: Optional[int] = None
-    alliance_tag: Optional[str] = None
-    alliance_name: Optional[str] = None
-    game_pseudo: str
-    is_primary: bool
-    created_at: datetime
-
-
-# ---- Alliance DTOs ----
-
-class AllianceCreateRequest(BaseModel):
-    """DTO to create a new alliance. The owner is the game account that creates it."""
-    name: str = Field(..., max_length=100, examples=["My Alliance"])
-    tag: str = Field(..., max_length=10, examples=["ALLY"])
-    owner_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
-
-
-class AllianceMemberResponse(BaseModel):
-    """A member of an alliance (game account with group info)."""
-    id: uuid.UUID
-    user_id: uuid.UUID
-    game_pseudo: str
-    alliance_group: Optional[int] = None
-    is_owner: bool = False
-    is_officer: bool = False
-
-
-class AllianceOfficerResponse(BaseModel):
-    id: uuid.UUID
-    game_account_id: uuid.UUID
-    game_pseudo: str
-    assigned_at: datetime
-
-
-class AllianceResponse(BaseModel):
-    id: uuid.UUID
-    name: str
-    tag: str
-    owner_id: uuid.UUID
-    owner_pseudo: str
-    created_at: datetime
-    officers: list[AllianceOfficerResponse] = []
-    members: list[AllianceMemberResponse] = []
-    member_count: int = 0
-
-
-class AllianceAddOfficerRequest(BaseModel):
-    """DTO to add an adjoint (deputy) to an alliance."""
-    game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
-
-
-class AllianceRemoveOfficerRequest(BaseModel):
-    """DTO to remove an adjoint from an alliance."""
-    game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
-
-
-class AllianceAddMemberRequest(BaseModel):
-    """DTO to add a game account as member of the alliance."""
-    game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
-
-
-class AllianceSetGroupRequest(BaseModel):
-    """DTO to assign a member to a group (1, 2, 3) or remove from group (null)."""
-    group: Optional[int] = Field(None, ge=1, le=3, examples=[1])
-
-
-# ---- Champion User DTOs ----
-
-class ChampionUserCreateRequest(BaseModel):
-    """DTO to add a champion to a game account roster."""
-    game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
-    champion_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440001"])
-    rarity: str = Field(..., examples=["6r4"])
-    signature: int = Field(default=0, ge=0, examples=[200])
-
-
-class ChampionUserBulkEntry(BaseModel):
-    """Single entry in a bulk roster update request."""
-    champion_name: str = Field(..., examples=["Spider-Man"])
-    rarity: str = Field(..., examples=["6r4"])
-    signature: int = Field(default=0, ge=0, examples=[200])
-
-
-class ChampionUserBulkRequest(BaseModel):
-    """DTO to add multiple champions to a game account roster at once."""
-    game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
-    champions: list[ChampionUserBulkEntry] = Field(..., min_length=1)
-
-
-class ChampionUserResponse(BaseModel):
-    id: uuid.UUID
-    game_account_id: uuid.UUID
-    champion_id: uuid.UUID
-    rarity: str
-    signature: int
-
-    @classmethod
-    def from_model(cls, m) -> "ChampionUserResponse":
-        return cls(
-            id=m.id,
-            game_account_id=m.game_account_id,
-            champion_id=m.champion_id,
-            rarity=m.rarity,
-            signature=m.signature,
-        )
-
-
-class ChampionUserDetailResponse(BaseModel):
-    """Roster entry with champion details for display."""
-    id: uuid.UUID
-    game_account_id: uuid.UUID
-    champion_id: uuid.UUID
-    rarity: str
-    signature: int
-    champion_name: str
-    champion_class: str
-    image_url: Optional[str] = None
-
-
-# ---- Champion DTOs ----
-
-class ChampionResponse(BaseModel):
-    """DTO representing a champion in API responses."""
-    id: uuid.UUID
-    name: str
-    champion_class: str
-    image_url: Optional[str] = None
-    is_7_star: bool = False
-    alias: Optional[str] = None
-
-
-class ChampionAdminViewAll(BaseModel):
-    """Paginated list of champions for admin view."""
-    champions: list[ChampionResponse]
-    total_champions: int
-    total_pages: int
-    current_page: int
-
-
-class ChampionUpdateAliasRequest(BaseModel):
-    """DTO to update alias of a champion."""
-    alias: Optional[str] = Field(default=None, max_length=500, examples=["spidey;peter;spider"])
-
-
-class ChampionLoadRequest(BaseModel):
-    """Single champion entry for bulk load."""
-    name: str = Field(..., max_length=100)
-    champion_class: str = Field(..., max_length=20)
-    image_filename: Optional[str] = None
+from src.dto.dto_champion import (              # noqa: F401
+    ChampionResponse,
+    ChampionAdminViewAll,
+    ChampionUpdateAliasRequest,
+    ChampionLoadRequest,
+)
 

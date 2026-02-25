@@ -11,6 +11,7 @@ import {
   getRoster,
   BulkChampionEntry,
   raritySortValue,
+  searchChampions,
 } from '@/app/services/roster';
 import ImportPreviewDialog from '@/components/roster/import-preview-dialog';
 import ImportReportDialog, { type ImportResult } from '@/components/roster/import-report-dialog';
@@ -27,12 +28,14 @@ export interface RosterExportEntry {
 interface RosterImportExportProps {
   roster: RosterEntry[];
   selectedAccountId: string;
+  selectedAccountName: string;
   onRosterUpdated: (roster: RosterEntry[]) => void;
 }
 
 export default function RosterImportExport({
   roster,
   selectedAccountId,
+  selectedAccountName,
   onRosterUpdated,
 }: RosterImportExportProps) {
   const { t } = useI18n();
@@ -65,7 +68,8 @@ export default function RosterImportExport({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `roster_export_${new Date().toISOString().slice(0, 10)}.json`;
+    const safeName = selectedAccountName.replace(/[^a-zA-Z0-9_-]/g, '_');
+    a.download = `roster_${safeName}_${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -158,6 +162,31 @@ export default function RosterImportExport({
         const uniqueEntries = Array.from(deduped.values());
 
         // Build preview rows
+        // First, resolve champion details for entries not in the roster
+        const unknownNames = new Set<string>();
+        for (const entry of uniqueEntries) {
+          const found = roster.find(
+            (r) => r.champion_name.toLowerCase() === entry.champion_name.toLowerCase(),
+          );
+          if (!found) unknownNames.add(entry.champion_name);
+        }
+
+        // Batch-fetch unknown champions from the API
+        const championLookup = new Map<string, { champion_class: string; image_url: string | null }>();
+        if (unknownNames.size > 0) {
+          try {
+            const res = await searchChampions('', 9999);
+            for (const c of res.champions) {
+              championLookup.set(c.name.toLowerCase(), {
+                champion_class: c.champion_class,
+                image_url: c.image_url,
+              });
+            }
+          } catch {
+            // search failed — previews will just lack metadata
+          }
+        }
+
         const rows: PreviewRow[] = uniqueEntries.map((entry) => {
           // Find existing entry in current roster matching champion_name + star level
           const stars = entry.rarity.charAt(0);
@@ -170,15 +199,16 @@ export default function RosterImportExport({
             existing!.rarity !== entry.rarity || existing!.signature !== entry.signature
           );
 
-          // Resolve champion class and image from the roster (any star level)
+          // Resolve champion class and image from the roster or API lookup
           const rosterMatch = roster.find(
             (r) => r.champion_name.toLowerCase() === entry.champion_name.toLowerCase(),
           );
+          const apiMatch = championLookup.get(entry.champion_name.toLowerCase());
 
           return {
             champion_name: entry.champion_name,
-            champion_class: rosterMatch?.champion_class ?? null,
-            image_url: rosterMatch?.image_url ?? null,
+            champion_class: rosterMatch?.champion_class ?? apiMatch?.champion_class ?? null,
+            image_url: rosterMatch?.image_url ?? apiMatch?.image_url ?? null,
             newRarity: entry.rarity,
             newSignature: entry.signature,
             oldRarity: existing?.rarity ?? null,
@@ -231,21 +261,35 @@ export default function RosterImportExport({
       try {
         await bulkUpdateRoster(selectedAccountId, champions);
 
-        // All succeeded (bulk is atomic)
+        // All succeeded (bulk is atomic) — build rich results
         for (const row of toSend) {
           results.push({
             champion_name: row.champion_name,
             success: true,
             isNew: row.isNew,
+            isSkipped: false,
+            champion_class: row.champion_class,
+            image_url: row.image_url,
+            newRarity: row.newRarity,
+            newSignature: row.newSignature,
+            oldRarity: row.oldRarity,
+            oldSignature: row.oldSignature,
           });
         }
 
-        // Also mark unchanged entries as success (no-op)
+        // Mark unchanged entries as skipped
         for (const row of previewRows.filter((r) => !r.isNew && !r.hasChanges)) {
           results.push({
             champion_name: row.champion_name,
             success: true,
             isNew: false,
+            isSkipped: true,
+            champion_class: row.champion_class,
+            image_url: row.image_url,
+            newRarity: row.newRarity,
+            newSignature: row.newSignature,
+            oldRarity: row.oldRarity,
+            oldSignature: row.oldSignature,
           });
         }
       } catch (err: any) {
@@ -255,6 +299,13 @@ export default function RosterImportExport({
             champion_name: row.champion_name,
             success: false,
             isNew: row.isNew,
+            isSkipped: false,
+            champion_class: row.champion_class,
+            image_url: row.image_url,
+            newRarity: row.newRarity,
+            newSignature: row.newSignature,
+            oldRarity: row.oldRarity,
+            oldSignature: row.oldSignature,
             error: err.message || t.roster.importExport.serverError,
           });
         }

@@ -179,7 +179,18 @@ class ChampionUserService:
         await session.commit()
         for r in results:
             await session.refresh(r)
-        return results
+
+        # Eagerly load champion relationship for detail responses
+        refreshed = []
+        for r in results:
+            stmt = (
+                select(ChampionUser)
+                .where(ChampionUser.id == r.id)
+                .options(selectinload(ChampionUser.champion))  # type: ignore[arg-type]
+            )
+            res = await session.exec(stmt)
+            refreshed.append(res.one())
+        return refreshed
 
     @classmethod
     async def get_roster_by_game_account(

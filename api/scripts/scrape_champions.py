@@ -213,7 +213,7 @@ def action_download():
         entry = {
             "name": champ["name"],
             "champion_class": champ["champion_class"],
-            "image_filename": base_name if success else None,
+            "image_url": f"/static/champions/{filename}" if success else None,
         }
         final_data.append(entry)
 

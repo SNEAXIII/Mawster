@@ -186,12 +186,13 @@ export default function ChampionsPage() {
     setError('');
     try {
       const text = await file.text();
-      const data = JSON.parse(text) as { name: string; champion_class: string; image_filename?: string | null }[];
+      const data = JSON.parse(text) as { name: string; champion_class: string; image_filename?: string | null; image_url?: string | null }[];
       if (!Array.isArray(data)) throw new Error('Invalid JSON: expected an array');
       const payload = data.map((c) => ({
         name: c.name,
         champion_class: c.champion_class,
         image_filename: c.image_filename ?? null,
+        image_url: c.image_url ?? null,
       }));
       await loadChampions(payload);
       await loadChampionsList();
