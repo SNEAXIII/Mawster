@@ -335,8 +335,8 @@ class TestLoadChampions:
         await push_one_admin()
 
         payload = [
-            {"name": "Spider-Man", "champion_class": "Science", "image_filename": "spider_man.png"},
-            {"name": "Wolverine", "champion_class": "Mutant", "image_filename": "wolverine.png"},
+            {"name": "Spider-Man", "champion_class": "Science", "image_url": "spider_man.png"},
+            {"name": "Wolverine", "champion_class": "Mutant", "image_url": "wolverine.png"},
         ]
 
         response = await execute_post_request(
@@ -355,7 +355,7 @@ class TestLoadChampions:
         await load_objects([existing])
 
         payload = [
-            {"name": "Spider-Man", "champion_class": "Science", "image_filename": "new_spider.png"},
+            {"name": "Spider-Man", "champion_class": "Science", "image_url": "new_spider.png"},
         ]
 
         response = await execute_post_request(
@@ -371,7 +371,7 @@ class TestLoadChampions:
         await push_one_admin()
 
         payload = [
-            {"name": "FakeChamp", "champion_class": "InvalidClass", "image_filename": "fake.png"},
+            {"name": "FakeChamp", "champion_class": "InvalidClass", "image_url": "fake.png"},
         ]
 
         response = await execute_post_request(

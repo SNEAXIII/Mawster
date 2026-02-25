@@ -298,10 +298,10 @@ class TestLoadChampions:
 
         data = [
             ChampionLoadRequest(
-                name="Spider-Man", champion_class="Science", image_filename="spider_man.png"
+                name="Spider-Man", champion_class="Science", image_url="spider_man.png"
             ),
             ChampionLoadRequest(
-                name="Wolverine", champion_class="Mutant", image_filename="wolverine.png"
+                name="Wolverine", champion_class="Mutant", image_url="wolverine.png"
             ),
         ]
 
@@ -321,7 +321,7 @@ class TestLoadChampions:
 
         data = [
             ChampionLoadRequest(
-                name="Spider-Man", champion_class="Science", image_filename="new_spider.png"
+                name="Spider-Man", champion_class="Science", image_url="new_spider.png"
             ),
         ]
 
@@ -336,7 +336,7 @@ class TestLoadChampions:
 
         data = [
             ChampionLoadRequest(
-                name="FakeChamp", champion_class="InvalidClass", image_filename="fake.png"
+                name="FakeChamp", champion_class="InvalidClass", image_url="fake.png"
             ),
         ]
 
@@ -360,9 +360,9 @@ class TestLoadChampions:
         )
 
         data = [
-            ChampionLoadRequest(name="NewChamp", champion_class="Cosmic", image_filename="new.png"),
-            ChampionLoadRequest(name="Existing", champion_class="Science", image_filename="exist.png"),
-            ChampionLoadRequest(name="BadClass", champion_class="Fake", image_filename="bad.png"),
+            ChampionLoadRequest(name="NewChamp", champion_class="Cosmic", image_url="new.png"),
+            ChampionLoadRequest(name="Existing", champion_class="Science", image_url="exist.png"),
+            ChampionLoadRequest(name="BadClass", champion_class="Fake", image_url="bad.png"),
         ]
 
         result = await ChampionService.load_champions(session, data)
@@ -379,7 +379,7 @@ class TestLoadChampions:
 
         data = [
             ChampionLoadRequest(
-                name="NoImageChamp", champion_class="Tech", image_filename=None
+                name="NoImageChamp", champion_class="Tech", image_url=None
             ),
         ]
 
