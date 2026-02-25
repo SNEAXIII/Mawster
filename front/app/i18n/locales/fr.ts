@@ -275,6 +275,8 @@ const fr: Translations = {
       targetRarity: 'Cible : {rarity}',
       currentRarity: 'Actuel : {rarity}',
       cancel: 'Annuler la demande',
+      cancelConfirmTitle: 'Annuler la demande d\'upgrade',
+      cancelConfirmDesc: 'Êtes-vous sûr de vouloir annuler la demande d\'upgrade pour {name} ?',
       cancelSuccess: 'Demande d\'upgrade annulée',
       cancelError: "Erreur lors de l'annulation de la demande d'upgrade",
     },
