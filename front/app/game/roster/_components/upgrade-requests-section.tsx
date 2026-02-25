@@ -18,32 +18,49 @@ interface UpgradeRequestsSectionProps {
   gameAccountId: string | null;
   /** Key to trigger refresh (e.g. after roster changes) */
   refreshKey?: number;
+  /** Whether the current user can cancel requests (officer/owner) */
+  canCancel?: boolean;
+  /** External requests — when provided, skip internal fetch */
+  externalRequests?: UpgradeRequest[];
+  /** Callback when a request is cancelled externally */
+  onRequestCancelled?: (requestId: string) => void;
 }
 
 export default function UpgradeRequestsSection({
   gameAccountId,
   refreshKey = 0,
+  canCancel = true,
+  externalRequests,
+  onRequestCancelled,
 }: UpgradeRequestsSectionProps) {
   const { t } = useI18n();
-  const [requests, setRequests] = useState<UpgradeRequest[]>([]);
+  const [internalRequests, setInternalRequests] = useState<UpgradeRequest[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const requests = externalRequests ?? internalRequests;
+
   useEffect(() => {
+    // Skip fetch if using external requests
+    if (externalRequests !== undefined) return;
     if (!gameAccountId) {
-      setRequests([]);
+      setInternalRequests([]);
       return;
     }
     setLoading(true);
     getUpgradeRequests(gameAccountId)
-      .then(setRequests)
+      .then(setInternalRequests)
       .catch(() => {/* silent */})
       .finally(() => setLoading(false));
-  }, [gameAccountId, refreshKey]);
+  }, [gameAccountId, refreshKey, externalRequests]);
 
   const handleCancel = async (requestId: string) => {
     try {
       await cancelUpgradeRequest(requestId);
-      setRequests((prev) => prev.filter((r) => r.id !== requestId));
+      if (onRequestCancelled) {
+        onRequestCancelled(requestId);
+      } else {
+        setInternalRequests((prev) => prev.filter((r) => r.id !== requestId));
+      }
       toast.success(t.roster.upgradeRequests.cancelSuccess);
     } catch {
       toast.error(t.roster.upgradeRequests.cancelError);
@@ -95,13 +112,15 @@ export default function UpgradeRequestsSection({
                     {t.roster.upgradeRequests.requestedBy.replace('{pseudo}', req.requester_pseudo)}
                   </p>
                 </div>
-                <button
-                  className="text-red-400 hover:text-red-300 bg-black/40 rounded-full p-1 shrink-0"
-                  onClick={() => handleCancel(req.id)}
-                  title={t.roster.upgradeRequests.cancel}
-                >
-                  <FiX size={14} />
-                </button>
+                {canCancel && (
+                  <button
+                    className="text-red-400 hover:text-red-300 bg-black/40 rounded-full p-1 shrink-0"
+                    onClick={() => handleCancel(req.id)}
+                    title={t.roster.upgradeRequests.cancel}
+                  >
+                    <FiX size={14} />
+                  </button>
+                )}
               </div>
             );
           })}

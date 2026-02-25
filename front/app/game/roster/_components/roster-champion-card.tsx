@@ -9,7 +9,7 @@ import {
   shortenChampionName,
   getNextRarity,
 } from '@/app/services/roster';
-import { FiTrash2, FiEdit2, FiArrowUp } from 'react-icons/fi';
+import { FiTrash2, FiEdit2, FiArrowUp, FiX } from 'react-icons/fi';
 
 interface RosterChampionCardProps {
   entry: RosterEntry;
@@ -17,6 +17,10 @@ interface RosterChampionCardProps {
   onDelete?: (entry: RosterEntry) => void;
   onUpgrade?: (entry: RosterEntry) => void;
   readOnly?: boolean;
+  /** If set, this champion has a pending upgrade request */
+  pendingRequestId?: string;
+  /** Callback to cancel a pending upgrade request */
+  onCancelRequest?: (requestId: string) => void;
 }
 
 export default function RosterChampionCard({
@@ -25,6 +29,8 @@ export default function RosterChampionCard({
   onDelete,
   onUpgrade,
   readOnly = false,
+  pendingRequestId,
+  onCancelRequest,
 }: RosterChampionCardProps) {
   const { t } = useI18n();
   const classColors = getClassColors(entry.champion_class);
@@ -37,7 +43,15 @@ export default function RosterChampionCard({
       {/* Action buttons — visible on hover */}
       {!readOnly && (
         <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-          {nextRarity && onUpgrade && (
+          {pendingRequestId && onCancelRequest ? (
+            <button
+              className="text-red-400 hover:text-red-300 bg-black/60 rounded-full p-1"
+              onClick={() => onCancelRequest(pendingRequestId)}
+              title={t.roster.upgradeRequests.cancel}
+            >
+              <FiX size={14} />
+            </button>
+          ) : nextRarity && onUpgrade ? (
             <button
               className="text-green-400 hover:text-green-300 bg-black/60 rounded-full p-1"
               onClick={() => onUpgrade(entry)}
@@ -45,7 +59,7 @@ export default function RosterChampionCard({
             >
               <FiArrowUp size={14} />
             </button>
-          )}
+          ) : null}
           {onEdit && (
             <button
               className="text-blue-400 hover:text-blue-300 bg-black/60 rounded-full p-1"

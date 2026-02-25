@@ -17,12 +17,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import RosterGrid from '@/app/game/roster/_components/roster-grid';
+import UpgradeRequestsSection from '@/app/game/roster/_components/upgrade-requests-section';
 import {
   getRoster,
   RosterEntry,
   RARITIES,
   RARITY_LABELS,
   createUpgradeRequest,
+  getUpgradeRequests,
+  cancelUpgradeRequest,
+  UpgradeRequest,
   getNextRarity,
 } from '@/app/services/roster';
 import { toast } from 'sonner';
@@ -47,6 +51,7 @@ export default function AllianceRosterDialog({
   const [roster, setRoster] = useState<RosterEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [upgradeRequests, setUpgradeRequests] = useState<UpgradeRequest[]>([]);
 
   // Upgrade request dialog state
   const [upgradeTarget, setUpgradeTarget] = useState<RosterEntry | null>(null);
@@ -56,8 +61,14 @@ export default function AllianceRosterDialog({
     if (!open || !gameAccountId) return;
     setLoading(true);
     setError('');
-    getRoster(gameAccountId)
-      .then(setRoster)
+    Promise.all([
+      getRoster(gameAccountId),
+      getUpgradeRequests(gameAccountId).catch(() => [] as UpgradeRequest[]),
+    ])
+      .then(([rosterData, requestsData]) => {
+        setRoster(rosterData);
+        setUpgradeRequests(requestsData);
+      })
       .catch(() => setError(t.game.alliances.rosterError))
       .finally(() => setLoading(false));
   }, [open, gameAccountId]);
@@ -81,12 +92,23 @@ export default function AllianceRosterDialog({
   const handleRequestUpgrade = async () => {
     if (!upgradeTarget || !selectedRarity) return;
     try {
-      await createUpgradeRequest(upgradeTarget.id, selectedRarity);
+      const newReq = await createUpgradeRequest(upgradeTarget.id, selectedRarity);
+      setUpgradeRequests((prev) => [...prev, newReq]);
       toast.success(t.game.alliances.requestUpgradeSuccess);
       setUpgradeTarget(null);
       setSelectedRarity('');
     } catch {
       toast.error(t.game.alliances.requestUpgradeError);
+    }
+  };
+
+  const handleCancelRequest = async (requestId: string) => {
+    try {
+      await cancelUpgradeRequest(requestId);
+      setUpgradeRequests((prev) => prev.filter((r) => r.id !== requestId));
+      toast.success(t.roster.upgradeRequests.cancelSuccess);
+    } catch {
+      toast.error(t.roster.upgradeRequests.cancelError);
     }
   };
 
@@ -117,17 +139,34 @@ export default function AllianceRosterDialog({
           )}
 
           {!loading && !error && roster.length > 0 && (
-            <RosterGrid
-              groupedRoster={groupedRoster}
-              readOnly={!canRequestUpgrade}
-              onUpgrade={canRequestUpgrade ? (entry) => {
-                const options = getUpgradeOptions(entry);
-                if (options.length > 0) {
-                  setUpgradeTarget(entry);
-                  setSelectedRarity(options[0]);
-                }
-              } : undefined}
-            />
+            <>
+              {canRequestUpgrade && upgradeRequests.length > 0 && (
+                <UpgradeRequestsSection
+                  gameAccountId={gameAccountId}
+                  canCancel={canRequestUpgrade}
+                  externalRequests={upgradeRequests}
+                  onRequestCancelled={(id) =>
+                    setUpgradeRequests((prev) => prev.filter((r) => r.id !== id))
+                  }
+                />
+              )}
+              <RosterGrid
+                groupedRoster={groupedRoster}
+                readOnly={!canRequestUpgrade}
+                upgradeRequests={upgradeRequests}
+                onCancelRequest={canRequestUpgrade ? handleCancelRequest : undefined}
+                onUpgrade={canRequestUpgrade ? (entry) => {
+                  // If there's already a pending request, don't open upgrade dialog
+                  const pending = upgradeRequests.find((r) => r.champion_user_id === entry.id);
+                  if (pending) return;
+                  const options = getUpgradeOptions(entry);
+                  if (options.length > 0) {
+                    setUpgradeTarget(entry);
+                    setSelectedRarity(options[0]);
+                  }
+                } : undefined}
+              />
+            </>
           )}
 
           <div className="flex justify-end pt-2">

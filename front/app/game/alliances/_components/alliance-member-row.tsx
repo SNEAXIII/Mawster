@@ -205,28 +205,30 @@ export default function AllianceMemberRow({
           ) : null
         )}
 
-        {/* Group selector */}
-        <Select
-          value={member.alliance_group?.toString() ?? 'none'}
-          onValueChange={(val) =>
-            onSetGroup(
-              allianceId,
-              member.id,
-              val === 'none' ? null : parseInt(val),
-              member.game_pseudo,
-            )
-          }
-        >
-          <SelectTrigger className="h-7 w-24 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">{t.game.alliances.noGroup}</SelectItem>
-            <SelectItem value="1">{t.game.alliances.group} 1</SelectItem>
-            <SelectItem value="2">{t.game.alliances.group} 2</SelectItem>
-            <SelectItem value="3">{t.game.alliances.group} 3</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Group selector — only for officers/owners */}
+        {userCanManage && (
+          <Select
+            value={member.alliance_group?.toString() ?? 'none'}
+            onValueChange={(val) =>
+              onSetGroup(
+                allianceId,
+                member.id,
+                val === 'none' ? null : parseInt(val),
+                member.game_pseudo,
+              )
+            }
+          >
+            <SelectTrigger className="h-7 w-24 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">{t.game.alliances.noGroup}</SelectItem>
+              <SelectItem value="1">{t.game.alliances.group} 1</SelectItem>
+              <SelectItem value="2">{t.game.alliances.group} 2</SelectItem>
+              <SelectItem value="3">{t.game.alliances.group} 3</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
       </div>
     </div>
   );

@@ -314,6 +314,7 @@ export default function RosterPage() {
           <UpgradeRequestsSection
             gameAccountId={selectedAccountId}
             refreshKey={upgradeRefreshKey}
+            canCancel={false}
           />
 
           {loadingRoster ? (

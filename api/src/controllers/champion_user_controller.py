@@ -400,32 +400,25 @@ async def cancel_upgrade_request(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Cancel/delete an upgrade request.
-    The requester, the champion owner, or an alliance officer/owner can cancel."""
+    Only an officer or owner of the alliance can cancel."""
     from src.models.RequestedUpgrade import RequestedUpgrade
     upgrade_request = await session.get(RequestedUpgrade, request_id)
     if upgrade_request is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upgrade request not found")
 
-    # Check permissions: requester, champion owner, or officer/owner
-    user_accounts_result = await session.exec(
-        select(GameAccount).where(GameAccount.user_id == current_user.id)
-    )
-    user_account_ids = {acc.id for acc in user_accounts_result.all()}
-
-    # Requester can cancel
-    if upgrade_request.requester_game_account_id in user_account_ids:
-        await UpgradeRequestService.cancel_upgrade_request(session, request_id)
-        return
-
-    # Champion owner can cancel
+    # Find the champion user to locate the alliance
     champion_user = await ChampionUserService.get_champion_user(session, upgrade_request.champion_user_id)
-    if champion_user:
-        target_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
-        if target_account and target_account.user_id == current_user.id:
-            await UpgradeRequestService.cancel_upgrade_request(session, request_id)
-            return
+    if champion_user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
 
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="Not authorized to cancel this upgrade request",
-    )
+    target_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
+    if target_account is None or target_account.alliance_id is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to cancel this upgrade request")
+
+    from src.services.AllianceService import AllianceService
+    alliance = await AllianceService._load_alliance_with_relations(session, target_account.alliance_id)
+    if alliance is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+
+    await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
+    await UpgradeRequestService.cancel_upgrade_request(session, request_id)
