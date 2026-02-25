@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { toast } from 'sonner';
 import { CollapsibleSection } from '@/components/collapsible-section';
+import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import ChampionPortrait from '@/components/champion-portrait';
 import {
   getUpgradeRequests,
@@ -36,6 +37,7 @@ export default function UpgradeRequestsSection({
   const { t } = useI18n();
   const [internalRequests, setInternalRequests] = useState<UpgradeRequest[]>([]);
   const [loading, setLoading] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<UpgradeRequest | null>(null);
 
   const requests = externalRequests ?? internalRequests;
 
@@ -53,17 +55,20 @@ export default function UpgradeRequestsSection({
       .finally(() => setLoading(false));
   }, [gameAccountId, refreshKey, externalRequests]);
 
-  const handleCancel = async (requestId: string) => {
+  const confirmCancel = async () => {
+    if (!cancelTarget) return;
     try {
-      await cancelUpgradeRequest(requestId);
+      await cancelUpgradeRequest(cancelTarget.id);
       if (onRequestCancelled) {
-        onRequestCancelled(requestId);
+        onRequestCancelled(cancelTarget.id);
       } else {
-        setInternalRequests((prev) => prev.filter((r) => r.id !== requestId));
+        setInternalRequests((prev) => prev.filter((r) => r.id !== cancelTarget.id));
       }
       toast.success(t.roster.upgradeRequests.cancelSuccess);
     } catch {
       toast.error(t.roster.upgradeRequests.cancelError);
+    } finally {
+      setCancelTarget(null);
     }
   };
 
@@ -115,7 +120,7 @@ export default function UpgradeRequestsSection({
                 {canCancel && (
                   <button
                     className="text-red-400 hover:text-red-300 bg-black/40 rounded-full p-1 shrink-0"
-                    onClick={() => handleCancel(req.id)}
+                    onClick={() => setCancelTarget(req)}
                     title={t.roster.upgradeRequests.cancel}
                   >
                     <FiX size={14} />
@@ -126,6 +131,19 @@ export default function UpgradeRequestsSection({
           })}
         </div>
       )}
+
+      <ConfirmationDialog
+        open={!!cancelTarget}
+        onOpenChange={(open) => { if (!open) setCancelTarget(null); }}
+        title={t.roster.upgradeRequests.cancelConfirmTitle}
+        description={t.roster.upgradeRequests.cancelConfirmDesc.replace(
+          '{name}',
+          cancelTarget?.champion_name ?? '',
+        )}
+        onConfirm={confirmCancel}
+        variant="destructive"
+        confirmText={t.roster.upgradeRequests.cancel}
+      />
     </CollapsibleSection>
   );
 }

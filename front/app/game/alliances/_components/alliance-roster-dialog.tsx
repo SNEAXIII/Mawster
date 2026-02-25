@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import {
   Select,
   SelectContent,
@@ -57,6 +58,9 @@ export default function AllianceRosterDialog({
   const [upgradeTarget, setUpgradeTarget] = useState<RosterEntry | null>(null);
   const [selectedRarity, setSelectedRarity] = useState<string>('');
 
+  // Cancel confirmation state
+  const [cancelTarget, setCancelTarget] = useState<{ id: string; name: string } | null>(null);
+
   useEffect(() => {
     if (!open || !gameAccountId) return;
     setLoading(true);
@@ -102,13 +106,21 @@ export default function AllianceRosterDialog({
     }
   };
 
-  const handleCancelRequest = async (requestId: string) => {
+  const handleCancelRequest = (requestId: string) => {
+    const req = upgradeRequests.find((r) => r.id === requestId);
+    setCancelTarget({ id: requestId, name: req?.champion_name ?? '' });
+  };
+
+  const confirmCancelRequest = async () => {
+    if (!cancelTarget) return;
     try {
-      await cancelUpgradeRequest(requestId);
-      setUpgradeRequests((prev) => prev.filter((r) => r.id !== requestId));
+      await cancelUpgradeRequest(cancelTarget.id);
+      setUpgradeRequests((prev) => prev.filter((r) => r.id !== cancelTarget.id));
       toast.success(t.roster.upgradeRequests.cancelSuccess);
     } catch {
       toast.error(t.roster.upgradeRequests.cancelError);
+    } finally {
+      setCancelTarget(null);
     }
   };
 
@@ -222,6 +234,20 @@ export default function AllianceRosterDialog({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Cancel upgrade request confirmation */}
+      <ConfirmationDialog
+        open={!!cancelTarget}
+        onOpenChange={(open) => { if (!open) setCancelTarget(null); }}
+        title={t.roster.upgradeRequests.cancelConfirmTitle}
+        description={t.roster.upgradeRequests.cancelConfirmDesc.replace(
+          '{name}',
+          cancelTarget?.name ?? '',
+        )}
+        onConfirm={confirmCancelRequest}
+        variant="destructive"
+        confirmText={t.roster.upgradeRequests.cancel}
+      />
     </>
   );
 }

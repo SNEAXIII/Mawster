@@ -270,6 +270,8 @@ const en = {
       targetRarity: 'Target: {rarity}',
       currentRarity: 'Current: {rarity}',
       cancel: 'Cancel request',
+      cancelConfirmTitle: 'Cancel upgrade request',
+      cancelConfirmDesc: 'Are you sure you want to cancel the upgrade request for {name}?',
       cancelSuccess: 'Upgrade request cancelled',
       cancelError: 'Failed to cancel upgrade request',
     },
