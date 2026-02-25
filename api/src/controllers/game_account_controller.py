@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
-from src.dto.dto_game import (
+from src.dto.dto_game_account import (
     GameAccountCreateRequest,
     GameAccountResponse,
 )

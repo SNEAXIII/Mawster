@@ -489,7 +489,7 @@ class TestBulkAddChampions:
         assert isinstance(body, list)
         assert len(body) == 2
         for entry in body:
-            assert set(entry.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature"}
+            assert set(entry.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "champion_name", "champion_class", "image_url"}
 
     @pytest.mark.asyncio
     async def test_bulk_mixed_valid_and_invalid_champion_returns_404(self, session):

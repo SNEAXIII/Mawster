@@ -8,21 +8,18 @@ import {
   exportAllChampions,
   Champion,
   championClasses,
-  getChampionImageUrl,
 } from '@/app/services/champions';
 import PaginationControls from '@/components/dashboard/pagination/pagination-controls';
 import DropdownRadioMenu from '@/components/dashboard/pagination/dropdown-radio-menu';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useSession } from 'next-auth/react';
 import { redirect, usePathname } from 'next/navigation';
 import { useI18n } from '@/app/i18n';
-import { FiCheck, FiDownload, FiEdit2, FiTrash2, FiUpload, FiX } from 'react-icons/fi';
+import { FiDownload, FiUpload } from 'react-icons/fi';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { SearchInput } from '@/components/search-input';
 import { ErrorBanner } from '@/components/error-banner';
-import { ClassBadge } from '@/components/class-badge';
-import { ActionIconButton } from '@/components/action-icon-button';
+import ChampionTableRow from './_components/champion-table-row';
 
 const BASE_PAGE = 1;
 const BASE_SIZE = 10;
@@ -189,12 +186,13 @@ export default function ChampionsPage() {
     setError('');
     try {
       const text = await file.text();
-      const data = JSON.parse(text) as { name: string; champion_class: string; image_filename?: string | null }[];
+      const data = JSON.parse(text) as { name: string; champion_class: string; image_url?: string | null; alias?: string | null }[];
       if (!Array.isArray(data)) throw new Error('Invalid JSON: expected an array');
       const payload = data.map((c) => ({
         name: c.name,
         champion_class: c.champion_class,
-        image_filename: c.image_filename ?? null,
+        image_url: c.image_url ?? null,
+        alias: c.alias ?? null,
       }));
       await loadChampions(payload);
       await loadChampionsList();
@@ -282,84 +280,18 @@ export default function ChampionsPage() {
             </thead>
             <tbody>
               {champions.map((champion) => (
-                <tr key={champion.id} className="border-b hover:bg-gray-50">
-                  {/* Image */}
-                  <td className="p-3">
-                    {champion.image_url ? (
-                      <img
-                        src={getChampionImageUrl(champion.image_url, 40) ?? ''}
-                        alt={champion.name}
-                        className="w-10 h-10 rounded object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded bg-gray-200 flex items-center justify-center text-xs text-gray-500">
-                        ?
-                      </div>
-                    )}
-                  </td>
-
-                  {/* Name */}
-                  <td className="p-3 font-medium">{champion.name}</td>
-
-                  {/* Class */}
-                  <td className="p-3">
-                    <ClassBadge championClass={champion.champion_class} />
-                  </td>
-
-                  {/* Alias */}
-                  <td className="p-3">
-                    {editingId === champion.id ? (
-                      <div className="flex items-center gap-1">
-                        <Input
-                          value={editingAlias}
-                          onChange={(e) => setEditingAlias(e.target.value)}
-                          placeholder="alias1;alias2;alias3"
-                          className="h-8 text-sm"
-                          disabled={savingAlias}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => saveAlias(champion.id)}
-                          disabled={savingAlias}
-                        >
-                          <FiCheck className="text-green-600" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={cancelEditAlias}
-                          disabled={savingAlias}
-                        >
-                          <FiX className="text-red-600" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <span className="text-gray-600 text-xs">
-                        {champion.alias || '-'}
-                      </span>
-                    )}
-                  </td>
-
-                  {/* Actions */}
-                  <td className="p-3">
-                    <div className="flex items-center gap-1">
-                      <ActionIconButton
-                        icon={<FiEdit2 className="w-3.5 h-3.5" />}
-                        onClick={() => startEditAlias(champion)}
-                        title="Edit alias"
-                      />
-                      <ActionIconButton
-                        icon={<FiTrash2 />}
-                        onClick={() => setDeleteTarget(champion)}
-                        variant="danger"
-                      />
-                    </div>
-                  </td>
-                </tr>
+                <ChampionTableRow
+                  key={champion.id}
+                  champion={champion}
+                  isEditing={editingId === champion.id}
+                  editingAlias={editingAlias}
+                  savingAlias={savingAlias}
+                  onStartEdit={startEditAlias}
+                  onCancelEdit={cancelEditAlias}
+                  onSaveAlias={saveAlias}
+                  onAliasChange={setEditingAlias}
+                  onDelete={setDeleteTarget}
+                />
               ))}
             </tbody>
           </table>

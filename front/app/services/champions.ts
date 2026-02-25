@@ -58,7 +58,7 @@ export const getChampions = async (
   page: number = 1,
   size: number = 20,
   championClass: string | null = null,
-  search: string | null = null,
+  search: string | null = null
 ): Promise<FetchChampionsResponse> => {
   const qs = new URLSearchParams({ page: String(page), size: String(size) });
   if (championClass && championClass !== 'all') qs.set('champion_class', championClass);
@@ -71,7 +71,7 @@ export const getChampions = async (
 
 export const updateChampionAlias = async (
   championId: string,
-  alias: string | null,
+  alias: string | null
 ): Promise<void> => {
   const response = await fetch(`${PROXY}/admin/champions/${championId}/alias`, {
     method: 'PATCH',
@@ -82,7 +82,7 @@ export const updateChampionAlias = async (
 };
 
 export const loadChampions = async (
-  champions: { name: string; champion_class: string; image_filename: string | null }[],
+  champions: { name: string; champion_class: string; image_url?: string | null; alias?: string | null }[]
 ): Promise<{ message: string; created: number; updated: number; skipped: number }> => {
   const response = await fetch(`${PROXY}/admin/champions/load`, {
     method: 'POST',
@@ -93,10 +93,14 @@ export const loadChampions = async (
   return response.json();
 };
 
-export const exportAllChampions = async (): Promise<{ name: string; champion_class: string; image_url: string | null; alias: string | null }[]> => {
+export const exportAllChampions = async (): Promise<
+  { name: string; champion_class: string; image_url: string | null; alias: string | null }[]
+> => {
   // Fetch all champions in one big page (no images, just data)
-  const response = await fetch(`${PROXY}/admin/champions?page=1&size=9999`, { headers: jsonHeaders });
-  await throwOnError(response, 'Erreur lors de l\'export des champions');
+  const response = await fetch(`${PROXY}/admin/champions?page=1&size=9999`, {
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, "Erreur lors de l'export des champions");
   const data: FetchChampionsResponse = await response.json();
   return data.champions.map((c) => ({
     name: c.name,
@@ -122,7 +126,7 @@ export const deleteChampion = async (championId: string): Promise<void> => {
  */
 export function getChampionImageUrl(
   imageUrl: string | null | undefined,
-  size?: number,
+  size?: number
 ): string | null {
   if (!imageUrl) return null;
   if (!size) return imageUrl;

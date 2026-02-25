@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 
-from src.dto.dto_game import (
+from src.dto.dto_champion import (
     ChampionAdminViewAll,
     ChampionResponse,
     ChampionUpdateAliasRequest,

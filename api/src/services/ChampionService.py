@@ -7,7 +7,7 @@ from sqlmodel import select, or_
 from src.Messages.champion_messages import (
     CHAMPION_NOT_FOUND,
 )
-from src.dto.dto_game import (
+from src.dto.dto_champion import (
     ChampionAdminViewAll,
     ChampionResponse,
     ChampionLoadRequest,
@@ -143,27 +143,21 @@ class ChampionService:
                 continue
 
             existing = await cls.get_champion_by_name(session, data.name)
-            # image_filename is the base name without extension (e.g. "cyclops_blue_team")
-            # Append .png to build the full static URL
-            if data.image_filename:
-                fname = data.image_filename
-                if not fname.endswith(".png"):
-                    fname = fname + ".png"
-                image_url = f"/static/champions/{fname}"
-            else:
-                image_url = None
 
             if existing:
                 existing.champion_class = data.champion_class
-                if image_url:
-                    existing.image_url = image_url
+                if data.image_url:
+                    existing.image_url = data.image_url
+                if data.alias is not None:
+                    existing.alias = data.alias
                 session.add(existing)
                 updated += 1
             else:
                 new_champion = Champion(
                     name=data.name,
                     champion_class=data.champion_class,
-                    image_url=image_url,
+                    image_url=data.image_url,
+                    alias=data.alias,
                     is_7_star=False,
                 )
                 session.add(new_champion)

@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from src.services.ChampionService import ChampionService
+from src.services.UpgradeRequestService import UpgradeRequestService
 from src.enums.ChampionRarity import ChampionRarity
 from src.models.GameAccount import GameAccount
 from src.models.Champion import Champion
@@ -90,6 +91,7 @@ class ChampionUserService:
             session.add(existing_entry)
             await session.commit()
             await session.refresh(existing_entry)
+            await UpgradeRequestService.auto_complete_for_champion_user(session, existing_entry)
             return existing_entry
 
         champion_user = ChampionUser(
@@ -102,6 +104,7 @@ class ChampionUserService:
         session.add(champion_user)
         await session.commit()
         await session.refresh(champion_user)
+        await UpgradeRequestService.auto_complete_for_champion_user(session, champion_user)
         return champion_user
 
     @classmethod
@@ -179,7 +182,22 @@ class ChampionUserService:
         await session.commit()
         for r in results:
             await session.refresh(r)
-        return results
+
+        # Auto-complete upgrade requests
+        for r in results:
+            await UpgradeRequestService.auto_complete_for_champion_user(session, r)
+
+        # Eagerly load champion relationship for detail responses
+        refreshed = []
+        for r in results:
+            stmt = (
+                select(ChampionUser)
+                .where(ChampionUser.id == r.id)
+                .options(selectinload(ChampionUser.champion))  # type: ignore[arg-type]
+            )
+            res = await session.exec(stmt)
+            refreshed.append(res.one())
+        return refreshed
 
     @classmethod
     async def get_roster_by_game_account(
@@ -214,6 +232,7 @@ class ChampionUserService:
         session.add(champion_user)
         await session.commit()
         await session.refresh(champion_user)
+        await UpgradeRequestService.auto_complete_for_champion_user(session, champion_user)
         return champion_user
 
     @classmethod
@@ -248,6 +267,7 @@ class ChampionUserService:
         session.add(champion_user)
         await session.commit()
         await session.refresh(champion_user)
+        await UpgradeRequestService.auto_complete_for_champion_user(session, champion_user)
         return champion_user
 
     @classmethod
