@@ -24,6 +24,7 @@ import { Champion } from '@/app/services/champions';
 
 import AddChampionForm from './_components/add-champion-form';
 import RosterGrid from './_components/roster-grid';
+import UpgradeRequestsSection from './_components/upgrade-requests-section';
 
 export default function RosterPage() {
   const { data: session, status: authStatus } = useSession();
@@ -56,6 +57,9 @@ export default function RosterPage() {
   // Upgrade
   const [upgradeTarget, setUpgradeTarget] = useState<RosterEntry | null>(null);
   const [upgrading, setUpgrading] = useState(false);
+
+  // Upgrade requests refresh key
+  const [upgradeRefreshKey, setUpgradeRefreshKey] = useState(0);
 
   // Error
   const [error, setError] = useState<string | null>(null);
@@ -134,6 +138,7 @@ export default function RosterPage() {
       // Refresh roster
       const updated = await getRoster(selectedAccountId);
       setRoster(updated);
+      setUpgradeRefreshKey((k) => k + 1);
       toast.success(t.roster.addSuccess.replace('{name}', selectedChampion.name));
       // Reset champion selection but keep the form open
       setSelectedChampion(null);
@@ -197,6 +202,7 @@ export default function RosterPage() {
       await upgradeChampionRank(upgradeTarget.id);
       const updated = await getRoster(selectedAccountId);
       setRoster(updated);
+      setUpgradeRefreshKey((k) => k + 1);
       toast.success(
         t.roster.upgradeSuccess
           .replace('{name}', upgradeTarget.champion_name)
@@ -246,7 +252,10 @@ export default function RosterPage() {
             roster={roster}
             selectedAccountId={selectedAccountId}
             selectedAccountName={accounts.find((a) => a.id === selectedAccountId)?.game_pseudo ?? ''}
-            onRosterUpdated={setRoster}
+            onRosterUpdated={(updated) => {
+              setRoster(updated);
+              setUpgradeRefreshKey((k) => k + 1);
+            }}
           />
         )}
       </div>
@@ -300,6 +309,11 @@ export default function RosterPage() {
             roster={roster}
             searchInputRef={searchInputRef}
             formRef={addFormRef}
+          />
+
+          <UpgradeRequestsSection
+            gameAccountId={selectedAccountId}
+            refreshKey={upgradeRefreshKey}
           />
 
           {loadingRoster ? (

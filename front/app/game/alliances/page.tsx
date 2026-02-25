@@ -27,6 +27,7 @@ import { Shield } from 'lucide-react';
 
 import CreateAllianceForm from './_components/create-alliance-form';
 import AllianceCard from './_components/alliance-card';
+import AllianceRosterDialog from './_components/alliance-roster-dialog';
 
 export default function AlliancesPage() {
   const { locale, t } = useI18n();
@@ -58,6 +59,9 @@ export default function AlliancesPage() {
 
   // Promote officer confirmation
   const [promoteTarget, setPromoteTarget] = useState<{ allianceId: string; gameAccountId: string; pseudo: string } | null>(null);
+
+  // Roster viewer
+  const [rosterTarget, setRosterTarget] = useState<{ gameAccountId: string; pseudo: string; canRequestUpgrade: boolean } | null>(null);
 
   const myAccountIds = new Set(myAccounts.map((a) => a.id));
 
@@ -275,6 +279,11 @@ export default function AlliancesPage() {
               onLeave={setLeaveTarget}
               onExclude={setExcludeTarget}
               onSetGroup={handleSetGroup}
+              onViewRoster={(gameAccountId, pseudo) => {
+                // Determine if current user can request upgrades (is officer/owner in that alliance)
+                const canReq = canManage(alliance);
+                setRosterTarget({ gameAccountId, pseudo, canRequestUpgrade: canReq });
+              }}
             />
           ))}
         </div>
@@ -324,6 +333,15 @@ export default function AlliancesPage() {
         inputLabel={t.game.alliances.excludeTypeConfirm}
         confirmText={t.game.alliances.excludeMember}
         variant="destructive"
+      />
+
+      {/* Roster viewer dialog */}
+      <AllianceRosterDialog
+        open={!!rosterTarget}
+        onOpenChange={(open) => { if (!open) setRosterTarget(null); }}
+        gameAccountId={rosterTarget?.gameAccountId ?? null}
+        gamePseudo={rosterTarget?.pseudo ?? ''}
+        canRequestUpgrade={rosterTarget?.canRequestUpgrade ?? false}
       />
     </div>
   );

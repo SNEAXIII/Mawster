@@ -226,3 +226,56 @@ export const upgradeChampionRank = async (
   await throwOnError(response, "Erreur lors de l'amélioration du champion");
   return response.json();
 };
+
+// ─── Upgrade Requests ────────────────────────────────────
+
+export interface UpgradeRequest {
+  id: string;
+  champion_user_id: string;
+  requester_game_account_id: string;
+  requester_pseudo: string;
+  requested_rarity: string;
+  current_rarity: string;
+  champion_name: string;
+  champion_class: string;
+  image_url: string | null;
+  created_at: string;
+  done_at: string | null;
+}
+
+export const createUpgradeRequest = async (
+  championUserId: string,
+  requestedRarity: string,
+): Promise<UpgradeRequest> => {
+  const response = await fetch(`${PROXY}/champion-users/upgrade-requests`, {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify({
+      champion_user_id: championUserId,
+      requested_rarity: requestedRarity,
+    }),
+  });
+  await throwOnError(response, "Erreur lors de la demande d'upgrade");
+  return response.json();
+};
+
+export const getUpgradeRequests = async (
+  gameAccountId: string,
+): Promise<UpgradeRequest[]> => {
+  const response = await fetch(
+    `${PROXY}/champion-users/upgrade-requests/by-account/${gameAccountId}`,
+    { headers: jsonHeaders },
+  );
+  await throwOnError(response, 'Erreur lors de la récupération des demandes');
+  return response.json();
+};
+
+export const cancelUpgradeRequest = async (
+  requestId: string,
+): Promise<void> => {
+  const response = await fetch(
+    `${PROXY}/champion-users/upgrade-requests/${requestId}`,
+    { method: 'DELETE', headers: jsonHeaders },
+  );
+  await throwOnError(response, "Erreur lors de l'annulation de la demande");
+};

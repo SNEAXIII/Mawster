@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import select
 from starlette import status
 
 from src.dto.dto_champion_user import (
@@ -10,10 +11,16 @@ from src.dto.dto_champion_user import (
     ChampionUserResponse,
     ChampionUserDetailResponse,
 )
+from src.dto.dto_upgrade_request import (
+    UpgradeRequestCreate,
+    UpgradeRequestResponse,
+)
 from src.models import User
+from src.models.GameAccount import GameAccount
 from src.services.AuthService import AuthService
 from src.services.GameAccountService import GameAccountService
 from src.services.ChampionUserService import ChampionUserService
+from src.services.UpgradeRequestService import UpgradeRequestService
 from src.utils.db import SessionDep
 
 champion_user_controller = APIRouter(
@@ -115,15 +122,27 @@ async def get_roster_by_game_account(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get all champions in a game account's roster with champion details.
-    The game account must belong to the current user."""
+    The game account must belong to the current user, or the current user
+    must be in the same alliance as the target game account."""
     game_account = await GameAccountService.get_game_account(session, game_account_id)
     if game_account is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game account not found")
     if game_account.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only view your own roster",
-        )
+        # Check if current user is in the same alliance
+        is_ally = False
+        if game_account.alliance_id is not None:
+            user_accounts = await session.exec(
+                select(GameAccount).where(GameAccount.user_id == current_user.id)
+            )
+            for acc in user_accounts.all():
+                if acc.alliance_id == game_account.alliance_id:
+                    is_ally = True
+                    break
+        if not is_ally:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only view your own roster or rosters of alliance members",
+            )
     entries = await ChampionUserService.get_roster_by_game_account(session, game_account_id)
     return [
         ChampionUserDetailResponse(
@@ -223,3 +242,190 @@ async def upgrade_champion_rank(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
     upgraded = await ChampionUserService.upgrade_champion_rank(session, champion_user)
     return ChampionUserResponse.from_model(upgraded)
+
+
+# ─── Upgrade Request Endpoints ────────────────────────────
+
+@champion_user_controller.post(
+    "/upgrade-requests",
+    response_model=UpgradeRequestResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_upgrade_request(
+    body: UpgradeRequestCreate,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Request an upgrade for a champion user entry.
+    Officers/owners can request for alliance members; anyone can request for themselves."""
+    champion_user = await ChampionUserService.get_champion_user(session, body.champion_user_id)
+    if champion_user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+
+    game_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
+    if game_account is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game account not found")
+
+    # Determine the requester's game account (must be in same alliance or self)
+    user_accounts_result = await session.exec(
+        select(GameAccount).where(GameAccount.user_id == current_user.id)
+    )
+    user_accounts = user_accounts_result.all()
+    user_account_ids = {acc.id for acc in user_accounts}
+
+    is_self = game_account.user_id == current_user.id
+
+    if not is_self:
+        # Must be in same alliance and be officer/owner
+        if game_account.alliance_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Target is not in an alliance",
+            )
+        from src.services.AllianceService import AllianceService
+        alliance = await AllianceService._load_alliance_with_relations(
+            session, game_account.alliance_id
+        )
+        if alliance is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
+
+    # Pick the requester game account (prefer one in the same alliance, fallback to primary)
+    requester_account_id = None
+    if game_account.alliance_id:
+        for acc in user_accounts:
+            if acc.alliance_id == game_account.alliance_id:
+                requester_account_id = acc.id
+                break
+    if requester_account_id is None:
+        # fallback: pick the first account
+        requester_account_id = user_accounts[0].id if user_accounts else None
+    if requester_account_id is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No game account found")
+
+    upgrade_request = await UpgradeRequestService.create_upgrade_request(
+        session=session,
+        champion_user_id=body.champion_user_id,
+        requester_game_account_id=requester_account_id,
+        requested_rarity=body.requested_rarity,
+    )
+
+    # Load relationships for response
+    from sqlalchemy.orm import selectinload
+    from src.models.RequestedUpgrade import RequestedUpgrade
+    from src.models.ChampionUser import ChampionUser
+    stmt = (
+        select(RequestedUpgrade)
+        .where(RequestedUpgrade.id == upgrade_request.id)
+        .options(
+            selectinload(RequestedUpgrade.champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+            selectinload(RequestedUpgrade.requester),  # type: ignore[arg-type]
+        )
+    )
+    result = await session.exec(stmt)
+    loaded = result.one()
+
+    return UpgradeRequestResponse(
+        id=loaded.id,
+        champion_user_id=loaded.champion_user_id,
+        requester_game_account_id=loaded.requester_game_account_id,
+        requester_pseudo=loaded.requester.game_pseudo,
+        requested_rarity=loaded.requested_rarity,
+        current_rarity=loaded.champion_user.rarity,
+        champion_name=loaded.champion_user.champion.name,
+        champion_class=loaded.champion_user.champion.champion_class,
+        image_url=loaded.champion_user.champion.image_url,
+        created_at=loaded.created_at,
+        done_at=loaded.done_at,
+    )
+
+
+@champion_user_controller.get(
+    "/upgrade-requests/by-account/{game_account_id}",
+    response_model=list[UpgradeRequestResponse],
+)
+async def get_upgrade_requests_by_account(
+    game_account_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Get all pending upgrade requests for a game account's roster.
+    The account must belong to the current user or be in the same alliance."""
+    game_account = await GameAccountService.get_game_account(session, game_account_id)
+    if game_account is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game account not found")
+
+    if game_account.user_id != current_user.id:
+        is_ally = False
+        if game_account.alliance_id is not None:
+            user_accounts = await session.exec(
+                select(GameAccount).where(GameAccount.user_id == current_user.id)
+            )
+            for acc in user_accounts.all():
+                if acc.alliance_id == game_account.alliance_id:
+                    is_ally = True
+                    break
+        if not is_ally:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to view these upgrade requests",
+            )
+
+    requests = await UpgradeRequestService.get_pending_by_game_account(session, game_account_id)
+    return [
+        UpgradeRequestResponse(
+            id=r.id,
+            champion_user_id=r.champion_user_id,
+            requester_game_account_id=r.requester_game_account_id,
+            requester_pseudo=r.requester.game_pseudo,
+            requested_rarity=r.requested_rarity,
+            current_rarity=r.champion_user.rarity,
+            champion_name=r.champion_user.champion.name,
+            champion_class=r.champion_user.champion.champion_class,
+            image_url=r.champion_user.champion.image_url,
+            created_at=r.created_at,
+            done_at=r.done_at,
+        )
+        for r in requests
+    ]
+
+
+@champion_user_controller.delete(
+    "/upgrade-requests/{request_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def cancel_upgrade_request(
+    request_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Cancel/delete an upgrade request.
+    The requester, the champion owner, or an alliance officer/owner can cancel."""
+    from src.models.RequestedUpgrade import RequestedUpgrade
+    upgrade_request = await session.get(RequestedUpgrade, request_id)
+    if upgrade_request is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upgrade request not found")
+
+    # Check permissions: requester, champion owner, or officer/owner
+    user_accounts_result = await session.exec(
+        select(GameAccount).where(GameAccount.user_id == current_user.id)
+    )
+    user_account_ids = {acc.id for acc in user_accounts_result.all()}
+
+    # Requester can cancel
+    if upgrade_request.requester_game_account_id in user_account_ids:
+        await UpgradeRequestService.cancel_upgrade_request(session, request_id)
+        return
+
+    # Champion owner can cancel
+    champion_user = await ChampionUserService.get_champion_user(session, upgrade_request.champion_user_id)
+    if champion_user:
+        target_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
+        if target_account and target_account.user_id == current_user.id:
+            await UpgradeRequestService.cancel_upgrade_request(session, request_id)
+            return
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Not authorized to cancel this upgrade request",
+    )
