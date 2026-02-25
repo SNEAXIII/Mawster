@@ -5,14 +5,9 @@ import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import { toast } from 'sonner';
 import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import ChampionPortrait from '@/components/champion-portrait';
 import RosterImportExport from '@/components/roster-import-export';
 import { ErrorBanner } from '@/components/error-banner';
-import { SearchInput } from '@/components/search-input';
-import { CollapsibleSection } from '@/components/collapsible-section';
 import { getMyGameAccounts, GameAccount } from '@/app/services/game';
 import {
   getRoster,
@@ -22,17 +17,13 @@ import {
   RosterEntry,
   RARITIES,
   RARITY_LABELS,
-  SIGNATURE_PRESETS,
-  raritySortValue,
-  getClassColors,
-  shortenChampionName,
-} from '@/app/services/roster';
-import { Champion, getChampionImageUrl } from '@/app/services/champions';
-import { FiTrash2, FiChevronDown, FiChevronUp, FiEdit2, FiArrowUp } from 'react-icons/fi';
-import {
   upgradeChampionRank,
   getNextRarity,
 } from '@/app/services/roster';
+import { Champion } from '@/app/services/champions';
+
+import AddChampionForm from './_components/add-champion-form';
+import RosterGrid from './_components/roster-grid';
 
 export default function RosterPage() {
   const { data: session, status: authStatus } = useSession();
@@ -284,242 +275,41 @@ export default function RosterPage() {
 
       {selectedAccountId && (
         <>
-          {/* Foldable add / update champion section */}
-          <div ref={addFormRef} className="mb-6">
-            <CollapsibleSection
-              title={t.roster.addOrUpdate}
-              open={showAddForm}
-              onOpenChange={setShowAddForm}
-            >
-                {/* Champion search */}
-                <div className="mb-3">
-                  <label className="block text-sm font-medium mb-1">
-                    {t.roster.champion}
-                  </label>
-                  <SearchInput
-                    ref={searchInputRef}
-                    placeholder={t.roster.searchChampion}
-                    value={championSearch}
-                    onChange={(val) => {
-                      setChampionSearch(val);
-                      setSelectedChampion(null);
-                    }}
-                  />
+          <AddChampionForm
+            open={showAddForm}
+            onOpenChange={setShowAddForm}
+            championSearch={championSearch}
+            onChampionSearchChange={(val) => {
+              setChampionSearch(val);
+              setSelectedChampion(null);
+            }}
+            searchResults={searchResults}
+            selectedChampion={selectedChampion}
+            onSelectChampion={(c) => {
+              setSelectedChampion(c);
+              setChampionSearch(c.name);
+              setSearchResults([]);
+            }}
+            selectedRarity={selectedRarity}
+            onRarityChange={setSelectedRarity}
+            signatureValue={signatureValue}
+            onSignatureChange={setSignatureValue}
+            adding={adding}
+            onSubmit={handleAddOrUpdateChampion}
+            roster={roster}
+            searchInputRef={searchInputRef}
+            formRef={addFormRef}
+          />
 
-                {/* Search results dropdown */}
-                {searchResults.length > 0 && !selectedChampion && (
-                  <div className="border rounded mt-1 max-h-48 overflow-y-auto bg-white shadow-md">
-                    {searchResults.map((c) => (
-                      <button
-                        key={c.id}
-                        className="w-full text-left px-3 py-2 hover:bg-blue-50 flex items-center gap-2"
-                        onClick={() => {
-                          setSelectedChampion(c);
-                          setChampionSearch(c.name);
-                          setSearchResults([]);
-                        }}
-                      >
-                        {c.image_url && (
-                          <img
-                            src={getChampionImageUrl(c.image_url, 40) ?? ''}
-                            alt={c.name}
-                            className="w-8 h-8 rounded object-cover"
-                          />
-                        )}
-                        <span>{c.name}</span>
-                        <span className="text-xs text-gray-400 ml-auto">{c.champion_class}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {selectedChampion && (
-                  <div className="mt-1">
-                    <div className="flex items-center gap-2 text-sm text-green-700">
-                      {selectedChampion.image_url && (
-                        <img
-                          src={getChampionImageUrl(selectedChampion.image_url, 40) ?? ''}
-                          alt={selectedChampion.name}
-                          className="w-6 h-6 rounded"
-                        />
-                      )}
-                      <span className="font-medium">{selectedChampion.name}</span>
-                      <span className="text-gray-400">({selectedChampion.champion_class})</span>
-                    </div>
-                    {/* Show existing roster entries for this champion */}
-                    {(() => {
-                      const existingEntries = roster.filter(
-                        (r) => r.champion_id === selectedChampion.id,
-                      );
-                      if (existingEntries.length === 0) return null;
-                      return (
-                        <div className="mt-1.5 ml-8 space-y-0.5">
-                          <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                            {t.roster.alreadyInRoster}
-                          </span>
-                          {existingEntries.map((entry) => (
-                            <div
-                              key={entry.id}
-                              className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1"
-                            >
-                              <span className={"font-semibold text-amber-600 dark:text-amber-400"}>
-                                {RARITY_LABELS[entry.rarity] ?? entry.rarity}
-                              </span>
-                              <span className="text-amber-600 dark:text-amber-400">· sig {entry.signature}</span>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                )}
-              </div>
-
-              {/* Rarity buttons */}
-              <div className="mb-3">
-                <label className="block text-sm font-medium mb-1">{t.roster.rarity}</label>
-                <div className="flex flex-wrap gap-2">
-                  {RARITIES.map((r) => (
-                    <button
-                      key={r}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
-                        selectedRarity === r
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-                      }`}
-                      onClick={() => setSelectedRarity(r)}
-                    >
-                      {RARITY_LABELS[r]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Signature field with quick-fill buttons */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">{t.roster.signature}</label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    min={0}
-                    className="w-24"
-                    value={signatureValue}
-                    onChange={(e) => setSignatureValue(Math.max(0, parseInt(e.target.value) || 0))}
-                  />
-                  <div className="flex gap-1">
-                    {SIGNATURE_PRESETS.map((v) => (
-                      <button
-                        key={v}
-                        className={`px-2 py-1 rounded text-xs border transition-colors ${
-                          signatureValue === v
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'
-                        }`}
-                        onClick={() => setSignatureValue(v)}
-                      >
-                        {v}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Submit */}
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleAddOrUpdateChampion}
-                  disabled={!selectedChampion || adding}
-                >
-                  {adding ? t.common.loading : t.roster.addOrUpdateButton}
-                </Button>
-              </div>
-            </CollapsibleSection>
-          </div>
-
-          {/* Roster visualization */}
           {loadingRoster ? (
             <p className="text-gray-500">{t.common.loading}</p>
-          ) : roster.length === 0 ? (
-            <p className="text-gray-500">{t.roster.empty}</p>
           ) : (
-            <div className="space-y-6">
-              {groupedRoster.map(([rarity, entries]) => (
-                <div key={rarity}>
-                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                    <span className="bg-gray-800 text-yellow-400 px-3 py-0.5 rounded-md text-sm font-bold">
-                      {RARITY_LABELS[rarity]}
-                    </span>
-                    <span className="text-sm text-gray-400">({entries.length})</span>
-                  </h3>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2">
-                    {entries.map((entry) => {
-                      const classColors = getClassColors(entry.champion_class);
-                      return (
-                        <div
-                          key={entry.id}
-                          className={`rounded-md bg-gray-900 ${classColors.border} border-[3px] shadow hover:shadow-lg transition-shadow relative group overflow-hidden`}
-                        >
-                          {/* Action buttons */}
-                          <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                            {getNextRarity(entry.rarity) && (
-                              <button
-                                className="text-green-400 hover:text-green-300 bg-black/60 rounded-full p-1"
-                                onClick={() => setUpgradeTarget(entry)}
-                                title={t.roster.upgrade}
-                              >
-                                <FiArrowUp size={14} />
-                              </button>
-                            )}
-                            <button
-                              className="text-blue-400 hover:text-blue-300 bg-black/60 rounded-full p-1"
-                              onClick={() => startEditEntry(entry)}
-                              title="Edit"
-                            >
-                              <FiEdit2 size={14} />
-                            </button>
-                            <button
-                              className="text-red-400 hover:text-red-600 bg-black/60 rounded-full p-1"
-                              onClick={() => setDeleteTarget(entry)}
-                              title={t.common.delete}
-                            >
-                              <FiTrash2 size={14} />
-                            </button>
-                          </div>
-
-                          {/* Champion portrait with frame */}
-                          <div className="flex justify-center pt-1">
-                            <ChampionPortrait
-                              imageUrl={entry.image_url}
-                              name={entry.champion_name}
-                              rarity={entry.rarity}
-                              size={72}
-                            />
-                          </div>
-
-                          {/* Name (shortened) */}
-                          <p className="text-[10px] font-semibold text-white text-center truncate px-0.5 mt-0.5" title={entry.champion_name}>
-                            {shortenChampionName(entry.champion_name)}
-                          </p>
-
-                          {/* Signature */}
-                          <div className="flex justify-center pb-1">
-                            {entry.signature > 0 ? (
-                              <span className="text-amber-400 text-[9px] font-semibold">
-                                sig {entry.signature}
-                              </span>
-                            ) : (
-                              <span className="text-white/50 text-[9px]">
-                                sig 0
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <RosterGrid
+              groupedRoster={groupedRoster}
+              onEdit={startEditEntry}
+              onDelete={setDeleteTarget}
+              onUpgrade={setUpgradeTarget}
+            />
           )}
         </>
       )}
