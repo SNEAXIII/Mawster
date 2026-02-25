@@ -82,7 +82,7 @@ export const updateChampionAlias = async (
 };
 
 export const loadChampions = async (
-  champions: { name: string; champion_class: string; image_url?: string | null }[]
+  champions: { name: string; champion_class: string; image_url?: string | null; alias?: string | null }[]
 ): Promise<{ message: string; created: number; updated: number; skipped: number }> => {
   const response = await fetch(`${PROXY}/admin/champions/load`, {
     method: 'POST',

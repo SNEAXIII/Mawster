@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from src.models.Alliance import Alliance
     from src.models.ChampionUser import ChampionUser
     from src.models.AllianceOfficer import AllianceOfficer
+    from src.models.RequestedUpgrade import RequestedUpgrade
 
 
 class GameAccount(SQLModel, table=True):
@@ -33,3 +34,7 @@ class GameAccount(SQLModel, table=True):
     )
     roster: List["ChampionUser"] = Relationship(back_populates="game_account")
     adjoint_entries: List["AllianceOfficer"] = Relationship(back_populates="game_account")
+    requested_upgrades: List["RequestedUpgrade"] = Relationship(
+        back_populates="requester",
+        sa_relationship_kwargs={"foreign_keys": "[RequestedUpgrade.requester_game_account_id]"},
+    )

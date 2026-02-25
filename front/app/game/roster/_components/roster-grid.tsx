@@ -7,9 +7,10 @@ import RosterChampionCard from './roster-champion-card';
 
 interface RosterGridProps {
   groupedRoster: [string, RosterEntry[]][];
-  onEdit: (entry: RosterEntry) => void;
-  onDelete: (entry: RosterEntry) => void;
-  onUpgrade: (entry: RosterEntry) => void;
+  onEdit?: (entry: RosterEntry) => void;
+  onDelete?: (entry: RosterEntry) => void;
+  onUpgrade?: (entry: RosterEntry) => void;
+  readOnly?: boolean;
 }
 
 export default function RosterGrid({
@@ -17,6 +18,7 @@ export default function RosterGrid({
   onEdit,
   onDelete,
   onUpgrade,
+  readOnly = false,
 }: RosterGridProps) {
   const { t } = useI18n();
 
@@ -42,6 +44,7 @@ export default function RosterGrid({
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onUpgrade={onUpgrade}
+                readOnly={readOnly}
               />
             ))}
           </div>

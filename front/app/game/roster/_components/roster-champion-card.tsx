@@ -13,9 +13,10 @@ import { FiTrash2, FiEdit2, FiArrowUp } from 'react-icons/fi';
 
 interface RosterChampionCardProps {
   entry: RosterEntry;
-  onEdit: (entry: RosterEntry) => void;
-  onDelete: (entry: RosterEntry) => void;
-  onUpgrade: (entry: RosterEntry) => void;
+  onEdit?: (entry: RosterEntry) => void;
+  onDelete?: (entry: RosterEntry) => void;
+  onUpgrade?: (entry: RosterEntry) => void;
+  readOnly?: boolean;
 }
 
 export default function RosterChampionCard({
@@ -23,6 +24,7 @@ export default function RosterChampionCard({
   onEdit,
   onDelete,
   onUpgrade,
+  readOnly = false,
 }: RosterChampionCardProps) {
   const { t } = useI18n();
   const classColors = getClassColors(entry.champion_class);
@@ -33,31 +35,37 @@ export default function RosterChampionCard({
       className={`rounded-md bg-gray-900 ${classColors.border} border-[3px] shadow hover:shadow-lg transition-shadow relative group overflow-hidden`}
     >
       {/* Action buttons — visible on hover */}
-      <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-        {nextRarity && (
-          <button
-            className="text-green-400 hover:text-green-300 bg-black/60 rounded-full p-1"
-            onClick={() => onUpgrade(entry)}
-            title={t.roster.upgrade}
-          >
-            <FiArrowUp size={14} />
-          </button>
-        )}
-        <button
-          className="text-blue-400 hover:text-blue-300 bg-black/60 rounded-full p-1"
-          onClick={() => onEdit(entry)}
-          title="Edit"
-        >
-          <FiEdit2 size={14} />
-        </button>
-        <button
-          className="text-red-400 hover:text-red-600 bg-black/60 rounded-full p-1"
-          onClick={() => onDelete(entry)}
-          title={t.common.delete}
-        >
-          <FiTrash2 size={14} />
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+          {nextRarity && onUpgrade && (
+            <button
+              className="text-green-400 hover:text-green-300 bg-black/60 rounded-full p-1"
+              onClick={() => onUpgrade(entry)}
+              title={t.roster.upgrade}
+            >
+              <FiArrowUp size={14} />
+            </button>
+          )}
+          {onEdit && (
+            <button
+              className="text-blue-400 hover:text-blue-300 bg-black/60 rounded-full p-1"
+              onClick={() => onEdit(entry)}
+              title="Edit"
+            >
+              <FiEdit2 size={14} />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              className="text-red-400 hover:text-red-600 bg-black/60 rounded-full p-1"
+              onClick={() => onDelete(entry)}
+              title={t.common.delete}
+            >
+              <FiTrash2 size={14} />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Champion portrait with frame */}
       <div className="flex justify-center pt-1">

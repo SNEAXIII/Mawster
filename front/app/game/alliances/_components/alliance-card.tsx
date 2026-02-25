@@ -46,6 +46,7 @@ interface AllianceCardProps {
   onLeave: (target: ConfirmTarget) => void;
   onExclude: (target: ConfirmTarget) => void;
   onSetGroup: (allianceId: string, gameAccountId: string, group: number | null, pseudo: string) => void;
+  onViewRoster: (gameAccountId: string, pseudo: string) => void;
 }
 
 export default function AllianceCard({
@@ -66,6 +67,7 @@ export default function AllianceCard({
   onLeave,
   onExclude,
   onSetGroup,
+  onViewRoster,
 }: AllianceCardProps) {
   const { t } = useI18n();
   const officerCount = alliance.officers.length;
@@ -167,6 +169,7 @@ export default function AllianceCard({
                   onLeave={onLeave}
                   onExclude={onExclude}
                   onSetGroup={onSetGroup}
+                  onViewRoster={onViewRoster}
                 />
               ))}
             </div>

@@ -23,6 +23,11 @@ def _mock_session(mocker):
     """Return an AsyncMock pretending to be an async DB session."""
     session = mocker.AsyncMock()
     session.add = mocker.MagicMock()
+    # Prevent UpgradeRequestService.auto_complete from interfering with unit tests
+    mocker.patch(
+        "src.services.ChampionUserService.UpgradeRequestService.auto_complete_for_champion_user",
+        return_value=None,
+    )
     return session
 
 

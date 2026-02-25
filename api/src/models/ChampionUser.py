@@ -1,10 +1,11 @@
 import uuid
-from typing import TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from src.models.GameAccount import GameAccount
     from src.models.Champion import Champion
+    from src.models.RequestedUpgrade import RequestedUpgrade
 
 
 class ChampionUser(SQLModel, table=True):
@@ -25,3 +26,4 @@ class ChampionUser(SQLModel, table=True):
     # Relations
     game_account: "GameAccount" = Relationship(back_populates="roster")
     champion: "Champion" = Relationship(back_populates="instances")
+    upgrade_requests: List["RequestedUpgrade"] = Relationship(back_populates="champion_user")

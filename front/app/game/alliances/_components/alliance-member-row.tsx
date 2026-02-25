@@ -21,6 +21,7 @@ import {
   UserMinus,
   ShieldCheck,
   ShieldMinus,
+  Eye,
 } from 'lucide-react';
 
 const GROUP_COLORS: Record<number, string> = {
@@ -48,6 +49,7 @@ interface AllianceMemberRowProps {
   onLeave: (target: { allianceId: string; gameAccountId: string; pseudo: string }) => void;
   onExclude: (target: { allianceId: string; gameAccountId: string; pseudo: string }) => void;
   onSetGroup: (allianceId: string, gameAccountId: string, group: number | null, pseudo: string) => void;
+  onViewRoster: (gameAccountId: string, pseudo: string) => void;
 }
 
 export default function AllianceMemberRow({
@@ -61,6 +63,7 @@ export default function AllianceMemberRow({
   onLeave,
   onExclude,
   onSetGroup,
+  onViewRoster,
 }: AllianceMemberRowProps) {
   const { t } = useI18n();
 
@@ -93,6 +96,23 @@ export default function AllianceMemberRow({
       </div>
 
       <div className="flex items-center gap-1">
+        {/* View Roster */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                onClick={() => onViewRoster(member.id, member.game_pseudo)}
+              >
+                <Eye className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t.game.alliances.viewRoster}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         {/* Promote / Demote — owner only, not on self/owner */}
         {userIsOwner && !member.is_owner && (
           member.is_officer ? (

@@ -148,6 +148,8 @@ class ChampionService:
                 existing.champion_class = data.champion_class
                 if data.image_url:
                     existing.image_url = data.image_url
+                if data.alias is not None:
+                    existing.alias = data.alias
                 session.add(existing)
                 updated += 1
             else:
@@ -155,6 +157,7 @@ class ChampionService:
                     name=data.name,
                     champion_class=data.champion_class,
                     image_url=data.image_url,
+                    alias=data.alias,
                     is_7_star=False,
                 )
                 session.add(new_champion)
