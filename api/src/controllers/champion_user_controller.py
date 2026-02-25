@@ -271,7 +271,6 @@ async def create_upgrade_request(
         select(GameAccount).where(GameAccount.user_id == current_user.id)
     )
     user_accounts = user_accounts_result.all()
-    user_account_ids = {acc.id for acc in user_accounts}
 
     is_self = game_account.user_id == current_user.id
 
