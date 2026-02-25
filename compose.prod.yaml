@@ -1,0 +1,65 @@
+networks:
+  internal:
+    driver: bridge
+
+services:
+  mariadb:
+    image: mariadb:11
+    container_name: mariadb
+    restart: unless-stopped
+    networks:
+      - internal
+    env_file: db.env
+    volumes:
+      - ./data/db/:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: sneaxiii/mawster-api:latest
+    container_name: api
+    restart: unless-stopped
+    networks:
+      - internal
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    env_file:
+      - api.env
+    command: ["sh", "run.sh"]
+
+  front:
+    image: sneaxiii/mawster-front:latest
+    container_name: front
+    restart: unless-stopped
+    networks:
+      - internal
+    depends_on:
+      - api
+    env_file:
+      - front.env
+    command: ["sh", "run.sh"]
+
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - internal
+    depends_on:
+      - front
+      - api
+
+volumes:
+  caddy_data:
+  caddy_config:
