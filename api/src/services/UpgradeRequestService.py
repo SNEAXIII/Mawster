@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from fastapi import HTTPException
 from sqlmodel import select, and_
@@ -9,7 +8,6 @@ from starlette import status
 
 from src.models.RequestedUpgrade import RequestedUpgrade
 from src.models.ChampionUser import ChampionUser
-from src.models.GameAccount import GameAccount
 from src.enums.ChampionRarity import ChampionRarity
 from src.utils.db import SessionDep
 

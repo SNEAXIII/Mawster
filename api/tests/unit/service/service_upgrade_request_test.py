@@ -10,7 +10,7 @@ from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
 from src.models.RequestedUpgrade import RequestedUpgrade
 from src.services.UpgradeRequestService import UpgradeRequestService
-from tests.utils.utils_constant import USER_ID, GAME_PSEUDO, GAME_PSEUDO_2
+from tests.utils.utils_constant import USER_ID, GAME_PSEUDO_2
 
 
 # ---------------------------------------------------------------------------
@@ -170,7 +170,7 @@ class TestCreateUpgradeRequest:
         mock_result_no_dup.first.return_value = None
         session.exec.side_effect = [mock_result_cu, mock_result_no_dup]
 
-        result = await UpgradeRequestService.create_upgrade_request(
+        await UpgradeRequestService.create_upgrade_request(
             session, CHAMPION_USER_ID, REQUESTER_ACCOUNT_ID, "7r3"
         )
         assert session.add.called
