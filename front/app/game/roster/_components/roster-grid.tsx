@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useI18n } from '@/app/i18n';
-import { RosterEntry, RARITY_LABELS } from '@/app/services/roster';
+import { RosterEntry, RARITY_LABELS, UpgradeRequest } from '@/app/services/roster';
 import RosterChampionCard from './roster-champion-card';
 
 interface RosterGridProps {
@@ -11,6 +11,10 @@ interface RosterGridProps {
   onDelete?: (entry: RosterEntry) => void;
   onUpgrade?: (entry: RosterEntry) => void;
   readOnly?: boolean;
+  /** Pending upgrade requests — used to show cancel button instead of upgrade arrow */
+  upgradeRequests?: UpgradeRequest[];
+  /** Callback to cancel an upgrade request */
+  onCancelRequest?: (requestId: string) => void;
 }
 
 export default function RosterGrid({
@@ -19,6 +23,8 @@ export default function RosterGrid({
   onDelete,
   onUpgrade,
   readOnly = false,
+  upgradeRequests,
+  onCancelRequest,
 }: RosterGridProps) {
   const { t } = useI18n();
 
@@ -37,16 +43,21 @@ export default function RosterGrid({
             <span className="text-sm text-gray-400">({entries.length})</span>
           </h3>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2">
-            {entries.map((entry) => (
-              <RosterChampionCard
-                key={entry.id}
-                entry={entry}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onUpgrade={onUpgrade}
-                readOnly={readOnly}
-              />
-            ))}
+            {entries.map((entry) => {
+              const pending = upgradeRequests?.find((r) => r.champion_user_id === entry.id);
+              return (
+                <RosterChampionCard
+                  key={entry.id}
+                  entry={entry}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onUpgrade={onUpgrade}
+                  readOnly={readOnly}
+                  pendingRequestId={pending?.id}
+                  onCancelRequest={onCancelRequest}
+                />
+              );
+            })}
           </div>
         </div>
       ))}
