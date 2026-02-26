@@ -1,14 +1,15 @@
-{$DOMAIN:localhost}
-
-{$DOMAIN} {
-    handle_path /api/back/* {
+{
+    auto_https off
+}
+:80 {
+    handle /static/* {
         reverse_proxy api:8000
     }
 
-    handle_path /static/* {
-        reverse_proxy api:8000
+    handle_path /myadmin* {
+        reverse_proxy myadmin:85
     }
-
+    
     handle {
         reverse_proxy front:3000
     }
