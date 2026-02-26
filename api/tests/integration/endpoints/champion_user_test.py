@@ -28,6 +28,8 @@ app.dependency_overrides[get_session] = get_test_session
 
 HEADERS = create_auth_headers()
 
+CHAMPION_USERS_ROUTE = "/champion-users"
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -60,11 +62,11 @@ async def _push_champion_user(
 _FAKE_ID = str(uuid.uuid4())
 
 _CHAMPION_USER_ROUTES_NO_AUTH = [
-    ("POST", "/champion-users", {"game_account_id": _FAKE_ID, "champion_id": _FAKE_ID, "rarity": "6r4"}, "create"),
-    ("POST", "/champion-users/bulk", {"game_account_id": _FAKE_ID, "champions": [{"champion_name": "X", "rarity": "6r4"}]}, "bulk"),
-    ("PUT", f"/champion-users/{_FAKE_ID}", {"game_account_id": _FAKE_ID, "champion_id": _FAKE_ID, "rarity": "6r4"}, "update"),
-    ("DELETE", f"/champion-users/{_FAKE_ID}", None, "delete"),
-    ("PATCH", f"/champion-users/{_FAKE_ID}/upgrade", {}, "upgrade"),
+    ("POST", CHAMPION_USERS_ROUTE, {"game_account_id": _FAKE_ID, "champion_id": _FAKE_ID, "rarity": "6r4"}, "create"),
+    ("POST", f"{CHAMPION_USERS_ROUTE}/bulk", {"game_account_id": _FAKE_ID, "champions": [{"champion_name": "X", "rarity": "6r4"}]}, "bulk"),
+    ("PUT", f"{CHAMPION_USERS_ROUTE}/{_FAKE_ID}", {"game_account_id": _FAKE_ID, "champion_id": _FAKE_ID, "rarity": "6r4"}, "update"),
+    ("DELETE", f"{CHAMPION_USERS_ROUTE}/{_FAKE_ID}", None, "delete"),
+    ("PATCH", f"{CHAMPION_USERS_ROUTE}/{_FAKE_ID}/upgrade", {}, "upgrade"),
 ]
 
 
@@ -95,7 +97,7 @@ class TestCreateChampionUser:
         champ = await push_champion()
 
         response = await execute_post_request(
-            "/champion-users",
+            CHAMPION_USERS_ROUTE,
             {
                 "game_account_id": str(acc.id),
                 "champion_id": str(champ.id),
@@ -116,7 +118,7 @@ class TestCreateChampionUser:
         champ = await push_champion()
 
         response = await execute_post_request(
-            "/champion-users",
+            CHAMPION_USERS_ROUTE,
             {
                 "game_account_id": str(acc.id),
                 "champion_id": str(champ.id),
@@ -132,7 +134,7 @@ class TestCreateChampionUser:
         champ = await push_champion()
 
         response = await execute_post_request(
-            "/champion-users",
+            CHAMPION_USERS_ROUTE,
             {
                 "game_account_id": str(uuid.uuid4()),
                 "champion_id": str(champ.id),
@@ -150,7 +152,7 @@ class TestCreateChampionUser:
         champ = await push_champion()
 
         response = await execute_post_request(
-            "/champion-users",
+            CHAMPION_USERS_ROUTE,
             {
                 "game_account_id": str(acc.id),
                 "champion_id": str(champ.id),
@@ -169,7 +171,7 @@ class TestCreateChampionUser:
         await _push_champion_user(acc.id, champ.id, "6r4")
 
         response = await execute_post_request(
-            "/champion-users",
+            CHAMPION_USERS_ROUTE,
             {
                 "game_account_id": str(acc.id),
                 "champion_id": str(champ.id),
@@ -188,7 +190,7 @@ class TestCreateChampionUser:
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         response = await execute_post_request(
-            "/champion-users",
+            CHAMPION_USERS_ROUTE,
             {
                 "game_account_id": str(acc.id),
                 "champion_id": str(uuid.uuid4()),
@@ -212,7 +214,7 @@ class TestCreateChampionUser:
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         champ = await push_champion()
         response = await execute_post_request(
-            "/champion-users",
+            CHAMPION_USERS_ROUTE,
             {
                 "game_account_id": str(acc.id),
                 "champion_id": str(champ.id),
@@ -230,7 +232,7 @@ class TestCreateChampionUser:
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         champ = await push_champion()
         response = await execute_post_request(
-            "/champion-users",
+            CHAMPION_USERS_ROUTE,
             {
                 "game_account_id": str(acc.id),
                 "champion_id": str(champ.id),
@@ -259,7 +261,7 @@ class TestCreateChampionUser:
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         champ = await push_champion(name=f"Champ-{rarity}")
         response = await execute_post_request(
-            "/champion-users",
+            CHAMPION_USERS_ROUTE,
             {
                 "game_account_id": str(acc.id),
                 "champion_id": str(champ.id),
@@ -286,7 +288,7 @@ class TestBulkAddChampions:
         await push_champion("Wolverine", "Mutant")
 
         response = await execute_post_request(
-            "/champion-users/bulk",
+            f"{CHAMPION_USERS_ROUTE}/bulk",
             {
                 "game_account_id": str(acc.id),
                 "champions": [
@@ -308,7 +310,7 @@ class TestBulkAddChampions:
         await push_champion()
 
         response = await execute_post_request(
-            "/champion-users/bulk",
+            f"{CHAMPION_USERS_ROUTE}/bulk",
             {
                 "game_account_id": str(acc.id),
                 "champions": [
@@ -332,7 +334,7 @@ class TestBulkAddChampions:
         await _push_champion_user(acc.id, champ.id, "6r4")
 
         response = await execute_post_request(
-            "/champion-users/bulk",
+            f"{CHAMPION_USERS_ROUTE}/bulk",
             {
                 "game_account_id": str(acc.id),
                 "champions": [
@@ -354,7 +356,7 @@ class TestBulkAddChampions:
         await push_champion()
 
         response = await execute_post_request(
-            "/champion-users/bulk",
+            f"{CHAMPION_USERS_ROUTE}/bulk",
             {
                 "game_account_id": str(acc.id),
                 "champions": [
@@ -373,7 +375,7 @@ class TestBulkAddChampions:
         await push_champion()
 
         response = await execute_post_request(
-            "/champion-users/bulk",
+            f"{CHAMPION_USERS_ROUTE}/bulk",
             {
                 "game_account_id": str(acc.id),
                 "champions": [
@@ -395,7 +397,7 @@ class TestBulkAddChampions:
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         response = await execute_post_request(
-            "/champion-users/bulk",
+            f"{CHAMPION_USERS_ROUTE}/bulk",
             {
                 "game_account_id": str(acc.id),
                 "champions": [
@@ -412,7 +414,7 @@ class TestBulkAddChampions:
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         await push_champion()
         response = await execute_post_request(
-            "/champion-users/bulk",
+            f"{CHAMPION_USERS_ROUTE}/bulk",
             {
                 "game_account_id": str(acc.id),
                 "champions": [
@@ -429,7 +431,7 @@ class TestBulkAddChampions:
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         response = await execute_post_request(
-            "/champion-users/bulk",
+            f"{CHAMPION_USERS_ROUTE}/bulk",
             {
                 "game_account_id": str(acc.id),
                 "champions": [],
@@ -444,7 +446,7 @@ class TestBulkAddChampions:
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         response = await execute_post_request(
-            "/champion-users/bulk",
+            f"{CHAMPION_USERS_ROUTE}/bulk",
             {"game_account_id": str(acc.id)},
             headers=HEADERS,
         )
@@ -455,7 +457,7 @@ class TestBulkAddChampions:
         await push_one_user()
         await push_champion()
         response = await execute_post_request(
-            "/champion-users/bulk",
+            f"{CHAMPION_USERS_ROUTE}/bulk",
             {
                 "game_account_id": str(uuid.uuid4()),
                 "champions": [
@@ -474,7 +476,7 @@ class TestBulkAddChampions:
         await push_champion("Hulk", "Science")
         await push_champion("Thor", "Cosmic")
         response = await execute_post_request(
-            "/champion-users/bulk",
+            f"{CHAMPION_USERS_ROUTE}/bulk",
             {
                 "game_account_id": str(acc.id),
                 "champions": [
@@ -498,7 +500,7 @@ class TestBulkAddChampions:
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         await push_champion()
         response = await execute_post_request(
-            "/champion-users/bulk",
+            f"{CHAMPION_USERS_ROUTE}/bulk",
             {
                 "game_account_id": str(acc.id),
                 "champions": [
@@ -523,7 +525,7 @@ class TestGetRosterByGameAccount:
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
 
         response = await execute_get_request(
-            f"/champion-users/by-account/{acc.id}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/by-account/{acc.id}", headers=HEADERS
         )
         assert response.status_code == 200
         assert response.json() == []
@@ -536,7 +538,7 @@ class TestGetRosterByGameAccount:
         await _push_champion_user(acc.id, champ.id, "6r4", signature=200)
 
         response = await execute_get_request(
-            f"/champion-users/by-account/{acc.id}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/by-account/{acc.id}", headers=HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -553,7 +555,7 @@ class TestGetRosterByGameAccount:
         acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_get_request(
-            f"/champion-users/by-account/{acc.id}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/by-account/{acc.id}", headers=HEADERS
         )
         assert response.status_code == 403
 
@@ -561,7 +563,7 @@ class TestGetRosterByGameAccount:
     async def test_get_roster_nonexistent_account_404(self, session):
         await push_one_user()
         response = await execute_get_request(
-            f"/champion-users/by-account/{uuid.uuid4()}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/by-account/{uuid.uuid4()}", headers=HEADERS
         )
         assert response.status_code == 404
 
@@ -569,7 +571,7 @@ class TestGetRosterByGameAccount:
     async def test_invalid_uuid_returns_400(self, session):
         await push_one_user()
         response = await execute_get_request(
-            "/champion-users/by-account/not-a-uuid", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/by-account/not-a-uuid", headers=HEADERS
         )
         assert response.status_code == 400
 
@@ -581,7 +583,7 @@ class TestGetRosterByGameAccount:
         champ = await push_champion("Doctor Doom", "Mystic")
         await _push_champion_user(acc.id, champ.id, "7r5", signature=200)
         response = await execute_get_request(
-            f"/champion-users/by-account/{acc.id}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/by-account/{acc.id}", headers=HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -607,7 +609,7 @@ class TestGetRosterByGameAccount:
         await _push_champion_user(acc.id, c2.id, "7r3")
         await _push_champion_user(acc.id, c3.id, "7r5")
         response = await execute_get_request(
-            f"/champion-users/by-account/{acc.id}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/by-account/{acc.id}", headers=HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -628,7 +630,7 @@ class TestGetChampionUser:
         entry = await _push_champion_user(acc.id, champ.id, "7r3", signature=200)
 
         response = await execute_get_request(
-            f"/champion-users/{entry.id}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -639,7 +641,7 @@ class TestGetChampionUser:
     async def test_get_not_found_404(self, session):
         await push_one_user()
         response = await execute_get_request(
-            f"/champion-users/{uuid.uuid4()}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{uuid.uuid4()}", headers=HEADERS
         )
         assert response.status_code == 404
 
@@ -652,7 +654,7 @@ class TestGetChampionUser:
         entry = await _push_champion_user(acc.id, champ.id, "6r4")
 
         response = await execute_get_request(
-            f"/champion-users/{entry.id}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS
         )
         assert response.status_code == 403
 
@@ -660,7 +662,7 @@ class TestGetChampionUser:
     async def test_get_invalid_uuid_returns_400(self, session):
         await push_one_user()
         response = await execute_get_request(
-            "/champion-users/not-a-uuid", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/not-a-uuid", headers=HEADERS
         )
         assert response.status_code == 400
 
@@ -679,7 +681,7 @@ class TestUpdateChampionUser:
         entry = await _push_champion_user(acc.id, champ.id, "6r4")
 
         response = await execute_put_request(
-            f"/champion-users/{entry.id}",
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}",
             {
                 "game_account_id": str(acc.id),
                 "champion_id": str(champ.id),
@@ -697,7 +699,7 @@ class TestUpdateChampionUser:
     async def test_update_not_found_404(self, session):
         await push_one_user()
         response = await execute_put_request(
-            f"/champion-users/{uuid.uuid4()}",
+            f"{CHAMPION_USERS_ROUTE}/{uuid.uuid4()}",
             {
                 "game_account_id": str(uuid.uuid4()),
                 "champion_id": str(uuid.uuid4()),
@@ -716,7 +718,7 @@ class TestUpdateChampionUser:
         entry = await _push_champion_user(acc.id, champ.id, "6r4")
 
         response = await execute_put_request(
-            f"/champion-users/{entry.id}",
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}",
             {
                 "game_account_id": str(acc.id),
                 "champion_id": str(champ.id),
@@ -734,7 +736,7 @@ class TestUpdateChampionUser:
         champ = await push_champion()
         entry = await _push_champion_user(acc.id, champ.id, "6r4")
         response = await execute_put_request(
-            f"/champion-users/{entry.id}",
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}",
             {
                 "game_account_id": str(acc.id),
                 "champion_id": str(champ.id),
@@ -749,7 +751,7 @@ class TestUpdateChampionUser:
     async def test_update_invalid_uuid_returns_400(self, session):
         await push_one_user()
         response = await execute_put_request(
-            "/champion-users/not-a-uuid",
+            f"{CHAMPION_USERS_ROUTE}/not-a-uuid",
             {
                 "game_account_id": str(uuid.uuid4()),
                 "champion_id": str(uuid.uuid4()),
@@ -767,7 +769,7 @@ class TestUpdateChampionUser:
         champ = await push_champion()
         entry = await _push_champion_user(acc.id, champ.id, "6r4", signature=0)
         response = await execute_put_request(
-            f"/champion-users/{entry.id}",
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}",
             {
                 "game_account_id": str(acc.id),
                 "champion_id": str(champ.id),
@@ -797,7 +799,7 @@ class TestDeleteChampionUser:
         entry = await _push_champion_user(acc.id, champ.id, "6r4")
 
         response = await execute_delete_request(
-            f"/champion-users/{entry.id}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS
         )
         assert response.status_code == 204
 
@@ -805,7 +807,7 @@ class TestDeleteChampionUser:
     async def test_delete_not_found_404(self, session):
         await push_one_user()
         response = await execute_delete_request(
-            f"/champion-users/{uuid.uuid4()}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{uuid.uuid4()}", headers=HEADERS
         )
         assert response.status_code == 404
 
@@ -818,7 +820,7 @@ class TestDeleteChampionUser:
         entry = await _push_champion_user(acc.id, champ.id, "6r4")
 
         response = await execute_delete_request(
-            f"/champion-users/{entry.id}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS
         )
         assert response.status_code == 403
 
@@ -830,11 +832,11 @@ class TestDeleteChampionUser:
         champ = await push_champion()
         entry = await _push_champion_user(acc.id, champ.id)
         r1 = await execute_delete_request(
-            f"/champion-users/{entry.id}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS
         )
         assert r1.status_code == 204
         r2 = await execute_delete_request(
-            f"/champion-users/{entry.id}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS
         )
         assert r2.status_code == 404
 
@@ -842,7 +844,7 @@ class TestDeleteChampionUser:
     async def test_delete_invalid_uuid_returns_400(self, session):
         await push_one_user()
         response = await execute_delete_request(
-            "/champion-users/not-a-uuid", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/not-a-uuid", headers=HEADERS
         )
         assert response.status_code == 400
 
@@ -854,10 +856,10 @@ class TestDeleteChampionUser:
         champ = await push_champion()
         entry = await _push_champion_user(acc.id, champ.id)
         await execute_delete_request(
-            f"/champion-users/{entry.id}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS
         )
         roster_resp = await execute_get_request(
-            f"/champion-users/by-account/{acc.id}", headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/by-account/{acc.id}", headers=HEADERS
         )
         assert roster_resp.status_code == 200
         assert roster_resp.json() == []
@@ -878,7 +880,7 @@ class TestUpgradeChampionRank:
         entry = await _push_champion_user(acc.id, champ.id, "7r2", signature=50)
 
         response = await execute_patch_request(
-            f"/champion-users/{entry.id}/upgrade", {}, headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/upgrade", {}, headers=HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -894,7 +896,7 @@ class TestUpgradeChampionRank:
         entry = await _push_champion_user(acc.id, champ.id, "6r4")
 
         response = await execute_patch_request(
-            f"/champion-users/{entry.id}/upgrade", {}, headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/upgrade", {}, headers=HEADERS
         )
         assert response.status_code == 200
         assert response.json()["rarity"] == "6r5"
@@ -908,7 +910,7 @@ class TestUpgradeChampionRank:
         entry = await _push_champion_user(acc.id, champ.id, "7r5")
 
         response = await execute_patch_request(
-            f"/champion-users/{entry.id}/upgrade", {}, headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/upgrade", {}, headers=HEADERS
         )
         assert response.status_code == 400
         assert "maximum rank" in response.json()["message"].lower()
@@ -922,7 +924,7 @@ class TestUpgradeChampionRank:
         champ = await push_champion()
         entry = await _push_champion_user(acc.id, champ.id, rarity)
         response = await execute_patch_request(
-            f"/champion-users/{entry.id}/upgrade", {}, headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/upgrade", {}, headers=HEADERS
         )
         assert response.status_code == 400
 
@@ -930,7 +932,7 @@ class TestUpgradeChampionRank:
     async def test_upgrade_not_found_404(self, session):
         await push_one_user()
         response = await execute_patch_request(
-            f"/champion-users/{uuid.uuid4()}/upgrade", {}, headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{uuid.uuid4()}/upgrade", {}, headers=HEADERS
         )
         assert response.status_code == 404
 
@@ -943,7 +945,7 @@ class TestUpgradeChampionRank:
         entry = await _push_champion_user(acc.id, champ.id, "7r1")
 
         response = await execute_patch_request(
-            f"/champion-users/{entry.id}/upgrade", {}, headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/upgrade", {}, headers=HEADERS
         )
         assert response.status_code == 403
 
@@ -956,7 +958,7 @@ class TestUpgradeChampionRank:
         entry = await _push_champion_user(acc.id, champ.id, "7r1", signature=100)
 
         response = await execute_patch_request(
-            f"/champion-users/{entry.id}/upgrade", {}, headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/upgrade", {}, headers=HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -969,7 +971,7 @@ class TestUpgradeChampionRank:
     async def test_upgrade_invalid_uuid_returns_400(self, session):
         await push_one_user()
         response = await execute_patch_request(
-            "/champion-users/not-a-uuid/upgrade", {}, headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/not-a-uuid/upgrade", {}, headers=HEADERS
         )
         assert response.status_code == 400
 
@@ -981,7 +983,7 @@ class TestUpgradeChampionRank:
         champ = await push_champion()
         entry = await _push_champion_user(acc.id, champ.id, "7r1")
         response = await execute_patch_request(
-            f"/champion-users/{entry.id}/upgrade", {}, headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/upgrade", {}, headers=HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -999,11 +1001,11 @@ class TestUpgradeChampionRank:
         expected_rarities = ["7r2", "7r3", "7r4", "7r5"]
         for expected in expected_rarities:
             r = await execute_patch_request(
-                f"/champion-users/{entry.id}/upgrade", {}, headers=HEADERS
+                f"{CHAMPION_USERS_ROUTE}/{entry.id}/upgrade", {}, headers=HEADERS
             )
             assert r.status_code == 200
             assert r.json()["rarity"] == expected
         r = await execute_patch_request(
-            f"/champion-users/{entry.id}/upgrade", {}, headers=HEADERS
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/upgrade", {}, headers=HEADERS
         )
         assert r.status_code == 400
