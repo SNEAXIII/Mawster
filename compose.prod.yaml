@@ -65,7 +65,16 @@ services:
     depends_on:
       - front
       - api
-
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: myadmin
+    networks:
+      - internal
+    environment:
+      - PMA_HOST=mariadb
+      - PMA_PORT=3306
+    depends_on:
+      - mariadb
 volumes:
   caddy_data:
   caddy_config:
