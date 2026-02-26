@@ -1,138 +1,28 @@
 [
   {
-    "champion_name": "Storm",
-    "rarity": "7r3",
-    "signature": 60
-  },
-  {
-    "champion_name": "Shocker",
-    "rarity": "7r4",
-    "signature": 200
-  },
-  {
-    "champion_name": "Dazzler",
-    "rarity": "7r4",
-    "signature": 200
-  },
-  {
-    "champion_name": "Bullseye",
-    "rarity": "7r3",
-    "signature": 20
-  },
-  {
-    "champion_name": "Kushala",
-    "rarity": "7r4",
-    "signature": 200
-  },
-  {
-    "champion_name": "Cull Obsidian",
-    "rarity": "7r4",
-    "signature": 20
-  },
-  {
-    "champion_name": "The Hood",
-    "rarity": "7r4",
-    "signature": 200
-  },
-  {
-    "champion_name": "Bastion",
-    "rarity": "7r3",
-    "signature": 60
-  },
-  {
-    "champion_name": "Franken-Castle",
-    "rarity": "7r3",
-    "signature": 0
-  },
-  {
-    "champion_name": "Onslaught",
-    "rarity": "7r3",
-    "signature": 0
-  },
-  {
-    "champion_name": "Attuma",
-    "rarity": "7r3",
-    "signature": 20
-  },
-  {
-    "champion_name": "Kate Bishop",
-    "rarity": "6r5",
-    "signature": 200
-  },
-  {
-    "champion_name": "Karolina Dean",
-    "rarity": "7r4",
-    "signature": 20
-  },
-  {
-    "champion_name": "Nova",
-    "rarity": "7r3",
-    "signature": 0
-  },
-  {
-    "champion_name": "Korg",
-    "rarity": "7r3",
-    "signature": 200
-  },
-  {
-    "champion_name": "Maestro (Cosmic)",
-    "rarity": "7r3",
-    "signature": 0
-  },
-  {
-    "champion_name": "Scream",
-    "rarity": "7r3",
-    "signature": 20
-  },
-  {
-    "champion_name": "Sentinel",
-    "rarity": "7r4",
-    "signature": 20
-  },
-  {
-    "champion_name": "Spider-Woman (Jessica Drew)",
-    "rarity": "7r4",
-    "signature": 200
-  },
-  {
     "champion_name": "Jean Grey",
     "rarity": "7r4",
     "signature": 60
   },
   {
-    "champion_name": "Shuri",
-    "rarity": "7r3",
-    "signature": 60
-  },
-  {
-    "champion_name": "Photon",
-    "rarity": "7r4",
-    "signature": 200
-  },
-  {
-    "champion_name": "Scorpion",
-    "rarity": "7r4",
-    "signature": 20
-  },
-  {
-    "champion_name": "The Maker",
+    "champion_name": "She-Hulk (Deathless)",
     "rarity": "7r3",
     "signature": 20
   },
   {
-    "champion_name": "Absorbing Man",
-    "rarity": "7r4",
-    "signature": 20
-  },
-  {
-    "champion_name": "Mister Sinister",
-    "rarity": "7r4",
-    "signature": 20
-  },
-  {
-    "champion_name": "Count Nefaria",
+    "champion_name": "Titania",
     "rarity": "7r3",
     "signature": 40
+  },
+  {
+    "champion_name": "Prowler",
+    "rarity": "7r4",
+    "signature": 180
+  },
+  {
+    "champion_name": "Scream",
+    "rarity": "7r3",
+    "signature": 20
   },
   {
     "champion_name": "Werewolf By Night",
@@ -145,12 +35,57 @@
     "signature": 40
   },
   {
-    "champion_name": "Crossbones",
+    "champion_name": "Nico Minoru",
     "rarity": "7r4",
     "signature": 200
   },
   {
-    "champion_name": "Thanos (Deathless)",
+    "champion_name": "Attuma",
+    "rarity": "7r3",
+    "signature": 20
+  },
+  {
+    "champion_name": "Sentinel",
+    "rarity": "7r4",
+    "signature": 20
+  },
+  {
+    "champion_name": "Count Nefaria",
+    "rarity": "7r3",
+    "signature": 40
+  },
+  {
+    "champion_name": "Okoye",
+    "rarity": "7r4",
+    "signature": 20
+  },
+  {
+    "champion_name": "Deadpool (X-Force)",
+    "rarity": "7r4",
+    "signature": 0
+  },
+  {
+    "champion_name": "Adam Warlock",
+    "rarity": "7r3",
+    "signature": 0
+  },
+  {
+    "champion_name": "Maestro (Cosmic)",
+    "rarity": "7r3",
+    "signature": 0
+  },
+  {
+    "champion_name": "Bastion",
+    "rarity": "7r3",
+    "signature": 60
+  },
+  {
+    "champion_name": "Korg",
+    "rarity": "7r3",
+    "signature": 200
+  },
+  {
+    "champion_name": "Crossbones",
     "rarity": "7r4",
     "signature": 200
   },
@@ -160,14 +95,9 @@
     "signature": 200
   },
   {
-    "champion_name": "Titania",
-    "rarity": "7r3",
-    "signature": 40
-  },
-  {
-    "champion_name": "Adam Warlock",
-    "rarity": "7r3",
-    "signature": 0
+    "champion_name": "Scorpion",
+    "rarity": "7r4",
+    "signature": 20
   },
   {
     "champion_name": "Yelena Belova",
@@ -175,17 +105,87 @@
     "signature": 200
   },
   {
-    "champion_name": "She-Hulk (Deathless)",
+    "champion_name": "Thanos (Deathless)",
+    "rarity": "7r4",
+    "signature": 200
+  },
+  {
+    "champion_name": "Dazzler",
+    "rarity": "7r4",
+    "signature": 200
+  },
+  {
+    "champion_name": "Franken-Castle",
     "rarity": "7r3",
+    "signature": 0
+  },
+  {
+    "champion_name": "Absorbing Man",
+    "rarity": "7r4",
     "signature": 20
   },
   {
-    "champion_name": "Deadpool (X-Force)",
+    "champion_name": "Shuri",
+    "rarity": "7r3",
+    "signature": 60
+  },
+  {
+    "champion_name": "Nova",
+    "rarity": "7r3",
+    "signature": 0
+  },
+  {
+    "champion_name": "Mister Sinister",
     "rarity": "7r4",
+    "signature": 20
+  },
+  {
+    "champion_name": "Bishop",
+    "rarity": "7r4",
+    "signature": 160
+  },
+  {
+    "champion_name": "Onslaught",
+    "rarity": "7r3",
+    "signature": 0
+  },
+  {
+    "champion_name": "Cull Obsidian",
+    "rarity": "7r4",
+    "signature": 20
+  },
+  {
+    "champion_name": "Storm",
+    "rarity": "7r3",
+    "signature": 60
+  },
+  {
+    "champion_name": "Rintrah",
+    "rarity": "7r3",
     "signature": 0
   },
   {
     "champion_name": "The Serpent",
+    "rarity": "7r4",
+    "signature": 200
+  },
+  {
+    "champion_name": "Bullseye",
+    "rarity": "7r3",
+    "signature": 20
+  },
+  {
+    "champion_name": "Captain Britain",
+    "rarity": "7r3",
+    "signature": 20
+  },
+  {
+    "champion_name": "Photon",
+    "rarity": "7r4",
+    "signature": 200
+  },
+  {
+    "champion_name": "Spider-Woman (Jessica Drew)",
     "rarity": "7r4",
     "signature": 200
   },
@@ -195,33 +195,38 @@
     "signature": 20
   },
   {
+    "champion_name": "Shocker",
+    "rarity": "7r4",
+    "signature": 200
+  },
+  {
     "champion_name": "Baron Zemo",
     "rarity": "7r3",
     "signature": 0
   },
   {
-    "champion_name": "Bishop",
-    "rarity": "7r4",
-    "signature": 160
-  },
-  {
-    "champion_name": "Nico Minoru",
+    "champion_name": "Kushala",
     "rarity": "7r4",
     "signature": 200
   },
   {
-    "champion_name": "Rintrah",
+    "champion_name": "The Maker",
     "rarity": "7r3",
-    "signature": 0
+    "signature": 20
   },
   {
-    "champion_name": "Prowler",
+    "champion_name": "The Hood",
     "rarity": "7r4",
-    "signature": 180
+    "signature": 200
   },
   {
-    "champion_name": "Okoye",
+    "champion_name": "Karolina Dean",
     "rarity": "7r4",
     "signature": 20
+  },
+  {
+    "champion_name": "Kate Bishop",
+    "rarity": "6r5",
+    "signature": 200
   }
 ]
