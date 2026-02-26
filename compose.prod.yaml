@@ -33,6 +33,19 @@ services:
     env_file:
       - api.env
     command: ["sh", "run.sh"]
+    # Mount logs directory on the host for persistence and inspection
+    volumes:
+      - ./api/logs:/app/api/logs
+    # Explicitly set production mode so backend behaves accordingly
+    environment:
+      - MODE=prod
+      - CONTAINER=1
+    # Docker-level log driver: rotate JSON logs at container level (also captured by app.log/audit.log)
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   front:
     # image: sneaxiii/mawster-front:latest
