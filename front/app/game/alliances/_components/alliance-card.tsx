@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { type Alliance, type GameAccount } from '@/app/services/game';
 import { formatDateMedium } from '@/app/lib/utils';
+import { useAllianceRole } from '@/hooks/use-alliance-role';
 import AllianceMemberRow from './alliance-member-row';
 
 interface ConfirmTarget {
@@ -30,9 +31,6 @@ interface ConfirmTarget {
 interface AllianceCardProps {
   alliance: Alliance;
   locale: string;
-  myAccountIds: Set<string>;
-  isOwner: boolean;
-  canManage: boolean;
   /** Currently open add-member form alliance id */
   memberAllianceId: string | null;
   memberAccountId: string;
@@ -46,15 +44,12 @@ interface AllianceCardProps {
   onLeave: (target: ConfirmTarget) => void;
   onExclude: (target: ConfirmTarget) => void;
   onSetGroup: (allianceId: string, gameAccountId: string, group: number | null, pseudo: string) => void;
-  onViewRoster: (gameAccountId: string, pseudo: string) => void;
+  onViewRoster: (gameAccountId: string, pseudo: string, canRequestUpgrade: boolean) => void;
 }
 
 export default function AllianceCard({
   alliance,
   locale,
-  myAccountIds,
-  isOwner,
-  canManage,
   memberAllianceId,
   memberAccountId,
   eligibleMembers,
@@ -70,6 +65,9 @@ export default function AllianceCard({
   onViewRoster,
 }: AllianceCardProps) {
   const { t } = useI18n();
+  const { isMine, isOwner, canManage } = useAllianceRole();
+  const userIsOwner = isOwner(alliance);
+  const userCanManage = canManage(alliance);
   const officerCount = alliance.officers.length;
 
   const sortedMembers = [...alliance.members].sort((a, b) => {
@@ -79,7 +77,7 @@ export default function AllianceCard({
 
   return (
     <Card>
-      <CardContent className="py-4 space-y-4">
+        <CardContent className="py-3 sm:py-4 px-3 sm:px-6 space-y-3 sm:space-y-4">
         {/* Alliance header */}
         <div className="flex items-center gap-3">
           <Shield className="h-5 w-5 text-purple-500" />
@@ -107,7 +105,7 @@ export default function AllianceCard({
 
         {/* Members section */}
         <div className="border-t pt-3">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-green-500" />
               <span className="text-sm font-medium text-gray-700">
@@ -116,11 +114,11 @@ export default function AllianceCard({
             </div>
 
             {/* Add member button / inline form */}
-            {canManage &&
+            {userCanManage &&
               (memberAllianceId === alliance.id ? (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Select value={memberAccountId} onValueChange={onMemberAccountChange}>
-                    <SelectTrigger className="w-48 h-8 text-xs">
+                    <SelectTrigger className="w-full sm:w-48 h-8 text-xs">
                       <SelectValue placeholder={t.game.alliances.selectMember} />
                     </SelectTrigger>
                     <SelectContent>
@@ -160,16 +158,15 @@ export default function AllianceCard({
                 <AllianceMemberRow
                   key={member.id}
                   member={member}
-                  allianceId={alliance.id}
-                  isMine={myAccountIds.has(member.id)}
-                  userIsOwner={isOwner}
-                  userCanManage={canManage}
+                  alliance={alliance}
                   onDemoteOfficer={onDemoteOfficer}
                   onPromoteOfficer={onPromoteOfficer}
                   onLeave={onLeave}
                   onExclude={onExclude}
                   onSetGroup={onSetGroup}
-                  onViewRoster={onViewRoster}
+                  onViewRoster={(gameAccountId, pseudo) =>
+                    onViewRoster(gameAccountId, pseudo, userCanManage)
+                  }
                 />
               ))}
             </div>

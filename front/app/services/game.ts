@@ -122,6 +122,23 @@ export async function getMyAlliances(): Promise<Alliance[]> {
   return response.json();
 }
 
+export interface AllianceRoleEntry {
+  is_owner: boolean;
+  is_officer: boolean;
+  can_manage: boolean;
+}
+
+export interface AllianceMyRoles {
+  roles: Record<string, AllianceRoleEntry>;
+  my_account_ids: string[];
+}
+
+export async function getMyAllianceRoles(): Promise<AllianceMyRoles> {
+  const response = await debugFetch(`${PROXY}/alliances/my-roles`, { headers: jsonHeaders });
+  await throwOnError(response, 'Erreur lors de la récupération de vos rôles');
+  return response.json();
+}
+
 export async function createAlliance(
   name: string,
   tag: string,

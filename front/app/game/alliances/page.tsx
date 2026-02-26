@@ -23,6 +23,7 @@ import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { TextConfirmationDialog } from '@/components/text-confirmation-dialog';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { useRequiredSession } from '@/hooks/use-required-session';
+import { AllianceRoleProvider } from '@/hooks/use-alliance-role';
 import { Shield } from 'lucide-react';
 
 import CreateAllianceForm from './_components/create-alliance-form';
@@ -41,6 +42,7 @@ export default function AlliancesPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [roleRefreshKey, setRoleRefreshKey] = useState(0);
 
   // Create form
   const [name, setName] = useState('');
@@ -62,8 +64,6 @@ export default function AlliancesPage() {
 
   // Roster viewer
   const [rosterTarget, setRosterTarget] = useState<{ gameAccountId: string; pseudo: string; canRequestUpgrade: boolean } | null>(null);
-
-  const myAccountIds = new Set(myAccounts.map((a) => a.id));
 
   const fetchAlliances = async () => {
     try {
@@ -134,6 +134,7 @@ export default function AlliancesPage() {
       setTag('');
       setOwnerId('');
       setCreateOpen(false);
+      setRoleRefreshKey((k) => k + 1);
       await Promise.all([fetchAlliances(), fetchEligibleOwners(), fetchEligibleMembers(), fetchMyAccounts()]);
     } catch (err: any) {
       console.error(err);
@@ -149,6 +150,7 @@ export default function AlliancesPage() {
       await addOfficer(allianceId, gameAccountId);
       toast.success(t.game.alliances.adjointAddSuccess);
       setPromoteTarget(null);
+      setRoleRefreshKey((k) => k + 1);
       await fetchAlliances();
     } catch (err: any) {
       console.error(err);
@@ -160,6 +162,7 @@ export default function AlliancesPage() {
     try {
       await removeOfficer(allianceId, gameAccountId);
       toast.success(t.game.alliances.adjointRemoveSuccess);
+      setRoleRefreshKey((k) => k + 1);
       await fetchAlliances();
     } catch (err: any) {
       console.error(err);
@@ -194,6 +197,7 @@ export default function AlliancesPage() {
       toast.success(t.game.alliances.memberRemoveSuccess);
       setExcludeTarget(null);
       setLeaveTarget(null);
+      setRoleRefreshKey((k) => k + 1);
       await Promise.all([fetchAlliances(), fetchEligibleMembers(), fetchMyAccounts()]);
     } catch (err: any) {
       console.error(err);
@@ -214,22 +218,16 @@ export default function AlliancesPage() {
     }
   };
 
-  /** Check if the current user is the owner of an alliance */
-  const isOwner = (alliance: Alliance) => myAccountIds.has(alliance.owner_id);
-
-  /** Check if the current user is an officer or owner in an alliance */
-  const canManage = (alliance: Alliance) =>
-    isOwner(alliance) || alliance.officers.some((o) => myAccountIds.has(o.game_account_id));
-
   if (status === 'loading' || loading) {
     return <FullPageSpinner />;
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <AllianceRoleProvider refreshKey={roleRefreshKey}>
+    <div className="max-w-4xl mx-auto px-3 py-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t.game.alliances.title}</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t.game.alliances.title}</h1>
         <p className="text-gray-500 mt-1">{t.game.alliances.description}</p>
       </div>
 
@@ -264,9 +262,6 @@ export default function AlliancesPage() {
               key={alliance.id}
               alliance={alliance}
               locale={locale}
-              myAccountIds={myAccountIds}
-              isOwner={isOwner(alliance)}
-              canManage={canManage(alliance)}
               memberAllianceId={memberAllianceId}
               memberAccountId={memberAccountId}
               eligibleMembers={eligibleMembers}
@@ -279,9 +274,7 @@ export default function AlliancesPage() {
               onLeave={setLeaveTarget}
               onExclude={setExcludeTarget}
               onSetGroup={handleSetGroup}
-              onViewRoster={(gameAccountId, pseudo) => {
-                // Determine if current user can request upgrades (is officer/owner in that alliance)
-                const canReq = canManage(alliance);
+              onViewRoster={(gameAccountId, pseudo, canReq) => {
                 setRosterTarget({ gameAccountId, pseudo, canRequestUpgrade: canReq });
               }}
             />
@@ -344,5 +337,6 @@ export default function AlliancesPage() {
         canRequestUpgrade={rosterTarget?.canRequestUpgrade ?? false}
       />
     </div>
+    </AllianceRoleProvider>
   );
 }
