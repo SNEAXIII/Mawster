@@ -43,7 +43,7 @@ app.include_router(champion_controller)
 
 # Mount static files for champion images
 static_dir = Path(__file__).resolve().parent / "static"
-static_dir.mkdir(parents=True, exist_ok=True)
+# static_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 ic(app.routes)
