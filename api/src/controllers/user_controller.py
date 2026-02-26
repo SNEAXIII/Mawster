@@ -11,6 +11,7 @@ from src.models import User
 from src.services.AuthService import AuthService
 from src.services.UserService import UserService
 from src.utils.db import SessionDep
+from src.utils.logging_config import audit_log
 
 user_controller = APIRouter(
     prefix="/user",
@@ -42,4 +43,5 @@ async def delete_user(
             detail=f"Vous devez saisir '{CONFIRMATION_TEXT}' pour confirmer la suppression.",
         )
     await UserService.self_delete(session, current_user)
+    audit_log("user.self_delete", user_id=str(current_user.id))
     return {"message": TARGET_USER_DELETED_SUCCESSFULLY}

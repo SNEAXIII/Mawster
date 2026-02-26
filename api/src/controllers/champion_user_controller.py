@@ -22,6 +22,7 @@ from src.services.GameAccountService import GameAccountService
 from src.services.ChampionUserService import ChampionUserService
 from src.services.UpgradeRequestService import UpgradeRequestService
 from src.utils.db import SessionDep
+from src.utils.logging_config import audit_log
 
 champion_user_controller = APIRouter(
     prefix="/champion-users",
@@ -60,6 +61,7 @@ async def create_champion_user(
         rarity=body.rarity,
         signature=body.signature,
     )
+    audit_log("roster.add_champion", user_id=str(current_user.id), detail=f"game_account_id={body.game_account_id} champion_id={body.champion_id}")
     return ChampionUserResponse.from_model(result)
 
 
@@ -97,6 +99,7 @@ async def bulk_add_champions(
         game_account_id=body.game_account_id,
         champions=champions_data,
     )
+    audit_log("roster.bulk_import", user_id=str(current_user.id), detail=f"game_account_id={body.game_account_id} count={len(entries)}")
     return [
         ChampionUserDetailResponse(
             id=e.id,
@@ -222,6 +225,7 @@ async def delete_champion_user(
     if game_account is None or game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
     await ChampionUserService.delete_champion_user(session, champion_user)
+    audit_log("roster.delete_champion", user_id=str(current_user.id), detail=f"champion_user_id={champion_user_id}")
 
 
 @champion_user_controller.patch(
@@ -241,6 +245,7 @@ async def upgrade_champion_rank(
     if game_account is None or game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
     upgraded = await ChampionUserService.upgrade_champion_rank(session, champion_user)
+    audit_log("roster.upgrade_rank", user_id=str(current_user.id), detail=f"champion_user_id={champion_user_id}")
     return ChampionUserResponse.from_model(upgraded)
 
 
@@ -323,6 +328,12 @@ async def create_upgrade_request(
     )
     result = await session.exec(stmt)
     loaded = result.one()
+
+    audit_log(
+        "upgrade_request.create",
+        user_id=str(current_user.id),
+        detail=f"request_id={loaded.id} champion_user_id={body.champion_user_id} requested_rarity={body.requested_rarity}",
+    )
 
     return UpgradeRequestResponse(
         id=loaded.id,
@@ -421,3 +432,4 @@ async def cancel_upgrade_request(
 
     await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
     await UpgradeRequestService.cancel_upgrade_request(session, request_id)
+    audit_log("upgrade_request.cancel", user_id=str(current_user.id), detail=f"request_id={request_id}")

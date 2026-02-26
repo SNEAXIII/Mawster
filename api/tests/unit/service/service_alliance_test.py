@@ -545,6 +545,135 @@ class TestGetEligibleOwners:
         assert len(result) == 1
 
 
+class TestGetMyRoles:
+    """Tests for AllianceService.get_my_roles — returns role map per alliance."""
+
+    @pytest.mark.asyncio
+    async def test_no_accounts(self, mocker):
+        """User with no game accounts gets empty roles and empty account list."""
+        session = _mock_session(mocker)
+        result_mock = mocker.MagicMock()
+        result_mock.all.return_value = []
+        session.exec.return_value = result_mock
+
+        result = await AllianceService.get_my_roles(session, USER_ID)
+        assert result["roles"] == {}
+        assert result["my_account_ids"] == []
+
+    @pytest.mark.asyncio
+    async def test_accounts_not_in_alliance(self, mocker):
+        """User with game accounts but none in an alliance → empty roles, non-empty account list."""
+        session = _mock_session(mocker)
+        acc = _make_account(user_id=USER_ID, alliance_id=None)
+
+        result_mock = mocker.MagicMock()
+        result_mock.all.return_value = [acc]
+        session.exec.return_value = result_mock
+
+        result = await AllianceService.get_my_roles(session, USER_ID)
+        assert result["roles"] == {}
+        assert str(acc.id) in result["my_account_ids"]
+
+    @pytest.mark.asyncio
+    async def test_owner_role(self, mocker):
+        """User who owns an alliance → is_owner=True, can_manage=True."""
+        session = _mock_session(mocker)
+        alliance_id = uuid.uuid4()
+        acc = _make_account(user_id=USER_ID, alliance_id=alliance_id)
+
+        alliance = _make_alliance(owner_id=acc.id, alliance_id=alliance_id, officers=[])
+
+        # First exec returns user accounts, second returns alliances
+        accounts_result = mocker.MagicMock()
+        accounts_result.all.return_value = [acc]
+        alliances_result = mocker.MagicMock()
+        alliances_result.all.return_value = [alliance]
+        session.exec.side_effect = [accounts_result, alliances_result]
+
+        result = await AllianceService.get_my_roles(session, USER_ID)
+        role = result["roles"][str(alliance_id)]
+        assert role["is_owner"] is True
+        assert role["is_officer"] is False
+        assert role["can_manage"] is True
+
+    @pytest.mark.asyncio
+    async def test_officer_role(self, mocker):
+        """User who is an officer → is_officer=True, can_manage=True, is_owner=False."""
+        session = _mock_session(mocker)
+        alliance_id = uuid.uuid4()
+        acc = _make_account(user_id=USER_ID, alliance_id=alliance_id)
+        owner_acc = _make_account(user_id=USER2_ID, alliance_id=alliance_id)
+
+        officer = _make_officer(alliance_id, acc.id)
+        alliance = _make_alliance(
+            owner_id=owner_acc.id, alliance_id=alliance_id, officers=[officer]
+        )
+
+        accounts_result = mocker.MagicMock()
+        accounts_result.all.return_value = [acc]
+        alliances_result = mocker.MagicMock()
+        alliances_result.all.return_value = [alliance]
+        session.exec.side_effect = [accounts_result, alliances_result]
+
+        result = await AllianceService.get_my_roles(session, USER_ID)
+        role = result["roles"][str(alliance_id)]
+        assert role["is_owner"] is False
+        assert role["is_officer"] is True
+        assert role["can_manage"] is True
+
+    @pytest.mark.asyncio
+    async def test_regular_member_role(self, mocker):
+        """Regular member → is_owner=False, is_officer=False, can_manage=False."""
+        session = _mock_session(mocker)
+        alliance_id = uuid.uuid4()
+        acc = _make_account(user_id=USER_ID, alliance_id=alliance_id)
+        owner_acc = _make_account(user_id=USER2_ID, alliance_id=alliance_id)
+
+        alliance = _make_alliance(
+            owner_id=owner_acc.id, alliance_id=alliance_id, officers=[]
+        )
+
+        accounts_result = mocker.MagicMock()
+        accounts_result.all.return_value = [acc]
+        alliances_result = mocker.MagicMock()
+        alliances_result.all.return_value = [alliance]
+        session.exec.side_effect = [accounts_result, alliances_result]
+
+        result = await AllianceService.get_my_roles(session, USER_ID)
+        role = result["roles"][str(alliance_id)]
+        assert role["is_owner"] is False
+        assert role["is_officer"] is False
+        assert role["can_manage"] is False
+
+    @pytest.mark.asyncio
+    async def test_multiple_alliances(self, mocker):
+        """User in two alliances — owner of one, officer of another."""
+        session = _mock_session(mocker)
+        alliance1_id = uuid.uuid4()
+        alliance2_id = uuid.uuid4()
+        acc1 = _make_account(user_id=USER_ID, alliance_id=alliance1_id)
+        acc2 = _make_account(user_id=USER_ID, pseudo=GAME_PSEUDO_2, alliance_id=alliance2_id)
+        other_owner = _make_account(user_id=USER2_ID, alliance_id=alliance2_id)
+
+        officer_entry = _make_officer(alliance2_id, acc2.id)
+        alliance1 = _make_alliance(owner_id=acc1.id, alliance_id=alliance1_id, officers=[])
+        alliance2 = _make_alliance(
+            owner_id=other_owner.id, alliance_id=alliance2_id, officers=[officer_entry]
+        )
+
+        accounts_result = mocker.MagicMock()
+        accounts_result.all.return_value = [acc1, acc2]
+        alliances_result = mocker.MagicMock()
+        alliances_result.all.return_value = [alliance1, alliance2]
+        session.exec.side_effect = [accounts_result, alliances_result]
+
+        result = await AllianceService.get_my_roles(session, USER_ID)
+        assert len(result["roles"]) == 2
+        assert result["roles"][str(alliance1_id)]["is_owner"] is True
+        assert result["roles"][str(alliance2_id)]["is_officer"] is True
+        assert len(result["my_account_ids"]) == 2
+
+
 class TestGetEligibleOfficers:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
