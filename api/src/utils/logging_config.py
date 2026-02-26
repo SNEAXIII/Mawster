@@ -50,7 +50,10 @@ def setup_logging(level: int = logging.INFO) -> None:
 
     Call this once from main.py before the app starts.
     """
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    # Detect whether we're running inside a container environment. In container
+    # mode we prefer logging to stdout/stderr only and let Docker handle
+    # rotation/retention (avoids duplicate file logs).
+    CONTAINER_MODE = os.getenv("CONTAINER") == "1"
 
     # Root logger
     root = logging.getLogger()
@@ -62,25 +65,29 @@ def setup_logging(level: int = logging.INFO) -> None:
 
     formatter = logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT)
 
-    # Console handler
+    # Console handler always present (useful for docker logs)
     console = logging.StreamHandler()
     console.setLevel(level)
     console.setFormatter(formatter)
     root.addHandler(console)
 
-    # Rotating file handler — general app logs
-    file_handler = logging.handlers.RotatingFileHandler(
-        str(APP_LOG_FILE),
-        maxBytes=MAX_BYTES,
-        backupCount=BACKUP_COUNT,
-        encoding="utf-8",
-    )
-    file_handler.setLevel(level)
-    file_handler.setFormatter(formatter)
-    root.addHandler(file_handler)
+    if not CONTAINER_MODE:
+        # In non-container mode create logs directory and add rotating file handler
+        LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+        # Rotating file handler — general app logs
+        file_handler = logging.handlers.RotatingFileHandler(
+            str(APP_LOG_FILE),
+            maxBytes=MAX_BYTES,
+            backupCount=BACKUP_COUNT,
+            encoding="utf-8",
+        )
+        file_handler.setLevel(level)
+        file_handler.setFormatter(formatter)
+        root.addHandler(file_handler)
 
     # ---------------------------------------------------------------------------
-    # Audit logger (separate file, RGPD-safe events only)
+    # Audit logger (separate logger for RGPD-safe events)
     # ---------------------------------------------------------------------------
     audit_logger = logging.getLogger("audit")
     audit_logger.setLevel(logging.INFO)
@@ -88,22 +95,30 @@ def setup_logging(level: int = logging.INFO) -> None:
 
     audit_formatter = logging.Formatter(AUDIT_FORMAT, datefmt=DATE_FORMAT)
 
-    audit_handler = logging.handlers.RotatingFileHandler(
-        str(AUDIT_LOG_FILE),
-        maxBytes=MAX_BYTES,
-        backupCount=BACKUP_COUNT,
-        encoding="utf-8",
-    )
-    audit_handler.setLevel(logging.INFO)
-    audit_handler.setFormatter(audit_formatter)
-    audit_logger.addHandler(audit_handler)
+    if CONTAINER_MODE:
+        # In container mode, send audit events to the same console
+        audit_handler = logging.StreamHandler()
+        audit_handler.setLevel(logging.INFO)
+        audit_handler.setFormatter(audit_formatter)
+        audit_logger.addHandler(audit_handler)
+    else:
+        # File-based audit handler
+        audit_handler = logging.handlers.RotatingFileHandler(
+            str(AUDIT_LOG_FILE),
+            maxBytes=MAX_BYTES,
+            backupCount=BACKUP_COUNT,
+            encoding="utf-8",
+        )
+        audit_handler.setLevel(logging.INFO)
+        audit_handler.setFormatter(audit_formatter)
+        audit_logger.addHandler(audit_handler)
 
-    # Also echo audit events to the console in non-prod
-    if os.getenv("MODE") != "prod":
-        audit_console = logging.StreamHandler()
-        audit_console.setLevel(logging.INFO)
-        audit_console.setFormatter(audit_formatter)
-        audit_logger.addHandler(audit_console)
+        # Also echo audit events to the console in non-prod
+        if os.getenv("MODE") != "prod":
+            audit_console = logging.StreamHandler()
+            audit_console.setLevel(logging.INFO)
+            audit_console.setFormatter(audit_formatter)
+            audit_logger.addHandler(audit_console)
 
     logging.getLogger("httpcore").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
