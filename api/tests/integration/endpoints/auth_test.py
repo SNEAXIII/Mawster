@@ -37,7 +37,7 @@ TOKEN_TYPE = "bearer"
 
 
 # --- Utility functions ---
-def _create_token(
+def _create_jwt(
     login=USER_LOGIN,
     user_id=str(USER_ID),
     email=USER_EMAIL,
@@ -139,7 +139,7 @@ class TestPostSession:
     @pytest.mark.asyncio
     async def test_valid_token_returns_200(self, session):
         await push_one_user()
-        token = _create_token()
+        token = _create_jwt()
         response = await execute_post_request(
             "/auth/session", payload={"token": token}
         )
@@ -171,7 +171,7 @@ class TestPostSession:
     async def test_deleted_user_token_returns_error(self, session):
         user = get_generic_user(is_base_id=True, deleted_at=datetime.now())
         await load_objects([user])
-        token = _create_token()
+        token = _create_jwt()
         response = await execute_post_request(
             "/auth/session", payload={"token": token}
         )
@@ -181,7 +181,7 @@ class TestPostSession:
     async def test_disabled_user_token_returns_error(self, session):
         user = get_generic_user(is_base_id=True, disabled_at=datetime.now())
         await load_objects([user])
-        token = _create_token()
+        token = _create_jwt()
         response = await execute_post_request(
             "/auth/session", payload={"token": token}
         )
