@@ -17,6 +17,7 @@ from src.Messages.champion_messages import (
 from src.services.AuthService import AuthService
 from src.services.ChampionService import ChampionService
 from src.utils.db import SessionDep
+from src.utils.logging_config import audit_log
 
 champion_controller = APIRouter(
     prefix="/admin/champions",
@@ -70,6 +71,7 @@ async def load_champions(
     champions: list[ChampionLoadRequest],
 ):
     result = await ChampionService.load_champions(session, champions)
+    audit_log("admin.load_champions", detail=f"created={result['created']} updated={result['updated']} skipped={result['skipped']}")
     return {
         "message": CHAMPION_LOAD_SUCCESS,
         "created": result["created"],

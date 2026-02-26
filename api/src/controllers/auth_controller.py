@@ -18,6 +18,7 @@ from src.services.DiscordAuthService import DiscordAuthService
 from src.services.UserService import UserService
 
 from src.utils.db import SessionDep
+from src.utils.logging_config import audit_log
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +64,8 @@ async def discord_login(discord_data: DiscordLoginRequest, session: SessionDep) 
 
     user = await DiscordAuthService.get_or_create_discord_user(session, discord_profile)
     access_token = JWTService.create_access_token(user)
+
+    audit_log("auth.login", user_id=str(user.id), detail="method=discord")
 
     if not IS_PROD:
         logger.warning("=" * 80)

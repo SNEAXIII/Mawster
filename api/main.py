@@ -1,5 +1,6 @@
 from time import perf_counter
 from pathlib import Path
+import logging
 
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
@@ -21,8 +22,14 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from src.security.secrets import SECRET
+from src.utils.logging_config import setup_logging
+
+# Initialize logging before anything else
+setup_logging()
+logger = logging.getLogger(__name__)
 
 ic(f"Targeted db: {SECRET.MARIADB_DATABASE}")
+logger.info("Starting Mawster API — database: %s", SECRET.MARIADB_DATABASE)
 
 app = FastAPI(title="Mawster", version="1.0.0")
 origins = ["*"]
@@ -72,11 +79,12 @@ async def check_user_role(
 ):
     uri = request.url.path.rstrip("/")
     method = request.method
-    ic(f"Requested {method} {uri = }")
+    logger.debug("%s %s", method, uri)
     start_time = perf_counter()
     response: _StreamingResponse = await next_function(request)
     process_time = perf_counter() - start_time
     response.headers["X-Process-Time"] = str(process_time)
+    logger.info("%s %s → %s (%.3fs)", method, uri, response.status_code, process_time)
     return response
 
 

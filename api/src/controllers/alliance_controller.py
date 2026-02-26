@@ -21,6 +21,7 @@ from src.models.Alliance import Alliance
 from src.services.AuthService import AuthService
 from src.services.AllianceService import AllianceService
 from src.utils.db import SessionDep
+from src.utils.logging_config import audit_log
 
 alliance_controller = APIRouter(
     prefix="/alliances",
@@ -127,6 +128,7 @@ async def create_alliance(
         owner_id=body.owner_id,
         current_user_id=current_user.id,
     )
+    audit_log("alliance.create", user_id=str(current_user.id), detail=f"alliance_id={alliance.id}")
     return _to_response(alliance)
 
 
@@ -206,6 +208,7 @@ async def update_alliance(
         name=body.name,
         tag=body.tag,
     )
+    audit_log("alliance.update", user_id=str(current_user.id), detail=f"alliance_id={alliance_id}")
     return _to_response(updated)
 
 
@@ -224,6 +227,7 @@ async def delete_alliance(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
     await AllianceService._assert_is_owner(session, alliance, current_user.id)
     await AllianceService.delete_alliance(session, alliance)
+    audit_log("alliance.delete", user_id=str(current_user.id), detail=f"alliance_id={alliance_id}")
 
 
 # ---- Member management ----
@@ -250,6 +254,7 @@ async def add_member(
         alliance_id=alliance_id,
         game_account_id=body.game_account_id,
     )
+    audit_log("alliance.add_member", user_id=str(current_user.id), detail=f"alliance_id={alliance_id} game_account_id={body.game_account_id}")
     return _to_response(updated)
 
 
@@ -275,6 +280,7 @@ async def remove_member(
         alliance_id=alliance_id,
         game_account_id=game_account_id,
     )
+    audit_log("alliance.remove_member", user_id=str(current_user.id), detail=f"alliance_id={alliance_id} game_account_id={game_account_id}")
     return _to_response(updated)
 
 
@@ -302,6 +308,7 @@ async def add_adjoint(
         alliance_id=alliance_id,
         game_account_id=body.game_account_id,
     )
+    audit_log("alliance.add_officer", user_id=str(current_user.id), detail=f"alliance_id={alliance_id} game_account_id={body.game_account_id}")
     return _to_response(updated)
 
 
@@ -325,6 +332,7 @@ async def remove_adjoint(
         alliance_id=alliance_id,
         game_account_id=body.game_account_id,
     )
+    audit_log("alliance.remove_officer", user_id=str(current_user.id), detail=f"alliance_id={alliance_id} game_account_id={body.game_account_id}")
     return _to_response(updated)
 
 
@@ -353,4 +361,5 @@ async def set_member_group(
         game_account_id=game_account_id,
         group=body.group,
     )
+    audit_log("alliance.set_group", user_id=str(current_user.id), detail=f"alliance_id={alliance_id} game_account_id={game_account_id} group={body.group}")
     return _to_response(updated)
