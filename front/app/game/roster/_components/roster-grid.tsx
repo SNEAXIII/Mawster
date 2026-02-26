@@ -42,7 +42,7 @@ export default function RosterGrid({
             </span>
             <span className="text-sm text-gray-400">({entries.length})</span>
           </h3>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2">
+          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2">
             {entries.map((entry) => {
               const pending = upgradeRequests?.find((r) => r.champion_user_id === entry.id);
               return (

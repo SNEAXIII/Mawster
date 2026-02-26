@@ -8,6 +8,7 @@ from src.dto.dto_alliance import (
     AllianceAddMemberRequest,
     AllianceAddOfficerRequest,
     AllianceMemberResponse,
+    AllianceMyRolesResponse,
     AllianceOfficerResponse,
     AllianceCreateRequest,
     AllianceRemoveOfficerRequest,
@@ -153,6 +154,19 @@ async def get_my_alliances(
     """Get only alliances where the current user has a game account as a member."""
     alliances = await AllianceService.get_my_alliances(session, current_user.id)
     return [_to_response(a) for a in alliances]
+
+
+@alliance_controller.get(
+    "/my-roles",
+    response_model=AllianceMyRolesResponse,
+)
+async def get_my_alliance_roles(
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Get the current user's role (owner/officer/can_manage) in each of their alliances,
+    plus the list of their game account IDs. One call replaces all frontend role computation."""
+    return await AllianceService.get_my_roles(session, current_user.id)
 
 
 @alliance_controller.get(

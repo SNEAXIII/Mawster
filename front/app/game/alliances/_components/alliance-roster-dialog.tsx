@@ -24,13 +24,8 @@ import {
   RosterEntry,
   RARITIES,
   RARITY_LABELS,
-  createUpgradeRequest,
-  getUpgradeRequests,
-  cancelUpgradeRequest,
-  UpgradeRequest,
-  getNextRarity,
 } from '@/app/services/roster';
-import { toast } from 'sonner';
+import { useUpgradeRequests } from '@/hooks/use-upgrade-requests';
 
 interface AllianceRosterDialogProps {
   open: boolean;
@@ -52,14 +47,23 @@ export default function AllianceRosterDialog({
   const [roster, setRoster] = useState<RosterEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [upgradeRequests, setUpgradeRequests] = useState<UpgradeRequest[]>([]);
 
-  // Upgrade request dialog state
-  const [upgradeTarget, setUpgradeTarget] = useState<RosterEntry | null>(null);
-  const [selectedRarity, setSelectedRarity] = useState<string>('');
-
-  // Cancel confirmation state
-  const [cancelTarget, setCancelTarget] = useState<{ id: string; name: string } | null>(null);
+  const {
+    upgradeRequests,
+    setUpgradeRequests,
+    fetchUpgradeRequests,
+    upgradeTarget,
+    selectedRarity,
+    setSelectedRarity,
+    cancelTarget,
+    getUpgradeOptions,
+    initiateUpgrade,
+    handleRequestUpgrade,
+    closeUpgradeDialog,
+    initiateCancelRequest,
+    confirmCancelRequest,
+    closeCancelDialog,
+  } = useUpgradeRequests();
 
   useEffect(() => {
     if (!open || !gameAccountId) return;
@@ -67,11 +71,10 @@ export default function AllianceRosterDialog({
     setError('');
     Promise.all([
       getRoster(gameAccountId),
-      getUpgradeRequests(gameAccountId).catch(() => [] as UpgradeRequest[]),
+      fetchUpgradeRequests(gameAccountId),
     ])
-      .then(([rosterData, requestsData]) => {
+      .then(([rosterData]) => {
         setRoster(rosterData);
-        setUpgradeRequests(requestsData);
       })
       .catch(() => setError(t.game.alliances.rosterError))
       .finally(() => setLoading(false));
@@ -87,47 +90,10 @@ export default function AllianceRosterDialog({
     return Object.entries(groups) as [string, RosterEntry[]][];
   })();
 
-  // Compute available upgrade rarities for a given champion
-  const getUpgradeOptions = (entry: RosterEntry) => {
-    const current = entry.rarity;
-    return RARITIES.filter((r) => r > current);
-  };
-
-  const handleRequestUpgrade = async () => {
-    if (!upgradeTarget || !selectedRarity) return;
-    try {
-      const newReq = await createUpgradeRequest(upgradeTarget.id, selectedRarity);
-      setUpgradeRequests((prev) => [...prev, newReq]);
-      toast.success(t.game.alliances.requestUpgradeSuccess);
-      setUpgradeTarget(null);
-      setSelectedRarity('');
-    } catch {
-      toast.error(t.game.alliances.requestUpgradeError);
-    }
-  };
-
-  const handleCancelRequest = (requestId: string) => {
-    const req = upgradeRequests.find((r) => r.id === requestId);
-    setCancelTarget({ id: requestId, name: req?.champion_name ?? '' });
-  };
-
-  const confirmCancelRequest = async () => {
-    if (!cancelTarget) return;
-    try {
-      await cancelUpgradeRequest(cancelTarget.id);
-      setUpgradeRequests((prev) => prev.filter((r) => r.id !== cancelTarget.id));
-      toast.success(t.roster.upgradeRequests.cancelSuccess);
-    } catch {
-      toast.error(t.roster.upgradeRequests.cancelError);
-    } finally {
-      setCancelTarget(null);
-    }
-  };
-
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="w-full max-w-[95vw] sm:max-w-5xl max-h-[90vh] sm:max-h-[80vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>
               {t.game.alliances.rosterOf.replace('{pseudo}', gamePseudo)}
@@ -160,23 +126,15 @@ export default function AllianceRosterDialog({
                   onRequestCancelled={(id) =>
                     setUpgradeRequests((prev) => prev.filter((r) => r.id !== id))
                   }
+                  onInitiateCancel={initiateCancelRequest}
                 />
               )}
               <RosterGrid
                 groupedRoster={groupedRoster}
                 readOnly={!canRequestUpgrade}
                 upgradeRequests={upgradeRequests}
-                onCancelRequest={canRequestUpgrade ? handleCancelRequest : undefined}
-                onUpgrade={canRequestUpgrade ? (entry) => {
-                  // If there's already a pending request, don't open upgrade dialog
-                  const pending = upgradeRequests.find((r) => r.champion_user_id === entry.id);
-                  if (pending) return;
-                  const options = getUpgradeOptions(entry);
-                  if (options.length > 0) {
-                    setUpgradeTarget(entry);
-                    setSelectedRarity(options[0]);
-                  }
-                } : undefined}
+                onCancelRequest={canRequestUpgrade ? initiateCancelRequest : undefined}
+                onUpgrade={canRequestUpgrade ? initiateUpgrade : undefined}
               />
             </>
           )}
@@ -192,9 +150,9 @@ export default function AllianceRosterDialog({
       {/* Upgrade request sub-dialog */}
       <Dialog
         open={!!upgradeTarget}
-        onOpenChange={(v) => { if (!v) { setUpgradeTarget(null); setSelectedRarity(''); } }}
+        onOpenChange={(v) => { if (!v) closeUpgradeDialog(); }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-full max-w-[90vw] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {t.game.alliances.requestUpgradeTitle.replace('{name}', upgradeTarget?.champion_name ?? '')}
@@ -224,7 +182,7 @@ export default function AllianceRosterDialog({
           <div className="flex justify-end gap-2 pt-2">
             <Button
               variant="outline"
-              onClick={() => { setUpgradeTarget(null); setSelectedRarity(''); }}
+              onClick={closeUpgradeDialog}
             >
               {t.common.cancel}
             </Button>
@@ -238,7 +196,7 @@ export default function AllianceRosterDialog({
       {/* Cancel upgrade request confirmation */}
       <ConfirmationDialog
         open={!!cancelTarget}
-        onOpenChange={(open) => { if (!open) setCancelTarget(null); }}
+        onOpenChange={(open) => { if (!open) closeCancelDialog(); }}
         title={t.roster.upgradeRequests.cancelConfirmTitle}
         description={t.roster.upgradeRequests.cancelConfirmDesc.replace(
           '{name}',

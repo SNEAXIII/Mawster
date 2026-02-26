@@ -58,3 +58,16 @@ class AllianceAddMemberRequest(BaseModel):
 class AllianceSetGroupRequest(BaseModel):
     """DTO to assign a member to a group (1, 2, 3) or remove from group (null)."""
     group: Optional[int] = Field(None, ge=1, le=3, examples=[1])
+
+
+class AllianceRoleEntry(BaseModel):
+    """Role information for the current user in a specific alliance."""
+    is_owner: bool = False
+    is_officer: bool = False
+    can_manage: bool = False
+
+
+class AllianceMyRolesResponse(BaseModel):
+    """All alliance roles for the current user, plus their game account IDs."""
+    roles: dict[str, AllianceRoleEntry] = {}
+    my_account_ids: list[str] = []

@@ -40,9 +40,9 @@ export default function RosterChampionCard({
     <div
       className={`rounded-md bg-gray-900 ${classColors.border} border-[3px] shadow hover:shadow-lg transition-shadow relative group overflow-hidden`}
     >
-      {/* Action buttons — visible on hover */}
+      {/* Action buttons — always visible on touch, hover on desktop */}
       {!readOnly && (
-        <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+        <div className="absolute top-1 right-1 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20">
           {pendingRequestId && onCancelRequest ? (
             <button
               className="text-red-400 hover:text-red-300 bg-black/60 rounded-full p-1"
