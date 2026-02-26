@@ -40,7 +40,7 @@ jobs:
         run: uv run pytest tests/unit -v --tb=short
       - name: Run integration tests
         working-directory: ${{ env.WORKDIR }}
-        run: uv run pytest tests/integration -v --tb=short
+        run: uv run pytest tests/integration -v --tb=short -n auto
   changes:
     if: github.ref_name == 'release'
     name: Detect changed paths
