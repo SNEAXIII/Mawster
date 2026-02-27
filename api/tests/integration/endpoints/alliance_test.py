@@ -127,7 +127,7 @@ class TestGetAlliances:
         await _setup_2_users()
         await push_alliance_with_owner(user_id=USER_ID)
 
-        response = await execute_get_request(ALLIANCES_BASE, headers=HEADERS_USER1)
+        response = await execute_get_request(ENDPOINT, headers=HEADERS_USER1)
         assert response.status_code == 200
         assert len(response.json()) >= 1
 
@@ -140,7 +140,7 @@ class TestGetAlliances:
             user_id=USER2_ID, game_pseudo="U2Player", alliance_name="OtherAlliance", alliance_tag="OTH"
         )
 
-        response = await execute_get_request(f"{ALLIANCES_BASE}/mine", headers=HEADERS_USER1)
+        response = await execute_get_request(f"{ENDPOINT}/mine", headers=HEADERS_USER1)
         assert response.status_code == 200
         body = response.json()
         assert len(body) == 1
@@ -152,7 +152,7 @@ class TestGetAlliances:
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
         response = await execute_get_request(
-            f"{ALLIANCES_BASE}/{alliance.id}", headers=HEADERS_USER1
+            f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1
         )
         assert response.status_code == 200
         assert response.json()["id"] == str(alliance.id)
@@ -161,7 +161,7 @@ class TestGetAlliances:
     async def test_get_by_id_not_found(self, session):
         await _setup_2_users()
         response = await execute_get_request(
-            f"{ALLIANCES_BASE}/{uuid.uuid4()}", headers=HEADERS_USER1
+            f"{ENDPOINT}/{uuid.uuid4()}", headers=HEADERS_USER1
         )
         assert response.status_code == 404
 
@@ -178,7 +178,7 @@ class TestUpdateAlliance:
         alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
 
         response = await execute_put_request(
-            f"{ALLIANCES_BASE}/{alliance.id}",
+            f"{ENDPOINT}/{alliance.id}",
             {"name": "NewName", "tag": "NEW", "owner_id": str(owner.id)},
             headers=HEADERS_USER1,
         )
@@ -191,7 +191,7 @@ class TestUpdateAlliance:
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
         response = await execute_put_request(
-            f"{ALLIANCES_BASE}/{alliance.id}",
+            f"{ENDPOINT}/{alliance.id}",
             {"name": "Hacked", "tag": "H", "owner_id": str(uuid.uuid4())},
             headers=HEADERS_USER2,
         )
@@ -210,7 +210,7 @@ class TestDeleteAlliance:
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
         response = await execute_delete_request(
-            f"{ALLIANCES_BASE}/{alliance.id}", headers=HEADERS_USER1
+            f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1
         )
         assert response.status_code == 204
 
@@ -220,7 +220,7 @@ class TestDeleteAlliance:
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
         response = await execute_delete_request(
-            f"{ALLIANCES_BASE}/{alliance.id}", headers=HEADERS_USER2
+            f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER2
         )
         assert response.status_code == 403
 
@@ -238,7 +238,7 @@ class TestAddMember:
         free_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_post_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/members",
+            f"{ENDPOINT}/{alliance.id}/members",
             {"game_account_id": str(free_acc.id)},
             headers=HEADERS_USER1,
         )
@@ -261,7 +261,7 @@ class TestAddMember:
         free_acc = await push_game_account(user_id=u3_id, game_pseudo=GAME_PSEUDO_3)
 
         response = await execute_post_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/members",
+            f"{ENDPOINT}/{alliance.id}/members",
             {"game_account_id": str(free_acc.id)},
             headers=HEADERS_USER2,
         )
@@ -278,7 +278,7 @@ class TestAddMember:
             user_id=uuid.uuid4(), game_pseudo=GAME_PSEUDO_3
         )
         response = await execute_post_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/members",
+            f"{ENDPOINT}/{alliance.id}/members",
             {"game_account_id": str(free_acc.id)},
             headers=HEADERS_USER2,
         )
@@ -291,7 +291,7 @@ class TestAddMember:
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_post_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/members",
+            f"{ENDPOINT}/{alliance.id}/members",
             {"game_account_id": str(member.id)},
             headers=HEADERS_USER1,
         )
@@ -311,7 +311,7 @@ class TestRemoveMember:
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_delete_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/members/{member.id}",
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
             headers=HEADERS_USER1,
         )
         assert response.status_code == 200
@@ -324,7 +324,7 @@ class TestRemoveMember:
         await push_officer(alliance, member)
 
         response = await execute_delete_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/members/{member.id}",
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
             headers=HEADERS_USER1,
         )
         assert response.status_code == 200
@@ -345,7 +345,7 @@ class TestRemoveMember:
         regular = await push_member(alliance, user_id=u3_id, game_pseudo=GAME_PSEUDO_3)
 
         response = await execute_delete_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/members/{regular.id}",
+            f"{ENDPOINT}/{alliance.id}/members/{regular.id}",
             headers=HEADERS_USER2,
         )
         assert response.status_code == 200
@@ -369,7 +369,7 @@ class TestRemoveMember:
 
         # officer1 (user2) tries to remove officer2
         response = await execute_delete_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/members/{officer2_acc.id}",
+            f"{ENDPOINT}/{alliance.id}/members/{officer2_acc.id}",
             headers=HEADERS_USER2,
         )
         assert response.status_code == 403
@@ -388,7 +388,7 @@ class TestRemoveMember:
         target = await push_member(alliance, user_id=u3_id, game_pseudo=GAME_PSEUDO_3)
 
         response = await execute_delete_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/members/{target.id}",
+            f"{ENDPOINT}/{alliance.id}/members/{target.id}",
             headers=HEADERS_USER2,
         )
         assert response.status_code == 403
@@ -399,7 +399,7 @@ class TestRemoveMember:
         alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
 
         response = await execute_delete_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/members/{owner.id}",
+            f"{ENDPOINT}/{alliance.id}/members/{owner.id}",
             headers=HEADERS_USER1,
         )
         assert response.status_code == 400
@@ -418,7 +418,7 @@ class TestAddOfficer:
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_post_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/officers",
+            f"{ENDPOINT}/{alliance.id}/officers",
             {"game_account_id": str(member.id)},
             headers=HEADERS_USER1,
         )
@@ -439,7 +439,7 @@ class TestAddOfficer:
         regular = await push_member(alliance, user_id=u3_id, game_pseudo=GAME_PSEUDO_3)
 
         response = await execute_post_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/officers",
+            f"{ENDPOINT}/{alliance.id}/officers",
             {"game_account_id": str(regular.id)},
             headers=HEADERS_USER2,
         )
@@ -460,7 +460,7 @@ class TestRemoveOfficer:
         await push_officer(alliance, member)
 
         response = await execute_delete_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/officers",
+            f"{ENDPOINT}/{alliance.id}/officers",
             headers=HEADERS_USER1,
             payload={"game_account_id": str(member.id)},
         )
@@ -474,7 +474,7 @@ class TestRemoveOfficer:
         await push_officer(alliance, officer_acc)
 
         response = await execute_delete_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/officers",
+            f"{ENDPOINT}/{alliance.id}/officers",
             headers=HEADERS_USER2,
             payload={"game_account_id": str(officer_acc.id)},
         )
@@ -499,7 +499,7 @@ class TestSetMemberGroup:
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_patch_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/members/{member.id}/group",
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}/group",
             {"group": group},
             headers=HEADERS_USER1,
         )
@@ -512,7 +512,7 @@ class TestSetMemberGroup:
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_patch_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/members/{member.id}/group",
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}/group",
             {"group": 1},
             headers=HEADERS_USER2,
         )
@@ -531,7 +531,7 @@ class TestGetMyRoles:
         await _setup_2_users()
         alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
 
-        response = await execute_get_request(f"{ALLIANCES_BASE}/my-roles", headers=HEADERS_USER1)
+        response = await execute_get_request(f"{ENDPOINT}/my-roles", headers=HEADERS_USER1)
         assert response.status_code == 200
         body = response.json()
         assert str(alliance.id) in body["roles"]
@@ -548,7 +548,7 @@ class TestGetMyRoles:
         officer_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
         await push_officer(alliance, officer_acc)
 
-        response = await execute_get_request(f"{ALLIANCES_BASE}/my-roles", headers=HEADERS_USER2)
+        response = await execute_get_request(f"{ENDPOINT}/my-roles", headers=HEADERS_USER2)
         assert response.status_code == 200
         body = response.json()
         role = body["roles"][str(alliance.id)]
@@ -563,7 +563,7 @@ class TestGetMyRoles:
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
-        response = await execute_get_request(f"{ALLIANCES_BASE}/my-roles", headers=HEADERS_USER2)
+        response = await execute_get_request(f"{ENDPOINT}/my-roles", headers=HEADERS_USER2)
         assert response.status_code == 200
         body = response.json()
         role = body["roles"][str(alliance.id)]
@@ -577,7 +577,7 @@ class TestGetMyRoles:
         await _setup_2_users()
         await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
 
-        response = await execute_get_request(f"{ALLIANCES_BASE}/my-roles", headers=HEADERS_USER1)
+        response = await execute_get_request(f"{ENDPOINT}/my-roles", headers=HEADERS_USER1)
         assert response.status_code == 200
         body = response.json()
         assert body["roles"] == {}
@@ -586,7 +586,7 @@ class TestGetMyRoles:
     @pytest.mark.asyncio
     async def test_my_roles_without_auth(self, session):
         """No auth header → 401 (router-level dependency rejects)."""
-        response = await execute_get_request(f"{ALLIANCES_BASE}/my-roles")
+        response = await execute_get_request(f"{ENDPOINT}/my-roles")
         assert response.status_code == 401
 
 
@@ -602,7 +602,7 @@ class TestEligibility:
         await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
 
         response = await execute_get_request(
-            f"{ALLIANCES_BASE}/eligible-owners", headers=HEADERS_USER1
+            f"{ENDPOINT}/eligible-owners", headers=HEADERS_USER1
         )
         assert response.status_code == 200
         assert len(response.json()) == 1
@@ -613,7 +613,7 @@ class TestEligibility:
         await push_alliance_with_owner(user_id=USER_ID)
 
         response = await execute_get_request(
-            f"{ALLIANCES_BASE}/eligible-owners", headers=HEADERS_USER1
+            f"{ENDPOINT}/eligible-owners", headers=HEADERS_USER1
         )
         assert response.status_code == 200
         assert len(response.json()) == 0
@@ -624,7 +624,7 @@ class TestEligibility:
         await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_get_request(
-            f"{ALLIANCES_BASE}/eligible-members", headers=HEADERS_USER1
+            f"{ENDPOINT}/eligible-members", headers=HEADERS_USER1
         )
         assert response.status_code == 200
         assert len(response.json()) >= 1
@@ -636,7 +636,7 @@ class TestEligibility:
         await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_get_request(
-            f"{ALLIANCES_BASE}/{alliance.id}/eligible-officers", headers=HEADERS_USER1
+            f"{ENDPOINT}/{alliance.id}/eligible-officers", headers=HEADERS_USER1
         )
         assert response.status_code == 200
         assert len(response.json()) == 1
