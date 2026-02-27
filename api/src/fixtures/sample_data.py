@@ -87,14 +87,14 @@ def load_sample_data():
                 session.add(user)
                 session.flush()
 
-                ga = GameAccount(
+                game_account = GameAccount(
                     user_id=user.id,
                     game_pseudo=pseudo,
                     is_primary=True,
                 )
-                session.add(ga)
+                session.add(game_account)
                 session.flush()
-                game_accounts.append(ga)
+                game_accounts.append(game_account)
 
                 # Login log
                 session.add(LoginLog(
@@ -114,10 +114,10 @@ def load_sample_data():
             session.flush()
 
             # Put admin + all 29 members in the alliance (30 total)
-            for ga in game_accounts:
-                ga.alliance_id = alliance.id
-                ga.alliance_group = choice([1, 2, 3])
-                session.add(ga)
+            for number,game_account in enumerate(game_accounts):
+                game_account.alliance_id = alliance.id
+                game_account.alliance_group = number % 3 + 1
+                session.add(game_account)
 
             session.commit()
 

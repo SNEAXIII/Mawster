@@ -1,7 +1,7 @@
 'use client';
 import { MdOutlineAdminPanelSettings, MdPersonOutline } from 'react-icons/md';
 import { IoHomeOutline, IoGameControllerOutline, IoTrophyOutline } from 'react-icons/io5';
-import { RiShieldLine, RiSwordLine } from 'react-icons/ri';
+import { RiShieldLine, RiSwordLine, RiShieldStarLine } from 'react-icons/ri';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useI18n } from '@/app/i18n';
@@ -32,6 +32,7 @@ export default function NavLinks({ userRole }: Readonly<NavLinksProps>) {
     { name: t.nav.gameAccounts, href: '/game/accounts', icon: IoGameControllerOutline, role: Role.user },
     { name: t.nav.roster, href: '/game/roster', icon: RiSwordLine, role: Role.user },
     { name: t.nav.alliances, href: '/game/alliances', icon: RiShieldLine, role: Role.user },
+    { name: t.nav.defense, href: '/game/defense', icon: RiShieldStarLine, role: Role.user },
     { name: t.nav.champions, href: '/admin/champions', icon: IoTrophyOutline, role: Role.admin },
     {
       name: t.nav.administration,
