@@ -27,6 +27,7 @@ type UserAction = typeof UserAction[keyof typeof UserAction];
 interface UserActionsProps {
   userId: string;
   isAdmin: boolean;
+  isSuperAdmin?: boolean;
   isDisabled?: boolean;
   isDeleted?: boolean;
   loadUsers: () => void;
@@ -35,6 +36,7 @@ interface UserActionsProps {
 export const UserActions: React.FC<UserActionsProps> = ({
   userId,
   isAdmin,
+  isSuperAdmin = false,
   isDisabled = false,
   isDeleted = false,
   loadUsers,
@@ -128,6 +130,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
             </DropdownMenuTrigger>
             {!isDeleted && (
               <DropdownMenuContent align='end'>
+                {isSuperAdmin && (
                 <DropdownMenuItem
                   onClick={() => setIsPromoteToAdminDialogOpen(true)}
                   className='text-blue-600 flex items-center'
@@ -136,6 +139,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
                   <UserPlus className='mr-2 h-4 w-4' />
                   {t.dashboard.actions.promote}
                 </DropdownMenuItem>
+                )}
                 {isDisabled ? (
                   <DropdownMenuItem
                     className='text-green-600 flex items-center'

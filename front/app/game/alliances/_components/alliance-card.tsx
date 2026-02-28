@@ -16,8 +16,10 @@ import {
   Crown,
   UserPlus,
   Users,
+  Mail,
+  X,
 } from 'lucide-react';
-import { type Alliance, type GameAccount } from '@/app/services/game';
+import { type Alliance, type GameAccount, type AllianceInvitation } from '@/app/services/game';
 import { formatDateMedium } from '@/app/lib/utils';
 import { useAllianceRole } from '@/hooks/use-alliance-role';
 import AllianceMemberRow from './alliance-member-row';
@@ -45,6 +47,8 @@ interface AllianceCardProps {
   onExclude: (target: ConfirmTarget) => void;
   onSetGroup: (allianceId: string, gameAccountId: string, group: number | null, pseudo: string) => void;
   onViewRoster: (gameAccountId: string, pseudo: string, canRequestUpgrade: boolean) => void;
+  pendingInvitations?: AllianceInvitation[];
+  onCancelInvitation?: (allianceId: string, invitationId: string) => void;
 }
 
 export default function AllianceCard({
@@ -63,6 +67,8 @@ export default function AllianceCard({
   onExclude,
   onSetGroup,
   onViewRoster,
+  pendingInvitations = [],
+  onCancelInvitation,
 }: AllianceCardProps) {
   const { t } = useI18n();
   const { isMine, isOwner, canManage } = useAllianceRole();
@@ -172,6 +178,44 @@ export default function AllianceCard({
             </div>
           )}
         </div>
+
+        {/* Pending invitations section (visible to officers/owners) */}
+        {userCanManage && pendingInvitations.length > 0 && (
+          <div className="border-t pt-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Mail className="h-4 w-4 text-amber-500" />
+              <span className="text-sm font-medium text-gray-700">
+                {t.game.alliances.pendingInvitations} ({pendingInvitations.length})
+              </span>
+            </div>
+            <div className="space-y-1">
+              {pendingInvitations.map((inv) => (
+                <div
+                  key={inv.id}
+                  className="flex items-center justify-between gap-2 p-2 rounded-md bg-amber-50 border border-amber-200"
+                >
+                  <div className="space-y-0.5">
+                    <p className="text-sm text-gray-900">{inv.game_account_pseudo}</p>
+                    <p className="text-xs text-gray-500">
+                      {t.game.alliances.invitedBy} {inv.invited_by_pseudo}
+                    </p>
+                  </div>
+                  {onCancelInvitation && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => onCancelInvitation(alliance.id, inv.id)}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      {t.game.alliances.cancelInvitation}
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
