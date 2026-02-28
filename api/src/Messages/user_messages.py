@@ -36,6 +36,7 @@ TARGET_USER_DELETED_SUCCESSFULLY = "Le compte cible a bien été supprimé"
 TARGET_USER_PROMOTED_SUCCESSFULLY = "Le compte cible a bien été promu"
 TARGET_USER_DOESNT_EXISTS = UserAdminError("Le compte cible n'existe pas")
 TARGET_USER_IS_ADMIN = UserAdminError("Le compte cible est un administrateur")
+TARGET_USER_IS_SUPER_ADMIN = UserAdminError("Le compte cible est un super administrateur")
 TARGET_USER_IS_ALREADY_ENABLED = UserAdminError("Le compte cible est déjà activé")
 TARGET_USER_IS_ALREADY_DISABLED = UserAdminError("Le compte cible est déjà désactivé")
 TARGET_USER_IS_DELETED = UserAdminError("Le compte cible est supprimé")

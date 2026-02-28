@@ -74,7 +74,11 @@ async def delete_user(
     return {"message": TARGET_USER_DELETED_SUCCESSFULLY}
 
 
-@admin_controller.patch("/users/promote/{user_uuid_to_promote}", status_code=200)
+@admin_controller.patch(
+    "/users/promote/{user_uuid_to_promote}",
+    status_code=200,
+    dependencies=[Depends(AuthService.is_logged_as_super_admin)],
+)
 async def patch_promote_user(
     session: SessionDep,
     user_uuid_to_promote: uuid.UUID,

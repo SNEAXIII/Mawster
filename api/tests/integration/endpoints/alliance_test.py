@@ -226,33 +226,34 @@ class TestDeleteAlliance:
 
 
 # =========================================================================
-# POST /alliances/{id}/members  (add member)
+# POST /alliances/{id}/invitations  (invite member)
 # =========================================================================
 
 
-class TestAddMember:
+class TestInviteMember:
     @pytest.mark.asyncio
-    async def test_owner_can_add_member(self, session):
+    async def test_owner_can_invite_member(self, session):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         free_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_post_request(
-            f"{ENDPOINT}/{alliance.id}/members",
+            f"{ENDPOINT}/{alliance.id}/invitations",
             {"game_account_id": str(free_acc.id)},
             headers=HEADERS_USER1,
         )
         assert response.status_code == 201
-        assert response.json()["member_count"] >= 1
+        body = response.json()
+        assert body["game_account_pseudo"] == GAME_PSEUDO_2
+        assert body["status"] == "pending"
 
     @pytest.mark.asyncio
-    async def test_officer_can_add_member(self, session):
+    async def test_officer_can_invite_member(self, session):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         officer_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
         await push_officer(alliance, officer_acc)
 
-        # Create a third user's free account
         u3_id = uuid.uuid4()
         u3 = get_generic_user(login="user3", email="user3@gmail.com")
         u3.id = u3_id
@@ -261,41 +262,305 @@ class TestAddMember:
         free_acc = await push_game_account(user_id=u3_id, game_pseudo=GAME_PSEUDO_3)
 
         response = await execute_post_request(
-            f"{ENDPOINT}/{alliance.id}/members",
+            f"{ENDPOINT}/{alliance.id}/invitations",
             {"game_account_id": str(free_acc.id)},
             headers=HEADERS_USER2,
         )
         assert response.status_code == 201
 
     @pytest.mark.asyncio
-    async def test_regular_member_cannot_add(self, session):
+    async def test_regular_member_cannot_invite(self, session):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
-        # user2 is a regular member, cannot add
         free_acc = await push_game_account(
             user_id=uuid.uuid4(), game_pseudo=GAME_PSEUDO_3
         )
         response = await execute_post_request(
-            f"{ENDPOINT}/{alliance.id}/members",
+            f"{ENDPOINT}/{alliance.id}/invitations",
             {"game_account_id": str(free_acc.id)},
             headers=HEADERS_USER2,
         )
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_add_already_in_alliance(self, session):
+    async def test_invite_already_in_alliance(self, session):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_post_request(
-            f"{ENDPOINT}/{alliance.id}/members",
+            f"{ENDPOINT}/{alliance.id}/invitations",
             {"game_account_id": str(member.id)},
             headers=HEADERS_USER1,
         )
         assert response.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_duplicate_pending_invitation(self, session):
+        """Sending a second invitation to the same account should fail."""
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        free_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        # First invitation succeeds
+        resp1 = await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/invitations",
+            {"game_account_id": str(free_acc.id)},
+            headers=HEADERS_USER1,
+        )
+        assert resp1.status_code == 201
+
+        # Second invitation to same account should be 409
+        resp2 = await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/invitations",
+            {"game_account_id": str(free_acc.id)},
+            headers=HEADERS_USER1,
+        )
+        assert resp2.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_invite_nonexistent_account(self, session):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+
+        response = await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/invitations",
+            {"game_account_id": str(uuid.uuid4())},
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_invite_without_auth(self, session):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+
+        response = await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/invitations",
+            {"game_account_id": str(uuid.uuid4())},
+        )
+        assert response.status_code == 401
+
+
+# =========================================================================
+# GET /alliances/my-invitations + accept + decline
+# =========================================================================
+
+
+class TestMyInvitations:
+    @pytest.mark.asyncio
+    async def test_get_my_invitations(self, session):
+        """User2 has a pending invitation → visible via GET /alliances/my-invitations."""
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        free_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        # Owner invites user2's account
+        resp = await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/invitations",
+            {"game_account_id": str(free_acc.id)},
+            headers=HEADERS_USER1,
+        )
+        assert resp.status_code == 201
+
+        # User2 fetches their invitations
+        resp2 = await execute_get_request(f"{ENDPOINT}/my-invitations", headers=HEADERS_USER2)
+        assert resp2.status_code == 200
+        body = resp2.json()
+        assert len(body) == 1
+        assert body[0]["alliance_name"] == ALLIANCE_NAME
+        assert body[0]["game_account_pseudo"] == GAME_PSEUDO_2
+        assert body[0]["status"] == "pending"
+
+    @pytest.mark.asyncio
+    async def test_get_my_invitations_empty(self, session):
+        """User with no invitations → empty list."""
+        await _setup_2_users()
+        await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+        resp = await execute_get_request(f"{ENDPOINT}/my-invitations", headers=HEADERS_USER1)
+        assert resp.status_code == 200
+        assert resp.json() == []
+
+    @pytest.mark.asyncio
+    async def test_accept_invitation(self, session):
+        """User2 accepts invitation → joins the alliance."""
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        free_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        # Create invitation
+        resp = await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/invitations",
+            {"game_account_id": str(free_acc.id)},
+            headers=HEADERS_USER1,
+        )
+        invitation_id = resp.json()["id"]
+
+        # Accept invitation
+        resp2 = await execute_post_request(
+            f"{ENDPOINT}/invitations/{invitation_id}/accept",
+            {},
+            headers=HEADERS_USER2,
+        )
+        assert resp2.status_code == 200
+        assert resp2.json()["status"] == "accepted"
+
+        # Check alliance now has 2 members
+        resp3 = await execute_get_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1)
+        assert resp3.json()["member_count"] == 2
+
+    @pytest.mark.asyncio
+    async def test_decline_invitation(self, session):
+        """User2 declines invitation → status becomes declined, NOT in alliance."""
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        free_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        # Create invitation
+        resp = await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/invitations",
+            {"game_account_id": str(free_acc.id)},
+            headers=HEADERS_USER1,
+        )
+        invitation_id = resp.json()["id"]
+
+        # Decline invitation
+        resp2 = await execute_post_request(
+            f"{ENDPOINT}/invitations/{invitation_id}/decline",
+            {},
+            headers=HEADERS_USER2,
+        )
+        assert resp2.status_code == 200
+        assert resp2.json()["status"] == "declined"
+
+        # Alliance still has 1 member
+        resp3 = await execute_get_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1)
+        assert resp3.json()["member_count"] == 1
+
+    @pytest.mark.asyncio
+    async def test_cannot_accept_other_users_invitation(self, session):
+        """User1 cannot accept an invitation meant for User2."""
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        free_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        resp = await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/invitations",
+            {"game_account_id": str(free_acc.id)},
+            headers=HEADERS_USER1,
+        )
+        invitation_id = resp.json()["id"]
+
+        # User1 tries to accept (it's user2's invitation)
+        resp2 = await execute_post_request(
+            f"{ENDPOINT}/invitations/{invitation_id}/accept",
+            {},
+            headers=HEADERS_USER1,
+        )
+        assert resp2.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_accept_nonexistent_invitation(self, session):
+        await _setup_2_users()
+        resp = await execute_post_request(
+            f"{ENDPOINT}/invitations/{uuid.uuid4()}/accept",
+            {},
+            headers=HEADERS_USER1,
+        )
+        assert resp.status_code == 404
+
+
+# =========================================================================
+# DELETE /alliances/{id}/invitations/{inv_id}  (cancel invitation)
+# =========================================================================
+
+
+class TestCancelInvitation:
+    @pytest.mark.asyncio
+    async def test_owner_can_cancel_invitation(self, session):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        free_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        resp = await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/invitations",
+            {"game_account_id": str(free_acc.id)},
+            headers=HEADERS_USER1,
+        )
+        invitation_id = resp.json()["id"]
+
+        # Owner cancels
+        resp2 = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/invitations/{invitation_id}",
+            headers=HEADERS_USER1,
+        )
+        assert resp2.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_regular_member_cannot_cancel_invitation(self, session):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        u3_id = uuid.uuid4()
+        u3 = get_generic_user(login="user3", email="user3@gmail.com")
+        u3.id = u3_id
+        u3.discord_id = "discord_789"
+        await load_objects([u3])
+        free_acc = await push_game_account(user_id=u3_id, game_pseudo=GAME_PSEUDO_3)
+
+        resp = await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/invitations",
+            {"game_account_id": str(free_acc.id)},
+            headers=HEADERS_USER1,
+        )
+        invitation_id = resp.json()["id"]
+
+        # Regular member (user2) tries to cancel → 403
+        resp2 = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/invitations/{invitation_id}",
+            headers=HEADERS_USER2,
+        )
+        assert resp2.status_code == 403
+
+
+# =========================================================================
+# GET /alliances/{id}/invitations  (list alliance invitations)
+# =========================================================================
+
+
+class TestAllianceInvitations:
+    @pytest.mark.asyncio
+    async def test_owner_can_list_invitations(self, session):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        free_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/invitations",
+            {"game_account_id": str(free_acc.id)},
+            headers=HEADERS_USER1,
+        )
+
+        resp = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/invitations", headers=HEADERS_USER1
+        )
+        assert resp.status_code == 200
+        assert len(resp.json()) == 1
+
+    @pytest.mark.asyncio
+    async def test_regular_member_cannot_list_invitations(self, session):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        resp = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/invitations", headers=HEADERS_USER2
+        )
+        assert resp.status_code == 403
 
 
 # =========================================================================

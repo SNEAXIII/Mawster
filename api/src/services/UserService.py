@@ -11,6 +11,7 @@ from src.Messages.user_messages import (
     TARGET_USER_IS_ALREADY_DISABLED,
     TARGET_USER_DOESNT_EXISTS,
     TARGET_USER_IS_ADMIN,
+    TARGET_USER_IS_SUPER_ADMIN,
     TARGET_USER_IS_ALREADY_ENABLED,
     TARGET_USER_IS_ALREADY_ADMIN,
     TARGET_USER_IS_DELETED,
@@ -56,6 +57,24 @@ class UserService:
         return user
 
     @classmethod
+    async def get_user_by_id_with_validity_check(
+        cls, session: SessionDep, user_id: str
+    ) -> Optional[User]:
+        """Look up user by UUID string and validate account status."""
+        try:
+            uid = uuid.UUID(user_id)
+        except (ValueError, AttributeError):
+            raise USER_DOESNT_EXISTS
+        user = await UserService.get_user(session, uid)
+        if user is None:
+            raise USER_DOESNT_EXISTS
+        if user.deleted_at:
+            raise USER_IS_DELETED
+        if user.disabled_at:
+            raise USER_IS_DISABLED
+        return user
+
+    @classmethod
     async def get_user_by_email(cls, session: SessionDep, email: str) -> Optional[User]:
         sql = select(User).where(User.email == email)
         result = await session.exec(sql)
@@ -75,12 +94,14 @@ class UserService:
         - require_disabled: if True, user must be disabled (otherwise raise ALREADY_ENABLED);
                             if False, user must NOT be disabled (otherwise raise ALREADY_DISABLED);
                             if None, no disabled-state check is performed.
-        - forbid_admin: if True, raise if target is an ADMIN (preserves previous checks).
+        - forbid_admin: if True, raise if target is an ADMIN or SUPER_ADMIN.
         """
         if user is None:
             raise TARGET_USER_DOESNT_EXISTS
         if user.deleted_at:
             raise TARGET_USER_IS_DELETED
+        if user.role == Roles.SUPER_ADMIN:
+            raise TARGET_USER_IS_SUPER_ADMIN
         if forbid_admin and user.role == Roles.ADMIN:
             raise TARGET_USER_IS_ADMIN
         if require_disabled is True and not user.disabled_at:

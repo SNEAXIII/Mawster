@@ -31,7 +31,7 @@ def get_user_mock(mocker, return_value: User):
 def get_user_with_validity_check_mock(mocker, return_value: Optional[User]):
     return mocker.patch.object(
         UserService,
-        "get_user_by_login_with_validity_check",
+        "get_user_by_id_with_validity_check",
         return_value=return_value,
     )
 

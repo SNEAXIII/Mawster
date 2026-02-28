@@ -31,14 +31,14 @@ interface ConfirmTarget {
 interface AllianceCardProps {
   alliance: Alliance;
   locale: string;
-  /** Currently open add-member form alliance id */
+  /** Currently open invite-member form alliance id */
   memberAllianceId: string | null;
   memberAccountId: string;
   eligibleMembers: GameAccount[];
   onMemberAccountChange: (value: string) => void;
-  onOpenAddMember: (allianceId: string) => void;
-  onCloseAddMember: () => void;
-  onAddMember: (allianceId: string) => void;
+  onOpenInviteMember: (allianceId: string) => void;
+  onCloseInviteMember: () => void;
+  onInviteMember: (allianceId: string) => void;
   onDemoteOfficer: (allianceId: string, gameAccountId: string) => void;
   onPromoteOfficer: (target: ConfirmTarget) => void;
   onLeave: (target: ConfirmTarget) => void;
@@ -54,9 +54,9 @@ export default function AllianceCard({
   memberAccountId,
   eligibleMembers,
   onMemberAccountChange,
-  onOpenAddMember,
-  onCloseAddMember,
-  onAddMember,
+  onOpenInviteMember,
+  onCloseInviteMember,
+  onInviteMember,
   onDemoteOfficer,
   onPromoteOfficer,
   onLeave,
@@ -113,7 +113,7 @@ export default function AllianceCard({
               </span>
             </div>
 
-            {/* Add member button / inline form */}
+            {/* Invite member button / inline form */}
             {userCanManage &&
               (memberAllianceId === alliance.id ? (
                 <div className="flex flex-wrap items-center gap-2">
@@ -132,11 +132,11 @@ export default function AllianceCard({
                   <Button
                     size="sm"
                     disabled={!memberAccountId}
-                    onClick={() => onAddMember(alliance.id)}
+                    onClick={() => onInviteMember(alliance.id)}
                   >
-                    {t.game.alliances.addMemberButton}
+                    {t.game.alliances.inviteMemberButton}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={onCloseAddMember}>
+                  <Button size="sm" variant="ghost" onClick={onCloseInviteMember}>
                     {t.common.cancel}
                   </Button>
                 </div>
@@ -144,10 +144,10 @@ export default function AllianceCard({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => onOpenAddMember(alliance.id)}
+                  onClick={() => onOpenInviteMember(alliance.id)}
                 >
                   <UserPlus className="h-3 w-3 mr-1" />
-                  {t.game.alliances.addMember}
+                  {t.game.alliances.inviteMember}
                 </Button>
               ))}
           </div>

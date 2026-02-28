@@ -79,3 +79,21 @@ async def push_user2():
 
 async def push_one_admin():
     await load_objects([get_admin()])
+
+
+def get_super_admin(
+    disabled_at: Optional[datetime] = None,
+    deleted_at: Optional[datetime] = None,
+) -> User:
+    return get_generic_user(
+        is_base_id=True,
+        login=ADMIN_LOGIN,
+        email=ADMIN_EMAIL,
+        role=Roles.SUPER_ADMIN,
+        disabled_at=disabled_at,
+        deleted_at=deleted_at,
+    )
+
+
+async def push_one_super_admin():
+    await load_objects([get_super_admin()])

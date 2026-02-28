@@ -12,11 +12,13 @@ export enum Role {
   all = 'all',
   user = 'user',
   admin = 'admin',
+  superAdmin = 'super_admin'
 }
 const roleHierarchy: Record<Role, Role[]> = {
   [Role.all]: [Role.all],
   [Role.user]: [Role.all, Role.user],
   [Role.admin]: [Role.all, Role.user, Role.admin],
+  [Role.superAdmin]: [Role.all, Role.user, Role.admin, Role.superAdmin],
 };
 interface NavLinksProps {
   userRole: Role;

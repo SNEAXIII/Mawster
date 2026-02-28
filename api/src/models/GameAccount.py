@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from src.models.Alliance import Alliance
     from src.models.ChampionUser import ChampionUser
     from src.models.AllianceOfficer import AllianceOfficer
+    from src.models.AllianceInvitation import AllianceInvitation
     from src.models.RequestedUpgrade import RequestedUpgrade
 
 
@@ -34,6 +35,14 @@ class GameAccount(SQLModel, table=True):
     )
     roster: List["ChampionUser"] = Relationship(back_populates="game_account")
     adjoint_entries: List["AllianceOfficer"] = Relationship(back_populates="game_account")
+    received_invitations: List["AllianceInvitation"] = Relationship(
+        back_populates="game_account",
+        sa_relationship_kwargs={"foreign_keys": "[AllianceInvitation.game_account_id]"},
+    )
+    sent_invitations: List["AllianceInvitation"] = Relationship(
+        back_populates="invited_by",
+        sa_relationship_kwargs={"foreign_keys": "[AllianceInvitation.invited_by_game_account_id]"},
+    )
     requested_upgrades: List["RequestedUpgrade"] = Relationship(
         back_populates="requester",
         sa_relationship_kwargs={"foreign_keys": "[RequestedUpgrade.requester_game_account_id]"},
