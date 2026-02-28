@@ -164,6 +164,46 @@ class TestGetDefense:
         )
         assert response.status_code == 400
 
+    @pytest.mark.asyncio
+    async def test_get_defense_includes_preferred_attacker(self):
+        """GET defense includes is_preferred_attacker for each placement."""
+        data = await _setup_alliance_with_bg()
+        data["cu_owner1"].is_preferred_attacker = True
+        await load_objects([data["cu_owner1"]])
+
+        headers = create_auth_headers(user_id=str(USER_ID))
+        # Place a preferred champion
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 1,
+                "champion_user_id": str(data["cu_owner1"].id),
+                "game_account_id": str(data["owner"].id),
+            },
+            headers=headers,
+        )
+        # Place a non-preferred champion
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 2,
+                "champion_user_id": str(data["cu_owner2"].id),
+                "game_account_id": str(data["owner"].id),
+            },
+            headers=headers,
+        )
+
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1",
+            headers=headers,
+        )
+        assert response.status_code == 200
+        placements = response.json()["placements"]
+        assert len(placements) == 2
+        p_map = {p["node_number"]: p for p in placements}
+        assert p_map[1]["is_preferred_attacker"] is True
+        assert p_map[2]["is_preferred_attacker"] is False
+
 
 class TestPlaceDefender:
     """POST /alliances/{id}/defense/bg/{bg}/place"""
@@ -187,6 +227,29 @@ class TestPlaceDefender:
         assert body["champion_name"] == "Spider-Man"
         assert body["rarity"] == "7r3"
         assert body["game_pseudo"] == GAME_PSEUDO
+        assert body["is_preferred_attacker"] is False
+
+    @pytest.mark.asyncio
+    async def test_place_preferred_attacker_flag_in_response(self):
+        """Placement response includes is_preferred_attacker when champion is flagged."""
+        data = await _setup_alliance_with_bg()
+        # Mark cu_owner1 as preferred attacker
+        data["cu_owner1"].is_preferred_attacker = True
+        await load_objects([data["cu_owner1"]])
+
+        headers = create_auth_headers(user_id=str(USER_ID))
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 1,
+                "champion_user_id": str(data["cu_owner1"].id),
+                "game_account_id": str(data["owner"].id),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 201
+        body = response.json()
+        assert body["is_preferred_attacker"] is True
 
     @pytest.mark.asyncio
     async def test_place_defender_replaces_existing_on_same_node(self):

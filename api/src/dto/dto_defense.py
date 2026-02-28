@@ -29,6 +29,7 @@ class DefensePlacementResponse(BaseModel):
     champion_image_url: Optional[str] = None
     rarity: str
     signature: int = 0
+    is_preferred_attacker: bool = False
     placed_by_id: Optional[uuid.UUID] = None
     placed_by_pseudo: Optional[str] = None
     created_at: datetime

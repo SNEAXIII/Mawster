@@ -92,7 +92,11 @@ export function WarMapNode({
             rarity={placement.rarity}
             size={44}
           />
-          <span className='text-[8px] text-white/60 font-medium leading-none'>
+          <span className={cn(
+            'text-[8px] font-medium leading-none',
+            placement.is_preferred_attacker ? 'text-yellow-400' : 'text-white/60',
+          )}>
+            {placement.is_preferred_attacker && '⚔ '}
             {placement.rarity[0]}★ R{placement.rarity[2]}
             {placement.signature > 0 && ` · ${placement.signature}`}
           </span>

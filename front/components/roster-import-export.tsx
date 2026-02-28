@@ -22,6 +22,7 @@ export interface RosterExportEntry {
   champion_name: string;
   rarity: string;
   signature: number;
+  is_preferred_attacker: boolean;
 }
 
 // ─── Props ───────────────────────────────────────────────
@@ -61,6 +62,7 @@ export default function RosterImportExport({
       champion_name: e.champion_name,
       rarity: e.rarity,
       signature: e.signature,
+      is_preferred_attacker: e.is_preferred_attacker,
     }));
 
     const json = JSON.stringify(data, null, 2);
@@ -141,6 +143,7 @@ export default function RosterImportExport({
             champion_name: obj.champion_name as string,
             rarity: obj.rarity as string,
             signature: (typeof obj.signature === 'number' ? obj.signature : 0),
+            is_preferred_attacker: obj.is_preferred_attacker === true,
           });
         }
 
@@ -196,7 +199,7 @@ export default function RosterImportExport({
 
           const isNew = !existing;
           const hasChanges = !isNew && (
-            existing!.rarity !== entry.rarity || existing!.signature !== entry.signature
+            existing!.rarity !== entry.rarity || existing!.signature !== entry.signature || existing!.is_preferred_attacker !== entry.is_preferred_attacker
           );
 
           // Resolve champion class and image from the roster or API lookup
@@ -215,6 +218,7 @@ export default function RosterImportExport({
             oldSignature: existing?.signature ?? null,
             isNew,
             hasChanges,
+            is_preferred_attacker: entry.is_preferred_attacker,
           };
         });
 
@@ -256,6 +260,7 @@ export default function RosterImportExport({
         champion_name: r.champion_name,
         rarity: r.newRarity,
         signature: r.newSignature,
+        is_preferred_attacker: r.is_preferred_attacker ?? false,
       }));
 
       try {

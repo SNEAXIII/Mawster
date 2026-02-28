@@ -173,7 +173,10 @@ export default function ChampionSelector({
                     size={44}
                   />
                   <div className="flex flex-col items-start">
-                    <span className="font-medium text-sm">{owner.game_pseudo}</span>
+                    <span className="font-medium text-sm">
+                      {owner.is_preferred_attacker && <span className="text-yellow-400">⚔ </span>}
+                      {owner.game_pseudo}
+                    </span>
                     <span className="text-xs text-muted-foreground">
                       {RARITY_LABELS[owner.rarity] ?? owner.rarity}
                       {' · '}

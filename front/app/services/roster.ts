@@ -104,6 +104,7 @@ export interface BulkChampionEntry {
   champion_name: string;
   rarity: string;
   signature: number;
+  is_preferred_attacker?: boolean;
 }
 
 interface ApiError {
