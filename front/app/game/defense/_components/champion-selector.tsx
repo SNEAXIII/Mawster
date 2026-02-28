@@ -118,9 +118,21 @@ export default function ChampionSelector({
                         <span className={cn('text-[9px] font-medium', classColors.label)}>
                           {RARITY_LABELS[bestOwner.rarity] ?? bestOwner.rarity}
                         </span>
-                        {champ.owners.length > 1 && (
+                        {bestOwner.is_preferred_attacker && (
+                          <span
+                            className="text-[10px] text-amber-400 font-bold"
+                            title={t.game.defense.preferredAttackerWarning}
+                          >
+                            ⚔
+                          </span>
+                        )}
+                        {champ.owners.length === 1 ? (
+                          <span className="text-[9px] text-muted-foreground truncate w-full text-center">
+                            {bestOwner.game_pseudo} · {bestOwner.defender_count}/5
+                          </span>
+                        ) : (
                           <span className="text-[9px] text-muted-foreground">
-                            {champ.owners.length} owners
+                            {t.game.defense.ownersCount.replace('{count}', String(champ.owners.length))}
                           </span>
                         )}
                       </button>

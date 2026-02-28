@@ -243,7 +243,7 @@ class TestCreateChampionUser:
         )
         assert response.status_code == 201
         body = response.json()
-        assert set(body.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature"}
+        assert set(body.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "is_preferred_attacker"}
         assert body["rarity"] == "7r5"
         assert body["signature"] == 200
         assert body["champion_id"] == str(champ.id)
@@ -491,7 +491,7 @@ class TestBulkAddChampions:
         assert isinstance(body, list)
         assert len(body) == 2
         for entry in body:
-            assert set(entry.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "champion_name", "champion_class", "image_url"}
+            assert set(entry.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "champion_name", "champion_class", "image_url", "is_preferred_attacker"}
 
     @pytest.mark.asyncio
     async def test_bulk_mixed_valid_and_invalid_champion_returns_404(self, session):
@@ -987,7 +987,7 @@ class TestUpgradeChampionRank:
         )
         assert response.status_code == 200
         body = response.json()
-        assert set(body.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature"}
+        assert set(body.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "is_preferred_attacker"}
         assert body["id"] == str(entry.id)
         assert body["rarity"] == "7r2"
 
@@ -1009,3 +1009,87 @@ class TestUpgradeChampionRank:
             f"{CHAMPION_USERS_ROUTE}/{entry.id}/upgrade", {}, headers=HEADERS
         )
         assert r.status_code == 400
+
+
+# =========================================================================
+# Preferred Attacker toggle — PATCH /champion-users/{id}/preferred-attacker
+# =========================================================================
+
+class TestPreferredAttacker:
+    """PATCH /champion-users/{id}/preferred-attacker"""
+
+    @pytest.mark.asyncio
+    async def test_toggle_preferred_attacker_on(self, session):
+        """Toggling sets is_preferred_attacker to True when it was False."""
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion()
+        entry = await _push_champion_user(acc.id, champ.id, "7r3")
+        assert entry.is_preferred_attacker is False
+
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/preferred-attacker", {}, headers=HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["is_preferred_attacker"] is True
+
+    @pytest.mark.asyncio
+    async def test_toggle_preferred_attacker_off(self, session):
+        """Toggling again sets is_preferred_attacker back to False."""
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion()
+        entry = await _push_champion_user(acc.id, champ.id, "7r2")
+
+        # Toggle on
+        await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/preferred-attacker", {}, headers=HEADERS
+        )
+        # Toggle off
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/preferred-attacker", {}, headers=HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["is_preferred_attacker"] is False
+
+    @pytest.mark.asyncio
+    async def test_toggle_preferred_attacker_not_owner_denied(self, session):
+        """Another user cannot toggle someone else's champion."""
+        await push_one_user()
+        await push_user2()
+        # Create game account belonging to USER2 — USER1 (default HEADERS) must be denied
+        acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        champ = await push_champion()
+        entry = await _push_champion_user(acc.id, champ.id, "7r1")
+
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/preferred-attacker", {}, headers=HEADERS
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_toggle_preferred_attacker_not_found(self, session):
+        """Non-existent champion user returns 404."""
+        await push_one_user()
+        fake_id = str(uuid.uuid4())
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{fake_id}/preferred-attacker", {}, headers=HEADERS
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_toggle_preferred_attacker_response_structure(self, session):
+        """Response includes is_preferred_attacker in body."""
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion()
+        entry = await _push_champion_user(acc.id, champ.id, "6r5", signature=20)
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/preferred-attacker", {}, headers=HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert "is_preferred_attacker" in body
+        assert body["id"] == str(entry.id)

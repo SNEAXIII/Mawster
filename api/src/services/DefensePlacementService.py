@@ -116,13 +116,15 @@ class DefensePlacementService:
             await session.delete(old_placement)
             await session.flush()
 
-        # 4. Check champion is not already placed elsewhere on this defense
+        # 4. Check champion (by champion_id) is not already placed elsewhere on this defense
         existing_champ = await session.exec(
-            select(DefensePlacement).where(
+            select(DefensePlacement)
+            .join(ChampionUser, DefensePlacement.champion_user_id == ChampionUser.id)  # type: ignore[arg-type]
+            .where(
                 and_(
                     DefensePlacement.alliance_id == alliance_id,
                     DefensePlacement.battlegroup == battlegroup,
-                    DefensePlacement.champion_user_id == champion_user_id,
+                    ChampionUser.champion_id == champion_user.champion_id,
                 )
             )
         )
@@ -264,15 +266,20 @@ class DefensePlacementService:
         roster_result = await session.exec(roster_stmt)
         all_roster = roster_result.all()
 
-        # Get already-placed champion_user_ids
-        placed_stmt = select(DefensePlacement.champion_user_id).where(
-            and_(
-                DefensePlacement.alliance_id == alliance_id,
-                DefensePlacement.battlegroup == battlegroup,
+        # Get already-placed champion_ids (by champion, not champion_user)
+        # A champion placed by ANY player blocks the champion for everyone
+        placed_cu_stmt = (
+            select(ChampionUser.champion_id)
+            .join(DefensePlacement, DefensePlacement.champion_user_id == ChampionUser.id)  # type: ignore[arg-type]
+            .where(
+                and_(
+                    DefensePlacement.alliance_id == alliance_id,
+                    DefensePlacement.battlegroup == battlegroup,
+                )
             )
         )
-        placed_result = await session.exec(placed_stmt)
-        placed_ids = set(placed_result.all())
+        placed_cu_result = await session.exec(placed_cu_stmt)
+        placed_champion_ids = set(placed_cu_result.all())
 
         # Get defender counts per player
         count_stmt = select(DefensePlacement).where(
@@ -290,7 +297,8 @@ class DefensePlacementService:
         # Group by champion_id
         champion_groups: dict[uuid.UUID, dict] = {}
         for cu in all_roster:
-            if cu.id in placed_ids:
+            # Exclude if this champion (by champion_id) is already placed anywhere on the map
+            if cu.champion_id in placed_champion_ids:
                 continue
             # Skip players who already have 5 defenders
             if defender_counts.get(cu.game_account_id, 0) >= MAX_DEFENDERS_PER_PLAYER:
@@ -313,6 +321,7 @@ class DefensePlacementService:
                 "stars": cu.stars,
                 "rank": cu.rank,
                 "signature": cu.signature,
+                "is_preferred_attacker": cu.is_preferred_attacker,
                 "defender_count": defender_counts.get(cu.game_account_id, 0),
             })
 

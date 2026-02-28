@@ -9,13 +9,14 @@ import {
   shortenChampionName,
   getNextRarity,
 } from '@/app/services/roster';
-import { FiTrash2, FiEdit2, FiArrowUp, FiX } from 'react-icons/fi';
+import { FiTrash2, FiEdit2, FiArrowUp, FiX, FiZap } from 'react-icons/fi';
 
 interface RosterChampionCardProps {
   entry: RosterEntry;
   onEdit?: (entry: RosterEntry) => void;
   onDelete?: (entry: RosterEntry) => void;
   onUpgrade?: (entry: RosterEntry) => void;
+  onTogglePreferredAttacker?: (entry: RosterEntry) => void;
   readOnly?: boolean;
   /** If set, this champion has a pending upgrade request */
   pendingRequestId?: string;
@@ -28,6 +29,7 @@ export default function RosterChampionCard({
   onEdit,
   onDelete,
   onUpgrade,
+  onTogglePreferredAttacker,
   readOnly = false,
   pendingRequestId,
   onCancelRequest,
@@ -43,6 +45,17 @@ export default function RosterChampionCard({
       {/* Action buttons — always visible on touch, hover on desktop */}
       {!readOnly && (
         <div className="absolute top-1 right-1 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20">
+          {onTogglePreferredAttacker && (
+            <button
+              className={`hover:text-amber-300 bg-black/60 rounded-full p-1 ${
+                entry.is_preferred_attacker ? 'text-amber-400' : 'text-white/40'
+              }`}
+              onClick={() => onTogglePreferredAttacker(entry)}
+              title={t.roster.preferredAttackerToggle}
+            >
+              <FiZap size={14} />
+            </button>
+          )}
           {pendingRequestId && onCancelRequest ? (
             <button
               className="text-red-400 hover:text-red-300 bg-black/60 rounded-full p-1"

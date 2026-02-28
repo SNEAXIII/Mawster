@@ -184,6 +184,9 @@ const en = {
       clearError: 'Failed to clear defense',
       loadError: 'Failed to load defense data',
       membersTitle: 'Members',
+      nodeEmpty: 'Node #{node} — Empty',
+      ownersCount: '{count} owners',
+      preferredAttackerWarning: 'Preferred attacker',
     },
   },
 
@@ -345,6 +348,9 @@ const en = {
       deleteError: 'An error occurred while removing the champion',
       upgradeError: 'An error occurred while upgrading the champion',
     },
+    preferredAttacker: 'Preferred Attacker',
+    preferredAttackerToggle: 'Toggle preferred attacker flag',
+    preferredAttackerHint: 'Marked as preferred attacker — officers can still place them in defense.',
   },
 } as const;
 

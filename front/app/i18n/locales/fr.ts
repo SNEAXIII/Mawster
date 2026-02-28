@@ -187,6 +187,9 @@ const fr: Translations = {
       clearError: 'Erreur lors de l\'effacement de la défense',
       loadError: 'Erreur lors du chargement de la défense',
       membersTitle: 'Membres',
+      nodeEmpty: 'Nœud #{node} — Vide',
+      ownersCount: '{count} possesseurs',
+      preferredAttackerWarning: 'Attaquant préféré',
     },
   },
 
@@ -350,6 +353,9 @@ const fr: Translations = {
       deleteError: 'Une erreur est survenue lors de la suppression du champion',
       upgradeError: "Une erreur est survenue lors de l'amélioration du champion",
     },
+    preferredAttacker: 'Attaquant Préféré',
+    preferredAttackerToggle: 'Basculer le statut d\'attaquant préféré',
+    preferredAttackerHint: 'Marqué comme attaquant préféré — les officiers peuvent quand même le placer en défense.',
   },
 } as const;
 

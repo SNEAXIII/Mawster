@@ -17,6 +17,7 @@ class ChampionUser(SQLModel, table=True):
     stars: int = Field(default=6)
     rank: int = Field(default=1)
     signature: int = Field(default=0)
+    is_preferred_attacker: bool = Field(default=False)
 
     @property
     def rarity(self) -> str:

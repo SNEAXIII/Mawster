@@ -55,6 +55,7 @@ class ChampionUserService:
         champion_id: uuid.UUID,
         rarity: str,
         signature: int = 0,
+        is_preferred_attacker: bool = False,
     ) -> ChampionUser:
         stars, rank = cls._parse_rarity(rarity)
 
@@ -88,6 +89,7 @@ class ChampionUserService:
         if existing_entry is not None:
             existing_entry.rank = rank
             existing_entry.signature = signature
+            existing_entry.is_preferred_attacker = is_preferred_attacker
             session.add(existing_entry)
             await session.commit()
             await session.refresh(existing_entry)
@@ -100,6 +102,7 @@ class ChampionUserService:
             stars=stars,
             rank=rank,
             signature=signature,
+            is_preferred_attacker=is_preferred_attacker,
         )
         session.add(champion_user)
         await session.commit()
@@ -151,6 +154,8 @@ class ChampionUserService:
                     detail=f"Champion '{champion_name}' not found",
                 )
 
+            is_preferred_attacker = entry.get("is_preferred_attacker", False)
+
             # Check if exists in DB (unique per champion+stars)
             existing = await session.exec(
                 select(ChampionUser).where(
@@ -166,6 +171,7 @@ class ChampionUserService:
             if existing_entry is not None:
                 existing_entry.rank = rank
                 existing_entry.signature = signature
+                existing_entry.is_preferred_attacker = is_preferred_attacker
                 session.add(existing_entry)
                 results.append(existing_entry)
             else:
@@ -175,6 +181,7 @@ class ChampionUserService:
                     stars=stars,
                     rank=rank,
                     signature=signature,
+                    is_preferred_attacker=is_preferred_attacker,
                 )
                 session.add(champion_user)
                 results.append(champion_user)

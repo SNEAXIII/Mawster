@@ -11,8 +11,8 @@ services:
     networks:
       - internal
     env_file: db.env
-    # volumes:
-    #   - /mawster-db:/var/lib/mysql
+    volumes:
+      - ./mawster-db:/var/lib/mysql
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     ports:
