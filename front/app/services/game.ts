@@ -180,20 +180,86 @@ export async function getEligibleMembers(): Promise<GameAccount[]> {
   return response.json();
 }
 
-// ─── Members ─────────────────────────────────────────────
-export async function addMember(
+// ─── Invitations ─────────────────────────────────────────
+export interface AllianceInvitation {
+  id: string;
+  alliance_id: string;
+  alliance_name: string;
+  alliance_tag: string;
+  game_account_id: string;
+  game_account_pseudo: string;
+  invited_by_game_account_id: string;
+  invited_by_pseudo: string;
+  status: 'pending' | 'accepted' | 'declined';
+  created_at: string;
+  responded_at: string | null;
+}
+
+export async function inviteMember(
   allianceId: string,
   gameAccountId: string,
-): Promise<Alliance> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/members`, {
+): Promise<AllianceInvitation> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/invitations`, {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify({ game_account_id: gameAccountId }),
   });
-  await throwOnError(response, "Erreur lors de l'ajout du membre");
+  await throwOnError(response, "Erreur lors de l'envoi de l'invitation");
   return response.json();
 }
 
+export async function getAllianceInvitations(
+  allianceId: string,
+): Promise<AllianceInvitation[]> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/invitations`, {
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, 'Erreur lors de la récupération des invitations');
+  return response.json();
+}
+
+export async function cancelInvitation(
+  allianceId: string,
+  invitationId: string,
+): Promise<void> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/invitations/${invitationId}`, {
+    method: 'DELETE',
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, "Erreur lors de l'annulation de l'invitation");
+}
+
+export async function getMyInvitations(): Promise<AllianceInvitation[]> {
+  const response = await debugFetch(`${PROXY}/alliances/my-invitations`, {
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, 'Erreur lors de la récupération de vos invitations');
+  return response.json();
+}
+
+export async function acceptInvitation(
+  invitationId: string,
+): Promise<AllianceInvitation> {
+  const response = await debugFetch(`${PROXY}/alliances/invitations/${invitationId}/accept`, {
+    method: 'POST',
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, "Erreur lors de l'acceptation de l'invitation");
+  return response.json();
+}
+
+export async function declineInvitation(
+  invitationId: string,
+): Promise<AllianceInvitation> {
+  const response = await debugFetch(`${PROXY}/alliances/invitations/${invitationId}/decline`, {
+    method: 'POST',
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, "Erreur lors du refus de l'invitation");
+  return response.json();
+}
+
+// ─── Members ─────────────────────────────────────────────
 export async function removeMember(
   allianceId: string,
   gameAccountId: string,

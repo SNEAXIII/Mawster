@@ -50,7 +50,7 @@ def load_sample_data():
                 email="misterbalise2@gmail.com",
                 login="misterbalise",
                 discord_id="403941390586871808",
-                role=Roles.ADMIN,
+                role=Roles.SUPER_ADMIN,
                 created_at=fake.date_time_between(start_date="-1y", end_date=NOW),
                 last_login_date=NOW,
             )

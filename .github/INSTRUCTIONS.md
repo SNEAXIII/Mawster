@@ -103,5 +103,5 @@ front/
 2. **Commits**: use conventional commits (`feat:`, `fix:`, `refactor:`, `test:`).
 3. **No manual migrations**: always use `make create-mig MIGRATION_MESSAGE="..."`.
 4. **Tests first**: update tests before or alongside code changes, then run `make test`.
-5. **Lint last**: run `uvx ruff check` at the end of every backend session.
+5. **Lint last**: run `uvx ruff check` at the end of every backend session and `npm run build` for the frontend.
 6. **Docker**: images are `sneaxiii/mawster-api` and `sneaxiii/mawster-front`. Watchtower auto-deploys.

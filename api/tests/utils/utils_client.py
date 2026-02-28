@@ -36,9 +36,14 @@ def create_auth_headers(
     email: str = USER_EMAIL,
     role: str = Roles.USER,
 ) -> dict[str, str]:
-    """Create Authorization headers with a valid JWT for the given user."""
+    """Create Authorization headers with a valid JWT for the given user.
+
+    The JWT is now slim: only user_id, role, and type=access.
+    login/email params are kept for backward-compatible call signatures but
+    are NOT placed in the token payload.
+    """
     token = JWTService.create_token(
-        {"sub": login, "user_id": user_id, "email": email, "role": role}
+        {"user_id": user_id, "role": role, "type": "access"}
     )
     return {"Authorization": f"Bearer {token}"}
 

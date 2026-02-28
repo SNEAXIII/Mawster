@@ -18,6 +18,7 @@ from tests.utils.utils_constant import (
     DISCORD_ID,
     LOGIN,
     EMAIL,
+    USER_ID,
 )
 
 
@@ -25,7 +26,7 @@ from tests.utils.utils_constant import (
 async def test_get_current_user_in_jwt_success(mocker):
     # Arrange
     user = User(login=LOGIN, email=EMAIL, discord_id=DISCORD_ID)
-    mock_decode = decode_service_mock(mocker, {"sub": LOGIN})
+    mock_decode = decode_service_mock(mocker, {"user_id": str(USER_ID)})
     mock_get_user = get_user_with_validity_check_mock(mocker, user)
     mock_session = session_mock(mocker)
 
@@ -34,14 +35,14 @@ async def test_get_current_user_in_jwt_success(mocker):
 
     # Assert
     mock_decode.assert_called_once_with(FAKE_TOKEN)
-    mock_get_user.assert_called_once_with(mock_session, LOGIN)
+    mock_get_user.assert_called_once_with(mock_session, str(USER_ID))
     assert result == user
 
 
 @pytest.mark.asyncio
 async def test_get_current_user_in_jwt_user_not_found(mocker):
     # Arrange
-    mock_decode = decode_service_mock(mocker, {"sub": LOGIN})
+    mock_decode = decode_service_mock(mocker, {"user_id": str(USER_ID)})
     mock_get_user = get_user_with_validity_check_mock(mocker, None)
     mock_session = session_mock(mocker)
 
@@ -50,7 +51,7 @@ async def test_get_current_user_in_jwt_user_not_found(mocker):
 
     # Assert
     mock_decode.assert_called_once_with(FAKE_TOKEN)
-    mock_get_user.assert_called_once_with(mock_session, LOGIN)
+    mock_get_user.assert_called_once_with(mock_session, str(USER_ID))
     assert result is None
 
 
@@ -82,6 +83,48 @@ async def test_is_logged_as_admin_success(mocker):
     # Assert
     mock_decode.assert_called_once_with(FAKE_TOKEN)
     assert result is True
+
+
+@pytest.mark.asyncio
+async def test_is_logged_as_admin_super_admin_also_passes(mocker):
+    """SUPER_ADMIN should also pass the is_logged_as_admin check."""
+    # Arrange
+    mock_decode = decode_service_mock(mocker, {"role": Roles.SUPER_ADMIN})
+
+    # Act
+    result = await AuthService.is_logged_as_admin(FAKE_TOKEN)
+
+    # Assert
+    mock_decode.assert_called_once_with(FAKE_TOKEN)
+    assert result is True
+
+
+@pytest.mark.asyncio
+async def test_is_logged_as_super_admin_success(mocker):
+    # Arrange
+    mock_decode = decode_service_mock(mocker, {"role": Roles.SUPER_ADMIN})
+
+    # Act
+    result = await AuthService.is_logged_as_super_admin(FAKE_TOKEN)
+
+    # Assert
+    mock_decode.assert_called_once_with(FAKE_TOKEN)
+    assert result is True
+
+
+@pytest.mark.asyncio
+async def test_is_logged_as_super_admin_admin_fails(mocker):
+    """Regular ADMIN should NOT pass the is_logged_as_super_admin check."""
+    # Arrange
+    mock_decode = decode_service_mock(mocker, {"role": Roles.ADMIN})
+
+    # Act
+    with pytest.raises(JwtError) as error:
+        await AuthService.is_logged_as_super_admin(FAKE_TOKEN)
+
+    # Assert
+    mock_decode.assert_called_once_with(FAKE_TOKEN)
+    assert error.value.detail == str(INSUFFISANT_ROLE_EXCEPTION)
 
 
 @pytest.mark.asyncio

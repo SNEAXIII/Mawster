@@ -30,7 +30,7 @@ def get_user():
 @pytest.mark.parametrize("role", Roles.__members__.values())
 def test_decode_jwt_success(mocker, role):
     # Arrange
-    data = {"sub": LOGIN, "role": role}
+    data = {"user_id": "some-uuid", "role": role, "type": "access"}
     mock_decode = decode_module_mock(mocker, data)
 
     # Act
@@ -61,7 +61,7 @@ def test_decode_jwt_token_expired(mocker):
 
 def test_decode_jwt_token_no_user(mocker):
     # Arrange
-    data = {"role": Roles.USER}
+    data = {"role": Roles.USER, "type": "access"}
     mock_decode = decode_module_mock(mocker, data)
 
     # Act
@@ -78,8 +78,8 @@ def test_decode_jwt_token_no_user(mocker):
 @pytest.mark.parametrize(
     "data",
     [
-        {"sub": LOGIN, "role": "UnvalidRole"},
-        {"sub": LOGIN},
+        {"user_id": "some-uuid", "role": "UnvalidRole", "type": "access"},
+        {"user_id": "some-uuid", "type": "access"},
     ],
     ids=["unvalid_role", "missing_role"],
 )
@@ -104,9 +104,8 @@ def test_create_access_token_success(mocker):
     mock_create_token = create_token_mock(mocker)
     expected_data = {
         "user_id": str(user.id),
-        "sub": user.login,
-        "email": user.email,
         "role": user.role,
+        "type": "access",
     }
     expected_expires_delta = timedelta(minutes=SECRET.ACCESS_TOKEN_EXPIRE_MINUTES)
 
@@ -134,7 +133,7 @@ def test_create_access_token_no_user():
 
 def test_create_token_success(mocker, use_time_machine):
     # Arrange
-    input_data = {"sub": LOGIN, "role": Roles.USER.value}
+    input_data = {"user_id": "some-uuid", "role": Roles.USER.value, "type": "access"}
     mock_encode_mock = encode_mock(mocker)
     expected_expires_delta = timedelta(minutes=SECRET.ACCESS_TOKEN_EXPIRE_MINUTES)
     expected_expires_date_time = datetime.now(tz=timezone.utc) + expected_expires_delta
