@@ -45,6 +45,7 @@ export function WarMapNode({
   onRemove,
   canManage,
 }: WarMapNodeProps) {
+  const { t } = useI18n();
   const colorClasses = getNodeColor(nodeNumber);
   const hoverClasses = getNodeHoverColor(nodeNumber);
 
@@ -61,7 +62,7 @@ export function WarMapNode({
       title={
         placement
           ? `#${nodeNumber} – ${placement.champion_name} (${placement.game_pseudo})`
-          : `Node #${nodeNumber} – Empty`
+          : t.game.defense.nodeEmpty.replace('{node}', String(nodeNumber))
       }
     >
       {/* Node number badge */}
@@ -77,7 +78,7 @@ export function WarMapNode({
             e.stopPropagation();
             onRemove(nodeNumber);
           }}
-          title='Remove defender'
+          title={t.game.defense.removeDefender}
         >
           <X className='w-3 h-3' />
         </button>
@@ -91,6 +92,10 @@ export function WarMapNode({
             rarity={placement.rarity}
             size={44}
           />
+          <span className='text-[8px] text-white/60 font-medium leading-none'>
+            {placement.rarity[0]}★ R{placement.rarity[2]}
+            {placement.signature > 0 && ` · ${placement.signature}`}
+          </span>
           <span className='text-[9px] text-white/80 truncate max-w-[68px] text-center leading-tight'>
             {placement.game_pseudo}
           </span>

@@ -26,6 +26,8 @@ interface AddChampionFormProps {
   onRarityChange: (rarity: string) => void;
   signatureValue: number;
   onSignatureChange: (value: number) => void;
+  isPreferredAttacker: boolean;
+  onIsPreferredAttackerChange: (value: boolean) => void;
   adding: boolean;
   onSubmit: () => void;
   roster: RosterEntry[];
@@ -45,6 +47,8 @@ export default function AddChampionForm({
   onRarityChange,
   signatureValue,
   onSignatureChange,
+  isPreferredAttacker,
+  onIsPreferredAttackerChange,
   adding,
   onSubmit,
   roster,
@@ -194,6 +198,22 @@ export default function AddChampionForm({
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Preferred Attacker */}
+        <div className="mb-4">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isPreferredAttacker}
+              onChange={(e) => onIsPreferredAttackerChange(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <span className="text-sm font-medium">{t.roster.preferredAttacker}</span>
+          </label>
+          <p className="text-xs text-muted-foreground mt-1 ml-6">
+            {t.roster.preferredAttackerHint}
+          </p>
         </div>
 
         {/* Submit */}

@@ -97,6 +97,7 @@ export interface RosterEntry {
   champion_name: string;
   champion_class: string;
   image_url: string | null;
+  is_preferred_attacker: boolean;
 }
 
 export interface BulkChampionEntry {
@@ -159,6 +160,7 @@ export const updateChampionInRoster = async (
   championId: string,
   rarity: string,
   signature: number,
+  isPreferredAttacker: boolean = false,
 ): Promise<RosterEntry> => {
   const response = await fetch(`${PROXY}/champion-users`, {
     method: 'POST',
@@ -168,6 +170,7 @@ export const updateChampionInRoster = async (
       champion_id: championId,
       rarity,
       signature,
+      is_preferred_attacker: isPreferredAttacker,
     }),
   });
   await throwOnError(response, "Erreur lors de la mise à jour du roster");
@@ -224,6 +227,20 @@ export const upgradeChampionRank = async (
     },
   );
   await throwOnError(response, "Erreur lors de l'amélioration du champion");
+  return response.json();
+};
+
+export const togglePreferredAttacker = async (
+  championUserId: string,
+): Promise<RosterEntry> => {
+  const response = await fetch(
+    `${PROXY}/champion-users/${championUserId}/preferred-attacker`,
+    {
+      method: 'PATCH',
+      headers: jsonHeaders,
+    },
+  );
+  await throwOnError(response, "Erreur lors du basculement de l'attaquant préféré");
   return response.json();
 };
 

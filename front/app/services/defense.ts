@@ -12,6 +12,7 @@ export interface DefensePlacement {
   champion_class: string;
   champion_image_url: string | null;
   rarity: string;
+  signature: number;
   placed_by_id: string | null;
   placed_by_pseudo: string | null;
   created_at: string;
@@ -33,6 +34,7 @@ export interface ChampionOwner {
   rank: number;
   signature: number;
   defender_count: number;
+  is_preferred_attacker: boolean;
 }
 
 export interface AvailableChampion {

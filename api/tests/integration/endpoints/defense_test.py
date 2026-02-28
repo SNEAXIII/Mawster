@@ -247,6 +247,35 @@ class TestPlaceDefender:
         assert response.status_code == 409
 
     @pytest.mark.asyncio
+    async def test_place_defender_cross_owner_duplicate_blocked(self):
+        """Same champion_id placed by one owner blocks ALL other owners."""
+        data = await _setup_alliance_with_bg()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        # Place owner's Spider-Man on node 1
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 1,
+                "champion_user_id": str(data["cu_owner1"].id),
+                "game_account_id": str(data["owner"].id),
+            },
+            headers=headers,
+        )
+
+        # Attempt to place MEMBER's Spider-Man (same champion_id) on node 2 → must be 409
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 2,
+                "champion_user_id": str(data["cu_member1"].id),
+                "game_account_id": str(data["member"].id),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 409
+
+    @pytest.mark.asyncio
     async def test_place_defender_wrong_player(self):
         """Champion doesn't belong to the specified game account."""
         data = await _setup_alliance_with_bg()
@@ -444,10 +473,11 @@ class TestAvailableChampions:
             headers=headers,
         )
         body = response.json()
-        spidey = next(c for c in body if c["champion_name"] == "Spider-Man")
-        # Only member's Spider-Man should be available now
-        assert len(spidey["owners"]) == 1
-        assert spidey["owners"][0]["game_pseudo"] == GAME_PSEUDO_2
+        # Dedup by champion_id: Spider-Man entirely excluded (both owner's and member's copy)
+        champion_names = [c["champion_name"] for c in body]
+        assert "Spider-Man" not in champion_names
+        # Only Wolverine and Iron Man remain
+        assert len(body) == 2
 
 
 class TestBgMembers:

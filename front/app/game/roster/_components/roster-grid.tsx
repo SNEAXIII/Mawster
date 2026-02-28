@@ -10,6 +10,7 @@ interface RosterGridProps {
   onEdit?: (entry: RosterEntry) => void;
   onDelete?: (entry: RosterEntry) => void;
   onUpgrade?: (entry: RosterEntry) => void;
+  onTogglePreferredAttacker?: (entry: RosterEntry) => void;
   readOnly?: boolean;
   /** Pending upgrade requests — used to show cancel button instead of upgrade arrow */
   upgradeRequests?: UpgradeRequest[];
@@ -22,6 +23,7 @@ export default function RosterGrid({
   onEdit,
   onDelete,
   onUpgrade,
+  onTogglePreferredAttacker,
   readOnly = false,
   upgradeRequests,
   onCancelRequest,
@@ -52,6 +54,7 @@ export default function RosterGrid({
                   onEdit={onEdit}
                   onDelete={onDelete}
                   onUpgrade={onUpgrade}
+                  onTogglePreferredAttacker={onTogglePreferredAttacker}
                   readOnly={readOnly}
                   pendingRequestId={pending?.id}
                   onCancelRequest={onCancelRequest}

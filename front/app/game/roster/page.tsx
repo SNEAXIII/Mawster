@@ -19,6 +19,7 @@ import {
   RARITY_LABELS,
   upgradeChampionRank,
   getNextRarity,
+  togglePreferredAttacker,
 } from '@/app/services/roster';
 import { Champion } from '@/app/services/champions';
 
@@ -68,6 +69,7 @@ export default function RosterPage() {
   const [selectedChampion, setSelectedChampion] = useState<Champion | null>(null);
   const [selectedRarity, setSelectedRarity] = useState<string>(RARITIES[0]);
   const [signatureValue, setSignatureValue] = useState<number>(0);
+  const [isPreferredAttacker, setIsPreferredAttacker] = useState<boolean>(false);
   const [adding, setAdding] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -154,7 +156,8 @@ export default function RosterPage() {
         selectedAccountId,
         selectedChampion.id,
         selectedRarity,
-        signatureValue
+        signatureValue,
+        isPreferredAttacker,
       );
       // Refresh roster
       const updated = await getRoster(selectedAccountId);
@@ -166,6 +169,7 @@ export default function RosterPage() {
       setChampionSearch('');
       setSearchResults([]);
       setSignatureValue(0);
+      setIsPreferredAttacker(false);
       // Re-focus search input for quick next add
       setTimeout(() => searchInputRef.current?.focus(), 50);
     } catch (e: any) {
@@ -236,6 +240,18 @@ export default function RosterPage() {
       setUpgradeTarget(null);
     }
   }, [upgradeTarget, selectedAccountId]);
+
+  const handleTogglePreferredAttacker = useCallback(async (entry: RosterEntry) => {
+    try {
+      await togglePreferredAttacker(entry.id);
+      if (selectedAccountId) {
+        const updated = await getRoster(selectedAccountId);
+        setRoster(updated);
+      }
+    } catch (e: any) {
+      toast.error(e.message || t.roster.preferredAttackerToggle);
+    }
+  }, [selectedAccountId]);
 
   // Group roster by rarity, sorted descending (7r5 first → 6r4 last)
   const groupedRoster = (() => {
@@ -335,6 +351,8 @@ export default function RosterPage() {
               onRarityChange={setSelectedRarity}
               signatureValue={signatureValue}
               onSignatureChange={setSignatureValue}
+              isPreferredAttacker={isPreferredAttacker}
+              onIsPreferredAttackerChange={setIsPreferredAttacker}
               adding={adding}
               onSubmit={handleAddOrUpdateChampion}
               roster={roster}
@@ -356,6 +374,7 @@ export default function RosterPage() {
                 onEdit={startEditEntry}
                 onDelete={setDeleteTarget}
                 onUpgrade={setUpgradeTarget}
+                onTogglePreferredAttacker={handleTogglePreferredAttacker}
               />
             )}
           </>
