@@ -8,6 +8,7 @@ interface RenderUserDashboardProps {
   users: User[];
   fetchUsersError: string;
   loadUsers: () => void;
+  currentUserRole?: string;
 }
 
 export default function RenderUserDashboard({
@@ -18,6 +19,7 @@ export default function RenderUserDashboard({
   onStatusChange,
   onRoleChange,
   loadUsers,
+  currentUserRole,
 }: RenderUserDashboardProps & AllSelectorProps) {
   return (
     <div className='container mx-auto py-6'>
@@ -34,6 +36,7 @@ export default function RenderUserDashboard({
               key={user.id}
               user={user}
               loadUsers={loadUsers}
+              currentUserRole={currentUserRole}
             />
           ))}
         </TableBody>

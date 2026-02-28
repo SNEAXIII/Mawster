@@ -13,9 +13,10 @@ import { UserActions } from '@/components/dashboard/actions/user-actions';
 interface UserRowProps {
   readonly user: Readonly<User>;
   readonly loadUsers: () => void;
+  readonly currentUserRole?: string;
 }
 
-export function UserRow({ user, loadUsers }: UserRowProps) {
+export function UserRow({ user, loadUsers, currentUserRole }: UserRowProps) {
   return (
     <TableRow>
       <RowUserLogin login={user.login} />
@@ -30,7 +31,8 @@ export function UserRow({ user, loadUsers }: UserRowProps) {
       />
       <UserActions
         userId={user.id}
-        isAdmin={user.role === 'admin'}
+        isAdmin={user.role === 'admin' || user.role === 'super_admin'}
+        isSuperAdmin={currentUserRole === 'super_admin'}
         isDisabled={!!user.disabled_at}
         isDeleted={!!user.deleted_at}
         loadUsers={loadUsers}

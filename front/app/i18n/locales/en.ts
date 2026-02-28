@@ -224,6 +224,7 @@ const en = {
       all: 'All',
       user: 'user',
       admin: 'admin',
+      super_admin: 'super admin',
     },
     pagination: {
       perPage: '{count} per page',

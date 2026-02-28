@@ -227,6 +227,7 @@ const fr: Translations = {
       all: 'Tous',
       user: 'user',
       admin: 'admin',
+      super_admin: 'super admin',
     },
     pagination: {
       perPage: '{count} par page',

@@ -113,19 +113,14 @@ export default function ChampionSelector({
                           size={48}
                         />
                         <span className="text-[10px] text-center truncate w-full leading-tight">
+                          {champ.owners.every(o => o.is_preferred_attacker) && (
+                            <span className="text-yellow-400 font-bold">⚔ </span>
+                          )}
                           {shortenChampionName(champ.champion_name)}
                         </span>
                         <span className={cn('text-[9px] font-medium', classColors.label)}>
                           {RARITY_LABELS[bestOwner.rarity] ?? bestOwner.rarity}
                         </span>
-                        {bestOwner.is_preferred_attacker && (
-                          <span
-                            className="text-[10px] text-amber-400 font-bold"
-                            title={t.game.defense.preferredAttackerWarning}
-                          >
-                            ⚔
-                          </span>
-                        )}
                         {champ.owners.length === 1 ? (
                           <span className="text-[9px] text-muted-foreground truncate w-full text-center">
                             {bestOwner.game_pseudo} · {bestOwner.defender_count}/5

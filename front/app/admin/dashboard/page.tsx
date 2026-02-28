@@ -154,6 +154,7 @@ useEffect(() => {
           onRoleChange={handleRadioSetSelectedRole}
           onStatusChange={handleRadioSetSelectedStatus}
           loadUsers={loadUsers}
+          currentUserRole={session?.user?.role}
         />
       )}
     </>

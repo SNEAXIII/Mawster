@@ -20,6 +20,8 @@ import {
   getMyInvitations,
   acceptInvitation,
   declineInvitation,
+  getAllianceInvitations,
+  cancelInvitation,
 } from '@/app/services/game';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -51,6 +53,9 @@ export default function AlliancesPage() {
 
   // Invitations received by current user
   const [myInvitations, setMyInvitations] = useState<AllianceInvitation[]>([]);
+
+  // Pending invitations sent by alliance (for officers to cancel)
+  const [pendingInvitations, setPendingInvitations] = useState<Record<string, AllianceInvitation[]>>({});
 
   // Create form
   const [name, setName] = useState('');
@@ -124,6 +129,23 @@ export default function AlliancesPage() {
     }
   };
 
+  const fetchPendingInvitations = async (allianceList: Alliance[]) => {
+    const results: Record<string, AllianceInvitation[]> = {};
+    await Promise.all(
+      allianceList.map(async (alliance) => {
+        try {
+          const invitations = await getAllianceInvitations(alliance.id);
+          if (invitations.length > 0) {
+            results[alliance.id] = invitations;
+          }
+        } catch {
+          // Not an officer/owner — silently ignore permission errors
+        }
+      }),
+    );
+    setPendingInvitations(results);
+  };
+
   useEffect(() => {
     if (status === 'authenticated') {
       Promise.all([fetchAlliances(), fetchEligibleOwners(), fetchEligibleMembers(), fetchMyAccounts(), fetchMyInvitations()]).then(() => {
@@ -131,6 +153,13 @@ export default function AlliancesPage() {
       });
     }
   }, [status]);
+
+  // Fetch pending invitations when alliances change
+  useEffect(() => {
+    if (alliances.length > 0) {
+      fetchPendingInvitations(alliances);
+    }
+  }, [alliances]);
 
   // Auto-open create form only if user has NO alliances yet
   useEffect(() => {
@@ -259,6 +288,27 @@ export default function AlliancesPage() {
     }
   };
 
+  const handleCancelInvitation = async (allianceId: string, invitationId: string) => {
+    try {
+      await cancelInvitation(allianceId, invitationId);
+      toast.success(t.game.alliances.cancelInvitationSuccess);
+      // Update pending invitations locally
+      setPendingInvitations((prev) => {
+        const updated = { ...prev };
+        if (updated[allianceId]) {
+          updated[allianceId] = updated[allianceId].filter((inv) => inv.id !== invitationId);
+          if (updated[allianceId].length === 0) {
+            delete updated[allianceId];
+          }
+        }
+        return updated;
+      });
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || t.game.alliances.cancelInvitationError);
+    }
+  };
+
   if (status === 'loading' || loading) {
     return <FullPageSpinner />;
   }
@@ -368,6 +418,8 @@ export default function AlliancesPage() {
               onViewRoster={(gameAccountId, pseudo, canReq) => {
                 setRosterTarget({ gameAccountId, pseudo, canRequestUpgrade: canReq });
               }}
+              pendingInvitations={pendingInvitations[alliance.id] ?? []}
+              onCancelInvitation={handleCancelInvitation}
             />
           ))}
         </div>
