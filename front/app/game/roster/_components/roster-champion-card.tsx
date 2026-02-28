@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useI18n } from '@/app/i18n';
+import { cn } from '@/app/lib/utils';
 import ChampionPortrait from '@/components/champion-portrait';
 import {
   RosterEntry,
@@ -9,7 +10,7 @@ import {
   shortenChampionName,
   getNextRarity,
 } from '@/app/services/roster';
-import { FiTrash2, FiEdit2, FiArrowUp, FiX, FiZap } from 'react-icons/fi';
+import { FiTrash2, FiEdit2, FiArrowUp, FiX } from 'react-icons/fi';
 
 interface RosterChampionCardProps {
   entry: RosterEntry;
@@ -47,13 +48,16 @@ export default function RosterChampionCard({
         <div className="absolute top-1 right-1 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20">
           {onTogglePreferredAttacker && (
             <button
-              className={`hover:text-amber-300 bg-black/60 rounded-full p-1 ${
-                entry.is_preferred_attacker ? 'text-amber-400' : 'text-white/40'
-              }`}
+              className={cn(
+                'bg-black/60 rounded-full p-1',
+                entry.is_preferred_attacker
+                  ? 'text-yellow-400 hover:text-yellow-300'
+                  : 'text-white/40 hover:text-yellow-400',
+              )}
               onClick={() => onTogglePreferredAttacker(entry)}
               title={t.roster.preferredAttackerToggle}
             >
-              <FiZap size={14} />
+              <span className="text-xs leading-none">⚔</span>
             </button>
           )}
           {pendingRequestId && onCancelRequest ? (
@@ -106,10 +110,13 @@ export default function RosterChampionCard({
 
       {/* Name (shortened) */}
       <p
-        className="text-[10px] font-semibold text-white text-center truncate px-0.5 mt-0.5"
+        className={cn(
+          'text-[10px] font-semibold text-center truncate px-0.5 mt-0.5',
+          entry.is_preferred_attacker ? 'text-yellow-400' : 'text-white',
+        )}
         title={entry.champion_name}
       >
-        {shortenChampionName(entry.champion_name)}
+        {entry.is_preferred_attacker && '⚔ '}{shortenChampionName(entry.champion_name)}
       </p>
 
       {/* Signature */}
@@ -122,6 +129,7 @@ export default function RosterChampionCard({
           <span className="text-white/50 text-[9px]">sig 0</span>
         )}
       </div>
+
     </div>
   );
 }

@@ -9,7 +9,7 @@ Usage:
 """
 
 from datetime import datetime
-from random import randint, choice
+from random import randint
 
 from faker import Faker
 from sqlmodel import Session

@@ -20,6 +20,7 @@ export interface PreviewRow {
   oldSignature: number | null;
   isNew: boolean;
   hasChanges: boolean;
+  is_preferred_attacker?: boolean;
 }
 
 interface ImportPreviewRowProps {

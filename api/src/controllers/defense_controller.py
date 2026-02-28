@@ -63,6 +63,7 @@ def _to_placement_response(p) -> DefensePlacementResponse:
         champion_image_url=p.champion_user.champion.image_url,
         rarity=p.champion_user.rarity,
         signature=p.champion_user.signature,
+        is_preferred_attacker=p.champion_user.is_preferred_attacker,
         placed_by_id=p.placed_by_id,
         placed_by_pseudo=p.placed_by.game_pseudo if p.placed_by else None,
         created_at=p.created_at,

@@ -77,7 +77,12 @@ export default function DefenseSidePanel({
                           rarity={p.rarity}
                           size={40}
                         />
-                        <span className="text-[9px] text-muted-foreground">#{p.node_number}</span>
+                        <span className={cn(
+                          'text-[9px]',
+                          p.is_preferred_attacker ? 'text-yellow-400 font-semibold' : 'text-muted-foreground',
+                        )}>
+                          {p.is_preferred_attacker && '⚔ '}#{p.node_number}
+                        </span>
                         {canManage && (
                           <button
                             className="absolute -top-1 -right-1 z-10 hidden group-hover:flex bg-red-600 hover:bg-red-700 text-white rounded-full w-4 h-4 items-center justify-center"

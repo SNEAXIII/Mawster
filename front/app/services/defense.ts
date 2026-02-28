@@ -13,6 +13,7 @@ export interface DefensePlacement {
   champion_image_url: string | null;
   rarity: string;
   signature: number;
+  is_preferred_attacker: boolean;
   placed_by_id: string | null;
   placed_by_pseudo: string | null;
   created_at: string;
