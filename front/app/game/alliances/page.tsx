@@ -230,7 +230,7 @@ export default function AlliancesPage() {
       toast.success(t.game.alliances.inviteSuccess);
       setMemberAllianceId(null);
       setMemberAccountId('');
-      await fetchEligibleMembers();
+      await Promise.all([fetchEligibleMembers(), fetchPendingInvitations(alliances)]);
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || t.game.alliances.inviteError);
@@ -303,6 +303,8 @@ export default function AlliancesPage() {
         }
         return updated;
       });
+      // Refresh eligible members since cancelled invite frees up the account
+      await fetchEligibleMembers();
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || t.game.alliances.cancelInvitationError);
