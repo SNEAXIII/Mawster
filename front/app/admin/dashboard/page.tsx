@@ -4,6 +4,7 @@ import { getUsers, User } from '@/app/services/users';
 import Loading from '@/app/admin/dashboard/loading';
 import RenderUserDashboard from '@/components/dashboard/table/render-user-dashboard';
 import PaginationControls from '@/components/dashboard/pagination/pagination-controls';
+import { SearchInput } from '@/components/search-input';
 import { possibleRoles, possibleStatus } from '@/app/lib/constants';
 import { useSession } from 'next-auth/react';
 import { redirect, usePathname } from 'next/navigation';
@@ -37,6 +38,7 @@ useEffect(() => {
   const [usersPerPage, setUsersPerPage] = useState(BASE_USERS_PER_PAGE);
   const [selectedStatus, setSelectedStatus] = useState(BASE_SELECTED_STATUS);
   const [selectedRole, setSelectedRole] = useState(BASE_SELECTED_ROLE);
+  const [searchQuery, setSearchQuery] = useState('');
   const [canReset, setCanReset] = useState(false);
   const [fetchUsersError, setFetchUsersError] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -53,6 +55,7 @@ useEffect(() => {
         usersPerPage,
         selectedStatus,
         selectedRole,
+        searchQuery,
       );
       setUsers(data.users);
       setCurrentPage(Math.min(currentPage, data.total_pages));
@@ -72,7 +75,8 @@ useEffect(() => {
         !(
           usersPerPage === BASE_USERS_PER_PAGE &&
           selectedStatus === BASE_SELECTED_STATUS &&
-          selectedRole === BASE_SELECTED_ROLE
+          selectedRole === BASE_SELECTED_ROLE &&
+          searchQuery === ''
         )
       );
     }
@@ -87,12 +91,13 @@ useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [sessionReady, currentPage, usersPerPage, selectedStatus, selectedRole]);
+  }, [sessionReady, currentPage, usersPerPage, selectedStatus, selectedRole, searchQuery]);
 
   function resetPagination() {
     setUsersPerPage(BASE_USERS_PER_PAGE);
     setSelectedStatus(BASE_SELECTED_STATUS);
     setSelectedRole(BASE_SELECTED_ROLE);
+    setSearchQuery('');
     setCurrentPage(BASE_CURRENT_PAGE);
   }
 
@@ -131,7 +136,14 @@ useEffect(() => {
 
   return (
     <>
-      <PaginationControls
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        <SearchInput
+          placeholder={t.dashboard.searchPlaceholder}
+          value={searchQuery}
+          onChange={(val) => { setSearchQuery(val); goToPage1(); }}
+          className="w-full sm:w-72"
+        />
+        <PaginationControls
         currentPage={currentPage}
         totalPage={totalPage}
         usersPerPage={usersPerPage}
@@ -143,6 +155,7 @@ useEffect(() => {
         onLastPage={handleLastPage}
         onResetPagination={resetPagination}
       />
+      </div>
       {isLoading ? (
         <Loading usersPerPage={usersPerPage} />
       ) : (

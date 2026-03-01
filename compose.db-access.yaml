@@ -1,0 +1,6 @@
+# Override pour exposer le port MariaDB afin de lancer les scripts de migration.
+# Usage: docker compose -f compose.yaml -f compose.db-access.yaml up -d mariadb
+services:
+  mariadb:
+    ports:
+      - "3306:3306"

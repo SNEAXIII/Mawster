@@ -42,3 +42,5 @@ TARGET_USER_IS_ALREADY_DISABLED = UserAdminError("Le compte cible est déjà dé
 TARGET_USER_IS_DELETED = UserAdminError("Le compte cible est supprimé")
 TARGET_USER_IS_ALREADY_DELETED = UserAdminError("Le compte cible est déjà supprimé")
 TARGET_USER_IS_ALREADY_ADMIN = UserAdminError("Le compte cible est déjà administrateur")
+TARGET_USER_IS_NOT_ADMIN = UserAdminError("Le compte cible n'est pas administrateur")
+TARGET_USER_DEMOTED_SUCCESSFULLY = "Le compte cible a bien été rétrogradé"

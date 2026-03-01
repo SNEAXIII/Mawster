@@ -9,7 +9,9 @@ from starlette import status
 
 from src.models.GameAccount import GameAccount
 from src.models.Alliance import Alliance
+from src.models.AllianceInvitation import AllianceInvitation
 from src.models.AllianceOfficer import AllianceOfficer
+from src.enums.InvitationStatus import InvitationStatus
 from src.utils.db import SessionDep
 
 MAX_MEMBERS_PER_GROUP = 10
@@ -508,9 +510,19 @@ class AllianceService:
     async def get_eligible_members(
         cls, session: SessionDep
     ) -> list[GameAccount]:
-        """Get all game accounts that are NOT in any alliance (can be invited)."""
+        """Get all game accounts that are NOT in any alliance and do NOT have a pending invitation."""
+        # Get IDs of game accounts with pending invitations
+        pending_ids_result = await session.exec(
+            select(AllianceInvitation.game_account_id).where(
+                AllianceInvitation.status == InvitationStatus.PENDING,
+            )
+        )
+        pending_ids = set(pending_ids_result.all())
+
         sql = select(GameAccount).where(
             GameAccount.alliance_id == None,  # noqa: E711
         )
+        if pending_ids:
+            sql = sql.where(GameAccount.id.notin_(pending_ids))  # type: ignore[union-attr]
         result = await session.exec(sql)
         return result.all()

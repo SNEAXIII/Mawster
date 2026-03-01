@@ -59,10 +59,12 @@ export const getUsers = async (
   size: number = 10,
   status: string | null = null,
   role: string | null = null,
+  search: string | null = null,
 ): Promise<FetchUsersResponse> => {
   const qs = new URLSearchParams({ page: String(page), size: String(size) });
   if (status && status !== possibleStatus[0].value) qs.set('status', status);
   if (role && role !== possibleRoles[0].value) qs.set('role', role);
+  if (search && search.trim()) qs.set('search', search.trim());
 
   const response = await fetch(`${PROXY}/admin/users?${qs}`, { headers: jsonHeaders });
   await throwOnError(response, 'Erreur lors de la récupération des utilisateurs');
@@ -123,5 +125,14 @@ export const promoteToAdmin = async (userId: string): Promise<true> => {
     error.validationErrors = errorData.errors;
     throw error;
   }
+  return true;
+};
+
+export const demoteFromAdmin = async (userId: string): Promise<true> => {
+  const response = await fetch(`${PROXY}/admin/users/demote/${userId}`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, "Erreur lors de la rétrogradation de l'administrateur");
   return true;
 };

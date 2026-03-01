@@ -235,6 +235,7 @@ const en = {
     },
     actions: {
       promote: 'Promote to admin',
+      demote: 'Demote',
       enable: 'Enable',
       disable: 'Disable',
       delete: 'Delete',
@@ -250,11 +251,14 @@ const en = {
       deleteUserDesc: 'Are you sure you want to delete this user? This action is irreversible.',
       promoteUser: 'Promote to administrator',
       promoteUserDesc: 'Are you sure you want to promote this user to administrator?',
+      demoteUser: 'Demote administrator',
+      demoteUserDesc: 'Are you sure you want to remove administrator rights from this user?',
     },
     errors: {
       unauthorized: 'Unauthorized',
       loadError: 'An error occurred while loading users',
     },
+    searchPlaceholder: 'Search by login or email...',
   },
 
   // Champions management

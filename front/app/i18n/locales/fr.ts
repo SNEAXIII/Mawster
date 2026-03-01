@@ -238,6 +238,7 @@ const fr: Translations = {
     },
     actions: {
       promote: 'Promouvoir administrateur',
+      demote: 'Rétrograder',
       enable: 'Activer',
       disable: 'Désactiver',
       delete: 'Supprimer',
@@ -255,11 +256,15 @@ const fr: Translations = {
       promoteUser: 'Promouvoir en administrateur',
       promoteUserDesc:
         'Êtes-vous sûr de vouloir promouvoir cet utilisateur en administrateur ?',
+      demoteUser: "Rétrograder l'administrateur",
+      demoteUserDesc:
+        'Êtes-vous sûr de vouloir retirer les droits administrateur de cet utilisateur ?',
     },
     errors: {
       unauthorized: 'Non autorisé',
       loadError: 'Une erreur est survenue lors du chargement des utilisateurs',
     },
+    searchPlaceholder: 'Rechercher par login ou email...',
   },
 
   // Gestion des champions

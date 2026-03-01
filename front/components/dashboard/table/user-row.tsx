@@ -31,7 +31,8 @@ export function UserRow({ user, loadUsers, currentUserRole }: UserRowProps) {
       />
       <UserActions
         userId={user.id}
-        isAdmin={user.role === 'admin' || user.role === 'super_admin'}
+        isAdmin={user.role === 'admin'}
+        isTargetSuperAdmin={user.role === 'super_admin'}
         isSuperAdmin={currentUserRole === 'super_admin'}
         isDisabled={!!user.disabled_at}
         isDeleted={!!user.deleted_at}
