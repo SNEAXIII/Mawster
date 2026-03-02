@@ -79,9 +79,9 @@ class TestChampionUserAccessControl:
         [(action, route, payload) for action, route, payload, _ in _CHAMPION_USER_ROUTES_NO_AUTH],
         ids=[name for _, _, _, name in _CHAMPION_USER_ROUTES_NO_AUTH],
     )
-    async def test_no_auth_returns_401(self, session, method, url, payload):
+    async def test_no_auth_returns_403(self, session, method, url, payload):
         response = await execute_request(method, url, payload)
-        assert response.status_code == 401
+        assert response.status_code == 403
 
 
 # =========================================================================

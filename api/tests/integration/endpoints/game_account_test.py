@@ -56,12 +56,12 @@ class TestCreateGameAccount:
         assert body["is_primary"] is True
 
     @pytest.mark.asyncio
-    async def test_create_without_auth_returns_401(self, session):
+    async def test_create_without_auth_returns_403(self, session):
         response = await execute_post_request(
             ENDPOINT,
             {"game_pseudo": GAME_PSEUDO, "is_primary": False},
         )
-        assert response.status_code == 401
+        assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_create_exceeds_limit(self, session):
@@ -340,12 +340,12 @@ class TestUpdateGameAccount:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_update_without_auth_returns_401(self, session):
+    async def test_update_without_auth_returns_403(self, session):
         response = await execute_put_request(
             f"/game-accounts/{uuid.uuid4()}",
             {"game_pseudo": "X", "is_primary": False},
         )
-        assert response.status_code == 401
+        assert response.status_code == 403
 
 
 # =========================================================================
@@ -392,11 +392,11 @@ class TestDeleteGameAccount:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_delete_without_auth_returns_401(self, session):
+    async def test_delete_without_auth_returns_403(self, session):
         response = await execute_delete_request(
             f"/game-accounts/{uuid.uuid4()}"
         )
-        assert response.status_code == 401
+        assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_delete_already_deleted_returns_404(self, session):

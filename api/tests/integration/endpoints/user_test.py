@@ -59,4 +59,4 @@ class TestSelfDeleteUser:
             ENDPOINT,
             payload={"confirmation": CONFIRMATION_TEXT},
         )
-        assert response.status_code == 401
+        assert response.status_code == 403

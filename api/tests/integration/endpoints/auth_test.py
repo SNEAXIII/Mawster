@@ -68,9 +68,9 @@ class TestGetSession:
         assert body["email"] == USER_EMAIL
 
     @pytest.mark.asyncio
-    async def test_no_auth_header_returns_401(self, session):
+    async def test_no_auth_header_returns_403(self, session):
         response = await execute_get_request("/auth/session")
-        assert response.status_code == 401
+        assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_malformed_token_returns_401(self, session):

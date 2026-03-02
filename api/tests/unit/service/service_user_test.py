@@ -113,9 +113,9 @@ async def test_get_users_with_pagination(mocker):
     assert result.total_users == total_user_result
     assert result.total_pages == 5
     assert result.current_page == PAGE
-    mock_get_total_users.assert_called_once_with(mock_session, STATUS, ROLE)
+    mock_get_total_users.assert_called_once_with(mock_session, STATUS, ROLE, None)
     mock_get_users_paginated.assert_called_once_with(
-        mock_session, PAGE, SIZE, STATUS, ROLE
+        mock_session, PAGE, SIZE, STATUS, ROLE, None
     )
 
 

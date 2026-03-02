@@ -84,7 +84,7 @@ class TestCreateAlliance:
             ENDPOINT,
             {"name": "X", "tag": "X", "owner_id": str(uuid.uuid4())},
         )
-        assert response.status_code == 401
+        assert response.status_code == 403
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -341,7 +341,7 @@ class TestInviteMember:
             f"{ENDPOINT}/{alliance.id}/invitations",
             {"game_account_id": str(uuid.uuid4())},
         )
-        assert response.status_code == 401
+        assert response.status_code == 403
 
 
 # =========================================================================
@@ -850,9 +850,9 @@ class TestGetMyRoles:
 
     @pytest.mark.asyncio
     async def test_my_roles_without_auth(self, session):
-        """No auth header → 401 (router-level dependency rejects)."""
+        """No auth header → 403 (HTTPBearer rejects missing credentials)."""
         response = await execute_get_request(f"{ENDPOINT}/my-roles")
-        assert response.status_code == 401
+        assert response.status_code == 403
 
 
 # =========================================================================
