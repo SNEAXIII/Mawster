@@ -9,7 +9,7 @@ function isPathMatching(path: string, paths: string[]): boolean {
   return paths.some((basePath) => path === basePath || path.startsWith(`${basePath}/`));
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
   const isTokenExpired = token?.expired || !token?.backendAuthenticated;

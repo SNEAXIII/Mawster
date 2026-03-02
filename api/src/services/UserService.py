@@ -260,7 +260,7 @@ class UserService:
         return result.one()
 
     @classmethod
-    async def get_users_with_pagination(
+    async def get_users_with_pagination_role_search(
         cls,
         session: SessionDep,
         page: int,

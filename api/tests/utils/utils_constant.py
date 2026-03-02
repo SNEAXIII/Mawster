@@ -24,6 +24,7 @@ FAKE_TOKEN = "FAKE_TOKEN"  # For unit test purpose
 UNKNOWN_ROLE = "unknown"
 ROLE = None
 STATUS = None
+SEARCH = None
 PAGE = 1
 SIZE = 10
 

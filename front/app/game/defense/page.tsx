@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { toast } from 'sonner';
 import { useRequiredSession } from '@/hooks/use-required-session';
@@ -14,15 +14,11 @@ import { Shield, Trash2 } from 'lucide-react';
 
 import {
   type Alliance,
-  type GameAccount,
   getMyAlliances,
-  getMyGameAccounts,
 } from '@/app/services/game';
 import {
-  type DefensePlacement,
   type DefenseSummary,
   type AvailableChampion,
-  type ChampionOwner,
   type BgMember,
   getDefense,
   placeDefender,
@@ -43,7 +39,6 @@ function DefensePageContent() {
 
   // State
   const [alliances, setAlliances] = useState<Alliance[]>([]);
-  const [myAccounts, setMyAccounts] = useState<GameAccount[]>([]);
   const [selectedAllianceId, setSelectedAllianceId] = useState<string>('');
   const [selectedBg, setSelectedBg] = useState<number>(1);
   const [loading, setLoading] = useState(true);
@@ -74,18 +69,9 @@ function DefensePageContent() {
     }
   }, [t, selectedAllianceId]);
 
-  const fetchMyAccounts = useCallback(async () => {
-    try {
-      const data = await getMyGameAccounts();
-      setMyAccounts(data);
-    } catch {
-      // silent
-    }
-  }, []);
-
-  const fetchDefense = useCallback(async () => {
+  const fetchDefense = useCallback(async (silent = false) => {
     if (!selectedAllianceId) return;
-    setDefenseLoading(true);
+    if (!silent) setDefenseLoading(true);
     try {
       const [defense, champions, members] = await Promise.all([
         getDefense(selectedAllianceId, selectedBg),
@@ -96,23 +82,39 @@ function DefensePageContent() {
       setAvailableChampions(champions);
       setBgMembers(members);
     } catch (err: any) {
-      toast.error(t.game.defense.loadError);
+      if (!silent) toast.error(t.game.defense.loadError);
     } finally {
-      setDefenseLoading(false);
+      if (!silent) setDefenseLoading(false);
     }
   }, [selectedAllianceId, selectedBg, t]);
+
+  // Keep a ref to fetchDefense so the interval always calls the latest version
+  // without restarting every time the callback reference changes
+  const fetchDefenseRef = useRef(fetchDefense);
+  useEffect(() => {
+    fetchDefenseRef.current = fetchDefense;
+  }, [fetchDefense]);
 
   useEffect(() => {
     if (status !== 'authenticated') return;
     setLoading(true);
-    Promise.all([fetchAlliances(), fetchMyAccounts()]).finally(() => setLoading(false));
+    fetchAlliances().finally(() => setLoading(false));
   }, [status]);
 
+  // Fetch on alliance/BG change
   useEffect(() => {
     if (selectedAllianceId) {
       fetchDefense();
     }
-  }, [selectedAllianceId, selectedBg, fetchDefense]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAllianceId, selectedBg]);
+
+  // Auto-poll every 10s (silent — no spinner, no error toast)
+  useEffect(() => {
+    if (!selectedAllianceId) return;
+    const id = setInterval(() => fetchDefenseRef.current(true), 10_000);
+    return () => clearInterval(id);
+  }, [selectedAllianceId, selectedBg]);
 
   // ─── Actions ───────────────────────────────────────────
   const handleNodeClick = (nodeNumber: number) => {
@@ -127,7 +129,7 @@ function DefensePageContent() {
   ) => {
     if (!selectedAllianceId || selectorNode === null) return;
     try {
-      const placement = await placeDefender(
+      await placeDefender(
         selectedAllianceId,
         selectedBg,
         selectorNode,
@@ -137,48 +139,8 @@ function DefensePageContent() {
       toast.success(
         t.game.defense.placeSuccess.replace('{name}', championName).replace('{node}', String(selectorNode)),
       );
-
-      // Update state locally instead of refetching everything
-      setDefenseSummary((prev) => {
-        if (!prev) return prev;
-        // Remove any existing placement on the same node, then add the new one
-        const filtered = prev.placements.filter((p) => p.node_number !== selectorNode);
-        return {
-          ...prev,
-          placements: [...filtered, placement],
-        };
-      });
-
-      // Remove the placed champion from available list (or update owners)
-      setAvailableChampions((prev) =>
-        prev
-          .map((champ) => {
-            if (champ.champion_id !== placement.champion_user_id.split('/')[0]) {
-              // Try matching by champion name + owner
-              const ownerIdx = champ.owners.findIndex(
-                (o) => o.champion_user_id === championUserId && o.game_account_id === gameAccountId,
-              );
-              if (ownerIdx === -1) return champ;
-              // Remove this owner from available
-              const newOwners = champ.owners.filter((_, i) => i !== ownerIdx);
-              if (newOwners.length === 0) return null; // Remove entirely
-              return { ...champ, owners: newOwners };
-            }
-            return champ;
-          })
-          .filter(Boolean) as AvailableChampion[],
-      );
-
-      // Update BG member defender counts
-      setBgMembers((prev) =>
-        prev.map((m) =>
-          m.game_account_id === gameAccountId
-            ? { ...m, defender_count: m.defender_count + 1 }
-            : m,
-        ),
-      );
-
       setSelectorNode(null);
+      await fetchDefense(true);
     } catch (err: any) {
       toast.error(err.message || t.game.defense.placeError);
     }
@@ -186,76 +148,10 @@ function DefensePageContent() {
 
   const handleRemoveDefender = async (nodeNumber: number) => {
     if (!selectedAllianceId) return;
-
-    // Capture the placement before removing (for local state update)
-    const removedPlacement = defenseSummary?.placements.find(
-      (p) => p.node_number === nodeNumber,
-    );
-
     try {
       await removeDefender(selectedAllianceId, selectedBg, nodeNumber);
       toast.success(t.game.defense.removeSuccess);
-
-      // Update state locally instead of refetching everything
-      if (removedPlacement) {
-        setDefenseSummary((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            placements: prev.placements.filter((p) => p.node_number !== nodeNumber),
-          };
-        });
-
-        // Re-add the champion back to available list
-        setAvailableChampions((prev) => {
-          const restoredOwner: ChampionOwner = {
-            champion_user_id: removedPlacement.champion_user_id,
-            game_account_id: removedPlacement.game_account_id,
-            game_pseudo: removedPlacement.game_pseudo,
-            rarity: removedPlacement.rarity,
-            stars: parseInt(removedPlacement.rarity.replace(/[^\d]/g, '')) || 0,
-            rank: 0,
-            signature: removedPlacement.signature,
-            defender_count: Math.max(
-              0,
-              (bgMembers.find((m) => m.game_account_id === removedPlacement.game_account_id)
-                ?.defender_count ?? 1) - 1,
-            ),
-            is_preferred_attacker: removedPlacement.is_preferred_attacker,
-          };
-
-          const existing = prev.find(
-            (c) => c.champion_name === removedPlacement.champion_name && c.champion_class === removedPlacement.champion_class,
-          );
-          if (existing) {
-            return prev.map((c) =>
-              c === existing
-                ? { ...c, owners: [...c.owners, restoredOwner] }
-                : c,
-            );
-          }
-          // Champion was completely removed before, re-add it
-          return [
-            ...prev,
-            {
-              champion_id: removedPlacement.champion_user_id,
-              champion_name: removedPlacement.champion_name,
-              champion_class: removedPlacement.champion_class,
-              image_url: removedPlacement.champion_image_url,
-              owners: [restoredOwner],
-            },
-          ];
-        });
-
-        // Update BG member defender counts
-        setBgMembers((prevMembers) =>
-          prevMembers.map((m) =>
-            m.game_account_id === removedPlacement.game_account_id
-              ? { ...m, defender_count: Math.max(0, m.defender_count - 1) }
-              : m,
-          ),
-        );
-      }
+      await fetchDefense(true);
     } catch (err: any) {
       toast.error(err.message || t.game.defense.removeError);
     }
