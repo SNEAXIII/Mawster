@@ -37,7 +37,7 @@ async def get_users(
     role: Optional[Roles] = None,
     search: Optional[str] = None,
 ):
-    result = await UserService.get_users_with_pagination(
+    result = await UserService.get_users_with_pagination_role_search(
         session, page, size, status, role, search
     )
     return result
