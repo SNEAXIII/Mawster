@@ -16,7 +16,7 @@ from src.controllers.user_controller import user_controller
 from src.controllers.game_account_controller import game_account_controller
 from src.controllers.alliance_controller import alliance_controller
 from src.controllers.champion_user_controller import champion_user_controller
-from src.controllers.champion_controller import champion_controller
+from src.controllers.champion_controller import champion_controller, champion_read_controller
 from src.controllers.defense_controller import defense_controller
 from starlette import status
 from starlette.requests import Request
@@ -48,6 +48,7 @@ app.include_router(game_account_controller)
 app.include_router(alliance_controller)
 app.include_router(champion_user_controller)
 app.include_router(champion_controller)
+app.include_router(champion_read_controller)
 app.include_router(defense_controller)
 
 # Mount static files for champion images

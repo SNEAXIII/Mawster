@@ -137,7 +137,7 @@ export const searchChampions = async (
 ): Promise<{ champions: Champion[] }> => {
   const qs = new URLSearchParams({ page: '1', size: String(size) });
   if (search.trim()) qs.set('search', search.trim());
-  const response = await fetch(`${PROXY}/admin/champions?${qs}`, {
+  const response = await fetch(`${PROXY}/champions?${qs}`, {
     headers: jsonHeaders,
   });
   await throwOnError(response, 'Erreur lors de la recherche de champions');
