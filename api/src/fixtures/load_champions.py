@@ -1,22 +1,26 @@
 """
 Champion fixture script.
-Loads champions from a CSV file into the database.
+Loads champions from champions.json into the database.
 
-CSV format expected (with header):
-    name,champion_class,image_url,is_7_star
-
-Example:
-    name,champion_class,image_url,is_7_star
-    Spider-Man (Classic),Science,https://example.com/spiderman.png,False
-    Doctor Doom,Mystic,https://example.com/doom.png,True
+JSON format expected (array of objects):
+    [
+      {
+        "name": "Spider-Man (Classic)",
+        "champion_class": "Science",
+        "image_url": "/static/champions/spider-man_classic.png",
+        "alias": null
+      },
+      ...
+    ]
 
 Usage:
-    python -m src.fixtures.load_champions
+    make load-champions
     # or
-    python -m src.fixtures.load_champions --csv path/to/champions.csv
+    python -m src.fixtures.load_champions
+    python -m src.fixtures.load_champions --json path/to/champions.json
 """
 
-import csv
+import json
 import sys
 from pathlib import Path
 
@@ -29,60 +33,81 @@ sync_engine = create_engine(
     f"mysql+pymysql://{SECRET.MARIADB_USER}:{SECRET.MARIADB_PASSWORD}@{SECRET.MARIADB_HOST}/{SECRET.MARIADB_DATABASE}",
 )
 
-DEFAULT_CSV_PATH = Path(__file__).parent / "champions.csv"
+DEFAULT_JSON_PATH = Path(__file__).parent.parent.parent / "scripts" / "champions.json"
 
 
-def parse_bool(value: str) -> bool:
-    """Parse a boolean string value from CSV."""
-    return value.strip().lower() in ("true", "1", "yes", "oui")
-
-
-def load_champions(csv_path: Path = DEFAULT_CSV_PATH):
-    """Load champions from a CSV file into the database.
+def load_champions(json_path: Path = DEFAULT_JSON_PATH):
+    """Load champions from a JSON file into the database.
 
     Skips champions that already exist (matched by name).
+    Updates alias/image_url if the champion already exists.
     """
-    if not csv_path.exists():
-        print(f"❌ CSV file not found: {csv_path}")
-        print("   Please create the CSV file with columns: name,champion_class,image_url,is_7_star")
+    if not json_path.exists():
+        print(f"❌ JSON file not found: {json_path}")
+        print("   Expected: scripts/champions.json")
         return
 
     added = 0
+    updated = 0
     skipped = 0
 
     try:
         with Session(sync_engine) as session:
-            with open(csv_path, newline="", encoding="utf-8") as f:
-                reader = csv.DictReader(f)
+            with open(json_path, encoding="utf-8") as f:
+                champions_data = json.load(f)
 
-                for row in reader:
-                    name = row["name"].strip()
+            if not isinstance(champions_data, list):
+                print("❌ JSON root must be an array of champion objects")
+                return
 
-                    # Check if champion already exists
-                    existing = session.exec(
-                        select(Champion).where(Champion.name == name)
-                    ).first()
+            for item in champions_data:
+                name = item.get("name", "").strip()
+                if not name:
+                    continue
 
-                    if existing:
+                champion_class = item.get("champion_class", "").strip()
+                image_url = item.get("image_url") or None
+                alias = item.get("alias") or None
+
+                # Check if champion already exists
+                existing = session.exec(
+                    select(Champion).where(Champion.name == name)
+                ).first()
+
+                if existing:
+                    # Update fields if they changed
+                    changed = False
+                    if existing.image_url != image_url:
+                        existing.image_url = image_url
+                        changed = True
+                    if existing.alias != alias:
+                        existing.alias = alias
+                        changed = True
+                    if existing.champion_class != champion_class:
+                        existing.champion_class = champion_class
+                        changed = True
+                    if changed:
+                        session.add(existing)
+                        updated += 1
+                    else:
                         skipped += 1
-                        continue
+                    continue
 
-                    champion = Champion(
-                        name=name,
-                        champion_class=row["champion_class"].strip(),
-                        image_url=row.get("image_url", "").strip() or None,
-                        is_7_star=parse_bool(row.get("is_7_star", "false")),
-                    )
-                    session.add(champion)
-                    added += 1
+                champion = Champion(
+                    name=name,
+                    champion_class=champion_class,
+                    image_url=image_url,
+                    alias=alias,
+                )
+                session.add(champion)
+                added += 1
 
             session.commit()
 
-        print(f"✅ Champions loaded: {added} added, {skipped} skipped (already exist)")
+        print(f"✅ Champions loaded: {added} added, {updated} updated, {skipped} unchanged")
 
-    except KeyError as e:
-        print(f"❌ Missing column in CSV: {e}")
-        print("   Expected columns: name, champion_class, image_url, is_7_star")
+    except json.JSONDecodeError as e:
+        print(f"❌ Invalid JSON: {e}")
         raise
     except Exception as e:
         print(f"❌ Error loading champions: {e}")
@@ -90,8 +115,8 @@ def load_champions(csv_path: Path = DEFAULT_CSV_PATH):
 
 
 if __name__ == "__main__":
-    csv_file = DEFAULT_CSV_PATH
-    if len(sys.argv) > 2 and sys.argv[1] == "--csv":
-        csv_file = Path(sys.argv[2])
+    json_file = DEFAULT_JSON_PATH
+    if len(sys.argv) > 2 and sys.argv[1] == "--json":
+        json_file = Path(sys.argv[2])
 
-    load_champions(csv_file)
+    load_champions(json_file)

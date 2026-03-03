@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { Shield, Trash2 } from 'lucide-react';
+import { Shield, Trash2, Download, Upload } from 'lucide-react';
 
 import {
   type Alliance,
@@ -20,17 +20,21 @@ import {
   type DefenseSummary,
   type AvailableChampion,
   type BgMember,
+  type DefenseImportReport,
   getDefense,
   placeDefender,
   removeDefender,
   clearDefense,
   getAvailableChampions,
   getBgMembers,
+  exportDefense,
+  importDefense,
 } from '@/app/services/defense';
 
 import WarMap from './_components/war-map';
 import ChampionSelector from './_components/champion-selector';
 import DefenseSidePanel from './_components/defense-side-panel';
+import DefenseImportReportDialog from './_components/defense-import-report-dialog';
 
 function DefensePageContent() {
   const { t } = useI18n();
@@ -52,6 +56,9 @@ function DefensePageContent() {
   // Dialogs
   const [selectorNode, setSelectorNode] = useState<number | null>(null);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const [importReport, setImportReport] = useState<DefenseImportReport | null>(null);
+  const [importReportOpen, setImportReportOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
   const userCanManage = selectedAlliance ? (canManage(selectedAlliance) || isOwner(selectedAlliance)) : false;
@@ -192,6 +199,57 @@ function DefensePageContent() {
     setSelectedBg(1);
   };
 
+  // ─── Import / Export ───────────────────────────────────
+  const handleExport = async () => {
+    if (!selectedAllianceId) return;
+    try {
+      const items = await exportDefense(selectedAllianceId, selectedBg);
+      if (items.length === 0) {
+        toast.warning(t.game.defense.importExport.emptyExport);
+        return;
+      }
+      const json = JSON.stringify(items, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const tag = selectedAlliance?.tag ?? 'defense';
+      a.download = `defense_${tag}_bg${selectedBg}_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(
+        t.game.defense.importExport.exportedCount.replace('{count}', String(items.length)),
+      );
+    } catch (err: any) {
+      toast.error(err.message || t.game.defense.importExport.exportError);
+    }
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedAllianceId) return;
+    // Reset so the same file can be re-selected
+    e.target.value = '';
+
+    try {
+      const text = await file.text();
+      const placements = JSON.parse(text);
+      if (!Array.isArray(placements) || placements.length === 0) {
+        toast.error(t.game.defense.importExport.invalidFile);
+        return;
+      }
+      const report = await importDefense(selectedAllianceId, selectedBg, placements);
+      setImportReport(report);
+      setImportReportOpen(true);
+      await fetchDefense(true);
+      resetPollTimer();
+    } catch (err: any) {
+      toast.error(err.message || t.game.defense.importExport.importError);
+    }
+  };
+
   // ─── Render ────────────────────────────────────────────
   if (loading || status === 'loading') return <FullPageSpinner />;
 
@@ -269,6 +327,20 @@ function DefensePageContent() {
                 {t.game.defense.clearAll}
               </Button>
             )}
+
+            {/* Export / Import */}
+            <div className={`flex gap-1 ${userCanManage && defenseSummary && defenseSummary.placements.length > 0 ? '' : 'ml-auto'}`}>
+              <Button variant="outline" size="sm" onClick={handleExport}>
+                <Download className="w-4 h-4 mr-1" />
+                {t.game.defense.importExport.exportBtn}
+              </Button>
+              {userCanManage && (
+                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                  <Upload className="w-4 h-4 mr-1" />
+                  {t.game.defense.importExport.importBtn}
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -328,6 +400,22 @@ function DefensePageContent() {
         confirmText={t.common.confirm}
         onConfirm={handleClearDefense}
         variant="destructive"
+      />
+
+      {/* Hidden file input for import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        className="hidden"
+        onChange={handleImportFile}
+      />
+
+      {/* Import report dialog */}
+      <DefenseImportReportDialog
+        open={importReportOpen}
+        onClose={() => setImportReportOpen(false)}
+        report={importReport}
       />
     </div>
   );

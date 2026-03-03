@@ -2,7 +2,7 @@
 
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -11,12 +11,34 @@ import { MdErrorOutline } from 'react-icons/md';
 import { BiUser } from 'react-icons/bi';
 import { useI18n } from '@/app/i18n';
 
+const IS_DEV = process.env.NODE_ENV === 'development';
+
+interface DevUser {
+  id: string;
+  login: string;
+  email: string;
+  role: string;
+}
+
 function LoginPageContent() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') ?? '/';
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [devUsers, setDevUsers] = useState<DevUser[]>([]);
+  const [devLoading, setDevLoading] = useState(false);
   const { t } = useI18n();
+
+  // In dev mode, fetch the user list from the backend
+  useEffect(() => {
+    if (!IS_DEV) return;
+    setDevLoading(true);
+    fetch('/api/dev/users')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((users: DevUser[]) => setDevUsers(users))
+      .catch(() => setDevUsers([]))
+      .finally(() => setDevLoading(false));
+  }, []);
 
   const handleDiscordLogin = async () => {
     setIsLoading(true);
@@ -25,6 +47,18 @@ function LoginPageContent() {
       await signIn('discord', { callbackUrl });
     } catch (error) {
       console.error('Login error:', error);
+      setError(t.login.errorGeneric);
+      setIsLoading(false);
+    }
+  };
+
+  const handleDevLogin = async (userId: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await signIn('dev-login', { user_id: userId, callbackUrl });
+    } catch (error) {
+      console.error('Dev login error:', error);
       setError(t.login.errorGeneric);
       setIsLoading(false);
     }
@@ -76,6 +110,37 @@ function LoginPageContent() {
                 </>
               )}
             </Button>
+
+            {/* ─── Dev-only: user picker ─── */}
+            {IS_DEV && (
+              <div className='border-t pt-4 mt-4'>
+                <p className='text-xs font-semibold text-orange-600 mb-2 text-center'>
+                  🔓 {t.login.devModeTitle}
+                </p>
+                {devLoading ? (
+                  <div className='flex justify-center py-2'>
+                    <Loader className='w-5 h-5 animate-spin text-gray-400' />
+                  </div>
+                ) : devUsers.length === 0 ? (
+                  <p className='text-xs text-gray-400 text-center'>{t.login.devNoUsers}</p>
+                ) : (
+                  <div className='space-y-1 max-h-60 overflow-y-auto'>
+                    {devUsers.map((u) => (
+                      <button
+                        key={u.id}
+                        type='button'
+                        className='w-full text-left px-3 py-2 text-sm rounded-md hover:bg-gray-100 transition-colors flex items-center justify-between disabled:opacity-50'
+                        disabled={isLoading}
+                        onClick={() => handleDevLogin(u.id)}
+                      >
+                        <span className='font-medium truncate'>{u.login}</span>
+                        <span className='text-xs text-gray-400 ml-2 shrink-0'>{u.role}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

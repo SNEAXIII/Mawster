@@ -153,3 +153,56 @@ export async function getBgMembers(
   await throwOnError(response, 'Failed to load BG members');
   return response.json();
 }
+
+// ─── Export / Import ─────────────────────────────────────
+
+export interface DefenseExportItem {
+  champion_name: string;
+  rarity: string;
+  node_number: number;
+  owner_name: string;
+}
+
+export interface DefenseImportError {
+  node_number: number;
+  champion_name: string;
+  owner_name: string;
+  reason: string;
+}
+
+export interface DefenseImportReport {
+  before: DefenseExportItem[];
+  after: DefenseExportItem[];
+  errors: DefenseImportError[];
+  success_count: number;
+  error_count: number;
+}
+
+export async function exportDefense(
+  allianceId: string,
+  battlegroup: number,
+): Promise<DefenseExportItem[]> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/defense/bg/${battlegroup}/export`,
+    { headers: jsonHeaders },
+  );
+  await throwOnError(response, 'Failed to export defense');
+  return response.json();
+}
+
+export async function importDefense(
+  allianceId: string,
+  battlegroup: number,
+  placements: DefenseExportItem[],
+): Promise<DefenseImportReport> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/defense/bg/${battlegroup}/import`,
+    {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ placements }),
+    },
+  );
+  await throwOnError(response, 'Failed to import defense');
+  return response.json();
+}

@@ -8,6 +8,9 @@ from src.dto.dto_defense import (
     DefensePlacementCreateRequest,
     DefensePlacementResponse,
     DefenseSummaryResponse,
+    DefenseExportItem,
+    DefenseImportRequest,
+    DefenseImportReport,
 )
 from src.models import User
 from src.models.GameAccount import GameAccount
@@ -256,4 +259,80 @@ async def get_bg_members(
 
     return await DefensePlacementService.get_bg_members_with_counts(
         session, alliance_id, battlegroup
+    )
+
+
+# ─── Export / Import ──────────────────────────────────────────────────────────
+
+
+@defense_controller.get(
+    "/bg/{battlegroup}/export",
+    response_model=list[DefenseExportItem],
+)
+async def export_defense(
+    alliance_id: uuid.UUID,
+    battlegroup: int,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Export the current defense as portable JSON (no IDs)."""
+    if battlegroup < 1 or battlegroup > 3:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Battlegroup must be 1, 2, or 3")
+
+    await _get_user_account_in_alliance(session, current_user, alliance_id)
+
+    items = await DefensePlacementService.export_defense(session, alliance_id, battlegroup)
+
+    audit_log(
+        "defense.export",
+        user_id=str(current_user.id),
+        detail=f"alliance_id={alliance_id} bg={battlegroup} count={len(items)}",
+    )
+    return items
+
+
+@defense_controller.post(
+    "/bg/{battlegroup}/import",
+    response_model=DefenseImportReport,
+)
+async def import_defense(
+    alliance_id: uuid.UUID,
+    battlegroup: int,
+    body: DefenseImportRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Import a defense layout from JSON. Clears existing defense first.
+    Officers/owners only. Returns a before/after comparison + errors."""
+    if battlegroup < 1 or battlegroup > 3:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Battlegroup must be 1, 2, or 3")
+
+    my_account = await _get_user_account_in_alliance(session, current_user, alliance_id)
+
+    alliance = await AllianceService._load_alliance_with_relations(session, alliance_id)
+    if alliance is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+
+    await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
+
+    before, after, errors, success_count, error_count = await DefensePlacementService.import_defense(
+        session=session,
+        alliance_id=alliance_id,
+        battlegroup=battlegroup,
+        items=body.placements,
+        placed_by_id=my_account.id,
+    )
+
+    audit_log(
+        "defense.import",
+        user_id=str(current_user.id),
+        detail=f"alliance_id={alliance_id} bg={battlegroup} ok={success_count} err={error_count}",
+    )
+
+    return DefenseImportReport(
+        before=before,
+        after=after,
+        errors=errors,
+        success_count=success_count,
+        error_count=error_count,
     )
