@@ -163,6 +163,15 @@ export interface DefenseExportItem {
   owner_name: string;
 }
 
+export interface DefenseReportItem {
+  champion_name: string;
+  champion_class: string | null;
+  champion_image_url: string | null;
+  rarity: string;
+  node_number: number;
+  owner_name: string;
+}
+
 export interface DefenseImportError {
   node_number: number;
   champion_name: string;
@@ -171,8 +180,8 @@ export interface DefenseImportError {
 }
 
 export interface DefenseImportReport {
-  before: DefenseExportItem[];
-  after: DefenseExportItem[];
+  before: DefenseReportItem[];
+  after: DefenseReportItem[];
   errors: DefenseImportError[];
   success_count: number;
   error_count: number;

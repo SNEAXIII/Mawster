@@ -563,3 +563,267 @@ class TestBgMembers:
         for m in body:
             assert m["defender_count"] == 0
             assert m["max_defenders"] == 5
+
+
+class TestExportDefense:
+    """GET /alliances/{id}/defense/bg/{bg}/export"""
+
+    @pytest.mark.asyncio
+    async def test_export_empty(self):
+        """Export when no defenders are placed returns []."""
+        data = await _setup_alliance_with_bg()
+        headers = create_auth_headers(user_id=str(USER_ID))
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/export",
+            headers=headers,
+        )
+        assert response.status_code == 200
+        assert response.json() == []
+
+    @pytest.mark.asyncio
+    async def test_export_after_placing(self):
+        """Export returns one DefenseExportItem per placement."""
+        data = await _setup_alliance_with_bg()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        # Place 2 defenders (use different champions to avoid cross-owner dup)
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 1,
+                "champion_user_id": str(data["cu_owner1"].id),
+                "game_account_id": str(data["owner"].id),
+            },
+            headers=headers,
+        )
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 10,
+                "champion_user_id": str(data["cu_member2"].id),
+                "game_account_id": str(data["member"].id),
+            },
+            headers=headers,
+        )
+
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/export",
+            headers=headers,
+        )
+        assert response.status_code == 200
+        items = response.json()
+        assert len(items) == 2
+        names = {i["champion_name"] for i in items}
+        assert "Spider-Man" in names
+        assert "Iron Man" in names
+        nodes = {i["node_number"] for i in items}
+        assert nodes == {1, 10}
+        # Verify portable format (no IDs)
+        for i in items:
+            assert "id" not in i
+            assert "champion_user_id" not in i
+            assert "owner_name" in i
+            assert "rarity" in i
+
+    @pytest.mark.asyncio
+    async def test_export_not_member_denied(self):
+        """Non-member cannot export."""
+        data = await _setup_alliance_with_bg()
+        other_user_id = uuid.uuid4()
+        other_user = User(
+            id=other_user_id, login="outsider2", email="outsider2@test.com",
+            discord_id="outsider2", role="user",
+        )
+        await load_objects([other_user])
+        headers = create_auth_headers(login="outsider2", user_id=str(other_user_id), email="outsider2@test.com")
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/export",
+            headers=headers,
+        )
+        assert response.status_code == 403
+
+
+class TestImportDefense:
+    """POST /alliances/{id}/defense/bg/{bg}/import"""
+
+    @pytest.mark.asyncio
+    async def test_import_valid(self):
+        """Import valid placements → success report with correct counts."""
+        data = await _setup_alliance_with_bg()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        payload = {
+            "placements": [
+                {
+                    "champion_name": "Spider-Man",
+                    "rarity": "7r3",
+                    "node_number": 1,
+                    "owner_name": GAME_PSEUDO,
+                },
+                {
+                    "champion_name": "Iron Man",
+                    "rarity": "7r1",
+                    "node_number": 5,
+                    "owner_name": GAME_PSEUDO_2,
+                },
+            ]
+        }
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/import",
+            payload=payload,
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success_count"] == 2
+        assert body["error_count"] == 0
+        assert body["errors"] == []
+        assert len(body["before"]) == 0  # was empty before
+        assert len(body["after"]) == 2
+        # After items should have report fields (class + image)
+        for item in body["after"]:
+            assert "champion_class" in item
+            assert "champion_image_url" in item
+
+    @pytest.mark.asyncio
+    async def test_import_clears_previous(self):
+        """Import clears existing defense before placing new ones."""
+        data = await _setup_alliance_with_bg()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        # Place one defender first
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 1,
+                "champion_user_id": str(data["cu_owner1"].id),
+                "game_account_id": str(data["owner"].id),
+            },
+            headers=headers,
+        )
+
+        # Import different placements
+        payload = {
+            "placements": [
+                {
+                    "champion_name": "Wolverine",
+                    "rarity": "6r5",
+                    "node_number": 10,
+                    "owner_name": GAME_PSEUDO,
+                },
+            ]
+        }
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/import",
+            payload=payload,
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body["before"]) == 1  # had Spider-Man on node 1
+        assert body["before"][0]["champion_name"] == "Spider-Man"
+        assert len(body["after"]) == 1   # now Wolverine on node 10
+        assert body["after"][0]["champion_name"] == "Wolverine"
+
+    @pytest.mark.asyncio
+    async def test_import_with_unknown_champion_error(self):
+        """Importing an unknown champion returns an error for that entry."""
+        data = await _setup_alliance_with_bg()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        payload = {
+            "placements": [
+                {
+                    "champion_name": "NonExistentHero",
+                    "rarity": "7r3",
+                    "node_number": 1,
+                    "owner_name": GAME_PSEUDO,
+                },
+                {
+                    "champion_name": "Spider-Man",
+                    "rarity": "7r3",
+                    "node_number": 2,
+                    "owner_name": GAME_PSEUDO,
+                },
+            ]
+        }
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/import",
+            payload=payload,
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success_count"] == 1
+        assert body["error_count"] == 1
+        assert len(body["errors"]) == 1
+        assert body["errors"][0]["champion_name"] == "NonExistentHero"
+        assert "Unknown champion" in body["errors"][0]["reason"]
+
+    @pytest.mark.asyncio
+    async def test_import_unknown_player_error(self):
+        """Importing for an unknown player returns an error."""
+        data = await _setup_alliance_with_bg()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        payload = {
+            "placements": [
+                {
+                    "champion_name": "Spider-Man",
+                    "rarity": "7r3",
+                    "node_number": 1,
+                    "owner_name": "GhostPlayer",
+                },
+            ]
+        }
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/import",
+            payload=payload,
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success_count"] == 0
+        assert body["error_count"] == 1
+        assert "not found" in body["errors"][0]["reason"]
+
+    @pytest.mark.asyncio
+    async def test_import_non_officer_denied(self):
+        """Non-officer cannot import."""
+        data = await _setup_alliance_with_bg()
+        headers = create_auth_headers(login=USER2_LOGIN, user_id=str(USER2_ID), email=USER2_EMAIL)
+
+        payload = {
+            "placements": [
+                {
+                    "champion_name": "Spider-Man",
+                    "rarity": "7r2",
+                    "node_number": 1,
+                    "owner_name": GAME_PSEUDO_2,
+                },
+            ]
+        }
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/import",
+            payload=payload,
+            headers=headers,
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_import_empty_placements_rejected(self):
+        """Import with empty placements array is rejected (422 validation)."""
+        data = await _setup_alliance_with_bg()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/import",
+            payload={"placements": []},
+            headers=headers,
+        )
+        assert response.status_code in (400, 422)
