@@ -35,7 +35,7 @@ import DefenseSidePanel from './_components/defense-side-panel';
 function DefensePageContent() {
   const { t } = useI18n();
   const { status } = useRequiredSession();
-  const { canManage, isOwner, myAccountIds } = useAllianceRole();
+  const { canManage, isOwner } = useAllianceRole();
 
   // State
   const [alliances, setAlliances] = useState<Alliance[]>([]);
@@ -95,6 +95,15 @@ function DefensePageContent() {
     fetchDefenseRef.current = fetchDefense;
   }, [fetchDefense]);
 
+  // Ref holding the active poll interval ID
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Reset the 10s poll countdown (call after any mutation to avoid double-fetch)
+  const resetPollTimer = useCallback(() => {
+    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    pollIntervalRef.current = setInterval(() => fetchDefenseRef.current(true), 10_000);
+  }, []);
+
   useEffect(() => {
     if (status !== 'authenticated') return;
     setLoading(true);
@@ -112,9 +121,11 @@ function DefensePageContent() {
   // Auto-poll every 10s (silent — no spinner, no error toast)
   useEffect(() => {
     if (!selectedAllianceId) return;
-    const id = setInterval(() => fetchDefenseRef.current(true), 10_000);
-    return () => clearInterval(id);
-  }, [selectedAllianceId, selectedBg]);
+    resetPollTimer();
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    };
+  }, [selectedAllianceId, selectedBg, resetPollTimer]);
 
   // ─── Actions ───────────────────────────────────────────
   const handleNodeClick = (nodeNumber: number) => {
@@ -141,6 +152,7 @@ function DefensePageContent() {
       );
       setSelectorNode(null);
       await fetchDefense(true);
+      resetPollTimer();
     } catch (err: any) {
       toast.error(err.message || t.game.defense.placeError);
     }
@@ -152,6 +164,7 @@ function DefensePageContent() {
       await removeDefender(selectedAllianceId, selectedBg, nodeNumber);
       toast.success(t.game.defense.removeSuccess);
       await fetchDefense(true);
+      resetPollTimer();
     } catch (err: any) {
       toast.error(err.message || t.game.defense.removeError);
     }
@@ -162,7 +175,8 @@ function DefensePageContent() {
     try {
       await clearDefense(selectedAllianceId, selectedBg);
       toast.success(t.game.defense.clearSuccess);
-      await fetchDefense();
+      await fetchDefense(true);
+      resetPollTimer();
     } catch (err: any) {
       toast.error(err.message || t.game.defense.clearError);
     }
