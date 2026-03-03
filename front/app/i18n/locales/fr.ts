@@ -17,6 +17,7 @@ const fr: Translations = {
     never: 'Jamais',
     active: 'Actif',
     page: 'Page',
+    close: 'Fermer',
   },
 
   // Navigation
@@ -46,6 +47,8 @@ const fr: Translations = {
     discordButton: 'Se connecter avec Discord',
     signingIn: 'Connexion en cours...',
     errorGeneric: 'Une erreur est survenue lors de la connexion',
+    devModeTitle: 'Mode Dev — Choisir un utilisateur',
+    devNoUsers: 'Aucun utilisateur trouvé (lancez les fixtures)',
   },
 
   // Register page
@@ -203,6 +206,21 @@ const fr: Translations = {
       nodeEmpty: 'Nœud #{node} — Vide',
       ownersCount: '{count} possesseurs',
       preferredAttackerWarning: 'Attaquant préféré',
+      importExport: {
+        exportBtn: 'Exporter',
+        importBtn: 'Importer',
+        emptyExport: 'Aucun défenseur à exporter',
+        exportedCount: '{count} défenseurs exportés',
+        exportError: "Erreur lors de l'export de la défense",
+        importError: "Erreur lors de l'import de la défense",
+        invalidFile: 'Fichier JSON invalide',
+        reportTitle: "Rapport d'import",
+        reportSummary: '{ok} placés avec succès, {err} erreurs',
+        errors: 'Erreurs',
+        before: 'Avant',
+        after: 'Après',
+        empty: 'Vide',
+      },
     },
   },
 

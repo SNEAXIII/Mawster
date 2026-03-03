@@ -15,6 +15,7 @@ const en = {
     never: 'Never',
     active: 'Active',
     page: 'Page',
+    close: 'Close',
   },
 
   // Navigation
@@ -44,6 +45,8 @@ const en = {
     discordButton: 'Sign in with Discord',
     signingIn: 'Signing in...',
     errorGeneric: 'An error occurred during sign in',
+    devModeTitle: 'Dev Mode — Pick a user',
+    devNoUsers: 'No users found (run fixtures first)',
   },
 
   // Register page
@@ -200,6 +203,21 @@ const en = {
       nodeEmpty: 'Node #{node} — Empty',
       ownersCount: '{count} owners',
       preferredAttackerWarning: 'Preferred attacker',
+      importExport: {
+        exportBtn: 'Export',
+        importBtn: 'Import',
+        emptyExport: 'No defenders to export',
+        exportedCount: '{count} defenders exported',
+        exportError: 'Failed to export defense',
+        importError: 'Failed to import defense',
+        invalidFile: 'Invalid JSON file',
+        reportTitle: 'Import Report',
+        reportSummary: '{ok} placed successfully, {err} errors',
+        errors: 'Errors',
+        before: 'Before',
+        after: 'After',
+        empty: 'Empty',
+      },
     },
   },
 

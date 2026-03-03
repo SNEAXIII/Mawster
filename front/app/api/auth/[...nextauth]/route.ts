@@ -1,7 +1,10 @@
 import NextAuth from 'next-auth';
 import Discord from 'next-auth/providers/discord';
+import Credentials from 'next-auth/providers/credentials';
 import jwt from 'jsonwebtoken';
 import { SERVER_API_URL } from '@/next.config';
+
+const IS_DEV = process.env.NODE_ENV === 'development';
 
 interface JwtPayload {
   user_id: string;
@@ -119,9 +122,57 @@ export const {
         },
       },
     }),
+    // Dev-only: pick a user from the database without Discord
+    ...(IS_DEV
+      ? [
+          Credentials({
+            id: 'dev-login',
+            name: 'Dev Login',
+            credentials: {
+              user_id: { label: 'User ID', type: 'text' },
+            },
+            async authorize(credentials) {
+              if (!credentials?.user_id) return null;
+
+              const res = await fetch(`${SERVER_API_URL}/auth/dev-login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: credentials.user_id }),
+              });
+
+              if (!res.ok) return null;
+
+              const data = await res.json();
+              const decoded = jwt.decode(data.access_token) as JwtPayload | null;
+              if (!decoded) return null;
+
+              return {
+                id: decoded.user_id,
+                role: decoded.role,
+                accessToken: data.access_token,
+                refreshToken: data.refresh_token,
+              } as any;
+            },
+          }),
+        ]
+      : []),
   ],
   callbacks: {
     async jwt({ token, user, account, profile }: { token: any; user: any; account?: any; profile?: any }) {
+      // Dev login via CredentialsProvider (no Discord)
+      if (account?.provider === 'dev-login' && user) {
+        return {
+          ...token,
+          id: user.id,
+          role: user.role,
+          accessToken: user.accessToken,
+          backendRefreshToken: user.refreshToken,
+          accessTokenExpires: Date.now() + 60 * 60 * 1000,
+          expired: false,
+          backendAuthenticated: true,
+        };
+      }
+
       // Login initial via Discord OAuth
       if (account?.provider === 'discord' && account.access_token) {
         try {

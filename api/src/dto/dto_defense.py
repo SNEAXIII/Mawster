@@ -56,3 +56,36 @@ class DefenderAssignmentResponse(BaseModel):
     champion_image_url: Optional[str] = None
     game_account_id: uuid.UUID
     game_pseudo: str
+
+
+# ─── Defense export / import ──────────────────────────────────────────────────
+
+
+class DefenseExportItem(BaseModel):
+    """One placement in portable JSON form (no IDs)."""
+    champion_name: str
+    rarity: str
+    node_number: int
+    owner_name: str
+
+
+class DefenseImportRequest(BaseModel):
+    """Payload to import a full defense from JSON."""
+    placements: list[DefenseExportItem] = Field(..., min_length=1)
+
+
+class DefenseImportError(BaseModel):
+    """One failed placement during import."""
+    node_number: int
+    champion_name: str
+    owner_name: str
+    reason: str
+
+
+class DefenseImportReport(BaseModel):
+    """Result returned after an import operation."""
+    before: list[DefenseExportItem]
+    after: list[DefenseExportItem]
+    errors: list[DefenseImportError]
+    success_count: int
+    error_count: int

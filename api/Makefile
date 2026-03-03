@@ -5,6 +5,7 @@ help:
 	@echo "create-mig   --> create fresh new migration"
 	@echo "migrate      --> execute pending migrations"
 	@echo "fixtures     --> load all fixtures for dev purposes"
+	@echo "load-champions --> load champions from scripts/champions.json"
 	@echo "init-db      --> load one user and basic bdd"
 	@echo "cancel-last  --> cancel last executed migration"
 	@echo "test         --> run tests (xdist enabled by default, set XDIST=0 to disable)"
@@ -30,6 +31,9 @@ migrate:
 
 fixtures:
 	uv run python -m src.fixtures.sample_data
+
+load-champions:
+	uv run python -m src.fixtures.load_champions
 
 reset-db:
 	uv run python -m src.fixtures.reset_db

@@ -7,9 +7,11 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from src.models.Alliance import Alliance
+from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.DefensePlacement import DefensePlacement
 from src.models.GameAccount import GameAccount
+from src.dto.dto_defense import DefenseExportItem, DefenseImportError
 from src.utils.db import SessionDep
 
 MAX_DEFENDERS_PER_PLAYER = 5
@@ -374,3 +376,213 @@ class DefensePlacementService:
             }
             for m in members
         ]
+
+    # ─── Export / Import ──────────────────────────────────────────────────
+
+    @classmethod
+    async def export_defense(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        battlegroup: int,
+    ) -> list[DefenseExportItem]:
+        """Return current placements as portable items (no IDs)."""
+        placements = await cls.get_defense(session, alliance_id, battlegroup)
+        return [
+            DefenseExportItem(
+                champion_name=p.champion_user.champion.name,
+                rarity=p.champion_user.rarity,
+                node_number=p.node_number,
+                owner_name=p.game_account.game_pseudo,
+            )
+            for p in placements
+        ]
+
+    @classmethod
+    async def import_defense(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        battlegroup: int,
+        items: list[DefenseExportItem],
+        placed_by_id: uuid.UUID | None = None,
+    ) -> tuple[list[DefenseExportItem], list[DefenseExportItem], list[DefenseImportError], int, int]:
+        """
+        Import a defense layout.
+
+        Returns (before, after, errors, success_count, error_count).
+        """
+        # 1. Snapshot "before"
+        before = await cls.export_defense(session, alliance_id, battlegroup)
+
+        # 2. Clear current defense
+        await cls.clear_defense(session, alliance_id, battlegroup)
+
+        # 3. Pre-load lookup tables for this BG
+        members_result = await session.exec(
+            select(GameAccount).where(
+                and_(
+                    GameAccount.alliance_id == alliance_id,
+                    GameAccount.alliance_group == battlegroup,
+                )
+            )
+        )
+        members = members_result.all()
+        pseudo_map: dict[str, GameAccount] = {m.game_pseudo.lower(): m for m in members}
+
+        champion_result = await session.exec(select(Champion))
+        all_champions = champion_result.all()
+        champ_name_map: dict[str, Champion] = {c.name.lower(): c for c in all_champions}
+
+        # 4. Import one-by-one
+        errors: list[DefenseImportError] = []
+        success_count = 0
+
+        for item in items:
+            reason = await cls._import_one(
+                session,
+                alliance_id,
+                battlegroup,
+                item,
+                pseudo_map,
+                champ_name_map,
+                placed_by_id,
+            )
+            if reason:
+                errors.append(
+                    DefenseImportError(
+                        node_number=item.node_number,
+                        champion_name=item.champion_name,
+                        owner_name=item.owner_name,
+                        reason=reason,
+                    )
+                )
+            else:
+                success_count += 1
+
+        await session.commit()
+
+        # 5. Snapshot "after"
+        after = await cls.export_defense(session, alliance_id, battlegroup)
+
+        return before, after, errors, success_count, len(errors)
+
+    @classmethod
+    async def _import_one(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        battlegroup: int,
+        item: DefenseExportItem,
+        pseudo_map: dict[str, "GameAccount"],
+        champ_name_map: dict[str, "Champion"],
+        placed_by_id: uuid.UUID | None,
+    ) -> str | None:
+        """Try to place one imported item. Returns error reason or None on success."""
+        # Validate node
+        if item.node_number < 1 or item.node_number > 55:
+            return f"Invalid node number {item.node_number}"
+
+        # Resolve champion
+        champion = champ_name_map.get(item.champion_name.lower())
+        if champion is None:
+            return f"Unknown champion '{item.champion_name}'"
+
+        # Resolve owner
+        game_account = pseudo_map.get(item.owner_name.lower())
+        if game_account is None:
+            return f"Player '{item.owner_name}' not found in BG{battlegroup}"
+
+        # Parse rarity → stars + rank
+        try:
+            parts = item.rarity.lower().split("r")
+            stars = int(parts[0])
+            rank = int(parts[1])
+        except (ValueError, IndexError):
+            return f"Invalid rarity format '{item.rarity}' (expected e.g. '7r3')"
+
+        # Find matching ChampionUser
+        cu_result = await session.exec(
+            select(ChampionUser).where(
+                and_(
+                    ChampionUser.champion_id == champion.id,
+                    ChampionUser.game_account_id == game_account.id,
+                    ChampionUser.stars == stars,
+                    ChampionUser.rank == rank,
+                )
+            )
+        )
+        champion_user = cu_result.first()
+        if champion_user is None:
+            # Try any matching champion for this owner (different rank)
+            fallback_result = await session.exec(
+                select(ChampionUser).where(
+                    and_(
+                        ChampionUser.champion_id == champion.id,
+                        ChampionUser.game_account_id == game_account.id,
+                    )
+                )
+            )
+            fallback = fallback_result.first()
+            if fallback is None:
+                return f"'{item.owner_name}' does not own '{item.champion_name}'"
+            else:
+                return (
+                    f"'{item.owner_name}' owns '{item.champion_name}' at "
+                    f"{fallback.rarity}, not {item.rarity}"
+                )
+
+        # Check node not already taken (earlier import item may occupy it)
+        node_result = await session.exec(
+            select(DefensePlacement).where(
+                and_(
+                    DefensePlacement.alliance_id == alliance_id,
+                    DefensePlacement.battlegroup == battlegroup,
+                    DefensePlacement.node_number == item.node_number,
+                )
+            )
+        )
+        if node_result.first():
+            return f"Node {item.node_number} already occupied by a previous import entry"
+
+        # Check champion not already placed on another node
+        dup_result = await session.exec(
+            select(DefensePlacement)
+            .join(ChampionUser, DefensePlacement.champion_user_id == ChampionUser.id)
+            .where(
+                and_(
+                    DefensePlacement.alliance_id == alliance_id,
+                    DefensePlacement.battlegroup == battlegroup,
+                    ChampionUser.champion_id == champion.id,
+                )
+            )
+        )
+        if dup_result.first():
+            return f"Champion '{item.champion_name}' already placed on another node"
+
+        # Check max 5 per player
+        count_result = await session.exec(
+            select(DefensePlacement).where(
+                and_(
+                    DefensePlacement.alliance_id == alliance_id,
+                    DefensePlacement.battlegroup == battlegroup,
+                    DefensePlacement.game_account_id == game_account.id,
+                )
+            )
+        )
+        if len(count_result.all()) >= MAX_DEFENDERS_PER_PLAYER:
+            return f"'{item.owner_name}' already has {MAX_DEFENDERS_PER_PLAYER} defenders"
+
+        # All checks passed — create the placement
+        placement = DefensePlacement(
+            alliance_id=alliance_id,
+            battlegroup=battlegroup,
+            node_number=item.node_number,
+            champion_user_id=champion_user.id,
+            game_account_id=game_account.id,
+            placed_by_id=placed_by_id,
+        )
+        session.add(placement)
+        await session.flush()
+
+        return None
