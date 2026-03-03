@@ -69,6 +69,16 @@ class DefenseExportItem(BaseModel):
     owner_name: str
 
 
+class DefenseReportItem(BaseModel):
+    """One placement in the import report — includes visual fields."""
+    champion_name: str
+    champion_class: Optional[str] = None
+    champion_image_url: Optional[str] = None
+    rarity: str
+    node_number: int
+    owner_name: str
+
+
 class DefenseImportRequest(BaseModel):
     """Payload to import a full defense from JSON."""
     placements: list[DefenseExportItem] = Field(..., min_length=1)
@@ -84,8 +94,9 @@ class DefenseImportError(BaseModel):
 
 class DefenseImportReport(BaseModel):
     """Result returned after an import operation."""
-    before: list[DefenseExportItem]
-    after: list[DefenseExportItem]
+    before: list[DefenseReportItem]
+    after: list[DefenseReportItem]
     errors: list[DefenseImportError]
     success_count: int
+    error_count: int
     error_count: int

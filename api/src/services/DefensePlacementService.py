@@ -11,7 +11,7 @@ from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.DefensePlacement import DefensePlacement
 from src.models.GameAccount import GameAccount
-from src.dto.dto_defense import DefenseExportItem, DefenseImportError
+from src.dto.dto_defense import DefenseExportItem, DefenseImportError, DefenseReportItem
 from src.utils.db import SessionDep
 
 MAX_DEFENDERS_PER_PLAYER = 5
@@ -399,6 +399,27 @@ class DefensePlacementService:
         ]
 
     @classmethod
+    async def _report_snapshot(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        battlegroup: int,
+    ) -> list[DefenseReportItem]:
+        """Return current placements as rich report items (with class + image)."""
+        placements = await cls.get_defense(session, alliance_id, battlegroup)
+        return [
+            DefenseReportItem(
+                champion_name=p.champion_user.champion.name,
+                champion_class=p.champion_user.champion.champion_class,
+                champion_image_url=p.champion_user.champion.image_url,
+                rarity=p.champion_user.rarity,
+                node_number=p.node_number,
+                owner_name=p.game_account.game_pseudo,
+            )
+            for p in placements
+        ]
+
+    @classmethod
     async def import_defense(
         cls,
         session: SessionDep,
@@ -406,14 +427,14 @@ class DefensePlacementService:
         battlegroup: int,
         items: list[DefenseExportItem],
         placed_by_id: uuid.UUID | None = None,
-    ) -> tuple[list[DefenseExportItem], list[DefenseExportItem], list[DefenseImportError], int, int]:
+    ) -> tuple[list[DefenseReportItem], list[DefenseReportItem], list[DefenseImportError], int, int]:
         """
         Import a defense layout.
 
         Returns (before, after, errors, success_count, error_count).
         """
-        # 1. Snapshot "before"
-        before = await cls.export_defense(session, alliance_id, battlegroup)
+        # 1. Snapshot "before" (rich)
+        before = await cls._report_snapshot(session, alliance_id, battlegroup)
 
         # 2. Clear current defense
         await cls.clear_defense(session, alliance_id, battlegroup)
@@ -462,8 +483,8 @@ class DefensePlacementService:
 
         await session.commit()
 
-        # 5. Snapshot "after"
-        after = await cls.export_defense(session, alliance_id, battlegroup)
+        # 5. Snapshot "after" (rich)
+        after = await cls._report_snapshot(session, alliance_id, battlegroup)
 
         return before, after, errors, success_count, len(errors)
 
