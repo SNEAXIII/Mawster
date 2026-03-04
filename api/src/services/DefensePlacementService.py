@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from src.models.Alliance import Alliance
+from src.models.AllianceOfficer import AllianceOfficer
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.DefensePlacement import DefensePlacement
@@ -367,12 +368,24 @@ class DefensePlacementService:
         for p in all_placed:
             defender_counts[p.game_account_id] = defender_counts.get(p.game_account_id, 0) + 1
 
+        # Fetch alliance to determine the owner
+        alliance = await session.get(Alliance, alliance_id)
+        owner_game_account_id: uuid.UUID | None = alliance.owner_id if alliance else None
+
+        # Fetch officers for this alliance
+        officers_result = await session.exec(
+            select(AllianceOfficer).where(AllianceOfficer.alliance_id == alliance_id)
+        )
+        officer_ids: set[uuid.UUID] = {o.game_account_id for o in officers_result.all()}
+
         return [
             {
                 "game_account_id": str(m.id),
                 "game_pseudo": m.game_pseudo,
                 "defender_count": defender_counts.get(m.id, 0),
                 "max_defenders": MAX_DEFENDERS_PER_PLAYER,
+                "is_owner": m.id == owner_game_account_id,
+                "is_officer": m.id in officer_ids,
             }
             for m in members
         ]

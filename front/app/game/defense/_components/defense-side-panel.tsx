@@ -6,7 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { type DefensePlacement, type BgMember } from '@/app/services/defense';
 import { cn } from '@/app/lib/utils';
 import ChampionPortrait from '@/components/champion-portrait';
-import UsernameEnriched from '@/components/username-enriched';
+import UsernameEnriched, { getMemberRole } from '@/components/username-enriched';
+import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { X } from 'lucide-react';
 
 interface DefenseSidePanelProps {
@@ -23,6 +24,7 @@ export default function DefenseSidePanel({
   canManage,
 }: DefenseSidePanelProps) {
   const { t } = useI18n();
+  const { isMine } = useAllianceRole();
 
   // Group placements by game_account_id
   const placementsByPlayer = new Map<string, DefensePlacement[]>();
@@ -54,7 +56,11 @@ export default function DefenseSidePanel({
             <Card key={member.game_account_id} className="bg-card/50">
               <CardContent className="p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <UsernameEnriched pseudo={member.game_pseudo} />
+                  <UsernameEnriched
+                    pseudo={member.game_pseudo}
+                    role={getMemberRole(member.is_owner, member.is_officer)}
+                    isMine={isMine(member.game_account_id)}
+                  />
                   <span
                     className={cn(
                       'text-xs font-mono',

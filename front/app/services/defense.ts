@@ -51,6 +51,8 @@ export interface BgMember {
   game_pseudo: string;
   defender_count: number;
   max_defenders: number;
+  is_owner: boolean;
+  is_officer: boolean;
 }
 
 // ─── Helpers ─────────────────────────────────────────────
