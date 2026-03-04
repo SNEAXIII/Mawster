@@ -241,7 +241,7 @@ def load_sample_data():
             with_7r5 = sum(1 for ui in range(2, 30) if ui % 4 == 2)
             print(f"✅ {total} users created (1 super admin + 1 admin + {total - 2} regular users)")
             print(f"✅ {total} game accounts, all in alliance '{alliance_name}' [{alliance_tag}]")
-            print(f"✅ Each user: 10×7r3 + 10×7r4, sig ∈ {{0, 20, 200}} — fully deterministic")
+            print("✅ Each user: 10×7r3 + 10×7r4, sig ∈ {{0, 20, 200}} — fully deterministic")
             print(f"✅ {with_7r5} regular users also have 1×7r5 champion")
             print("✅ Super admin : login=misterbalise  | email=misterbalise2@gmail.com | game=Mr DrBalise")
             print("✅ Simple admin: login=misterbalise2 | email=misterbalise@gmail.com  | game=B DrBalise")

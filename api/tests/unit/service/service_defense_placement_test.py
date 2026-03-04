@@ -5,7 +5,6 @@ import pytest
 
 from src.dto.dto_defense import (
     DefenseExportItem,
-    DefenseImportError,
     DefenseReportItem,
 )
 from src.models.Champion import Champion

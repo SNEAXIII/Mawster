@@ -31,7 +31,6 @@ from tests.utils.utils_constant import (
     DISCORD_ID,
     LOGIN,
     ROLE,
-    SEARCH,
     USER_ID,
     EMAIL,
     SIZE,
