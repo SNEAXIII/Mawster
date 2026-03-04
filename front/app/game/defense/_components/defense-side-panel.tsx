@@ -9,6 +9,7 @@ import ChampionPortrait from '@/components/champion-portrait';
 import UsernameEnriched, { getMemberRole } from '@/components/username-enriched';
 import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { X } from 'lucide-react';
+import { rarityBadgeClass, rarityLabel, memberRoleOrder } from './defense-utils';
 
 interface DefenseSidePanelProps {
   members: BgMember[];
@@ -17,32 +18,7 @@ interface DefenseSidePanelProps {
   canManage: boolean;
 }
 
-/** Parse a rarity string like "7r4" → { stars, rank } */
-function parseRarity(rarity: string): { stars: number; rank: number } {
-  const m = rarity.match(/^(\d+)r(\d+)$/i);
-  if (!m) return { stars: 0, rank: 0 };
-  return { stars: parseInt(m[1], 10), rank: parseInt(m[2], 10) };
-}
-
-/** Colour + label for a placed champion based on rarity & signature. */
-function rarityBadgeClass(rarity: string): string {
-  const { stars, rank } = parseRarity(rarity);
-  if (stars === 7 && rank === 5) return 'text-blue-400';
-  if (stars === 7 && rank === 4) return 'text-green-400';
-  return 'text-red-400';
-}
-
-function rarityLabel(rarity: string, signature: number): string {
-  const { stars, rank } = parseRarity(rarity);
-  return `${stars}★R${rank}·${signature}`;
-}
-
-/** Role sort order: owner < officer < member */
-function roleOrder(member: BgMember): number {
-  if (member.is_owner) return 0;
-  if (member.is_officer) return 1;
-  return 2;
-}
+// (rarity + role helpers imported from ./defense-utils)
 
 export default function DefenseSidePanel({
   members,
@@ -55,7 +31,7 @@ export default function DefenseSidePanel({
 
   // Sort members: owner → officers → members, then alphabetical
   const sortedMembers = [...members].sort((a, b) => {
-    const rDiff = roleOrder(a) - roleOrder(b);
+    const rDiff = memberRoleOrder(a) - memberRoleOrder(b);
     if (rDiff !== 0) return rDiff;
     return a.game_pseudo.localeCompare(b.game_pseudo);
   });
