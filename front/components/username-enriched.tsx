@@ -32,7 +32,7 @@ export default function UsernameEnriched({
   isMine = false,
   className,
   textSize = 'text-sm',
-}: UsernameEnrichedProps) {
+}: Readonly<UsernameEnrichedProps>) {
   return (
     <span
       className={cn(
