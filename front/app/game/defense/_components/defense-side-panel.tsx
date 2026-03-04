@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { type DefensePlacement, type BgMember } from '@/app/services/defense';
 import { cn } from '@/app/lib/utils';
 import ChampionPortrait from '@/components/champion-portrait';
+import UsernameEnriched from '@/components/username-enriched';
 import { X } from 'lucide-react';
 
 interface DefenseSidePanelProps {
@@ -53,7 +54,7 @@ export default function DefenseSidePanel({
             <Card key={member.game_account_id} className="bg-card/50">
               <CardContent className="p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-sm">{member.game_pseudo}</span>
+                  <UsernameEnriched pseudo={member.game_pseudo} />
                   <span
                     className={cn(
                       'text-xs font-mono',

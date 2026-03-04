@@ -17,7 +17,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
-  Crown,
   UserMinus,
   ShieldCheck,
   ShieldMinus,
@@ -25,12 +24,7 @@ import {
 } from 'lucide-react';
 import { type Alliance } from '@/app/services/game';
 import { useAllianceRole } from '@/hooks/use-alliance-role';
-
-const GROUP_COLORS: Record<number, string> = {
-  1: 'bg-green-100 text-green-800',
-  2: 'bg-orange-100 text-orange-800',
-  3: 'bg-red-100 text-red-800',
-};
+import UsernameEnriched, { getMemberRole } from '@/components/username-enriched';
 
 interface AllianceMember {
   id: string;
@@ -71,30 +65,13 @@ export default function AllianceMemberRow({
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-2 sm:py-1 px-2 rounded hover:bg-gray-50 gap-1 sm:gap-0">
-      <div className="flex items-center gap-2 flex-wrap min-w-0">
-        <span className="text-sm text-gray-800 truncate">{member.game_pseudo}</span>
-        {member.is_owner && (
-          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-800">
-            <Crown className="h-2.5 w-2.5" /> {t.game.alliances.owner}
-          </span>
-        )}
-        {member.is_officer && !member.is_owner && (
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700">
-            Officer
-          </span>
-        )}
-        {member.alliance_group ? (
-          <span
-            className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs ${GROUP_COLORS[member.alliance_group]}`}
-          >
-            {t.game.alliances.group} {member.alliance_group}
-          </span>
-        ) : null}
-        {memberIsMine && (
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-500">
-            {t.game.alliances.you}
-          </span>
-        )}
+      <div className="flex items-center gap-2 min-w-0">
+        <UsernameEnriched
+          pseudo={member.game_pseudo}
+          role={getMemberRole(member.is_owner, member.is_officer)}
+          group={member.alliance_group}
+          isMine={memberIsMine}
+        />
       </div>
 
       <div className="flex items-center gap-1 flex-wrap sm:flex-nowrap">

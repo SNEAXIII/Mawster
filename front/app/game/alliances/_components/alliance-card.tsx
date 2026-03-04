@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/select';
 import {
   Shield,
-  Crown,
   UserPlus,
   Users,
   X,
@@ -23,6 +22,7 @@ import { formatDateMedium } from '@/app/lib/utils';
 import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { CollapsibleSection } from '@/components/collapsible-section';
 import AllianceMemberRow from './alliance-member-row';
+import UsernameEnriched from '@/components/username-enriched';
 
 interface ConfirmTarget {
   allianceId: string;
@@ -99,8 +99,7 @@ export default function AllianceCard({
               </span>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <Crown className="h-3 w-3 text-yellow-500" />
-              <span className="text-xs text-gray-600">{alliance.owner_pseudo}</span>
+              <UsernameEnriched pseudo={alliance.owner_pseudo} role="owner" textSize="text-xs" />
               <span className="text-xs text-gray-400">·</span>
               <span className="text-xs text-gray-400">
                 {formatDateMedium(alliance.created_at, locale)}
