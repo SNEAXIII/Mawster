@@ -97,7 +97,7 @@ export function WarMapNode({
             placement.is_preferred_attacker ? 'text-yellow-400' : 'text-white/60',
           )}>
             {placement.is_preferred_attacker && '⚔ '}
-            {placement.rarity[0]}★ R{placement.rarity[2]}
+            {placement.rarity[0]}★R{placement.rarity[2]}
             {placement.signature > 0 && ` · ${placement.signature}`}
           </span>
           <span className='text-[9px] text-white/80 truncate max-w-[68px] text-center leading-tight'>
