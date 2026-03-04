@@ -5,6 +5,7 @@ import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
 import { X } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
+import { rarityBadgeClass, rarityLabel } from './defense-utils';
 
 interface WarMapNodeProps {
   nodeNumber: number;
@@ -53,7 +54,7 @@ export function WarMapNode({
     <div
       className={cn(
         'relative flex flex-col items-center justify-center rounded-lg border-2 cursor-pointer transition-all',
-        'w-[72px] h-[84px] sm:w-[80px] sm:h-[92px]',
+        'w-[80px] h-[96px] sm:w-[90px] sm:h-[108px]',
         colorClasses,
         hoverClasses,
         placement ? 'ring-1 ring-white/30' : 'opacity-80'
@@ -93,14 +94,13 @@ export function WarMapNode({
             size={44}
           />
           <span className={cn(
-            'text-[8px] font-medium leading-none',
-            placement.is_preferred_attacker ? 'text-yellow-400' : 'text-white/60',
+            'text-[10px] font-medium leading-none',
+            placement.is_preferred_attacker ? 'text-yellow-400' : rarityBadgeClass(placement.rarity),
           )}>
             {placement.is_preferred_attacker && '⚔ '}
-            {placement.rarity[0]}★R{placement.rarity[2]}
-            {placement.signature > 0 && ` · ${placement.signature}`}
+            {rarityLabel(placement.rarity, placement.signature)}
           </span>
-          <span className='text-[9px] text-white/80 truncate max-w-[68px] text-center leading-tight'>
+          <span className='text-[10px] text-white/80 truncate max-w-[76px] text-center leading-tight'>
             {placement.game_pseudo}
           </span>
         </div>
