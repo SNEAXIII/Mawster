@@ -13,6 +13,7 @@ from src.models.GameAccount import GameAccount
 from src.services.AuthService import AuthService
 from src.services.GameAccountService import GameAccountService
 from src.utils.db import SessionDep
+from src.utils.logging_config import audit_log
 
 game_account_controller = APIRouter(
     prefix="/game-accounts",
@@ -52,12 +53,14 @@ async def create_game_account(
 ):
     """Create a new game account for the current user.
     Only a game pseudo is required. The ID is auto-generated."""
-    return await GameAccountService.create_game_account(
+    result = await GameAccountService.create_game_account(
         session=session,
         user_id=current_user.id,
         game_pseudo=body.game_pseudo,
         is_primary=body.is_primary,
     )
+    audit_log("game_account.create", user_id=str(current_user.id), detail=f"game_account_id={result.id}")
+    return result
 
 
 @game_account_controller.get(
@@ -110,12 +113,14 @@ async def update_game_account(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game account not found")
     if game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your game account")
-    return await GameAccountService.update_game_account(
+    result = await GameAccountService.update_game_account(
         session=session,
         game_account=game_account,
         game_pseudo=body.game_pseudo,
         is_primary=body.is_primary,
     )
+    audit_log("game_account.update", user_id=str(current_user.id), detail=f"game_account_id={game_account_id}")
+    return result
 
 
 @game_account_controller.delete(
@@ -134,3 +139,4 @@ async def delete_game_account(
     if game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your game account")
     await GameAccountService.delete_game_account(session, game_account)
+    audit_log("game_account.delete", user_id=str(current_user.id), detail=f"game_account_id={game_account_id}")

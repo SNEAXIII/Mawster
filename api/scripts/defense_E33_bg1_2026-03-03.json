@@ -1,0 +1,302 @@
+[
+  {
+    "champion_name": "Dazzler",
+    "rarity": "7r4",
+    "node_number": 11,
+    "owner_name": "ThunderFist"
+  },
+  {
+    "champion_name": "Falcon",
+    "rarity": "7r3",
+    "node_number": 24,
+    "owner_name": "ThunderFist"
+  },
+  {
+    "champion_name": "Bishop",
+    "rarity": "7r3",
+    "node_number": 46,
+    "owner_name": "ThunderFist"
+  },
+  {
+    "champion_name": "Crossbones",
+    "rarity": "7r3",
+    "node_number": 8,
+    "owner_name": "SteelNerve"
+  },
+  {
+    "champion_name": "Thanos",
+    "rarity": "7r4",
+    "node_number": 9,
+    "owner_name": "SteelNerve"
+  },
+  {
+    "champion_name": "Captain Britain",
+    "rarity": "7r3",
+    "node_number": 4,
+    "owner_name": "Mr DrBalise"
+  },
+  {
+    "champion_name": "Abomination",
+    "rarity": "7r4",
+    "node_number": 28,
+    "owner_name": "ThunderFist"
+  },
+  {
+    "champion_name": "Gladiator",
+    "rarity": "7r3",
+    "node_number": 31,
+    "owner_name": "ViperStrike"
+  },
+  {
+    "champion_name": "Black Widow",
+    "rarity": "7r3",
+    "node_number": 38,
+    "owner_name": "NightCrawlr"
+  },
+  {
+    "champion_name": "Doctor Octopus",
+    "rarity": "7r4",
+    "node_number": 10,
+    "owner_name": "NightCrawlr"
+  },
+  {
+    "champion_name": "Dani Moonstar",
+    "rarity": "7r4",
+    "node_number": 18,
+    "owner_name": "Mr DrBalise"
+  },
+  {
+    "champion_name": "Cyclops (New Xavier School)",
+    "rarity": "7r3",
+    "node_number": 17,
+    "owner_name": "RuneKnight"
+  },
+  {
+    "champion_name": "Mister Negative",
+    "rarity": "7r3",
+    "node_number": 49,
+    "owner_name": "AbyssWalkr"
+  },
+  {
+    "champion_name": "Carnage",
+    "rarity": "7r4",
+    "node_number": 14,
+    "owner_name": "OmegaPrime"
+  },
+  {
+    "champion_name": "Ultron",
+    "rarity": "7r4",
+    "node_number": 7,
+    "owner_name": "SteelNerve"
+  },
+  {
+    "champion_name": "Gamora",
+    "rarity": "7r3",
+    "node_number": 26,
+    "owner_name": "NightCrawlr"
+  },
+  {
+    "champion_name": "Deadpool (X-Force)",
+    "rarity": "7r4",
+    "node_number": 2,
+    "owner_name": "XMutant77"
+  },
+  {
+    "champion_name": "Captain America (Sam Wilson)",
+    "rarity": "7r4",
+    "node_number": 13,
+    "owner_name": "VenomPulse"
+  },
+  {
+    "champion_name": "Ant-Man (Future)",
+    "rarity": "7r4",
+    "node_number": 20,
+    "owner_name": "RuneKnight"
+  },
+  {
+    "champion_name": "Bullseye",
+    "rarity": "7r3",
+    "node_number": 39,
+    "owner_name": "RuneKnight"
+  },
+  {
+    "champion_name": "Goldpool",
+    "rarity": "7r3",
+    "node_number": 30,
+    "owner_name": "RuneKnight"
+  },
+  {
+    "champion_name": "Black Widow (Deadly Origin)",
+    "rarity": "7r4",
+    "node_number": 37,
+    "owner_name": "SteelNerve"
+  },
+  {
+    "champion_name": "Invisible Woman",
+    "rarity": "7r5",
+    "node_number": 35,
+    "owner_name": "NightCrawlr"
+  },
+  {
+    "champion_name": "Black Cat",
+    "rarity": "7r4",
+    "node_number": 47,
+    "owner_name": "XMutant77"
+  },
+  {
+    "champion_name": "Cyclops (Blue Team)",
+    "rarity": "7r3",
+    "node_number": 16,
+    "owner_name": "ViperStrike"
+  },
+  {
+    "champion_name": "Nico Minoru",
+    "rarity": "7r4",
+    "node_number": 27,
+    "owner_name": "VenomPulse"
+  },
+  {
+    "champion_name": "Baron Zemo",
+    "rarity": "7r3",
+    "node_number": 42,
+    "owner_name": "AbyssWalkr"
+  },
+  {
+    "champion_name": "Dust",
+    "rarity": "7r4",
+    "node_number": 32,
+    "owner_name": "VenomPulse"
+  },
+  {
+    "champion_name": "Captain America",
+    "rarity": "7r4",
+    "node_number": 21,
+    "owner_name": "AbyssWalkr"
+  },
+  {
+    "champion_name": "Dracula",
+    "rarity": "7r4",
+    "node_number": 22,
+    "owner_name": "Mr DrBalise"
+  },
+  {
+    "champion_name": "Ghost",
+    "rarity": "7r3",
+    "node_number": 34,
+    "owner_name": "SteelNerve"
+  },
+  {
+    "champion_name": "Electro",
+    "rarity": "7r3",
+    "node_number": 33,
+    "owner_name": "Mr DrBalise"
+  },
+  {
+    "champion_name": "Civil Warrior",
+    "rarity": "7r3",
+    "node_number": 5,
+    "owner_name": "XMutant77"
+  },
+  {
+    "champion_name": "Daredevil (Classic)",
+    "rarity": "7r3",
+    "node_number": 6,
+    "owner_name": "AbyssWalkr"
+  },
+  {
+    "champion_name": "Archangel",
+    "rarity": "7r3",
+    "node_number": 48,
+    "owner_name": "ViperStrike"
+  },
+  {
+    "champion_name": "Angela",
+    "rarity": "7r3",
+    "node_number": 41,
+    "owner_name": "XMutant77"
+  },
+  {
+    "champion_name": "Black Panther",
+    "rarity": "7r3",
+    "node_number": 45,
+    "owner_name": "OmegaPrime"
+  },
+  {
+    "champion_name": "Emma Frost",
+    "rarity": "7r4",
+    "node_number": 23,
+    "owner_name": "OmegaPrime"
+  },
+  {
+    "champion_name": "Franken-Castle",
+    "rarity": "7r3",
+    "node_number": 25,
+    "owner_name": "XMutant77"
+  },
+  {
+    "champion_name": "Dragon Man",
+    "rarity": "7r4",
+    "node_number": 29,
+    "owner_name": "AbyssWalkr"
+  },
+  {
+    "champion_name": "Cassie Lang",
+    "rarity": "7r3",
+    "node_number": 40,
+    "owner_name": "ThunderFist"
+  },
+  {
+    "champion_name": "Diablo",
+    "rarity": "7r3",
+    "node_number": 1,
+    "owner_name": "OmegaPrime"
+  },
+  {
+    "champion_name": "Air-Walker",
+    "rarity": "7r4",
+    "node_number": 50,
+    "owner_name": "NightCrawlr"
+  },
+  {
+    "champion_name": "Beast",
+    "rarity": "7r3",
+    "node_number": 3,
+    "owner_name": "VenomPulse"
+  },
+  {
+    "champion_name": "Dark Phoenix",
+    "rarity": "7r3",
+    "node_number": 12,
+    "owner_name": "VenomPulse"
+  },
+  {
+    "champion_name": "Blue Marvel",
+    "rarity": "7r4",
+    "node_number": 44,
+    "owner_name": "ViperStrike"
+  },
+  {
+    "champion_name": "Jabari Panther",
+    "rarity": "7r3",
+    "node_number": 36,
+    "owner_name": "ViperStrike"
+  },
+  {
+    "champion_name": "Adam Warlock",
+    "rarity": "7r4",
+    "node_number": 19,
+    "owner_name": "OmegaPrime"
+  },
+  {
+    "champion_name": "Cable",
+    "rarity": "7r4",
+    "node_number": 43,
+    "owner_name": "Mr DrBalise"
+  },
+  {
+    "champion_name": "Cosmic Ghost Rider",
+    "rarity": "7r4",
+    "node_number": 15,
+    "owner_name": "RuneKnight"
+  }
+]

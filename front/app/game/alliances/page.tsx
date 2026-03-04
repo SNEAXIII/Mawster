@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import {
   type Alliance,
   type GameAccount,
+  type AllianceInvitation,
   getMyAlliances,
   getMyGameAccounts,
   getEligibleOwners,
@@ -13,17 +14,24 @@ import {
   createAlliance,
   addOfficer,
   removeOfficer,
-  addMember,
+  inviteMember,
   removeMember,
   setMemberGroup,
+  getMyInvitations,
+  acceptInvitation,
+  declineInvitation,
+  getAllianceInvitations,
+  cancelInvitation,
 } from '@/app/services/game';
 
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { TextConfirmationDialog } from '@/components/text-confirmation-dialog';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { useRequiredSession } from '@/hooks/use-required-session';
-import { Shield } from 'lucide-react';
+import { AllianceRoleProvider } from '@/hooks/use-alliance-role';
+import { Shield, Mail, Check, X } from 'lucide-react';
 
 import CreateAllianceForm from './_components/create-alliance-form';
 import AllianceCard from './_components/alliance-card';
@@ -41,6 +49,13 @@ export default function AlliancesPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [roleRefreshKey, setRoleRefreshKey] = useState(0);
+
+  // Invitations received by current user
+  const [myInvitations, setMyInvitations] = useState<AllianceInvitation[]>([]);
+
+  // Pending invitations sent by alliance (for officers to cancel)
+  const [pendingInvitations, setPendingInvitations] = useState<Record<string, AllianceInvitation[]>>({});
 
   // Create form
   const [name, setName] = useState('');
@@ -62,8 +77,6 @@ export default function AlliancesPage() {
 
   // Roster viewer
   const [rosterTarget, setRosterTarget] = useState<{ gameAccountId: string; pseudo: string; canRequestUpgrade: boolean } | null>(null);
-
-  const myAccountIds = new Set(myAccounts.map((a) => a.id));
 
   const fetchAlliances = async () => {
     try {
@@ -107,13 +120,46 @@ export default function AlliancesPage() {
     }
   };
 
+  const fetchMyInvitations = async () => {
+    try {
+      const data = await getMyInvitations();
+      setMyInvitations(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchPendingInvitations = async (allianceList: Alliance[]) => {
+    const results: Record<string, AllianceInvitation[]> = {};
+    await Promise.all(
+      allianceList.map(async (alliance) => {
+        try {
+          const invitations = await getAllianceInvitations(alliance.id);
+          if (invitations.length > 0) {
+            results[alliance.id] = invitations;
+          }
+        } catch {
+          // Not an officer/owner — silently ignore permission errors
+        }
+      }),
+    );
+    setPendingInvitations(results);
+  };
+
   useEffect(() => {
     if (status === 'authenticated') {
-      Promise.all([fetchAlliances(), fetchEligibleOwners(), fetchEligibleMembers(), fetchMyAccounts()]).then(() => {
+      Promise.all([fetchAlliances(), fetchEligibleOwners(), fetchEligibleMembers(), fetchMyAccounts(), fetchMyInvitations()]).then(() => {
         // createOpen stays false — will be overridden below after alliances load
       });
     }
   }, [status]);
+
+  // Fetch pending invitations when alliances change
+  useEffect(() => {
+    if (alliances.length > 0) {
+      fetchPendingInvitations(alliances);
+    }
+  }, [alliances]);
 
   // Auto-open create form only if user has NO alliances yet
   useEffect(() => {
@@ -134,6 +180,7 @@ export default function AlliancesPage() {
       setTag('');
       setOwnerId('');
       setCreateOpen(false);
+      setRoleRefreshKey((k) => k + 1);
       await Promise.all([fetchAlliances(), fetchEligibleOwners(), fetchEligibleMembers(), fetchMyAccounts()]);
     } catch (err: any) {
       console.error(err);
@@ -149,6 +196,7 @@ export default function AlliancesPage() {
       await addOfficer(allianceId, gameAccountId);
       toast.success(t.game.alliances.adjointAddSuccess);
       setPromoteTarget(null);
+      setRoleRefreshKey((k) => k + 1);
       await fetchAlliances();
     } catch (err: any) {
       console.error(err);
@@ -160,6 +208,7 @@ export default function AlliancesPage() {
     try {
       await removeOfficer(allianceId, gameAccountId);
       toast.success(t.game.alliances.adjointRemoveSuccess);
+      setRoleRefreshKey((k) => k + 1);
       await fetchAlliances();
     } catch (err: any) {
       console.error(err);
@@ -168,23 +217,23 @@ export default function AlliancesPage() {
   };
 
   // ---- Members ----
-  const handleOpenAddMember = async (allianceId: string) => {
+  const handleOpenInviteMember = async (allianceId: string) => {
     setMemberAllianceId(allianceId);
     setMemberAccountId('');
     await fetchEligibleMembers();
   };
 
-  const handleAddMember = async (allianceId: string) => {
+  const handleInviteMember = async (allianceId: string) => {
     if (!memberAccountId) return;
     try {
-      await addMember(allianceId, memberAccountId);
-      toast.success(t.game.alliances.memberAddSuccess);
+      await inviteMember(allianceId, memberAccountId);
+      toast.success(t.game.alliances.inviteSuccess);
       setMemberAllianceId(null);
       setMemberAccountId('');
-      await Promise.all([fetchAlliances(), fetchEligibleMembers()]);
+      await Promise.all([fetchEligibleMembers(), fetchPendingInvitations(alliances)]);
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.message || t.game.alliances.memberAddError);
+      toast.error(err?.message || t.game.alliances.inviteError);
     }
   };
 
@@ -194,6 +243,7 @@ export default function AlliancesPage() {
       toast.success(t.game.alliances.memberRemoveSuccess);
       setExcludeTarget(null);
       setLeaveTarget(null);
+      setRoleRefreshKey((k) => k + 1);
       await Promise.all([fetchAlliances(), fetchEligibleMembers(), fetchMyAccounts()]);
     } catch (err: any) {
       console.error(err);
@@ -214,22 +264,63 @@ export default function AlliancesPage() {
     }
   };
 
-  /** Check if the current user is the owner of an alliance */
-  const isOwner = (alliance: Alliance) => myAccountIds.has(alliance.owner_id);
+  // ---- Invitations (accept / decline) ----
+  const handleAcceptInvitation = async (invitationId: string) => {
+    try {
+      await acceptInvitation(invitationId);
+      toast.success(t.game.alliances.acceptInvitationSuccess);
+      setRoleRefreshKey((k) => k + 1);
+      await Promise.all([fetchAlliances(), fetchEligibleOwners(), fetchEligibleMembers(), fetchMyAccounts(), fetchMyInvitations()]);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || t.game.alliances.acceptInvitationError);
+    }
+  };
 
-  /** Check if the current user is an officer or owner in an alliance */
-  const canManage = (alliance: Alliance) =>
-    isOwner(alliance) || alliance.officers.some((o) => myAccountIds.has(o.game_account_id));
+  const handleDeclineInvitation = async (invitationId: string) => {
+    try {
+      await declineInvitation(invitationId);
+      toast.success(t.game.alliances.declineInvitationSuccess);
+      await fetchMyInvitations();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || t.game.alliances.declineInvitationError);
+    }
+  };
+
+  const handleCancelInvitation = async (allianceId: string, invitationId: string) => {
+    try {
+      await cancelInvitation(allianceId, invitationId);
+      toast.success(t.game.alliances.cancelInvitationSuccess);
+      // Update pending invitations locally
+      setPendingInvitations((prev) => {
+        const updated = { ...prev };
+        if (updated[allianceId]) {
+          updated[allianceId] = updated[allianceId].filter((inv) => inv.id !== invitationId);
+          if (updated[allianceId].length === 0) {
+            delete updated[allianceId];
+          }
+        }
+        return updated;
+      });
+      // Refresh eligible members since cancelled invite frees up the account
+      await fetchEligibleMembers();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.message || t.game.alliances.cancelInvitationError);
+    }
+  };
 
   if (status === 'loading' || loading) {
     return <FullPageSpinner />;
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <AllianceRoleProvider refreshKey={roleRefreshKey}>
+    <div className="max-w-4xl mx-auto px-3 py-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t.game.alliances.title}</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t.game.alliances.title}</h1>
         <p className="text-gray-500 mt-1">{t.game.alliances.description}</p>
       </div>
 
@@ -249,6 +340,56 @@ export default function AlliancesPage() {
         onSubmit={handleCreate}
       />
 
+      {/* My Invitations */}
+      {myInvitations.length > 0 && (
+        <Card>
+          <CardContent className="py-3 sm:py-4 px-3 sm:px-6 space-y-3">
+            <div className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-blue-500" />
+              <h2 className="text-sm font-medium text-gray-700">
+                {t.game.alliances.myInvitations} ({myInvitations.length})
+              </h2>
+            </div>
+            <div className="space-y-2">
+              {myInvitations.map((inv) => (
+                <div
+                  key={inv.id}
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-md bg-blue-50 border border-blue-200"
+                >
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium text-gray-900">
+                      {inv.alliance_name}{' '}
+                      <span className="text-xs text-purple-700 font-bold">[{inv.alliance_tag}]</span>
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {t.game.alliances.invitedBy} {inv.invited_by_pseudo} · {inv.game_account_pseudo}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => handleAcceptInvitation(inv.id)}
+                    >
+                      <Check className="h-3 w-3 mr-1" />
+                      {t.game.alliances.acceptInvitation}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDeclineInvitation(inv.id)}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      {t.game.alliances.declineInvitation}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Alliance list */}
       {alliances.length === 0 ? (
         <Card>
@@ -264,26 +405,23 @@ export default function AlliancesPage() {
               key={alliance.id}
               alliance={alliance}
               locale={locale}
-              myAccountIds={myAccountIds}
-              isOwner={isOwner(alliance)}
-              canManage={canManage(alliance)}
               memberAllianceId={memberAllianceId}
               memberAccountId={memberAccountId}
               eligibleMembers={eligibleMembers}
               onMemberAccountChange={setMemberAccountId}
-              onOpenAddMember={handleOpenAddMember}
-              onCloseAddMember={() => { setMemberAllianceId(null); setMemberAccountId(''); }}
-              onAddMember={handleAddMember}
+              onOpenInviteMember={handleOpenInviteMember}
+              onCloseInviteMember={() => { setMemberAllianceId(null); setMemberAccountId(''); }}
+              onInviteMember={handleInviteMember}
               onDemoteOfficer={handleDemoteOfficer}
               onPromoteOfficer={setPromoteTarget}
               onLeave={setLeaveTarget}
               onExclude={setExcludeTarget}
               onSetGroup={handleSetGroup}
-              onViewRoster={(gameAccountId, pseudo) => {
-                // Determine if current user can request upgrades (is officer/owner in that alliance)
-                const canReq = canManage(alliance);
+              onViewRoster={(gameAccountId, pseudo, canReq) => {
                 setRosterTarget({ gameAccountId, pseudo, canRequestUpgrade: canReq });
               }}
+              pendingInvitations={pendingInvitations[alliance.id] ?? []}
+              onCancelInvitation={handleCancelInvitation}
             />
           ))}
         </div>
@@ -344,5 +482,6 @@ export default function AlliancesPage() {
         canRequestUpgrade={rosterTarget?.canRequestUpgrade ?? false}
       />
     </div>
+    </AllianceRoleProvider>
   );
 }

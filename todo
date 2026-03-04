@@ -1,3 +1,5 @@
-Links are not rendered properly in tip tap view
 Add db backup
 Add a way to pull latest images
+importer que les étoiles, pas le rank parce que ca peut désync -> 'XMutant77' owns 'Deadpool (X-Force)' at 7r4, not 7r1
+quand un joeur est viré, on le met sans groupe
+si un joueur change de groupe on lui retire sa défense

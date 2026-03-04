@@ -13,13 +13,16 @@ import {
 } from '@/components/ui/select';
 import {
   Shield,
-  Crown,
   UserPlus,
   Users,
+  X,
 } from 'lucide-react';
-import { type Alliance, type GameAccount } from '@/app/services/game';
+import { type Alliance, type GameAccount, type AllianceInvitation } from '@/app/services/game';
 import { formatDateMedium } from '@/app/lib/utils';
+import { useAllianceRole } from '@/hooks/use-alliance-role';
+import { CollapsibleSection } from '@/components/collapsible-section';
 import AllianceMemberRow from './alliance-member-row';
+import UsernameEnriched from '@/components/username-enriched';
 
 interface ConfirmTarget {
   allianceId: string;
@@ -30,46 +33,47 @@ interface ConfirmTarget {
 interface AllianceCardProps {
   alliance: Alliance;
   locale: string;
-  myAccountIds: Set<string>;
-  isOwner: boolean;
-  canManage: boolean;
-  /** Currently open add-member form alliance id */
+  /** Currently open invite-member form alliance id */
   memberAllianceId: string | null;
   memberAccountId: string;
   eligibleMembers: GameAccount[];
   onMemberAccountChange: (value: string) => void;
-  onOpenAddMember: (allianceId: string) => void;
-  onCloseAddMember: () => void;
-  onAddMember: (allianceId: string) => void;
+  onOpenInviteMember: (allianceId: string) => void;
+  onCloseInviteMember: () => void;
+  onInviteMember: (allianceId: string) => void;
   onDemoteOfficer: (allianceId: string, gameAccountId: string) => void;
   onPromoteOfficer: (target: ConfirmTarget) => void;
   onLeave: (target: ConfirmTarget) => void;
   onExclude: (target: ConfirmTarget) => void;
   onSetGroup: (allianceId: string, gameAccountId: string, group: number | null, pseudo: string) => void;
-  onViewRoster: (gameAccountId: string, pseudo: string) => void;
+  onViewRoster: (gameAccountId: string, pseudo: string, canRequestUpgrade: boolean) => void;
+  pendingInvitations?: AllianceInvitation[];
+  onCancelInvitation?: (allianceId: string, invitationId: string) => void;
 }
 
 export default function AllianceCard({
   alliance,
   locale,
-  myAccountIds,
-  isOwner,
-  canManage,
   memberAllianceId,
   memberAccountId,
   eligibleMembers,
   onMemberAccountChange,
-  onOpenAddMember,
-  onCloseAddMember,
-  onAddMember,
+  onOpenInviteMember,
+  onCloseInviteMember,
+  onInviteMember,
   onDemoteOfficer,
   onPromoteOfficer,
   onLeave,
   onExclude,
   onSetGroup,
   onViewRoster,
+  pendingInvitations = [],
+  onCancelInvitation,
 }: AllianceCardProps) {
   const { t } = useI18n();
+  const { isMine, isOwner, canManage } = useAllianceRole();
+  const userIsOwner = isOwner(alliance);
+  const userCanManage = canManage(alliance);
   const officerCount = alliance.officers.length;
 
   const sortedMembers = [...alliance.members].sort((a, b) => {
@@ -79,7 +83,7 @@ export default function AllianceCard({
 
   return (
     <Card>
-      <CardContent className="py-4 space-y-4">
+        <CardContent className="py-3 sm:py-4 px-3 sm:px-6 space-y-3 sm:space-y-4">
         {/* Alliance header */}
         <div className="flex items-center gap-3">
           <Shield className="h-5 w-5 text-purple-500" />
@@ -95,8 +99,7 @@ export default function AllianceCard({
               </span>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <Crown className="h-3 w-3 text-yellow-500" />
-              <span className="text-xs text-gray-600">{alliance.owner_pseudo}</span>
+              <UsernameEnriched pseudo={alliance.owner_pseudo} role="owner" textSize="text-xs" />
               <span className="text-xs text-gray-400">·</span>
               <span className="text-xs text-gray-400">
                 {formatDateMedium(alliance.created_at, locale)}
@@ -105,9 +108,45 @@ export default function AllianceCard({
           </div>
         </div>
 
+        {/* Pending invitations section — above members, collapsible (visible to officers/owners) */}
+        {userCanManage && pendingInvitations.length > 0 && (
+          <CollapsibleSection
+            title={`${t.game.alliances.pendingInvitations} (${pendingInvitations.length})`}
+            defaultOpen={true}
+            className="border-amber-200"
+          >
+            <div className="space-y-1">
+              {pendingInvitations.map((inv) => (
+                <div
+                  key={inv.id}
+                  className="flex items-center justify-between gap-2 p-2 rounded-md bg-amber-50 border border-amber-200"
+                >
+                  <div className="space-y-0.5">
+                    <p className="text-sm text-gray-900">{inv.game_account_pseudo}</p>
+                    <p className="text-xs text-gray-500">
+                      {t.game.alliances.invitedBy} {inv.invited_by_pseudo}
+                    </p>
+                  </div>
+                  {onCancelInvitation && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => onCancelInvitation(alliance.id, inv.id)}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      {t.game.alliances.cancelInvitation}
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CollapsibleSection>
+        )}
+
         {/* Members section */}
         <div className="border-t pt-3">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-green-500" />
               <span className="text-sm font-medium text-gray-700">
@@ -115,12 +154,12 @@ export default function AllianceCard({
               </span>
             </div>
 
-            {/* Add member button / inline form */}
-            {canManage &&
+            {/* Invite member button / inline form */}
+            {userCanManage &&
               (memberAllianceId === alliance.id ? (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Select value={memberAccountId} onValueChange={onMemberAccountChange}>
-                    <SelectTrigger className="w-48 h-8 text-xs">
+                    <SelectTrigger className="w-full sm:w-48 h-8 text-xs">
                       <SelectValue placeholder={t.game.alliances.selectMember} />
                     </SelectTrigger>
                     <SelectContent>
@@ -134,11 +173,11 @@ export default function AllianceCard({
                   <Button
                     size="sm"
                     disabled={!memberAccountId}
-                    onClick={() => onAddMember(alliance.id)}
+                    onClick={() => onInviteMember(alliance.id)}
                   >
-                    {t.game.alliances.addMemberButton}
+                    {t.game.alliances.inviteMemberButton}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={onCloseAddMember}>
+                  <Button size="sm" variant="ghost" onClick={onCloseInviteMember}>
                     {t.common.cancel}
                   </Button>
                 </div>
@@ -146,10 +185,10 @@ export default function AllianceCard({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => onOpenAddMember(alliance.id)}
+                  onClick={() => onOpenInviteMember(alliance.id)}
                 >
                   <UserPlus className="h-3 w-3 mr-1" />
-                  {t.game.alliances.addMember}
+                  {t.game.alliances.inviteMember}
                 </Button>
               ))}
           </div>
@@ -160,16 +199,15 @@ export default function AllianceCard({
                 <AllianceMemberRow
                   key={member.id}
                   member={member}
-                  allianceId={alliance.id}
-                  isMine={myAccountIds.has(member.id)}
-                  userIsOwner={isOwner}
-                  userCanManage={canManage}
+                  alliance={alliance}
                   onDemoteOfficer={onDemoteOfficer}
                   onPromoteOfficer={onPromoteOfficer}
                   onLeave={onLeave}
                   onExclude={onExclude}
                   onSetGroup={onSetGroup}
-                  onViewRoster={onViewRoster}
+                  onViewRoster={(gameAccountId, pseudo) =>
+                    onViewRoster(gameAccountId, pseudo, userCanManage)
+                  }
                 />
               ))}
             </div>

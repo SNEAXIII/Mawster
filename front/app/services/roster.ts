@@ -15,13 +15,13 @@ export enum ChampionRarity {
 export const RARITIES = Object.values(ChampionRarity);
 
 export const RARITY_LABELS: Record<string, string> = {
-  '6r4': '6★ R4',
-  '6r5': '6★ R5',
-  '7r1': '7★ R1',
-  '7r2': '7★ R2',
-  '7r3': '7★ R3',
-  '7r4': '7★ R4',
-  '7r5': '7★ R5',
+  '6r4': '6★R4',
+  '6r5': '6★R5',
+  '7r1': '7★R1',
+  '7r2': '7★R2',
+  '7r3': '7★R3',
+  '7r4': '7★R4',
+  '7r5': '7★R5',
 };
 
 export const SIGNATURE_PRESETS = [0, 20, 200];
@@ -97,12 +97,14 @@ export interface RosterEntry {
   champion_name: string;
   champion_class: string;
   image_url: string | null;
+  is_preferred_attacker: boolean;
 }
 
 export interface BulkChampionEntry {
   champion_name: string;
   rarity: string;
   signature: number;
+  is_preferred_attacker?: boolean;
 }
 
 interface ApiError {
@@ -135,7 +137,7 @@ export const searchChampions = async (
 ): Promise<{ champions: Champion[] }> => {
   const qs = new URLSearchParams({ page: '1', size: String(size) });
   if (search.trim()) qs.set('search', search.trim());
-  const response = await fetch(`${PROXY}/admin/champions?${qs}`, {
+  const response = await fetch(`${PROXY}/champions?${qs}`, {
     headers: jsonHeaders,
   });
   await throwOnError(response, 'Erreur lors de la recherche de champions');
@@ -159,6 +161,7 @@ export const updateChampionInRoster = async (
   championId: string,
   rarity: string,
   signature: number,
+  isPreferredAttacker: boolean = false,
 ): Promise<RosterEntry> => {
   const response = await fetch(`${PROXY}/champion-users`, {
     method: 'POST',
@@ -168,6 +171,7 @@ export const updateChampionInRoster = async (
       champion_id: championId,
       rarity,
       signature,
+      is_preferred_attacker: isPreferredAttacker,
     }),
   });
   await throwOnError(response, "Erreur lors de la mise à jour du roster");
@@ -224,6 +228,20 @@ export const upgradeChampionRank = async (
     },
   );
   await throwOnError(response, "Erreur lors de l'amélioration du champion");
+  return response.json();
+};
+
+export const togglePreferredAttacker = async (
+  championUserId: string,
+): Promise<RosterEntry> => {
+  const response = await fetch(
+    `${PROXY}/champion-users/${championUserId}/preferred-attacker`,
+    {
+      method: 'PATCH',
+      headers: jsonHeaders,
+    },
+  );
+  await throwOnError(response, "Erreur lors du basculement de l'attaquant préféré");
   return response.json();
 };
 

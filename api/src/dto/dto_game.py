@@ -30,7 +30,7 @@ from src.dto.dto_champion_user import (         # noqa: F401
 
 from src.dto.dto_champion import (              # noqa: F401
     ChampionResponse,
-    ChampionAdminViewAll,
+    ChampionPaginatedResponse,
     ChampionUpdateAliasRequest,
     ChampionLoadRequest,
 )

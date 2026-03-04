@@ -64,7 +64,7 @@ export const getChampions = async (
   if (championClass && championClass !== 'all') qs.set('champion_class', championClass);
   if (search && search.trim()) qs.set('search', search.trim());
 
-  const response = await fetch(`${PROXY}/admin/champions?${qs}`, { headers: jsonHeaders });
+  const response = await fetch(`${PROXY}/champions?${qs}`, { headers: jsonHeaders });
   await throwOnError(response, 'Erreur lors de la récupération des champions');
   return response.json();
 };
@@ -97,7 +97,7 @@ export const exportAllChampions = async (): Promise<
   { name: string; champion_class: string; image_url: string | null; alias: string | null }[]
 > => {
   // Fetch all champions in one big page (no images, just data)
-  const response = await fetch(`${PROXY}/admin/champions?page=1&size=9999`, {
+  const response = await fetch(`${PROXY}/champions?page=1&size=9999`, {
     headers: jsonHeaders,
   });
   await throwOnError(response, "Erreur lors de l'export des champions");

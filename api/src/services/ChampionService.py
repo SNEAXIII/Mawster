@@ -8,7 +8,7 @@ from src.Messages.champion_messages import (
     CHAMPION_NOT_FOUND,
 )
 from src.dto.dto_champion import (
-    ChampionAdminViewAll,
+    ChampionPaginatedResponse,
     ChampionResponse,
     ChampionLoadRequest,
 )
@@ -93,7 +93,7 @@ class ChampionService:
         size: int,
         champion_class: Optional[str] = None,
         search: Optional[str] = None,
-    ) -> ChampionAdminViewAll:
+    ) -> ChampionPaginatedResponse:
         total = await cls.get_total_champions(session, champion_class, search)
         champions = await cls.get_champions_paginated(
             session, page, size, champion_class, search
@@ -110,7 +110,7 @@ class ChampionService:
             )
             for c in champions
         ]
-        return ChampionAdminViewAll(
+        return ChampionPaginatedResponse(
             champions=mapped,
             total_champions=total,
             total_pages=total_pages,

@@ -9,7 +9,7 @@ admin = User(
     email="misterbalise2@gmail.com",
     login=master_account,
     discord_id="403941390586871808",
-    role=Roles.ADMIN,
+    role=Roles.SUPER_ADMIN,
 )
 
 

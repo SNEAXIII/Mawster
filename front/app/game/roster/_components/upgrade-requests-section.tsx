@@ -25,6 +25,8 @@ interface UpgradeRequestsSectionProps {
   externalRequests?: UpgradeRequest[];
   /** Callback when a request is cancelled externally */
   onRequestCancelled?: (requestId: string) => void;
+  /** When provided, clicking cancel delegates to the parent (avoids nested dialog issues) */
+  onInitiateCancel?: (requestId: string) => void;
 }
 
 export default function UpgradeRequestsSection({
@@ -33,6 +35,7 @@ export default function UpgradeRequestsSection({
   canCancel = true,
   externalRequests,
   onRequestCancelled,
+  onInitiateCancel,
 }: UpgradeRequestsSectionProps) {
   const { t } = useI18n();
   const [internalRequests, setInternalRequests] = useState<UpgradeRequest[]>([]);
@@ -120,7 +123,7 @@ export default function UpgradeRequestsSection({
                 {canCancel && (
                   <button
                     className="text-red-400 hover:text-red-300 bg-black/40 rounded-full p-1 shrink-0"
-                    onClick={() => setCancelTarget(req)}
+                    onClick={() => onInitiateCancel ? onInitiateCancel(req.id) : setCancelTarget(req)}
                     title={t.roster.upgradeRequests.cancel}
                   >
                     <FiX size={14} />

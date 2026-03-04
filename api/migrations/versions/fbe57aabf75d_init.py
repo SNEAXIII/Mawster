@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 2d239a911782
+Revision ID: fbe57aabf75d
 Revises: 
-Create Date: 2026-02-22 01:08:53.426423
+Create Date: 2026-02-28 03:29:39.628496
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel  # noqa: F401
 
 
 # revision identifiers, used by Alembic.
-revision: str = '2d239a911782'
+revision: str = 'fbe57aabf75d'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -37,7 +37,9 @@ def upgrade() -> None:
     sa.Column('champion_class', sqlmodel.sql.sqltypes.AutoString(length=20), nullable=False),
     sa.Column('image_url', sqlmodel.sql.sqltypes.AutoString(length=500), nullable=True),
     sa.Column('is_7_star', sa.Boolean(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.Column('alias', sqlmodel.sql.sqltypes.AutoString(length=500), nullable=True),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
     op.create_table('user',
     sa.Column('id', sa.Uuid(), nullable=False),
@@ -47,7 +49,7 @@ def upgrade() -> None:
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('last_login_date', sa.DateTime(), nullable=True),
-    sa.Column('role', sa.Enum('ADMIN', 'USER', name='roles'), nullable=False),
+    sa.Column('role', sa.Enum('SUPER_ADMIN', 'ADMIN', 'USER', name='roles'), nullable=False),
     sa.Column('discord_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('avatar_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
@@ -83,16 +85,56 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['game_account_id'], ['game_account.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('alliance_invitation',
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('alliance_id', sa.Uuid(), nullable=False),
+    sa.Column('game_account_id', sa.Uuid(), nullable=False),
+    sa.Column('invited_by_game_account_id', sa.Uuid(), nullable=False),
+    sa.Column('status', sa.Enum('PENDING', 'ACCEPTED', 'DECLINED', name='invitationstatus'), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('responded_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['alliance_id'], ['alliance.id'], ),
+    sa.ForeignKeyConstraint(['game_account_id'], ['game_account.id'], ),
+    sa.ForeignKeyConstraint(['invited_by_game_account_id'], ['game_account.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('champion_user',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('game_account_id', sa.Uuid(), nullable=False),
     sa.Column('champion_id', sa.Uuid(), nullable=False),
     sa.Column('stars', sa.Integer(), nullable=False),
     sa.Column('rank', sa.Integer(), nullable=False),
-    sa.Column('level', sa.Integer(), nullable=False),
     sa.Column('signature', sa.Integer(), nullable=False),
+    sa.Column('is_preferred_attacker', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['champion_id'], ['champion.id'], ),
     sa.ForeignKeyConstraint(['game_account_id'], ['game_account.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('defense_placement',
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('alliance_id', sa.Uuid(), nullable=False),
+    sa.Column('battlegroup', sa.Integer(), nullable=False),
+    sa.Column('node_number', sa.Integer(), nullable=False),
+    sa.Column('champion_user_id', sa.Uuid(), nullable=False),
+    sa.Column('game_account_id', sa.Uuid(), nullable=False),
+    sa.Column('placed_by_id', sa.Uuid(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['alliance_id'], ['alliance.id'], ),
+    sa.ForeignKeyConstraint(['champion_user_id'], ['champion_user.id'], ),
+    sa.ForeignKeyConstraint(['game_account_id'], ['game_account.id'], ),
+    sa.ForeignKeyConstraint(['placed_by_id'], ['game_account.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('alliance_id', 'battlegroup', 'node_number', name='uq_defense_node')
+    )
+    op.create_table('requested_upgrade',
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('champion_user_id', sa.Uuid(), nullable=False),
+    sa.Column('requester_game_account_id', sa.Uuid(), nullable=False),
+    sa.Column('requested_rarity', sqlmodel.sql.sqltypes.AutoString(length=10), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('done_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['champion_user_id'], ['champion_user.id'], ),
+    sa.ForeignKeyConstraint(['requester_game_account_id'], ['game_account.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
@@ -101,7 +143,10 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table('requested_upgrade')
+    op.drop_table('defense_placement')
     op.drop_table('champion_user')
+    op.drop_table('alliance_invitation')
     op.drop_table('alliance_adjoint')
     op.drop_table('login_log')
     op.drop_table('game_account')

@@ -1,10 +1,14 @@
 **/.vscode/*
 test*.db*
+*db/
 .idea
 data/db/*
 .coverage
 *.env
 !*.env.example
+
+# Application logs (RGPD — never commit)
+api/logs/
 
 
 # Byte-compiled / optimized / DLL files

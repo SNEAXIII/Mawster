@@ -9,7 +9,7 @@ function isPathMatching(path: string, paths: string[]): boolean {
   return paths.some((basePath) => path === basePath || path.startsWith(`${basePath}/`));
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
   const isTokenExpired = token?.expired || !token?.backendAuthenticated;
@@ -37,8 +37,8 @@ export async function middleware(request: NextRequest) {
   if (isTokenExpired) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
-  // 5. Restrict admin paths to admin users
-  if (isPathMatching(pathname, ADMIN_PATHS) && token?.role !== 'admin') {
+  // 5. Restrict admin paths to admin or super_admin users
+  if (isPathMatching(pathname, ADMIN_PATHS) && token?.role !== 'admin' && token?.role !== 'super_admin') {
     console.log('Non-admin user attempting to access admin path, redirecting to /');
     return NextResponse.redirect(new URL('/', request.url));
   }

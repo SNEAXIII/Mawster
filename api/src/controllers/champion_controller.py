@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 
 from src.dto.dto_champion import (
-    ChampionAdminViewAll,
+    ChampionPaginatedResponse,
     ChampionResponse,
     ChampionUpdateAliasRequest,
     ChampionLoadRequest,
@@ -17,10 +17,22 @@ from src.Messages.champion_messages import (
 from src.services.AuthService import AuthService
 from src.services.ChampionService import ChampionService
 from src.utils.db import SessionDep
+from src.utils.logging_config import audit_log
 
+# ── User-accessible read endpoints (/champions) ──────────
+champion_read_controller = APIRouter(
+    prefix="/champions",
+    tags=["Champions"],
+    dependencies=[
+        Depends(AuthService.is_logged_as_user),
+        Depends(AuthService.get_current_user_in_jwt),
+    ],
+)
+
+# ── Admin-only write endpoints (/admin/champions) ────────
 champion_controller = APIRouter(
     prefix="/admin/champions",
-    tags=["Champions"],
+    tags=["Champions (Admin)"],
     dependencies=[
         Depends(AuthService.is_logged_as_admin),
         Depends(AuthService.get_current_user_in_jwt),
@@ -28,7 +40,7 @@ champion_controller = APIRouter(
 )
 
 
-@champion_controller.get("", status_code=200, response_model=ChampionAdminViewAll)
+@champion_read_controller.get("", status_code=200, response_model=ChampionPaginatedResponse)
 async def get_champions(
     session: SessionDep,
     page: int = Query(default=1, ge=1),
@@ -41,7 +53,7 @@ async def get_champions(
     )
 
 
-@champion_controller.get("/{champion_id}", status_code=200, response_model=ChampionResponse)
+@champion_read_controller.get("/{champion_id}", status_code=200, response_model=ChampionResponse)
 async def get_champion(session: SessionDep, champion_id: uuid.UUID):
     champion = await ChampionService.get_champion_by_id(session, champion_id)
     return ChampionResponse(
@@ -70,6 +82,7 @@ async def load_champions(
     champions: list[ChampionLoadRequest],
 ):
     result = await ChampionService.load_champions(session, champions)
+    audit_log("admin.load_champions", detail=f"created={result['created']} updated={result['updated']} skipped={result['skipped']}")
     return {
         "message": CHAMPION_LOAD_SUCCESS,
         "created": result["created"],

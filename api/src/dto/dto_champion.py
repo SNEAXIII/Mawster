@@ -13,8 +13,8 @@ class ChampionResponse(BaseModel):
     alias: Optional[str] = None
 
 
-class ChampionAdminViewAll(BaseModel):
-    """Paginated list of champions for admin view."""
+class ChampionPaginatedResponse(BaseModel):
+    """Paginated list of champions."""
     champions: list[ChampionResponse]
     total_champions: int
     total_pages: int

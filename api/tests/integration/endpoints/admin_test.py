@@ -7,7 +7,7 @@ import pytest
 from main import app
 from src.enums.Roles import Roles
 from src.utils.db import get_session
-from tests.integration.endpoints.setup.user_setup import get_generic_user, push_one_admin
+from tests.integration.endpoints.setup.user_setup import get_generic_user, push_one_admin, push_one_super_admin
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
@@ -31,6 +31,7 @@ from tests.utils.utils_db import get_test_session, load_objects
 app.dependency_overrides[get_session] = get_test_session
 
 ADMIN_HEADERS = create_auth_headers(login=ADMIN_LOGIN, user_id=str(USER_ID), email=ADMIN_EMAIL, role=Roles.ADMIN)
+SUPER_ADMIN_HEADERS = create_auth_headers(login=ADMIN_LOGIN, user_id=str(USER_ID), email=ADMIN_EMAIL, role=Roles.SUPER_ADMIN)
 USER_HEADERS = create_auth_headers(login=USER_LOGIN, user_id=str(USER_ID), email=USER_EMAIL, role=Roles.USER)
 
 
@@ -297,14 +298,26 @@ class TestAdminDeleteUser:
 
 class TestPromoteUser:
     @pytest.mark.asyncio
-    async def test_promote_ok(self, session):
+    async def test_super_admin_can_promote(self, session):
+        """Only super_admin can promote a user to admin."""
+        await push_one_super_admin()
+        user = await _setup_user()
+
+        response = await execute_patch_request(
+            f"/admin/users/promote/{user.id}", {}, headers=SUPER_ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_admin_cannot_promote(self, session):
+        """Admin (non-super) is forbidden from promoting users."""
         await push_one_admin()
         user = await _setup_user()
 
         response = await execute_patch_request(
             f"/admin/users/promote/{user.id}", {}, headers=ADMIN_HEADERS
         )
-        assert response.status_code == 200
+        assert response.status_code == 403
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -317,7 +330,7 @@ class TestPromoteUser:
         ids=["already_admin", "deleted_user", "not_found"],
     )
     async def test_promote_errors(self, session, scenario, expected_status):
-        await push_one_admin()
+        await push_one_super_admin()
 
         if scenario == "already_admin":
             user = await _setup_user(
@@ -332,14 +345,54 @@ class TestPromoteUser:
             target_id = uuid.uuid4()
 
         response = await execute_patch_request(
-            f"/admin/users/promote/{target_id}", {}, headers=ADMIN_HEADERS
+            f"/admin/users/promote/{target_id}", {}, headers=SUPER_ADMIN_HEADERS
         )
         assert response.status_code == expected_status
 
     @pytest.mark.asyncio
     async def test_promote_invalid_uuid_returns_400(self, session):
-        await push_one_admin()
+        await push_one_super_admin()
         response = await execute_patch_request(
-            "/admin/users/promote/not-a-uuid", {}, headers=ADMIN_HEADERS
+            "/admin/users/promote/not-a-uuid", {}, headers=SUPER_ADMIN_HEADERS
+        )
+        assert response.status_code == 400
+
+
+# =========================================================================
+# SUPER_ADMIN related access control
+# =========================================================================
+
+
+class TestSuperAdminAccess:
+    @pytest.mark.asyncio
+    async def test_super_admin_can_access_admin_routes(self, session):
+        """Super admin can list users via /admin/users."""
+        await push_one_super_admin()
+        response = await execute_get_request("/admin/users", headers=SUPER_ADMIN_HEADERS)
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_cannot_disable_super_admin(self, session):
+        """Targeting a super_admin user for disable should fail."""
+        await push_one_super_admin()
+        target = await _setup_user(
+            user_id=uuid.uuid4(), login="superadmin2", email="sa2@gmail.com",
+            discord_id="discord_sa2", role=Roles.SUPER_ADMIN,
+        )
+        response = await execute_patch_request(
+            f"/admin/users/disable/{target.id}", {}, headers=SUPER_ADMIN_HEADERS
+        )
+        assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_cannot_delete_super_admin(self, session):
+        """Targeting a super_admin user for deletion should fail."""
+        await push_one_super_admin()
+        target = await _setup_user(
+            user_id=uuid.uuid4(), login="superadmin2", email="sa2@gmail.com",
+            discord_id="discord_sa2", role=Roles.SUPER_ADMIN,
+        )
+        response = await execute_delete_request(
+            f"/admin/users/delete/{target.id}", headers=SUPER_ADMIN_HEADERS
         )
         assert response.status_code == 400

@@ -17,18 +17,14 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
-  Crown,
   UserMinus,
   ShieldCheck,
   ShieldMinus,
   Eye,
 } from 'lucide-react';
-
-const GROUP_COLORS: Record<number, string> = {
-  1: 'bg-green-100 text-green-800',
-  2: 'bg-orange-100 text-orange-800',
-  3: 'bg-red-100 text-red-800',
-};
+import { type Alliance } from '@/app/services/game';
+import { useAllianceRole } from '@/hooks/use-alliance-role';
+import UsernameEnriched, { getMemberRole } from '@/components/username-enriched';
 
 interface AllianceMember {
   id: string;
@@ -40,10 +36,7 @@ interface AllianceMember {
 
 interface AllianceMemberRowProps {
   member: AllianceMember;
-  allianceId: string;
-  isMine: boolean;
-  userIsOwner: boolean;
-  userCanManage: boolean;
+  alliance: Alliance;
   onDemoteOfficer: (allianceId: string, gameAccountId: string) => void;
   onPromoteOfficer: (target: { allianceId: string; gameAccountId: string; pseudo: string }) => void;
   onLeave: (target: { allianceId: string; gameAccountId: string; pseudo: string }) => void;
@@ -54,10 +47,7 @@ interface AllianceMemberRowProps {
 
 export default function AllianceMemberRow({
   member,
-  allianceId,
-  isMine,
-  userIsOwner,
-  userCanManage,
+  alliance,
   onDemoteOfficer,
   onPromoteOfficer,
   onLeave,
@@ -66,36 +56,25 @@ export default function AllianceMemberRow({
   onViewRoster,
 }: AllianceMemberRowProps) {
   const { t } = useI18n();
+  const { isMine: isMineCheck, isOwner, canManage } = useAllianceRole();
+
+  const memberIsMine = isMineCheck(member.id);
+  const userIsOwner = isOwner(alliance);
+  const userCanManage = canManage(alliance);
+  const allianceId = alliance.id;
 
   return (
-    <div className="flex items-center justify-between py-1 px-2 rounded hover:bg-gray-50">
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-800">{member.game_pseudo}</span>
-        {member.is_owner && (
-          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-800">
-            <Crown className="h-2.5 w-2.5" /> {t.game.alliances.owner}
-          </span>
-        )}
-        {member.is_officer && !member.is_owner && (
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700">
-            Officer
-          </span>
-        )}
-        {member.alliance_group ? (
-          <span
-            className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs ${GROUP_COLORS[member.alliance_group]}`}
-          >
-            {t.game.alliances.group} {member.alliance_group}
-          </span>
-        ) : null}
-        {isMine && (
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-500">
-            {t.game.alliances.you}
-          </span>
-        )}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-2 sm:py-1 px-2 rounded hover:bg-gray-50 gap-1 sm:gap-0">
+      <div className="flex items-center gap-2 min-w-0">
+        <UsernameEnriched
+          pseudo={member.game_pseudo}
+          role={getMemberRole(member.is_owner, member.is_officer)}
+          group={member.alliance_group}
+          isMine={memberIsMine}
+        />
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 flex-wrap sm:flex-nowrap">
         {/* View Roster */}
         <TooltipProvider>
           <Tooltip>
@@ -158,7 +137,7 @@ export default function AllianceMemberRow({
 
         {/* Leave (own account) or Exclude (officer/owner action on others) */}
         {!member.is_owner && (
-          isMine ? (
+          memberIsMine ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>

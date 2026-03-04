@@ -14,7 +14,7 @@ app.dependency_overrides[get_session] = get_test_session
 
 HEADERS = create_auth_headers()
 CONFIRMATION_TEXT = "SUPPRIMER"
-
+ENDPOINT = "/user/delete"
 
 # =========================================================================
 # DELETE /user/delete
@@ -27,7 +27,7 @@ class TestSelfDeleteUser:
         await push_one_user()
 
         response = await execute_delete_request(
-            "/user/delete",
+            ENDPOINT,
             headers=HEADERS,
             payload={"confirmation": CONFIRMATION_TEXT},
         )
@@ -47,7 +47,7 @@ class TestSelfDeleteUser:
         await push_one_user()
 
         response = await execute_delete_request(
-            "/user/delete",
+            ENDPOINT,
             headers=HEADERS,
             payload={"confirmation": confirmation},
         )
@@ -56,7 +56,7 @@ class TestSelfDeleteUser:
     @pytest.mark.asyncio
     async def test_delete_without_auth(self, session):
         response = await execute_delete_request(
-            "/user/delete",
+            ENDPOINT,
             payload={"confirmation": CONFIRMATION_TEXT},
         )
         assert response.status_code == 401

@@ -91,7 +91,7 @@ async def test_get_total_users(mocker):
 
 
 @pytest.mark.asyncio
-async def test_get_users_with_pagination(mocker):
+async def test_get_users_with_pagination_role_search(mocker):
     # Arrange
     total_user_result = 45
     user_list_for_mock = [
@@ -105,17 +105,21 @@ async def test_get_users_with_pagination(mocker):
     mock_session = session_mock(mocker)
     mock_get_users_paginated = get_users_paginated_mock(mocker, user_list_for_mock)
     mock_get_total_users = get_total_users_mock(mocker, return_value=total_user_result)
+    STATUS = "status"
+    ROLE = Roles.USER
+    SEARCH = "search"
+
     # Act
-    result = await UserService.get_users_with_pagination(mock_session, PAGE, SIZE)
+    result = await UserService.get_users_with_pagination_role_search(mock_session, PAGE, SIZE, STATUS, ROLE, SEARCH)
 
     # Assert
     assert result.users == expected_list_result
     assert result.total_users == total_user_result
     assert result.total_pages == 5
     assert result.current_page == PAGE
-    mock_get_total_users.assert_called_once_with(mock_session, STATUS, ROLE)
+    mock_get_total_users.assert_called_once_with(mock_session, STATUS, ROLE, SEARCH)
     mock_get_users_paginated.assert_called_once_with(
-        mock_session, PAGE, SIZE, STATUS, ROLE
+        mock_session, PAGE, SIZE, STATUS, ROLE, SEARCH
     )
 
 

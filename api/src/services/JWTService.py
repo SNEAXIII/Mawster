@@ -51,11 +51,24 @@ class JWTService:
         return JWTService.create_token(
             data={
                 "user_id": str(user.id),
-                "sub": user.login,
-                "email": user.email,
                 "role": user.role,
+                "type": "access",
             },
             expires_delta=access_token_expires,
+        )
+
+    @classmethod
+    def create_refresh_token(cls, user: Optional[User]) -> str:
+        """Create a long-lived refresh token containing only user_id."""
+        if not user:
+            raise CREDENTIALS_EXCEPTION
+        refresh_token_expires = timedelta(days=SECRET.REFRESH_TOKEN_EXPIRE_DAYS)
+        return JWTService.create_token(
+            data={
+                "user_id": str(user.id),
+                "type": "refresh",
+            },
+            expires_delta=refresh_token_expires,
         )
 
     @classmethod
@@ -70,8 +83,19 @@ class JWTService:
             raise EXPIRED_EXCEPTION
         except (InvalidSignatureError, InvalidAlgorithmError, DecodeError):
             raise INVALID_TOKEN_EXCEPTION
-        if data.get("sub") is None:
+        if data.get("user_id") is None:
             raise CANT_FIND_USER_TOKEN_EXCEPTION
-        if data.get("role") not in Roles.__members__.values():
-            raise INVALID_ROLE_EXCEPTION
+        # Only validate role for access tokens (refresh tokens don't carry role)
+        token_type = data.get("type", "access")
+        if token_type == "access":
+            if data.get("role") not in Roles.__members__.values():
+                raise INVALID_ROLE_EXCEPTION
+        return data
+
+    @classmethod
+    def decode_refresh_token(cls, token: str) -> dict:
+        """Decode and validate a refresh token. Raises if not a refresh token."""
+        data = cls.decode_jwt(token)
+        if data.get("type") != "refresh":
+            raise INVALID_TOKEN_EXCEPTION
         return data

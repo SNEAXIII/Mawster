@@ -9,7 +9,9 @@ from starlette import status
 
 from src.models.GameAccount import GameAccount
 from src.models.Alliance import Alliance
+from src.models.AllianceInvitation import AllianceInvitation
 from src.models.AllianceOfficer import AllianceOfficer
+from src.enums.InvitationStatus import InvitationStatus
 from src.utils.db import SessionDep
 
 MAX_MEMBERS_PER_GROUP = 10
@@ -207,6 +209,55 @@ class AllianceService:
         )
         result = await session.exec(sql)
         return result.all()
+
+    @classmethod
+    async def get_my_roles(
+        cls, session: SessionDep, user_id: uuid.UUID
+    ) -> dict:
+        """Return alliance role information for the current user.
+
+        Returns a dict with:
+          - roles: { alliance_id_str: { is_owner, is_officer, can_manage } }
+          - my_account_ids: [ str(account_id), ... ]
+        """
+        # 1. Get all game accounts for this user
+        accs_result = await session.exec(
+            select(GameAccount).where(GameAccount.user_id == user_id)
+        )
+        user_accounts = accs_result.all()
+        user_account_ids = {acc.id for acc in user_accounts}
+        my_account_ids = [str(aid) for aid in user_account_ids]
+
+        # 2. Get alliance IDs the user is a member of
+        alliance_ids = {acc.alliance_id for acc in user_accounts if acc.alliance_id is not None}
+        if not alliance_ids:
+            return {"roles": {}, "my_account_ids": my_account_ids}
+
+        # 3. Load those alliances with officers
+        sql = (
+            select(Alliance)
+            .where(Alliance.id.in_(alliance_ids))  # type: ignore[union-attr]
+            .options(
+                selectinload(Alliance.officers),  # type: ignore[arg-type]
+            )
+        )
+        result = await session.exec(sql)
+        alliances = result.all()
+
+        # 4. Build role map
+        roles: dict[str, dict] = {}
+        for alliance in alliances:
+            is_owner = alliance.owner_id in user_account_ids
+            officer_ids = {off.game_account_id for off in alliance.officers}
+            is_officer = bool(user_account_ids & officer_ids)
+            can_manage = is_owner or is_officer
+            roles[str(alliance.id)] = {
+                "is_owner": is_owner,
+                "is_officer": is_officer,
+                "can_manage": can_manage,
+            }
+
+        return {"roles": roles, "my_account_ids": my_account_ids}
 
     @classmethod
     async def update_alliance(
@@ -459,9 +510,19 @@ class AllianceService:
     async def get_eligible_members(
         cls, session: SessionDep
     ) -> list[GameAccount]:
-        """Get all game accounts that are NOT in any alliance (can be invited)."""
+        """Get all game accounts that are NOT in any alliance and do NOT have a pending invitation."""
+        # Get IDs of game accounts with pending invitations
+        pending_ids_result = await session.exec(
+            select(AllianceInvitation.game_account_id).where(
+                AllianceInvitation.status == InvitationStatus.PENDING,
+            )
+        )
+        pending_ids = set(pending_ids_result.all())
+
         sql = select(GameAccount).where(
             GameAccount.alliance_id == None,  # noqa: E711
         )
+        if pending_ids:
+            sql = sql.where(GameAccount.id.notin_(pending_ids))  # type: ignore[union-attr]
         result = await session.exec(sql)
         return result.all()

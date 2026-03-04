@@ -8,9 +8,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Power, Trash, UserPlus } from 'lucide-react';
+import { MoreHorizontal, Power, Trash, UserPlus, UserMinus } from 'lucide-react';
 import { useState } from 'react';
-import { disableUser, enableUser, deleteUser, promoteToAdmin } from '@/app/services/users';
+import { disableUser, enableUser, deleteUser, promoteToAdmin, demoteFromAdmin } from '@/app/services/users';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useI18n } from '@/app/i18n';
@@ -20,6 +20,7 @@ const UserAction = {
   ENABLE: 'enable',
   DELETE: 'delete',
   PROMOTE: 'promote',
+  DEMOTE: 'demote',
 } as const;
 
 type UserAction = typeof UserAction[keyof typeof UserAction];
@@ -27,6 +28,8 @@ type UserAction = typeof UserAction[keyof typeof UserAction];
 interface UserActionsProps {
   userId: string;
   isAdmin: boolean;
+  isTargetSuperAdmin?: boolean;
+  isSuperAdmin?: boolean;
   isDisabled?: boolean;
   isDeleted?: boolean;
   loadUsers: () => void;
@@ -35,6 +38,8 @@ interface UserActionsProps {
 export const UserActions: React.FC<UserActionsProps> = ({
   userId,
   isAdmin,
+  isTargetSuperAdmin = false,
+  isSuperAdmin = false,
   isDisabled = false,
   isDeleted = false,
   loadUsers,
@@ -44,6 +49,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
     [UserAction.ENABLE]: false,
     [UserAction.DELETE]: false,
     [UserAction.PROMOTE]: false,
+    [UserAction.DEMOTE]: false,
   } as const;
 
   const [isLoading, setIsLoading] = useState<Record<UserAction, boolean>>(initialLoadingState);
@@ -74,6 +80,11 @@ export const UserActions: React.FC<UserActionsProps> = ({
           setIsPromoteToAdminDialogOpen(false);
           loadUsers();
           break;
+        case UserAction.DEMOTE:
+          await demoteFromAdmin(userId);
+          setIsDemoteDialogOpen(false);
+          loadUsers();
+          break;
       }
     } catch (error) {
       console.error(`Error during ${action} user:`, error);
@@ -85,7 +96,10 @@ export const UserActions: React.FC<UserActionsProps> = ({
   const [isDisableDialogOpen, setIsDisableDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isPromoteToAdminDialogOpen, setIsPromoteToAdminDialogOpen] = useState(false);
-  const isDisabledOrAdmin = isDeleted || isAdmin;
+  const [isDemoteDialogOpen, setIsDemoteDialogOpen] = useState(false);
+  const isTargetAdmin = isAdmin && !isDeleted;
+  // Block all actions: deleted users, super_admin targets, and admins (unless current user is super_admin)
+  const isDisabledOrAdmin = isDeleted || isTargetSuperAdmin || (isAdmin && !isSuperAdmin);
   if (isDisabledOrAdmin) {
     return (
       <TableCell>
@@ -103,7 +117,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
               </div>
             </TooltipTrigger>
             <TooltipContent>
-              {isAdmin && <p>{t.dashboard.actions.isAdmin}</p>}
+              {(isAdmin || isTargetSuperAdmin) && <p>{t.dashboard.actions.isAdmin}</p>}
               {isDeleted && <p>{t.dashboard.actions.isDeleted}</p>}
             </TooltipContent>
           </Tooltip>
@@ -128,6 +142,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
             </DropdownMenuTrigger>
             {!isDeleted && (
               <DropdownMenuContent align='end'>
+                {isSuperAdmin && !isAdmin && (
                 <DropdownMenuItem
                   onClick={() => setIsPromoteToAdminDialogOpen(true)}
                   className='text-blue-600 flex items-center'
@@ -136,6 +151,19 @@ export const UserActions: React.FC<UserActionsProps> = ({
                   <UserPlus className='mr-2 h-4 w-4' />
                   {t.dashboard.actions.promote}
                 </DropdownMenuItem>
+                )}
+                {isSuperAdmin && isTargetAdmin && (
+                <DropdownMenuItem
+                  onClick={() => setIsDemoteDialogOpen(true)}
+                  className='text-orange-600 flex items-center'
+                  disabled={isLoading.demote}
+                >
+                  <UserMinus className='mr-2 h-4 w-4' />
+                  {t.dashboard.actions.demote}
+                </DropdownMenuItem>
+                )}
+                {!isTargetAdmin && (
+                <>
                 {isDisabled ? (
                   <DropdownMenuItem
                     className='text-green-600 flex items-center'
@@ -163,6 +191,8 @@ export const UserActions: React.FC<UserActionsProps> = ({
                   <Trash className='mr-2 h-4 w-4' />
                   {t.dashboard.actions.delete}
                 </DropdownMenuItem>
+                </>
+                )}
               </DropdownMenuContent>
             )}
           </DropdownMenu>
@@ -207,6 +237,16 @@ export const UserActions: React.FC<UserActionsProps> = ({
           description={t.dashboard.dialogs.promoteUserDesc}
           onConfirm={() => handleAction(UserAction.PROMOTE, userId)}
           confirmText={t.dashboard.actions.promote}
+        />
+
+        <ConfirmationDialog
+          open={isDemoteDialogOpen}
+          onOpenChange={setIsDemoteDialogOpen}
+          title={t.dashboard.dialogs.demoteUser}
+          description={t.dashboard.dialogs.demoteUserDesc}
+          onConfirm={() => handleAction(UserAction.DEMOTE, userId)}
+          variant='destructive'
+          confirmText={t.dashboard.actions.demote}
         />
 
       </div>

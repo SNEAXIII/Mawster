@@ -22,6 +22,7 @@ from src.services.GameAccountService import GameAccountService
 from src.services.ChampionUserService import ChampionUserService
 from src.services.UpgradeRequestService import UpgradeRequestService
 from src.utils.db import SessionDep
+from src.utils.logging_config import audit_log
 
 champion_user_controller = APIRouter(
     prefix="/champion-users",
@@ -59,7 +60,9 @@ async def create_champion_user(
         champion_id=body.champion_id,
         rarity=body.rarity,
         signature=body.signature,
+        is_preferred_attacker=body.is_preferred_attacker,
     )
+    audit_log("roster.add_champion", user_id=str(current_user.id), detail=f"game_account_id={body.game_account_id} champion_id={body.champion_id}")
     return ChampionUserResponse.from_model(result)
 
 
@@ -89,6 +92,7 @@ async def bulk_add_champions(
             "champion_name": entry.champion_name,
             "rarity": entry.rarity,
             "signature": entry.signature,
+            "is_preferred_attacker": entry.is_preferred_attacker,
         }
         for entry in body.champions
     ]
@@ -97,6 +101,7 @@ async def bulk_add_champions(
         game_account_id=body.game_account_id,
         champions=champions_data,
     )
+    audit_log("roster.bulk_import", user_id=str(current_user.id), detail=f"game_account_id={body.game_account_id} count={len(entries)}")
     return [
         ChampionUserDetailResponse(
             id=e.id,
@@ -104,6 +109,7 @@ async def bulk_add_champions(
             champion_id=e.champion_id,
             rarity=e.rarity,
             signature=e.signature,
+            is_preferred_attacker=e.is_preferred_attacker,
             champion_name=e.champion.name,
             champion_class=e.champion.champion_class,
             image_url=e.champion.image_url,
@@ -151,12 +157,42 @@ async def get_roster_by_game_account(
             champion_id=e.champion_id,
             rarity=e.rarity,
             signature=e.signature,
+            is_preferred_attacker=e.is_preferred_attacker,
             champion_name=e.champion.name,
             champion_class=e.champion.champion_class,
             image_url=e.champion.image_url,
         )
         for e in entries
     ]
+
+
+@champion_user_controller.patch(
+    "/{champion_user_id}/preferred-attacker",
+    response_model=ChampionUserResponse,
+)
+async def toggle_preferred_attacker(
+    champion_user_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Toggle the preferred attacker flag for a champion user entry.
+    Only the owner of the game account can toggle this flag."""
+    champion_user = await ChampionUserService.get_champion_user(session, champion_user_id)
+    if champion_user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+    game_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
+    if game_account is None or game_account.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
+    champion_user.is_preferred_attacker = not champion_user.is_preferred_attacker
+    session.add(champion_user)
+    await session.commit()
+    await session.refresh(champion_user)
+    audit_log(
+        "roster.toggle_preferred_attacker",
+        user_id=str(current_user.id),
+        detail=f"champion_user_id={champion_user_id} is_preferred_attacker={champion_user.is_preferred_attacker}",
+    )
+    return ChampionUserResponse.from_model(champion_user)
 
 
 @champion_user_controller.get(
@@ -222,6 +258,7 @@ async def delete_champion_user(
     if game_account is None or game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
     await ChampionUserService.delete_champion_user(session, champion_user)
+    audit_log("roster.delete_champion", user_id=str(current_user.id), detail=f"champion_user_id={champion_user_id}")
 
 
 @champion_user_controller.patch(
@@ -241,6 +278,7 @@ async def upgrade_champion_rank(
     if game_account is None or game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
     upgraded = await ChampionUserService.upgrade_champion_rank(session, champion_user)
+    audit_log("roster.upgrade_rank", user_id=str(current_user.id), detail=f"champion_user_id={champion_user_id}")
     return ChampionUserResponse.from_model(upgraded)
 
 
@@ -323,6 +361,12 @@ async def create_upgrade_request(
     )
     result = await session.exec(stmt)
     loaded = result.one()
+
+    audit_log(
+        "upgrade_request.create",
+        user_id=str(current_user.id),
+        detail=f"request_id={loaded.id} champion_user_id={body.champion_user_id} requested_rarity={body.requested_rarity}",
+    )
 
     return UpgradeRequestResponse(
         id=loaded.id,
@@ -421,3 +465,4 @@ async def cancel_upgrade_request(
 
     await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
     await UpgradeRequestService.cancel_upgrade_request(session, request_id)
+    audit_log("upgrade_request.cancel", user_id=str(current_user.id), detail=f"request_id={request_id}")

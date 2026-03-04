@@ -1,4 +1,8 @@
-"""Integration tests for /admin/champions endpoints."""
+"""Integration tests for champion endpoints.
+
+/champions (GET) — accessible to any authenticated user.
+/admin/champions (PATCH, POST, DELETE) — admin only.
+"""
 import uuid
 
 import pytest
@@ -6,7 +10,7 @@ import pytest
 from main import app
 from src.enums.Roles import Roles
 from src.utils.db import get_session
-from tests.integration.endpoints.setup.user_setup import push_one_admin
+from tests.integration.endpoints.setup.user_setup import push_one_admin, push_one_user
 from tests.integration.endpoints.setup.game_setup import get_champion, push_champion
 from tests.utils.utils_client import (
     create_auth_headers,
@@ -33,22 +37,51 @@ USER_HEADERS = create_auth_headers(
 
 
 # =========================================================================
-# Access control — 401 / 403 for all /admin/champions routes
+# Access control — /champions (GET) requires auth but NOT admin
 # =========================================================================
 
 _FAKE_ID = str(uuid.uuid4())
 
+_USER_CHAMPION_ROUTES = [
+    ("GET", "/champions?page=1&size=10", None, "list"),
+    ("GET", f"/champions/{_FAKE_ID}", None, "get_by_id"),
+]
+
 _ADMIN_CHAMPION_ROUTES = [
-    ("GET", "/admin/champions?page=1&size=10", None, "list"),
-    ("GET", f"/admin/champions/{_FAKE_ID}", None, "get_by_id"),
     ("PATCH", f"/admin/champions/{_FAKE_ID}/alias", {"alias": "x"}, "update_alias"),
     ("POST", "/admin/champions/load", [{"name": "X", "champion_class": "Science"}], "load"),
     ("DELETE", f"/admin/champions/{_FAKE_ID}", None, "delete"),
 ]
 
 
+class TestChampionReadAccessControl:
+    """GET /champions endpoints require authentication."""
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "method, url, payload",
+        [(action, route, payload) for action, route, payload, _ in _USER_CHAMPION_ROUTES],
+        ids=[name for _, _, _, name in _USER_CHAMPION_ROUTES],
+    )
+    async def test_no_auth_returns_401(self, session, method, url, payload):
+        response = await execute_request(method, url, payload)
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "method, url, payload",
+        [(action, route, payload) for action, route, payload, _ in _USER_CHAMPION_ROUTES],
+        ids=[name for _, _, _, name in _USER_CHAMPION_ROUTES],
+    )
+    async def test_regular_user_can_access(self, session, method, url, payload):
+        await push_one_user()
+        response = await execute_request(method, url, payload, headers=USER_HEADERS)
+
+        assert response.status_code not in (401, 403)
+
+
 class TestAdminChampionsAccessControl:
-    """All /admin/champions endpoints require authentication and admin role."""
+    """Write /admin/champions endpoints require authentication and admin role."""
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -72,7 +105,7 @@ class TestAdminChampionsAccessControl:
 
 
 # =========================================================================
-# GET /admin/champions — list with pagination
+# GET /champions — list with pagination
 # =========================================================================
 
 
@@ -90,15 +123,15 @@ class TestGetChampions:
         ids=["valid", "page_zero", "page_negative", "size_zero", "size_negative"],
     )
     async def test_pagination_validation(self, session, params, expected_status):
-        await push_one_admin()
+        await push_one_user()
         response = await execute_get_request(
-            f"/admin/champions{params}", headers=ADMIN_HEADERS
+            f"/champions{params}", headers=USER_HEADERS
         )
         assert response.status_code == expected_status
 
     @pytest.mark.asyncio
-    async def test_admin_can_list_champions(self, session):
-        await push_one_admin()
+    async def test_user_can_list_champions(self, session):
+        await push_one_user()
         champs = [
             get_champion(name="Spider-Man", champion_class="Science"),
             get_champion(name="Wolverine", champion_class="Mutant"),
@@ -106,7 +139,7 @@ class TestGetChampions:
         await load_objects(champs)
 
         response = await execute_get_request(
-            "/admin/champions?page=1&size=10", headers=ADMIN_HEADERS
+            "/champions?page=1&size=10", headers=USER_HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -115,7 +148,7 @@ class TestGetChampions:
 
     @pytest.mark.asyncio
     async def test_filter_by_class(self, session):
-        await push_one_admin()
+        await push_one_user()
         champs = [
             get_champion(name="Spider-Man", champion_class="Science"),
             get_champion(name="Wolverine", champion_class="Mutant"),
@@ -124,8 +157,8 @@ class TestGetChampions:
         await load_objects(champs)
 
         response = await execute_get_request(
-            "/admin/champions?page=1&size=10&champion_class=Science",
-            headers=ADMIN_HEADERS,
+            "/champions?page=1&size=10&champion_class=Science",
+            headers=USER_HEADERS,
         )
         assert response.status_code == 200
         body = response.json()
@@ -135,7 +168,7 @@ class TestGetChampions:
 
     @pytest.mark.asyncio
     async def test_search_by_name(self, session):
-        await push_one_admin()
+        await push_one_user()
         champs = [
             get_champion(name="Spider-Man", champion_class="Science"),
             get_champion(name="Wolverine", champion_class="Mutant"),
@@ -143,8 +176,8 @@ class TestGetChampions:
         await load_objects(champs)
 
         response = await execute_get_request(
-            "/admin/champions?page=1&size=10&search=spider",
-            headers=ADMIN_HEADERS,
+            "/champions?page=1&size=10&search=spider",
+            headers=USER_HEADERS,
         )
         assert response.status_code == 200
         body = response.json()
@@ -153,7 +186,7 @@ class TestGetChampions:
 
     @pytest.mark.asyncio
     async def test_search_by_alias(self, session):
-        await push_one_admin()
+        await push_one_user()
         champs = [
             get_champion(name="Spider-Man", champion_class="Science", alias="spidey;peter"),
             get_champion(name="Wolverine", champion_class="Mutant", alias="logan;james"),
@@ -161,8 +194,8 @@ class TestGetChampions:
         await load_objects(champs)
 
         response = await execute_get_request(
-            "/admin/champions?page=1&size=10&search=logan",
-            headers=ADMIN_HEADERS,
+            "/champions?page=1&size=10&search=logan",
+            headers=USER_HEADERS,
         )
         assert response.status_code == 200
         body = response.json()
@@ -171,9 +204,9 @@ class TestGetChampions:
 
     @pytest.mark.asyncio
     async def test_empty_list(self, session):
-        await push_one_admin()
+        await push_one_user()
         response = await execute_get_request(
-            "/admin/champions?page=1&size=10", headers=ADMIN_HEADERS
+            "/champions?page=1&size=10", headers=USER_HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -182,7 +215,7 @@ class TestGetChampions:
 
     @pytest.mark.asyncio
     async def test_pagination_pages(self, session):
-        await push_one_admin()
+        await push_one_user()
         champs = [
             get_champion(name=f"Champion_{i:03d}", champion_class="Science")
             for i in range(15)
@@ -191,7 +224,7 @@ class TestGetChampions:
 
         # Page 1
         response = await execute_get_request(
-            "/admin/champions?page=1&size=10", headers=ADMIN_HEADERS
+            "/champions?page=1&size=10", headers=USER_HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -201,7 +234,7 @@ class TestGetChampions:
 
         # Page 2
         response = await execute_get_request(
-            "/admin/champions?page=2&size=10", headers=ADMIN_HEADERS
+            "/champions?page=2&size=10", headers=USER_HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -209,19 +242,19 @@ class TestGetChampions:
 
 
 # =========================================================================
-# GET /admin/champions/{champion_id} — single champion
+# GET /champions/{champion_id} — single champion
 # =========================================================================
 
 
 class TestGetChampionById:
     @pytest.mark.asyncio
     async def test_get_existing(self, session):
-        await push_one_admin()
+        await push_one_user()
         champ = get_champion()
         await load_objects([champ])
 
         response = await execute_get_request(
-            f"/admin/champions/{champ.id}", headers=ADMIN_HEADERS
+            f"/champions/{champ.id}", headers=USER_HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -230,26 +263,26 @@ class TestGetChampionById:
 
     @pytest.mark.asyncio
     async def test_get_nonexistent(self, session):
-        await push_one_admin()
+        await push_one_user()
         response = await execute_get_request(
-            f"/admin/champions/{uuid.uuid4()}", headers=ADMIN_HEADERS
+            f"/champions/{uuid.uuid4()}", headers=USER_HEADERS
         )
         assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_invalid_uuid_returns_400(self, session):
-        await push_one_admin()
+        await push_one_user()
         response = await execute_get_request(
-            "/admin/champions/not-a-uuid", headers=ADMIN_HEADERS
+            "/champions/not-a-uuid", headers=USER_HEADERS
         )
         assert response.status_code == 400
 
     @pytest.mark.asyncio
     async def test_response_body_structure(self, session):
-        await push_one_admin()
+        await push_one_user()
         champ = await push_champion("Hulk", "Science")
         response = await execute_get_request(
-            f"/admin/champions/{champ.id}", headers=ADMIN_HEADERS
+            f"/champions/{champ.id}", headers=USER_HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -279,7 +312,7 @@ class TestUpdateAlias:
         assert response.status_code == 200
 
         get_resp = await execute_get_request(
-            f"/admin/champions/{champ.id}", headers=ADMIN_HEADERS
+            f"/champions/{champ.id}", headers=ADMIN_HEADERS
         )
         assert get_resp.json()["alias"] == "spidey;peter"
 
@@ -297,7 +330,7 @@ class TestUpdateAlias:
         assert response.status_code == 200
 
         get_resp = await execute_get_request(
-            f"/admin/champions/{champ.id}", headers=ADMIN_HEADERS
+            f"/champions/{champ.id}", headers=ADMIN_HEADERS
         )
         assert get_resp.json()["alias"] is None
 
@@ -411,7 +444,7 @@ class TestDeleteChampion:
         assert response.status_code == 200
 
         get_resp = await execute_get_request(
-            f"/admin/champions/{champ.id}", headers=ADMIN_HEADERS
+            f"/champions/{champ.id}", headers=ADMIN_HEADERS
         )
         assert get_resp.status_code == 404
 
