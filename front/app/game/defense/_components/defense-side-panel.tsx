@@ -17,6 +17,33 @@ interface DefenseSidePanelProps {
   canManage: boolean;
 }
 
+/** Parse a rarity string like "7r4" → { stars, rank } */
+function parseRarity(rarity: string): { stars: number; rank: number } {
+  const m = rarity.match(/^(\d+)r(\d+)$/i);
+  if (!m) return { stars: 0, rank: 0 };
+  return { stars: parseInt(m[1], 10), rank: parseInt(m[2], 10) };
+}
+
+/** Colour + label for a placed champion based on rarity & signature. */
+function rarityBadgeClass(rarity: string): string {
+  const { stars, rank } = parseRarity(rarity);
+  if (stars === 7 && rank === 5) return 'text-blue-400';
+  if (stars === 7 && rank === 4) return 'text-green-400';
+  return 'text-red-400';
+}
+
+function rarityLabel(rarity: string, signature: number): string {
+  const { stars, rank } = parseRarity(rarity);
+  return `${stars}★R${rank}·${signature}`;
+}
+
+/** Role sort order: owner < officer < member */
+function roleOrder(member: BgMember): number {
+  if (member.is_owner) return 0;
+  if (member.is_officer) return 1;
+  return 2;
+}
+
 export default function DefenseSidePanel({
   members,
   placements,
@@ -25,6 +52,13 @@ export default function DefenseSidePanel({
 }: DefenseSidePanelProps) {
   const { t } = useI18n();
   const { isMine } = useAllianceRole();
+
+  // Sort members: owner → officers → members, then alphabetical
+  const sortedMembers = [...members].sort((a, b) => {
+    const rDiff = roleOrder(a) - roleOrder(b);
+    if (rDiff !== 0) return rDiff;
+    return a.game_pseudo.localeCompare(b.game_pseudo);
+  });
 
   // Group placements by game_account_id
   const placementsByPlayer = new Map<string, DefensePlacement[]>();
@@ -46,10 +80,10 @@ export default function DefenseSidePanel({
       <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
         {t.game.defense.membersTitle}
       </h3>
-      {members.length === 0 ? (
+      {sortedMembers.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t.game.defense.noMembers}</p>
       ) : (
-        members.map((member) => {
+        sortedMembers.map((member) => {
           const playerPlacements = placementsByPlayer.get(member.game_account_id) ?? [];
           const isFull = member.defender_count >= member.max_defenders;
           return (
@@ -85,10 +119,13 @@ export default function DefenseSidePanel({
                           size={40}
                         />
                         <span className={cn(
-                          'text-[9px]',
+                          'text-[10px]',
                           p.is_preferred_attacker ? 'text-yellow-400 font-semibold' : 'text-muted-foreground',
                         )}>
                           {p.is_preferred_attacker && '⚔ '}#{p.node_number}
+                        </span>
+                        <span className={cn('text-[10px] font-mono leading-none', rarityBadgeClass(p.rarity))}>
+                          {rarityLabel(p.rarity, p.signature)}
                         </span>
                         {canManage && (
                           <button

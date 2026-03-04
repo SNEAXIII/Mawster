@@ -15,13 +15,13 @@ export enum ChampionRarity {
 export const RARITIES = Object.values(ChampionRarity);
 
 export const RARITY_LABELS: Record<string, string> = {
-  '6r4': '6★ R4',
-  '6r5': '6★ R5',
-  '7r1': '7★ R1',
-  '7r2': '7★ R2',
-  '7r3': '7★ R3',
-  '7r4': '7★ R4',
-  '7r5': '7★ R5',
+  '6r4': '6★R4',
+  '6r5': '6★R5',
+  '7r1': '7★R1',
+  '7r2': '7★R2',
+  '7r3': '7★R3',
+  '7r4': '7★R4',
+  '7r5': '7★R5',
 };
 
 export const SIGNATURE_PRESETS = [0, 20, 200];
