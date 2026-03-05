@@ -27,18 +27,7 @@ game_account_controller = APIRouter(
 
 def _to_response(account: GameAccount) -> GameAccountResponse:
     """Convert a GameAccount ORM object to a response DTO, including alliance info."""
-    alliance = getattr(account, "alliance", None)
-    return GameAccountResponse(
-        id=account.id,
-        user_id=account.user_id,
-        alliance_id=account.alliance_id,
-        alliance_group=account.alliance_group,
-        alliance_tag=alliance.tag if alliance else None,
-        alliance_name=alliance.name if alliance else None,
-        game_pseudo=account.game_pseudo,
-        is_primary=account.is_primary,
-        created_at=account.created_at,
-    )
+    return GameAccountResponse.from_model(account)
 
 
 @game_account_controller.post(

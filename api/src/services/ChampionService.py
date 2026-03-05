@@ -99,18 +99,7 @@ class ChampionService:
             session, page, size, champion_class, search
         )
         total_pages = (total + size - 1) // size
-        mapped = [
-            ChampionResponse(
-                id=c.id,
-                name=c.name,
-                champion_class=c.champion_class,
-                image_url=c.image_url,
-                is_7_star=c.is_7_star,
-                is_ascendable=c.is_ascendable,
-                alias=c.alias,
-            )
-            for c in champions
-        ]
+        mapped = [ChampionResponse.from_model(c) for c in champions]
         return ChampionPaginatedResponse(
             champions=mapped,
             total_champions=total,

@@ -1,7 +1,11 @@
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from src.models.DefensePlacement import DefensePlacement
 
 
 class DefensePlacementCreateRequest(BaseModel):
@@ -34,6 +38,29 @@ class DefensePlacementResponse(BaseModel):
     placed_by_id: Optional[uuid.UUID] = None
     placed_by_pseudo: Optional[str] = None
     created_at: datetime
+
+    @classmethod
+    def from_model(cls, p: "DefensePlacement") -> "DefensePlacementResponse":
+        """Build from a DefensePlacement with relations loaded."""
+        return cls(
+            id=p.id,
+            alliance_id=p.alliance_id,
+            battlegroup=p.battlegroup,
+            node_number=p.node_number,
+            champion_user_id=p.champion_user_id,
+            game_account_id=p.game_account_id,
+            game_pseudo=p.game_account.game_pseudo,
+            champion_name=p.champion_user.champion.name,
+            champion_class=p.champion_user.champion.champion_class,
+            champion_image_url=p.champion_user.champion.image_url,
+            rarity=p.champion_user.rarity,
+            signature=p.champion_user.signature,
+            is_preferred_attacker=p.champion_user.is_preferred_attacker,
+            ascension=p.champion_user.ascension,
+            placed_by_id=p.placed_by_id,
+            placed_by_pseudo=p.placed_by.game_pseudo if p.placed_by else None,
+            created_at=p.created_at,
+        )
 
 
 class DefenseSummaryResponse(BaseModel):

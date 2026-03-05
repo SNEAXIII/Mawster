@@ -1,7 +1,13 @@
 import uuid
-from typing import Optional
 from datetime import datetime
+from typing import TYPE_CHECKING, Optional
+
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from src.models.Alliance import Alliance
+    from src.models.AllianceOfficer import AllianceOfficer
+    from src.models.GameAccount import GameAccount
 
 
 class AllianceCreateRequest(BaseModel):
@@ -20,12 +26,39 @@ class AllianceMemberResponse(BaseModel):
     is_owner: bool = False
     is_officer: bool = False
 
+    @classmethod
+    def from_model(
+        cls,
+        m: "GameAccount",
+        *,
+        owner_id: uuid.UUID,
+        officer_ids: set[uuid.UUID],
+    ) -> "AllianceMemberResponse":
+        """Build from a GameAccount member in the context of an alliance."""
+        return cls(
+            id=m.id,
+            user_id=m.user_id,
+            game_pseudo=m.game_pseudo,
+            alliance_group=m.alliance_group,
+            is_owner=(m.id == owner_id),
+            is_officer=(m.id in officer_ids),
+        )
+
 
 class AllianceOfficerResponse(BaseModel):
     id: uuid.UUID
     game_account_id: uuid.UUID
     game_pseudo: str
     assigned_at: datetime
+
+    @classmethod
+    def from_model(cls, adj: "AllianceOfficer") -> "AllianceOfficerResponse":
+        return cls(
+            id=adj.id,
+            game_account_id=adj.game_account_id,
+            game_pseudo=adj.game_account.game_pseudo,
+            assigned_at=adj.assigned_at,
+        )
 
 
 class AllianceResponse(BaseModel):
@@ -38,6 +71,30 @@ class AllianceResponse(BaseModel):
     officers: list[AllianceOfficerResponse] = []
     members: list[AllianceMemberResponse] = []
     member_count: int = 0
+
+    @classmethod
+    def from_model(cls, alliance: "Alliance") -> "AllianceResponse":
+        """Build from an Alliance with `.owner`, `.officers`, `.members` loaded."""
+        officer_ids = {adj.game_account_id for adj in alliance.officers}
+        return cls(
+            id=alliance.id,
+            name=alliance.name,
+            tag=alliance.tag,
+            owner_id=alliance.owner_id,
+            owner_pseudo=alliance.owner.game_pseudo,
+            created_at=alliance.created_at,
+            officers=[
+                AllianceOfficerResponse.from_model(adj)
+                for adj in alliance.officers
+            ],
+            members=[
+                AllianceMemberResponse.from_model(
+                    m, owner_id=alliance.owner_id, officer_ids=officer_ids,
+                )
+                for m in alliance.members
+            ],
+            member_count=len(alliance.members),
+        )
 
 
 class AllianceAddOfficerRequest(BaseModel):

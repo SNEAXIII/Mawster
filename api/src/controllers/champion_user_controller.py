@@ -105,19 +105,7 @@ async def bulk_add_champions(
     )
     audit_log("roster.bulk_import", user_id=str(current_user.id), detail=f"game_account_id={body.game_account_id} count={len(entries)}")
     return [
-        ChampionUserDetailResponse(
-            id=e.id,
-            game_account_id=e.game_account_id,
-            champion_id=e.champion_id,
-            rarity=e.rarity,
-            signature=e.signature,
-            is_preferred_attacker=e.is_preferred_attacker,
-            ascension=e.ascension,
-            is_ascendable=e.champion.is_ascendable,
-            champion_name=e.champion.name,
-            champion_class=e.champion.champion_class,
-            image_url=e.champion.image_url,
-        )
+        ChampionUserDetailResponse.from_model(e)
         for e in entries
     ]
 
@@ -155,19 +143,7 @@ async def get_roster_by_game_account(
             )
     entries = await ChampionUserService.get_roster_by_game_account(session, game_account_id)
     return [
-        ChampionUserDetailResponse(
-            id=e.id,
-            game_account_id=e.game_account_id,
-            champion_id=e.champion_id,
-            rarity=e.rarity,
-            signature=e.signature,
-            is_preferred_attacker=e.is_preferred_attacker,
-            ascension=e.ascension,
-            is_ascendable=e.champion.is_ascendable,
-            champion_name=e.champion.name,
-            champion_class=e.champion.champion_class,
-            image_url=e.champion.image_url,
-        )
+        ChampionUserDetailResponse.from_model(e)
         for e in entries
     ]
 
@@ -395,19 +371,7 @@ async def create_upgrade_request(
         detail=f"request_id={loaded.id} champion_user_id={body.champion_user_id} requested_rarity={body.requested_rarity}",
     )
 
-    return UpgradeRequestResponse(
-        id=loaded.id,
-        champion_user_id=loaded.champion_user_id,
-        requester_game_account_id=loaded.requester_game_account_id,
-        requester_pseudo=loaded.requester.game_pseudo,
-        requested_rarity=loaded.requested_rarity,
-        current_rarity=loaded.champion_user.rarity,
-        champion_name=loaded.champion_user.champion.name,
-        champion_class=loaded.champion_user.champion.champion_class,
-        image_url=loaded.champion_user.champion.image_url,
-        created_at=loaded.created_at,
-        done_at=loaded.done_at,
-    )
+    return UpgradeRequestResponse.from_model(loaded)
 
 
 @champion_user_controller.get(
@@ -442,22 +406,7 @@ async def get_upgrade_requests_by_account(
             )
 
     requests = await UpgradeRequestService.get_pending_by_game_account(session, game_account_id)
-    return [
-        UpgradeRequestResponse(
-            id=r.id,
-            champion_user_id=r.champion_user_id,
-            requester_game_account_id=r.requester_game_account_id,
-            requester_pseudo=r.requester.game_pseudo,
-            requested_rarity=r.requested_rarity,
-            current_rarity=r.champion_user.rarity,
-            champion_name=r.champion_user.champion.name,
-            champion_class=r.champion_user.champion.champion_class,
-            image_url=r.champion_user.champion.image_url,
-            created_at=r.created_at,
-            done_at=r.done_at,
-        )
-        for r in requests
-    ]
+    return [UpgradeRequestResponse.from_model(r) for r in requests]
 
 
 @champion_user_controller.delete(
