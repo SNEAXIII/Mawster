@@ -1,6 +1,10 @@
 import uuid
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from src.models.ChampionUser import ChampionUser
 
 
 class ChampionUserCreateRequest(BaseModel):
@@ -38,7 +42,7 @@ class ChampionUserResponse(BaseModel):
     ascension: int = 0
 
     @classmethod
-    def from_model(cls, m) -> "ChampionUserResponse":
+    def from_model(cls, m: "ChampionUser") -> "ChampionUserResponse":
         return cls(
             id=m.id,
             game_account_id=m.game_account_id,
@@ -50,16 +54,27 @@ class ChampionUserResponse(BaseModel):
         )
 
 
-class ChampionUserDetailResponse(BaseModel):
-    """Roster entry with champion details for display."""
-    id: uuid.UUID
-    game_account_id: uuid.UUID
-    champion_id: uuid.UUID
-    rarity: str
-    signature: int
-    is_preferred_attacker: bool = False
-    ascension: int = 0
+class ChampionUserDetailResponse(ChampionUserResponse):
+    """Roster entry with champion details for display.
+    Extends ChampionUserResponse with champion-level fields."""
     is_ascendable: bool = False
     champion_name: str
     champion_class: str
     image_url: Optional[str] = None
+
+    @classmethod
+    def from_model(cls, m: "ChampionUser") -> "ChampionUserDetailResponse":
+        """Build from a ChampionUser with its `.champion` relationship loaded."""
+        return cls(
+            id=m.id,
+            game_account_id=m.game_account_id,
+            champion_id=m.champion_id,
+            rarity=m.rarity,
+            signature=m.signature,
+            is_preferred_attacker=m.is_preferred_attacker,
+            ascension=m.ascension,
+            is_ascendable=m.champion.is_ascendable,
+            champion_name=m.champion.name,
+            champion_class=m.champion.champion_class,
+            image_url=m.champion.image_url,
+        )

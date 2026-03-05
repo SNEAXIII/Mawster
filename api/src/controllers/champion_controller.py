@@ -57,15 +57,7 @@ async def get_champions(
 @champion_read_controller.get("/{champion_id}", status_code=200, response_model=ChampionResponse)
 async def get_champion(session: SessionDep, champion_id: uuid.UUID):
     champion = await ChampionService.get_champion_by_id(session, champion_id)
-    return ChampionResponse(
-        id=champion.id,
-        name=champion.name,
-        champion_class=champion.champion_class,
-        image_url=champion.image_url,
-        is_7_star=champion.is_7_star,
-        is_ascendable=champion.is_ascendable,
-        alias=champion.alias,
-    )
+    return ChampionResponse.from_model(champion)
 
 
 @champion_controller.patch("/{champion_id}/alias", status_code=200)

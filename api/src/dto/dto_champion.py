@@ -1,6 +1,10 @@
 import uuid
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from src.models.Champion import Champion as ChampionModel
 
 
 class ChampionResponse(BaseModel):
@@ -12,6 +16,18 @@ class ChampionResponse(BaseModel):
     is_7_star: bool = False
     is_ascendable: bool = False
     alias: Optional[str] = None
+
+    @classmethod
+    def from_model(cls, m: "ChampionModel") -> "ChampionResponse":
+        return cls(
+            id=m.id,
+            name=m.name,
+            champion_class=m.champion_class,
+            image_url=m.image_url,
+            is_7_star=m.is_7_star,
+            is_ascendable=m.is_ascendable,
+            alias=m.alias,
+        )
 
 
 class ChampionPaginatedResponse(BaseModel):

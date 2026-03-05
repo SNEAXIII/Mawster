@@ -6,9 +6,7 @@ from starlette import status
 
 from src.dto.dto_alliance import (
     AllianceAddOfficerRequest,
-    AllianceMemberResponse,
     AllianceMyRolesResponse,
-    AllianceOfficerResponse,
     AllianceCreateRequest,
     AllianceRemoveOfficerRequest,
     AllianceResponse,
@@ -40,36 +38,7 @@ alliance_controller = APIRouter(
 
 def _to_response(alliance: Alliance) -> AllianceResponse:
     """Convert an Alliance ORM object (with loaded relations) to a response DTO."""
-    officer_ids = {adj.game_account_id for adj in alliance.officers}
-    return AllianceResponse(
-        id=alliance.id,
-        name=alliance.name,
-        tag=alliance.tag,
-        owner_id=alliance.owner_id,
-        owner_pseudo=alliance.owner.game_pseudo,
-        created_at=alliance.created_at,
-        officers=[
-            AllianceOfficerResponse(
-                id=adj.id,
-                game_account_id=adj.game_account_id,
-                game_pseudo=adj.game_account.game_pseudo,
-                assigned_at=adj.assigned_at,
-            )
-            for adj in alliance.officers
-        ],
-        members=[
-            AllianceMemberResponse(
-                id=m.id,
-                user_id=m.user_id,
-                game_pseudo=m.game_pseudo,
-                alliance_group=m.alliance_group,
-                is_owner=(m.id == alliance.owner_id),
-                is_officer=(m.id in officer_ids),
-            )
-            for m in alliance.members
-        ],
-        member_count=len(alliance.members),
-    )
+    return AllianceResponse.from_model(alliance)
 
 
 # ---- Eligibility endpoints ----
@@ -286,19 +255,7 @@ async def delete_alliance(
 # ---- Member management (invitations) ----
 
 def _invitation_to_response(inv: AllianceInvitation) -> AllianceInvitationResponse:
-    return AllianceInvitationResponse(
-        id=inv.id,
-        alliance_id=inv.alliance_id,
-        alliance_name=inv.alliance.name,
-        alliance_tag=inv.alliance.tag,
-        game_account_id=inv.game_account_id,
-        game_account_pseudo=inv.game_account.game_pseudo,
-        invited_by_game_account_id=inv.invited_by_game_account_id,
-        invited_by_pseudo=inv.invited_by.game_pseudo,
-        status=inv.status,
-        created_at=inv.created_at,
-        responded_at=inv.responded_at,
-    )
+    return AllianceInvitationResponse.from_model(inv)
 
 
 @alliance_controller.post(

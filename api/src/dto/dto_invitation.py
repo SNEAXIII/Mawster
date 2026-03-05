@@ -1,9 +1,13 @@
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
 from pydantic import BaseModel, Field
 
 from src.enums.InvitationStatus import InvitationStatus
+
+if TYPE_CHECKING:
+    from src.models.AllianceInvitation import AllianceInvitation
 
 
 class AllianceInvitationCreateRequest(BaseModel):
@@ -24,3 +28,20 @@ class AllianceInvitationResponse(BaseModel):
     status: InvitationStatus
     created_at: datetime
     responded_at: Optional[datetime] = None
+
+    @classmethod
+    def from_model(cls, inv: "AllianceInvitation") -> "AllianceInvitationResponse":
+        """Build from an AllianceInvitation with `.alliance`, `.game_account`, `.invited_by` loaded."""
+        return cls(
+            id=inv.id,
+            alliance_id=inv.alliance_id,
+            alliance_name=inv.alliance.name,
+            alliance_tag=inv.alliance.tag,
+            game_account_id=inv.game_account_id,
+            game_account_pseudo=inv.game_account.game_pseudo,
+            invited_by_game_account_id=inv.invited_by_game_account_id,
+            invited_by_pseudo=inv.invited_by.game_pseudo,
+            status=inv.status,
+            created_at=inv.created_at,
+            responded_at=inv.responded_at,
+        )

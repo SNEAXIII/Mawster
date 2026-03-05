@@ -76,6 +76,7 @@ async def discord_login(discord_data: DiscordLoginRequest, session: SessionDep) 
         logger.warning("⚠️  DEBUG JWT — À RETIRER AVANT PRODUCTION ⚠️")
         logger.warning("User: %s (discord_id: %s)", user.login, user.discord_id)
         logger.warning("JWT: %s", access_token)
+        logger.warning("JWT: %s", refresh_token)
         logger.warning("=" * 80)
 
     return LoginResponse(
