@@ -386,6 +386,43 @@ class TestLoadChampions:
         result = await ChampionService.load_champions(session, data)
         assert result["created"] == 1
 
+    @pytest.mark.asyncio
+    async def test_load_with_is_ascendable(self, mocker):
+        session = _mock_session(mocker)
+        mocker.patch.object(
+            ChampionService, "get_champion_by_name", return_value=None
+        )
+
+        data = [
+            ChampionLoadRequest(
+                name="Hercules", champion_class="Cosmic", image_url="herc.png",
+                is_ascendable=True,
+            ),
+        ]
+
+        result = await ChampionService.load_champions(session, data)
+        assert result["created"] == 1
+
+    @pytest.mark.asyncio
+    async def test_load_updates_is_ascendable(self, mocker):
+        session = _mock_session(mocker)
+        existing = _make_champion(name="Hercules", champion_class="Cosmic")
+        existing.is_ascendable = False
+        mocker.patch.object(
+            ChampionService, "get_champion_by_name", return_value=existing
+        )
+
+        data = [
+            ChampionLoadRequest(
+                name="Hercules", champion_class="Cosmic", image_url="herc.png",
+                is_ascendable=True,
+            ),
+        ]
+
+        result = await ChampionService.load_champions(session, data)
+        assert result["updated"] == 1
+        assert existing.is_ascendable is True
+
 
 # =========================================================================
 # delete_champion

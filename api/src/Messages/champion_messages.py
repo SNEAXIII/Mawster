@@ -15,4 +15,5 @@ CHAMPION_NOT_FOUND = ChampionError(
 )
 CHAMPION_LOAD_SUCCESS = "Champions chargés avec succès"
 CHAMPION_ALIAS_UPDATED = "Alias du champion mis à jour avec succès"
+CHAMPION_ASCENDABLE_UPDATED = "Statut d'ascension du champion mis à jour avec succès"
 CHAMPION_DELETED = "Champion supprimé avec succès"

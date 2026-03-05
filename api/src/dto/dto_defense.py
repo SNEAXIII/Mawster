@@ -30,6 +30,7 @@ class DefensePlacementResponse(BaseModel):
     rarity: str
     signature: int = 0
     is_preferred_attacker: bool = False
+    ascension: int = 0
     placed_by_id: Optional[uuid.UUID] = None
     placed_by_pseudo: Optional[str] = None
     created_at: datetime

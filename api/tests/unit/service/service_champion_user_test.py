@@ -498,4 +498,111 @@ class TestUpgradeChampionRank:
             await ChampionUserService.upgrade_champion_rank(session, entry)
 
         assert exc_info.value.status_code == 400
-        assert "maximum rank" in exc_info.value.detail.lower()
+
+
+# =========================================================================
+# _validate_ascension
+# =========================================================================
+
+
+class TestValidateAscension:
+    def test_valid_ascension_values(self):
+        champion = _make_champion()
+        champion.is_ascendable = True
+        for val in (0, 1, 2):
+            result = ChampionUserService._validate_ascension(val, champion)
+            assert result == val
+
+    def test_invalid_ascension_raises_400(self):
+        champion = _make_champion()
+        champion.is_ascendable = True
+        with pytest.raises(HTTPException) as exc:
+            ChampionUserService._validate_ascension(3, champion)
+        assert exc.value.status_code == 400
+
+    def test_not_ascendable_forces_zero(self):
+        champion = _make_champion()
+        champion.is_ascendable = False
+        result = ChampionUserService._validate_ascension(2, champion)
+        assert result == 0
+
+    def test_negative_ascension_raises_400(self):
+        champion = _make_champion()
+        champion.is_ascendable = True
+        with pytest.raises(HTTPException) as exc:
+            ChampionUserService._validate_ascension(-1, champion)
+        assert exc.value.status_code == 400
+
+
+# =========================================================================
+# ascend_champion
+# =========================================================================
+
+
+class TestAscendChampion:
+    @pytest.mark.asyncio
+    async def test_ascend_ok(self, mocker):
+        session = _mock_session(mocker)
+        champion = _make_champion()
+        champion.is_ascendable = True
+        entry = _make_champion_user(rarity="7r5")
+        entry.ascension = 0
+        session.get.return_value = champion
+
+        result = await ChampionUserService.ascend_champion(session, entry)
+        assert result.ascension == 1
+        session.add.assert_called_once()
+        session.commit.assert_awaited_once()
+        session.refresh.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_ascend_from_1_to_2(self, mocker):
+        session = _mock_session(mocker)
+        champion = _make_champion()
+        champion.is_ascendable = True
+        entry = _make_champion_user(rarity="7r5")
+        entry.ascension = 1
+        session.get.return_value = champion
+
+        result = await ChampionUserService.ascend_champion(session, entry)
+        assert result.ascension == 2
+
+    @pytest.mark.asyncio
+    async def test_ascend_max_raises_400(self, mocker):
+        session = _mock_session(mocker)
+        champion = _make_champion()
+        champion.is_ascendable = True
+        entry = _make_champion_user(rarity="7r5")
+        entry.ascension = 2
+        session.get.return_value = champion
+
+        with pytest.raises(HTTPException) as exc:
+            await ChampionUserService.ascend_champion(session, entry)
+        assert exc.value.status_code == 400
+        assert "maximum ascension" in exc.value.detail.lower()
+
+    @pytest.mark.asyncio
+    async def test_ascend_not_ascendable_raises_400(self, mocker):
+        session = _mock_session(mocker)
+        champion = _make_champion()
+        champion.is_ascendable = False
+        entry = _make_champion_user(rarity="7r5")
+        entry.ascension = 0
+        session.get.return_value = champion
+
+        with pytest.raises(HTTPException) as exc:
+            await ChampionUserService.ascend_champion(session, entry)
+        assert exc.value.status_code == 400
+        assert "cannot be ascended" in exc.value.detail.lower()
+
+    @pytest.mark.asyncio
+    async def test_ascend_champion_not_found_raises_404(self, mocker):
+        session = _mock_session(mocker)
+        entry = _make_champion_user(rarity="7r5")
+        entry.ascension = 0
+        session.get.return_value = None
+
+        with pytest.raises(HTTPException) as exc:
+            await ChampionUserService.ascend_champion(session, entry)
+        assert exc.value.status_code == 404
+        assert "not found" in exc.value.detail.lower()

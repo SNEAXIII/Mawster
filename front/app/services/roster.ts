@@ -98,6 +98,8 @@ export interface RosterEntry {
   champion_class: string;
   image_url: string | null;
   is_preferred_attacker: boolean;
+  ascension: number;
+  is_ascendable: boolean;
 }
 
 export interface BulkChampionEntry {
@@ -105,6 +107,7 @@ export interface BulkChampionEntry {
   rarity: string;
   signature: number;
   is_preferred_attacker?: boolean;
+  ascension?: number;
 }
 
 interface ApiError {
@@ -162,6 +165,7 @@ export const updateChampionInRoster = async (
   rarity: string,
   signature: number,
   isPreferredAttacker: boolean = false,
+  ascension: number = 0,
 ): Promise<RosterEntry> => {
   const response = await fetch(`${PROXY}/champion-users`, {
     method: 'POST',
@@ -172,6 +176,7 @@ export const updateChampionInRoster = async (
       rarity,
       signature,
       is_preferred_attacker: isPreferredAttacker,
+      ascension,
     }),
   });
   await throwOnError(response, "Erreur lors de la mise à jour du roster");
@@ -228,6 +233,20 @@ export const upgradeChampionRank = async (
     },
   );
   await throwOnError(response, "Erreur lors de l'amélioration du champion");
+  return response.json();
+};
+
+export const ascendChampion = async (
+  championUserId: string,
+): Promise<RosterEntry> => {
+  const response = await fetch(
+    `${PROXY}/champion-users/${championUserId}/ascend`,
+    {
+      method: 'PATCH',
+      headers: jsonHeaders,
+    },
+  );
+  await throwOnError(response, "Erreur lors de l'ascension du champion");
   return response.json();
 };
 

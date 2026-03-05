@@ -98,7 +98,7 @@ export function WarMapNode({
             placement.is_preferred_attacker ? 'text-yellow-400' : rarityBadgeClass(placement.rarity),
           )}>
             {placement.is_preferred_attacker && '⚔ '}
-            {rarityLabel(placement.rarity, placement.signature)}
+            {rarityLabel(placement.rarity, placement.signature, placement.ascension)}
           </span>
           <span className='text-[10px] text-white/80 truncate max-w-[76px] text-center leading-tight'>
             {placement.game_pseudo}

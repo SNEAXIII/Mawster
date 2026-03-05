@@ -286,7 +286,7 @@ class TestGetChampionById:
         )
         assert response.status_code == 200
         body = response.json()
-        expected = {"id", "name", "champion_class", "image_url", "is_7_star", "alias"}
+        expected = {"id", "name", "champion_class", "image_url", "is_7_star", "is_ascendable", "alias"}
         assert expected.issubset(body.keys())
         assert body["name"] == "Hulk"
         assert body["champion_class"] == "Science"
@@ -424,6 +424,32 @@ class TestLoadChampions:
         assert response.status_code == 200
         body = response.json()
         assert body["created"] == 0
+
+    @pytest.mark.asyncio
+    async def test_load_with_is_ascendable(self, session):
+        """Loading a champion with is_ascendable=True should persist the flag."""
+        await push_one_admin()
+
+        payload = [
+            {"name": "Hercules", "champion_class": "Cosmic", "image_url": "herc.png", "is_ascendable": True},
+        ]
+
+        response = await execute_post_request(
+            "/admin/champions/load", payload=payload, headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["created"] == 1
+
+        # Verify the flag is persisted
+        get_resp = await execute_get_request(
+            "/champions?page=1&size=10&search=Hercules",
+            headers=ADMIN_HEADERS,
+        )
+        assert get_resp.status_code == 200
+        champions = get_resp.json()["champions"]
+        assert len(champions) == 1
+        assert champions[0]["is_ascendable"] is True
 
 
 # =========================================================================

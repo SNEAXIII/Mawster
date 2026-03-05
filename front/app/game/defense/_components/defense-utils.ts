@@ -26,10 +26,13 @@ export function rarityBadgeClass(rarity: string): string {
   return 'text-red-400';
 }
 
-/** Human-readable label: "7★R4 · 200" */
-export function rarityLabel(rarity: string, signature: number): string {
+/** Human-readable label: "7★R4·200" or "7★R5·A1·200" if ascended. */
+export function rarityLabel(rarity: string, signature: number, ascension?: number): string {
   const { stars, rank } = parseRarity(rarity);
-  return `${stars}★R${rank}·${signature}`;
+  const parts = [`${stars}★R${rank}`];
+  if (ascension && ascension > 0) parts.push(`A${ascension}`);
+  parts.push(String(signature));
+  return parts.join('·');
 }
 
 // ─── Member role ─────────────────────────────────────────

@@ -16,6 +16,8 @@ const en = {
     active: 'Active',
     page: 'Page',
     close: 'Close',
+    yes: 'Yes',
+    no: 'No',
   },
 
   // Navigation
@@ -290,6 +292,7 @@ const en = {
       name: 'Name',
       class: 'Class',
       alias: 'Aliases',
+      isAscendable: 'Ascendable',
       actions: 'Actions',
     },
     exportJson: 'Export JSON',
@@ -327,6 +330,11 @@ const en = {
     upgradeConfirmTitle: 'Upgrade champion rank',
     upgradeConfirmDesc: 'Do you want to upgrade {name} from {from} to {to}?',
     upgradeConfirmButton: 'Upgrade',
+    ascendConfirmTitle: 'Ascend champion',
+    ascendConfirmDesc: 'Do you want to ascend {name} to level A{level}?',
+    ascendConfirmButton: 'Ascend',
+    ascendSuccess: '{name} ascended successfully!',
+    ascendError: 'An error occurred while ascending the champion',
     upgradeRequests: {
       title: 'Upgrade Requests',
       empty: 'No pending upgrade requests.',

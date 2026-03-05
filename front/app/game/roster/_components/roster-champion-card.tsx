@@ -10,7 +10,7 @@ import {
   shortenChampionName,
   getNextRarity,
 } from '@/app/services/roster';
-import { FiTrash2, FiEdit2, FiArrowUp, FiX } from 'react-icons/fi';
+import { FiTrash2, FiEdit2, FiArrowUp, FiX, FiStar } from 'react-icons/fi';
 
 interface RosterChampionCardProps {
   entry: RosterEntry;
@@ -18,6 +18,7 @@ interface RosterChampionCardProps {
   onDelete?: (entry: RosterEntry) => void;
   onUpgrade?: (entry: RosterEntry) => void;
   onTogglePreferredAttacker?: (entry: RosterEntry) => void;
+  onAscend?: (entry: RosterEntry) => void;
   readOnly?: boolean;
   /** If set, this champion has a pending upgrade request */
   pendingRequestId?: string;
@@ -31,6 +32,7 @@ export default function RosterChampionCard({
   onDelete,
   onUpgrade,
   onTogglePreferredAttacker,
+  onAscend,
   readOnly = false,
   pendingRequestId,
   onCancelRequest,
@@ -60,7 +62,16 @@ export default function RosterChampionCard({
               <span className="text-xs leading-none">⚔</span>
             </button>
           )}
-          {pendingRequestId && onCancelRequest ? (
+          {entry.is_ascendable && entry.ascension < 2 && onAscend && (
+            <button
+              className="text-purple-400 hover:text-purple-300 bg-black/60 rounded-full p-1"
+              onClick={() => onAscend(entry)}
+              title="Ascension"
+            >
+              <FiStar size={14} />
+            </button>
+          )}
+          {pendingRequestId && onCancelRequest && (
             <button
               className="text-red-400 hover:text-red-300 bg-black/60 rounded-full p-1"
               onClick={() => onCancelRequest(pendingRequestId)}
@@ -68,7 +79,8 @@ export default function RosterChampionCard({
             >
               <FiX size={14} />
             </button>
-          ) : nextRarity && onUpgrade ? (
+          )}
+          {!pendingRequestId && nextRarity && onUpgrade && (
             <button
               className="text-green-400 hover:text-green-300 bg-black/60 rounded-full p-1"
               onClick={() => onUpgrade(entry)}
@@ -76,7 +88,7 @@ export default function RosterChampionCard({
             >
               <FiArrowUp size={14} />
             </button>
-          ) : null}
+          )}
           {onEdit && (
             <button
               className="text-blue-400 hover:text-blue-300 bg-black/60 rounded-full p-1"
@@ -119,14 +131,19 @@ export default function RosterChampionCard({
         {entry.is_preferred_attacker && '⚔ '}{shortenChampionName(entry.champion_name)}
       </p>
 
-      {/* Signature */}
-      <div className="flex justify-center pb-1">
+      {/* Signature + Ascension */}
+      <div className="flex justify-center gap-1 pb-1">
         {entry.signature > 0 ? (
           <span className="text-amber-400 text-[9px] font-semibold">
             sig {entry.signature}
           </span>
         ) : (
           <span className="text-white/50 text-[9px]">sig 0</span>
+        )}
+        {entry.ascension > 0 && (
+          <span className="text-purple-400 text-[9px] font-semibold">
+            · A{entry.ascension}
+          </span>
         )}
       </div>
 
