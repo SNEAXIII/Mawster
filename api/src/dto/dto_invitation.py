@@ -1,13 +1,10 @@
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.enums.InvitationStatus import InvitationStatus
-
-if TYPE_CHECKING:
-    from src.models.AllianceInvitation import AllianceInvitation
 
 
 class AllianceInvitationCreateRequest(BaseModel):
@@ -17,6 +14,8 @@ class AllianceInvitationCreateRequest(BaseModel):
 
 class AllianceInvitationResponse(BaseModel):
     """Response DTO for an alliance invitation."""
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     alliance_id: uuid.UUID
     alliance_name: str
@@ -29,19 +28,22 @@ class AllianceInvitationResponse(BaseModel):
     created_at: datetime
     responded_at: Optional[datetime] = None
 
+    @model_validator(mode='before')
     @classmethod
-    def from_model(cls, inv: "AllianceInvitation") -> "AllianceInvitationResponse":
-        """Build from an AllianceInvitation with `.alliance`, `.game_account`, `.invited_by` loaded."""
-        return cls(
-            id=inv.id,
-            alliance_id=inv.alliance_id,
-            alliance_name=inv.alliance.name,
-            alliance_tag=inv.alliance.tag,
-            game_account_id=inv.game_account_id,
-            game_account_pseudo=inv.game_account.game_pseudo,
-            invited_by_game_account_id=inv.invited_by_game_account_id,
-            invited_by_pseudo=inv.invited_by.game_pseudo,
-            status=inv.status,
-            created_at=inv.created_at,
-            responded_at=inv.responded_at,
-        )
+    def flatten_relations(cls, data: Any) -> Any:
+        """Flatten `.alliance`, `.game_account`, `.invited_by` relationships."""
+        if isinstance(data, dict):
+            return data
+        return {
+            'id': data.id,
+            'alliance_id': data.alliance_id,
+            'alliance_name': data.alliance.name,
+            'alliance_tag': data.alliance.tag,
+            'game_account_id': data.game_account_id,
+            'game_account_pseudo': data.game_account.game_pseudo,
+            'invited_by_game_account_id': data.invited_by_game_account_id,
+            'invited_by_pseudo': data.invited_by.game_pseudo,
+            'status': data.status,
+            'created_at': data.created_at,
+            'responded_at': data.responded_at,
+        }

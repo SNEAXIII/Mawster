@@ -57,7 +57,7 @@ async def get_champions(
 @champion_read_controller.get("/{champion_id}", status_code=200, response_model=ChampionResponse)
 async def get_champion(session: SessionDep, champion_id: uuid.UUID):
     champion = await ChampionService.get_champion_by_id(session, champion_id)
-    return ChampionResponse.from_model(champion)
+    return ChampionResponse.model_validate(champion)
 
 
 @champion_controller.patch("/{champion_id}/alias", status_code=200)

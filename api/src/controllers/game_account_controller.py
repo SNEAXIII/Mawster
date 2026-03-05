@@ -27,7 +27,7 @@ game_account_controller = APIRouter(
 
 def _to_response(account: GameAccount) -> GameAccountResponse:
     """Convert a GameAccount ORM object to a response DTO, including alliance info."""
-    return GameAccountResponse.from_model(account)
+    return GameAccountResponse.model_validate(account)
 
 
 @game_account_controller.post(

@@ -53,7 +53,7 @@ async def _get_user_account_in_alliance(
 
 
 def _to_placement_response(p) -> DefensePlacementResponse:
-    return DefensePlacementResponse.from_model(p)
+    return DefensePlacementResponse.model_validate(p)
 
 
 @defense_controller.get(

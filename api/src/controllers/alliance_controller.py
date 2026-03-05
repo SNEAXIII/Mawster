@@ -38,7 +38,7 @@ alliance_controller = APIRouter(
 
 def _to_response(alliance: Alliance) -> AllianceResponse:
     """Convert an Alliance ORM object (with loaded relations) to a response DTO."""
-    return AllianceResponse.from_model(alliance)
+    return AllianceResponse.model_validate(alliance)
 
 
 # ---- Eligibility endpoints ----
@@ -255,7 +255,7 @@ async def delete_alliance(
 # ---- Member management (invitations) ----
 
 def _invitation_to_response(inv: AllianceInvitation) -> AllianceInvitationResponse:
-    return AllianceInvitationResponse.from_model(inv)
+    return AllianceInvitationResponse.model_validate(inv)
 
 
 @alliance_controller.post(

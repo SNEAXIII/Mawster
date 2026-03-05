@@ -99,7 +99,7 @@ class ChampionService:
             session, page, size, champion_class, search
         )
         total_pages = (total + size - 1) // size
-        mapped = [ChampionResponse.from_model(c) for c in champions]
+        mapped = [ChampionResponse.model_validate(c) for c in champions]
         return ChampionPaginatedResponse(
             champions=mapped,
             total_champions=total,
