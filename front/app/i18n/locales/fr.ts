@@ -18,6 +18,8 @@ const fr: Translations = {
     active: 'Actif',
     page: 'Page',
     close: 'Fermer',
+    yes: 'Oui',
+    no: 'Non',
   },
 
   // Navigation
@@ -296,6 +298,7 @@ const fr: Translations = {
       name: 'Nom',
       class: 'Classe',
       alias: 'Alias',
+      isAscendable: 'Ascendable',
       actions: 'Actions',
     },
     exportJson: 'Exporter JSON',
@@ -333,6 +336,11 @@ const fr: Translations = {
     upgradeConfirmTitle: 'Améliorer le rang du champion',
     upgradeConfirmDesc: 'Voulez-vous passer {name} du rang {from} à {to} ?',
     upgradeConfirmButton: 'Améliorer',
+    ascendConfirmTitle: 'Ascension du champion',
+    ascendConfirmDesc: 'Voulez-vous passer {name} au niveau A{level} ?',
+    ascendConfirmButton: 'Ascension',
+    ascendSuccess: '{name} ascendé avec succès !',
+    ascendError: "Une erreur est survenue lors de l'ascension du champion",
     upgradeRequests: {
       title: 'Demandes d\'upgrade',
       empty: 'Aucune demande d\'upgrade en cours.',

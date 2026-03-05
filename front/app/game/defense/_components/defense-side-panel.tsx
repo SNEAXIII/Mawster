@@ -101,7 +101,7 @@ export default function DefenseSidePanel({
                           {p.is_preferred_attacker && '⚔ '}#{p.node_number}
                         </span>
                         <span className={cn('text-[10px] font-mono leading-none', rarityBadgeClass(p.rarity))}>
-                          {rarityLabel(p.rarity, p.signature)}
+                          {rarityLabel(p.rarity, p.signature, p.ascension)}
                         </span>
                         {canManage && (
                           <button

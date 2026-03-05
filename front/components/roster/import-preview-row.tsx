@@ -21,6 +21,7 @@ export interface PreviewRow {
   isNew: boolean;
   hasChanges: boolean;
   is_preferred_attacker?: boolean;
+  ascension?: number;
 }
 
 interface ImportPreviewRowProps {

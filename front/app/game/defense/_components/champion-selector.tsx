@@ -120,6 +120,9 @@ export default function ChampionSelector({
                         </span>
                         <span className={cn('text-[9px] font-medium', classColors.label)}>
                           {RARITY_LABELS[bestOwner.rarity] ?? bestOwner.rarity}
+                          {bestOwner.ascension > 0 && (
+                            <span className="text-purple-400 font-semibold"> · A{bestOwner.ascension}</span>
+                          )}
                         </span>
                         {champ.owners.length === 1 ? (
                           <span className="text-[9px] text-muted-foreground truncate w-full text-center">
@@ -174,6 +177,9 @@ export default function ChampionSelector({
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {RARITY_LABELS[owner.rarity] ?? owner.rarity}
+                      {owner.ascension > 0 && (
+                        <span className="text-purple-400 font-semibold"> · A{owner.ascension}</span>
+                      )}
                       {' · '}
                       sig {owner.signature}
                     </span>

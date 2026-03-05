@@ -48,6 +48,22 @@ class ChampionUserService:
         return int(m.group(1)), int(m.group(2))
 
     @classmethod
+    def _validate_ascension(cls, ascension: int, champion: Champion) -> int:
+        """Validate and potentially coerce ascension level.
+
+        - If the champion is not ascendable, force ascension to 0.
+        - If ascension is not in {0, 1, 2}, raise 400.
+        """
+        if ascension not in (0, 1, 2):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid ascension level '{ascension}'. Must be 0, 1, or 2.",
+            )
+        if not champion.is_ascendable:
+            return 0
+        return ascension
+
+    @classmethod
     async def create_champion_user(
         cls,
         session: SessionDep,
@@ -56,6 +72,7 @@ class ChampionUserService:
         rarity: str,
         signature: int = 0,
         is_preferred_attacker: bool = False,
+        ascension: int = 0,
     ) -> ChampionUser:
         stars, rank = cls._parse_rarity(rarity)
 
@@ -75,6 +92,9 @@ class ChampionUserService:
                 detail="Champion not found",
             )
 
+        # Validate ascension
+        ascension = cls._validate_ascension(ascension, champion)
+
         # Check if same champion + stars already exists → update rank & signature
         existing = await session.exec(
             select(ChampionUser).where(
@@ -90,6 +110,7 @@ class ChampionUserService:
             existing_entry.rank = rank
             existing_entry.signature = signature
             existing_entry.is_preferred_attacker = is_preferred_attacker
+            existing_entry.ascension = ascension
             session.add(existing_entry)
             await session.commit()
             await session.refresh(existing_entry)
@@ -103,6 +124,7 @@ class ChampionUserService:
             rank=rank,
             signature=signature,
             is_preferred_attacker=is_preferred_attacker,
+            ascension=ascension,
         )
         session.add(champion_user)
         await session.commit()
@@ -155,6 +177,7 @@ class ChampionUserService:
                 )
 
             is_preferred_attacker = entry.get("is_preferred_attacker", False)
+            ascension = cls._validate_ascension(entry.get("ascension", 0), champion)
 
             # Check if exists in DB (unique per champion+stars)
             existing = await session.exec(
@@ -172,6 +195,7 @@ class ChampionUserService:
                 existing_entry.rank = rank
                 existing_entry.signature = signature
                 existing_entry.is_preferred_attacker = is_preferred_attacker
+                existing_entry.ascension = ascension
                 session.add(existing_entry)
                 results.append(existing_entry)
             else:
@@ -182,6 +206,7 @@ class ChampionUserService:
                     rank=rank,
                     signature=signature,
                     is_preferred_attacker=is_preferred_attacker,
+                    ascension=ascension,
                 )
                 session.add(champion_user)
                 results.append(champion_user)
@@ -275,6 +300,40 @@ class ChampionUserService:
         await session.commit()
         await session.refresh(champion_user)
         await UpgradeRequestService.auto_complete_for_champion_user(session, champion_user)
+        return champion_user
+
+    @classmethod
+    async def ascend_champion(
+        cls, session: SessionDep, champion_user: ChampionUser
+    ) -> ChampionUser:
+        """Ascend a champion to the next ascension level (0 → 1 → 2).
+
+        Raises 400 if the champion is not ascendable or already at max ascension.
+        """
+        # Eagerly load champion if not already loaded
+        champion = await session.get(Champion, champion_user.champion_id)
+        if champion is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Champion not found",
+            )
+
+        if not champion.is_ascendable:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This champion cannot be ascended",
+            )
+
+        if champion_user.ascension >= 2:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Champion is already at maximum ascension (A{champion_user.ascension})",
+            )
+
+        champion_user.ascension += 1
+        session.add(champion_user)
+        await session.commit()
+        await session.refresh(champion_user)
         return champion_user
 
     @classmethod

@@ -61,6 +61,7 @@ async def create_champion_user(
         rarity=body.rarity,
         signature=body.signature,
         is_preferred_attacker=body.is_preferred_attacker,
+        ascension=body.ascension,
     )
     audit_log("roster.add_champion", user_id=str(current_user.id), detail=f"game_account_id={body.game_account_id} champion_id={body.champion_id}")
     return ChampionUserResponse.from_model(result)
@@ -93,6 +94,7 @@ async def bulk_add_champions(
             "rarity": entry.rarity,
             "signature": entry.signature,
             "is_preferred_attacker": entry.is_preferred_attacker,
+            "ascension": entry.ascension,
         }
         for entry in body.champions
     ]
@@ -110,6 +112,8 @@ async def bulk_add_champions(
             rarity=e.rarity,
             signature=e.signature,
             is_preferred_attacker=e.is_preferred_attacker,
+            ascension=e.ascension,
+            is_ascendable=e.champion.is_ascendable,
             champion_name=e.champion.name,
             champion_class=e.champion.champion_class,
             image_url=e.champion.image_url,
@@ -158,6 +162,8 @@ async def get_roster_by_game_account(
             rarity=e.rarity,
             signature=e.signature,
             is_preferred_attacker=e.is_preferred_attacker,
+            ascension=e.ascension,
+            is_ascendable=e.champion.is_ascendable,
             champion_name=e.champion.name,
             champion_class=e.champion.champion_class,
             image_url=e.champion.image_url,
@@ -280,6 +286,27 @@ async def upgrade_champion_rank(
     upgraded = await ChampionUserService.upgrade_champion_rank(session, champion_user)
     audit_log("roster.upgrade_rank", user_id=str(current_user.id), detail=f"champion_user_id={champion_user_id}")
     return ChampionUserResponse.from_model(upgraded)
+
+
+@champion_user_controller.patch(
+    "/{champion_user_id}/ascend",
+    response_model=ChampionUserResponse,
+)
+async def ascend_champion(
+    champion_user_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Ascend a champion to the next ascension level (0 → 1 → 2)."""
+    champion_user = await ChampionUserService.get_champion_user(session, champion_user_id)
+    if champion_user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+    game_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
+    if game_account is None or game_account.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
+    ascended = await ChampionUserService.ascend_champion(session, champion_user)
+    audit_log("roster.ascend_champion", user_id=str(current_user.id), detail=f"champion_user_id={champion_user_id}")
+    return ChampionUserResponse.from_model(ascended)
 
 
 # ─── Upgrade Request Endpoints ────────────────────────────

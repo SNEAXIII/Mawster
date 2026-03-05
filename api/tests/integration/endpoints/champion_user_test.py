@@ -243,7 +243,7 @@ class TestCreateChampionUser:
         )
         assert response.status_code == 201
         body = response.json()
-        assert set(body.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "is_preferred_attacker"}
+        assert set(body.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "is_preferred_attacker", "ascension"}
         assert body["rarity"] == "7r5"
         assert body["signature"] == 200
         assert body["champion_id"] == str(champ.id)
@@ -491,7 +491,7 @@ class TestBulkAddChampions:
         assert isinstance(body, list)
         assert len(body) == 2
         for entry in body:
-            assert set(entry.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "champion_name", "champion_class", "image_url", "is_preferred_attacker"}
+            assert set(entry.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "champion_name", "champion_class", "image_url", "is_preferred_attacker", "ascension", "is_ascendable"}
 
     @pytest.mark.asyncio
     async def test_bulk_mixed_valid_and_invalid_champion_returns_404(self, session):
@@ -987,7 +987,7 @@ class TestUpgradeChampionRank:
         )
         assert response.status_code == 200
         body = response.json()
-        assert set(body.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "is_preferred_attacker"}
+        assert set(body.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "is_preferred_attacker", "ascension"}
         assert body["id"] == str(entry.id)
         assert body["rarity"] == "7r2"
 
@@ -1093,3 +1093,103 @@ class TestPreferredAttacker:
         body = response.json()
         assert "is_preferred_attacker" in body
         assert body["id"] == str(entry.id)
+
+
+# =========================================================================
+# PATCH /champion-users/{id}/ascend — champion ascension
+# =========================================================================
+
+
+class TestAscendChampion:
+    @pytest.mark.asyncio
+    async def test_ascend_ok(self, session):
+        """Ascend an ascendable champion: 0 → 1."""
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion("Hercules", "Cosmic", is_ascendable=True)
+        entry = await _push_champion_user(acc.id, champ.id, "7r5")
+
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["ascension"] == 1
+
+    @pytest.mark.asyncio
+    async def test_ascend_1_to_2(self, session):
+        """Ascend from 1 → 2."""
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion("Hercules", "Cosmic", is_ascendable=True)
+        entry = await _push_champion_user(acc.id, champ.id, "7r5")
+
+        # First ascend
+        await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+        # Second ascend
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["ascension"] == 2
+
+    @pytest.mark.asyncio
+    async def test_ascend_max_returns_400(self, session):
+        """Ascension at 2 → 400."""
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion("Hercules", "Cosmic", is_ascendable=True)
+        entry = await _push_champion_user(acc.id, champ.id, "7r5")
+
+        # Ascend to 2
+        await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+        await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+
+        # Third ascend should fail
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+        assert response.status_code == 400
+        assert "maximum ascension" in response.json()["message"].lower()
+
+    @pytest.mark.asyncio
+    async def test_ascend_not_ascendable_returns_400(self, session):
+        """Non-ascendable champion → 400."""
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion("Spider-Man", "Science", is_ascendable=False)
+        entry = await _push_champion_user(acc.id, champ.id, "7r5")
+
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+        assert response.status_code == 400
+        assert "cannot be ascended" in response.json()["message"].lower()
+
+    @pytest.mark.asyncio
+    async def test_ascend_not_found_404(self, session):
+        await push_one_user()
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{uuid.uuid4()}/ascend", {}, headers=HEADERS
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_ascend_not_own_champion_403(self, session):
+        await push_one_user()
+        await push_user2()
+        acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        champ = await push_champion("Hercules", "Cosmic", is_ascendable=True)
+        entry = await _push_champion_user(acc.id, champ.id, "7r5")
+
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+        assert response.status_code == 403

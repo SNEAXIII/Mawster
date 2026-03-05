@@ -11,6 +11,7 @@ from src.dto.dto_champion import (
 )
 from src.Messages.champion_messages import (
     CHAMPION_ALIAS_UPDATED,
+    CHAMPION_ASCENDABLE_UPDATED,
     CHAMPION_DELETED,
     CHAMPION_LOAD_SUCCESS,
 )
@@ -62,6 +63,7 @@ async def get_champion(session: SessionDep, champion_id: uuid.UUID):
         champion_class=champion.champion_class,
         image_url=champion.image_url,
         is_7_star=champion.is_7_star,
+        is_ascendable=champion.is_ascendable,
         alias=champion.alias,
     )
 
@@ -74,6 +76,15 @@ async def update_champion_alias(
 ):
     await ChampionService.update_alias(session, champion_id, body.alias)
     return {"message": CHAMPION_ALIAS_UPDATED}
+
+
+@champion_controller.patch("/{champion_id}/ascendable", status_code=200)
+async def toggle_champion_ascendable(
+    session: SessionDep,
+    champion_id: uuid.UUID,
+):
+    champion = await ChampionService.toggle_ascendable(session, champion_id)
+    return {"message": CHAMPION_ASCENDABLE_UPDATED, "is_ascendable": champion.is_ascendable}
 
 
 @champion_controller.post("/load", status_code=200)

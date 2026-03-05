@@ -5,6 +5,7 @@ export interface Champion {
   champion_class: string;
   image_url: string | null;
   is_7_star: boolean;
+  is_ascendable: boolean;
   alias: string | null;
 }
 
@@ -82,7 +83,7 @@ export const updateChampionAlias = async (
 };
 
 export const loadChampions = async (
-  champions: { name: string; champion_class: string; image_url?: string | null; alias?: string | null }[]
+  champions: { name: string; champion_class: string; image_url?: string | null; alias?: string | null; is_ascendable?: boolean }[]
 ): Promise<{ message: string; created: number; updated: number; skipped: number }> => {
   const response = await fetch(`${PROXY}/admin/champions/load`, {
     method: 'POST',
@@ -94,7 +95,7 @@ export const loadChampions = async (
 };
 
 export const exportAllChampions = async (): Promise<
-  { name: string; champion_class: string; image_url: string | null; alias: string | null }[]
+  { name: string; champion_class: string; image_url: string | null; alias: string | null; is_ascendable: boolean }[]
 > => {
   // Fetch all champions in one big page (no images, just data)
   const response = await fetch(`${PROXY}/champions?page=1&size=9999`, {
@@ -107,6 +108,7 @@ export const exportAllChampions = async (): Promise<
     champion_class: c.champion_class,
     image_url: c.image_url,
     alias: c.alias,
+    is_ascendable: c.is_ascendable,
   }));
 };
 
@@ -116,6 +118,20 @@ export const deleteChampion = async (championId: string): Promise<void> => {
     headers: jsonHeaders,
   });
   await throwOnError(response, 'Erreur lors de la suppression du champion');
+};
+
+export const toggleChampionAscendable = async (
+  championId: string,
+): Promise<{ is_ascendable: boolean }> => {
+  const response = await fetch(
+    `${PROXY}/admin/champions/${championId}/ascendable`,
+    {
+      method: 'PATCH',
+      headers: jsonHeaders,
+    },
+  );
+  await throwOnError(response, "Erreur lors du basculement de l'ascension");
+  return response.json();
 };
 
 /**

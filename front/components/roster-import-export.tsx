@@ -23,6 +23,7 @@ export interface RosterExportEntry {
   rarity: string;
   signature: number;
   is_preferred_attacker: boolean;
+  ascension: number;
 }
 
 // ─── Props ───────────────────────────────────────────────
@@ -63,6 +64,7 @@ export default function RosterImportExport({
       rarity: e.rarity,
       signature: e.signature,
       is_preferred_attacker: e.is_preferred_attacker,
+      ascension: e.ascension ?? 0,
     }));
 
     const json = JSON.stringify(data, null, 2);
@@ -144,6 +146,7 @@ export default function RosterImportExport({
             rarity: obj.rarity as string,
             signature: (typeof obj.signature === 'number' ? obj.signature : 0),
             is_preferred_attacker: obj.is_preferred_attacker === true,
+            ascension: (typeof obj.ascension === 'number' && obj.ascension >= 0 && obj.ascension <= 2) ? obj.ascension : 0,
           });
         }
 
@@ -199,7 +202,7 @@ export default function RosterImportExport({
 
           const isNew = !existing;
           const hasChanges = !isNew && (
-            existing!.rarity !== entry.rarity || existing!.signature !== entry.signature || existing!.is_preferred_attacker !== entry.is_preferred_attacker
+            existing!.rarity !== entry.rarity || existing!.signature !== entry.signature || existing!.is_preferred_attacker !== entry.is_preferred_attacker || (existing!.ascension ?? 0) !== entry.ascension
           );
 
           // Resolve champion class and image from the roster or API lookup
@@ -219,6 +222,7 @@ export default function RosterImportExport({
             isNew,
             hasChanges,
             is_preferred_attacker: entry.is_preferred_attacker,
+            ascension: entry.ascension,
           };
         });
 
@@ -261,6 +265,7 @@ export default function RosterImportExport({
         rarity: r.newRarity,
         signature: r.newSignature,
         is_preferred_attacker: r.is_preferred_attacker ?? false,
+        ascension: r.ascension ?? 0,
       }));
 
       try {

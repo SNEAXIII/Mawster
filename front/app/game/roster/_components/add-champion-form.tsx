@@ -28,6 +28,8 @@ interface AddChampionFormProps {
   onSignatureChange: (value: number) => void;
   isPreferredAttacker: boolean;
   onIsPreferredAttackerChange: (value: boolean) => void;
+  ascension: number;
+  onAscensionChange: (value: number) => void;
   adding: boolean;
   onSubmit: () => void;
   roster: RosterEntry[];
@@ -49,6 +51,8 @@ export default function AddChampionForm({
   onSignatureChange,
   isPreferredAttacker,
   onIsPreferredAttackerChange,
+  ascension,
+  onAscensionChange,
   adding,
   onSubmit,
   roster,
@@ -214,6 +218,40 @@ export default function AddChampionForm({
           <p className="text-xs text-muted-foreground mt-1 ml-6">
             {t.roster.preferredAttackerHint}
           </p>
+        </div>
+
+        {/* Ascension */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">
+            Ascension
+          </label>
+          <div className="flex gap-2">
+            {[0, 1, 2].map((level) => {
+              const isAscendable = selectedChampion?.is_ascendable ?? false;
+              const disabled = !isAscendable && level > 0;
+              return (
+                <button
+                  key={level}
+                  disabled={disabled}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
+                    ascension === level
+                      ? 'bg-purple-600 text-white border-purple-600'
+                      : disabled
+                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                  }`}
+                  onClick={() => onAscensionChange(level)}
+                >
+                  {level === 0 ? 'None' : `A${level}`}
+                </button>
+              );
+            })}
+          </div>
+          {selectedChampion && !selectedChampion.is_ascendable && (
+            <p className="text-xs text-muted-foreground mt-1">
+              This champion cannot be ascended.
+            </p>
+          )}
         </div>
 
         {/* Submit */}

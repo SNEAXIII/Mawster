@@ -106,6 +106,7 @@ class ChampionService:
                 champion_class=c.champion_class,
                 image_url=c.image_url,
                 is_7_star=c.is_7_star,
+                is_ascendable=c.is_ascendable,
                 alias=c.alias,
             )
             for c in champions
@@ -123,6 +124,17 @@ class ChampionService:
     ) -> Champion:
         champion = await cls.get_champion_by_id(session, champion_id)
         champion.alias = alias
+        session.add(champion)
+        await session.commit()
+        await session.refresh(champion)
+        return champion
+
+    @classmethod
+    async def toggle_ascendable(
+        cls, session: SessionDep, champion_id: uuid.UUID
+    ) -> Champion:
+        champion = await cls.get_champion_by_id(session, champion_id)
+        champion.is_ascendable = not champion.is_ascendable
         session.add(champion)
         await session.commit()
         await session.refresh(champion)
@@ -150,6 +162,7 @@ class ChampionService:
                     existing.image_url = data.image_url
                 if data.alias is not None:
                     existing.alias = data.alias
+                existing.is_ascendable = data.is_ascendable
                 session.add(existing)
                 updated += 1
             else:
@@ -159,6 +172,7 @@ class ChampionService:
                     image_url=data.image_url,
                     alias=data.alias,
                     is_7_star=False,
+                    is_ascendable=data.is_ascendable,
                 )
                 session.add(new_champion)
                 created += 1

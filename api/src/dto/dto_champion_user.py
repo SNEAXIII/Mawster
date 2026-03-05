@@ -10,6 +10,7 @@ class ChampionUserCreateRequest(BaseModel):
     rarity: str = Field(..., examples=["6r4"])
     signature: int = Field(default=0, ge=0, examples=[200])
     is_preferred_attacker: bool = Field(default=False)
+    ascension: int = Field(default=0, ge=0, le=2, examples=[0])
 
 
 class ChampionUserBulkEntry(BaseModel):
@@ -18,6 +19,7 @@ class ChampionUserBulkEntry(BaseModel):
     rarity: str = Field(..., examples=["6r4"])
     signature: int = Field(default=0, ge=0, examples=[200])
     is_preferred_attacker: bool = Field(default=False)
+    ascension: int = Field(default=0, ge=0, le=2, examples=[0])
 
 
 class ChampionUserBulkRequest(BaseModel):
@@ -33,6 +35,7 @@ class ChampionUserResponse(BaseModel):
     rarity: str
     signature: int
     is_preferred_attacker: bool = False
+    ascension: int = 0
 
     @classmethod
     def from_model(cls, m) -> "ChampionUserResponse":
@@ -43,6 +46,7 @@ class ChampionUserResponse(BaseModel):
             rarity=m.rarity,
             signature=m.signature,
             is_preferred_attacker=m.is_preferred_attacker,
+            ascension=m.ascension,
         )
 
 
@@ -54,6 +58,8 @@ class ChampionUserDetailResponse(BaseModel):
     rarity: str
     signature: int
     is_preferred_attacker: bool = False
+    ascension: int = 0
+    is_ascendable: bool = False
     champion_name: str
     champion_class: str
     image_url: Optional[str] = None
