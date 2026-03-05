@@ -64,7 +64,7 @@ async def create_champion_user(
         ascension=body.ascension,
     )
     audit_log("roster.add_champion", user_id=str(current_user.id), detail=f"game_account_id={body.game_account_id} champion_id={body.champion_id}")
-    return ChampionUserResponse.from_model(result)
+    return ChampionUserResponse.model_validate(result)
 
 
 @champion_user_controller.post(
@@ -105,7 +105,7 @@ async def bulk_add_champions(
     )
     audit_log("roster.bulk_import", user_id=str(current_user.id), detail=f"game_account_id={body.game_account_id} count={len(entries)}")
     return [
-        ChampionUserDetailResponse.from_model(e)
+        ChampionUserDetailResponse.model_validate(e)
         for e in entries
     ]
 
@@ -143,7 +143,7 @@ async def get_roster_by_game_account(
             )
     entries = await ChampionUserService.get_roster_by_game_account(session, game_account_id)
     return [
-        ChampionUserDetailResponse.from_model(e)
+        ChampionUserDetailResponse.model_validate(e)
         for e in entries
     ]
 
@@ -174,7 +174,7 @@ async def toggle_preferred_attacker(
         user_id=str(current_user.id),
         detail=f"champion_user_id={champion_user_id} is_preferred_attacker={champion_user.is_preferred_attacker}",
     )
-    return ChampionUserResponse.from_model(champion_user)
+    return ChampionUserResponse.model_validate(champion_user)
 
 
 @champion_user_controller.get(
@@ -194,7 +194,7 @@ async def get_champion_user(
     game_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
     if game_account is None or game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
-    return ChampionUserResponse.from_model(champion_user)
+    return ChampionUserResponse.model_validate(champion_user)
 
 
 @champion_user_controller.put(
@@ -220,7 +220,7 @@ async def update_champion_user(
         rarity=body.rarity,
         signature=body.signature,
     )
-    return ChampionUserResponse.from_model(updated)
+    return ChampionUserResponse.model_validate(updated)
 
 
 @champion_user_controller.delete(
@@ -261,7 +261,7 @@ async def upgrade_champion_rank(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
     upgraded = await ChampionUserService.upgrade_champion_rank(session, champion_user)
     audit_log("roster.upgrade_rank", user_id=str(current_user.id), detail=f"champion_user_id={champion_user_id}")
-    return ChampionUserResponse.from_model(upgraded)
+    return ChampionUserResponse.model_validate(upgraded)
 
 
 @champion_user_controller.patch(
@@ -282,7 +282,7 @@ async def ascend_champion(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
     ascended = await ChampionUserService.ascend_champion(session, champion_user)
     audit_log("roster.ascend_champion", user_id=str(current_user.id), detail=f"champion_user_id={champion_user_id}")
-    return ChampionUserResponse.from_model(ascended)
+    return ChampionUserResponse.model_validate(ascended)
 
 
 # ─── Upgrade Request Endpoints ────────────────────────────
@@ -371,7 +371,7 @@ async def create_upgrade_request(
         detail=f"request_id={loaded.id} champion_user_id={body.champion_user_id} requested_rarity={body.requested_rarity}",
     )
 
-    return UpgradeRequestResponse.from_model(loaded)
+    return UpgradeRequestResponse.model_validate(loaded)
 
 
 @champion_user_controller.get(
@@ -406,7 +406,7 @@ async def get_upgrade_requests_by_account(
             )
 
     requests = await UpgradeRequestService.get_pending_by_game_account(session, game_account_id)
-    return [UpgradeRequestResponse.from_model(r) for r in requests]
+    return [UpgradeRequestResponse.model_validate(r) for r in requests]
 
 
 @champion_user_controller.delete(

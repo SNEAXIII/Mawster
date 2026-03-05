@@ -1,10 +1,7 @@
 import uuid
-from typing import TYPE_CHECKING, Optional
+from typing import Any, Optional
 
-from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    from src.models.ChampionUser import ChampionUser
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ChampionUserCreateRequest(BaseModel):
@@ -33,6 +30,9 @@ class ChampionUserBulkRequest(BaseModel):
 
 
 class ChampionUserResponse(BaseModel):
+    """DTO for a champion-user roster entry."""
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     game_account_id: uuid.UUID
     champion_id: uuid.UUID
@@ -40,18 +40,6 @@ class ChampionUserResponse(BaseModel):
     signature: int
     is_preferred_attacker: bool = False
     ascension: int = 0
-
-    @classmethod
-    def from_model(cls, m: "ChampionUser") -> "ChampionUserResponse":
-        return cls(
-            id=m.id,
-            game_account_id=m.game_account_id,
-            champion_id=m.champion_id,
-            rarity=m.rarity,
-            signature=m.signature,
-            is_preferred_attacker=m.is_preferred_attacker,
-            ascension=m.ascension,
-        )
 
 
 class ChampionUserDetailResponse(ChampionUserResponse):
@@ -62,19 +50,22 @@ class ChampionUserDetailResponse(ChampionUserResponse):
     champion_class: str
     image_url: Optional[str] = None
 
+    @model_validator(mode='before')
     @classmethod
-    def from_model(cls, m: "ChampionUser") -> "ChampionUserDetailResponse":
-        """Build from a ChampionUser with its `.champion` relationship loaded."""
-        return cls(
-            id=m.id,
-            game_account_id=m.game_account_id,
-            champion_id=m.champion_id,
-            rarity=m.rarity,
-            signature=m.signature,
-            is_preferred_attacker=m.is_preferred_attacker,
-            ascension=m.ascension,
-            is_ascendable=m.champion.is_ascendable,
-            champion_name=m.champion.name,
-            champion_class=m.champion.champion_class,
-            image_url=m.champion.image_url,
-        )
+    def flatten_champion(cls, data: Any) -> Any:
+        """Flatten the nested `.champion` relationship into top-level fields."""
+        if isinstance(data, dict):
+            return data
+        return {
+            'id': data.id,
+            'game_account_id': data.game_account_id,
+            'champion_id': data.champion_id,
+            'rarity': data.rarity,
+            'signature': data.signature,
+            'is_preferred_attacker': data.is_preferred_attacker,
+            'ascension': data.ascension,
+            'is_ascendable': data.champion.is_ascendable,
+            'champion_name': data.champion.name,
+            'champion_class': data.champion.champion_class,
+            'image_url': data.champion.image_url,
+        }

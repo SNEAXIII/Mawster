@@ -1,4 +1,4 @@
-"""Unit tests for DTO from_model class methods."""
+"""Unit tests for DTO model_validate with from_attributes."""
 import uuid
 from datetime import datetime
 from types import SimpleNamespace
@@ -60,13 +60,13 @@ def _make_champion_user(champion=None, **overrides):
 
 
 # ---------------------------------------------------------------------------
-# ChampionResponse.from_model
+# ChampionResponse.model_validate
 # ---------------------------------------------------------------------------
 
-class TestChampionResponseFromModel:
+class TestChampionResponseModelValidate:
     def test_maps_all_fields(self):
         champ = _make_champion()
-        dto = ChampionResponse.from_model(champ)
+        dto = ChampionResponse.model_validate(champ)
 
         assert dto.id == champ.id
         assert dto.name == "Spider-Man"
@@ -78,27 +78,27 @@ class TestChampionResponseFromModel:
 
     def test_handles_none_optional_fields(self):
         champ = _make_champion(image_url=None, alias=None)
-        dto = ChampionResponse.from_model(champ)
+        dto = ChampionResponse.model_validate(champ)
 
         assert dto.image_url is None
         assert dto.alias is None
 
     def test_defaults_booleans(self):
         champ = _make_champion(is_7_star=False, is_ascendable=False)
-        dto = ChampionResponse.from_model(champ)
+        dto = ChampionResponse.model_validate(champ)
 
         assert dto.is_7_star is False
         assert dto.is_ascendable is False
 
 
 # ---------------------------------------------------------------------------
-# ChampionUserResponse.from_model
+# ChampionUserResponse.model_validate
 # ---------------------------------------------------------------------------
 
-class TestChampionUserResponseFromModel:
+class TestChampionUserResponseModelValidate:
     def test_maps_all_fields(self):
         cu = _make_champion_user()
-        dto = ChampionUserResponse.from_model(cu)
+        dto = ChampionUserResponse.model_validate(cu)
 
         assert dto.id == cu.id
         assert dto.game_account_id == cu.game_account_id
@@ -110,21 +110,21 @@ class TestChampionUserResponseFromModel:
 
     def test_default_values(self):
         cu = _make_champion_user(is_preferred_attacker=False, ascension=0)
-        dto = ChampionUserResponse.from_model(cu)
+        dto = ChampionUserResponse.model_validate(cu)
 
         assert dto.is_preferred_attacker is False
         assert dto.ascension == 0
 
 
 # ---------------------------------------------------------------------------
-# ChampionUserDetailResponse.from_model
+# ChampionUserDetailResponse.model_validate
 # ---------------------------------------------------------------------------
 
-class TestChampionUserDetailResponseFromModel:
+class TestChampionUserDetailResponseModelValidate:
     def test_maps_champion_user_and_champion_fields(self):
         champ = _make_champion(name="Doom", champion_class="Mystic", is_ascendable=True)
         cu = _make_champion_user(champion=champ)
-        dto = ChampionUserDetailResponse.from_model(cu)
+        dto = ChampionUserDetailResponse.model_validate(cu)
 
         # ChampionUser fields
         assert dto.id == cu.id
@@ -145,16 +145,16 @@ class TestChampionUserDetailResponseFromModel:
     def test_non_ascendable_champion(self):
         champ = _make_champion(is_ascendable=False)
         cu = _make_champion_user(champion=champ)
-        dto = ChampionUserDetailResponse.from_model(cu)
+        dto = ChampionUserDetailResponse.model_validate(cu)
 
         assert dto.is_ascendable is False
 
 
 # ---------------------------------------------------------------------------
-# UpgradeRequestResponse.from_model
+# UpgradeRequestResponse.model_validate
 # ---------------------------------------------------------------------------
 
-class TestUpgradeRequestResponseFromModel:
+class TestUpgradeRequestResponseModelValidate:
     def test_maps_all_fields(self):
         now = datetime.now()
         champ = _make_champion(name="Hercules", champion_class="Cosmic")
@@ -170,7 +170,7 @@ class TestUpgradeRequestResponseFromModel:
             created_at=now,
             done_at=None,
         )
-        dto = UpgradeRequestResponse.from_model(req)
+        dto = UpgradeRequestResponse.model_validate(req)
 
         assert dto.id == req.id
         assert dto.requester_pseudo == "DrBalise"
@@ -196,15 +196,15 @@ class TestUpgradeRequestResponseFromModel:
             created_at=now,
             done_at=now,
         )
-        dto = UpgradeRequestResponse.from_model(req)
+        dto = UpgradeRequestResponse.model_validate(req)
         assert dto.done_at == now
 
 
 # ---------------------------------------------------------------------------
-# DefensePlacementResponse.from_model
+# DefensePlacementResponse.model_validate
 # ---------------------------------------------------------------------------
 
-class TestDefensePlacementResponseFromModel:
+class TestDefensePlacementResponseModelValidate:
     def test_maps_all_fields(self):
         now = datetime.now()
         champ = _make_champion(name="Corvus", champion_class="Cosmic")
@@ -223,7 +223,7 @@ class TestDefensePlacementResponseFromModel:
             placed_by=placed_by,
             created_at=now,
         )
-        dto = DefensePlacementResponse.from_model(placement)
+        dto = DefensePlacementResponse.model_validate(placement)
 
         assert dto.node_number == 15
         assert dto.battlegroup == 2
@@ -250,16 +250,16 @@ class TestDefensePlacementResponseFromModel:
             placed_by=None,
             created_at=now,
         )
-        dto = DefensePlacementResponse.from_model(placement)
+        dto = DefensePlacementResponse.model_validate(placement)
         assert dto.placed_by_id is None
         assert dto.placed_by_pseudo is None
 
 
 # ---------------------------------------------------------------------------
-# GameAccountResponse.from_model
+# GameAccountResponse.model_validate
 # ---------------------------------------------------------------------------
 
-class TestGameAccountResponseFromModel:
+class TestGameAccountResponseModelValidate:
     def test_with_alliance(self):
         now = datetime.now()
         alliance = _ns(tag="TST", name="Test Alliance")
@@ -273,7 +273,7 @@ class TestGameAccountResponseFromModel:
             is_primary=True,
             created_at=now,
         )
-        dto = GameAccountResponse.from_model(account)
+        dto = GameAccountResponse.model_validate(account)
 
         assert dto.alliance_tag == "TST"
         assert dto.alliance_name == "Test Alliance"
@@ -292,7 +292,7 @@ class TestGameAccountResponseFromModel:
             created_at=now,
         )
         # No alliance attribute at all
-        dto = GameAccountResponse.from_model(account)
+        dto = GameAccountResponse.model_validate(account)
 
         assert dto.alliance_tag is None
         assert dto.alliance_name is None
@@ -300,10 +300,10 @@ class TestGameAccountResponseFromModel:
 
 
 # ---------------------------------------------------------------------------
-# AllianceOfficerResponse.from_model
+# AllianceOfficerResponse.model_validate
 # ---------------------------------------------------------------------------
 
-class TestAllianceOfficerResponseFromModel:
+class TestAllianceOfficerResponseModelValidate:
     def test_maps_all_fields(self):
         now = datetime.now()
         officer = _ns(
@@ -312,65 +312,61 @@ class TestAllianceOfficerResponseFromModel:
             game_account=_ns(game_pseudo="Officer1"),
             assigned_at=now,
         )
-        dto = AllianceOfficerResponse.from_model(officer)
+        dto = AllianceOfficerResponse.model_validate(officer)
 
         assert dto.game_pseudo == "Officer1"
         assert dto.assigned_at == now
 
 
 # ---------------------------------------------------------------------------
-# AllianceMemberResponse.from_model
+# AllianceMemberResponse.model_validate
 # ---------------------------------------------------------------------------
 
-class TestAllianceMemberResponseFromModel:
+class TestAllianceMemberResponseModelValidate:
     def test_owner(self):
         member_id = uuid.uuid4()
-        member = _ns(
-            id=member_id,
-            user_id=uuid.uuid4(),
-            game_pseudo="Owner",
-            alliance_group=1,
-        )
-        dto = AllianceMemberResponse.from_model(
-            member, owner_id=member_id, officer_ids=set(),
-        )
+        dto = AllianceMemberResponse.model_validate({
+            'id': member_id,
+            'user_id': uuid.uuid4(),
+            'game_pseudo': 'Owner',
+            'alliance_group': 1,
+            'is_owner': True,
+            'is_officer': False,
+        })
         assert dto.is_owner is True
         assert dto.is_officer is False
 
     def test_officer(self):
-        member_id = uuid.uuid4()
-        member = _ns(
-            id=member_id,
-            user_id=uuid.uuid4(),
-            game_pseudo="Adj",
-            alliance_group=None,
-        )
-        dto = AllianceMemberResponse.from_model(
-            member, owner_id=uuid.uuid4(), officer_ids={member_id},
-        )
+        dto = AllianceMemberResponse.model_validate({
+            'id': uuid.uuid4(),
+            'user_id': uuid.uuid4(),
+            'game_pseudo': 'Adj',
+            'alliance_group': None,
+            'is_owner': False,
+            'is_officer': True,
+        })
         assert dto.is_owner is False
         assert dto.is_officer is True
 
     def test_regular_member(self):
-        member = _ns(
-            id=uuid.uuid4(),
-            user_id=uuid.uuid4(),
-            game_pseudo="Normal",
-            alliance_group=3,
-        )
-        dto = AllianceMemberResponse.from_model(
-            member, owner_id=uuid.uuid4(), officer_ids=set(),
-        )
+        dto = AllianceMemberResponse.model_validate({
+            'id': uuid.uuid4(),
+            'user_id': uuid.uuid4(),
+            'game_pseudo': 'Normal',
+            'alliance_group': 3,
+            'is_owner': False,
+            'is_officer': False,
+        })
         assert dto.is_owner is False
         assert dto.is_officer is False
         assert dto.alliance_group == 3
 
 
 # ---------------------------------------------------------------------------
-# AllianceResponse.from_model
+# AllianceResponse.model_validate
 # ---------------------------------------------------------------------------
 
-class TestAllianceResponseFromModel:
+class TestAllianceResponseModelValidate:
     def test_maps_full_alliance(self):
         now = datetime.now()
         owner_id = uuid.uuid4()
@@ -405,7 +401,7 @@ class TestAllianceResponseFromModel:
             members=[owner_member, officer_member],
         )
 
-        dto = AllianceResponse.from_model(alliance)
+        dto = AllianceResponse.model_validate(alliance)
 
         assert dto.name == "Test Alliance"
         assert dto.tag == "TST"
@@ -432,7 +428,7 @@ class TestAllianceResponseFromModel:
             officers=[],
             members=[],
         )
-        dto = AllianceResponse.from_model(alliance)
+        dto = AllianceResponse.model_validate(alliance)
 
         assert dto.member_count == 0
         assert dto.officers == []
@@ -440,10 +436,10 @@ class TestAllianceResponseFromModel:
 
 
 # ---------------------------------------------------------------------------
-# AllianceInvitationResponse.from_model
+# AllianceInvitationResponse.model_validate
 # ---------------------------------------------------------------------------
 
-class TestAllianceInvitationResponseFromModel:
+class TestAllianceInvitationResponseModelValidate:
     def test_maps_all_fields(self):
         now = datetime.now()
         inv = _ns(
@@ -458,7 +454,7 @@ class TestAllianceInvitationResponseFromModel:
             created_at=now,
             responded_at=None,
         )
-        dto = AllianceInvitationResponse.from_model(inv)
+        dto = AllianceInvitationResponse.model_validate(inv)
 
         assert dto.alliance_name == "Cool Alliance"
         assert dto.alliance_tag == "CLA"
@@ -481,6 +477,6 @@ class TestAllianceInvitationResponseFromModel:
             created_at=now,
             responded_at=now,
         )
-        dto = AllianceInvitationResponse.from_model(inv)
+        dto = AllianceInvitationResponse.model_validate(inv)
         assert dto.status == InvitationStatus.ACCEPTED
         assert dto.responded_at == now
