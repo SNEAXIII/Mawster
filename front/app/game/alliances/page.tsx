@@ -148,7 +148,7 @@ export default function AlliancesPage() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      Promise.all([fetchAlliances(), fetchEligibleOwners(), fetchEligibleMembers(), fetchMyAccounts(), fetchMyInvitations()]).then(() => {
+      Promise.all([fetchAlliances(), fetchEligibleOwners(), fetchMyAccounts(), fetchMyInvitations()]).then(() => {
         // createOpen stays false — will be overridden below after alliances load
       });
     }
@@ -217,10 +217,10 @@ export default function AlliancesPage() {
   };
 
   // ---- Members ----
-  const handleOpenInviteMember = async (allianceId: string) => {
+  const handleOpenInviteMember = (allianceId: string) => {
     setMemberAllianceId(allianceId);
     setMemberAccountId('');
-    await fetchEligibleMembers();
+    fetchEligibleMembers();
   };
 
   const handleInviteMember = async (allianceId: string) => {
@@ -325,7 +325,7 @@ export default function AlliancesPage() {
       </div>
 
       {/* Create form — foldable */}
-{eligibleMembers.length > 0 && (
+{eligibleOwners.length > 0 && (
       <CreateAllianceForm
         open={createOpen}
         onToggle={() => setCreateOpen((v) => !v)}
