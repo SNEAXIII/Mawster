@@ -373,13 +373,13 @@ class AllianceService:
     # ---- Officer management ----
 
     @classmethod
-    async def add_adjoint(
+    async def add_officer(
         cls,
         session: SessionDep,
         alliance_id: uuid.UUID,
         game_account_id: uuid.UUID,
     ) -> Alliance:
-        """Add a game account as adjoint of the alliance.
+        """Add a game account as officer of the alliance.
         The game account MUST already be a member of the alliance."""
         game_account = await session.get(GameAccount, game_account_id)
         if game_account is None:
@@ -387,13 +387,13 @@ class AllianceService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Game account not found",
             )
-        # Adjoint must be a member of the alliance
+        # officer must be a member of the alliance
         if game_account.alliance_id != alliance_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Game account must be a member of the alliance to become an officer",
             )
-        # Check not already adjoint
+        # Check not already officer
         existing = await session.exec(
             select(AllianceOfficer).where(
                 AllianceOfficer.alliance_id == alliance_id,
@@ -403,18 +403,18 @@ class AllianceService:
         if existing.first() is not None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Game account is already an adjoint of this alliance",
+                detail="Game account is already an officer of this alliance",
             )
-        adjoint = AllianceOfficer(
+        officer = AllianceOfficer(
             alliance_id=alliance_id,
             game_account_id=game_account_id,
         )
-        session.add(adjoint)
+        session.add(officer)
         await session.commit()
         return await cls._load_alliance_with_relations(session, alliance_id)
 
     @classmethod
-    async def remove_adjoint(
+    async def remove_officer(
         cls,
         session: SessionDep,
         alliance_id: uuid.UUID,
@@ -427,13 +427,13 @@ class AllianceService:
                 AllianceOfficer.game_account_id == game_account_id,
             )
         )
-        adjoint = result.first()
-        if adjoint is None:
+        officer = result.first()
+        if officer is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="This game account is not an adjoint of this alliance",
+                detail="This game account is not an officer of this alliance",
             )
-        await session.delete(adjoint)
+        await session.delete(officer)
         await session.commit()
         return await cls._load_alliance_with_relations(session, alliance_id)
 

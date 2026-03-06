@@ -383,11 +383,11 @@ class TestRemoveMember:
 
 
 # =========================================================================
-# add_adjoint / remove_adjoint
+# add_officer / remove_officer
 # =========================================================================
 
 
-class TestAddAdjoint:
+class TestAddofficer:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "account_exists, is_member, already_officer, expected_status",
@@ -399,7 +399,7 @@ class TestAddAdjoint:
         ],
         ids=["success", "not_found", "not_member", "already_officer"],
     )
-    async def test_add_adjoint(
+    async def test_add_officer(
         self, mocker, account_exists, is_member, already_officer, expected_status
     ):
         session = _mock_session(mocker)
@@ -432,21 +432,21 @@ class TestAddAdjoint:
 
         if expected_status is not None:
             with pytest.raises(HTTPException) as exc:
-                await AllianceService.add_adjoint(session, alliance_id, ga_id)
+                await AllianceService.add_officer(session, alliance_id, ga_id)
             assert exc.value.status_code == expected_status
         else:
-            result = await AllianceService.add_adjoint(session, alliance_id, ga_id)
+            result = await AllianceService.add_officer(session, alliance_id, ga_id)
             assert result is not None
 
 
-class TestRemoveAdjoint:
+class TestRemoveofficer:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "officer_found, expected_status",
         [(True, None), (False, 404)],
         ids=["success", "not_found"],
     )
-    async def test_remove_adjoint(self, mocker, officer_found, expected_status):
+    async def test_remove_officer(self, mocker, officer_found, expected_status):
         session = _mock_session(mocker)
         alliance_id = uuid.uuid4()
         ga_id = uuid.uuid4()
@@ -466,10 +466,10 @@ class TestRemoveAdjoint:
 
         if expected_status is not None:
             with pytest.raises(HTTPException) as exc:
-                await AllianceService.remove_adjoint(session, alliance_id, ga_id)
+                await AllianceService.remove_officer(session, alliance_id, ga_id)
             assert exc.value.status_code == expected_status
         else:
-            result = await AllianceService.remove_adjoint(session, alliance_id, ga_id)
+            result = await AllianceService.remove_officer(session, alliance_id, ga_id)
             assert result is not None
 
 

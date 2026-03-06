@@ -361,19 +361,19 @@ async def remove_member(
     response_model=AllianceResponse,
     status_code=status.HTTP_201_CREATED,
 )
-async def add_adjoint(
+async def add_officer(
     alliance_id: uuid.UUID,
     body: AllianceAddOfficerRequest,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Add an adjoint (deputy) to an alliance. Only the owner can add officers.
+    """Add an officer (deputy) to an alliance. Only the owner can add officers.
     The game account must already be a member of the alliance."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
     await AllianceService._assert_is_owner(session, alliance, current_user.id)
-    updated = await AllianceService.add_adjoint(
+    updated = await AllianceService.add_officer(
         session=session,
         alliance_id=alliance_id,
         game_account_id=body.game_account_id,
@@ -386,18 +386,18 @@ async def add_adjoint(
     "/{alliance_id}/officers",
     response_model=AllianceResponse,
 )
-async def remove_adjoint(
+async def remove_officer(
     alliance_id: uuid.UUID,
     body: AllianceRemoveOfficerRequest,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Remove an adjoint from an alliance. Only the owner can remove officers."""
+    """Remove an officer from an alliance. Only the owner can remove officers."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
     await AllianceService._assert_is_owner(session, alliance, current_user.id)
-    updated = await AllianceService.remove_adjoint(
+    updated = await AllianceService.remove_officer(
         session=session,
         alliance_id=alliance_id,
         game_account_id=body.game_account_id,

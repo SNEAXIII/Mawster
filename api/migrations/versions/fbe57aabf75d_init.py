@@ -76,7 +76,7 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['id_user'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('alliance_adjoint',
+    op.create_table('alliance_officer',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('alliance_id', sa.Uuid(), nullable=False),
     sa.Column('game_account_id', sa.Uuid(), nullable=False),
@@ -147,7 +147,7 @@ def downgrade() -> None:
     op.drop_table('defense_placement')
     op.drop_table('champion_user')
     op.drop_table('alliance_invitation')
-    op.drop_table('alliance_adjoint')
+    op.drop_table('alliance_officer')
     op.drop_table('login_log')
     op.drop_table('game_account')
     op.drop_index(op.f('ix_user_discord_id'), table_name='user')

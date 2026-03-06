@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { toast } from 'sonner';
@@ -31,10 +32,19 @@ import {
   importDefense,
 } from '@/app/services/defense';
 
-import WarMap from './_components/war-map';
-import ChampionSelector from './_components/champion-selector';
-import DefenseSidePanel from './_components/defense-side-panel';
 import DefenseImportReportDialog from './_components/defense-import-report-dialog';
+
+const WarMap = dynamic(() => import('./_components/war-map'), {
+  loading: () => <FullPageSpinner />,
+});
+
+const ChampionSelector = dynamic(() => import('./_components/champion-selector'), {
+  loading: () => null,
+});
+
+const DefenseSidePanel = dynamic(() => import('./_components/defense-side-panel'), {
+  loading: () => <FullPageSpinner />,
+});
 
 function DefensePageContent() {
   const { t } = useI18n();

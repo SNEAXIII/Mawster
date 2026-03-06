@@ -9,8 +9,8 @@ if TYPE_CHECKING:
 
 
 class AllianceOfficer(SQLModel, table=True):
-    """Association table: a game account designated as adjoint (deputy) of an alliance."""
-    __tablename__ = "alliance_adjoint"
+    """Association table: a game account designated as officer (deputy) of an alliance."""
+    __tablename__ = "alliance_officer"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
@@ -19,4 +19,4 @@ class AllianceOfficer(SQLModel, table=True):
 
     # Relations
     alliance: "Alliance" = Relationship(back_populates="officers")
-    game_account: "GameAccount" = Relationship(back_populates="adjoint_entries")
+    game_account: "GameAccount" = Relationship(back_populates="officer_entries")

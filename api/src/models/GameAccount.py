@@ -34,7 +34,7 @@ class GameAccount(SQLModel, table=True):
         sa_relationship_kwargs={"foreign_keys": "[Alliance.owner_id]"},
     )
     roster: List["ChampionUser"] = Relationship(back_populates="game_account")
-    adjoint_entries: List["AllianceOfficer"] = Relationship(back_populates="game_account")
+    officer_entries: List["AllianceOfficer"] = Relationship(back_populates="game_account")
     received_invitations: List["AllianceInvitation"] = Relationship(
         back_populates="game_account",
         sa_relationship_kwargs={"foreign_keys": "[AllianceInvitation.game_account_id]"},
