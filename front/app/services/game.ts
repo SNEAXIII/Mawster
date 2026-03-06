@@ -282,7 +282,7 @@ export async function addOfficer(
     headers: jsonHeaders,
     body: JSON.stringify({ game_account_id: gameAccountId }),
   });
-  await throwOnError(response, "Erreur lors de l'ajout de l'adjoint");
+  await throwOnError(response, "Erreur lors de l'ajout de l'officer");
   return response.json();
 }
 
@@ -295,7 +295,7 @@ export async function removeOfficer(
     headers: jsonHeaders,
     body: JSON.stringify({ game_account_id: gameAccountId }),
   });
-  await throwOnError(response, "Erreur lors du retrait de l'adjoint");
+  await throwOnError(response, "Erreur lors du retrait de l'officer");
   return response.json();
 }
 

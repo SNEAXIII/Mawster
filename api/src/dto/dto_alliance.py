@@ -25,7 +25,7 @@ class AllianceMemberResponse(BaseModel):
 
 
 class AllianceOfficerResponse(BaseModel):
-    """An officer (adjoint) of an alliance."""
+    """An officer (officer) of an alliance."""
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
@@ -95,12 +95,12 @@ class AllianceResponse(BaseModel):
 
 
 class AllianceAddOfficerRequest(BaseModel):
-    """DTO to add an adjoint (deputy) to an alliance."""
+    """DTO to add an officer (deputy) to an alliance."""
     game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
 
 
 class AllianceRemoveOfficerRequest(BaseModel):
-    """DTO to remove an adjoint from an alliance."""
+    """DTO to remove an officer from an alliance."""
     game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
 
 

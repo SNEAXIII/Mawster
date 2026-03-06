@@ -194,25 +194,25 @@ export default function AlliancesPage() {
   const handlePromoteOfficer = async (allianceId: string, gameAccountId: string) => {
     try {
       await addOfficer(allianceId, gameAccountId);
-      toast.success(t.game.alliances.adjointAddSuccess);
+      toast.success(t.game.alliances.officerAddSuccess);
       setPromoteTarget(null);
       setRoleRefreshKey((k) => k + 1);
       await fetchAlliances();
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.message || t.game.alliances.adjointAddError);
+      toast.error(err?.message || t.game.alliances.officerAddError);
     }
   };
 
   const handleDemoteOfficer = async (allianceId: string, gameAccountId: string) => {
     try {
       await removeOfficer(allianceId, gameAccountId);
-      toast.success(t.game.alliances.adjointRemoveSuccess);
+      toast.success(t.game.alliances.officerRemoveSuccess);
       setRoleRefreshKey((k) => k + 1);
       await fetchAlliances();
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.message || t.game.alliances.adjointRemoveError);
+      toast.error(err?.message || t.game.alliances.officerRemoveError);
     }
   };
 
@@ -325,6 +325,7 @@ export default function AlliancesPage() {
       </div>
 
       {/* Create form — foldable */}
+{eligibleMembers.length > 0 && (
       <CreateAllianceForm
         open={createOpen}
         onToggle={() => setCreateOpen((v) => !v)}
@@ -339,7 +340,7 @@ export default function AlliancesPage() {
         onOwnerChange={setOwnerId}
         onSubmit={handleCreate}
       />
-
+)}
       {/* My Invitations */}
       {myInvitations.length > 0 && (
         <Card>
