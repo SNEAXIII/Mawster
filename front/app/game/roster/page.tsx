@@ -8,6 +8,13 @@ import { useI18n } from '@/app/i18n';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import RosterImportExport from '@/components/roster-import-export';
 import { ErrorBanner } from '@/components/error-banner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { getMyGameAccounts, GameAccount } from '@/app/services/game';
 import {
   getRoster,
@@ -104,9 +111,9 @@ export default function RosterPage() {
     getMyGameAccounts()
       .then((accs) => {
         setAccounts(accs);
-        if (accs.length === 1) {
-          setSelectedAccountId(accs[0].id);
-        }
+        // Auto-select: primary account first, otherwise first available
+        const primary = accs.find((a) => a.is_primary);
+        setSelectedAccountId(primary?.id ?? accs[0]?.id ?? null);
       })
       .catch(() => setError(t.roster.errors.loadAccounts))
       .finally(() => setLoadingAccounts(false));
@@ -307,7 +314,27 @@ export default function RosterPage() {
     <AllianceRoleProvider>
       <div className='px-3 py-4 sm:p-6 max-w-6xl mx-auto'>
         <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2'>
-          <h1 className='text-xl sm:text-2xl font-bold'>{t.roster.title}</h1>
+                  {/* Account selector - only show if multiple accounts */}
+        {accounts.length > 1 && (
+          <div className='mb-6'>
+            <label className='block text-sm font-medium mb-2'>{t.roster.selectAccount}</label>
+            <Select
+              value={selectedAccountId || ''}
+              onValueChange={(val) => setSelectedAccountId(val || null)}
+            >
+              <SelectTrigger className='w-full max-w-xs'>
+                <SelectValue placeholder={t.roster.chooseAccount} />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((acc) => (
+                  <SelectItem key={acc.id} value={acc.id}>
+                    {acc.game_pseudo} {acc.is_primary ? `(${t.game.accounts.primary})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
           {selectedAccountId && (
             <RosterImportExport
               roster={roster}
@@ -329,28 +356,6 @@ export default function RosterPage() {
             onDismiss={() => setError(null)}
             className='mb-4'
           />
-        )}
-
-        {/* Account selector - only show if multiple accounts */}
-        {accounts.length > 1 && (
-          <div className='mb-6'>
-            <label className='block text-sm font-medium mb-2'>{t.roster.selectAccount}</label>
-            <select
-              className='border rounded px-3 py-2 w-full max-w-xs'
-              value={selectedAccountId || ''}
-              onChange={(e) => setSelectedAccountId(e.target.value || null)}
-            >
-              <option value=''>{t.roster.chooseAccount}</option>
-              {accounts.map((acc) => (
-                <option
-                  key={acc.id}
-                  value={acc.id}
-                >
-                  {acc.game_pseudo} {acc.is_primary ? `(${t.game.accounts.primary})` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
         )}
 
         {selectedAccountId && (

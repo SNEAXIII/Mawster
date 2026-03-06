@@ -99,6 +99,8 @@ const en = {
       editError: 'Failed to rename game account',
       accountCount: '{count}/10 accounts',
       accountLimitReached: 'Maximum of 10 game accounts reached',
+      setAsPrimary: 'Set as primary account',
+      primarySet: 'Primary account updated!',
     },
     alliances: {
       title: 'Alliances',

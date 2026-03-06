@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,16 @@ export default function ChampionSelector({
         c.champion_class.toLowerCase().includes(q),
     );
   }, [search, availableChampions]);
+
+  // Defer rendering of the grid by one frame so the dialog open animation is smooth
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (open) {
+      const id = requestAnimationFrame(() => setReady(true));
+      return () => cancelAnimationFrame(id);
+    }
+    setReady(false);
+  }, [open]);
 
   const handleSelectChampion = (champ: AvailableChampion) => {
     if (champ.owners.length === 1) {
@@ -86,7 +96,11 @@ export default function ChampionSelector({
               className="mb-3"
             />
             <div className="overflow-y-auto flex-1 pr-1">
-              {filtered.length === 0 ? (
+              {!ready ? (
+                <p className="text-muted-foreground text-sm text-center py-8">
+                  {t.common.loading}
+                </p>
+              ) : filtered.length === 0 ? (
                 <p className="text-muted-foreground text-sm text-center py-8">
                   {t.game.defense.noChampionsAvailable}
                 </p>

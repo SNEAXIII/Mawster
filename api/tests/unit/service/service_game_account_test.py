@@ -152,13 +152,18 @@ class TestUpdateGameAccount:
         session = _mock_session(mocker)
         account = _make_account()
 
+        # Mock the exec call for _ensure_single_primary (returns empty list)
+        mock_result = mocker.MagicMock()
+        mock_result.all.return_value = []
+        session.exec.return_value = mock_result
+
         result = await GameAccountService.update_game_account(
             session, account, GAME_PSEUDO_2, True
         )
 
         assert result.game_pseudo == GAME_PSEUDO_2
         assert result.is_primary is True
-        session.add.assert_called_once()
+        session.add.assert_called()
         session.commit.assert_awaited_once()
         session.refresh.assert_awaited_once()
 

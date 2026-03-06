@@ -14,6 +14,22 @@ MAX_GAME_ACCOUNTS_PER_USER = 10
 
 class GameAccountService:
     @classmethod
+    async def _ensure_single_primary(
+        cls, session: SessionDep, user_id: uuid.UUID, primary_id: uuid.UUID
+    ) -> None:
+        """Unset is_primary on all other accounts for this user."""
+        result = await session.exec(
+            select(GameAccount).where(
+                GameAccount.user_id == user_id,
+                GameAccount.id != primary_id,
+                GameAccount.is_primary == True,  # noqa: E712
+            )
+        )
+        for acc in result.all():
+            acc.is_primary = False
+            session.add(acc)
+
+    @classmethod
     async def create_game_account(
         cls,
         session: SessionDep,
@@ -25,17 +41,25 @@ class GameAccountService:
         existing = await session.exec(
             select(GameAccount).where(GameAccount.user_id == user_id)
         )
-        if len(existing.all()) >= MAX_GAME_ACCOUNTS_PER_USER:
+        existing_accounts = existing.all()
+        if len(existing_accounts) >= MAX_GAME_ACCOUNTS_PER_USER:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Maximum {MAX_GAME_ACCOUNTS_PER_USER} game accounts allowed per user",
             )
+        # First account is always primary
+        if len(existing_accounts) == 0:
+            is_primary = True
         game_account = GameAccount(
             user_id=user_id,
             game_pseudo=game_pseudo,
             is_primary=is_primary,
         )
         session.add(game_account)
+        # Enforce single primary
+        if is_primary:
+            await session.flush()
+            await cls._ensure_single_primary(session, user_id, game_account.id)
         await session.commit()
         await session.refresh(game_account)
         return game_account
@@ -70,6 +94,9 @@ class GameAccountService:
         game_account.game_pseudo = game_pseudo
         game_account.is_primary = is_primary
         session.add(game_account)
+        # Enforce single primary
+        if is_primary:
+            await cls._ensure_single_primary(session, game_account.user_id, game_account.id)
         await session.commit()
         await session.refresh(game_account)
         return game_account

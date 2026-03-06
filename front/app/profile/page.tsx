@@ -11,6 +11,7 @@ import { useRequiredSession } from '@/hooks/use-required-session';
 import { LuLogOut, LuShield, LuMail, LuUser, LuCalendar } from 'react-icons/lu';
 import { FaDiscord } from 'react-icons/fa';
 import { useI18n } from '@/app/i18n';
+import GameAccountsSection from '@/components/profile/game-accounts-section';
 
 function getInitials(name: string | undefined | null): string {
   if (!name) return '?';
@@ -79,6 +80,9 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Game accounts management */}
+      <GameAccountsSection />
 
       {/* Bouton deconnexion */}
       <Button variant="outline" className="w-full" onClick={handleSignOut}>
