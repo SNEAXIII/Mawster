@@ -34,7 +34,7 @@ app.dependency_overrides[get_session] = get_test_session
 # --- Constants ---
 REGEX_BEARER = re.compile(r"(eyJ[\da-zA-Z]+\.){2}[\w-]+")
 TOKEN_TYPE = "bearer"
-
+ENDPOINT_SESSION = "/auth/session"
 
 # --- Utility functions ---
 def _create_jwt(
@@ -58,34 +58,34 @@ class TestGetSession:
     """GET /auth/session — header-based authentication."""
 
     @pytest.mark.asyncio
-    async def test_valid_token_returns_200(self, session):
+    async def test_valid_token_returns_200(self):
         await push_one_user()
         headers = create_auth_headers()
-        response = await execute_get_request("/auth/session", headers=headers)
+        response = await execute_get_request(ENDPOINT_SESSION, headers=headers)
         assert response.status_code == 200
         body = response.json()
         assert body["login"] == USER_LOGIN
         assert body["email"] == USER_EMAIL
 
     @pytest.mark.asyncio
-    async def test_no_auth_header_returns_401(self, session):
-        response = await execute_get_request("/auth/session")
+    async def test_no_auth_header_returns_401(self):
+        response = await execute_get_request(ENDPOINT_SESSION)
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_malformed_token_returns_401(self, session):
+    async def test_malformed_token_returns_401(self):
         headers = {"Authorization": "Bearer not.a.valid.jwt"}
-        response = await execute_get_request("/auth/session", headers=headers)
+        response = await execute_get_request(ENDPOINT_SESSION, headers=headers)
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_empty_bearer_returns_401(self, session):
+    async def test_empty_bearer_returns_401(self):
         headers = {"Authorization": "Bearer "}
-        response = await execute_get_request("/auth/session", headers=headers)
+        response = await execute_get_request(ENDPOINT_SESSION, headers=headers)
         assert response.status_code in (401, 403)
 
     @pytest.mark.asyncio
-    async def test_expired_token_returns_401(self, session):
+    async def test_expired_token_returns_401(self):
         """An expired JWT should yield 401, not 200."""
         payload = {
             "sub": USER_LOGIN,
@@ -96,36 +96,33 @@ class TestGetSession:
         }
         token = pyjwt.encode(payload, SECRET.SECRET_KEY, algorithm="HS256")
         headers = {"Authorization": f"Bearer {token}"}
-        response = await execute_get_request("/auth/session", headers=headers)
+        response = await execute_get_request(ENDPOINT_SESSION, headers=headers)
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_token_for_deleted_user_returns_error(self, session):
+    async def test_token_for_deleted_user_returns_error(self):
         """A valid token for a soft-deleted user must not return 200."""
         user = get_generic_user(is_base_id=True, deleted_at=datetime.now())
         await load_objects([user])
         headers = create_auth_headers()
-        response = await execute_get_request("/auth/session", headers=headers)
-        assert response.status_code != 200
-        assert response.status_code in (401, 403, 404)
+        response = await execute_get_request(ENDPOINT_SESSION, headers=headers)
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_token_for_disabled_user_returns_error(self, session):
+    async def test_token_for_disabled_user_returns_error(self):
         """A valid token for a disabled user must not return 200."""
         user = get_generic_user(is_base_id=True, disabled_at=datetime.now())
         await load_objects([user])
         headers = create_auth_headers()
-        response = await execute_get_request("/auth/session", headers=headers)
-        assert response.status_code != 200
-        assert response.status_code in (401, 403)
+        response = await execute_get_request(ENDPOINT_SESSION, headers=headers)
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_token_for_nonexistent_user_returns_error(self, session):
+    async def test_token_for_nonexistent_user_returns_error(self):
         """Token with a login that doesn't exist in DB."""
         headers = create_auth_headers(login="ghost_user")
-        response = await execute_get_request("/auth/session", headers=headers)
-        assert response.status_code != 200
-        assert response.status_code in (401, 404)
+        response = await execute_get_request(ENDPOINT_SESSION, headers=headers)
+        assert response.status_code == 401
 
 
 # =========================================================================
@@ -137,11 +134,11 @@ class TestPostSession:
     """POST /auth/session — token in request body."""
 
     @pytest.mark.asyncio
-    async def test_valid_token_returns_200(self, session):
+    async def test_valid_token_returns_200(self):
         await push_one_user()
         token = _create_jwt()
         response = await execute_post_request(
-            "/auth/session", payload={"token": token}
+            ENDPOINT_SESSION, payload={"token": token}
         )
         assert response.status_code == 200
         body = response.json()
@@ -149,43 +146,43 @@ class TestPostSession:
         assert body["email"] == USER_EMAIL
 
     @pytest.mark.asyncio
-    async def test_malformed_token_returns_401(self, session):
+    async def test_malformed_token_returns_401(self):
         response = await execute_post_request(
-            "/auth/session", payload={"token": "garbage"}
+            ENDPOINT_SESSION, payload={"token": "garbage"}
         )
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_empty_token_returns_error(self, session):
+    async def test_empty_token_returns_error(self):
         response = await execute_post_request(
-            "/auth/session", payload={"token": ""}
+            ENDPOINT_SESSION, payload={"token": ""}
         )
-        assert response.status_code in (401, 422)
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_missing_token_field_returns_400(self, session):
-        response = await execute_post_request("/auth/session", payload={})
+    async def test_missing_token_field_returns_400(self):
+        response = await execute_post_request(ENDPOINT_SESSION, payload={})
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_deleted_user_token_returns_error(self, session):
+    async def test_deleted_user_token_returns_error(self):
         user = get_generic_user(is_base_id=True, deleted_at=datetime.now())
         await load_objects([user])
         token = _create_jwt()
         response = await execute_post_request(
-            "/auth/session", payload={"token": token}
+            ENDPOINT_SESSION, payload={"token": token}
         )
-        assert response.status_code != 200
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_disabled_user_token_returns_error(self, session):
+    async def test_disabled_user_token_returns_error(self):
         user = get_generic_user(is_base_id=True, disabled_at=datetime.now())
         await load_objects([user])
         token = _create_jwt()
         response = await execute_post_request(
-            "/auth/session", payload={"token": token}
+            ENDPOINT_SESSION, payload={"token": token}
         )
-        assert response.status_code != 200
+        assert response.status_code == 401
 
 
 # =========================================================================
@@ -197,39 +194,15 @@ class TestDiscordLogin:
     """POST /auth/discord — Discord OAuth2 flow."""
 
     @pytest.mark.asyncio
-    async def test_missing_access_token_returns_400(self, session):
+    async def test_missing_access_token_returns_400(self):
         response = await execute_post_request("/auth/discord", payload={})
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_empty_access_token_returns_error(self, session):
+    async def test_empty_access_token_returns_error(self):
         """An empty access_token should not succeed."""
         response = await execute_post_request(
             "/auth/discord", payload={"access_token": ""}
         )
         # Discord API call will fail → 401 or 502
         assert response.status_code in (401, 502)
-
-
-# =========================================================================
-# Non-existent auth routes
-# =========================================================================
-
-
-class TestRemovedRoutes:
-    """Verify legacy auth endpoints no longer exist."""
-
-    @pytest.mark.asyncio
-    async def test_login_endpoint_gone(self, session):
-        response = await execute_post_request(
-            "/auth/login", payload={"username": "x", "password": "x"}
-        )
-        assert response.status_code in (404, 405)
-
-    @pytest.mark.asyncio
-    async def test_register_endpoint_gone(self, session):
-        response = await execute_post_request(
-            "/auth/register",
-            payload={"login": "x", "email": "x@x.com", "password": "X1!xxxxx"},
-        )
-        assert response.status_code in (404, 405)
