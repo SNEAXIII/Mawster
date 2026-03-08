@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Query
 
@@ -44,8 +44,8 @@ champion_controller = APIRouter(
 @champion_read_controller.get("", status_code=200, response_model=ChampionPaginatedResponse)
 async def get_champions(
     session: SessionDep,
-    page: int = Query(default=1, ge=1),
-    size: int = Query(default=20, ge=1),
+    page: Annotated[int, Query(ge=1)] = 1,
+    size: Annotated[int, Query(ge=1)] = 20,
     champion_class: Optional[str] = None,
     search: Optional[str] = None,
 ):

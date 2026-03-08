@@ -21,37 +21,39 @@ from src.enums.InvitationStatus import InvitationStatus
 # Helpers — lightweight namespace objects that mimic ORM models
 # ---------------------------------------------------------------------------
 
+TEST_ALLIANCE_NAME = "Test Alliance"
+
 def _ns(**kwargs):
     return SimpleNamespace(**kwargs)
 
 
 def _make_champion(**overrides):
-    defaults = dict(
-        id=uuid.uuid4(),
-        name="Spider-Man",
-        champion_class="Science",
-        image_url="/img/spider.png",
-        is_7_star=True,
-        is_ascendable=True,
-        alias="spidey;peter",
-    )
+    defaults = {
+        "id": uuid.uuid4(),
+        "name": "Spider-Man",
+        "champion_class": "Science",
+        "image_url": "/img/spider.png",
+        "is_7_star": True,
+        "is_ascendable": True,
+        "alias": "spidey;peter",
+    }
     defaults.update(overrides)
     return _ns(**defaults)
 
 
 def _make_champion_user(champion=None, **overrides):
     champ = champion or _make_champion()
-    defaults = dict(
-        id=uuid.uuid4(),
-        game_account_id=uuid.uuid4(),
-        champion_id=champ.id,
-        stars=7,
-        rank=3,
-        signature=200,
-        is_preferred_attacker=True,
-        ascension=1,
-        champion=champ,
-    )
+    defaults = {
+        "id": uuid.uuid4(),
+        "game_account_id": uuid.uuid4(),
+        "champion_id": champ.id,
+        "stars": 7,
+        "rank": 3,
+        "signature": 200,
+        "is_preferred_attacker": True,
+        "ascension": 1,
+        "champion": champ,
+    }
     defaults.update(overrides)
     obj = _ns(**defaults)
     # Add the rarity property
@@ -262,7 +264,7 @@ class TestDefensePlacementResponseModelValidate:
 class TestGameAccountResponseModelValidate:
     def test_with_alliance(self):
         now = datetime.now()
-        alliance = _ns(tag="TST", name="Test Alliance")
+        alliance = _ns(tag="TST", name=TEST_ALLIANCE_NAME)
         account = _ns(
             id=uuid.uuid4(),
             user_id=uuid.uuid4(),
@@ -276,7 +278,7 @@ class TestGameAccountResponseModelValidate:
         dto = GameAccountResponse.model_validate(account)
 
         assert dto.alliance_tag == "TST"
-        assert dto.alliance_name == "Test Alliance"
+        assert dto.alliance_name == TEST_ALLIANCE_NAME
         assert dto.game_pseudo == "DrBalise"
         assert dto.is_primary is True
 
@@ -392,7 +394,7 @@ class TestAllianceResponseModelValidate:
         )
         alliance = _ns(
             id=uuid.uuid4(),
-            name="Test Alliance",
+            name=TEST_ALLIANCE_NAME,
             tag="TST",
             owner_id=owner_id,
             owner=_ns(game_pseudo="TheOwner"),
@@ -403,7 +405,7 @@ class TestAllianceResponseModelValidate:
 
         dto = AllianceResponse.model_validate(alliance)
 
-        assert dto.name == "Test Alliance"
+        assert dto.name == TEST_ALLIANCE_NAME
         assert dto.tag == "TST"
         assert dto.owner_pseudo == "TheOwner"
         assert dto.member_count == 2

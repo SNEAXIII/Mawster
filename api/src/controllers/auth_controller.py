@@ -50,7 +50,7 @@ async def read_users_me_with_token(body: TokenBody, session: SessionDep):
     return user
 
 
-@auth_controller.post("/discord", response_model=LoginResponse, status_code=200)
+@auth_controller.post("/discord", status_code=200)
 async def discord_login(discord_data: DiscordLoginRequest, session: SessionDep) -> LoginResponse:
     """Authentification via Discord OAuth2.
 
@@ -86,7 +86,7 @@ async def discord_login(discord_data: DiscordLoginRequest, session: SessionDep) 
     )
 
 
-@auth_controller.post("/refresh", response_model=LoginResponse, status_code=200)
+@auth_controller.post("/refresh", status_code=200)
 async def refresh_access_token(body: RefreshTokenRequest, session: SessionDep) -> LoginResponse:
     """Use a refresh token to obtain a new access token + refresh token pair."""
     data = JWTService.decode_refresh_token(body.refresh_token)
@@ -134,7 +134,7 @@ async def dev_list_users(session: SessionDep):
     ]
 
 
-@auth_controller.post("/dev-login", response_model=LoginResponse, status_code=200)
+@auth_controller.post("/dev-login", status_code=200)
 async def dev_login(body: DevLoginRequest, session: SessionDep) -> LoginResponse:
     """Authenticate as any user without Discord. Production: disabled."""
     if IS_PROD:

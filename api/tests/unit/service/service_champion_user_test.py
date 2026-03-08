@@ -19,6 +19,8 @@ CHAMPION_ID = uuid.uuid4()
 GAME_ACCOUNT_ID = uuid.uuid4()
 
 
+MOCK_GET_CHAMPION_BY_NAME = "src.services.ChampionUserService.ChampionService.get_champion_by_name"
+
 def _mock_session(mocker):
     """Return an AsyncMock pretending to be an async DB session."""
     session = mocker.AsyncMock()
@@ -186,7 +188,7 @@ class TestBulkAddChampions:
         # Mock ChampionService.get_champion_by_name to return a champion
         champion = _make_champion()
         mocker.patch(
-            "src.services.ChampionUserService.ChampionService.get_champion_by_name",
+            MOCK_GET_CHAMPION_BY_NAME,
             return_value=champion,
         )
         # No existing entries (.first() returns None for each check)
@@ -224,7 +226,7 @@ class TestBulkAddChampions:
         session.get.return_value = _make_game_account()
         champion = _make_champion()
         mocker.patch(
-            "src.services.ChampionUserService.ChampionService.get_champion_by_name",
+            MOCK_GET_CHAMPION_BY_NAME,
             return_value=champion,
         )
         # Only 1 unique entry after dedup
@@ -255,7 +257,7 @@ class TestBulkAddChampions:
         session.get.return_value = _make_game_account()
         champion = _make_champion()
         mocker.patch(
-            "src.services.ChampionUserService.ChampionService.get_champion_by_name",
+            MOCK_GET_CHAMPION_BY_NAME,
             return_value=champion,
         )
         # Check existing returns the existing entry
@@ -305,7 +307,7 @@ class TestBulkAddChampions:
         session = _mock_session(mocker)
         session.get.return_value = _make_game_account()
         mocker.patch(
-            "src.services.ChampionUserService.ChampionService.get_champion_by_name",
+            MOCK_GET_CHAMPION_BY_NAME,
             return_value=None,
         )
 

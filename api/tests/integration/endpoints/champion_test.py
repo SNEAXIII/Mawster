@@ -21,19 +21,22 @@ from tests.utils.utils_client import (
     execute_request,
 )
 from tests.utils.utils_constant import (
-    USER_ID, USER_LOGIN, USER_EMAIL,
-    ADMIN_LOGIN, ADMIN_EMAIL,
+    USER_ID,
 )
 from tests.utils.utils_db import get_test_session, load_objects
 
 app.dependency_overrides[get_session] = get_test_session
 
 ADMIN_HEADERS = create_auth_headers(
-    login=ADMIN_LOGIN, user_id=str(USER_ID), email=ADMIN_EMAIL, role=Roles.ADMIN
+    user_id=str(USER_ID), role=Roles.ADMIN
 )
 USER_HEADERS = create_auth_headers(
-    login=USER_LOGIN, user_id=str(USER_ID), email=USER_EMAIL, role=Roles.USER
+    user_id=str(USER_ID), role=Roles.USER
 )
+
+CHAMPIONS_LIST_URL = "/champions?page=1&size=10"
+LOAD_CHAMPIONS_URL = "/admin/champions/load"
+SPIDEY_ALIAS = "spidey;peter"
 
 
 # =========================================================================
@@ -43,13 +46,13 @@ USER_HEADERS = create_auth_headers(
 _FAKE_ID = str(uuid.uuid4())
 
 _USER_CHAMPION_ROUTES = [
-    ("GET", "/champions?page=1&size=10", None, "list"),
+    ("GET", CHAMPIONS_LIST_URL, None, "list"),
     ("GET", f"/champions/{_FAKE_ID}", None, "get_by_id"),
 ]
 
 _ADMIN_CHAMPION_ROUTES = [
     ("PATCH", f"/admin/champions/{_FAKE_ID}/alias", {"alias": "x"}, "update_alias"),
-    ("POST", "/admin/champions/load", [{"name": "X", "champion_class": "Science"}], "load"),
+    ("POST", LOAD_CHAMPIONS_URL, [{"name": "X", "champion_class": "Science"}], "load"),
     ("DELETE", f"/admin/champions/{_FAKE_ID}", None, "delete"),
 ]
 
@@ -139,7 +142,7 @@ class TestGetChampions:
         await load_objects(champs)
 
         response = await execute_get_request(
-            "/champions?page=1&size=10", headers=USER_HEADERS
+            CHAMPIONS_LIST_URL, headers=USER_HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -188,7 +191,7 @@ class TestGetChampions:
     async def test_search_by_alias(self, session):
         await push_one_user()
         champs = [
-            get_champion(name="Spider-Man", champion_class="Science", alias="spidey;peter"),
+            get_champion(name="Spider-Man", champion_class="Science", alias=SPIDEY_ALIAS),
             get_champion(name="Wolverine", champion_class="Mutant", alias="logan;james"),
         ]
         await load_objects(champs)
@@ -206,7 +209,7 @@ class TestGetChampions:
     async def test_empty_list(self, session):
         await push_one_user()
         response = await execute_get_request(
-            "/champions?page=1&size=10", headers=USER_HEADERS
+            CHAMPIONS_LIST_URL, headers=USER_HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -224,7 +227,7 @@ class TestGetChampions:
 
         # Page 1
         response = await execute_get_request(
-            "/champions?page=1&size=10", headers=USER_HEADERS
+            CHAMPIONS_LIST_URL, headers=USER_HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -306,7 +309,7 @@ class TestUpdateAlias:
 
         response = await execute_patch_request(
             f"/admin/champions/{champ.id}/alias",
-            payload={"alias": "spidey;peter"},
+            payload={"alias": SPIDEY_ALIAS},
             headers=ADMIN_HEADERS,
         )
         assert response.status_code == 200
@@ -314,7 +317,7 @@ class TestUpdateAlias:
         get_resp = await execute_get_request(
             f"/champions/{champ.id}", headers=ADMIN_HEADERS
         )
-        assert get_resp.json()["alias"] == "spidey;peter"
+        assert get_resp.json()["alias"] == SPIDEY_ALIAS
 
     @pytest.mark.asyncio
     async def test_clear_alias(self, session):
@@ -373,7 +376,7 @@ class TestLoadChampions:
         ]
 
         response = await execute_post_request(
-            "/admin/champions/load", payload=payload, headers=ADMIN_HEADERS
+            LOAD_CHAMPIONS_URL, payload=payload, headers=ADMIN_HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -392,7 +395,7 @@ class TestLoadChampions:
         ]
 
         response = await execute_post_request(
-            "/admin/champions/load", payload=payload, headers=ADMIN_HEADERS
+            LOAD_CHAMPIONS_URL, payload=payload, headers=ADMIN_HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -408,7 +411,7 @@ class TestLoadChampions:
         ]
 
         response = await execute_post_request(
-            "/admin/champions/load", payload=payload, headers=ADMIN_HEADERS
+            LOAD_CHAMPIONS_URL, payload=payload, headers=ADMIN_HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -419,7 +422,7 @@ class TestLoadChampions:
     async def test_load_empty_list(self, session):
         await push_one_admin()
         response = await execute_post_request(
-            "/admin/champions/load", payload=[], headers=ADMIN_HEADERS
+            LOAD_CHAMPIONS_URL, payload=[], headers=ADMIN_HEADERS
         )
         assert response.status_code == 200
         body = response.json()
@@ -435,7 +438,7 @@ class TestLoadChampions:
         ]
 
         response = await execute_post_request(
-            "/admin/champions/load", payload=payload, headers=ADMIN_HEADERS
+            LOAD_CHAMPIONS_URL, payload=payload, headers=ADMIN_HEADERS
         )
         assert response.status_code == 200
         body = response.json()

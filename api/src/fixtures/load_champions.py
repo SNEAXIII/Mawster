@@ -36,6 +36,50 @@ sync_engine = create_engine(
 DEFAULT_JSON_PATH = Path(__file__).parent.parent.parent / "scripts" / "champions.json"
 
 
+def _update_existing_champion(session: Session, existing: Champion, image_url, alias, champion_class) -> bool:
+    """Update an existing champion's fields if they changed. Returns True if updated."""
+    changed = False
+    if existing.image_url != image_url:
+        existing.image_url = image_url
+        changed = True
+    if existing.alias != alias:
+        existing.alias = alias
+        changed = True
+    if existing.champion_class != champion_class:
+        existing.champion_class = champion_class
+        changed = True
+    if changed:
+        session.add(existing)
+    return changed
+
+
+def _process_champion_item(session: Session, item: dict) -> str:
+    """Process a single champion item. Returns 'added', 'updated', or 'skipped'."""
+    name = item.get("name", "").strip()
+    if not name:
+        return "skipped"
+
+    champion_class = item.get("champion_class", "").strip()
+    image_url = item.get("image_url") or None
+    alias = item.get("alias") or None
+
+    existing = session.exec(
+        select(Champion).where(Champion.name == name)
+    ).first()
+
+    if existing:
+        return "updated" if _update_existing_champion(session, existing, image_url, alias, champion_class) else "skipped"
+
+    champion = Champion(
+        name=name,
+        champion_class=champion_class,
+        image_url=image_url,
+        alias=alias,
+    )
+    session.add(champion)
+    return "added"
+
+
 def load_champions(json_path: Path = DEFAULT_JSON_PATH):
     """Load champions from a JSON file into the database.
 
@@ -61,46 +105,13 @@ def load_champions(json_path: Path = DEFAULT_JSON_PATH):
                 return
 
             for item in champions_data:
-                name = item.get("name", "").strip()
-                if not name:
-                    continue
-
-                champion_class = item.get("champion_class", "").strip()
-                image_url = item.get("image_url") or None
-                alias = item.get("alias") or None
-
-                # Check if champion already exists
-                existing = session.exec(
-                    select(Champion).where(Champion.name == name)
-                ).first()
-
-                if existing:
-                    # Update fields if they changed
-                    changed = False
-                    if existing.image_url != image_url:
-                        existing.image_url = image_url
-                        changed = True
-                    if existing.alias != alias:
-                        existing.alias = alias
-                        changed = True
-                    if existing.champion_class != champion_class:
-                        existing.champion_class = champion_class
-                        changed = True
-                    if changed:
-                        session.add(existing)
-                        updated += 1
-                    else:
-                        skipped += 1
-                    continue
-
-                champion = Champion(
-                    name=name,
-                    champion_class=champion_class,
-                    image_url=image_url,
-                    alias=alias,
-                )
-                session.add(champion)
-                added += 1
+                result = _process_champion_item(session, item)
+                if result == "added":
+                    added += 1
+                elif result == "updated":
+                    updated += 1
+                else:
+                    skipped += 1
 
             session.commit()
 

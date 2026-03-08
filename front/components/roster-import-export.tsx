@@ -17,6 +17,180 @@ import ImportPreviewDialog from '@/components/roster/import-preview-dialog';
 import ImportReportDialog, { type ImportResult } from '@/components/roster/import-report-dialog';
 import { type PreviewRow } from '@/components/roster/import-preview-row';
 
+// ─── Validation helpers ──────────────────────────────────
+
+function validateEntry(
+  obj: Record<string, unknown>,
+  idx: number,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: any,
+): { entry?: RosterExportEntry; error?: string } {
+  if (!obj.champion_name || typeof obj.champion_name !== 'string') {
+    return { error: t.roster.importExport.missingChampionName.replace('{idx}', String(idx)) };
+  }
+  if (!obj.rarity || typeof obj.rarity !== 'string') {
+    return { error: t.roster.importExport.missingRarity.replace('{idx}', String(idx)) };
+  }
+  if (!/^[67]r[1-5]$/.exec(obj.rarity)) {
+    return {
+      error: t.roster.importExport.invalidRarity
+        .replace('{idx}', String(idx))
+        .replace('{name}', obj.champion_name)
+        .replace('{rarity}', obj.rarity),
+    };
+  }
+  if (obj.signature !== undefined && (typeof obj.signature !== 'number' || obj.signature < 0)) {
+    return {
+      error: t.roster.importExport.invalidSignature
+        .replace('{idx}', String(idx))
+        .replace('{name}', obj.champion_name),
+    };
+  }
+
+  return {
+    entry: {
+      champion_name: obj.champion_name,
+      rarity: obj.rarity,
+      signature: typeof obj.signature === 'number' ? obj.signature : 0,
+      is_preferred_attacker: obj.is_preferred_attacker === true,
+      ascension:
+        typeof obj.ascension === 'number' && obj.ascension >= 0 && obj.ascension <= 2
+          ? obj.ascension
+          : 0,
+    },
+  };
+}
+
+function parseAndValidateEntries(
+  parsed: unknown[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: any,
+): { entries: RosterExportEntry[]; errors: string[] } {
+  const entries: RosterExportEntry[] = [];
+  const errors: string[] = [];
+
+  for (let i = 0; i < parsed.length; i++) {
+    const item = parsed[i];
+    const idx = i + 1;
+
+    if (!item || typeof item !== 'object') {
+      errors.push(t.roster.importExport.entryNotObject.replace('{idx}', String(idx)));
+      continue;
+    }
+
+    const result = validateEntry(item as Record<string, unknown>, idx, t);
+    if (result.error) {
+      errors.push(result.error);
+    } else if (result.entry) {
+      entries.push(result.entry);
+    }
+  }
+
+  return { entries, errors };
+}
+
+function deduplicateEntries(entries: RosterExportEntry[]): RosterExportEntry[] {
+  const deduped = new Map<string, RosterExportEntry>();
+  for (const entry of entries) {
+    const stars = entry.rarity.charAt(0);
+    const key = `${entry.champion_name.toLowerCase()}_${stars}`;
+    deduped.set(key, entry);
+  }
+  return Array.from(deduped.values());
+}
+
+async function fetchChampionLookup(
+  uniqueEntries: RosterExportEntry[],
+  roster: RosterEntry[],
+): Promise<Map<string, { champion_class: string; image_url: string | null }>> {
+  const championLookup = new Map<string, { champion_class: string; image_url: string | null }>();
+  const unknownNames = new Set<string>();
+  for (const entry of uniqueEntries) {
+    const found = roster.find(
+      (r) => r.champion_name.toLowerCase() === entry.champion_name.toLowerCase(),
+    );
+    if (!found) unknownNames.add(entry.champion_name);
+  }
+
+  if (unknownNames.size > 0) {
+    try {
+      const res = await searchChampions('', 9999);
+      for (const c of res.champions) {
+        championLookup.set(c.name.toLowerCase(), {
+          champion_class: c.champion_class,
+          image_url: c.image_url,
+        });
+      }
+    } catch {
+      // search failed — previews will just lack metadata
+    }
+  }
+  return championLookup;
+}
+
+function parseJsonFile(
+  text: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: any,
+): unknown[] {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new TypeError(t.roster.importExport.invalidJson);
+  }
+
+  if (!Array.isArray(parsed)) {
+    throw new TypeError(t.roster.importExport.notArray);
+  }
+
+  if (parsed.length === 0) {
+    throw new TypeError(t.roster.importExport.emptyFile);
+  }
+
+  return parsed;
+}
+
+function buildPreviewRow(
+  entry: RosterExportEntry,
+  roster: RosterEntry[],
+  championLookup: Map<string, { champion_class: string; image_url: string | null }>,
+): PreviewRow {
+  const stars = entry.rarity.charAt(0);
+  const existing = roster.find(
+    (r) =>
+      r.champion_name.toLowerCase() === entry.champion_name.toLowerCase() &&
+      r.rarity.startsWith(stars),
+  );
+
+  const isNew = !existing;
+  const hasChanges =
+    existing != null &&
+    (existing.rarity !== entry.rarity ||
+      existing.signature !== entry.signature ||
+      existing.is_preferred_attacker !== entry.is_preferred_attacker ||
+      (existing.ascension ?? 0) !== entry.ascension);
+
+  const rosterMatch = roster.find(
+    (r) => r.champion_name.toLowerCase() === entry.champion_name.toLowerCase(),
+  );
+  const apiMatch = championLookup.get(entry.champion_name.toLowerCase());
+
+  return {
+    champion_name: entry.champion_name,
+    champion_class: rosterMatch?.champion_class ?? apiMatch?.champion_class ?? null,
+    image_url: rosterMatch?.image_url ?? apiMatch?.image_url ?? null,
+    newRarity: entry.rarity,
+    newSignature: entry.signature,
+    oldRarity: existing?.rarity ?? null,
+    oldSignature: existing?.signature ?? null,
+    isNew,
+    hasChanges,
+    is_preferred_attacker: entry.is_preferred_attacker,
+    ascension: entry.ascension,
+  };
+}
+
 // ─── Export format (simplified) ──────────────────────────
 export interface RosterExportEntry {
   champion_name: string;
@@ -39,7 +213,7 @@ export default function RosterImportExport({
   selectedAccountId,
   selectedAccountName,
   onRosterUpdated,
-}: RosterImportExportProps) {
+}: Readonly<RosterImportExportProps>) {
   const { t } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -72,11 +246,11 @@ export default function RosterImportExport({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const safeName = selectedAccountName.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const safeName = selectedAccountName.replaceAll(/[^a-zA-Z0-9_-]/g, '_');
     a.download = `roster_${safeName}_${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    a.remove();
     URL.revokeObjectURL(url);
 
     toast.success(t.roster.importExport.exportedCount.replace('{count}', String(data.length)));
@@ -93,138 +267,23 @@ export default function RosterImportExport({
 
       try {
         const text = await file.text();
-        let parsed: unknown;
-
-        try {
-          parsed = JSON.parse(text);
-        } catch {
-          throw new Error(t.roster.importExport.invalidJson);
-        }
-
-        if (!Array.isArray(parsed)) {
-          throw new Error(t.roster.importExport.notArray);
-        }
-
-        if (parsed.length === 0) {
-          throw new Error(t.roster.importExport.emptyFile);
-        }
-
-        // Validate each entry
-        const entries: RosterExportEntry[] = [];
-        const errors: string[] = [];
-
-        for (let i = 0; i < parsed.length; i++) {
-          const item = parsed[i];
-          const idx = i + 1;
-
-          if (!item || typeof item !== 'object') {
-            errors.push(t.roster.importExport.entryNotObject.replace('{idx}', String(idx)));
-            continue;
-          }
-
-          const obj = item as Record<string, unknown>;
-
-          if (!obj.champion_name || typeof obj.champion_name !== 'string') {
-            errors.push(t.roster.importExport.missingChampionName.replace('{idx}', String(idx)));
-            continue;
-          }
-          if (!obj.rarity || typeof obj.rarity !== 'string') {
-            errors.push(t.roster.importExport.missingRarity.replace('{idx}', String(idx)));
-            continue;
-          }
-          if (!obj.rarity.match(/^[67]r[1-5]$/)) {
-            errors.push(t.roster.importExport.invalidRarity.replace('{idx}', String(idx)).replace('{name}', obj.champion_name as string).replace('{rarity}', obj.rarity as string));
-            continue;
-          }
-          if (obj.signature !== undefined && (typeof obj.signature !== 'number' || obj.signature < 0)) {
-            errors.push(t.roster.importExport.invalidSignature.replace('{idx}', String(idx)).replace('{name}', obj.champion_name as string));
-            continue;
-          }
-
-          entries.push({
-            champion_name: obj.champion_name as string,
-            rarity: obj.rarity as string,
-            signature: (typeof obj.signature === 'number' ? obj.signature : 0),
-            is_preferred_attacker: obj.is_preferred_attacker === true,
-            ascension: (typeof obj.ascension === 'number' && obj.ascension >= 0 && obj.ascension <= 2) ? obj.ascension : 0,
-          });
-        }
+        const parsed = parseJsonFile(text, t);
+        const { entries, errors } = parseAndValidateEntries(parsed, t);
 
         if (errors.length > 0 && entries.length === 0) {
-          throw new Error(`${t.roster.importExport.allInvalid}\n${errors.join('\n')}`);
+          throw new TypeError(`${t.roster.importExport.allInvalid}\n${errors.join('\n')}`);
         }
 
         if (errors.length > 0) {
           toast.warning(t.roster.importExport.skippedEntries.replace('{count}', String(errors.length)));
         }
 
-        // Deduplicate: keep last occurrence per (champion_name, stars)
-        const deduped = new Map<string, RosterExportEntry>();
-        for (const entry of entries) {
-          const stars = entry.rarity.charAt(0);
-          const key = `${entry.champion_name.toLowerCase()}_${stars}`;
-          deduped.set(key, entry);
-        }
-        const uniqueEntries = Array.from(deduped.values());
+        const uniqueEntries = deduplicateEntries(entries);
+        const championLookup = await fetchChampionLookup(uniqueEntries, roster);
 
-        // Build preview rows
-        // First, resolve champion details for entries not in the roster
-        const unknownNames = new Set<string>();
-        for (const entry of uniqueEntries) {
-          const found = roster.find(
-            (r) => r.champion_name.toLowerCase() === entry.champion_name.toLowerCase(),
-          );
-          if (!found) unknownNames.add(entry.champion_name);
-        }
-
-        // Batch-fetch unknown champions from the API
-        const championLookup = new Map<string, { champion_class: string; image_url: string | null }>();
-        if (unknownNames.size > 0) {
-          try {
-            const res = await searchChampions('', 9999);
-            for (const c of res.champions) {
-              championLookup.set(c.name.toLowerCase(), {
-                champion_class: c.champion_class,
-                image_url: c.image_url,
-              });
-            }
-          } catch {
-            // search failed — previews will just lack metadata
-          }
-        }
-
-        const rows: PreviewRow[] = uniqueEntries.map((entry) => {
-          // Find existing entry in current roster matching champion_name + star level
-          const stars = entry.rarity.charAt(0);
-          const existing = roster.find(
-            (r) => r.champion_name.toLowerCase() === entry.champion_name.toLowerCase() && r.rarity.charAt(0) === stars,
-          );
-
-          const isNew = !existing;
-          const hasChanges = !isNew && (
-            existing!.rarity !== entry.rarity || existing!.signature !== entry.signature || existing!.is_preferred_attacker !== entry.is_preferred_attacker || (existing!.ascension ?? 0) !== entry.ascension
-          );
-
-          // Resolve champion class and image from the roster or API lookup
-          const rosterMatch = roster.find(
-            (r) => r.champion_name.toLowerCase() === entry.champion_name.toLowerCase(),
-          );
-          const apiMatch = championLookup.get(entry.champion_name.toLowerCase());
-
-          return {
-            champion_name: entry.champion_name,
-            champion_class: rosterMatch?.champion_class ?? apiMatch?.champion_class ?? null,
-            image_url: rosterMatch?.image_url ?? apiMatch?.image_url ?? null,
-            newRarity: entry.rarity,
-            newSignature: entry.signature,
-            oldRarity: existing?.rarity ?? null,
-            oldSignature: existing?.signature ?? null,
-            isNew,
-            hasChanges,
-            is_preferred_attacker: entry.is_preferred_attacker,
-            ascension: entry.ascension,
-          };
-        });
+        const rows: PreviewRow[] = uniqueEntries.map((entry) =>
+          buildPreviewRow(entry, roster, championLookup),
+        );
 
         // Sort: new first, then changes, then unchanged
         rows.sort((a, b) => {

@@ -24,7 +24,53 @@ interface Props {
 
 const MAX_NODE = 50;
 
-export default function DefenseImportReportDialog({ open, onClose, report }: Props) {
+function getNodeRowClass(
+  before: DefenseReportItem | undefined,
+  after: DefenseReportItem | undefined,
+  error: string | undefined,
+): string {
+  if (error) return 'bg-red-50 dark:bg-red-950/30';
+  if (!before && after) return 'bg-green-50 dark:bg-green-950/30';
+  if (before && !after) return 'bg-red-50/50 dark:bg-red-900/20';
+  if (!before || !after) return '';
+
+  const unchanged =
+    before.champion_name === after.champion_name &&
+    before.rarity === after.rarity &&
+    before.owner_name === after.owner_name;
+
+  return unchanged ? '' : 'bg-blue-50 dark:bg-blue-950/30';
+}
+
+function AfterCell({
+  after,
+  error,
+  emptyLabel,
+  removedLabel,
+}: Readonly<{
+  after: DefenseReportItem | undefined;
+  error: string | undefined;
+  emptyLabel: string;
+  removedLabel: string;
+}>) {
+  if (after) return <NodeChampion item={after} />;
+  if (error) {
+    return (
+      <span className='text-xs text-destructive truncate' title={error}>
+        <XCircle className='w-3 h-3 inline mr-0.5' />
+        {error}
+      </span>
+    );
+  }
+  return (
+    <span className='text-xs text-muted-foreground italic'>
+      <Minus className='w-3 h-3 inline mr-0.5' />
+      {removedLabel}
+    </span>
+  );
+}
+
+export default function DefenseImportReportDialog({ open, onClose, report }: Readonly<Props>) {
   const { t } = useI18n();
   if (!report) return null;
 
@@ -72,27 +118,10 @@ export default function DefenseImportReportDialog({ open, onClose, report }: Pro
             const after = afterMap.get(node);
             const error = errorMap.get(node);
 
-            const unchanged = before && after
-              && before.champion_name === after.champion_name
-              && before.rarity === after.rarity
-              && before.owner_name === after.owner_name;
-
             return (
               <div
                 key={node}
-                className={`py-2 px-2 flex items-center gap-2 ${
-                  error
-                    ? 'bg-red-50 dark:bg-red-950/30'
-                    : !before && after
-                      ? 'bg-green-50 dark:bg-green-950/30'
-                      : before && !after
-                        ? 'bg-red-50/50 dark:bg-red-900/20'
-                        : unchanged
-                          ? ''
-                          : before && after
-                            ? 'bg-blue-50 dark:bg-blue-950/30'
-                            : ''
-                }`}
+                className={`py-2 px-2 flex items-center gap-2 ${getNodeRowClass(before, after, error)}`}
               >
                 {/* Node number */}
                 <span className='shrink-0 w-8 text-center text-xs font-bold text-muted-foreground'>
@@ -113,19 +142,12 @@ export default function DefenseImportReportDialog({ open, onClose, report }: Pro
 
                 {/* After side */}
                 <div className='flex-1 min-w-0'>
-                  {after ? (
-                    <NodeChampion item={after} />
-                  ) : error ? (
-                    <span className='text-xs text-destructive truncate' title={error}>
-                      <XCircle className='w-3 h-3 inline mr-0.5' />
-                      {error}
-                    </span>
-                  ) : (
-                    <span className='text-xs text-muted-foreground italic'>
-                      <Minus className='w-3 h-3 inline mr-0.5' />
-                      {ti.removed}
-                    </span>
-                  )}
+                  <AfterCell
+                    after={after}
+                    error={error}
+                    emptyLabel={ti.empty}
+                    removedLabel={ti.removed}
+                  />
                 </div>
               </div>
             );
@@ -141,7 +163,7 @@ export default function DefenseImportReportDialog({ open, onClose, report }: Pro
 }
 
 /** Compact champion cell: portrait 40×40 + name + rarity + owner */
-function NodeChampion({ item }: { item: DefenseReportItem }) {
+function NodeChampion({ item }: Readonly<{ item: DefenseReportItem }>) {
   const classColors = getClassColors(item.champion_class ?? 'Unknown');
 
   return (
