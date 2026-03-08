@@ -41,11 +41,11 @@ function RosterUpgradeSection({
   selectedAccountId,
   allianceId,
   refreshKey,
-}: {
+}: Readonly<{
   selectedAccountId: string | null;
   allianceId: string | null;
   refreshKey: number;
-}) {
+}>) {
   const { getRoleFor } = useAllianceRole();
   const role = allianceId ? getRoleFor(allianceId) : undefined;
   return (
@@ -58,7 +58,7 @@ function RosterUpgradeSection({
 }
 
 export default function RosterPage() {
-  const { data: session, status: authStatus } = useSession();
+  const { status: authStatus } = useSession();
   const { t } = useI18n();
 
   // Game accounts
@@ -88,7 +88,6 @@ export default function RosterPage() {
 
   // Upgrade
   const [upgradeTarget, setUpgradeTarget] = useState<RosterEntry | null>(null);
-  const [upgrading, setUpgrading] = useState(false);
 
   // Ascend
   const [ascendTarget, setAscendTarget] = useState<RosterEntry | null>(null);
@@ -238,7 +237,6 @@ export default function RosterPage() {
     if (!upgradeTarget || !selectedAccountId) return;
     const nextRarity = getNextRarity(upgradeTarget.rarity);
     if (!nextRarity) return;
-    setUpgrading(true);
     try {
       await upgradeChampionRank(upgradeTarget.id);
       const updated = await getRoster(selectedAccountId);
@@ -252,7 +250,6 @@ export default function RosterPage() {
     } catch (e: any) {
       toast.error(e.message || t.roster.errors.upgradeError);
     } finally {
-      setUpgrading(false);
       setUpgradeTarget(null);
     }
   }, [upgradeTarget, selectedAccountId]);
@@ -290,7 +287,7 @@ export default function RosterPage() {
       const entries = roster.filter((r) => r.rarity === rarity);
       if (entries.length > 0) groups[rarity] = entries;
     }
-    return Object.entries(groups) as [string, RosterEntry[]][];
+    return Object.entries(groups);
   })();
 
   if (authStatus === 'loading' || loadingAccounts) {
