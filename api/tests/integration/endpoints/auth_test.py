@@ -35,6 +35,10 @@ app.dependency_overrides[get_session] = get_test_session
 REGEX_BEARER = re.compile(r"(eyJ[\da-zA-Z]+\.){2}[\w-]+")
 TOKEN_TYPE = "bearer"
 ENDPOINT_SESSION = "/auth/session"
+ENDPOINT_DISCORD = "/auth/discord"
+ENDPOINT_REFRESH = "/auth/refresh"
+ENDPOINT_DEV_USERS = "/auth/dev/users"
+ENDPOINT_DEV_LOGIN = "/auth/dev-login"
 
 # --- Utility functions ---
 def _create_jwt(
@@ -120,7 +124,7 @@ class TestGetSession:
     @pytest.mark.asyncio
     async def test_token_for_nonexistent_user_returns_error(self):
         """Token with a login that doesn't exist in DB."""
-        headers = create_auth_headers(login="ghost_user")
+        headers = create_auth_headers()
         response = await execute_get_request(ENDPOINT_SESSION, headers=headers)
         assert response.status_code == 401
 
@@ -195,14 +199,156 @@ class TestDiscordLogin:
 
     @pytest.mark.asyncio
     async def test_missing_access_token_returns_400(self):
-        response = await execute_post_request("/auth/discord", payload={})
+        response = await execute_post_request(ENDPOINT_DISCORD, payload={})
         assert response.status_code == 400
 
     @pytest.mark.asyncio
     async def test_empty_access_token_returns_error(self):
         """An empty access_token should not succeed."""
         response = await execute_post_request(
-            "/auth/discord", payload={"access_token": ""}
+            ENDPOINT_DISCORD, payload={"access_token": ""}
         )
         # Discord API call will fail → 401 or 502
         assert response.status_code in (401, 502)
+
+    @pytest.mark.asyncio
+    async def test_valid_access_token_returns_tokens(self):
+        """A non-empty access_token succeeds via the mocked Discord verifier."""
+        response = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["token_type"] == TOKEN_TYPE
+        assert REGEX_BEARER.match(body["access_token"])
+        assert REGEX_BEARER.match(body["refresh_token"])
+
+
+# =========================================================================
+# POST /auth/refresh — refresh token exchange
+# =========================================================================
+
+
+class TestRefreshToken:
+    """POST /auth/refresh — exchange a refresh token for new tokens."""
+
+    @pytest.mark.asyncio
+    async def test_valid_refresh_returns_new_tokens(self):
+        """A valid refresh token yields a fresh access + refresh pair."""
+        await push_one_user()
+        user = get_generic_user(is_base_id=True)
+        refresh_token = JWTService.create_refresh_token(user)
+
+        response = await execute_post_request(
+            ENDPOINT_REFRESH, payload={"refresh_token": refresh_token}
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["token_type"] == TOKEN_TYPE
+        assert REGEX_BEARER.match(body["access_token"])
+        assert REGEX_BEARER.match(body["refresh_token"])
+
+    @pytest.mark.asyncio
+    async def test_access_token_as_refresh_returns_error(self):
+        """An access token must not be accepted as a refresh token."""
+        await push_one_user()
+        access_token = _create_jwt()
+
+        response = await execute_post_request(
+            ENDPOINT_REFRESH, payload={"refresh_token": access_token}
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_garbage_refresh_returns_error(self):
+        response = await execute_post_request(
+            ENDPOINT_REFRESH, payload={"refresh_token": "not.a.token"}
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_expired_refresh_returns_error(self):
+        payload = {"user_id": str(USER_ID), "type": "refresh", "exp": 0}
+        token = pyjwt.encode(payload, SECRET.SECRET_KEY, algorithm="HS256")
+        response = await execute_post_request(
+            ENDPOINT_REFRESH, payload={"refresh_token": token}
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_refresh_for_deleted_user_returns_error(self):
+        user = get_generic_user(is_base_id=True, deleted_at=datetime.now())
+        await load_objects([user])
+        refresh_token = JWTService.create_refresh_token(user)
+        response = await execute_post_request(
+            ENDPOINT_REFRESH, payload={"refresh_token": refresh_token}
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_missing_refresh_field_returns_error(self):
+        response = await execute_post_request(
+            ENDPOINT_REFRESH, payload={}
+        )
+        assert response.status_code in (400, 422)
+
+
+# =========================================================================
+# Dev-only endpoints
+# =========================================================================
+
+
+class TestDevEndpoints:
+    """GET /auth/dev/users and POST /auth/dev-login — available only in non-prod."""
+
+    @pytest.mark.asyncio
+    async def test_dev_list_users_returns_all(self):
+        """List all users via the dev endpoint."""
+        await push_one_user()
+        response = await execute_get_request(ENDPOINT_DEV_USERS)
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) >= 1
+        user_entry = body[0]
+        assert "id" in user_entry
+        assert "login" in user_entry
+        assert "email" in user_entry
+        assert "role" in user_entry
+
+    @pytest.mark.asyncio
+    async def test_dev_list_users_empty_db(self):
+        """No users in the DB → empty list."""
+        response = await execute_get_request(ENDPOINT_DEV_USERS)
+        assert response.status_code == 200
+        assert response.json() == []
+
+    @pytest.mark.asyncio
+    async def test_dev_login_valid_user(self):
+        """Dev login with a valid user_id returns token pair."""
+        await push_one_user()
+        response = await execute_post_request(
+            ENDPOINT_DEV_LOGIN, payload={"user_id": str(USER_ID)}
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["token_type"] == TOKEN_TYPE
+        assert REGEX_BEARER.match(body["access_token"])
+        assert REGEX_BEARER.match(body["refresh_token"])
+
+    @pytest.mark.asyncio
+    async def test_dev_login_nonexistent_user(self):
+        """Dev login with a non-existent user_id should fail."""
+        response = await execute_post_request(
+            ENDPOINT_DEV_LOGIN, payload={"user_id": str(USER_ID)}
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_dev_login_deleted_user(self):
+        """Dev login with a deleted user should fail."""
+        user = get_generic_user(is_base_id=True, deleted_at=datetime.now())
+        await load_objects([user])
+        response = await execute_post_request(
+            ENDPOINT_DEV_LOGIN, payload={"user_id": str(USER_ID)}
+        )
+        assert response.status_code == 401

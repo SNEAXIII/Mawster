@@ -17,22 +17,21 @@ from tests.utils.utils_client import (
 )
 from tests.utils.utils_constant import (
     USER_ID,
-    USER_LOGIN,
-    USER_EMAIL,
     USER2_ID,
     USER2_LOGIN,
     USER2_EMAIL,
-    ADMIN_LOGIN,
-    ADMIN_EMAIL,
     DISCORD_ID_2,
 )
 from tests.utils.utils_db import get_test_session, load_objects
 
 app.dependency_overrides[get_session] = get_test_session
 
-ADMIN_HEADERS = create_auth_headers(login=ADMIN_LOGIN, user_id=str(USER_ID), email=ADMIN_EMAIL, role=Roles.ADMIN)
-SUPER_ADMIN_HEADERS = create_auth_headers(login=ADMIN_LOGIN, user_id=str(USER_ID), email=ADMIN_EMAIL, role=Roles.SUPER_ADMIN)
-USER_HEADERS = create_auth_headers(login=USER_LOGIN, user_id=str(USER_ID), email=USER_EMAIL, role=Roles.USER)
+ADMIN_HEADERS = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
+SUPER_ADMIN_HEADERS = create_auth_headers(user_id=str(USER_ID), role=Roles.SUPER_ADMIN)
+USER_HEADERS = create_auth_headers(user_id=str(USER_ID), role=Roles.USER)
+
+ADMIN_USERS_URL = "/admin/users"
+ADMIN2_EMAIL = "admin2@gmail.com"
 
 
 # ---------------------------------------------------------------------------
@@ -62,7 +61,7 @@ async def _setup_user(
 _FAKE_ID = str(uuid.uuid4())
 
 _ADMIN_USER_ROUTES = [
-    ("GET", "/admin/users", None, "list_users"),
+    ("GET", ADMIN_USERS_URL, None, "list_users"),
     ("PATCH", f"/admin/users/disable/{_FAKE_ID}", {}, "disable"),
     ("PATCH", f"/admin/users/enable/{_FAKE_ID}", {}, "enable"),
     ("DELETE", f"/admin/users/delete/{_FAKE_ID}", None, "delete"),
@@ -105,7 +104,7 @@ class TestGetUsers:
         await push_one_admin()
         await _setup_user()
 
-        response = await execute_get_request("/admin/users", headers=ADMIN_HEADERS)
+        response = await execute_get_request(ADMIN_USERS_URL, headers=ADMIN_HEADERS)
         assert response.status_code == 200
         body = response.json()
         assert body["total_users"] >= 2
@@ -131,7 +130,7 @@ class TestGetUsers:
     async def test_response_structure(self, session):
         await push_one_admin()
         await _setup_user()
-        response = await execute_get_request("/admin/users", headers=ADMIN_HEADERS)
+        response = await execute_get_request(ADMIN_USERS_URL, headers=ADMIN_HEADERS)
         assert response.status_code == 200
         body = response.json()
         assert "users" in body
@@ -179,7 +178,7 @@ class TestDisableUser:
             target_id = user.id
         elif scenario == "is_admin":
             user = await _setup_user(
-                user_id=uuid.uuid4(), login="admin2", email="admin2@gmail.com",
+                user_id=uuid.uuid4(), login="admin2", email=ADMIN2_EMAIL,
                 discord_id="discord_admin2", role=Roles.ADMIN,
             )
             target_id = user.id
@@ -278,7 +277,7 @@ class TestAdminDeleteUser:
             target_id = user.id
         elif scenario == "is_admin":
             user = await _setup_user(
-                user_id=uuid.uuid4(), login="admin2", email="admin2@gmail.com",
+                user_id=uuid.uuid4(), login="admin2", email=ADMIN2_EMAIL,
                 discord_id="discord_admin2", role=Roles.ADMIN,
             )
             target_id = user.id
@@ -334,7 +333,7 @@ class TestPromoteUser:
 
         if scenario == "already_admin":
             user = await _setup_user(
-                user_id=uuid.uuid4(), login="admin2", email="admin2@gmail.com",
+                user_id=uuid.uuid4(), login="admin2", email=ADMIN2_EMAIL,
                 discord_id="discord_admin2", role=Roles.ADMIN,
             )
             target_id = user.id
@@ -368,7 +367,7 @@ class TestSuperAdminAccess:
     async def test_super_admin_can_access_admin_routes(self, session):
         """Super admin can list users via /admin/users."""
         await push_one_super_admin()
-        response = await execute_get_request("/admin/users", headers=SUPER_ADMIN_HEADERS)
+        response = await execute_get_request(ADMIN_USERS_URL, headers=SUPER_ADMIN_HEADERS)
         assert response.status_code == 200
 
     @pytest.mark.asyncio

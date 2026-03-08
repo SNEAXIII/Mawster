@@ -22,8 +22,6 @@ from tests.utils.utils_client import (
 )
 from tests.utils.utils_constant import (
     USER_ID,
-    USER_LOGIN,
-    USER_EMAIL,
     USER2_ID,
     USER2_LOGIN,
     USER2_EMAIL,
@@ -38,10 +36,11 @@ from tests.utils.utils_db import get_test_session, load_objects
 
 app.dependency_overrides[get_session] = get_test_session
 
-HEADERS_USER1 = create_auth_headers(login=USER_LOGIN, user_id=str(USER_ID), email=USER_EMAIL)
-HEADERS_USER2 = create_auth_headers(login=USER2_LOGIN, user_id=str(USER2_ID), email=USER2_EMAIL)
+HEADERS_USER1 = create_auth_headers(user_id=str(USER_ID))
+HEADERS_USER2 = create_auth_headers(user_id=str(USER2_ID))
 
 ENDPOINT = "/alliances"
+USER3_EMAIL = "user3@gmail.com"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -255,7 +254,7 @@ class TestInviteMember:
         await push_officer(alliance, officer_acc)
 
         u3_id = uuid.uuid4()
-        u3 = get_generic_user(login="user3", email="user3@gmail.com")
+        u3 = get_generic_user(login="user3", email=USER3_EMAIL)
         u3.id = u3_id
         u3.discord_id = "discord_789"
         await load_objects([u3])
@@ -506,7 +505,7 @@ class TestCancelInvitation:
         await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         u3_id = uuid.uuid4()
-        u3 = get_generic_user(login="user3", email="user3@gmail.com")
+        u3 = get_generic_user(login="user3", email=USER3_EMAIL)
         u3.id = u3_id
         u3.discord_id = "discord_789"
         await load_objects([u3])
@@ -603,7 +602,7 @@ class TestRemoveMember:
 
         # Add a third user as regular member
         u3_id = uuid.uuid4()
-        u3 = get_generic_user(login="user3", email="user3@gmail.com")
+        u3 = get_generic_user(login="user3", email=USER3_EMAIL)
         u3.id = u3_id
         u3.discord_id = "discord_789"
         await load_objects([u3])
@@ -625,7 +624,7 @@ class TestRemoveMember:
         await push_officer(alliance, officer1_acc)
 
         u3_id = uuid.uuid4()
-        u3 = get_generic_user(login="user3", email="user3@gmail.com")
+        u3 = get_generic_user(login="user3", email=USER3_EMAIL)
         u3.id = u3_id
         u3.discord_id = "discord_789"
         await load_objects([u3])
@@ -646,7 +645,7 @@ class TestRemoveMember:
         await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         u3_id = uuid.uuid4()
-        u3 = get_generic_user(login="user3", email="user3@gmail.com")
+        u3 = get_generic_user(login="user3", email=USER3_EMAIL)
         u3.id = u3_id
         u3.discord_id = "discord_789"
         await load_objects([u3])
@@ -697,7 +696,7 @@ class TestAddOfficer:
         await push_officer(alliance, officer_acc)
 
         u3_id = uuid.uuid4()
-        u3 = get_generic_user(login="user3", email="user3@gmail.com")
+        u3 = get_generic_user(login="user3", email=USER3_EMAIL)
         u3.id = u3_id
         u3.discord_id = "discord_789"
         await load_objects([u3])

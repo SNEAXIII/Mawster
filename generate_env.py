@@ -136,8 +136,8 @@ def main() -> None:
     # db.env
     write_env(ROOT / "db.env", [
         f"MARIADB_USER={db_user}",
-        f"MARIADB_PASSWORD={db_password}",
-        f"MARIADB_ROOT_PASSWORD={db_root_pw}",
+        f"MARIADB_PASSWORD={db_password}",  # NOSONAR — user-provided input, not a hardcoded secret
+        f"MARIADB_ROOT_PASSWORD={db_root_pw}",  # NOSONAR — user-provided input, not a hardcoded secret
         f"MARIADB_PORT={db_port}",
         f"MARIADB_DATABASE={db_name}",
     ])
@@ -146,8 +146,8 @@ def main() -> None:
     write_env(ROOT / "api.env", [
         f"SECRET_KEY={api_secret_key}",
         f"MARIADB_USER={db_user}",
-        f"MARIADB_PASSWORD={db_password}",
-        f"MARIADB_ROOT_PASSWORD={db_root_pw}",
+        f"MARIADB_PASSWORD={db_password}",  # NOSONAR — user-provided input, not a hardcoded secret
+        f"MARIADB_ROOT_PASSWORD={db_root_pw}",  # NOSONAR — user-provided input, not a hardcoded secret
         f"MARIADB_PORT={db_port}",
         f"MARIADB_DATABASE={db_name}",
         f"ALGORITHM={algo}",

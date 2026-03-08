@@ -30,11 +30,13 @@ JSON_OUTPUT = Path(__file__).resolve().parent.parent / "scripts" / "champions.js
 
 VALID_CLASSES = {c.value for c in ChampionClass}
 
+REVISION_LATEST = "/revision/latest"
+
 
 def clean_image_url(url: str) -> str:
     """Strip Fandom's thumbnail suffixes to get the original full-size image."""
-    if "/revision/latest" in url:
-        return url.split("/revision/latest")[0] + "/revision/latest"
+    if REVISION_LATEST in url:
+        return url.split(REVISION_LATEST)[0] + REVISION_LATEST
     return url
 
 
@@ -61,6 +63,116 @@ def download_image(url: str, filepath: Path) -> bool:
         return False
 
 
+def _find_champion_tables(soup):
+    """Try multiple strategies to find champion tables in the wiki page."""
+    # Strategy 1: table with class "sortable"
+    tables = soup.find_all("table", class_="sortable")
+    print(f"  [DEBUG] Tables with class='sortable': {len(tables)}")
+    if tables:
+        return tables
+
+    # Strategy 2: tables inside #mw-content-text
+    content_div = soup.find("div", id="mw-content-text")
+    if content_div:
+        parser_output = content_div.find("div", class_="mw-parser-output")
+        if parser_output:
+            tables = parser_output.find_all("table", recursive=False)
+            print(f"  [DEBUG] Tables in mw-parser-output: {len(tables)}")
+        else:
+            tables = content_div.find_all("table")
+            print(f"  [DEBUG] Tables in mw-content-text: {len(tables)}")
+    else:
+        tables = soup.find_all("table")
+        print(f"  [DEBUG] All tables in page: {len(tables)}")
+
+    if tables:
+        return tables
+
+    # Strategy 3: any table with class containing "wiki"
+    tables = soup.find_all("table", class_=re.compile(r"wiki|article|fandom", re.I))
+    print(f"  [DEBUG] Tables with wiki/article/fandom class: {len(tables)}")
+    return tables
+
+
+def _extract_champion_name(cells):
+    """Extract champion name from row cells. Returns name or empty string."""
+    name_cell = cells[2]
+    name_link = name_cell.find("a")
+    if name_link:
+        name = name_link.get("title", "").strip()
+        if not name:
+            name = name_link.get_text(strip=True)
+    else:
+        name = name_cell.get_text(strip=True)
+    return name
+
+
+def _resolve_champion_class(cells):
+    """Resolve champion class from cell. Returns class string or None."""
+    class_cell = cells[4]
+    class_text = class_cell.get_text(separator=" ", strip=True)
+
+    class_link = class_cell.find("a")
+    if class_link:
+        class_title = class_link.get("title", "")
+        if class_title in VALID_CLASSES:
+            class_text = class_title
+
+    class_matches = [c for c in VALID_CLASSES if c in class_text]
+    if len(class_matches) != 1:
+        return None
+    return class_matches[0]
+
+
+def _extract_portrait_url(cells):
+    """Extract portrait URL from portrait cell. Returns URL or None."""
+    portrait_cell = cells[0]
+    portrait_img = portrait_cell.find("img")
+    if not portrait_img:
+        return None
+    portrait_url = portrait_img.get("data-src") or portrait_img.get("src")
+    if portrait_url:
+        portrait_url = clean_image_url(portrait_url)
+    if not portrait_url or "File:" in portrait_cell.get_text():
+        return None
+    return portrait_url
+
+
+def _parse_champion_row(cells, seen_names, champions, row_idx):
+    """Parse a single table row and append champion if valid."""
+    name = _extract_champion_name(cells)
+    if not name or name in seen_names:
+        return
+
+    if len(champions) < 3:
+        print(f"  [DEBUG] Row {row_idx}: name=\'{name}\', cells={len(cells)}")
+        for ci, c in enumerate(cells):
+            print(f"    cell[{ci}] text=\'{c.get_text(strip=True)[:50]}\'")
+
+    champion_class = _resolve_champion_class(cells)
+    if champion_class is None:
+        class_text = cells[4].get_text(separator=" ", strip=True)
+        print(f"  [SKIP] {name}: no single valid class ({class_text})")
+        return
+
+    portrait_url = _extract_portrait_url(cells)
+    if portrait_url is None:
+        print(f"  [SKIP] {name}: no valid portrait image")
+        return
+
+    release_date = cells[3].get_text(strip=True)
+
+    seen_names.add(name)
+    champions.append(
+        {
+            "name": name,
+            "champion_class": champion_class,
+            "release_date": release_date,
+            "portrait_url": portrait_url,
+        }
+    )
+
+
 def scrape_champions() -> list[dict]:
     """Scrape the wiki and return a list of champion dicts."""
     from curl_cffi import requests as cffi_requests
@@ -76,31 +188,7 @@ def scrape_champions() -> list[dict]:
     champions = []
     seen_names = set()
 
-    # --- Try multiple strategies to find the champions table ---
-    # Strategy 1: table with class "sortable"
-    tables = soup.find_all("table", class_="sortable")
-    print(f"  [DEBUG] Tables with class='sortable': {len(tables)}")
-
-    # Strategy 2: tables inside #mw-content-text
-    if not tables:
-        content_div = soup.find("div", id="mw-content-text")
-        if content_div:
-            parser_output = content_div.find("div", class_="mw-parser-output")
-            if parser_output:
-                tables = parser_output.find_all("table", recursive=False)
-                print(f"  [DEBUG] Tables in mw-parser-output: {len(tables)}")
-            else:
-                tables = content_div.find_all("table")
-                print(f"  [DEBUG] Tables in mw-content-text: {len(tables)}")
-        else:
-            tables = soup.find_all("table")
-            print(f"  [DEBUG] All tables in page: {len(tables)}")
-
-    # Strategy 3: any table with class containing "wiki"
-    if not tables:
-        tables = soup.find_all("table", class_=re.compile(r"wiki|article|fandom", re.I))
-        print(f"  [DEBUG] Tables with wiki/article/fandom class: {len(tables)}")
-
+    tables = _find_champion_tables(soup)
     if not tables:
         print("  [ERROR] No tables found at all!")
         print(f"  [DEBUG] Page start:\n{resp.text[:2000]}")
@@ -122,72 +210,7 @@ def scrape_champions() -> list[dict]:
             cells = row.find_all("td")
             if len(cells) < 5:
                 continue
-
-            # Cell 0: portrait image
-            # Cell 1: featured image
-            # Cell 2: champion name (link)
-            # Cell 3: release date
-            # Cell 4: class
-
-            name_cell = cells[2]
-            name_link = name_cell.find("a")
-            if name_link:
-                name = name_link.get("title", "").strip()
-                if not name:
-                    name = name_link.get_text(strip=True)
-            else:
-                name = name_cell.get_text(strip=True)
-
-            if not name or name in seen_names:
-                continue
-
-            if len(champions) < 3:
-                print(f"  [DEBUG] Row {row_idx}: name='{name}', cells={len(cells)}")
-                for ci, c in enumerate(cells):
-                    print(f"    cell[{ci}] text='{c.get_text(strip=True)[:50]}'")
-
-            class_cell = cells[4]
-            class_text = class_cell.get_text(separator=" ", strip=True)
-
-            class_link = class_cell.find("a")
-            if class_link:
-                class_title = class_link.get("title", "")
-                if class_title in VALID_CLASSES:
-                    class_text = class_title
-
-            class_matches = [c for c in VALID_CLASSES if c in class_text]
-            if len(class_matches) != 1:
-                print(
-                    f"  [SKIP] {name}: {'multiple classes' if len(class_matches) > 1 else 'no valid class'} ({class_text})"
-                )
-                continue
-
-            champion_class = class_matches[0]
-
-            date_cell = cells[3]
-            release_date = date_cell.get_text(strip=True)
-
-            portrait_cell = cells[0]
-            portrait_img = portrait_cell.find("img")
-            portrait_url = None
-            if portrait_img:
-                portrait_url = portrait_img.get("data-src") or portrait_img.get("src")
-                if portrait_url:
-                    portrait_url = clean_image_url(portrait_url)
-
-            if not portrait_url or "File:" in portrait_cell.get_text():
-                print(f"  [SKIP] {name}: no valid portrait image")
-                continue
-
-            seen_names.add(name)
-            champions.append(
-                {
-                    "name": name,
-                    "champion_class": champion_class,
-                    "release_date": release_date,
-                    "portrait_url": portrait_url,
-                }
-            )
+            _parse_champion_row(cells, seen_names, champions, row_idx)
 
     print(f"\n  [DEBUG] Total champions collected: {len(champions)}")
     return champions

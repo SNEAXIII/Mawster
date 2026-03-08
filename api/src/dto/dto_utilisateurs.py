@@ -27,8 +27,8 @@ class UserAdminViewSingleUser(UserBaseResponse):
     id: uuid.UUID
     created_at: datetime
     last_login_date: Optional[datetime] = Field(default=None)
-    disabled_at: Optional[datetime]
-    deleted_at: Optional[datetime]
+    disabled_at: Optional[datetime] = None
+    deleted_at: Optional[datetime] = None
 
 
 class UserAdminViewAllUsers(BaseModel):

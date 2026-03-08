@@ -1,4 +1,4 @@
-import uuid
+﻿import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -15,6 +15,9 @@ from src.dto.dto_upgrade_request import (
     UpgradeRequestCreate,
     UpgradeRequestResponse,
 )
+from src.Messages.champion_user_messages import CHAMPION_USER_NOT_FOUND, NOT_YOUR_CHAMPION
+from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND
+from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.models import User
 from src.models.GameAccount import GameAccount
 from src.services.AuthService import AuthService
@@ -48,7 +51,7 @@ async def create_champion_user(
     The game account must belong to the current user."""
     game_account = await GameAccountService.get_game_account(session, body.game_account_id)
     if game_account is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game account not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
     if game_account.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -82,7 +85,7 @@ async def bulk_add_champions(
     If a champion+rarity already exists, updates the signature."""
     game_account = await GameAccountService.get_game_account(session, body.game_account_id)
     if game_account is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game account not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
     if game_account.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -124,7 +127,7 @@ async def get_roster_by_game_account(
     must be in the same alliance as the target game account."""
     game_account = await GameAccountService.get_game_account(session, game_account_id)
     if game_account is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game account not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
     if game_account.user_id != current_user.id:
         # Check if current user is in the same alliance
         is_ally = False
@@ -161,10 +164,10 @@ async def toggle_preferred_attacker(
     Only the owner of the game account can toggle this flag."""
     champion_user = await ChampionUserService.get_champion_user(session, champion_user_id)
     if champion_user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)
     game_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
     if game_account is None or game_account.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_CHAMPION)
     champion_user.is_preferred_attacker = not champion_user.is_preferred_attacker
     session.add(champion_user)
     await session.commit()
@@ -189,11 +192,11 @@ async def get_champion_user(
     """Get a specific champion user entry."""
     champion_user = await ChampionUserService.get_champion_user(session, champion_user_id)
     if champion_user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)
     # Verify ownership via game account
     game_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
     if game_account is None or game_account.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_CHAMPION)
     return ChampionUserResponse.model_validate(champion_user)
 
 
@@ -210,10 +213,10 @@ async def update_champion_user(
     """Update a champion user entry (rarity, signature)."""
     champion_user = await ChampionUserService.get_champion_user(session, champion_user_id)
     if champion_user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)
     game_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
     if game_account is None or game_account.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_CHAMPION)
     updated = await ChampionUserService.update_champion_user(
         session=session,
         champion_user=champion_user,
@@ -235,10 +238,10 @@ async def delete_champion_user(
     """Delete a champion from a roster."""
     champion_user = await ChampionUserService.get_champion_user(session, champion_user_id)
     if champion_user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)
     game_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
     if game_account is None or game_account.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_CHAMPION)
     await ChampionUserService.delete_champion_user(session, champion_user)
     audit_log("roster.delete_champion", user_id=str(current_user.id), detail=f"champion_user_id={champion_user_id}")
 
@@ -252,13 +255,13 @@ async def upgrade_champion_rank(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Upgrade a champion to the next rank (e.g. 7r2 → 7r3)."""
+    """Upgrade a champion to the next rank (e.g. 7r2 â†’ 7r3)."""
     champion_user = await ChampionUserService.get_champion_user(session, champion_user_id)
     if champion_user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)
     game_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
     if game_account is None or game_account.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_CHAMPION)
     upgraded = await ChampionUserService.upgrade_champion_rank(session, champion_user)
     audit_log("roster.upgrade_rank", user_id=str(current_user.id), detail=f"champion_user_id={champion_user_id}")
     return ChampionUserResponse.model_validate(upgraded)
@@ -273,19 +276,52 @@ async def ascend_champion(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Ascend a champion to the next ascension level (0 → 1 → 2)."""
+    """Ascend a champion to the next ascension level (0 â†’ 1 â†’ 2)."""
     champion_user = await ChampionUserService.get_champion_user(session, champion_user_id)
     if champion_user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)
     game_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
     if game_account is None or game_account.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your champion")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_CHAMPION)
     ascended = await ChampionUserService.ascend_champion(session, champion_user)
     audit_log("roster.ascend_champion", user_id=str(current_user.id), detail=f"champion_user_id={champion_user_id}")
     return ChampionUserResponse.model_validate(ascended)
 
 
-# ─── Upgrade Request Endpoints ────────────────────────────
+# --- Upgrade Request Helpers ---
+
+
+async def _assert_alliance_officer(
+    session, game_account, current_user_id,
+):
+    """Verify that the current user is an officer/owner in the target's alliance."""
+    if game_account.alliance_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Target is not in an alliance",
+        )
+    from src.services.AllianceService import AllianceService
+
+    alliance = await AllianceService._load_alliance_with_relations(
+        session, game_account.alliance_id
+    )
+    if alliance is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+    await AllianceService._assert_is_owner_or_officer(session, alliance, current_user_id)
+
+
+def _pick_requester_account(
+    user_accounts, target_alliance_id,
+):
+    """Pick the best requester game account (prefer same alliance, fallback to first)."""
+    if target_alliance_id:
+        for acc in user_accounts:
+            if acc.alliance_id == target_alliance_id:
+                return acc.id
+    return user_accounts[0].id if user_accounts else None
+
+
+# â”€â”€â”€ Upgrade Request Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @champion_user_controller.post(
     "/upgrade-requests",
@@ -301,11 +337,11 @@ async def create_upgrade_request(
     Officers/owners can request for alliance members; anyone can request for themselves."""
     champion_user = await ChampionUserService.get_champion_user(session, body.champion_user_id)
     if champion_user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)
 
     game_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
     if game_account is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game account not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
 
     # Determine the requester's game account (must be in same alliance or self)
     user_accounts_result = await session.exec(
@@ -313,33 +349,10 @@ async def create_upgrade_request(
     )
     user_accounts = user_accounts_result.all()
 
-    is_self = game_account.user_id == current_user.id
+    if game_account.user_id != current_user.id:
+        await _assert_alliance_officer(session, game_account, current_user.id)
 
-    if not is_self:
-        # Must be in same alliance and be officer/owner
-        if game_account.alliance_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Target is not in an alliance",
-            )
-        from src.services.AllianceService import AllianceService
-        alliance = await AllianceService._load_alliance_with_relations(
-            session, game_account.alliance_id
-        )
-        if alliance is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
-        await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
-
-    # Pick the requester game account (prefer one in the same alliance, fallback to primary)
-    requester_account_id = None
-    if game_account.alliance_id:
-        for acc in user_accounts:
-            if acc.alliance_id == game_account.alliance_id:
-                requester_account_id = acc.id
-                break
-    if requester_account_id is None:
-        # fallback: pick the first account
-        requester_account_id = user_accounts[0].id if user_accounts else None
+    requester_account_id = _pick_requester_account(user_accounts, game_account.alliance_id)
     if requester_account_id is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No game account found")
 
@@ -387,7 +400,7 @@ async def get_upgrade_requests_by_account(
     The account must belong to the current user or be in the same alliance."""
     game_account = await GameAccountService.get_game_account(session, game_account_id)
     if game_account is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game account not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
 
     if game_account.user_id != current_user.id:
         is_ally = False
@@ -428,7 +441,7 @@ async def cancel_upgrade_request(
     # Find the champion user to locate the alliance
     champion_user = await ChampionUserService.get_champion_user(session, upgrade_request.champion_user_id)
     if champion_user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)
 
     target_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
     if target_account is None or target_account.alliance_id is None:
@@ -437,7 +450,7 @@ async def cancel_upgrade_request(
     from src.services.AllianceService import AllianceService
     alliance = await AllianceService._load_alliance_with_relations(session, target_account.alliance_id)
     if alliance is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
 
     await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
     await UpgradeRequestService.cancel_upgrade_request(session, request_id)
