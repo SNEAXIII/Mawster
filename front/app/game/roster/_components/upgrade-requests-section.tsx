@@ -36,7 +36,7 @@ export default function UpgradeRequestsSection({
   externalRequests,
   onRequestCancelled,
   onInitiateCancel,
-}: UpgradeRequestsSectionProps) {
+}: Readonly<UpgradeRequestsSectionProps>) {
   const { t } = useI18n();
   const [internalRequests, setInternalRequests] = useState<UpgradeRequest[]>([]);
   const [loading, setLoading] = useState(false);

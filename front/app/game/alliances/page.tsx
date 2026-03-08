@@ -42,7 +42,6 @@ export default function AlliancesPage() {
   const { status } = useRequiredSession();
 
   const [alliances, setAlliances] = useState<Alliance[]>([]);
-  const [myAccounts, setMyAccounts] = useState<GameAccount[]>([]);
   const [eligibleOwners, setEligibleOwners] = useState<GameAccount[]>([]);
   const [eligibleMembers, setEligibleMembers] = useState<GameAccount[]>([]);
   const [hasAnyAccounts, setHasAnyAccounts] = useState(true);
@@ -113,7 +112,6 @@ export default function AlliancesPage() {
   const fetchMyAccounts = async () => {
     try {
       const data = await getMyGameAccounts();
-      setMyAccounts(data);
       setHasAnyAccounts(data.length > 0);
     } catch (err) {
       console.error(err);
