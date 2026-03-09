@@ -19,6 +19,7 @@ from src.Messages.jwt_messages import (
     INVALID_TOKEN_EXCEPTION,
 )
 from src.enums.Roles import Roles
+from src.enums.Token import Token
 from src.models import User
 from src.security.secrets import SECRET
 
@@ -87,7 +88,9 @@ class JWTService:
             raise CANT_FIND_USER_TOKEN_EXCEPTION
         # Only validate role for access tokens (refresh tokens don't carry role)
         token_type = data.get("type", "access")
-        if token_type == "access":
+        if data.get("type") not in  Token.__members__.values():
+            raise INVALID_TOKEN_EXCEPTION
+        if token_type == Token.ACCESS:
             if data.get("role") not in Roles.__members__.values():
                 raise INVALID_ROLE_EXCEPTION
         return data
@@ -96,6 +99,6 @@ class JWTService:
     def decode_refresh_token(cls, token: str) -> dict:
         """Decode and validate a refresh token. Raises if not a refresh token."""
         data = cls.decode_jwt(token)
-        if data.get("type") != "refresh":
+        if data.get("type") != Token.REFRESH:
             raise INVALID_TOKEN_EXCEPTION
         return data

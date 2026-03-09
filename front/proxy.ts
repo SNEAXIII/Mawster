@@ -14,12 +14,8 @@ export async function proxy(request: NextRequest) {
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
   const isTokenExpired = token?.expired || !token?.backendAuthenticated;
 
-  console.log('Middleware triggered for path:', pathname);
-  console.log('Token status:', isTokenExpired ? 'expired' : 'valid');
-
   // 1. Redirect authenticated users away from login/register pages
   if (token && !isTokenExpired && (pathname === '/login' || pathname === '/register')) {
-    console.log('Authenticated user accessing /login or /register, redirecting to /');
     return NextResponse.redirect(new URL('/', request.url));
   }
   // 2. Allow public paths without authentication
@@ -28,7 +24,6 @@ export async function proxy(request: NextRequest) {
   }
   // 3. Redirect unauthenticated users
   if (!token) {
-    console.log('No token detected, redirecting to /login');
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(loginUrl);
@@ -39,7 +34,6 @@ export async function proxy(request: NextRequest) {
   }
   // 5. Restrict admin paths to admin or super_admin users
   if (isPathMatching(pathname, ADMIN_PATHS) && token?.role !== 'admin' && token?.role !== 'super_admin') {
-    console.log('Non-admin user attempting to access admin path, redirecting to /');
     return NextResponse.redirect(new URL('/', request.url));
   }
   // 6. For all other cases, continue

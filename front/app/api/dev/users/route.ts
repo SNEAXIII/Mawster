@@ -12,7 +12,7 @@ export async function GET() {
   }
 
   try {
-    const res = await fetch(`${SERVER_API_URL}/auth/dev/users`);
+    const res = await fetch(`${SERVER_API_URL}/dev/users`);
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
   } catch (error) {

@@ -52,7 +52,7 @@ async def execute_get_request(
 
 
 async def execute_post_request(
-    route: str, payload: dict | list, headers: Optional[dict[str, str]] = None
+    route: str, payload: dict, headers: Optional[dict[str, str]] = None
 ) -> Response:
     async with get_test_client() as client:
         return await client.post(route, json=payload, headers=headers)
