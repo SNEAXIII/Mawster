@@ -18,6 +18,7 @@ from src.controllers.alliance_controller import alliance_controller
 from src.controllers.champion_user_controller import champion_user_controller
 from src.controllers.champion_controller import champion_controller, champion_read_controller
 from src.controllers.defense_controller import defense_controller
+from src.security import IS_PROD
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -50,6 +51,11 @@ app.include_router(champion_user_controller)
 app.include_router(champion_controller)
 app.include_router(champion_read_controller)
 app.include_router(defense_controller)
+
+if not IS_PROD:
+    from src.controllers.dev_controller import dev_controller
+    app.include_router(dev_controller)
+    logger.info("Dev controller enabled (MODE != prod)")
 
 # Mount static files for champion images
 static_dir = Path(__file__).resolve().parent / "static"

@@ -37,8 +37,9 @@ TOKEN_TYPE = "bearer"
 ENDPOINT_SESSION = "/auth/session"
 ENDPOINT_DISCORD = "/auth/discord"
 ENDPOINT_REFRESH = "/auth/refresh"
-ENDPOINT_DEV_USERS = "/auth/dev/users"
-ENDPOINT_DEV_LOGIN = "/auth/dev-login"
+ENDPOINT_DEV_SESSION = "/dev/session"
+ENDPOINT_DEV_USERS = "/dev/users"
+ENDPOINT_DEV_LOGIN = "/dev/login"
 
 # --- Utility functions ---
 def _create_jwt(
@@ -47,9 +48,9 @@ def _create_jwt(
     email=USER_EMAIL,
     role=Roles.USER,
 ) -> str:
-    """Create a valid JWT token for testing /auth/session."""
+    """Create a valid JWT token for testing."""
     return JWTService.create_token(
-        {"sub": login, "user_id": user_id, "email": email, "role": role}
+        {"sub": login, "user_id": user_id, "email": email, "role": role, "type": "access"}
     )
 
 
@@ -135,14 +136,14 @@ class TestGetSession:
 
 
 class TestPostSession:
-    """POST /auth/session — token in request body."""
+    """POST /dev/session — token in request body (dev only)."""
 
     @pytest.mark.asyncio
     async def test_valid_token_returns_200(self):
         await push_one_user()
         token = _create_jwt()
         response = await execute_post_request(
-            ENDPOINT_SESSION, payload={"token": token}
+            ENDPOINT_DEV_SESSION, payload={"token": token}
         )
         assert response.status_code == 200
         body = response.json()
@@ -152,20 +153,20 @@ class TestPostSession:
     @pytest.mark.asyncio
     async def test_malformed_token_returns_401(self):
         response = await execute_post_request(
-            ENDPOINT_SESSION, payload={"token": "garbage"}
+            ENDPOINT_DEV_SESSION, payload={"token": "garbage"}
         )
         assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_empty_token_returns_error(self):
         response = await execute_post_request(
-            ENDPOINT_SESSION, payload={"token": ""}
+            ENDPOINT_DEV_SESSION, payload={"token": ""}
         )
         assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_missing_token_field_returns_400(self):
-        response = await execute_post_request(ENDPOINT_SESSION, payload={})
+        response = await execute_post_request(ENDPOINT_DEV_SESSION, payload={})
         assert response.status_code == 400
 
     @pytest.mark.asyncio
@@ -174,7 +175,7 @@ class TestPostSession:
         await load_objects([user])
         token = _create_jwt()
         response = await execute_post_request(
-            ENDPOINT_SESSION, payload={"token": token}
+            ENDPOINT_DEV_SESSION, payload={"token": token}
         )
         assert response.status_code == 401
 
@@ -184,7 +185,7 @@ class TestPostSession:
         await load_objects([user])
         token = _create_jwt()
         response = await execute_post_request(
-            ENDPOINT_SESSION, payload={"token": token}
+            ENDPOINT_DEV_SESSION, payload={"token": token}
         )
         assert response.status_code == 401
 
@@ -299,7 +300,7 @@ class TestRefreshToken:
 
 
 class TestDevEndpoints:
-    """GET /auth/dev/users and POST /auth/dev-login — available only in non-prod."""
+    """GET /dev/users and POST /dev/login — available only in non-prod."""
 
     @pytest.mark.asyncio
     async def test_dev_list_users_returns_all(self):
