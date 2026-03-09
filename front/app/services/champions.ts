@@ -63,7 +63,7 @@ export const getChampions = async (
 ): Promise<FetchChampionsResponse> => {
   const qs = new URLSearchParams({ page: String(page), size: String(size) });
   if (championClass && championClass !== 'all') qs.set('champion_class', championClass);
-  if (search && search.trim()) qs.set('search', search.trim());
+  if (search?.trim()) qs.set('search', search.trim());
 
   const response = await fetch(`${PROXY}/champions?${qs}`, { headers: jsonHeaders });
   await throwOnError(response, 'Erreur lors de la récupération des champions');

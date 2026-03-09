@@ -41,7 +41,7 @@ declare namespace Cypress {
       token: string,
       name: string,
       tag: string,
-      ownerGameAccountId: string
+      ownerId: string
     ): Chainable<any>;
 
     /**

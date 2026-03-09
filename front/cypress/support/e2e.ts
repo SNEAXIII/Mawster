@@ -72,12 +72,12 @@ Cypress.Commands.add(
 
 Cypress.Commands.add(
   "apiCreateAlliance",
-  (token: string, name: string, tag: string, ownerGameAccountId: string) => {
+  (token: string, name: string, tag: string, ownerId: string) => {
     cy.request({
       method: "POST",
       url: `${BACKEND}/alliances`,
       headers: { Authorization: `Bearer ${token}` },
-      body: { name, tag, owner_game_account_id: ownerGameAccountId },
+      body: { name, tag, owner_id: ownerId },
     }).then((res) => {
       expect(res.status).to.eq(201);
       return res.body;
@@ -98,39 +98,17 @@ Cypress.Commands.add("uiLogin", (userName: string) => {
 function getProfile(
   accessToken: string
 ): Cypress.Chainable<{ id: string; login: string }> {
+  // Decode user_id from JWT since /auth/session doesn't include it
+  const payload = JSON.parse(atob(accessToken.split(".")[1]));
+  const userId: string = payload.user_id;
+
   return cy
     .request({
       method: "GET",
       url: `${BACKEND}/auth/session`,
       headers: { Authorization: `Bearer ${accessToken}` },
     })
-    .then((res) => ({ id: res.body.id, login: res.body.login }));
-}
-
-function promoteAndRelogin(
-  userId: string,
-  login: string
-): Cypress.Chainable<{ access_token: string; refresh_token: string; user_id: string; login: string }> {
-  return cy
-    .request({
-      method: "POST",
-      url: `${BACKEND}/dev/promote`,
-      body: { user_id: userId, role: "admin" },
-    })
-    .then(() => {
-      return cy
-        .request({
-          method: "POST",
-          url: `${BACKEND}/dev/login`,
-          body: { user_id: userId },
-        })
-        .then((loginRes) => ({
-          access_token: loginRes.body.access_token,
-          refresh_token: loginRes.body.refresh_token,
-          user_id: userId,
-          login,
-        }));
-    });
+    .then((res) => ({ id: userId, login: res.body.login }));
 }
 
 export function setupAdmin(
@@ -138,7 +116,22 @@ export function setupAdmin(
 ): Cypress.Chainable<{ access_token: string; refresh_token: string; user_id: string; login: string }> {
   return cy.registerUser(discordToken).then((tokens) => {
     return getProfile(tokens.access_token).then((profile) => {
-      return promoteAndRelogin(profile.id, profile.login);
+      return cy.request({
+        method: "POST",
+        url: `${BACKEND}/dev/promote`,
+        body: { user_id: profile.id, role: "admin" },
+      }).then(() => {
+        return cy.request({
+          method: "POST",
+          url: `${BACKEND}/dev/login`,
+          body: { user_id: profile.id },
+        }).then((loginRes) => ({
+          access_token: loginRes.body.access_token,
+          refresh_token: loginRes.body.refresh_token,
+          user_id: profile.id,
+          login: profile.login,
+        }));
+      });
     });
   });
 }

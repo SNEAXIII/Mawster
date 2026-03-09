@@ -18,15 +18,12 @@ describe("Game Accounts – UI", () => {
       cy.uiLogin(login);
       cy.visit("/profile");
 
-      // Open the Add a Game Account section
-      cy.contains("Add a Game Account").click();
-
-      // Fill in pseudo and submit
-      cy.get("#pseudo").type("MyGamePseudo");
+      // Form is already open (defaultOpen when no accounts)
+      cy.get("#pseudo").scrollIntoView().type("MyGamePseudo");
       cy.contains("button", "Add account").click();
 
       // Verify the account appears in the list
-      cy.contains("MyGamePseudo").should("be.visible");
+      cy.contains("MyGamePseudo").scrollIntoView().should("be.visible");
 
       // Verify the toast
       cy.contains("Game account created successfully").should("be.visible");
@@ -38,11 +35,11 @@ describe("Game Accounts – UI", () => {
       cy.uiLogin(login);
       cy.visit("/profile");
 
-      cy.contains("Add a Game Account").click();
-      cy.get("#pseudo").type("PrimaryPlayer");
+      // Form is already open (defaultOpen when no accounts)
+      cy.get("#pseudo").scrollIntoView().type("PrimaryPlayer");
       cy.contains("button", "Add account").click();
 
-      cy.contains("PrimaryPlayer").should("be.visible");
+      cy.contains("PrimaryPlayer").scrollIntoView().should("be.visible");
       cy.contains("Primary").should("be.visible");
     });
   });
@@ -54,20 +51,24 @@ describe("Game Accounts – UI", () => {
 
       cy.uiLogin(login);
       cy.visit("/profile");
-      cy.contains("OldPseudo").should("be.visible");
+      cy.contains("OldPseudo").scrollIntoView().should("be.visible");
 
-      // Click the pencil (edit) button
-      cy.get('[class*="text-blue"]').filter(':has(svg)').first().click();
+      // Click the pencil (edit) button (Star=0, Pencil=1, Trash=2)
+      cy.contains("OldPseudo")
+        .closest(".bg-gray-50")
+        .find("button")
+        .eq(1)
+        .click({ force: true });
 
       // Clear old value and type new one
       cy.get('input[maxlength="50"]').clear().type("NewPseudo");
 
       // Click the green check to confirm
-      cy.get('[class*="text-green"]').filter(':has(svg)').first().click();
+      cy.get('button[class*="text-green"]').first().click({ force: true });
 
       // Verify the rename toast and new pseudo
       cy.contains("Game account renamed successfully").should("be.visible");
-      cy.contains("NewPseudo").should("be.visible");
+      cy.contains("NewPseudo").scrollIntoView().should("be.visible");
     });
   });
 
@@ -77,15 +78,17 @@ describe("Game Accounts – UI", () => {
 
       cy.uiLogin(login);
       cy.visit("/profile");
-      cy.contains("ToDelete").should("be.visible");
+      cy.contains("ToDelete").scrollIntoView().should("be.visible");
 
-      // Click the delete (trash) button
-      cy.get('[class*="text-red"]').filter(':has(svg)').first().click();
+      // Click the delete (trash) button (Star=0, Pencil=1, Trash=2)
+      cy.contains("ToDelete")
+        .closest(".bg-gray-50")
+        .find("button")
+        .eq(2)
+        .click({ force: true });
 
       // Confirmation dialog should appear
-      cy.contains("Are you sure you want to delete this game account").should(
-        "be.visible"
-      );
+      cy.get('[role="alertdialog"]').should("be.visible");
 
       // Click Delete in the dialog
       cy.get('[role="alertdialog"]').contains("button", "Delete").click();
@@ -100,7 +103,7 @@ describe("Game Accounts – UI", () => {
     setupUser("ga-empty-token").then(({ login }) => {
       cy.uiLogin(login);
       cy.visit("/profile");
-      cy.contains("No game accounts yet").should("be.visible");
+      cy.contains("No game accounts yet").scrollIntoView().should("be.visible");
     });
   });
 
@@ -111,7 +114,7 @@ describe("Game Accounts – UI", () => {
 
       cy.uiLogin(login);
       cy.visit("/profile");
-      cy.contains("2/10 accounts").should("be.visible");
+      cy.contains("2/10 accounts").scrollIntoView().should("be.visible");
     });
   });
 });

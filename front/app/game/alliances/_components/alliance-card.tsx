@@ -71,8 +71,7 @@ export default function AllianceCard({
   onCancelInvitation,
 }: AllianceCardProps) {
   const { t } = useI18n();
-  const { isMine, isOwner, canManage } = useAllianceRole();
-  const userIsOwner = isOwner(alliance);
+  const { canManage } = useAllianceRole();
   const userCanManage = canManage(alliance);
   const officerCount = alliance.officers.length;
 
