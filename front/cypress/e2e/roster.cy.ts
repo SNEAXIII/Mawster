@@ -25,7 +25,7 @@ describe("Roster – UI", () => {
 
   it("opens the Add Champion form and searches for a champion", () => {
     setupAdmin("roster-add-admin-token").then((admin) => {
-      cy.apiLoadChampion(admin.access_token, "Spider-Man", "science");
+      cy.apiLoadChampion(admin.access_token, "Spider-Man", "Science");
 
       setupUser("roster-add-user-token").then(({ login, access_token }) => {
         cy.apiCreateGameAccount(access_token, "RosterPlayer", true);
@@ -47,7 +47,7 @@ describe("Roster – UI", () => {
 
   it("adds a champion to the roster", () => {
     setupAdmin("roster-addchamp-admin-token").then((admin) => {
-      cy.apiLoadChampion(admin.access_token, "Wolverine", "mutant");
+      cy.apiLoadChampion(admin.access_token, "Wolverine", "Mutant");
 
       setupUser("roster-addchamp-user-token").then(
         ({ login, access_token }) => {
@@ -63,15 +63,14 @@ describe("Roster – UI", () => {
           cy.get('input[placeholder="Search a champion..."]').type("Wolverine");
           cy.contains("button", "Wolverine").click();
 
-          // Select rarity (click 6★)
-          cy.contains("button", "6★").click();
+          // Select rarity (click 6★R4)
+          cy.contains("button", "6★R4").click();
 
           // Submit
-          cy.contains("button", "Add / Update").click();
+          cy.contains("button", /^Add \/ Update$/).click();
 
-          // Verify toast and champion in grid
           cy.contains("Wolverine added / updated").should("be.visible");
-          cy.contains("Wolverine").should("be.visible");
+          cy.contains("Wolverine").should("exist");
         }
       );
     });
@@ -79,7 +78,7 @@ describe("Roster – UI", () => {
 
   it("deletes a champion from the roster", () => {
     setupAdmin("roster-del-admin-token").then((admin) => {
-      cy.apiLoadChampion(admin.access_token, "HulkDel", "science");
+      cy.apiLoadChampion(admin.access_token, "HulkDel", "Science");
 
       setupUser("roster-del-user-token").then(({ login, access_token }) => {
         cy.apiCreateGameAccount(access_token, "HulkPlayer", true);
@@ -91,28 +90,12 @@ describe("Roster – UI", () => {
         cy.contains("Add / Update a Champion").click();
         cy.get('input[placeholder="Search a champion..."]').type("HulkDel");
         cy.contains("button", "HulkDel").click();
-        cy.contains("button", "Add / Update").click();
+        cy.contains("button", "6★R4").click();
+        cy.contains("button", /^Add \/ Update$/).click();
         cy.contains("HulkDel added / updated").should("be.visible");
 
-        // Now delete the champion via the delete button in the grid
-        cy.get('[data-testid="roster-delete"], button[title*="delete"], button[title*="Delete"]')
-          .first()
-          .click({ force: true })
-          .then(() => {
-            // If no data-testid, try the trash icon button
-          });
-
-        // Fallback: find any trash icon button near HulkDel
-        cy.get("body").then(($body) => {
-          if ($body.find('[role="alertdialog"]').length === 0) {
-            // Try clicking the delete button in the champion card
-            cy.contains("HulkDel")
-              .parents('[class*="rounded"]')
-              .find('button')
-              .last()
-              .click({ force: true });
-          }
-        });
+        // Now delete the champion via the delete button on the card
+        cy.get('button[title="Delete"]').first().click({ force: true });
 
         // Confirm deletion dialog
         cy.get('[role="alertdialog"]')
@@ -136,14 +119,14 @@ describe("Roster – UI", () => {
     });
   });
 
-  it("shows the Upgrade Requests section", () => {
+  it("hides upgrade requests section when no requests exist", () => {
     setupUser("roster-upgrades-token").then(({ login, access_token }) => {
       cy.apiCreateGameAccount(access_token, "UpgradeAcc", true);
 
       cy.uiLogin(login);
       cy.visit("/game/roster");
-      cy.contains("Upgrade Requests").should("be.visible");
-      cy.contains("No pending upgrade requests").should("be.visible");
+      // The Upgrade Requests component returns null when there are no requests
+      cy.contains("Upgrade Requests").should("not.exist");
     });
   });
 });

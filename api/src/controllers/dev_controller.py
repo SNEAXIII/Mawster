@@ -1,5 +1,6 @@
 """Dev-only controller — all routes are disabled when MODE=prod."""
 import logging
+import uuid
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -42,7 +43,7 @@ class DevUser(BaseModel):
 
 
 class PromoteRequest(BaseModel):
-    user_id: str
+    user_id: uuid.UUID
     role: str = Roles.ADMIN
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
