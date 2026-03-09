@@ -23,6 +23,9 @@ install-dev:
 run-dev:
 	uv run fastapi dev --reload
 
+run-testing:
+	uv run app_testing.py
+
 create-mig:
 	uv run alembic revision --autogenerate -m "$(MIGRATION_MESSAGE)"
 
