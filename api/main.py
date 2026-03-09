@@ -18,7 +18,7 @@ from src.controllers.alliance_controller import alliance_controller
 from src.controllers.champion_user_controller import champion_user_controller
 from src.controllers.champion_controller import champion_controller, champion_read_controller
 from src.controllers.defense_controller import defense_controller
-from src.security import IS_PROD
+from src.security import IS_PROD, IS_TESTING
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -56,6 +56,26 @@ if not IS_PROD:
     from src.controllers.dev_controller import dev_controller
     app.include_router(dev_controller)
     logger.info("Dev controller enabled (MODE != prod)")
+
+if IS_TESTING:
+    import hashlib
+    from src.services.DiscordAuthService import DiscordAuthService, DISCORD_TOKEN_INVALID_EXCEPTION
+
+    _original_verify = DiscordAuthService.verify_discord_token
+
+    async def _fake_verify(cls, access_token: str) -> dict:
+        if not access_token:
+            raise DISCORD_TOKEN_INVALID_EXCEPTION
+        token_hash = hashlib.sha256(access_token.encode()).hexdigest()[:16]
+        random =token_hash[:8]
+        return {
+            "id": token_hash,
+            "username": f"test_{random}",
+            "email": f"{random}@test.com",
+        }
+
+    DiscordAuthService.verify_discord_token = classmethod(_fake_verify)
+    logger.info("Testing mode: Discord verification is mocked")
 
 # Mount static files for champion images
 static_dir = Path(__file__).resolve().parent / "static"

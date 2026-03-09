@@ -6,7 +6,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 api_file = "api.env"
 
 IS_PROD = os.getenv("MODE") == "prod"
+IS_TESTING = os.getenv("MODE") == "testing"
 
+if not IS_PROD:
+    print(f"Selected mode {IS_PROD = }, {IS_TESTING = }")
 
 class Settings(BaseSettings):
     MARIADB_DATABASE: str = Field(... if IS_PROD else "mawster")

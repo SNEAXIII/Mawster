@@ -9,6 +9,7 @@ from starlette import status as http_status
 
 from src.dto.dto_token import LoginResponse, TokenBody
 from src.dto.dto_utilisateurs import UserProfile
+from src.enums.Roles import Roles
 from src.models import User
 from src.services.JWTService import JWTService
 from src.services.UserService import UserService
@@ -21,6 +22,7 @@ dev_controller = APIRouter(
     prefix="/dev",
     tags=["Dev"],
 )
+
 
 
 # ── DTOs ──────────────────────────────────────────────────────────────────────
@@ -38,6 +40,10 @@ class DevUser(BaseModel):
     email: str
     role: str
 
+
+class PromoteRequest(BaseModel):
+    user_id: str
+    role: str = Roles.ADMIN
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
@@ -91,3 +97,16 @@ async def truncate_database(session: SessionDep):
     await session.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
     await session.commit()
     return {"message": "All tables truncated"}
+
+
+@dev_controller.post("/promote", status_code=200)
+async def promote_user(body: PromoteRequest, session: SessionDep):
+    """Promote a user to a given role. For testing purposes only."""
+    user = await UserService.get_user(session, body.user_id)
+    if not user:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="User not found")
+    user.role = body.role
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return {"message": f"User promoted to {body.role}", "user_id": str(user.id)}
