@@ -260,11 +260,17 @@ async def export_defense(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Export the current defense as portable JSON (no IDs)."""
+    """Export the current defense as portable JSON (no IDs). Officers/owners only."""
     if battlegroup < 1 or battlegroup > 3:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
 
     await _get_user_account_in_alliance(session, current_user, alliance_id)
+
+    alliance = await AllianceService._load_alliance_with_relations(session, alliance_id)
+    if alliance is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+
+    await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
 
     items = await DefensePlacementService.export_defense(session, alliance_id, battlegroup)
 

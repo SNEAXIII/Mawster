@@ -169,9 +169,24 @@ jobs:
             front:
               - 'front/**'
 
+  trivy:
+    name: Trivy Security Scan
+    runs-on: ubuntu-latest
+    needs: lint-test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Run Trivy vulnerability scanner (filesystem)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL,HIGH
+          exit-code: 0
+          format: table
+
   docker-api:
-  # Todo check ca
-    # if: needs.changes.outputs.api == 'true'
+    if: needs.changes.outputs.api == 'true'
     environment: Api
     name: Docker Build & Push (API)
     runs-on: ubuntu-latest
@@ -201,8 +216,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   docker-front:
-  # TODO check ca
-    # if: needs.changes.outputs.front == 'true'
+    if: needs.changes.outputs.front == 'true'
     environment: Api
     name: Docker Build & Push (Front)
     runs-on: ubuntu-latest
@@ -225,6 +239,8 @@ jobs:
           context: ./front
           file: ./front/front.Dockerfile
           push: true
+          build-args: |
+            NEXT_PUBLIC_API_CLIENT_HOST=${{ vars.API_CLIENT_HOST }}
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:latest
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:${{ env.TAG }}

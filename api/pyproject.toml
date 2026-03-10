@@ -11,15 +11,16 @@ dependencies = [
     "pydantic-settings",
     "sqlmodel",
     "aiomysql",
-    "icecream",
     "pymysql",
     "alembic",
     "bleach",
     "sentry-sdk",
+    "slowapi",
 ]
 
 [project.optional-dependencies]
 dev = [
+    "icecream",
     "pytest",
     "aiosqlite",
     "pytest-asyncio",

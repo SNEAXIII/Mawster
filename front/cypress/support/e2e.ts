@@ -133,6 +133,81 @@ Cypress.Commands.add(
   }
 );
 
+// ── Add champion to player roster (direct backend call) ─────────────────────
+
+Cypress.Commands.add(
+  "apiAddChampionToRoster",
+  (
+    token: string,
+    gameAccountId: string,
+    championId: string,
+    rarity: string,
+    options: { signature?: number; is_preferred_attacker?: boolean; ascension?: number } = {}
+  ) => {
+    cy.request({
+      method: "POST",
+      url: `${BACKEND}/champion-users`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: {
+        game_account_id: gameAccountId,
+        champion_id: championId,
+        rarity,
+        signature: options.signature ?? 0,
+        is_preferred_attacker: options.is_preferred_attacker ?? false,
+        ascension: options.ascension ?? 0,
+      },
+    }).then((res) => {
+      expect(res.status).to.eq(201);
+      return res.body;
+    });
+  }
+);
+
+// ── Place defender on defense node (direct backend call) ────────────────────
+
+Cypress.Commands.add(
+  "apiPlaceDefender",
+  (
+    token: string,
+    allianceId: string,
+    battlegroup: number,
+    nodeNumber: number,
+    championUserId: string,
+    gameAccountId: string
+  ) => {
+    cy.request({
+      method: "POST",
+      url: `${BACKEND}/alliances/${allianceId}/defense/bg/${battlegroup}/place`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: {
+        node_number: nodeNumber,
+        champion_user_id: championUserId,
+        game_account_id: gameAccountId,
+      },
+    }).then((res) => {
+      expect(res.status).to.eq(201);
+      return res.body;
+    });
+  }
+);
+
+// ── Set member battlegroup (direct backend call) ─────────────────────────────
+
+Cypress.Commands.add(
+  "apiSetMemberGroup",
+  (token: string, allianceId: string, gameAccountId: string, group: number | null) => {
+    cy.request({
+      method: "PATCH",
+      url: `${BACKEND}/alliances/${allianceId}/members/${gameAccountId}/group`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { group },
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      return res.body;
+    });
+  }
+);
+
 // ── Add officer to alliance (direct backend call) ───────────────────────────
 
 Cypress.Commands.add(

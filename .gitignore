@@ -6,6 +6,7 @@ data/db/*
 .coverage
 *.env
 !*.env.example
+front/.env.local
 
 # Application logs (RGPD — never commit)
 api/logs/

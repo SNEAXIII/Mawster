@@ -7,7 +7,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
-from icecream import ic
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 from starlette.middleware.base import _StreamingResponse
 from src.Messages.validators_messages import VALIDATION_ERROR
 from src.controllers.admin_controller import admin_controller
@@ -30,14 +32,21 @@ from src.utils.logging_config import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
-ic(f"Targeted db: {SECRET.MARIADB_DATABASE}")
-logger.info("Starting Mawster API — database: %s", SECRET.MARIADB_DATABASE)
+if not IS_PROD:
+    logger.info("Starting Mawster API — database: %s", SECRET.MARIADB_DATABASE)
 
 app = FastAPI(title="Mawster", version="1.0.0")
-origins = ["*"]
+
+# Rate limiter (utilise l'IP du client — X-Forwarded-For si disponible, sinon connexion directe)
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS — origines définies dans api.env (ALLOWED_ORIGINS), jamais "*" en prod
+_cors_origins = [origin.strip() for origin in SECRET.ALLOWED_ORIGINS.split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -82,8 +91,6 @@ static_dir = Path(__file__).resolve().parent / "static"
 # static_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
-ic(app.routes)
-
 
 def custom_openapi():
     if app.openapi_schema:
@@ -112,7 +119,8 @@ async def check_user_role(
     start_time = perf_counter()
     response: _StreamingResponse = await next_function(request)
     process_time = perf_counter() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
+    if not IS_PROD:
+        response.headers["X-Process-Time"] = str(process_time)
     logger.info("%s %s → %s (%.3fs)", method, uri, response.status_code, process_time)
     return response
 

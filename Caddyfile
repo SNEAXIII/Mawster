@@ -2,6 +2,15 @@
     auto_https off
 }
 :80 {
+    # Headers de sécurité HTTP
+    header {
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        -Server
+    }
+
     handle /static/* {
         reverse_proxy api:8000
     }
@@ -9,7 +18,15 @@
     handle_path /myadmin* {
         reverse_proxy myadmin:85
     }
-    
+
+    handle /api/* {
+        reverse_proxy api:8000 {
+            # Transmet l'IP réelle du client pour le rate limiting
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+        }
+    }
+
     handle {
         reverse_proxy front:3000
     }
