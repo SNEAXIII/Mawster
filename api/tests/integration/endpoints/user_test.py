@@ -23,7 +23,7 @@ ENDPOINT = "/user/delete"
 
 class TestSelfDeleteUser:
     @pytest.mark.asyncio
-    async def test_delete_ok(self, session):
+    async def test_delete_ok(self):
         await push_one_user()
 
         response = await execute_delete_request(
@@ -54,7 +54,7 @@ class TestSelfDeleteUser:
         assert response.status_code == expected_status
 
     @pytest.mark.asyncio
-    async def test_delete_without_auth(self, session):
+    async def test_delete_without_auth(self):
         response = await execute_delete_request(
             ENDPOINT,
             payload={"confirmation": CONFIRMATION_TEXT},

@@ -46,7 +46,7 @@ async def _setup_1_user():
 
 class TestCreateGameAccount:
     @pytest.mark.asyncio
-    async def test_create_ok(self, session):
+    async def test_create_ok(self):
         await _setup_1_user()
         payload = {"game_pseudo": GAME_PSEUDO, "is_primary": True}
         response = await execute_post_request(ENDPOINT, payload, headers=HEADERS)
@@ -56,7 +56,7 @@ class TestCreateGameAccount:
         assert body["is_primary"] is True
 
     @pytest.mark.asyncio
-    async def test_create_without_auth_returns_401(self, session):
+    async def test_create_without_auth_returns_401(self):
         response = await execute_post_request(
             ENDPOINT,
             {"game_pseudo": GAME_PSEUDO, "is_primary": False},
@@ -64,7 +64,7 @@ class TestCreateGameAccount:
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_create_exceeds_limit(self, session):
+    async def test_create_exceeds_limit(self):
         await _setup_1_user()
         # Create 10 accounts
         for i in range(10):
@@ -94,7 +94,7 @@ class TestCreateGameAccount:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_pseudo_too_long_returns_400(self, session):
+    async def test_pseudo_too_long_returns_400(self):
         """game_pseudo has max_length=50 in DTO."""
         await _setup_1_user()
         response = await execute_post_request(
@@ -105,7 +105,7 @@ class TestCreateGameAccount:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_pseudo_exactly_50_chars_ok(self, session):
+    async def test_pseudo_exactly_50_chars_ok(self):
         await _setup_1_user()
         response = await execute_post_request(
             ENDPOINT,
@@ -115,7 +115,7 @@ class TestCreateGameAccount:
         assert response.status_code == 201
 
     @pytest.mark.asyncio
-    async def test_response_body_structure(self, session):
+    async def test_response_body_structure(self):
         """Verify all expected fields are present in the response."""
         await _setup_1_user()
         response = await execute_post_request(
@@ -130,7 +130,7 @@ class TestCreateGameAccount:
         assert body["user_id"] == str(USER_ID)
 
     @pytest.mark.asyncio
-    async def test_create_multiple_primary_keeps_latest(self, session):
+    async def test_create_multiple_primary_keeps_latest(self):
         """Creating multiple primary accounts should succeed."""
         await _setup_1_user()
         r1 = await execute_post_request(
@@ -154,14 +154,14 @@ class TestCreateGameAccount:
 
 class TestGetMyGameAccounts:
     @pytest.mark.asyncio
-    async def test_list_empty(self, session):
+    async def test_list_empty(self):
         await _setup_1_user()
         response = await execute_get_request(ENDPOINT, headers=HEADERS)
         assert response.status_code == 200
         assert response.json() == []
 
     @pytest.mark.asyncio
-    async def test_list_returns_own_accounts(self, session):
+    async def test_list_returns_own_accounts(self):
         await _setup_1_user()
         await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO_2)
@@ -172,7 +172,7 @@ class TestGetMyGameAccounts:
         assert len(body) == 2
 
     @pytest.mark.asyncio
-    async def test_list_sorted_primary_first(self, session):
+    async def test_list_sorted_primary_first(self):
         """Primary accounts should appear before non-primary."""
         await _setup_1_user()
         await push_game_account(user_id=USER_ID, game_pseudo="NonPrimary", is_primary=False)
@@ -185,7 +185,7 @@ class TestGetMyGameAccounts:
         assert body[0]["game_pseudo"] == "Primary"
 
     @pytest.mark.asyncio
-    async def test_list_includes_alliance_tag(self, session):
+    async def test_list_includes_alliance_tag(self):
         """Accounts that are in an alliance should return alliance_tag and alliance_name."""
         await _setup_1_user()
         await push_alliance_with_owner(
@@ -207,7 +207,7 @@ class TestGetMyGameAccounts:
         assert free[0]["alliance_tag"] is None
 
     @pytest.mark.asyncio
-    async def test_does_not_return_other_users_accounts(self, session):
+    async def test_does_not_return_other_users_accounts(self):
         """A user should not see another user's accounts."""
         await _setup_1_user()
         await push_user2()
@@ -225,7 +225,7 @@ class TestGetMyGameAccounts:
 
 class TestGetSingleGameAccount:
     @pytest.mark.asyncio
-    async def test_get_own_account(self, session):
+    async def test_get_own_account(self):
         await _setup_1_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
 
@@ -236,7 +236,7 @@ class TestGetSingleGameAccount:
         assert response.json()["game_pseudo"] == GAME_PSEUDO
 
     @pytest.mark.asyncio
-    async def test_get_other_users_account_returns_403(self, session):
+    async def test_get_other_users_account_returns_403(self):
         await _setup_1_user()
         await push_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo="Other")
@@ -247,7 +247,7 @@ class TestGetSingleGameAccount:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_get_nonexistent_returns_404(self, session):
+    async def test_get_nonexistent_returns_404(self):
         await _setup_1_user()
         response = await execute_get_request(
             f"/game-accounts/{uuid.uuid4()}", headers=HEADERS
@@ -255,7 +255,7 @@ class TestGetSingleGameAccount:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_invalid_uuid_returns_400(self, session):
+    async def test_invalid_uuid_returns_400(self):
         """A non-UUID path param should be rejected by FastAPI validation."""
         await _setup_1_user()
         response = await execute_get_request(
@@ -271,7 +271,7 @@ class TestGetSingleGameAccount:
 
 class TestUpdateGameAccount:
     @pytest.mark.asyncio
-    async def test_update_ok(self, session):
+    async def test_update_ok(self):
         await _setup_1_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
 
@@ -285,7 +285,7 @@ class TestUpdateGameAccount:
         assert response.json()["is_primary"] is True
 
     @pytest.mark.asyncio
-    async def test_update_other_users_account_returns_403(self, session):
+    async def test_update_other_users_account_returns_403(self):
         await _setup_1_user()
         await push_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo="Other")
@@ -298,7 +298,7 @@ class TestUpdateGameAccount:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_update_nonexistent_returns_404(self, session):
+    async def test_update_nonexistent_returns_404(self):
         await _setup_1_user()
         response = await execute_put_request(
             f"/game-accounts/{uuid.uuid4()}",
@@ -308,7 +308,7 @@ class TestUpdateGameAccount:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_update_pseudo_too_long_returns_400(self, session):
+    async def test_update_pseudo_too_long_returns_400(self):
         await _setup_1_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         response = await execute_put_request(
@@ -319,7 +319,7 @@ class TestUpdateGameAccount:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_update_missing_pseudo_returns_400(self, session):
+    async def test_update_missing_pseudo_returns_400(self):
         await _setup_1_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         response = await execute_put_request(
@@ -330,7 +330,7 @@ class TestUpdateGameAccount:
         assert response.status_code in (400, 422)
 
     @pytest.mark.asyncio
-    async def test_update_invalid_uuid_returns_400(self, session):
+    async def test_update_invalid_uuid_returns_400(self):
         await _setup_1_user()
         response = await execute_put_request(
             "/game-accounts/not-a-uuid",
@@ -340,7 +340,7 @@ class TestUpdateGameAccount:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_update_without_auth_returns_401(self, session):
+    async def test_update_without_auth_returns_401(self):
         response = await execute_put_request(
             f"/game-accounts/{uuid.uuid4()}",
             {"game_pseudo": "X", "is_primary": False},
@@ -355,7 +355,7 @@ class TestUpdateGameAccount:
 
 class TestDeleteGameAccount:
     @pytest.mark.asyncio
-    async def test_delete_ok(self, session):
+    async def test_delete_ok(self):
         await _setup_1_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
 
@@ -365,7 +365,7 @@ class TestDeleteGameAccount:
         assert response.status_code == 204
 
     @pytest.mark.asyncio
-    async def test_delete_other_users_account_returns_403(self, session):
+    async def test_delete_other_users_account_returns_403(self):
         await _setup_1_user()
         await push_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo="Other")
@@ -376,7 +376,7 @@ class TestDeleteGameAccount:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_delete_nonexistent_returns_404(self, session):
+    async def test_delete_nonexistent_returns_404(self):
         await _setup_1_user()
         response = await execute_delete_request(
             f"/game-accounts/{uuid.uuid4()}", headers=HEADERS
@@ -384,7 +384,7 @@ class TestDeleteGameAccount:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_delete_invalid_uuid_returns_400(self, session):
+    async def test_delete_invalid_uuid_returns_400(self):
         await _setup_1_user()
         response = await execute_delete_request(
             "/game-accounts/not-valid", headers=HEADERS
@@ -392,14 +392,14 @@ class TestDeleteGameAccount:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_delete_without_auth_returns_401(self, session):
+    async def test_delete_without_auth_returns_401(self):
         response = await execute_delete_request(
             f"/game-accounts/{uuid.uuid4()}"
         )
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_delete_already_deleted_returns_404(self, session):
+    async def test_delete_already_deleted_returns_404(self):
         """Re-deleting the same account should 404."""
         await _setup_1_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -410,7 +410,7 @@ class TestDeleteGameAccount:
 
     @pytest.mark.asyncio
     @pytest.mark.xfail(reason="BUG: deleting an alliance-owner game account returns 500 (FK constraint)")
-    async def test_delete_account_in_alliance(self, session):
+    async def test_delete_account_in_alliance(self):
         """Deleting a game account that's in an alliance should work or fail cleanly."""
         await _setup_1_user()
         alliance, owner_acc = await push_alliance_with_owner(

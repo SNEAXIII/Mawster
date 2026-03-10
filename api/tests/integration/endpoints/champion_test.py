@@ -133,7 +133,7 @@ class TestGetChampions:
         assert response.status_code == expected_status
 
     @pytest.mark.asyncio
-    async def test_user_can_list_champions(self, session):
+    async def test_user_can_list_champions(self):
         await push_one_user()
         champs = [
             get_champion(name="Spider-Man", champion_class="Science"),
@@ -150,7 +150,7 @@ class TestGetChampions:
         assert len(body["champions"]) == 2
 
     @pytest.mark.asyncio
-    async def test_filter_by_class(self, session):
+    async def test_filter_by_class(self):
         await push_one_user()
         champs = [
             get_champion(name="Spider-Man", champion_class="Science"),
@@ -170,7 +170,7 @@ class TestGetChampions:
             assert c["champion_class"] == "Science"
 
     @pytest.mark.asyncio
-    async def test_search_by_name(self, session):
+    async def test_search_by_name(self):
         await push_one_user()
         champs = [
             get_champion(name="Spider-Man", champion_class="Science"),
@@ -188,7 +188,7 @@ class TestGetChampions:
         assert body["champions"][0]["name"] == "Spider-Man"
 
     @pytest.mark.asyncio
-    async def test_search_by_alias(self, session):
+    async def test_search_by_alias(self):
         await push_one_user()
         champs = [
             get_champion(name="Spider-Man", champion_class="Science", alias=SPIDEY_ALIAS),
@@ -206,7 +206,7 @@ class TestGetChampions:
         assert body["champions"][0]["name"] == "Wolverine"
 
     @pytest.mark.asyncio
-    async def test_empty_list(self, session):
+    async def test_empty_list(self):
         await push_one_user()
         response = await execute_get_request(
             CHAMPIONS_LIST_URL, headers=USER_HEADERS
@@ -217,7 +217,7 @@ class TestGetChampions:
         assert body["champions"] == []
 
     @pytest.mark.asyncio
-    async def test_pagination_pages(self, session):
+    async def test_pagination_pages(self):
         await push_one_user()
         champs = [
             get_champion(name=f"Champion_{i:03d}", champion_class="Science")
@@ -251,7 +251,7 @@ class TestGetChampions:
 
 class TestGetChampionById:
     @pytest.mark.asyncio
-    async def test_get_existing(self, session):
+    async def test_get_existing(self):
         await push_one_user()
         champ = get_champion()
         await load_objects([champ])
@@ -265,7 +265,7 @@ class TestGetChampionById:
         assert body["champion_class"] == "Science"
 
     @pytest.mark.asyncio
-    async def test_get_nonexistent(self, session):
+    async def test_get_nonexistent(self):
         await push_one_user()
         response = await execute_get_request(
             f"/champions/{uuid.uuid4()}", headers=USER_HEADERS
@@ -273,7 +273,7 @@ class TestGetChampionById:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_invalid_uuid_returns_400(self, session):
+    async def test_invalid_uuid_returns_400(self):
         await push_one_user()
         response = await execute_get_request(
             "/champions/not-a-uuid", headers=USER_HEADERS
@@ -281,7 +281,7 @@ class TestGetChampionById:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_response_body_structure(self, session):
+    async def test_response_body_structure(self):
         await push_one_user()
         champ = await push_champion("Hulk", "Science")
         response = await execute_get_request(
@@ -302,7 +302,7 @@ class TestGetChampionById:
 
 class TestUpdateAlias:
     @pytest.mark.asyncio
-    async def test_update_alias(self, session):
+    async def test_update_alias(self):
         await push_one_admin()
         champ = get_champion()
         await load_objects([champ])
@@ -320,7 +320,7 @@ class TestUpdateAlias:
         assert get_resp.json()["alias"] == SPIDEY_ALIAS
 
     @pytest.mark.asyncio
-    async def test_clear_alias(self, session):
+    async def test_clear_alias(self):
         await push_one_admin()
         champ = get_champion(alias="old_alias")
         await load_objects([champ])
@@ -338,7 +338,7 @@ class TestUpdateAlias:
         assert get_resp.json()["alias"] is None
 
     @pytest.mark.asyncio
-    async def test_update_alias_nonexistent_champion(self, session):
+    async def test_update_alias_nonexistent_champion(self):
         await push_one_admin()
         response = await execute_patch_request(
             f"/admin/champions/{uuid.uuid4()}/alias",
@@ -348,7 +348,7 @@ class TestUpdateAlias:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_alias_too_long_returns_400(self, session):
+    async def test_alias_too_long_returns_400(self):
         """alias has max_length=500 in DTO."""
         await push_one_admin()
         champ = await push_champion()
@@ -367,7 +367,7 @@ class TestUpdateAlias:
 
 class TestLoadChampions:
     @pytest.mark.asyncio
-    async def test_load_new_champions(self, session):
+    async def test_load_new_champions(self):
         await push_one_admin()
 
         payload = [
@@ -385,7 +385,7 @@ class TestLoadChampions:
         assert body["skipped"] == 0
 
     @pytest.mark.asyncio
-    async def test_load_updates_existing(self, session):
+    async def test_load_updates_existing(self):
         await push_one_admin()
         existing = get_champion(name="Spider-Man", champion_class="Science")
         await load_objects([existing])
@@ -403,7 +403,7 @@ class TestLoadChampions:
         assert body["updated"] == 1
 
     @pytest.mark.asyncio
-    async def test_load_skips_invalid_class(self, session):
+    async def test_load_skips_invalid_class(self):
         await push_one_admin()
 
         payload = [
@@ -419,7 +419,7 @@ class TestLoadChampions:
         assert body["created"] == 0
 
     @pytest.mark.asyncio
-    async def test_load_empty_list(self, session):
+    async def test_load_empty_list(self):
         await push_one_admin()
         response = await execute_post_request(
             LOAD_CHAMPIONS_URL, payload=[], headers=ADMIN_HEADERS
@@ -429,7 +429,7 @@ class TestLoadChampions:
         assert body["created"] == 0
 
     @pytest.mark.asyncio
-    async def test_load_with_is_ascendable(self, session):
+    async def test_load_with_is_ascendable(self):
         """Loading a champion with is_ascendable=True should persist the flag."""
         await push_one_admin()
 
@@ -462,7 +462,7 @@ class TestLoadChampions:
 
 class TestDeleteChampion:
     @pytest.mark.asyncio
-    async def test_delete_champion(self, session):
+    async def test_delete_champion(self):
         await push_one_admin()
         champ = get_champion()
         await load_objects([champ])
@@ -478,7 +478,7 @@ class TestDeleteChampion:
         assert get_resp.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_delete_nonexistent(self, session):
+    async def test_delete_nonexistent(self):
         await push_one_admin()
         response = await execute_delete_request(
             f"/admin/champions/{uuid.uuid4()}", headers=ADMIN_HEADERS
@@ -486,7 +486,7 @@ class TestDeleteChampion:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_delete_invalid_uuid_returns_400(self, session):
+    async def test_delete_invalid_uuid_returns_400(self):
         await push_one_admin()
         response = await execute_delete_request(
             "/admin/champions/not-a-uuid", headers=ADMIN_HEADERS
@@ -494,7 +494,7 @@ class TestDeleteChampion:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_redelete_returns_404(self, session):
+    async def test_redelete_returns_404(self):
         """Deleting the same champion twice -> 404."""
         await push_one_admin()
         champ = await push_champion()
