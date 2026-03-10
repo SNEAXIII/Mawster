@@ -22,6 +22,7 @@ import {
   declineInvitation,
   getAllianceInvitations,
   cancelInvitation,
+  getMyAllianceRoles,
 } from '@/app/services/game';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -129,18 +130,24 @@ export default function AlliancesPage() {
 
   const fetchPendingInvitations = async (allianceList: Alliance[]) => {
     const results: Record<string, AllianceInvitation[]> = {};
-    await Promise.all(
-      allianceList.map(async (alliance) => {
-        try {
-          const invitations = await getAllianceInvitations(alliance.id);
-          if (invitations.length > 0) {
-            results[alliance.id] = invitations;
+    try {
+      const { roles } = await getMyAllianceRoles();
+      const manageable = allianceList.filter((a) => roles[a.id]?.can_manage);
+      await Promise.all(
+        manageable.map(async (alliance) => {
+          try {
+            const invitations = await getAllianceInvitations(alliance.id);
+            if (invitations.length > 0) {
+              results[alliance.id] = invitations;
+            }
+          } catch {
+            // ignore
           }
-        } catch {
-          // Not an officer/owner — silently ignore permission errors
-        }
-      }),
-    );
+        }),
+      );
+    } catch {
+      // ignore role fetch failure
+    }
     setPendingInvitations(results);
   };
 
@@ -341,7 +348,7 @@ export default function AlliancesPage() {
 )}
       {/* My Invitations */}
       {myInvitations.length > 0 && (
-        <Card>
+        <Card data-cy="my-invitations-section">
           <CardContent className="py-3 sm:py-4 px-3 sm:px-6 space-y-3">
             <div className="flex items-center gap-2">
               <Mail className="h-5 w-5 text-blue-500" />
@@ -353,6 +360,7 @@ export default function AlliancesPage() {
               {myInvitations.map((inv) => (
                 <div
                   key={inv.id}
+                  data-cy={`my-invitation-${inv.alliance_name}`}
                   className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-md bg-blue-50 border border-blue-200"
                 >
                   <div className="space-y-0.5">
@@ -393,10 +401,10 @@ export default function AlliancesPage() {
 
       {/* Alliance list */}
       {alliances.length === 0 ? (
-        <Card>
+        <Card data-cy="alliance-empty-state">
           <CardContent className="py-12 text-center text-gray-500">
             <Shield className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p>{t.game.alliances.empty}</p>
+            <p data-cy="alliance-empty-text">{t.game.alliances.empty}</p>
           </CardContent>
         </Card>
       ) : (

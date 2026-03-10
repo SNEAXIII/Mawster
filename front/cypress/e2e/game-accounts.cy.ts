@@ -8,7 +8,7 @@ describe("Game Accounts – UI", () => {
   it("shows the game accounts section on the profile page", () => {
     setupUser("ga-section-token").then(({ login }) => {
       cy.uiLogin(login);
-      cy.visit("/profile");
+      cy.navTo("profile");
       cy.contains("Game Accounts").should("be.visible");
     });
   });
@@ -16,7 +16,7 @@ describe("Game Accounts – UI", () => {
   it("creates a game account via the profile form", () => {
     setupUser("ga-create-token").then(({ login }) => {
       cy.uiLogin(login);
-      cy.visit("/profile");
+      cy.navTo("profile");
 
       // Form is already open (defaultOpen when no accounts)
       cy.getByCy('account-pseudo-input').scrollIntoView().type("MyGamePseudo");
@@ -33,7 +33,7 @@ describe("Game Accounts – UI", () => {
   it("shows the Primary badge on the first created account", () => {
     setupUser("ga-primary-token").then(({ login }) => {
       cy.uiLogin(login);
-      cy.visit("/profile");
+      cy.navTo("profile");
 
       // Form is already open (defaultOpen when no accounts)
       cy.getByCy('account-pseudo-input').scrollIntoView().type("PrimaryPlayer");
@@ -50,7 +50,7 @@ describe("Game Accounts – UI", () => {
       cy.apiCreateGameAccount(access_token, "OldPseudo", true);
 
       cy.uiLogin(login);
-      cy.visit("/profile");
+      cy.navTo("profile");
       cy.contains("OldPseudo").scrollIntoView().should("be.visible");
 
       // Click the pencil (edit) button
@@ -75,7 +75,7 @@ describe("Game Accounts – UI", () => {
       cy.apiCreateGameAccount(access_token, "ToDelete", true);
 
       cy.uiLogin(login);
-      cy.visit("/profile");
+      cy.navTo("profile");
       cy.contains("ToDelete").scrollIntoView().should("be.visible");
 
       // Click the delete (trash) button
@@ -98,7 +98,7 @@ describe("Game Accounts – UI", () => {
   it("shows empty state when no accounts exist", () => {
     setupUser("ga-empty-token").then(({ login }) => {
       cy.uiLogin(login);
-      cy.visit("/profile");
+      cy.navTo("profile");
       cy.contains("No game accounts yet").scrollIntoView().should("be.visible");
     });
   });
@@ -109,7 +109,7 @@ describe("Game Accounts – UI", () => {
       cy.apiCreateGameAccount(access_token, "Account2", false);
 
       cy.uiLogin(login);
-      cy.visit("/profile");
+      cy.navTo("profile");
       cy.contains("2/10 accounts").scrollIntoView().should("be.visible");
     });
   });

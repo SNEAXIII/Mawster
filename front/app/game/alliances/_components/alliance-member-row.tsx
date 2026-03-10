@@ -64,7 +64,7 @@ export default function AllianceMemberRow({
   const allianceId = alliance.id;
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-2 sm:py-1 px-2 rounded hover:bg-gray-50 gap-1 sm:gap-0">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-2 sm:py-1 px-2 rounded hover:bg-gray-50 gap-1 sm:gap-0" data-cy={`member-row-${member.game_pseudo}`}>
       <div className="flex items-center gap-2 min-w-0">
         <UsernameEnriched
           pseudo={member.game_pseudo}
@@ -83,6 +83,7 @@ export default function AllianceMemberRow({
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                data-cy={`view-roster-${member.game_pseudo}`}
                 onClick={() => onViewRoster(member.id, member.game_pseudo)}
               >
                 <Eye className="h-3.5 w-3.5" />
@@ -102,6 +103,7 @@ export default function AllianceMemberRow({
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 text-orange-400 hover:text-orange-600 hover:bg-orange-50"
+                    data-cy={`demote-officer-${member.game_pseudo}`}
                     onClick={() => onDemoteOfficer(allianceId, member.id)}
                   >
                     <ShieldMinus className="h-3.5 w-3.5" />
@@ -118,6 +120,7 @@ export default function AllianceMemberRow({
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 text-blue-400 hover:text-blue-600 hover:bg-blue-50"
+                    data-cy={`promote-officer-${member.game_pseudo}`}
                     onClick={() =>
                       onPromoteOfficer({
                         allianceId,
@@ -145,6 +148,7 @@ export default function AllianceMemberRow({
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                    data-cy={`leave-alliance-${member.game_pseudo}`}
                     onClick={() =>
                       onLeave({
                         allianceId,
@@ -167,6 +171,7 @@ export default function AllianceMemberRow({
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50"
+                    data-cy={`exclude-member-${member.game_pseudo}`}
                     onClick={() =>
                       onExclude({
                         allianceId,

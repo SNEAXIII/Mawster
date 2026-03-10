@@ -2,6 +2,17 @@
 
 const BACKEND = "http://localhost:8000";
 
+// ── Shared types ─────────────────────────────────────────────────────────────
+
+export interface UserSetupData {
+  access_token: string;
+  refresh_token: string;
+  user_id: string;
+  login: string;
+  email: string;
+  discord_id: string;
+}
+
 // ── Custom selector: data-cy ─────────────────────────────────────────────────
 
 Cypress.Commands.add("getByCy", (selector: string) => {
@@ -99,6 +110,46 @@ Cypress.Commands.add("uiLogin", (userName: string) => {
   cy.url().should("not.include", "/login");
 });
 
+// ── Navigate via navbar click ────────────────────────────────────────────────
+
+Cypress.Commands.add("navTo", (page: string) => {
+  cy.getByCy(`nav-${page}`).click();
+});
+
+// ── Invite member to alliance (direct backend call) ─────────────────────────
+
+Cypress.Commands.add(
+  "apiInviteMember",
+  (token: string, allianceId: string, gameAccountId: string) => {
+    cy.request({
+      method: "POST",
+      url: `${BACKEND}/alliances/${allianceId}/invitations`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { game_account_id: gameAccountId },
+    }).then((res) => {
+      expect(res.status).to.eq(201);
+      return res.body;
+    });
+  }
+);
+
+// ── Add officer to alliance (direct backend call) ───────────────────────────
+
+Cypress.Commands.add(
+  "apiAddOfficer",
+  (token: string, allianceId: string, gameAccountId: string) => {
+    cy.request({
+      method: "POST",
+      url: `${BACKEND}/alliances/${allianceId}/officers`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { game_account_id: gameAccountId },
+    }).then((res) => {
+      expect(res.status).to.eq(201);
+      return res.body;
+    });
+  }
+);
+
 // ── Helper: register + promote via API, returns user data ────────────────────
 
 function getProfile(
@@ -119,7 +170,7 @@ function getProfile(
 
 export function setupAdmin(
   discordToken = "cypress-admin-token"
-): Cypress.Chainable<{ access_token: string; refresh_token: string; user_id: string; login: string; email: string; discord_id: string }> {
+): Cypress.Chainable<UserSetupData> {
   return cy.registerUser(discordToken).then((tokens) => {
     return getProfile(tokens.access_token).then((profile) => {
       return cy.request({
@@ -148,7 +199,7 @@ export function setupAdmin(
 
 export function setupUser(
   discordToken = "cypress-test-token"
-): Cypress.Chainable<{ access_token: string; refresh_token: string; user_id: string; login: string; email: string; discord_id: string }> {
+): Cypress.Chainable<UserSetupData> {
   return cy.registerUser(discordToken).then((tokens) => {
     return getProfile(tokens.access_token).then((profile) => ({
       ...tokens,

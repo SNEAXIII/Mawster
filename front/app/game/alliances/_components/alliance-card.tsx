@@ -69,7 +69,7 @@ export default function AllianceCard({
   onViewRoster,
   pendingInvitations = [],
   onCancelInvitation,
-}: AllianceCardProps) {
+}: Readonly<AllianceCardProps>) {
   const { t } = useI18n();
   const { canManage } = useAllianceRole();
   const userCanManage = canManage(alliance);
@@ -81,20 +81,19 @@ export default function AllianceCard({
   });
 
   return (
-    <Card>
+    <Card data-cy={`alliance-card-${alliance.name}`}>
         <CardContent className="py-3 sm:py-4 px-3 sm:px-6 space-y-3 sm:space-y-4">
         {/* Alliance header */}
         <div className="flex items-center gap-3">
           <Shield className="h-5 w-5 text-purple-500" />
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-medium text-gray-900">{alliance.name}</p>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800">
+              <p className="font-medium text-gray-900" data-cy="alliance-name">{alliance.name}</p>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800" data-cy="alliance-tag">
                 [{alliance.tag}]
               </span>
-              <span className="text-xs text-gray-400">
-                {alliance.member_count} {t.game.alliances.members} · {officerCount}{' '}
-                {t.game.alliances.officersCount}
+              <span className="text-xs text-gray-400" data-cy="alliance-officer-count">
+                {officerCount} {t.game.alliances.officersCount}
               </span>
             </div>
             <div className="flex items-center gap-2 mt-1">
@@ -149,7 +148,7 @@ export default function AllianceCard({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-green-500" />
-              <span className="text-sm font-medium text-gray-700">
+              <span data-cy="alliance-member-count" className="text-sm font-medium text-gray-700">
                 {t.game.alliances.membersTitle} ({alliance.member_count})
               </span>
             </div>

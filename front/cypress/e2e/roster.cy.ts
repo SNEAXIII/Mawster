@@ -8,7 +8,7 @@ describe("Roster – UI", () => {
   it("shows no-accounts message when user has no game accounts", () => {
     setupUser("roster-noacc-token").then(({ login }) => {
       cy.uiLogin(login);
-      cy.visit("/game/roster");
+      cy.navTo("roster");
       cy.contains("create a game account first").should("be.visible");
     });
   });
@@ -18,7 +18,7 @@ describe("Roster – UI", () => {
       cy.apiCreateGameAccount(access_token, "EmptyRoster", true);
 
       cy.uiLogin(login);
-      cy.visit("/game/roster");
+      cy.navTo("roster");
       cy.contains("roster is empty").should("be.visible");
     });
   });
@@ -31,7 +31,7 @@ describe("Roster – UI", () => {
         cy.apiCreateGameAccount(access_token, "RosterPlayer", true);
 
         cy.uiLogin(login);
-        cy.visit("/game/roster");
+        cy.navTo("roster");
 
         // Open form
         cy.contains("Add / Update a Champion").click();
@@ -54,7 +54,7 @@ describe("Roster – UI", () => {
           cy.apiCreateGameAccount(access_token, "WolverinePlayer", true);
 
           cy.uiLogin(login);
-          cy.visit("/game/roster");
+          cy.navTo("roster");
 
           // Open form
           cy.contains("Add / Update a Champion").click();
@@ -84,7 +84,7 @@ describe("Roster – UI", () => {
         cy.apiCreateGameAccount(access_token, "HulkPlayer", true);
 
         cy.uiLogin(login);
-        cy.visit("/game/roster");
+        cy.navTo("roster");
 
         // Add champion first
         cy.contains("Add / Update a Champion").click();
@@ -114,7 +114,7 @@ describe("Roster – UI", () => {
       cy.apiCreateGameAccount(access_token, "Account2", false);
 
       cy.uiLogin(login);
-      cy.visit("/game/roster");
+      cy.navTo("roster");
       cy.contains("Select a game account").should("be.visible");
     });
   });
@@ -124,7 +124,7 @@ describe("Roster – UI", () => {
       cy.apiCreateGameAccount(access_token, "UpgradeAcc", true);
 
       cy.uiLogin(login);
-      cy.visit("/game/roster");
+      cy.navTo("roster");
       // The Upgrade Requests component returns null when there are no requests
       cy.contains("Upgrade Requests").should("not.exist");
     });

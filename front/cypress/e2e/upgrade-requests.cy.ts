@@ -10,7 +10,7 @@ describe("Upgrade Requests – UI", () => {
       cy.apiCreateGameAccount(access_token, "UpgradePlayer", true);
 
       cy.uiLogin(login);
-      cy.visit("/game/roster");
+      cy.navTo("roster");
       // The Upgrade Requests section returns null when there are no requests
       cy.contains("Upgrade Requests").should("not.exist");
     });
@@ -24,7 +24,7 @@ describe("Upgrade Requests – UI", () => {
         cy.apiCreateGameAccount(access_token, "UpgradeAcc", true);
 
         cy.uiLogin(login);
-        cy.visit("/game/roster");
+        cy.navTo("roster");
 
         // Add a champion first
         cy.contains("Add / Update a Champion").click();
