@@ -8,7 +8,7 @@ describe("Defense – UI", () => {
   it("shows no-alliance message when user has no alliances", () => {
     setupUser("def-noalliance-token").then(({ login }) => {
       cy.uiLogin(login);
-      cy.visit("/game/defense");
+      cy.navTo("defense");
       cy.contains("need to join an alliance").should("be.visible");
     });
   });
@@ -27,7 +27,7 @@ describe("Defense – UI", () => {
       );
 
       cy.uiLogin(login);
-      cy.visit("/game/defense");
+      cy.navTo("defense");
 
       // Verify the page elements
       cy.contains("Defense Placement").should("be.visible");
@@ -53,7 +53,7 @@ describe("Defense – UI", () => {
       );
 
       cy.uiLogin(login);
-      cy.visit("/game/defense");
+      cy.navTo("defense");
 
       // BG 1 should be active by default
       cy.contains("BG 1").should("be.visible");
@@ -80,7 +80,7 @@ describe("Defense – UI", () => {
       );
 
       cy.uiLogin(login);
-      cy.visit("/game/defense");
+      cy.navTo("defense");
       cy.getByCy('defense-export').should("be.visible");
     });
   });
@@ -99,7 +99,7 @@ describe("Defense – UI", () => {
       );
 
       cy.uiLogin(login);
-      cy.visit("/game/defense");
+      cy.navTo("defense");
       cy.getByCy('defense-import').should("be.visible");
     });
   });
@@ -118,7 +118,7 @@ describe("Defense – UI", () => {
       );
 
       cy.uiLogin(login);
-      cy.visit("/game/defense");
+      cy.navTo("defense");
       cy.contains("Members").should("be.visible");
     });
   });

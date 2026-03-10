@@ -45,10 +45,34 @@ declare namespace Cypress {
     ): Chainable<any>;
 
     /**
+     * Invite a game account to an alliance via backend API.
+     */
+    apiInviteMember(
+      token: string,
+      allianceId: string,
+      gameAccountId: string
+    ): Chainable<any>;
+
+    /**
+     * Promote a member to officer in an alliance via backend API.
+     */
+    apiAddOfficer(
+      token: string,
+      allianceId: string,
+      gameAccountId: string
+    ): Chainable<any>;
+
+    /**
      * Log in via the dev-login UI on the login page.
      * Clicks the button matching the user's login name.
      */
     uiLogin(userName: string): Chainable<void>;
+
+    /**
+     * Navigate to a page by clicking the corresponding navbar link.
+     * @param page - The page identifier (e.g. "alliances", "profile", "roster", "defense", "champions", "administration", "home")
+     */
+    navTo(page: string): Chainable<void>;
 
     /**
      * Select a DOM element by its `data-cy` attribute.

@@ -29,17 +29,18 @@ export default function NavLinks({ userRole }: Readonly<NavLinksProps>) {
   const { t } = useI18n();
 
   const links = [
-    { name: t.nav.home, href: '/', icon: IoHomeOutline, role: Role.all },
-    { name: t.nav.profile, href: '/profile', icon: MdPersonOutline, role: Role.user },
-    { name: t.nav.roster, href: '/game/roster', icon: RiSwordLine, role: Role.user },
-    { name: t.nav.alliances, href: '/game/alliances', icon: RiShieldLine, role: Role.user },
-    { name: t.nav.defense, href: '/game/defense', icon: RiShieldStarLine, role: Role.user },
-    { name: t.nav.champions, href: '/admin/champions', icon: IoTrophyOutline, role: Role.admin },
+    { name: t.nav.home, href: '/', icon: IoHomeOutline, role: Role.all, cy: 'nav-home' },
+    { name: t.nav.profile, href: '/profile', icon: MdPersonOutline, role: Role.user, cy: 'nav-profile' },
+    { name: t.nav.roster, href: '/game/roster', icon: RiSwordLine, role: Role.user, cy: 'nav-roster' },
+    { name: t.nav.alliances, href: '/game/alliances', icon: RiShieldLine, role: Role.user, cy: 'nav-alliances' },
+    { name: t.nav.defense, href: '/game/defense', icon: RiShieldStarLine, role: Role.user, cy: 'nav-defense' },
+    { name: t.nav.champions, href: '/admin/champions', icon: IoTrophyOutline, role: Role.admin, cy: 'nav-champions' },
     {
       name: t.nav.administration,
       href: '/admin/dashboard',
       icon: MdOutlineAdminPanelSettings,
       role: Role.admin,
+      cy: 'nav-administration',
     },
   ];
 
@@ -54,6 +55,7 @@ export default function NavLinks({ userRole }: Readonly<NavLinksProps>) {
           <Link
             key={link.name}
             href={link.href}
+            data-cy={link.cy}
             className={clsx(
               'flex h-[48px] grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-sky-100 hover:text-blue-600 md:flex-none md:justify-start md:p-2 md:px-3',
               {
