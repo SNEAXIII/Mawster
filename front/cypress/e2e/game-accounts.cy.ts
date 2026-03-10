@@ -55,7 +55,7 @@ describe("Game Accounts – UI", () => {
 
       // Click the pencil (edit) button
       cy.getByCy('account-row-OldPseudo')
-        .find('[data-cy="account-edit-btn"]')
+        .find('[data-cy="account-edit-btn-0"]')
         .click({ force: true });
 
       // Clear old value and type new one
@@ -111,6 +111,57 @@ describe("Game Accounts – UI", () => {
       cy.uiLogin(login);
       cy.navTo("profile");
       cy.contains("2/10 accounts").scrollIntoView().should("be.visible");
+    });
+  });
+
+  it("sets the primary account", () => {
+    setupUser("ga-count-token").then(({ login, access_token }) => {
+      cy.apiCreateGameAccount(access_token, "Account1", true);
+      cy.apiCreateGameAccount(access_token, "Account2", false);
+
+      cy.uiLogin(login);
+      cy.navTo("profile");
+      cy.getByCy('account-row-Account1').scrollIntoView()
+        .find('[data-cy="account-primary-badge"]').should("exist");
+      cy.getByCy('account-row-Account2').scrollIntoView()
+        .find('[data-cy="account-primary-badge"]').should("not.exist");
+      
+      cy.getByCy('account-star-btn-1').click();
+
+      cy.getByCy('account-row-Account2').scrollIntoView()
+        .find('[data-cy="account-primary-badge"]').should("exist");
+      cy.getByCy('account-row-Account1').scrollIntoView()
+        .find('[data-cy="account-primary-badge"]').should("not.exist");
+    });
+  });
+
+  it("create new primary account remove the old primary account", () => {
+    setupUser("ga-count-token").then(({ login, access_token }) => {
+      cy.apiCreateGameAccount(access_token, "MainAccount", true);
+
+      cy.uiLogin(login);
+      cy.navTo("profile");
+      
+      cy.getByCy('collapsible-add-a-game-account').scrollIntoView().click();
+      cy.getByCy('account-pseudo-input').scrollIntoView().type("SecondAccount");
+      cy.getByCy('account-create-btn').click();
+
+      // Verify the account appears in the list
+      cy.contains("SecondAccount").scrollIntoView().should("be.visible");
+
+      // MainAccount should have the Primary badge, SecondAccount should not
+      cy.getByCy('account-row-MainAccount').scrollIntoView()
+        .find('[data-cy="account-primary-badge"]').should("exist");
+      cy.getByCy('account-row-SecondAccount').scrollIntoView()
+        .find('[data-cy="account-primary-badge"]').should("not.exist");
+      
+      // Switch primary to SecondAccount
+      cy.getByCy('account-star-btn-1').click();
+
+      cy.getByCy('account-row-SecondAccount').scrollIntoView()
+        .find('[data-cy="account-primary-badge"]').should("exist");
+      cy.getByCy('account-row-MainAccount').scrollIntoView()
+        .find('[data-cy="account-primary-badge"]').should("not.exist");
     });
   });
 });
