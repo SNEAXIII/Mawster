@@ -9,10 +9,11 @@ type SearchInputProps = Readonly<{
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  'data-cy'?: string;
 }>;
 
 export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
-  ({ placeholder = 'Search...', value, onChange, className = '' }, ref) => {
+  ({ placeholder = 'Search...', value, onChange, className = '', 'data-cy': dataCy }, ref) => {
     return (
       <div className={`relative ${className}`}>
         <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -22,6 +23,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="pl-9"
+          data-cy={dataCy}
         />
       </div>
     );

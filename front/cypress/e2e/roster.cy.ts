@@ -37,7 +37,7 @@ describe("Roster – UI", () => {
         cy.contains("Add / Update a Champion").click();
 
         // Search for champion
-        cy.get('input[placeholder="Search a champion..."]').type("Spider");
+        cy.getByCy('champion-search').type("Spider");
 
         // Verify search results appear
         cy.contains("Spider-Man").should("be.visible");
@@ -60,14 +60,14 @@ describe("Roster – UI", () => {
           cy.contains("Add / Update a Champion").click();
 
           // Search and select champion
-          cy.get('input[placeholder="Search a champion..."]').type("Wolverine");
-          cy.contains("button", "Wolverine").click();
+          cy.getByCy('champion-search').type("Wolverine");
+          cy.getByCy('champion-result-Wolverine').click();
 
           // Select rarity (click 6★R4)
-          cy.contains("button", "6★R4").click();
+          cy.getByCy('rarity-6r4').click();
 
           // Submit
-          cy.contains("button", /^Add \/ Update$/).click();
+          cy.getByCy('champion-submit').click();
 
           cy.contains("Wolverine added / updated").should("be.visible");
           cy.contains("Wolverine").should("exist");
@@ -88,14 +88,14 @@ describe("Roster – UI", () => {
 
         // Add champion first
         cy.contains("Add / Update a Champion").click();
-        cy.get('input[placeholder="Search a champion..."]').type("HulkDel");
-        cy.contains("button", "HulkDel").click();
-        cy.contains("button", "6★R4").click();
-        cy.contains("button", /^Add \/ Update$/).click();
+        cy.getByCy('champion-search').type("HulkDel");
+        cy.getByCy('champion-result-HulkDel').click();
+        cy.getByCy('rarity-6r4').click();
+        cy.getByCy('champion-submit').click();
         cy.contains("HulkDel added / updated").should("be.visible");
 
         // Now delete the champion via the delete button on the card
-        cy.get('button[title="Delete"]').first().click({ force: true });
+        cy.getByCy('champion-delete').first().click({ force: true });
 
         // Confirm deletion dialog
         cy.get('[role="alertdialog"]')

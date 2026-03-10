@@ -115,9 +115,10 @@ export default function AllianceCard({
             className="border-amber-200"
           >
             <div className="space-y-1">
-              {pendingInvitations.map((inv) => (
+              {pendingInvitations.map((inv, index) => (
                 <div
                   key={inv.id}
+                  data-cy={`pending-invitation-${index}`}
                   className="flex items-center justify-between gap-2 p-2 rounded-md bg-amber-50 border border-amber-200"
                 >
                   <div className="space-y-0.5">
@@ -158,7 +159,7 @@ export default function AllianceCard({
               (memberAllianceId === alliance.id ? (
                 <div className="flex flex-wrap items-center gap-2">
                   <Select value={memberAccountId} onValueChange={onMemberAccountChange}>
-                    <SelectTrigger className="w-full sm:w-48 h-8 text-xs">
+                    <SelectTrigger className="w-full sm:w-48 h-8 text-xs" data-cy="invite-member-select">
                       <SelectValue placeholder={t.game.alliances.selectMember} />
                     </SelectTrigger>
                     <SelectContent>
@@ -172,11 +173,12 @@ export default function AllianceCard({
                   <Button
                     size="sm"
                     disabled={!memberAccountId}
+                    data-cy="invite-member-submit"
                     onClick={() => onInviteMember(alliance.id)}
                   >
                     {t.game.alliances.inviteMemberButton}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={onCloseInviteMember}>
+                  <Button size="sm" variant="ghost" data-cy="invite-member-cancel" onClick={onCloseInviteMember}>
                     {t.common.cancel}
                   </Button>
                 </div>
@@ -184,6 +186,7 @@ export default function AllianceCard({
                 <Button
                   size="sm"
                   variant="outline"
+                  data-cy="invite-member-toggle"
                   onClick={() => onOpenInviteMember(alliance.id)}
                 >
                   <UserPlus className="h-3 w-3 mr-1" />

@@ -74,6 +74,7 @@ export default function CreateAllianceForm({
                 <Label htmlFor='name'>{t.game.alliances.name}</Label>
                 <Input
                   id='name'
+                  data-cy='alliance-name-input'
                   value={name}
                   onChange={(e) => onNameChange(e.target.value)}
                   placeholder={t.game.alliances.namePlaceholder}
@@ -86,6 +87,7 @@ export default function CreateAllianceForm({
                 <Label htmlFor='tag'>{t.game.alliances.tag}</Label>
                 <Input
                   id='tag'
+                  data-cy='alliance-tag-input'
                   value={tag}
                   onChange={(e) => onTagChange(e.target.value.toUpperCase())}
                   placeholder={t.game.alliances.tagPlaceholder}
@@ -119,6 +121,7 @@ export default function CreateAllianceForm({
             </div>
             <Button
               type='submit'
+              data-cy='alliance-create-btn'
               disabled={creating || !name.trim() || !tag.trim() || !ownerId}
             >
               {creating ? (

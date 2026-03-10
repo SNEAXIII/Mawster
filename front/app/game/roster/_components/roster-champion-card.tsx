@@ -94,6 +94,7 @@ export default function RosterChampionCard({
               className="text-blue-400 hover:text-blue-300 bg-black/60 rounded-full p-1"
               onClick={() => onEdit(entry)}
               title="Edit"
+              data-cy="champion-edit"
             >
               <FiEdit2 size={14} />
             </button>
@@ -103,6 +104,7 @@ export default function RosterChampionCard({
               className="text-red-400 hover:text-red-600 bg-black/60 rounded-full p-1"
               onClick={() => onDelete(entry)}
               title={t.common.delete}
+              data-cy="champion-delete"
             >
               <FiTrash2 size={14} />
             </button>

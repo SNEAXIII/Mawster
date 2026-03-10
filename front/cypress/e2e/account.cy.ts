@@ -8,6 +8,7 @@ describe("Login & Profile – UI", () => {
   it("shows the login page with Sign In title and Discord button", () => {
     cy.visit("/login");
     cy.contains("Sign In").should("be.visible");
+    cy.contains("Sign in with your Discord account").should("be.visible");
     cy.contains("Sign in with Discord").should("be.visible");
   });
 
@@ -26,14 +27,14 @@ describe("Login & Profile – UI", () => {
   });
 
   it("displays profile info after login", () => {
-    setupUser("profile-token").then(({ login }) => {
+    setupUser("profile-token").then(({ login, email, discord_id }) => {
       cy.uiLogin(login);
       cy.visit("/profile");
-      cy.contains(login).should("be.visible");
       cy.contains("Account Information").should("be.visible");
-      cy.contains("Username").should("be.visible");
-      cy.contains("Email").should("be.visible");
-      cy.contains("Discord ID").should("be.visible");
+      cy.getByCy("username-row").should("contain", login);
+      cy.getByCy("email-row").should("contain", email);
+      cy.getByCy("discord-id-row").should("contain", discord_id);
+      cy.getByCy("member-since-row").should("be.visible");
     });
   });
 
@@ -49,7 +50,7 @@ describe("Login & Profile – UI", () => {
     setupUser("signout-token").then(({ login }) => {
       cy.uiLogin(login);
       cy.visit("/profile");
-      cy.contains("Sign out").click();
+      cy.getByCy('sign-out-btn').click();
       cy.url().should("include", "/login");
     });
   });

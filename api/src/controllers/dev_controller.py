@@ -25,7 +25,6 @@ dev_controller = APIRouter(
 )
 
 
-
 # ── DTOs ──────────────────────────────────────────────────────────────────────
 
 
@@ -105,7 +104,10 @@ async def promote_user(body: PromoteRequest, session: SessionDep):
     """Promote a user to a given role. For testing purposes only."""
     user = await UserService.get_user(session, body.user_id)
     if not user:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
     user.role = body.role
     session.add(user)
     await session.commit()

@@ -59,10 +59,10 @@ describe("Defense – UI", () => {
       cy.contains("BG 1").should("be.visible");
 
       // Switch to BG 2
-      cy.contains("button", "BG 2").click();
+      cy.getByCy('defense-bg-2').click();
 
       // Switch to BG 3
-      cy.contains("button", "BG 3").click();
+      cy.getByCy('defense-bg-3').click();
     });
   });
 
@@ -81,7 +81,7 @@ describe("Defense – UI", () => {
 
       cy.uiLogin(login);
       cy.visit("/game/defense");
-      cy.contains("button", "Export").should("be.visible");
+      cy.getByCy('defense-export').should("be.visible");
     });
   });
 
@@ -100,7 +100,7 @@ describe("Defense – UI", () => {
 
       cy.uiLogin(login);
       cy.visit("/game/defense");
-      cy.contains("button", "Import").should("be.visible");
+      cy.getByCy('defense-import').should("be.visible");
     });
   });
 

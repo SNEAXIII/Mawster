@@ -30,11 +30,11 @@ describe("Alliances – UI", () => {
 
       // Form auto-opens when user has no alliances (useEffect)
       // Fill in alliance details (owner is auto-selected when only one account)
-      cy.get("#name").should("be.visible").type("TestAlliance");
-      cy.get("#tag").type("TA");
+      cy.getByCy('alliance-name-input').should('be.visible').type('TestAlliance');
+      cy.getByCy('alliance-tag-input').type('TA');
 
       // Submit the form
-      cy.contains("button", "Create alliance").click();
+      cy.getByCy('alliance-create-btn').click();
 
       // Verify the alliance appears
       cy.contains("Alliance created successfully").should("be.visible");
@@ -91,23 +91,22 @@ describe("Alliances – UI", () => {
 
       // Intercept eligible members API
       cy.intercept("GET", "**/alliances/eligible-members").as("eligibleMembers");
-      cy.contains("Invite member").click();
+      cy.getByCy('invite-member-toggle').click();
       cy.wait("@eligibleMembers");
 
-      // Wait for React to process the eligible members
-      cy.wait(500);
-
-      // Click the invite member Select (identified by its placeholder text)
-      cy.contains("Select an account").click();
+      // Click the invite member Select
+      cy.getByCy('invite-member-select').click();
 
       // Select NewMemberAcc from the dropdown
       cy.contains("[role='option']", "NewMemberAcc", { timeout: 1000 }).click();
 
       // Click the Invite button
-      cy.contains("button", "Invite",{ timeout: 1000 }).click();
+      cy.getByCy('invite-member-submit').click({ timeout: 1000 });
       cy.contains("Invitation sent successfully").should("be.visible");
       cy.contains("NewMemberAcc").should("be.visible");
       cy.contains("Pending invitations (1)").should("be.visible");
+      cy.getByCy('pending-invitation-0').contains("NewMemberAcc");
+      cy.getByCy('pending-invitation-0').contains("Invited by OwnerAcc");
     });
   });
 
@@ -142,7 +141,7 @@ describe("Alliances – UI", () => {
       cy.uiLogin(inviteeLogin);
       cy.visit("/game/alliances");
       cy.contains("My invitations").should("be.visible");
-      cy.contains("Accept").click();
+      cy.getByCy('accept-invitation').click();
       cy.contains("Invitation accepted").should("be.visible");
     });
   });

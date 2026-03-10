@@ -368,6 +368,7 @@ export default function AlliancesPage() {
                     <Button
                       size="sm"
                       variant="default"
+                      data-cy="accept-invitation"
                       onClick={() => handleAcceptInvitation(inv.id)}
                     >
                       <Check className="h-3 w-3 mr-1" />
@@ -376,6 +377,7 @@ export default function AlliancesPage() {
                     <Button
                       size="sm"
                       variant="outline"
+                      data-cy="decline-invitation"
                       onClick={() => handleDeclineInvitation(inv.id)}
                     >
                       <X className="h-3 w-3 mr-1" />

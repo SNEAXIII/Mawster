@@ -82,6 +82,7 @@ export default function AddChampionForm({
             placeholder={t.roster.searchChampion}
             value={championSearch}
             onChange={onChampionSearchChange}
+            data-cy="champion-search"
           />
 
           {/* Search results dropdown */}
@@ -92,6 +93,7 @@ export default function AddChampionForm({
                   key={c.id}
                   className="w-full text-left px-3 py-2 hover:bg-blue-50 flex items-center gap-2"
                   onClick={() => onSelectChampion(c)}
+                  data-cy={`champion-result-${c.name}`}
                 >
                   {c.image_url && (
                     <img
@@ -164,6 +166,7 @@ export default function AddChampionForm({
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
                 }`}
                 onClick={() => onRarityChange(r)}
+                data-cy={`rarity-${r}`}
               >
                 {RARITY_LABELS[r]}
               </button>
@@ -256,7 +259,7 @@ export default function AddChampionForm({
 
         {/* Submit */}
         <div className="flex gap-2">
-          <Button onClick={onSubmit} disabled={!selectedChampion || adding}>
+          <Button onClick={onSubmit} disabled={!selectedChampion || adding} data-cy="champion-submit">
             {adding ? t.common.loading : t.roster.addOrUpdateButton}
           </Button>
         </div>

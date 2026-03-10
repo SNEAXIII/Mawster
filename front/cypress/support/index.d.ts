@@ -49,5 +49,10 @@ declare namespace Cypress {
      * Clicks the button matching the user's login name.
      */
     uiLogin(userName: string): Chainable<void>;
+
+    /**
+     * Select a DOM element by its `data-cy` attribute.
+     */
+    getByCy(selector: string): Chainable<JQuery<HTMLElement>>;
   }
 }

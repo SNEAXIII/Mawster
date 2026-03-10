@@ -319,7 +319,7 @@ export default function RosterPage() {
               value={selectedAccountId || ''}
               onValueChange={(val) => setSelectedAccountId(val || null)}
             >
-              <SelectTrigger className='w-full max-w-xs'>
+              <SelectTrigger className='w-full max-w-xs' data-cy='roster-account-select'>
                 <SelectValue placeholder={t.roster.chooseAccount} />
               </SelectTrigger>
               <SelectContent>
