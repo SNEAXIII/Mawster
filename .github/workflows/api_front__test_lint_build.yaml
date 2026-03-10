@@ -50,7 +50,7 @@ jobs:
       MARIADB_USER: user
       MARIADB_PASSWORD: password
       MARIADB_ROOT_PASSWORD: rootpassword
-      MARIADB_DATABASE: mawster
+      MARIADB_DATABASE: mawster-testing
     services:
       mariadb:
         image: mariadb
@@ -58,7 +58,7 @@ jobs:
           MARIADB_USER: user
           MARIADB_PASSWORD: password
           MARIADB_ROOT_PASSWORD: rootpassword
-          MARIADB_DATABASE: mawster
+          MARIADB_DATABASE: mawster-testing
         ports:
           - 3306:3306
         options: >-
@@ -79,20 +79,9 @@ jobs:
       - name: Install API dependencies
         working-directory: ./api
         run: uv sync
-      - name: Run database migrations
-        working-directory: ./api
-        env:
-          MODE: testing
-          SECRET_KEY: ci-test-secret-key-for-e2e-tests
-          MARIADB_PORT: 3306
-          ALGORITHM: HS256
-          BCRYPT_HASH_ROUND: 4
-          ACCESS_TOKEN_EXPIRE_MINUTES: 60
-        run: uv run alembic upgrade head
       - name: Start API server
         working-directory: ./api
         env:
-          MODE: testing
           SECRET_KEY: ci-test-secret-key-for-e2e-tests
           MARIADB_PORT: 3306
           ALGORITHM: HS256
@@ -115,13 +104,13 @@ jobs:
         env:
           NEXTAUTH_SECRET: ci-test-nextauth-secret
           NEXTAUTH_URL: http://localhost:3000
-        run: npm run dev &
+        run: npm run testing &
 
       # ── Wait for services ──
       - name: Wait for API
         run: |
           for i in $(seq 1 30); do
-            curl -s http://localhost:8000/docs > /dev/null && break
+            curl -s http://localhost:8001 > /dev/null && break
             sleep 2
           done
       - name: Wait for frontend

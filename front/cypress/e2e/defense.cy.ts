@@ -1,4 +1,4 @@
-import { setupUser, setupAdmin, type UserSetupData } from "../support/e2e";
+import { setupUser, setupAdmin, type UserSetupData, BACKEND } from "../support/e2e";
 
 describe("Defense – UI", () => {
   beforeEach(() => {
@@ -489,7 +489,7 @@ describe("Defense – UI", () => {
       // Export via API
       cy.request({
         method: "GET",
-        url: `http://localhost:8000/alliances/${allianceId}/defense/bg/1/export`,
+        url: `${BACKEND}/alliances/${allianceId}/defense/bg/1/export`,
         headers: { Authorization: `Bearer ${ownerData.access_token}` },
       }).then((exportRes) => {
         expect(exportRes.status).to.eq(200);
@@ -505,7 +505,7 @@ describe("Defense – UI", () => {
         // Import via API
         cy.request({
           method: "POST",
-          url: `http://localhost:8000/alliances/${allianceId}/defense/bg/1/import`,
+          url: `${BACKEND}/alliances/${allianceId}/defense/bg/1/import`,
           headers: { Authorization: `Bearer ${ownerData.access_token}` },
           body: { placements: exportData },
         }).then((importRes) => {

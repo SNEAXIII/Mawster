@@ -1,4 +1,4 @@
-import { setupUser, type UserSetupData } from "../support/e2e";
+import { BACKEND, setupUser, type UserSetupData } from "../support/e2e";
 
 describe("Alliances – UI", () => {
   beforeEach(() => {
@@ -224,7 +224,7 @@ describe("Alliances – UI", () => {
       // Accept via API
       cy.request({
         method: "POST",
-        url: `http://localhost:8000/alliances/invitations/${memberAccount.id}/accept`,
+        url: `${BACKEND}/alliances/invitations/${memberAccount.id}/accept`,
         headers: { Authorization: `Bearer ${ownerData.access_token}` },
         failOnStatusCode: false,
       });
@@ -232,7 +232,7 @@ describe("Alliances – UI", () => {
       // Accept via the invitee's session
       cy.request({
         method: "GET",
-        url: `http://localhost:8000/alliances/my-invitations`,
+        url: `${BACKEND}/alliances/my-invitations`,
         headers: { Authorization: `Bearer ${ownerData.access_token}` },
         failOnStatusCode: false,
       });

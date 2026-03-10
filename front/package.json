@@ -2,7 +2,8 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev --turbopack",
+    "dev": "cross-env API_PORT=8000 next dev --turbopack",
+    "testing": "cross-env API_PORT=8001 next dev --turbopack",
     "start": "next start",
     "prod": "npm run build && npm run start",
     "cypress:open": "cypress open",
@@ -49,6 +50,7 @@
     "@types/node": "22.10.7",
     "@types/react": "19.0.7",
     "@types/react-dom": "19.0.3",
+    "cross-env": "^10.1.0",
     "cypress": "^15.11.0",
     "cypress-multi-reporters": "^2.0.5",
     "cypress-parallel": "^0.15.0",
