@@ -62,7 +62,7 @@ async def _setup_2_users():
 
 class TestCreateAlliance:
     @pytest.mark.asyncio
-    async def test_create_ok(self, session):
+    async def test_create_ok(self):
         await _setup_2_users()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
 
@@ -78,7 +78,7 @@ class TestCreateAlliance:
         assert body["member_count"] == 1
 
     @pytest.mark.asyncio
-    async def test_create_without_auth(self, session):
+    async def test_create_without_auth(self):
         response = await execute_post_request(
             ENDPOINT,
             {"name": "X", "tag": "X", "owner_id": str(uuid.uuid4())},
@@ -122,7 +122,7 @@ class TestCreateAlliance:
 
 class TestGetAlliances:
     @pytest.mark.asyncio
-    async def test_get_all(self, session):
+    async def test_get_all(self):
         await _setup_2_users()
         await push_alliance_with_owner(user_id=USER_ID)
 
@@ -131,7 +131,7 @@ class TestGetAlliances:
         assert len(response.json()) >= 1
 
     @pytest.mark.asyncio
-    async def test_get_mine(self, session):
+    async def test_get_mine(self):
         await _setup_2_users()
         await push_alliance_with_owner(user_id=USER_ID)
         # user2 creates another alliance — user1 should NOT see it in /mine
@@ -146,7 +146,7 @@ class TestGetAlliances:
         assert body[0]["name"] == ALLIANCE_NAME
 
     @pytest.mark.asyncio
-    async def test_get_by_id(self, session):
+    async def test_get_by_id(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
@@ -157,7 +157,7 @@ class TestGetAlliances:
         assert response.json()["id"] == str(alliance.id)
 
     @pytest.mark.asyncio
-    async def test_get_by_id_not_found(self, session):
+    async def test_get_by_id_not_found(self):
         await _setup_2_users()
         response = await execute_get_request(
             f"{ENDPOINT}/{uuid.uuid4()}", headers=HEADERS_USER1
@@ -172,7 +172,7 @@ class TestGetAlliances:
 
 class TestUpdateAlliance:
     @pytest.mark.asyncio
-    async def test_owner_can_update(self, session):
+    async def test_owner_can_update(self):
         await _setup_2_users()
         alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
 
@@ -185,7 +185,7 @@ class TestUpdateAlliance:
         assert response.json()["name"] == "NewName"
 
     @pytest.mark.asyncio
-    async def test_non_owner_cannot_update(self, session):
+    async def test_non_owner_cannot_update(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
@@ -204,7 +204,7 @@ class TestUpdateAlliance:
 
 class TestDeleteAlliance:
     @pytest.mark.asyncio
-    async def test_owner_can_delete(self, session):
+    async def test_owner_can_delete(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
@@ -214,7 +214,7 @@ class TestDeleteAlliance:
         assert response.status_code == 204
 
     @pytest.mark.asyncio
-    async def test_non_owner_cannot_delete(self, session):
+    async def test_non_owner_cannot_delete(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
@@ -231,7 +231,7 @@ class TestDeleteAlliance:
 
 class TestInviteMember:
     @pytest.mark.asyncio
-    async def test_owner_can_invite_member(self, session):
+    async def test_owner_can_invite_member(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         free_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -247,7 +247,7 @@ class TestInviteMember:
         assert body["status"] == "pending"
 
     @pytest.mark.asyncio
-    async def test_officer_can_invite_member(self, session):
+    async def test_officer_can_invite_member(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         officer_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -268,7 +268,7 @@ class TestInviteMember:
         assert response.status_code == 201
 
     @pytest.mark.asyncio
-    async def test_regular_member_cannot_invite(self, session):
+    async def test_regular_member_cannot_invite(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -284,7 +284,7 @@ class TestInviteMember:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_invite_already_in_alliance(self, session):
+    async def test_invite_already_in_alliance(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -297,7 +297,7 @@ class TestInviteMember:
         assert response.status_code == 409
 
     @pytest.mark.asyncio
-    async def test_duplicate_pending_invitation(self, session):
+    async def test_duplicate_pending_invitation(self):
         """Sending a second invitation to the same account should fail."""
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
@@ -320,7 +320,7 @@ class TestInviteMember:
         assert resp2.status_code == 409
 
     @pytest.mark.asyncio
-    async def test_invite_nonexistent_account(self, session):
+    async def test_invite_nonexistent_account(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
@@ -332,7 +332,7 @@ class TestInviteMember:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_invite_without_auth(self, session):
+    async def test_invite_without_auth(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
@@ -350,7 +350,7 @@ class TestInviteMember:
 
 class TestMyInvitations:
     @pytest.mark.asyncio
-    async def test_get_my_invitations(self, session):
+    async def test_get_my_invitations(self):
         """User2 has a pending invitation → visible via GET /alliances/my-invitations."""
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
@@ -374,7 +374,7 @@ class TestMyInvitations:
         assert body[0]["status"] == "pending"
 
     @pytest.mark.asyncio
-    async def test_get_my_invitations_empty(self, session):
+    async def test_get_my_invitations_empty(self):
         """User with no invitations → empty list."""
         await _setup_2_users()
         await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -384,7 +384,7 @@ class TestMyInvitations:
         assert resp.json() == []
 
     @pytest.mark.asyncio
-    async def test_accept_invitation(self, session):
+    async def test_accept_invitation(self):
         """User2 accepts invitation → joins the alliance."""
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
@@ -412,7 +412,7 @@ class TestMyInvitations:
         assert resp3.json()["member_count"] == 2
 
     @pytest.mark.asyncio
-    async def test_decline_invitation(self, session):
+    async def test_decline_invitation(self):
         """User2 declines invitation → status becomes declined, NOT in alliance."""
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
@@ -440,7 +440,7 @@ class TestMyInvitations:
         assert resp3.json()["member_count"] == 1
 
     @pytest.mark.asyncio
-    async def test_cannot_accept_other_users_invitation(self, session):
+    async def test_cannot_accept_other_users_invitation(self):
         """User1 cannot accept an invitation meant for User2."""
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
@@ -462,7 +462,7 @@ class TestMyInvitations:
         assert resp2.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_accept_nonexistent_invitation(self, session):
+    async def test_accept_nonexistent_invitation(self):
         await _setup_2_users()
         resp = await execute_post_request(
             f"{ENDPOINT}/invitations/{uuid.uuid4()}/accept",
@@ -479,7 +479,7 @@ class TestMyInvitations:
 
 class TestCancelInvitation:
     @pytest.mark.asyncio
-    async def test_owner_can_cancel_invitation(self, session):
+    async def test_owner_can_cancel_invitation(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         free_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -499,7 +499,7 @@ class TestCancelInvitation:
         assert resp2.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_regular_member_cannot_cancel_invitation(self, session):
+    async def test_regular_member_cannot_cancel_invitation(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -533,7 +533,7 @@ class TestCancelInvitation:
 
 class TestAllianceInvitations:
     @pytest.mark.asyncio
-    async def test_owner_can_list_invitations(self, session):
+    async def test_owner_can_list_invitations(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         free_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -551,7 +551,7 @@ class TestAllianceInvitations:
         assert len(resp.json()) == 1
 
     @pytest.mark.asyncio
-    async def test_regular_member_cannot_list_invitations(self, session):
+    async def test_regular_member_cannot_list_invitations(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -569,7 +569,7 @@ class TestAllianceInvitations:
 
 class TestRemoveMember:
     @pytest.mark.asyncio
-    async def test_owner_can_remove_regular_member(self, session):
+    async def test_owner_can_remove_regular_member(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -581,7 +581,7 @@ class TestRemoveMember:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_owner_can_remove_officer(self, session):
+    async def test_owner_can_remove_officer(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -594,7 +594,7 @@ class TestRemoveMember:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_officer_can_remove_regular_member(self, session):
+    async def test_officer_can_remove_regular_member(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         officer_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -615,7 +615,7 @@ class TestRemoveMember:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_officer_cannot_remove_another_officer(self, session):
+    async def test_officer_cannot_remove_another_officer(self):
         """Key access control test: officers must not remove other officers."""
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
@@ -639,7 +639,7 @@ class TestRemoveMember:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_regular_member_cannot_remove(self, session):
+    async def test_regular_member_cannot_remove(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -658,7 +658,7 @@ class TestRemoveMember:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_cannot_remove_owner(self, session):
+    async def test_cannot_remove_owner(self):
         await _setup_2_users()
         alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
 
@@ -676,7 +676,7 @@ class TestRemoveMember:
 
 class TestAddOfficer:
     @pytest.mark.asyncio
-    async def test_owner_can_add_officer(self, session):
+    async def test_owner_can_add_officer(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -689,7 +689,7 @@ class TestAddOfficer:
         assert response.status_code == 201
 
     @pytest.mark.asyncio
-    async def test_officer_cannot_add_officer(self, session):
+    async def test_officer_cannot_add_officer(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         officer_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -717,7 +717,7 @@ class TestAddOfficer:
 
 class TestRemoveOfficer:
     @pytest.mark.asyncio
-    async def test_owner_can_remove_officer(self, session):
+    async def test_owner_can_remove_officer(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -731,7 +731,7 @@ class TestRemoveOfficer:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_officer_cannot_remove_officer(self, session):
+    async def test_officer_cannot_remove_officer(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         officer_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -770,7 +770,7 @@ class TestSetMemberGroup:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_regular_member_cannot_set_group(self, session):
+    async def test_regular_member_cannot_set_group(self):
         await _setup_2_users()
         alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -790,7 +790,7 @@ class TestSetMemberGroup:
 
 class TestGetMyRoles:
     @pytest.mark.asyncio
-    async def test_my_roles_owner(self, session):
+    async def test_my_roles_owner(self):
         """Owner of an alliance → is_owner=True, can_manage=True."""
         await _setup_2_users()
         alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
@@ -805,7 +805,7 @@ class TestGetMyRoles:
         assert str(owner.id) in body["my_account_ids"]
 
     @pytest.mark.asyncio
-    async def test_my_roles_officer(self, session):
+    async def test_my_roles_officer(self):
         """Officer of an alliance → is_officer=True, can_manage=True, is_owner=False."""
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
@@ -821,7 +821,7 @@ class TestGetMyRoles:
         assert role["can_manage"] is True
 
     @pytest.mark.asyncio
-    async def test_my_roles_regular_member(self, session):
+    async def test_my_roles_regular_member(self):
         """Regular member → is_owner=False, is_officer=False, can_manage=False."""
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
@@ -836,7 +836,7 @@ class TestGetMyRoles:
         assert role["can_manage"] is False
 
     @pytest.mark.asyncio
-    async def test_my_roles_no_alliance(self, session):
+    async def test_my_roles_no_alliance(self):
         """User with no alliance → empty roles dict."""
         await _setup_2_users()
         await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -848,7 +848,7 @@ class TestGetMyRoles:
         assert len(body["my_account_ids"]) == 1
 
     @pytest.mark.asyncio
-    async def test_my_roles_without_auth(self, session):
+    async def test_my_roles_without_auth(self):
         """No auth header → 401 (router-level dependency rejects)."""
         response = await execute_get_request(f"{ENDPOINT}/my-roles")
         assert response.status_code == 401
@@ -861,7 +861,7 @@ class TestGetMyRoles:
 
 class TestEligibility:
     @pytest.mark.asyncio
-    async def test_eligible_owners(self, session):
+    async def test_eligible_owners(self):
         await _setup_2_users()
         await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
 
@@ -872,7 +872,7 @@ class TestEligibility:
         assert len(response.json()) == 1
 
     @pytest.mark.asyncio
-    async def test_eligible_owners_empty_when_all_in_alliance(self, session):
+    async def test_eligible_owners_empty_when_all_in_alliance(self):
         await _setup_2_users()
         await push_alliance_with_owner(user_id=USER_ID)
 
@@ -883,7 +883,7 @@ class TestEligibility:
         assert len(response.json()) == 0
 
     @pytest.mark.asyncio
-    async def test_eligible_members(self, session):
+    async def test_eligible_members(self):
         await _setup_2_users()
         await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
@@ -894,7 +894,7 @@ class TestEligibility:
         assert len(response.json()) >= 1
 
     @pytest.mark.asyncio
-    async def test_eligible_officers(self, session):
+    async def test_eligible_officers(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
