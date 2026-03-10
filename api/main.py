@@ -7,9 +7,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 from starlette.middleware.base import _StreamingResponse
 from src.Messages.validators_messages import VALIDATION_ERROR
 from src.controllers.admin_controller import admin_controller
@@ -38,9 +35,9 @@ if not IS_PROD:
 app = FastAPI(title="Mawster", version="1.0.0")
 
 # Rate limiter (utilise l'IP du client — X-Forwarded-For si disponible, sinon connexion directe)
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+# limiter = Limiter(key_func=get_remote_address)
+# app.state.limiter = limiter
+# app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS — origines définies dans api.env (ALLOWED_ORIGINS), jamais "*" en prod
 _cors_origins = [origin.strip() for origin in SECRET.ALLOWED_ORIGINS.split(",") if origin.strip()]
