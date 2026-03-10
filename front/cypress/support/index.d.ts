@@ -45,6 +45,39 @@ declare namespace Cypress {
     ): Chainable<any>;
 
     /**
+     * Add a champion to a player's roster via backend API.
+     */
+    apiAddChampionToRoster(
+      token: string,
+      gameAccountId: string,
+      championId: string,
+      rarity: string,
+      options?: { signature?: number; is_preferred_attacker?: boolean; ascension?: number }
+    ): Chainable<any>;
+
+    /**
+     * Place a defender on a defense node via backend API.
+     */
+    apiPlaceDefender(
+      token: string,
+      allianceId: string,
+      battlegroup: number,
+      nodeNumber: number,
+      championUserId: string,
+      gameAccountId: string
+    ): Chainable<any>;
+
+    /**
+     * Set (or unset) the battlegroup for an alliance member via backend API.
+     */
+    apiSetMemberGroup(
+      token: string,
+      allianceId: string,
+      gameAccountId: string,
+      group: number | null
+    ): Chainable<any>;
+
+    /**
      * Invite a game account to an alliance via backend API.
      */
     apiInviteMember(

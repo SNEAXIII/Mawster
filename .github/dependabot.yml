@@ -1,0 +1,35 @@
+version: 2
+updates:
+  # Dépendances Python (pip/uv)
+  - package-ecosystem: pip
+    directory: /api
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      fastapi:
+        patterns:
+          - fastapi*
+          - starlette*
+          - uvicorn*
+
+  # Dépendances Node.js (npm)
+  - package-ecosystem: npm
+    directory: /front
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      react:
+        patterns:
+          - react*
+          - "@types/react*"
+      nextjs:
+        patterns:
+          - next*
+
+  # Actions GitHub
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

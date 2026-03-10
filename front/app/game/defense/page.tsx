@@ -332,6 +332,7 @@ function DefensePageContent() {
                 variant="destructive"
                 size="sm"
                 className="ml-auto"
+                data-cy="defense-clear-all"
                 onClick={() => setClearConfirmOpen(true)}
               >
                 <Trash2 className="w-4 h-4 mr-1" />
@@ -339,19 +340,19 @@ function DefensePageContent() {
               </Button>
             )}
 
-            {/* Export / Import */}
-            <div className={`flex gap-1 ${userCanManage && defenseSummary && defenseSummary.placements.length > 0 ? '' : 'ml-auto'}`}>
-              <Button variant="outline" size="sm" onClick={handleExport} data-cy="defense-export">
-                <Download className="w-4 h-4 mr-1" />
-                {t.game.defense.importExport.exportBtn}
-              </Button>
-              {userCanManage && (
+            {/* Export / Import — managers only */}
+            {userCanManage && (
+              <div className="flex gap-1 ml-auto">
+                <Button variant="outline" size="sm" onClick={handleExport} data-cy="defense-export">
+                  <Download className="w-4 h-4 mr-1" />
+                  {t.game.defense.importExport.exportBtn}
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} data-cy="defense-import">
                   <Upload className="w-4 h-4 mr-1" />
                   {t.game.defense.importExport.importBtn}
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

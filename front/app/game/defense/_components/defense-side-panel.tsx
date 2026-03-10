@@ -63,7 +63,7 @@ export default function DefenseSidePanel({
           const playerPlacements = placementsByPlayer.get(member.game_account_id) ?? [];
           const isFull = member.defender_count >= member.max_defenders;
           return (
-            <Card key={member.game_account_id} className="bg-card/50">
+            <Card key={member.game_account_id} className="bg-card/50" data-cy={`member-section-${member.game_pseudo}`}>
               <CardContent className="p-3">
                 <div className="flex items-center justify-between mb-2">
                   <UsernameEnriched
@@ -72,6 +72,7 @@ export default function DefenseSidePanel({
                     isMine={isMine(member.game_account_id)}
                   />
                   <span
+                    data-cy={`defender-count-${member.game_pseudo}`}
                     className={cn(
                       'text-xs font-mono',
                       isFull ? 'text-red-400' : 'text-muted-foreground',

@@ -1,8 +1,9 @@
 from typing import Annotated
 import logging
 
-from fastapi import APIRouter, Depends
-from src.security import IS_PROD
+from fastapi import APIRouter, Depends, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from src.dto.dto_token import LoginResponse, RefreshTokenRequest
 from src.dto.dto_utilisateurs import (
@@ -22,6 +23,8 @@ from src.utils.logging_config import audit_log
 
 logger = logging.getLogger(__name__)
 
+limiter = Limiter(key_func=get_remote_address)
+
 auth_controller = APIRouter(
     prefix="/auth",
     tags=["Auth"],
@@ -36,7 +39,8 @@ async def read_users_me(
 
 
 @auth_controller.post("/discord", status_code=200)
-async def discord_login(discord_data: DiscordLoginRequest, session: SessionDep) -> LoginResponse:
+@limiter.limit("20/minute")
+async def discord_login(request: Request, discord_data: DiscordLoginRequest, session: SessionDep) -> LoginResponse:
     """Authentification via Discord OAuth2.
 
     Appele par le serveur NextAuth apres un flow OAuth Discord reussi.
@@ -55,14 +59,6 @@ async def discord_login(discord_data: DiscordLoginRequest, session: SessionDep) 
     refresh_token = JWTService.create_refresh_token(user)
 
     audit_log("auth.login", user_id=str(user.id), detail="method=discord")
-
-    if not IS_PROD:
-        logger.warning("=" * 80)
-        logger.warning("⚠️  DEBUG JWT — À RETIRER AVANT PRODUCTION ⚠️")
-        logger.warning("User: %s (discord_id: %s)", user.login, user.discord_id)
-        logger.warning("JWT: %s", access_token)
-        logger.warning("JWT: %s", refresh_token)
-        logger.warning("=" * 80)
 
     return LoginResponse(
         token_type="bearer",
