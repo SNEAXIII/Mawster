@@ -204,7 +204,7 @@ jobs:
       - name: Generate timestamp tag
         run: echo "TAG=$(date +'${{ vars.TIME_TAG_FORMAT }}')" >> $GITHUB_ENV
       - name: Build and push Docker image for the api
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./api
           file: ./api/api.Dockerfile
@@ -234,7 +234,7 @@ jobs:
       - name: Generate timestamp tag
         run: echo "TAG=$(date +'${{ vars.TIME_TAG_FORMAT }}')" >> $GITHUB_ENV
       - name: Build and push Docker image for the front
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./front
           file: ./front/front.Dockerfile
