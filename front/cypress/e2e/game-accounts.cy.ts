@@ -19,8 +19,8 @@ describe("Game Accounts – UI", () => {
       cy.visit("/profile");
 
       // Form is already open (defaultOpen when no accounts)
-      cy.get("#pseudo").scrollIntoView().type("MyGamePseudo");
-      cy.contains("button", "Add account").click();
+      cy.getByCy('account-pseudo-input').scrollIntoView().type("MyGamePseudo");
+      cy.getByCy('account-create-btn').click();
 
       // Verify the account appears in the list
       cy.contains("MyGamePseudo").scrollIntoView().should("be.visible");
@@ -36,8 +36,8 @@ describe("Game Accounts – UI", () => {
       cy.visit("/profile");
 
       // Form is already open (defaultOpen when no accounts)
-      cy.get("#pseudo").scrollIntoView().type("PrimaryPlayer");
-      cy.contains("button", "Add account").click();
+      cy.getByCy('account-pseudo-input').scrollIntoView().type("PrimaryPlayer");
+      cy.getByCy('account-create-btn').click();
 
       cy.contains("PrimaryPlayer").scrollIntoView().should("be.visible");
       cy.contains("Primary").should("be.visible");
@@ -53,18 +53,16 @@ describe("Game Accounts – UI", () => {
       cy.visit("/profile");
       cy.contains("OldPseudo").scrollIntoView().should("be.visible");
 
-      // Click the pencil (edit) button (Star=0, Pencil=1, Trash=2)
-      cy.contains("OldPseudo")
-        .closest(".bg-gray-50")
-        .find("button")
-        .eq(1)
+      // Click the pencil (edit) button
+      cy.getByCy('account-row-OldPseudo')
+        .find('[data-cy="account-edit-btn"]')
         .click({ force: true });
 
       // Clear old value and type new one
       cy.get('input[maxlength="50"]').clear().type("NewPseudo");
 
       // Click the green check to confirm
-      cy.get('button[class*="text-green"]').first().click({ force: true });
+      cy.getByCy('account-edit-confirm').first().click({ force: true });
 
       // Verify the rename toast and new pseudo
       cy.contains("Game account renamed successfully").should("be.visible");
@@ -80,11 +78,9 @@ describe("Game Accounts – UI", () => {
       cy.visit("/profile");
       cy.contains("ToDelete").scrollIntoView().should("be.visible");
 
-      // Click the delete (trash) button (Star=0, Pencil=1, Trash=2)
-      cy.contains("ToDelete")
-        .closest(".bg-gray-50")
-        .find("button")
-        .eq(2)
+      // Click the delete (trash) button
+      cy.getByCy('account-row-ToDelete')
+        .find('[data-cy="account-delete-btn"]')
         .click({ force: true });
 
       // Confirmation dialog should appear

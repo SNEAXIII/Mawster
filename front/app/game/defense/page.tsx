@@ -293,7 +293,7 @@ function DefensePageContent() {
                 {t.game.defense.alliance}:
               </label>
               <Select value={selectedAllianceId} onValueChange={handleAllianceChange}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-[200px]" data-cy="defense-alliance-select">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -318,6 +318,7 @@ function DefensePageContent() {
                     variant={selectedBg === bg ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => handleBgChange(String(bg))}
+                    data-cy={`defense-bg-${bg}`}
                   >
                     BG {bg}
                   </Button>
@@ -340,12 +341,12 @@ function DefensePageContent() {
 
             {/* Export / Import */}
             <div className={`flex gap-1 ${userCanManage && defenseSummary && defenseSummary.placements.length > 0 ? '' : 'ml-auto'}`}>
-              <Button variant="outline" size="sm" onClick={handleExport}>
+              <Button variant="outline" size="sm" onClick={handleExport} data-cy="defense-export">
                 <Download className="w-4 h-4 mr-1" />
                 {t.game.defense.importExport.exportBtn}
               </Button>
               {userCanManage && (
-                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} data-cy="defense-import">
                   <Upload className="w-4 h-4 mr-1" />
                   {t.game.defense.importExport.importBtn}
                 </Button>

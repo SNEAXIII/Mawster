@@ -197,7 +197,7 @@ export default function AllianceMemberRow({
               )
             }
           >
-            <SelectTrigger className="h-7 w-24 text-xs">
+            <SelectTrigger className="h-7 w-24 text-xs" data-cy="member-group-select">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

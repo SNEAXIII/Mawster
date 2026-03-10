@@ -155,6 +155,7 @@ export default function GameAccountsSection() {
                   <Label htmlFor="pseudo">{t.game.accounts.pseudo}</Label>
                   <Input
                     id="pseudo"
+                    data-cy="account-pseudo-input"
                     value={pseudo}
                     onChange={(e) => setPseudo(e.target.value)}
                     placeholder={t.game.accounts.pseudoPlaceholder}
@@ -163,7 +164,7 @@ export default function GameAccountsSection() {
                     disabled={creating}
                   />
                 </div>
-                <Button type="submit" disabled={creating || !pseudo.trim()}>
+                <Button type="submit" disabled={creating || !pseudo.trim()} data-cy="account-create-btn">
                   {creating ? (
                     <>
                       <Loader className="w-4 h-4 mr-2 animate-spin" />
@@ -192,6 +193,7 @@ export default function GameAccountsSection() {
                 <div
                   key={account.id}
                   className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border"
+                  data-cy={`account-row-${account.game_pseudo}`}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <Gamepad2 className="h-4 w-4 text-blue-500 shrink-0" />
@@ -216,6 +218,7 @@ export default function GameAccountsSection() {
                           size="icon"
                           className="text-green-600 hover:text-green-800 hover:bg-green-50 shrink-0"
                           disabled={!editPseudo.trim()}
+                          data-cy="account-edit-confirm"
                         >
                           <Check className="h-4 w-4" />
                         </Button>
@@ -264,6 +267,7 @@ export default function GameAccountsSection() {
                         onClick={() => handleSetPrimary(account)}
                         title={account.is_primary ? t.game.accounts.primary : (t.game.accounts.setAsPrimary ?? 'Set as primary')}
                         disabled={account.is_primary}
+                        data-cy="account-star-btn"
                       >
                         <Star className={`h-4 w-4 ${account.is_primary ? 'fill-yellow-500' : ''}`} />
                       </Button>
@@ -272,6 +276,7 @@ export default function GameAccountsSection() {
                         size="icon"
                         className="text-gray-500 hover:text-blue-600 hover:bg-blue-50"
                         onClick={() => startEditing(account)}
+                        data-cy="account-edit-btn"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -280,6 +285,7 @@ export default function GameAccountsSection() {
                         size="icon"
                         className="text-red-500 hover:text-red-700 hover:bg-red-50"
                         onClick={() => setDeleteTarget(account.id)}
+                        data-cy="account-delete-btn"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

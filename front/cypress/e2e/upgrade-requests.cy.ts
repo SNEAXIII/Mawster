@@ -28,14 +28,14 @@ describe("Upgrade Requests – UI", () => {
 
         // Add a champion first
         cy.contains("Add / Update a Champion").click();
-        cy.get('input[placeholder="Search a champion..."]').type(
+        cy.getByCy('champion-search').type(
           "UpgradeHero"
         );
-        cy.contains("button", "UpgradeHero").click();
+        cy.getByCy('champion-result-UpgradeHero').click();
 
         // Select 6★R4 rarity
-        cy.contains("button", "6★R4").click();
-        cy.contains("button", /^Add \/ Update$/).click();
+        cy.getByCy('rarity-6r4').click();
+        cy.getByCy('champion-submit').click();
 
         cy.contains("UpgradeHero added / updated").should("be.visible");
         // The champion card should be visible in the roster grid

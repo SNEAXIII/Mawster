@@ -36,6 +36,7 @@ export function CollapsibleSection({
         className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors font-semibold text-left"
         onClick={toggle}
         type="button"
+        data-cy={`collapsible-${title.replace(/[\s/]+/g, '-').toLowerCase()}`}
       >
         <span>{title}</span>
         {isOpen ? <FiChevronUp size={18} /> : <FiChevronDown size={18} />}

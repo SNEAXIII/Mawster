@@ -2,6 +2,12 @@
 
 const BACKEND = "http://localhost:8000";
 
+// ── Custom selector: data-cy ─────────────────────────────────────────────────
+
+Cypress.Commands.add("getByCy", (selector: string) => {
+  return cy.get(`[data-cy="${selector}"]`);
+});
+
 // ── Truncate DB (direct backend call) ────────────────────────────────────────
 
 Cypress.Commands.add("truncateDb", () => {
@@ -97,7 +103,7 @@ Cypress.Commands.add("uiLogin", (userName: string) => {
 
 function getProfile(
   accessToken: string
-): Cypress.Chainable<{ id: string; login: string }> {
+): Cypress.Chainable<{ id: string; login: string; email: string; discord_id: string }> {
   // Decode user_id from JWT since /auth/session doesn't include it
   const payload = JSON.parse(atob(accessToken.split(".")[1]));
   const userId: string = payload.user_id;
@@ -108,12 +114,12 @@ function getProfile(
       url: `${BACKEND}/auth/session`,
       headers: { Authorization: `Bearer ${accessToken}` },
     })
-    .then((res) => ({ id: userId, login: res.body.login }));
+    .then((res) => ({ id: userId, login: res.body.login, email: res.body.email, discord_id: res.body.discord_id }));
 }
 
 export function setupAdmin(
   discordToken = "cypress-admin-token"
-): Cypress.Chainable<{ access_token: string; refresh_token: string; user_id: string; login: string }> {
+): Cypress.Chainable<{ access_token: string; refresh_token: string; user_id: string; login: string; email: string; discord_id: string }> {
   return cy.registerUser(discordToken).then((tokens) => {
     return getProfile(tokens.access_token).then((profile) => {
       return cy.request({
@@ -130,6 +136,8 @@ export function setupAdmin(
           refresh_token: loginRes.body.refresh_token,
           user_id: profile.id,
           login: profile.login,
+          email: profile.email,
+          discord_id: profile.discord_id,
         }));
       });
     });
@@ -140,12 +148,14 @@ export function setupAdmin(
 
 export function setupUser(
   discordToken = "cypress-test-token"
-): Cypress.Chainable<{ access_token: string; refresh_token: string; user_id: string; login: string }> {
+): Cypress.Chainable<{ access_token: string; refresh_token: string; user_id: string; login: string; email: string; discord_id: string }> {
   return cy.registerUser(discordToken).then((tokens) => {
     return getProfile(tokens.access_token).then((profile) => ({
       ...tokens,
       user_id: profile.id,
       login: profile.login,
+      email: profile.email,
+      discord_id: profile.discord_id,
     }));
   });
 }
