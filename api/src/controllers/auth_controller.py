@@ -2,8 +2,6 @@ from typing import Annotated
 import logging
 
 from fastapi import APIRouter, Depends, Request
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from src.dto.dto_token import LoginResponse, RefreshTokenRequest
 from src.dto.dto_utilisateurs import (
@@ -23,8 +21,6 @@ from src.utils.logging_config import audit_log
 
 logger = logging.getLogger(__name__)
 
-limiter = Limiter(key_func=get_remote_address)
-
 auth_controller = APIRouter(
     prefix="/auth",
     tags=["Auth"],
@@ -39,7 +35,6 @@ async def read_users_me(
 
 
 @auth_controller.post("/discord", status_code=200)
-@limiter.limit("20/minute")
 async def discord_login(request: Request, discord_data: DiscordLoginRequest, session: SessionDep) -> LoginResponse:
     """Authentification via Discord OAuth2.
 

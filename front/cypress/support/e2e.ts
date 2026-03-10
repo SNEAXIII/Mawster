@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-const BACKEND = "http://localhost:8000";
+export const BACKEND = "http://localhost:8001";
 
 // ── Shared types ─────────────────────────────────────────────────────────────
 
@@ -80,7 +80,14 @@ Cypress.Commands.add(
       ],
     }).then((res) => {
       expect(res.status).to.eq(200);
-      return res.body;
+      // Load endpoint doesn't return champion objects, so fetch them
+      return cy
+        .request({
+          method: "GET",
+          url: `${BACKEND}/champions?search=${encodeURIComponent(name)}`,
+          headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        .then((getRes) => getRes.body.champions);
     });
   }
 );
@@ -105,9 +112,12 @@ Cypress.Commands.add(
 // ── UI login via dev-login flow ──────────────────────────────────────────────
 
 Cypress.Commands.add("uiLogin", (userName: string) => {
+  cy.clearAllCookies();
+  cy.clearAllSessionStorage();
+  cy.clearAllLocalStorage();
   cy.visit("/login");
-  cy.contains("button", userName).click();
-  cy.url().should("not.include", "/login");
+  cy.contains("button", userName, { timeout: 10000 }).click();
+  cy.url({ timeout: 10000 }).should("not.include", "/login");
 });
 
 // ── Navigate via navbar click ────────────────────────────────────────────────
@@ -246,28 +256,34 @@ function getProfile(
 export function setupAdmin(
   discordToken = "cypress-admin-token"
 ): Cypress.Chainable<UserSetupData> {
-  return cy.registerUser(discordToken).then((tokens) => {
-    return getProfile(tokens.access_token).then((profile) => {
+  let profile: { id: string; login: string; email: string; discord_id: string };
+
+  return cy
+    .registerUser(discordToken)
+    .then((tokens) => getProfile(tokens.access_token))
+    .then((p) => {
+      profile = p;
       return cy.request({
         method: "POST",
         url: `${BACKEND}/dev/promote`,
         body: { user_id: profile.id, role: "admin" },
-      }).then(() => {
-        return cy.request({
-          method: "POST",
-          url: `${BACKEND}/dev/login`,
-          body: { user_id: profile.id },
-        }).then((loginRes) => ({
-          access_token: loginRes.body.access_token,
-          refresh_token: loginRes.body.refresh_token,
-          user_id: profile.id,
-          login: profile.login,
-          email: profile.email,
-          discord_id: profile.discord_id,
-        }));
       });
-    });
-  });
+    })
+    .then(() =>
+      cy.request({
+        method: "POST",
+        url: `${BACKEND}/dev/login`,
+        body: { user_id: profile.id },
+      })
+    )
+    .then((loginRes) => ({
+      access_token: loginRes.body.access_token,
+      refresh_token: loginRes.body.refresh_token,
+      user_id: profile.id,
+      login: profile.login,
+      email: profile.email,
+      discord_id: profile.discord_id,
+    }));
 }
 
 // ── Helper: register a regular user via API, returns user data ───────────────

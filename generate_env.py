@@ -129,6 +129,7 @@ def main() -> None:
     algo               = prompt("JWT algorithm",                  default="HS256")
     bcrypt_rounds      = prompt("Bcrypt hash rounds",             default="12")
     token_expire       = prompt("Access token expiry (minutes)",  default="60")
+    api_port           = prompt("API port",                       default="8000")
 
     # ── 5. Write files ─────────────────────────────────────────────────────────
     print(f"\n{c(BOLD, '── Writing files ──────────────────────────────────')}")
@@ -153,6 +154,7 @@ def main() -> None:
         f"ALGORITHM={algo}",
         f"BCRYPT_HASH_ROUND={bcrypt_rounds}",
         f"ACCESS_TOKEN_EXPIRE_MINUTES={token_expire}",
+        f"API_PORT={api_port}",
     ])
 
     # front.env

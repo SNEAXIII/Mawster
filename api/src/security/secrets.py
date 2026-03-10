@@ -15,8 +15,13 @@ if not IS_PROD:
     print(f"Selected mode {IS_PROD = }, {IS_TESTING = }")
 
 
+def _default_database() -> str:
+    """Return the default database name based on mode."""
+    return "mawster" if not IS_TESTING else "mawster_testing"
+
+
 class Settings(BaseSettings):
-    MARIADB_DATABASE: str = Field(... if IS_PROD else "mawster")
+    MARIADB_DATABASE: str = Field(... if IS_PROD else _default_database())
     MARIADB_USER: str = Field(... if IS_PROD else "user")
     MARIADB_PASSWORD: str = Field(... if IS_PROD else "password")
     MARIADB_ROOT_PASSWORD: str = Field(... if IS_PROD else "rootpassword")
@@ -30,6 +35,7 @@ class Settings(BaseSettings):
     # Origines CORS séparées par des virgules (ex: "https://mawster.example.com")
     # En dev, défaut permissif ; en prod, DOIT être défini dans api.env
     ALLOWED_ORIGINS: str = Field(... if IS_PROD else "http://localhost:3000,http://localhost:3001")
+    API_PORT: int = Field(... if IS_PROD else 8000)
     model_config = SettingsConfigDict(env_file=api_file)
 
 
