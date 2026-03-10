@@ -189,7 +189,7 @@ export default function GameAccountsSection() {
             </div>
           ) : (
             <div className="space-y-2">
-              {accounts.map((account) => (
+              {accounts.map((account, index) => (
                 <div
                   key={account.id}
                   className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border"
@@ -238,7 +238,7 @@ export default function GameAccountsSection() {
                           {account.game_pseudo}
                         </p>
                         {account.is_primary && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          <span data-cy="account-primary-badge" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                             <Star className="h-3 w-3" />
                             {t.game.accounts.primary}
                           </span>
@@ -267,7 +267,7 @@ export default function GameAccountsSection() {
                         onClick={() => handleSetPrimary(account)}
                         title={account.is_primary ? t.game.accounts.primary : (t.game.accounts.setAsPrimary ?? 'Set as primary')}
                         disabled={account.is_primary}
-                        data-cy="account-star-btn"
+                        data-cy={`account-star-btn-${index}`}
                       >
                         <Star className={`h-4 w-4 ${account.is_primary ? 'fill-yellow-500' : ''}`} />
                       </Button>
@@ -276,7 +276,7 @@ export default function GameAccountsSection() {
                         size="icon"
                         className="text-gray-500 hover:text-blue-600 hover:bg-blue-50"
                         onClick={() => startEditing(account)}
-                        data-cy="account-edit-btn"
+                        data-cy={`account-edit-btn-${index}`}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
