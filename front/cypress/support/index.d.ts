@@ -87,11 +87,10 @@ declare namespace Cypress {
     ): Chainable<any>;
 
     /**
-     * Force a user to join an alliance via backend API (dev endpoint).
+     * Force a user to join an alliance via dev endpoint (bypasses invitations).
      */
-    apiJoinAlliance(
-      token: string,
-      userId: string,
+    apiForceJoinAlliance(
+      gameAccountId: string,
       allianceId: string
     ): Chainable<any>;
 

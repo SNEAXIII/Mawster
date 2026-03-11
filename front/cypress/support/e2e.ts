@@ -1,5 +1,10 @@
 /// <reference types="cypress" />
 
+// Suppress benign ResizeObserver errors that occur in some browsers
+Cypress.on('uncaught:exception', (err) => {
+  if (err.message.includes('ResizeObserver')) return false;
+});
+
 export const BACKEND = "http://localhost:8001";
 
 // ── Shared types ─────────────────────────────────────────────────────────────
@@ -109,14 +114,13 @@ Cypress.Commands.add(
   }
 );
 
-// ── Make an account join a team ──────────────────────────────────────────────
+// ── Force-join a game account into an alliance (dev endpoint, bypasses invitations) ──
 
-Cypress.Commands.add("apiJoinAlliance", (token: string, userId: string, allianceId: string) => {
+Cypress.Commands.add("apiForceJoinAlliance", (gameAccountId: string, allianceId: string) => {
   cy.request({
     method: "POST",
-    url: `${BACKEND}/dev/join-alliance`,
-    headers: { Authorization: `Bearer ${token}` },
-    body: { user_id: userId, alliance_id: allianceId },
+    url: `${BACKEND}/dev/force-join-alliance`,
+    body: { game_account_id: gameAccountId, alliance_id: allianceId },
   }).then((res) => {
     expect(res.status).to.eq(200);
   });

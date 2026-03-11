@@ -58,6 +58,7 @@ export default function RosterChampionCard({
               )}
               onClick={() => onTogglePreferredAttacker(entry)}
               title={t.roster.preferredAttackerToggle}
+              data-cy="preferred-attacker-toggle"
             >
               <span className="text-xs leading-none">⚔</span>
             </button>
@@ -131,6 +132,7 @@ export default function RosterChampionCard({
           entry.is_preferred_attacker ? 'text-yellow-400' : 'text-white',
         )}
         title={entry.champion_name}
+        data-cy={entry.is_preferred_attacker ? 'preferred-attacker-name' : undefined}
       >
         {entry.is_preferred_attacker && '⚔ '}{shortenChampionName(entry.champion_name)}
       </p>
