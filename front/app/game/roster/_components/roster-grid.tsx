@@ -39,7 +39,7 @@ export default function RosterGrid({
   return (
     <div className="space-y-6">
       {groupedRoster.map(([rarity, entries]) => (
-        <div key={rarity}>
+        <div key={rarity} data-cy={`rarity-group-${rarity}`}>
           <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
             <span className="bg-gray-800 text-yellow-400 px-3 py-0.5 rounded-md text-sm font-bold">
               {RARITY_LABELS[rarity]}

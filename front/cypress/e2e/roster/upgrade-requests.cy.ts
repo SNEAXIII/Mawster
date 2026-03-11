@@ -9,19 +9,32 @@ describe("Roster – Champion Upgrade", () => {
   // Basic upgrade via API
   // =========================================================================
 
-  it("upgrades a champion one rank via API and UI reflects it", () => {
+  it("upgrades a champion one rank via UI and verifies rarity group", () => {
     setupAdmin("upg-basic-admin").then((admin) => {
       cy.apiLoadChampion(admin.access_token, "Hercules", "Cosmic").then((champs) => {
         setupUser("upg-basic-user").then(({ login, access_token }) => {
           cy.apiCreateGameAccount(access_token, "HercPlayer", true).then((acc) => {
-            cy.apiAddChampionToRoster(access_token, acc.id, champs[0].id, "7r1").then((cu) => {
-              // Upgrade 7r1 → 7r2
-              cy.apiUpgradeChampion(access_token, cu.id);
+            cy.apiAddChampionToRoster(access_token, acc.id, champs[0].id, "7r1");
 
-              cy.uiLogin(login);
-              cy.navTo("roster");
-              cy.contains("Hercules").should("be.visible");
-            });
+            cy.uiLogin(login);
+            cy.navTo("roster");
+
+            // Champion should start in the 7r1 group
+            cy.getByCy("rarity-group-7r1").should("exist");
+            cy.getByCy("rarity-group-7r1").contains("Hercules").should("be.visible");
+
+            // Click the upgrade button on the champion card
+            cy.getByCy("champion-upgrade").first().click({ force: true });
+
+            // Confirm upgrade in the dialog
+            cy.get('[role="alertdialog"]').should("be.visible");
+            cy.get('[role="alertdialog"]').contains("button", "Upgrade").click();
+
+            // Champion should now be in the 7r2 group
+            cy.getByCy("rarity-group-7r2").should("exist");
+            cy.getByCy("rarity-group-7r2").contains("Hercules").should("be.visible");
+            // The 7r1 group should be gone (only champion was moved)
+            cy.getByCy("rarity-group-7r1").should("not.exist");
           });
         });
       });
@@ -85,21 +98,33 @@ describe("Roster – Champion Upgrade", () => {
   // Multiple sequential upgrades
   // =========================================================================
 
-  it("can upgrade champion through multiple ranks sequentially", () => {
+  it("can upgrade champion through multiple ranks sequentially via UI", () => {
     setupAdmin("upg-multi-admin").then((admin) => {
       cy.apiLoadChampion(admin.access_token, "MultUpHero", "Mutant").then((champs) => {
         setupUser("upg-multi-user").then(({ login, access_token }) => {
           cy.apiCreateGameAccount(access_token, "MultUpPlayer", true).then((acc) => {
-            cy.apiAddChampionToRoster(access_token, acc.id, champs[0].id, "7r1").then((cu) => {
-              // Upgrade 7r1 → 7r2 → 7r3 → 7r4
-              cy.apiUpgradeChampion(access_token, cu.id);
-              cy.apiUpgradeChampion(access_token, cu.id);
-              cy.apiUpgradeChampion(access_token, cu.id);
+            cy.apiAddChampionToRoster(access_token, acc.id, champs[0].id, "7r1");
 
-              cy.uiLogin(login);
-              cy.navTo("roster");
-              cy.contains("MultUpHero").should("be.visible");
-            });
+            cy.uiLogin(login);
+            cy.navTo("roster");
+
+            // Verify starting group
+            cy.getByCy("rarity-group-7r1").contains("MultUpHero").should("be.visible");
+
+            // Upgrade 7r1 → 7r2
+            cy.getByCy("champion-upgrade").first().click({ force: true });
+            cy.get('[role="alertdialog"]').contains("button", "Upgrade").click();
+            cy.getByCy("rarity-group-7r2").contains("MultUpHero").should("be.visible");
+
+            // Upgrade 7r2 → 7r3
+            cy.getByCy("champion-upgrade").first().click({ force: true });
+            cy.get('[role="alertdialog"]').contains("button", "Upgrade").click();
+            cy.getByCy("rarity-group-7r3").contains("MultUpHero").should("be.visible");
+
+            // Upgrade 7r3 → 7r4
+            cy.getByCy("champion-upgrade").first().click({ force: true });
+            cy.get('[role="alertdialog"]').contains("button", "Upgrade").click();
+            cy.getByCy("rarity-group-7r4").contains("MultUpHero").should("be.visible");
           });
         });
       });
