@@ -128,7 +128,7 @@ export default function AddChampionForm({
                 </span>
               </div>
               {existingEntries.length > 0 && (
-                <div className="mt-1.5 ml-8 space-y-0.5">
+                <div className="mt-1.5 ml-8 space-y-0.5" data-cy="already-in-roster">
                   <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
                     {t.roster.alreadyInRoster}
                   </span>
@@ -188,6 +188,7 @@ export default function AddChampionForm({
               onChange={(e) =>
                 onSignatureChange(Math.max(0, parseInt(e.target.value) || 0))
               }
+              data-cy="sig-input"
             />
             <div className="flex gap-1">
               {SIGNATURE_PRESETS.map((v) => (
@@ -215,6 +216,7 @@ export default function AddChampionForm({
               checked={isPreferredAttacker}
               onChange={(e) => onIsPreferredAttackerChange(e.target.checked)}
               className="w-4 h-4"
+              data-cy="preferred-attacker-checkbox"
             />
             <span className="text-sm font-medium">{t.roster.preferredAttacker}</span>
           </label>
@@ -244,6 +246,7 @@ export default function AddChampionForm({
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
                   }`}
                   onClick={() => onAscensionChange(level)}
+                  data-cy={`ascension-${level}`}
                 >
                   {level === 0 ? 'None' : `A${level}`}
                 </button>

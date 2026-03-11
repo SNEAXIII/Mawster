@@ -44,6 +44,7 @@ export default function RosterChampionCard({
   return (
     <div
       className={`rounded-md bg-gray-900 ${classColors.border} border-[3px] shadow hover:shadow-lg transition-shadow relative group overflow-hidden`}
+      data-cy={`champion-card-${entry.champion_name}`}
     >
       {/* Action buttons — always visible on touch, hover on desktop */}
       {!readOnly && (
@@ -140,14 +141,14 @@ export default function RosterChampionCard({
       {/* Signature + Ascension */}
       <div className="flex justify-center gap-1 pb-1">
         {entry.signature > 0 ? (
-          <span className="text-amber-400 text-[9px] font-semibold">
+          <span className="text-amber-400 text-[9px] font-semibold" data-cy="champion-sig">
             sig {entry.signature}
           </span>
         ) : (
-          <span className="text-white/50 text-[9px]">sig 0</span>
+          <span className="text-white/50 text-[9px]" data-cy="champion-sig">sig 0</span>
         )}
         {entry.ascension > 0 && (
-          <span className="text-purple-400 text-[9px] font-semibold">
+          <span className="text-purple-400 text-[9px] font-semibold" data-cy="champion-ascension">
             · A{entry.ascension}
           </span>
         )}
