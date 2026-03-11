@@ -73,6 +73,7 @@ export default function RosterChampionCard({
           )}
           {pendingRequestId && onCancelRequest && (
             <button
+              data-cy="cancel-pending-request"
               className="text-red-400 hover:text-red-300 bg-black/60 rounded-full p-1"
               onClick={() => onCancelRequest(pendingRequestId)}
               title={t.roster.upgradeRequests.cancel}
@@ -82,6 +83,7 @@ export default function RosterChampionCard({
           )}
           {!pendingRequestId && nextRarity && onUpgrade && (
             <button
+              data-cy="champion-upgrade"
               className="text-green-400 hover:text-green-300 bg-black/60 rounded-full p-1"
               onClick={() => onUpgrade(entry)}
               title={t.roster.upgrade}

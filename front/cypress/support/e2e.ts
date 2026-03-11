@@ -109,6 +109,19 @@ Cypress.Commands.add(
   }
 );
 
+// ── Make an account join a team ──────────────────────────────────────────────
+
+Cypress.Commands.add("apiJoinAlliance", (token: string, userId: string, allianceId: string) => {
+  cy.request({
+    method: "POST",
+    url: `${BACKEND}/dev/join-alliance`,
+    headers: { Authorization: `Bearer ${token}` },
+    body: { user_id: userId, alliance_id: allianceId },
+  }).then((res) => {
+    expect(res.status).to.eq(200);
+  });
+});
+
 // ── UI login via dev-login flow ──────────────────────────────────────────────
 
 Cypress.Commands.add("uiLogin", (userName: string) => {
@@ -232,6 +245,43 @@ Cypress.Commands.add(
       expect(res.status).to.eq(201);
       return res.body;
     });
+  }
+);
+
+// ── Run fixtures (truncate DB + seed) ────────────────────────────────────────
+
+Cypress.Commands.add("runFixtures", () => {
+  cy.request("POST", `${BACKEND}/dev/fixtures`);
+});
+
+// ── Create upgrade request (direct backend call) ──────────────────────────────
+
+Cypress.Commands.add(
+  "apiCreateUpgradeRequest",
+  (token: string, championUserId: string, requestedRarity: string) => {
+    return cy
+      .request({
+        method: "POST",
+        url: `${BACKEND}/champion-users/upgrade-requests`,
+        headers: { Authorization: `Bearer ${token}` },
+        body: { champion_user_id: championUserId, requested_rarity: requestedRarity },
+      })
+      .then((res) => res.body);
+  }
+);
+
+// ── Upgrade champion rank (direct backend call) ───────────────────────────────
+
+Cypress.Commands.add(
+  "apiUpgradeChampion",
+  (token: string, championUserId: string) => {
+    return cy
+      .request({
+        method: "PATCH",
+        url: `${BACKEND}/champion-users/${championUserId}/upgrade`,
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => res.body);
   }
 );
 
