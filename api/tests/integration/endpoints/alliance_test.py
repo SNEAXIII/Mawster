@@ -86,35 +86,39 @@ class TestCreateAlliance:
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "scenario, expected_status",
-        [
-            ("not_your_account", 403),
-            ("already_in_alliance", 409),
-            ("account_not_found", 404),
-        ],
-        ids=["not_your_account", "already_in_alliance", "account_not_found"],
-    )
-    async def test_create_errors(self, session, scenario, expected_status):
+    async def not_your_account(self):
         await _setup_2_users()
-
-        if scenario == "not_your_account":
-            acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO)
-            owner_id = str(acc.id)
-        elif scenario == "already_in_alliance":
-            _, owner = await push_alliance_with_owner(user_id=USER_ID)
-            owner_id = str(owner.id)
-        else:
-            owner_id = str(uuid.uuid4())
-
+        acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO)
+        owner_id = str(acc.id)
         response = await execute_post_request(
             ENDPOINT,
             {"name": "X", "tag": "X", "owner_id": owner_id},
             headers=HEADERS_USER1,
         )
-        assert response.status_code == expected_status
+        assert response.status_code == 403
 
+    @pytest.mark.asyncio
+    async def already_in_alliance(self):
+        await _setup_2_users()
+        _, owner = await push_alliance_with_owner(user_id=USER_ID)
+        owner_id = str(owner.id)
+        response = await execute_post_request(
+            ENDPOINT,
+            {"name": "X", "tag": "X", "owner_id": owner_id},
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 409
 
+    @pytest.mark.asyncio
+    async def account_not_found(self):
+        await _setup_2_users()
+        owner_id = str(uuid.uuid4())
+        response = await execute_post_request(
+            ENDPOINT,
+            {"name": "X", "tag": "X", "owner_id": owner_id},
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 404
 # =========================================================================
 # GET /alliances, /alliances/mine, /alliances/{id}
 # =========================================================================

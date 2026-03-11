@@ -114,8 +114,8 @@ class TestGetUsers:
         "page, size, expected_status",
         [
             (1, 10, 200),
-            (0, 10, 400),
-            (1, 0, 400),
+            (0, 10, 422),
+            (1, 0, 422),
         ],
         ids=["valid", "page_zero", "size_zero"],
     )
@@ -191,12 +191,12 @@ class TestDisableUser:
         assert response.status_code == expected_status
 
     @pytest.mark.asyncio
-    async def test_disable_invalid_uuid_returns_400(self):
+    async def test_disable_invalid_uuid_returns_422(self):
         await push_one_admin()
         response = await execute_patch_request(
             "/admin/users/disable/not-a-uuid", {}, headers=ADMIN_HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
 
 # =========================================================================
@@ -349,12 +349,12 @@ class TestPromoteUser:
         assert response.status_code == expected_status
 
     @pytest.mark.asyncio
-    async def test_promote_invalid_uuid_returns_400(self):
+    async def test_promote_invalid_uuid_returns_422(self):
         await push_one_super_admin()
         response = await execute_patch_request(
             "/admin/users/promote/not-a-uuid", {}, headers=SUPER_ADMIN_HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
 
 # =========================================================================

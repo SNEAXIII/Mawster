@@ -135,7 +135,7 @@ async def validation_exception_handler(request, exc):
         error_message = error.get("msg").removeprefix(f"{error_type}, ")
         errors_dict[location] = {"type": error.get("type"), "message": error_message}
     return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         content={"message": VALIDATION_ERROR, "errors": errors_dict},
     )
 

@@ -64,7 +64,6 @@ async def get_eligible_owners(
 async def get_eligible_officers(
     alliance_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get members of the alliance eligible to become officers (not owner, not already officer)."""
     return await AllianceService.get_eligible_officers(session, alliance_id)
@@ -76,7 +75,6 @@ async def get_eligible_officers(
 )
 async def get_eligible_members(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get all game accounts NOT in any alliance (can be invited)."""
     return await AllianceService.get_eligible_members(session)
@@ -113,7 +111,6 @@ async def create_alliance(
 )
 async def get_all_alliances(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get all alliances."""
     alliances = await AllianceService.get_all_alliances(session)
@@ -201,7 +198,6 @@ async def decline_invitation(
 async def get_alliance(
     alliance_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get a specific alliance by ID."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
