@@ -7,8 +7,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 class AllianceCreateRequest(BaseModel):
     """DTO to create a new alliance. The owner is the game account that creates it."""
-    name: str = Field(..., max_length=100, examples=["My Alliance"])
-    tag: str = Field(..., max_length=10, examples=["ALLY"])
+    name: str = Field(..., min_length=3, max_length=50, examples=["My Alliance"])
+    tag: str = Field(..., min_length=1, max_length=5, examples=["ALLY"])
     owner_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
 
 

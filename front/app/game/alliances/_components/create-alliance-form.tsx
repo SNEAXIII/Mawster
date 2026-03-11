@@ -78,7 +78,8 @@ export default function CreateAllianceForm({
                   value={name}
                   onChange={(e) => onNameChange(e.target.value)}
                   placeholder={t.game.alliances.namePlaceholder}
-                  maxLength={100}
+                  maxLength={50}
+                  minLength={3}
                   required
                   disabled={creating}
                 />
@@ -91,7 +92,7 @@ export default function CreateAllianceForm({
                   value={tag}
                   onChange={(e) => onTagChange(e.target.value.toUpperCase())}
                   placeholder={t.game.alliances.tagPlaceholder}
-                  maxLength={10}
+                  maxLength={5}
                   required
                   disabled={creating}
                 />

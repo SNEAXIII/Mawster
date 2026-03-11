@@ -19,7 +19,7 @@ class GameAccount(SQLModel, table=True):
     user_id: uuid.UUID = Field(foreign_key="user.id")
     alliance_id: Optional[uuid.UUID] = Field(default=None, foreign_key="alliance.id")
     alliance_group: Optional[int] = Field(default=None)  # 1, 2, 3 or None
-    game_pseudo: str = Field(max_length=50)
+    game_pseudo: str = Field(max_length=16)
     is_primary: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.now)
 
