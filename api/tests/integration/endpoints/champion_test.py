@@ -118,10 +118,10 @@ class TestGetChampions:
         "params, expected_status",
         [
             ("?page=1&size=10", 200),
-            ("?page=0", 400),
-            ("?page=-1", 400),
-            ("?size=0", 400),
-            ("?size=-5", 400),
+            ("?page=0", 422),
+            ("?page=-1", 422),
+            ("?size=0", 422),
+            ("?size=-5", 422),
         ],
         ids=["valid", "page_zero", "page_negative", "size_zero", "size_negative"],
     )
@@ -273,12 +273,12 @@ class TestGetChampionById:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_invalid_uuid_returns_400(self):
+    async def test_invalid_uuid_returns_422(self):
         await push_one_user()
         response = await execute_get_request(
             "/champions/not-a-uuid", headers=USER_HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_response_body_structure(self):
@@ -348,7 +348,7 @@ class TestUpdateAlias:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_alias_too_long_returns_400(self):
+    async def test_alias_too_long_returns_422(self):
         """alias has max_length=500 in DTO."""
         await push_one_admin()
         champ = await push_champion()
@@ -357,7 +357,7 @@ class TestUpdateAlias:
             payload={"alias": "x" * 501},
             headers=ADMIN_HEADERS,
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
 
 # =========================================================================
@@ -486,12 +486,12 @@ class TestDeleteChampion:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_delete_invalid_uuid_returns_400(self):
+    async def test_delete_invalid_uuid_returns_422(self):
         await push_one_admin()
         response = await execute_delete_request(
             "/admin/champions/not-a-uuid", headers=ADMIN_HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_redelete_returns_404(self):

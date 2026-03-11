@@ -15,17 +15,17 @@ if not IS_PROD:
     print(f"Selected mode {IS_PROD = }, {IS_TESTING = }")
 
 
-def _default_database() -> str:
-    """Return the default database name based on mode."""
-    return "mawster" if not IS_TESTING else "mawster_testing"
+def _default_database() -> int:
+    """Return the default database port based on mode."""
+    return 3306 if not IS_TESTING else 3307
 
 
 class Settings(BaseSettings):
-    MARIADB_DATABASE: str = Field(... if IS_PROD else _default_database())
+    MARIADB_DATABASE: str = Field(... if IS_PROD else "mawster")
     MARIADB_USER: str = Field(... if IS_PROD else "user")
     MARIADB_PASSWORD: str = Field(... if IS_PROD else "password")
     MARIADB_ROOT_PASSWORD: str = Field(... if IS_PROD else "rootpassword")
-    MARIADB_PORT: int = Field(... if IS_PROD else 3306)
+    MARIADB_PORT: int = Field(... if IS_PROD else _default_database())
     MARIADB_HOST: str = Field("mariadb" if IS_PROD else "localhost")
     SECRET_KEY: str = Field(... if IS_PROD else "dev-secret-key_dev-secret-key_dev-secret-key")
     ALGORITHM: str = Field(... if IS_PROD else "HS256")
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = Field(... if IS_PROD else 7, le=30)
     # Origines CORS séparées par des virgules (ex: "https://mawster.example.com")
     # En dev, défaut permissif ; en prod, DOIT être défini dans api.env
-    ALLOWED_ORIGINS: str = Field(... if IS_PROD else "http://localhost:3000,http://localhost:3001")
+    ALLOWED_ORIGINS: str = Field(... if IS_PROD else "http://localhost:3000")
     API_PORT: int = Field(... if IS_PROD else 8000)
     model_config = SettingsConfigDict(env_file=api_file)
 

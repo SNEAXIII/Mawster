@@ -91,25 +91,25 @@ class TestCreateGameAccount:
         response = await execute_post_request(
             ENDPOINT, payload, headers=HEADERS,
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_pseudo_too_long_returns_400(self):
-        """game_pseudo has max_length=50 in DTO."""
+    async def test_pseudo_too_long_returns_422(self):
+        """game_pseudo has max_length=16 in DTO."""
         await _setup_1_user()
         response = await execute_post_request(
             ENDPOINT,
-            {"game_pseudo": "A" * 51, "is_primary": False},
+            {"game_pseudo": "A" * 17, "is_primary": False},
             headers=HEADERS,
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_pseudo_exactly_50_chars_ok(self):
+    async def test_pseudo_exactly_16_chars_ok(self):
         await _setup_1_user()
         response = await execute_post_request(
             ENDPOINT,
-            {"game_pseudo": "A" * 50, "is_primary": False},
+            {"game_pseudo": "A" * 16, "is_primary": False},
             headers=HEADERS,
         )
         assert response.status_code == 201
@@ -255,13 +255,13 @@ class TestGetSingleGameAccount:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_invalid_uuid_returns_400(self):
+    async def test_invalid_uuid_returns_422(self):
         """A non-UUID path param should be rejected by FastAPI validation."""
         await _setup_1_user()
         response = await execute_get_request(
             "/game-accounts/not-a-uuid", headers=HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
 
 # =========================================================================
@@ -302,13 +302,13 @@ class TestUpdateGameAccount:
         await _setup_1_user()
         response = await execute_put_request(
             f"/game-accounts/{uuid.uuid4()}",
-            {"game_pseudo": "X", "is_primary": False},
+            {"game_pseudo": "XX", "is_primary": False},
             headers=HEADERS,
         )
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_update_pseudo_too_long_returns_400(self):
+    async def test_update_pseudo_too_long_returns_422(self):
         await _setup_1_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         response = await execute_put_request(
@@ -316,10 +316,10 @@ class TestUpdateGameAccount:
             {"game_pseudo": "X" * 51, "is_primary": False},
             headers=HEADERS,
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_update_missing_pseudo_returns_400(self):
+    async def test_update_missing_pseudo_returns_422(self):
         await _setup_1_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         response = await execute_put_request(
@@ -327,17 +327,17 @@ class TestUpdateGameAccount:
             {"is_primary": True},
             headers=HEADERS,
         )
-        assert response.status_code in (400, 422)
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_update_invalid_uuid_returns_400(self):
+    async def test_update_invalid_uuid_returns_422(self):
         await _setup_1_user()
         response = await execute_put_request(
             "/game-accounts/not-a-uuid",
             {"game_pseudo": "X", "is_primary": False},
             headers=HEADERS,
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_update_without_auth_returns_401(self):
@@ -384,12 +384,12 @@ class TestDeleteGameAccount:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_delete_invalid_uuid_returns_400(self):
+    async def test_delete_invalid_uuid_returns_422(self):
         await _setup_1_user()
         response = await execute_delete_request(
             "/game-accounts/not-valid", headers=HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_delete_without_auth_returns_401(self):

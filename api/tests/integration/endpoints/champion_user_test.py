@@ -432,8 +432,8 @@ class TestBulkAddChampions:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_bulk_empty_champions_list_returns_400(self):
-        """Empty champions list violates min_length=1 -> 400."""
+    async def test_bulk_empty_champions_list_returns_422(self):
+        """Empty champions list violates min_length=1 -> 422."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         response = await execute_post_request(
@@ -444,11 +444,11 @@ class TestBulkAddChampions:
             },
             headers=HEADERS,
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_bulk_missing_champions_field_returns_400(self):
-        """Missing 'champions' field -> 400."""
+    async def test_bulk_missing_champions_field_returns_422(self):
+        """Missing 'champions' field -> 422."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         response = await execute_post_request(
@@ -456,7 +456,7 @@ class TestBulkAddChampions:
             {"game_account_id": str(acc.id)},
             headers=HEADERS,
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_bulk_game_account_not_found_returns_404(self):
@@ -574,12 +574,12 @@ class TestGetRosterByGameAccount:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_invalid_uuid_returns_400(self):
+    async def test_invalid_uuid_returns_422(self):
         await push_one_user()
         response = await execute_get_request(
             f"{CHAMPION_USERS_ROUTE}/by-account/not-a-uuid", headers=HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_detail_response_structure(self):
@@ -665,12 +665,12 @@ class TestGetChampionUser:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_get_invalid_uuid_returns_400(self):
+    async def test_get_invalid_uuid_returns_422(self):
         await push_one_user()
         response = await execute_get_request(
             f"{CHAMPION_USERS_ROUTE}/not-a-uuid", headers=HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
 
 # =========================================================================
@@ -754,7 +754,7 @@ class TestUpdateChampionUser:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_update_invalid_uuid_returns_400(self):
+    async def test_update_invalid_uuid_returns_422(self):
         await push_one_user()
         response = await execute_put_request(
             f"{CHAMPION_USERS_ROUTE}/not-a-uuid",
@@ -765,7 +765,7 @@ class TestUpdateChampionUser:
             },
             headers=HEADERS,
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_update_response_body_matches_request(self):
@@ -847,12 +847,12 @@ class TestDeleteChampionUser:
         assert r2.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_delete_invalid_uuid_returns_400(self):
+    async def test_delete_invalid_uuid_returns_422(self):
         await push_one_user()
         response = await execute_delete_request(
             f"{CHAMPION_USERS_ROUTE}/not-a-uuid", headers=HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_delete_verifies_roster_empty_after(self):
@@ -974,12 +974,12 @@ class TestUpgradeChampionRank:
         assert body["signature"] == 100
 
     @pytest.mark.asyncio
-    async def test_upgrade_invalid_uuid_returns_400(self):
+    async def test_upgrade_invalid_uuid_returns_422(self):
         await push_one_user()
         response = await execute_patch_request(
             f"{CHAMPION_USERS_ROUTE}/not-a-uuid/upgrade", {}, headers=HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_upgrade_response_body_structure(self):

@@ -1,6 +1,6 @@
 **/.vscode/*
 test*.db*
-*db/
+*db*/**
 .idea
 data/db/*
 .coverage

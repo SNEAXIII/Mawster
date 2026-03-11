@@ -4,7 +4,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
 from starlette import status
-
+from src.services.AllianceService import AllianceService
+from sqlalchemy.orm import selectinload
+from src.models.RequestedUpgrade import RequestedUpgrade
+from src.models.ChampionUser import ChampionUser
 from src.dto.dto_champion_user import (
     ChampionUserCreateRequest,
     ChampionUserBulkRequest,
@@ -300,9 +303,7 @@ async def _assert_alliance_officer(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Target is not in an alliance",
         )
-    from src.services.AllianceService import AllianceService
-
-    alliance = await AllianceService._load_alliance_with_relations(
+    alliance = await AllianceService.get_alliance(
         session, game_account.alliance_id
     )
     if alliance is None:
@@ -321,7 +322,7 @@ def _pick_requester_account(
     return user_accounts[0].id if user_accounts else None
 
 
-# â”€â”€â”€ Upgrade Request Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# --- Upgrade Request Endpoints ---
 
 @champion_user_controller.post(
     "/upgrade-requests",
@@ -363,10 +364,6 @@ async def create_upgrade_request(
         requested_rarity=body.requested_rarity,
     )
 
-    # Load relationships for response
-    from sqlalchemy.orm import selectinload
-    from src.models.RequestedUpgrade import RequestedUpgrade
-    from src.models.ChampionUser import ChampionUser
     stmt = (
         select(RequestedUpgrade)
         .where(RequestedUpgrade.id == upgrade_request.id)
@@ -433,7 +430,6 @@ async def cancel_upgrade_request(
 ):
     """Cancel/delete an upgrade request.
     Only an officer or owner of the alliance can cancel."""
-    from src.models.RequestedUpgrade import RequestedUpgrade
     upgrade_request = await session.get(RequestedUpgrade, request_id)
     if upgrade_request is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upgrade request not found")
@@ -447,7 +443,6 @@ async def cancel_upgrade_request(
     if target_account is None or target_account.alliance_id is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to cancel this upgrade request")
 
-    from src.services.AllianceService import AllianceService
     alliance = await AllianceService._load_alliance_with_relations(session, target_account.alliance_id)
     if alliance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
