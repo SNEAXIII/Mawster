@@ -93,11 +93,8 @@ describe("Defense – UI", () => {
       return setupUser("def-perm-member-token");
     }).then((member) => {
       return cy.apiCreateGameAccount(member.access_token, "PermMember", true).then((memberAcc) => {
-        cy.apiInviteMember(ownerData.access_token, allianceId, memberAcc.id);
+        cy.apiForceJoinAlliance(memberAcc.id, allianceId);
         cy.uiLogin(member.login);
-        cy.navTo("alliances");
-        cy.getByCy("accept-invitation").click();
-        cy.contains("Invitation accepted").should("be.visible");
         cy.navTo("defense");
         cy.getByCy("defense-export").should("not.exist");
         cy.getByCy("defense-import").should("not.exist");
@@ -119,12 +116,9 @@ describe("Defense – UI", () => {
       return setupUser("def-officer-token");
     }).then((officer) => {
       return cy.apiCreateGameAccount(officer.access_token, "OfficerAcc", true).then((officerAcc) => {
-        cy.apiInviteMember(ownerData.access_token, allianceId, officerAcc.id);
-        cy.uiLogin(officer.login);
-        cy.navTo("alliances");
-        cy.getByCy("accept-invitation").click();
-        cy.contains("Invitation accepted").should("be.visible");
+        cy.apiForceJoinAlliance(officerAcc.id, allianceId);
         cy.apiAddOfficer(ownerData.access_token, allianceId, officerAcc.id);
+        cy.uiLogin(officer.login);
         cy.navTo("defense");
         cy.getByCy("defense-export").should("be.visible");
         cy.getByCy("defense-import").should("be.visible");
@@ -238,13 +232,7 @@ describe("Defense – UI", () => {
       return cy.apiCreateGameAccount(member.access_token, "TwoMember", true);
     }).then((memberAcc) => {
       memberAccId = memberAcc.id;
-      return cy.apiInviteMember(ownerData.access_token, allianceId, memberAccId);
-    }).then(() => {
-      // Accept invitation via member UI
-      cy.uiLogin(memberData.login);
-      cy.navTo("alliances");
-      cy.getByCy("accept-invitation").click();
-      cy.contains("Invitation accepted").should("be.visible");
+      cy.apiForceJoinAlliance(memberAccId, allianceId);
 
       cy.apiSetMemberGroup(ownerData.access_token, allianceId, memberAccId, 1);
 
@@ -293,12 +281,7 @@ describe("Defense – UI", () => {
       return cy.apiCreateGameAccount(member.access_token, "SectionMember", true);
     }).then((memberAcc) => {
       memberAccId = memberAcc.id;
-      return cy.apiInviteMember(ownerData.access_token, allianceId, memberAccId);
-    }).then(() => {
-      cy.uiLogin(memberData.login);
-      cy.navTo("alliances");
-      cy.getByCy("accept-invitation").click();
-      cy.contains("Invitation accepted").should("be.visible");
+      cy.apiForceJoinAlliance(memberAccId, allianceId);
 
       cy.apiSetMemberGroup(ownerData.access_token, allianceId, memberAccId, 1);
 

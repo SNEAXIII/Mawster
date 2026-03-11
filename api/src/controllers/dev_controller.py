@@ -13,7 +13,7 @@ from starlette import status as http_status
 from src.dto.dto_token import LoginResponse, TokenBody
 from src.dto.dto_utilisateurs import UserProfile
 from src.enums.Roles import Roles
-from src.models import User
+from src.models import User, GameAccount
 from src.services.JWTService import JWTService
 from src.services.UserService import UserService
 from src.utils.db import SessionDep
@@ -36,7 +36,7 @@ class DevLoginRequest(BaseModel):
 
 class DevJoinAllianceRequest(BaseModel):
     """Request body for joining an alliance as a dev user."""
-    user_id: uuid.UUID
+    game_account_id: uuid.UUID
     alliance_id: uuid.UUID
 
 class DevUser(BaseModel):
@@ -130,18 +130,18 @@ async def run_fixtures(session: SessionDep):
 
 @dev_controller.post("/force-join-alliance", status_code=200)
 async def force_join_alliance(body: DevJoinAllianceRequest, session: SessionDep):
-    """Force a user to join an alliance, bypassing all checks. For testing purposes only."""
-    user = await UserService.get_user(session, body.user_id)
-    if not user:
+    """Force a game account to join an alliance, bypassing all checks. For testing purposes only."""
+    game_account = await session.get(GameAccount, body.game_account_id)
+    if not game_account:
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            detail="Game account not found"
         )
-    user.alliance_id = body.alliance_id
-    session.add(user)
+    game_account.alliance_id = body.alliance_id
+    session.add(game_account)
     await session.commit()
-    await session.refresh(user)
-    return {"message": f"User {user.login} forced to join alliance {body.alliance_id}", "user_id": str(user.id)}
+    await session.refresh(game_account)
+    return {"message": f"Game account {game_account.game_pseudo} forced to join alliance {body.alliance_id}", "game_account_id": str(game_account.id)}
 
 
 @dev_controller.post("/promote", status_code=200)
