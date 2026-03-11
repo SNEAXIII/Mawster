@@ -87,6 +87,15 @@ declare namespace Cypress {
     ): Chainable<any>;
 
     /**
+     * Force a user to join an alliance via backend API (dev endpoint).
+     */
+    apiJoinAlliance(
+      token: string,
+      userId: string,
+      allianceId: string
+    ): Chainable<any>;
+
+    /**
      * Promote a member to officer in an alliance via backend API.
      */
     apiAddOfficer(
@@ -94,6 +103,25 @@ declare namespace Cypress {
       allianceId: string,
       gameAccountId: string
     ): Chainable<any>;
+
+    /**
+     * Truncate the DB then run all fixture scripts (POST /dev/fixtures).
+     */
+    runFixtures(): void;
+
+    /**
+     * Create an upgrade request for a champion user (POST /champion-users/upgrade-requests).
+     */
+    apiCreateUpgradeRequest(
+      token: string,
+      championUserId: string,
+      requestedRarity: string
+    ): Chainable<any>;
+
+    /**
+     * Upgrade a champion to the next rank (PATCH /champion-users/{id}/upgrade).
+     */
+    apiUpgradeChampion(token: string, championUserId: string): Chainable<any>;
 
     /**
      * Log in via the dev-login UI on the login page.

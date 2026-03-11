@@ -1,6 +1,8 @@
 """Dev-only controller — all routes are disabled when MODE=prod."""
+import importlib.util
 import logging
 import uuid
+from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -30,12 +32,16 @@ dev_controller = APIRouter(
 
 class DevLoginRequest(BaseModel):
     """Select a user by ID for dev login (no Discord needed)."""
-    user_id: str
+    user_id: uuid.UUID
 
+class DevJoinAllianceRequest(BaseModel):
+    """Request body for joining an alliance as a dev user."""
+    user_id: uuid.UUID
+    alliance_id: uuid.UUID
 
 class DevUser(BaseModel):
     """Minimal user info for the dev user picker."""
-    id: str
+    id: uuid.UUID
     login: str
     email: str
     role: str
@@ -74,7 +80,7 @@ async def dev_list_users(session: SessionDep):
 @dev_controller.post("/login", status_code=200)
 async def dev_login(body: DevLoginRequest, session: SessionDep) -> LoginResponse:
     """Authenticate as any user without Discord."""
-    user = await UserService.get_user_by_id_with_validity_check(session, body.user_id)
+    user = await UserService.get_user_by_id_with_validity_check(session, str(body.user_id))
     access_token = JWTService.create_access_token(user)
     refresh_token = JWTService.create_refresh_token(user)
 
@@ -97,6 +103,45 @@ async def truncate_database(session: SessionDep):
     await session.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
     await session.commit()
     return {"message": "All tables truncated"}
+
+
+@dev_controller.post("/fixtures", status_code=200)
+async def run_fixtures(session: SessionDep):
+    """Truncate all tables then run every fixture script in /fixtures/. Testing only."""
+    await session.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+    for table in reversed(SQLModel.metadata.sorted_tables):
+        await session.execute(text(f"TRUNCATE TABLE `{table.name}`"))
+    await session.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+    await session.commit()
+
+    fixtures_dir = Path(__file__).resolve().parent.parent.parent / "fixtures"
+    results = {}
+    for fixture_file in sorted(fixtures_dir.glob("*.py")):
+        if fixture_file.stem.startswith("_"):
+            continue
+        spec = importlib.util.spec_from_file_location(f"fixtures.{fixture_file.stem}", fixture_file)
+        module = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
+        spec.loader.exec_module(module)  # type: ignore[union-attr]
+        if hasattr(module, "run"):
+            results[fixture_file.stem] = await module.run(session)
+
+    return {"message": "Fixtures loaded", "results": results}
+
+
+@dev_controller.post("/force-join-alliance", status_code=200)
+async def force_join_alliance(body: DevJoinAllianceRequest, session: SessionDep):
+    """Force a user to join an alliance, bypassing all checks. For testing purposes only."""
+    user = await UserService.get_user(session, body.user_id)
+    if not user:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    user.alliance_id = body.alliance_id
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return {"message": f"User {user.login} forced to join alliance {body.alliance_id}", "user_id": str(user.id)}
 
 
 @dev_controller.post("/promote", status_code=200)
