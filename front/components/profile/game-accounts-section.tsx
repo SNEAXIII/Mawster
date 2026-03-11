@@ -159,7 +159,8 @@ export default function GameAccountsSection() {
                     value={pseudo}
                     onChange={(e) => setPseudo(e.target.value)}
                     placeholder={t.game.accounts.pseudoPlaceholder}
-                    maxLength={50}
+                    maxLength={16}
+                    minLength={2}
                     required
                     disabled={creating}
                   />
@@ -208,7 +209,8 @@ export default function GameAccountsSection() {
                         <Input
                           value={editPseudo}
                           onChange={(e) => setEditPseudo(e.target.value)}
-                          maxLength={50}
+                          maxLength={16}
+                          minLength={2}
                           className="h-8 text-sm"
                           autoFocus
                         />

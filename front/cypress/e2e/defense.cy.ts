@@ -498,7 +498,7 @@ describe("Defense – UI", () => {
         // Clear via API
         cy.request({
           method: "DELETE",
-          url: `http://localhost:8000/alliances/${allianceId}/defense/bg/1/clear`,
+          url: `${BACKEND}/alliances/${allianceId}/defense/bg/1/clear`,
           headers: { Authorization: `Bearer ${ownerData.access_token}` },
         });
 

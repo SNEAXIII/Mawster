@@ -14,8 +14,8 @@ class Alliance(SQLModel, table=True):
     __tablename__ = "alliance"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    name: str = Field(max_length=100)
-    tag: str = Field(max_length=10)
+    name: str = Field(max_length=50)
+    tag: str = Field(max_length=5)
     owner_id: uuid.UUID = Field(
         sa_column=sa.Column(
             sa.Uuid(),
