@@ -325,8 +325,8 @@ export default function AlliancesPage() {
     <div className="max-w-4xl mx-auto px-3 py-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t.game.alliances.title}</h1>
-        <p className="text-gray-500 mt-1">{t.game.alliances.description}</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t.game.alliances.title}</h1>
+        <p className="text-muted-foreground mt-1">{t.game.alliances.description}</p>
       </div>
 
       {/* Create form — foldable */}
@@ -352,7 +352,7 @@ export default function AlliancesPage() {
           <CardContent className="py-3 sm:py-4 px-3 sm:px-6 space-y-3">
             <div className="flex items-center gap-2">
               <Mail className="h-5 w-5 text-blue-500" />
-              <h2 className="text-sm font-medium text-gray-700">
+              <h2 className="text-sm font-medium text-muted-foreground">
                 {t.game.alliances.myInvitations} ({myInvitations.length})
               </h2>
             </div>
@@ -361,14 +361,14 @@ export default function AlliancesPage() {
                 <div
                   key={inv.id}
                   data-cy={`my-invitation-${inv.alliance_name}`}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-md bg-blue-50 border border-blue-200"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-md bg-accent/50 border border-border"
                 >
                   <div className="space-y-0.5">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-foreground">
                       {inv.alliance_name}{' '}
                       <span className="text-xs text-purple-700 font-bold">[{inv.alliance_tag}]</span>
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {t.game.alliances.invitedBy} {inv.invited_by_pseudo} · {inv.game_account_pseudo}
                     </p>
                   </div>
@@ -403,7 +403,7 @@ export default function AlliancesPage() {
       {alliances.length === 0 ? (
         <Card data-cy="alliance-empty-state">
           <CardContent className="py-12 text-center text-gray-500">
-            <Shield className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+            <Shield className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
             <p data-cy="alliance-empty-text">{t.game.alliances.empty}</p>
           </CardContent>
         </Card>

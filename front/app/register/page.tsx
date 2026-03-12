@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BiUserPlus } from 'react-icons/bi';
+import { UserPlus } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 
 function RegisterPageContent() {
@@ -14,18 +14,18 @@ function RegisterPageContent() {
   const { t } = useI18n();
 
   return (
-    <div className='h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6'>
+    <div className='h-full flex items-center justify-center bg-gradient-to-br from-background to-muted p-4 sm:p-6'>
       <Card className='w-full max-w-md mx-auto shadow-lg transition-all duration-300 hover:shadow-xl'>
         <CardHeader className='space-y-1'>
           <div className='flex justify-center mb-2'>
             <div className='w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center'>
-              <BiUserPlus className='w-12 h-12' />
+              <UserPlus className='w-8 h-8 text-primary' />
             </div>
           </div>
-          <CardTitle className='text-2xl font-bold text-center text-gray-800'>
+          <CardTitle className='text-2xl font-bold text-center'>
             {t.register.title}
           </CardTitle>
-          <p className='text-sm text-center text-gray-500'>
+          <p className='text-sm text-center text-muted-foreground'>
             {t.register.subtitle}
           </p>
         </CardHeader>

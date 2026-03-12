@@ -88,18 +88,18 @@ export default function AllianceCard({
           <Shield className="h-5 w-5 text-purple-500" />
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-medium text-gray-900" data-cy="alliance-name">{alliance.name}</p>
+              <p className="font-medium text-foreground" data-cy="alliance-name">{alliance.name}</p>
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800" data-cy="alliance-tag">
                 [{alliance.tag}]
               </span>
-              <span className="text-xs text-gray-400" data-cy="alliance-officer-count">
+              <span className="text-xs text-muted-foreground" data-cy="alliance-officer-count">
                 {officerCount} {t.game.alliances.officersCount}
               </span>
             </div>
             <div className="flex items-center gap-2 mt-1">
               <UsernameEnriched pseudo={alliance.owner_pseudo} role="owner" textSize="text-xs" />
-              <span className="text-xs text-gray-400">·</span>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-muted-foreground">·</span>
+              <span className="text-xs text-muted-foreground">
                 {formatDateMedium(alliance.created_at, locale)}
               </span>
             </div>
@@ -121,8 +121,8 @@ export default function AllianceCard({
                   className="flex items-center justify-between gap-2 p-2 rounded-md bg-amber-50 border border-amber-200"
                 >
                   <div className="space-y-0.5">
-                    <p className="text-sm text-gray-900">{inv.game_account_pseudo}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm text-foreground">{inv.game_account_pseudo}</p>
+                    <p className="text-xs text-muted-foreground">
                       {t.game.alliances.invitedBy} {inv.invited_by_pseudo}
                     </p>
                   </div>
@@ -148,7 +148,7 @@ export default function AllianceCard({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-green-500" />
-              <span data-cy="alliance-member-count" className="text-sm font-medium text-gray-700">
+              <span data-cy="alliance-member-count" className="text-sm font-medium text-muted-foreground">
                 {t.game.alliances.membersTitle} ({alliance.member_count})
               </span>
             </div>
