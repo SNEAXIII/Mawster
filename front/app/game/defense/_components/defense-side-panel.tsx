@@ -88,6 +88,7 @@ export default function DefenseSidePanel({
                         key={p.id}
                         className="relative group flex flex-col items-center"
                         title={`Node #${p.node_number} — ${p.champion_name}`}
+                        data-cy={`defender-card-${p.node_number}`}
                       >
                         <ChampionPortrait
                           imageUrl={p.champion_image_url}
