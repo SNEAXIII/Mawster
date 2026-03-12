@@ -22,6 +22,7 @@ import {
   declineInvitation,
   getAllianceInvitations,
   cancelInvitation,
+  getMyAllianceRoles,
 } from '@/app/services/game';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -42,7 +43,6 @@ export default function AlliancesPage() {
   const { status } = useRequiredSession();
 
   const [alliances, setAlliances] = useState<Alliance[]>([]);
-  const [myAccounts, setMyAccounts] = useState<GameAccount[]>([]);
   const [eligibleOwners, setEligibleOwners] = useState<GameAccount[]>([]);
   const [eligibleMembers, setEligibleMembers] = useState<GameAccount[]>([]);
   const [hasAnyAccounts, setHasAnyAccounts] = useState(true);
@@ -113,7 +113,6 @@ export default function AlliancesPage() {
   const fetchMyAccounts = async () => {
     try {
       const data = await getMyGameAccounts();
-      setMyAccounts(data);
       setHasAnyAccounts(data.length > 0);
     } catch (err) {
       console.error(err);
@@ -131,24 +130,30 @@ export default function AlliancesPage() {
 
   const fetchPendingInvitations = async (allianceList: Alliance[]) => {
     const results: Record<string, AllianceInvitation[]> = {};
-    await Promise.all(
-      allianceList.map(async (alliance) => {
-        try {
-          const invitations = await getAllianceInvitations(alliance.id);
-          if (invitations.length > 0) {
-            results[alliance.id] = invitations;
+    try {
+      const { roles } = await getMyAllianceRoles();
+      const manageable = allianceList.filter((a) => roles[a.id]?.can_manage);
+      await Promise.all(
+        manageable.map(async (alliance) => {
+          try {
+            const invitations = await getAllianceInvitations(alliance.id);
+            if (invitations.length > 0) {
+              results[alliance.id] = invitations;
+            }
+          } catch {
+            // ignore
           }
-        } catch {
-          // Not an officer/owner — silently ignore permission errors
-        }
-      }),
-    );
+        }),
+      );
+    } catch {
+      // ignore role fetch failure
+    }
     setPendingInvitations(results);
   };
 
   useEffect(() => {
     if (status === 'authenticated') {
-      Promise.all([fetchAlliances(), fetchEligibleOwners(), fetchEligibleMembers(), fetchMyAccounts(), fetchMyInvitations()]).then(() => {
+      Promise.all([fetchAlliances(), fetchEligibleOwners(), fetchMyAccounts(), fetchMyInvitations()]).then(() => {
         // createOpen stays false — will be overridden below after alliances load
       });
     }
@@ -194,33 +199,33 @@ export default function AlliancesPage() {
   const handlePromoteOfficer = async (allianceId: string, gameAccountId: string) => {
     try {
       await addOfficer(allianceId, gameAccountId);
-      toast.success(t.game.alliances.adjointAddSuccess);
+      toast.success(t.game.alliances.officerAddSuccess);
       setPromoteTarget(null);
       setRoleRefreshKey((k) => k + 1);
       await fetchAlliances();
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.message || t.game.alliances.adjointAddError);
+      toast.error(err?.message || t.game.alliances.officerAddError);
     }
   };
 
   const handleDemoteOfficer = async (allianceId: string, gameAccountId: string) => {
     try {
       await removeOfficer(allianceId, gameAccountId);
-      toast.success(t.game.alliances.adjointRemoveSuccess);
+      toast.success(t.game.alliances.officerRemoveSuccess);
       setRoleRefreshKey((k) => k + 1);
       await fetchAlliances();
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.message || t.game.alliances.adjointRemoveError);
+      toast.error(err?.message || t.game.alliances.officerRemoveError);
     }
   };
 
   // ---- Members ----
-  const handleOpenInviteMember = async (allianceId: string) => {
+  const handleOpenInviteMember = (allianceId: string) => {
     setMemberAllianceId(allianceId);
     setMemberAccountId('');
-    await fetchEligibleMembers();
+    fetchEligibleMembers();
   };
 
   const handleInviteMember = async (allianceId: string) => {
@@ -325,6 +330,7 @@ export default function AlliancesPage() {
       </div>
 
       {/* Create form — foldable */}
+{eligibleOwners.length > 0 && (
       <CreateAllianceForm
         open={createOpen}
         onToggle={() => setCreateOpen((v) => !v)}
@@ -339,10 +345,10 @@ export default function AlliancesPage() {
         onOwnerChange={setOwnerId}
         onSubmit={handleCreate}
       />
-
+)}
       {/* My Invitations */}
       {myInvitations.length > 0 && (
-        <Card>
+        <Card data-cy="my-invitations-section">
           <CardContent className="py-3 sm:py-4 px-3 sm:px-6 space-y-3">
             <div className="flex items-center gap-2">
               <Mail className="h-5 w-5 text-blue-500" />
@@ -354,6 +360,7 @@ export default function AlliancesPage() {
               {myInvitations.map((inv) => (
                 <div
                   key={inv.id}
+                  data-cy={`my-invitation-${inv.alliance_name}`}
                   className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-md bg-blue-50 border border-blue-200"
                 >
                   <div className="space-y-0.5">
@@ -369,6 +376,7 @@ export default function AlliancesPage() {
                     <Button
                       size="sm"
                       variant="default"
+                      data-cy="accept-invitation"
                       onClick={() => handleAcceptInvitation(inv.id)}
                     >
                       <Check className="h-3 w-3 mr-1" />
@@ -377,6 +385,7 @@ export default function AlliancesPage() {
                     <Button
                       size="sm"
                       variant="outline"
+                      data-cy="decline-invitation"
                       onClick={() => handleDeclineInvitation(inv.id)}
                     >
                       <X className="h-3 w-3 mr-1" />
@@ -392,10 +401,10 @@ export default function AlliancesPage() {
 
       {/* Alliance list */}
       {alliances.length === 0 ? (
-        <Card>
+        <Card data-cy="alliance-empty-state">
           <CardContent className="py-12 text-center text-gray-500">
             <Shield className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p>{t.game.alliances.empty}</p>
+            <p data-cy="alliance-empty-text">{t.game.alliances.empty}</p>
           </CardContent>
         </Card>
       ) : (

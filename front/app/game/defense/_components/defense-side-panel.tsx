@@ -63,7 +63,7 @@ export default function DefenseSidePanel({
           const playerPlacements = placementsByPlayer.get(member.game_account_id) ?? [];
           const isFull = member.defender_count >= member.max_defenders;
           return (
-            <Card key={member.game_account_id} className="bg-card/50">
+            <Card key={member.game_account_id} className="bg-card/50" data-cy={`member-section-${member.game_pseudo}`}>
               <CardContent className="p-3">
                 <div className="flex items-center justify-between mb-2">
                   <UsernameEnriched
@@ -72,6 +72,7 @@ export default function DefenseSidePanel({
                     isMine={isMine(member.game_account_id)}
                   />
                   <span
+                    data-cy={`defender-count-${member.game_pseudo}`}
                     className={cn(
                       'text-xs font-mono',
                       isFull ? 'text-red-400' : 'text-muted-foreground',
@@ -87,6 +88,7 @@ export default function DefenseSidePanel({
                         key={p.id}
                         className="relative group flex flex-col items-center"
                         title={`Node #${p.node_number} — ${p.champion_name}`}
+                        data-cy={`defender-card-${p.node_number}`}
                       >
                         <ChampionPortrait
                           imageUrl={p.champion_image_url}
@@ -101,7 +103,7 @@ export default function DefenseSidePanel({
                           {p.is_preferred_attacker && '⚔ '}#{p.node_number}
                         </span>
                         <span className={cn('text-[10px] font-mono leading-none', rarityBadgeClass(p.rarity))}>
-                          {rarityLabel(p.rarity, p.signature)}
+                          {rarityLabel(p.rarity, p.signature, p.ascension)}
                         </span>
                         {canManage && (
                           <button

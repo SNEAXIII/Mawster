@@ -69,10 +69,9 @@ export default function AllianceCard({
   onViewRoster,
   pendingInvitations = [],
   onCancelInvitation,
-}: AllianceCardProps) {
+}: Readonly<AllianceCardProps>) {
   const { t } = useI18n();
-  const { isMine, isOwner, canManage } = useAllianceRole();
-  const userIsOwner = isOwner(alliance);
+  const { canManage } = useAllianceRole();
   const userCanManage = canManage(alliance);
   const officerCount = alliance.officers.length;
 
@@ -82,20 +81,19 @@ export default function AllianceCard({
   });
 
   return (
-    <Card>
+    <Card data-cy={`alliance-card-${alliance.name}`}>
         <CardContent className="py-3 sm:py-4 px-3 sm:px-6 space-y-3 sm:space-y-4">
         {/* Alliance header */}
         <div className="flex items-center gap-3">
           <Shield className="h-5 w-5 text-purple-500" />
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-medium text-gray-900">{alliance.name}</p>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800">
+              <p className="font-medium text-gray-900" data-cy="alliance-name">{alliance.name}</p>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800" data-cy="alliance-tag">
                 [{alliance.tag}]
               </span>
-              <span className="text-xs text-gray-400">
-                {alliance.member_count} {t.game.alliances.members} · {officerCount}{' '}
-                {t.game.alliances.officersCount}
+              <span className="text-xs text-gray-400" data-cy="alliance-officer-count">
+                {officerCount} {t.game.alliances.officersCount}
               </span>
             </div>
             <div className="flex items-center gap-2 mt-1">
@@ -116,9 +114,10 @@ export default function AllianceCard({
             className="border-amber-200"
           >
             <div className="space-y-1">
-              {pendingInvitations.map((inv) => (
+              {pendingInvitations.map((inv, index) => (
                 <div
                   key={inv.id}
+                  data-cy={`pending-invitation-${index}`}
                   className="flex items-center justify-between gap-2 p-2 rounded-md bg-amber-50 border border-amber-200"
                 >
                   <div className="space-y-0.5">
@@ -149,7 +148,7 @@ export default function AllianceCard({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-green-500" />
-              <span className="text-sm font-medium text-gray-700">
+              <span data-cy="alliance-member-count" className="text-sm font-medium text-gray-700">
                 {t.game.alliances.membersTitle} ({alliance.member_count})
               </span>
             </div>
@@ -159,7 +158,7 @@ export default function AllianceCard({
               (memberAllianceId === alliance.id ? (
                 <div className="flex flex-wrap items-center gap-2">
                   <Select value={memberAccountId} onValueChange={onMemberAccountChange}>
-                    <SelectTrigger className="w-full sm:w-48 h-8 text-xs">
+                    <SelectTrigger className="w-full sm:w-48 h-8 text-xs" data-cy="invite-member-select">
                       <SelectValue placeholder={t.game.alliances.selectMember} />
                     </SelectTrigger>
                     <SelectContent>
@@ -173,11 +172,12 @@ export default function AllianceCard({
                   <Button
                     size="sm"
                     disabled={!memberAccountId}
+                    data-cy="invite-member-submit"
                     onClick={() => onInviteMember(alliance.id)}
                   >
                     {t.game.alliances.inviteMemberButton}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={onCloseInviteMember}>
+                  <Button size="sm" variant="ghost" data-cy="invite-member-cancel" onClick={onCloseInviteMember}>
                     {t.common.cancel}
                   </Button>
                 </div>
@@ -185,6 +185,7 @@ export default function AllianceCard({
                 <Button
                   size="sm"
                   variant="outline"
+                  data-cy="invite-member-toggle"
                   onClick={() => onOpenInviteMember(alliance.id)}
                 >
                   <UserPlus className="h-3 w-3 mr-1" />

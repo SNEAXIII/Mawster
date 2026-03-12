@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, Field
+from typing import Any, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class DefensePlacementCreateRequest(BaseModel):
@@ -17,6 +18,9 @@ class DefensePlacementBulkRequest(BaseModel):
 
 
 class DefensePlacementResponse(BaseModel):
+    """DTO for a defense placement with resolved relations."""
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     alliance_id: uuid.UUID
     battlegroup: int
@@ -30,9 +34,36 @@ class DefensePlacementResponse(BaseModel):
     rarity: str
     signature: int = 0
     is_preferred_attacker: bool = False
+    ascension: int = 0
     placed_by_id: Optional[uuid.UUID] = None
     placed_by_pseudo: Optional[str] = None
     created_at: datetime
+
+    @model_validator(mode='before')
+    @classmethod
+    def flatten_relations(cls, data: Any) -> Any:
+        """Flatten `.game_account`, `.champion_user.champion`, `.placed_by` relations."""
+        if isinstance(data, dict):
+            return data
+        return {
+            'id': data.id,
+            'alliance_id': data.alliance_id,
+            'battlegroup': data.battlegroup,
+            'node_number': data.node_number,
+            'champion_user_id': data.champion_user_id,
+            'game_account_id': data.game_account_id,
+            'game_pseudo': data.game_account.game_pseudo,
+            'champion_name': data.champion_user.champion.name,
+            'champion_class': data.champion_user.champion.champion_class,
+            'champion_image_url': data.champion_user.champion.image_url,
+            'rarity': data.champion_user.rarity,
+            'signature': data.champion_user.signature,
+            'is_preferred_attacker': data.champion_user.is_preferred_attacker,
+            'ascension': data.champion_user.ascension,
+            'placed_by_id': data.placed_by_id,
+            'placed_by_pseudo': data.placed_by.game_pseudo if data.placed_by else None,
+            'created_at': data.created_at,
+        }
 
 
 class DefenseSummaryResponse(BaseModel):

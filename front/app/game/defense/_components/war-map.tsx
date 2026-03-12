@@ -65,6 +65,7 @@ export function WarMapNode({
           ? `#${nodeNumber} – ${placement.champion_name} (${placement.game_pseudo})`
           : t.game.defense.nodeEmpty.replace('{node}', String(nodeNumber))
       }
+      data-cy={`war-node-${nodeNumber}`}
     >
       {/* Node number badge */}
       <span className='absolute -top-2 -left-1 text-[10px] font-bold bg-black/70 text-white rounded px-1 z-20'>
@@ -98,7 +99,7 @@ export function WarMapNode({
             placement.is_preferred_attacker ? 'text-yellow-400' : rarityBadgeClass(placement.rarity),
           )}>
             {placement.is_preferred_attacker && '⚔ '}
-            {rarityLabel(placement.rarity, placement.signature)}
+            {rarityLabel(placement.rarity, placement.signature, placement.ascension)}
           </span>
           <span className='text-[10px] text-white/80 truncate max-w-[76px] text-center leading-tight'>
             {placement.game_pseudo}

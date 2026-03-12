@@ -7,7 +7,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
-from icecream import ic
 from starlette.middleware.base import _StreamingResponse
 from src.Messages.validators_messages import VALIDATION_ERROR
 from src.controllers.admin_controller import admin_controller
@@ -18,6 +17,7 @@ from src.controllers.alliance_controller import alliance_controller
 from src.controllers.champion_user_controller import champion_user_controller
 from src.controllers.champion_controller import champion_controller, champion_read_controller
 from src.controllers.defense_controller import defense_controller
+from src.security import IS_PROD, IS_TESTING
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -29,14 +29,21 @@ from src.utils.logging_config import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
-ic(f"Targeted db: {SECRET.MARIADB_DATABASE}")
-logger.info("Starting Mawster API — database: %s", SECRET.MARIADB_DATABASE)
+if not IS_PROD:
+    logger.info("Starting Mawster API — database: %s", SECRET.MARIADB_DATABASE)
 
 app = FastAPI(title="Mawster", version="1.0.0")
-origins = ["*"]
+
+# Rate limiter (utilise l'IP du client — X-Forwarded-For si disponible, sinon connexion directe)
+# limiter = Limiter(key_func=get_remote_address)
+# app.state.limiter = limiter
+# app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS — origines définies dans api.env (ALLOWED_ORIGINS), jamais "*" en prod
+_cors_origins = [origin.strip() for origin in SECRET.ALLOWED_ORIGINS.split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -51,12 +58,35 @@ app.include_router(champion_controller)
 app.include_router(champion_read_controller)
 app.include_router(defense_controller)
 
+if not IS_PROD:
+    from src.controllers.dev_controller import dev_controller
+    app.include_router(dev_controller)
+    logger.info("Dev controller enabled (MODE != prod)")
+
+if IS_TESTING:
+    import hashlib
+    from src.services.DiscordAuthService import DiscordAuthService, DISCORD_TOKEN_INVALID_EXCEPTION
+
+    _original_verify = DiscordAuthService.verify_discord_token
+
+    async def _fake_verify(cls, access_token: str) -> dict:
+        if not access_token:
+            raise DISCORD_TOKEN_INVALID_EXCEPTION
+        token_hash = hashlib.sha256(access_token.encode()).hexdigest()[:16]
+        random =token_hash[:8]
+        return {
+            "id": token_hash,
+            "username": f"test_{random}",
+            "email": f"{random}@test.com",
+        }
+
+    DiscordAuthService.verify_discord_token = classmethod(_fake_verify)
+    logger.info("Testing mode: Discord verification is mocked")
+
 # Mount static files for champion images
 static_dir = Path(__file__).resolve().parent / "static"
 # static_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
-
-ic(app.routes)
 
 
 def custom_openapi():
@@ -86,7 +116,8 @@ async def check_user_role(
     start_time = perf_counter()
     response: _StreamingResponse = await next_function(request)
     process_time = perf_counter() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
+    if not IS_PROD:
+        response.headers["X-Process-Time"] = str(process_time)
     logger.info("%s %s → %s (%.3fs)", method, uri, response.status_code, process_time)
     return response
 
@@ -104,7 +135,7 @@ async def validation_exception_handler(request, exc):
         error_message = error.get("msg").removeprefix(f"{error_type}, ")
         errors_dict[location] = {"type": error.get("type"), "message": error_message}
     return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         content={"message": VALIDATION_ERROR, "errors": errors_dict},
     )
 

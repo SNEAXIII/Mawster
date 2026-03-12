@@ -1,4 +1,4 @@
-import uuid
+﻿import uuid
 from datetime import datetime
 
 from fastapi import HTTPException
@@ -8,6 +8,7 @@ from sqlalchemy import func
 from starlette import status
 
 from src.enums.InvitationStatus import InvitationStatus
+from src.Messages.invitation_messages import INVITATION_NOT_FOUND, INVITATION_NO_LONGER_PENDING
 from src.models.GameAccount import GameAccount
 from src.models.Alliance import Alliance
 from src.models.AllianceInvitation import AllianceInvitation
@@ -142,17 +143,17 @@ class AllianceInvitationService:
     async def accept_invitation(
         cls, session: SessionDep, invitation_id: uuid.UUID, user_id: uuid.UUID
     ) -> AllianceInvitation:
-        """Accept a pending invitation — the game account joins the alliance."""
+        """Accept a pending invitation â€” the game account joins the alliance."""
         invitation = await session.get(AllianceInvitation, invitation_id)
         if invitation is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Invitation not found",
+                detail=INVITATION_NOT_FOUND,
             )
         if invitation.status != InvitationStatus.PENDING:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="This invitation is no longer pending",
+                detail=INVITATION_NO_LONGER_PENDING,
             )
         # Verify the invitation target belongs to the current user
         user_account_ids = await cls._get_user_account_ids(session, user_id)
@@ -210,12 +211,12 @@ class AllianceInvitationService:
         if invitation is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Invitation not found",
+                detail=INVITATION_NOT_FOUND,
             )
         if invitation.status != InvitationStatus.PENDING:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="This invitation is no longer pending",
+                detail=INVITATION_NO_LONGER_PENDING,
             )
         user_account_ids = await cls._get_user_account_ids(session, user_id)
         if invitation.game_account_id not in user_account_ids:
@@ -239,12 +240,12 @@ class AllianceInvitationService:
         if invitation is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Invitation not found",
+                detail=INVITATION_NOT_FOUND,
             )
         if invitation.status != InvitationStatus.PENDING:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="This invitation is no longer pending",
+                detail=INVITATION_NO_LONGER_PENDING,
             )
         if invitation.alliance_id != alliance.id:
             raise HTTPException(

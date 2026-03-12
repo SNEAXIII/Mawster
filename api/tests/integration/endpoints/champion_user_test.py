@@ -6,7 +6,13 @@ from main import app
 from src.models.ChampionUser import ChampionUser
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2
-from tests.integration.endpoints.setup.game_setup import push_game_account, push_champion
+from tests.integration.endpoints.setup.game_setup import (
+    push_game_account,
+    push_champion,
+    push_alliance_with_owner,
+    push_member,
+    push_officer,
+)
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
@@ -91,7 +97,7 @@ class TestChampionUserAccessControl:
 
 class TestCreateChampionUser:
     @pytest.mark.asyncio
-    async def test_create_ok(self, session):
+    async def test_create_ok(self):
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         champ = await push_champion()
@@ -112,7 +118,7 @@ class TestCreateChampionUser:
         assert body["signature"] == 200
 
     @pytest.mark.asyncio
-    async def test_create_invalid_rarity(self, session):
+    async def test_create_invalid_rarity(self):
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         champ = await push_champion()
@@ -129,7 +135,7 @@ class TestCreateChampionUser:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_create_game_account_not_found(self, session):
+    async def test_create_game_account_not_found(self):
         await push_one_user()
         champ = await push_champion()
 
@@ -145,7 +151,7 @@ class TestCreateChampionUser:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_create_not_own_account_returns_403(self, session):
+    async def test_create_not_own_account_returns_403(self):
         await push_one_user()
         await push_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -163,7 +169,7 @@ class TestCreateChampionUser:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_create_updates_existing_same_rarity(self, session):
+    async def test_create_updates_existing_same_rarity(self):
         """Creating with same champion+rarity should update signature."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -185,7 +191,7 @@ class TestCreateChampionUser:
         assert body["signature"] == 200
 
     @pytest.mark.asyncio
-    async def test_champion_not_found_returns_404(self, session):
+    async def test_champion_not_found_returns_404(self):
         """Referencing a nonexistent champion_id -> exactly 404."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -226,7 +232,7 @@ class TestCreateChampionUser:
         assert response.status_code == 400, f"Expected 400 for rarity='{bad_rarity}', got {response.status_code}"
 
     @pytest.mark.asyncio
-    async def test_response_body_structure(self, session):
+    async def test_response_body_structure(self):
         """Verify response contains all expected fields."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -243,7 +249,7 @@ class TestCreateChampionUser:
         )
         assert response.status_code == 201
         body = response.json()
-        assert set(body.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "is_preferred_attacker"}
+        assert set(body.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "is_preferred_attacker", "ascension"}
         assert body["rarity"] == "7r5"
         assert body["signature"] == 200
         assert body["champion_id"] == str(champ.id)
@@ -281,7 +287,7 @@ class TestCreateChampionUser:
 
 class TestBulkAddChampions:
     @pytest.mark.asyncio
-    async def test_bulk_add_ok(self, session):
+    async def test_bulk_add_ok(self):
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         await push_champion("Spider-Man", "Science")
@@ -303,7 +309,7 @@ class TestBulkAddChampions:
         assert len(body) == 2
 
     @pytest.mark.asyncio
-    async def test_bulk_dedup_same_request(self, session):
+    async def test_bulk_dedup_same_request(self):
         """Same champion+rarity in one request -> only first kept."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -326,7 +332,7 @@ class TestBulkAddChampions:
         assert body[0]["signature"] == 100
 
     @pytest.mark.asyncio
-    async def test_bulk_updates_existing_db_entry(self, session):
+    async def test_bulk_updates_existing_db_entry(self):
         """If champion+rarity already in DB -> update signature."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -349,7 +355,7 @@ class TestBulkAddChampions:
         assert body[0]["signature"] == 200
 
     @pytest.mark.asyncio
-    async def test_bulk_not_own_account_returns_403(self, session):
+    async def test_bulk_not_own_account_returns_403(self):
         await push_one_user()
         await push_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -368,7 +374,7 @@ class TestBulkAddChampions:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_bulk_same_champion_different_rarities_ok(self, session):
+    async def test_bulk_same_champion_different_rarities_ok(self):
         """Same champion with different rarities should create separate entries."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -392,7 +398,7 @@ class TestBulkAddChampions:
         assert rarities == {"6r4", "7r3"}
 
     @pytest.mark.asyncio
-    async def test_bulk_champion_not_found_returns_404(self, session):
+    async def test_bulk_champion_not_found_returns_404(self):
         """Referencing nonexistent champion in bulk -> 404."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -409,7 +415,7 @@ class TestBulkAddChampions:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_bulk_invalid_rarity_returns_400(self, session):
+    async def test_bulk_invalid_rarity_returns_400(self):
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         await push_champion()
@@ -426,8 +432,8 @@ class TestBulkAddChampions:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_bulk_empty_champions_list_returns_400(self, session):
-        """Empty champions list violates min_length=1 -> 400."""
+    async def test_bulk_empty_champions_list_returns_422(self):
+        """Empty champions list violates min_length=1 -> 422."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         response = await execute_post_request(
@@ -438,11 +444,11 @@ class TestBulkAddChampions:
             },
             headers=HEADERS,
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_bulk_missing_champions_field_returns_400(self, session):
-        """Missing 'champions' field -> 400."""
+    async def test_bulk_missing_champions_field_returns_422(self):
+        """Missing 'champions' field -> 422."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         response = await execute_post_request(
@@ -450,10 +456,10 @@ class TestBulkAddChampions:
             {"game_account_id": str(acc.id)},
             headers=HEADERS,
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_bulk_game_account_not_found_returns_404(self, session):
+    async def test_bulk_game_account_not_found_returns_404(self):
         await push_one_user()
         await push_champion()
         response = await execute_post_request(
@@ -469,7 +475,7 @@ class TestBulkAddChampions:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_bulk_response_body_structure(self, session):
+    async def test_bulk_response_body_structure(self):
         """Verify bulk response is a list of ChampionUserResponse objects."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -491,10 +497,10 @@ class TestBulkAddChampions:
         assert isinstance(body, list)
         assert len(body) == 2
         for entry in body:
-            assert set(entry.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "champion_name", "champion_class", "image_url", "is_preferred_attacker"}
+            assert set(entry.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "champion_name", "champion_class", "image_url", "is_preferred_attacker", "ascension", "is_ascendable"}
 
     @pytest.mark.asyncio
-    async def test_bulk_mixed_valid_and_invalid_champion_returns_404(self, session):
+    async def test_bulk_mixed_valid_and_invalid_champion_returns_404(self):
         """If any champion in the bulk request is invalid, the whole request should fail atomically."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -520,7 +526,7 @@ class TestBulkAddChampions:
 
 class TestGetRosterByGameAccount:
     @pytest.mark.asyncio
-    async def test_get_roster_empty(self, session):
+    async def test_get_roster_empty(self):
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
 
@@ -531,7 +537,7 @@ class TestGetRosterByGameAccount:
         assert response.json() == []
 
     @pytest.mark.asyncio
-    async def test_get_roster_with_entries(self, session):
+    async def test_get_roster_with_entries(self):
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         champ = await push_champion()
@@ -549,7 +555,7 @@ class TestGetRosterByGameAccount:
         assert body[0]["champion_class"] == "Science"
 
     @pytest.mark.asyncio
-    async def test_get_roster_not_own_account_403(self, session):
+    async def test_get_roster_not_own_account_403(self):
         await push_one_user()
         await push_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -560,7 +566,7 @@ class TestGetRosterByGameAccount:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_get_roster_nonexistent_account_404(self, session):
+    async def test_get_roster_nonexistent_account_404(self):
         await push_one_user()
         response = await execute_get_request(
             f"{CHAMPION_USERS_ROUTE}/by-account/{uuid.uuid4()}", headers=HEADERS
@@ -568,15 +574,15 @@ class TestGetRosterByGameAccount:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_invalid_uuid_returns_400(self, session):
+    async def test_invalid_uuid_returns_422(self):
         await push_one_user()
         response = await execute_get_request(
             f"{CHAMPION_USERS_ROUTE}/by-account/not-a-uuid", headers=HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_detail_response_structure(self, session):
+    async def test_detail_response_structure(self):
         """Verify the detail response includes champion name/class/image."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -598,7 +604,7 @@ class TestGetRosterByGameAccount:
         assert entry["champion_class"] == "Mystic"
 
     @pytest.mark.asyncio
-    async def test_multiple_entries_sorted(self, session):
+    async def test_multiple_entries_sorted(self):
         """Multiple roster entries should all be returned."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -623,7 +629,7 @@ class TestGetRosterByGameAccount:
 
 class TestGetChampionUser:
     @pytest.mark.asyncio
-    async def test_get_ok(self, session):
+    async def test_get_ok(self):
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         champ = await push_champion()
@@ -638,7 +644,7 @@ class TestGetChampionUser:
         assert body["signature"] == 200
 
     @pytest.mark.asyncio
-    async def test_get_not_found_404(self, session):
+    async def test_get_not_found_404(self):
         await push_one_user()
         response = await execute_get_request(
             f"{CHAMPION_USERS_ROUTE}/{uuid.uuid4()}", headers=HEADERS
@@ -646,7 +652,7 @@ class TestGetChampionUser:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_get_not_own_champion_403(self, session):
+    async def test_get_not_own_champion_403(self):
         await push_one_user()
         await push_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -659,12 +665,12 @@ class TestGetChampionUser:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_get_invalid_uuid_returns_400(self, session):
+    async def test_get_invalid_uuid_returns_422(self):
         await push_one_user()
         response = await execute_get_request(
             f"{CHAMPION_USERS_ROUTE}/not-a-uuid", headers=HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
 
 # =========================================================================
@@ -674,7 +680,7 @@ class TestGetChampionUser:
 
 class TestUpdateChampionUser:
     @pytest.mark.asyncio
-    async def test_update_ok(self, session):
+    async def test_update_ok(self):
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         champ = await push_champion()
@@ -696,7 +702,7 @@ class TestUpdateChampionUser:
         assert body["signature"] == 200
 
     @pytest.mark.asyncio
-    async def test_update_not_found_404(self, session):
+    async def test_update_not_found_404(self):
         await push_one_user()
         response = await execute_put_request(
             f"{CHAMPION_USERS_ROUTE}/{uuid.uuid4()}",
@@ -710,7 +716,7 @@ class TestUpdateChampionUser:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_update_not_own_champion_403(self, session):
+    async def test_update_not_own_champion_403(self):
         await push_one_user()
         await push_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -729,7 +735,7 @@ class TestUpdateChampionUser:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_update_invalid_rarity_returns_400(self, session):
+    async def test_update_invalid_rarity_returns_400(self):
         """Updating with invalid rarity should return exactly 400."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -748,7 +754,7 @@ class TestUpdateChampionUser:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_update_invalid_uuid_returns_400(self, session):
+    async def test_update_invalid_uuid_returns_422(self):
         await push_one_user()
         response = await execute_put_request(
             f"{CHAMPION_USERS_ROUTE}/not-a-uuid",
@@ -759,10 +765,10 @@ class TestUpdateChampionUser:
             },
             headers=HEADERS,
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_update_response_body_matches_request(self, session):
+    async def test_update_response_body_matches_request(self):
         """After update, the response body should reflect the new values."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -792,7 +798,7 @@ class TestUpdateChampionUser:
 
 class TestDeleteChampionUser:
     @pytest.mark.asyncio
-    async def test_delete_ok(self, session):
+    async def test_delete_ok(self):
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         champ = await push_champion()
@@ -804,7 +810,7 @@ class TestDeleteChampionUser:
         assert response.status_code == 204
 
     @pytest.mark.asyncio
-    async def test_delete_not_found_404(self, session):
+    async def test_delete_not_found_404(self):
         await push_one_user()
         response = await execute_delete_request(
             f"{CHAMPION_USERS_ROUTE}/{uuid.uuid4()}", headers=HEADERS
@@ -812,7 +818,7 @@ class TestDeleteChampionUser:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_delete_not_own_champion_403(self, session):
+    async def test_delete_not_own_champion_403(self):
         await push_one_user()
         await push_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -825,7 +831,7 @@ class TestDeleteChampionUser:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_redelete_returns_404(self, session):
+    async def test_redelete_returns_404(self):
         """Deleting the same entry twice -> second should 404."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -841,15 +847,15 @@ class TestDeleteChampionUser:
         assert r2.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_delete_invalid_uuid_returns_400(self, session):
+    async def test_delete_invalid_uuid_returns_422(self):
         await push_one_user()
         response = await execute_delete_request(
             f"{CHAMPION_USERS_ROUTE}/not-a-uuid", headers=HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_delete_verifies_roster_empty_after(self, session):
+    async def test_delete_verifies_roster_empty_after(self):
         """After deleting the only entry, roster should be empty."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -872,7 +878,7 @@ class TestDeleteChampionUser:
 
 class TestUpgradeChampionRank:
     @pytest.mark.asyncio
-    async def test_upgrade_ok(self, session):
+    async def test_upgrade_ok(self):
         """7r2 -> 7r3"""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -888,7 +894,7 @@ class TestUpgradeChampionRank:
         assert body["signature"] == 50  # signature preserved
 
     @pytest.mark.asyncio
-    async def test_upgrade_6r4_to_6r5(self, session):
+    async def test_upgrade_6r4_to_6r5(self):
         """6r4 -> 6r5"""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -902,7 +908,7 @@ class TestUpgradeChampionRank:
         assert response.json()["rarity"] == "6r5"
 
     @pytest.mark.asyncio
-    async def test_upgrade_max_rank_returns_400(self, session):
+    async def test_upgrade_max_rank_returns_400(self):
         """7r5 is max -> 400"""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -929,7 +935,7 @@ class TestUpgradeChampionRank:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_upgrade_not_found_404(self, session):
+    async def test_upgrade_not_found_404(self):
         await push_one_user()
         response = await execute_patch_request(
             f"{CHAMPION_USERS_ROUTE}/{uuid.uuid4()}/upgrade", {}, headers=HEADERS
@@ -937,7 +943,7 @@ class TestUpgradeChampionRank:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_upgrade_not_own_champion_403(self, session):
+    async def test_upgrade_not_own_champion_403(self):
         await push_one_user()
         await push_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -950,7 +956,7 @@ class TestUpgradeChampionRank:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_upgrade_preserves_champion_id(self, session):
+    async def test_upgrade_preserves_champion_id(self):
         """Ensure upgrade only changes rank, not champion_id or game_account_id."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -968,15 +974,15 @@ class TestUpgradeChampionRank:
         assert body["signature"] == 100
 
     @pytest.mark.asyncio
-    async def test_upgrade_invalid_uuid_returns_400(self, session):
+    async def test_upgrade_invalid_uuid_returns_422(self):
         await push_one_user()
         response = await execute_patch_request(
             f"{CHAMPION_USERS_ROUTE}/not-a-uuid/upgrade", {}, headers=HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_upgrade_response_body_structure(self, session):
+    async def test_upgrade_response_body_structure(self):
         """Ensure upgrade response has all expected fields."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -987,12 +993,12 @@ class TestUpgradeChampionRank:
         )
         assert response.status_code == 200
         body = response.json()
-        assert set(body.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "is_preferred_attacker"}
+        assert set(body.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "is_preferred_attacker", "ascension"}
         assert body["id"] == str(entry.id)
         assert body["rarity"] == "7r2"
 
     @pytest.mark.asyncio
-    async def test_upgrade_successive_ranks(self, session):
+    async def test_upgrade_successive_ranks(self):
         """Chain upgrades: 7r1 -> 7r2 -> 7r3 -> 7r4 -> 7r5 -> 400."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -1019,7 +1025,7 @@ class TestPreferredAttacker:
     """PATCH /champion-users/{id}/preferred-attacker"""
 
     @pytest.mark.asyncio
-    async def test_toggle_preferred_attacker_on(self, session):
+    async def test_toggle_preferred_attacker_on(self):
         """Toggling sets is_preferred_attacker to True when it was False."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -1035,7 +1041,7 @@ class TestPreferredAttacker:
         assert body["is_preferred_attacker"] is True
 
     @pytest.mark.asyncio
-    async def test_toggle_preferred_attacker_off(self, session):
+    async def test_toggle_preferred_attacker_off(self):
         """Toggling again sets is_preferred_attacker back to False."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -1055,7 +1061,7 @@ class TestPreferredAttacker:
         assert body["is_preferred_attacker"] is False
 
     @pytest.mark.asyncio
-    async def test_toggle_preferred_attacker_not_owner_denied(self, session):
+    async def test_toggle_preferred_attacker_not_owner_denied(self):
         """Another user cannot toggle someone else's champion."""
         await push_one_user()
         await push_user2()
@@ -1070,7 +1076,7 @@ class TestPreferredAttacker:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_toggle_preferred_attacker_not_found(self, session):
+    async def test_toggle_preferred_attacker_not_found(self):
         """Non-existent champion user returns 404."""
         await push_one_user()
         fake_id = str(uuid.uuid4())
@@ -1080,7 +1086,7 @@ class TestPreferredAttacker:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_toggle_preferred_attacker_response_structure(self, session):
+    async def test_toggle_preferred_attacker_response_structure(self):
         """Response includes is_preferred_attacker in body."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -1093,3 +1099,394 @@ class TestPreferredAttacker:
         body = response.json()
         assert "is_preferred_attacker" in body
         assert body["id"] == str(entry.id)
+
+
+# =========================================================================
+# PATCH /champion-users/{id}/ascend — champion ascension
+# =========================================================================
+
+
+class TestAscendChampion:
+    @pytest.mark.asyncio
+    async def test_ascend_ok(self):
+        """Ascend an ascendable champion: 0 → 1."""
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion("Hercules", "Cosmic", is_ascendable=True)
+        entry = await _push_champion_user(acc.id, champ.id, "7r5")
+
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["ascension"] == 1
+
+    @pytest.mark.asyncio
+    async def test_ascend_1_to_2(self):
+        """Ascend from 1 → 2."""
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion("Hercules", "Cosmic", is_ascendable=True)
+        entry = await _push_champion_user(acc.id, champ.id, "7r5")
+
+        # First ascend
+        await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+        # Second ascend
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["ascension"] == 2
+
+    @pytest.mark.asyncio
+    async def test_ascend_max_returns_400(self):
+        """Ascension at 2 → 400."""
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion("Hercules", "Cosmic", is_ascendable=True)
+        entry = await _push_champion_user(acc.id, champ.id, "7r5")
+
+        # Ascend to 2
+        await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+        await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+
+        # Third ascend should fail
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+        assert response.status_code == 400
+        assert "maximum ascension" in response.json()["message"].lower()
+
+    @pytest.mark.asyncio
+    async def test_ascend_not_ascendable_returns_400(self):
+        """Non-ascendable champion → 400."""
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion("Spider-Man", "Science", is_ascendable=False)
+        entry = await _push_champion_user(acc.id, champ.id, "7r5")
+
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+        assert response.status_code == 400
+        assert "cannot be ascended" in response.json()["message"].lower()
+
+    @pytest.mark.asyncio
+    async def test_ascend_not_found_404(self):
+        await push_one_user()
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{uuid.uuid4()}/ascend", {}, headers=HEADERS
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_ascend_not_own_champion_403(self):
+        await push_one_user()
+        await push_user2()
+        acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        champ = await push_champion("Hercules", "Cosmic", is_ascendable=True)
+        entry = await _push_champion_user(acc.id, champ.id, "7r5")
+
+        response = await execute_patch_request(
+            f"{CHAMPION_USERS_ROUTE}/{entry.id}/ascend", {}, headers=HEADERS
+        )
+        assert response.status_code == 403
+
+
+# =========================================================================
+# Alliance member can view another member's roster
+# =========================================================================
+
+
+class TestAllianceMemberRosterView:
+    """GET /champion-users/by-account/{id} — alliance member access."""
+
+    @pytest.mark.asyncio
+    async def test_ally_can_view_roster(self):
+        """A user in the same alliance can view another member's roster."""
+        await push_one_user()
+        await push_user2()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        member_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        champ = await push_champion()
+        await _push_champion_user(member_acc.id, champ.id, "7r3")
+
+        response = await execute_get_request(
+            f"{CHAMPION_USERS_ROUTE}/by-account/{member_acc.id}", headers=HEADERS
+        )
+        assert response.status_code == 200
+        assert len(response.json()) == 1
+
+    @pytest.mark.asyncio
+    async def test_non_ally_cannot_view_roster(self):
+        """A user NOT in the same alliance cannot view another member's roster."""
+        await push_one_user()
+        await push_user2()
+        _alliance, _owner = await push_alliance_with_owner(
+            user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
+        )
+        # USER_ID has no game account in this alliance
+        await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+        response = await execute_get_request(
+            f"{CHAMPION_USERS_ROUTE}/by-account/{_owner.id}", headers=HEADERS
+        )
+        assert response.status_code == 403
+
+
+# =========================================================================
+# Upgrade Request endpoints
+# =========================================================================
+
+
+UPGRADE_REQUESTS_ROUTE = f"{CHAMPION_USERS_ROUTE}/upgrade-requests"
+
+
+class TestCreateUpgradeRequest:
+    """POST /champion-users/upgrade-requests"""
+
+    @pytest.mark.asyncio
+    async def test_self_upgrade_request_ok(self):
+        """Owner creates an upgrade request for their own champion."""
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion()
+        entry = await _push_champion_user(acc.id, champ.id, "6r4")
+
+        response = await execute_post_request(
+            UPGRADE_REQUESTS_ROUTE,
+            payload={
+                "champion_user_id": str(entry.id),
+                "requested_rarity": "7r1",
+            },
+            headers=HEADERS,
+        )
+        assert response.status_code == 201
+        body = response.json()
+        assert body["champion_user_id"] == str(entry.id)
+        assert body["requested_rarity"] == "7r1"
+
+    @pytest.mark.asyncio
+    async def test_officer_upgrade_request_for_member(self):
+        """Alliance officer creates upgrade request for a member's champion."""
+        await push_one_user()
+        await push_user2()
+        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
+        await push_officer(alliance, owner_acc)
+        member_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        champ = await push_champion()
+        entry = await _push_champion_user(member_acc.id, champ.id, "6r4")
+
+        response = await execute_post_request(
+            UPGRADE_REQUESTS_ROUTE,
+            payload={
+                "champion_user_id": str(entry.id),
+                "requested_rarity": "7r1",
+            },
+            headers=HEADERS,
+        )
+        assert response.status_code == 201
+
+    @pytest.mark.asyncio
+    async def test_non_officer_for_other_returns_403(self):
+        """A regular member cannot create upgrade requests for another member."""
+        await push_one_user()
+        await push_user2()
+        alliance, _owner = await push_alliance_with_owner(
+            user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
+        )
+        # USER_ID is just a member, not officer
+        await push_member(alliance, user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+        champ = await push_champion()
+        entry = await _push_champion_user(_owner.id, champ.id, "6r4")
+
+        response = await execute_post_request(
+            UPGRADE_REQUESTS_ROUTE,
+            payload={
+                "champion_user_id": str(entry.id),
+                "requested_rarity": "7r1",
+            },
+            headers=HEADERS,
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_champion_user_not_found_returns_404(self):
+        await push_one_user()
+        await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+        response = await execute_post_request(
+            UPGRADE_REQUESTS_ROUTE,
+            payload={
+                "champion_user_id": str(uuid.uuid4()),
+                "requested_rarity": "7r1",
+            },
+            headers=HEADERS,
+        )
+        assert response.status_code == 404
+
+
+class TestGetUpgradeRequestsByAccount:
+    """GET /champion-users/upgrade-requests/by-account/{game_account_id}"""
+
+    @pytest.mark.asyncio
+    async def test_get_own_upgrade_requests(self):
+        """Owner can see pending upgrade requests for their own account."""
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion()
+        entry = await _push_champion_user(acc.id, champ.id, "6r4")
+
+        # Create an upgrade request first
+        await execute_post_request(
+            UPGRADE_REQUESTS_ROUTE,
+            payload={
+                "champion_user_id": str(entry.id),
+                "requested_rarity": "7r1",
+            },
+            headers=HEADERS,
+        )
+
+        response = await execute_get_request(
+            f"{UPGRADE_REQUESTS_ROUTE}/by-account/{acc.id}", headers=HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) == 1
+        assert body[0]["requested_rarity"] == "7r1"
+
+    @pytest.mark.asyncio
+    async def test_ally_can_view_upgrade_requests(self):
+        """An alliance member can view upgrade requests for another member."""
+        await push_one_user()
+        await push_user2()
+        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
+        member_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        champ = await push_champion()
+        entry = await _push_champion_user(member_acc.id, champ.id, "6r4")
+
+        # Create upgrade request as owner (officer)
+        await push_officer(alliance, owner_acc)
+        await execute_post_request(
+            UPGRADE_REQUESTS_ROUTE,
+            payload={
+                "champion_user_id": str(entry.id),
+                "requested_rarity": "7r1",
+            },
+            headers=HEADERS,
+        )
+
+        # Owner (in same alliance) can view member's upgrade requests
+        response = await execute_get_request(
+            f"{UPGRADE_REQUESTS_ROUTE}/by-account/{member_acc.id}", headers=HEADERS
+        )
+        assert response.status_code == 200
+        assert len(response.json()) >= 1
+
+    @pytest.mark.asyncio
+    async def test_non_ally_cannot_view_upgrade_requests(self):
+        """A user NOT in the same alliance cannot view upgrade requests."""
+        await push_one_user()
+        await push_user2()
+        _, _owner = await push_alliance_with_owner(
+            user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
+        )
+        # USER_ID is not in this alliance at all
+        await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+        response = await execute_get_request(
+            f"{UPGRADE_REQUESTS_ROUTE}/by-account/{_owner.id}", headers=HEADERS
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_account_not_found_returns_404(self):
+        await push_one_user()
+
+        response = await execute_get_request(
+            f"{UPGRADE_REQUESTS_ROUTE}/by-account/{uuid.uuid4()}", headers=HEADERS
+        )
+        assert response.status_code == 404
+
+
+class TestCancelUpgradeRequest:
+    """DELETE /champion-users/upgrade-requests/{request_id}"""
+
+    @pytest.mark.asyncio
+    async def test_officer_can_cancel(self):
+        """An officer/owner can cancel an upgrade request."""
+        await push_one_user()
+        await push_user2()
+        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
+        await push_officer(alliance, owner_acc)
+        member_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        champ = await push_champion()
+        entry = await _push_champion_user(member_acc.id, champ.id, "6r4")
+
+        # Create upgrade request
+        create_resp = await execute_post_request(
+            UPGRADE_REQUESTS_ROUTE,
+            payload={
+                "champion_user_id": str(entry.id),
+                "requested_rarity": "7r1",
+            },
+            headers=HEADERS,
+        )
+        assert create_resp.status_code == 201
+        request_id = create_resp.json()["id"]
+
+        # Cancel it
+        response = await execute_delete_request(
+            f"{UPGRADE_REQUESTS_ROUTE}/{request_id}", headers=HEADERS
+        )
+        assert response.status_code == 204
+
+    @pytest.mark.asyncio
+    async def test_non_officer_cannot_cancel(self):
+        """A regular member cannot cancel an upgrade request."""
+        await push_one_user()
+        await push_user2()
+        # USER2 owns the alliance, USER1 is just a member
+        alliance, owner_acc = await push_alliance_with_owner(
+            user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
+        )
+        await push_officer(alliance, owner_acc)
+        member_acc = await push_member(alliance, user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion()
+        entry = await _push_champion_user(member_acc.id, champ.id, "6r4")
+
+        # Create upgrade request as USER2 (officer)
+        headers_user2 = create_auth_headers(user_id=str(USER2_ID))
+        create_resp = await execute_post_request(
+            UPGRADE_REQUESTS_ROUTE,
+            payload={
+                "champion_user_id": str(entry.id),
+                "requested_rarity": "7r1",
+            },
+            headers=headers_user2,
+        )
+        assert create_resp.status_code == 201
+        request_id = create_resp.json()["id"]
+
+        # USER1 (regular member) tries to cancel → 403
+        response = await execute_delete_request(
+            f"{UPGRADE_REQUESTS_ROUTE}/{request_id}", headers=HEADERS
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_cancel_not_found_returns_404(self):
+        await push_one_user()
+        response = await execute_delete_request(
+            f"{UPGRADE_REQUESTS_ROUTE}/{uuid.uuid4()}", headers=HEADERS
+        )
+        assert response.status_code == 404

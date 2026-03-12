@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,16 @@ export default function ChampionSelector({
         c.champion_class.toLowerCase().includes(q),
     );
   }, [search, availableChampions]);
+
+  // Defer rendering of the grid by one frame so the dialog open animation is smooth
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (open) {
+      const id = requestAnimationFrame(() => setReady(true));
+      return () => cancelAnimationFrame(id);
+    }
+    setReady(false);
+  }, [open]);
 
   const handleSelectChampion = (champ: AvailableChampion) => {
     if (champ.owners.length === 1) {
@@ -86,7 +96,11 @@ export default function ChampionSelector({
               className="mb-3"
             />
             <div className="overflow-y-auto flex-1 pr-1">
-              {filtered.length === 0 ? (
+              {!ready ? (
+                <p className="text-muted-foreground text-sm text-center py-8">
+                  {t.common.loading}
+                </p>
+              ) : filtered.length === 0 ? (
                 <p className="text-muted-foreground text-sm text-center py-8">
                   {t.game.defense.noChampionsAvailable}
                 </p>
@@ -105,6 +119,7 @@ export default function ChampionSelector({
                         )}
                         onClick={() => handleSelectChampion(champ)}
                         title={`${champ.champion_name} — ${champ.owners.length} owner(s)`}
+                        data-cy={`champion-card-${champ.champion_name.replaceAll(/\s+/g, '-')}`}
                       >
                         <ChampionPortrait
                           imageUrl={champ.image_url}
@@ -120,6 +135,9 @@ export default function ChampionSelector({
                         </span>
                         <span className={cn('text-[9px] font-medium', classColors.label)}>
                           {RARITY_LABELS[bestOwner.rarity] ?? bestOwner.rarity}
+                          {bestOwner.ascension > 0 && (
+                            <span className="text-purple-400 font-semibold"> · A{bestOwner.ascension}</span>
+                          )}
                         </span>
                         {champ.owners.length === 1 ? (
                           <span className="text-[9px] text-muted-foreground truncate w-full text-center">
@@ -160,6 +178,7 @@ export default function ChampionSelector({
                   )}
                   onClick={() => handleSelectOwner(owner, selectedChampion.champion_name)}
                   disabled={owner.defender_count >= 5}
+                  data-cy={`owner-row-${owner.game_pseudo}`}
                 >
                   <ChampionPortrait
                     imageUrl={selectedChampion.image_url}
@@ -174,6 +193,9 @@ export default function ChampionSelector({
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {RARITY_LABELS[owner.rarity] ?? owner.rarity}
+                      {owner.ascension > 0 && (
+                        <span className="text-purple-400 font-semibold"> · A{owner.ascension}</span>
+                      )}
                       {' · '}
                       sig {owner.signature}
                     </span>

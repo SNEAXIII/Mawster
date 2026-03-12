@@ -28,6 +28,8 @@ interface AddChampionFormProps {
   onSignatureChange: (value: number) => void;
   isPreferredAttacker: boolean;
   onIsPreferredAttackerChange: (value: boolean) => void;
+  ascension: number;
+  onAscensionChange: (value: number) => void;
   adding: boolean;
   onSubmit: () => void;
   roster: RosterEntry[];
@@ -49,6 +51,8 @@ export default function AddChampionForm({
   onSignatureChange,
   isPreferredAttacker,
   onIsPreferredAttackerChange,
+  ascension,
+  onAscensionChange,
   adding,
   onSubmit,
   roster,
@@ -78,6 +82,7 @@ export default function AddChampionForm({
             placeholder={t.roster.searchChampion}
             value={championSearch}
             onChange={onChampionSearchChange}
+            data-cy="champion-search"
           />
 
           {/* Search results dropdown */}
@@ -88,6 +93,7 @@ export default function AddChampionForm({
                   key={c.id}
                   className="w-full text-left px-3 py-2 hover:bg-blue-50 flex items-center gap-2"
                   onClick={() => onSelectChampion(c)}
+                  data-cy={`champion-result-${c.name}`}
                 >
                   {c.image_url && (
                     <img
@@ -122,7 +128,7 @@ export default function AddChampionForm({
                 </span>
               </div>
               {existingEntries.length > 0 && (
-                <div className="mt-1.5 ml-8 space-y-0.5">
+                <div className="mt-1.5 ml-8 space-y-0.5" data-cy="already-in-roster">
                   <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
                     {t.roster.alreadyInRoster}
                   </span>
@@ -160,6 +166,7 @@ export default function AddChampionForm({
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
                 }`}
                 onClick={() => onRarityChange(r)}
+                data-cy={`rarity-${r}`}
               >
                 {RARITY_LABELS[r]}
               </button>
@@ -181,6 +188,7 @@ export default function AddChampionForm({
               onChange={(e) =>
                 onSignatureChange(Math.max(0, parseInt(e.target.value) || 0))
               }
+              data-cy="sig-input"
             />
             <div className="flex gap-1">
               {SIGNATURE_PRESETS.map((v) => (
@@ -208,6 +216,7 @@ export default function AddChampionForm({
               checked={isPreferredAttacker}
               onChange={(e) => onIsPreferredAttackerChange(e.target.checked)}
               className="w-4 h-4"
+              data-cy="preferred-attacker-checkbox"
             />
             <span className="text-sm font-medium">{t.roster.preferredAttacker}</span>
           </label>
@@ -216,9 +225,44 @@ export default function AddChampionForm({
           </p>
         </div>
 
+        {/* Ascension */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">
+            Ascension
+          </label>
+          <div className="flex gap-2">
+            {[0, 1, 2].map((level) => {
+              const isAscendable = selectedChampion?.is_ascendable ?? false;
+              const disabled = !isAscendable && level > 0;
+              return (
+                <button
+                  key={level}
+                  disabled={disabled}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
+                    ascension === level
+                      ? 'bg-purple-600 text-white border-purple-600'
+                      : disabled
+                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                  }`}
+                  onClick={() => onAscensionChange(level)}
+                  data-cy={`ascension-${level}`}
+                >
+                  {level === 0 ? 'None' : `A${level}`}
+                </button>
+              );
+            })}
+          </div>
+          {selectedChampion && !selectedChampion.is_ascendable && (
+            <p className="text-xs text-muted-foreground mt-1">
+              This champion cannot be ascended.
+            </p>
+          )}
+        </div>
+
         {/* Submit */}
         <div className="flex gap-2">
-          <Button onClick={onSubmit} disabled={!selectedChampion || adding}>
+          <Button onClick={onSubmit} disabled={!selectedChampion || adding} data-cy="champion-submit">
             {adding ? t.common.loading : t.roster.addOrUpdateButton}
           </Button>
         </div>

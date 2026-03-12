@@ -12,7 +12,7 @@ services:
       - internal
     env_file: db.env
     volumes:
-      - ./mawster-db:/var/lib/mysql
+      - ./db/mawster-db:/var/lib/mysql
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     ports:
@@ -25,3 +25,25 @@ services:
       - PMA_PORT=3306
     depends_on:
       - mariadb
+  mariadb-test:
+    image: mariadb
+    ports:
+      - 3307:3306
+    container_name: mariadb-test
+    networks:
+      - internal
+    env_file: db.env
+    volumes:
+      - ./db/mawster-db-test:/var/lib/mysql
+  phpmyadmin-test:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - 8081:80
+    container_name: myadmin-test
+    networks:
+      - internal
+    environment:
+      - PMA_HOST=mariadb-test
+      - PMA_PORT=3306
+    depends_on:
+      - mariadb-test

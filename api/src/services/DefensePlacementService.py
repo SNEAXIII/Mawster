@@ -325,6 +325,7 @@ class DefensePlacementService:
                 "rank": cu.rank,
                 "signature": cu.signature,
                 "is_preferred_attacker": cu.is_preferred_attacker,
+                "ascension": cu.ascension,
                 "defender_count": defender_counts.get(cu.game_account_id, 0),
             })
 

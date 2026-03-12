@@ -6,6 +6,7 @@ import {
   deleteChampion,
   loadChampions,
   exportAllChampions,
+  toggleChampionAscendable,
   Champion,
   championClasses,
 } from '@/app/services/champions';
@@ -162,6 +163,19 @@ export default function ChampionsPage() {
     }
   }
 
+  async function handleToggleAscendable(champion: Champion) {
+    try {
+      const result = await toggleChampionAscendable(champion.id);
+      setChampions((prev) =>
+        prev.map((c) =>
+          c.id === champion.id ? { ...c, is_ascendable: result.is_ascendable } : c,
+        ),
+      );
+    } catch (err) {
+      console.error('Error toggling ascendable:', err);
+    }
+  }
+
   async function handleExport() {
     try {
       const data = await exportAllChampions();
@@ -186,13 +200,14 @@ export default function ChampionsPage() {
     setError('');
     try {
       const text = await file.text();
-      const data = JSON.parse(text) as { name: string; champion_class: string; image_url?: string | null; alias?: string | null }[];
+      const data = JSON.parse(text) as { name: string; champion_class: string; image_url?: string | null; alias?: string | null; is_ascendable?: boolean }[];
       if (!Array.isArray(data)) throw new Error('Invalid JSON: expected an array');
       const payload = data.map((c) => ({
         name: c.name,
         champion_class: c.champion_class,
         image_url: c.image_url ?? null,
         alias: c.alias ?? null,
+        is_ascendable: c.is_ascendable ?? false,
       }));
       await loadChampions(payload);
       await loadChampionsList();
@@ -275,6 +290,7 @@ export default function ChampionsPage() {
                 <th className="text-left p-3">{t.champions.tableHeaders.name}</th>
                 <th className="text-left p-3">{t.champions.tableHeaders.class}</th>
                 <th className="text-left p-3">{t.champions.tableHeaders.alias}</th>
+                <th className="text-left p-3">{t.champions.tableHeaders.isAscendable}</th>
                 <th className="text-left p-3 w-24">{t.champions.tableHeaders.actions}</th>
               </tr>
             </thead>
@@ -291,6 +307,7 @@ export default function ChampionsPage() {
                   onSaveAlias={saveAlias}
                   onAliasChange={setEditingAlias}
                   onDelete={setDeleteTarget}
+                  onToggleAscendable={handleToggleAscendable}
                 />
               ))}
             </tbody>

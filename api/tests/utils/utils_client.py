@@ -6,7 +6,7 @@ from main import app
 
 from src.enums.Roles import Roles
 from src.services.JWTService import JWTService
-from tests.utils.utils_constant import USER_LOGIN, USER_ID, USER_EMAIL
+from tests.utils.utils_constant import USER_ID
 
 # Module-level shared client set by a fixture to avoid recreating AsyncClient per request
 _SHARED_CLIENT: Optional[AsyncClient] = None
@@ -31,16 +31,12 @@ async def get_test_client() -> AsyncClient:
 
 
 def create_auth_headers(
-    login: str = USER_LOGIN,
     user_id: str = str(USER_ID),
-    email: str = USER_EMAIL,
     role: str = Roles.USER,
 ) -> dict[str, str]:
     """Create Authorization headers with a valid JWT for the given user.
 
-    The JWT is now slim: only user_id, role, and type=access.
-    login/email params are kept for backward-compatible call signatures but
-    are NOT placed in the token payload.
+    The JWT is slim: only user_id, role, and type=access.
     """
     token = JWTService.create_token(
         {"user_id": user_id, "role": role, "type": "access"}

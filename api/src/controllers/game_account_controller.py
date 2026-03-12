@@ -1,4 +1,4 @@
-import uuid
+﻿import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -8,6 +8,7 @@ from src.dto.dto_game_account import (
     GameAccountCreateRequest,
     GameAccountResponse,
 )
+from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND, NOT_YOUR_GAME_ACCOUNT
 from src.models import User
 from src.models.GameAccount import GameAccount
 from src.services.AuthService import AuthService
@@ -27,18 +28,7 @@ game_account_controller = APIRouter(
 
 def _to_response(account: GameAccount) -> GameAccountResponse:
     """Convert a GameAccount ORM object to a response DTO, including alliance info."""
-    alliance = getattr(account, "alliance", None)
-    return GameAccountResponse(
-        id=account.id,
-        user_id=account.user_id,
-        alliance_id=account.alliance_id,
-        alliance_group=account.alliance_group,
-        alliance_tag=alliance.tag if alliance else None,
-        alliance_name=alliance.name if alliance else None,
-        game_pseudo=account.game_pseudo,
-        is_primary=account.is_primary,
-        created_at=account.created_at,
-    )
+    return GameAccountResponse.model_validate(account)
 
 
 @game_account_controller.post(
@@ -91,9 +81,9 @@ async def get_game_account(
     """Get a specific game account by ID. Must belong to the current user."""
     game_account = await GameAccountService.get_game_account(session, game_account_id)
     if game_account is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game account not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
     if game_account.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your game account")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_GAME_ACCOUNT)
     return game_account
 
 
@@ -110,9 +100,9 @@ async def update_game_account(
     """Update a game account. Must belong to the current user."""
     game_account = await GameAccountService.get_game_account(session, game_account_id)
     if game_account is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game account not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
     if game_account.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your game account")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_GAME_ACCOUNT)
     result = await GameAccountService.update_game_account(
         session=session,
         game_account=game_account,
@@ -135,8 +125,8 @@ async def delete_game_account(
     """Delete a game account. Must belong to the current user."""
     game_account = await GameAccountService.get_game_account(session, game_account_id)
     if game_account is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game account not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
     if game_account.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your game account")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_GAME_ACCOUNT)
     await GameAccountService.delete_game_account(session, game_account)
     audit_log("game_account.delete", user_id=str(current_user.id), detail=f"game_account_id={game_account_id}")

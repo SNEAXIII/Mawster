@@ -31,8 +31,8 @@ admin_controller = APIRouter(
 @admin_controller.get("/users", status_code=200, response_model=UserAdminViewAllUsers)
 async def get_users(
     session: SessionDep,
-    page: int = Query(default=1, ge=1),
-    size: int = Query(default=10, ge=1),
+    page: Annotated[int, Query(ge=1)] = 1,
+    size: Annotated[int, Query(ge=1)] = 10,
     status: Optional[str] = None,
     role: Optional[Roles] = None,
     search: Optional[str] = None,

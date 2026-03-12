@@ -4,7 +4,7 @@ networks:
 
 services:
   mariadb:
-    image: mariadb
+    image: mariadb:11.4
     container_name: mariadb
     networks:
       - internal
@@ -15,7 +15,7 @@ services:
       - "com.centurylinklabs.watchtower.enable=false"
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin
+    image: phpmyadmin/phpmyadmin:5.2
     container_name: myadmin
     networks:
       - internal
@@ -60,7 +60,7 @@ services:
       - "com.centurylinklabs.watchtower.enable=true"
 
   caddy:
-    image: caddy:latest
+    image: caddy:2.10
     container_name: caddy
     restart: unless-stopped
     ports:

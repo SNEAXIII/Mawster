@@ -31,7 +31,6 @@ async function refreshBackendToken(token: any): Promise<any> {
         const decoded = jwt.decode(data.access_token) as JwtPayload | null;
 
         if (decoded) {
-          console.log('Token rafraichi avec succes via backend refresh token');
           return {
             ...token,
             id: decoded.user_id,
@@ -87,8 +86,6 @@ async function refreshBackendToken(token: any): Promise<any> {
         return { ...token, expired: true, backendAuthenticated: false };
       }
 
-      console.log('Token rafraichi avec succes via Discord re-auth');
-
       return {
         ...token,
         id: decoded.user_id,
@@ -114,8 +111,8 @@ export const {
 } = NextAuth({
   providers: [
     Discord({
-      clientId: process.env.DISCORD_CLIENT_ID!,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
+      clientId: process.env.DISCORD_CLIENT_ID,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET,
       authorization: {
         params: {
           scope: 'identify email',
@@ -134,7 +131,7 @@ export const {
             async authorize(credentials) {
               if (!credentials?.user_id) return null;
 
-              const res = await fetch(`${SERVER_API_URL}/auth/dev-login`, {
+              const res = await fetch(`${SERVER_API_URL}/dev/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: credentials.user_id }),
@@ -219,7 +216,6 @@ export const {
       }
 
       // JWT backend expiré : tenter un refresh
-      console.log('JWT backend expire, tentative de refresh...');
       return await refreshBackendToken(token);
     },
     async session({ session, token }: { session: any; token: any }) {

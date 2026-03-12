@@ -1,6 +1,7 @@
 import uuid
-from typing import Optional
-from pydantic import BaseModel, Field
+from typing import Any, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ChampionUserCreateRequest(BaseModel):
@@ -10,6 +11,7 @@ class ChampionUserCreateRequest(BaseModel):
     rarity: str = Field(..., examples=["6r4"])
     signature: int = Field(default=0, ge=0, examples=[200])
     is_preferred_attacker: bool = Field(default=False)
+    ascension: int = Field(default=0, ge=0, le=2, examples=[0])
 
 
 class ChampionUserBulkEntry(BaseModel):
@@ -18,6 +20,7 @@ class ChampionUserBulkEntry(BaseModel):
     rarity: str = Field(..., examples=["6r4"])
     signature: int = Field(default=0, ge=0, examples=[200])
     is_preferred_attacker: bool = Field(default=False)
+    ascension: int = Field(default=0, ge=0, le=2, examples=[0])
 
 
 class ChampionUserBulkRequest(BaseModel):
@@ -27,33 +30,42 @@ class ChampionUserBulkRequest(BaseModel):
 
 
 class ChampionUserResponse(BaseModel):
+    """DTO for a champion-user roster entry."""
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     game_account_id: uuid.UUID
     champion_id: uuid.UUID
     rarity: str
     signature: int
     is_preferred_attacker: bool = False
-
-    @classmethod
-    def from_model(cls, m) -> "ChampionUserResponse":
-        return cls(
-            id=m.id,
-            game_account_id=m.game_account_id,
-            champion_id=m.champion_id,
-            rarity=m.rarity,
-            signature=m.signature,
-            is_preferred_attacker=m.is_preferred_attacker,
-        )
+    ascension: int = 0
 
 
-class ChampionUserDetailResponse(BaseModel):
-    """Roster entry with champion details for display."""
-    id: uuid.UUID
-    game_account_id: uuid.UUID
-    champion_id: uuid.UUID
-    rarity: str
-    signature: int
-    is_preferred_attacker: bool = False
+class ChampionUserDetailResponse(ChampionUserResponse):
+    """Roster entry with champion details for display.
+    Extends ChampionUserResponse with champion-level fields."""
+    is_ascendable: bool = False
     champion_name: str
     champion_class: str
     image_url: Optional[str] = None
+
+    @model_validator(mode='before')
+    @classmethod
+    def flatten_champion(cls, data: Any) -> Any:
+        """Flatten the nested `.champion` relationship into top-level fields."""
+        if isinstance(data, dict):
+            return data
+        return {
+            'id': data.id,
+            'game_account_id': data.game_account_id,
+            'champion_id': data.champion_id,
+            'rarity': data.rarity,
+            'signature': data.signature,
+            'is_preferred_attacker': data.is_preferred_attacker,
+            'ascension': data.ascension,
+            'is_ascendable': data.champion.is_ascendable,
+            'champion_name': data.champion.name,
+            'champion_class': data.champion.champion_class,
+            'image_url': data.champion.image_url,
+        }

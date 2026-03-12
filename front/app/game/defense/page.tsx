@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { toast } from 'sonner';
@@ -31,10 +32,19 @@ import {
   importDefense,
 } from '@/app/services/defense';
 
-import WarMap from './_components/war-map';
-import ChampionSelector from './_components/champion-selector';
-import DefenseSidePanel from './_components/defense-side-panel';
 import DefenseImportReportDialog from './_components/defense-import-report-dialog';
+
+const WarMap = dynamic(() => import('./_components/war-map'), {
+  loading: () => <FullPageSpinner />,
+});
+
+const ChampionSelector = dynamic(() => import('./_components/champion-selector'), {
+  loading: () => null,
+});
+
+const DefenseSidePanel = dynamic(() => import('./_components/defense-side-panel'), {
+  loading: () => <FullPageSpinner />,
+});
 
 function DefensePageContent() {
   const { t } = useI18n();
@@ -283,7 +293,7 @@ function DefensePageContent() {
                 {t.game.defense.alliance}:
               </label>
               <Select value={selectedAllianceId} onValueChange={handleAllianceChange}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-[200px]" data-cy="defense-alliance-select">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -308,6 +318,7 @@ function DefensePageContent() {
                     variant={selectedBg === bg ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => handleBgChange(String(bg))}
+                    data-cy={`defense-bg-${bg}`}
                   >
                     BG {bg}
                   </Button>
@@ -321,6 +332,7 @@ function DefensePageContent() {
                 variant="destructive"
                 size="sm"
                 className="ml-auto"
+                data-cy="defense-clear-all"
                 onClick={() => setClearConfirmOpen(true)}
               >
                 <Trash2 className="w-4 h-4 mr-1" />
@@ -328,19 +340,19 @@ function DefensePageContent() {
               </Button>
             )}
 
-            {/* Export / Import */}
-            <div className={`flex gap-1 ${userCanManage && defenseSummary && defenseSummary.placements.length > 0 ? '' : 'ml-auto'}`}>
-              <Button variant="outline" size="sm" onClick={handleExport}>
-                <Download className="w-4 h-4 mr-1" />
-                {t.game.defense.importExport.exportBtn}
-              </Button>
-              {userCanManage && (
-                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+            {/* Export / Import — managers only */}
+            {userCanManage && (
+              <div className="flex gap-1 ml-auto">
+                <Button variant="outline" size="sm" onClick={handleExport} data-cy="defense-export">
+                  <Download className="w-4 h-4 mr-1" />
+                  {t.game.defense.importExport.exportBtn}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} data-cy="defense-import">
                   <Upload className="w-4 h-4 mr-1" />
                   {t.game.defense.importExport.importBtn}
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

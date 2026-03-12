@@ -12,8 +12,6 @@ from tests.utils.utils_client import (
 from tests.utils.utils_constant import (
     USER_ID,
     USER2_ID,
-    USER2_LOGIN,
-    USER2_EMAIL,
     GAME_PSEUDO,
     GAME_PSEUDO_2,
     ALLIANCE_NAME,
@@ -30,6 +28,7 @@ from tests.utils.utils_db import load_objects
 from src.models import User
 from src.models.ChampionUser import ChampionUser
 
+IRON_MAN = "Iron Man"
 
 # ─── Helpers ──────────────────────────────────────────────
 
@@ -66,7 +65,7 @@ async def _setup_alliance_with_bg(
     # Create champions
     champ1 = await push_champion(name="Spider-Man", champion_class="Science")
     champ2 = await push_champion(name="Wolverine", champion_class="Mutant")
-    champ3 = await push_champion(name="Iron Man", champion_class="Tech")
+    champ3 = await push_champion(name=IRON_MAN, champion_class="Tech")
 
     # Add to rosters
     cu_owner1 = ChampionUser(
@@ -147,7 +146,7 @@ class TestGetDefense:
             role="user",
         )
         await load_objects([other_user])
-        headers = create_auth_headers(login=other_login, user_id=str(other_user_id), email=other_email)
+        headers = create_auth_headers(user_id=str(other_user_id))
         response = await execute_get_request(
             f"/alliances/{data['alliance'].id}/defense/bg/1",
             headers=headers,
@@ -376,7 +375,7 @@ class TestPlaceDefender:
     async def test_place_defender_for_other_as_non_officer_denied(self):
         """Non-officer cannot place for another player."""
         data = await _setup_alliance_with_bg()
-        headers = create_auth_headers(login=USER2_LOGIN, user_id=str(USER2_ID), email=USER2_EMAIL)
+        headers = create_auth_headers(user_id=str(USER2_ID))
         response = await execute_post_request(
             f"/alliances/{data['alliance'].id}/defense/bg/1/place",
             payload={
@@ -429,7 +428,7 @@ class TestRemoveDefender:
     async def test_remove_defender_non_officer_denied(self):
         data = await _setup_alliance_with_bg()
         owner_headers = create_auth_headers(user_id=str(USER_ID))
-        member_headers = create_auth_headers(login=USER2_LOGIN, user_id=str(USER2_ID), email=USER2_EMAIL)
+        member_headers = create_auth_headers(user_id=str(USER2_ID))
 
         # Owner places
         await execute_post_request(
@@ -615,7 +614,7 @@ class TestExportDefense:
         assert len(items) == 2
         names = {i["champion_name"] for i in items}
         assert "Spider-Man" in names
-        assert "Iron Man" in names
+        assert IRON_MAN in names
         nodes = {i["node_number"] for i in items}
         assert nodes == {1, 10}
         # Verify portable format (no IDs)
@@ -635,7 +634,7 @@ class TestExportDefense:
             discord_id="outsider2", role="user",
         )
         await load_objects([other_user])
-        headers = create_auth_headers(login="outsider2", user_id=str(other_user_id), email="outsider2@test.com")
+        headers = create_auth_headers(user_id=str(other_user_id))
         response = await execute_get_request(
             f"/alliances/{data['alliance'].id}/defense/bg/1/export",
             headers=headers,
@@ -661,7 +660,7 @@ class TestImportDefense:
                     "owner_name": GAME_PSEUDO,
                 },
                 {
-                    "champion_name": "Iron Man",
+                    "champion_name": IRON_MAN,
                     "rarity": "7r1",
                     "node_number": 5,
                     "owner_name": GAME_PSEUDO_2,
@@ -795,7 +794,7 @@ class TestImportDefense:
     async def test_import_non_officer_denied(self):
         """Non-officer cannot import."""
         data = await _setup_alliance_with_bg()
-        headers = create_auth_headers(login=USER2_LOGIN, user_id=str(USER2_ID), email=USER2_EMAIL)
+        headers = create_auth_headers(user_id=str(USER2_ID))
 
         payload = {
             "placements": [

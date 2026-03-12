@@ -10,7 +10,7 @@ import {
   shortenChampionName,
   getNextRarity,
 } from '@/app/services/roster';
-import { FiTrash2, FiEdit2, FiArrowUp, FiX } from 'react-icons/fi';
+import { FiTrash2, FiEdit2, FiArrowUp, FiX, FiStar } from 'react-icons/fi';
 
 interface RosterChampionCardProps {
   entry: RosterEntry;
@@ -18,6 +18,7 @@ interface RosterChampionCardProps {
   onDelete?: (entry: RosterEntry) => void;
   onUpgrade?: (entry: RosterEntry) => void;
   onTogglePreferredAttacker?: (entry: RosterEntry) => void;
+  onAscend?: (entry: RosterEntry) => void;
   readOnly?: boolean;
   /** If set, this champion has a pending upgrade request */
   pendingRequestId?: string;
@@ -31,6 +32,7 @@ export default function RosterChampionCard({
   onDelete,
   onUpgrade,
   onTogglePreferredAttacker,
+  onAscend,
   readOnly = false,
   pendingRequestId,
   onCancelRequest,
@@ -42,6 +44,7 @@ export default function RosterChampionCard({
   return (
     <div
       className={`rounded-md bg-gray-900 ${classColors.border} border-[3px] shadow hover:shadow-lg transition-shadow relative group overflow-hidden`}
+      data-cy={`champion-card-${entry.champion_name}`}
     >
       {/* Action buttons — always visible on touch, hover on desktop */}
       {!readOnly && (
@@ -56,32 +59,46 @@ export default function RosterChampionCard({
               )}
               onClick={() => onTogglePreferredAttacker(entry)}
               title={t.roster.preferredAttackerToggle}
+              data-cy="preferred-attacker-toggle"
             >
               <span className="text-xs leading-none">⚔</span>
             </button>
           )}
-          {pendingRequestId && onCancelRequest ? (
+          {entry.is_ascendable && entry.ascension < 2 && onAscend && (
             <button
+              className="text-purple-400 hover:text-purple-300 bg-black/60 rounded-full p-1"
+              onClick={() => onAscend(entry)}
+              title="Ascension"
+            >
+              <FiStar size={14} />
+            </button>
+          )}
+          {pendingRequestId && onCancelRequest && (
+            <button
+              data-cy="cancel-pending-request"
               className="text-red-400 hover:text-red-300 bg-black/60 rounded-full p-1"
               onClick={() => onCancelRequest(pendingRequestId)}
               title={t.roster.upgradeRequests.cancel}
             >
               <FiX size={14} />
             </button>
-          ) : nextRarity && onUpgrade ? (
+          )}
+          {!pendingRequestId && nextRarity && onUpgrade && (
             <button
+              data-cy="champion-upgrade"
               className="text-green-400 hover:text-green-300 bg-black/60 rounded-full p-1"
               onClick={() => onUpgrade(entry)}
               title={t.roster.upgrade}
             >
               <FiArrowUp size={14} />
             </button>
-          ) : null}
+          )}
           {onEdit && (
             <button
               className="text-blue-400 hover:text-blue-300 bg-black/60 rounded-full p-1"
               onClick={() => onEdit(entry)}
               title="Edit"
+              data-cy="champion-edit"
             >
               <FiEdit2 size={14} />
             </button>
@@ -91,6 +108,7 @@ export default function RosterChampionCard({
               className="text-red-400 hover:text-red-600 bg-black/60 rounded-full p-1"
               onClick={() => onDelete(entry)}
               title={t.common.delete}
+              data-cy="champion-delete"
             >
               <FiTrash2 size={14} />
             </button>
@@ -115,18 +133,24 @@ export default function RosterChampionCard({
           entry.is_preferred_attacker ? 'text-yellow-400' : 'text-white',
         )}
         title={entry.champion_name}
+        data-cy={entry.is_preferred_attacker ? 'preferred-attacker-name' : undefined}
       >
         {entry.is_preferred_attacker && '⚔ '}{shortenChampionName(entry.champion_name)}
       </p>
 
-      {/* Signature */}
-      <div className="flex justify-center pb-1">
+      {/* Signature + Ascension */}
+      <div className="flex justify-center gap-1 pb-1">
         {entry.signature > 0 ? (
-          <span className="text-amber-400 text-[9px] font-semibold">
+          <span className="text-amber-400 text-[9px] font-semibold" data-cy="champion-sig">
             sig {entry.signature}
           </span>
         ) : (
-          <span className="text-white/50 text-[9px]">sig 0</span>
+          <span className="text-white/50 text-[9px]" data-cy="champion-sig">sig 0</span>
+        )}
+        {entry.ascension > 0 && (
+          <span className="text-purple-400 text-[9px] font-semibold" data-cy="champion-ascension">
+            · A{entry.ascension}
+          </span>
         )}
       </div>
 

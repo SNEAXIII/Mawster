@@ -7,6 +7,7 @@ import { FiCheck, FiEdit2, FiTrash2, FiX } from 'react-icons/fi';
 import { ClassBadge } from '@/components/class-badge';
 import { ActionIconButton } from '@/components/action-icon-button';
 import { Champion, getChampionImageUrl } from '@/app/services/champions';
+import { useI18n } from '@/app/i18n';
 
 interface ChampionTableRowProps {
   champion: Champion;
@@ -18,6 +19,7 @@ interface ChampionTableRowProps {
   onSaveAlias: (championId: string) => void;
   onAliasChange: (value: string) => void;
   onDelete: (champion: Champion) => void;
+  onToggleAscendable: (champion: Champion) => void;
 }
 
 export default function ChampionTableRow({
@@ -30,10 +32,9 @@ export default function ChampionTableRow({
   onSaveAlias,
   onAliasChange,
   onDelete,
+  onToggleAscendable,
 }: ChampionTableRowProps) {
-  console.log('Rendering ChampionTableRow for', champion.name);
-  console.log('isEditing:', isEditing, 'editingAlias:', editingAlias, 'savingAlias:', savingAlias);
-  console.log('Champion data:', champion.image_url, champion.champion_class, champion.alias);
+  const { t } = useI18n();
   return (
     <tr className="border-b hover:bg-gray-50">
       {/* Image */}
@@ -93,6 +94,20 @@ export default function ChampionTableRow({
         ) : (
           <span className="text-gray-600 text-xs">{champion.alias || '-'}</span>
         )}
+      </td>
+
+      {/* Ascendable */}
+      <td className="p-3">
+        <button
+          onClick={() => onToggleAscendable(champion)}
+          className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+            champion.is_ascendable
+              ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+              : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+          }`}
+        >
+          {champion.is_ascendable ? t.common.yes : t.common.no}
+        </button>
       </td>
 
       {/* Actions */}

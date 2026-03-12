@@ -17,22 +17,21 @@ from tests.utils.utils_client import (
 )
 from tests.utils.utils_constant import (
     USER_ID,
-    USER_LOGIN,
-    USER_EMAIL,
     USER2_ID,
     USER2_LOGIN,
     USER2_EMAIL,
-    ADMIN_LOGIN,
-    ADMIN_EMAIL,
     DISCORD_ID_2,
 )
 from tests.utils.utils_db import get_test_session, load_objects
 
 app.dependency_overrides[get_session] = get_test_session
 
-ADMIN_HEADERS = create_auth_headers(login=ADMIN_LOGIN, user_id=str(USER_ID), email=ADMIN_EMAIL, role=Roles.ADMIN)
-SUPER_ADMIN_HEADERS = create_auth_headers(login=ADMIN_LOGIN, user_id=str(USER_ID), email=ADMIN_EMAIL, role=Roles.SUPER_ADMIN)
-USER_HEADERS = create_auth_headers(login=USER_LOGIN, user_id=str(USER_ID), email=USER_EMAIL, role=Roles.USER)
+ADMIN_HEADERS = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
+SUPER_ADMIN_HEADERS = create_auth_headers(user_id=str(USER_ID), role=Roles.SUPER_ADMIN)
+USER_HEADERS = create_auth_headers(user_id=str(USER_ID), role=Roles.USER)
+
+ADMIN_USERS_URL = "/admin/users"
+ADMIN2_EMAIL = "admin2@gmail.com"
 
 
 # ---------------------------------------------------------------------------
@@ -62,7 +61,7 @@ async def _setup_user(
 _FAKE_ID = str(uuid.uuid4())
 
 _ADMIN_USER_ROUTES = [
-    ("GET", "/admin/users", None, "list_users"),
+    ("GET", ADMIN_USERS_URL, None, "list_users"),
     ("PATCH", f"/admin/users/disable/{_FAKE_ID}", {}, "disable"),
     ("PATCH", f"/admin/users/enable/{_FAKE_ID}", {}, "enable"),
     ("DELETE", f"/admin/users/delete/{_FAKE_ID}", None, "delete"),
@@ -101,11 +100,11 @@ class TestAdminUsersAccessControl:
 
 class TestGetUsers:
     @pytest.mark.asyncio
-    async def test_admin_can_list_users(self, session):
+    async def test_admin_can_list_users(self):
         await push_one_admin()
         await _setup_user()
 
-        response = await execute_get_request("/admin/users", headers=ADMIN_HEADERS)
+        response = await execute_get_request(ADMIN_USERS_URL, headers=ADMIN_HEADERS)
         assert response.status_code == 200
         body = response.json()
         assert body["total_users"] >= 2
@@ -115,8 +114,8 @@ class TestGetUsers:
         "page, size, expected_status",
         [
             (1, 10, 200),
-            (0, 10, 400),
-            (1, 0, 400),
+            (0, 10, 422),
+            (1, 0, 422),
         ],
         ids=["valid", "page_zero", "size_zero"],
     )
@@ -128,10 +127,10 @@ class TestGetUsers:
         assert response.status_code == expected_status
 
     @pytest.mark.asyncio
-    async def test_response_structure(self, session):
+    async def test_response_structure(self):
         await push_one_admin()
         await _setup_user()
-        response = await execute_get_request("/admin/users", headers=ADMIN_HEADERS)
+        response = await execute_get_request(ADMIN_USERS_URL, headers=ADMIN_HEADERS)
         assert response.status_code == 200
         body = response.json()
         assert "users" in body
@@ -148,7 +147,7 @@ class TestGetUsers:
 
 class TestDisableUser:
     @pytest.mark.asyncio
-    async def test_disable_ok(self, session):
+    async def test_disable_ok(self):
         await push_one_admin()
         user = await _setup_user()
 
@@ -179,7 +178,7 @@ class TestDisableUser:
             target_id = user.id
         elif scenario == "is_admin":
             user = await _setup_user(
-                user_id=uuid.uuid4(), login="admin2", email="admin2@gmail.com",
+                user_id=uuid.uuid4(), login="admin2", email=ADMIN2_EMAIL,
                 discord_id="discord_admin2", role=Roles.ADMIN,
             )
             target_id = user.id
@@ -192,12 +191,12 @@ class TestDisableUser:
         assert response.status_code == expected_status
 
     @pytest.mark.asyncio
-    async def test_disable_invalid_uuid_returns_400(self, session):
+    async def test_disable_invalid_uuid_returns_422(self):
         await push_one_admin()
         response = await execute_patch_request(
             "/admin/users/disable/not-a-uuid", {}, headers=ADMIN_HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
 
 # =========================================================================
@@ -207,7 +206,7 @@ class TestDisableUser:
 
 class TestEnableUser:
     @pytest.mark.asyncio
-    async def test_enable_ok(self, session):
+    async def test_enable_ok(self):
         await push_one_admin()
         user = await _setup_user(disabled_at=datetime.now())
 
@@ -251,7 +250,7 @@ class TestEnableUser:
 
 class TestAdminDeleteUser:
     @pytest.mark.asyncio
-    async def test_delete_ok(self, session):
+    async def test_delete_ok(self):
         await push_one_admin()
         user = await _setup_user()
 
@@ -278,7 +277,7 @@ class TestAdminDeleteUser:
             target_id = user.id
         elif scenario == "is_admin":
             user = await _setup_user(
-                user_id=uuid.uuid4(), login="admin2", email="admin2@gmail.com",
+                user_id=uuid.uuid4(), login="admin2", email=ADMIN2_EMAIL,
                 discord_id="discord_admin2", role=Roles.ADMIN,
             )
             target_id = user.id
@@ -298,7 +297,7 @@ class TestAdminDeleteUser:
 
 class TestPromoteUser:
     @pytest.mark.asyncio
-    async def test_super_admin_can_promote(self, session):
+    async def test_super_admin_can_promote(self):
         """Only super_admin can promote a user to admin."""
         await push_one_super_admin()
         user = await _setup_user()
@@ -309,7 +308,7 @@ class TestPromoteUser:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_admin_cannot_promote(self, session):
+    async def test_admin_cannot_promote(self):
         """Admin (non-super) is forbidden from promoting users."""
         await push_one_admin()
         user = await _setup_user()
@@ -334,7 +333,7 @@ class TestPromoteUser:
 
         if scenario == "already_admin":
             user = await _setup_user(
-                user_id=uuid.uuid4(), login="admin2", email="admin2@gmail.com",
+                user_id=uuid.uuid4(), login="admin2", email=ADMIN2_EMAIL,
                 discord_id="discord_admin2", role=Roles.ADMIN,
             )
             target_id = user.id
@@ -350,12 +349,12 @@ class TestPromoteUser:
         assert response.status_code == expected_status
 
     @pytest.mark.asyncio
-    async def test_promote_invalid_uuid_returns_400(self, session):
+    async def test_promote_invalid_uuid_returns_422(self):
         await push_one_super_admin()
         response = await execute_patch_request(
             "/admin/users/promote/not-a-uuid", {}, headers=SUPER_ADMIN_HEADERS
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
 
 # =========================================================================
@@ -365,14 +364,14 @@ class TestPromoteUser:
 
 class TestSuperAdminAccess:
     @pytest.mark.asyncio
-    async def test_super_admin_can_access_admin_routes(self, session):
+    async def test_super_admin_can_access_admin_routes(self):
         """Super admin can list users via /admin/users."""
         await push_one_super_admin()
-        response = await execute_get_request("/admin/users", headers=SUPER_ADMIN_HEADERS)
+        response = await execute_get_request(ADMIN_USERS_URL, headers=SUPER_ADMIN_HEADERS)
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_cannot_disable_super_admin(self, session):
+    async def test_cannot_disable_super_admin(self):
         """Targeting a super_admin user for disable should fail."""
         await push_one_super_admin()
         target = await _setup_user(
@@ -385,7 +384,7 @@ class TestSuperAdminAccess:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_cannot_delete_super_admin(self, session):
+    async def test_cannot_delete_super_admin(self):
         """Targeting a super_admin user for deletion should fail."""
         await push_one_super_admin()
         target = await _setup_user(

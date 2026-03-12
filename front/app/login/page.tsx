@@ -95,6 +95,7 @@ function LoginPageContent() {
               className='w-full flex items-center justify-center gap-2 h-12 text-base'
               onClick={handleDiscordLogin}
               disabled={isLoading}
+              data-cy='discord-login-btn'
             >
               {isLoading ? (
                 <>
@@ -132,6 +133,7 @@ function LoginPageContent() {
                         className='w-full text-left px-3 py-2 text-sm rounded-md hover:bg-gray-100 transition-colors flex items-center justify-between disabled:opacity-50'
                         disabled={isLoading}
                         onClick={() => handleDevLogin(u.id)}
+                        data-cy={`dev-login-${u.login}`}
                       >
                         <span className='font-medium truncate'>{u.login}</span>
                         <span className='text-xs text-gray-400 ml-2 shrink-0'>{u.role}</span>

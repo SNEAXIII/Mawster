@@ -166,7 +166,7 @@ export default function AllianceRosterDialog({
           </p>
 
           <Select value={selectedRarity} onValueChange={setSelectedRarity}>
-            <SelectTrigger>
+            <SelectTrigger data-cy="upgrade-rarity-select">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -186,7 +186,7 @@ export default function AllianceRosterDialog({
             >
               {t.common.cancel}
             </Button>
-            <Button onClick={handleRequestUpgrade} disabled={!selectedRarity}>
+            <Button data-cy="request-upgrade-btn" onClick={handleRequestUpgrade} disabled={!selectedRarity}>
               {t.game.alliances.requestUpgrade}
             </Button>
           </div>

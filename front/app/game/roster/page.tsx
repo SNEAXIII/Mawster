@@ -8,6 +8,13 @@ import { useI18n } from '@/app/i18n';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import RosterImportExport from '@/components/roster-import-export';
 import { ErrorBanner } from '@/components/error-banner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { getMyGameAccounts, GameAccount } from '@/app/services/game';
 import {
   getRoster,
@@ -20,6 +27,7 @@ import {
   upgradeChampionRank,
   getNextRarity,
   togglePreferredAttacker,
+  ascendChampion,
 } from '@/app/services/roster';
 import { Champion } from '@/app/services/champions';
 
@@ -33,11 +41,11 @@ function RosterUpgradeSection({
   selectedAccountId,
   allianceId,
   refreshKey,
-}: {
+}: Readonly<{
   selectedAccountId: string | null;
   allianceId: string | null;
   refreshKey: number;
-}) {
+}>) {
   const { getRoleFor } = useAllianceRole();
   const role = allianceId ? getRoleFor(allianceId) : undefined;
   return (
@@ -50,7 +58,7 @@ function RosterUpgradeSection({
 }
 
 export default function RosterPage() {
-  const { data: session, status: authStatus } = useSession();
+  const { status: authStatus } = useSession();
   const { t } = useI18n();
 
   // Game accounts
@@ -70,6 +78,7 @@ export default function RosterPage() {
   const [selectedRarity, setSelectedRarity] = useState<string>(RARITIES[0]);
   const [signatureValue, setSignatureValue] = useState<number>(0);
   const [isPreferredAttacker, setIsPreferredAttacker] = useState<boolean>(false);
+  const [ascension, setAscension] = useState<number>(0);
   const [adding, setAdding] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -79,7 +88,9 @@ export default function RosterPage() {
 
   // Upgrade
   const [upgradeTarget, setUpgradeTarget] = useState<RosterEntry | null>(null);
-  const [upgrading, setUpgrading] = useState(false);
+
+  // Ascend
+  const [ascendTarget, setAscendTarget] = useState<RosterEntry | null>(null);
 
   // Upgrade requests refresh key
   const [upgradeRefreshKey, setUpgradeRefreshKey] = useState(0);
@@ -99,9 +110,9 @@ export default function RosterPage() {
     getMyGameAccounts()
       .then((accs) => {
         setAccounts(accs);
-        if (accs.length === 1) {
-          setSelectedAccountId(accs[0].id);
-        }
+        // Auto-select: primary account first, otherwise first available
+        const primary = accs.find((a) => a.is_primary);
+        setSelectedAccountId(primary?.id ?? accs[0]?.id ?? null);
       })
       .catch(() => setError(t.roster.errors.loadAccounts))
       .finally(() => setLoadingAccounts(false));
@@ -158,6 +169,7 @@ export default function RosterPage() {
         selectedRarity,
         signatureValue,
         isPreferredAttacker,
+        ascension,
       );
       // Refresh roster
       const updated = await getRoster(selectedAccountId);
@@ -170,6 +182,7 @@ export default function RosterPage() {
       setSearchResults([]);
       setSignatureValue(0);
       setIsPreferredAttacker(false);
+      setAscension(0);
       // Re-focus search input for quick next add
       setTimeout(() => searchInputRef.current?.focus(), 50);
     } catch (e: any) {
@@ -178,7 +191,7 @@ export default function RosterPage() {
     } finally {
       setAdding(false);
     }
-  }, [selectedAccountId, selectedChampion, selectedRarity, signatureValue]);
+  }, [selectedAccountId, selectedChampion, selectedRarity, signatureValue, isPreferredAttacker, ascension]);
 
   const confirmDelete = useCallback(async () => {
     if (!deleteTarget || !selectedAccountId) return;
@@ -205,12 +218,14 @@ export default function RosterPage() {
       champion_class: entry.champion_class,
       image_url: entry.image_url,
       is_7_star: entry.rarity.startsWith('7'),
+      is_ascendable: entry.is_ascendable ?? false,
       alias: null,
     };
     setSelectedChampion(champion);
     setChampionSearch(entry.champion_name);
     setSelectedRarity(entry.rarity);
     setSignatureValue(entry.signature);
+    setAscension(entry.ascension ?? 0);
     setShowAddForm(true);
     setTimeout(() => {
       addFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -222,7 +237,6 @@ export default function RosterPage() {
     if (!upgradeTarget || !selectedAccountId) return;
     const nextRarity = getNextRarity(upgradeTarget.rarity);
     if (!nextRarity) return;
-    setUpgrading(true);
     try {
       await upgradeChampionRank(upgradeTarget.id);
       const updated = await getRoster(selectedAccountId);
@@ -236,7 +250,6 @@ export default function RosterPage() {
     } catch (e: any) {
       toast.error(e.message || t.roster.errors.upgradeError);
     } finally {
-      setUpgrading(false);
       setUpgradeTarget(null);
     }
   }, [upgradeTarget, selectedAccountId]);
@@ -253,6 +266,20 @@ export default function RosterPage() {
     }
   }, [selectedAccountId]);
 
+  const confirmAscend = useCallback(async () => {
+    if (!ascendTarget || !selectedAccountId) return;
+    try {
+      await ascendChampion(ascendTarget.id);
+      const updated = await getRoster(selectedAccountId);
+      setRoster(updated);
+      toast.success(t.roster.ascendSuccess.replace('{name}', ascendTarget.champion_name));
+    } catch (e: any) {
+      toast.error(e.message || t.roster.ascendError);
+    } finally {
+      setAscendTarget(null);
+    }
+  }, [ascendTarget, selectedAccountId]);
+
   // Group roster by rarity, sorted descending (7r5 first → 6r4 last)
   const groupedRoster = (() => {
     const groups: Record<string, RosterEntry[]> = {};
@@ -260,7 +287,7 @@ export default function RosterPage() {
       const entries = roster.filter((r) => r.rarity === rarity);
       if (entries.length > 0) groups[rarity] = entries;
     }
-    return Object.entries(groups) as [string, RosterEntry[]][];
+    return Object.entries(groups);
   })();
 
   if (authStatus === 'loading' || loadingAccounts) {
@@ -284,7 +311,27 @@ export default function RosterPage() {
     <AllianceRoleProvider>
       <div className='px-3 py-4 sm:p-6 max-w-6xl mx-auto'>
         <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2'>
-          <h1 className='text-xl sm:text-2xl font-bold'>{t.roster.title}</h1>
+                  {/* Account selector - only show if multiple accounts */}
+        {accounts.length > 1 && (
+          <div className='mb-6'>
+            <label className='block text-sm font-medium mb-2'>{t.roster.selectAccount}</label>
+            <Select
+              value={selectedAccountId || ''}
+              onValueChange={(val) => setSelectedAccountId(val || null)}
+            >
+              <SelectTrigger className='w-full max-w-xs' data-cy='roster-account-select'>
+                <SelectValue placeholder={t.roster.chooseAccount} />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((acc) => (
+                  <SelectItem key={acc.id} value={acc.id}>
+                    {acc.game_pseudo} {acc.is_primary ? `(${t.game.accounts.primary})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
           {selectedAccountId && (
             <RosterImportExport
               roster={roster}
@@ -306,28 +353,6 @@ export default function RosterPage() {
             onDismiss={() => setError(null)}
             className='mb-4'
           />
-        )}
-
-        {/* Account selector - only show if multiple accounts */}
-        {accounts.length > 1 && (
-          <div className='mb-6'>
-            <label className='block text-sm font-medium mb-2'>{t.roster.selectAccount}</label>
-            <select
-              className='border rounded px-3 py-2 w-full max-w-xs'
-              value={selectedAccountId || ''}
-              onChange={(e) => setSelectedAccountId(e.target.value || null)}
-            >
-              <option value=''>{t.roster.chooseAccount}</option>
-              {accounts.map((acc) => (
-                <option
-                  key={acc.id}
-                  value={acc.id}
-                >
-                  {acc.game_pseudo} {acc.is_primary ? `(${t.game.accounts.primary})` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
         )}
 
         {selectedAccountId && (
@@ -353,6 +378,8 @@ export default function RosterPage() {
               onSignatureChange={setSignatureValue}
               isPreferredAttacker={isPreferredAttacker}
               onIsPreferredAttackerChange={setIsPreferredAttacker}
+              ascension={ascension}
+              onAscensionChange={setAscension}
               adding={adding}
               onSubmit={handleAddOrUpdateChampion}
               roster={roster}
@@ -375,6 +402,7 @@ export default function RosterPage() {
                 onDelete={setDeleteTarget}
                 onUpgrade={setUpgradeTarget}
                 onTogglePreferredAttacker={handleTogglePreferredAttacker}
+                onAscend={setAscendTarget}
               />
             )}
           </>
@@ -411,6 +439,23 @@ export default function RosterPage() {
           confirmText={t.roster.upgradeConfirmButton}
           cancelText={t.common.cancel}
           onConfirm={confirmUpgrade}
+        />
+
+        {/* Ascension confirmation dialog */}
+        <ConfirmationDialog
+          open={ascendTarget !== null}
+          onOpenChange={(open) => !open && setAscendTarget(null)}
+          title={t.roster.ascendConfirmTitle}
+          description={
+            ascendTarget
+              ? t.roster.ascendConfirmDesc
+                  .replace('{name}', ascendTarget.champion_name)
+                  .replace('{level}', String((ascendTarget.ascension ?? 0) + 1))
+              : ''
+          }
+          confirmText={t.roster.ascendConfirmButton}
+          cancelText={t.common.cancel}
+          onConfirm={confirmAscend}
         />
       </div>
     </AllianceRoleProvider>

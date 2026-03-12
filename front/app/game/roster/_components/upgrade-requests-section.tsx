@@ -36,7 +36,7 @@ export default function UpgradeRequestsSection({
   externalRequests,
   onRequestCancelled,
   onInitiateCancel,
-}: UpgradeRequestsSectionProps) {
+}: Readonly<UpgradeRequestsSectionProps>) {
   const { t } = useI18n();
   const [internalRequests, setInternalRequests] = useState<UpgradeRequest[]>([]);
   const [loading, setLoading] = useState(false);
@@ -79,6 +79,7 @@ export default function UpgradeRequestsSection({
   if (!gameAccountId || (!loading && requests.length === 0)) return null;
 
   return (
+    <div data-cy="upgrade-requests-section">
     <CollapsibleSection
       title={`${t.roster.upgradeRequests.title} (${requests.length})`}
       defaultOpen={false}
@@ -93,6 +94,7 @@ export default function UpgradeRequestsSection({
             return (
               <div
                 key={req.id}
+                data-cy="upgrade-request-item"
                 className={`flex items-center gap-3 p-2 rounded-md bg-gray-900 ${classColors.border} border`}
               >
                 <ChampionPortrait
@@ -122,6 +124,7 @@ export default function UpgradeRequestsSection({
                 </div>
                 {canCancel && (
                   <button
+                    data-cy="cancel-upgrade-request"
                     className="text-red-400 hover:text-red-300 bg-black/40 rounded-full p-1 shrink-0"
                     onClick={() => onInitiateCancel ? onInitiateCancel(req.id) : setCancelTarget(req)}
                     title={t.roster.upgradeRequests.cancel}
@@ -148,5 +151,6 @@ export default function UpgradeRequestsSection({
         confirmText={t.roster.upgradeRequests.cancel}
       />
     </CollapsibleSection>
+    </div>
   );
 }

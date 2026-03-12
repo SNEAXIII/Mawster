@@ -1,4 +1,4 @@
-import uuid
+﻿import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -6,9 +6,7 @@ from starlette import status
 
 from src.dto.dto_alliance import (
     AllianceAddOfficerRequest,
-    AllianceMemberResponse,
     AllianceMyRolesResponse,
-    AllianceOfficerResponse,
     AllianceCreateRequest,
     AllianceRemoveOfficerRequest,
     AllianceResponse,
@@ -19,6 +17,7 @@ from src.dto.dto_invitation import (
     AllianceInvitationResponse,
 )
 from src.dto.dto_game_account import GameAccountResponse
+from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.models import User
 from src.models.Alliance import Alliance
 from src.models.AllianceInvitation import AllianceInvitation
@@ -40,36 +39,7 @@ alliance_controller = APIRouter(
 
 def _to_response(alliance: Alliance) -> AllianceResponse:
     """Convert an Alliance ORM object (with loaded relations) to a response DTO."""
-    officer_ids = {adj.game_account_id for adj in alliance.officers}
-    return AllianceResponse(
-        id=alliance.id,
-        name=alliance.name,
-        tag=alliance.tag,
-        owner_id=alliance.owner_id,
-        owner_pseudo=alliance.owner.game_pseudo,
-        created_at=alliance.created_at,
-        officers=[
-            AllianceOfficerResponse(
-                id=adj.id,
-                game_account_id=adj.game_account_id,
-                game_pseudo=adj.game_account.game_pseudo,
-                assigned_at=adj.assigned_at,
-            )
-            for adj in alliance.officers
-        ],
-        members=[
-            AllianceMemberResponse(
-                id=m.id,
-                user_id=m.user_id,
-                game_pseudo=m.game_pseudo,
-                alliance_group=m.alliance_group,
-                is_owner=(m.id == alliance.owner_id),
-                is_officer=(m.id in officer_ids),
-            )
-            for m in alliance.members
-        ],
-        member_count=len(alliance.members),
-    )
+    return AllianceResponse.model_validate(alliance)
 
 
 # ---- Eligibility endpoints ----
@@ -94,7 +64,6 @@ async def get_eligible_owners(
 async def get_eligible_officers(
     alliance_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get members of the alliance eligible to become officers (not owner, not already officer)."""
     return await AllianceService.get_eligible_officers(session, alliance_id)
@@ -106,7 +75,6 @@ async def get_eligible_officers(
 )
 async def get_eligible_members(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get all game accounts NOT in any alliance (can be invited)."""
     return await AllianceService.get_eligible_members(session)
@@ -143,7 +111,6 @@ async def create_alliance(
 )
 async def get_all_alliances(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get all alliances."""
     alliances = await AllianceService.get_all_alliances(session)
@@ -198,7 +165,7 @@ async def accept_invitation(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Accept a pending invitation — the game account joins the alliance."""
+    """Accept a pending invitation â€” the game account joins the alliance."""
     invitation = await AllianceInvitationService.accept_invitation(session, invitation_id, current_user.id)
     # Reload the invitation with its relations
     reloaded = await session.get(AllianceInvitation, invitation.id)
@@ -231,12 +198,11 @@ async def decline_invitation(
 async def get_alliance(
     alliance_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get a specific alliance by ID."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     return _to_response(alliance)
 
 
@@ -253,7 +219,7 @@ async def update_alliance(
     """Update an alliance. Only the owner can update."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     await AllianceService._assert_is_owner(session, alliance, current_user.id)
     updated = await AllianceService.update_alliance(
         session=session,
@@ -277,7 +243,7 @@ async def delete_alliance(
     """Delete an alliance. Only the owner can delete."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     await AllianceService._assert_is_owner(session, alliance, current_user.id)
     await AllianceService.delete_alliance(session, alliance)
     audit_log("alliance.delete", user_id=str(current_user.id), detail=f"alliance_id={alliance_id}")
@@ -286,19 +252,7 @@ async def delete_alliance(
 # ---- Member management (invitations) ----
 
 def _invitation_to_response(inv: AllianceInvitation) -> AllianceInvitationResponse:
-    return AllianceInvitationResponse(
-        id=inv.id,
-        alliance_id=inv.alliance_id,
-        alliance_name=inv.alliance.name,
-        alliance_tag=inv.alliance.tag,
-        game_account_id=inv.game_account_id,
-        game_account_pseudo=inv.game_account.game_pseudo,
-        invited_by_game_account_id=inv.invited_by_game_account_id,
-        invited_by_pseudo=inv.invited_by.game_pseudo,
-        status=inv.status,
-        created_at=inv.created_at,
-        responded_at=inv.responded_at,
-    )
+    return AllianceInvitationResponse.model_validate(inv)
 
 
 @alliance_controller.post(
@@ -316,7 +270,7 @@ async def invite_member(
     Only the owner or an officer can invite members."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
     invitation = await AllianceInvitationService.create_invitation(
         session=session,
@@ -345,7 +299,7 @@ async def get_alliance_invitations(
     Only the owner or an officer can view."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
     invitations = await AllianceInvitationService.get_invitations_for_alliance(session, alliance_id)
     return [_invitation_to_response(inv) for inv in invitations]
@@ -364,7 +318,7 @@ async def cancel_invitation(
     """Cancel a pending invitation. Only the owner or an officer can cancel."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
     await AllianceInvitationService.cancel_invitation(session, invitation_id, current_user.id, alliance)
     audit_log("alliance.cancel_invitation", user_id=str(current_user.id), detail=f"invitation_id={invitation_id}")
@@ -386,7 +340,7 @@ async def remove_member(
     Cannot remove the owner."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     await AllianceService._assert_can_remove_member(session, alliance, current_user.id, game_account_id)
     updated = await AllianceService.remove_member(
         session=session,
@@ -404,19 +358,19 @@ async def remove_member(
     response_model=AllianceResponse,
     status_code=status.HTTP_201_CREATED,
 )
-async def add_adjoint(
+async def add_officer(
     alliance_id: uuid.UUID,
     body: AllianceAddOfficerRequest,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Add an adjoint (deputy) to an alliance. Only the owner can add officers.
+    """Add an officer (deputy) to an alliance. Only the owner can add officers.
     The game account must already be a member of the alliance."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     await AllianceService._assert_is_owner(session, alliance, current_user.id)
-    updated = await AllianceService.add_adjoint(
+    updated = await AllianceService.add_officer(
         session=session,
         alliance_id=alliance_id,
         game_account_id=body.game_account_id,
@@ -429,18 +383,18 @@ async def add_adjoint(
     "/{alliance_id}/officers",
     response_model=AllianceResponse,
 )
-async def remove_adjoint(
+async def remove_officer(
     alliance_id: uuid.UUID,
     body: AllianceRemoveOfficerRequest,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Remove an adjoint from an alliance. Only the owner can remove officers."""
+    """Remove an officer from an alliance. Only the owner can remove officers."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     await AllianceService._assert_is_owner(session, alliance, current_user.id)
-    updated = await AllianceService.remove_adjoint(
+    updated = await AllianceService.remove_officer(
         session=session,
         alliance_id=alliance_id,
         game_account_id=body.game_account_id,
@@ -466,7 +420,7 @@ async def set_member_group(
     Only the owner or an officer can manage groups."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
     updated = await AllianceService.set_member_group(
         session=session,

@@ -1,15 +1,19 @@
 import uuid
 from typing import Optional
-from pydantic import BaseModel, Field
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ChampionResponse(BaseModel):
     """DTO representing a champion in API responses."""
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     name: str
     champion_class: str
     image_url: Optional[str] = None
     is_7_star: bool = False
+    is_ascendable: bool = False
     alias: Optional[str] = None
 
 
@@ -31,4 +35,5 @@ class ChampionLoadRequest(BaseModel):
     name: str = Field(..., max_length=100)
     champion_class: str = Field(..., max_length=20)
     image_url: Optional[str] = None
+    is_ascendable: bool = False
     alias: Optional[str] = Field(default=None, max_length=500)
