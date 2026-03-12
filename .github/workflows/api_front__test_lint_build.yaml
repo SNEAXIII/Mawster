@@ -15,9 +15,10 @@ env:
   WORKDIR: ./api
   PYTHON_VERSION: ${{ vars.PYTHON_VERSION }}
 jobs:
-  lint-test:
+  lint-test-python:
     name: Lint & Test
     runs-on: ubuntu-latest
+    needs: trivy
     env:
       MODE: dev
     steps:
@@ -45,7 +46,7 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: lint-test
+    needs: lint-test-python
     env:
       MARIADB_USER: user
       MARIADB_PASSWORD: password
@@ -140,7 +141,7 @@ jobs:
     if: github.ref_name == 'release'
     name: Detect changed paths
     runs-on: ubuntu-latest
-    needs: lint-test
+    needs: trivy
     outputs:
       api: ${{ steps.filter.outputs.api }}
       front: ${{ steps.filter.outputs.front }}
@@ -160,7 +161,6 @@ jobs:
   trivy:
     name: Trivy Security Scan
     runs-on: ubuntu-latest
-    needs: lint-test
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -178,7 +178,9 @@ jobs:
     environment: Api
     name: Docker Build & Push (API)
     runs-on: ubuntu-latest
-    needs: changes
+    needs: 
+      - changes
+      - lint-test-python
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -208,7 +210,9 @@ jobs:
     environment: Api
     name: Docker Build & Push (Front)
     runs-on: ubuntu-latest
-    needs: changes
+    needs: 
+      - changes
+      - e2e
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
