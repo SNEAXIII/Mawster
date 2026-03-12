@@ -127,7 +127,6 @@ def main() -> None:
     api_secret_key     = gen_hex(64)
     print(f"  SECRET_KEY            [{c(DIM, '(auto-generated)')}]")
     algo               = prompt("JWT algorithm",                  default="HS256")
-    bcrypt_rounds      = prompt("Bcrypt hash rounds",             default="12")
     token_expire       = prompt("Access token expiry (minutes)",  default="60")
     api_port           = prompt("API port",                       default="8000")
 
@@ -152,7 +151,6 @@ def main() -> None:
         f"MARIADB_PORT={db_port}",
         f"MARIADB_DATABASE={db_name}",
         f"ALGORITHM={algo}",
-        f"BCRYPT_HASH_ROUND={bcrypt_rounds}",
         f"ACCESS_TOKEN_EXPIRE_MINUTES={token_expire}",
         f"API_PORT={api_port}",
     ])

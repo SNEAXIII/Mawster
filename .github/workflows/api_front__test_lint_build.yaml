@@ -85,7 +85,6 @@ jobs:
           SECRET_KEY: ci-test-secret-key-for-e2e-tests
           MARIADB_PORT: 3306
           ALGORITHM: HS256
-          BCRYPT_HASH_ROUND: 4
           ACCESS_TOKEN_EXPIRE_MINUTES: 60
         run: uv run app_testing.py &
 
@@ -129,13 +128,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cypress-videos
-          path: front/cypress/videos
+          path: front/cypress/results/videos
       - name: Upload Cypress screenshots
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-screenshots
-          path: front/cypress/screenshots
+          path: front/cypress/results/screenshots
 
   changes:
     if: github.ref_name == 'release'
