@@ -1,6 +1,8 @@
 'use client';
 
-import { FiX } from 'react-icons/fi';
+import { AlertCircle, X } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { cn } from '@/app/lib/utils';
 
 type ErrorBannerProps = Readonly<{
   message: string;
@@ -20,27 +22,33 @@ export function ErrorBanner({
 
   if (variant === 'inline') {
     return (
-      <div className={`text-red-500 text-sm py-2 ${className}`}>
+      <p className={cn('text-sm text-destructive flex items-center gap-1 py-1', className)}>
+        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
         {message}
         {onDismiss && (
-          <button className="ml-2 font-bold" onClick={onDismiss} aria-label="Dismiss">
-            <FiX className="inline w-3.5 h-3.5" />
+          <button className="ml-1" onClick={onDismiss} aria-label="Dismiss">
+            <X className="h-3.5 w-3.5" />
           </button>
         )}
-      </div>
+      </p>
     );
   }
 
   return (
-    <div
-      className={`bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded flex items-center justify-between ${className}`}
-    >
-      <span>{message}</span>
+    <Alert variant="destructive" className={cn('flex items-center justify-between', className)}>
+      <div className="flex items-center gap-2">
+        <AlertCircle className="h-4 w-4 shrink-0" />
+        <AlertDescription>{message}</AlertDescription>
+      </div>
       {onDismiss && (
-        <button className="ml-2 font-bold text-red-700 hover:text-red-900" onClick={onDismiss} aria-label="Dismiss">
-          <FiX className="w-4 h-4" />
+        <button
+          className="shrink-0 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100"
+          onClick={onDismiss}
+          aria-label="Dismiss"
+        >
+          <X className="h-4 w-4" />
         </button>
       )}
-    </div>
+    </Alert>
   );
 }

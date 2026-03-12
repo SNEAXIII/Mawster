@@ -3,7 +3,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useI18n } from '@/app/i18n';
-import { FiDownload, FiUpload } from 'react-icons/fi';
+import { Download, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   RosterEntry,
@@ -409,11 +409,11 @@ export default function RosterImportExport({
       {/* Export / Import buttons */}
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={handleExport}>
-          <FiDownload className="mr-1.5" size={14} />
+          <Download className="mr-1.5 h-3.5 w-3.5" />
           {t.roster.importExport.exportJson}
         </Button>
         <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-          <FiUpload className="mr-1.5" size={14} />
+          <Upload className="mr-1.5 h-3.5 w-3.5" />
           {t.roster.importExport.importJson}
         </Button>
       </div>

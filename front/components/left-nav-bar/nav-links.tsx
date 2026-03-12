@@ -1,12 +1,9 @@
 'use client';
-import { MdOutlineAdminPanelSettings, MdPersonOutline } from 'react-icons/md';
-import { IoHomeOutline, IoTrophyOutline } from 'react-icons/io5';
-import { RiShieldLine, RiSwordLine, RiShieldStarLine } from 'react-icons/ri';
+import { Home, User, Sword, Shield, ShieldCheck, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useI18n } from '@/app/i18n';
-
-import clsx from 'clsx';
+import { cn } from '@/app/lib/utils';
 
 export enum Role {
   all = 'all',
@@ -29,16 +26,15 @@ export default function NavLinks({ userRole }: Readonly<NavLinksProps>) {
   const { t } = useI18n();
 
   const links = [
-    { name: t.nav.home, href: '/', icon: IoHomeOutline, role: Role.all, cy: 'nav-home' },
-    { name: t.nav.profile, href: '/profile', icon: MdPersonOutline, role: Role.user, cy: 'nav-profile' },
-    { name: t.nav.roster, href: '/game/roster', icon: RiSwordLine, role: Role.user, cy: 'nav-roster' },
-    { name: t.nav.alliances, href: '/game/alliances', icon: RiShieldLine, role: Role.user, cy: 'nav-alliances' },
-    { name: t.nav.defense, href: '/game/defense', icon: RiShieldStarLine, role: Role.user, cy: 'nav-defense' },
-    { name: t.nav.champions, href: '/admin/champions', icon: IoTrophyOutline, role: Role.admin, cy: 'nav-champions' },
+    { name: t.nav.home, href: '/', icon: Home, role: Role.all, cy: 'nav-home' },
+    { name: t.nav.profile, href: '/profile', icon: User, role: Role.user, cy: 'nav-profile' },
+    { name: t.nav.roster, href: '/game/roster', icon: Sword, role: Role.user, cy: 'nav-roster' },
+    { name: t.nav.alliances, href: '/game/alliances', icon: Shield, role: Role.user, cy: 'nav-alliances' },
+    { name: t.nav.defense, href: '/game/defense', icon: ShieldCheck, role: Role.user, cy: 'nav-defense' },
     {
       name: t.nav.administration,
-      href: '/admin/dashboard',
-      icon: MdOutlineAdminPanelSettings,
+      href: '/admin',
+      icon: Settings,
       role: Role.admin,
       cy: 'nav-administration',
     },
@@ -51,22 +47,18 @@ export default function NavLinks({ userRole }: Readonly<NavLinksProps>) {
         if (!roleHierarchy[userRole]?.includes(link.role)) {
           return null;
         }
+        const isActive = (pathname.startsWith(link.href) && link.href !== '/') || pathname === link.href;
         return (
           <Link
             key={link.name}
             href={link.href}
             data-cy={link.cy}
-            className={clsx(
-              'flex h-[48px] grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-sky-100 hover:text-blue-600 md:flex-none md:justify-start md:p-2 md:px-3',
-              {
-                'bg-sky-100 text-blue-600': pathname.startsWith(link.href) && link.href !== '/' || pathname === link.href,
-              }
+            className={cn(
+              'flex h-[48px] grow items-center justify-center gap-2 rounded-md bg-muted/50 p-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground md:flex-none md:justify-start md:p-2 md:px-3',
+              isActive && 'bg-accent text-accent-foreground font-semibold',
             )}
           >
-            <LinkIcon
-              className='w-6'
-              size={70}
-            />
+            <LinkIcon className='h-5 w-5 shrink-0' />
             <p className='hidden md:block'>{link.name}</p>
           </Link>
         );

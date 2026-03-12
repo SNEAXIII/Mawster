@@ -10,7 +10,7 @@ import {
   shortenChampionName,
   getNextRarity,
 } from '@/app/services/roster';
-import { FiTrash2, FiEdit2, FiArrowUp, FiX, FiStar } from 'react-icons/fi';
+import { Trash2, Pencil, ArrowUp, X, Star } from 'lucide-react';
 
 interface RosterChampionCardProps {
   entry: RosterEntry;
@@ -70,7 +70,7 @@ export default function RosterChampionCard({
               onClick={() => onAscend(entry)}
               title="Ascension"
             >
-              <FiStar size={14} />
+              <Star className="h-3.5 w-3.5" />
             </button>
           )}
           {pendingRequestId && onCancelRequest && (
@@ -80,7 +80,7 @@ export default function RosterChampionCard({
               onClick={() => onCancelRequest(pendingRequestId)}
               title={t.roster.upgradeRequests.cancel}
             >
-              <FiX size={14} />
+              <X className="h-3.5 w-3.5" />
             </button>
           )}
           {!pendingRequestId && nextRarity && onUpgrade && (
@@ -90,7 +90,7 @@ export default function RosterChampionCard({
               onClick={() => onUpgrade(entry)}
               title={t.roster.upgrade}
             >
-              <FiArrowUp size={14} />
+              <ArrowUp className="h-3.5 w-3.5" />
             </button>
           )}
           {onEdit && (
@@ -100,7 +100,7 @@ export default function RosterChampionCard({
               title="Edit"
               data-cy="champion-edit"
             >
-              <FiEdit2 size={14} />
+              <Pencil className="h-3.5 w-3.5" />
             </button>
           )}
           {onDelete && (
@@ -110,7 +110,7 @@ export default function RosterChampionCard({
               title={t.common.delete}
               data-cy="champion-delete"
             >
-              <FiTrash2 size={14} />
+              <Trash2 className="h-3.5 w-3.5" />
             </button>
           )}
         </div>

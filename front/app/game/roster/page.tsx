@@ -205,7 +205,7 @@ export default function RosterPage() {
   if (authStatus === 'loading' || loadingAccounts) {
     return (
       <div className='flex items-center justify-center h-64'>
-        <p className='text-gray-500'>{t.common.loading}</p>
+        <p className='text-muted-foreground'>{t.common.loading}</p>
       </div>
     );
   }
@@ -214,7 +214,7 @@ export default function RosterPage() {
     return (
       <div className='px-3 py-4 sm:p-6'>
         <h1 className='text-xl sm:text-2xl font-bold mb-4'>{t.roster.title}</h1>
-        <p className='text-gray-500'>{t.roster.noAccounts}</p>
+        <p className='text-muted-foreground'>{t.roster.noAccounts}</p>
       </div>
     );
   }
@@ -285,7 +285,7 @@ export default function RosterPage() {
             />
 
             {loadingRoster ? (
-              <p className='text-gray-500'>{t.common.loading}</p>
+              <p className='text-muted-foreground'>{t.common.loading}</p>
             ) : (
               <RosterGrid
                 groupedRoster={groupedRoster}
