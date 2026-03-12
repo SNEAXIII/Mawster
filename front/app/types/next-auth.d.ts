@@ -1,3 +1,5 @@
+declare module '*.css';
+
 import 'next-auth';
 
 declare module 'next-auth' {
