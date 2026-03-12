@@ -65,6 +65,7 @@ export function WarMapNode({
           ? `#${nodeNumber} – ${placement.champion_name} (${placement.game_pseudo})`
           : t.game.defense.nodeEmpty.replace('{node}', String(nodeNumber))
       }
+      data-cy={`war-node-${nodeNumber}`}
     >
       {/* Node number badge */}
       <span className='absolute -top-2 -left-1 text-[10px] font-bold bg-black/70 text-white rounded px-1 z-20'>

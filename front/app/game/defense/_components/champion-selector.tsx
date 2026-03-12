@@ -119,6 +119,7 @@ export default function ChampionSelector({
                         )}
                         onClick={() => handleSelectChampion(champ)}
                         title={`${champ.champion_name} — ${champ.owners.length} owner(s)`}
+                        data-cy={`champion-card-${champ.champion_name.replaceAll(/\s+/g, '-')}`}
                       >
                         <ChampionPortrait
                           imageUrl={champ.image_url}
@@ -177,6 +178,7 @@ export default function ChampionSelector({
                   )}
                   onClick={() => handleSelectOwner(owner, selectedChampion.champion_name)}
                   disabled={owner.defender_count >= 5}
+                  data-cy={`owner-row-${owner.game_pseudo}`}
                 >
                   <ChampionPortrait
                     imageUrl={selectedChampion.image_url}
