@@ -1,69 +1,83 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SearchInput } from '@/components/search-input';
 import { CollapsibleSection } from '@/components/collapsible-section';
-import { Champion, getChampionImageUrl } from '@/app/services/champions';
+import { getChampionImageUrl } from '@/app/services/champions';
 import {
   RosterEntry,
   RARITIES,
   RARITY_LABELS,
   SIGNATURE_PRESETS,
 } from '@/app/services/roster';
+import { useAddChampionForm } from '@/hooks/use-add-champion-form';
 
 interface AddChampionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  championSearch: string;
-  onChampionSearchChange: (value: string) => void;
-  searchResults: Champion[];
-  selectedChampion: Champion | null;
-  onSelectChampion: (champion: Champion) => void;
-  selectedRarity: string;
-  onRarityChange: (rarity: string) => void;
-  signatureValue: number;
-  onSignatureChange: (value: number) => void;
-  isPreferredAttacker: boolean;
-  onIsPreferredAttackerChange: (value: boolean) => void;
-  ascension: number;
-  onAscensionChange: (value: number) => void;
-  adding: boolean;
-  onSubmit: () => void;
+  selectedAccountId: string | null;
   roster: RosterEntry[];
-  searchInputRef: React.RefObject<HTMLInputElement | null>;
-  formRef: React.RefObject<HTMLDivElement | null>;
+  initialEntry?: RosterEntry | null;
+  onSuccess: (updatedRoster: RosterEntry[]) => void;
 }
 
 export default function AddChampionForm({
   open,
   onOpenChange,
-  championSearch,
-  onChampionSearchChange,
-  searchResults,
-  selectedChampion,
-  onSelectChampion,
-  selectedRarity,
-  onRarityChange,
-  signatureValue,
-  onSignatureChange,
-  isPreferredAttacker,
-  onIsPreferredAttackerChange,
-  ascension,
-  onAscensionChange,
-  adding,
-  onSubmit,
+  selectedAccountId,
   roster,
-  searchInputRef,
-  formRef,
-}: AddChampionFormProps) {
+  initialEntry,
+  onSuccess,
+}: Readonly<AddChampionFormProps>) {
   const { t } = useI18n();
+  const {
+    championSearch,
+    searchResults,
+    selectedChampion,
+    selectedRarity,
+    setSelectedRarity,
+    signatureValue,
+    setSignatureValue,
+    isPreferredAttacker,
+    setIsPreferredAttacker,
+    ascension,
+    setAscension,
+    adding,
+    handleChampionSearchChange,
+    handleSelectChampion,
+    handleSubmit,
+    reset,
+    prefillFromEntry,
+    searchInputRef,
+    formRef,
+  } = useAddChampionForm(selectedAccountId);
+
+  // Pre-fill when opening for an existing entry, reset when closing
+  useEffect(() => {
+    if (open && initialEntry) {
+      prefillFromEntry(initialEntry);
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        searchInputRef.current?.focus();
+      }, 100);
+    } else if (open) {
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    } else {
+      reset();
+    }
+  }, [open, initialEntry]);
 
   const existingEntries = selectedChampion
     ? roster.filter((r) => r.champion_id === selectedChampion.id)
     : [];
+
+  const submit = async () => {
+    const updated = await handleSubmit();
+    if (updated) onSuccess(updated);
+  };
 
   return (
     <div ref={formRef} className="mb-6">
@@ -81,7 +95,7 @@ export default function AddChampionForm({
             ref={searchInputRef}
             placeholder={t.roster.searchChampion}
             value={championSearch}
-            onChange={onChampionSearchChange}
+            onChange={handleChampionSearchChange}
             data-cy="champion-search"
           />
 
@@ -92,7 +106,7 @@ export default function AddChampionForm({
                 <button
                   key={c.id}
                   className="w-full text-left px-3 py-2 hover:bg-blue-50 flex items-center gap-2"
-                  onClick={() => onSelectChampion(c)}
+                  onClick={() => handleSelectChampion(c)}
                   data-cy={`champion-result-${c.name}`}
                 >
                   {c.image_url && (
@@ -165,7 +179,7 @@ export default function AddChampionForm({
                     ? 'bg-blue-600 text-white border-blue-600'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
                 }`}
-                onClick={() => onRarityChange(r)}
+                onClick={() => setSelectedRarity(r)}
                 data-cy={`rarity-${r}`}
               >
                 {RARITY_LABELS[r]}
@@ -186,7 +200,7 @@ export default function AddChampionForm({
               className="w-24"
               value={signatureValue}
               onChange={(e) =>
-                onSignatureChange(Math.max(0, parseInt(e.target.value) || 0))
+                setSignatureValue(Math.max(0, parseInt(e.target.value) || 0))
               }
               data-cy="sig-input"
             />
@@ -199,7 +213,7 @@ export default function AddChampionForm({
                       ? 'bg-blue-600 text-white border-blue-600'
                       : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'
                   }`}
-                  onClick={() => onSignatureChange(v)}
+                  onClick={() => setSignatureValue(v)}
                 >
                   {v}
                 </button>
@@ -214,7 +228,7 @@ export default function AddChampionForm({
             <input
               type="checkbox"
               checked={isPreferredAttacker}
-              onChange={(e) => onIsPreferredAttackerChange(e.target.checked)}
+              onChange={(e) => setIsPreferredAttacker(e.target.checked)}
               className="w-4 h-4"
               data-cy="preferred-attacker-checkbox"
             />
@@ -245,7 +259,7 @@ export default function AddChampionForm({
                         ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
                   }`}
-                  onClick={() => onAscensionChange(level)}
+                  onClick={() => setAscension(level)}
                   data-cy={`ascension-${level}`}
                 >
                   {level === 0 ? 'None' : `A${level}`}
@@ -262,7 +276,7 @@ export default function AddChampionForm({
 
         {/* Submit */}
         <div className="flex gap-2">
-          <Button onClick={onSubmit} disabled={!selectedChampion || adding} data-cy="champion-submit">
+          <Button onClick={submit} disabled={!selectedChampion || adding} data-cy="champion-submit">
             {adding ? t.common.loading : t.roster.addOrUpdateButton}
           </Button>
         </div>

@@ -24,7 +24,7 @@ export const RARITY_LABELS: Record<string, string> = {
   '7r5': '7★R5',
 };
 
-export const SIGNATURE_PRESETS = [0, 20, 200];
+export const SIGNATURE_PRESETS = [0, 20, 100, 200];
 
 /** Tailwind classes for each rarity tier */
 export const RARITY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
