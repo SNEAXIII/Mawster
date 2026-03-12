@@ -218,8 +218,8 @@ describe("Roster – Basic", () => {
         // Set sig to 200 via preset button
         cy.contains("button", "200").click();
         cy.getByCy("champion-submit").click();
-        cy.contains("DoctorSig added / updated").should("be.visible");
-        cy.contains("sig 200").should("be.visible");
+        cy.contains("DoctorSig added / updated").scrollIntoView().should("be.visible");
+        cy.contains("sig 200").scrollIntoView().should("be.visible");
       });
     });
   });
