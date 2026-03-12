@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import { toast } from 'sonner';
@@ -18,8 +18,6 @@ import {
 import { getMyGameAccounts, GameAccount } from '@/app/services/game';
 import {
   getRoster,
-  searchChampions,
-  updateChampionInRoster,
   deleteRosterEntry,
   RosterEntry,
   RARITIES,
@@ -29,7 +27,6 @@ import {
   togglePreferredAttacker,
   ascendChampion,
 } from '@/app/services/roster';
-import { Champion } from '@/app/services/champions';
 
 import { AllianceRoleProvider, useAllianceRole } from '@/hooks/use-alliance-role';
 import AddChampionForm from './_components/add-champion-form';
@@ -72,17 +69,8 @@ export default function RosterPage() {
 
   // Add champion form
   const [showAddForm, setShowAddForm] = useState(false);
-  const [championSearch, setChampionSearch] = useState('');
-  const [searchResults, setSearchResults] = useState<Champion[]>([]);
-  const [selectedChampion, setSelectedChampion] = useState<Champion | null>(null);
-  const [selectedRarity, setSelectedRarity] = useState<string>(RARITIES[0]);
-  const [signatureValue, setSignatureValue] = useState<number>(0);
-  const [isPreferredAttacker, setIsPreferredAttacker] = useState<boolean>(false);
-  const [ascension, setAscension] = useState<number>(0);
-  const [adding, setAdding] = useState(false);
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const addFormRef = useRef<HTMLDivElement>(null);
+  const [editEntry, setEditEntry] = useState<RosterEntry | null>(null);
+
   // Delete
   const [deleteTarget, setDeleteTarget] = useState<RosterEntry | null>(null);
 
@@ -131,67 +119,10 @@ export default function RosterPage() {
       .finally(() => setLoadingRoster(false));
   }, [selectedAccountId]);
 
-  // Champion search with debounce
-  useEffect(() => {
-    if (!championSearch.trim()) {
-      setSearchResults([]);
-      return;
-    }
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    searchTimeoutRef.current = setTimeout(async () => {
-      try {
-        const res = await searchChampions(championSearch, 10);
-        setSearchResults(res.champions);
-      } catch {
-        // ignore search errors
-      }
-    }, 300);
-    return () => {
-      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    };
-  }, [championSearch]);
-
-  // Auto-focus search input when add form opens
-  useEffect(() => {
-    if (showAddForm) {
-      setTimeout(() => searchInputRef.current?.focus(), 50);
-    }
-  }, [showAddForm]);
-
-  const handleAddOrUpdateChampion = useCallback(async () => {
-    if (!selectedAccountId || !selectedChampion) return;
-    setAdding(true);
-    setError(null);
-    try {
-      await updateChampionInRoster(
-        selectedAccountId,
-        selectedChampion.id,
-        selectedRarity,
-        signatureValue,
-        isPreferredAttacker,
-        ascension,
-      );
-      // Refresh roster
-      const updated = await getRoster(selectedAccountId);
-      setRoster(updated);
-      setUpgradeRefreshKey((k) => k + 1);
-      toast.success(t.roster.addSuccess.replace('{name}', selectedChampion.name));
-      // Reset champion selection but keep the form open
-      setSelectedChampion(null);
-      setChampionSearch('');
-      setSearchResults([]);
-      setSignatureValue(0);
-      setIsPreferredAttacker(false);
-      setAscension(0);
-      // Re-focus search input for quick next add
-      setTimeout(() => searchInputRef.current?.focus(), 50);
-    } catch (e: any) {
-      toast.error(e.message || t.roster.errors.addError);
-      setError(e.message || t.roster.errors.addError);
-    } finally {
-      setAdding(false);
-    }
-  }, [selectedAccountId, selectedChampion, selectedRarity, signatureValue, isPreferredAttacker, ascension]);
+  const handleFormSuccess = useCallback((updated: RosterEntry[]) => {
+    setRoster(updated);
+    setUpgradeRefreshKey((k) => k + 1);
+  }, []);
 
   const confirmDelete = useCallback(async () => {
     if (!deleteTarget || !selectedAccountId) return;
@@ -209,28 +140,9 @@ export default function RosterPage() {
     }
   }, [deleteTarget, selectedAccountId]);
 
-  // Pre-fill the add form with an existing roster entry for quick editing
   const startEditEntry = useCallback((entry: RosterEntry) => {
-    // Find the champion in search results or create a minimal object
-    const champion: Champion = {
-      id: entry.champion_id,
-      name: entry.champion_name,
-      champion_class: entry.champion_class,
-      image_url: entry.image_url,
-      is_7_star: entry.rarity.startsWith('7'),
-      is_ascendable: entry.is_ascendable ?? false,
-      alias: null,
-    };
-    setSelectedChampion(champion);
-    setChampionSearch(entry.champion_name);
-    setSelectedRarity(entry.rarity);
-    setSignatureValue(entry.signature);
-    setAscension(entry.ascension ?? 0);
+    setEditEntry(entry);
     setShowAddForm(true);
-    setTimeout(() => {
-      addFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      searchInputRef.current?.focus();
-    }, 100);
   }, []);
 
   const confirmUpgrade = useCallback(async () => {
@@ -360,31 +272,10 @@ export default function RosterPage() {
             <AddChampionForm
               open={showAddForm}
               onOpenChange={setShowAddForm}
-              championSearch={championSearch}
-              onChampionSearchChange={(val) => {
-                setChampionSearch(val);
-                setSelectedChampion(null);
-              }}
-              searchResults={searchResults}
-              selectedChampion={selectedChampion}
-              onSelectChampion={(c) => {
-                setSelectedChampion(c);
-                setChampionSearch(c.name);
-                setSearchResults([]);
-              }}
-              selectedRarity={selectedRarity}
-              onRarityChange={setSelectedRarity}
-              signatureValue={signatureValue}
-              onSignatureChange={setSignatureValue}
-              isPreferredAttacker={isPreferredAttacker}
-              onIsPreferredAttackerChange={setIsPreferredAttacker}
-              ascension={ascension}
-              onAscensionChange={setAscension}
-              adding={adding}
-              onSubmit={handleAddOrUpdateChampion}
+              selectedAccountId={selectedAccountId}
               roster={roster}
-              searchInputRef={searchInputRef}
-              formRef={addFormRef}
+              initialEntry={editEntry}
+              onSuccess={handleFormSuccess}
             />
 
             <RosterUpgradeSection
