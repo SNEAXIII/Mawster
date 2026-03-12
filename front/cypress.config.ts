@@ -8,6 +8,8 @@ export default defineConfig({
     setupNodeEvents() {},
   },
   video: true,
+  videosFolder: "cypress/results/videos",
+  screenshotsFolder: "cypress/results/screenshots",
   reporter: "cypress-multi-reporters",
   reporterOptions: {
     configFile: "cypress/reporter-config.json",

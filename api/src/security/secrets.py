@@ -29,7 +29,6 @@ class Settings(BaseSettings):
     MARIADB_HOST: str = Field("mariadb" if IS_PROD else "localhost")
     SECRET_KEY: str = Field(... if IS_PROD else "dev-secret-key_dev-secret-key_dev-secret-key")
     ALGORITHM: str = Field(... if IS_PROD else "HS256")
-    BCRYPT_HASH_ROUND: int = Field(... if IS_PROD else 12)
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(... if IS_PROD else 60, le=60)
     REFRESH_TOKEN_EXPIRE_DAYS: int = Field(... if IS_PROD else 7, le=30)
     # Origines CORS séparées par des virgules (ex: "https://mawster.example.com")
