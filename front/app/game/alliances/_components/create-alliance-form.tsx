@@ -25,6 +25,7 @@ interface CreateAllianceFormProps {
   tag: string;
   ownerId: string;
   creating: boolean;
+  collapsible?: boolean;
   onNameChange: (value: string) => void;
   onTagChange: (value: string) => void;
   onOwnerChange: (value: string) => void;
@@ -40,6 +41,7 @@ export default function CreateAllianceForm({
   tag,
   ownerId,
   creating,
+  collapsible = true,
   onNameChange,
   onTagChange,
   onOwnerChange,
@@ -49,6 +51,7 @@ export default function CreateAllianceForm({
 
   return (
     <Card>
+      {collapsible && (
       <CardHeader
         className='cursor-pointer select-none'
         onClick={onToggle}
@@ -63,6 +66,7 @@ export default function CreateAllianceForm({
           )}
         </CardTitle>
       </CardHeader>
+      )}
       {open && (
         <CardContent>
           <form

@@ -13,7 +13,7 @@ describe("Roster – Basic", () => {
     setupUser("roster-noacc-token").then(({ login }) => {
       cy.uiLogin(login);
       cy.navTo("roster");
-      cy.contains("create a game account first").should("be.visible");
+      cy.contains("No game accounts yet. Add one to get started!").should("be.visible");
     });
   });
 

@@ -87,14 +87,14 @@ describe("Roster – Detailed UI", () => {
           cy.getByCy("champion-search").type("Venom");
           cy.getByCy("champion-result-Venom").click();
 
-          // Click 7r2 and verify it gets the active class
+          // Click 7r2 and verify it gets the active state
           cy.getByCy("rarity-7r2").click();
-          cy.getByCy("rarity-7r2").should("have.class", "bg-blue-600");
+          cy.getByCy("rarity-7r2").should("have.attr", "data-state", "on");
 
           // Click 7r5 instead — previous should lose active, new should gain it
           cy.getByCy("rarity-7r5").click();
-          cy.getByCy("rarity-7r5").should("have.class", "bg-blue-600");
-          cy.getByCy("rarity-7r2").should("not.have.class", "bg-blue-600");
+          cy.getByCy("rarity-7r5").should("have.attr", "data-state", "on");
+          cy.getByCy("rarity-7r2").should("have.attr", "data-state", "off");
         });
       });
     });
@@ -215,8 +215,8 @@ describe("Roster – Detailed UI", () => {
           cy.getByCy("rarity-7r2").click();
 
           // Check the preferred attacker checkbox
-          cy.getByCy("preferred-attacker-checkbox").check({ force: true });
-          cy.getByCy("preferred-attacker-checkbox").should("be.checked");
+          cy.getByCy("preferred-attacker-checkbox").click({ force: true });
+          cy.getByCy("preferred-attacker-checkbox").should("have.attr", "data-state", "checked");
 
           cy.getByCy("champion-submit").click();
           cy.contains("NickFury added / updated").should("be.visible");
@@ -257,7 +257,7 @@ describe("Roster – Detailed UI", () => {
 
           // Select A1
           cy.getByCy("ascension-1").click();
-          cy.getByCy("ascension-1").should("have.class", "bg-purple-600");
+          cy.getByCy("ascension-1").should("have.attr", "data-state", "on");
 
           cy.getByCy("champion-submit").click();
           cy.contains("AscHero added / updated").should("be.visible");
@@ -288,7 +288,7 @@ describe("Roster – Detailed UI", () => {
 
           // Select A2
           cy.getByCy("ascension-2").click();
-          cy.getByCy("ascension-2").should("have.class", "bg-purple-600");
+          cy.getByCy("ascension-2").should("have.attr", "data-state", "on");
 
           cy.getByCy("champion-submit").click();
           cy.contains("AscHeroMax added / updated").should("be.visible");
@@ -391,7 +391,7 @@ describe("Roster – Detailed UI", () => {
           cy.getByCy("sig-input").should("have.value", "200");
 
           // Check preferred attacker
-          cy.getByCy("preferred-attacker-checkbox").check({ force: true });
+          cy.getByCy("preferred-attacker-checkbox").click({ force: true });
 
           // Set ascension A2
           cy.getByCy("ascension-2").click();
@@ -453,14 +453,14 @@ describe("Roster – Detailed UI", () => {
               // Champion name should be shown in the form
               cy.contains("EditHero").should("be.visible");
 
-              // Rarity 7r3 should be selected (active class)
-              cy.getByCy("rarity-7r3").should("have.class", "bg-blue-600");
+              // Rarity 7r3 should be selected (active state)
+              cy.getByCy("rarity-7r3").should("have.attr", "data-state", "on");
 
               // Signature input should show 120
               cy.getByCy("sig-input").should("have.value", "120");
 
               // Ascension A1 should be selected
-              cy.getByCy("ascension-1").should("have.class", "bg-purple-600");
+              cy.getByCy("ascension-1").should("have.attr", "data-state", "on");
             });
           });
         });
