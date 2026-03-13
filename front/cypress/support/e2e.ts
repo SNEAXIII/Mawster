@@ -139,8 +139,18 @@ Cypress.Commands.add("uiLogin", (userName: string) => {
 
 // ── Navigate via navbar click ────────────────────────────────────────────────
 
+// Pages that no longer have a nav link — navigate via URL instead
+const NAV_URL_FALLBACK: Record<string, string> = {
+  defense: "/game/defense",
+};
+
 Cypress.Commands.add("navTo", (page: string) => {
-  cy.getByCy(`nav-${page}`).click();
+  const fallback = NAV_URL_FALLBACK[page];
+  if (fallback) {
+    cy.visit(fallback);
+  } else {
+    cy.getByCy(`nav-${page}`).click();
+  }
 });
 
 // ── Invite member to alliance (direct backend call) ─────────────────────────

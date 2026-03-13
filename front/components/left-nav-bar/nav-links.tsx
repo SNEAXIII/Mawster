@@ -1,5 +1,5 @@
 'use client';
-import { Home, User, Sword, Shield, ShieldCheck, Settings } from 'lucide-react';
+import { Home, User, Sword, Shield, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useI18n } from '@/app/i18n';
@@ -30,7 +30,6 @@ export default function NavLinks({ userRole }: Readonly<NavLinksProps>) {
     { name: t.nav.profile, href: '/profile', icon: User, role: Role.user, cy: 'nav-profile' },
     { name: t.nav.roster, href: '/game/roster', icon: Sword, role: Role.user, cy: 'nav-roster' },
     { name: t.nav.alliances, href: '/game/alliances', icon: Shield, role: Role.user, cy: 'nav-alliances' },
-    { name: t.nav.defense, href: '/game/defense', icon: ShieldCheck, role: Role.user, cy: 'nav-defense' },
     {
       name: t.nav.administration,
       href: '/admin',

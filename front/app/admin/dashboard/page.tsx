@@ -1,5 +1,12 @@
-import { redirect } from 'next/navigation';
+'use client';
 
-export default function DashboardRedirect() {
-  redirect('/admin');
+import { Suspense } from 'react';
+import AdminContent, { AdminTab } from '../_components/admin-content';
+
+export default function DashboardPage() {
+  return (
+    <Suspense>
+      <AdminContent defaultTab={AdminTab.Users} />
+    </Suspense>
+  );
 }

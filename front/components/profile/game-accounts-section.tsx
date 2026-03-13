@@ -19,7 +19,11 @@ import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { CollapsibleSection } from '@/components/collapsible-section';
 import { Loader, Plus, Trash2, Gamepad2, Star, Pencil, Check, X, Shield } from 'lucide-react';
 
-export default function GameAccountsSection() {
+interface GameAccountsSectionProps {
+  onAccountsChange?: () => void;
+}
+
+export default function GameAccountsSection({ onAccountsChange }: Readonly<GameAccountsSectionProps>) {
   const { t } = useI18n();
 
   const [accounts, setAccounts] = useState<GameAccount[]>([]);
@@ -59,6 +63,7 @@ export default function GameAccountsSection() {
       toast.success(t.game.accounts.createSuccess);
       setPseudo('');
       await fetchAccounts();
+      onAccountsChange?.();
     } catch (err) {
       console.error(err);
       toast.error(t.game.accounts.createError);
@@ -74,6 +79,7 @@ export default function GameAccountsSection() {
       toast.success(t.game.accounts.deleteSuccess);
       setDeleteTarget(null);
       await fetchAccounts();
+      onAccountsChange?.();
     } catch (err) {
       console.error(err);
       toast.error(t.game.accounts.deleteError);
@@ -98,6 +104,7 @@ export default function GameAccountsSection() {
       setEditingId(null);
       setEditPseudo('');
       await fetchAccounts();
+      onAccountsChange?.();
     } catch (err) {
       console.error(err);
       toast.error(t.game.accounts.editError);
@@ -110,6 +117,7 @@ export default function GameAccountsSection() {
       await updateGameAccount(account.id, account.game_pseudo, true);
       toast.success(t.game.accounts.primarySet ?? 'Primary account updated');
       await fetchAccounts();
+      onAccountsChange?.();
     } catch (err) {
       console.error(err);
       toast.error(t.game.accounts.editError);

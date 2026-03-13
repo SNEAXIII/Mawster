@@ -30,6 +30,7 @@ const en = {
     defense: 'Defense',
     administration: 'Administration',
     champions: 'Champions',
+    users: 'Users',
     signIn: 'Sign in',
     signOut: 'Sign out',
   },

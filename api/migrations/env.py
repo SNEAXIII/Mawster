@@ -15,6 +15,7 @@ section = config.config_ini_section
 config.set_section_option(section, "MARIADB_USER", SECRET.MARIADB_USER)
 config.set_section_option(section, "MARIADB_PASSWORD", SECRET.MARIADB_PASSWORD)
 config.set_section_option(section, "MARIADB_HOST", SECRET.MARIADB_HOST)
+config.set_section_option(section, "MARIADB_PORT", str(SECRET.MARIADB_PORT))
 config.set_section_option(section, "MARIADB_DATABASE", SECRET.MARIADB_DATABASE)
 
 # Interpret the config file for Python logging.
