@@ -6,9 +6,10 @@ import { useState, useEffect, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader } from 'lucide-react';
-import { MdErrorOutline } from 'react-icons/md';
-import { BiUser } from 'react-icons/bi';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Loader, AlertCircle, User } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 
 const IS_DEV = process.env.NODE_ENV === 'development';
@@ -65,16 +66,16 @@ function LoginPageContent() {
   };
 
   return (
-    <div className='h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6'>
+    <div className='h-full flex items-center justify-center bg-gradient-to-br from-background to-muted p-4 sm:p-6'>
       <Card className='w-full max-w-md mx-auto shadow-lg transition-all duration-300 hover:shadow-xl'>
         <CardHeader className='space-y-1'>
           <div className='flex justify-center mb-2'>
             <div className='w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center'>
-              <BiUser className='w-12 h-12' />
+              <User className='w-8 h-8 text-primary' />
             </div>
           </div>
-          <CardTitle className='text-2xl font-bold text-center text-gray-800'>{t.login.title}</CardTitle>
-          <p className='text-sm text-center text-gray-500'>
+          <CardTitle className='text-2xl font-bold text-center'>{t.login.title}</CardTitle>
+          <p className='text-sm text-center text-muted-foreground'>
             {t.login.subtitle}
           </p>
         </CardHeader>
@@ -82,10 +83,8 @@ function LoginPageContent() {
           <div className='space-y-4'>
             {error && (
               <Alert variant='destructive'>
-                <AlertTitle className='flex items-center'>
-                  <MdErrorOutline className='mr-1' />
-                  {t.common.error}
-                </AlertTitle>
+                <AlertCircle className='h-4 w-4' />
+                <AlertTitle>{t.common.error}</AlertTitle>
                 <AlertDescription className='mt-1'>{error}</AlertDescription>
               </Alert>
             )}
@@ -114,32 +113,35 @@ function LoginPageContent() {
 
             {/* ─── Dev-only: user picker ─── */}
             {IS_DEV && (
-              <div className='border-t pt-4 mt-4'>
+              <div className='pt-4 mt-4'>
+                <Separator className='mb-4' />
                 <p className='text-xs font-semibold text-orange-600 mb-2 text-center'>
                   🔓 {t.login.devModeTitle}
                 </p>
                 {devLoading ? (
                   <div className='flex justify-center py-2'>
-                    <Loader className='w-5 h-5 animate-spin text-gray-400' />
+                    <Loader className='w-5 h-5 animate-spin text-muted-foreground' />
                   </div>
                 ) : devUsers.length === 0 ? (
-                  <p className='text-xs text-gray-400 text-center'>{t.login.devNoUsers}</p>
+                  <p className='text-xs text-muted-foreground text-center'>{t.login.devNoUsers}</p>
                 ) : (
-                  <div className='space-y-1 max-h-60 overflow-y-auto'>
-                    {devUsers.map((u) => (
-                      <button
-                        key={u.id}
-                        type='button'
-                        className='w-full text-left px-3 py-2 text-sm rounded-md hover:bg-gray-100 transition-colors flex items-center justify-between disabled:opacity-50'
-                        disabled={isLoading}
-                        onClick={() => handleDevLogin(u.id)}
-                        data-cy={`dev-login-${u.login}`}
-                      >
-                        <span className='font-medium truncate'>{u.login}</span>
-                        <span className='text-xs text-gray-400 ml-2 shrink-0'>{u.role}</span>
-                      </button>
-                    ))}
-                  </div>
+                  <ScrollArea className='max-h-60'>
+                    <div className='space-y-1'>
+                      {devUsers.map((u) => (
+                        <button
+                          key={u.id}
+                          type='button'
+                          className='w-full text-left px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors flex items-center justify-between disabled:opacity-50'
+                          disabled={isLoading}
+                          onClick={() => handleDevLogin(u.id)}
+                          data-cy={`dev-login-${u.login}`}
+                        >
+                          <span className='font-medium truncate'>{u.login}</span>
+                          <Badge variant='secondary' className='ml-2 shrink-0 text-[10px]'>{u.role}</Badge>
+                        </button>
+                      ))}
+                    </div>
+                  </ScrollArea>
                 )}
               </div>
             )}

@@ -2,10 +2,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
-import { LuChevronFirst, LuChevronLast } from 'react-icons/lu';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, RotateCcw } from 'lucide-react';
 import PageNumberSelector from '@/components/dashboard/pagination/page-number-selector';
-import { GrPowerReset } from 'react-icons/gr';
 import { useI18n } from '@/app/i18n';
 
 interface PaginationControlsProps {
@@ -42,14 +40,14 @@ export default function PaginationControls({
           disabled={currentPage <= 1}
           variant='outline'
         >
-          <LuChevronFirst />
+          <ChevronsLeft className="h-4 w-4" />
         </Button>
         <Button
           onClick={onPreviousPage}
           disabled={currentPage <= 1}
           variant='outline'
         >
-          <IoChevronBackOutline />
+          <ChevronLeft className="h-4 w-4" />
         </Button>
         <p className='flex-1 items-center justify-center text-center w-28 text-sm sm:text-base'>
           {t.common.page} {!totalPage ? 0 : currentPage}/{totalPage}
@@ -59,14 +57,14 @@ export default function PaginationControls({
           disabled={currentPage >= totalPage}
           variant='outline'
         >
-          <IoChevronForwardOutline />
+          <ChevronRight className="h-4 w-4" />
         </Button>
         <Button
           onClick={onLastPage}
           disabled={currentPage >= totalPage}
           variant='outline'
         >
-          <LuChevronLast />
+          <ChevronsRight className="h-4 w-4" />
         </Button>
       </div>
       <div className='flex justify-center lg:justify-start items-center flex-wrap gap-1 sm:gap-3 w-full sm:w-auto'>
@@ -79,7 +77,7 @@ export default function PaginationControls({
           disabled={!canReset}
           variant='outline'
         >
-          {t.dashboard.pagination.resetFilters} <GrPowerReset />
+          {t.dashboard.pagination.resetFilters} <RotateCcw className="h-4 w-4" />
         </Button>
       </div>
     </div>

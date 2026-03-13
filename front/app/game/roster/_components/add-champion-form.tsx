@@ -4,6 +4,10 @@ import React, { useEffect } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { SearchInput } from '@/components/search-input';
 import { CollapsibleSection } from '@/components/collapsible-section';
 import { getChampionImageUrl } from '@/app/services/champions';
@@ -101,11 +105,11 @@ export default function AddChampionForm({
 
           {/* Search results dropdown */}
           {searchResults.length > 0 && !selectedChampion && (
-            <div className="border rounded mt-1 max-h-48 overflow-y-auto bg-white shadow-md">
+            <ScrollArea className="border rounded-md mt-1 max-h-48 shadow-md">
               {searchResults.map((c) => (
                 <button
                   key={c.id}
-                  className="w-full text-left px-3 py-2 hover:bg-blue-50 flex items-center gap-2"
+                  className="w-full text-left px-3 py-2 hover:bg-accent flex items-center gap-2 transition-colors"
                   onClick={() => handleSelectChampion(c)}
                   data-cy={`champion-result-${c.name}`}
                 >
@@ -117,12 +121,12 @@ export default function AddChampionForm({
                     />
                   )}
                   <span>{c.name}</span>
-                  <span className="text-xs text-gray-400 ml-auto">
+                  <span className="text-xs text-muted-foreground ml-auto">
                     {c.champion_class}
                   </span>
                 </button>
               ))}
-            </div>
+            </ScrollArea>
           )}
 
           {/* Selected champion preview */}
@@ -167,33 +171,31 @@ export default function AddChampionForm({
 
         {/* Rarity buttons */}
         <div className="mb-3">
-          <label className="block text-sm font-medium mb-1">
-            {t.roster.rarity}
-          </label>
-          <div className="flex flex-wrap gap-2">
+          <Label className="mb-1.5 block">{t.roster.rarity}</Label>
+          <ToggleGroup
+            type="single"
+            value={selectedRarity}
+            onValueChange={(val) => { if (val) setSelectedRarity(val); }}
+            variant="outline"
+            className="flex flex-wrap justify-start gap-1"
+          >
             {RARITIES.map((r) => (
-              <button
+              <ToggleGroupItem
                 key={r}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
-                  selectedRarity === r
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-                }`}
-                onClick={() => setSelectedRarity(r)}
+                value={r}
                 data-cy={`rarity-${r}`}
+                className="px-3 py-1.5 text-sm data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
               >
                 {RARITY_LABELS[r]}
-              </button>
+              </ToggleGroupItem>
             ))}
-          </div>
+          </ToggleGroup>
         </div>
 
         {/* Signature field with quick-fill buttons */}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
-            {t.roster.signature}
-          </label>
-          <div className="flex items-center gap-2">
+          <Label className="mb-1.5 block">{t.roster.signature}</Label>
+          <div className="flex flex-wrap items-center gap-2">
             <Input
               type="number"
               min={0}
@@ -204,36 +206,40 @@ export default function AddChampionForm({
               }
               data-cy="sig-input"
             />
-            <div className="flex gap-1">
+            <ToggleGroup
+              type="single"
+              value={String(signatureValue)}
+              onValueChange={(val) => { if (val) setSignatureValue(Number(val)); }}
+              variant="outline"
+              size="sm"
+              className="flex gap-1"
+            >
               {SIGNATURE_PRESETS.map((v) => (
-                <button
+                <ToggleGroupItem
                   key={v}
-                  className={`px-2 py-1 rounded text-xs border transition-colors ${
-                    signatureValue === v
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'
-                  }`}
-                  onClick={() => setSignatureValue(v)}
+                  value={String(v)}
+                  className="text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
                 >
                   {v}
-                </button>
+                </ToggleGroupItem>
               ))}
-            </div>
+            </ToggleGroup>
           </div>
         </div>
 
         {/* Preferred Attacker */}
         <div className="mb-4">
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="preferred-attacker"
               checked={isPreferredAttacker}
-              onChange={(e) => setIsPreferredAttacker(e.target.checked)}
-              className="w-4 h-4"
+              onCheckedChange={(checked) => setIsPreferredAttacker(checked === true)}
               data-cy="preferred-attacker-checkbox"
             />
-            <span className="text-sm font-medium">{t.roster.preferredAttacker}</span>
-          </label>
+            <Label htmlFor="preferred-attacker" className="cursor-pointer select-none">
+              {t.roster.preferredAttacker}
+            </Label>
+          </div>
           <p className="text-xs text-muted-foreground mt-1 ml-6">
             {t.roster.preferredAttackerHint}
           </p>
@@ -241,32 +247,30 @@ export default function AddChampionForm({
 
         {/* Ascension */}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
-            Ascension
-          </label>
-          <div className="flex gap-2">
+          <Label className="mb-1.5 block">Ascension</Label>
+          <ToggleGroup
+            type="single"
+            value={String(ascension)}
+            onValueChange={(val) => { if (val) setAscension(Number(val)); }}
+            variant="outline"
+            className="flex justify-start gap-1"
+          >
             {[0, 1, 2].map((level) => {
               const isAscendable = selectedChampion?.is_ascendable ?? false;
               const disabled = !isAscendable && level > 0;
               return (
-                <button
+                <ToggleGroupItem
                   key={level}
+                  value={String(level)}
                   disabled={disabled}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
-                    ascension === level
-                      ? 'bg-purple-600 text-white border-purple-600'
-                      : disabled
-                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-                  }`}
-                  onClick={() => setAscension(level)}
                   data-cy={`ascension-${level}`}
+                  className="px-3 py-1.5 text-sm data-[state=on]:bg-purple-600 data-[state=on]:text-white"
                 >
                   {level === 0 ? 'None' : `A${level}`}
-                </button>
+                </ToggleGroupItem>
               );
             })}
-          </div>
+          </ToggleGroup>
           {selectedChampion && !selectedChampion.is_ascendable && (
             <p className="text-xs text-muted-foreground mt-1">
               This champion cannot be ascended.

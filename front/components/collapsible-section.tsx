@@ -1,7 +1,9 @@
 'use client';
 
 import React, { ReactNode, useState } from 'react';
-import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { ChevronDown } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { cn } from '@/app/lib/utils';
 
 type CollapsibleSectionProps = Readonly<{
   title: string;
@@ -24,24 +26,35 @@ export function CollapsibleSection({
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
 
-  function toggle() {
-    const next = !isOpen;
-    setInternalOpen(next);
-    onOpenChange?.(next);
+  function handleOpenChange(nextOpen: boolean) {
+    setInternalOpen(nextOpen);
+    onOpenChange?.(nextOpen);
   }
 
   return (
-    <div className={`border rounded-lg overflow-hidden ${className}`}>
-      <button
-        className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors font-semibold text-left"
-        onClick={toggle}
-        type="button"
-        data-cy={`collapsible-${title.replace(/[\s/]+/g, '-').toLowerCase()}`}
-      >
-        <span>{title}</span>
-        {isOpen ? <FiChevronUp size={18} /> : <FiChevronDown size={18} />}
-      </button>
-      {isOpen && <div className="p-4 border-t bg-white">{children}</div>}
-    </div>
+    <Collapsible
+      open={isOpen}
+      onOpenChange={handleOpenChange}
+      className={cn('rounded-lg border', className)}
+    >
+      <CollapsibleTrigger asChild>
+        <button
+          className="w-full flex items-center justify-between px-4 py-3 bg-muted/50 hover:bg-muted transition-colors font-semibold text-left rounded-t-lg"
+          type="button"
+          data-cy={`collapsible-${title.replace(/[\s/]+/g, '-').toLowerCase()}`}
+        >
+          <span>{title}</span>
+          <ChevronDown
+            className={cn(
+              'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
+              isOpen && 'rotate-180',
+            )}
+          />
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="border-t">
+        <div className="p-4">{children}</div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

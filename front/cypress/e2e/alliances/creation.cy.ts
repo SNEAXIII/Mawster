@@ -29,6 +29,7 @@ describe("Alliances – Creation", () => {
       cy.uiLogin(login);
       cy.navTo("alliances");
 
+      cy.getByCy("tab-create").click();
       cy.getByCy("alliance-name-input").should("be.visible").type("TestAlliance");
       cy.getByCy("alliance-tag-input").type("TA");
       cy.getByCy("alliance-create-btn").click();

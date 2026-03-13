@@ -13,7 +13,7 @@ import {
   RARITY_LABELS,
   getClassColors,
 } from '@/app/services/roster';
-import { FiX } from 'react-icons/fi';
+import { X } from 'lucide-react';
 
 interface UpgradeRequestsSectionProps {
   gameAccountId: string | null;
@@ -86,7 +86,7 @@ export default function UpgradeRequestsSection({
       className="mb-4"
     >
       {loading ? (
-        <p className="text-sm text-gray-500">...</p>
+        <p className="text-sm text-muted-foreground">...</p>
       ) : (
         <div className="space-y-2">
           {requests.map((req) => {
@@ -118,7 +118,7 @@ export default function UpgradeRequestsSection({
                       → {RARITY_LABELS[req.requested_rarity] ?? req.requested_rarity}
                     </span>
                   </div>
-                  <p className="text-[10px] text-gray-500">
+                  <p className="text-[10px] text-muted-foreground">
                     {t.roster.upgradeRequests.requestedBy.replace('{pseudo}', req.requester_pseudo)}
                   </p>
                 </div>
@@ -129,7 +129,7 @@ export default function UpgradeRequestsSection({
                     onClick={() => onInitiateCancel ? onInitiateCancel(req.id) : setCancelTarget(req)}
                     title={t.roster.upgradeRequests.cancel}
                   >
-                    <FiX size={14} />
+                    <X className="h-3.5 w-3.5" />
                   </button>
                 )}
               </div>

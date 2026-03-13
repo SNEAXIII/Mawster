@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useI18n } from '@/app/i18n';
 import { toast } from 'sonner';
 import {
@@ -33,14 +35,29 @@ import { FullPageSpinner } from '@/components/full-page-spinner';
 import { useRequiredSession } from '@/hooks/use-required-session';
 import { AllianceRoleProvider } from '@/hooks/use-alliance-role';
 import { Shield, Mail, Check, X } from 'lucide-react';
+import TabBar, { type TabItem } from '@/components/tab-bar';
 
 import CreateAllianceForm from './_components/create-alliance-form';
 import AllianceCard from './_components/alliance-card';
 import AllianceRosterDialog from './_components/alliance-roster-dialog';
 
-export default function AlliancesPage() {
+const DefensePageContent = dynamic(
+  () => import('../defense/_components/defense-content'),
+  { loading: () => <FullPageSpinner /> },
+);
+
+export enum AllianceTab {
+  Create = 'create',
+  Alliances = 'alliances',
+  Defense = 'defense',
+}
+
+function AlliancesContent() {
   const { locale, t } = useI18n();
   const { status } = useRequiredSession();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [alliances, setAlliances] = useState<Alliance[]>([]);
   const [eligibleOwners, setEligibleOwners] = useState<GameAccount[]>([]);
@@ -48,8 +65,37 @@ export default function AlliancesPage() {
   const [hasAnyAccounts, setHasAnyAccounts] = useState(true);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
   const [roleRefreshKey, setRoleRefreshKey] = useState(0);
+
+  // Tabs — read from URL or default
+  const initialTab = (searchParams.get('tab') as AllianceTab) || AllianceTab.Alliances;
+  const [activeTab, setActiveTab] = useState<AllianceTab>(
+    Object.values(AllianceTab).includes(initialTab) ? initialTab : AllianceTab.Alliances,
+  );
+
+  // Sync tab to URL
+  const handleDefenseStateChange = useCallback((allianceId: string, bg: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', AllianceTab.Defense);
+    params.set('alliance', allianceId);
+    params.set('bg', String(bg));
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [pathname, searchParams, router]);
+
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', activeTab);
+    if (activeTab !== AllianceTab.Defense) {
+      params.delete('alliance');
+      params.delete('bg');
+    }
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [activeTab]);
 
   // Invitations received by current user
   const [myInvitations, setMyInvitations] = useState<AllianceInvitation[]>([]);
@@ -166,13 +212,6 @@ export default function AlliancesPage() {
     }
   }, [alliances]);
 
-  // Auto-open create form only if user has NO alliances yet
-  useEffect(() => {
-    if (!loading && alliances.length === 0) {
-      setCreateOpen(true);
-    }
-  }, [loading, alliances.length]);
-
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !tag.trim() || !ownerId) return;
@@ -184,7 +223,7 @@ export default function AlliancesPage() {
       setName('');
       setTag('');
       setOwnerId('');
-      setCreateOpen(false);
+      setActiveTab(AllianceTab.Alliances);
       setRoleRefreshKey((k) => k + 1);
       await Promise.all([fetchAlliances(), fetchEligibleOwners(), fetchEligibleMembers(), fetchMyAccounts()]);
     } catch (err: any) {
@@ -320,39 +359,30 @@ export default function AlliancesPage() {
     return <FullPageSpinner />;
   }
 
+  const tabs: TabItem<AllianceTab>[] = [
+    ...(eligibleOwners.length > 0
+      ? [{ value: AllianceTab.Create, label: t.game.alliances.createTitle, cy: 'tab-create' }]
+      : []),
+    { value: AllianceTab.Alliances, label: t.game.alliances.title, cy: 'tab-alliances' },
+    { value: AllianceTab.Defense, label: t.nav.defense, cy: 'tab-defense' },
+  ];
+
   return (
     <AllianceRoleProvider refreshKey={roleRefreshKey}>
     <div className="max-w-4xl mx-auto px-3 py-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t.game.alliances.title}</h1>
-        <p className="text-gray-500 mt-1">{t.game.alliances.description}</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t.game.alliances.title}</h1>
+        <p className="text-muted-foreground mt-1">{t.game.alliances.description}</p>
       </div>
 
-      {/* Create form — foldable */}
-{eligibleOwners.length > 0 && (
-      <CreateAllianceForm
-        open={createOpen}
-        onToggle={() => setCreateOpen((v) => !v)}
-        hasAnyAccounts={hasAnyAccounts}
-        eligibleOwners={eligibleOwners}
-        name={name}
-        tag={tag}
-        ownerId={ownerId}
-        creating={creating}
-        onNameChange={setName}
-        onTagChange={setTag}
-        onOwnerChange={setOwnerId}
-        onSubmit={handleCreate}
-      />
-)}
-      {/* My Invitations */}
+      {/* My Invitations — always visible above tabs */}
       {myInvitations.length > 0 && (
         <Card data-cy="my-invitations-section">
           <CardContent className="py-3 sm:py-4 px-3 sm:px-6 space-y-3">
             <div className="flex items-center gap-2">
               <Mail className="h-5 w-5 text-blue-500" />
-              <h2 className="text-sm font-medium text-gray-700">
+              <h2 className="text-sm font-medium text-muted-foreground">
                 {t.game.alliances.myInvitations} ({myInvitations.length})
               </h2>
             </div>
@@ -361,14 +391,14 @@ export default function AlliancesPage() {
                 <div
                   key={inv.id}
                   data-cy={`my-invitation-${inv.alliance_name}`}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-md bg-blue-50 border border-blue-200"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-md bg-accent/50 border border-border"
                 >
                   <div className="space-y-0.5">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-foreground">
                       {inv.alliance_name}{' '}
                       <span className="text-xs text-purple-700 font-bold">[{inv.alliance_tag}]</span>
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {t.game.alliances.invitedBy} {inv.invited_by_pseudo} · {inv.game_account_pseudo}
                     </p>
                   </div>
@@ -399,41 +429,76 @@ export default function AlliancesPage() {
         </Card>
       )}
 
-      {/* Alliance list */}
-      {alliances.length === 0 ? (
-        <Card data-cy="alliance-empty-state">
-          <CardContent className="py-12 text-center text-gray-500">
-            <Shield className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p data-cy="alliance-empty-text">{t.game.alliances.empty}</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {alliances.map((alliance) => (
-            <AllianceCard
-              key={alliance.id}
-              alliance={alliance}
-              locale={locale}
-              memberAllianceId={memberAllianceId}
-              memberAccountId={memberAccountId}
-              eligibleMembers={eligibleMembers}
-              onMemberAccountChange={setMemberAccountId}
-              onOpenInviteMember={handleOpenInviteMember}
-              onCloseInviteMember={() => { setMemberAllianceId(null); setMemberAccountId(''); }}
-              onInviteMember={handleInviteMember}
-              onDemoteOfficer={handleDemoteOfficer}
-              onPromoteOfficer={setPromoteTarget}
-              onLeave={setLeaveTarget}
-              onExclude={setExcludeTarget}
-              onSetGroup={handleSetGroup}
-              onViewRoster={(gameAccountId, pseudo, canReq) => {
-                setRosterTarget({ gameAccountId, pseudo, canRequestUpgrade: canReq });
-              }}
-              pendingInvitations={pendingInvitations[alliance.id] ?? []}
-              onCancelInvitation={handleCancelInvitation}
-            />
-          ))}
-        </div>
+      {/* Tabs */}
+      <TabBar tabs={tabs} value={activeTab} onChange={setActiveTab} />
+
+      {/* Create tab */}
+      {activeTab === AllianceTab.Create && eligibleOwners.length > 0 && (
+        <CreateAllianceForm
+          open={true}
+          onToggle={() => {}}
+          collapsible={false}
+          hasAnyAccounts={hasAnyAccounts}
+          eligibleOwners={eligibleOwners}
+          name={name}
+          tag={tag}
+          ownerId={ownerId}
+          creating={creating}
+          onNameChange={setName}
+          onTagChange={setTag}
+          onOwnerChange={setOwnerId}
+          onSubmit={handleCreate}
+        />
+      )}
+
+      {/* Alliances tab */}
+      {activeTab === AllianceTab.Alliances && (
+        <>
+          {alliances.length === 0 ? (
+            <Card data-cy="alliance-empty-state">
+              <CardContent className="py-12 text-center text-gray-500">
+                <Shield className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                <p data-cy="alliance-empty-text">{t.game.alliances.empty}</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {alliances.map((alliance) => (
+                <AllianceCard
+                  key={alliance.id}
+                  alliance={alliance}
+                  locale={locale}
+                  memberAllianceId={memberAllianceId}
+                  memberAccountId={memberAccountId}
+                  eligibleMembers={eligibleMembers}
+                  onMemberAccountChange={setMemberAccountId}
+                  onOpenInviteMember={handleOpenInviteMember}
+                  onCloseInviteMember={() => { setMemberAllianceId(null); setMemberAccountId(''); }}
+                  onInviteMember={handleInviteMember}
+                  onDemoteOfficer={handleDemoteOfficer}
+                  onPromoteOfficer={setPromoteTarget}
+                  onLeave={setLeaveTarget}
+                  onExclude={setExcludeTarget}
+                  onSetGroup={handleSetGroup}
+                  onViewRoster={(gameAccountId, pseudo, canReq) => {
+                    setRosterTarget({ gameAccountId, pseudo, canRequestUpgrade: canReq });
+                  }}
+                  pendingInvitations={pendingInvitations[alliance.id] ?? []}
+                  onCancelInvitation={handleCancelInvitation}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Defense tab */}
+      {activeTab === AllianceTab.Defense && (
+        <DefensePageContent
+          onStateChange={handleDefenseStateChange}
+          initialAllianceId={searchParams.get('alliance') ?? undefined}
+          initialBg={searchParams.get('bg') ? Number(searchParams.get('bg')) : undefined}
+        />
       )}
 
       {/* Leave alliance confirmation */}
@@ -492,5 +557,13 @@ export default function AlliancesPage() {
       />
     </div>
     </AllianceRoleProvider>
+  );
+}
+
+export default function AlliancesPage() {
+  return (
+    <Suspense>
+      <AlliancesContent />
+    </Suspense>
   );
 }
