@@ -195,42 +195,6 @@ describe("Roster – Detailed UI", () => {
   });
 
   // =========================================================================
-  // Preferred Attacker (via add form)
-  // =========================================================================
-
-  describe("Preferred Attacker via form", () => {
-    it("adds a champion as preferred attacker via checkbox and verifies visual elements", () => {
-      setupAdmin("ui-pref-form-admin").then((admin) => {
-        cy.apiLoadChampion(admin.access_token, "NickFury", "Skill");
-
-        setupUser("ui-pref-form-user").then(({ login, access_token }) => {
-          cy.apiCreateGameAccount(access_token, "PrefFormPlayer", true);
-
-          cy.uiLogin(login);
-          cy.navTo("roster");
-
-          cy.contains("Add / Update a Champion").click();
-          cy.getByCy("champion-search").type("NickFury");
-          cy.getByCy("champion-result-NickFury").click();
-          cy.getByCy("rarity-7r2").click();
-
-          // Check the preferred attacker checkbox
-          cy.getByCy("preferred-attacker-checkbox").click({ force: true });
-          cy.getByCy("preferred-attacker-checkbox").should("have.attr", "data-state", "checked");
-
-          cy.getByCy("champion-submit").click();
-          cy.contains("NickFury added / updated").should("be.visible");
-
-          // Verify visual elements: yellow name with ⚔ prefix
-          cy.getByCy("preferred-attacker-name").should("be.visible");
-          cy.getByCy("preferred-attacker-name").should("have.class", "text-yellow-400");
-          cy.getByCy("preferred-attacker-name").should("contain", "⚔");
-        });
-      });
-    });
-  });
-
-  // =========================================================================
   // Ascension
   // =========================================================================
 

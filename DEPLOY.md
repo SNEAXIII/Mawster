@@ -21,19 +21,29 @@
 
 # 3. front.env
 #    NEXTAUTH_SECRET=<npx auth secret>
-#    NEXTAUTH_URL=https://your-domain.com
+#    NEXTAUTH_URL=https://www.your-domain.com
+#    NEXTAUTH_URL_INTERNAL=http://front:3000
 #    DISCORD_CLIENT_ID=<from Discord Developer Portal>
 #    DISCORD_CLIENT_SECRET=<from Discord Developer Portal>
 
 # ──────────────────────────────────────────────
 # Deploy
 # ──────────────────────────────────────────────
-# export DOMAIN=your-domain.com
-# docker compose -f compose.prod.yaml up -d
+# Domain DNS attendu:
+# - your-domain.com     -> IP du serveur
+# - www.your-domain.com -> IP du serveur
 #
-# Caddy auto-provisions HTTPS via Let's Encrypt
-# when DOMAIN is a real domain pointing to your server.
+# docker compose -f compose-prod.yaml up -d
+#
+# Caddy génère automatiquement les certificats Let's Encrypt
+# quand le domaine public pointe bien vers votre serveur.
+#
+# Le bloc Caddy recommandé:
+# - redirige l'apex vers https://www.your-domain.com
+# - sert l'application uniquement sur https://www.your-domain.com
+#
+# Les certificats sont stockés dans le volume Docker `caddy_data`
+# sous /data/caddy/certificates à l'intérieur du conteneur.
 #
 # For IP-only / no TLS (temporary):
-# export DOMAIN=:80
-# docker compose -f compose.prod.yaml up -d
+# utiliser un Caddyfile temporaire dédié, sans domaine public.
