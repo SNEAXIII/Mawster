@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { Suspense, useEffect, useRef, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { redirect } from 'next/navigation';
+import { redirect, usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useI18n } from '@/app/i18n';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
@@ -29,9 +29,16 @@ import {
 } from '@/app/services/roster';
 
 import { AllianceRoleProvider, useAllianceRole } from '@/hooks/use-alliance-role';
+import TabBar, { type TabItem } from '@/components/tab-bar';
+import GameAccountsSection from '@/components/profile/game-accounts-section';
 import AddChampionForm from './_components/add-champion-form';
 import RosterGrid from './_components/roster-grid';
 import UpgradeRequestsSection from './_components/upgrade-requests-section';
+
+export enum RosterTab {
+  Roster = 'roster',
+  Accounts = 'accounts',
+}
 
 /** Sub-component that uses the AllianceRoleProvider to determine canCancel */
 function RosterUpgradeSection({
@@ -54,14 +61,35 @@ function RosterUpgradeSection({
   );
 }
 
-export default function RosterPage() {
+function RosterContent() {
   const { status: authStatus } = useSession();
   const { t } = useI18n();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   // Game accounts
   const [accounts, setAccounts] = useState<GameAccount[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [loadingAccounts, setLoadingAccounts] = useState(true);
+
+  // Tabs — read from URL or default
+  const initialTab = (searchParams.get('tab') as RosterTab) || RosterTab.Roster;
+  const [activeTab, setActiveTab] = useState<RosterTab>(
+    Object.values(RosterTab).includes(initialTab) ? initialTab : RosterTab.Roster,
+  );
+
+  // Sync tab to URL
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', activeTab);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [activeTab]);
 
   // Roster
   const [roster, setRoster] = useState<RosterEntry[]>([]);
@@ -92,19 +120,30 @@ export default function RosterPage() {
   }, [authStatus]);
 
   // Load accounts
-  useEffect(() => {
-    if (authStatus !== 'authenticated') return;
+  const fetchAccounts = useCallback(() => {
     setLoadingAccounts(true);
     getMyGameAccounts()
       .then((accs) => {
         setAccounts(accs);
-        // Auto-select: primary account first, otherwise first available
         const primary = accs.find((a) => a.is_primary);
         setSelectedAccountId(primary?.id ?? accs[0]?.id ?? null);
+        if (accs.length === 0) setActiveTab(RosterTab.Accounts);
       })
       .catch(() => setError(t.roster.errors.loadAccounts))
       .finally(() => setLoadingAccounts(false));
+  }, [t]);
+
+  useEffect(() => {
+    if (authStatus !== 'authenticated') return;
+    fetchAccounts();
   }, [authStatus]);
+
+  // Re-fetch accounts when switching to Roster tab
+  useEffect(() => {
+    if (activeTab === RosterTab.Roster && authStatus === 'authenticated') {
+      fetchAccounts();
+    }
+  }, [activeTab]);
 
   // Load roster when account changes
   useEffect(() => {
@@ -205,99 +244,110 @@ export default function RosterPage() {
   if (authStatus === 'loading' || loadingAccounts) {
     return (
       <div className='flex items-center justify-center h-64'>
-        <p className='text-gray-500'>{t.common.loading}</p>
+        <p className='text-muted-foreground'>{t.common.loading}</p>
       </div>
     );
   }
 
-  if (accounts.length === 0) {
-    return (
-      <div className='px-3 py-4 sm:p-6'>
-        <h1 className='text-xl sm:text-2xl font-bold mb-4'>{t.roster.title}</h1>
-        <p className='text-gray-500'>{t.roster.noAccounts}</p>
-      </div>
-    );
-  }
+  const tabs: TabItem<RosterTab>[] = [
+    ...(accounts.length > 0 ? [{ value: RosterTab.Roster, label: t.roster.title, cy: 'tab-roster' }] : []),
+    { value: RosterTab.Accounts, label: t.nav.gameAccounts, cy: 'tab-accounts' },
+  ];
 
   return (
     <AllianceRoleProvider>
       <div className='px-3 py-4 sm:p-6 max-w-6xl mx-auto'>
-        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2'>
-                  {/* Account selector - only show if multiple accounts */}
-        {accounts.length > 1 && (
-          <div className='mb-6'>
-            <label className='block text-sm font-medium mb-2'>{t.roster.selectAccount}</label>
-            <Select
-              value={selectedAccountId || ''}
-              onValueChange={(val) => setSelectedAccountId(val || null)}
-            >
-              <SelectTrigger className='w-full max-w-xs' data-cy='roster-account-select'>
-                <SelectValue placeholder={t.roster.chooseAccount} />
-              </SelectTrigger>
-              <SelectContent>
-                {accounts.map((acc) => (
-                  <SelectItem key={acc.id} value={acc.id}>
-                    {acc.game_pseudo} {acc.is_primary ? `(${t.game.accounts.primary})` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-          {selectedAccountId && (
-            <RosterImportExport
-              roster={roster}
-              selectedAccountId={selectedAccountId}
-              selectedAccountName={
-                accounts.find((a) => a.id === selectedAccountId)?.game_pseudo ?? ''
-              }
-              onRosterUpdated={(updated) => {
-                setRoster(updated);
-                setUpgradeRefreshKey((k) => k + 1);
-              }}
-            />
-          )}
-        </div>
+        <TabBar tabs={tabs} value={activeTab} onChange={setActiveTab} />
 
-        {error && (
-          <ErrorBanner
-            message={error}
-            onDismiss={() => setError(null)}
-            className='mb-4'
-          />
-        )}
-
-        {selectedAccountId && (
+        {/* Roster tab */}
+        {activeTab === RosterTab.Roster && (
           <>
-            <AddChampionForm
-              open={showAddForm}
-              onOpenChange={setShowAddForm}
-              selectedAccountId={selectedAccountId}
-              roster={roster}
-              initialEntry={editEntry}
-              onSuccess={handleFormSuccess}
-            />
-
-            <RosterUpgradeSection
-              selectedAccountId={selectedAccountId}
-              allianceId={accounts.find((a) => a.id === selectedAccountId)?.alliance_id ?? null}
-              refreshKey={upgradeRefreshKey}
-            />
-
-            {loadingRoster ? (
-              <p className='text-gray-500'>{t.common.loading}</p>
+            {accounts.length === 0 ? (
+              <p className='text-muted-foreground'>{t.roster.noAccounts}</p>
             ) : (
-              <RosterGrid
-                groupedRoster={groupedRoster}
-                onEdit={startEditEntry}
-                onDelete={setDeleteTarget}
-                onUpgrade={setUpgradeTarget}
-                onTogglePreferredAttacker={handleTogglePreferredAttacker}
-                onAscend={setAscendTarget}
-              />
+              <>
+                <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2'>
+                  {accounts.length > 1 && (
+                    <div className='mb-6'>
+                      <label className='block text-sm font-medium mb-2'>{t.roster.selectAccount}</label>
+                      <Select
+                        value={selectedAccountId || ''}
+                        onValueChange={(val) => setSelectedAccountId(val || null)}
+                      >
+                        <SelectTrigger className='w-full max-w-xs' data-cy='roster-account-select'>
+                          <SelectValue placeholder={t.roster.chooseAccount} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {accounts.map((acc) => (
+                            <SelectItem key={acc.id} value={acc.id}>
+                              {acc.game_pseudo} {acc.is_primary ? `(${t.game.accounts.primary})` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {selectedAccountId && (
+                    <RosterImportExport
+                      roster={roster}
+                      selectedAccountId={selectedAccountId}
+                      selectedAccountName={
+                        accounts.find((a) => a.id === selectedAccountId)?.game_pseudo ?? ''
+                      }
+                      onRosterUpdated={(updated) => {
+                        setRoster(updated);
+                        setUpgradeRefreshKey((k) => k + 1);
+                      }}
+                    />
+                  )}
+                </div>
+
+                {error && (
+                  <ErrorBanner
+                    message={error}
+                    onDismiss={() => setError(null)}
+                    className='mb-4'
+                  />
+                )}
+
+                {selectedAccountId && (
+                  <>
+                    <AddChampionForm
+                      open={showAddForm}
+                      onOpenChange={setShowAddForm}
+                      selectedAccountId={selectedAccountId}
+                      roster={roster}
+                      initialEntry={editEntry}
+                      onSuccess={handleFormSuccess}
+                    />
+
+                    <RosterUpgradeSection
+                      selectedAccountId={selectedAccountId}
+                      allianceId={accounts.find((a) => a.id === selectedAccountId)?.alliance_id ?? null}
+                      refreshKey={upgradeRefreshKey}
+                    />
+
+                    {loadingRoster ? (
+                      <p className='text-muted-foreground'>{t.common.loading}</p>
+                    ) : (
+                      <RosterGrid
+                        groupedRoster={groupedRoster}
+                        onEdit={startEditEntry}
+                        onDelete={setDeleteTarget}
+                        onUpgrade={setUpgradeTarget}
+                        onTogglePreferredAttacker={handleTogglePreferredAttacker}
+                        onAscend={setAscendTarget}
+                      />
+                    )}
+                  </>
+                )}
+              </>
             )}
           </>
         )}
+
+        {/* Accounts tab */}
+        {activeTab === RosterTab.Accounts && <GameAccountsSection onAccountsChange={fetchAccounts} />}
 
         {/* Delete confirmation dialog */}
         <ConfirmationDialog
@@ -350,5 +400,13 @@ export default function RosterPage() {
         />
       </div>
     </AllianceRoleProvider>
+  );
+}
+
+export default function RosterPage() {
+  return (
+    <Suspense>
+      <RosterContent />
+    </Suspense>
   );
 }

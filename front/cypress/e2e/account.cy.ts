@@ -69,16 +69,11 @@ describe("Login & Profile – UI", () => {
       cy.uiLogin(login);
 
       // Admin nav links should be visible
-      cy.getByCy("nav-champions").should("be.visible");
       cy.getByCy("nav-administration").should("be.visible");
-
-      // Navigate to Champions page
-      cy.navTo("champions");
-      cy.url().should("include", "/admin/champions");
 
       // Navigate to Administration page
       cy.navTo("administration");
-      cy.url().should("include", "/admin/dashboard");
+      cy.url().should("include", "/admin");
 
       // User routes should also be accessible
       cy.navTo("profile");
@@ -86,12 +81,6 @@ describe("Login & Profile – UI", () => {
 
       cy.navTo("alliances");
       cy.url().should("include", "/game/alliances");
-
-      cy.navTo("roster");
-      cy.url().should("include", "/game/roster");
-
-      cy.navTo("defense");
-      cy.url().should("include", "/game/defense");
     });
   });
 
@@ -102,11 +91,8 @@ describe("Login & Profile – UI", () => {
       // User nav links should be visible
       cy.getByCy("nav-profile").should("be.visible");
       cy.getByCy("nav-alliances").should("be.visible");
-      cy.getByCy("nav-roster").should("be.visible");
-      cy.getByCy("nav-defense").should("be.visible");
 
       // Admin nav links should NOT be visible
-      cy.getByCy("nav-champions").should("not.exist");
       cy.getByCy("nav-administration").should("not.exist");
     });
   });

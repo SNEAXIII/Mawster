@@ -3,7 +3,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { FiCheck, FiEdit2, FiTrash2, FiX } from 'react-icons/fi';
+import { Check, Pencil, Trash2, X } from 'lucide-react';
 import { ClassBadge } from '@/components/class-badge';
 import { ActionIconButton } from '@/components/action-icon-button';
 import { Champion, getChampionImageUrl } from '@/app/services/champions';
@@ -36,7 +36,7 @@ export default function ChampionTableRow({
 }: ChampionTableRowProps) {
   const { t } = useI18n();
   return (
-    <tr className="border-b hover:bg-gray-50">
+    <tr className="border-b hover:bg-accent/50">
       {/* Image */}
       <td className="p-3">
         {champion.image_url ? (
@@ -49,7 +49,7 @@ export default function ChampionTableRow({
             }}
           />
         ) : (
-          <div className="w-10 h-10 rounded bg-gray-200 flex items-center justify-center text-xs text-gray-500">
+          <div className="w-10 h-10 rounded bg-muted flex items-center justify-center text-xs text-muted-foreground">
             ?
           </div>
         )}
@@ -80,7 +80,7 @@ export default function ChampionTableRow({
               onClick={() => onSaveAlias(champion.id)}
               disabled={savingAlias}
             >
-              <FiCheck className="text-green-600" />
+              <Check className="text-green-600 h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
@@ -88,11 +88,11 @@ export default function ChampionTableRow({
               onClick={onCancelEdit}
               disabled={savingAlias}
             >
-              <FiX className="text-red-600" />
+              <X className="text-red-600 h-4 w-4" />
             </Button>
           </div>
         ) : (
-          <span className="text-gray-600 text-xs">{champion.alias || '-'}</span>
+          <span className="text-muted-foreground text-xs">{champion.alias || '-'}</span>
         )}
       </td>
 
@@ -114,12 +114,12 @@ export default function ChampionTableRow({
       <td className="p-3">
         <div className="flex items-center gap-1">
           <ActionIconButton
-            icon={<FiEdit2 className="w-3.5 h-3.5" />}
+            icon={<Pencil className="w-3.5 h-3.5" />}
             onClick={() => onStartEdit(champion)}
             title="Edit alias"
           />
           <ActionIconButton
-            icon={<FiTrash2 />}
+            icon={<Trash2 />}
             onClick={() => onDelete(champion)}
             variant="danger"
           />

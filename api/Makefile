@@ -1,5 +1,7 @@
 MIGRATION_MESSAGE := "init"
 
+.PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions reset-db init-db cancel-last test test-cov
+
 help:
 	@echo "run-dev      --> run the server in dev mode with auto reload"
 	@echo "create-mig   --> create fresh new migration"

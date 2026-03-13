@@ -13,7 +13,7 @@ describe("Roster – Basic", () => {
     setupUser("roster-noacc-token").then(({ login }) => {
       cy.uiLogin(login);
       cy.navTo("roster");
-      cy.contains("create a game account first").should("be.visible");
+      cy.contains("No game accounts yet. Add one to get started!").should("be.visible");
     });
   });
 
@@ -218,8 +218,8 @@ describe("Roster – Basic", () => {
         // Set sig to 200 via preset button
         cy.contains("button", "200").click();
         cy.getByCy("champion-submit").click();
-        cy.contains("DoctorSig added / updated").should("be.visible");
-        cy.contains("sig 200").should("be.visible");
+        cy.contains("DoctorSig added / updated").scrollIntoView().should("be.visible");
+        cy.contains("sig 200").scrollIntoView().should("be.visible");
       });
     });
   });

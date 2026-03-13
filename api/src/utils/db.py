@@ -10,7 +10,7 @@ from src.security.secrets import SECRET
 
 async_engine = AsyncEngine(
     create_engine(
-        url=f"mysql+aiomysql://{SECRET.MARIADB_USER}:{SECRET.MARIADB_PASSWORD}@{SECRET.MARIADB_HOST}/{SECRET.MARIADB_DATABASE}"
+        url=f"mysql+aiomysql://{SECRET.MARIADB_USER}:{SECRET.MARIADB_PASSWORD}@{SECRET.MARIADB_HOST}:{SECRET.MARIADB_PORT}/{SECRET.MARIADB_DATABASE}"
     )
 )
 

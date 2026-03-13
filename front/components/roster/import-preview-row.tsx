@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useI18n } from '@/app/i18n';
-import { FiArrowRight } from 'react-icons/fi';
+import { ArrowRight } from 'lucide-react';
 import ChampionPortrait from '@/components/champion-portrait';
 import {
   RARITY_LABELS,
@@ -79,7 +79,7 @@ export default function ImportPreviewRow({ row }: ImportPreviewRowProps) {
                 <span className="text-gray-400">
                   {RARITY_LABELS[row.oldRarity!] ?? row.oldRarity}
                 </span>
-                <FiArrowRight className="text-blue-500" size={10} />
+                <ArrowRight className="text-blue-500 h-2.5 w-2.5" />
                 <span className="text-blue-600 font-semibold">
                   {RARITY_LABELS[row.newRarity] ?? row.newRarity}
                 </span>
@@ -93,7 +93,7 @@ export default function ImportPreviewRow({ row }: ImportPreviewRowProps) {
             {row.oldSignature !== row.newSignature && (
               <div className="flex items-center gap-1 justify-end">
                 <span className="text-gray-400">sig {row.oldSignature}</span>
-                <FiArrowRight className="text-blue-500" size={10} />
+                <ArrowRight className="text-blue-500 h-2.5 w-2.5" />
                 <span className="text-blue-600 font-semibold">sig {row.newSignature}</span>
               </div>
             )}

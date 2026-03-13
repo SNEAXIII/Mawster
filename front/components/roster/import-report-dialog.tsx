@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useI18n } from '@/app/i18n';
-import { FiCheck, FiX, FiAlertTriangle, FiArrowRight } from 'react-icons/fi';
+import { Check, X, AlertTriangle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -59,12 +59,12 @@ export default function ImportReportDialog({
           <DialogDescription className="flex items-center gap-3 mt-1 flex-wrap">
             {addedCount > 0 && (
               <span className="inline-flex items-center gap-1 text-green-600 font-medium">
-                <FiCheck size={14} /> {addedCount} {t.roster.importExport.badgeAdded.toLowerCase()}
+                <Check className="h-3.5 w-3.5" /> {addedCount} {t.roster.importExport.badgeAdded.toLowerCase()}
               </span>
             )}
             {updatedCount > 0 && (
               <span className="inline-flex items-center gap-1 text-blue-600 font-medium">
-                <FiCheck size={14} /> {updatedCount} {t.roster.importExport.badgeUpdated.toLowerCase()}
+                <Check className="h-3.5 w-3.5" /> {updatedCount} {t.roster.importExport.badgeUpdated.toLowerCase()}
               </span>
             )}
             {skippedCount > 0 && (
@@ -74,7 +74,7 @@ export default function ImportReportDialog({
             )}
             {failCount > 0 && (
               <span className="inline-flex items-center gap-1 text-red-600 font-medium">
-                <FiX size={14} /> {failCount} {t.roster.importExport.badgeError.toLowerCase()}
+                <X className="h-3.5 w-3.5" /> {failCount} {t.roster.importExport.badgeError.toLowerCase()}
               </span>
             )}
           </DialogDescription>
@@ -128,7 +128,7 @@ export default function ImportReportDialog({
                 <div className="shrink-0 text-right text-xs whitespace-nowrap">
                   {!result.success ? (
                     <span className="text-[10px] font-bold bg-red-600 text-white px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                      <FiAlertTriangle size={9} /> {t.roster.importExport.badgeError}
+                      <AlertTriangle className="h-2.5 w-2.5" /> {t.roster.importExport.badgeError}
                     </span>
                   ) : result.isNew ? (
                     <div>
@@ -153,7 +153,7 @@ export default function ImportReportDialog({
                           <span className="text-gray-400">
                             {RARITY_LABELS[result.oldRarity!] ?? result.oldRarity}
                           </span>
-                          <FiArrowRight className="text-blue-500" size={10} />
+                          <ArrowRight className="text-blue-500 h-2.5 w-2.5" />
                           <span className="text-blue-600 font-semibold">
                             {RARITY_LABELS[result.newRarity] ?? result.newRarity}
                           </span>
@@ -167,7 +167,7 @@ export default function ImportReportDialog({
                       {hasSigChange && (
                         <div className="flex items-center gap-1 justify-end">
                           <span className="text-gray-400">sig {result.oldSignature}</span>
-                          <FiArrowRight className="text-blue-500" size={10} />
+                          <ArrowRight className="text-blue-500 h-2.5 w-2.5" />
                           <span className="text-blue-600 font-semibold">sig {result.newSignature}</span>
                         </div>
                       )}
