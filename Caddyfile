@@ -1,13 +1,16 @@
-{
-    auto_https off
+mawster.app {
+    redir https://www.mawster.app{uri} permanent
 }
-:80 {
-    # Headers de sécurité HTTP
+
+www.mawster.app {
+    encode zstd gzip
+
+    # Headers de sécurité HTTP/HTTPS
     header {
         X-Frame-Options "DENY"
         X-Content-Type-Options "nosniff"
         Referrer-Policy "strict-origin-when-cross-origin"
-        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), accelerometer=()"
         -Server
     }
 
@@ -16,15 +19,7 @@
     }
 
     handle_path /myadmin* {
-        reverse_proxy myadmin:85
-    }
-
-    handle /api/* {
-        reverse_proxy api:8000 {
-            # Transmet l'IP réelle du client pour le rate limiting
-            header_up X-Real-IP {remote_host}
-            header_up X-Forwarded-For {remote_host}
-        }
+        reverse_proxy myadmin:80
     }
 
     handle {

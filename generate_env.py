@@ -120,6 +120,8 @@ def main() -> None:
     nextauth_url    = prompt("NEXTAUTH_URL", default=default_url)
     nextauth_secret = gen_base64(32)
     print(f"  NEXTAUTH_SECRET  [{c(DIM, '(auto-generated)')}]")
+    default_internal = "http://front:3000" if scheme == "https" else "http://localhost:3000"
+    nextauth_url_internal = prompt("NEXTAUTH_URL_INTERNAL", default=default_internal)
 
     # ── 4. API settings ────────────────────────────────────────────────────────
     section("API settings")
@@ -159,6 +161,7 @@ def main() -> None:
     write_env(ROOT / "front.env", [
         f"NEXTAUTH_SECRET={nextauth_secret}",
         f"NEXTAUTH_URL={nextauth_url}",
+        f"NEXTAUTH_URL_INTERNAL={nextauth_url_internal}",
         f"DISCORD_CLIENT_ID={discord_client_id or 'PASTE_FROM_DISCORD_DEVELOPER_PORTAL'}",
         f"DISCORD_CLIENT_SECRET={discord_client_secret or 'PASTE_FROM_DISCORD_DEVELOPER_PORTAL'}",
     ])
