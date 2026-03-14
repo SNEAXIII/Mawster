@@ -23,7 +23,7 @@ jobs:
       MODE: dev
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
@@ -69,7 +69,7 @@ jobs:
           --health-retries=5
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # ── API setup ──
       - name: Install uv
@@ -147,7 +147,7 @@ jobs:
       front: ${{ steps.filter.outputs.front }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Detect changes
         uses: dorny/paths-filter@v3
         id: filter
@@ -163,7 +163,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Run Trivy vulnerability scanner (filesystem)
         uses: aquasecurity/trivy-action@master
         with:
@@ -183,7 +183,7 @@ jobs:
       - lint-test-python
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -215,7 +215,7 @@ jobs:
       - e2e
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
