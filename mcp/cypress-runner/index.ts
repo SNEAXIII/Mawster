@@ -8,7 +8,7 @@ import { XMLParser } from 'fast-xml-parser';
 
 // ── Paths ─────────────────────────────────────────────────────────────────────
 
-const ROOT = path.resolve(import.meta.dirname, '..');
+const ROOT = path.resolve(import.meta.dirname, '../..');
 const FRONT_DIR = path.join(ROOT, 'front');
 const RESULTS_DIR = path.join(FRONT_DIR, 'cypress', 'results');
 const REPORTS_DIR = path.join(RESULTS_DIR, 'reports');
@@ -140,10 +140,12 @@ const server = new McpServer({
   version: '1.0.0',
 });
 
-server.tool(
+server.registerTool(
   'run_all_tests',
-  "Supprime les résultats précédents, lance tous les tests Cypress, et retourne le résumé ainsi que les détails de chaque test échoué (suite, nom du test, message d'erreur).",
-  {},
+  {
+    description:
+      "Supprime les résultats précédents, lance tous les tests Cypress, et retourne le résumé ainsi que les détails de chaque test échoué (suite, nom du test, message d'erreur).",
+  },
   async () => {
     const results = runCypress();
     return {
@@ -152,15 +154,18 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   'run_failing_tests',
-  'Supprime les résultats précédents, relance uniquement les specs Cypress spécifiées, et retourne les résultats. À utiliser après avoir corrigé des tests échoués.',
   {
-    spec_files: z
-      .array(z.string())
-      .describe(
-        'Liste des chemins de specs à relancer, relatifs au dossier front/. Ex: ["cypress/e2e/defense/operations.cy.ts"]'
-      ),
+    description:
+      'Supprime les résultats précédents, relance uniquement les specs Cypress spécifiées, et retourne les résultats. À utiliser après avoir corrigé des tests échoués.',
+    inputSchema: {
+      spec_files: z
+        .array(z.string())
+        .describe(
+          'Liste des chemins de specs à relancer, relatifs au dossier front/. Ex: ["cypress/e2e/defense/operations.cy.ts"]'
+        ),
+    },
   },
   async ({ spec_files }) => {
     const results = runCypress(spec_files);

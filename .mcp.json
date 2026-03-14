@@ -3,7 +3,12 @@
     "cypress-runner": {
       "type": "stdio",
       "command": "cmd",
-      "args": ["/c", "npx", "tsx", "mcp/index.ts"]
+      "args": ["/c", "npx", "tsx", "mcp/cypress-runner/index.ts"]
+    },
+    "pytest-runner": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "tsx", "mcp/pytest-runner/index.ts"]
     },
     "context-mode": {
       "command": "node",

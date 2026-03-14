@@ -1,4 +1,5 @@
 **/.vscode/*
+.claude/settings.local.json
 test*.db*
 *db*/**
 .idea
@@ -10,6 +11,7 @@ front/.env.local
 *.pid
 # Application logs (RGPD — never commit)
 api/logs/
+api/test-results/
 
 
 # Byte-compiled / optimized / DLL files
