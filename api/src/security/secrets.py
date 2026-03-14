@@ -4,7 +4,9 @@ import os
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-api_file = "api.env"
+# En prod, charger depuis l'env du compose (pas depuis un fichier)
+# En dev, essayer api.env s'il existe, sinon utiliser les valeurs par défaut
+_api_env_path = "api.env" if (not os.getenv("MODE") == "prod" and os.path.exists("api.env")) else None
 
 IS_PROD = os.getenv("MODE") == "prod"
 IS_TESTING = os.getenv("MODE") == "testing"
@@ -35,7 +37,7 @@ class Settings(BaseSettings):
     # En dev, défaut permissif ; en prod, DOIT être défini dans api.env
     ALLOWED_ORIGINS: str = Field(... if IS_PROD else "http://localhost:3000")
     API_PORT: int = Field(... if IS_PROD else 8000)
-    model_config = SettingsConfigDict(env_file=api_file)
+    model_config = SettingsConfigDict(env_file=_api_env_path) if _api_env_path else SettingsConfigDict()
 
 
 SECRET = Settings()

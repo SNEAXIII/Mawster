@@ -12,8 +12,7 @@ function isPathMatching(path: string, paths: string[]): boolean {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-  const isTokenExpired = token?.expired || !token?.backendAuthenticated;
-
+  const isTokenExpired = !!token && (token?.expired || !token?.backendAuthenticated);
   // 1. Redirect authenticated users away from login/register pages
   if (token && !isTokenExpired && (pathname === '/login' || pathname === '/register')) {
     return NextResponse.redirect(new URL('/', request.url));

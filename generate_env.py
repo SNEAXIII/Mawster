@@ -98,8 +98,8 @@ def main() -> None:
 
     db_name     = prompt("Database name",     default="mawster")
     db_user     = prompt("DB username",       default="mawster")
-    db_password = prompt("DB password",       default=gen_hex(16), secret=True)
-    db_root_pw  = prompt("DB root password",  default=gen_hex(16), secret=True)
+    db_password = prompt("DB password",       default=gen_hex(64), secret=True)
+    db_root_pw  = prompt("DB root password",  default=gen_hex(64), secret=True)
     db_port     = prompt("DB port",           default="3306")
 
     # ── 2. Discord OAuth ──────────────────────────────────────────────────────
@@ -130,6 +130,8 @@ def main() -> None:
     print(f"  SECRET_KEY            [{c(DIM, '(auto-generated)')}]")
     algo               = prompt("JWT algorithm",                  default="HS256")
     token_expire       = prompt("Access token expiry (minutes)",  default="60")
+    refresh_token_expire = prompt("Refresh token expiry (days)", default="7")
+    allowed_origins    = prompt("Allowed CORS origins (comma-separated)", default=nextauth_url)
     api_port           = prompt("API port",                       default="8000")
 
     # ── 5. Write files ─────────────────────────────────────────────────────────
@@ -154,6 +156,8 @@ def main() -> None:
         f"MARIADB_DATABASE={db_name}",
         f"ALGORITHM={algo}",
         f"ACCESS_TOKEN_EXPIRE_MINUTES={token_expire}",
+        f"REFRESH_TOKEN_EXPIRE_DAYS={refresh_token_expire}",
+        f"ALLOWED_ORIGINS={allowed_origins}",
         f"API_PORT={api_port}",
     ])
 

@@ -12,6 +12,8 @@ www.mawster.app {
         Referrer-Policy "strict-origin-when-cross-origin"
         Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), accelerometer=()"
         -Server
+        X-Forwarded-Host "www.mawster.app"
+        X-Forwarded-Proto "https"
     }
 
     handle /static/* {
@@ -23,6 +25,8 @@ www.mawster.app {
     }
 
     handle {
-        reverse_proxy front:3000
+        reverse_proxy front:3000 {
+            header_up X-Forwarded-Proto {http.request.proto}
+        }
     }
 }
