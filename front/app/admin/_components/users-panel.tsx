@@ -43,7 +43,7 @@ export default function UsersPanel({ currentUserRole }: Readonly<UsersPanelProps
         usersPerPage,
         selectedStatus,
         selectedRole,
-        searchQuery,
+        searchQuery
       );
       setUsers(data.users);
       setCurrentPage(Math.min(currentPage, data.total_pages));
@@ -51,7 +51,7 @@ export default function UsersPanel({ currentUserRole }: Readonly<UsersPanelProps
     } catch (error) {
       const err = error as Error & { status?: number };
       setFetchUsersError(
-        err.status === 401 ? t.dashboard.errors.unauthorized : t.dashboard.errors.loadError,
+        err.status === 401 ? t.dashboard.errors.unauthorized : t.dashboard.errors.loadError
       );
     } finally {
       setIsLoading(false);
@@ -61,15 +61,19 @@ export default function UsersPanel({ currentUserRole }: Readonly<UsersPanelProps
           selectedStatus === BASE_SELECTED_STATUS &&
           selectedRole === BASE_SELECTED_ROLE &&
           searchQuery === ''
-        ),
+        )
       );
     }
   };
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => { loadUsers(); }, 300);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    debounceRef.current = setTimeout(() => {
+      loadUsers();
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [currentPage, usersPerPage, selectedStatus, selectedRole, searchQuery]);
 
   function resetPagination() {
@@ -80,23 +84,31 @@ export default function UsersPanel({ currentUserRole }: Readonly<UsersPanelProps
     setCurrentPage(BASE_CURRENT_PAGE);
   }
 
-  function goToPage1() { setCurrentPage(1); }
+  function goToPage1() {
+    setCurrentPage(1);
+  }
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+      <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center'>
         <SearchInput
           placeholder={t.dashboard.searchPlaceholder}
           value={searchQuery}
-          onChange={(val) => { setSearchQuery(val); goToPage1(); }}
-          className="w-full sm:w-72"
+          onChange={(val) => {
+            setSearchQuery(val);
+            goToPage1();
+          }}
+          className='w-full sm:w-72'
         />
         <PaginationControls
           currentPage={currentPage}
           totalPage={totalPage}
           usersPerPage={usersPerPage}
           canReset={canReset}
-          onUserPerPageChange={(val) => { setUsersPerPage(Number(val)); goToPage1(); }}
+          onUserPerPageChange={(val) => {
+            setUsersPerPage(Number(val));
+            goToPage1();
+          }}
           onFirstPage={() => setCurrentPage(1)}
           onPreviousPage={() => setCurrentPage((p) => Math.max(1, p - 1))}
           onNextPage={() => setCurrentPage((p) => p + 1)}
@@ -112,8 +124,14 @@ export default function UsersPanel({ currentUserRole }: Readonly<UsersPanelProps
           role={selectedRole}
           status={selectedStatus}
           fetchUsersError={fetchUsersError}
-          onRoleChange={(val) => { setSelectedRole(val); goToPage1(); }}
-          onStatusChange={(val) => { setSelectedStatus(val); goToPage1(); }}
+          onRoleChange={(val) => {
+            setSelectedRole(val);
+            goToPage1();
+          }}
+          onStatusChange={(val) => {
+            setSelectedStatus(val);
+            goToPage1();
+          }}
           loadUsers={loadUsers}
           currentUserRole={currentUserRole}
         />

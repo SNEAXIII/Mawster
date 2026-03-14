@@ -9,7 +9,7 @@ type FullPageSpinnerProps = Readonly<{
 export function FullPageSpinner({ className }: FullPageSpinnerProps) {
   return (
     <div className={`flex justify-center items-center h-full ${className ?? ''}`}>
-      <Loader className="w-6 h-6 animate-spin text-gray-400" />
+      <Loader className='w-6 h-6 animate-spin text-gray-400' />
     </div>
   );
 }

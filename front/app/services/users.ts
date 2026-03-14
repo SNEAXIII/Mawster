@@ -59,7 +59,7 @@ export const getUsers = async (
   size: number = 10,
   status: string | null = null,
   role: string | null = null,
-  search: string | null = null,
+  search: string | null = null
 ): Promise<FetchUsersResponse> => {
   const qs = new URLSearchParams({ page: String(page), size: String(size) });
   if (status && status !== possibleStatus[0].value) qs.set('status', status);

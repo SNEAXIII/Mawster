@@ -76,7 +76,7 @@ function RosterContent() {
   // Tabs — read from URL or default
   const initialTab = (searchParams.get('tab') as RosterTab) || RosterTab.Roster;
   const [activeTab, setActiveTab] = useState<RosterTab>(
-    Object.values(RosterTab).includes(initialTab) ? initialTab : RosterTab.Roster,
+    Object.values(RosterTab).includes(initialTab) ? initialTab : RosterTab.Roster
   );
 
   // Sync tab to URL
@@ -205,17 +205,20 @@ function RosterContent() {
     }
   }, [upgradeTarget, selectedAccountId]);
 
-  const handleTogglePreferredAttacker = useCallback(async (entry: RosterEntry) => {
-    try {
-      await togglePreferredAttacker(entry.id);
-      if (selectedAccountId) {
-        const updated = await getRoster(selectedAccountId);
-        setRoster(updated);
+  const handleTogglePreferredAttacker = useCallback(
+    async (entry: RosterEntry) => {
+      try {
+        await togglePreferredAttacker(entry.id);
+        if (selectedAccountId) {
+          const updated = await getRoster(selectedAccountId);
+          setRoster(updated);
+        }
+      } catch (e: any) {
+        toast.error(e.message || t.roster.preferredAttackerToggle);
       }
-    } catch (e: any) {
-      toast.error(e.message || t.roster.preferredAttackerToggle);
-    }
-  }, [selectedAccountId]);
+    },
+    [selectedAccountId]
+  );
 
   const confirmAscend = useCallback(async () => {
     if (!ascendTarget || !selectedAccountId) return;
@@ -250,14 +253,20 @@ function RosterContent() {
   }
 
   const tabs: TabItem<RosterTab>[] = [
-    ...(accounts.length > 0 ? [{ value: RosterTab.Roster, label: t.roster.title, cy: 'tab-roster' }] : []),
+    ...(accounts.length > 0
+      ? [{ value: RosterTab.Roster, label: t.roster.title, cy: 'tab-roster' }]
+      : []),
     { value: RosterTab.Accounts, label: t.nav.gameAccounts, cy: 'tab-accounts' },
   ];
 
   return (
     <AllianceRoleProvider>
       <div className='px-3 py-4 sm:p-6 max-w-6xl mx-auto'>
-        <TabBar tabs={tabs} value={activeTab} onChange={setActiveTab} />
+        <TabBar
+          tabs={tabs}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
 
         {/* Roster tab */}
         {activeTab === RosterTab.Roster && (
@@ -269,18 +278,27 @@ function RosterContent() {
                 <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2'>
                   {accounts.length > 1 && (
                     <div className='mb-6'>
-                      <label className='block text-sm font-medium mb-2'>{t.roster.selectAccount}</label>
+                      <label className='block text-sm font-medium mb-2'>
+                        {t.roster.selectAccount}
+                      </label>
                       <Select
                         value={selectedAccountId || ''}
                         onValueChange={(val) => setSelectedAccountId(val || null)}
                       >
-                        <SelectTrigger className='w-full max-w-xs' data-cy='roster-account-select'>
+                        <SelectTrigger
+                          className='w-full max-w-xs'
+                          data-cy='roster-account-select'
+                        >
                           <SelectValue placeholder={t.roster.chooseAccount} />
                         </SelectTrigger>
                         <SelectContent>
                           {accounts.map((acc) => (
-                            <SelectItem key={acc.id} value={acc.id}>
-                              {acc.game_pseudo} {acc.is_primary ? `(${t.game.accounts.primary})` : ''}
+                            <SelectItem
+                              key={acc.id}
+                              value={acc.id}
+                            >
+                              {acc.game_pseudo}{' '}
+                              {acc.is_primary ? `(${t.game.accounts.primary})` : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -323,7 +341,9 @@ function RosterContent() {
 
                     <RosterUpgradeSection
                       selectedAccountId={selectedAccountId}
-                      allianceId={accounts.find((a) => a.id === selectedAccountId)?.alliance_id ?? null}
+                      allianceId={
+                        accounts.find((a) => a.id === selectedAccountId)?.alliance_id ?? null
+                      }
                       refreshKey={upgradeRefreshKey}
                     />
 
@@ -347,7 +367,9 @@ function RosterContent() {
         )}
 
         {/* Accounts tab */}
-        {activeTab === RosterTab.Accounts && <GameAccountsSection onAccountsChange={fetchAccounts} />}
+        {activeTab === RosterTab.Accounts && (
+          <GameAccountsSection onAccountsChange={fetchAccounts} />
+        )}
 
         {/* Delete confirmation dialog */}
         <ConfirmationDialog

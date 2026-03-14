@@ -8,11 +8,11 @@
 ## Résumé
 
 | Sévérité | Nombre | Corrigé |
-|----------|--------|---------|
-| Critique | 2 | ❌ |
-| Haute | 5 | ❌ |
-| Moyenne | 6 | ❌ |
-| Basse | 5 | ❌ |
+| -------- | ------ | ------- |
+| Critique | 2      | ❌      |
+| Haute    | 5      | ❌      |
+| Moyenne  | 6      | ❌      |
+| Basse    | 5      | ❌      |
 
 ---
 
@@ -27,6 +27,7 @@ Les fichiers `.example` contiennent des vraies valeurs de secrets (`SECRET_KEY`,
 **Risque** : Si ces valeurs sont réutilisées en production, les JWT sont forge­ables et les sessions sont compromises.
 
 **Remédiation** :
+
 - Remplacer les valeurs par des placeholders (`CHANGE_ME`, `<generate with openssl rand -hex 64>`)
 - Rotation immédiate de tous les secrets déployés
 - Vérifier l'historique Git (`git log -p -- "*.example"`)
@@ -51,6 +52,7 @@ La combinaison `*` + credentials autorise n'importe quel site tiers à effectuer
 **Risque** : Un site malveillant peut exécuter des actions au nom d'un utilisateur connecté (CSRF cross-origin).
 
 **Remédiation** :
+
 ```python
 origins = [
     "https://votre-domaine.com",
@@ -71,6 +73,7 @@ Aucune limitation de débit n'est en place, ni côté API (pas de `slowapi` / mi
 **Risque** : Brute-force sur `/auth/discord`, spam de requêtes, déni de service applicatif.
 
 **Remédiation** :
+
 - Installer `slowapi` sur FastAPI avec des limites par IP
 - Ou ajouter un `rate_limit` dans le Caddyfile pour les endpoints sensibles
 
@@ -85,6 +88,7 @@ phpMyAdmin est accessible publiquement via `/phpmyadmin/` avec uniquement les cr
 **Risque** : Accès direct à la base de données par quiconque atteint le serveur.
 
 **Remédiation** :
+
 - Retirer phpMyAdmin du compose de production (déjà fait dans `compose.prod.yaml`)
 - Si nécessaire en dev, protéger par HTTP Basic Auth dans Caddy
 
@@ -99,6 +103,7 @@ Les credentials par défaut sont `user` / `password` / `rootpassword`. En mode d
 **Risque** : Si déployé sans `MODE=prod`, la DB est accessible avec des credentials triviaux.
 
 **Remédiation** :
+
 - Générer des mots de passe forts pour la production
 - Documenter clairement la nécessité de `MODE=prod`
 
@@ -117,6 +122,7 @@ Tout le trafic (JWT, cookies de session, credentials phpMyAdmin) circule en clai
 **Risque** : Interception des tokens d'authentification, man-in-the-middle.
 
 **Remédiation** :
+
 - Retirer `auto_https off` en production — Caddy provisionne automatiquement des certificats Let's Encrypt
 - Le `Caddyfile.prod` fourni corrige ce point
 
@@ -135,6 +141,7 @@ En mode non-prod, la clé est une chaîne connue. Si `MODE` n'est pas défini, l
 **Risque** : Authentification contournable sur tout déploiement non-explicitement marqué `MODE=prod`.
 
 **Remédiation** :
+
 - Toujours exiger `SECRET_KEY` via variable d'environnement
 - Vérifier `MODE=prod` dans le script de démarrage (`run.sh`)
 
@@ -147,6 +154,7 @@ En mode non-prod, la clé est une chaîne connue. Si `MODE` n'est pas défini, l
 **Fichiers** : `Caddyfile`, `api/main.py`, `front/next.config.ts`
 
 Aucun des composants ne définit :
+
 - `Content-Security-Policy`
 - `X-Frame-Options`
 - `X-Content-Type-Options`
@@ -158,6 +166,7 @@ Aucun des composants ne définit :
 
 **Remédiation** :
 Ajouter dans le Caddyfile :
+
 ```
 header {
     X-Frame-Options "DENY"
@@ -186,6 +195,7 @@ Le JWT complet est loggé au niveau WARNING quand `IS_PROD` est faux. Si les log
 L'application utilise des JWT stateless sans mécanisme de blacklist. Un utilisateur désactivé ou supprimé conserve un JWT valide jusqu'à expiration (60 minutes max).
 
 **Remédiation** :
+
 - Implémenter un cache Redis pour les tokens révoqués
 - Ou réduire la durée de vie des tokens (15 min) avec un refresh token
 
@@ -213,6 +223,7 @@ volumes:
 Le montage du socket Docker donne un accès root à l'hôte depuis le conteneur Watchtower.
 
 **Remédiation** :
+
 - Acceptable si Watchtower est nécessaire, mais documenter le risque
 - Alternative : utiliser un socket proxy en lecture seule
 
@@ -285,26 +296,26 @@ Les credentials MariaDB ne sont soumis à aucune politique de complexité ou rot
 
 ## Points Positifs
 
-| # | Constat |
-|---|---------|
-| ✅ | Pas d'injection SQL — utilisation systématique de SQLModel/SQLAlchemy avec requêtes paramétrées |
-| ✅ | Pas d'authentification par mot de passe — OAuth Discord exclusivement, élimine le credential stuffing |
-| ✅ | JWT non exposé au navigateur — proxy via `/api/back/`, protège contre le vol de token par XSS |
-| ✅ | Flow de refresh token correct — le rafraîchissement du token Discord ré-authentifie proprement |
-| ✅ | Validation admin côté backend — `is_logged_as_admin` vérifie le rôle en base, pas seulement côté client |
-| ✅ | Conteneurs non-root — API et Front tournent avec des utilisateurs dédiés (`fastapi`, `nextjs`) |
+| #   | Constat                                                                                                 |
+| --- | ------------------------------------------------------------------------------------------------------- |
+| ✅  | Pas d'injection SQL — utilisation systématique de SQLModel/SQLAlchemy avec requêtes paramétrées         |
+| ✅  | Pas d'authentification par mot de passe — OAuth Discord exclusivement, élimine le credential stuffing   |
+| ✅  | JWT non exposé au navigateur — proxy via `/api/back/`, protège contre le vol de token par XSS           |
+| ✅  | Flow de refresh token correct — le rafraîchissement du token Discord ré-authentifie proprement          |
+| ✅  | Validation admin côté backend — `is_logged_as_admin` vérifie le rôle en base, pas seulement côté client |
+| ✅  | Conteneurs non-root — API et Front tournent avec des utilisateurs dédiés (`fastapi`, `nextjs`)          |
 
 ---
 
 ## Plan de Remédiation Prioritaire
 
-| Priorité | Action | Effort |
-|----------|--------|--------|
-| 1 | Restreindre les CORS à l'origine réelle | 5 min |
-| 2 | Rotation de tous les secrets (JWT, NEXTAUTH, Discord, DB) | 30 min |
-| 3 | Nettoyer les fichiers `.example` des vraies valeurs | 5 min |
-| 4 | Activer HTTPS (retirer `auto_https off`) | 5 min |
-| 5 | Retirer phpMyAdmin du compose prod | ✅ Fait |
-| 6 | Ajouter rate limiting (`slowapi`) | 2h |
-| 7 | Ajouter les headers de sécurité dans Caddy | 15 min |
-| 8 | Conditionner les logs debug par `IS_PROD` | 10 min |
+| Priorité | Action                                                    | Effort  |
+| -------- | --------------------------------------------------------- | ------- |
+| 1        | Restreindre les CORS à l'origine réelle                   | 5 min   |
+| 2        | Rotation de tous les secrets (JWT, NEXTAUTH, Discord, DB) | 30 min  |
+| 3        | Nettoyer les fichiers `.example` des vraies valeurs       | 5 min   |
+| 4        | Activer HTTPS (retirer `auto_https off`)                  | 5 min   |
+| 5        | Retirer phpMyAdmin du compose prod                        | ✅ Fait |
+| 6        | Ajouter rate limiting (`slowapi`)                         | 2h      |
+| 7        | Ajouter les headers de sécurité dans Caddy                | 15 min  |
+| 8        | Conditionner les logs debug par `IS_PROD`                 | 10 min  |

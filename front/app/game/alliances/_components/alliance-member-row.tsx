@@ -10,18 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
-  UserMinus,
-  ShieldCheck,
-  ShieldMinus,
-  Eye,
-} from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { UserMinus, ShieldCheck, ShieldMinus, Eye } from 'lucide-react';
 import { type Alliance } from '@/app/services/game';
 import { useAllianceRole } from '@/hooks/use-alliance-role';
 import UsernameEnriched, { getMemberRole } from '@/components/username-enriched';
@@ -41,7 +31,12 @@ interface AllianceMemberRowProps {
   onPromoteOfficer: (target: { allianceId: string; gameAccountId: string; pseudo: string }) => void;
   onLeave: (target: { allianceId: string; gameAccountId: string; pseudo: string }) => void;
   onExclude: (target: { allianceId: string; gameAccountId: string; pseudo: string }) => void;
-  onSetGroup: (allianceId: string, gameAccountId: string, group: number | null, pseudo: string) => void;
+  onSetGroup: (
+    allianceId: string,
+    gameAccountId: string,
+    group: number | null,
+    pseudo: string
+  ) => void;
   onViewRoster: (gameAccountId: string, pseudo: string) => void;
 }
 
@@ -64,8 +59,11 @@ export default function AllianceMemberRow({
   const allianceId = alliance.id;
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-2 sm:py-1 px-2 rounded hover:bg-accent/50 gap-1 sm:gap-0" data-cy={`member-row-${member.game_pseudo}`}>
-      <div className="flex items-center gap-2 min-w-0">
+    <div
+      className='flex flex-col sm:flex-row sm:items-center sm:justify-between py-2 sm:py-1 px-2 rounded hover:bg-accent/50 gap-1 sm:gap-0'
+      data-cy={`member-row-${member.game_pseudo}`}
+    >
+      <div className='flex items-center gap-2 min-w-0'>
         <UsernameEnriched
           pseudo={member.game_pseudo}
           role={getMemberRole(member.is_owner, member.is_officer)}
@@ -74,19 +72,19 @@ export default function AllianceMemberRow({
         />
       </div>
 
-      <div className="flex items-center gap-1 flex-wrap sm:flex-nowrap">
+      <div className='flex items-center gap-1 flex-wrap sm:flex-nowrap'>
         {/* View Roster */}
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-accent"
+                variant='ghost'
+                size='icon'
+                className='h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-accent'
                 data-cy={`view-roster-${member.game_pseudo}`}
                 onClick={() => onViewRoster(member.id, member.game_pseudo)}
               >
-                <Eye className="h-3.5 w-3.5" />
+                <Eye className='h-3.5 w-3.5' />
               </Button>
             </TooltipTrigger>
             <TooltipContent>{t.game.alliances.viewRoster}</TooltipContent>
@@ -94,19 +92,20 @@ export default function AllianceMemberRow({
         </TooltipProvider>
 
         {/* Promote / Demote — owner only, not on self/owner */}
-        {userIsOwner && !member.is_owner && (
-          member.is_officer ? (
+        {userIsOwner &&
+          !member.is_owner &&
+          (member.is_officer ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-orange-400 hover:text-orange-600 hover:bg-orange-50"
+                    variant='ghost'
+                    size='icon'
+                    className='h-7 w-7 text-orange-400 hover:text-orange-600 hover:bg-orange-50'
                     data-cy={`demote-officer-${member.game_pseudo}`}
                     onClick={() => onDemoteOfficer(allianceId, member.id)}
                   >
-                    <ShieldMinus className="h-3.5 w-3.5" />
+                    <ShieldMinus className='h-3.5 w-3.5' />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>{t.game.alliances.demoteOfficer}</TooltipContent>
@@ -117,9 +116,9 @@ export default function AllianceMemberRow({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-blue-400 hover:text-blue-600 hover:bg-blue-50"
+                    variant='ghost'
+                    size='icon'
+                    className='h-7 w-7 text-blue-400 hover:text-blue-600 hover:bg-blue-50'
                     data-cy={`promote-officer-${member.game_pseudo}`}
                     onClick={() =>
                       onPromoteOfficer({
@@ -129,25 +128,24 @@ export default function AllianceMemberRow({
                       })
                     }
                   >
-                    <ShieldCheck className="h-3.5 w-3.5" />
+                    <ShieldCheck className='h-3.5 w-3.5' />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>{t.game.alliances.promoteOfficer}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          )
-        )}
+          ))}
 
         {/* Leave (own account) or Exclude (officer/owner action on others) */}
-        {!member.is_owner && (
-          memberIsMine ? (
+        {!member.is_owner &&
+          (memberIsMine ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-accent"
+                    variant='ghost'
+                    size='icon'
+                    className='h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-accent'
                     data-cy={`leave-alliance-${member.game_pseudo}`}
                     onClick={() =>
                       onLeave({
@@ -157,7 +155,7 @@ export default function AllianceMemberRow({
                       })
                     }
                   >
-                    <UserMinus className="h-3.5 w-3.5" />
+                    <UserMinus className='h-3.5 w-3.5' />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>{t.game.alliances.leaveAlliance}</TooltipContent>
@@ -168,9 +166,9 @@ export default function AllianceMemberRow({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50"
+                    variant='ghost'
+                    size='icon'
+                    className='h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50'
                     data-cy={`exclude-member-${member.game_pseudo}`}
                     onClick={() =>
                       onExclude({
@@ -180,14 +178,13 @@ export default function AllianceMemberRow({
                       })
                     }
                   >
-                    <UserMinus className="h-3.5 w-3.5" />
+                    <UserMinus className='h-3.5 w-3.5' />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>{t.game.alliances.excludeMember}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          ) : null
-        )}
+          ) : null)}
 
         {/* Group selector — only for officers/owners */}
         {userCanManage && (
@@ -198,18 +195,21 @@ export default function AllianceMemberRow({
                 allianceId,
                 member.id,
                 val === 'none' ? null : parseInt(val),
-                member.game_pseudo,
+                member.game_pseudo
               )
             }
           >
-            <SelectTrigger className="h-7 w-24 text-xs" data-cy="member-group-select">
+            <SelectTrigger
+              className='h-7 w-24 text-xs'
+              data-cy='member-group-select'
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">{t.game.alliances.noGroup}</SelectItem>
-              <SelectItem value="1">{t.game.alliances.group} 1</SelectItem>
-              <SelectItem value="2">{t.game.alliances.group} 2</SelectItem>
-              <SelectItem value="3">{t.game.alliances.group} 3</SelectItem>
+              <SelectItem value='none'>{t.game.alliances.noGroup}</SelectItem>
+              <SelectItem value='1'>{t.game.alliances.group} 1</SelectItem>
+              <SelectItem value='2'>{t.game.alliances.group} 2</SelectItem>
+              <SelectItem value='3'>{t.game.alliances.group} 3</SelectItem>
             </SelectContent>
           </Select>
         )}

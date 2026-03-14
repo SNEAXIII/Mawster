@@ -55,16 +55,14 @@ export default function ChampionsPanel() {
         Math.max(currentPage, 1),
         perPage,
         selectedClass,
-        searchQuery || null,
+        searchQuery || null
       );
       setChampions(data.champions);
       setCurrentPage(Math.min(currentPage, data.total_pages || 1));
       setTotalPage(data.total_pages);
     } catch (err) {
       setError(
-        (err as any).status === 401
-          ? t.dashboard.errors.unauthorized
-          : t.champions.errors.loadError,
+        (err as any).status === 401 ? t.dashboard.errors.unauthorized : t.champions.errors.loadError
       );
     } finally {
       setIsLoading(false);
@@ -74,8 +72,12 @@ export default function ChampionsPanel() {
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => { loadChampionsList(); }, 300);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    debounceRef.current = setTimeout(() => {
+      loadChampionsList();
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [currentPage, perPage, selectedClass, searchQuery]);
 
   function resetPagination() {
@@ -113,7 +115,7 @@ export default function ChampionsPanel() {
     try {
       const result = await toggleChampionAscendable(champion.id);
       setChampions((prev) =>
-        prev.map((c) => (c.id === champion.id ? { ...c, is_ascendable: result.is_ascendable } : c)),
+        prev.map((c) => (c.id === champion.id ? { ...c, is_ascendable: result.is_ascendable } : c))
       );
     } catch {
       // ignore
@@ -156,7 +158,7 @@ export default function ChampionsPanel() {
           image_url: c.image_url ?? null,
           alias: c.alias ?? null,
           is_ascendable: c.is_ascendable ?? false,
-        })),
+        }))
       );
       await loadChampionsList();
     } catch {
@@ -168,14 +170,17 @@ export default function ChampionsPanel() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col lg:flex-row gap-3">
+    <div className='space-y-4'>
+      <div className='flex flex-col lg:flex-row gap-3'>
         <PaginationControls
           currentPage={currentPage}
           totalPage={totalPage}
           usersPerPage={perPage}
           canReset={canReset}
-          onUserPerPageChange={(val) => { setPerPage(Number(val)); setCurrentPage(1); }}
+          onUserPerPageChange={(val) => {
+            setPerPage(Number(val));
+            setCurrentPage(1);
+          }}
           onFirstPage={() => setCurrentPage(1)}
           onPreviousPage={() => setCurrentPage((p) => Math.max(1, p - 1))}
           onNextPage={() => setCurrentPage((p) => p + 1)}
@@ -184,49 +189,74 @@ export default function ChampionsPanel() {
         />
       </div>
 
-      <div className="flex gap-2">
-        <Button variant="outline" onClick={handleExport}>
-          <Download className="mr-1 h-4 w-4" /> {t.champions.exportJson}
+      <div className='flex gap-2'>
+        <Button
+          variant='outline'
+          onClick={handleExport}
+        >
+          <Download className='mr-1 h-4 w-4' /> {t.champions.exportJson}
         </Button>
-        <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing}>
-          <Upload className="mr-1 h-4 w-4" /> {importing ? t.common.loading : t.champions.importJson}
+        <Button
+          variant='outline'
+          onClick={() => fileInputRef.current?.click()}
+          disabled={importing}
+        >
+          <Upload className='mr-1 h-4 w-4' />{' '}
+          {importing ? t.common.loading : t.champions.importJson}
         </Button>
-        <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
+        <input
+          ref={fileInputRef}
+          type='file'
+          accept='.json'
+          className='hidden'
+          onChange={handleImport}
+        />
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+      <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center'>
         <DropdownRadioMenu
           labelButton={t.champions.classFilter}
           labelDescription={t.champions.selectClass}
           possibleValues={championClasses.map((c) => ({ value: c.value, label: c.label }))}
           selectedValue={selectedClass}
-          setValue={(val) => { setSelectedClass(val); setCurrentPage(1); }}
+          setValue={(val) => {
+            setSelectedClass(val);
+            setCurrentPage(1);
+          }}
         />
         <SearchInput
           placeholder={t.champions.searchPlaceholder}
           value={searchQuery}
-          onChange={(val) => { setSearchQuery(val); setCurrentPage(1); }}
-          className="w-64"
+          onChange={(val) => {
+            setSearchQuery(val);
+            setCurrentPage(1);
+          }}
+          className='w-64'
         />
       </div>
 
-      {error && <ErrorBanner message={error} variant="inline" />}
+      {error && (
+        <ErrorBanner
+          message={error}
+          variant='inline'
+        />
+      )}
 
       {isLoading ? (
-        <div className="text-center py-8">{t.common.loading}</div>
+        <div className='text-center py-8'>{t.common.loading}</div>
       ) : champions.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">{t.champions.empty}</div>
+        <div className='text-center py-8 text-muted-foreground'>{t.champions.empty}</div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
+        <div className='overflow-x-auto'>
+          <table className='w-full text-sm border-collapse'>
             <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="text-left p-3 w-16">{t.champions.tableHeaders.image}</th>
-                <th className="text-left p-3">{t.champions.tableHeaders.name}</th>
-                <th className="text-left p-3">{t.champions.tableHeaders.class}</th>
-                <th className="text-left p-3">{t.champions.tableHeaders.alias}</th>
-                <th className="text-left p-3">{t.champions.tableHeaders.isAscendable}</th>
-                <th className="text-left p-3 w-24">{t.champions.tableHeaders.actions}</th>
+              <tr className='border-b bg-muted/50'>
+                <th className='text-left p-3 w-16'>{t.champions.tableHeaders.image}</th>
+                <th className='text-left p-3'>{t.champions.tableHeaders.name}</th>
+                <th className='text-left p-3'>{t.champions.tableHeaders.class}</th>
+                <th className='text-left p-3'>{t.champions.tableHeaders.alias}</th>
+                <th className='text-left p-3'>{t.champions.tableHeaders.isAscendable}</th>
+                <th className='text-left p-3 w-24'>{t.champions.tableHeaders.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -237,8 +267,14 @@ export default function ChampionsPanel() {
                   isEditing={editingId === champion.id}
                   editingAlias={editingAlias}
                   savingAlias={savingAlias}
-                  onStartEdit={(c) => { setEditingId(c.id); setEditingAlias(c.alias || ''); }}
-                  onCancelEdit={() => { setEditingId(null); setEditingAlias(''); }}
+                  onStartEdit={(c) => {
+                    setEditingId(c.id);
+                    setEditingAlias(c.alias || '');
+                  }}
+                  onCancelEdit={() => {
+                    setEditingId(null);
+                    setEditingAlias('');
+                  }}
                   onSaveAlias={saveAlias}
                   onAliasChange={setEditingAlias}
                   onDelete={setDeleteTarget}
@@ -252,13 +288,15 @@ export default function ChampionsPanel() {
 
       <ConfirmationDialog
         open={!!deleteTarget}
-        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
         title={t.champions.deleteConfirmTitle}
         description={t.champions.deleteConfirmDesc.replace('{name}', deleteTarget?.name || '')}
         confirmText={t.common.delete}
         cancelText={t.common.cancel}
         onConfirm={confirmDelete}
-        variant="destructive"
+        variant='destructive'
       />
     </div>
   );

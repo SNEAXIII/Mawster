@@ -26,22 +26,25 @@ export default function ChampionPortrait({
   const imgSize = 60; // pre-resized thumbnails
 
   return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
+    <div
+      className='relative shrink-0'
+      style={{ width: size, height: size }}
+    >
       {/* Star frame – behind */}
       <img
         src={frameUrl}
-        alt=""
-        className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+        alt=''
+        className='absolute inset-0 w-full h-full object-contain pointer-events-none'
       />
       {/* Champion image – on top, shifted slightly up */}
       {imageUrl ? (
         <img
           src={getChampionImageUrl(imageUrl, imgSize) ?? ''}
           alt={name}
-          className="absolute inset-[6px] pb-[3px] w-[calc(100%-12px)] h-[calc(100%-12px)] object-cover z-10"
+          className='absolute inset-[6px] pb-[3px] w-[calc(100%-12px)] h-[calc(100%-12px)] object-cover z-10'
         />
       ) : (
-        <div className="absolute inset-[6px] pb-[3px] w-[calc(100%-12px)] h-[calc(100%-12px)] bg-gray-700 flex items-center justify-center text-gray-400 text-xs z-10">
+        <div className='absolute inset-[6px] pb-[3px] w-[calc(100%-12px)] h-[calc(100%-12px)] bg-gray-700 flex items-center justify-center text-gray-400 text-xs z-10'>
           ?
         </div>
       )}

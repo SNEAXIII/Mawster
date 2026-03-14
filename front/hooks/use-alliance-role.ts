@@ -1,11 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import {
-  type Alliance,
-  type AllianceRoleEntry,
-  getMyAllianceRoles,
-} from '@/app/services/game';
+import { type Alliance, type AllianceRoleEntry, getMyAllianceRoles } from '@/app/services/game';
 
 export interface AllianceRoleAPI {
   /** Current user's game account IDs */

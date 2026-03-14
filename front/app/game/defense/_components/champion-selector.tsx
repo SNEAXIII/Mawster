@@ -15,11 +15,7 @@ interface ChampionSelectorProps {
   onClose: () => void;
   nodeNumber: number;
   availableChampions: AvailableChampion[];
-  onSelect: (
-    championUserId: string,
-    gameAccountId: string,
-    championName: string,
-  ) => void;
+  onSelect: (championUserId: string, gameAccountId: string, championName: string) => void;
 }
 
 export default function ChampionSelector({
@@ -37,9 +33,7 @@ export default function ChampionSelector({
     if (!search.trim()) return availableChampions;
     const q = search.toLowerCase();
     return availableChampions.filter(
-      (c) =>
-        c.champion_name.toLowerCase().includes(q) ||
-        c.champion_class.toLowerCase().includes(q),
+      (c) => c.champion_name.toLowerCase().includes(q) || c.champion_class.toLowerCase().includes(q)
     );
   }, [search, availableChampions]);
 
@@ -77,8 +71,11 @@ export default function ChampionSelector({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+    <Dialog
+      open={open}
+      onOpenChange={(v) => !v && handleClose()}
+    >
+      <DialogContent className='max-w-2xl max-h-[80vh] overflow-hidden flex flex-col'>
         <DialogHeader>
           <DialogTitle>
             {selectedChampion
@@ -93,19 +90,17 @@ export default function ChampionSelector({
               placeholder={t.roster.searchChampion}
               value={search}
               onChange={setSearch}
-              className="mb-3"
+              className='mb-3'
             />
-            <div className="overflow-y-auto flex-1 pr-1">
+            <div className='overflow-y-auto flex-1 pr-1'>
               {!ready ? (
-                <p className="text-muted-foreground text-sm text-center py-8">
-                  {t.common.loading}
-                </p>
+                <p className='text-muted-foreground text-sm text-center py-8'>{t.common.loading}</p>
               ) : filtered.length === 0 ? (
-                <p className="text-muted-foreground text-sm text-center py-8">
+                <p className='text-muted-foreground text-sm text-center py-8'>
                   {t.game.defense.noChampionsAvailable}
                 </p>
               ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2'>
                   {filtered.map((champ) => {
                     const classColors = getClassColors(champ.champion_class);
                     const bestOwner = champ.owners[0]; // already sorted by stars desc
@@ -115,7 +110,7 @@ export default function ChampionSelector({
                         className={cn(
                           'flex flex-col items-center gap-1 p-2 rounded-lg border transition-all',
                           'hover:ring-2 hover:ring-white/40 cursor-pointer',
-                          'bg-card border-border',
+                          'bg-card border-border'
                         )}
                         onClick={() => handleSelectChampion(champ)}
                         title={`${champ.champion_name} — ${champ.owners.length} owner(s)`}
@@ -127,25 +122,31 @@ export default function ChampionSelector({
                           rarity={bestOwner.rarity}
                           size={48}
                         />
-                        <span className="text-[10px] text-center truncate w-full leading-tight">
-                          {champ.owners.every(o => o.is_preferred_attacker) && (
-                            <span className="text-yellow-400 font-bold">⚔ </span>
+                        <span className='text-[10px] text-center truncate w-full leading-tight'>
+                          {champ.owners.every((o) => o.is_preferred_attacker) && (
+                            <span className='text-yellow-400 font-bold'>⚔ </span>
                           )}
                           {shortenChampionName(champ.champion_name)}
                         </span>
                         <span className={cn('text-[9px] font-medium', classColors.label)}>
                           {RARITY_LABELS[bestOwner.rarity] ?? bestOwner.rarity}
                           {bestOwner.ascension > 0 && (
-                            <span className="text-purple-400 font-semibold"> · A{bestOwner.ascension}</span>
+                            <span className='text-purple-400 font-semibold'>
+                              {' '}
+                              · A{bestOwner.ascension}
+                            </span>
                           )}
                         </span>
                         {champ.owners.length === 1 ? (
-                          <span className="text-[9px] text-muted-foreground truncate w-full text-center">
+                          <span className='text-[9px] text-muted-foreground truncate w-full text-center'>
                             {bestOwner.game_pseudo} · {bestOwner.defender_count}/5
                           </span>
                         ) : (
-                          <span className="text-[9px] text-muted-foreground">
-                            {t.game.defense.ownersCount.replace('{count}', String(champ.owners.length))}
+                          <span className='text-[9px] text-muted-foreground'>
+                            {t.game.defense.ownersCount.replace(
+                              '{count}',
+                              String(champ.owners.length)
+                            )}
                           </span>
                         )}
                       </button>
@@ -157,16 +158,16 @@ export default function ChampionSelector({
           </>
         ) : (
           /* Owner picker */
-          <div className="overflow-y-auto flex-1">
+          <div className='overflow-y-auto flex-1'>
             <Button
-              variant="ghost"
-              size="sm"
-              className="mb-3"
+              variant='ghost'
+              size='sm'
+              className='mb-3'
               onClick={() => setSelectedChampion(null)}
             >
               ← {t.common.back}
             </Button>
-            <div className="space-y-2">
+            <div className='space-y-2'>
               {selectedChampion.owners.map((owner) => (
                 <button
                   key={owner.champion_user_id}
@@ -174,7 +175,7 @@ export default function ChampionSelector({
                     'w-full flex items-center gap-3 p-3 rounded-lg border transition-all',
                     'hover:ring-2 hover:ring-white/40 cursor-pointer',
                     'bg-card border-border',
-                    owner.defender_count >= 5 && 'opacity-40 pointer-events-none',
+                    owner.defender_count >= 5 && 'opacity-40 pointer-events-none'
                   )}
                   onClick={() => handleSelectOwner(owner, selectedChampion.champion_name)}
                   disabled={owner.defender_count >= 5}
@@ -186,25 +187,25 @@ export default function ChampionSelector({
                     rarity={owner.rarity}
                     size={44}
                   />
-                  <div className="flex flex-col items-start">
-                    <span className="font-medium text-sm">
-                      {owner.is_preferred_attacker && <span className="text-yellow-400">⚔ </span>}
+                  <div className='flex flex-col items-start'>
+                    <span className='font-medium text-sm'>
+                      {owner.is_preferred_attacker && <span className='text-yellow-400'>⚔ </span>}
                       {owner.game_pseudo}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className='text-xs text-muted-foreground'>
                       {RARITY_LABELS[owner.rarity] ?? owner.rarity}
                       {owner.ascension > 0 && (
-                        <span className="text-purple-400 font-semibold"> · A{owner.ascension}</span>
+                        <span className='text-purple-400 font-semibold'> · A{owner.ascension}</span>
                       )}
                       {' · '}
                       sig {owner.signature}
                     </span>
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className='text-[10px] text-muted-foreground'>
                       {t.game.defense.defendersPlaced}: {owner.defender_count}/5
                     </span>
                   </div>
                   {owner.stars === 7 && (
-                    <span className="ml-auto text-xs font-bold text-yellow-400">7★</span>
+                    <span className='ml-auto text-xs font-bold text-yellow-400'>7★</span>
                   )}
                 </button>
               ))}

@@ -36,68 +36,68 @@ export default function ChampionTableRow({
 }: ChampionTableRowProps) {
   const { t } = useI18n();
   return (
-    <tr className="border-b hover:bg-accent/50">
+    <tr className='border-b hover:bg-accent/50'>
       {/* Image */}
-      <td className="p-3">
+      <td className='p-3'>
         {champion.image_url ? (
           <img
             src={getChampionImageUrl(champion.image_url, 40) ?? ''}
             alt={champion.name}
-            className="w-10 h-10 rounded object-cover"
+            className='w-10 h-10 rounded object-cover'
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
             }}
           />
         ) : (
-          <div className="w-10 h-10 rounded bg-muted flex items-center justify-center text-xs text-muted-foreground">
+          <div className='w-10 h-10 rounded bg-muted flex items-center justify-center text-xs text-muted-foreground'>
             ?
           </div>
         )}
       </td>
 
       {/* Name */}
-      <td className="p-3 font-medium">{champion.name}</td>
+      <td className='p-3 font-medium'>{champion.name}</td>
 
       {/* Class */}
-      <td className="p-3">
+      <td className='p-3'>
         <ClassBadge championClass={champion.champion_class} />
       </td>
 
       {/* Alias */}
-      <td className="p-3">
+      <td className='p-3'>
         {isEditing ? (
-          <div className="flex items-center gap-1">
+          <div className='flex items-center gap-1'>
             <Input
               value={editingAlias}
               onChange={(e) => onAliasChange(e.target.value)}
-              placeholder="alias1;alias2;alias3"
-              className="h-8 text-sm"
+              placeholder='alias1;alias2;alias3'
+              className='h-8 text-sm'
               disabled={savingAlias}
             />
             <Button
-              variant="ghost"
-              size="sm"
+              variant='ghost'
+              size='sm'
               onClick={() => onSaveAlias(champion.id)}
               disabled={savingAlias}
             >
-              <Check className="text-green-600 h-4 w-4" />
+              <Check className='text-green-600 h-4 w-4' />
             </Button>
             <Button
-              variant="ghost"
-              size="sm"
+              variant='ghost'
+              size='sm'
               onClick={onCancelEdit}
               disabled={savingAlias}
             >
-              <X className="text-red-600 h-4 w-4" />
+              <X className='text-red-600 h-4 w-4' />
             </Button>
           </div>
         ) : (
-          <span className="text-muted-foreground text-xs">{champion.alias || '-'}</span>
+          <span className='text-muted-foreground text-xs'>{champion.alias || '-'}</span>
         )}
       </td>
 
       {/* Ascendable */}
-      <td className="p-3">
+      <td className='p-3'>
         <button
           onClick={() => onToggleAscendable(champion)}
           className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
@@ -111,17 +111,17 @@ export default function ChampionTableRow({
       </td>
 
       {/* Actions */}
-      <td className="p-3">
-        <div className="flex items-center gap-1">
+      <td className='p-3'>
+        <div className='flex items-center gap-1'>
           <ActionIconButton
-            icon={<Pencil className="w-3.5 h-3.5" />}
+            icon={<Pencil className='w-3.5 h-3.5' />}
             onClick={() => onStartEdit(champion)}
-            title="Edit alias"
+            title='Edit alias'
           />
           <ActionIconButton
             icon={<Trash2 />}
             onClick={() => onDelete(champion)}
-            variant="danger"
+            variant='danger'
           />
         </div>
       </td>

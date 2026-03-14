@@ -48,76 +48,76 @@ export default function RosterChampionCard({
     >
       {/* Action buttons — always visible on touch, hover on desktop */}
       {!readOnly && (
-        <div className="absolute top-1 right-1 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20">
+        <div className='absolute top-1 right-1 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20'>
           {onTogglePreferredAttacker && (
             <button
               className={cn(
                 'bg-black/60 rounded-full p-1',
                 entry.is_preferred_attacker
                   ? 'text-yellow-400 hover:text-yellow-300'
-                  : 'text-white/40 hover:text-yellow-400',
+                  : 'text-white/40 hover:text-yellow-400'
               )}
               onClick={() => onTogglePreferredAttacker(entry)}
               title={t.roster.preferredAttackerToggle}
-              data-cy="preferred-attacker-toggle"
+              data-cy='preferred-attacker-toggle'
             >
-              <span className="text-xs leading-none">⚔</span>
+              <span className='text-xs leading-none'>⚔</span>
             </button>
           )}
           {entry.is_ascendable && entry.ascension < 2 && onAscend && (
             <button
-              className="text-purple-400 hover:text-purple-300 bg-black/60 rounded-full p-1"
+              className='text-purple-400 hover:text-purple-300 bg-black/60 rounded-full p-1'
               onClick={() => onAscend(entry)}
-              title="Ascension"
+              title='Ascension'
             >
-              <Star className="h-3.5 w-3.5" />
+              <Star className='h-3.5 w-3.5' />
             </button>
           )}
           {pendingRequestId && onCancelRequest && (
             <button
-              data-cy="cancel-pending-request"
-              className="text-red-400 hover:text-red-300 bg-black/60 rounded-full p-1"
+              data-cy='cancel-pending-request'
+              className='text-red-400 hover:text-red-300 bg-black/60 rounded-full p-1'
               onClick={() => onCancelRequest(pendingRequestId)}
               title={t.roster.upgradeRequests.cancel}
             >
-              <X className="h-3.5 w-3.5" />
+              <X className='h-3.5 w-3.5' />
             </button>
           )}
           {!pendingRequestId && nextRarity && onUpgrade && (
             <button
-              data-cy="champion-upgrade"
-              className="text-green-400 hover:text-green-300 bg-black/60 rounded-full p-1"
+              data-cy='champion-upgrade'
+              className='text-green-400 hover:text-green-300 bg-black/60 rounded-full p-1'
               onClick={() => onUpgrade(entry)}
               title={t.roster.upgrade}
             >
-              <ArrowUp className="h-3.5 w-3.5" />
+              <ArrowUp className='h-3.5 w-3.5' />
             </button>
           )}
           {onEdit && (
             <button
-              className="text-blue-400 hover:text-blue-300 bg-black/60 rounded-full p-1"
+              className='text-blue-400 hover:text-blue-300 bg-black/60 rounded-full p-1'
               onClick={() => onEdit(entry)}
-              title="Edit"
-              data-cy="champion-edit"
+              title='Edit'
+              data-cy='champion-edit'
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <Pencil className='h-3.5 w-3.5' />
             </button>
           )}
           {onDelete && (
             <button
-              className="text-red-400 hover:text-red-600 bg-black/60 rounded-full p-1"
+              className='text-red-400 hover:text-red-600 bg-black/60 rounded-full p-1'
               onClick={() => onDelete(entry)}
               title={t.common.delete}
-              data-cy="champion-delete"
+              data-cy='champion-delete'
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className='h-3.5 w-3.5' />
             </button>
           )}
         </div>
       )}
 
       {/* Champion portrait with frame */}
-      <div className="flex justify-center pt-1">
+      <div className='flex justify-center pt-1'>
         <ChampionPortrait
           imageUrl={entry.image_url}
           name={entry.champion_name}
@@ -130,30 +130,41 @@ export default function RosterChampionCard({
       <p
         className={cn(
           'text-[10px] font-semibold text-center truncate px-0.5 mt-0.5',
-          entry.is_preferred_attacker ? 'text-yellow-400' : 'text-white',
+          entry.is_preferred_attacker ? 'text-yellow-400' : 'text-white'
         )}
         title={entry.champion_name}
         data-cy={entry.is_preferred_attacker ? 'preferred-attacker-name' : undefined}
       >
-        {entry.is_preferred_attacker && '⚔ '}{shortenChampionName(entry.champion_name)}
+        {entry.is_preferred_attacker && '⚔ '}
+        {shortenChampionName(entry.champion_name)}
       </p>
 
       {/* Signature + Ascension */}
-      <div className="flex justify-center gap-1 pb-1">
+      <div className='flex justify-center gap-1 pb-1'>
         {entry.signature > 0 ? (
-          <span className="text-amber-400 text-[9px] font-semibold" data-cy="champion-sig">
+          <span
+            className='text-amber-400 text-[9px] font-semibold'
+            data-cy='champion-sig'
+          >
             sig {entry.signature}
           </span>
         ) : (
-          <span className="text-white/50 text-[9px]" data-cy="champion-sig">sig 0</span>
+          <span
+            className='text-white/50 text-[9px]'
+            data-cy='champion-sig'
+          >
+            sig 0
+          </span>
         )}
         {entry.ascension > 0 && (
-          <span className="text-purple-400 text-[9px] font-semibold" data-cy="champion-ascension">
+          <span
+            className='text-purple-400 text-[9px] font-semibold'
+            data-cy='champion-ascension'
+          >
             · A{entry.ascension}
           </span>
         )}
       </div>
-
     </div>
   );
 }

@@ -76,7 +76,7 @@ export async function getMyGameAccounts(): Promise<GameAccount[]> {
 
 export async function createGameAccount(
   game_pseudo: string,
-  is_primary: boolean = false,
+  is_primary: boolean = false
 ): Promise<GameAccount> {
   const response = await debugFetch(`${PROXY}/game-accounts`, {
     method: 'POST',
@@ -90,7 +90,7 @@ export async function createGameAccount(
 export async function updateGameAccount(
   id: string,
   game_pseudo: string,
-  is_primary: boolean,
+  is_primary: boolean
 ): Promise<GameAccount> {
   const response = await debugFetch(`${PROXY}/game-accounts/${id}`, {
     method: 'PUT',
@@ -142,7 +142,7 @@ export async function getMyAllianceRoles(): Promise<AllianceMyRoles> {
 export async function createAlliance(
   name: string,
   tag: string,
-  owner_id: string,
+  owner_id: string
 ): Promise<Alliance> {
   const response = await debugFetch(`${PROXY}/alliances`, {
     method: 'POST',
@@ -169,13 +169,17 @@ export async function getEligibleOwners(): Promise<GameAccount[]> {
 }
 
 export async function getEligibleOfficers(allianceId: string): Promise<GameAccount[]> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/eligible-officers`, { headers: jsonHeaders });
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/eligible-officers`, {
+    headers: jsonHeaders,
+  });
   await throwOnError(response, 'Erreur lors de la récupération des officiers éligibles');
   return response.json();
 }
 
 export async function getEligibleMembers(): Promise<GameAccount[]> {
-  const response = await debugFetch(`${PROXY}/alliances/eligible-members`, { headers: jsonHeaders });
+  const response = await debugFetch(`${PROXY}/alliances/eligible-members`, {
+    headers: jsonHeaders,
+  });
   await throwOnError(response, 'Erreur lors de la récupération des membres éligibles');
   return response.json();
 }
@@ -197,7 +201,7 @@ export interface AllianceInvitation {
 
 export async function inviteMember(
   allianceId: string,
-  gameAccountId: string,
+  gameAccountId: string
 ): Promise<AllianceInvitation> {
   const response = await debugFetch(`${PROXY}/alliances/${allianceId}/invitations`, {
     method: 'POST',
@@ -208,9 +212,7 @@ export async function inviteMember(
   return response.json();
 }
 
-export async function getAllianceInvitations(
-  allianceId: string,
-): Promise<AllianceInvitation[]> {
+export async function getAllianceInvitations(allianceId: string): Promise<AllianceInvitation[]> {
   const response = await debugFetch(`${PROXY}/alliances/${allianceId}/invitations`, {
     headers: jsonHeaders,
   });
@@ -218,14 +220,14 @@ export async function getAllianceInvitations(
   return response.json();
 }
 
-export async function cancelInvitation(
-  allianceId: string,
-  invitationId: string,
-): Promise<void> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/invitations/${invitationId}`, {
-    method: 'DELETE',
-    headers: jsonHeaders,
-  });
+export async function cancelInvitation(allianceId: string, invitationId: string): Promise<void> {
+  const response = await debugFetch(
+    `${PROXY}/alliances/${allianceId}/invitations/${invitationId}`,
+    {
+      method: 'DELETE',
+      headers: jsonHeaders,
+    }
+  );
   await throwOnError(response, "Erreur lors de l'annulation de l'invitation");
 }
 
@@ -237,9 +239,7 @@ export async function getMyInvitations(): Promise<AllianceInvitation[]> {
   return response.json();
 }
 
-export async function acceptInvitation(
-  invitationId: string,
-): Promise<AllianceInvitation> {
+export async function acceptInvitation(invitationId: string): Promise<AllianceInvitation> {
   const response = await debugFetch(`${PROXY}/alliances/invitations/${invitationId}/accept`, {
     method: 'POST',
     headers: jsonHeaders,
@@ -248,9 +248,7 @@ export async function acceptInvitation(
   return response.json();
 }
 
-export async function declineInvitation(
-  invitationId: string,
-): Promise<AllianceInvitation> {
+export async function declineInvitation(invitationId: string): Promise<AllianceInvitation> {
   const response = await debugFetch(`${PROXY}/alliances/invitations/${invitationId}/decline`, {
     method: 'POST',
     headers: jsonHeaders,
@@ -260,10 +258,7 @@ export async function declineInvitation(
 }
 
 // ─── Members ─────────────────────────────────────────────
-export async function removeMember(
-  allianceId: string,
-  gameAccountId: string,
-): Promise<Alliance> {
+export async function removeMember(allianceId: string, gameAccountId: string): Promise<Alliance> {
   const response = await debugFetch(`${PROXY}/alliances/${allianceId}/members/${gameAccountId}`, {
     method: 'DELETE',
     headers: jsonHeaders,
@@ -273,10 +268,7 @@ export async function removeMember(
 }
 
 // ─── Officers ────────────────────────────────────────────
-export async function addOfficer(
-  allianceId: string,
-  gameAccountId: string,
-): Promise<Alliance> {
+export async function addOfficer(allianceId: string, gameAccountId: string): Promise<Alliance> {
   const response = await debugFetch(`${PROXY}/alliances/${allianceId}/officers`, {
     method: 'POST',
     headers: jsonHeaders,
@@ -286,10 +278,7 @@ export async function addOfficer(
   return response.json();
 }
 
-export async function removeOfficer(
-  allianceId: string,
-  gameAccountId: string,
-): Promise<Alliance> {
+export async function removeOfficer(allianceId: string, gameAccountId: string): Promise<Alliance> {
   const response = await debugFetch(`${PROXY}/alliances/${allianceId}/officers`, {
     method: 'DELETE',
     headers: jsonHeaders,
@@ -303,7 +292,7 @@ export async function removeOfficer(
 export async function setMemberGroup(
   allianceId: string,
   gameAccountId: string,
-  group: number | null,
+  group: number | null
 ): Promise<Alliance> {
   const response = await debugFetch(
     `${PROXY}/alliances/${allianceId}/members/${gameAccountId}/group`,
@@ -311,7 +300,7 @@ export async function setMemberGroup(
       method: 'PATCH',
       headers: jsonHeaders,
       body: JSON.stringify({ group }),
-    },
+    }
   );
   await throwOnError(response, 'Erreur lors du changement de groupe');
   return response.json();

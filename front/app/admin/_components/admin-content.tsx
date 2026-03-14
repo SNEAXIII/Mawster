@@ -31,7 +31,7 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
 
   const initialTab = (searchParams.get('tab') as AdminTab) || defaultTab;
   const [activeTab, setActiveTab] = useState<AdminTab>(
-    Object.values(AdminTab).includes(initialTab) ? initialTab : defaultTab,
+    Object.values(AdminTab).includes(initialTab) ? initialTab : defaultTab
   );
 
   const isFirstRender = useRef(true);
@@ -52,16 +52,20 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
 
   if (status === 'loading') {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500">{t.common.loading}</p>
+      <div className='flex items-center justify-center h-64'>
+        <p className='text-gray-500'>{t.common.loading}</p>
       </div>
     );
   }
 
   return (
-    <div className="px-3 py-4 sm:p-6">
-      <h1 className="text-xl sm:text-2xl font-bold mb-6">{t.nav.administration}</h1>
-      <TabBar tabs={tabs} value={activeTab} onChange={setActiveTab} />
+    <div className='px-3 py-4 sm:p-6'>
+      <h1 className='text-xl sm:text-2xl font-bold mb-6'>{t.nav.administration}</h1>
+      <TabBar
+        tabs={tabs}
+        value={activeTab}
+        onChange={setActiveTab}
+      />
       {activeTab === AdminTab.Users && <UsersPanel currentUserRole={session?.user?.role} />}
       {activeTab === AdminTab.Champions && <ChampionsPanel />}
     </div>

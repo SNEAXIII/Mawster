@@ -4,11 +4,7 @@ import React from 'react';
 import { useI18n } from '@/app/i18n';
 import { ArrowRight } from 'lucide-react';
 import ChampionPortrait from '@/components/champion-portrait';
-import {
-  RARITY_LABELS,
-  shortenChampionName,
-  getClassColors,
-} from '@/app/services/roster';
+import { RARITY_LABELS, shortenChampionName, getClassColors } from '@/app/services/roster';
 
 export interface PreviewRow {
   champion_name: string;
@@ -42,7 +38,7 @@ export default function ImportPreviewRow({ row }: ImportPreviewRowProps) {
       }`}
     >
       {/* Champion portrait */}
-      <div className="shrink-0">
+      <div className='shrink-0'>
         <ChampionPortrait
           imageUrl={row.image_url}
           name={row.champion_name}
@@ -52,8 +48,11 @@ export default function ImportPreviewRow({ row }: ImportPreviewRowProps) {
       </div>
 
       {/* Name & class */}
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold truncate" title={row.champion_name}>
+      <div className='min-w-0 flex-1'>
+        <p
+          className='text-sm font-semibold truncate'
+          title={row.champion_name}
+        >
           {shortenChampionName(row.champion_name)}
         </p>
         <p className={`text-xs ${getClassColors(row.champion_class ?? 'Unknown').label}`}>
@@ -62,46 +61,42 @@ export default function ImportPreviewRow({ row }: ImportPreviewRowProps) {
       </div>
 
       {/* Status badge + diff */}
-      <div className="shrink-0 text-right text-xs whitespace-nowrap">
+      <div className='shrink-0 text-right text-xs whitespace-nowrap'>
         {row.isNew ? (
           <div>
-            <span className="inline-flex items-center gap-1 bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-0.5">
+            <span className='inline-flex items-center gap-1 bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-0.5'>
               {t.roster.importExport.badgeNew}
             </span>
-            <div className="text-gray-600 dark:text-gray-300">
+            <div className='text-gray-600 dark:text-gray-300'>
               {RARITY_LABELS[row.newRarity] ?? row.newRarity} · sig {row.newSignature}
             </div>
           </div>
         ) : row.hasChanges ? (
-          <div className="space-y-0.5">
+          <div className='space-y-0.5'>
             {row.oldRarity !== row.newRarity && (
-              <div className="flex items-center gap-1 justify-end">
-                <span className="text-gray-400">
+              <div className='flex items-center gap-1 justify-end'>
+                <span className='text-gray-400'>
                   {RARITY_LABELS[row.oldRarity!] ?? row.oldRarity}
                 </span>
-                <ArrowRight className="text-blue-500 h-2.5 w-2.5" />
-                <span className="text-blue-600 font-semibold">
+                <ArrowRight className='text-blue-500 h-2.5 w-2.5' />
+                <span className='text-blue-600 font-semibold'>
                   {RARITY_LABELS[row.newRarity] ?? row.newRarity}
                 </span>
               </div>
             )}
             {row.oldRarity === row.newRarity && (
-              <div className="text-gray-500">
-                {RARITY_LABELS[row.newRarity] ?? row.newRarity}
-              </div>
+              <div className='text-gray-500'>{RARITY_LABELS[row.newRarity] ?? row.newRarity}</div>
             )}
             {row.oldSignature !== row.newSignature && (
-              <div className="flex items-center gap-1 justify-end">
-                <span className="text-gray-400">sig {row.oldSignature}</span>
-                <ArrowRight className="text-blue-500 h-2.5 w-2.5" />
-                <span className="text-blue-600 font-semibold">sig {row.newSignature}</span>
+              <div className='flex items-center gap-1 justify-end'>
+                <span className='text-gray-400'>sig {row.oldSignature}</span>
+                <ArrowRight className='text-blue-500 h-2.5 w-2.5' />
+                <span className='text-blue-600 font-semibold'>sig {row.newSignature}</span>
               </div>
             )}
           </div>
         ) : (
-          <span className="text-gray-400 italic">
-            {t.roster.importExport.badgeUnchanged}
-          </span>
+          <span className='text-gray-400 italic'>{t.roster.importExport.badgeUnchanged}</span>
         )}
       </div>
     </div>

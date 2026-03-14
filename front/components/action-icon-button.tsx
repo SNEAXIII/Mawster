@@ -29,8 +29,8 @@ export function ActionIconButton({
 }: ActionIconButtonProps) {
   return (
     <Button
-      variant="ghost"
-      size="sm"
+      variant='ghost'
+      size='sm'
       onClick={onClick}
       title={title}
       disabled={disabled}

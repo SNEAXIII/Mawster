@@ -41,10 +41,9 @@ import CreateAllianceForm from './_components/create-alliance-form';
 import AllianceCard from './_components/alliance-card';
 import AllianceRosterDialog from './_components/alliance-roster-dialog';
 
-const DefensePageContent = dynamic(
-  () => import('../defense/_components/defense-content'),
-  { loading: () => <FullPageSpinner /> },
-);
+const DefensePageContent = dynamic(() => import('../defense/_components/defense-content'), {
+  loading: () => <FullPageSpinner />,
+});
 
 export enum AllianceTab {
   Create = 'create',
@@ -70,17 +69,20 @@ function AlliancesContent() {
   // Tabs — read from URL or default
   const initialTab = (searchParams.get('tab') as AllianceTab) || AllianceTab.Alliances;
   const [activeTab, setActiveTab] = useState<AllianceTab>(
-    Object.values(AllianceTab).includes(initialTab) ? initialTab : AllianceTab.Alliances,
+    Object.values(AllianceTab).includes(initialTab) ? initialTab : AllianceTab.Alliances
   );
 
   // Sync tab to URL
-  const handleDefenseStateChange = useCallback((allianceId: string, bg: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('tab', AllianceTab.Defense);
-    params.set('alliance', allianceId);
-    params.set('bg', String(bg));
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [pathname, searchParams, router]);
+  const handleDefenseStateChange = useCallback(
+    (allianceId: string, bg: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('tab', AllianceTab.Defense);
+      params.set('alliance', allianceId);
+      params.set('bg', String(bg));
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, searchParams, router]
+  );
 
   const isFirstRender = useRef(true);
   useEffect(() => {
@@ -101,7 +103,9 @@ function AlliancesContent() {
   const [myInvitations, setMyInvitations] = useState<AllianceInvitation[]>([]);
 
   // Pending invitations sent by alliance (for officers to cancel)
-  const [pendingInvitations, setPendingInvitations] = useState<Record<string, AllianceInvitation[]>>({});
+  const [pendingInvitations, setPendingInvitations] = useState<
+    Record<string, AllianceInvitation[]>
+  >({});
 
   // Create form
   const [name, setName] = useState('');
@@ -113,16 +117,32 @@ function AlliancesContent() {
   const [memberAccountId, setMemberAccountId] = useState('');
 
   // Exclude confirmation with text input
-  const [excludeTarget, setExcludeTarget] = useState<{ allianceId: string; gameAccountId: string; pseudo: string } | null>(null);
+  const [excludeTarget, setExcludeTarget] = useState<{
+    allianceId: string;
+    gameAccountId: string;
+    pseudo: string;
+  } | null>(null);
 
   // Leave alliance confirmation
-  const [leaveTarget, setLeaveTarget] = useState<{ allianceId: string; gameAccountId: string; pseudo: string } | null>(null);
+  const [leaveTarget, setLeaveTarget] = useState<{
+    allianceId: string;
+    gameAccountId: string;
+    pseudo: string;
+  } | null>(null);
 
   // Promote officer confirmation
-  const [promoteTarget, setPromoteTarget] = useState<{ allianceId: string; gameAccountId: string; pseudo: string } | null>(null);
+  const [promoteTarget, setPromoteTarget] = useState<{
+    allianceId: string;
+    gameAccountId: string;
+    pseudo: string;
+  } | null>(null);
 
   // Roster viewer
-  const [rosterTarget, setRosterTarget] = useState<{ gameAccountId: string; pseudo: string; canRequestUpgrade: boolean } | null>(null);
+  const [rosterTarget, setRosterTarget] = useState<{
+    gameAccountId: string;
+    pseudo: string;
+    canRequestUpgrade: boolean;
+  } | null>(null);
 
   const fetchAlliances = async () => {
     try {
@@ -189,7 +209,7 @@ function AlliancesContent() {
           } catch {
             // ignore
           }
-        }),
+        })
       );
     } catch {
       // ignore role fetch failure
@@ -199,7 +219,12 @@ function AlliancesContent() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      Promise.all([fetchAlliances(), fetchEligibleOwners(), fetchMyAccounts(), fetchMyInvitations()]).then(() => {
+      Promise.all([
+        fetchAlliances(),
+        fetchEligibleOwners(),
+        fetchMyAccounts(),
+        fetchMyInvitations(),
+      ]).then(() => {
         // createOpen stays false — will be overridden below after alliances load
       });
     }
@@ -225,7 +250,12 @@ function AlliancesContent() {
       setOwnerId('');
       setActiveTab(AllianceTab.Alliances);
       setRoleRefreshKey((k) => k + 1);
-      await Promise.all([fetchAlliances(), fetchEligibleOwners(), fetchEligibleMembers(), fetchMyAccounts()]);
+      await Promise.all([
+        fetchAlliances(),
+        fetchEligibleOwners(),
+        fetchEligibleMembers(),
+        fetchMyAccounts(),
+      ]);
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || t.game.alliances.createError);
@@ -296,11 +326,18 @@ function AlliancesContent() {
   };
 
   // ---- Groups ----
-  const handleSetGroup = async (allianceId: string, gameAccountId: string, group: number | null, pseudo: string) => {
+  const handleSetGroup = async (
+    allianceId: string,
+    gameAccountId: string,
+    group: number | null,
+    pseudo: string
+  ) => {
     try {
       await setMemberGroup(allianceId, gameAccountId, group);
       const groupLabel = group ? `${t.game.alliances.group} ${group}` : t.game.alliances.noGroup;
-      toast.success(t.game.alliances.groupSetSuccess.replace('{pseudo}', pseudo).replace('{group}', groupLabel));
+      toast.success(
+        t.game.alliances.groupSetSuccess.replace('{pseudo}', pseudo).replace('{group}', groupLabel)
+      );
       await fetchAlliances();
     } catch (err: any) {
       console.error(err);
@@ -314,7 +351,13 @@ function AlliancesContent() {
       await acceptInvitation(invitationId);
       toast.success(t.game.alliances.acceptInvitationSuccess);
       setRoleRefreshKey((k) => k + 1);
-      await Promise.all([fetchAlliances(), fetchEligibleOwners(), fetchEligibleMembers(), fetchMyAccounts(), fetchMyInvitations()]);
+      await Promise.all([
+        fetchAlliances(),
+        fetchEligibleOwners(),
+        fetchEligibleMembers(),
+        fetchMyAccounts(),
+        fetchMyInvitations(),
+      ]);
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || t.game.alliances.acceptInvitationError);
@@ -369,193 +412,216 @@ function AlliancesContent() {
 
   return (
     <AllianceRoleProvider refreshKey={roleRefreshKey}>
-    <div className="max-w-4xl mx-auto px-3 py-4 sm:p-6 space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t.game.alliances.title}</h1>
-        <p className="text-muted-foreground mt-1">{t.game.alliances.description}</p>
-      </div>
+      <div className='max-w-4xl mx-auto px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
+        {/* Header */}
+        <div>
+          <h1 className='text-xl sm:text-2xl font-bold text-foreground'>
+            {t.game.alliances.title}
+          </h1>
+          <p className='text-muted-foreground mt-1'>{t.game.alliances.description}</p>
+        </div>
 
-      {/* My Invitations — always visible above tabs */}
-      {myInvitations.length > 0 && (
-        <Card data-cy="my-invitations-section">
-          <CardContent className="py-3 sm:py-4 px-3 sm:px-6 space-y-3">
-            <div className="flex items-center gap-2">
-              <Mail className="h-5 w-5 text-blue-500" />
-              <h2 className="text-sm font-medium text-muted-foreground">
-                {t.game.alliances.myInvitations} ({myInvitations.length})
-              </h2>
-            </div>
-            <div className="space-y-2">
-              {myInvitations.map((inv) => (
-                <div
-                  key={inv.id}
-                  data-cy={`my-invitation-${inv.alliance_name}`}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-md bg-accent/50 border border-border"
-                >
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-medium text-foreground">
-                      {inv.alliance_name}{' '}
-                      <span className="text-xs text-purple-700 font-bold">[{inv.alliance_tag}]</span>
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t.game.alliances.invitedBy} {inv.invited_by_pseudo} · {inv.game_account_pseudo}
-                    </p>
+        {/* My Invitations — always visible above tabs */}
+        {myInvitations.length > 0 && (
+          <Card data-cy='my-invitations-section'>
+            <CardContent className='py-3 sm:py-4 px-3 sm:px-6 space-y-3'>
+              <div className='flex items-center gap-2'>
+                <Mail className='h-5 w-5 text-blue-500' />
+                <h2 className='text-sm font-medium text-muted-foreground'>
+                  {t.game.alliances.myInvitations} ({myInvitations.length})
+                </h2>
+              </div>
+              <div className='space-y-2'>
+                {myInvitations.map((inv) => (
+                  <div
+                    key={inv.id}
+                    data-cy={`my-invitation-${inv.alliance_name}`}
+                    className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-md bg-accent/50 border border-border'
+                  >
+                    <div className='space-y-0.5'>
+                      <p className='text-sm font-medium text-foreground'>
+                        {inv.alliance_name}{' '}
+                        <span className='text-xs text-purple-700 font-bold'>
+                          [{inv.alliance_tag}]
+                        </span>
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        {t.game.alliances.invitedBy} {inv.invited_by_pseudo} ·{' '}
+                        {inv.game_account_pseudo}
+                      </p>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <Button
+                        size='sm'
+                        variant='default'
+                        data-cy='accept-invitation'
+                        onClick={() => handleAcceptInvitation(inv.id)}
+                      >
+                        <Check className='h-3 w-3 mr-1' />
+                        {t.game.alliances.acceptInvitation}
+                      </Button>
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        data-cy='decline-invitation'
+                        onClick={() => handleDeclineInvitation(inv.id)}
+                      >
+                        <X className='h-3 w-3 mr-1' />
+                        {t.game.alliances.declineInvitation}
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="default"
-                      data-cy="accept-invitation"
-                      onClick={() => handleAcceptInvitation(inv.id)}
-                    >
-                      <Check className="h-3 w-3 mr-1" />
-                      {t.game.alliances.acceptInvitation}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      data-cy="decline-invitation"
-                      onClick={() => handleDeclineInvitation(inv.id)}
-                    >
-                      <X className="h-3 w-3 mr-1" />
-                      {t.game.alliances.declineInvitation}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Tabs */}
-      <TabBar tabs={tabs} value={activeTab} onChange={setActiveTab} />
-
-      {/* Create tab */}
-      {activeTab === AllianceTab.Create && eligibleOwners.length > 0 && (
-        <CreateAllianceForm
-          open={true}
-          onToggle={() => {}}
-          collapsible={false}
-          hasAnyAccounts={hasAnyAccounts}
-          eligibleOwners={eligibleOwners}
-          name={name}
-          tag={tag}
-          ownerId={ownerId}
-          creating={creating}
-          onNameChange={setName}
-          onTagChange={setTag}
-          onOwnerChange={setOwnerId}
-          onSubmit={handleCreate}
+        {/* Tabs */}
+        <TabBar
+          tabs={tabs}
+          value={activeTab}
+          onChange={setActiveTab}
         />
-      )}
 
-      {/* Alliances tab */}
-      {activeTab === AllianceTab.Alliances && (
-        <>
-          {alliances.length === 0 ? (
-            <Card data-cy="alliance-empty-state">
-              <CardContent className="py-12 text-center text-gray-500">
-                <Shield className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                <p data-cy="alliance-empty-text">{t.game.alliances.empty}</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {alliances.map((alliance) => (
-                <AllianceCard
-                  key={alliance.id}
-                  alliance={alliance}
-                  locale={locale}
-                  memberAllianceId={memberAllianceId}
-                  memberAccountId={memberAccountId}
-                  eligibleMembers={eligibleMembers}
-                  onMemberAccountChange={setMemberAccountId}
-                  onOpenInviteMember={handleOpenInviteMember}
-                  onCloseInviteMember={() => { setMemberAllianceId(null); setMemberAccountId(''); }}
-                  onInviteMember={handleInviteMember}
-                  onDemoteOfficer={handleDemoteOfficer}
-                  onPromoteOfficer={setPromoteTarget}
-                  onLeave={setLeaveTarget}
-                  onExclude={setExcludeTarget}
-                  onSetGroup={handleSetGroup}
-                  onViewRoster={(gameAccountId, pseudo, canReq) => {
-                    setRosterTarget({ gameAccountId, pseudo, canRequestUpgrade: canReq });
-                  }}
-                  pendingInvitations={pendingInvitations[alliance.id] ?? []}
-                  onCancelInvitation={handleCancelInvitation}
-                />
-              ))}
-            </div>
+        {/* Create tab */}
+        {activeTab === AllianceTab.Create && eligibleOwners.length > 0 && (
+          <CreateAllianceForm
+            hasAnyAccounts={hasAnyAccounts}
+            eligibleOwners={eligibleOwners}
+            name={name}
+            tag={tag}
+            ownerId={ownerId}
+            creating={creating}
+            onNameChange={setName}
+            onTagChange={setTag}
+            onOwnerChange={setOwnerId}
+            onSubmit={handleCreate}
+          />
+        )}
+
+        {/* Alliances tab */}
+        {activeTab === AllianceTab.Alliances && (
+          <>
+            {alliances.length === 0 ? (
+              <Card data-cy='alliance-empty-state'>
+                <CardContent className='py-12 text-center text-gray-500'>
+                  <Shield className='h-12 w-12 mx-auto mb-3 text-muted-foreground' />
+                  <p data-cy='alliance-empty-text'>{t.game.alliances.empty}</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className='space-y-4'>
+                {alliances.map((alliance) => (
+                  <AllianceCard
+                    key={alliance.id}
+                    alliance={alliance}
+                    locale={locale}
+                    memberAllianceId={memberAllianceId}
+                    memberAccountId={memberAccountId}
+                    eligibleMembers={eligibleMembers}
+                    onMemberAccountChange={setMemberAccountId}
+                    onOpenInviteMember={handleOpenInviteMember}
+                    onCloseInviteMember={() => {
+                      setMemberAllianceId(null);
+                      setMemberAccountId('');
+                    }}
+                    onInviteMember={handleInviteMember}
+                    onDemoteOfficer={handleDemoteOfficer}
+                    onPromoteOfficer={setPromoteTarget}
+                    onLeave={setLeaveTarget}
+                    onExclude={setExcludeTarget}
+                    onSetGroup={handleSetGroup}
+                    onViewRoster={(gameAccountId, pseudo, canReq) => {
+                      setRosterTarget({ gameAccountId, pseudo, canRequestUpgrade: canReq });
+                    }}
+                    pendingInvitations={pendingInvitations[alliance.id] ?? []}
+                    onCancelInvitation={handleCancelInvitation}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Defense tab */}
+        {activeTab === AllianceTab.Defense && (
+          <DefensePageContent
+            onStateChange={handleDefenseStateChange}
+            initialAllianceId={searchParams.get('alliance') ?? undefined}
+            initialBg={searchParams.get('bg') ? Number(searchParams.get('bg')) : undefined}
+          />
+        )}
+
+        {/* Leave alliance confirmation */}
+        <ConfirmationDialog
+          open={!!leaveTarget}
+          onOpenChange={(open) => {
+            if (!open) setLeaveTarget(null);
+          }}
+          title={t.common.confirm}
+          description={t.game.alliances.leaveConfirm.replace('{pseudo}', leaveTarget?.pseudo ?? '')}
+          onConfirm={() => {
+            if (leaveTarget) {
+              handleRemoveMember(leaveTarget.allianceId, leaveTarget.gameAccountId);
+            }
+          }}
+          variant='destructive'
+          confirmText={t.game.alliances.leaveAlliance}
+        />
+
+        {/* Promote officer confirmation */}
+        <ConfirmationDialog
+          open={!!promoteTarget}
+          onOpenChange={(open) => {
+            if (!open) setPromoteTarget(null);
+          }}
+          title={t.common.confirm}
+          description={t.game.alliances.promoteOfficerConfirm.replace(
+            '{pseudo}',
+            promoteTarget?.pseudo ?? ''
           )}
-        </>
-      )}
-
-      {/* Defense tab */}
-      {activeTab === AllianceTab.Defense && (
-        <DefensePageContent
-          onStateChange={handleDefenseStateChange}
-          initialAllianceId={searchParams.get('alliance') ?? undefined}
-          initialBg={searchParams.get('bg') ? Number(searchParams.get('bg')) : undefined}
+          onConfirm={() => {
+            if (promoteTarget) {
+              handlePromoteOfficer(promoteTarget.allianceId, promoteTarget.gameAccountId);
+            }
+          }}
+          confirmText={t.game.alliances.promoteOfficer}
         />
-      )}
 
-      {/* Leave alliance confirmation */}
-      <ConfirmationDialog
-        open={!!leaveTarget}
-        onOpenChange={(open) => { if (!open) setLeaveTarget(null); }}
-        title={t.common.confirm}
-        description={t.game.alliances.leaveConfirm.replace('{pseudo}', leaveTarget?.pseudo ?? '')}
-        onConfirm={() => {
-          if (leaveTarget) {
-            handleRemoveMember(leaveTarget.allianceId, leaveTarget.gameAccountId);
-          }
-        }}
-        variant="destructive"
-        confirmText={t.game.alliances.leaveAlliance}
-      />
+        {/* Exclude member confirmation — requires typing "confirmer" */}
+        <TextConfirmationDialog
+          open={!!excludeTarget}
+          onOpenChange={(open) => {
+            if (!open) setExcludeTarget(null);
+          }}
+          title={t.common.confirm}
+          description={t.game.alliances.excludeConfirm.replace(
+            '{pseudo}',
+            excludeTarget?.pseudo ?? ''
+          )}
+          onConfirm={() => {
+            if (excludeTarget) {
+              handleRemoveMember(excludeTarget.allianceId, excludeTarget.gameAccountId);
+            }
+          }}
+          confirmationWord={t.game.alliances.excludeTypeConfirmPlaceholder}
+          inputLabel={t.game.alliances.excludeTypeConfirm}
+          confirmText={t.game.alliances.excludeMember}
+          variant='destructive'
+        />
 
-      {/* Promote officer confirmation */}
-      <ConfirmationDialog
-        open={!!promoteTarget}
-        onOpenChange={(open) => { if (!open) setPromoteTarget(null); }}
-        title={t.common.confirm}
-        description={t.game.alliances.promoteOfficerConfirm.replace('{pseudo}', promoteTarget?.pseudo ?? '')}
-        onConfirm={() => {
-          if (promoteTarget) {
-            handlePromoteOfficer(promoteTarget.allianceId, promoteTarget.gameAccountId);
-          }
-        }}
-        confirmText={t.game.alliances.promoteOfficer}
-      />
-
-      {/* Exclude member confirmation — requires typing "confirmer" */}
-      <TextConfirmationDialog
-        open={!!excludeTarget}
-        onOpenChange={(open) => { if (!open) setExcludeTarget(null); }}
-        title={t.common.confirm}
-        description={t.game.alliances.excludeConfirm.replace('{pseudo}', excludeTarget?.pseudo ?? '')}
-        onConfirm={() => {
-          if (excludeTarget) {
-            handleRemoveMember(excludeTarget.allianceId, excludeTarget.gameAccountId);
-          }
-        }}
-        confirmationWord={t.game.alliances.excludeTypeConfirmPlaceholder}
-        inputLabel={t.game.alliances.excludeTypeConfirm}
-        confirmText={t.game.alliances.excludeMember}
-        variant="destructive"
-      />
-
-      {/* Roster viewer dialog */}
-      <AllianceRosterDialog
-        open={!!rosterTarget}
-        onOpenChange={(open) => { if (!open) setRosterTarget(null); }}
-        gameAccountId={rosterTarget?.gameAccountId ?? null}
-        gamePseudo={rosterTarget?.pseudo ?? ''}
-        canRequestUpgrade={rosterTarget?.canRequestUpgrade ?? false}
-      />
-    </div>
+        {/* Roster viewer dialog */}
+        <AllianceRosterDialog
+          open={!!rosterTarget}
+          onOpenChange={(open) => {
+            if (!open) setRosterTarget(null);
+          }}
+          gameAccountId={rosterTarget?.gameAccountId ?? null}
+          gamePseudo={rosterTarget?.pseudo ?? ''}
+          canRequestUpgrade={rosterTarget?.canRequestUpgrade ?? false}
+        />
+      </div>
     </AllianceRoleProvider>
   );
 }

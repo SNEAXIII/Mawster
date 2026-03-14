@@ -13,12 +13,15 @@ function DefensePageInner() {
   const initialAllianceId = searchParams.get('alliance') ?? undefined;
   const initialBg = searchParams.get('bg') ? Number(searchParams.get('bg')) : undefined;
 
-  const handleStateChange = useCallback((allianceId: string, bg: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('alliance', allianceId);
-    params.set('bg', String(bg));
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [pathname, searchParams, router]);
+  const handleStateChange = useCallback(
+    (allianceId: string, bg: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('alliance', allianceId);
+      params.set('bg', String(bg));
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, searchParams, router]
+  );
 
   return (
     <AllianceRoleProvider>

@@ -2,12 +2,12 @@ Gère les migrations Alembic depuis `/home/alexis.bassignot/Desktop/work/Mawster
 
 ## Actions selon $ARGUMENTS
 
-| Argument | Commande make | Description |
-|----------|---------------|-------------|
-| (vide) | `make migrate` | Applique toutes les migrations en attente |
-| `create <message>` | `make create-mig MIGRATION_MESSAGE="<message>"` | Crée une migration autogénérée |
-| `cancel` | `make cancel-last` | Annule la dernière migration |
-| `reset` | `make reset-db` | ⚠️ Remet la DB à zéro |
+| Argument           | Commande make                                   | Description                               |
+| ------------------ | ----------------------------------------------- | ----------------------------------------- |
+| (vide)             | `make migrate`                                  | Applique toutes les migrations en attente |
+| `create <message>` | `make create-mig MIGRATION_MESSAGE="<message>"` | Crée une migration autogénérée            |
+| `cancel`           | `make cancel-last`                              | Annule la dernière migration              |
+| `reset`            | `make reset-db`                                 | ⚠️ Remet la DB à zéro                     |
 
 ## Étapes
 

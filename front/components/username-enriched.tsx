@@ -41,17 +41,17 @@ export default function UsernameEnriched({
         isMine
           ? 'bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent font-semibold'
           : 'text-foreground',
-        className,
+        className
       )}
     >
       {group != null && (
-        <span className="text-[10px] font-bold text-muted-foreground/70 tracking-tight">
+        <span className='text-[10px] font-bold text-muted-foreground/70 tracking-tight'>
           [G{group}]
         </span>
       )}
-      {role === 'owner' && <Crown className="h-3 w-3 text-yellow-500 shrink-0" />}
-      {role === 'officer' && <Shield className="h-3 w-3 text-purple-500 shrink-0" />}
-      <span className="truncate">{pseudo}</span>
+      {role === 'owner' && <Crown className='h-3 w-3 text-yellow-500 shrink-0' />}
+      {role === 'officer' && <Shield className='h-3 w-3 text-purple-500 shrink-0' />}
+      <span className='truncate'>{pseudo}</span>
     </span>
   );
 }

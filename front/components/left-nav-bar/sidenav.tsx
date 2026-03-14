@@ -9,13 +9,14 @@ import { Separator } from '@/components/ui/separator';
 import { LogIn, LogOut } from 'lucide-react';
 import NavLinks, { Role } from './nav-links';
 import LanguageSwitcher from '@/components/language-switcher';
+import ThemePicker from '@/components/theme-picker';
 import { useI18n } from '@/app/i18n';
 
 export default function SideNavBar() {
   const { data: session } = useSession();
   const { t } = useI18n();
   const isAuthenticated = session && !session.error && session.user;
-  const userRole: Role = (isAuthenticated ? session.user.role as Role : null) || Role.all;
+  const userRole: Role = (isAuthenticated ? (session.user.role as Role) : null) || Role.all;
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -41,7 +42,10 @@ export default function SideNavBar() {
             <MainMawsterLogo />
           </div>
         </Link>
-        <LanguageSwitcher />
+        <div className='flex flex-col'>
+          <LanguageSwitcher />
+          <ThemePicker />
+        </div>
       </div>
 
       {/* Navigation Links Section */}

@@ -23,7 +23,9 @@ interface GameAccountsSectionProps {
   onAccountsChange?: () => void;
 }
 
-export default function GameAccountsSection({ onAccountsChange }: Readonly<GameAccountsSectionProps>) {
+export default function GameAccountsSection({
+  onAccountsChange,
+}: Readonly<GameAccountsSectionProps>) {
   const { t } = useI18n();
 
   const [accounts, setAccounts] = useState<GameAccount[]>([]);
@@ -127,8 +129,8 @@ export default function GameAccountsSection({ onAccountsChange }: Readonly<GameA
   if (loading) {
     return (
       <Card>
-        <CardContent className="py-8 text-center text-gray-500">
-          <Loader className="h-5 w-5 animate-spin mx-auto mb-2" />
+        <CardContent className='py-8 text-center text-muted-foreground'>
+          <Loader className='h-5 w-5 animate-spin mx-auto mb-2' />
           {t.common.loading}
         </CardContent>
       </Card>
@@ -139,31 +141,34 @@ export default function GameAccountsSection({ onAccountsChange }: Readonly<GameA
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Gamepad2 className="h-5 w-5 text-blue-500" />
+          <CardTitle className='text-lg flex items-center gap-2'>
+            <Gamepad2 className='h-5 w-5 text-blue-500' />
             {t.game.accounts.title}
           </CardTitle>
-          <p className="text-sm text-gray-400">
+          <p className='text-sm text-muted-foreground'>
             {t.game.accounts.accountCount.replace('{count}', String(accounts.length))}
           </p>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className='space-y-4'>
           {/* Create form */}
           <CollapsibleSection
             title={t.game.accounts.createTitle}
             defaultOpen={accounts.length === 0}
           >
             {accounts.length >= 10 ? (
-              <p className="text-sm text-amber-600 font-medium">
+              <p className='text-sm text-amber-600 font-medium'>
                 {t.game.accounts.accountLimitReached}
               </p>
             ) : (
-              <form onSubmit={handleCreate} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="pseudo">{t.game.accounts.pseudo}</Label>
+              <form
+                onSubmit={handleCreate}
+                className='space-y-4'
+              >
+                <div className='space-y-2'>
+                  <Label htmlFor='pseudo'>{t.game.accounts.pseudo}</Label>
                   <Input
-                    id="pseudo"
-                    data-cy="account-pseudo-input"
+                    id='pseudo'
+                    data-cy='account-pseudo-input'
                     value={pseudo}
                     onChange={(e) => setPseudo(e.target.value)}
                     placeholder={t.game.accounts.pseudoPlaceholder}
@@ -173,15 +178,19 @@ export default function GameAccountsSection({ onAccountsChange }: Readonly<GameA
                     disabled={creating}
                   />
                 </div>
-                <Button type="submit" disabled={creating || !pseudo.trim()} data-cy="account-create-btn">
+                <Button
+                  type='submit'
+                  disabled={creating || !pseudo.trim()}
+                  data-cy='account-create-btn'
+                >
                   {creating ? (
                     <>
-                      <Loader className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader className='w-4 h-4 mr-2 animate-spin' />
                       {t.game.accounts.creating}
                     </>
                   ) : (
                     <>
-                      <Plus className="w-4 h-4 mr-2" />
+                      <Plus className='w-4 h-4 mr-2' />
                       {t.game.accounts.createButton}
                     </>
                   )}
@@ -192,23 +201,23 @@ export default function GameAccountsSection({ onAccountsChange }: Readonly<GameA
 
           {/* Accounts list */}
           {accounts.length === 0 ? (
-            <div className="py-6 text-center text-gray-500">
-              <Gamepad2 className="h-10 w-10 mx-auto mb-2 text-gray-300" />
+            <div className='py-6 text-center text-muted-foreground'>
+              <Gamepad2 className='h-10 w-10 mx-auto mb-2 text-muted-foreground/50' />
               <p>{t.game.accounts.empty}</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className='space-y-2'>
               {accounts.map((account, index) => (
                 <div
                   key={account.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border"
+                  className='flex items-center justify-between p-3 rounded-lg bg-muted/50 border'
                   data-cy={`account-row-${account.game_pseudo}`}
                 >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <Gamepad2 className="h-4 w-4 text-blue-500 shrink-0" />
+                  <div className='flex items-center gap-3 flex-1 min-w-0'>
+                    <Gamepad2 className='h-4 w-4 text-blue-500 shrink-0' />
                     {editingId === account.id ? (
                       <form
-                        className="flex items-center gap-2 flex-1"
+                        className='flex items-center gap-2 flex-1'
                         onSubmit={(e) => {
                           e.preventDefault();
                           handleEdit(account);
@@ -219,85 +228,92 @@ export default function GameAccountsSection({ onAccountsChange }: Readonly<GameA
                           onChange={(e) => setEditPseudo(e.target.value)}
                           maxLength={16}
                           minLength={2}
-                          className="h-8 text-sm"
+                          className='h-8 text-sm'
                           autoFocus
                         />
                         <Button
-                          type="submit"
-                          variant="ghost"
-                          size="icon"
-                          className="text-green-600 hover:text-green-800 hover:bg-green-50 shrink-0"
+                          type='submit'
+                          variant='ghost'
+                          size='icon'
+                          className='text-green-600 hover:text-green-700 hover:bg-green-500/10 shrink-0'
                           disabled={!editPseudo.trim()}
-                          data-cy="account-edit-confirm"
+                          data-cy='account-edit-confirm'
                         >
-                          <Check className="h-4 w-4" />
+                          <Check className='h-4 w-4' />
                         </Button>
                         <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="text-gray-500 hover:text-gray-700 shrink-0"
+                          type='button'
+                          variant='ghost'
+                          size='icon'
+                          className='text-muted-foreground hover:text-foreground shrink-0'
                           onClick={cancelEditing}
                         >
-                          <X className="h-4 w-4" />
+                          <X className='h-4 w-4' />
                         </Button>
                       </form>
                     ) : (
                       <>
-                        <p className="font-medium text-sm text-gray-900">
-                          {account.game_pseudo}
-                        </p>
+                        <p className='font-medium text-sm text-foreground'>{account.game_pseudo}</p>
                         {account.is_primary && (
-                          <span data-cy="account-primary-badge" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            <Star className="h-3 w-3" />
+                          <span
+                            data-cy='account-primary-badge'
+                            className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-700 dark:text-yellow-300'
+                          >
+                            <Star className='h-3 w-3' />
                             {t.game.accounts.primary}
                           </span>
                         )}
                         {account.alliance_tag && (
                           <span
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                            className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-700 dark:text-blue-300'
                             title={account.alliance_name ?? ''}
                           >
-                            <Shield className="h-3 w-3" />
-                            [{account.alliance_tag}]
+                            <Shield className='h-3 w-3' />[{account.alliance_tag}]
                           </span>
                         )}
                       </>
                     )}
                   </div>
                   {editingId !== account.id && (
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className='flex items-center gap-1 shrink-0'>
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        className={account.is_primary
-                          ? 'text-yellow-500 cursor-default'
-                          : 'text-gray-300 hover:text-yellow-500 hover:bg-yellow-50'
+                        variant='ghost'
+                        size='icon'
+                        className={
+                          account.is_primary
+                            ? 'text-yellow-500 cursor-default'
+                            : 'text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10'
                         }
                         onClick={() => handleSetPrimary(account)}
-                        title={account.is_primary ? t.game.accounts.primary : (t.game.accounts.setAsPrimary ?? 'Set as primary')}
+                        title={
+                          account.is_primary
+                            ? t.game.accounts.primary
+                            : (t.game.accounts.setAsPrimary ?? 'Set as primary')
+                        }
                         disabled={account.is_primary}
                         data-cy={`account-star-btn-${index}`}
                       >
-                        <Star className={`h-4 w-4 ${account.is_primary ? 'fill-yellow-500' : ''}`} />
+                        <Star
+                          className={`h-4 w-4 ${account.is_primary ? 'fill-yellow-500' : ''}`}
+                        />
                       </Button>
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                        variant='ghost'
+                        size='icon'
+                        className='text-muted-foreground hover:text-blue-600 hover:bg-blue-500/10'
                         onClick={() => startEditing(account)}
                         data-cy={`account-edit-btn-${index}`}
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className='h-4 w-4' />
                       </Button>
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        variant='ghost'
+                        size='icon'
+                        className='text-red-500 hover:text-red-700 hover:bg-red-500/10'
                         onClick={() => setDeleteTarget(account.id)}
-                        data-cy="account-delete-btn"
+                        data-cy='account-delete-btn'
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className='h-4 w-4' />
                       </Button>
                     </div>
                   )}
@@ -317,7 +333,7 @@ export default function GameAccountsSection({ onAccountsChange }: Readonly<GameA
         title={t.common.confirm}
         description={t.game.accounts.deleteConfirm}
         onConfirm={handleDelete}
-        variant="destructive"
+        variant='destructive'
         confirmText={t.common.delete}
       />
     </>
