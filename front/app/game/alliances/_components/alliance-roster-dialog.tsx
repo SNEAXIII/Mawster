@@ -2,12 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useI18n } from '@/app/i18n';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import {
@@ -19,12 +14,7 @@ import {
 } from '@/components/ui/select';
 import RosterGrid from '@/app/game/roster/_components/roster-grid';
 import UpgradeRequestsSection from '@/app/game/roster/_components/upgrade-requests-section';
-import {
-  getRoster,
-  RosterEntry,
-  RARITIES,
-  RARITY_LABELS,
-} from '@/app/services/roster';
+import { getRoster, RosterEntry, RARITIES, RARITY_LABELS } from '@/app/services/roster';
 import { useUpgradeRequests } from '@/hooks/use-upgrade-requests';
 
 interface AllianceRosterDialogProps {
@@ -69,10 +59,7 @@ export default function AllianceRosterDialog({
     if (!open || !gameAccountId) return;
     setLoading(true);
     setError('');
-    Promise.all([
-      getRoster(gameAccountId),
-      fetchUpgradeRequests(gameAccountId),
-    ])
+    Promise.all([getRoster(gameAccountId), fetchUpgradeRequests(gameAccountId)])
       .then(([rosterData]) => {
         setRoster(rosterData);
       })
@@ -92,28 +79,23 @@ export default function AllianceRosterDialog({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-full max-w-[95vw] sm:max-w-5xl max-h-[90vh] sm:max-h-[80vh] overflow-y-auto p-4 sm:p-6">
+      <Dialog
+        open={open}
+        onOpenChange={onOpenChange}
+      >
+        <DialogContent className='w-full max-w-[95vw] sm:max-w-5xl max-h-[90vh] sm:max-h-[80vh] overflow-y-auto p-4 sm:p-6'>
           <DialogHeader>
-            <DialogTitle>
-              {t.game.alliances.rosterOf.replace('{pseudo}', gamePseudo)}
-            </DialogTitle>
+            <DialogTitle>{t.game.alliances.rosterOf.replace('{pseudo}', gamePseudo)}</DialogTitle>
           </DialogHeader>
 
           {loading && (
-            <p className="text-gray-500 text-center py-8">
-              {t.game.alliances.loadingRoster}
-            </p>
+            <p className='text-gray-500 text-center py-8'>{t.game.alliances.loadingRoster}</p>
           )}
 
-          {error && (
-            <p className="text-red-500 text-center py-8">{error}</p>
-          )}
+          {error && <p className='text-red-500 text-center py-8'>{error}</p>}
 
           {!loading && !error && roster.length === 0 && (
-            <p className="text-gray-500 text-center py-8">
-              {t.game.alliances.emptyRoster}
-            </p>
+            <p className='text-gray-500 text-center py-8'>{t.game.alliances.emptyRoster}</p>
           )}
 
           {!loading && !error && roster.length > 0 && (
@@ -139,8 +121,11 @@ export default function AllianceRosterDialog({
             </>
           )}
 
-          <div className="flex justify-end pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <div className='flex justify-end pt-2'>
+            <Button
+              variant='outline'
+              onClick={() => onOpenChange(false)}
+            >
               {t.game.alliances.close}
             </Button>
           </div>
@@ -150,43 +135,61 @@ export default function AllianceRosterDialog({
       {/* Upgrade request sub-dialog */}
       <Dialog
         open={!!upgradeTarget}
-        onOpenChange={(v) => { if (!v) closeUpgradeDialog(); }}
+        onOpenChange={(v) => {
+          if (!v) closeUpgradeDialog();
+        }}
       >
-        <DialogContent className="w-full max-w-[90vw] sm:max-w-md">
+        <DialogContent className='w-full max-w-[90vw] sm:max-w-md'>
           <DialogHeader>
             <DialogTitle>
-              {t.game.alliances.requestUpgradeTitle.replace('{name}', upgradeTarget?.champion_name ?? '')}
+              {t.game.alliances.requestUpgradeTitle.replace(
+                '{name}',
+                upgradeTarget?.champion_name ?? ''
+              )}
             </DialogTitle>
           </DialogHeader>
 
-          <p className="text-sm text-gray-600 mb-3">
+          <p className='text-sm text-gray-600 mb-3'>
             {t.game.alliances.requestUpgradeDesc
               .replace('{name}', upgradeTarget?.champion_name ?? '')
-              .replace('{current}', RARITY_LABELS[upgradeTarget?.rarity ?? ''] ?? upgradeTarget?.rarity ?? '')}
+              .replace(
+                '{current}',
+                RARITY_LABELS[upgradeTarget?.rarity ?? ''] ?? upgradeTarget?.rarity ?? ''
+              )}
           </p>
 
-          <Select value={selectedRarity} onValueChange={setSelectedRarity}>
-            <SelectTrigger data-cy="upgrade-rarity-select">
+          <Select
+            value={selectedRarity}
+            onValueChange={setSelectedRarity}
+          >
+            <SelectTrigger data-cy='upgrade-rarity-select'>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {upgradeTarget &&
                 getUpgradeOptions(upgradeTarget).map((r) => (
-                  <SelectItem key={r} value={r}>
+                  <SelectItem
+                    key={r}
+                    value={r}
+                  >
                     {RARITY_LABELS[r]}
                   </SelectItem>
                 ))}
             </SelectContent>
           </Select>
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className='flex justify-end gap-2 pt-2'>
             <Button
-              variant="outline"
+              variant='outline'
               onClick={closeUpgradeDialog}
             >
               {t.common.cancel}
             </Button>
-            <Button data-cy="request-upgrade-btn" onClick={handleRequestUpgrade} disabled={!selectedRarity}>
+            <Button
+              data-cy='request-upgrade-btn'
+              onClick={handleRequestUpgrade}
+              disabled={!selectedRarity}
+            >
               {t.game.alliances.requestUpgrade}
             </Button>
           </div>
@@ -196,14 +199,16 @@ export default function AllianceRosterDialog({
       {/* Cancel upgrade request confirmation */}
       <ConfirmationDialog
         open={!!cancelTarget}
-        onOpenChange={(open) => { if (!open) closeCancelDialog(); }}
+        onOpenChange={(open) => {
+          if (!open) closeCancelDialog();
+        }}
         title={t.roster.upgradeRequests.cancelConfirmTitle}
         description={t.roster.upgradeRequests.cancelConfirmDesc.replace(
           '{name}',
-          cancelTarget?.name ?? '',
+          cancelTarget?.name ?? ''
         )}
         onConfirm={confirmCancelRequest}
-        variant="destructive"
+        variant='destructive'
         confirmText={t.roster.upgradeRequests.cancel}
       />
     </>

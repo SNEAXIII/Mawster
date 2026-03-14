@@ -18,11 +18,7 @@ declare namespace Cypress {
     /**
      * Create a game account via backend API.
      */
-    apiCreateGameAccount(
-      token: string,
-      pseudo: string,
-      isPrimary?: boolean
-    ): Chainable<any>;
+    apiCreateGameAccount(token: string, pseudo: string, isPrimary?: boolean): Chainable<any>;
 
     /**
      * Load a champion via admin backend API.
@@ -37,12 +33,7 @@ declare namespace Cypress {
     /**
      * Create an alliance via backend API.
      */
-    apiCreateAlliance(
-      token: string,
-      name: string,
-      tag: string,
-      ownerId: string
-    ): Chainable<any>;
+    apiCreateAlliance(token: string, name: string, tag: string, ownerId: string): Chainable<any>;
 
     /**
      * Add a champion to a player's roster via backend API.
@@ -80,28 +71,17 @@ declare namespace Cypress {
     /**
      * Invite a game account to an alliance via backend API.
      */
-    apiInviteMember(
-      token: string,
-      allianceId: string,
-      gameAccountId: string
-    ): Chainable<any>;
+    apiInviteMember(token: string, allianceId: string, gameAccountId: string): Chainable<any>;
 
     /**
      * Force a user to join an alliance via dev endpoint (bypasses invitations).
      */
-    apiForceJoinAlliance(
-      gameAccountId: string,
-      allianceId: string
-    ): Chainable<any>;
+    apiForceJoinAlliance(gameAccountId: string, allianceId: string): Chainable<any>;
 
     /**
      * Promote a member to officer in an alliance via backend API.
      */
-    apiAddOfficer(
-      token: string,
-      allianceId: string,
-      gameAccountId: string
-    ): Chainable<any>;
+    apiAddOfficer(token: string, allianceId: string, gameAccountId: string): Chainable<any>;
 
     /**
      * Truncate the DB then run all fixture scripts (POST /dev/fixtures).

@@ -28,12 +28,12 @@ export default function TableHeaderUsers({
 }: AllSelectorProps) {
   const { t } = useI18n();
 
-  const translatedStatus = possibleStatus.map(s => ({
+  const translatedStatus = possibleStatus.map((s) => ({
     value: s.value,
     label: t.dashboard.status[s.value as keyof typeof t.dashboard.status],
   }));
 
-  const translatedRoles = possibleRoles.map(r => ({
+  const translatedRoles = possibleRoles.map((r) => ({
     value: r.value,
     label: t.dashboard.roles[r.value as keyof typeof t.dashboard.roles],
   }));

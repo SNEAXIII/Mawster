@@ -9,14 +9,17 @@ import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { Shield, Trash2, Download, Upload } from 'lucide-react';
 
-import {
-  type Alliance,
-  getMyAlliances,
-} from '@/app/services/game';
+import { type Alliance, getMyAlliances } from '@/app/services/game';
 import {
   type DefenseSummary,
   type AvailableChampion,
@@ -81,7 +84,9 @@ export default function DefensePageContent({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
-  const userCanManage = selectedAlliance ? (canManage(selectedAlliance) || isOwner(selectedAlliance)) : false;
+  const userCanManage = selectedAlliance
+    ? canManage(selectedAlliance) || isOwner(selectedAlliance)
+    : false;
 
   // ─── Data fetching ─────────────────────────────────────
   const fetchAlliances = useCallback(async () => {
@@ -98,24 +103,27 @@ export default function DefensePageContent({
     }
   }, [t, selectedAllianceId, selectedBg, onStateChange]);
 
-  const fetchDefense = useCallback(async (silent = false) => {
-    if (!selectedAllianceId) return;
-    if (!silent) setDefenseLoading(true);
-    try {
-      const [defense, champions, members] = await Promise.all([
-        getDefense(selectedAllianceId, selectedBg),
-        getAvailableChampions(selectedAllianceId, selectedBg),
-        getBgMembers(selectedAllianceId, selectedBg),
-      ]);
-      setDefenseSummary(defense);
-      setAvailableChampions(champions);
-      setBgMembers(members);
-    } catch (err: any) {
-      if (!silent) toast.error(t.game.defense.loadError);
-    } finally {
-      if (!silent) setDefenseLoading(false);
-    }
-  }, [selectedAllianceId, selectedBg, t]);
+  const fetchDefense = useCallback(
+    async (silent = false) => {
+      if (!selectedAllianceId) return;
+      if (!silent) setDefenseLoading(true);
+      try {
+        const [defense, champions, members] = await Promise.all([
+          getDefense(selectedAllianceId, selectedBg),
+          getAvailableChampions(selectedAllianceId, selectedBg),
+          getBgMembers(selectedAllianceId, selectedBg),
+        ]);
+        setDefenseSummary(defense);
+        setAvailableChampions(champions);
+        setBgMembers(members);
+      } catch (err: any) {
+        if (!silent) toast.error(t.game.defense.loadError);
+      } finally {
+        if (!silent) setDefenseLoading(false);
+      }
+    },
+    [selectedAllianceId, selectedBg, t]
+  );
 
   const fetchDefenseRef = useRef(fetchDefense);
   useEffect(() => {
@@ -159,7 +167,7 @@ export default function DefensePageContent({
   const handlePlaceDefender = async (
     championUserId: string,
     gameAccountId: string,
-    championName: string,
+    championName: string
   ) => {
     if (!selectedAllianceId || selectorNode === null) return;
     try {
@@ -168,10 +176,12 @@ export default function DefensePageContent({
         selectedBg,
         selectorNode,
         championUserId,
-        gameAccountId,
+        gameAccountId
       );
       toast.success(
-        t.game.defense.placeSuccess.replace('{name}', championName).replace('{node}', String(selectorNode)),
+        t.game.defense.placeSuccess
+          .replace('{name}', championName)
+          .replace('{node}', String(selectorNode))
       );
       setSelectorNode(null);
       await fetchDefense(true);
@@ -239,7 +249,7 @@ export default function DefensePageContent({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       toast.success(
-        t.game.defense.importExport.exportedCount.replace('{count}', String(items.length)),
+        t.game.defense.importExport.exportedCount.replace('{count}', String(items.length))
       );
     } catch (err: any) {
       toast.error(err.message || t.game.defense.importExport.exportError);
@@ -273,40 +283,49 @@ export default function DefensePageContent({
 
   if (alliances.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Shield className="w-16 h-16 text-muted-foreground mb-4" />
-        <h2 className="text-xl font-bold mb-2">{t.game.defense.title}</h2>
-        <p className="text-muted-foreground">{t.game.defense.noAlliance}</p>
+      <div className='flex flex-col items-center justify-center py-20 text-center'>
+        <Shield className='w-16 h-16 text-muted-foreground mb-4' />
+        <h2 className='text-xl font-bold mb-2'>{t.game.defense.title}</h2>
+        <p className='text-muted-foreground'>{t.game.defense.noAlliance}</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className='space-y-4'>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <div className="flex items-center gap-2">
-          <Shield className="w-6 h-6 text-blue-400" />
-          <h1 className="text-xl font-bold">{t.game.defense.title}</h1>
+      <div className='flex flex-col sm:flex-row items-start sm:items-center gap-3'>
+        <div className='flex items-center gap-2'>
+          <Shield className='w-6 h-6 text-blue-400' />
+          <h1 className='text-xl font-bold'>{t.game.defense.title}</h1>
         </div>
       </div>
 
       {/* Controls */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        <CardContent className='p-4'>
+          <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center'>
             {/* Alliance selector */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium whitespace-nowrap">
+            <div className='flex items-center gap-2'>
+              <label className='text-sm font-medium whitespace-nowrap'>
                 {t.game.defense.alliance}:
               </label>
-              <Select value={selectedAllianceId} onValueChange={handleAllianceChange}>
-                <SelectTrigger className="w-[200px]" data-cy="defense-alliance-select">
+              <Select
+                value={selectedAllianceId}
+                onValueChange={handleAllianceChange}
+              >
+                <SelectTrigger
+                  className='w-[200px]'
+                  data-cy='defense-alliance-select'
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {alliances.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
+                    <SelectItem
+                      key={a.id}
+                      value={a.id}
+                    >
                       [{a.tag}] {a.name}
                     </SelectItem>
                   ))}
@@ -315,16 +334,16 @@ export default function DefensePageContent({
             </div>
 
             {/* BG selector */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium whitespace-nowrap">
+            <div className='flex items-center gap-2'>
+              <label className='text-sm font-medium whitespace-nowrap'>
                 {t.game.defense.battlegroup}:
               </label>
-              <div className="flex gap-1">
+              <div className='flex gap-1'>
                 {[1, 2, 3].map((bg) => (
                   <Button
                     key={bg}
                     variant={selectedBg === bg ? 'default' : 'outline'}
-                    size="sm"
+                    size='sm'
                     onClick={() => handleBgChange(String(bg))}
                     data-cy={`defense-bg-${bg}`}
                   >
@@ -337,26 +356,36 @@ export default function DefensePageContent({
             {/* Clear button */}
             {userCanManage && defenseSummary && defenseSummary.placements.length > 0 && (
               <Button
-                variant="destructive"
-                size="sm"
-                className="ml-auto"
-                data-cy="defense-clear-all"
+                variant='destructive'
+                size='sm'
+                className='ml-auto'
+                data-cy='defense-clear-all'
                 onClick={() => setClearConfirmOpen(true)}
               >
-                <Trash2 className="w-4 h-4 mr-1" />
+                <Trash2 className='w-4 h-4 mr-1' />
                 {t.game.defense.clearAll}
               </Button>
             )}
 
             {/* Export / Import — managers only */}
             {userCanManage && (
-              <div className="flex gap-1 ml-auto">
-                <Button variant="outline" size="sm" onClick={handleExport} data-cy="defense-export">
-                  <Download className="w-4 h-4 mr-1" />
+              <div className='flex gap-1 ml-auto'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={handleExport}
+                  data-cy='defense-export'
+                >
+                  <Download className='w-4 h-4 mr-1' />
                   {t.game.defense.importExport.exportBtn}
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} data-cy="defense-import">
-                  <Upload className="w-4 h-4 mr-1" />
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => fileInputRef.current?.click()}
+                  data-cy='defense-import'
+                >
+                  <Upload className='w-4 h-4 mr-1' />
                   {t.game.defense.importExport.importBtn}
                 </Button>
               </div>
@@ -369,11 +398,11 @@ export default function DefensePageContent({
       {defenseLoading ? (
         <FullPageSpinner />
       ) : (
-        <div className="flex flex-col lg:flex-row gap-4">
+        <div className='flex flex-col lg:flex-row gap-4'>
           {/* War Map */}
-          <div className="flex-1 min-w-0">
+          <div className='flex-1 min-w-0'>
             <Card>
-              <CardContent className="p-2 sm:p-4">
+              <CardContent className='p-2 sm:p-4'>
                 <WarMap
                   placements={defenseSummary?.placements ?? []}
                   onNodeClick={handleNodeClick}
@@ -385,9 +414,9 @@ export default function DefensePageContent({
           </div>
 
           {/* Side panel */}
-          <div className="w-full lg:w-72 xl:w-80 shrink-0">
+          <div className='w-full lg:w-72 xl:w-80 shrink-0'>
             <Card>
-              <CardContent className="p-3">
+              <CardContent className='p-3'>
                 <DefenseSidePanel
                   members={bgMembers}
                   placements={defenseSummary?.placements ?? []}
@@ -419,15 +448,15 @@ export default function DefensePageContent({
         description={t.game.defense.clearConfirmDesc}
         confirmText={t.common.confirm}
         onConfirm={handleClearDefense}
-        variant="destructive"
+        variant='destructive'
       />
 
       {/* Hidden file input for import */}
       <input
         ref={fileInputRef}
-        type="file"
-        accept=".json"
-        className="hidden"
+        type='file'
+        accept='.json'
+        className='hidden'
         onChange={handleImportFile}
       />
 

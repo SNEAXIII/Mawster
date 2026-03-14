@@ -27,7 +27,7 @@ const MAX_NODE = 50;
 function getNodeRowClass(
   before: DefenseReportItem | undefined,
   after: DefenseReportItem | undefined,
-  error: string | undefined,
+  error: string | undefined
 ): string {
   if (error) return 'bg-red-50 dark:bg-red-950/30';
   if (!before && after) return 'bg-green-50 dark:bg-green-950/30';
@@ -56,7 +56,10 @@ function AfterCell({
   if (after) return <NodeChampion item={after} />;
   if (error) {
     return (
-      <span className='text-xs text-destructive truncate' title={error}>
+      <span
+        className='text-xs text-destructive truncate'
+        title={error}
+      >
         <XCircle className='w-3 h-3 inline mr-0.5' />
         {error}
       </span>
@@ -91,12 +94,13 @@ export default function DefenseImportReportDialog({ open, onClose, report }: Rea
   for (let n = MAX_NODE; n >= 1; n--) nodes.push(n);
 
   // Only show nodes that had something before, after, or errored
-  const activeNodes = nodes.filter(
-    (n) => beforeMap.has(n) || afterMap.has(n) || errorMap.has(n),
-  );
+  const activeNodes = nodes.filter((n) => beforeMap.has(n) || afterMap.has(n) || errorMap.has(n));
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => !v && onClose()}
+    >
       <DialogContent className='max-w-2xl max-h-[85vh] flex flex-col'>
         <DialogHeader>
           <DialogTitle>{ti.reportTitle}</DialogTitle>
@@ -177,13 +181,14 @@ function NodeChampion({ item }: Readonly<{ item: DefenseReportItem }>) {
         />
       </div>
       <div className='min-w-0 flex-1'>
-        <p className='text-xs font-semibold truncate' title={item.champion_name}>
+        <p
+          className='text-xs font-semibold truncate'
+          title={item.champion_name}
+        >
           {shortenChampionName(item.champion_name)}
         </p>
         <p className='text-[10px] text-muted-foreground truncate'>
-          <span className={classColors.label}>
-            {RARITY_LABELS[item.rarity] ?? item.rarity}
-          </span>
+          <span className={classColors.label}>{RARITY_LABELS[item.rarity] ?? item.rarity}</span>
           {' · '}
           {item.owner_name}
         </p>

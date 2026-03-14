@@ -54,7 +54,9 @@ export default function UpgradeRequestsSection({
     setLoading(true);
     getUpgradeRequests(gameAccountId)
       .then(setInternalRequests)
-      .catch(() => {/* silent */})
+      .catch(() => {
+        /* silent */
+      })
       .finally(() => setLoading(false));
   }, [gameAccountId, refreshKey, externalRequests]);
 
@@ -79,78 +81,83 @@ export default function UpgradeRequestsSection({
   if (!gameAccountId || (!loading && requests.length === 0)) return null;
 
   return (
-    <div data-cy="upgrade-requests-section">
-    <CollapsibleSection
-      title={`${t.roster.upgradeRequests.title} (${requests.length})`}
-      defaultOpen={false}
-      className="mb-4"
-    >
-      {loading ? (
-        <p className="text-sm text-muted-foreground">...</p>
-      ) : (
-        <div className="space-y-2">
-          {requests.map((req) => {
-            const classColors = getClassColors(req.champion_class);
-            return (
-              <div
-                key={req.id}
-                data-cy="upgrade-request-item"
-                className={`flex items-center gap-3 p-2 rounded-md bg-gray-900 ${classColors.border} border`}
-              >
-                <ChampionPortrait
-                  imageUrl={req.image_url}
-                  name={req.champion_name}
-                  rarity={req.current_rarity}
-                  size={40}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">
-                    {req.champion_name}
-                  </p>
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-gray-400">
-                      {t.roster.upgradeRequests.currentRarity.replace(
-                        '{rarity}',
-                        RARITY_LABELS[req.current_rarity] ?? req.current_rarity,
+    <div data-cy='upgrade-requests-section'>
+      <CollapsibleSection
+        title={`${t.roster.upgradeRequests.title} (${requests.length})`}
+        defaultOpen={false}
+        className='mb-4'
+      >
+        {loading ? (
+          <p className='text-sm text-muted-foreground'>...</p>
+        ) : (
+          <div className='space-y-2'>
+            {requests.map((req) => {
+              const classColors = getClassColors(req.champion_class);
+              return (
+                <div
+                  key={req.id}
+                  data-cy='upgrade-request-item'
+                  className={`flex items-center gap-3 p-2 rounded-md bg-gray-900 ${classColors.border} border`}
+                >
+                  <ChampionPortrait
+                    imageUrl={req.image_url}
+                    name={req.champion_name}
+                    rarity={req.current_rarity}
+                    size={40}
+                  />
+                  <div className='flex-1 min-w-0'>
+                    <p className='text-sm font-semibold text-white truncate'>{req.champion_name}</p>
+                    <div className='flex items-center gap-2 text-xs'>
+                      <span className='text-gray-400'>
+                        {t.roster.upgradeRequests.currentRarity.replace(
+                          '{rarity}',
+                          RARITY_LABELS[req.current_rarity] ?? req.current_rarity
+                        )}
+                      </span>
+                      <span className='text-yellow-400 font-semibold'>
+                        → {RARITY_LABELS[req.requested_rarity] ?? req.requested_rarity}
+                      </span>
+                    </div>
+                    <p className='text-[10px] text-muted-foreground'>
+                      {t.roster.upgradeRequests.requestedBy.replace(
+                        '{pseudo}',
+                        req.requester_pseudo
                       )}
-                    </span>
-                    <span className="text-yellow-400 font-semibold">
-                      → {RARITY_LABELS[req.requested_rarity] ?? req.requested_rarity}
-                    </span>
+                    </p>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">
-                    {t.roster.upgradeRequests.requestedBy.replace('{pseudo}', req.requester_pseudo)}
-                  </p>
+                  {canCancel && (
+                    <button
+                      data-cy='cancel-upgrade-request'
+                      className='text-red-400 hover:text-red-300 bg-black/40 rounded-full p-1 shrink-0'
+                      onClick={() =>
+                        onInitiateCancel ? onInitiateCancel(req.id) : setCancelTarget(req)
+                      }
+                      title={t.roster.upgradeRequests.cancel}
+                    >
+                      <X className='h-3.5 w-3.5' />
+                    </button>
+                  )}
                 </div>
-                {canCancel && (
-                  <button
-                    data-cy="cancel-upgrade-request"
-                    className="text-red-400 hover:text-red-300 bg-black/40 rounded-full p-1 shrink-0"
-                    onClick={() => onInitiateCancel ? onInitiateCancel(req.id) : setCancelTarget(req)}
-                    title={t.roster.upgradeRequests.cancel}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      <ConfirmationDialog
-        open={!!cancelTarget}
-        onOpenChange={(open) => { if (!open) setCancelTarget(null); }}
-        title={t.roster.upgradeRequests.cancelConfirmTitle}
-        description={t.roster.upgradeRequests.cancelConfirmDesc.replace(
-          '{name}',
-          cancelTarget?.champion_name ?? '',
+              );
+            })}
+          </div>
         )}
-        onConfirm={confirmCancel}
-        variant="destructive"
-        confirmText={t.roster.upgradeRequests.cancel}
-      />
-    </CollapsibleSection>
+
+        <ConfirmationDialog
+          open={!!cancelTarget}
+          onOpenChange={(open) => {
+            if (!open) setCancelTarget(null);
+          }}
+          title={t.roster.upgradeRequests.cancelConfirmTitle}
+          description={t.roster.upgradeRequests.cancelConfirmDesc.replace(
+            '{name}',
+            cancelTarget?.champion_name ?? ''
+          )}
+          onConfirm={confirmCancel}
+          variant='destructive'
+          confirmText={t.roster.upgradeRequests.cancel}
+        />
+      </CollapsibleSection>
     </div>
   );
 }

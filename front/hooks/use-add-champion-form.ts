@@ -88,7 +88,7 @@ export function useAddChampionForm(selectedAccountId: string | null) {
         selectedRarity,
         signatureValue,
         isPreferredAttacker,
-        ascension,
+        ascension
       );
       const updated = await getRoster(selectedAccountId);
       toast.success(t.roster.addSuccess.replace('{name}', selectedChampion.name));
@@ -101,7 +101,16 @@ export function useAddChampionForm(selectedAccountId: string | null) {
     } finally {
       setAdding(false);
     }
-  }, [selectedAccountId, selectedChampion, selectedRarity, signatureValue, isPreferredAttacker, ascension, reset, t]);
+  }, [
+    selectedAccountId,
+    selectedChampion,
+    selectedRarity,
+    signatureValue,
+    isPreferredAttacker,
+    ascension,
+    reset,
+    t,
+  ]);
 
   return {
     championSearch,

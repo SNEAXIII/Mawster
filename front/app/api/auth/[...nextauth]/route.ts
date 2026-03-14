@@ -155,7 +155,17 @@ export const {
       : []),
   ],
   callbacks: {
-    async jwt({ token, user, account, profile }: { token: any; user: any; account?: any; profile?: any }) {
+    async jwt({
+      token,
+      user,
+      account,
+      profile,
+    }: {
+      token: any;
+      user: any;
+      account?: any;
+      profile?: any;
+    }) {
       // Dev login via CredentialsProvider (no Discord)
       if (account?.provider === 'dev-login' && user) {
         return {
@@ -205,7 +215,7 @@ export const {
             backendAuthenticated: true,
           };
         } catch (error) {
-          console.error('Erreur lors de l\'auth Discord:', error);
+          console.error("Erreur lors de l'auth Discord:", error);
           return { ...token, expired: true, backendAuthenticated: false };
         }
       }

@@ -11,12 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Shield,
-  UserPlus,
-  Users,
-  X,
-} from 'lucide-react';
+import { Shield, UserPlus, Users, X } from 'lucide-react';
 import { type Alliance, type GameAccount, type AllianceInvitation } from '@/app/services/game';
 import { formatDateMedium } from '@/app/lib/utils';
 import { useAllianceRole } from '@/hooks/use-alliance-role';
@@ -45,7 +40,12 @@ interface AllianceCardProps {
   onPromoteOfficer: (target: ConfirmTarget) => void;
   onLeave: (target: ConfirmTarget) => void;
   onExclude: (target: ConfirmTarget) => void;
-  onSetGroup: (allianceId: string, gameAccountId: string, group: number | null, pseudo: string) => void;
+  onSetGroup: (
+    allianceId: string,
+    gameAccountId: string,
+    group: number | null,
+    pseudo: string
+  ) => void;
   onViewRoster: (gameAccountId: string, pseudo: string, canRequestUpgrade: boolean) => void;
   pendingInvitations?: AllianceInvitation[];
   onCancelInvitation?: (allianceId: string, invitationId: string) => void;
@@ -82,24 +82,39 @@ export default function AllianceCard({
 
   return (
     <Card data-cy={`alliance-card-${alliance.name}`}>
-        <CardContent className="py-3 sm:py-4 px-3 sm:px-6 space-y-3 sm:space-y-4">
+      <CardContent className='py-3 sm:py-4 px-3 sm:px-6 space-y-3 sm:space-y-4'>
         {/* Alliance header */}
-        <div className="flex items-center gap-3">
-          <Shield className="h-5 w-5 text-purple-500" />
+        <div className='flex items-center gap-3'>
+          <Shield className='h-5 w-5 text-purple-500' />
           <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-medium text-foreground" data-cy="alliance-name">{alliance.name}</p>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800" data-cy="alliance-tag">
+            <div className='flex items-center gap-2 flex-wrap'>
+              <p
+                className='font-medium text-foreground'
+                data-cy='alliance-name'
+              >
+                {alliance.name}
+              </p>
+              <span
+                className='inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800'
+                data-cy='alliance-tag'
+              >
                 [{alliance.tag}]
               </span>
-              <span className="text-xs text-muted-foreground" data-cy="alliance-officer-count">
+              <span
+                className='text-xs text-muted-foreground'
+                data-cy='alliance-officer-count'
+              >
                 {officerCount} {t.game.alliances.officersCount}
               </span>
             </div>
-            <div className="flex items-center gap-2 mt-1">
-              <UsernameEnriched pseudo={alliance.owner_pseudo} role="owner" textSize="text-xs" />
-              <span className="text-xs text-muted-foreground">·</span>
-              <span className="text-xs text-muted-foreground">
+            <div className='flex items-center gap-2 mt-1'>
+              <UsernameEnriched
+                pseudo={alliance.owner_pseudo}
+                role='owner'
+                textSize='text-xs'
+              />
+              <span className='text-xs text-muted-foreground'>·</span>
+              <span className='text-xs text-muted-foreground'>
                 {formatDateMedium(alliance.created_at, locale)}
               </span>
             </div>
@@ -111,29 +126,29 @@ export default function AllianceCard({
           <CollapsibleSection
             title={`${t.game.alliances.pendingInvitations} (${pendingInvitations.length})`}
             defaultOpen={true}
-            className="border-amber-200"
+            className='border-amber-200'
           >
-            <div className="space-y-1">
+            <div className='space-y-1'>
               {pendingInvitations.map((inv, index) => (
                 <div
                   key={inv.id}
                   data-cy={`pending-invitation-${index}`}
-                  className="flex items-center justify-between gap-2 p-2 rounded-md bg-amber-50 border border-amber-200"
+                  className='flex items-center justify-between gap-2 p-2 rounded-md bg-amber-50 border border-amber-200'
                 >
-                  <div className="space-y-0.5">
-                    <p className="text-sm text-foreground">{inv.game_account_pseudo}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className='space-y-0.5'>
+                    <p className='text-sm text-foreground'>{inv.game_account_pseudo}</p>
+                    <p className='text-xs text-muted-foreground'>
                       {t.game.alliances.invitedBy} {inv.invited_by_pseudo}
                     </p>
                   </div>
                   {onCancelInvitation && (
                     <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      size='sm'
+                      variant='ghost'
+                      className='text-red-500 hover:text-red-700 hover:bg-red-50'
                       onClick={() => onCancelInvitation(alliance.id, inv.id)}
                     >
-                      <X className="h-3 w-3 mr-1" />
+                      <X className='h-3 w-3 mr-1' />
                       {t.game.alliances.cancelInvitation}
                     </Button>
                   )}
@@ -144,11 +159,14 @@ export default function AllianceCard({
         )}
 
         {/* Members section */}
-        <div className="border-t pt-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-green-500" />
-              <span data-cy="alliance-member-count" className="text-sm font-medium text-muted-foreground">
+        <div className='border-t pt-3'>
+          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2'>
+            <div className='flex items-center gap-2'>
+              <Users className='h-4 w-4 text-green-500' />
+              <span
+                data-cy='alliance-member-count'
+                className='text-sm font-medium text-muted-foreground'
+              >
                 {t.game.alliances.membersTitle} ({alliance.member_count})
               </span>
             </div>
@@ -156,46 +174,60 @@ export default function AllianceCard({
             {/* Invite member button / inline form */}
             {userCanManage &&
               (memberAllianceId === alliance.id ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  <Select value={memberAccountId} onValueChange={onMemberAccountChange}>
-                    <SelectTrigger className="w-full sm:w-48 h-8 text-xs" data-cy="invite-member-select">
+                <div className='flex flex-wrap items-center gap-2'>
+                  <Select
+                    value={memberAccountId}
+                    onValueChange={onMemberAccountChange}
+                  >
+                    <SelectTrigger
+                      className='w-full sm:w-48 h-8 text-xs'
+                      data-cy='invite-member-select'
+                    >
                       <SelectValue placeholder={t.game.alliances.selectMember} />
                     </SelectTrigger>
                     <SelectContent>
                       {eligibleMembers.map((acc) => (
-                        <SelectItem key={acc.id} value={acc.id}>
+                        <SelectItem
+                          key={acc.id}
+                          value={acc.id}
+                        >
                           {acc.game_pseudo}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <Button
-                    size="sm"
+                    size='sm'
                     disabled={!memberAccountId}
-                    data-cy="invite-member-submit"
+                    data-cy='invite-member-submit'
                     onClick={() => onInviteMember(alliance.id)}
                   >
                     {t.game.alliances.inviteMemberButton}
                   </Button>
-                  <Button size="sm" variant="ghost" data-cy="invite-member-cancel" onClick={onCloseInviteMember}>
+                  <Button
+                    size='sm'
+                    variant='ghost'
+                    data-cy='invite-member-cancel'
+                    onClick={onCloseInviteMember}
+                  >
                     {t.common.cancel}
                   </Button>
                 </div>
               ) : (
                 <Button
-                  size="sm"
-                  variant="outline"
-                  data-cy="invite-member-toggle"
+                  size='sm'
+                  variant='outline'
+                  data-cy='invite-member-toggle'
                   onClick={() => onOpenInviteMember(alliance.id)}
                 >
-                  <UserPlus className="h-3 w-3 mr-1" />
+                  <UserPlus className='h-3 w-3 mr-1' />
                   {t.game.alliances.inviteMember}
                 </Button>
               ))}
           </div>
 
           {alliance.members.length > 0 && (
-            <div className="space-y-1">
+            <div className='space-y-1'>
               {sortedMembers.map((member) => (
                 <AllianceMemberRow
                   key={member.id}

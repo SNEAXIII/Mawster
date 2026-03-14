@@ -32,6 +32,7 @@ const en = {
     champions: 'Champions',
     users: 'Users',
     signIn: 'Sign in',
+    toggleTheme: 'Toggle theme',
     signOut: 'Sign out',
   },
 
@@ -113,7 +114,8 @@ const en = {
       owner: 'Leader',
       selectOwner: 'Select an account',
       noGameAccount: 'You need to create a game account first before creating an alliance.',
-      noEligibleAccount: 'All your game accounts are already in an alliance. Create a new game account or leave an alliance first.',
+      noEligibleAccount:
+        'All your game accounts are already in an alliance. Create a new game account or leave an alliance first.',
       createTitle: 'Create an alliance',
       createButton: 'Create alliance',
       creating: 'Creating...',
@@ -361,7 +363,8 @@ const en = {
       entryNotObject: 'Entry #{idx}: must be an object.',
       missingChampionName: 'Entry #{idx}: "champion_name" is missing or invalid.',
       missingRarity: 'Entry #{idx}: "rarity" is missing or invalid.',
-      invalidRarity: 'Entry #{idx} ({name}): rarity "{rarity}" is invalid (expected 6r4, 7r1, etc.).',
+      invalidRarity:
+        'Entry #{idx} ({name}): rarity "{rarity}" is invalid (expected 6r4, 7r1, etc.).',
       invalidSignature: 'Entry #{idx} ({name}): "signature" must be a number >= 0.',
       allInvalid: 'All entries are invalid.',
       skippedEntries: '{count} entry(ies) skipped because invalid.',
@@ -396,7 +399,8 @@ const en = {
     },
     preferredAttacker: 'Preferred Attacker',
     preferredAttackerToggle: 'Toggle preferred attacker flag',
-    preferredAttackerHint: 'Marked as preferred attacker — officers can still place them in defense.',
+    preferredAttackerHint:
+      'Marked as preferred attacker — officers can still place them in defense.',
   },
 } as const;
 

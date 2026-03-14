@@ -39,21 +39,21 @@ export function CollapsibleSection({
     >
       <CollapsibleTrigger asChild>
         <button
-          className="w-full flex items-center justify-between px-4 py-3 bg-muted/50 hover:bg-muted transition-colors font-semibold text-left rounded-t-lg"
-          type="button"
+          className='w-full flex items-center justify-between px-4 py-3 bg-muted/50 hover:bg-muted transition-colors font-semibold text-left rounded-t-lg'
+          type='button'
           data-cy={`collapsible-${title.replace(/[\s/]+/g, '-').toLowerCase()}`}
         >
           <span>{title}</span>
           <ChevronDown
             className={cn(
               'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
-              isOpen && 'rotate-180',
+              isOpen && 'rotate-180'
             )}
           />
         </button>
       </CollapsibleTrigger>
-      <CollapsibleContent className="border-t">
-        <div className="p-4">{children}</div>
+      <CollapsibleContent className='border-t'>
+        <div className='p-4'>{children}</div>
       </CollapsibleContent>
     </Collapsible>
   );

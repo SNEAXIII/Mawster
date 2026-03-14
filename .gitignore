@@ -7,7 +7,7 @@ data/db/*
 *.env
 !*.env.example
 front/.env.local
-
+*.pid
 # Application logs (RGPD — never commit)
 api/logs/
 

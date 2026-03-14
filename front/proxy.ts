@@ -33,7 +33,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
   // 5. Restrict admin paths to admin or super_admin users
-  if (isPathMatching(pathname, ADMIN_PATHS) && token?.role !== 'admin' && token?.role !== 'super_admin') {
+  if (
+    isPathMatching(pathname, ADMIN_PATHS) &&
+    token?.role !== 'admin' &&
+    token?.role !== 'super_admin'
+  ) {
     return NextResponse.redirect(new URL('/', request.url));
   }
   // 6. For all other cases, continue

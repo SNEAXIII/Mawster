@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "cypress-runner": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "tsx", "mcp/index.ts"]
+    },
+    "context-mode": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/start.mjs"]
+    }
+  }
+}

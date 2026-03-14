@@ -9,7 +9,7 @@ export enum Role {
   all = 'all',
   user = 'user',
   admin = 'admin',
-  superAdmin = 'super_admin'
+  superAdmin = 'super_admin',
 }
 const roleHierarchy: Record<Role, Role[]> = {
   [Role.all]: [Role.all],
@@ -29,7 +29,13 @@ export default function NavLinks({ userRole }: Readonly<NavLinksProps>) {
     { name: t.nav.home, href: '/', icon: Home, role: Role.all, cy: 'nav-home' },
     { name: t.nav.profile, href: '/profile', icon: User, role: Role.user, cy: 'nav-profile' },
     { name: t.nav.roster, href: '/game/roster', icon: Sword, role: Role.user, cy: 'nav-roster' },
-    { name: t.nav.alliances, href: '/game/alliances', icon: Shield, role: Role.user, cy: 'nav-alliances' },
+    {
+      name: t.nav.alliances,
+      href: '/game/alliances',
+      icon: Shield,
+      role: Role.user,
+      cy: 'nav-alliances',
+    },
     {
       name: t.nav.administration,
       href: '/admin',
@@ -46,7 +52,8 @@ export default function NavLinks({ userRole }: Readonly<NavLinksProps>) {
         if (!roleHierarchy[userRole]?.includes(link.role)) {
           return null;
         }
-        const isActive = (pathname.startsWith(link.href) && link.href !== '/') || pathname === link.href;
+        const isActive =
+          (pathname.startsWith(link.href) && link.href !== '/') || pathname === link.href;
         return (
           <Link
             key={link.name}
@@ -54,7 +61,7 @@ export default function NavLinks({ userRole }: Readonly<NavLinksProps>) {
             data-cy={link.cy}
             className={cn(
               'flex h-[48px] grow items-center justify-center gap-2 rounded-md bg-muted/50 p-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground md:flex-none md:justify-start md:p-2 md:px-3',
-              isActive && 'bg-accent text-accent-foreground font-semibold',
+              isActive && 'bg-accent text-accent-foreground font-semibold'
             )}
           >
             <LinkIcon className='h-5 w-5 shrink-0' />
