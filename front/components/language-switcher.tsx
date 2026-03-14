@@ -14,10 +14,10 @@ export default function LanguageSwitcher() {
 
   return (
     <Button
-      variant="ghost"
-      size="sm"
+      variant='ghost'
+      size='sm'
       onClick={() => setLocale(nextLocale)}
-      className="text-lg px-2"
+      className='text-lg px-2'
       aria-label={`Switch to ${nextLocale === 'en' ? 'English' : 'Français'}`}
     >
       {flags[nextLocale]}

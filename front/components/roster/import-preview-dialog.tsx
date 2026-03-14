@@ -35,35 +35,45 @@ export default function ImportPreviewDialog({
   const unchangedCount = previewRows.filter((r) => !r.isNew && !r.hasChanges).length;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+    >
+      <DialogContent className='max-w-2xl max-h-[85vh] flex flex-col'>
         <DialogHeader>
           <DialogTitle>{t.roster.importExport.previewTitle}</DialogTitle>
           <DialogDescription>
             {t.roster.importExport.detectedCount.replace('{count}', String(previewRows.length))} —{' '}
-            <span className="text-green-600 font-medium">
+            <span className='text-green-600 font-medium'>
               {t.roster.importExport.newCount.replace('{count}', String(newCount))}
             </span>
             ,{' '}
-            <span className="text-blue-600 font-medium">
+            <span className='text-blue-600 font-medium'>
               {t.roster.importExport.updateCount.replace('{count}', String(changeCount))}
             </span>
             ,{' '}
-            <span className="text-gray-500">
+            <span className='text-gray-500'>
               {t.roster.importExport.unchangedCount.replace('{count}', String(unchangedCount))}
             </span>
           </DialogDescription>
         </DialogHeader>
 
         {/* Scrollable list */}
-        <div className="flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700 px-2">
+        <div className='flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700 px-2'>
           {previewRows.map((row) => (
-            <ImportPreviewRow key={`${row.champion_name}_${row.newRarity}`} row={row} />
+            <ImportPreviewRow
+              key={`${row.champion_name}_${row.newRarity}`}
+              row={row}
+            />
           ))}
         </div>
 
-        <DialogFooter className="pt-3 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={importing}>
+        <DialogFooter className='pt-3 border-t'>
+          <Button
+            variant='outline'
+            onClick={() => onOpenChange(false)}
+            disabled={importing}
+          >
             {t.roster.importExport.cancel}
           </Button>
           <Button
@@ -74,7 +84,7 @@ export default function ImportPreviewDialog({
               ? t.roster.importExport.importing
               : t.roster.importExport.importButton.replace(
                   '{count}',
-                  String(newCount + changeCount),
+                  String(newCount + changeCount)
                 )}
           </Button>
         </DialogFooter>

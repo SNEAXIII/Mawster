@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "@tailwindcss/forms";
 @plugin "tailwindcss-animate";
 
@@ -9,9 +9,9 @@
   --breakpoint-xs: 480px;
 
   /* Blue color overrides */
-  --color-blue-400: #2589FE;
-  --color-blue-500: #0070F3;
-  --color-blue-600: #2F6FEB;
+  --color-blue-400: #2589fe;
+  --color-blue-500: #0070f3;
+  --color-blue-600: #2f6feb;
 
   /* Semantic colors (shadcn/ui) */
   --color-background: hsl(var(--background));

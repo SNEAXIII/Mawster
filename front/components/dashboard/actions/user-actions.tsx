@@ -10,7 +10,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Power, Trash, UserPlus, UserMinus } from 'lucide-react';
 import { useState } from 'react';
-import { disableUser, enableUser, deleteUser, promoteToAdmin, demoteFromAdmin } from '@/app/services/users';
+import {
+  disableUser,
+  enableUser,
+  deleteUser,
+  promoteToAdmin,
+  demoteFromAdmin,
+} from '@/app/services/users';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useI18n } from '@/app/i18n';
@@ -23,7 +29,7 @@ const UserAction = {
   DEMOTE: 'demote',
 } as const;
 
-type UserAction = typeof UserAction[keyof typeof UserAction];
+type UserAction = (typeof UserAction)[keyof typeof UserAction];
 
 interface UserActionsProps {
   userId: string;
@@ -57,7 +63,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
 
   const handleAction = async (action: UserAction, userId: string) => {
     try {
-      setIsLoading(prev => ({ ...prev, [action]: true }));
+      setIsLoading((prev) => ({ ...prev, [action]: true }));
 
       switch (action) {
         case UserAction.DISABLE:
@@ -90,7 +96,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
       console.error(`Error during ${action} user:`, error);
       throw error;
     } finally {
-      setIsLoading(prev => ({ ...prev, [action]: false }));
+      setIsLoading((prev) => ({ ...prev, [action]: false }));
     }
   };
   const [isDisableDialogOpen, setIsDisableDialogOpen] = useState(false);
@@ -128,8 +134,8 @@ export const UserActions: React.FC<UserActionsProps> = ({
 
   return (
     <TableCell>
-      <div className="flex flex-col space-y-2">
-        <div className="flex justify-center">
+      <div className='flex flex-col space-y-2'>
+        <div className='flex justify-center'>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -143,55 +149,55 @@ export const UserActions: React.FC<UserActionsProps> = ({
             {!isDeleted && (
               <DropdownMenuContent align='end'>
                 {isSuperAdmin && !isAdmin && (
-                <DropdownMenuItem
-                  onClick={() => setIsPromoteToAdminDialogOpen(true)}
-                  className='text-blue-600 flex items-center'
-                  disabled={isLoading.promote}
-                >
-                  <UserPlus className='mr-2 h-4 w-4' />
-                  {t.dashboard.actions.promote}
-                </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setIsPromoteToAdminDialogOpen(true)}
+                    className='text-blue-600 flex items-center'
+                    disabled={isLoading.promote}
+                  >
+                    <UserPlus className='mr-2 h-4 w-4' />
+                    {t.dashboard.actions.promote}
+                  </DropdownMenuItem>
                 )}
                 {isSuperAdmin && isTargetAdmin && (
-                <DropdownMenuItem
-                  onClick={() => setIsDemoteDialogOpen(true)}
-                  className='text-orange-600 flex items-center'
-                  disabled={isLoading.demote}
-                >
-                  <UserMinus className='mr-2 h-4 w-4' />
-                  {t.dashboard.actions.demote}
-                </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setIsDemoteDialogOpen(true)}
+                    className='text-orange-600 flex items-center'
+                    disabled={isLoading.demote}
+                  >
+                    <UserMinus className='mr-2 h-4 w-4' />
+                    {t.dashboard.actions.demote}
+                  </DropdownMenuItem>
                 )}
                 {!isTargetAdmin && (
-                <>
-                {isDisabled ? (
-                  <DropdownMenuItem
-                    className='text-green-600 flex items-center'
-                    onClick={() => setIsDisableDialogOpen(true)}
-                    disabled={isLoading.enable}
-                  >
-                    <Power className='mr-2 h-4 w-4' />
-                    {t.dashboard.actions.enable}
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem
-                    className='text-orange-600 flex items-center'
-                    onClick={() => setIsDisableDialogOpen(true)}
-                    disabled={isLoading.disable}
-                  >
-                    <Power className='mr-2 h-4 w-4' />
-                    {t.dashboard.actions.disable}
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                  className='text-red-600 flex items-center'
-                  disabled={isLoading.delete}
-                >
-                  <Trash className='mr-2 h-4 w-4' />
-                  {t.dashboard.actions.delete}
-                </DropdownMenuItem>
-                </>
+                  <>
+                    {isDisabled ? (
+                      <DropdownMenuItem
+                        className='text-green-600 flex items-center'
+                        onClick={() => setIsDisableDialogOpen(true)}
+                        disabled={isLoading.enable}
+                      >
+                        <Power className='mr-2 h-4 w-4' />
+                        {t.dashboard.actions.enable}
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem
+                        className='text-orange-600 flex items-center'
+                        onClick={() => setIsDisableDialogOpen(true)}
+                        disabled={isLoading.disable}
+                      >
+                        <Power className='mr-2 h-4 w-4' />
+                        {t.dashboard.actions.disable}
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem
+                      onClick={() => setIsDeleteDialogOpen(true)}
+                      className='text-red-600 flex items-center'
+                      disabled={isLoading.delete}
+                    >
+                      <Trash className='mr-2 h-4 w-4' />
+                      {t.dashboard.actions.delete}
+                    </DropdownMenuItem>
+                  </>
                 )}
               </DropdownMenuContent>
             )}
@@ -229,7 +235,6 @@ export const UserActions: React.FC<UserActionsProps> = ({
           confirmText={t.common.delete}
         />
 
-
         <ConfirmationDialog
           open={isPromoteToAdminDialogOpen}
           onOpenChange={setIsPromoteToAdminDialogOpen}
@@ -248,7 +253,6 @@ export const UserActions: React.FC<UserActionsProps> = ({
           variant='destructive'
           confirmText={t.dashboard.actions.demote}
         />
-
       </div>
     </TableCell>
   );

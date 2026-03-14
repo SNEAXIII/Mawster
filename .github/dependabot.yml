@@ -23,7 +23,7 @@ updates:
       react:
         patterns:
           - react*
-          - "@types/react*"
+          - '@types/react*'
       nextjs:
         patterns:
           - next*

@@ -1,6 +1,6 @@
-import { setupUser, setupAdmin, BACKEND } from "../../support/e2e";
+import { setupUser, setupRosterUser, BACKEND } from '../../support/e2e';
 
-describe("Roster – Basic", () => {
+describe('Roster – Basic', () => {
   beforeEach(() => {
     cy.truncateDb();
   });
@@ -9,32 +9,32 @@ describe("Roster – Basic", () => {
   // Basic rendering
   // =========================================================================
 
-  it("shows no-accounts message when user has no game accounts", () => {
-    setupUser("roster-noacc-token").then(({ login }) => {
+  it('shows no-accounts message when user has no game accounts', () => {
+    setupUser('roster-noacc-token').then(({ login }) => {
       cy.uiLogin(login);
-      cy.navTo("roster");
-      cy.contains("No game accounts yet. Add one to get started!").should("be.visible");
+      cy.navTo('roster');
+      cy.contains('No game accounts yet. Add one to get started!').should('be.visible');
     });
   });
 
-  it("shows empty roster message", () => {
-    setupUser("roster-empty-token").then(({ login, access_token }) => {
-      cy.apiCreateGameAccount(access_token, "EmptyRoster", true);
+  it('shows empty roster message', () => {
+    setupUser('roster-empty-token').then(({ login, access_token }) => {
+      cy.apiCreateGameAccount(access_token, 'EmptyRoster', true);
 
       cy.uiLogin(login);
-      cy.navTo("roster");
-      cy.contains("roster is empty").should("be.visible");
+      cy.navTo('roster');
+      cy.contains('roster is empty').should('be.visible');
     });
   });
 
-  it("shows account selector when user has multiple accounts", () => {
-    setupUser("roster-multi-token").then(({ login, access_token }) => {
-      cy.apiCreateGameAccount(access_token, "Account1", true);
-      cy.apiCreateGameAccount(access_token, "Account2", false);
+  it('shows account selector when user has multiple accounts', () => {
+    setupUser('roster-multi-token').then(({ login, access_token }) => {
+      cy.apiCreateGameAccount(access_token, 'Account1', true);
+      cy.apiCreateGameAccount(access_token, 'Account2', false);
 
       cy.uiLogin(login);
-      cy.navTo("roster");
-      cy.contains("Select a game account").should("be.visible");
+      cy.navTo('roster');
+      cy.contains('Select a game account').should('be.visible');
     });
   });
 
@@ -42,44 +42,34 @@ describe("Roster – Basic", () => {
   // Add champion
   // =========================================================================
 
-  it("opens the Add Champion form and searches for a champion", () => {
-    setupAdmin("roster-add-admin-token").then((admin) => {
-      cy.apiLoadChampion(admin.access_token, "Spider-Man", "Science");
+  it('opens the Add Champion form and searches for a champion', () => {
+    setupRosterUser('roster-add', 'RosterPlayer').then(({ adminData, userData }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Science');
 
-      setupUser("roster-add-user-token").then(({ login, access_token }) => {
-        cy.apiCreateGameAccount(access_token, "RosterPlayer", true);
+      cy.uiLogin(userData.login);
+      cy.navTo('roster');
 
-        cy.uiLogin(login);
-        cy.navTo("roster");
-
-        cy.contains("Add / Update a Champion").click();
-        cy.getByCy("champion-search").type("Spider");
-        cy.contains("Spider-Man").should("be.visible");
-      });
+      cy.contains('Add / Update a Champion').click();
+      cy.getByCy('champion-search').type('Spider');
+      cy.contains('Spider-Man').should('be.visible');
     });
   });
 
-  it("adds a champion to the roster", () => {
-    setupAdmin("roster-addchamp-admin-token").then((admin) => {
-      cy.apiLoadChampion(admin.access_token, "Wolverine", "Mutant");
+  it('adds a champion to the roster', () => {
+    setupRosterUser('roster-addchamp', 'WolverinePlayer').then(({ adminData, userData }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant');
 
-      setupUser("roster-addchamp-user-token").then(
-        ({ login, access_token }) => {
-          cy.apiCreateGameAccount(access_token, "WolverinePlayer", true);
+      cy.uiLogin(userData.login);
+      cy.navTo('roster');
 
-          cy.uiLogin(login);
-          cy.navTo("roster");
+      cy.contains('Add / Update a Champion').click();
+      cy.getByCy('champion-search').type('Wolverine');
+      cy.getByCy('champion-result-Wolverine').click();
+      cy.getByCy('rarity-6r4').click();
+      cy.getByCy('champion-submit').click();
 
-          cy.contains("Add / Update a Champion").click();
-          cy.getByCy("champion-search").type("Wolverine");
-          cy.getByCy("champion-result-Wolverine").click();
-          cy.getByCy("rarity-6r4").click();
-          cy.getByCy("champion-submit").click();
-
-          cy.contains("Wolverine added / updated").should("be.visible");
-          cy.contains("Wolverine").should("exist");
-        }
-      );
+      cy.contains('Wolverine added / updated').should('be.visible');
+      cy.contains('Wolverine').should('exist');
     });
   });
 
@@ -87,32 +77,25 @@ describe("Roster – Basic", () => {
   // Delete champion
   // =========================================================================
 
-  it("deletes a champion from the roster", () => {
-    setupAdmin("roster-del-admin-token").then((admin) => {
-      cy.apiLoadChampion(admin.access_token, "HulkDel", "Science");
+  it('deletes a champion from the roster', () => {
+    setupRosterUser('roster-del', 'HulkPlayer').then(({ adminData, userData }) => {
+      cy.apiLoadChampion(adminData.access_token, 'HulkDel', 'Science');
 
-      setupUser("roster-del-user-token").then(({ login, access_token }) => {
-        cy.apiCreateGameAccount(access_token, "HulkPlayer", true);
+      cy.uiLogin(userData.login);
+      cy.navTo('roster');
 
-        cy.uiLogin(login);
-        cy.navTo("roster");
+      // Add champion first
+      cy.contains('Add / Update a Champion').click();
+      cy.getByCy('champion-search').type('HulkDel');
+      cy.getByCy('champion-result-HulkDel').click();
+      cy.getByCy('rarity-6r4').click();
+      cy.getByCy('champion-submit').click();
+      cy.contains('HulkDel added / updated').should('be.visible');
 
-        // Add champion first
-        cy.contains("Add / Update a Champion").click();
-        cy.getByCy("champion-search").type("HulkDel");
-        cy.getByCy("champion-result-HulkDel").click();
-        cy.getByCy("rarity-6r4").click();
-        cy.getByCy("champion-submit").click();
-        cy.contains("HulkDel added / updated").should("be.visible");
-
-        // Now delete
-        cy.getByCy("champion-delete").first().click({ force: true });
-        cy.get('[role="alertdialog"]')
-          .should("be.visible")
-          .contains("button", "Delete")
-          .click();
-        cy.contains("HulkDel removed from roster").should("be.visible");
-      });
+      // Now delete
+      cy.getByCy('champion-delete').first().click({ force: true });
+      cy.get('[role="alertdialog"]').should('be.visible').contains('button', 'Delete').click();
+      cy.contains('HulkDel removed from roster').should('be.visible');
     });
   });
 
@@ -120,128 +103,108 @@ describe("Roster – Basic", () => {
   // Edge cases
   // =========================================================================
 
-  it("adds a champion via API and sees it in the grid", () => {
-    setupAdmin("roster-api-admin-token").then((admin) => {
-      cy.apiLoadChampion(admin.access_token, "Thor", "Cosmic").then((champs) => {
-        setupUser("roster-api-user-token").then(({ login, access_token }) => {
-          cy.apiCreateGameAccount(access_token, "ThorPlayer", true).then((acc) => {
-            cy.apiAddChampionToRoster(access_token, acc.id, champs[0].id, "7r3");
+  it('adds a champion via API and sees it in the grid', () => {
+    setupRosterUser('roster-api', 'ThorPlayer').then(({ adminData, userData, accountId }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Thor', 'Cosmic').then((champs) => {
+        cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r3');
 
-            cy.uiLogin(login);
-            cy.navTo("roster");
-            cy.contains("Thor").should("be.visible");
-          });
-        });
+        cy.uiLogin(userData.login);
+        cy.navTo('roster');
+        cy.contains('Thor').should('be.visible');
       });
     });
   });
 
-  it("updating a champion changes its rarity in the roster", () => {
-    setupAdmin("roster-upd-admin-token").then((admin) => {
-      cy.apiLoadChampion(admin.access_token, "Iron Man", "Tech").then((champs) => {
-        setupUser("roster-upd-user-token").then(({ login, access_token }) => {
-          cy.apiCreateGameAccount(access_token, "IronPlayer", true).then((acc) => {
-            cy.apiAddChampionToRoster(access_token, acc.id, champs[0].id, "6r4");
+  it('updating a champion changes its rarity in the roster', () => {
+    setupRosterUser('roster-upd', 'IronPlayer').then(({ adminData, userData, accountId }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Iron Man', 'Tech').then((champs) => {
+        cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '6r4');
 
-            cy.uiLogin(login);
-            cy.navTo("roster");
+        cy.uiLogin(userData.login);
+        cy.navTo('roster');
 
-            // Update via UI: click edit, change rarity
-            cy.contains("Add / Update a Champion").click();
-            cy.getByCy("champion-search").type("Iron Man");
-            cy.getByCy("champion-result-Iron Man").click();
-            cy.getByCy("rarity-7r2").click();
-            cy.getByCy("champion-submit").click();
-            cy.contains("Iron Man added / updated").should("be.visible");
-          });
-        });
+        // Update via UI: click edit, change rarity
+        cy.contains('Add / Update a Champion').click();
+        cy.getByCy('champion-search').type('Iron Man');
+        cy.getByCy('champion-result-Iron Man').click();
+        cy.getByCy('rarity-7r2').click();
+        cy.getByCy('champion-submit').click();
+        cy.contains('Iron Man added / updated').should('be.visible');
       });
     });
   });
 
-  it("empty search returns no results", () => {
-    setupAdmin("roster-nosearch-admin-token").then((admin) => {
-      cy.apiLoadChampion(admin.access_token, "Medusa", "Cosmic");
+  it('empty search returns no results', () => {
+    setupRosterUser('roster-nosearch', 'NoSearchPlayer').then(({ adminData, userData }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Medusa', 'Cosmic');
 
-      setupUser("roster-nosearch-user-token").then(({ login, access_token }) => {
-        cy.apiCreateGameAccount(access_token, "NoSearchPlayer", true);
+      cy.uiLogin(userData.login);
+      cy.navTo('roster');
+      cy.contains('Add / Update a Champion').click();
+      cy.getByCy('champion-search').type('ZZZZZZZZZ');
+      cy.contains('Medusa').should('not.exist');
+    });
+  });
 
-        cy.uiLogin(login);
-        cy.navTo("roster");
-        cy.contains("Add / Update a Champion").click();
-        cy.getByCy("champion-search").type("ZZZZZZZZZ");
-        cy.contains("Medusa").should("not.exist");
+  it('adding same champion twice updates it instead of duplicating', () => {
+    setupRosterUser('roster-dup', 'StormPlayer').then(({ adminData, userData, accountId }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Storm', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r1');
+
+        cy.uiLogin(userData.login);
+        cy.navTo('roster');
+
+        // Add same champion again with higher rank (same star level = upsert)
+        cy.contains('Add / Update a Champion').click();
+        cy.getByCy('champion-search').type('Storm');
+        cy.getByCy('champion-result-Storm').click();
+        cy.getByCy('rarity-7r2').click();
+        cy.getByCy('champion-submit').click();
+        cy.contains('Storm added / updated').should('be.visible');
+
+        // Should only appear once in the roster
+        cy.get('[data-cy="champion-delete"]').should('have.length', 1);
       });
     });
   });
 
-  it("adding same champion twice updates it instead of duplicating", () => {
-    setupAdmin("roster-dup-admin-token").then((admin) => {
-      cy.apiLoadChampion(admin.access_token, "Storm", "Mutant").then((champs) => {
-        setupUser("roster-dup-user-token").then(({ login, access_token }) => {
-          cy.apiCreateGameAccount(access_token, "StormPlayer", true).then((acc) => {
-            cy.apiAddChampionToRoster(access_token, acc.id, champs[0].id, "7r1");
+  it('signature can be set via the form', () => {
+    setupRosterUser('roster-sig', 'SigPlayer').then(({ adminData, userData }) => {
+      cy.apiLoadChampion(adminData.access_token, 'DoctorSig', 'Mystic');
 
-            cy.uiLogin(login);
-            cy.navTo("roster");
+      cy.uiLogin(userData.login);
+      cy.navTo('roster');
 
-            // Add same champion again with higher rank (same star level = upsert)
-            cy.contains("Add / Update a Champion").click();
-            cy.getByCy("champion-search").type("Storm");
-            cy.getByCy("champion-result-Storm").click();
-            cy.getByCy("rarity-7r2").click();
-            cy.getByCy("champion-submit").click();
-            cy.contains("Storm added / updated").should("be.visible");
-
-            // Should only appear once in the roster
-            cy.get('[data-cy="champion-delete"]').should("have.length", 1);
-          });
-        });
-      });
+      cy.contains('Add / Update a Champion').click();
+      cy.getByCy('champion-search').type('DoctorSig');
+      cy.getByCy('champion-result-DoctorSig').click();
+      cy.getByCy('rarity-6r4').click();
+      // Set sig to 200 via preset button
+      cy.contains('button', '200').click();
+      cy.getByCy('champion-submit').click();
+      cy.contains('DoctorSig added / updated').scrollIntoView().should('be.visible');
+      cy.contains('sig 200').scrollIntoView().should('be.visible');
     });
   });
 
-  it("signature can be set via the form", () => {
-    setupAdmin("roster-sig-admin-token").then((admin) => {
-      cy.apiLoadChampion(admin.access_token, "DoctorSig", "Mystic");
-
-      setupUser("roster-sig-user-token").then(({ login, access_token }) => {
-        cy.apiCreateGameAccount(access_token, "SigPlayer", true);
-
-        cy.uiLogin(login);
-        cy.navTo("roster");
-
-        cy.contains("Add / Update a Champion").click();
-        cy.getByCy("champion-search").type("DoctorSig");
-        cy.getByCy("champion-result-DoctorSig").click();
-        cy.getByCy("rarity-6r4").click();
-        // Set sig to 200 via preset button
-        cy.contains("button", "200").click();
-        cy.getByCy("champion-submit").click();
-        cy.contains("DoctorSig added / updated").scrollIntoView().should("be.visible");
-        cy.contains("sig 200").scrollIntoView().should("be.visible");
-      });
-    });
-  });
-
-  it("hides upgrade requests section when no requests exist", () => {
-    setupUser("roster-upgrades-token").then(({ login, access_token }) => {
-      cy.apiCreateGameAccount(access_token, "UpgradeAcc", true);
+  it('hides upgrade requests section when no requests exist', () => {
+    setupUser('roster-upgrades-token').then(({ login, access_token }) => {
+      cy.apiCreateGameAccount(access_token, 'UpgradeAcc', true);
 
       cy.uiLogin(login);
-      cy.navTo("roster");
-      cy.contains("Upgrade Requests").should("not.exist");
+      cy.navTo('roster');
+      cy.contains('Upgrade Requests').should('not.exist');
     });
   });
 
-  it("returns 401 when adding champion without authentication (API)", () => {
+  it('returns 401 when adding champion without authentication (API)', () => {
     cy.request({
-      method: "POST",
+      method: 'POST',
       url: `${BACKEND}/champion-users`,
       body: {
-        game_account_id: "00000000-0000-0000-0000-000000000000",
-        champion_id: "00000000-0000-0000-0000-000000000000",
-        rarity: "6r4",
+        game_account_id: '00000000-0000-0000-0000-000000000000',
+        champion_id: '00000000-0000-0000-0000-000000000000',
+        rarity: '6r4',
         signature: 0,
       },
       failOnStatusCode: false,
@@ -250,28 +213,26 @@ describe("Roster – Basic", () => {
     });
   });
 
-  it("returns error when adding champion with invalid rarity (API)", () => {
-    setupAdmin("roster-badrarity-admin-token").then((admin) => {
-      cy.apiLoadChampion(admin.access_token, "BadRarity", "Science").then((champs) => {
-        setupUser("roster-badrarity-user-token").then(({ access_token }) => {
-          cy.apiCreateGameAccount(access_token, "BadRarityPlayer", true).then((acc) => {
-            cy.request({
-              method: "POST",
-              url: `${BACKEND}/champion-users`,
-              headers: { Authorization: `Bearer ${access_token}` },
-              body: {
-                game_account_id: acc.id,
-                champion_id: champs[0].id,
-                rarity: "invalid-rarity",
-                signature: 0,
-              },
-              failOnStatusCode: false,
-            }).then((res) => {
-              expect(res.status).to.be.oneOf([400, 422]);
-            });
+  it('returns error when adding champion with invalid rarity (API)', () => {
+    setupRosterUser('roster-badrarity', 'BadRarityPlayer').then(
+      ({ adminData, userData, accountId }) => {
+        cy.apiLoadChampion(adminData.access_token, 'BadRarity', 'Science').then((champs) => {
+          cy.request({
+            method: 'POST',
+            url: `${BACKEND}/champion-users`,
+            headers: { Authorization: `Bearer ${userData.access_token}` },
+            body: {
+              game_account_id: accountId,
+              champion_id: champs[0].id,
+              rarity: 'invalid-rarity',
+              signature: 0,
+            },
+            failOnStatusCode: false,
+          }).then((res) => {
+            expect(res.status).to.be.oneOf([400, 422]);
           });
         });
-      });
-    });
+      }
+    );
   });
 });

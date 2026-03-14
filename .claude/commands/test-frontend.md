@@ -12,6 +12,7 @@ Lance les tests Cypress depuis `.//front`.
    - Serveur non lancé → rappeler que `npm run testing` (port 3000) doit tourner
 
 ## Notes
+
 - Le frontend doit être démarré avec `npm run testing`
 - L'API backend doit être disponible sur le port 8001
 - Commandes custom Cypress dans `cypress/support/e2e.ts`

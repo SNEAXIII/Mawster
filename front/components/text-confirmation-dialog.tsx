@@ -65,42 +65,50 @@ export function TextConfirmationDialog({
   const isMatch = inputValue.toLowerCase() === confirmationWord.toLowerCase();
 
   return (
-    <AlertDialog open={open} onOpenChange={(v) => { if (!isLoading) onOpenChange(v); }}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!isLoading) onOpenChange(v);
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
-          <div className="mt-3 space-y-2">
-            {inputLabel && (
-              <Label className="text-sm text-gray-600">{inputLabel}</Label>
-            )}
+          <div className='mt-3 space-y-2'>
+            {inputLabel && <Label className='text-sm text-gray-600'>{inputLabel}</Label>}
             <Input
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={inputPlaceholder ?? confirmationWord}
               disabled={isLoading}
               autoFocus
-              autoComplete="off"
+              autoComplete='off'
             />
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className='text-sm text-red-600'>{error}</p>}
           </div>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLoading} onClick={() => setInputValue('')}>
+          <AlertDialogCancel
+            disabled={isLoading}
+            onClick={() => setInputValue('')}
+          >
             {cancelText ?? t.common.cancel}
           </AlertDialogCancel>
           <AlertDialogAction
-            className={variant === 'destructive' ? 'bg-red-600 hover:bg-red-700 disabled:opacity-50' : ''}
+            className={
+              variant === 'destructive' ? 'bg-red-600 hover:bg-red-700 disabled:opacity-50' : ''
+            }
             disabled={!isMatch || isLoading}
             onClick={onConfirm}
           >
             {isLoading ? (
               <>
-                <Loader className="w-4 h-4 mr-2 animate-spin" />
+                <Loader className='w-4 h-4 mr-2 animate-spin' />
                 {confirmText ?? t.common.confirm}
               </>
             ) : (
-              confirmText ?? t.common.confirm
+              (confirmText ?? t.common.confirm)
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

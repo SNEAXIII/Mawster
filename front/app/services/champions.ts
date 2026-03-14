@@ -83,7 +83,13 @@ export const updateChampionAlias = async (
 };
 
 export const loadChampions = async (
-  champions: { name: string; champion_class: string; image_url?: string | null; alias?: string | null; is_ascendable?: boolean }[]
+  champions: {
+    name: string;
+    champion_class: string;
+    image_url?: string | null;
+    alias?: string | null;
+    is_ascendable?: boolean;
+  }[]
 ): Promise<{ message: string; created: number; updated: number; skipped: number }> => {
   const response = await fetch(`${PROXY}/admin/champions/load`, {
     method: 'POST',
@@ -95,7 +101,13 @@ export const loadChampions = async (
 };
 
 export const exportAllChampions = async (): Promise<
-  { name: string; champion_class: string; image_url: string | null; alias: string | null; is_ascendable: boolean }[]
+  {
+    name: string;
+    champion_class: string;
+    image_url: string | null;
+    alias: string | null;
+    is_ascendable: boolean;
+  }[]
 > => {
   // Fetch all champions in one big page (no images, just data)
   const response = await fetch(`${PROXY}/champions?page=1&size=9999`, {
@@ -121,15 +133,12 @@ export const deleteChampion = async (championId: string): Promise<void> => {
 };
 
 export const toggleChampionAscendable = async (
-  championId: string,
+  championId: string
 ): Promise<{ is_ascendable: boolean }> => {
-  const response = await fetch(
-    `${PROXY}/admin/champions/${championId}/ascendable`,
-    {
-      method: 'PATCH',
-      headers: jsonHeaders,
-    },
-  );
+  const response = await fetch(`${PROXY}/admin/champions/${championId}/ascendable`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+  });
   await throwOnError(response, "Erreur lors du basculement de l'ascension");
   return response.json();
 };

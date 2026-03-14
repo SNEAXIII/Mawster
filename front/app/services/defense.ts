@@ -76,14 +76,10 @@ async function throwOnError(response: Response, fallback: string) {
 
 // ─── Defense API ─────────────────────────────────────────
 
-export async function getDefense(
-  allianceId: string,
-  battlegroup: number,
-): Promise<DefenseSummary> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/defense/bg/${battlegroup}`,
-    { headers: jsonHeaders },
-  );
+export async function getDefense(allianceId: string, battlegroup: number): Promise<DefenseSummary> {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/defense/bg/${battlegroup}`, {
+    headers: jsonHeaders,
+  });
   await throwOnError(response, 'Failed to load defense');
   return response.json();
 }
@@ -93,20 +89,17 @@ export async function placeDefender(
   battlegroup: number,
   nodeNumber: number,
   championUserId: string,
-  gameAccountId: string,
+  gameAccountId: string
 ): Promise<DefensePlacement> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/defense/bg/${battlegroup}/place`,
-    {
-      method: 'POST',
-      headers: jsonHeaders,
-      body: JSON.stringify({
-        node_number: nodeNumber,
-        champion_user_id: championUserId,
-        game_account_id: gameAccountId,
-      }),
-    },
-  );
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/defense/bg/${battlegroup}/place`, {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify({
+      node_number: nodeNumber,
+      champion_user_id: championUserId,
+      game_account_id: gameAccountId,
+    }),
+  });
   await throwOnError(response, 'Failed to place defender');
   return response.json();
 }
@@ -114,45 +107,39 @@ export async function placeDefender(
 export async function removeDefender(
   allianceId: string,
   battlegroup: number,
-  nodeNumber: number,
+  nodeNumber: number
 ): Promise<void> {
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/defense/bg/${battlegroup}/node/${nodeNumber}`,
-    { method: 'DELETE', headers: jsonHeaders },
+    { method: 'DELETE', headers: jsonHeaders }
   );
   await throwOnError(response, 'Failed to remove defender');
 }
 
-export async function clearDefense(
-  allianceId: string,
-  battlegroup: number,
-): Promise<void> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/defense/bg/${battlegroup}/clear`,
-    { method: 'DELETE', headers: jsonHeaders },
-  );
+export async function clearDefense(allianceId: string, battlegroup: number): Promise<void> {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/defense/bg/${battlegroup}/clear`, {
+    method: 'DELETE',
+    headers: jsonHeaders,
+  });
   await throwOnError(response, 'Failed to clear defense');
 }
 
 export async function getAvailableChampions(
   allianceId: string,
-  battlegroup: number,
+  battlegroup: number
 ): Promise<AvailableChampion[]> {
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/defense/bg/${battlegroup}/available-champions`,
-    { headers: jsonHeaders },
+    { headers: jsonHeaders }
   );
   await throwOnError(response, 'Failed to load available champions');
   return response.json();
 }
 
-export async function getBgMembers(
-  allianceId: string,
-  battlegroup: number,
-): Promise<BgMember[]> {
+export async function getBgMembers(allianceId: string, battlegroup: number): Promise<BgMember[]> {
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/defense/bg/${battlegroup}/members`,
-    { headers: jsonHeaders },
+    { headers: jsonHeaders }
   );
   await throwOnError(response, 'Failed to load BG members');
   return response.json();
@@ -193,11 +180,11 @@ export interface DefenseImportReport {
 
 export async function exportDefense(
   allianceId: string,
-  battlegroup: number,
+  battlegroup: number
 ): Promise<DefenseExportItem[]> {
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/defense/bg/${battlegroup}/export`,
-    { headers: jsonHeaders },
+    { headers: jsonHeaders }
   );
   await throwOnError(response, 'Failed to export defense');
   return response.json();
@@ -206,7 +193,7 @@ export async function exportDefense(
 export async function importDefense(
   allianceId: string,
   battlegroup: number,
-  placements: DefenseExportItem[],
+  placements: DefenseExportItem[]
 ): Promise<DefenseImportReport> {
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/defense/bg/${battlegroup}/import`,
@@ -214,7 +201,7 @@ export async function importDefense(
       method: 'POST',
       headers: jsonHeaders,
       body: JSON.stringify({ placements }),
-    },
+    }
   );
   await throwOnError(response, 'Failed to import defense');
   return response.json();

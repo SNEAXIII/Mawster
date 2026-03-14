@@ -40,14 +40,14 @@ export default function PaginationControls({
           disabled={currentPage <= 1}
           variant='outline'
         >
-          <ChevronsLeft className="h-4 w-4" />
+          <ChevronsLeft className='h-4 w-4' />
         </Button>
         <Button
           onClick={onPreviousPage}
           disabled={currentPage <= 1}
           variant='outline'
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className='h-4 w-4' />
         </Button>
         <p className='flex-1 items-center justify-center text-center w-28 text-sm sm:text-base'>
           {t.common.page} {!totalPage ? 0 : currentPage}/{totalPage}
@@ -57,14 +57,14 @@ export default function PaginationControls({
           disabled={currentPage >= totalPage}
           variant='outline'
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className='h-4 w-4' />
         </Button>
         <Button
           onClick={onLastPage}
           disabled={currentPage >= totalPage}
           variant='outline'
         >
-          <ChevronsRight className="h-4 w-4" />
+          <ChevronsRight className='h-4 w-4' />
         </Button>
       </div>
       <div className='flex justify-center lg:justify-start items-center flex-wrap gap-1 sm:gap-3 w-full sm:w-auto'>
@@ -77,7 +77,7 @@ export default function PaginationControls({
           disabled={!canReset}
           variant='outline'
         >
-          {t.dashboard.pagination.resetFilters} <RotateCcw className="h-4 w-4" />
+          {t.dashboard.pagination.resetFilters} <RotateCcw className='h-4 w-4' />
         </Button>
       </div>
     </div>

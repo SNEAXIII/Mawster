@@ -3,6 +3,7 @@
 ## Project Overview
 
 Mawster is a MCOC (Marvel Contest of Champions) alliance management tool.
+
 - **Backend**: FastAPI + SQLModel + MariaDB (async), Python 3.12, managed with **uv**
 - **Frontend**: Next.js 14 (App Router, Turbopack), React 19, Tailwind CSS, shadcn/ui
 - **Auth**: Discord OAuth2 → NextAuth → Backend JWT (HS256)
@@ -18,16 +19,16 @@ For full architecture details, see `.ai-context.md` at the project root.
 
 Always run commands from `api/` directory via `make`:
 
-| Task | Command |
-|------|---------|
-| Run dev server | `make run-dev` |
-| Create migration | `make create-mig MIGRATION_MESSAGE="description"` |
-| Apply migrations | `make migrate` |
-| Run tests | `make test` |
-| Run tests with coverage | `make test-cov` |
-| Load fixtures (dev) | `make fixtures` |
-| Reset database | `make reset-db` |
-| Install deps | `make install-dev` |
+| Task                    | Command                                           |
+| ----------------------- | ------------------------------------------------- |
+| Run dev server          | `make run-dev`                                    |
+| Create migration        | `make create-mig MIGRATION_MESSAGE="description"` |
+| Apply migrations        | `make migrate`                                    |
+| Run tests               | `make test`                                       |
+| Run tests with coverage | `make test-cov`                                   |
+| Load fixtures (dev)     | `make fixtures`                                   |
+| Reset database          | `make reset-db`                                   |
+| Install deps            | `make install-dev`                                |
 
 **Never** run raw `pytest`, `alembic`, or `uvicorn` commands directly.
 
@@ -43,9 +44,11 @@ Always run commands from `api/` directory via `make`:
 ### Linting
 
 Finish every backend change session with:
+
 ```bash
 uvx ruff check
 ```
+
 Fix any issues before committing.
 
 ### Patterns

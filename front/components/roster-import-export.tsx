@@ -23,7 +23,7 @@ function validateEntry(
   obj: Record<string, unknown>,
   idx: number,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  t: any,
+  t: any
 ): { entry?: RosterExportEntry; error?: string } {
   if (!obj.champion_name || typeof obj.champion_name !== 'string') {
     return { error: t.roster.importExport.missingChampionName.replace('{idx}', String(idx)) };
@@ -64,7 +64,7 @@ function validateEntry(
 function parseAndValidateEntries(
   parsed: unknown[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  t: any,
+  t: any
 ): { entries: RosterExportEntry[]; errors: string[] } {
   const entries: RosterExportEntry[] = [];
   const errors: string[] = [];
@@ -101,13 +101,13 @@ function deduplicateEntries(entries: RosterExportEntry[]): RosterExportEntry[] {
 
 async function fetchChampionLookup(
   uniqueEntries: RosterExportEntry[],
-  roster: RosterEntry[],
+  roster: RosterEntry[]
 ): Promise<Map<string, { champion_class: string; image_url: string | null }>> {
   const championLookup = new Map<string, { champion_class: string; image_url: string | null }>();
   const unknownNames = new Set<string>();
   for (const entry of uniqueEntries) {
     const found = roster.find(
-      (r) => r.champion_name.toLowerCase() === entry.champion_name.toLowerCase(),
+      (r) => r.champion_name.toLowerCase() === entry.champion_name.toLowerCase()
     );
     if (!found) unknownNames.add(entry.champion_name);
   }
@@ -131,7 +131,7 @@ async function fetchChampionLookup(
 function parseJsonFile(
   text: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  t: any,
+  t: any
 ): unknown[] {
   let parsed: unknown;
   try {
@@ -154,13 +154,13 @@ function parseJsonFile(
 function buildPreviewRow(
   entry: RosterExportEntry,
   roster: RosterEntry[],
-  championLookup: Map<string, { champion_class: string; image_url: string | null }>,
+  championLookup: Map<string, { champion_class: string; image_url: string | null }>
 ): PreviewRow {
   const stars = entry.rarity.charAt(0);
   const existing = roster.find(
     (r) =>
       r.champion_name.toLowerCase() === entry.champion_name.toLowerCase() &&
-      r.rarity.startsWith(stars),
+      r.rarity.startsWith(stars)
   );
 
   const isNew = !existing;
@@ -172,7 +172,7 @@ function buildPreviewRow(
       (existing.ascension ?? 0) !== entry.ascension);
 
   const rosterMatch = roster.find(
-    (r) => r.champion_name.toLowerCase() === entry.champion_name.toLowerCase(),
+    (r) => r.champion_name.toLowerCase() === entry.champion_name.toLowerCase()
   );
   const apiMatch = championLookup.get(entry.champion_name.toLowerCase());
 
@@ -275,14 +275,16 @@ export default function RosterImportExport({
         }
 
         if (errors.length > 0) {
-          toast.warning(t.roster.importExport.skippedEntries.replace('{count}', String(errors.length)));
+          toast.warning(
+            t.roster.importExport.skippedEntries.replace('{count}', String(errors.length))
+          );
         }
 
         const uniqueEntries = deduplicateEntries(entries);
         const championLookup = await fetchChampionLookup(uniqueEntries, roster);
 
         const rows: PreviewRow[] = uniqueEntries.map((entry) =>
-          buildPreviewRow(entry, roster, championLookup),
+          buildPreviewRow(entry, roster, championLookup)
         );
 
         // Sort: new first, then changes, then unchanged
@@ -298,7 +300,7 @@ export default function RosterImportExport({
         toast.error(err.message || t.roster.importExport.fileReadError);
       }
     },
-    [roster, t],
+    [roster, t]
   );
 
   // ── Execute import via bulk API ────────────────────────
@@ -400,20 +402,28 @@ export default function RosterImportExport({
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
-        type="file"
-        accept=".json,application/json"
-        className="hidden"
+        type='file'
+        accept='.json,application/json'
+        className='hidden'
         onChange={handleFileSelected}
       />
 
       {/* Export / Import buttons */}
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download className="mr-1.5 h-3.5 w-3.5" />
+      <div className='flex gap-2'>
+        <Button
+          variant='outline'
+          size='sm'
+          onClick={handleExport}
+        >
+          <Download className='mr-1.5 h-3.5 w-3.5' />
           {t.roster.importExport.exportJson}
         </Button>
-        <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-          <Upload className="mr-1.5 h-3.5 w-3.5" />
+        <Button
+          variant='outline'
+          size='sm'
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Upload className='mr-1.5 h-3.5 w-3.5' />
           {t.roster.importExport.importJson}
         </Button>
       </div>

@@ -28,13 +28,13 @@ export const SIGNATURE_PRESETS = [0, 20, 100, 200];
 
 /** Tailwind classes for each rarity tier */
 export const RARITY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  '6r4': { bg: 'bg-purple-600',  text: 'text-white', border: 'border-purple-500' },
-  '6r5': { bg: 'bg-red-600',     text: 'text-white', border: 'border-red-500' },
-  '7r1': { bg: 'bg-blue-500',    text: 'text-white', border: 'border-blue-400' },
-  '7r2': { bg: 'bg-green-500',   text: 'text-white', border: 'border-green-400' },
-  '7r3': { bg: 'bg-yellow-500',  text: 'text-black', border: 'border-yellow-400' },
-  '7r4': { bg: 'bg-orange-500',  text: 'text-white', border: 'border-orange-400' },
-  '7r5': { bg: 'bg-rose-700',    text: 'text-white', border: 'border-rose-600' },
+  '6r4': { bg: 'bg-purple-600', text: 'text-white', border: 'border-purple-500' },
+  '6r5': { bg: 'bg-red-600', text: 'text-white', border: 'border-red-500' },
+  '7r1': { bg: 'bg-blue-500', text: 'text-white', border: 'border-blue-400' },
+  '7r2': { bg: 'bg-green-500', text: 'text-white', border: 'border-green-400' },
+  '7r3': { bg: 'bg-yellow-500', text: 'text-black', border: 'border-yellow-400' },
+  '7r4': { bg: 'bg-orange-500', text: 'text-white', border: 'border-orange-400' },
+  '7r5': { bg: 'bg-rose-700', text: 'text-white', border: 'border-rose-600' },
 };
 
 // ─── Champion classes ────────────────────────────────────
@@ -48,18 +48,58 @@ export enum ChampionClass {
 }
 
 /** Tailwind color config per champion class */
-export const CLASS_COLORS: Record<string, { bg: string; text: string; border: string; label: string }> = {
-  Skill:   { bg: 'bg-red-600',     text: 'text-white', border: 'border-red-500',    label: 'text-red-600 dark:text-red-400' },
-  Cosmic:  { bg: 'bg-cyan-400',    text: 'text-black', border: 'border-cyan-300',   label: 'text-cyan-600 dark:text-cyan-400' },
-  Mutant:  { bg: 'bg-yellow-400',  text: 'text-black', border: 'border-yellow-300', label: 'text-yellow-600 dark:text-yellow-400' },
-  Mystic:  { bg: 'bg-purple-600',  text: 'text-white', border: 'border-purple-500', label: 'text-purple-600 dark:text-purple-400' },
-  Tech:    { bg: 'bg-blue-800',    text: 'text-white', border: 'border-blue-700',   label: 'text-blue-700 dark:text-blue-400' },
-  Science: { bg: 'bg-green-600',   text: 'text-white', border: 'border-green-500',  label: 'text-green-600 dark:text-green-400' },
+export const CLASS_COLORS: Record<
+  string,
+  { bg: string; text: string; border: string; label: string }
+> = {
+  Skill: {
+    bg: 'bg-red-600',
+    text: 'text-white',
+    border: 'border-red-500',
+    label: 'text-red-600 dark:text-red-400',
+  },
+  Cosmic: {
+    bg: 'bg-cyan-400',
+    text: 'text-black',
+    border: 'border-cyan-300',
+    label: 'text-cyan-600 dark:text-cyan-400',
+  },
+  Mutant: {
+    bg: 'bg-yellow-400',
+    text: 'text-black',
+    border: 'border-yellow-300',
+    label: 'text-yellow-600 dark:text-yellow-400',
+  },
+  Mystic: {
+    bg: 'bg-purple-600',
+    text: 'text-white',
+    border: 'border-purple-500',
+    label: 'text-purple-600 dark:text-purple-400',
+  },
+  Tech: {
+    bg: 'bg-blue-800',
+    text: 'text-white',
+    border: 'border-blue-700',
+    label: 'text-blue-700 dark:text-blue-400',
+  },
+  Science: {
+    bg: 'bg-green-600',
+    text: 'text-white',
+    border: 'border-green-500',
+    label: 'text-green-600 dark:text-green-400',
+  },
 };
 
 /** Return class colors with a safe fallback */
 export function getClassColors(championClass: string) {
-  return CLASS_COLORS[championClass] ?? { bg: 'bg-gray-500', text: 'text-white', border: 'border-gray-400', label: 'text-gray-500 dark:text-gray-400' };
+  return (
+    CLASS_COLORS[championClass] ?? {
+      bg: 'bg-gray-500',
+      text: 'text-white',
+      border: 'border-gray-400',
+      label: 'text-gray-500 dark:text-gray-400',
+    }
+  );
 }
 
 /** Frame image URL per star level */
@@ -136,7 +176,7 @@ async function throwOnError(response: Response, fallback: string) {
 // ─── Champions (non-admin, for search) ───────────────────
 export const searchChampions = async (
   search: string,
-  size: number = 20,
+  size: number = 20
 ): Promise<{ champions: Champion[] }> => {
   const qs = new URLSearchParams({ page: '1', size: String(size) });
   if (search.trim()) qs.set('search', search.trim());
@@ -148,13 +188,10 @@ export const searchChampions = async (
 };
 
 // ─── Roster API ──────────────────────────────────────────
-export const getRoster = async (
-  gameAccountId: string,
-): Promise<RosterEntry[]> => {
-  const response = await fetch(
-    `${PROXY}/champion-users/by-account/${gameAccountId}`,
-    { headers: jsonHeaders },
-  );
+export const getRoster = async (gameAccountId: string): Promise<RosterEntry[]> => {
+  const response = await fetch(`${PROXY}/champion-users/by-account/${gameAccountId}`, {
+    headers: jsonHeaders,
+  });
   await throwOnError(response, 'Erreur lors de la récupération du roster');
   return response.json();
 };
@@ -165,7 +202,7 @@ export const updateChampionInRoster = async (
   rarity: string,
   signature: number,
   isPreferredAttacker: boolean = false,
-  ascension: number = 0,
+  ascension: number = 0
 ): Promise<RosterEntry> => {
   const response = await fetch(`${PROXY}/champion-users`, {
     method: 'POST',
@@ -179,13 +216,13 @@ export const updateChampionInRoster = async (
       ascension,
     }),
   });
-  await throwOnError(response, "Erreur lors de la mise à jour du roster");
+  await throwOnError(response, 'Erreur lors de la mise à jour du roster');
   return response.json();
 };
 
 export const bulkUpdateRoster = async (
   gameAccountId: string,
-  champions: BulkChampionEntry[],
+  champions: BulkChampionEntry[]
 ): Promise<RosterEntry[]> => {
   const response = await fetch(`${PROXY}/champion-users/bulk`, {
     method: 'POST',
@@ -195,13 +232,11 @@ export const bulkUpdateRoster = async (
       champions,
     }),
   });
-  await throwOnError(response, "Erreur lors de la mise à jour en masse du roster");
+  await throwOnError(response, 'Erreur lors de la mise à jour en masse du roster');
   return response.json();
 };
 
-export const deleteRosterEntry = async (
-  championUserId: string,
-): Promise<void> => {
+export const deleteRosterEntry = async (championUserId: string): Promise<void> => {
   const response = await fetch(`${PROXY}/champion-users/${championUserId}`, {
     method: 'DELETE',
     headers: jsonHeaders,
@@ -222,44 +257,29 @@ export function getNextRarity(rarity: string): string | null {
   return nextRarity;
 }
 
-export const upgradeChampionRank = async (
-  championUserId: string,
-): Promise<RosterEntry> => {
-  const response = await fetch(
-    `${PROXY}/champion-users/${championUserId}/upgrade`,
-    {
-      method: 'PATCH',
-      headers: jsonHeaders,
-    },
-  );
+export const upgradeChampionRank = async (championUserId: string): Promise<RosterEntry> => {
+  const response = await fetch(`${PROXY}/champion-users/${championUserId}/upgrade`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+  });
   await throwOnError(response, "Erreur lors de l'amélioration du champion");
   return response.json();
 };
 
-export const ascendChampion = async (
-  championUserId: string,
-): Promise<RosterEntry> => {
-  const response = await fetch(
-    `${PROXY}/champion-users/${championUserId}/ascend`,
-    {
-      method: 'PATCH',
-      headers: jsonHeaders,
-    },
-  );
+export const ascendChampion = async (championUserId: string): Promise<RosterEntry> => {
+  const response = await fetch(`${PROXY}/champion-users/${championUserId}/ascend`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+  });
   await throwOnError(response, "Erreur lors de l'ascension du champion");
   return response.json();
 };
 
-export const togglePreferredAttacker = async (
-  championUserId: string,
-): Promise<RosterEntry> => {
-  const response = await fetch(
-    `${PROXY}/champion-users/${championUserId}/preferred-attacker`,
-    {
-      method: 'PATCH',
-      headers: jsonHeaders,
-    },
-  );
+export const togglePreferredAttacker = async (championUserId: string): Promise<RosterEntry> => {
+  const response = await fetch(`${PROXY}/champion-users/${championUserId}/preferred-attacker`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+  });
   await throwOnError(response, "Erreur lors du basculement de l'attaquant préféré");
   return response.json();
 };
@@ -282,7 +302,7 @@ export interface UpgradeRequest {
 
 export const createUpgradeRequest = async (
   championUserId: string,
-  requestedRarity: string,
+  requestedRarity: string
 ): Promise<UpgradeRequest> => {
   const response = await fetch(`${PROXY}/champion-users/upgrade-requests`, {
     method: 'POST',
@@ -296,23 +316,19 @@ export const createUpgradeRequest = async (
   return response.json();
 };
 
-export const getUpgradeRequests = async (
-  gameAccountId: string,
-): Promise<UpgradeRequest[]> => {
+export const getUpgradeRequests = async (gameAccountId: string): Promise<UpgradeRequest[]> => {
   const response = await fetch(
     `${PROXY}/champion-users/upgrade-requests/by-account/${gameAccountId}`,
-    { headers: jsonHeaders },
+    { headers: jsonHeaders }
   );
   await throwOnError(response, 'Erreur lors de la récupération des demandes');
   return response.json();
 };
 
-export const cancelUpgradeRequest = async (
-  requestId: string,
-): Promise<void> => {
-  const response = await fetch(
-    `${PROXY}/champion-users/upgrade-requests/${requestId}`,
-    { method: 'DELETE', headers: jsonHeaders },
-  );
+export const cancelUpgradeRequest = async (requestId: string): Promise<void> => {
+  const response = await fetch(`${PROXY}/champion-users/upgrade-requests/${requestId}`, {
+    method: 'DELETE',
+    headers: jsonHeaders,
+  });
   await throwOnError(response, "Erreur lors de l'annulation de la demande");
 };

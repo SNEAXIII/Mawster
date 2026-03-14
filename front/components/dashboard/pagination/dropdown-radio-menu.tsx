@@ -32,7 +32,9 @@ export default function DropdownRadioMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant='outline'>{labelButton} <ChevronDown className="h-4 w-4" /></Button>
+        <Button variant='outline'>
+          {labelButton} <ChevronDown className='h-4 w-4' />
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className='w-56'>
         <DropdownMenuLabel>{labelDescription}</DropdownMenuLabel>

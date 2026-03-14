@@ -178,7 +178,7 @@ jobs:
     environment: Api
     name: Docker Build & Push (API)
     runs-on: ubuntu-latest
-    needs: 
+    needs:
       - changes
       - lint-test-python
     steps:
@@ -210,7 +210,7 @@ jobs:
     environment: Api
     name: Docker Build & Push (Front)
     runs-on: ubuntu-latest
-    needs: 
+    needs:
       - changes
       - e2e
     steps:

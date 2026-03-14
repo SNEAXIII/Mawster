@@ -13,11 +13,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import ChampionPortrait from '@/components/champion-portrait';
-import {
-  shortenChampionName,
-  getClassColors,
-  RARITY_LABELS,
-} from '@/app/services/roster';
+import { shortenChampionName, getClassColors, RARITY_LABELS } from '@/app/services/roster';
 
 export interface ImportResult {
   champion_name: string;
@@ -52,39 +48,47 @@ export default function ImportReportDialog({
   const failCount = results.filter((r) => !r.success).length;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+    >
+      <DialogContent className='max-w-2xl max-h-[85vh] flex flex-col'>
         <DialogHeader>
           <DialogTitle>{t.roster.importExport.reportTitle}</DialogTitle>
-          <DialogDescription className="flex items-center gap-3 mt-1 flex-wrap">
+          <DialogDescription className='flex items-center gap-3 mt-1 flex-wrap'>
             {addedCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-green-600 font-medium">
-                <Check className="h-3.5 w-3.5" /> {addedCount} {t.roster.importExport.badgeAdded.toLowerCase()}
+              <span className='inline-flex items-center gap-1 text-green-600 font-medium'>
+                <Check className='h-3.5 w-3.5' /> {addedCount}{' '}
+                {t.roster.importExport.badgeAdded.toLowerCase()}
               </span>
             )}
             {updatedCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-blue-600 font-medium">
-                <Check className="h-3.5 w-3.5" /> {updatedCount} {t.roster.importExport.badgeUpdated.toLowerCase()}
+              <span className='inline-flex items-center gap-1 text-blue-600 font-medium'>
+                <Check className='h-3.5 w-3.5' /> {updatedCount}{' '}
+                {t.roster.importExport.badgeUpdated.toLowerCase()}
               </span>
             )}
             {skippedCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-gray-500 font-medium">
+              <span className='inline-flex items-center gap-1 text-gray-500 font-medium'>
                 {skippedCount} {t.roster.importExport.badgeSkipped.toLowerCase()}
               </span>
             )}
             {failCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-red-600 font-medium">
-                <X className="h-3.5 w-3.5" /> {failCount} {t.roster.importExport.badgeError.toLowerCase()}
+              <span className='inline-flex items-center gap-1 text-red-600 font-medium'>
+                <X className='h-3.5 w-3.5' /> {failCount}{' '}
+                {t.roster.importExport.badgeError.toLowerCase()}
               </span>
             )}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700 px-2">
+        <div className='flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700 px-2'>
           {results.map((result, idx) => {
             const classColors = getClassColors(result.champion_class ?? 'Unknown');
-            const hasRarityChange = result.oldRarity !== null && result.oldRarity !== result.newRarity;
-            const hasSigChange = result.oldSignature !== null && result.oldSignature !== result.newSignature;
+            const hasRarityChange =
+              result.oldRarity !== null && result.oldRarity !== result.newRarity;
+            const hasSigChange =
+              result.oldSignature !== null && result.oldSignature !== result.newSignature;
 
             return (
               <div
@@ -100,7 +104,7 @@ export default function ImportReportDialog({
                 }`}
               >
                 {/* Champion portrait */}
-                <div className="shrink-0">
+                <div className='shrink-0'>
                   <ChampionPortrait
                     imageUrl={result.image_url}
                     name={result.champion_name}
@@ -110,65 +114,74 @@ export default function ImportReportDialog({
                 </div>
 
                 {/* Name & class */}
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold truncate" title={result.champion_name}>
+                <div className='min-w-0 flex-1'>
+                  <p
+                    className='text-sm font-semibold truncate'
+                    title={result.champion_name}
+                  >
                     {shortenChampionName(result.champion_name)}
                   </p>
                   <p className={`text-xs ${classColors.label}`}>
                     {result.champion_class ?? 'Unknown'}
                   </p>
                   {result.error && (
-                    <p className="text-xs text-red-500 truncate" title={result.error}>
+                    <p
+                      className='text-xs text-red-500 truncate'
+                      title={result.error}
+                    >
                       {result.error}
                     </p>
                   )}
                 </div>
 
                 {/* Status badge + diff */}
-                <div className="shrink-0 text-right text-xs whitespace-nowrap">
+                <div className='shrink-0 text-right text-xs whitespace-nowrap'>
                   {!result.success ? (
-                    <span className="text-[10px] font-bold bg-red-600 text-white px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                      <AlertTriangle className="h-2.5 w-2.5" /> {t.roster.importExport.badgeError}
+                    <span className='text-[10px] font-bold bg-red-600 text-white px-1.5 py-0.5 rounded-full flex items-center gap-0.5'>
+                      <AlertTriangle className='h-2.5 w-2.5' /> {t.roster.importExport.badgeError}
                     </span>
                   ) : result.isNew ? (
                     <div>
-                      <span className="inline-flex items-center gap-1 bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-0.5">
+                      <span className='inline-flex items-center gap-1 bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-0.5'>
                         {t.roster.importExport.badgeAdded}
                       </span>
-                      <div className="text-gray-600 dark:text-gray-300">
-                        {RARITY_LABELS[result.newRarity] ?? result.newRarity} · sig {result.newSignature}
+                      <div className='text-gray-600 dark:text-gray-300'>
+                        {RARITY_LABELS[result.newRarity] ?? result.newRarity} · sig{' '}
+                        {result.newSignature}
                       </div>
                     </div>
                   ) : result.isSkipped ? (
-                    <span className="inline-flex items-center gap-1 bg-gray-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    <span className='inline-flex items-center gap-1 bg-gray-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full'>
                       {t.roster.importExport.badgeSkipped}
                     </span>
                   ) : (
-                    <div className="space-y-0.5">
-                      <span className="inline-flex items-center gap-1 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-0.5">
+                    <div className='space-y-0.5'>
+                      <span className='inline-flex items-center gap-1 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-0.5'>
                         {t.roster.importExport.badgeUpdated}
                       </span>
                       {hasRarityChange && (
-                        <div className="flex items-center gap-1 justify-end">
-                          <span className="text-gray-400">
+                        <div className='flex items-center gap-1 justify-end'>
+                          <span className='text-gray-400'>
                             {RARITY_LABELS[result.oldRarity!] ?? result.oldRarity}
                           </span>
-                          <ArrowRight className="text-blue-500 h-2.5 w-2.5" />
-                          <span className="text-blue-600 font-semibold">
+                          <ArrowRight className='text-blue-500 h-2.5 w-2.5' />
+                          <span className='text-blue-600 font-semibold'>
                             {RARITY_LABELS[result.newRarity] ?? result.newRarity}
                           </span>
                         </div>
                       )}
                       {!hasRarityChange && (
-                        <div className="text-gray-500">
+                        <div className='text-gray-500'>
                           {RARITY_LABELS[result.newRarity] ?? result.newRarity}
                         </div>
                       )}
                       {hasSigChange && (
-                        <div className="flex items-center gap-1 justify-end">
-                          <span className="text-gray-400">sig {result.oldSignature}</span>
-                          <ArrowRight className="text-blue-500 h-2.5 w-2.5" />
-                          <span className="text-blue-600 font-semibold">sig {result.newSignature}</span>
+                        <div className='flex items-center gap-1 justify-end'>
+                          <span className='text-gray-400'>sig {result.oldSignature}</span>
+                          <ArrowRight className='text-blue-500 h-2.5 w-2.5' />
+                          <span className='text-blue-600 font-semibold'>
+                            sig {result.newSignature}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -179,10 +192,8 @@ export default function ImportReportDialog({
           })}
         </div>
 
-        <DialogFooter className="pt-3 border-t">
-          <Button onClick={() => onOpenChange(false)}>
-            {t.roster.importExport.close}
-          </Button>
+        <DialogFooter className='pt-3 border-t'>
+          <Button onClick={() => onOpenChange(false)}>{t.roster.importExport.close}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

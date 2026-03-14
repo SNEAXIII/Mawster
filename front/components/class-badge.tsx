@@ -20,9 +20,14 @@ type ClassBadgeProps = Readonly<{
 }>;
 
 export function ClassBadge({ championClass, className = '' }: ClassBadgeProps) {
-  const colors = CLASS_BADGE_COLORS[championClass] || 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100';
+  const colors =
+    CLASS_BADGE_COLORS[championClass] ||
+    'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100';
   return (
-    <Badge variant="outline" className={cn(colors, className)}>
+    <Badge
+      variant='outline'
+      className={cn(colors, className)}
+    >
       {championClass}
     </Badge>
   );

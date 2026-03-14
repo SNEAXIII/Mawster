@@ -33,6 +33,7 @@ const fr: Translations = {
     administration: 'Administration',
     champions: 'Champions',
     users: 'Utilisateurs',
+    toggleTheme: 'Changer le thème',
     signIn: 'Se connecter',
     signOut: 'Se déconnecter',
   },

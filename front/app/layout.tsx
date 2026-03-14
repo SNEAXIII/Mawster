@@ -9,7 +9,10 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang='en'>
+    <html
+      lang='en'
+      suppressHydrationWarning
+    >
       <body className={`${inter.className} antialiased`}>
         <Providers>
           <div className='flex h-screen flex-col md:flex-row md:overflow-hidden'>

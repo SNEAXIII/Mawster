@@ -80,9 +80,8 @@ export function useUpgradeRequests(): UpgradeRequestsState {
   }, []);
 
   const hasPendingRequest = useCallback(
-    (entry: RosterEntry) =>
-      upgradeRequests.some((r) => r.champion_user_id === entry.id),
-    [upgradeRequests],
+    (entry: RosterEntry) => upgradeRequests.some((r) => r.champion_user_id === entry.id),
+    [upgradeRequests]
   );
 
   const initiateUpgrade = useCallback(
@@ -94,7 +93,7 @@ export function useUpgradeRequests(): UpgradeRequestsState {
         setSelectedRarity(options[0]);
       }
     },
-    [hasPendingRequest, getUpgradeOptions],
+    [hasPendingRequest, getUpgradeOptions]
   );
 
   const closeUpgradeDialog = useCallback(() => {
@@ -119,7 +118,7 @@ export function useUpgradeRequests(): UpgradeRequestsState {
       const req = upgradeRequests.find((r) => r.id === requestId);
       setCancelTarget({ id: requestId, name: req?.champion_name ?? '' });
     },
-    [upgradeRequests],
+    [upgradeRequests]
   );
 
   const closeCancelDialog = useCallback(() => {

@@ -7,7 +7,7 @@ interface MainMawsterLogoProps {
 export default function MainMawsterLogo({ className = '' }: MainMawsterLogoProps) {
   return (
     <div
-      className={`flex items-center gap-4 leading-none text-white ${className}`}
+      className={`flex items-center gap-4 leading-none text-primary-foreground ${className}`}
       aria-label='Mawster Logo'
     >
       <Image
