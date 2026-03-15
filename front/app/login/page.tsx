@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Loader, AlertCircle, User } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
@@ -65,6 +64,38 @@ function LoginPageContent() {
     }
   };
 
+  const renderDevUserPicker = () => {
+    if (devLoading) {
+      return (
+        <div className='flex justify-center py-2'>
+          <Loader className='w-5 h-5 animate-spin text-muted-foreground' />
+        </div>
+      );
+    }
+    if (devUsers.length === 0) {
+      return <p className='text-xs text-muted-foreground text-center'>{t.login.devNoUsers}</p>;
+    }
+    return (
+      <div className='max-h-60 overflow-y-auto space-y-1'>
+        {devUsers.map((u) => (
+          <button
+            key={u.id}
+            type='button'
+            className='w-full text-left px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors flex items-center justify-between disabled:opacity-50'
+            disabled={isLoading}
+            onClick={() => handleDevLogin(u.id)}
+            data-cy={`dev-login-${u.login}`}
+          >
+            <span className='font-medium truncate'>{u.login}</span>
+            <Badge variant='secondary' className='ml-2 shrink-0 text-[10px]'>
+              {u.role}
+            </Badge>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className='h-full flex items-center justify-center bg-gradient-to-br from-background to-muted p-4 sm:p-6'>
       <Card className='w-full max-w-md mx-auto shadow-lg transition-all duration-300 hover:shadow-xl'>
@@ -81,7 +112,7 @@ function LoginPageContent() {
           <div className='space-y-4'>
             {error && (
               <Alert variant='destructive'>
-                <AlertCircle className='h-4 w-4' />
+                <AlertCircle size={16} />
                 <AlertTitle>{t.common.error}</AlertTitle>
                 <AlertDescription className='mt-1'>{error}</AlertDescription>
               </Alert>
@@ -120,36 +151,7 @@ function LoginPageContent() {
                 <p className='text-xs font-semibold text-orange-600 mb-2 text-center'>
                   🔓 {t.login.devModeTitle}
                 </p>
-                {devLoading ? (
-                  <div className='flex justify-center py-2'>
-                    <Loader className='w-5 h-5 animate-spin text-muted-foreground' />
-                  </div>
-                ) : devUsers.length === 0 ? (
-                  <p className='text-xs text-muted-foreground text-center'>{t.login.devNoUsers}</p>
-                ) : (
-                  <ScrollArea className='max-h-60'>
-                    <div className='space-y-1'>
-                      {devUsers.map((u) => (
-                        <button
-                          key={u.id}
-                          type='button'
-                          className='w-full text-left px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors flex items-center justify-between disabled:opacity-50'
-                          disabled={isLoading}
-                          onClick={() => handleDevLogin(u.id)}
-                          data-cy={`dev-login-${u.login}`}
-                        >
-                          <span className='font-medium truncate'>{u.login}</span>
-                          <Badge
-                            variant='secondary'
-                            className='ml-2 shrink-0 text-[10px]'
-                          >
-                            {u.role}
-                          </Badge>
-                        </button>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                )}
+                {renderDevUserPicker()}
               </div>
             )}
           </div>

@@ -43,6 +43,8 @@ To run a single test file: `uv run pytest tests/unit/dto/dto_from_model_test.py 
 
 ## E2E Commands (root Makefile)
 
+**IMPORTANT** : `mcp__server-runner__run_e2e` bascule automatiquement en mode test si nécessaire — ne jamais appeler `start_test` avant `run_e2e`, ça causerait un double redémarrage des serveurs et doublerait le temps d'attente.
+
 Ces commandes démarrent automatiquement l'API de test, le frontend, et Cypress.
 
 | Task                              | Command                                   |

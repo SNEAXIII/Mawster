@@ -58,21 +58,29 @@ export default function AllianceMemberRow({
   const userCanManage = canManage(alliance);
   const allianceId = alliance.id;
 
+  const MAX_PER_GROUP = 10;
+  const groupCounts = alliance.members.reduce<Record<number, number>>((acc, m) => {
+    if (m.alliance_group !== null) acc[m.alliance_group] = (acc[m.alliance_group] ?? 0) + 1;
+    return acc;
+  }, {});
+  const isGroupFull = (g: number) =>
+    (groupCounts[g] ?? 0) >= MAX_PER_GROUP && member.alliance_group !== g;
+
   return (
     <div
-      className='flex flex-col sm:flex-row sm:items-center sm:justify-between py-2 sm:py-1 px-2 rounded hover:bg-accent/50 gap-1 sm:gap-0'
+      className='flex flex-col py-2 px-2 rounded hover:bg-accent/50 gap-1'
       data-cy={`member-row-${member.game_pseudo}`}
     >
-      <div className='flex items-center gap-2 min-w-0'>
-        <UsernameEnriched
-          pseudo={member.game_pseudo}
-          role={getMemberRole(member.is_owner, member.is_officer)}
-          group={member.alliance_group}
-          isMine={memberIsMine}
-        />
-      </div>
+      <div className='flex items-center gap-1 flex-wrap min-w-0'>
+        <div className='flex-1 min-w-0'>
+          <UsernameEnriched
+            pseudo={member.game_pseudo}
+            role={getMemberRole(member.is_owner, member.is_officer)}
+            group={member.alliance_group}
+            isMine={memberIsMine}
+          />
+        </div>
 
-      <div className='flex items-center gap-1 flex-wrap sm:flex-nowrap'>
         {/* View Roster */}
         <TooltipProvider>
           <Tooltip>
@@ -80,7 +88,7 @@ export default function AllianceMemberRow({
               <Button
                 variant='ghost'
                 size='icon'
-                className='h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-accent'
+                className='h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent'
                 data-cy={`view-roster-${member.game_pseudo}`}
                 onClick={() => onViewRoster(member.id, member.game_pseudo)}
               >
@@ -200,16 +208,16 @@ export default function AllianceMemberRow({
             }
           >
             <SelectTrigger
-              className='h-7 w-24 text-xs'
+              className='h-6 w-18 text-[10px] px-1.5'
               data-cy='member-group-select'
             >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value='none'>{t.game.alliances.noGroup}</SelectItem>
-              <SelectItem value='1'>{t.game.alliances.group} 1</SelectItem>
-              <SelectItem value='2'>{t.game.alliances.group} 2</SelectItem>
-              <SelectItem value='3'>{t.game.alliances.group} 3</SelectItem>
+              {!isGroupFull(1) && <SelectItem value='1'>{t.game.alliances.group} 1</SelectItem>}
+              {!isGroupFull(2) && <SelectItem value='2'>{t.game.alliances.group} 2</SelectItem>}
+              {!isGroupFull(3) && <SelectItem value='3'>{t.game.alliances.group} 3</SelectItem>}
             </SelectContent>
           </Select>
         )}

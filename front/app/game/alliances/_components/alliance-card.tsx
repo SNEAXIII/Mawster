@@ -75,10 +75,16 @@ export default function AllianceCard({
   const userCanManage = canManage(alliance);
   const officerCount = alliance.officers.length;
 
-  const sortedMembers = [...alliance.members].sort((a, b) => {
-    const rank = (m: typeof a) => (m.is_owner ? 0 : m.is_officer ? 1 : 2);
-    return rank(a) - rank(b);
-  });
+  const GROUPS = [1, 2, 3, null] as const;
+  const membersByGroup = GROUPS.map((group) => ({
+    group,
+    members: [...alliance.members]
+      .filter((m) => m.alliance_group === group)
+      .sort((a, b) => {
+        const rank = (m: typeof a) => (m.is_owner ? 0 : m.is_officer ? 1 : 2);
+        return rank(a) - rank(b);
+      }),
+  }));
 
   return (
     <Card data-cy={`alliance-card-${alliance.name}`}>
@@ -227,21 +233,42 @@ export default function AllianceCard({
           </div>
 
           {alliance.members.length > 0 && (
-            <div className='space-y-1'>
-              {sortedMembers.map((member) => (
-                <AllianceMemberRow
-                  key={member.id}
-                  member={member}
-                  alliance={alliance}
-                  onDemoteOfficer={onDemoteOfficer}
-                  onPromoteOfficer={onPromoteOfficer}
-                  onLeave={onLeave}
-                  onExclude={onExclude}
-                  onSetGroup={onSetGroup}
-                  onViewRoster={(gameAccountId, pseudo) =>
-                    onViewRoster(gameAccountId, pseudo, userCanManage)
-                  }
-                />
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mt-1'>
+              {membersByGroup.map(({ group, members }) => (
+                <div
+                  key={group ?? 'unassigned'}
+                  data-cy={`group-col-${group ?? 'unassigned'}`}
+                >
+                  <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-1 mb-1 border-b'>
+                    {group !== null
+                      ? `${t.game.alliances.group} ${group}`
+                      : t.game.alliances.noGroup}
+                    {members.length > 0 && (
+                      <span className='ml-1 font-normal'>({members.length})</span>
+                    )}
+                  </p>
+                  {members.length === 0 ? (
+                    <p className='text-xs text-muted-foreground italic py-1'>—</p>
+                  ) : (
+                    <div className='space-y-0.5'>
+                      {members.map((member) => (
+                        <AllianceMemberRow
+                          key={member.id}
+                          member={member}
+                          alliance={alliance}
+                          onDemoteOfficer={onDemoteOfficer}
+                          onPromoteOfficer={onPromoteOfficer}
+                          onLeave={onLeave}
+                          onExclude={onExclude}
+                          onSetGroup={onSetGroup}
+                          onViewRoster={(gameAccountId, pseudo) =>
+                            onViewRoster(gameAccountId, pseudo, userCanManage)
+                          }
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           )}

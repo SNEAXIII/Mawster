@@ -412,7 +412,7 @@ function AlliancesContent() {
 
   return (
     <AllianceRoleProvider refreshKey={roleRefreshKey}>
-      <div className='max-w-4xl mx-auto px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
+      <div className='w-full px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
         {/* Header */}
         <div>
           <h1 className='text-xl sm:text-2xl font-bold text-foreground'>
