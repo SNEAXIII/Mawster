@@ -9,6 +9,7 @@ data/db/*
 !*.env.example
 front/.env.local
 *.pid
+.server-runner-state.json
 # Application logs (RGPD — never commit)
 api/logs/
 api/test-results/
