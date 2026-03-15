@@ -154,6 +154,7 @@ Raw tool output floods the context window. Use context-mode MCP tools to keep ra
 
 - DO NOT use Bash for commands producing >20 lines of output — use `execute` or `batch_execute`.
 - **CRITICAL — Read vs ctx_execute_file**: Use `Read` ONLY when you are about to `Edit` the file immediately after. For ANY other file reading (exploration, analysis, debugging, searching for bugs) use `ctx_execute_file` instead. Violating this rule floods the context window.
+- **CRITICAL — No Explore agents**: NEVER launch Explore subagents for codebase research. Use `batch_execute(commands, queries)` instead — it keeps output out of context and costs far fewer tokens.
 - DO NOT use WebFetch — use `fetch_and_index` instead.
 - DO NOT use curl/wget in Bash — use `execute` or `fetch_and_index`.
 - Bash is ONLY for git, mkdir, rm, mv, navigation, and short commands.
@@ -163,3 +164,50 @@ Raw tool output floods the context window. Use context-mode MCP tools to keep ra
 - Keep responses under 500 words.
 - Write artifacts (code, configs) to FILES — never return them as inline text.
 - Return only: file path + 1-line description.
+
+---
+
+## MCP Servers
+
+Four MCP servers are configured in `.mcp.json`:
+
+### context-mode
+
+Keeps raw command/file output out of the context window (see [Context-Mode](#context-mode) section above).
+
+### cypress-runner
+
+Runs Cypress E2E tests from the assistant. Prefer this over `npm run cypress:run` via Bash.
+
+| Tool                                        | Description                        |
+| ------------------------------------------- | ---------------------------------- |
+| `mcp__cypress-runner__run_all_tests`        | Run the full Cypress E2E suite     |
+| `mcp__cypress-runner__run_failing_tests`    | Re-run only previously failed tests |
+
+### pytest-runner
+
+Runs backend pytest tests from the assistant. Prefer this over `make test` via Bash when output is large.
+
+| Tool                                       | Description                        |
+| ------------------------------------------ | ---------------------------------- |
+| `mcp__pytest-runner__run_all_tests`        | Run the full pytest suite          |
+| `mcp__pytest-runner__run_failing_tests`    | Re-run only previously failed tests |
+
+### server-runner
+
+Gère le cycle de vie des serveurs dev et test depuis l'assistant. Démarre/arrête API + Frontend + DB en un seul appel.
+
+| Outil MCP | Description |
+| --- | --- |
+| `mcp__server-runner__start_dev` | Lance mariadb (3306) + API (8000) + Frontend (3000) en mode dev |
+| `mcp__server-runner__start_test` | Lance mariadb-test (3307) + API (8001) + Frontend (3000) en mode test |
+| `mcp__server-runner__stop` | Arrête tous les serveurs démarrés |
+| `mcp__server-runner__status` | Mode actif, PIDs, ports, uptime |
+| `mcp__server-runner__run_e2e` | Démarre le mode test si besoin, lance Cypress, retourne les résultats |
+
+### github
+
+Interact with GitHub (issues, PRs, branches, files) without leaving the assistant.
+
+- Use `mcp__github__*` tools for all GitHub operations (create PR, merge, comment, etc.)
+- `GITHUB_PERSONAL_ACCESS_TOKEN` must be set in the environment.
