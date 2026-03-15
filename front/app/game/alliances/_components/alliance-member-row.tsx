@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,10 +12,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { UserMinus, ShieldCheck, ShieldMinus, Eye } from 'lucide-react';
-import { type Alliance } from '@/app/services/game';
+import { Eye } from 'lucide-react';
+import { type Alliance, setMemberGroup } from '@/app/services/game';
 import { useAllianceRole } from '@/hooks/use-alliance-role';
 import UsernameEnriched, { getMemberRole } from '@/components/username-enriched';
+import { AllianceMemberActions } from './alliance-member-actions';
 
 interface AllianceMember {
   id: string;
@@ -27,36 +29,24 @@ interface AllianceMember {
 interface AllianceMemberRowProps {
   member: AllianceMember;
   alliance: Alliance;
-  onDemoteOfficer: (allianceId: string, gameAccountId: string) => void;
-  onPromoteOfficer: (target: { allianceId: string; gameAccountId: string; pseudo: string }) => void;
-  onLeave: (target: { allianceId: string; gameAccountId: string; pseudo: string }) => void;
-  onExclude: (target: { allianceId: string; gameAccountId: string; pseudo: string }) => void;
-  onSetGroup: (
-    allianceId: string,
-    gameAccountId: string,
-    group: number | null,
-    pseudo: string
-  ) => void;
+  onRefresh: () => void;
   onViewRoster: (gameAccountId: string, pseudo: string) => void;
 }
 
 export default function AllianceMemberRow({
   member,
   alliance,
-  onDemoteOfficer,
-  onPromoteOfficer,
-  onLeave,
-  onExclude,
-  onSetGroup,
+  onRefresh,
   onViewRoster,
 }: AllianceMemberRowProps) {
   const { t } = useI18n();
-  const { isMine: isMineCheck, isOwner, canManage } = useAllianceRole();
+  const { isMine: isMineCheck, canManage } = useAllianceRole();
 
   const memberIsMine = isMineCheck(member.id);
-  const userIsOwner = isOwner(alliance);
   const userCanManage = canManage(alliance);
   const allianceId = alliance.id;
+
+  const [isChangingGroup, setIsChangingGroup] = useState(false);
 
   const MAX_PER_GROUP = 10;
   const groupCounts = alliance.members.reduce<Record<number, number>>((acc, m) => {
@@ -66,161 +56,85 @@ export default function AllianceMemberRow({
   const isGroupFull = (g: number) =>
     (groupCounts[g] ?? 0) >= MAX_PER_GROUP && member.alliance_group !== g;
 
+  const handleSetGroup = async (val: string) => {
+    const group = val === 'none' ? null : parseInt(val);
+    setIsChangingGroup(true);
+    try {
+      await setMemberGroup(allianceId, member.id, group);
+      const groupLabel = group
+        ? `${t.game.alliances.group} ${group}`
+        : t.game.alliances.noGroup;
+      toast.success(
+        t.game.alliances.groupSetSuccess
+          .replace('{pseudo}', member.game_pseudo)
+          .replace('{group}', groupLabel)
+      );
+      onRefresh();
+    } catch (err: any) {
+      toast.error(err?.message || t.game.alliances.groupSetError);
+    } finally {
+      setIsChangingGroup(false);
+    }
+  };
+
   return (
     <div
       className='flex flex-col py-2 px-2 rounded hover:bg-accent/50 gap-1'
       data-cy={`member-row-${member.game_pseudo}`}
     >
-      <div className='flex items-center gap-1 flex-wrap min-w-0'>
-        <div className='flex-1 min-w-0'>
+      <div className='flex items-center gap-0.5 flex-wrap'>
+        <div className='min-w-0 max-w-full'>
           <UsernameEnriched
             pseudo={member.game_pseudo}
             role={getMemberRole(member.is_owner, member.is_officer)}
-            group={member.alliance_group}
             isMine={memberIsMine}
           />
         </div>
 
-        {/* View Roster */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant='ghost'
-                size='icon'
-                className='h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent'
-                data-cy={`view-roster-${member.game_pseudo}`}
-                onClick={() => onViewRoster(member.id, member.game_pseudo)}
-              >
-                <Eye className='h-3.5 w-3.5' />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t.game.alliances.viewRoster}</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div className='flex items-center gap-0.5 shrink-0'>
+          {/* View Roster */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent'
+                  data-cy={`view-roster-${member.game_pseudo}`}
+                  onClick={() => onViewRoster(member.id, member.game_pseudo)}
+                >
+                  <Eye className='h-3.5 w-3.5' />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t.game.alliances.viewRoster}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
-        {/* Promote / Demote — owner only, not on self/owner */}
-        {userIsOwner &&
-          !member.is_owner &&
-          (member.is_officer ? (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='h-7 w-7 text-orange-400 hover:text-orange-600 hover:bg-orange-50'
-                    data-cy={`demote-officer-${member.game_pseudo}`}
-                    onClick={() => onDemoteOfficer(allianceId, member.id)}
-                  >
-                    <ShieldMinus className='h-3.5 w-3.5' />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t.game.alliances.demoteOfficer}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ) : (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='h-7 w-7 text-blue-400 hover:text-blue-600 hover:bg-blue-50'
-                    data-cy={`promote-officer-${member.game_pseudo}`}
-                    onClick={() =>
-                      onPromoteOfficer({
-                        allianceId,
-                        gameAccountId: member.id,
-                        pseudo: member.game_pseudo,
-                      })
-                    }
-                  >
-                    <ShieldCheck className='h-3.5 w-3.5' />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t.game.alliances.promoteOfficer}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ))}
+          {/* Actions dropdown (promote / demote / leave / exclude) */}
+          <AllianceMemberActions member={member} alliance={alliance} onRefresh={onRefresh} />
 
-        {/* Leave (own account) or Exclude (officer/owner action on others) */}
-        {!member.is_owner &&
-          (memberIsMine ? (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-accent'
-                    data-cy={`leave-alliance-${member.game_pseudo}`}
-                    onClick={() =>
-                      onLeave({
-                        allianceId,
-                        gameAccountId: member.id,
-                        pseudo: member.game_pseudo,
-                      })
-                    }
-                  >
-                    <UserMinus className='h-3.5 w-3.5' />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t.game.alliances.leaveAlliance}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ) : userCanManage ? (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className='h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50'
-                    data-cy={`exclude-member-${member.game_pseudo}`}
-                    onClick={() =>
-                      onExclude({
-                        allianceId,
-                        gameAccountId: member.id,
-                        pseudo: member.game_pseudo,
-                      })
-                    }
-                  >
-                    <UserMinus className='h-3.5 w-3.5' />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t.game.alliances.excludeMember}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ) : null)}
-
-        {/* Group selector — only for officers/owners */}
-        {userCanManage && (
-          <Select
-            value={member.alliance_group?.toString() ?? 'none'}
-            onValueChange={(val) =>
-              onSetGroup(
-                allianceId,
-                member.id,
-                val === 'none' ? null : parseInt(val),
-                member.game_pseudo
-              )
-            }
-          >
-            <SelectTrigger
-              className='h-6 w-18 text-[10px] px-1.5'
-              data-cy='member-group-select'
+          {/* Group selector — only for officers/owners */}
+          {userCanManage && (
+            <Select
+              value={member.alliance_group?.toString() ?? 'none'}
+              onValueChange={handleSetGroup}
+              disabled={isChangingGroup}
             >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='none'>{t.game.alliances.noGroup}</SelectItem>
-              {!isGroupFull(1) && <SelectItem value='1'>{t.game.alliances.group} 1</SelectItem>}
-              {!isGroupFull(2) && <SelectItem value='2'>{t.game.alliances.group} 2</SelectItem>}
-              {!isGroupFull(3) && <SelectItem value='3'>{t.game.alliances.group} 3</SelectItem>}
-            </SelectContent>
-          </Select>
-        )}
+              <SelectTrigger
+                className='h-4 w-10 text-[8px] px-0.5'
+                data-cy='member-group-select'
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='none'>{t.game.alliances.noGroup}</SelectItem>
+                {!isGroupFull(1) && <SelectItem value='1'>G1</SelectItem>}
+                {!isGroupFull(2) && <SelectItem value='2'>G2</SelectItem>}
+                {!isGroupFull(3) && <SelectItem value='3'>G3</SelectItem>}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       </div>
     </div>
   );

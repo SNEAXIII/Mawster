@@ -76,7 +76,7 @@ function LoginPageContent() {
       return <p className='text-xs text-muted-foreground text-center'>{t.login.devNoUsers}</p>;
     }
     return (
-      <div className='max-h-60 overflow-y-auto space-y-1'>
+      <div className='max-h-60 overflow-y-auto space-y-1' data-cy='dev-user-list'>
         {devUsers.map((u) => (
           <button
             key={u.id}
@@ -97,7 +97,7 @@ function LoginPageContent() {
   };
 
   return (
-    <div className='h-full flex items-center justify-center bg-gradient-to-br from-background to-muted p-4 sm:p-6'>
+    <div className='min-h-full flex items-center justify-center bg-gradient-to-br from-background to-muted p-4 sm:p-6'>
       <Card className='w-full max-w-md mx-auto shadow-lg transition-all duration-300 hover:shadow-xl'>
         <CardHeader className='space-y-1'>
           <div className='flex justify-center mb-2'>

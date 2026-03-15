@@ -54,7 +54,7 @@ export function WarMapNode({
     <div
       className={cn(
         'relative flex flex-col items-center justify-center rounded-lg border-2 cursor-pointer transition-all',
-        'w-[80px] h-[96px] sm:w-[90px] sm:h-[108px]',
+        'w-[60px] h-[72px] sm:w-[68px] sm:h-[82px] md:w-[74px] md:h-[88px]',
         colorClasses,
         hoverClasses,
         placement ? 'ring-1 ring-white/30' : 'opacity-80'
@@ -92,7 +92,7 @@ export function WarMapNode({
             imageUrl={placement.champion_image_url}
             name={placement.champion_name}
             rarity={placement.rarity}
-            size={44}
+            size={36}
           />
           <span
             className={cn(
@@ -105,7 +105,7 @@ export function WarMapNode({
             {placement.is_preferred_attacker && '⚔ '}
             {rarityLabel(placement.rarity, placement.signature, placement.ascension)}
           </span>
-          <span className='text-[10px] text-white/80 truncate max-w-[76px] text-center leading-tight'>
+          <span className='text-[9px] text-white/80 truncate max-w-[56px] sm:max-w-[64px] text-center leading-tight'>
             {placement.game_pseudo}
           </span>
         </div>
@@ -188,7 +188,7 @@ export default function WarMap({ placements, onNodeClick, onRemove, canManage }:
           {section.rows.map((row, rowIdx) => (
             <div
               key={rowIdx}
-              className='flex gap-1 sm:gap-2 justify-center'
+              className='flex gap-1 justify-center'
             >
               {row.map((nodeNumber, index) =>
                 nodeNumber === 0 ? (

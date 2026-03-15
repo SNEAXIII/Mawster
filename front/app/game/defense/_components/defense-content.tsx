@@ -402,7 +402,7 @@ export default function DefensePageContent({
           {/* War Map */}
           <div className='flex-1 min-w-0'>
             <Card>
-              <CardContent className='p-2 sm:p-4'>
+              <CardContent className='p-2 sm:p-3 overflow-x-auto'>
                 <WarMap
                   placements={defenseSummary?.placements ?? []}
                   onNodeClick={handleNodeClick}

@@ -14,11 +14,7 @@ import {
   getEligibleOwners,
   getEligibleMembers,
   createAlliance,
-  addOfficer,
-  removeOfficer,
   inviteMember,
-  removeMember,
-  setMemberGroup,
   getMyInvitations,
   acceptInvitation,
   declineInvitation,
@@ -29,8 +25,6 @@ import {
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { TextConfirmationDialog } from '@/components/text-confirmation-dialog';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { useRequiredSession } from '@/hooks/use-required-session';
 import { AllianceRoleProvider } from '@/hooks/use-alliance-role';
@@ -115,27 +109,6 @@ function AlliancesContent() {
   // Member management
   const [memberAllianceId, setMemberAllianceId] = useState<string | null>(null);
   const [memberAccountId, setMemberAccountId] = useState('');
-
-  // Exclude confirmation with text input
-  const [excludeTarget, setExcludeTarget] = useState<{
-    allianceId: string;
-    gameAccountId: string;
-    pseudo: string;
-  } | null>(null);
-
-  // Leave alliance confirmation
-  const [leaveTarget, setLeaveTarget] = useState<{
-    allianceId: string;
-    gameAccountId: string;
-    pseudo: string;
-  } | null>(null);
-
-  // Promote officer confirmation
-  const [promoteTarget, setPromoteTarget] = useState<{
-    allianceId: string;
-    gameAccountId: string;
-    pseudo: string;
-  } | null>(null);
 
   // Roster viewer
   const [rosterTarget, setRosterTarget] = useState<{
@@ -264,32 +237,6 @@ function AlliancesContent() {
     }
   };
 
-  // ---- Officers (promote / demote) ----
-  const handlePromoteOfficer = async (allianceId: string, gameAccountId: string) => {
-    try {
-      await addOfficer(allianceId, gameAccountId);
-      toast.success(t.game.alliances.officerAddSuccess);
-      setPromoteTarget(null);
-      setRoleRefreshKey((k) => k + 1);
-      await fetchAlliances();
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err?.message || t.game.alliances.officerAddError);
-    }
-  };
-
-  const handleDemoteOfficer = async (allianceId: string, gameAccountId: string) => {
-    try {
-      await removeOfficer(allianceId, gameAccountId);
-      toast.success(t.game.alliances.officerRemoveSuccess);
-      setRoleRefreshKey((k) => k + 1);
-      await fetchAlliances();
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err?.message || t.game.alliances.officerRemoveError);
-    }
-  };
-
   // ---- Members ----
   const handleOpenInviteMember = (allianceId: string) => {
     setMemberAllianceId(allianceId);
@@ -304,45 +251,16 @@ function AlliancesContent() {
       toast.success(t.game.alliances.inviteSuccess);
       setMemberAllianceId(null);
       setMemberAccountId('');
-      await Promise.all([fetchEligibleMembers(), fetchPendingInvitations(alliances)]);
+      await Promise.all([fetchEligibleMembers(), fetchPendingInvitations(alliances), fetchMyInvitations()]);
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || t.game.alliances.inviteError);
     }
   };
 
-  const handleRemoveMember = async (allianceId: string, gameAccountId: string) => {
-    try {
-      await removeMember(allianceId, gameAccountId);
-      toast.success(t.game.alliances.memberRemoveSuccess);
-      setExcludeTarget(null);
-      setLeaveTarget(null);
-      setRoleRefreshKey((k) => k + 1);
-      await Promise.all([fetchAlliances(), fetchEligibleMembers(), fetchMyAccounts()]);
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err?.message || t.game.alliances.memberRemoveError);
-    }
-  };
-
-  // ---- Groups ----
-  const handleSetGroup = async (
-    allianceId: string,
-    gameAccountId: string,
-    group: number | null,
-    pseudo: string
-  ) => {
-    try {
-      await setMemberGroup(allianceId, gameAccountId, group);
-      const groupLabel = group ? `${t.game.alliances.group} ${group}` : t.game.alliances.noGroup;
-      toast.success(
-        t.game.alliances.groupSetSuccess.replace('{pseudo}', pseudo).replace('{group}', groupLabel)
-      );
-      await fetchAlliances();
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err?.message || t.game.alliances.groupSetError);
-    }
+  const handleMemberRefresh = async () => {
+    setRoleRefreshKey((k) => k + 1);
+    await Promise.all([fetchAlliances(), fetchEligibleMembers(), fetchMyAccounts()]);
   };
 
   // ---- Invitations (accept / decline) ----
@@ -527,11 +445,7 @@ function AlliancesContent() {
                       setMemberAccountId('');
                     }}
                     onInviteMember={handleInviteMember}
-                    onDemoteOfficer={handleDemoteOfficer}
-                    onPromoteOfficer={setPromoteTarget}
-                    onLeave={setLeaveTarget}
-                    onExclude={setExcludeTarget}
-                    onSetGroup={handleSetGroup}
+                    onRefresh={handleMemberRefresh}
                     onViewRoster={(gameAccountId, pseudo, canReq) => {
                       setRosterTarget({ gameAccountId, pseudo, canRequestUpgrade: canReq });
                     }}
@@ -552,64 +466,6 @@ function AlliancesContent() {
             initialBg={searchParams.get('bg') ? Number(searchParams.get('bg')) : undefined}
           />
         )}
-
-        {/* Leave alliance confirmation */}
-        <ConfirmationDialog
-          open={!!leaveTarget}
-          onOpenChange={(open) => {
-            if (!open) setLeaveTarget(null);
-          }}
-          title={t.common.confirm}
-          description={t.game.alliances.leaveConfirm.replace('{pseudo}', leaveTarget?.pseudo ?? '')}
-          onConfirm={() => {
-            if (leaveTarget) {
-              handleRemoveMember(leaveTarget.allianceId, leaveTarget.gameAccountId);
-            }
-          }}
-          variant='destructive'
-          confirmText={t.game.alliances.leaveAlliance}
-        />
-
-        {/* Promote officer confirmation */}
-        <ConfirmationDialog
-          open={!!promoteTarget}
-          onOpenChange={(open) => {
-            if (!open) setPromoteTarget(null);
-          }}
-          title={t.common.confirm}
-          description={t.game.alliances.promoteOfficerConfirm.replace(
-            '{pseudo}',
-            promoteTarget?.pseudo ?? ''
-          )}
-          onConfirm={() => {
-            if (promoteTarget) {
-              handlePromoteOfficer(promoteTarget.allianceId, promoteTarget.gameAccountId);
-            }
-          }}
-          confirmText={t.game.alliances.promoteOfficer}
-        />
-
-        {/* Exclude member confirmation — requires typing "confirmer" */}
-        <TextConfirmationDialog
-          open={!!excludeTarget}
-          onOpenChange={(open) => {
-            if (!open) setExcludeTarget(null);
-          }}
-          title={t.common.confirm}
-          description={t.game.alliances.excludeConfirm.replace(
-            '{pseudo}',
-            excludeTarget?.pseudo ?? ''
-          )}
-          onConfirm={() => {
-            if (excludeTarget) {
-              handleRemoveMember(excludeTarget.allianceId, excludeTarget.gameAccountId);
-            }
-          }}
-          confirmationWord={t.game.alliances.excludeTypeConfirmPlaceholder}
-          inputLabel={t.game.alliances.excludeTypeConfirm}
-          confirmText={t.game.alliances.excludeMember}
-          variant='destructive'
-        />
 
         {/* Roster viewer dialog */}
         <AllianceRosterDialog

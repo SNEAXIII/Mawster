@@ -70,6 +70,35 @@ describe('Alliances – Invitations', () => {
     );
   });
 
+  it('owner sees invitation for their own second game account', () => {
+    setupAllianceOwner('self-invite', 'OwnerAcc', 'SelfAlliance', 'SI').then(
+      ({ userData: ownerData, allianceId }) => {
+        cy.apiCreateGameAccount(ownerData.access_token, 'SecondAcc', false).then(
+          (secondAccount) => {
+            cy.apiInviteMember(ownerData.access_token, allianceId, secondAccount.id);
+
+            cy.uiLogin(ownerData.login);
+            cy.navTo('alliances');
+
+            // The invitation for the owner's own second account must be visible
+            cy.getByCy('my-invitations-section').should('be.visible');
+            cy.getByCy('my-invitation-SelfAlliance').should('contain', 'SelfAlliance');
+            cy.getByCy('my-invitation-SelfAlliance').should('contain', '[SI]');
+            cy.getByCy('my-invitation-SelfAlliance').should('contain', 'SecondAcc');
+
+            // Owner can accept and the second account joins
+            cy.getByCy('accept-invitation').click();
+            cy.contains('Invitation accepted').should('be.visible');
+            cy.getByCy('alliance-card-SelfAlliance').within(() => {
+              cy.getByCy('alliance-member-count').should('contain', '2');
+              cy.getByCy('member-row-SecondAcc').should('be.visible');
+            });
+          }
+        );
+      }
+    );
+  });
+
   it('declines an invitation via the UI', () => {
     setupAllianceOwner('alliance-decline', 'DeclineOwner', 'DeclineAlliance', 'DA').then(
       ({ userData: ownerData, allianceId }) => {

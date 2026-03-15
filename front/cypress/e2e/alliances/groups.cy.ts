@@ -110,9 +110,9 @@ describe('Alliances – Member Groups', () => {
         cy.getByCy('member-row-PickerMember').find('[data-cy="member-group-select"]').click();
       });
 
-      cy.get('[role="option"]').contains('Group 1').should('exist');
-      cy.get('[role="option"]').contains('Group 2').should('exist');
-      cy.get('[role="option"]').contains('Group 3').should('exist');
+      cy.get('[role="option"]').contains('G1').should('exist');
+      cy.get('[role="option"]').contains('G2').should('exist');
+      cy.get('[role="option"]').contains('G3').should('exist');
     });
   });
 
@@ -154,11 +154,11 @@ describe('Alliances – Member Groups', () => {
               cy.getByCy('member-row-FullTarget').find('[data-cy="member-group-select"]').click();
             });
 
-            // Group 1 is full — option must not appear
-            cy.get('[role="option"]').contains('Group 1').should('not.exist');
-            // Group 2 and 3 are still available
-            cy.get('[role="option"]').contains('Group 2').should('exist');
-            cy.get('[role="option"]').contains('Group 3').should('exist');
+            // G1 is full — option must not appear
+            cy.get('[role="option"]').contains('G1').should('not.exist');
+            // G2 and 3 are still available
+            cy.get('[role="option"]').contains('G2').should('exist');
+            cy.get('[role="option"]').contains('G3').should('exist');
           }
         );
       });
@@ -190,12 +190,12 @@ describe('Alliances – Member Groups', () => {
             cy.uiLogin(ownerData.login);
             cy.navTo('alliances');
 
-            // Owner is already in group 1 — picker should still show Group 1
+            // Owner is already in group 1 — picker should still show G1
             cy.getByCy('alliance-card-KeepAlliance').within(() => {
               cy.getByCy('member-row-KeepOwner').find('[data-cy="member-group-select"]').click();
             });
 
-            cy.get('[role="option"]').contains('Group 1').should('exist');
+            cy.get('[role="option"]').contains('G1').should('exist');
           }
         );
       });

@@ -19,12 +19,6 @@ import { CollapsibleSection } from '@/components/collapsible-section';
 import AllianceMemberRow from './alliance-member-row';
 import UsernameEnriched from '@/components/username-enriched';
 
-interface ConfirmTarget {
-  allianceId: string;
-  gameAccountId: string;
-  pseudo: string;
-}
-
 interface AllianceCardProps {
   alliance: Alliance;
   locale: string;
@@ -36,16 +30,7 @@ interface AllianceCardProps {
   onOpenInviteMember: (allianceId: string) => void;
   onCloseInviteMember: () => void;
   onInviteMember: (allianceId: string) => void;
-  onDemoteOfficer: (allianceId: string, gameAccountId: string) => void;
-  onPromoteOfficer: (target: ConfirmTarget) => void;
-  onLeave: (target: ConfirmTarget) => void;
-  onExclude: (target: ConfirmTarget) => void;
-  onSetGroup: (
-    allianceId: string,
-    gameAccountId: string,
-    group: number | null,
-    pseudo: string
-  ) => void;
+  onRefresh: () => void;
   onViewRoster: (gameAccountId: string, pseudo: string, canRequestUpgrade: boolean) => void;
   pendingInvitations?: AllianceInvitation[];
   onCancelInvitation?: (allianceId: string, invitationId: string) => void;
@@ -61,11 +46,7 @@ export default function AllianceCard({
   onOpenInviteMember,
   onCloseInviteMember,
   onInviteMember,
-  onDemoteOfficer,
-  onPromoteOfficer,
-  onLeave,
-  onExclude,
-  onSetGroup,
+  onRefresh,
   onViewRoster,
   pendingInvitations = [],
   onCancelInvitation,
@@ -256,11 +237,7 @@ export default function AllianceCard({
                           key={member.id}
                           member={member}
                           alliance={alliance}
-                          onDemoteOfficer={onDemoteOfficer}
-                          onPromoteOfficer={onPromoteOfficer}
-                          onLeave={onLeave}
-                          onExclude={onExclude}
-                          onSetGroup={onSetGroup}
+                          onRefresh={onRefresh}
                           onViewRoster={(gameAccountId, pseudo) =>
                             onViewRoster(gameAccountId, pseudo, userCanManage)
                           }
