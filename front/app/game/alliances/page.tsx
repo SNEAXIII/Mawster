@@ -210,6 +210,13 @@ function AlliancesContent() {
     }
   }, [alliances]);
 
+  // Redirect away from create tab if no eligible accounts after loading
+  useEffect(() => {
+    if (!loading && activeTab === AllianceTab.Create && eligibleOwners.length === 0) {
+      router.replace('/game/alliances');
+    }
+  }, [loading, activeTab, eligibleOwners]);
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !tag.trim() || !ownerId) return;

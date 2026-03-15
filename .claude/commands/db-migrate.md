@@ -7,6 +7,5 @@ Gère les migrations Alembic sur la base de données.
 | (vide)             | Use `mcp__db-manager__migrate` to apply all pending migrations |
 | `create <message>` | Run `make create-mig MIGRATION_MESSAGE="<message>"` in `api/` |
 | `cancel`           | Run `make cancel-last` in `api/`                              |
-| `reset`            | Ask confirmation, then use `mcp__db-manager__reset_db`        |
 
 Report the result. After `create`, remind to review the generated file before applying.

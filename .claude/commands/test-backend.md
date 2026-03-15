@@ -1,19 +1,14 @@
-Lance les tests backend depuis `./api`.
+Lance les tests pytest backend.
 
-## Étapes
+## Comportement selon $ARGUMENTS
 
-1. Se placer dans `./api`
-2. Lancer :
-   ```
-   uv run pytest tests -v --tb=short -n 6 -q $ARGUMENTS
-   ```
-3. Analyser le résultat :
-   - Tous les tests passent → confirmer brièvement
-   - Tests échouent → afficher les erreurs, identifier la cause, proposer un fix
-   - Erreur de setup (import, env, DB) → le signaler clairement
+| Argument | Action |
+|---|---|
+| (vide) | Use `mcp__pytest-runner__run_all_tests` to run the full suite |
+| `<path>` | Run `uv run pytest $ARGUMENTS -v --tb=short` in `api/` to target a specific file or folder |
+
+Report the result. On failure, display the errors and identify the cause.
 
 ## Notes
-
-- `$ARGUMENTS` permet de cibler un sous-dossier ou fichier, ex: `tests/unit/service/`
-- Ne pas modifier les tests sans que l'utilisateur le demande
-- Les tests `xfail`/`skip` ne sont pas des échecs
+- `xfail`/`skip` are not failures
+- Do not modify tests unless explicitly asked

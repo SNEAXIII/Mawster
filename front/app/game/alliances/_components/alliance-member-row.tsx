@@ -82,7 +82,7 @@ export default function AllianceMemberRow({
       className='flex flex-col py-2 px-2 rounded hover:bg-accent/50 gap-1'
       data-cy={`member-row-${member.game_pseudo}`}
     >
-      <div className='flex items-center gap-0.5 flex-wrap'>
+      <div className='flex justify-between gap-0.5 flex-wrap'>
         <div className='min-w-0 max-w-full'>
           <UsernameEnriched
             pseudo={member.game_pseudo}
