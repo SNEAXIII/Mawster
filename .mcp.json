@@ -1,5 +1,10 @@
 {
   "mcpServers": {
+    "server-runner": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "cd mcp && npx tsx server-runner/index.ts"]
+    },
     "cypress-runner": {
       "type": "stdio",
       "command": "cmd",
@@ -13,6 +18,11 @@
     "context-mode": {
       "command": "node",
       "args": ["${CLAUDE_PLUGIN_ROOT}/start.mjs"]
+    },
+    "db-manager": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "cd mcp && npx tsx db-manager/index.ts"]
     },
     "github": {
       "type": "stdio",
