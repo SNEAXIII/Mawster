@@ -1,4 +1,4 @@
-Exécute une cible du Makefile depuis `.//api`.
+Exécute une cible du Makefile depuis `./api`.
 
 ## Cibles disponibles
 
@@ -22,6 +22,6 @@ Exécute une cible du Makefile depuis `.//api`.
 
 1. Si `$ARGUMENTS` est vide → exécuter `make help`
 2. Si cible destructive (`reset-db`) → demander confirmation
-3. Se placer dans `.//api`
+3. Se placer dans `./api`
 4. Exécuter `make $ARGUMENTS`
 5. Afficher le résultat et signaler toute erreur

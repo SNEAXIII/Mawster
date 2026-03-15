@@ -1,8 +1,8 @@
-Lance les tests backend depuis `.//api`.
+Lance les tests backend depuis `./api`.
 
 ## Étapes
 
-1. Se placer dans `.//api`
+1. Se placer dans `./api`
 2. Lancer :
    ```
    uv run pytest tests -v --tb=short -n 6 -q $ARGUMENTS
