@@ -410,11 +410,6 @@ export default function WarContent() {
                       <div className='flex items-center gap-2'>
                         <Swords className='w-4 h-4 text-muted-foreground' />
                         <span className='text-sm font-semibold'>vs {selectedWar.opponent_name}</span>
-                        {selectedWar.status === 'ended' && (
-                          <span className='text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full'>
-                            {t.game.war.ended}
-                          </span>
-                        )}
                       </div>
                     )}
 
