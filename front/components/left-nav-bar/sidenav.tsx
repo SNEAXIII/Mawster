@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import MainMawsterLogo from '@/components/MawsterLogo';
 import { Button } from '@/components/ui/button';
@@ -11,12 +12,24 @@ import NavLinks, { Role } from './nav-links';
 import LanguageSwitcher from '@/components/language-switcher';
 import ThemePicker from '@/components/theme-picker';
 import { useI18n } from '@/app/i18n';
+import { getMyAlliances } from '@/app/services/game';
 
 export default function SideNavBar() {
   const { data: session } = useSession();
   const { t } = useI18n();
   const isAuthenticated = session && !session.error && session.user;
   const userRole: Role = (isAuthenticated ? (session.user.role as Role) : null) || Role.all;
+  const [hasAlliance, setHasAlliance] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setHasAlliance(false);
+      return;
+    }
+    getMyAlliances()
+      .then((alliances) => setHasAlliance(alliances.length > 0))
+      .catch(() => setHasAlliance(false));
+  }, [isAuthenticated]);
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -50,7 +63,7 @@ export default function SideNavBar() {
 
       {/* Navigation Links Section */}
       <div className='flex grow flex-row justify-between gap-1 md:flex-col md:gap-2 overflow-x-auto md:overflow-x-visible'>
-        <NavLinks userRole={userRole} />
+        <NavLinks userRole={userRole} hasAlliance={hasAlliance} />
         <div
           className='hidden h-auto w-full grow rounded-md bg-muted/50 md:block'
           aria-hidden='true'

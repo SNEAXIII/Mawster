@@ -136,9 +136,11 @@ Cypress.Commands.add('uiLogin', (userName: string) => {
 
 // ── Navigate via navbar click ────────────────────────────────────────────────
 
-// Pages that no longer have a nav link — navigate via URL instead
+// Pages where cy.visit is preferred over nav click (avoids Radix scroll-lock contamination
+// across tests, or pages that have no nav link)
 const NAV_URL_FALLBACK: Record<string, string> = {
   defense: '/game/defense',
+  war: '/game/war',
 };
 
 Cypress.Commands.add('navTo', (page: string) => {

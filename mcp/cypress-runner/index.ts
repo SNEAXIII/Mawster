@@ -155,6 +155,44 @@ server.registerTool(
 );
 
 server.registerTool(
+  'run_specific_tests',
+  {
+    description:
+      'Lance uniquement les specs Cypress spécifiées (par fichier et/ou filtre de nom), et retourne le résumé + détails des échecs. Utiliser pour cibler un seul fichier de test ou un seul test par son nom.',
+    inputSchema: {
+      spec_files: z
+        .array(z.string())
+        .describe(
+          'Liste des chemins de specs à lancer, relatifs au dossier front/. Ex: ["cypress/e2e/war/management.cy.ts"]'
+        ),
+      grep: z
+        .string()
+        .optional()
+        .describe(
+          'Filtre optionnel sur le nom du test (passé à --env grep=...). Ex: "ended war shows"'
+        ),
+    },
+  },
+  async ({ spec_files, grep }) => {
+    clearResults();
+
+    const specArg = spec_files.length > 0 ? `--spec "${spec_files.join(',')}"` : '';
+    const grepArg = grep ? `--env grep="${grep}"` : '';
+    const cmd = `npx cypress run ${specArg} ${grepArg}`.trim();
+
+    try {
+      execSync(cmd, { cwd: FRONT_DIR, stdio: 'pipe', timeout: 600_000 });
+    } catch {
+      // Cypress exits with code 1 when tests fail — not a real error
+    }
+
+    return {
+      content: [{ type: 'text', text: JSON.stringify(parseXmlResults(), null, 2) }],
+    };
+  }
+);
+
+server.registerTool(
   'run_failing_tests',
   {
     description:

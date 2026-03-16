@@ -16,7 +16,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { Swords, Trash2, Flag } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Shield, Swords, Trash2, Flag } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import TabBar, { type TabItem } from '@/components/tab-bar';
 
@@ -51,6 +57,11 @@ export enum WarTab {
   Defenders = 'defenders',
 }
 
+export enum WarMode {
+  Defenders = 'defenders',
+  Attackers = 'attackers',
+}
+
 export default function WarContent() {
   const { t } = useI18n();
   const { canManage } = useAllianceRole();
@@ -68,6 +79,7 @@ export default function WarContent() {
 
   const [warSummary, setWarSummary] = useState<WarDefenseSummary | null>(null);
 
+  const [warMode, setWarMode] = useState<WarMode>(WarMode.Defenders);
   const [selectorNode, setSelectorNode] = useState<number | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -169,6 +181,8 @@ export default function WarContent() {
   const handleNodeClick = (nodeNumber: number) => {
     const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
     if (!selectedAlliance || !canManage(selectedAlliance)) return;
+    const war = wars.find((w) => w.id === selectedWarId);
+    if (war?.status === 'ended') return;
     setSelectorNode(nodeNumber);
   };
 
@@ -332,15 +346,28 @@ export default function WarContent() {
                 </Select>
 
                 {canManageWar && (
-                  <Button
-                    variant='default'
-                    onClick={() => setShowCreateDialog(true)}
-                    disabled={hasActiveWar}
-                    data-cy='declare-war-btn'
-                  >
-                    <Swords className='w-4 h-4 mr-2' />
-                    {t.game.war.declareWar}
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Button
+                            variant='default'
+                            onClick={() => setShowCreateDialog(true)}
+                            disabled={hasActiveWar}
+                            data-cy='declare-war-btn'
+                          >
+                            <Swords className='w-4 h-4 mr-2' />
+                            {t.game.war.declareWar}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      {hasActiveWar && (
+                        <TooltipContent>
+                          {t.game.war.declareWarTooltip}
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
 
                 {canManageWar && selectedWar?.status === 'active' && (
@@ -370,25 +397,27 @@ export default function WarContent() {
           {/* ── Defenders tab ────────────────────────────── */}
           {activeTab === WarTab.Defenders && (
             <>
-              {!selectedWarId ? (
-                <p className='text-muted-foreground'>{t.game.war.selectWar}</p>
+              {!selectedWarId || selectedWar?.status === 'ended' ? (
+                <p className='text-muted-foreground'>
+                  {selectedWar?.status === 'ended' ? t.game.war.noActiveWar : t.game.war.selectWar}
+                </p>
               ) : (
                 <div className='space-y-4'>
-                  {/* Opponent name */}
-                  {selectedWar && (
-                    <div className='flex items-center gap-2'>
-                      <Swords className='w-4 h-4 text-muted-foreground' />
-                      <span className='text-sm font-semibold'>vs {selectedWar.opponent_name}</span>
-                      {selectedWar.status === 'ended' && (
-                        <span className='text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full'>
-                          {t.game.war.ended}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Controls */}
+                  {/* Controls row: opponent name + BG picker + mode toggle + clear */}
                   <div className='flex flex-wrap items-center gap-3'>
+                    {/* Opponent name */}
+                    {selectedWar && (
+                      <div className='flex items-center gap-2'>
+                        <Swords className='w-4 h-4 text-muted-foreground' />
+                        <span className='text-sm font-semibold'>vs {selectedWar.opponent_name}</span>
+                        {selectedWar.status === 'ended' && (
+                          <span className='text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full'>
+                            {t.game.war.ended}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
                     {/* BG button group */}
                     <div
                       className='flex gap-1 rounded-md border p-1'
@@ -410,6 +439,38 @@ export default function WarContent() {
                         </button>
                       ))}
                     </div>
+
+                    {/* Mode toggle — officers only */}
+                    {canManageWar && (
+                      <div className='flex gap-1 rounded-md border p-1' data-cy='war-mode-toggle'>
+                        <button
+                          onClick={() => setWarMode(WarMode.Defenders)}
+                          className={cn(
+                            'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold transition-colors',
+                            warMode === WarMode.Defenders
+                              ? 'bg-primary text-primary-foreground'
+                              : 'text-muted-foreground hover:bg-accent'
+                          )}
+                          data-cy='war-mode-defenders'
+                        >
+                          <Shield className='w-3.5 h-3.5' />
+                          {t.game.war.modeDefenders}
+                        </button>
+                        <button
+                          onClick={() => setWarMode(WarMode.Attackers)}
+                          className={cn(
+                            'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold transition-colors',
+                            warMode === WarMode.Attackers
+                              ? 'bg-primary text-primary-foreground'
+                              : 'text-muted-foreground hover:bg-accent'
+                          )}
+                          data-cy='war-mode-attackers'
+                        >
+                          <Swords className='w-3.5 h-3.5' />
+                          {t.game.war.modeAttackers}
+                        </button>
+                      </div>
+                    )}
 
                     {/* Clear BG button */}
                     {canManageWar && placements.length > 0 && (
