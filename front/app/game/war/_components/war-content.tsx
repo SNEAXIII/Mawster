@@ -38,6 +38,9 @@ import {
   placeWarDefender,
   removeWarDefender,
   clearWarBg,
+  assignWarAttacker,
+  removeWarAttacker,
+  updateWarKo,
 } from '@/app/services/war';
 
 const WarDefenseMap = dynamic(() => import('./war-defense-map'), {
@@ -45,6 +48,14 @@ const WarDefenseMap = dynamic(() => import('./war-defense-map'), {
 });
 
 const WarChampionSelector = dynamic(() => import('./war-champion-selector'), {
+  loading: () => null,
+});
+
+const WarAttackerSelector = dynamic(() => import('./war-attacker-selector'), {
+  loading: () => null,
+});
+
+const WarAttackerPanel = dynamic(() => import('./war-attacker-panel'), {
   loading: () => null,
 });
 
@@ -79,8 +90,9 @@ export default function WarContent() {
 
   const [warSummary, setWarSummary] = useState<WarDefenseSummary | null>(null);
 
-  const [warMode, setWarMode] = useState<WarMode>(WarMode.Defenders);
+  const [warMode, setWarMode] = useState<WarMode>(WarMode.Attackers);
   const [selectorNode, setSelectorNode] = useState<number | null>(null);
+  const [attackerSelectorNode, setAttackerSelectorNode] = useState<number | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showEndWarConfirm, setShowEndWarConfirm] = useState(false);
@@ -179,11 +191,20 @@ export default function WarContent() {
   // ─── Actions ─────────────────────────────────────────────
 
   const handleNodeClick = (nodeNumber: number) => {
-    const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
-    if (!selectedAlliance || !canManage(selectedAlliance)) return;
     const war = wars.find((w) => w.id === selectedWarId);
     if (war?.status === 'ended') return;
-    setSelectorNode(nodeNumber);
+    if (warMode === WarMode.Attackers) {
+      const hasDefender = placements.some((p) => p.node_number === nodeNumber);
+      if (!hasDefender) {
+        toast.warning(t.game.war.defenderRequired);
+        return;
+      }
+      setAttackerSelectorNode(nodeNumber);
+    } else {
+      const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
+      if (!selectedAlliance || !canManage(selectedAlliance)) return;
+      setSelectorNode(nodeNumber);
+    }
   };
 
   const handlePlaceDefender = async (
@@ -235,6 +256,79 @@ export default function WarContent() {
       await fetchWarDefense();
     } catch {
       toast.error(t.game.war.loadError);
+    }
+  };
+
+  const handleAssignAttacker = async (
+    championUserId: string,
+    pseudo: string,
+    championName: string
+  ) => {
+    if (!selectedAllianceId || !selectedWarId || attackerSelectorNode === null) return;
+    try {
+      const updated = await assignWarAttacker(
+        selectedAllianceId,
+        selectedWarId,
+        selectedBg,
+        attackerSelectorNode,
+        championUserId
+      );
+      toast.success(
+        t.game.war.assignSuccess
+          .replace('{name}', championName)
+          .replace('{node}', String(attackerSelectorNode))
+      );
+      setWarSummary((prev) =>
+        prev
+          ? {
+              ...prev,
+              placements: prev.placements.map((p) =>
+                p.node_number === updated.node_number ? updated : p
+              ),
+            }
+          : prev
+      );
+    } catch (err: any) {
+      toast.error(err.message || t.game.war.assignError);
+    }
+  };
+
+  const handleRemoveAttacker = async (nodeNumber: number) => {
+    if (!selectedAllianceId || !selectedWarId) return;
+    try {
+      const updated = await removeWarAttacker(selectedAllianceId, selectedWarId, selectedBg, nodeNumber);
+      toast.success(t.game.war.removeAttackerSuccess);
+      setWarSummary((prev) =>
+        prev
+          ? {
+              ...prev,
+              placements: prev.placements.map((p) =>
+                p.node_number === updated.node_number ? updated : p
+              ),
+            }
+          : prev
+      );
+    } catch (err: any) {
+      toast.error(err.message || t.game.war.removeAttackerError);
+    }
+  };
+
+  const handleUpdateKo = async (nodeNumber: number, newKo: number) => {
+    if (!selectedAllianceId || !selectedWarId) return;
+    try {
+      const updated = await updateWarKo(selectedAllianceId, selectedWarId, selectedBg, nodeNumber, newKo);
+      setWarSummary((prev) =>
+        prev
+          ? {
+              ...prev,
+              placements: prev.placements.map((p) =>
+                p.node_number === updated.node_number ? updated : p
+              ),
+            }
+          : prev
+      );
+    } catch (err: any) {
+      toast.error(err.message || t.game.war.koUpdateError);
     }
   };
 
@@ -435,8 +529,8 @@ export default function WarContent() {
                       ))}
                     </div>
 
-                    {/* Mode toggle — officers only */}
-                    {canManageWar && (
+                    {/* Mode toggle — visible to all */}
+                    {true && (
                       <div className='flex gap-1 rounded-md border p-1' data-cy='war-mode-toggle'>
                         <button
                           onClick={() => setWarMode(WarMode.Defenders)}
@@ -483,13 +577,24 @@ export default function WarContent() {
                   {warLoading ? (
                     <FullPageSpinner />
                   ) : (
-                    <div className='overflow-x-auto'>
-                      <WarDefenseMap
-                        placements={placements}
-                        onNodeClick={handleNodeClick}
-                        onRemove={handleRemoveDefender}
-                        canManage={canManageWar}
-                      />
+                    <div className='flex gap-4'>
+                      <div className='overflow-x-auto flex-1'>
+                        <WarDefenseMap
+                          placements={placements}
+                          onNodeClick={handleNodeClick}
+                          onRemove={handleRemoveDefender}
+                          canManage={canManageWar && warMode === WarMode.Defenders}
+                        />
+                      </div>
+                      {warMode === WarMode.Attackers && (
+                        <div className='w-64 flex-shrink-0'>
+                          <WarAttackerPanel
+                            placements={placements}
+                            onRemoveAttacker={handleRemoveAttacker}
+                            onUpdateKo={handleUpdateKo}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -499,13 +604,24 @@ export default function WarContent() {
         </>
       )}
 
-      {/* Champion selector */}
+      {/* Defender champion selector */}
       <WarChampionSelector
         open={selectorNode !== null}
         onClose={() => setSelectorNode(null)}
         nodeNumber={selectorNode ?? 0}
         placedChampionIds={new Set(placements.map((p) => p.champion_id))}
         onSelect={handlePlaceDefender}
+      />
+
+      {/* Attacker selector */}
+      <WarAttackerSelector
+        open={attackerSelectorNode !== null}
+        onClose={() => setAttackerSelectorNode(null)}
+        nodeNumber={attackerSelectorNode ?? 0}
+        allianceId={selectedAllianceId}
+        warId={selectedWarId}
+        battlegroup={selectedBg}
+        onSelect={handleAssignAttacker}
       />
 
       {/* Create war dialog */}

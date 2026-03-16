@@ -1,8 +1,8 @@
 # Spécifications de tests — Mawster API
 
-**Date** : Juillet 2025  
+**Date** : Mars 2026  
 **Source** : Analyse des controllers, DTOs, services et règles métier  
-**Couverture** : Tests unitaires (services) + Tests d'intégration (endpoints)
+**Couverture** : Tests unitaires (services/DTO/validators) + Tests d'intégration (endpoints) + Tests E2E (Cypress front)
 
 ---
 
@@ -17,6 +17,8 @@
 7. [Defense](#7-defense)
 8. [Admin](#8-admin)
 9. [Upgrade Requests](#9-upgrade-requests)
+10. [War](#10-war)
+11. [Cypress E2E (Front)](#11-cypress-e2e-front)
 
 ---
 
@@ -361,7 +363,7 @@
 
 **Contraintes** :
 
-- Raretés valides : `6r4, 7r1, 7r2, 7r3, 7r4, 7r5` (enum `ChampionRarity`)
+- Raretés valides : `6r4, 6r5, 7r1, 7r2, 7r3, 7r4, 7r5` (enum `ChampionRarity`)
 - Ascension : 0, 1 ou 2 (forcé à 0 si champion non-ascendable)
 - Signature : ≥ 0
 - Dédoublonnage : même `champion_id` + même `stars` → mise à jour au lieu de doublon
@@ -663,6 +665,105 @@
 
 ---
 
+## 10. War
+
+**Controller** : `war_controller.py`  
+**Service** : `WarService.py`  
+**DTOs** : `dto_war.py`
+
+**Constantes / règles actuelles** :
+
+- Battlegroup : 1, 2 ou 3
+- Nodes : 1 à 55
+- Stars autorisées : 6 ou 7
+- Rank : 1 à 5
+- Ascension : 0 à 2
+- Une seule guerre active par alliance
+- Champion unique par BG de guerre (`war_id + battlegroup + champion_id`)
+
+### 10.1 — `POST /alliances/{id}/wars` (Déclarer une guerre)
+
+| #      | Cas de test                                 | Entrée                                     | Résultat attendu                                   | Code |
+| ------ | ------------------------------------------- | ------------------------------------------ | -------------------------------------------------- | ---- |
+| WAR-01 | Officer crée une guerre                     | alliance valide + `opponent_name`          | Guerre créée avec statut `active`                  | 201  |
+| WAR-02 | Membre non-officer interdit                 | membre simple                              | Erreur forbidden                                   | 403  |
+| WAR-03 | Conflit si guerre active existante          | alliance avec guerre active                | Erreur conflict                                    | 409  |
+| WAR-04 | Nouvelle guerre autorisée après fin         | guerre précédente terminée                 | Nouvelle guerre créée                              | 201  |
+| WAR-05 | Non authentifié                             | sans token                                 | Erreur non authentifié                             | 401  |
+
+### 10.2 — `GET /alliances/{id}/wars` (Lister les guerres)
+
+| #      | Cas de test                         | Entrée                               | Résultat attendu                        | Code |
+| ------ | ----------------------------------- | ------------------------------------ | --------------------------------------- | ---- |
+| WAR-06 | Membre de l'alliance lit les guerres| membre alliance                      | Liste des guerres retournée             | 200  |
+| WAR-07 | Non-membre interdit                 | utilisateur externe à l'alliance     | Erreur forbidden                        | 403  |
+| WAR-08 | Champ `status` présent dans la liste| guerre existante                     | `status` visible (`active`/`ended`)     | 200  |
+
+### 10.3 — `GET /alliances/{id}/wars/{war_id}/bg/{bg}` (Vue défense de guerre)
+
+| #      | Cas de test                       | Entrée                      | Résultat attendu                                      | Code |
+| ------ | --------------------------------- | --------------------------- | ----------------------------------------------------- | ---- |
+| WAR-09 | Lecture placements BG             | membre alliance + bg valide | Summary retourné avec `placements`                    | 200  |
+| WAR-10 | Historique conservé après fin     | guerre terminée             | Placements toujours lisibles                          | 200  |
+
+### 10.4 — `POST /alliances/{id}/wars/{war_id}/bg/{bg}/place` (Placer défenseur)
+
+| #      | Cas de test                         | Entrée                                         | Résultat attendu                                      | Code |
+| ------ | ----------------------------------- | ---------------------------------------------- | ----------------------------------------------------- | ---- |
+| WAR-11 | Placement valide                    | officer + node libre + champion valide         | Placement créé (`rarity` sérialisée ex. `7r3`)        | 201  |
+| WAR-12 | Champion dupliqué sur autre node    | même champion, node différent                  | Erreur conflict                                       | 409  |
+| WAR-13 | Node occupé remplacé                | nouveau champion sur node déjà occupé          | Ancien supprimé, nouveau créé                         | 201  |
+| WAR-14 | Non-officer interdit                | membre simple                                  | Erreur forbidden                                      | 403  |
+
+### 10.5 — `DELETE /alliances/{id}/wars/{war_id}/bg/{bg}/node/{node}` (Retirer défenseur)
+
+| #      | Cas de test                | Entrée                  | Résultat attendu                 | Code |
+| ------ | -------------------------- | ----------------------- | -------------------------------- | ---- |
+| WAR-15 | Retrait réussi             | officer + node occupé   | Placement supprimé               | 204  |
+| WAR-16 | Node vide                  | node sans placement     | Erreur not found                 | 404  |
+| WAR-17 | Non-officer interdit       | membre simple           | Erreur forbidden                 | 403  |
+
+### 10.6 — `DELETE /alliances/{id}/wars/{war_id}/bg/{bg}/clear` (Vider un BG)
+
+| #      | Cas de test                | Entrée                          | Résultat attendu                    | Code |
+| ------ | -------------------------- | ------------------------------- | ----------------------------------- | ---- |
+| WAR-18 | Clear BG supprime défenses | officer + BG avec placements    | Retour `{ deleted: n }`             | 200  |
+
+### 10.7 — `POST /alliances/{id}/wars/{war_id}/end` (Terminer une guerre)
+
+| #      | Cas de test                     | Entrée                              | Résultat attendu                                | Code |
+| ------ | ------------------------------- | ----------------------------------- | ----------------------------------------------- | ---- |
+| WAR-19 | Officer termine la guerre       | guerre active                       | `status` passe à `ended`                        | 200  |
+| WAR-20 | Non-officer interdit            | membre simple                       | Erreur forbidden                                | 403  |
+| WAR-21 | Non authentifié                 | sans token                          | Erreur non authentifié                          | 401  |
+| WAR-22 | Mauvaise alliance               | alliance_id différent               | Erreur 403/404                                  | 403/404 |
+| WAR-23 | Fin de guerre idempotente       | appel sur guerre déjà `ended`       | Réponse 200, statut reste `ended`               | 200  |
+| WAR-24 | Fin de guerre conserve historique| guerre avec placements              | Placements conservés et relisibles              | 200  |
+
+---
+
+## 11. Cypress E2E (Front)
+
+Suites Cypress détectées et maintenues :
+
+- **Account / Login / Profile** : `account.cy.ts`, `game-accounts.cy.ts`, `login.cy.ts`
+- **Alliances** : `alliances/creation.cy.ts`, `alliances/invitations.cy.ts`, `alliances/groups.cy.ts`, `alliances/permissions.cy.ts`, `alliances/edge-cases.cy.ts`
+- **Roster** : `roster/basic.cy.ts`, `roster/detailed-ui.cy.ts`, `roster/preferred-attacker.cy.ts`, `roster/upgrade-button.cy.ts`, `roster/upgrade-requests.cy.ts`
+- **Defense** : `defense/basic.cy.ts`, `defense/placement.cy.ts`, `defense/operations.cy.ts`, `defense/permissions.cy.ts`, `defense/overflow.cy.ts`
+- **War** : `war/basic.cy.ts`, `war/management.cy.ts`, `war/operations.cy.ts`, `war/war-status.cy.ts`
+
+Couverture War E2E actuellement validée :
+
+- rendu de page (états sans alliance / sans guerre),
+- permissions officer vs non-officer,
+- déclaration et fin de guerre (avec confirmations),
+- placement / suppression / clear de défenseurs,
+- sélecteur BG et persistance des placements,
+- statut `ended` et message no-active-war,
+- toggle mode `defenders/attackers` (UI).
+
+---
+
 ## Matrice de couverture par rôle
 
 | Action                 | Non-auth | USER | ADMIN | SUPER_ADMIN | Owner | Officer | Membre |
@@ -679,6 +780,10 @@
 | Exclure membre         | ❌       | —    | —     | —           | ✅    | ⚠️¹     | ❌     |
 | Gérer officers         | ❌       | —    | —     | —           | ✅    | ❌      | ❌     |
 | Gérer groupes BG       | ❌       | —    | —     | —           | ✅    | ✅      | ❌     |
+| Déclarer/finir guerre  | ❌       | —    | —     | —           | ✅    | ✅      | ❌     |
+| Voir guerres           | ❌       | —    | —     | —           | ✅    | ✅      | ✅     |
+| Placer défenseur war   | ❌       | —    | —     | —           | ✅    | ✅      | ❌     |
+| Retirer/vider war BG   | ❌       | —    | —     | —           | ✅    | ✅      | ❌     |
 | Placer défenseur       | ❌       | —    | —     | —           | ✅    | ✅      | ⚠️²    |
 | Retirer/vider défense  | ❌       | —    | —     | —           | ✅    | ✅      | ❌     |
 | Export/Import défense  | ❌       | —    | —     | —           | ✅    | ✅      | ❌     |
@@ -705,11 +810,16 @@
 | `champion.name`               | —   | 100 | unique                    |
 | `champion.champion_class`     | —   | 20  | —                         |
 | `champion.alias`              | —   | 500 | nullable                  |
-| `champion_user.rarity`        | —   | —   | enum: 6r4, 7r1-7r5        |
+| `champion_user.rarity`        | —   | —   | enum: 6r4, 6r5, 7r1-7r5   |
 | `champion_user.signature`     | 0   | ∞   | —                         |
 | `champion_user.ascension`     | 0   | 2   | forcé 0 si non-ascendable |
 | `defense.node_number`         | 1   | 55  | —                         |
 | `defense.battlegroup`         | 1   | 3   | —                         |
+| `war.node_number`             | 1   | 55  | —                         |
+| `war.battlegroup`             | 1   | 3   | —                         |
+| `war.stars`                   | 6   | 7   | —                         |
+| `war.rank`                    | 1   | 5   | —                         |
+| `war.ascension`               | 0   | 2   | —                         |
 | `MAX_GAME_ACCOUNTS_PER_USER`  | —   | 10  | —                         |
 | `MAX_MEMBERS_PER_ALLIANCE`    | —   | 30  | —                         |
 | `MAX_MEMBERS_PER_GROUP`       | —   | 10  | —                         |

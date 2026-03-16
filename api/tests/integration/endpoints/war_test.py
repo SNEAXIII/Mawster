@@ -8,6 +8,7 @@ from tests.utils.utils_client import (
     execute_get_request,
     execute_post_request,
     execute_delete_request,
+    execute_patch_request,
 )
 from tests.utils.utils_constant import (
     USER_ID,
@@ -22,6 +23,7 @@ from tests.integration.endpoints.setup.game_setup import (
     push_member,
     push_officer,
     push_champion,
+    push_champion_user,
     get_game_account,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
@@ -527,3 +529,279 @@ class TestEndWar:
 
         assert response.status_code == 200
         assert response.json()["status"] == "ended"
+
+
+# ─── Attacker helpers ─────────────────────────────────────
+
+async def _setup_attacker_scenario():
+    """
+    Create alliance + owner (officer, BG1) + member (BG1) + champion + war + defender on node 10.
+    Returns dict with all objects needed for attacker tests.
+    """
+    data = await _setup_alliance()
+    alliance = data["alliance"]
+    owner = data["owner"]
+    member = data["member"]
+    champ = data["champ"]
+
+    # Assign owner and member to BG1 via API
+    headers_owner = create_auth_headers(user_id=str(USER_ID))
+    await execute_patch_request(
+        f"/alliances/{alliance.id}/members/{owner.id}/group",
+        payload={"group": 1},
+        headers=headers_owner,
+    )
+    await execute_patch_request(
+        f"/alliances/{alliance.id}/members/{member.id}/group",
+        payload={"group": 1},
+        headers=headers_owner,
+    )
+
+    # Declare war
+    war = War(
+        id=uuid.uuid4(),
+        alliance_id=alliance.id,
+        opponent_name=OPPONENT,
+        created_by_id=owner.id,
+    )
+    await load_objects([war])
+
+    # Place defender on node 10
+    await execute_post_request(
+        f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
+        payload={"node_number": 10, "champion_id": str(champ.id), "stars": 7, "rank": 3, "ascension": 0},
+        headers=headers_owner,
+    )
+
+    # Add champion to member's roster
+    champ2 = await push_champion(name="Wolverine", champion_class="Mutant")
+    cu = await push_champion_user(member, champ2, stars=7, rank=3)
+
+    return {
+        **data,
+        "war": war,
+        "champ2": champ2,
+        "champion_user": cu,
+    }
+
+
+# ─── TestAvailableAttackers ───────────────────────────────
+
+class TestAvailableAttackers:
+    @pytest.mark.asyncio
+    async def test_available_attackers_member_can_view(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-attackers",
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert isinstance(body, list)
+        # Wolverine is in member's roster and not a defender
+        names = [a["champion_name"] for a in body]
+        assert "Wolverine" in names
+        # Spider-Man is a defender → must be excluded
+        assert "Spider-Man" not in names
+
+    @pytest.mark.asyncio
+    async def test_available_attackers_non_member_forbidden(self):
+        data = await _setup_attacker_scenario()
+        user3 = User(
+            id=USER3_ID,
+            login="user3",
+            email="user3@test.com",
+            role=Roles.USER,
+            discord_id="discord_user3_atk",
+        )
+        acc3 = get_game_account(user_id=USER3_ID, game_pseudo="OutsiderAtk")
+        await load_objects([user3, acc3])
+
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-attackers",
+            headers=create_auth_headers(user_id=str(USER3_ID)),
+        )
+        assert response.status_code == 403
+
+
+# ─── TestAssignAttacker ───────────────────────────────────
+
+class TestAssignAttacker:
+    @pytest.mark.asyncio
+    async def test_assign_attacker_success(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["attacker_champion_name"] == "Wolverine"
+        assert body["node_number"] == 10
+
+    @pytest.mark.asyncio
+    async def test_assign_attacker_node_without_defender_rejected(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/20/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_assign_attacker_defender_champion_rejected(self):
+        """Champion used as defender cannot be assigned as attacker."""
+        data = await _setup_attacker_scenario()
+        # Add Spider-Man (which is a defender) to member's roster
+        spider_cu = await push_champion_user(data["member"], data["champ"], stars=7, rank=3)
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(spider_cu.id)},
+            headers=headers,
+        )
+        assert response.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_assign_attacker_limit_3_per_member(self):
+        """A member cannot have more than 3 attackers in the same BG."""
+        data = await _setup_attacker_scenario()
+        alliance = data["alliance"]
+        war = data["war"]
+        member = data["member"]
+        headers_officer = create_auth_headers(user_id=str(USER_ID))
+        headers_member = create_auth_headers(user_id=str(USER2_ID))
+
+        # Place 4 defenders on nodes 11, 12, 13, 14 (different champions from attackers)
+        for i, (name, cls) in enumerate([("Thor", "Cosmic"), ("Iron Man", "Tech"), ("Hulk", "Science"), ("Black Widow", "Skill")]):
+            c = await push_champion(name=name, champion_class=cls)
+            await execute_post_request(
+                f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
+                payload={"node_number": 11 + i, "champion_id": str(c.id), "stars": 7, "rank": 3, "ascension": 0},
+                headers=headers_officer,
+            )
+
+        # Add DIFFERENT champions to member's roster and assign 3 attackers
+        for i, (name, cls) in enumerate([("Black Panther", "Cosmic"), ("Captain Marvel", "Cosmic"), ("Doctor Strange", "Mystic")]):
+            ac = await push_champion(name=name, champion_class=cls)
+            cu = await push_champion_user(member, ac, stars=7, rank=3)
+            resp = await execute_post_request(
+                f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/{11 + i}/attacker",
+                payload={"champion_user_id": str(cu.id)},
+                headers=headers_member,
+            )
+            assert resp.status_code == 200
+
+        # Now try a 4th (also a different champion) → should fail with 3-attacker limit
+        extra_champ = await push_champion(name="Vision", champion_class="Tech")
+        extra_cu = await push_champion_user(member, extra_champ, stars=7, rank=3)
+        response = await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/14/attacker",
+            payload={"champion_user_id": str(extra_cu.id)},
+            headers=headers_member,
+        )
+        assert response.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_assign_attacker_non_member_forbidden(self):
+        data = await _setup_attacker_scenario()
+        user3 = User(
+            id=USER3_ID,
+            login="user3-atk2",
+            email="user3atk2@test.com",
+            role=Roles.USER,
+            discord_id="discord_user3_atk2",
+        )
+        await load_objects([user3])
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=create_auth_headers(user_id=str(USER3_ID)),
+        )
+        assert response.status_code == 403
+
+
+# ─── TestRemoveAttacker ───────────────────────────────────
+
+class TestRemoveAttacker:
+    @pytest.mark.asyncio
+    async def test_remove_attacker_success(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        # First assign
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers,
+        )
+        # Then remove
+        response = await execute_delete_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            headers=headers,
+        )
+        assert response.status_code == 200
+        assert response.json()["attacker_champion_user_id"] is None
+
+    @pytest.mark.asyncio
+    async def test_remove_attacker_not_assigned_returns_404(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_delete_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            headers=headers,
+        )
+        assert response.status_code == 404
+
+
+# ─── TestUpdateKo ─────────────────────────────────────────
+
+class TestUpdateKo:
+    @pytest.mark.asyncio
+    async def test_update_ko_success_by_member(self):
+        """Non-officer member can update KO count."""
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        response = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/ko",
+            payload={"ko_count": 3},
+            headers=headers,
+        )
+        assert response.status_code == 200
+        assert response.json()["ko_count"] == 3
+
+    @pytest.mark.asyncio
+    async def test_update_ko_negative_rejected(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/ko",
+            payload={"ko_count": -1},
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_update_ko_node_not_found(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/55/ko",
+            payload={"ko_count": 2},
+            headers=headers,
+        )
+        assert response.status_code == 404

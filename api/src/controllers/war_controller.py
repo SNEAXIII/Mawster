@@ -10,10 +10,12 @@ from src.dto.dto_war import (
     WarPlacementCreateRequest,
     WarPlacementResponse,
     WarDefenseSummaryResponse,
+    WarAttackerAssignRequest,
+    WarKoUpdateRequest,
+    AvailableAttackerResponse,
 )
 from src.models import User
 from src.models.GameAccount import GameAccount
-from src.models.AllianceOfficer import AllianceOfficer
 from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.services.AllianceService import AllianceService
 from src.services.AuthService import AuthService
@@ -216,3 +218,86 @@ async def clear_war_bg(
     await WarService.get_war(session, war_id, alliance_id)
     count = await WarService.clear_bg(session, war_id, battlegroup)
     return {"deleted": count}
+
+
+@war_controller.get(
+    "/{war_id}/bg/{battlegroup}/available-attackers",
+    response_model=list[AvailableAttackerResponse],
+)
+async def get_available_attackers(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: int,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """List available attackers (BG roster minus defenders). All members can view."""
+    if battlegroup < 1 or battlegroup > 3:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
+    await _get_user_account_in_alliance(session, current_user, alliance_id)
+    await WarService.get_war(session, war_id, alliance_id)
+    return await WarService.get_available_attackers(session, war_id, alliance_id, battlegroup)
+
+
+@war_controller.post(
+    "/{war_id}/bg/{battlegroup}/node/{node_number}/attacker",
+    response_model=WarPlacementResponse,
+)
+async def assign_war_attacker(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: int,
+    node_number: int,
+    body: WarAttackerAssignRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Assign an attacker to a war node. All members can assign."""
+    if battlegroup < 1 or battlegroup > 3:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
+    await _get_user_account_in_alliance(session, current_user, alliance_id)
+    await WarService.get_war(session, war_id, alliance_id)
+    return await WarService.assign_attacker(
+        session, war_id, alliance_id, battlegroup, node_number, body.champion_user_id
+    )
+
+
+@war_controller.delete(
+    "/{war_id}/bg/{battlegroup}/node/{node_number}/attacker",
+    response_model=WarPlacementResponse,
+)
+async def remove_war_attacker(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: int,
+    node_number: int,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Remove the attacker from a war node. All members can remove."""
+    if battlegroup < 1 or battlegroup > 3:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
+    await _get_user_account_in_alliance(session, current_user, alliance_id)
+    await WarService.get_war(session, war_id, alliance_id)
+    return await WarService.remove_attacker(session, war_id, battlegroup, node_number)
+
+
+@war_controller.patch(
+    "/{war_id}/bg/{battlegroup}/node/{node_number}/ko",
+    response_model=WarPlacementResponse,
+)
+async def update_war_ko(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: int,
+    node_number: int,
+    body: WarKoUpdateRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Update the KO count for a war node. All members can update."""
+    if battlegroup < 1 or battlegroup > 3:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
+    await _get_user_account_in_alliance(session, current_user, alliance_id)
+    await WarService.get_war(session, war_id, alliance_id)
+    return await WarService.update_ko(session, war_id, battlegroup, node_number, body.ko_count)

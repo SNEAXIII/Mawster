@@ -146,5 +146,34 @@ declare namespace Cypress {
 
     /** Mark a war as ended (direct backend call). */
     apiEndWar(token: string, allianceId: string, warId: string): Chainable<any>;
+
+    /** Assign an attacker champion to a war node (direct backend call). */
+    apiAssignWarAttacker(
+      token: string,
+      allianceId: string,
+      warId: string,
+      battlegroup: number,
+      nodeNumber: number,
+      championUserId: string
+    ): Chainable<any>;
+
+    /** Remove attacker from a war node (direct backend call). */
+    apiRemoveWarAttacker(
+      token: string,
+      allianceId: string,
+      warId: string,
+      battlegroup: number,
+      nodeNumber: number
+    ): Chainable<any>;
+
+    /** Update KO count for a war node (direct backend call). */
+    apiUpdateWarKo(
+      token: string,
+      allianceId: string,
+      warId: string,
+      battlegroup: number,
+      nodeNumber: number,
+      koCount: number
+    ): Chainable<any>;
   }
 }

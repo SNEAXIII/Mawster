@@ -41,6 +41,9 @@ def _make_placement(**overrides):
         "ascension": 0,
         "placed_by": _ns(game_pseudo="OfficerPlayer"),
         "created_at": datetime(2025, 1, 1, 12, 0, 0),
+        "ko_count": 0,
+        "attacker_champion_user_id": None,
+        "attacker_champion_user": None,
     }
     defaults.update(overrides)
     return _ns(**defaults)

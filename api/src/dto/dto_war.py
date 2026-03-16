@@ -57,12 +57,20 @@ class WarPlacementResponse(BaseModel):
     ascension: int
     placed_by_pseudo: Optional[str] = None
     created_at: datetime
+    ko_count: int = 0
+    attacker_champion_user_id: Optional[uuid.UUID] = None
+    attacker_pseudo: Optional[str] = None
+    attacker_champion_name: Optional[str] = None
+    attacker_champion_class: Optional[str] = None
+    attacker_image_url: Optional[str] = None
+    attacker_rarity: Optional[str] = None
 
     @model_validator(mode='before')
     @classmethod
     def flatten_relations(cls, data: Any) -> Any:
         if isinstance(data, dict):
             return data
+        attacker = data.attacker_champion_user
         return {
             'id': data.id,
             'war_id': data.war_id,
@@ -76,6 +84,13 @@ class WarPlacementResponse(BaseModel):
             'ascension': data.ascension,
             'placed_by_pseudo': data.placed_by.game_pseudo if data.placed_by else None,
             'created_at': data.created_at,
+            'ko_count': data.ko_count,
+            'attacker_champion_user_id': data.attacker_champion_user_id,
+            'attacker_pseudo': attacker.game_account.game_pseudo if attacker else None,
+            'attacker_champion_name': attacker.champion.name if attacker else None,
+            'attacker_champion_class': attacker.champion.champion_class if attacker else None,
+            'attacker_image_url': attacker.champion.image_url if attacker else None,
+            'attacker_rarity': f"{attacker.stars}r{attacker.rank}" if attacker else None,
         }
 
 
@@ -83,3 +98,22 @@ class WarDefenseSummaryResponse(BaseModel):
     war_id: uuid.UUID
     battlegroup: int
     placements: list[WarPlacementResponse] = []
+
+
+class WarAttackerAssignRequest(BaseModel):
+    champion_user_id: uuid.UUID
+
+
+class WarKoUpdateRequest(BaseModel):
+    ko_count: int = Field(..., ge=0)
+
+
+class AvailableAttackerResponse(BaseModel):
+    champion_user_id: uuid.UUID
+    game_account_id: uuid.UUID
+    game_pseudo: str
+    champion_id: uuid.UUID
+    champion_name: str
+    champion_class: str
+    image_url: Optional[str] = None
+    rarity: str

@@ -219,7 +219,7 @@ function AlliancesContent() {
     }
   }, [loading, activeTab, eligibleOwners]);
 
-  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !tag.trim() || !ownerId) return;
 
