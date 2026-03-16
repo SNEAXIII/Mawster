@@ -58,6 +58,7 @@ export function ConfirmationDialog({
           <AlertDialogAction
             onClick={onConfirm}
             className={variant === 'destructive' ? 'bg-red-600 hover:bg-red-700' : ''}
+            data-cy='confirmation-dialog-confirm'
           >
             {confirmText ?? t.common.confirm}
           </AlertDialogAction>

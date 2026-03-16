@@ -8,4 +8,6 @@ from src.models.AllianceOfficer import AllianceOfficer  # noqa: F401
 from src.models.AllianceInvitation import AllianceInvitation  # noqa: F401
 from src.models.RequestedUpgrade import RequestedUpgrade  # noqa: F401
 from src.models.DefensePlacement import DefensePlacement  # noqa: F401
+from src.models.War import War  # noqa: F401
+from src.models.WarDefensePlacement import WarDefensePlacement  # noqa: F401
 from sqlmodel import SQLModel  # noqa: F401

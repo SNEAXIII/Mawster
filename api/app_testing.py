@@ -8,4 +8,5 @@ import uvicorn  # noqa: E402
 
 if __name__ == "__main__":
     reset()
-    uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=True)
+    port = int(os.environ.get("PORT", "8001"))
+    uvicorn.run("main:app", host="127.0.0.1", port=port, reload=True)

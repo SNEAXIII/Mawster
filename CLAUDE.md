@@ -21,8 +21,8 @@ Always run from the `api/` directory via `make`. **Never** run raw `pytest`, `al
 | -------------------- | ------------------------------------------------- |
 | Run dev server       | `make run-dev`                                    |
 | Install deps (dev)   | `make install-dev`                                |
-| Create migration     | `make create-mig MIGRATION_MESSAGE="description"` |
-| Apply migrations     | `make migrate`                                    |
+| Create migration     | `make reset-db` then `make create-mig MIGRATION_MESSAGE="description"` |
+| Apply migrations     | `make reset-db` then `make migrate`                                    |
 | Run all tests        | `make test`                                       |
 | Run tests + coverage | `make test-cov`                                   |
 | Load fixtures        | `make fixtures`                                   |
@@ -114,10 +114,49 @@ MariaDB in production, SQLite in-memory for integration tests. Migrations manage
 - Helpers: `tests/utils/`
 - Always update tests alongside code changes
 
-**Frontend:**
+**Frontend (Cypress E2E):**
 
-- Cypress E2E tests in `front/cypress/e2e/` (organized by feature)
+- Tests in `front/cypress/e2e/` (organized by feature: `alliances/`, `defense/`, `war/`, `roster/`, etc.)
 - Base URL: `http://localhost:3000`
+- Support file: `front/cypress/support/e2e.ts` — all custom commands and setup helpers live here
+- Type declarations: `front/cypress/support/index.d.ts` — update when adding a new `Cypress.Commands.add`
+
+**E2E conventions:**
+
+- Every `describe` block starts with `beforeEach(() => { cy.truncateDb(); })` — never share DB state between tests
+- Use `data-cy` attributes for all selectors; query them with `cy.getByCy('...')` — never use CSS classes or text for selection
+- Add `data-cy` to any new interactive element that tests need to reach
+- `ConfirmationDialog` confirm button exposes `data-cy='confirmation-dialog-confirm'`
+
+**Setup helpers** (defined in `e2e.ts`, import from `'../../support/e2e'`):
+
+| Helper | Use when |
+| --- | --- |
+| `setupUser(token)` | Need a bare user with no game account |
+| `setupAdmin(token)` | Need an admin token (e.g. to call `/admin/*` endpoints) |
+| `setupAllianceOwner(prefix, pseudo, name, tag)` | Need a user with game account + alliance |
+| `setupWarOwner(prefix, pseudo, name, tag)` | Need admin + owner + alliance for war tests — returns `{ adminData, ownerData, allianceId, ownerAccId }` |
+| `setupDefenseOwner(prefix, pseudo, name, tag)` | Need admin + owner + alliance + BG1 for defense tests |
+| `setupRosterUser(prefix, pseudo)` | Need admin + user + game account for roster tests |
+
+**Rules for setup helpers:**
+
+- Admin endpoints (`/admin/*`) require an admin token — always use `adminData.access_token`, never `ownerData.access_token`
+- Use `cy.apiLoadChampion(adminToken, name, class)` to load a champion; it returns the champion array so you can chain `.then(champs => ...)` to get the ID
+- Never write raw `cy.request({ method: 'POST', url: '.../admin/champions/load', ... })` in tests — use `cy.apiLoadChampion` instead
+- After loading a champion and needing its ID, chain directly: `cy.apiLoadChampion(...).then(champs => cy.apiPlaceWarDefender(..., champs[0].id, ...))`
+
+**After fixing failing tests — re-run only those specs:**
+
+```
+# E2E
+mcp__cypress-runner__run_failing_tests  (or skill: test-cypress-failing)
+
+# Backend
+mcp__pytest-runner__run_failing_tests   (or skill: test-backend-failing)
+```
+
+Only use `run_e2e` / `run_all_tests` after structural changes that could affect unrelated tests.
 
 ---
 

@@ -1,0 +1,203 @@
+import uuid
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
+from starlette import status
+
+from src.dto.dto_war import (
+    WarCreateRequest,
+    WarResponse,
+    WarPlacementCreateRequest,
+    WarPlacementResponse,
+    WarDefenseSummaryResponse,
+)
+from src.models import User
+from src.models.GameAccount import GameAccount
+from src.models.AllianceOfficer import AllianceOfficer
+from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
+from src.services.AllianceService import AllianceService
+from src.services.AuthService import AuthService
+from src.services.WarService import WarService
+from src.utils.db import SessionDep
+from sqlmodel import select
+
+war_controller = APIRouter(
+    prefix="/alliances/{alliance_id}/wars",
+    tags=["War"],
+    dependencies=[
+        Depends(AuthService.is_logged_as_user),
+        Depends(AuthService.get_current_user_in_jwt),
+    ],
+)
+
+BATTLEGROUP_INVALID = "Battlegroup must be between 1 and 3"
+WAR_NOT_FOUND = "War not found"
+
+
+async def _get_user_account_in_alliance(
+    session: SessionDep,
+    current_user: User,
+    alliance_id: uuid.UUID,
+) -> GameAccount:
+    """Find the current user's game account that belongs to this alliance."""
+    result = await session.exec(
+        select(GameAccount).where(
+            GameAccount.user_id == current_user.id,
+            GameAccount.alliance_id == alliance_id,
+        )
+    )
+    account = result.first()
+    if account is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not a member of this alliance",
+        )
+    return account
+
+
+async def _assert_officer_or_owner(
+    session: SessionDep,
+    current_user: User,
+    alliance_id: uuid.UUID,
+) -> GameAccount:
+    """Ensure the current user is owner or officer of the alliance."""
+    alliance = await AllianceService._load_alliance_with_relations(session, alliance_id)
+    if alliance is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+
+    # Collect current user's game account IDs
+    user_accounts_result = await session.exec(
+        select(GameAccount).where(GameAccount.user_id == current_user.id)
+    )
+    user_accounts = user_accounts_result.all()
+    user_account_ids = {a.id for a in user_accounts}
+
+    # Check owner
+    if alliance.owner_id in user_account_ids:
+        account = next(a for a in user_accounts if a.id == alliance.owner_id)
+        return account
+
+    # Check officers
+    officer_ids = {off.game_account_id for off in alliance.officers}
+    common = user_account_ids & officer_ids
+    if common:
+        account = next(a for a in user_accounts if a.id in common)
+        return account
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Only the alliance owner or an officer can perform this action",
+    )
+
+
+@war_controller.post(
+    "",
+    response_model=WarResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_war(
+    alliance_id: uuid.UUID,
+    body: WarCreateRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Declare a new war against an opponent. Officers/owner only."""
+    account = await _assert_officer_or_owner(session, current_user, alliance_id)
+    return await WarService.create_war(session, alliance_id, body.opponent_name, account.id)
+
+
+@war_controller.get(
+    "",
+    response_model=list[WarResponse],
+)
+async def list_wars(
+    alliance_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """List all wars for an alliance. All members can view."""
+    await _get_user_account_in_alliance(session, current_user, alliance_id)
+    return await WarService.get_wars(session, alliance_id)
+
+
+@war_controller.get(
+    "/{war_id}/bg/{battlegroup}",
+    response_model=WarDefenseSummaryResponse,
+)
+async def get_war_defense(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: int,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Get defense placements for a war battlegroup. All members can view."""
+    if battlegroup < 1 or battlegroup > 3:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
+
+    await _get_user_account_in_alliance(session, current_user, alliance_id)
+    await WarService.get_war(session, war_id, alliance_id)
+
+    return await WarService.get_war_defense(session, war_id, battlegroup)
+
+
+@war_controller.post(
+    "/{war_id}/bg/{battlegroup}/place",
+    response_model=WarPlacementResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def place_war_defender(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: int,
+    body: WarPlacementCreateRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Place a champion on a war defense node. Officers/owner only."""
+    if battlegroup < 1 or battlegroup > 3:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
+
+    account = await _assert_officer_or_owner(session, current_user, alliance_id)
+    await WarService.get_war(session, war_id, alliance_id)
+
+    return await WarService.place_defender(session, war_id, battlegroup, body, account.id)
+
+
+@war_controller.delete(
+    "/{war_id}/bg/{battlegroup}/node/{node_number}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def remove_war_defender(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: int,
+    node_number: int,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Remove a defender from a war node. Officers/owner only."""
+    await _assert_officer_or_owner(session, current_user, alliance_id)
+    await WarService.get_war(session, war_id, alliance_id)
+    await WarService.remove_defender(session, war_id, battlegroup, node_number)
+
+
+@war_controller.delete(
+    "/{war_id}/bg/{battlegroup}/clear",
+    status_code=status.HTTP_200_OK,
+)
+async def clear_war_bg(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: int,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Clear all defenders in a war battlegroup. Officers/owner only."""
+    if battlegroup < 1 or battlegroup > 3:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
+
+    await _assert_officer_or_owner(session, current_user, alliance_id)
+    await WarService.get_war(session, war_id, alliance_id)
+    count = await WarService.clear_bg(session, war_id, battlegroup)
+    return {"deleted": count}

@@ -1,5 +1,5 @@
 'use client';
-import { Home, User, Sword, Shield, Settings } from 'lucide-react';
+import { Home, User, Sword, Shield, Settings, Swords } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useI18n } from '@/app/i18n';
@@ -35,6 +35,13 @@ export default function NavLinks({ userRole }: Readonly<NavLinksProps>) {
       icon: Shield,
       role: Role.user,
       cy: 'nav-alliances',
+    },
+    {
+      name: t.nav.war,
+      href: '/game/war',
+      icon: Swords,
+      role: Role.user,
+      cy: 'nav-war',
     },
     {
       name: t.nav.administration,

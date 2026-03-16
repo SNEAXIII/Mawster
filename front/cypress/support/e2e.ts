@@ -5,7 +5,7 @@ Cypress.on('uncaught:exception', (err) => {
   if (err.message.includes('ResizeObserver')) return false;
 });
 
-export const BACKEND = 'http://localhost:8001';
+export const BACKEND: string = (Cypress.env('backendUrl') as string | undefined) ?? 'http://localhost:8001';
 
 // ── Shared types ─────────────────────────────────────────────────────────────
 
@@ -551,4 +551,93 @@ export function setupOwnerMemberAlliance(
       return cy.apiForceJoinAlliance(memberAccId, allianceId);
     })
     .then(() => ({ ownerData, memberData, allianceId, ownerAccId, memberAccId }));
+}
+
+// ── War API commands ──────────────────────────────────────────────────────────
+
+Cypress.Commands.add('apiCreateWar', (token: string, allianceId: string, opponentName: string) => {
+  cy.request({
+    method: 'POST',
+    url: `${BACKEND}/alliances/${allianceId}/wars`,
+    headers: { Authorization: `Bearer ${token}` },
+    body: { opponent_name: opponentName },
+  }).then((res) => {
+    expect(res.status).to.eq(201);
+    return res.body;
+  });
+});
+
+Cypress.Commands.add(
+  'apiPlaceWarDefender',
+  (
+    token: string,
+    allianceId: string,
+    warId: string,
+    battlegroup: number,
+    nodeNumber: number,
+    championId: string,
+    stars: number,
+    rank: number,
+    ascension = 0
+  ) => {
+    cy.request({
+      method: 'POST',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/place`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { node_number: nodeNumber, champion_id: championId, stars, rank, ascension },
+    }).then((res) => {
+      expect(res.status).to.eq(201);
+      return res.body;
+    });
+  }
+);
+
+Cypress.Commands.add(
+  'apiRemoveWarDefender',
+  (token: string, allianceId: string, warId: string, battlegroup: number, nodeNumber: number) => {
+    cy.request({
+      method: 'DELETE',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}`,
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((res) => {
+      expect(res.status).to.eq(204);
+    });
+  }
+);
+
+// ── War setup helper ──────────────────────────────────────────────────────────
+
+export function setupWarOwner(
+  tokenPrefix: string,
+  ownerPseudo: string,
+  allianceName: string,
+  allianceTag: string
+): Cypress.Chainable<{
+  adminData: UserSetupData;
+  ownerData: UserSetupData;
+  allianceId: string;
+  ownerAccId: string;
+}> {
+  let adminData: UserSetupData;
+  let ownerData: UserSetupData;
+  let allianceId: string;
+  let ownerAccId: string;
+
+  return setupAdmin(`${tokenPrefix}-admin`)
+    .then((admin) => {
+      adminData = admin;
+      return setupUser(`${tokenPrefix}-owner`);
+    })
+    .then((owner) => {
+      ownerData = owner;
+      return cy.apiCreateGameAccount(owner.access_token, ownerPseudo, true);
+    })
+    .then((ownerAcc) => {
+      ownerAccId = ownerAcc.id;
+      return cy.apiCreateAlliance(ownerData.access_token, allianceName, allianceTag, ownerAccId);
+    })
+    .then((alliance) => {
+      allianceId = alliance.id;
+      return cy.wrap({ adminData, ownerData, allianceId, ownerAccId });
+    });
 }

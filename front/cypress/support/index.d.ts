@@ -118,5 +118,30 @@ declare namespace Cypress {
      * Select a DOM element by its `data-cy` attribute.
      */
     getByCy(selector: string): Chainable<JQuery<HTMLElement>>;
+
+    /** Declare a war against an opponent (direct backend call). */
+    apiCreateWar(token: string, allianceId: string, opponentName: string): Chainable<any>;
+
+    /** Place a champion on a war defense node (direct backend call). */
+    apiPlaceWarDefender(
+      token: string,
+      allianceId: string,
+      warId: string,
+      battlegroup: number,
+      nodeNumber: number,
+      championId: string,
+      stars: number,
+      rank: number,
+      ascension?: number
+    ): Chainable<any>;
+
+    /** Remove a defender from a war node (direct backend call). */
+    apiRemoveWarDefender(
+      token: string,
+      allianceId: string,
+      warId: string,
+      battlegroup: number,
+      nodeNumber: number
+    ): Chainable<void>;
   }
 }
