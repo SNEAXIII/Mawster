@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { useRequiredSession } from '@/hooks/use-required-session';
 import { AllianceRoleProvider } from '@/hooks/use-alliance-role';
+import { useAllianceContext } from '@/app/contexts/alliance-context';
 import { Shield, Mail, Check, X } from 'lucide-react';
 import TabBar, { type TabItem } from '@/components/tab-bar';
 
@@ -48,6 +49,7 @@ export enum AllianceTab {
 function AlliancesContent() {
   const { locale, t } = useI18n();
   const { status } = useRequiredSession();
+  const { refreshHasAlliance } = useAllianceContext();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -235,6 +237,7 @@ function AlliancesContent() {
         fetchEligibleOwners(),
         fetchEligibleMembers(),
         fetchMyAccounts(),
+        refreshHasAlliance(),
       ]);
     } catch (err: any) {
       console.error(err);
@@ -282,6 +285,7 @@ function AlliancesContent() {
         fetchEligibleMembers(),
         fetchMyAccounts(),
         fetchMyInvitations(),
+        refreshHasAlliance(),
       ]);
     } catch (err: any) {
       console.error(err);
