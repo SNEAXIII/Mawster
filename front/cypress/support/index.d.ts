@@ -143,5 +143,8 @@ declare namespace Cypress {
       battlegroup: number,
       nodeNumber: number
     ): Chainable<void>;
+
+    /** Mark a war as ended (direct backend call). */
+    apiEndWar(token: string, allianceId: string, warId: string): Chainable<any>;
   }
 }

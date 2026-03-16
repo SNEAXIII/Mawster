@@ -1,0 +1,10 @@
+{
+  "enabledMcpjsonServers": [
+    "server-runner",
+    "cypress-runner",
+    "pytest-runner",
+    "context-mode",
+    "db-manager",
+    "github"
+  ]
+}

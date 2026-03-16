@@ -51,6 +51,8 @@ export default function WarDefenseMap({
       onNodeClick={onNodeClick}
       onRemove={onRemove}
       canManage={canManage}
+      hidePseudo={true}
+      hideSig={true}
     />
   );
 }

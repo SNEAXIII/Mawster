@@ -4,6 +4,7 @@ export interface War {
   id: string;
   alliance_id: string;
   opponent_name: string;
+  status: 'active' | 'ended';
   created_by_pseudo: string;
   created_at: string;
 }
@@ -119,6 +120,15 @@ export async function removeWarDefender(
     { method: 'DELETE', headers: jsonHeaders }
   );
   await throwOnError(response, 'Failed to remove defender');
+}
+
+export async function endWar(allianceId: string, warId: string): Promise<War> {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/${warId}/end`, {
+    method: 'POST',
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, 'Failed to end war');
+  return response.json();
 }
 
 export async function clearWarBg(

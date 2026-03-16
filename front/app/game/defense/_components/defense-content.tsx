@@ -294,44 +294,39 @@ export default function DefensePageContent({
   return (
     <div className='space-y-4'>
       {/* Header */}
-      <div className='flex flex-col sm:flex-row items-start sm:items-center gap-3'>
-        <div className='flex items-center gap-2'>
-          <Shield className='w-6 h-6 text-blue-400' />
-          <h1 className='text-xl font-bold'>{t.game.defense.title}</h1>
-        </div>
-      </div>
-
       {/* Controls */}
       <Card>
         <CardContent className='p-4'>
           <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center'>
-            {/* Alliance selector */}
-            <div className='flex items-center gap-2'>
-              <label className='text-sm font-medium whitespace-nowrap'>
-                {t.game.defense.alliance}:
-              </label>
-              <Select
-                value={selectedAllianceId}
-                onValueChange={handleAllianceChange}
-              >
-                <SelectTrigger
-                  className='w-[200px]'
-                  data-cy='defense-alliance-select'
+            {/* Alliance selector — hidden when only one alliance */}
+            {alliances.length > 1 && (
+              <div className='flex items-center gap-2'>
+                <label className='text-sm font-medium whitespace-nowrap'>
+                  {t.game.defense.alliance}:
+                </label>
+                <Select
+                  value={selectedAllianceId}
+                  onValueChange={handleAllianceChange}
                 >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {alliances.map((a) => (
-                    <SelectItem
-                      key={a.id}
-                      value={a.id}
-                    >
-                      [{a.tag}] {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                  <SelectTrigger
+                    className='w-[200px]'
+                    data-cy='defense-alliance-select'
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {alliances.map((a) => (
+                      <SelectItem
+                        key={a.id}
+                        value={a.id}
+                      >
+                        [{a.tag}] {a.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* BG selector */}
             <div className='flex flex-wrap items-center gap-2'>

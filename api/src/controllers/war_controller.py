@@ -182,6 +182,21 @@ async def remove_war_defender(
     await WarService.remove_defender(session, war_id, battlegroup, node_number)
 
 
+@war_controller.post(
+    "/{war_id}/end",
+    response_model=WarResponse,
+)
+async def end_war(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Mark a war as ended. Officers/owner only."""
+    await _assert_officer_or_owner(session, current_user, alliance_id)
+    return await WarService.end_war(session, war_id, alliance_id)
+
+
 @war_controller.delete(
     "/{war_id}/bg/{battlegroup}/clear",
     status_code=status.HTTP_200_OK,

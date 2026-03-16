@@ -5,7 +5,7 @@ import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
 import { X } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
-import { rarityBadgeClass, rarityLabel } from './defense-utils';
+import { rarityBadgeClass, rarityLabel, parseRarity } from './defense-utils';
 
 interface WarMapNodeProps {
   nodeNumber: number;
@@ -13,6 +13,8 @@ interface WarMapNodeProps {
   onNodeClick: (nodeNumber: number) => void;
   onRemove: (nodeNumber: number) => void;
   canManage: boolean;
+  hidePseudo?: boolean;
+  hideSig?: boolean;
 }
 
 function getNodeColor(nodeNumber: number): string {
@@ -45,6 +47,8 @@ export function WarMapNode({
   onNodeClick,
   onRemove,
   canManage,
+  hidePseudo = false,
+  hideSig = false,
 }: WarMapNodeProps) {
   const { t } = useI18n();
   const colorClasses = getNodeColor(nodeNumber);
@@ -103,11 +107,20 @@ export function WarMapNode({
             )}
           >
             {placement.is_preferred_attacker && '⚔ '}
-            {rarityLabel(placement.rarity, placement.signature, placement.ascension)}
+            {hideSig
+              ? (() => {
+                  const { stars, rank } = parseRarity(placement.rarity);
+                  const parts = [`${stars}★R${rank}`];
+                  if (placement.ascension > 0) parts.push(`A${placement.ascension}`);
+                  return parts.join('·');
+                })()
+              : rarityLabel(placement.rarity, placement.signature, placement.ascension)}
           </span>
-          <span className='text-[9px] text-white/80 truncate max-w-[56px] sm:max-w-[64px] text-center leading-tight'>
-            {placement.game_pseudo}
-          </span>
+          {!hidePseudo && (
+            <span className='text-[9px] text-white/80 truncate max-w-[56px] sm:max-w-[64px] text-center leading-tight'>
+              {placement.game_pseudo}
+            </span>
+          )}
         </div>
       ) : (
         <span className='text-white/40 text-xs'>+</span>
@@ -123,6 +136,8 @@ interface WarMapProps {
   onNodeClick: (nodeNumber: number) => void;
   onRemove: (nodeNumber: number) => void;
   canManage: boolean;
+  hidePseudo?: boolean;
+  hideSig?: boolean;
 }
 
 // Map layout: rows of nodes from top (boss) to bottom (start)
@@ -163,7 +178,7 @@ const MAP_SECTIONS = [
   },
 ];
 
-export default function WarMap({ placements, onNodeClick, onRemove, canManage }: WarMapProps) {
+export default function WarMap({ placements, onNodeClick, onRemove, canManage, hidePseudo = false, hideSig = false }: WarMapProps) {
   const { t } = useI18n();
   const placementMap = new Map<number, DefensePlacement>();
   for (const p of placements) {
@@ -201,6 +216,8 @@ export default function WarMap({ placements, onNodeClick, onRemove, canManage }:
                     onNodeClick={onNodeClick}
                     onRemove={onRemove}
                     canManage={canManage}
+                    hidePseudo={hidePseudo}
+                    hideSig={hideSig}
                   />
                 )
               )}

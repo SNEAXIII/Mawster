@@ -60,7 +60,6 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
 
   return (
     <div className='px-3 py-4 sm:p-6'>
-      <h1 className='text-xl sm:text-2xl font-bold mb-6'>{t.nav.administration}</h1>
       <TabBar
         tabs={tabs}
         value={activeTab}

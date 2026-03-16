@@ -605,6 +605,18 @@ Cypress.Commands.add(
   }
 );
 
+Cypress.Commands.add('apiEndWar', (token: string, allianceId: string, warId: string) => {
+  cy.request({
+    method: 'POST',
+    url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/end`,
+    headers: { Authorization: `Bearer ${token}` },
+    body: {},
+  }).then((res) => {
+    expect(res.status).to.eq(200);
+    return res.body;
+  });
+});
+
 // ── War setup helper ──────────────────────────────────────────────────────────
 
 export function setupWarOwner(

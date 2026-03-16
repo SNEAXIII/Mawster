@@ -15,6 +15,7 @@ class WarResponse(BaseModel):
     id: uuid.UUID
     alliance_id: uuid.UUID
     opponent_name: str
+    status: str
     created_by_pseudo: str
     created_at: datetime
 
@@ -27,6 +28,7 @@ class WarResponse(BaseModel):
             'id': data.id,
             'alliance_id': data.alliance_id,
             'opponent_name': data.opponent_name,
+            'status': data.status,
             'created_by_pseudo': data.created_by.game_pseudo,
             'created_at': data.created_at,
         }

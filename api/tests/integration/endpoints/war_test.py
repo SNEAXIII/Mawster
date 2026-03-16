@@ -37,11 +37,11 @@ OPPONENT = "Enemy Alliance"
 
 # ─── Helpers ──────────────────────────────────────────────
 
-async def _setup_war(
+async def _setup_alliance(
     owner_user_id=USER_ID,
     member_user_id=USER2_ID,
 ):
-    """Create alliance + owner (officer) + member + champion + one declared war."""
+    """Create alliance + owner (officer) + member + champion. No war."""
     await load_objects([get_generic_user(is_base_id=True)])
     await push_user2()
 
@@ -57,21 +57,30 @@ async def _setup_war(
 
     champ = await push_champion(name="Spider-Man", champion_class="Science")
 
-    war = War(
-        id=uuid.uuid4(),
-        alliance_id=alliance.id,
-        opponent_name=OPPONENT,
-        created_by_id=owner.id,
-    )
-    await load_objects([war])
-
     return {
         "alliance": alliance,
         "owner": owner,
         "member": member,
         "champ": champ,
-        "war": war,
     }
+
+
+async def _setup_war(
+    owner_user_id=USER_ID,
+    member_user_id=USER2_ID,
+):
+    """Create alliance + owner (officer) + member + champion + one declared war."""
+    data = await _setup_alliance(owner_user_id, member_user_id)
+
+    war = War(
+        id=uuid.uuid4(),
+        alliance_id=data["alliance"].id,
+        opponent_name=OPPONENT,
+        created_by_id=data["owner"].id,
+    )
+    await load_objects([war])
+
+    return {**data, "war": war}
 
 
 # ─── TestCreateWar ────────────────────────────────────────
@@ -79,7 +88,7 @@ async def _setup_war(
 class TestCreateWar:
     @pytest.mark.asyncio
     async def test_create_war_officer_success(self):
-        data = await _setup_war()
+        data = await _setup_alliance()
         headers = create_auth_headers(user_id=str(USER_ID))
 
         response = await execute_post_request(
@@ -95,7 +104,7 @@ class TestCreateWar:
 
     @pytest.mark.asyncio
     async def test_create_war_non_officer_forbidden(self):
-        data = await _setup_war()
+        data = await _setup_alliance()
         # member (USER2_ID) is not an officer
         headers = create_auth_headers(user_id=str(USER2_ID))
 
@@ -107,8 +116,43 @@ class TestCreateWar:
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_create_war_unauthenticated(self):
+    async def test_create_war_conflict_when_active_war_exists(self):
+        """Cannot declare a second war while one is already active."""
+        data = await _setup_war()  # already has an active war
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={"opponent_name": "Second Enemy"},
+            headers=headers,
+        )
+        assert response.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_create_war_allowed_after_previous_ended(self):
+        """Can declare a new war once the previous one is ended."""
         data = await _setup_war()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        # End the existing war
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={},
+            headers=headers,
+        )
+
+        # Now declaring a new war should succeed
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={"opponent_name": "New Enemy"},
+            headers=headers,
+        )
+        assert response.status_code == 201
+        assert response.json()["status"] == "active"
+
+    @pytest.mark.asyncio
+    async def test_create_war_unauthenticated(self):
+        data = await _setup_alliance()
 
         response = await execute_post_request(
             f"/alliances/{data['alliance'].id}/wars",
@@ -336,3 +380,150 @@ class TestRemoveWarDefender:
             headers=headers,
         )
         assert response.status_code == 403
+
+
+# ─── TestCreateWarStatus ──────────────────────────────────
+
+class TestCreateWarStatus:
+    @pytest.mark.asyncio
+    async def test_new_war_has_active_status(self):
+        data = await _setup_alliance()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={"opponent_name": "Fresh Enemy"},
+            headers=headers,
+        )
+        assert response.status_code == 201
+        assert response.json()["status"] == "active"
+
+    @pytest.mark.asyncio
+    async def test_list_wars_includes_status_field(self):
+        data = await _setup_war()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) >= 1
+        assert "status" in body[0]
+        assert body[0]["status"] == "active"
+
+
+# ─── TestEndWar ───────────────────────────────────────────
+
+class TestEndWar:
+    @pytest.mark.asyncio
+    async def test_end_war_officer_success(self):
+        data = await _setup_war()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={},
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["status"] == "ended"
+        assert body["id"] == str(data["war"].id)
+
+    @pytest.mark.asyncio
+    async def test_end_war_non_officer_forbidden(self):
+        data = await _setup_war()
+        # USER2_ID is a member, not an officer
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={},
+            headers=headers,
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_end_war_unauthenticated(self):
+        data = await _setup_war()
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={},
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_end_war_wrong_alliance_not_found(self):
+        data = await _setup_war()
+        headers = create_auth_headers(user_id=str(USER_ID))
+        wrong_alliance_id = uuid.uuid4()
+
+        response = await execute_post_request(
+            f"/alliances/{wrong_alliance_id}/wars/{data['war'].id}/end",
+            payload={},
+            headers=headers,
+        )
+        assert response.status_code in (403, 404)
+
+    @pytest.mark.asyncio
+    async def test_end_war_preserves_placements(self):
+        """Ending a war must NOT delete its placements (history)."""
+        data = await _setup_war()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        # Place a defender
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/place",
+            payload={
+                "node_number": 5,
+                "champion_id": str(data["champ"].id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
+            headers=headers,
+        )
+
+        # End the war
+        end_response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={},
+            headers=headers,
+        )
+        assert end_response.status_code == 200
+        assert end_response.json()["status"] == "ended"
+
+        # War still appears in the list with its placements accessible
+        list_response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            headers=headers,
+        )
+        wars = list_response.json()
+        ended = next((w for w in wars if w["id"] == str(data["war"].id)), None)
+        assert ended is not None
+        assert ended["status"] == "ended"
+        assert ended["opponent_name"] == OPPONENT
+
+        # Placements are still readable
+        defense_response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1",
+            headers=headers,
+        )
+        assert defense_response.status_code == 200
+        assert len(defense_response.json()["placements"]) == 1
+
+    @pytest.mark.asyncio
+    async def test_end_war_idempotent(self):
+        """Ending an already-ended war returns 200 and keeps status 'ended'."""
+        data = await _setup_war()
+        headers = create_auth_headers(user_id=str(USER_ID))
+        url = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end"
+
+        await execute_post_request(url, payload={}, headers=headers)
+        response = await execute_post_request(url, payload={}, headers=headers)
+
+        assert response.status_code == 200
+        assert response.json()["status"] == "ended"

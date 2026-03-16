@@ -15,6 +15,7 @@ class War(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
     opponent_name: str = Field(max_length=100)
+    status: str = Field(default="active", max_length=20)
     created_by_id: uuid.UUID = Field(foreign_key="game_account.id")
     created_at: datetime = Field(default_factory=datetime.now)
 

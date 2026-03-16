@@ -23,6 +23,14 @@ class WarService:
         opponent_name: str,
         created_by_id: uuid.UUID,
     ) -> WarResponse:
+        existing = await session.exec(
+            select(War).where(War.alliance_id == alliance_id, War.status == "active")
+        )
+        if existing.first() is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="An active war already exists for this alliance",
+            )
         war = War(
             alliance_id=alliance_id,
             opponent_name=opponent_name,
@@ -212,6 +220,20 @@ class WarService:
             )
         await session.delete(placement)
         await session.commit()
+
+    @classmethod
+    async def end_war(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+    ) -> WarResponse:
+        war = await cls.get_war(session, war_id, alliance_id)
+        war.status = "ended"
+        session.add(war)
+        await session.commit()
+        await session.refresh(war)
+        return WarResponse.model_validate(await cls._load_war(session, war.id))
 
     @classmethod
     async def clear_bg(

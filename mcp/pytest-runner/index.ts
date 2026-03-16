@@ -94,12 +94,17 @@ function parseXmlResults(): TestResults {
   };
 }
 
-function runPytest(paths?: string[]): TestResults {
+function runPytest(paths?: string[], keyword?: string, verbose = false): TestResults {
   fs.mkdirSync(RESULTS_DIR, { recursive: true });
   if (fs.existsSync(JUNIT_XML)) fs.unlinkSync(JUNIT_XML);
 
-  const targetArgs = paths && paths.length > 0 ? paths.join(' ') : '';
-  const cmd = `uv run pytest ${targetArgs} --junit-xml=test-results/junit.xml -q`.trim();
+  const parts: string[] = ['uv run pytest'];
+  if (paths && paths.length > 0) parts.push(paths.join(' '));
+  if (keyword) parts.push(`-k "${keyword}"`);
+  parts.push('--junit-xml=test-results/junit.xml');
+  parts.push(verbose ? '-v' : '-q');
+
+  const cmd = parts.join(' ');
 
   try {
     execSync(cmd, { cwd: API_DIR, stdio: 'pipe', timeout: 300_000 });
@@ -146,6 +151,38 @@ server.registerTool(
   },
   async ({ paths }) => {
     const results = runPytest(paths);
+    return {
+      content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
+    };
+  }
+);
+
+server.registerTool(
+  'run_specific_tests',
+  {
+    description:
+      'Lance des tests pytest spécifiques par chemin/ID et/ou mot-clé -k, et retourne les résultats.',
+    inputSchema: {
+      paths: z
+        .array(z.string())
+        .optional()
+        .describe(
+          'Chemins ou IDs de tests relatifs au dossier api/. Ex: ["tests/unit/dto/dto_war_test.py::TestWarResponseDTO"]'
+        ),
+      keyword: z
+        .string()
+        .optional()
+        .describe(
+          'Expression -k pour filtrer les tests. Ex: "test_end_war or test_create_war"'
+        ),
+      verbose: z
+        .boolean()
+        .optional()
+        .describe('Affichage verbeux (-v). Par défaut false.'),
+    },
+  },
+  async ({ paths, keyword, verbose }) => {
+    const results = runPytest(paths, keyword, verbose ?? false);
     return {
       content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
     };

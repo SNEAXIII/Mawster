@@ -338,14 +338,6 @@ function AlliancesContent() {
   return (
     <AllianceRoleProvider refreshKey={roleRefreshKey}>
       <div className='w-full px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
-        {/* Header */}
-        <div>
-          <h1 className='text-xl sm:text-2xl font-bold text-foreground'>
-            {t.game.alliances.title}
-          </h1>
-          <p className='text-muted-foreground mt-1'>{t.game.alliances.description}</p>
-        </div>
-
         {/* My Invitations — always visible above tabs */}
         {myInvitations.length > 0 && (
           <Card data-cy='my-invitations-section'>

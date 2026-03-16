@@ -16,7 +16,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { Swords, Trash2 } from 'lucide-react';
+import { Swords, Trash2, Flag } from 'lucide-react';
+import { cn } from '@/app/lib/utils';
+import TabBar, { type TabItem } from '@/components/tab-bar';
 
 import { type Alliance, getMyAlliances } from '@/app/services/game';
 import {
@@ -25,6 +27,7 @@ import {
   type WarPlacement,
   getWars,
   createWar,
+  endWar,
   getWarDefense,
   placeWarDefender,
   removeWarDefender,
@@ -39,13 +42,14 @@ const WarChampionSelector = dynamic(() => import('./war-champion-selector'), {
   loading: () => null,
 });
 
-const WarSidePanel = dynamic(() => import('./war-side-panel'), {
-  loading: () => <FullPageSpinner />,
-});
-
 const CreateWarDialog = dynamic(() => import('./create-war-dialog'), {
   loading: () => null,
 });
+
+export enum WarTab {
+  Management = 'management',
+  Defenders = 'defenders',
+}
 
 export default function WarContent() {
   const { t } = useI18n();
@@ -60,12 +64,14 @@ export default function WarContent() {
   const [selectedBg, setSelectedBg] = useState(1);
   const [loading, setLoading] = useState(true);
   const [warLoading, setWarLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<WarTab>(WarTab.Management);
 
   const [warSummary, setWarSummary] = useState<WarDefenseSummary | null>(null);
 
   const [selectorNode, setSelectorNode] = useState<number | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showEndWarConfirm, setShowEndWarConfirm] = useState(false);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -136,6 +142,16 @@ export default function WarContent() {
       fetchWarDefense();
     }
   }, [selectedWarId, selectedBg]);
+
+  // Redirect non-officers away from management tab
+  useEffect(() => {
+    if (!loading && activeTab === WarTab.Management) {
+      const alliance = alliances.find((a) => a.id === selectedAllianceId);
+      if (alliance && !canManage(alliance)) {
+        setActiveTab(WarTab.Defenders);
+      }
+    }
+  }, [loading, selectedAllianceId, alliances, canManage]);
 
   // Polling every 10s
   useEffect(() => {
@@ -221,6 +237,17 @@ export default function WarContent() {
     }
   };
 
+  const handleEndWar = async () => {
+    if (!selectedAllianceId || !selectedWarId) return;
+    try {
+      const updated = await endWar(selectedAllianceId, selectedWarId);
+      toast.success(t.game.war.endWarSuccess);
+      setWars((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
+    } catch (err: any) {
+      toast.error(err.message || t.game.war.endWarError);
+    }
+  };
+
   // ─── Render ──────────────────────────────────────────────
 
   if (loading) return <FullPageSpinner />;
@@ -228,25 +255,24 @@ export default function WarContent() {
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
   const canManageWar = selectedAlliance ? canManage(selectedAlliance) : false;
   const placements: WarPlacement[] = warSummary?.placements ?? [];
+  const selectedWar = wars.find((w) => w.id === selectedWarId);
+  const hasActiveWar = wars.some((w) => w.status === 'active');
+
+  const tabs: TabItem<WarTab>[] = [
+    ...(canManageWar
+      ? [{ value: WarTab.Management, label: t.game.war.management, cy: 'tab-war-management' }]
+      : []),
+    { value: WarTab.Defenders, label: t.game.war.defenders, cy: 'tab-war-defenders' },
+  ];
 
   return (
-    <div className='flex flex-col gap-4'>
-      {/* Header */}
-      <div className='flex flex-col gap-1'>
-        <h1 className='text-2xl font-bold flex items-center gap-2'>
-          <Swords className='w-6 h-6' />
-          {t.game.war.title}
-        </h1>
-        <p className='text-muted-foreground text-sm'>{t.game.war.description}</p>
-      </div>
-
+    <div className='w-full px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
       {alliances.length === 0 ? (
         <p className='text-muted-foreground'>{t.game.war.noAlliance}</p>
       ) : (
         <>
-          {/* Controls */}
-          <div className='flex flex-wrap items-center gap-3'>
-            {/* Alliance selector */}
+          {/* Alliance selector — hidden when only one alliance */}
+          {alliances.length > 1 && (
             <Select
               value={selectedAllianceId}
               onValueChange={setSelectedAllianceId}
@@ -268,107 +294,151 @@ export default function WarContent() {
                 ))}
               </SelectContent>
             </Select>
+          )}
 
-            {/* War selector */}
-            <Select
-              value={selectedWarId}
-              onValueChange={setSelectedWarId}
-            >
-              <SelectTrigger
-                className='w-56'
-                data-cy='war-select'
-              >
-                <SelectValue placeholder={t.game.war.selectWar} />
-              </SelectTrigger>
-              <SelectContent>
-                {wars.map((w) => (
-                  <SelectItem
-                    key={w.id}
-                    value={w.id}
-                    data-cy={`war-option-${w.id}`}
+          {/* Tabs */}
+          <TabBar
+            tabs={tabs}
+            value={activeTab}
+            onChange={setActiveTab}
+          />
+
+          {/* ── Management tab ──────────────────────────── */}
+          {activeTab === WarTab.Management && (
+            <div className='space-y-4'>
+              {/* War selector + actions */}
+              <div className='flex flex-wrap items-center gap-3'>
+                <Select
+                  value={selectedWarId}
+                  onValueChange={setSelectedWarId}
+                >
+                  <SelectTrigger
+                    className='w-56'
+                    data-cy='war-select'
                   >
-                    vs {w.opponent_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                    <SelectValue placeholder={t.game.war.selectWar} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {wars.map((w) => (
+                      <SelectItem
+                        key={w.id}
+                        value={w.id}
+                        data-cy={`war-option-${w.id}`}
+                      >
+                        vs {w.opponent_name}{w.status === 'ended' ? ' ✓' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-            {/* BG selector */}
-            <Select
-              value={String(selectedBg)}
-              onValueChange={(v) => setSelectedBg(Number(v))}
-            >
-              <SelectTrigger
-                className='w-36'
-                data-cy='bg-select'
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[1, 2, 3].map((bg) => (
-                  <SelectItem
-                    key={bg}
-                    value={String(bg)}
-                    data-cy={`bg-option-${bg}`}
+                {canManageWar && (
+                  <Button
+                    variant='default'
+                    onClick={() => setShowCreateDialog(true)}
+                    disabled={hasActiveWar}
+                    data-cy='declare-war-btn'
                   >
-                    {t.game.defense.battlegroup} {bg}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                    <Swords className='w-4 h-4 mr-2' />
+                    {t.game.war.declareWar}
+                  </Button>
+                )}
 
-            {/* Declare war button (officers only) */}
-            {canManageWar && (
-              <Button
-                variant='default'
-                onClick={() => setShowCreateDialog(true)}
-                data-cy='declare-war-btn'
-              >
-                <Swords className='w-4 h-4 mr-2' />
-                {t.game.war.declareWar}
-              </Button>
-            )}
-
-            {/* Clear BG button */}
-            {canManageWar && selectedWarId && placements.length > 0 && (
-              <Button
-                variant='outline'
-                onClick={() => setShowClearConfirm(true)}
-                data-cy='clear-war-bg-btn'
-              >
-                <Trash2 className='w-4 h-4 mr-2' />
-                {t.game.war.clearAll}
-              </Button>
-            )}
-          </div>
-
-          {wars.length === 0 ? (
-            <p className='text-muted-foreground'>{t.game.war.noWar}</p>
-          ) : !selectedWarId ? (
-            <p className='text-muted-foreground'>{t.game.war.selectWar}</p>
-          ) : warLoading ? (
-            <FullPageSpinner />
-          ) : (
-            <div className='flex flex-col lg:flex-row gap-4'>
-              {/* Map */}
-              <div className='flex-1 overflow-x-auto'>
-                <WarDefenseMap
-                  placements={placements}
-                  onNodeClick={handleNodeClick}
-                  onRemove={handleRemoveDefender}
-                  canManage={canManageWar}
-                />
+                {canManageWar && selectedWar?.status === 'active' && (
+                  <Button
+                    variant='destructive'
+                    onClick={() => setShowEndWarConfirm(true)}
+                    data-cy='end-war-btn'
+                  >
+                    <Flag className='w-4 h-4 mr-2' />
+                    {t.game.war.endWar}
+                  </Button>
+                )}
               </div>
 
-              {/* Side panel */}
-              <div className='lg:w-64 shrink-0'>
-                <WarSidePanel
-                  placements={placements}
-                  onRemoveDefender={handleRemoveDefender}
-                  canManage={canManageWar}
-                />
-              </div>
+              {wars.length === 0 && (
+                <p className='text-muted-foreground'>{t.game.war.noWar}</p>
+              )}
+
+              {selectedWar && (
+                <div className='text-sm text-muted-foreground'>
+                  vs <span className='font-semibold text-foreground'>{selectedWar.opponent_name}</span>
+                </div>
+              )}
             </div>
+          )}
+
+          {/* ── Defenders tab ────────────────────────────── */}
+          {activeTab === WarTab.Defenders && (
+            <>
+              {!selectedWarId ? (
+                <p className='text-muted-foreground'>{t.game.war.selectWar}</p>
+              ) : (
+                <div className='space-y-4'>
+                  {/* Opponent name */}
+                  {selectedWar && (
+                    <div className='flex items-center gap-2'>
+                      <Swords className='w-4 h-4 text-muted-foreground' />
+                      <span className='text-sm font-semibold'>vs {selectedWar.opponent_name}</span>
+                      {selectedWar.status === 'ended' && (
+                        <span className='text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full'>
+                          {t.game.war.ended}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Controls */}
+                  <div className='flex flex-wrap items-center gap-3'>
+                    {/* BG button group */}
+                    <div
+                      className='flex gap-1 rounded-md border p-1'
+                      data-cy='bg-picker'
+                    >
+                      {[1, 2, 3].map((bg) => (
+                        <button
+                          key={bg}
+                          onClick={() => setSelectedBg(bg)}
+                          className={cn(
+                            'px-3 py-1 rounded text-sm font-semibold transition-colors',
+                            selectedBg === bg
+                              ? 'bg-primary text-primary-foreground'
+                              : 'text-muted-foreground hover:bg-accent'
+                          )}
+                          data-cy={`bg-btn-${bg}`}
+                        >
+                          G{bg}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Clear BG button */}
+                    {canManageWar && placements.length > 0 && (
+                      <Button
+                        variant='outline'
+                        onClick={() => setShowClearConfirm(true)}
+                        data-cy='clear-war-bg-btn'
+                      >
+                        <Trash2 className='w-4 h-4 mr-2' />
+                        {t.game.war.clearAll}
+                      </Button>
+                    )}
+                  </div>
+
+                  {warLoading ? (
+                    <FullPageSpinner />
+                  ) : (
+                    <div className='overflow-x-auto'>
+                      <WarDefenseMap
+                        placements={placements}
+                        onNodeClick={handleNodeClick}
+                        onRemove={handleRemoveDefender}
+                        canManage={canManageWar}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </>
       )}
@@ -387,6 +457,19 @@ export default function WarContent() {
         open={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
         onConfirm={handleCreateWar}
+      />
+
+      {/* End war confirm dialog */}
+      <ConfirmationDialog
+        open={showEndWarConfirm}
+        onOpenChange={setShowEndWarConfirm}
+        onConfirm={async () => {
+          setShowEndWarConfirm(false);
+          await handleEndWar();
+        }}
+        title={t.game.war.endWarConfirmTitle}
+        description={t.game.war.endWarConfirmDesc}
+        variant='destructive'
       />
 
       {/* Clear confirm dialog */}
