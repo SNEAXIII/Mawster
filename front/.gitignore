@@ -9,6 +9,7 @@
 # testing
 /coverage
 /cypress/results
+/.cypress-thread-locks
 
 # next.js
 /.next/

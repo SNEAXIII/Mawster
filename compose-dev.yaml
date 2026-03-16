@@ -33,8 +33,6 @@ services:
     networks:
       - internal
     env_file: db.env
-    volumes:
-      - ./db/mawster-db-test:/var/lib/mysql
   phpmyadmin-test:
     image: phpmyadmin/phpmyadmin
     ports:

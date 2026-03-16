@@ -210,6 +210,8 @@ Raw tool output floods the context window. Use context-mode MCP tools to keep ra
 
 ## MCP Servers
 
+> **⚠️ IMPORTANT — après toute modification d'un serveur MCP** (nouveau tool, nouveau paramètre, changement de schéma) : prévenir l'utilisateur qu'il doit **redémarrer Claude Code** pour que le nouveau schéma soit pris en compte. Sans redémarrage, les anciens paramètres (ou l'absence de paramètres) restent actifs et les appels se font avec le mauvais schéma.
+
 Four MCP servers are configured in `.mcp.json`:
 
 ### context-mode

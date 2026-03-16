@@ -10,6 +10,7 @@ data/db/*
 front/.env.local
 *.pid
 .server-runner-state.json
+runner-results
 # Application logs (RGPD — never commit)
 api/logs/
 api/test-results/
