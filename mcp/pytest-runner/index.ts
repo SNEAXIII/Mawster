@@ -95,6 +95,13 @@ function parseXmlResults(): TestResults {
 }
 
 function runPytest(paths?: string[], keyword?: string, verbose = false): TestResults {
+  const TEMP_DIR = path.join(API_DIR, 'temp');
+  if (fs.existsSync(TEMP_DIR)) {
+    for (const f of fs.readdirSync(TEMP_DIR)) {
+      fs.rmSync(path.join(TEMP_DIR, f), { recursive: true, force: true });
+    }
+  }
+
   fs.mkdirSync(RESULTS_DIR, { recursive: true });
   if (fs.existsSync(JUNIT_XML)) fs.unlinkSync(JUNIT_XML);
 

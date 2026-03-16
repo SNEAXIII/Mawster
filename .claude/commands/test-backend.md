@@ -1,9 +1,5 @@
 Lance les tests pytest backend.
 
-## Avant de lancer les tests
-
-Toujours exécuter en premier : `rm -rf api/temp/*` (vide le dossier des bases SQLite de test).
-
 ## Comportement selon $ARGUMENTS
 
 | Argument | Action |
