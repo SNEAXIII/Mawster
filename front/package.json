@@ -3,7 +3,7 @@
   "scripts": {
     "build": "next build",
     "dev": "cross-env API_PORT=8000 next dev --turbopack",
-    "testing": "next dev --turbopack",
+    "testing": "cross-env API_PORT=8001 next dev --turbopack",
     "start": "next start",
     "prod": "npm run build && npm run start",
     "cypress:open": "cypress open",

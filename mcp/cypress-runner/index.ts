@@ -121,9 +121,8 @@ function runCypress(specs?: string[]): TestResults {
   clearResults();
 
   const specArg = specs && specs.length > 0 ? `--spec "${specs.join(',')}"` : '';
-  // Always target thread 0 (backend 8001, frontend 3000)
-  const envArg = '--env "backendUrl=http://localhost:8001" --config "baseUrl=http://localhost:3000"';
-  const cmd = `npx cypress run ${specArg} ${envArg}`.trim();
+
+  const cmd = `npx cypress run ${specArg}`.trim();
 
   try {
     execSync(cmd, { cwd: FRONT_DIR, stdio: 'pipe', timeout: 600_000 });
