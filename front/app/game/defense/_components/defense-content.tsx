@@ -105,6 +105,7 @@ export default function DefensePageContent({
 
   return (
     <div className='space-y-4'>
+      <h2 className='text-xl font-bold'>{t.game.defense.title}</h2>
       <DefenseHeader
         alliances={alliances}
         selectedAllianceId={selectedAllianceId}

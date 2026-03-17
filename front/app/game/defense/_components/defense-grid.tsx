@@ -74,7 +74,7 @@ export default function DefenseGrid({
 
   return (
     <>
-      <div className='flex flex-col lg:flex-row gap-4'>
+      <div className='flex flex-col-reverse lg:flex-row gap-4'>
         {/* War Map */}
         <div className='flex-1 min-w-0'>
           <Card>
