@@ -1,10 +1,9 @@
 'use client';
 
 import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
 import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
-import { X, Minus, Plus } from 'lucide-react';
+import { X, Minus, Plus, Swords } from 'lucide-react';
 import { type WarPlacement } from '@/app/services/war';
 
 interface WarAttackerPanelProps {
@@ -41,7 +40,7 @@ export default function WarAttackerPanel({
   return (
     <div className='flex flex-col gap-3'>
       <div className='text-sm font-semibold text-muted-foreground uppercase tracking-wide px-1'>
-        {t.game.war.attackersPanelTitle} ({assigned.length})
+        {t.game.war.attackersPanelTitle.replace('{assigned}', String(assigned.length))}
       </div>
 
       {assigned.length === 0 ? (
@@ -63,17 +62,25 @@ export default function WarAttackerPanel({
                     className='flex items-center gap-2 rounded-md border bg-card px-2 py-1.5'
                     data-cy={`attacker-entry-node-${p.node_number}`}
                   >
-                    <ChampionPortrait
-                      imageUrl={p.attacker_image_url}
-                      name={p.attacker_champion_name ?? ''}
-                      rarity={p.attacker_rarity ?? '7r3'}
-                      size={32}
-                    />
+                    {/* Attacker vs Defender portraits */}
+                    <div className='flex items-center gap-1 flex-shrink-0'>
+                      <ChampionPortrait
+                        imageUrl={p.attacker_image_url}
+                        name={p.attacker_champion_name ?? ''}
+                        rarity={p.attacker_rarity ?? '7r3'}
+                        size={35}
+                      />
+                      <Swords className='w-4 h-4 text-muted-foreground flex-shrink-0' />
+                      <ChampionPortrait
+                        imageUrl={p.image_url}
+                        name={p.champion_name}
+                        rarity={p.rarity}
+                        size={35}
+                      />
+                    </div>
+
                     <div className='flex-1 min-w-0'>
-                      <div className='text-xs font-medium truncate'>{p.attacker_champion_name}</div>
-                      <div className='text-[10px] text-muted-foreground'>
-                        {p.attacker_rarity} · #{p.node_number}
-                      </div>
+                      <div className='text-[10px] text-muted-foreground'>#{p.node_number}</div>
                     </div>
 
                     {/* KO counter */}

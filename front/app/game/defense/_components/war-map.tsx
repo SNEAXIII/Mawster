@@ -116,7 +116,7 @@ export function WarMapNode({
                 })()
               : rarityLabel(placement.rarity, placement.signature, placement.ascension)}
           </span>
-          {!hidePseudo && (
+          {!hidePseudo && placement.game_pseudo && (
             <span className='text-[9px] text-white/80 truncate max-w-[56px] sm:max-w-[64px] text-center leading-tight'>
               {placement.game_pseudo}
             </span>

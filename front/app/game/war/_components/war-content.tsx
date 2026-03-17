@@ -83,6 +83,8 @@ export default function WarContent() {
   const [selectedAllianceId, setSelectedAllianceId] = useState('');
   const [wars, setWars] = useState<War[]>([]);
   const [selectedWarId, setSelectedWarId] = useState('');
+
+  const activeWarId = wars.find((w) => w.status === 'active')?.id ?? '';
   const [selectedBg, setSelectedBg] = useState(1);
   const [loading, setLoading] = useState(true);
   const [warLoading, setWarLoading] = useState(false);
@@ -134,10 +136,10 @@ export default function WarContent() {
   // ─── Fetch war defense ───────────────────────────────────
   const fetchWarDefense = useCallback(
     async (silent = false) => {
-      if (!selectedAllianceId || !selectedWarId) return;
+      if (!selectedAllianceId || !activeWarId) return;
       if (!silent) setWarLoading(true);
       try {
-        const summary = await getWarDefense(selectedAllianceId, selectedWarId, selectedBg);
+        const summary = await getWarDefense(selectedAllianceId, activeWarId, selectedBg);
         setWarSummary(summary);
       } catch {
         if (!silent) toast.error(t.game.war.loadError);
@@ -145,7 +147,7 @@ export default function WarContent() {
         if (!silent) setWarLoading(false);
       }
     },
-    [selectedAllianceId, selectedWarId, selectedBg, t]
+    [selectedAllianceId, activeWarId, selectedBg, t]
   );
 
   useEffect(() => {
@@ -162,10 +164,10 @@ export default function WarContent() {
 
   useEffect(() => {
     setWarSummary(null);
-    if (selectedWarId) {
+    if (activeWarId) {
       fetchWarDefense();
     }
-  }, [selectedWarId, selectedBg]);
+  }, [activeWarId, selectedBg]);
 
   // Redirect non-officers away from management tab
   useEffect(() => {
@@ -180,19 +182,18 @@ export default function WarContent() {
   // Polling every 10s
   useEffect(() => {
     if (pollRef.current) clearInterval(pollRef.current);
-    if (selectedWarId) {
+    if (activeWarId) {
       pollRef.current = setInterval(() => fetchWarDefense(true), 10_000);
     }
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [fetchWarDefense, selectedWarId]);
+  }, [fetchWarDefense, activeWarId]);
 
   // ─── Actions ─────────────────────────────────────────────
 
   const handleNodeClick = (nodeNumber: number) => {
-    const war = wars.find((w) => w.id === selectedWarId);
-    if (war?.status === 'ended') return;
+    if (!activeWarId) return;
     if (warMode === WarMode.Attackers) {
       const hasDefender = placements.some((p) => p.node_number === nodeNumber);
       if (!hasDefender) {
@@ -214,11 +215,11 @@ export default function WarContent() {
     rank: number,
     ascension: number
   ) => {
-    if (!selectedAllianceId || !selectedWarId || selectorNode === null) return;
+    if (!selectedAllianceId || !activeWarId || selectorNode === null) return;
     try {
       await placeWarDefender(
         selectedAllianceId,
-        selectedWarId,
+        activeWarId,
         selectedBg,
         selectorNode,
         championId,
@@ -238,9 +239,9 @@ export default function WarContent() {
   };
 
   const handleRemoveDefender = async (nodeNumber: number) => {
-    if (!selectedAllianceId || !selectedWarId) return;
+    if (!selectedAllianceId || !activeWarId) return;
     try {
-      await removeWarDefender(selectedAllianceId, selectedWarId, selectedBg, nodeNumber);
+      await removeWarDefender(selectedAllianceId, activeWarId, selectedBg, nodeNumber);
       toast.success(t.game.war.removeSuccess);
       await fetchWarDefense();
     } catch (err: any) {
@@ -249,9 +250,9 @@ export default function WarContent() {
   };
 
   const handleClearBg = async () => {
-    if (!selectedAllianceId || !selectedWarId) return;
+    if (!selectedAllianceId || !activeWarId) return;
     try {
-      await clearWarBg(selectedAllianceId, selectedWarId, selectedBg);
+      await clearWarBg(selectedAllianceId, activeWarId, selectedBg);
       toast.success(t.game.war.clearSuccess);
       await fetchWarDefense();
     } catch {
@@ -264,11 +265,11 @@ export default function WarContent() {
     pseudo: string,
     championName: string
   ) => {
-    if (!selectedAllianceId || !selectedWarId || attackerSelectorNode === null) return;
+    if (!selectedAllianceId || !activeWarId || attackerSelectorNode === null) return;
     try {
       const updated = await assignWarAttacker(
         selectedAllianceId,
-        selectedWarId,
+        activeWarId,
         selectedBg,
         attackerSelectorNode,
         championUserId
@@ -294,9 +295,9 @@ export default function WarContent() {
   };
 
   const handleRemoveAttacker = async (nodeNumber: number) => {
-    if (!selectedAllianceId || !selectedWarId) return;
+    if (!selectedAllianceId || !activeWarId) return;
     try {
-      const updated = await removeWarAttacker(selectedAllianceId, selectedWarId, selectedBg, nodeNumber);
+      const updated = await removeWarAttacker(selectedAllianceId, activeWarId, selectedBg, nodeNumber);
       toast.success(t.game.war.removeAttackerSuccess);
       setWarSummary((prev) =>
         prev
@@ -314,9 +315,9 @@ export default function WarContent() {
   };
 
   const handleUpdateKo = async (nodeNumber: number, newKo: number) => {
-    if (!selectedAllianceId || !selectedWarId) return;
+    if (!selectedAllianceId || !activeWarId) return;
     try {
-      const updated = await updateWarKo(selectedAllianceId, selectedWarId, selectedBg, nodeNumber, newKo);
+      const updated = await updateWarKo(selectedAllianceId, activeWarId, selectedBg, nodeNumber, newKo);
       setWarSummary((prev) =>
         prev
           ? {
@@ -364,6 +365,7 @@ export default function WarContent() {
   const canManageWar = selectedAlliance ? canManage(selectedAlliance) : false;
   const placements: WarPlacement[] = warSummary?.placements ?? [];
   const selectedWar = wars.find((w) => w.id === selectedWarId);
+  const activeWar = wars.find((w) => w.id === activeWarId);
   const hasActiveWar = wars.some((w) => w.status === 'active');
 
   const tabs: TabItem<WarTab>[] = [
@@ -491,19 +493,17 @@ export default function WarContent() {
           {/* ── Defenders tab ────────────────────────────── */}
           {activeTab === WarTab.Defenders && (
             <>
-              {!selectedWarId || selectedWar?.status === 'ended' ? (
-                <p className='text-muted-foreground'>
-                  {selectedWar?.status === 'ended' ? t.game.war.noActiveWar : t.game.war.selectWar}
-                </p>
+              {!activeWarId ? (
+                <p className='text-muted-foreground'>{t.game.war.noActiveWar}</p>
               ) : (
                 <div className='space-y-4'>
                   {/* Controls row: opponent name + BG picker + mode toggle + clear */}
                   <div className='flex flex-wrap items-center gap-3'>
                     {/* Opponent name */}
-                    {selectedWar && (
+                    {activeWar && (
                       <div className='flex items-center gap-2'>
                         <Swords className='w-4 h-4 text-muted-foreground' />
-                        <span className='text-sm font-semibold'>vs {selectedWar.opponent_name}</span>
+                        <span className='text-sm font-semibold'>vs {activeWar.opponent_name}</span>
                       </div>
                     )}
 
@@ -619,8 +619,9 @@ export default function WarContent() {
         onClose={() => setAttackerSelectorNode(null)}
         nodeNumber={attackerSelectorNode ?? 0}
         allianceId={selectedAllianceId}
-        warId={selectedWarId}
+        warId={activeWarId}
         battlegroup={selectedBg}
+        placements={placements}
         onSelect={handleAssignAttacker}
       />
 

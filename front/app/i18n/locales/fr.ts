@@ -274,6 +274,7 @@ const fr: Translations = {
       // Attackers
       selectAttacker: 'Assigner un attaquant au nœud #{node}',
       searchAttacker: 'Rechercher champion ou joueur...',
+      searchPlayer: 'Rechercher joueur...',
       assignAttacker: 'Assigner Attaquant',
       removeAttacker: 'Retirer Attaquant',
       koCount: 'KO',
@@ -286,7 +287,7 @@ const fr: Translations = {
       defenderRequired: 'Ce nœud doit avoir un défenseur avant d\'assigner un attaquant',
       noAvailableAttackers: 'Aucun attaquant disponible pour ce groupe de combat',
       availableAttackersError: 'Erreur lors du chargement des attaquants disponibles',
-      attackersPanelTitle: 'Attaquants',
+      attackersPanelTitle: '{assigned}/50 combats attribués',
       memberAttackers: '{count}/3',
     },
   },

@@ -270,6 +270,7 @@ const en = {
       // Attackers
       selectAttacker: 'Assign attacker to node #{node}',
       searchAttacker: 'Search champion or player...',
+      searchPlayer: 'Search player...',
       assignAttacker: 'Assign Attacker',
       removeAttacker: 'Remove Attacker',
       koCount: 'KO',
@@ -282,7 +283,7 @@ const en = {
       defenderRequired: 'This node needs a defender before assigning an attacker',
       noAvailableAttackers: 'No available attackers for this battlegroup',
       availableAttackersError: 'Failed to load available attackers',
-      attackersPanelTitle: 'Attackers',
+      attackersPanelTitle: '{assigned}/50 fights attributed',
       memberAttackers: '{count}/3',
     },
   },

@@ -7,7 +7,7 @@ import { SearchInput } from '@/components/search-input';
 import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
 import { getClassColors, shortenChampionName } from '@/app/services/roster';
-import { type AvailableAttacker, getAvailableAttackers } from '@/app/services/war';
+import { type AvailableAttacker, type WarPlacement, getAvailableAttackers } from '@/app/services/war';
 
 interface WarAttackerSelectorProps {
   open: boolean;
@@ -16,6 +16,7 @@ interface WarAttackerSelectorProps {
   allianceId: string;
   warId: string;
   battlegroup: number;
+  placements: WarPlacement[];
   onSelect: (championUserId: string, pseudo: string, championName: string) => void;
 }
 
@@ -33,11 +34,13 @@ export default function WarAttackerSelector({
   allianceId,
   warId,
   battlegroup,
+  placements,
   onSelect,
 }: WarAttackerSelectorProps) {
   const { t } = useI18n();
   const [available, setAvailable] = useState<AvailableAttacker[]>([]);
-  const [search, setSearch] = useState('');
+  const [playerSearch, setPlayerSearch] = useState('');
+  const [championSearch, setChampionSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -57,19 +60,26 @@ export default function WarAttackerSelector({
   useEffect(() => {
     if (open) {
       fetchAvailable();
-      setSearch('');
+      setPlayerSearch('');
+      setChampionSearch('');
     }
   }, [open, fetchAvailable]);
 
   if (!open) return null;
 
-  const filtered = search
-    ? available.filter(
-        (a) =>
-          a.champion_name.toLowerCase().includes(search.toLowerCase()) ||
-          a.game_pseudo.toLowerCase().includes(search.toLowerCase())
-      )
-    : available;
+  // Count already-assigned attackers per pseudo from current placements
+  const assignedByPseudo = new Map<string, number>();
+  for (const p of placements) {
+    if (p.attacker_pseudo) {
+      assignedByPseudo.set(p.attacker_pseudo, (assignedByPseudo.get(p.attacker_pseudo) ?? 0) + 1);
+    }
+  }
+
+  const filtered = available.filter((a) => {
+    const matchPlayer = !playerSearch || a.game_pseudo.toLowerCase().includes(playerSearch.toLowerCase());
+    const matchChampion = !championSearch || a.champion_name.toLowerCase().includes(championSearch.toLowerCase());
+    return matchPlayer && matchChampion;
+  });
 
   // Group by member
   const groupMap = new Map<string, GroupedAttackers>();
@@ -79,7 +89,7 @@ export default function WarAttackerSelector({
         pseudo: a.game_pseudo,
         gameAccountId: a.game_account_id,
         attackers: [],
-        assignedCount: 0,
+        assignedCount: assignedByPseudo.get(a.game_pseudo) ?? 0,
       });
     }
     groupMap.get(a.game_account_id)!.attackers.push(a);
@@ -96,12 +106,18 @@ export default function WarAttackerSelector({
           <Button variant='ghost' size='sm' onClick={onClose}>✕</Button>
         </div>
 
-        <div className='p-3 border-b'>
+        <div className='p-3 border-b flex gap-2'>
           <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder={t.game.war.searchAttacker}
-            data-cy='war-attacker-search'
+            value={playerSearch}
+            onChange={setPlayerSearch}
+            placeholder={t.game.war.searchPlayer}
+            data-cy='war-attacker-search-player'
+          />
+          <SearchInput
+            value={championSearch}
+            onChange={setChampionSearch}
+            placeholder={t.game.war.searchChampion}
+            data-cy='war-attacker-search-champion'
           />
         </div>
 
@@ -118,7 +134,10 @@ export default function WarAttackerSelector({
           {!loading && !error && groups.map((group) => (
             <div key={group.gameAccountId}>
               <div className='text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1'>
-                {group.pseudo}
+                {group.pseudo}{' '}
+                <span className='text-primary font-bold'>
+                  {t.game.war.memberAttackers.replace('{count}', String(group.assignedCount))}
+                </span>
               </div>
               <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2'>
                 {group.attackers.map((a) => {

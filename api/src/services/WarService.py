@@ -8,6 +8,7 @@ from starlette import status
 
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
+from src.models.DefensePlacement import DefensePlacement
 from src.models.GameAccount import GameAccount
 from src.models.War import War
 from src.models.WarDefensePlacement import WarDefensePlacement
@@ -176,7 +177,7 @@ class WarService:
         if champion is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion not found")
 
-        # Check champion not already placed in this BG (unique per champion_id+war_id+battlegroup)
+        # Check champion not already placed as defender in this BG
         existing_champ = await session.exec(
             select(WarDefensePlacement).where(
                 and_(
@@ -191,6 +192,24 @@ class WarService:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="This champion is already placed on another node in this battlegroup",
+            )
+
+        # Check champion not already assigned as attacker in this BG
+        existing_as_attacker = await session.exec(
+            select(WarDefensePlacement)
+            .join(ChampionUser, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
+            .where(
+                and_(
+                    WarDefensePlacement.war_id == war_id,
+                    WarDefensePlacement.battlegroup == battlegroup,
+                    ChampionUser.champion_id == req.champion_id,
+                )
+            )
+        )
+        if existing_as_attacker.first():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This champion is already assigned as an attacker in this battlegroup",
             )
 
         # Replace if node already occupied
@@ -317,10 +336,21 @@ class WarService:
         placements = await cls._get_placements(session, war_id, battlegroup)
         defender_champion_ids = {p.champion_id for p in placements}
 
+        # Get champion_user_ids already placed in regular defense for this alliance+BG
+        defense_result = await session.exec(
+            select(DefensePlacement.champion_user_id).where(
+                and_(
+                    DefensePlacement.alliance_id == alliance_id,
+                    DefensePlacement.battlegroup == battlegroup,
+                )
+            )
+        )
+        defense_champion_user_ids = set(defense_result.all())
+
         result: list[AvailableAttackerResponse] = []
         for acc in members:
             for cu in acc.roster:
-                if cu.champion_id not in defender_champion_ids:
+                if cu.champion_id not in defender_champion_ids and cu.id not in defense_champion_user_ids:
                     result.append(AvailableAttackerResponse(
                         champion_user_id=cu.id,
                         game_account_id=acc.id,
@@ -379,7 +409,23 @@ class WarService:
                 detail="This champion is already placed as a defender in this battlegroup",
             )
 
-        # 5. Check member has fewer than 3 attackers in this war+BG
+        # 5. Check champion not already placed in regular alliance defense
+        defense_check = await session.exec(
+            select(DefensePlacement).where(
+                and_(
+                    DefensePlacement.champion_user_id == champion_user_id,
+                    DefensePlacement.alliance_id == alliance_id,
+                    DefensePlacement.battlegroup == battlegroup,
+                )
+            )
+        )
+        if defense_check.first():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This champion is already placed in the alliance defense",
+            )
+
+        # 7. Check member has fewer than 3 attackers in this war+BG
         member_attacker_count = sum(
             1 for p in all_placements
             if p.attacker_champion_user_id is not None
@@ -392,7 +438,7 @@ class WarService:
                 detail="This member already has 3 attackers assigned in this battlegroup",
             )
 
-        # 6. Assign
+        # 8. Assign
         placement_id = placement.id
         placement.attacker_champion_user_id = champion_user_id
         session.add(placement)

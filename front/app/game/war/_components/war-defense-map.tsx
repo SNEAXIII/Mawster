@@ -24,7 +24,7 @@ function toDefensePlacement(p: WarPlacement): DefensePlacement {
     node_number: p.node_number,
     champion_user_id: '',
     game_account_id: '',
-    game_pseudo: p.placed_by_pseudo ?? '',
+    game_pseudo: p.attacker_pseudo ?? '',
     champion_name: p.champion_name,
     champion_class: p.champion_class,
     champion_image_url: p.image_url,
@@ -51,7 +51,7 @@ export default function WarDefenseMap({
       onNodeClick={onNodeClick}
       onRemove={onRemove}
       canManage={canManage}
-      hidePseudo={true}
+      hidePseudo={false}
       hideSig={true}
     />
   );
