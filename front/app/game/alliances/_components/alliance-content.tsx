@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useAllianceSelector } from '@/hooks/use-alliance-selector';
 import dynamic from 'next/dynamic';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useI18n } from '@/app/i18n';
@@ -9,7 +10,6 @@ import {
   type Alliance,
   type GameAccount,
   type AllianceInvitation,
-  getMyAlliances,
   getMyGameAccounts,
   getEligibleOwners,
   getEligibleMembers,
@@ -54,11 +54,10 @@ export default function AllianceContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const [alliances, setAlliances] = useState<Alliance[]>([]);
+  const { alliances, loading, refresh: refreshAlliances } = useAllianceSelector();
   const [eligibleOwners, setEligibleOwners] = useState<GameAccount[]>([]);
   const [eligibleMembers, setEligibleMembers] = useState<GameAccount[]>([]);
   const [hasAnyAccounts, setHasAnyAccounts] = useState(true);
-  const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [roleRefreshKey, setRoleRefreshKey] = useState(0);
 
@@ -118,17 +117,6 @@ export default function AllianceContent() {
     pseudo: string;
     canRequestUpgrade: boolean;
   } | null>(null);
-
-  const fetchAlliances = async () => {
-    try {
-      const data = await getMyAlliances();
-      setAlliances(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchEligibleOwners = async () => {
     try {
@@ -195,7 +183,7 @@ export default function AllianceContent() {
   useEffect(() => {
     if (status === 'authenticated') {
       Promise.all([
-        fetchAlliances(),
+        refreshAlliances(),
         fetchEligibleOwners(),
         fetchMyAccounts(),
         fetchMyInvitations(),
@@ -233,7 +221,7 @@ export default function AllianceContent() {
       setActiveTab(AllianceTab.Alliances);
       setRoleRefreshKey((k) => k + 1);
       await Promise.all([
-        fetchAlliances(),
+        refreshAlliances(),
         fetchEligibleOwners(),
         fetchEligibleMembers(),
         fetchMyAccounts(),
@@ -270,7 +258,7 @@ export default function AllianceContent() {
 
   const handleMemberRefresh = async () => {
     setRoleRefreshKey((k) => k + 1);
-    await Promise.all([fetchAlliances(), fetchEligibleMembers(), fetchMyAccounts()]);
+    await Promise.all([refreshAlliances(), fetchEligibleMembers(), fetchMyAccounts()]);
   };
 
   // ---- Invitations (accept / decline) ----
@@ -280,7 +268,7 @@ export default function AllianceContent() {
       toast.success(t.game.alliances.acceptInvitationSuccess);
       setRoleRefreshKey((k) => k + 1);
       await Promise.all([
-        fetchAlliances(),
+        refreshAlliances(),
         fetchEligibleOwners(),
         fetchEligibleMembers(),
         fetchMyAccounts(),
