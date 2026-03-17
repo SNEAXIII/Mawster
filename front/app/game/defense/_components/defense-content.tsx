@@ -19,7 +19,7 @@ import {
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { Shield, Trash2, Download, Upload } from 'lucide-react';
 
-import { type Alliance, getMyAlliances } from '@/app/services/game';
+import { useAllianceSelector } from '@/hooks/use-alliance-selector';
 import {
   type DefenseSummary,
   type AvailableChampion,
@@ -64,11 +64,17 @@ export default function DefensePageContent({
   const { status } = useRequiredSession();
   const { canManage, isOwner } = useAllianceRole();
 
+  // Alliance selector
+  const {
+    alliances,
+    selectedAllianceId,
+    setSelectedAllianceId,
+    selectedBg,
+    setSelectedBg,
+    loading,
+  } = useAllianceSelector({ initialAllianceId, initialBg });
+
   // State
-  const [alliances, setAlliances] = useState<Alliance[]>([]);
-  const [selectedAllianceId, setSelectedAllianceId] = useState<string>(initialAllianceId ?? '');
-  const [selectedBg, setSelectedBg] = useState<number>(initialBg ?? 1);
-  const [loading, setLoading] = useState(true);
   const [defenseLoading, setDefenseLoading] = useState(false);
 
   // Defense data
@@ -89,20 +95,6 @@ export default function DefensePageContent({
     : false;
 
   // ─── Data fetching ─────────────────────────────────────
-  const fetchAlliances = useCallback(async () => {
-    try {
-      const data = await getMyAlliances();
-      setAlliances(data);
-      if (data.length > 0 && !selectedAllianceId) {
-        const firstId = data[0].id;
-        setSelectedAllianceId(firstId);
-        onStateChange?.(firstId, selectedBg);
-      }
-    } catch (err: any) {
-      toast.error(t.game.defense.loadError);
-    }
-  }, [t, selectedAllianceId, selectedBg, onStateChange]);
-
   const fetchDefense = useCallback(
     async (silent = false) => {
       if (!selectedAllianceId) return;
@@ -137,11 +129,15 @@ export default function DefensePageContent({
     pollIntervalRef.current = setInterval(() => fetchDefenseRef.current(true), 10_000);
   }, []);
 
+  // Auto-select first alliance when alliances load and none is selected
   useEffect(() => {
-    if (status !== 'authenticated') return;
-    setLoading(true);
-    fetchAlliances().finally(() => setLoading(false));
-  }, [status]);
+    if (alliances.length > 0 && !selectedAllianceId) {
+      const firstId = alliances[0].id;
+      setSelectedAllianceId(firstId);
+      onStateChange?.(firstId, selectedBg);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alliances]);
 
   useEffect(() => {
     if (selectedAllianceId) {
