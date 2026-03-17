@@ -1,5 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
-import React from 'react';
+import { type ChangeEvent, useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useI18n } from '@/app/i18n';
 import {
@@ -256,7 +255,7 @@ export function useRosterImportExport({
 
   // ── Import: parse + validate + build preview ───────────
   const handleFileSelected = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
