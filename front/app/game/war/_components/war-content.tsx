@@ -7,26 +7,17 @@ import { useI18n } from '@/app/i18n';
 import { useRequiredSession } from '@/hooks/use-required-session';
 import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { FullPageSpinner } from '@/components/full-page-spinner';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Shield, Swords, Trash2, Flag } from 'lucide-react';
-import { cn } from '@/app/lib/utils';
 import TabBar, { type TabItem } from '@/components/tab-bar';
 import { type WarPlacement } from '@/app/services/war';
 import { useWarActions } from '../_hooks/use-war-actions';
 import { toast } from 'sonner';
+import { WarTab, WarMode } from './war-types';
+import WarHeader from './war-header';
+import WarManagementTab from './war-defense-tab';
+import WarDefendersTab from './war-attacker-tab';
 
-const WarDefenseMap = dynamic(() => import('./war-defense-map'), {
-  loading: () => <FullPageSpinner />,
-});
+export { WarTab, WarMode };
 
 const WarChampionSelector = dynamic(() => import('./war-champion-selector'), {
   loading: () => null,
@@ -36,23 +27,9 @@ const WarAttackerSelector = dynamic(() => import('./war-attacker-selector'), {
   loading: () => null,
 });
 
-const WarAttackerPanel = dynamic(() => import('./war-attacker-panel'), {
-  loading: () => null,
-});
-
 const CreateWarDialog = dynamic(() => import('./create-war-dialog'), {
   loading: () => null,
 });
-
-export enum WarTab {
-  Management = 'management',
-  Defenders = 'defenders',
-}
-
-export enum WarMode {
-  Defenders = 'defenders',
-  Attackers = 'attackers',
-}
 
 export default function WarContent() {
   const { t } = useI18n();
@@ -158,30 +135,11 @@ export default function WarContent() {
         <p className='text-muted-foreground'>{t.game.war.noAlliance}</p>
       ) : (
         <>
-          {/* Alliance selector — hidden when only one alliance */}
-          {alliances.length > 1 && (
-            <Select
-              value={selectedAllianceId}
-              onValueChange={setSelectedAllianceId}
-            >
-              <SelectTrigger
-                className='w-48'
-                data-cy='alliance-select'
-              >
-                <SelectValue placeholder={t.game.defense.alliance} />
-              </SelectTrigger>
-              <SelectContent>
-                {alliances.map((a) => (
-                  <SelectItem
-                    key={a.id}
-                    value={a.id}
-                  >
-                    [{a.tag}] {a.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          <WarHeader
+            alliances={alliances}
+            selectedAllianceId={selectedAllianceId}
+            onAllianceChange={setSelectedAllianceId}
+          />
 
           {/* Tabs */}
           <TabBar
@@ -192,77 +150,16 @@ export default function WarContent() {
 
           {/* ── Management tab ──────────────────────────── */}
           {activeTab === WarTab.Management && (
-            <div className='space-y-4'>
-              {/* War selector + actions */}
-              <div className='flex flex-wrap items-center gap-3'>
-                <Select
-                  value={selectedWarId}
-                  onValueChange={setSelectedWarId}
-                >
-                  <SelectTrigger
-                    className='w-56'
-                    data-cy='war-select'
-                  >
-                    <SelectValue placeholder={t.game.war.selectWar} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {wars.map((w) => (
-                      <SelectItem
-                        key={w.id}
-                        value={w.id}
-                        data-cy={`war-option-${w.id}`}
-                      >
-                        vs {w.opponent_name}
-                        {w.status === 'ended' ? ' ✓' : ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {canManageWar && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span>
-                          <Button
-                            variant='default'
-                            onClick={() => setShowCreateDialog(true)}
-                            disabled={hasActiveWar}
-                            data-cy='declare-war-btn'
-                          >
-                            <Swords className='w-4 h-4 mr-2' />
-                            {t.game.war.declareWar}
-                          </Button>
-                        </span>
-                      </TooltipTrigger>
-                      {hasActiveWar && (
-                        <TooltipContent>{t.game.war.declareWarTooltip}</TooltipContent>
-                      )}
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-
-                {canManageWar && selectedWar?.status === 'active' && (
-                  <Button
-                    variant='destructive'
-                    onClick={() => setShowEndWarConfirm(true)}
-                    data-cy='end-war-btn'
-                  >
-                    <Flag className='w-4 h-4 mr-2' />
-                    {t.game.war.endWar}
-                  </Button>
-                )}
-              </div>
-
-              {wars.length === 0 && <p className='text-muted-foreground'>{t.game.war.noWar}</p>}
-
-              {selectedWar && (
-                <div className='text-sm text-muted-foreground'>
-                  vs{' '}
-                  <span className='font-semibold text-foreground'>{selectedWar.opponent_name}</span>
-                </div>
-              )}
-            </div>
+            <WarManagementTab
+              wars={wars}
+              selectedWarId={selectedWarId}
+              onWarChange={setSelectedWarId}
+              canManageWar={canManageWar}
+              hasActiveWar={hasActiveWar}
+              selectedWar={selectedWar}
+              onOpenCreateDialog={() => setShowCreateDialog(true)}
+              onOpenEndWarConfirm={() => setShowEndWarConfirm(true)}
+            />
           )}
 
           {/* ── Defenders tab ────────────────────────────── */}
@@ -271,111 +168,21 @@ export default function WarContent() {
               {!activeWarId ? (
                 <p className='text-muted-foreground'>{t.game.war.noActiveWar}</p>
               ) : (
-                <div className='space-y-4'>
-                  {/* Controls row: opponent name + BG picker + mode toggle + clear */}
-                  <div className='flex flex-wrap items-center gap-3'>
-                    {/* Opponent name */}
-                    {activeWar && (
-                      <div className='flex items-center gap-2'>
-                        <Swords className='w-4 h-4 text-muted-foreground' />
-                        <span className='text-sm font-semibold'>vs {activeWar.opponent_name}</span>
-                      </div>
-                    )}
-
-                    {/* BG button group */}
-                    <div
-                      className='flex gap-1 rounded-md border p-1'
-                      data-cy='bg-picker'
-                    >
-                      {[1, 2, 3].map((bg) => (
-                        <button
-                          key={bg}
-                          onClick={() => setSelectedBg(bg)}
-                          className={cn(
-                            'px-3 py-1 rounded text-sm font-semibold transition-colors',
-                            selectedBg === bg
-                              ? 'bg-primary text-primary-foreground'
-                              : 'text-muted-foreground hover:bg-accent'
-                          )}
-                          data-cy={`bg-btn-${bg}`}
-                        >
-                          G{bg}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Mode toggle — visible to officers/managers only */}
-                    {canManageWar && (
-                      <div
-                        className='flex gap-1 rounded-md border p-1'
-                        data-cy='war-mode-toggle'
-                      >
-                        <button
-                          onClick={() => setWarMode(WarMode.Defenders)}
-                          className={cn(
-                            'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold transition-colors',
-                            warMode === WarMode.Defenders
-                              ? 'bg-primary text-primary-foreground'
-                              : 'text-muted-foreground hover:bg-accent'
-                          )}
-                          data-cy='war-mode-defenders'
-                        >
-                          <Shield className='w-3.5 h-3.5' />
-                          {t.game.war.modeDefenders}
-                        </button>
-                        <button
-                          onClick={() => setWarMode(WarMode.Attackers)}
-                          className={cn(
-                            'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold transition-colors',
-                            warMode === WarMode.Attackers
-                              ? 'bg-primary text-primary-foreground'
-                              : 'text-muted-foreground hover:bg-accent'
-                          )}
-                          data-cy='war-mode-attackers'
-                        >
-                          <Swords className='w-3.5 h-3.5' />
-                          {t.game.war.modeAttackers}
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Clear BG button */}
-                    {canManageWar && placements.length > 0 && (
-                      <Button
-                        variant='outline'
-                        onClick={() => setShowClearConfirm(true)}
-                        data-cy='clear-war-bg-btn'
-                      >
-                        <Trash2 className='w-4 h-4 mr-2' />
-                        {t.game.war.clearAll}
-                      </Button>
-                    )}
-                  </div>
-
-                  {warLoading ? (
-                    <FullPageSpinner />
-                  ) : (
-                    <div className='flex gap-4'>
-                      <div className='overflow-x-auto flex-1'>
-                        <WarDefenseMap
-                          placements={placements}
-                          onNodeClick={handleNodeClick}
-                          onRemove={handleRemoveDefender}
-                          canManage={canManageWar && warMode === WarMode.Defenders}
-                        />
-                      </div>
-                      {warMode === WarMode.Attackers && (
-                        <div className='w-64 flex-shrink-0'>
-                          <WarAttackerPanel
-                            placements={placements}
-                            onRemoveAttacker={handleRemoveAttacker}
-                            onUpdateKo={handleUpdateKo}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                <WarDefendersTab
+                  activeWar={activeWar}
+                  selectedBg={selectedBg}
+                  onBgChange={setSelectedBg}
+                  canManageWar={canManageWar}
+                  warMode={warMode}
+                  onWarModeChange={setWarMode}
+                  warLoading={warLoading}
+                  placements={placements}
+                  onNodeClick={handleNodeClick}
+                  onRemoveDefender={handleRemoveDefender}
+                  onRemoveAttacker={handleRemoveAttacker}
+                  onUpdateKo={handleUpdateKo}
+                  onOpenClearConfirm={() => setShowClearConfirm(true)}
+                />
               )}
             </>
           )}
