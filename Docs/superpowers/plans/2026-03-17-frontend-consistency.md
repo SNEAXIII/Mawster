@@ -217,7 +217,7 @@ SPEC=cypress/e2e/<feature>/<spec>.cy.ts make e2e
     const [alliances, setAlliances] = useState<Alliance[]>([]);
     const [selectedAllianceId, setSelectedAllianceId] = useState<string>(initialAllianceId);
     const [selectedBg, setSelectedBg] = useState<number>(initialBg);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     const refresh = useCallback(async () => {
       setLoading(true);
