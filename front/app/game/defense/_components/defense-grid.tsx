@@ -28,8 +28,6 @@ const DefenseSidePanel = dynamic(() => import('./defense-side-panel'), {
 });
 
 interface DefenseGridProps {
-  allianceId: string;
-  bg: number;
   defenseSummary: DefenseSummary | null;
   availableChampions: AvailableChampion[];
   bgMembers: BgMember[];

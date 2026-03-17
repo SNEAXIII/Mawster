@@ -119,8 +119,6 @@ export default function DefensePageContent({
       />
 
       <DefenseGrid
-        allianceId={selectedAllianceId}
-        bg={selectedBg}
         defenseSummary={defenseSummary}
         availableChampions={availableChampions}
         bgMembers={bgMembers}
