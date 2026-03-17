@@ -13,15 +13,17 @@ The frontend has grown unevenly across feature pages. Some pages follow a clean 
 
 ## Phase 1 — Homogenize Structure
 
-**Convention target** (already applied in `war/` and `defense/`):
+**Convention target:**
 
 ```
 app/game/<feature>/
-  page.tsx                      ← thin shell: Suspense + session wrapper only (~15 lines)
+  page.tsx                      ← thin shell: Suspense + session wrapper + optional URL param reading
   _components/
     <feature>-content.tsx       ← logic + state + main render
     <sub-components>.tsx
 ```
+
+Note: `defense/page.tsx` is the reference implementation — it reads URL params and passes them as props to `defense-content.tsx`. This is acceptable shell behavior; the shell must not contain business logic or state.
 
 **Changes:**
 
@@ -30,9 +32,9 @@ app/game/<feature>/
 | `alliances/page.tsx` (494L) | Becomes a thin shell; content moves to `_components/alliance-content.tsx` |
 | `roster/page.tsx` (434L) | Becomes a thin shell; content moves to `_components/roster-content.tsx` |
 | `war/page.tsx` | Already a shell — no change needed |
-| `defense/` | Already follows convention — no change needed |
+| `defense/page.tsx` | Already a shell (URL params + props) — no change needed |
 
-Existing `_components/` sub-components in both pages are untouched.
+Existing `_components/` sub-components in both pages are untouched **during Phase 1**.
 
 **Success criteria:** Every `game/` page follows the exact same file structure. A developer opening any page immediately finds the same pattern.
 
@@ -46,10 +48,14 @@ Centralizes the pattern repeated across war, defense, and alliances:
 
 - Fetches `getMyAlliances` on mount
 - Manages `selectedAllianceId` + `selectedBg` state
-- Syncs with URL params (`?alliance=&bg=`)
 - Returns `{ alliances, selectedAllianceId, setSelectedAllianceId, selectedBg, setSelectedBg, loading }`
 
-Each of the three consuming pages loses ~40–60 lines of identical boilerplate.
+**URL param handling is out of scope for this hook.** Each page handles URL params differently:
+- `war-content.tsx` — no URL syncing (pure internal state); unchanged
+- `defense/page.tsx` — reads URL params and passes as props; unchanged
+- `alliances/page.tsx` — reads and writes URL params internally; moves to `alliance-content.tsx` as-is
+
+Each of the three consuming pages loses ~40–60 lines of alliance-fetching boilerplate.
 
 ### `app/game/war/_hooks/use-war-actions.ts` (new)
 
@@ -109,7 +115,7 @@ After the page→content move, extract inline JSX blocks:
 
 ### `roster-import-export.tsx` (446L)
 
-Shared component — no structural split needed, but extract a local hook `useRosterImportExport` to separate logic from rendering.
+Shared component — no structural split needed, but extract a local hook `useRosterImportExport` (at `front/components/use-roster-import-export.ts`) to separate logic from rendering.
 
 **Success criteria:** No file in `_components/` exceeds 150 lines. Every component has a single clear responsibility.
 
@@ -119,6 +125,7 @@ Shared component — no structural split needed, but extract a local hook `useRo
 
 **New files:**
 - `front/hooks/use-alliance-selector.ts`
+- `front/components/use-roster-import-export.ts`
 - `front/app/game/war/_hooks/use-war-actions.ts`
 - `front/app/game/defense/_hooks/use-defense-actions.ts`
 - `front/app/game/alliances/_components/alliance-content.tsx`
