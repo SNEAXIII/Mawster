@@ -72,7 +72,7 @@ export default function WarContent() {
   } = useWarActions(selectedAllianceId, selectedBg);
 
   const [activeTab, setActiveTab] = useState<WarTab>(WarTab.Management);
-  const [warMode, setWarMode] = useState<WarMode>(WarMode.Attackers);
+  const [warMode, setWarMode] = useState<WarMode>(WarMode.Defenders);
 
   // ─── Auto-select first alliance ──────────────────────────
   useEffect(() => {
