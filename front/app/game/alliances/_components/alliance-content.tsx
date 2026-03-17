@@ -23,18 +23,16 @@ import {
   getMyAllianceRoles,
 } from '@/app/services/game';
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { useRequiredSession } from '@/hooks/use-required-session';
 import { AllianceRoleProvider } from '@/hooks/use-alliance-role';
 import { useAllianceContext } from '@/app/contexts/alliance-context';
-import { Shield, Mail, Check, X } from 'lucide-react';
 import TabBar, { type TabItem } from '@/components/tab-bar';
 
 import CreateAllianceForm from './create-alliance-form';
-import AllianceCard from './alliance-card';
 import AllianceRosterDialog from './alliance-roster-dialog';
+import InvitationsSection from './invitations-section';
+import AlliancesTab from './alliances-tab';
 
 const DefensePageContent = dynamic(() => import('../../defense/_components/defense-content'), {
   loading: () => <FullPageSpinner />,
@@ -332,58 +330,11 @@ export default function AllianceContent() {
       <div className='w-full px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
         {/* My Invitations — always visible above tabs */}
         {myInvitations.length > 0 && (
-          <Card data-cy='my-invitations-section'>
-            <CardContent className='py-3 sm:py-4 px-3 sm:px-6 space-y-3'>
-              <div className='flex items-center gap-2'>
-                <Mail className='h-5 w-5 text-blue-500' />
-                <h2 className='text-sm font-medium text-muted-foreground'>
-                  {t.game.alliances.myInvitations} ({myInvitations.length})
-                </h2>
-              </div>
-              <div className='space-y-2'>
-                {myInvitations.map((inv) => (
-                  <div
-                    key={inv.id}
-                    data-cy={`my-invitation-${inv.alliance_name}`}
-                    className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-md bg-accent/50 border border-border'
-                  >
-                    <div className='space-y-0.5'>
-                      <p className='text-sm font-medium text-foreground'>
-                        {inv.alliance_name}{' '}
-                        <span className='text-xs text-purple-700 font-bold'>
-                          [{inv.alliance_tag}]
-                        </span>
-                      </p>
-                      <p className='text-xs text-muted-foreground'>
-                        {t.game.alliances.invitedBy} {inv.invited_by_pseudo} ·{' '}
-                        {inv.game_account_pseudo}
-                      </p>
-                    </div>
-                    <div className='flex items-center gap-2'>
-                      <Button
-                        size='sm'
-                        variant='default'
-                        data-cy='accept-invitation'
-                        onClick={() => handleAcceptInvitation(inv.id)}
-                      >
-                        <Check className='h-3 w-3 mr-1' />
-                        {t.game.alliances.acceptInvitation}
-                      </Button>
-                      <Button
-                        size='sm'
-                        variant='outline'
-                        data-cy='decline-invitation'
-                        onClick={() => handleDeclineInvitation(inv.id)}
-                      >
-                        <X className='h-3 w-3 mr-1' />
-                        {t.game.alliances.declineInvitation}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <InvitationsSection
+            invitations={myInvitations}
+            onAccept={handleAcceptInvitation}
+            onDecline={handleDeclineInvitation}
+          />
         )}
 
         {/* Tabs */}
@@ -411,42 +362,26 @@ export default function AllianceContent() {
 
         {/* Alliances tab */}
         {activeTab === AllianceTab.Alliances && (
-          <>
-            {alliances.length === 0 ? (
-              <Card data-cy='alliance-empty-state'>
-                <CardContent className='py-12 text-center text-gray-500'>
-                  <Shield className='h-12 w-12 mx-auto mb-3 text-muted-foreground' />
-                  <p data-cy='alliance-empty-text'>{t.game.alliances.empty}</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className='space-y-4'>
-                {alliances.map((alliance) => (
-                  <AllianceCard
-                    key={alliance.id}
-                    alliance={alliance}
-                    locale={locale}
-                    memberAllianceId={memberAllianceId}
-                    memberAccountId={memberAccountId}
-                    eligibleMembers={eligibleMembers}
-                    onMemberAccountChange={setMemberAccountId}
-                    onOpenInviteMember={handleOpenInviteMember}
-                    onCloseInviteMember={() => {
-                      setMemberAllianceId(null);
-                      setMemberAccountId('');
-                    }}
-                    onInviteMember={handleInviteMember}
-                    onRefresh={handleMemberRefresh}
-                    onViewRoster={(gameAccountId, pseudo, canReq) => {
-                      setRosterTarget({ gameAccountId, pseudo, canRequestUpgrade: canReq });
-                    }}
-                    pendingInvitations={pendingInvitations[alliance.id] ?? []}
-                    onCancelInvitation={handleCancelInvitation}
-                  />
-                ))}
-              </div>
-            )}
-          </>
+          <AlliancesTab
+            alliances={alliances}
+            locale={locale}
+            memberAllianceId={memberAllianceId}
+            memberAccountId={memberAccountId}
+            eligibleMembers={eligibleMembers}
+            pendingInvitations={pendingInvitations}
+            onMemberAccountChange={setMemberAccountId}
+            onOpenInviteMember={handleOpenInviteMember}
+            onCloseInviteMember={() => {
+              setMemberAllianceId(null);
+              setMemberAccountId('');
+            }}
+            onInviteMember={handleInviteMember}
+            onRefresh={handleMemberRefresh}
+            onViewRoster={(gameAccountId, pseudo, canReq) => {
+              setRosterTarget({ gameAccountId, pseudo, canRequestUpgrade: canReq });
+            }}
+            onCancelInvitation={handleCancelInvitation}
+          />
         )}
 
         {/* Defense tab */}
