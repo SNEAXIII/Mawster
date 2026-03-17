@@ -14,10 +14,8 @@ import { useWarActions } from '../_hooks/use-war-actions';
 import { toast } from 'sonner';
 import { WarTab, WarMode } from './war-types';
 import WarHeader from './war-header';
-import WarManagementTab from './war-defense-tab';
-import WarDefendersTab from './war-attacker-tab';
-
-export { WarTab, WarMode };
+import WarManagementTab from './war-management-tab';
+import WarDefendersTab from './war-defenders-tab';
 
 const WarChampionSelector = dynamic(() => import('./war-champion-selector'), {
   loading: () => null,
