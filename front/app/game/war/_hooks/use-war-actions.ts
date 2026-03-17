@@ -32,6 +32,8 @@ export function useWarActions(selectedAllianceId: string, selectedBg: number) {
   const [showEndWarConfirm, setShowEndWarConfirm] = useState(false);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tRef = useRef(t);
+  useEffect(() => { tRef.current = t; }, [t]);
 
   const activeWarId = wars.find((w) => w.status === 'active')?.id ?? '';
 
@@ -42,14 +44,14 @@ export function useWarActions(selectedAllianceId: string, selectedBg: number) {
       try {
         const data = await getWars(allianceId);
         setWars(data);
-        if (data.length > 0 && !selectedWarId) {
-          setSelectedWarId(data[0].id);
+        if (data.length > 0) {
+          setSelectedWarId((current) => current || data[0]?.id || '');
         }
       } catch {
-        toast.error(t.game.war.loadError);
+        toast.error(tRef.current.game.war.loadError);
       }
     },
-    [t, selectedWarId]
+    []
   );
 
   // ─── Fetch war defense ───────────────────────────────────
@@ -61,12 +63,12 @@ export function useWarActions(selectedAllianceId: string, selectedBg: number) {
         const summary = await getWarDefense(selectedAllianceId, activeWarId, selectedBg);
         setWarSummary(summary);
       } catch {
-        if (!silent) toast.error(t.game.war.loadError);
+        if (!silent) toast.error(tRef.current.game.war.loadError);
       } finally {
         if (!silent) setWarLoading(false);
       }
     },
-    [selectedAllianceId, activeWarId, selectedBg, t]
+    [selectedAllianceId, activeWarId, selectedBg]
   );
 
   useEffect(() => {
@@ -75,14 +77,14 @@ export function useWarActions(selectedAllianceId: string, selectedBg: number) {
       setWars([]);
       fetchWars(selectedAllianceId);
     }
-  }, [selectedAllianceId]);
+  }, [selectedAllianceId, fetchWars]);
 
   useEffect(() => {
     setWarSummary(null);
     if (activeWarId) {
       fetchWarDefense();
     }
-  }, [activeWarId, selectedBg]);
+  }, [activeWarId, selectedBg, fetchWarDefense]);
 
   // Polling every 10s
   useEffect(() => {
@@ -151,7 +153,7 @@ export function useWarActions(selectedAllianceId: string, selectedBg: number) {
 
   const handleAssignAttacker = async (
     championUserId: string,
-    pseudo: string,
+    _pseudo: string,
     championName: string
   ) => {
     if (!selectedAllianceId || !activeWarId || attackerSelectorNode === null) return;

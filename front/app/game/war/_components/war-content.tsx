@@ -61,7 +61,7 @@ export enum WarMode {
 
 export default function WarContent() {
   const { t } = useI18n();
-  const { canManage } = useAllianceRole();
+  const { canManage, loading: roleLoading } = useAllianceRole();
 
   useRequiredSession();
 
@@ -102,7 +102,7 @@ export default function WarContent() {
   } = useWarActions(selectedAllianceId, selectedBg);
 
   const [activeTab, setActiveTab] = useState<WarTab>(WarTab.Management);
-  const [warMode, setWarMode] = useState<WarMode>(WarMode.Attackers);
+  const [warMode, setWarMode] = useState<WarMode>(WarMode.Defenders);
 
   // ─── Auto-select first alliance ──────────────────────────
   useEffect(() => {
@@ -113,13 +113,13 @@ export default function WarContent() {
 
   // Redirect non-officers away from management tab
   useEffect(() => {
-    if (!loading && activeTab === WarTab.Management) {
+    if (!loading && !roleLoading && activeTab === WarTab.Management) {
       const alliance = alliances.find((a) => a.id === selectedAllianceId);
       if (alliance && !canManage(alliance)) {
         setActiveTab(WarTab.Defenders);
       }
     }
-  }, [loading, selectedAllianceId, alliances, canManage]);
+  }, [loading, roleLoading, selectedAllianceId, alliances, canManage]);
 
   // ─── Actions ─────────────────────────────────────────────
 
@@ -311,37 +311,35 @@ export default function WarContent() {
                       ))}
                     </div>
 
-                    {/* Mode toggle — visible to all */}
-                    {true && (
-                      <div className='flex gap-1 rounded-md border p-1' data-cy='war-mode-toggle'>
-                        <button
-                          onClick={() => setWarMode(WarMode.Defenders)}
-                          className={cn(
-                            'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold transition-colors',
-                            warMode === WarMode.Defenders
-                              ? 'bg-primary text-primary-foreground'
-                              : 'text-muted-foreground hover:bg-accent'
-                          )}
-                          data-cy='war-mode-defenders'
-                        >
-                          <Shield className='w-3.5 h-3.5' />
-                          {t.game.war.modeDefenders}
-                        </button>
-                        <button
-                          onClick={() => setWarMode(WarMode.Attackers)}
-                          className={cn(
-                            'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold transition-colors',
-                            warMode === WarMode.Attackers
-                              ? 'bg-primary text-primary-foreground'
-                              : 'text-muted-foreground hover:bg-accent'
-                          )}
-                          data-cy='war-mode-attackers'
-                        >
-                          <Swords className='w-3.5 h-3.5' />
-                          {t.game.war.modeAttackers}
-                        </button>
-                      </div>
-                    )}
+                    {/* Mode toggle — visible to officers/managers only */}
+                    {canManageWar && <div className='flex gap-1 rounded-md border p-1' data-cy='war-mode-toggle'>
+                      <button
+                        onClick={() => setWarMode(WarMode.Defenders)}
+                        className={cn(
+                          'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold transition-colors',
+                          warMode === WarMode.Defenders
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:bg-accent'
+                        )}
+                        data-cy='war-mode-defenders'
+                      >
+                        <Shield className='w-3.5 h-3.5' />
+                        {t.game.war.modeDefenders}
+                      </button>
+                      <button
+                        onClick={() => setWarMode(WarMode.Attackers)}
+                        className={cn(
+                          'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold transition-colors',
+                          warMode === WarMode.Attackers
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:bg-accent'
+                        )}
+                        data-cy='war-mode-attackers'
+                      >
+                        <Swords className='w-3.5 h-3.5' />
+                        {t.game.war.modeAttackers}
+                      </button>
+                    </div>}
 
                     {/* Clear BG button */}
                     {canManageWar && placements.length > 0 && (
