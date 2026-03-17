@@ -1,9 +1,8 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { useI18n } from '@/app/i18n';
-import { toast } from 'sonner';
 import { useRequiredSession } from '@/hooks/use-required-session';
 import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { FullPageSpinner } from '@/components/full-page-spinner';
@@ -20,20 +19,7 @@ import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { Shield, Trash2, Download, Upload } from 'lucide-react';
 
 import { useAllianceSelector } from '@/hooks/use-alliance-selector';
-import {
-  type DefenseSummary,
-  type AvailableChampion,
-  type BgMember,
-  type DefenseImportReport,
-  getDefense,
-  placeDefender,
-  removeDefender,
-  clearDefense,
-  getAvailableChampions,
-  getBgMembers,
-  exportDefense,
-  importDefense,
-} from '@/app/services/defense';
+import { useDefenseActions } from '../_hooks/use-defense-actions';
 
 import DefenseImportReportDialog from './defense-import-report-dialog';
 
@@ -74,60 +60,30 @@ export default function DefensePageContent({
     loading,
   } = useAllianceSelector({ initialAllianceId, initialBg });
 
-  // State
-  const [defenseLoading, setDefenseLoading] = useState(false);
-
-  // Defense data
-  const [defenseSummary, setDefenseSummary] = useState<DefenseSummary | null>(null);
-  const [availableChampions, setAvailableChampions] = useState<AvailableChampion[]>([]);
-  const [bgMembers, setBgMembers] = useState<BgMember[]>([]);
-
-  // Dialogs
-  const [selectorNode, setSelectorNode] = useState<number | null>(null);
-  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
-  const [importReport, setImportReport] = useState<DefenseImportReport | null>(null);
-  const [importReportOpen, setImportReportOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
   const userCanManage = selectedAlliance
     ? canManage(selectedAlliance) || isOwner(selectedAlliance)
     : false;
 
-  // ─── Data fetching ─────────────────────────────────────
-  const fetchDefense = useCallback(
-    async (silent = false) => {
-      if (!selectedAllianceId) return;
-      if (!silent) setDefenseLoading(true);
-      try {
-        const [defense, champions, members] = await Promise.all([
-          getDefense(selectedAllianceId, selectedBg),
-          getAvailableChampions(selectedAllianceId, selectedBg),
-          getBgMembers(selectedAllianceId, selectedBg),
-        ]);
-        setDefenseSummary(defense);
-        setAvailableChampions(champions);
-        setBgMembers(members);
-      } catch (err: any) {
-        if (!silent) toast.error(t.game.defense.loadError);
-      } finally {
-        if (!silent) setDefenseLoading(false);
-      }
-    },
-    [selectedAllianceId, selectedBg, t]
-  );
-
-  const fetchDefenseRef = useRef(fetchDefense);
-  useEffect(() => {
-    fetchDefenseRef.current = fetchDefense;
-  }, [fetchDefense]);
-
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const resetPollTimer = useCallback(() => {
-    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-    pollIntervalRef.current = setInterval(() => fetchDefenseRef.current(true), 10_000);
-  }, []);
+  const {
+    defenseSummary,
+    availableChampions,
+    bgMembers,
+    defenseLoading,
+    selectorNode,
+    setSelectorNode,
+    clearConfirmOpen,
+    setClearConfirmOpen,
+    importReportOpen,
+    setImportReportOpen,
+    importReport,
+    fileInputRef,
+    handlePlaceDefender,
+    handleRemoveDefender,
+    handleClearDefense,
+    handleExportDefense,
+    handleImportFile,
+  } = useDefenseActions(selectedAllianceId, selectedBg, onStateChange, selectedAlliance?.tag);
 
   // Auto-select first alliance when alliances load and none is selected
   useEffect(() => {
@@ -139,77 +95,10 @@ export default function DefensePageContent({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alliances]);
 
-  useEffect(() => {
-    if (selectedAllianceId) {
-      fetchDefense();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAllianceId, selectedBg]);
-
-  useEffect(() => {
-    if (!selectedAllianceId) return;
-    resetPollTimer();
-    return () => {
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-    };
-  }, [selectedAllianceId, selectedBg, resetPollTimer]);
-
   // ─── Actions ───────────────────────────────────────────
   const handleNodeClick = (nodeNumber: number) => {
     if (!userCanManage) return;
     setSelectorNode(nodeNumber);
-  };
-
-  const handlePlaceDefender = async (
-    championUserId: string,
-    gameAccountId: string,
-    championName: string
-  ) => {
-    if (!selectedAllianceId || selectorNode === null) return;
-    try {
-      await placeDefender(
-        selectedAllianceId,
-        selectedBg,
-        selectorNode,
-        championUserId,
-        gameAccountId
-      );
-      toast.success(
-        t.game.defense.placeSuccess
-          .replace('{name}', championName)
-          .replace('{node}', String(selectorNode))
-      );
-      setSelectorNode(null);
-      await fetchDefense(true);
-      resetPollTimer();
-    } catch (err: any) {
-      toast.error(err.message || t.game.defense.placeError);
-    }
-  };
-
-  const handleRemoveDefender = async (nodeNumber: number) => {
-    if (!selectedAllianceId) return;
-    try {
-      await removeDefender(selectedAllianceId, selectedBg, nodeNumber);
-      toast.success(t.game.defense.removeSuccess);
-      await fetchDefense(true);
-      resetPollTimer();
-    } catch (err: any) {
-      toast.error(err.message || t.game.defense.removeError);
-    }
-  };
-
-  const handleClearDefense = async () => {
-    if (!selectedAllianceId) return;
-    try {
-      await clearDefense(selectedAllianceId, selectedBg);
-      toast.success(t.game.defense.clearSuccess);
-      await fetchDefense(true);
-      resetPollTimer();
-    } catch (err: any) {
-      toast.error(err.message || t.game.defense.clearError);
-    }
-    setClearConfirmOpen(false);
   };
 
   const handleBgChange = (bg: string) => {
@@ -222,56 +111,6 @@ export default function DefensePageContent({
     setSelectedAllianceId(allianceId);
     setSelectedBg(1);
     onStateChange?.(allianceId, 1);
-  };
-
-  // ─── Import / Export ───────────────────────────────────
-  const handleExport = async () => {
-    if (!selectedAllianceId) return;
-    try {
-      const items = await exportDefense(selectedAllianceId, selectedBg);
-      if (items.length === 0) {
-        toast.warning(t.game.defense.importExport.emptyExport);
-        return;
-      }
-      const json = JSON.stringify(items, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      const tag = selectedAlliance?.tag ?? 'defense';
-      a.download = `defense_${tag}_bg${selectedBg}_${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success(
-        t.game.defense.importExport.exportedCount.replace('{count}', String(items.length))
-      );
-    } catch (err: any) {
-      toast.error(err.message || t.game.defense.importExport.exportError);
-    }
-  };
-
-  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !selectedAllianceId) return;
-    e.target.value = '';
-
-    try {
-      const text = await file.text();
-      const placements = JSON.parse(text);
-      if (!Array.isArray(placements) || placements.length === 0) {
-        toast.error(t.game.defense.importExport.invalidFile);
-        return;
-      }
-      const report = await importDefense(selectedAllianceId, selectedBg, placements);
-      setImportReport(report);
-      setImportReportOpen(true);
-      await fetchDefense(true);
-      resetPollTimer();
-    } catch (err: any) {
-      toast.error(err.message || t.game.defense.importExport.importError);
-    }
   };
 
   // ─── Render ────────────────────────────────────────────
@@ -364,7 +203,7 @@ export default function DefensePageContent({
                 <Button
                   variant='outline'
                   size='sm'
-                  onClick={handleExport}
+                  onClick={handleExportDefense}
                   data-cy='defense-export'
                 >
                   <Download className='w-4 h-4 mr-1' />
