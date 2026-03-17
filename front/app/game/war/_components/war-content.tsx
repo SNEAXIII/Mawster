@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useAllianceSelector } from '@/hooks/use-alliance-selector';
 import { useI18n } from '@/app/i18n';
 import { toast } from 'sonner';
 import { useRequiredSession } from '@/hooks/use-required-session';
@@ -26,7 +27,6 @@ import { Shield, Swords, Trash2, Flag } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import TabBar, { type TabItem } from '@/components/tab-bar';
 
-import { type Alliance, getMyAlliances } from '@/app/services/game';
 import {
   type War,
   type WarDefenseSummary,
@@ -79,14 +79,19 @@ export default function WarContent() {
 
   useRequiredSession();
 
-  const [alliances, setAlliances] = useState<Alliance[]>([]);
-  const [selectedAllianceId, setSelectedAllianceId] = useState('');
+  const {
+    alliances,
+    selectedAllianceId,
+    setSelectedAllianceId,
+    selectedBg,
+    setSelectedBg,
+    loading,
+  } = useAllianceSelector();
+
   const [wars, setWars] = useState<War[]>([]);
   const [selectedWarId, setSelectedWarId] = useState('');
 
   const activeWarId = wars.find((w) => w.status === 'active')?.id ?? '';
-  const [selectedBg, setSelectedBg] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [warLoading, setWarLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<WarTab>(WarTab.Management);
 
@@ -101,20 +106,12 @@ export default function WarContent() {
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // ─── Fetch alliances ─────────────────────────────────────
-  const fetchAlliances = useCallback(async () => {
-    try {
-      const data = await getMyAlliances();
-      setAlliances(data);
-      if (data.length > 0 && !selectedAllianceId) {
-        setSelectedAllianceId(data[0].id);
-      }
-    } catch {
-      toast.error(t.game.war.loadError);
-    } finally {
-      setLoading(false);
+  // ─── Auto-select first alliance ──────────────────────────
+  useEffect(() => {
+    if (alliances.length > 0 && !selectedAllianceId) {
+      setSelectedAllianceId(alliances[0].id);
     }
-  }, [t, selectedAllianceId]);
+  }, [alliances, selectedAllianceId, setSelectedAllianceId]);
 
   // ─── Fetch wars ──────────────────────────────────────────
   const fetchWars = useCallback(
@@ -149,10 +146,6 @@ export default function WarContent() {
     },
     [selectedAllianceId, activeWarId, selectedBg, t]
   );
-
-  useEffect(() => {
-    fetchAlliances();
-  }, []);
 
   useEffect(() => {
     if (selectedAllianceId) {
