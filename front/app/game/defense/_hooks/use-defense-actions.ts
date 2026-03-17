@@ -21,7 +21,6 @@ import {
 export function useDefenseActions(
   selectedAllianceId: string,
   selectedBg: number,
-  onStateChange?: (allianceId: string, bg: number) => void,
   selectedAllianceTag?: string
 ) {
   const { t } = useI18n();

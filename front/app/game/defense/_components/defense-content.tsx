@@ -83,7 +83,7 @@ export default function DefensePageContent({
     handleClearDefense,
     handleExportDefense,
     handleImportFile,
-  } = useDefenseActions(selectedAllianceId, selectedBg, onStateChange, selectedAlliance?.tag);
+  } = useDefenseActions(selectedAllianceId, selectedBg, selectedAlliance?.tag);
 
   // Auto-select first alliance when alliances load and none is selected
   useEffect(() => {
