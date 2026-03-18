@@ -14,6 +14,7 @@ const RESULTS_DIR = path.join(FRONT_DIR, 'cypress', 'results');
 const REPORTS_DIR = path.join(RESULTS_DIR, 'reports');
 const VIDEOS_DIR = path.join(RESULTS_DIR, 'videos');
 const SCREENSHOTS_DIR = path.join(RESULTS_DIR, 'screenshots');
+const HISTORY_FILE = path.join(ROOT, 'runner-results', 'e2e-history.json');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -117,6 +118,45 @@ function parseXmlResults(): TestResults {
   };
 }
 
+// ── History ───────────────────────────────────────────────────────────────────
+
+interface HistoryEntry {
+  timestamp: string;
+  branch: string;
+  type: 'all' | 'specific' | 'failing';
+  specs?: string[];
+  durationMs: number;
+  summary: { total: number; passed: number; failed: number };
+  failedTests: string[];
+}
+
+function currentBranch(): string {
+  try {
+    return execSync('git rev-parse --abbrev-ref HEAD', { cwd: ROOT, stdio: 'pipe' })
+      .toString()
+      .trim();
+  } catch {
+    return 'unknown';
+  }
+}
+
+function saveToHistory(entry: HistoryEntry): void {
+  const dir = path.dirname(HISTORY_FILE);
+  fs.mkdirSync(dir, { recursive: true });
+
+  let history: HistoryEntry[] = [];
+  if (fs.existsSync(HISTORY_FILE)) {
+    try {
+      history = JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf-8')) as HistoryEntry[];
+    } catch {
+      history = [];
+    }
+  }
+
+  history.push(entry);
+  fs.writeFileSync(HISTORY_FILE, JSON.stringify(history, null, 2));
+}
+
 function runCypress(specs?: string[]): TestResults {
   clearResults();
 
@@ -147,7 +187,17 @@ server.registerTool(
       "Supprime les résultats précédents, lance tous les tests Cypress, et retourne le résumé ainsi que les détails de chaque test échoué (suite, nom du test, message d'erreur).",
   },
   async () => {
+    const start = Date.now();
     const results = runCypress();
+    const durationMs = Date.now() - start;
+    saveToHistory({
+      timestamp: new Date().toISOString(),
+      branch: currentBranch(),
+      type: 'all',
+      durationMs,
+      summary: results.summary,
+      failedTests: results.failures.map((f) => f.test),
+    });
     return {
       content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
     };
@@ -176,6 +226,7 @@ server.registerTool(
   async ({ spec_files, grep }) => {
     clearResults();
 
+    const start = Date.now();
     const specArg = spec_files.length > 0 ? `--spec "${spec_files.join(',')}"` : '';
     const grepArg = grep ? `--env grep="${grep}"` : '';
     const cmd = `npx cypress run ${specArg} ${grepArg}`.trim();
@@ -186,8 +237,20 @@ server.registerTool(
       // Cypress exits with code 1 when tests fail — not a real error
     }
 
+    const durationMs = Date.now() - start;
+    const results = parseXmlResults();
+    saveToHistory({
+      timestamp: new Date().toISOString(),
+      branch: currentBranch(),
+      type: 'specific',
+      specs: spec_files,
+      durationMs,
+      summary: results.summary,
+      failedTests: results.failures.map((f) => f.test),
+    });
+
     return {
-      content: [{ type: 'text', text: JSON.stringify(parseXmlResults(), null, 2) }],
+      content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
     };
   }
 );
@@ -206,7 +269,18 @@ server.registerTool(
     },
   },
   async ({ spec_files }) => {
+    const start = Date.now();
     const results = runCypress(spec_files);
+    const durationMs = Date.now() - start;
+    saveToHistory({
+      timestamp: new Date().toISOString(),
+      branch: currentBranch(),
+      type: 'failing',
+      specs: spec_files,
+      durationMs,
+      summary: results.summary,
+      failedTests: results.failures.map((f) => f.test),
+    });
     return {
       content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
     };
