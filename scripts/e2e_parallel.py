@@ -15,6 +15,7 @@ import argparse
 import atexit
 import os
 import platform
+import signal
 import subprocess
 import sys
 import threading
@@ -43,10 +44,11 @@ def log(msg: str) -> None:
 
 def check_mariadb_running() -> None:
     """Verify the mariadb-test container is up."""
+    log("Checking if mariadb-test container is running...")
     result = subprocess.run(
         [
             "docker", "exec", MARIADB_CONTAINER,
-            "mysql", "-uroot", f"-p{MARIADB_ROOT_PASSWORD}",
+            "mariadb", "-uroot", f"-p{MARIADB_ROOT_PASSWORD}",
             "-e", "SELECT 1;",
         ],
         capture_output=True,
@@ -59,14 +61,20 @@ def check_mariadb_running() -> None:
 
 
 def docker_create_db(worker: int) -> None:
-    """CREATE DATABASE IF NOT EXISTS mawster_test_N via docker exec."""
+    """CREATE DATABASE IF NOT EXISTS mawster_test_N and GRANT privileges via docker exec."""
     db = f"{DB_PREFIX}{worker}"
+    db_user = os.environ.get("MARIADB_USER", "user")
     log(f"Worker {worker}: creating database {db}...")
+    sql = (
+        f"CREATE DATABASE IF NOT EXISTS `{db}`;"
+        f" GRANT ALL PRIVILEGES ON `{db}`.* TO '{db_user}'@'%';"
+        f" FLUSH PRIVILEGES;"
+    )
     result = subprocess.run(
         [
             "docker", "exec", MARIADB_CONTAINER,
-            "mysql", "-uroot", f"-p{MARIADB_ROOT_PASSWORD}",
-            "-e", f"CREATE DATABASE IF NOT EXISTS `{db}`;",
+            "mariadb", "-uroot", f"-p{MARIADB_ROOT_PASSWORD}",
+            "-e", sql,
         ],
         capture_output=True,
         text=True,
@@ -139,12 +147,40 @@ def run_cypress(worker: int, total: int) -> int:
         [
             NPX, "cypress", "run",
             "--env", f"backendUrl=http://localhost:{api_port},split={total},splitIndex={worker}",
-            "--config", f"baseUrl=http://localhost:{front_port}",
+            "--config", (
+                f"baseUrl=http://localhost:{front_port},"
+                f"screenshotsFolder=cypress/results/screenshots-{worker},"
+                f"videosFolder=cypress/results/videos-{worker}"
+            ),
         ],
         cwd=str(FRONT_DIR),
     )
     log(f"Worker {worker}: Cypress finished with exit code {result.returncode}")
     return result.returncode
+
+
+def kill_ports(ports: list[int]) -> None:
+    """Kill any process currently listening on the given ports."""
+    for port in ports:
+        if IS_WINDOWS:
+            result = subprocess.run(
+                ["netstat", "-ano"],
+                capture_output=True, text=True,
+            )
+            for line in result.stdout.splitlines():
+                if f":{port} " in line and "LISTENING" in line:
+                    parts = line.split()
+                    pid = parts[-1]
+                    subprocess.run(["taskkill", "/F", "/PID", pid], capture_output=True)
+                    log(f"Killed PID {pid} on port {port}")
+        else:
+            result = subprocess.run(
+                ["lsof", "-ti", f"tcp:{port}"],
+                capture_output=True, text=True,
+            )
+            for pid in result.stdout.strip().splitlines():
+                subprocess.run(["kill", "-9", pid], capture_output=True)
+                log(f"Killed PID {pid} on port {port}")
 
 
 def main() -> None:
@@ -158,6 +194,14 @@ def main() -> None:
     n = args.workers
 
     log(f"Starting E2E parallel run with {n} worker(s)...")
+
+    ports_to_free = [
+        *[BASE_API_PORT + i for i in range(n)],
+        *[BASE_FRONT_PORT + i for i in range(n)],
+    ]
+    log(f"Freeing ports: {ports_to_free}")
+    kill_ports(ports_to_free)
+
     check_mariadb_running()
 
     base_env = os.environ.copy()
@@ -179,8 +223,24 @@ def main() -> None:
                     p.kill()
                 except Exception:
                     pass
+        # Remove worker Next.js build dirs so Next.js doesn't re-add them to tsconfig.json
+        import shutil
+        for i in range(n):
+            next_dir = FRONT_DIR / f".next-{BASE_FRONT_PORT + i}"
+            if next_dir.exists():
+                shutil.rmtree(next_dir, ignore_errors=True)
+                log(f"Removed {next_dir.name}")
 
     atexit.register(cleanup)
+
+    def handle_sigint(sig, frame) -> None:
+        log("Interrupted — cleaning up...")
+        cleanup()
+        sys.exit(1)
+
+    signal.signal(signal.SIGINT, handle_sigint)
+    if hasattr(signal, "SIGTERM"):
+        signal.signal(signal.SIGTERM, handle_sigint)
 
     # Phase 1: create DBs and start servers in parallel
     errors: list[str] = []
