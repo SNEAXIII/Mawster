@@ -30,6 +30,7 @@ from tests.integration.endpoints.setup.user_setup import get_generic_user, push_
 from tests.utils.utils_db import load_objects
 from src.models import User
 from src.models.War import War
+from src.models.DefensePlacement import DefensePlacement
 from src.enums.Roles import Roles
 
 USER3_ID = uuid.UUID("00000000-0000-0000-0000-000000000003")
@@ -710,6 +711,77 @@ class TestAssignAttacker:
             headers=headers_member,
         )
         assert response.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_assign_attacker_regular_defense_conflict(self):
+        """Champion already in regular alliance defense cannot be assigned as war attacker."""
+        data = await _setup_attacker_scenario()
+        # Place Wolverine (data["champion_user"]) in regular defense for BG1
+        defense = DefensePlacement(
+            alliance_id=data["alliance"].id,
+            battlegroup=1,
+            node_number=5,
+            champion_user_id=data["champion_user"].id,
+            game_account_id=data["member"].id,
+        )
+        await load_objects([defense])
+
+        headers = create_auth_headers(user_id=str(USER2_ID))
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers,
+        )
+        assert response.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_available_attackers_excludes_regular_defense_champions(self):
+        """Champion in regular alliance defense must not appear in available attackers."""
+        data = await _setup_attacker_scenario()
+        # Place Wolverine in regular defense
+        defense = DefensePlacement(
+            alliance_id=data["alliance"].id,
+            battlegroup=1,
+            node_number=5,
+            champion_user_id=data["champion_user"].id,
+            game_account_id=data["member"].id,
+        )
+        await load_objects([defense])
+
+        headers = create_auth_headers(user_id=str(USER2_ID))
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-attackers",
+            headers=headers,
+        )
+        assert response.status_code == 200
+        names = [a["champion_name"] for a in response.json()]
+        assert "Wolverine" not in names
+
+    @pytest.mark.asyncio
+    async def test_available_attackers_excludes_defense_by_current_alliance_group(self):
+        """Defense filter uses member's current alliance_group, not stored battlegroup."""
+        data = await _setup_attacker_scenario()
+        # Simulate inconsistency: defense stored as battlegroup=2 but member is in BG1
+        # (can happen if member was moved after defense was created)
+        defense = DefensePlacement(
+            alliance_id=data["alliance"].id,
+            battlegroup=2,  # stored with wrong BG
+            node_number=5,
+            champion_user_id=data["champion_user"].id,
+            game_account_id=data["member"].id,
+        )
+        await load_objects([defense])
+
+        headers = create_auth_headers(user_id=str(USER2_ID))
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-attackers",
+            headers=headers,
+        )
+        assert response.status_code == 200
+        names = [a["champion_name"] for a in response.json()]
+        # Member is in BG1; their champion is in defense (stored as BG2 due to inconsistency).
+        # Robust fix: filter by member's current alliance_group, so still excluded.
+        assert "Wolverine" not in names
 
     @pytest.mark.asyncio
     async def test_assign_attacker_non_member_forbidden(self):

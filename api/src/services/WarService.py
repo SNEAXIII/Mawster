@@ -336,12 +336,16 @@ class WarService:
         placements = await cls._get_placements(session, war_id, battlegroup)
         defender_champion_ids = {p.champion_id for p in placements}
 
-        # Get champion_user_ids already placed in regular defense for this alliance+BG
+        # Get champion_user_ids already placed in regular defense for members currently in this BG.
+        # Join on GameAccount to use the member's current alliance_group rather than the stored
+        # battlegroup in DefensePlacement (which may be stale if the member was reassigned).
         defense_result = await session.exec(
-            select(DefensePlacement.champion_user_id).where(
+            select(DefensePlacement.champion_user_id)
+            .join(GameAccount, DefensePlacement.game_account_id == GameAccount.id)
+            .where(
                 and_(
                     DefensePlacement.alliance_id == alliance_id,
-                    DefensePlacement.battlegroup == battlegroup,
+                    GameAccount.alliance_group == battlegroup,
                 )
             )
         )
@@ -425,13 +429,20 @@ class WarService:
                 detail="This champion is already placed in the alliance defense",
             )
 
-        # 7. Check member has fewer than 3 attackers in this war+BG
-        member_attacker_count = sum(
-            1 for p in all_placements
-            if p.attacker_champion_user_id is not None
-            and p.attacker_champion_user is not None
-            and p.attacker_champion_user.game_account_id == ga.id
+        # 7. Check member has fewer than 3 attackers in this war+BG.
+        # Use a direct DB query instead of relying on selectinload being populated on all placements.
+        attacker_count_result = await session.exec(
+            select(WarDefensePlacement)
+            .join(ChampionUser, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
+            .where(
+                and_(
+                    WarDefensePlacement.war_id == war_id,
+                    WarDefensePlacement.battlegroup == battlegroup,
+                    ChampionUser.game_account_id == ga.id,
+                )
+            )
         )
+        member_attacker_count = len(attacker_count_result.all())
         if member_attacker_count >= 3:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
