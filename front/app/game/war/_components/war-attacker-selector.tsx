@@ -97,7 +97,7 @@ export default function WarAttackerSelector({
   const groups = Array.from(groupMap.values());
 
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4'>
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4' data-cy='war-attacker-search'>
       <div className='bg-card border rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col'>
         <div className='p-4 border-b flex items-center justify-between'>
           <h2 className='font-semibold'>

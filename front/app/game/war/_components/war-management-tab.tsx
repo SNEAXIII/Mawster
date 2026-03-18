@@ -55,7 +55,7 @@ export default function WarManagementTab({
               <SelectItem
                 key={w.id}
                 value={w.id}
-                data-cy={`war-option-${w.id}`}
+                data-cy={`war-option-${w.opponent_name}`}
               >
                 vs {w.opponent_name}
                 {w.status === 'ended' ? ' ✓' : ''}

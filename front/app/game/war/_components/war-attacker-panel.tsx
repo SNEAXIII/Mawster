@@ -80,6 +80,7 @@ export default function WarAttackerPanel({
                     </div>
 
                     <div className='flex-1 min-w-0'>
+                      <div className='text-[10px] font-medium truncate'>{p.attacker_champion_name}</div>
                       <div className='text-[10px] text-muted-foreground'>#{p.node_number}</div>
                     </div>
 

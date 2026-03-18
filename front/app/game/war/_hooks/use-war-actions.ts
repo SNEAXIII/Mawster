@@ -57,10 +57,10 @@ export function useWarActions(selectedAllianceId: string, selectedBg: number) {
   // ─── Fetch war defense ───────────────────────────────────
   const fetchWarDefense = useCallback(
     async (silent = false) => {
-      if (!selectedAllianceId || !activeWarId) return;
+      if (!selectedAllianceId || !selectedWarId) return;
       if (!silent) setWarLoading(true);
       try {
-        const summary = await getWarDefense(selectedAllianceId, activeWarId, selectedBg);
+        const summary = await getWarDefense(selectedAllianceId, selectedWarId, selectedBg);
         setWarSummary(summary);
       } catch {
         if (!silent) toast.error(tRef.current.game.war.loadError);
@@ -68,7 +68,7 @@ export function useWarActions(selectedAllianceId: string, selectedBg: number) {
         if (!silent) setWarLoading(false);
       }
     },
-    [selectedAllianceId, activeWarId, selectedBg]
+    [selectedAllianceId, selectedWarId, selectedBg]
   );
 
   useEffect(() => {
@@ -81,10 +81,10 @@ export function useWarActions(selectedAllianceId: string, selectedBg: number) {
 
   useEffect(() => {
     setWarSummary(null);
-    if (activeWarId) {
+    if (selectedWarId) {
       fetchWarDefense();
     }
-  }, [activeWarId, selectedBg, fetchWarDefense]);
+  }, [selectedWarId, selectedBg, fetchWarDefense]);
 
   // Polling every 10s
   useEffect(() => {

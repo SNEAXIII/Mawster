@@ -163,11 +163,11 @@ export default function WarContent() {
           {/* ── Defenders tab ────────────────────────────── */}
           {activeTab === WarTab.Defenders && (
             <>
-              {!activeWarId ? (
+              {!selectedWarId ? (
                 <p className='text-muted-foreground'>{t.game.war.noActiveWar}</p>
               ) : (
                 <WarDefendersTab
-                  activeWar={activeWar}
+                  activeWar={selectedWar}
                   selectedBg={selectedBg}
                   onBgChange={setSelectedBg}
                   canManageWar={canManageWar}

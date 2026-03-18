@@ -30,7 +30,7 @@ describe('War – Attackers mode', () => {
       .then(() => setupUser(`${prefix}-member`))
       .then((member) => {
         memberData = member;
-        return cy.apiCreateGameAccount(member.access_token, `${prefix}Member`, true);
+        return cy.apiCreateGameAccount(member.access_token, `${prefix}Member`.slice(0, 16), true);
       })
       .then((acc) => {
         memberAccId = acc.id;
@@ -74,7 +74,8 @@ describe('War – Attackers mode', () => {
       cy.navTo('war');
 
       cy.getByCy('tab-war-defenders').click();
-      // Mode toggle: Attackers should be active by default
+      // Switch to Attackers mode and verify it becomes active
+      cy.getByCy('war-mode-attackers').click();
       cy.getByCy('war-mode-attackers').should('have.class', 'bg-primary');
     });
   });
@@ -90,6 +91,7 @@ describe('War – Attackers mode', () => {
         cy.uiLogin(ownerData.login);
         cy.navTo('war');
         cy.getByCy('tab-war-defenders').click();
+        cy.getByCy('war-mode-attackers').click();
 
         // Should see the attacker entry
         cy.getByCy('attacker-entry-node-10').should('be.visible');
@@ -108,6 +110,7 @@ describe('War – Attackers mode', () => {
         cy.uiLogin(ownerData.login);
         cy.navTo('war');
         cy.getByCy('tab-war-defenders').click();
+        cy.getByCy('war-mode-attackers').click();
 
         // Initial KO = 0
         cy.getByCy('ko-value-node-10').should('have.text', '0');
@@ -137,6 +140,7 @@ describe('War – Attackers mode', () => {
         cy.uiLogin(ownerData.login);
         cy.navTo('war');
         cy.getByCy('tab-war-defenders').click();
+        cy.getByCy('war-mode-attackers').click();
 
         cy.getByCy('attacker-entry-node-10').should('be.visible');
         cy.getByCy('remove-attacker-node-10').click();
@@ -179,6 +183,7 @@ describe('War – Attackers mode', () => {
       cy.uiLogin(memberData.login);
       cy.navTo('war');
       cy.getByCy('tab-war-defenders').click();
+      cy.getByCy('war-mode-attackers').click();
 
       // Click node 20 which has no defender
       cy.getByCy('war-node-20').scrollIntoView().click({ force: true });
@@ -198,6 +203,7 @@ describe('War – Attackers mode', () => {
         cy.uiLogin(ownerData.login);
         cy.navTo('war');
         cy.getByCy('tab-war-defenders').click();
+        cy.getByCy('war-mode-attackers').click();
 
         // Panel should show 1/3
         cy.contains('1/3').should('be.visible');

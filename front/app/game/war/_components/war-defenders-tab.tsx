@@ -84,12 +84,11 @@ export default function WarDefendersTab({
           ))}
         </div>
 
-        {/* Mode toggle — visible to officers/managers only */}
-        {canManageWar && (
-          <div
-            className='flex gap-1 rounded-md border p-1'
-            data-cy='war-mode-toggle'
-          >
+        {/* Mode toggle — visible to officers only */}
+        {canManageWar && <div
+          className='flex gap-1 rounded-md border p-1'
+          data-cy='war-mode-toggle'
+        >
             <button
               onClick={() => onWarModeChange(WarMode.Defenders)}
               className={cn(
@@ -116,8 +115,7 @@ export default function WarDefendersTab({
               <Swords className='w-3.5 h-3.5' />
               {t.game.war.modeAttackers}
             </button>
-          </div>
-        )}
+          </div>}
 
         {/* Clear BG button */}
         {canManageWar && placements.length > 0 && (

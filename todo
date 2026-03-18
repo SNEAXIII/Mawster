@@ -2,3 +2,6 @@ ajouter une feature
     "je compte up ce perso"
     je veux que ce groupe aie tel perso monté def par les admins (commme la update request mais pas nominatif a une personne spécifique)
     un écran de visualisation / comparatif des persos monté par groupe/par alliance avec filters
+
+bug quand une ga est select, ca désync le display
+check la current war si il y a pas un endpoint

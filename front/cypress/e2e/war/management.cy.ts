@@ -1,4 +1,4 @@
-import { setupWarOwner } from '../../support/e2e';
+import { setupWarOwner, setupUser } from '../../support/e2e';
 
 describe('War – Management tab (declare & end war)', () => {
   beforeEach(() => {
@@ -38,10 +38,10 @@ describe('War – Management tab (declare & end war)', () => {
   it('declare war button is not visible for non-officers', () => {
     setupWarOwner('war-mgmt-nodeclare', 'NoDeclareOwner', 'NoDeclareAlliance', 'ND').then(
       ({ allianceId }) => {
-        cy.registerUser('war-mgmt-nodeclare-member').then((memberData) => {
+        setupUser('war-mgmt-nodeclare-member').then((memberData) => {
           cy.apiCreateGameAccount(memberData.access_token, 'JustAMember', true).then((acc) => {
             cy.apiForceJoinAlliance(acc.id, allianceId).then(() => {
-              cy.uiLogin('war-mgmt-nodeclare-member');
+              cy.uiLogin(memberData.login);
               cy.navTo('war');
               cy.getByCy('declare-war-btn').should('not.exist');
             });
@@ -61,7 +61,7 @@ describe('War – Management tab (declare & end war)', () => {
           cy.navTo('war');
 
           cy.getByCy('war-select').click();
-          cy.contains('vs EndEnemy').click();
+          cy.getByCy('war-option-EndEnemy').click();
 
           cy.getByCy('end-war-btn').should('be.visible').click();
           cy.getByCy('confirmation-dialog-confirm').click();
@@ -97,7 +97,7 @@ describe('War – Management tab (declare & end war)', () => {
           cy.navTo('war');
 
           cy.getByCy('war-select').click();
-          cy.contains('vs AlreadyDone').click();
+          cy.getByCy('war-option-AlreadyDone').click();
 
           cy.getByCy('end-war-btn').should('not.exist');
         });
@@ -117,7 +117,7 @@ describe('War – Management tab (declare & end war)', () => {
 
             // End the war
             cy.getByCy('war-select').click();
-            cy.contains('vs HistoryEnemy').click();
+            cy.getByCy('war-option-HistoryEnemy').click();
             cy.getByCy('end-war-btn').click();
             cy.getByCy('confirmation-dialog-confirm').click();
             cy.contains('War ended successfully').should('be.visible');
@@ -155,7 +155,7 @@ describe('War – Management tab (declare & end war)', () => {
 
           // End the war
           cy.getByCy('war-select').click();
-          cy.contains('vs ToEndEnemy').click();
+          cy.getByCy('war-option-ToEndEnemy').click();
           cy.getByCy('end-war-btn').click();
           cy.getByCy('confirmation-dialog-confirm').click();
           cy.contains('War ended successfully').should('be.visible');
@@ -175,11 +175,11 @@ describe('War – Management tab (declare & end war)', () => {
           cy.navTo('war');
 
           cy.getByCy('war-select').click();
-          cy.contains('vs CancelEnemy').click();
+          cy.getByCy('war-option-CancelEnemy').click();
 
           cy.getByCy('end-war-btn').click();
           // Click cancel instead of confirm
-          cy.contains('Cancel').click();
+          cy.getByCy('confirmation-dialog-cancel').click();
 
           // War should still be active — end-war-btn still visible
           cy.getByCy('end-war-btn').should('be.visible');
