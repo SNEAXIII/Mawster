@@ -164,3 +164,18 @@ input[type='number']::-webkit-outer-spin-button {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .origin-\[--radix-tooltip-content-transform-origin\] {
+    transform-origin: var(--radix-tooltip-content-transform-origin);
+  }
+  .origin-\[--radix-popover-content-transform-origin\] {
+    transform-origin: var(--radix-popover-content-transform-origin);
+  }
+  .origin-\[--radix-select-content-transform-origin\] {
+    transform-origin: var(--radix-select-content-transform-origin);
+  }
+  .origin-\[--radix-dropdown-menu-content-transform-origin\] {
+    transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+  }
+}

@@ -12,7 +12,7 @@
 /.cypress-thread-locks
 
 # next.js
-/.next/
+/.next*/
 /out/
 
 # production
