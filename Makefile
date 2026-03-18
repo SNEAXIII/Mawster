@@ -1,5 +1,5 @@
 # Root Makefile — E2E test orchestration
-.PHONY: help e2e e2e-open e2e-db e2e-stop
+.PHONY: help e2e e2e-open e2e-parallel e2e-db e2e-stop
 
 NEXTAUTH_SECRET ?= e2e-local-nextauth-secret
 NEXTAUTH_URL    ?= http://localhost:3000
@@ -13,6 +13,7 @@ SHELL := powershell.exe
 help:
 	@Write-Host "e2e          --> demarrer les services + lancer Cypress headless"
 	@Write-Host "e2e-open     --> demarrer les services + ouvrir l'UI Cypress"
+	@Write-Host "e2e-parallel --> lancer les tests E2E en parallèle (N=2 par défaut, max 8)"
 	@Write-Host "e2e-db       --> demarrer uniquement mariadb-test"
 	@Write-Host "e2e-stop     --> arreter l'API et le frontend de test"
 	@Write-Host "Logs : .e2e-api.log  .e2e-front.log"
@@ -36,12 +37,20 @@ e2e-open: e2e-db
 	@Write-Host 'Attente du frontend (port 3000)...'; for ($$i = 0; $$i -lt 60; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 3000 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
 	@Write-Host 'Lancement de Cypress...'; Set-Location front; npx cypress open
 
+e2e-parallel: e2e-db
+	$$env:MODE = 'testing'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c uv run app_testing.py' -WorkingDirectory api -RedirectStandardOutput ../.e2e-api.log -RedirectStandardError ../.e2e-api.log).Id | Out-File -Encoding ascii .e2e-api.pid
+	$$env:NEXTAUTH_SECRET = '$(NEXTAUTH_SECRET)'; $$env:NEXTAUTH_URL = '$(NEXTAUTH_URL)'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c npm run testing' -WorkingDirectory front -RedirectStandardOutput ../.e2e-front.log -RedirectStandardError ../.e2e-front.log).Id | Out-File -Encoding ascii .e2e-front.pid
+	@Write-Host 'Attente de l API (port 8001)...'; for ($$i = 0; $$i -lt 30; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 8001 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
+	@Write-Host 'Attente du frontend (port 3000)...'; for ($$i = 0; $$i -lt 60; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 3000 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
+	@Write-Host 'Lancement des tests E2E en parallèle avec $(if $(N),$(N),2) workers...'; python scripts/e2e_parallel.py --workers $(if $(N),$(N),2); $$EXIT = $$LASTEXITCODE; if (Test-Path .e2e-api.pid) { Stop-Process -Id (Get-Content .e2e-api.pid) -Force -EA SilentlyContinue; Remove-Item .e2e-api.pid -Force -EA SilentlyContinue }; if (Test-Path .e2e-front.pid) { Stop-Process -Id (Get-Content .e2e-front.pid) -Force -EA SilentlyContinue; Remove-Item .e2e-front.pid -Force -EA SilentlyContinue }; exit $$EXIT
+
 else
 # ── Linux / macOS ─────────────────────────────────────────────────────────────
 
 help:
 	@echo "e2e          --> demarrer les services + lancer Cypress headless"
 	@echo "e2e-open     --> demarrer les services + ouvrir l'UI Cypress"
+	@echo "e2e-parallel --> lancer les tests E2E en parallèle (N=2 par défaut, max 8)"
 	@echo "e2e-db       --> demarrer uniquement mariadb-test"
 	@echo "e2e-stop     --> arreter l'API et le frontend de test"
 	@echo "Variables : SPEC=cypress/e2e/account.cy.ts  NEXTAUTH_SECRET=..."
@@ -75,6 +84,16 @@ e2e-open: e2e-db
 	for i in $$(seq 1 60); do curl -s http://localhost:3000 >/dev/null 2>&1 && break || sleep 2; done
 	@echo "Lancement de Cypress..."
 	(cd front && npx cypress open)
+
+e2e-parallel: e2e-db ## Run E2E tests in parallel (N=2 by default, max 8)
+	cd api && MODE=testing uv run app_testing.py & echo $$! > .e2e-api.pid
+	cd front && NEXTAUTH_SECRET=$(NEXTAUTH_SECRET) NEXTAUTH_URL=$(NEXTAUTH_URL) npm run testing & echo $$! > .e2e-front.pid
+	@echo "Attente de l'API (port 8001)..."; \
+	for i in $$(seq 1 30); do curl -s http://localhost:8001 >/dev/null 2>&1 && break || sleep 2; done
+	@echo "Attente du frontend (port 3000)..."; \
+	for i in $$(seq 1 60); do curl -s http://localhost:3000 >/dev/null 2>&1 && break || sleep 2; done
+	@echo "Lancement des tests E2E en parallèle avec $(if $(N),$(N),2) workers..."; \
+	(cd && python scripts/e2e_parallel.py --workers $(if $(N),$(N),2)); STATUS=$$?; $(MAKE) e2e-stop; exit $$STATUS
 
 endif
 
