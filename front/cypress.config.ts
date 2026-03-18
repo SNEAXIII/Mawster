@@ -7,8 +7,7 @@ export default defineConfig({
     specPattern: 'cypress/e2e/**/*.cy.ts',
     setupNodeEvents() {},
   },
-  video: true,
-  videosFolder: 'cypress/results/videos',
+  video: false,
   screenshotsFolder: 'cypress/results/screenshots',
   reporter: 'cypress-multi-reporters',
   reporterOptions: {
