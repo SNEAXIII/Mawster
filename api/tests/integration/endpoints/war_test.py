@@ -877,3 +877,80 @@ class TestUpdateKo:
             headers=headers,
         )
         assert response.status_code == 404
+
+
+# ─── TestGetCurrentWar ────────────────────────────────────
+
+class TestGetCurrentWar:
+    """GET /alliances/{alliance_id}/wars/current"""
+
+    @pytest.mark.asyncio
+    async def test_returns_active_war(self):
+        data = await _setup_war()
+        alliance = data["alliance"]
+        war = data["war"]
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_get_request(
+            f"/alliances/{alliance.id}/wars/current",
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["id"] == str(war.id)
+        assert body["status"] == "active"
+        assert body["opponent_name"] == OPPONENT
+
+    @pytest.mark.asyncio
+    async def test_returns_404_when_no_active_war(self):
+        data = await _setup_alliance()
+        alliance = data["alliance"]
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_get_request(
+            f"/alliances/{alliance.id}/wars/current",
+            headers=headers,
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_returns_404_after_war_ended(self):
+        data = await _setup_war()
+        alliance = data["alliance"]
+        war = data["war"]
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        # End the war first
+        await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/end",
+            payload={},
+            headers=headers,
+        )
+
+        response = await execute_get_request(
+            f"/alliances/{alliance.id}/wars/current",
+            headers=headers,
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_returns_403_for_non_member(self):
+        data = await _setup_war()
+        alliance = data["alliance"]
+        # Load a user + game account that is NOT a member of this alliance
+        user3 = User(
+            id=USER3_ID,
+            login="user3",
+            email="user3@test.com",
+            role=Roles.USER,
+            discord_id="discord_user3",
+        )
+        acc3 = get_game_account(user_id=USER3_ID, game_pseudo="OutsidePlayer")
+        await load_objects([user3, acc3])
+
+        headers = create_auth_headers(user_id=str(USER3_ID))
+        response = await execute_get_request(
+            f"/alliances/{alliance.id}/wars/current",
+            headers=headers,
+        )
+        assert response.status_code == 403

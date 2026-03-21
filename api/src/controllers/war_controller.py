@@ -135,6 +135,20 @@ async def list_wars(
 
 
 @war_controller.get(
+    "/current",
+    response_model=WarResponse,
+)
+async def get_current_war(
+    alliance_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Get the currently active war for an alliance. All members can view."""
+    await _get_user_account_in_alliance(session, current_user, alliance_id)
+    return await WarService.get_current_war(session, alliance_id)
+
+
+@war_controller.get(
     "/{war_id}/bg/{battlegroup}",
     response_model=WarDefenseSummaryResponse,
 )

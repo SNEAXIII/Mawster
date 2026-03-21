@@ -68,6 +68,23 @@ class WarService:
         return [WarResponse.model_validate(w) for w in wars]
 
     @classmethod
+    async def get_current_war(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+    ) -> WarResponse:
+        result = await session.exec(
+            select(War).where(War.alliance_id == alliance_id, War.status == "active")
+        )
+        war = result.first()
+        if war is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No active war for this alliance",
+            )
+        return WarResponse.model_validate(await cls._load_war(session, war.id))
+
+    @classmethod
     async def get_war(
         cls,
         session: SessionDep,
