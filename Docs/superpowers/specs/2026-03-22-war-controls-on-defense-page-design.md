@@ -36,7 +36,7 @@ GET /alliances/{alliance_id}/wars/current
 `api/tests/integration/endpoints/war_test.py` — new test class `TestGetCurrentWar`:
 - `test_get_current_war_returns_active_war` — 200 with active war data
 - `test_get_current_war_returns_404_when_no_active_war` — 404 after war ended or none declared
-- `test_get_current_war_requires_alliance_member` — 403 for non-member
+- `test_get_current_war_requires_alliance_member` — 403 for authenticated user who is not a member of the alliance
 
 ---
 
@@ -47,11 +47,15 @@ GET /alliances/{alliance_id}/wars/current
 Location: `front/app/game/defense/_hooks/use-current-war.ts`
 
 Responsibilities:
-- Fetch `GET /wars/current` when `allianceId` changes
+- Fetch `GET /alliances/{allianceId}/wars/current` when `allianceId` changes
 - Expose: `currentWar: War | null`, `warLoading: boolean`, `handleCreateWar(opponentName)`, `handleEndWar()`
-- `handleCreateWar` calls `POST /wars`, then refreshes `currentWar`
-- `handleEndWar` calls `POST /wars/{id}/end`, then sets `currentWar = null`
+- `handleCreateWar` calls `POST /alliances/{id}/wars`, then refreshes `currentWar`
+- `handleEndWar` calls `POST /alliances/{id}/wars/{war_id}/end`, then sets `currentWar = null`
 - State: `showCreateDialog`, `setShowCreateDialog`, `showEndConfirm`, `setShowEndConfirm`
+
+This hook is used in **both** pages:
+- Defense page: drives `WarBanner` + dialogs
+- War page (`war-content.tsx`): replaces the current `getWars` call to derive `activeWarId`
 
 ### New Component: `WarBanner`
 
@@ -81,18 +85,23 @@ interface WarBannerProps {
 
 Dialogs (`CreateWarDialog`, `ConfirmationDialog`) managed in `DefenseContent` via state from `useCurrentWar`.
 
+`CreateWarDialog` lives at `front/app/game/war/_components/create-war-dialog.tsx`. Import it directly cross-feature (no move needed — it is a pure dialog component with no war-page-specific dependencies).
+
 ### Changes to `DefenseContent`
 
 - Import and call `useCurrentWar(selectedAllianceId)`
 - Render `<WarBanner ...>` between header and grid (officers only)
-- Render `<CreateWarDialog>` and end-war `<ConfirmationDialog>` (already exist in war page, reuse)
+- Render `<CreateWarDialog>` and end-war `<ConfirmationDialog>`
 
 ### Files to Delete
 
-- `front/app/game/war/_components/war-management-tab.tsx`
-- `front/app/game/war/_components/war-types.ts` — remove `WarTab.Management`; keep `WarMode`
-- `front/app/game/war/_hooks/use-war-actions.ts` — remove: `wars`, `selectedWarId`, `setSelectedWarId`, `showCreateDialog`, `setShowCreateDialog`, `showEndWarConfirm`, `setShowEndWarConfirm`, `handleCreateWar`, `handleEndWar`
-- `front/app/game/war/_components/war-content.tsx` — remove Management tab rendering, `TabBar` tab entry, management-related state and imports
+- `front/app/game/war/_components/war-management-tab.tsx` — entire file
+
+### Files to Edit
+
+- `front/app/game/war/_components/war-types.ts` — remove `WarTab.Management` enum value; leave `WarMode` unchanged
+- `front/app/game/war/_hooks/use-war-actions.ts` — edit (keep file): remove `wars`, `selectedWarId`, `setSelectedWarId`, `showCreateDialog`, `setShowCreateDialog`, `showEndWarConfirm`, `setShowEndWarConfirm`, `handleCreateWar`, `handleEndWar`, and `fetchWars`. Change signature from `(allianceId, bg)` → `(allianceId, bg, activeWarId: string)` so the hook no longer derives `activeWarId` from a wars list. All remaining actions (`handlePlaceDefender`, `handleRemoveDefender`, `handleClearBg`, `handleAssignAttacker`, `handleRemoveAttacker`, `handleUpdateKo`, polling) use the passed-in `activeWarId`. The caller (`war-content.tsx`) passes `currentWar?.id ?? ''` — all actions guard with `if (!activeWarId) return` so the null/empty case is safe.
+- `front/app/game/war/_components/war-content.tsx` — use `useCurrentWar` to get `activeWarId`; remove Management tab rendering, the `WarTab.Management` tab entry, and all management-related state/imports; pass `activeWarId` to `useWarActions`
 
 ### E2E Files to Delete
 
@@ -100,7 +109,7 @@ Dialogs (`CreateWarDialog`, `ConfirmationDialog`) managed in `DefenseContent` vi
 
 ### E2E Tests to Add
 
-`front/cypress/e2e/defense/war-controls.cy.ts`:
+`front/cypress/e2e/defense/war-controls.cy.ts` — use `setupDefenseOwner` (includes BG1 needed for defense page):
 - Officer sees WarBanner with "Declare War" when no active war
 - Officer can declare a war (opens dialog, submits, banner updates)
 - Officer sees "End War" when active war exists
