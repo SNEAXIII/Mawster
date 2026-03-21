@@ -76,6 +76,14 @@ export async function getWars(allianceId: string): Promise<War[]> {
   return response.json();
 }
 
+export async function getCurrentWar(allianceId: string): Promise<War> {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/current`, {
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, 'Failed to load current war');
+  return response.json();
+}
+
 export async function createWar(allianceId: string, opponentName: string): Promise<War> {
   const response = await fetch(`${PROXY}/alliances/${allianceId}/wars`, {
     method: 'POST',
