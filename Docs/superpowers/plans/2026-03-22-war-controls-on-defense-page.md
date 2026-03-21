@@ -100,9 +100,18 @@ class TestGetCurrentWar:
     async def test_returns_403_for_non_member(self):
         data = await _setup_war()
         alliance = data["alliance"]
-        # USER3_ID is authenticated but not a member of this alliance
-        headers = create_auth_headers(user_id=str(USER3_ID))
+        # Load a user + game account that is NOT a member of this alliance
+        user3 = User(
+            id=USER3_ID,
+            login="user3",
+            email="user3@test.com",
+            role=Roles.USER,
+            discord_id="discord_user3",
+        )
+        acc3 = get_game_account(user_id=USER3_ID, game_pseudo="OutsidePlayer")
+        await load_objects([user3, acc3])
 
+        headers = create_auth_headers(user_id=str(USER3_ID))
         response = await execute_get_request(
             f"/alliances/{alliance.id}/wars/current",
             headers=headers,
@@ -110,7 +119,7 @@ class TestGetCurrentWar:
         assert response.status_code == 403
 ```
 
-Note: `USER3_ID = uuid.UUID("00000000-0000-0000-0000-000000000003")` is already defined at the top of the file. `_setup_war` returns `{..., "war": war}` — confirmed by the helper definition. The `USER3_ID` user must be created (use `await load_objects([get_generic_user(user_id=USER3_ID)])`) — check whether `_setup_war` already loads it; if not, add the load call at the start of `test_returns_403_for_non_member`.
+Note: `User`, `Roles`, `get_game_account`, `load_objects` are all already imported at the top of `war_test.py`. `USER3_ID` is already defined.
 
 - [ ] **Step 2: Run tests to confirm they fail**
 
@@ -1017,8 +1026,8 @@ describe('War Controls on Defense Page', () => {
       cy.navTo('defense');
 
       cy.getByCy('declare-war-btn').click();
-      cy.getByCy('create-war-opponent-input').type('Enemy Alliance');
-      cy.getByCy('create-war-confirm-btn').click();
+      cy.getByCy('opponent-name-input').type('Enemy Alliance');
+      cy.getByCy('create-war-confirm').click();
 
       cy.getByCy('current-war-opponent').should('have.text', 'Enemy Alliance');
       cy.getByCy('end-war-btn').should('be.visible');
@@ -1081,13 +1090,13 @@ describe('War Controls on Defense Page', () => {
 
 Note: `cy.apiCreateWar`, `cy.apiForceJoinAlliance`, `cy.apiCreateGameAccount`, `setupUser`, `setupDefenseOwner` are all defined in `cypress/support/e2e.ts`. `create-war-opponent-input` and `create-war-confirm-btn` are `data-cy` attributes on `CreateWarDialog` — verify them before running (read `war-champion-selector.tsx` or `create-war-dialog.tsx`).
 
-- [ ] **Step 2: Verify `data-cy` attributes on `CreateWarDialog`**
+- [ ] **Step 2: Verify `data-cy` attributes on `CreateWarDialog` (already confirmed)**
 
-Read `front/app/game/war/_components/create-war-dialog.tsx` and confirm:
-- The text input has `data-cy='create-war-opponent-input'`
-- The confirm button has `data-cy='create-war-confirm-btn'`
+`front/app/game/war/_components/create-war-dialog.tsx` already has:
+- `data-cy='opponent-name-input'` on the text input
+- `data-cy='create-war-confirm'` on the submit button
 
-Add them if missing.
+No changes needed to `CreateWarDialog`.
 
 - [ ] **Step 3: Run the new E2E tests**
 
