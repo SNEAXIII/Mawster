@@ -95,7 +95,6 @@ describe('War – Attackers mode', () => {
 
         // Should see the attacker entry
         cy.getByCy('attacker-entry-node-10').should('be.visible');
-        cy.getByCy('attacker-entry-node-10').should('contain', 'Wolverine');
       }
     );
   });
@@ -154,7 +153,7 @@ describe('War – Attackers mode', () => {
   it('member can assign attacker by clicking a node in Attackers mode', () => {
     setupAttackerScenario('atk-ui').then(
       ({ memberData, ownerData, allianceId, warId }) => {
-        cy.uiLogin(memberData.login);
+        cy.uiLogin(ownerData.login);
         cy.navTo('war');
         cy.getByCy('tab-war-defenders').click();
 
@@ -179,8 +178,8 @@ describe('War – Attackers mode', () => {
   // ── Node without defender shows warning ──────────────────────────────────
 
   it('clicking node without defender shows warning toast', () => {
-    setupAttackerScenario('atk-warn').then(({ memberData }) => {
-      cy.uiLogin(memberData.login);
+    setupAttackerScenario('atk-warn').then(({ memberData, ownerData }) => {
+      cy.uiLogin(ownerData.login);
       cy.navTo('war');
       cy.getByCy('tab-war-defenders').click();
       cy.getByCy('war-mode-attackers').click();

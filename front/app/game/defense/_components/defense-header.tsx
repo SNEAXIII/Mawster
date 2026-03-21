@@ -95,23 +95,22 @@ export default function DefenseHeader({
             </div>
           </div>
 
-          {/* Clear button */}
-          {canManage && defenseSummary && defenseSummary.placements.length > 0 && (
-            <Button
-              variant='destructive'
-              size='sm'
-              className='ml-auto'
-              data-cy='defense-clear-all'
-              onClick={onClearClick}
-            >
-              <Trash2 className='w-4 h-4 mr-1' />
-              {t.game.defense.clearAll}
-            </Button>
-          )}
-
           {/* Export / Import — managers only */}
           {canManage && (
             <div className='flex gap-1 ml-auto'>
+              {/* Clear button */}
+              {defenseSummary && defenseSummary.placements.length > 0 && (
+                <Button
+                  variant='destructive'
+                  size='sm'
+                  className='ml-auto'
+                  data-cy='defense-clear-all'
+                  onClick={onClearClick}
+                >
+                  <Trash2 className='w-4 h-4 mr-1' />
+                  {t.game.defense.clearAll}
+                </Button>
+              )}
               <Button
                 variant='outline'
                 size='sm'

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import {
   type War,
   type WarDefenseSummary,
+  type AvailableAttacker,
   getWars,
   createWar,
   endWar,
@@ -151,31 +152,38 @@ export function useWarActions(selectedAllianceId: string, selectedBg: number) {
     }
   };
 
-  const handleAssignAttacker = async (
-    championUserId: string,
-    _pseudo: string,
-    championName: string
-  ) => {
+  const handleAssignAttacker = async (attacker: AvailableAttacker) => {
     if (!selectedAllianceId || !activeWarId || attackerSelectorNode === null) return;
+    const nodeNumber = attackerSelectorNode;
     try {
-      const updated = await assignWarAttacker(
+      await assignWarAttacker(
         selectedAllianceId,
         activeWarId,
         selectedBg,
-        attackerSelectorNode,
-        championUserId
+        nodeNumber,
+        attacker.champion_user_id
       );
       toast.success(
         t.game.war.assignSuccess
-          .replace('{name}', championName)
-          .replace('{node}', String(attackerSelectorNode))
+          .replace('{name}', attacker.champion_name)
+          .replace('{node}', String(nodeNumber))
       );
       setWarSummary((prev) =>
         prev
           ? {
               ...prev,
               placements: prev.placements.map((p) =>
-                p.node_number === updated.node_number ? updated : p
+                p.node_number === nodeNumber
+                  ? {
+                      ...p,
+                      attacker_champion_user_id: attacker.champion_user_id,
+                      attacker_pseudo: attacker.game_pseudo,
+                      attacker_champion_name: attacker.champion_name,
+                      attacker_champion_class: attacker.champion_class,
+                      attacker_image_url: attacker.image_url,
+                      attacker_rarity: attacker.rarity,
+                    }
+                  : p
               ),
             }
           : prev

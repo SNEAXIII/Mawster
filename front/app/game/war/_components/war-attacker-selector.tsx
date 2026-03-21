@@ -17,7 +17,7 @@ interface WarAttackerSelectorProps {
   warId: string;
   battlegroup: number;
   placements: WarPlacement[];
-  onSelect: (championUserId: string, pseudo: string, championName: string) => void;
+  onSelect: (attacker: AvailableAttacker) => void;
 }
 
 interface GroupedAttackers {
@@ -149,7 +149,7 @@ export default function WarAttackerSelector({
                         'flex flex-col items-center gap-1 p-2 rounded-lg border transition-all',
                         'hover:ring-2 hover:ring-primary/60 hover:border-primary/60'
                       )}
-                      onClick={() => { onSelect(a.champion_user_id, a.game_pseudo, a.champion_name); onClose(); }}
+                      onClick={() => { onSelect(a); onClose(); }}
                       data-cy={`attacker-card-${a.champion_name.replaceAll(/\s+/g, '-')}`}
                     >
                       <ChampionPortrait

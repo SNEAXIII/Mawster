@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { SERVER_API_URL } from '@/next.config';
+import { getServerApiUrl } from '@/app/lib/serverApiUrl';
 
 /**
  * Dev-only proxy: fetches the list of users from the backend
@@ -12,7 +12,7 @@ export async function GET() {
   }
 
   try {
-    const res = await fetch(`${SERVER_API_URL}/dev/users`);
+    const res = await fetch(`${getServerApiUrl()}/dev/users`);
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
   } catch (error) {

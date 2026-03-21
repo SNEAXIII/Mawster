@@ -17,5 +17,5 @@ const nextConfig: NextConfig = {
   },
 };
 export const CLIENT_API_URL: string = `http://${NEXT_PUBLIC_API_CLIENT_HOST}${API_CLIENT_END_PART}`;
-export const SERVER_API_URL: string = `http://${API_SERVER_HOST}:${API_PORT}`;
+const SERVER_API_URL: string = `http://${API_SERVER_HOST}:${API_PORT}`;
 export default nextConfig;

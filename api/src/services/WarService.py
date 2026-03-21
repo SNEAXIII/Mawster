@@ -20,6 +20,7 @@ from src.dto.dto_war import (
     AvailableAttackerResponse,
 )
 from src.utils.db import SessionDep
+from src.utils.logging_config import debug_log
 
 
 class WarService:
@@ -391,8 +392,8 @@ class WarService:
             .where(ChampionUser.id == champion_user_id)
             .options(selectinload(ChampionUser.game_account))  # type: ignore[arg-type]
         )
-        cu_result = await session.exec(cu_stmt)
-        cu = cu_result.first()
+        cu = (await session.exec(cu_stmt)).first()
+        debug_log(str(cu))
         if cu is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
 
@@ -440,10 +441,13 @@ class WarService:
                     WarDefensePlacement.battlegroup == battlegroup,
                     ChampionUser.game_account_id == ga.id,
                 )
-            )
+            ).group_by(ChampionUser.id)
         )
-        member_attacker_count = len(attacker_count_result.all())
-        if member_attacker_count >= 3:
+        all_attackers = attacker_count_result.all()
+        all_attackers_ids = set(a.attacker_champion_user_id for a in all_attackers)
+        all_attackers_ids.add(champion_user_id)  # include the new one we're trying to add
+        member_attacker_count = len(all_attackers_ids)
+        if member_attacker_count > 3:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="This member already has 3 attackers assigned in this battlegroup",

@@ -104,6 +104,15 @@ def wait_for_http(url: str, label: str, timeout: int = HEALTH_TIMEOUT) -> None:
     raise TimeoutError(f"{label} at {url} did not become ready within {timeout}s")
 
 
+def pipe_output(stream, prefix: str) -> None:
+    """Read lines from a subprocess stream and print them with a worker prefix."""
+    try:
+        for line in iter(stream.readline, b""):
+            print(f"{prefix} {line.decode(errors='replace').rstrip()}", flush=True)
+    except Exception:
+        pass
+
+
 def start_backend(worker: int, base_env: dict) -> subprocess.Popen:
     api_port = BASE_API_PORT + worker
     db = f"{DB_PREFIX}{worker}"
@@ -112,13 +121,19 @@ def start_backend(worker: int, base_env: dict) -> subprocess.Popen:
         "MODE": "testing",
         "MARIADB_DATABASE": db,
         "PORT": str(api_port),
+        "PYTHONIOENCODING": "utf-8",
     }
-    log(f"Worker {worker}: starting backend on port {api_port} (DB: {db})...")
-    return subprocess.Popen(
+    log(f"Worker {worker}: starting backend  — PORT={api_port}  DB={db}  MODE=testing")
+    proc = subprocess.Popen(
         ["uv", "run", "app_testing.py"],
         cwd=str(API_DIR),
         env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
+    prefix = f"[W{worker}|api:{api_port}]"
+    threading.Thread(target=pipe_output, args=(proc.stdout, prefix), daemon=True).start()
+    return proc
 
 
 def start_frontend(worker: int, base_env: dict) -> subprocess.Popen:
@@ -129,13 +144,19 @@ def start_frontend(worker: int, base_env: dict) -> subprocess.Popen:
         "PORT": str(front_port),
         "API_PORT": str(api_port),
         "NEXTAUTH_URL": f"http://localhost:{front_port}",
+        "PYTHONIOENCODING": "utf-8",
     }
-    log(f"Worker {worker}: starting frontend on port {front_port} (API: {api_port})...")
-    return subprocess.Popen(
+    log(f"Worker {worker}: starting frontend — PORT={front_port}  API_PORT={api_port}  NEXTAUTH_URL=http://localhost:{front_port}")
+    proc = subprocess.Popen(
         [NPM, "run", "dev"],
         cwd=str(FRONT_DIR),
         env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
+    prefix = f"[W{worker}|front:{front_port}]"
+    threading.Thread(target=pipe_output, args=(proc.stdout, prefix), daemon=True).start()
+    return proc
 
 
 def run_cypress(worker: int, total: int) -> int:

@@ -21,7 +21,7 @@ export default function WarAttackerPanel({
   placements,
   onRemoveAttacker,
   onUpdateKo,
-}: WarAttackerPanelProps) {
+}: Readonly<WarAttackerPanelProps>) {
   const { t } = useI18n();
 
   const assigned = placements.filter((p) => p.attacker_champion_user_id !== null);
@@ -49,12 +49,28 @@ export default function WarAttackerPanel({
         <div className='space-y-4'>
           {groups.map((group) => (
             <div key={group.pseudo}>
-              <div className='text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 px-1'>
-                {group.pseudo}{' '}
-                <span className='text-primary font-bold'>
-                  {t.game.war.memberAttackers.replace('{count}', String(group.entries.length))}
+              {/* Member header: pseudo + count + attacker portraits */}
+              <div className='flex items-center gap-1.5 mb-1.5 px-1'>
+                <span className='text-xs font-semibold text-muted-foreground uppercase tracking-wide'>
+                  {group.pseudo}
                 </span>
+                <span className='text-primary font-bold text-xs'>
+                  {t.game.war.memberAttackers.replace('{count}', String(new Set(group.entries.map((e) => e.attacker_champion_user_id)).size))}
+                </span>
+                <div className='flex items-center gap-0.5 ml-1'>
+                  {group.entries.filter((p, i, arr) => arr.findIndex((q) => q.attacker_champion_name === p.attacker_champion_name) === i).map((p) => (
+                    <ChampionPortrait
+                      key={p.id}
+                      imageUrl={p.attacker_image_url}
+                      name={p.attacker_champion_name ?? ''}
+                      rarity={p.attacker_rarity ?? '7r3'}
+                      size={35}
+                    />
+                  ))}
+                </div>
               </div>
+
+              {/* Per-node entries */}
               <div className='space-y-1.5'>
                 {group.entries.map((p) => (
                   <div
@@ -80,13 +96,13 @@ export default function WarAttackerPanel({
                     </div>
 
                     <div className='flex-1 min-w-0'>
-                      <div className='text-[10px] font-medium truncate'>{p.attacker_champion_name}</div>
                       <div className='text-[10px] text-muted-foreground'>#{p.node_number}</div>
                     </div>
 
                     {/* KO counter */}
                     <div className='flex items-center gap-1' data-cy={`ko-counter-node-${p.node_number}`}>
                       <button
+                        type='button'
                         className={cn(
                           'w-5 h-5 rounded flex items-center justify-center text-xs',
                           'bg-muted hover:bg-accent transition-colors',
@@ -105,17 +121,18 @@ export default function WarAttackerPanel({
                         {p.ko_count}
                       </span>
                       <button
+                        type='button'
                         className='w-5 h-5 rounded flex items-center justify-center text-xs bg-muted hover:bg-accent transition-colors'
                         onClick={() => onUpdateKo(p.node_number, p.ko_count + 1)}
                         data-cy={`ko-inc-node-${p.node_number}`}
                       >
                         <Plus className='w-2.5 h-2.5' />
                       </button>
-                      <span className='text-[9px] text-muted-foreground ml-0.5'>{t.game.war.koCount}</span>
                     </div>
 
                     {/* Remove attacker */}
                     <button
+                      type='button'
                       className='w-5 h-5 rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center flex-shrink-0'
                       onClick={() => onRemoveAttacker(p.node_number)}
                       title={t.game.war.removeAttacker}
