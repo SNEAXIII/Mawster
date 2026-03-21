@@ -47,16 +47,16 @@ Add this class at the end of `api/tests/integration/endpoints/war_test.py`:
 class TestGetCurrentWar:
     """GET /alliances/{alliance_id}/wars/current"""
 
-    async def test_returns_active_war(self, client):
+    @pytest.mark.asyncio
+    async def test_returns_active_war(self):
         data = await _setup_war()
-        owner = data["owner"]
         alliance = data["alliance"]
         war = data["war"]
+        headers = create_auth_headers(user_id=str(USER_ID))
 
         response = await execute_get_request(
-            client,
             f"/alliances/{alliance.id}/wars/current",
-            headers=create_auth_headers(USER_ID),
+            headers=headers,
         )
         assert response.status_code == 200
         body = response.json()
@@ -64,51 +64,53 @@ class TestGetCurrentWar:
         assert body["status"] == "active"
         assert body["opponent_name"] == OPPONENT
 
-    async def test_returns_404_when_no_active_war(self, client):
+    @pytest.mark.asyncio
+    async def test_returns_404_when_no_active_war(self):
         data = await _setup_alliance()
         alliance = data["alliance"]
+        headers = create_auth_headers(user_id=str(USER_ID))
 
         response = await execute_get_request(
-            client,
             f"/alliances/{alliance.id}/wars/current",
-            headers=create_auth_headers(USER_ID),
+            headers=headers,
         )
         assert response.status_code == 404
 
-    async def test_returns_404_after_war_ended(self, client):
+    @pytest.mark.asyncio
+    async def test_returns_404_after_war_ended(self):
         data = await _setup_war()
-        owner = data["owner"]
         alliance = data["alliance"]
         war = data["war"]
+        headers = create_auth_headers(user_id=str(USER_ID))
 
         # End the war first
         await execute_post_request(
-            client,
             f"/alliances/{alliance.id}/wars/{war.id}/end",
-            headers=create_auth_headers(USER_ID),
+            payload={},
+            headers=headers,
         )
 
         response = await execute_get_request(
-            client,
             f"/alliances/{alliance.id}/wars/current",
-            headers=create_auth_headers(USER_ID),
+            headers=headers,
         )
         assert response.status_code == 404
 
-    async def test_returns_403_for_non_member(self, client):
+    @pytest.mark.asyncio
+    async def test_returns_403_for_non_member(self):
         data = await _setup_war()
         alliance = data["alliance"]
+        # USER3_ID is authenticated but not a member of this alliance
+        headers = create_auth_headers(user_id=str(USER3_ID))
 
-        # USER3_ID is not a member of this alliance
         response = await execute_get_request(
-            client,
             f"/alliances/{alliance.id}/wars/current",
-            headers=create_auth_headers(USER3_ID),
+            headers=headers,
         )
         assert response.status_code == 403
 ```
 
-Note: `USER3_ID = uuid.UUID("00000000-0000-0000-0000-000000000003")` is already defined at the top of the file. `_setup_war` already returns `data["war"]` — check the helper to confirm (look for `war = War(...)` followed by `load_objects`).
+Note: `USER3_ID = uuid.UUID("00000000-0000-0000-0000-000000000003")` is already defined at the top of the file. `_setup_war` returns `{..., "war": war}` — confirmed by the helper definition. The `USER3_ID` user must be created (use `await load_objects([get_generic_user(user_id=USER3_ID)])`) — check whether `_setup_war` already loads it; if not, add the load call at the start of `test_returns_403_for_non_member`.
 
 - [ ] **Step 2: Run tests to confirm they fail**
 
@@ -321,7 +323,6 @@ git commit -m "feat: add useCurrentWar hook"
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Swords, Flag } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 import type { War } from '@/app/services/war';
@@ -367,21 +368,15 @@ export default function WarBanner({
       ) : (
         <>
           <span className='text-sm text-muted-foreground'>{t.game.war.noActiveWar}</span>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant='default'
-                  size='sm'
-                  onClick={onOpenCreateDialog}
-                  data-cy='declare-war-btn'
-                >
-                  <Swords className='w-4 h-4 mr-1' />
-                  {t.game.war.declareWar}
-                </Button>
-              </TooltipTrigger>
-            </Tooltip>
-          </TooltipProvider>
+          <Button
+            variant='default'
+            size='sm'
+            onClick={onOpenCreateDialog}
+            data-cy='declare-war-btn'
+          >
+            <Swords className='w-4 h-4 mr-1' />
+            {t.game.war.declareWar}
+          </Button>
         </>
       )}
     </div>
