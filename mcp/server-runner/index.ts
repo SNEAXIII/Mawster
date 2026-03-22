@@ -32,6 +32,19 @@ interface CypressResults {
   failures: Array<{ spec: string; suite: string; test: string; error: string }>;
 }
 
+// ── Env helpers ───────────────────────────────────────────────────────────────
+
+function readDbEnv(): Record<string, string> {
+  const dbEnvPath = path.join(ROOT, 'db.env');
+  if (!fs.existsSync(dbEnvPath)) return {};
+  return Object.fromEntries(
+    fs.readFileSync(dbEnvPath, 'utf-8')
+      .split('\n')
+      .filter((l) => l.includes('=') && !l.startsWith('#'))
+      .map((l) => l.split('=').map((s) => s.trim()) as [string, string])
+  );
+}
+
 // ── State helpers ──────────────────────────────────────────────────────────────
 
 function stateFile(mode: Mode): string {
@@ -290,6 +303,7 @@ server.registerTool(
   { description: 'Lance mariadb-test (3307) + API FastAPI (port 8001) + Frontend Next.js (port 3001) en mode test. N\'affecte pas le mode dev.' },
   async () => {
     const state = await startTest();
+    const db = readDbEnv();
     return {
       content: [{
         type: 'text',
@@ -298,6 +312,15 @@ server.registerTool(
           mode: state.mode,
           ports: { api: 8001, front: 3001, phpmyadmin: 8081 },
           pids: state.pids,
+          env: {
+            MODE: 'testing',
+            API_PORT: 8001,
+            FRONT_PORT: 3001,
+            MARIADB_PORT: 3307,
+            MARIADB_DATABASE: db['MARIADB_DATABASE'] ?? 'mawster',
+            MARIADB_USER: db['MARIADB_USER'] ?? 'user',
+            NEXTAUTH_URL: 'http://localhost:3001',
+          },
         }, null, 2),
       }],
     };
