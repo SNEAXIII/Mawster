@@ -53,6 +53,35 @@ class PromoteRequest(BaseModel):
     user_id: uuid.UUID
     role: str = Roles.ADMIN
 
+
+class SetupAllianceSpec(BaseModel):
+    name: str
+    tag: str
+
+
+class SetupUserSpec(BaseModel):
+    discord_token: str
+    role: str = "user"
+    game_pseudo: str | None = None
+    create_alliance: SetupAllianceSpec | None = None
+    join_alliance_token: str | None = None
+    battlegroup: int | None = None
+
+
+class SetupUserResult(BaseModel):
+    access_token: str
+    refresh_token: str
+    user_id: str
+    login: str
+    email: str
+    discord_id: str
+    account_id: str | None = None
+    alliance_id: str | None = None
+
+
+class BatchSetupResponse(BaseModel):
+    users: dict[str, SetupUserResult]
+
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 
@@ -160,6 +189,85 @@ async def promote_user(body: PromoteRequest, session: SessionDep):
     await session.commit()
     await session.refresh(user)
     return {"message": f"User promoted to {body.role}", "user_id": str(user.id)}
+
+
+@dev_controller.post("/batch-setup", response_model=BatchSetupResponse, status_code=200)
+async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
+    """Create multiple users with game accounts, alliances, and roles in a single request.
+
+    Users are processed in order — you can reference an earlier user's alliance via
+    join_alliance_token. Testing only.
+    """
+    from src.services.DiscordAuthService import DiscordAuthService
+    from src.services.GameAccountService import GameAccountService
+    from src.services.AllianceService import AllianceService
+
+    results: dict[str, SetupUserResult] = {}
+
+    for spec in specs:
+        # 1. Register / get user via mock Discord auth
+        discord_profile = await DiscordAuthService.verify_discord_token(spec.discord_token)
+        user = await DiscordAuthService.get_or_create_discord_user(session, discord_profile)
+
+        # 2. Set role if it differs
+        if spec.role != user.role:
+            user.role = spec.role
+            session.add(user)
+            await session.commit()
+            await session.refresh(user)
+
+        # 3. Issue fresh tokens (after role is set)
+        access_token = JWTService.create_access_token(user)
+        refresh_token = JWTService.create_refresh_token(user)
+
+        account_id: str | None = None
+        alliance_id: str | None = None
+
+        # 4. Game account
+        if spec.game_pseudo:
+            acc = await GameAccountService.create_game_account(
+                session, user.id, spec.game_pseudo, True
+            )
+            account_id = str(acc.id)
+
+            # 5a. Create alliance
+            if spec.create_alliance:
+                alliance = await AllianceService.create_alliance(
+                    session,
+                    name=spec.create_alliance.name,
+                    tag=spec.create_alliance.tag,
+                    owner_id=acc.id,
+                    current_user_id=user.id,
+                )
+                alliance_id = str(alliance.id)
+
+            # 5b. Force-join another user's alliance
+            elif spec.join_alliance_token:
+                ref = results.get(spec.join_alliance_token)
+                if ref and ref.alliance_id:
+                    acc.alliance_id = uuid.UUID(ref.alliance_id)
+                    session.add(acc)
+                    await session.commit()
+                    alliance_id = ref.alliance_id
+
+            # 6. Assign battlegroup
+            if spec.battlegroup is not None and alliance_id:
+                await AllianceService.set_member_group(
+                    session, uuid.UUID(alliance_id), acc.id, spec.battlegroup
+                )
+
+        results[spec.discord_token] = SetupUserResult(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            user_id=str(user.id),
+            login=user.login,
+            email=user.email,
+            discord_id=user.discord_id,
+            account_id=account_id,
+            alliance_id=alliance_id,
+        )
+
+    return BatchSetupResponse(users=results)
 
 
 class EnvInfo(BaseModel):

@@ -191,15 +191,43 @@ def start_frontend(worker: int, base_env: dict, quiet: bool = False) -> subproce
     return proc
 
 
-def run_cypress(worker: int, total: int) -> int:
-    """Run a Cypress instance for this worker, return exit code."""
+def get_spec_files() -> list[Path]:
+    """Return all Cypress spec files sorted by path."""
+    return sorted((FRONT_DIR / "cypress" / "e2e").rglob("*.cy.ts"))
+
+
+def count_tests(spec: Path) -> int:
+    """Estimate test weight by counting it( calls in the spec file."""
+    try:
+        return max(1, spec.read_text(encoding="utf-8").count("  it("))
+    except Exception:
+        return 1
+
+
+def distribute_specs(specs: list[Path], n: int) -> list[list[Path]]:
+    """Greedy bin-packing: assign heaviest specs first to the lightest bucket."""
+    weighted = sorted(((s, count_tests(s)) for s in specs), key=lambda x: x[1], reverse=True)
+    buckets: list[list[Path]] = [[] for _ in range(n)]
+    totals = [0] * n
+    for spec, w in weighted:
+        i = min(range(n), key=lambda i: totals[i])
+        buckets[i].append(spec)
+        totals[i] += w
+    log(f"Spec distribution (estimated tests per worker): {totals}")
+    return buckets
+
+
+def run_cypress(worker: int, specs: list[Path]) -> int:
+    """Run a Cypress instance for this worker with its assigned spec list."""
     api_port = BASE_API_PORT + worker
     front_port = BASE_FRONT_PORT + worker
-    log(f"Worker {worker}: launching Cypress (splitIndex={worker}/{total})...")
-    result = subprocess.run(
+    spec_list = ",".join(str(s.relative_to(FRONT_DIR)) for s in specs)
+    log(f"Worker {worker}: launching Cypress ({len(specs)} specs)...")
+    proc = subprocess.Popen(
         [
             NPX, "cypress", "run",
-            "--env", f"backendUrl=http://localhost:{api_port},split={total},splitIndex={worker}",
+            "--spec", spec_list,
+            "--env", f"backendUrl=http://localhost:{api_port}",
             "--config", (
                 f"baseUrl=http://localhost:{front_port},"
                 f"screenshotsFolder=cypress/results/screenshots-{worker},"
@@ -207,26 +235,48 @@ def run_cypress(worker: int, total: int) -> int:
             ),
         ],
         cwd=str(FRONT_DIR),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
-    log(f"Worker {worker}: Cypress finished with exit code {result.returncode}")
-    return result.returncode
+    prefix = f"[W{worker}|cypress]"
+    threading.Thread(target=pipe_output, args=(proc.stdout, prefix), daemon=True).start()
+    proc.wait()
+    log(f"Worker {worker}: Cypress finished with exit code {proc.returncode}")
+    return proc.returncode
 
 
 def kill_ports(ports: list[int]) -> None:
-    """Kill any process currently listening on the given ports."""
-    for port in ports:
-        if IS_WINDOWS:
-            result = subprocess.run(
-                ["netstat", "-ano"],
-                capture_output=True, text=True,
-            )
-            for line in result.stdout.splitlines():
-                if f":{port} " in line and "LISTENING" in line:
+    """Kill any process currently listening on the given ports (parallel)."""
+    port_set = set(ports)
+
+    if IS_WINDOWS:
+        # Single netstat call, then taskkill in parallel
+        result = subprocess.run(["netstat", "-ano"], capture_output=True, text=True)
+        # Map port -> set of PIDs
+        victims: dict[int, set[str]] = {p: set() for p in port_set}
+        for line in result.stdout.splitlines():
+            if "LISTENING" not in line:
+                continue
+            for port in port_set:
+                if f":{port} " in line:
                     parts = line.split()
-                    pid = parts[-1]
-                    subprocess.run(["taskkill", "/F", "/PID", pid], capture_output=True)
-                    log(f"Killed PID {pid} on port {port}")
-        else:
+                    victims[port].add(parts[-1])
+
+        def _kill_pid(pid: str, port: int) -> None:
+            subprocess.run(["taskkill", "/F", "/PID", pid], capture_output=True)
+            log(f"Killed PID {pid} on port {port}")
+
+        kill_threads = [
+            threading.Thread(target=_kill_pid, args=(pid, port))
+            for port, pids in victims.items()
+            for pid in pids
+        ]
+        for t in kill_threads:
+            t.start()
+        for t in kill_threads:
+            t.join()
+    else:
+        def _kill_port(port: int) -> None:
             result = subprocess.run(
                 ["lsof", "-ti", f"tcp:{port}"],
                 capture_output=True, text=True,
@@ -234,6 +284,12 @@ def kill_ports(ports: list[int]) -> None:
             for pid in result.stdout.strip().splitlines():
                 subprocess.run(["kill", "-9", pid], capture_output=True)
                 log(f"Killed PID {pid} on port {port}")
+
+        kill_threads = [threading.Thread(target=_kill_port, args=(p,)) for p in port_set]
+        for t in kill_threads:
+            t.start()
+        for t in kill_threads:
+            t.join()
 
 
 def main() -> None:
@@ -299,33 +355,50 @@ def main() -> None:
     if hasattr(signal, "SIGTERM"):
         signal.signal(signal.SIGTERM, handle_sigint)
 
-    # Phase 0: build the frontend once (shared across all workers)
-    try:
-        build_frontend(base_env)
-    except RuntimeError as exc:
-        log(f"ERROR: {exc}")
-        sys.exit(1)
-
-    # Phase 1: create DBs and start servers in parallel
+    # Phase 0+1 in parallel:
+    #   - build the frontend once (shared across all workers)
+    #   - create DBs and start backends (don't need the build)
+    # Frontends start after the build completes.
     errors: list[str] = []
+    build_event = threading.Event()
+    build_error: list[str] = []
+
+    def run_build() -> None:
+        try:
+            build_frontend(base_env)
+            build_event.set()
+        except RuntimeError as exc:
+            build_error.append(str(exc))
+            build_event.set()  # unblock waiting workers
 
     def setup_worker(worker: int) -> None:
         try:
             docker_create_db(worker)
             backend = start_backend(worker, base_env, quiet)
+            with lock:
+                procs.append(backend)
+            # Wait for the build before launching `next start`
+            build_event.wait()
+            if build_error:
+                return
             frontend = start_frontend(worker, base_env, quiet)
             with lock:
-                procs.extend([backend, frontend])
+                procs.append(frontend)
         except Exception as exc:
             with lock:
                 errors.append(f"Worker {worker}: {exc}")
 
-    threads = [threading.Thread(target=setup_worker, args=(i,)) for i in range(n)]
-    for t in threads:
+    all_threads = [threading.Thread(target=run_build)] + [
+        threading.Thread(target=setup_worker, args=(i,)) for i in range(n)
+    ]
+    for t in all_threads:
         t.start()
-    for t in threads:
+    for t in all_threads:
         t.join()
 
+    if build_error:
+        log(f"ERROR: {build_error[0]}")
+        sys.exit(1)
     if errors:
         for err in errors:
             log(f"ERROR: {err}")
@@ -362,10 +435,13 @@ def main() -> None:
 
     # Phase 3: run Cypress workers in parallel
     log("All servers ready. Launching Cypress workers...")
+    specs = get_spec_files()
+    log(f"Found {len(specs)} spec file(s) to distribute across {n} worker(s).")
+    spec_buckets = distribute_specs(specs, n)
     results: list[int] = [0] * n
 
     def cypress_worker(worker: int) -> None:
-        results[worker] = run_cypress(worker, n)
+        results[worker] = run_cypress(worker, spec_buckets[worker])
 
     cypress_threads = [threading.Thread(target=cypress_worker, args=(i,)) for i in range(n)]
     for t in cypress_threads:

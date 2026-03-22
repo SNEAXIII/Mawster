@@ -10,8 +10,14 @@ export default defineConfig({
       cypressSplit(on, config);
       return config;
     },
+    defaultCommandTimeout: 2000,
+    pageLoadTimeout: 10000,
+    requestTimeout: 5000,
+    responseTimeout: 5000,
+    numTestsKeptInMemory: 0,
   },
   video: false,
+  screenshotOnRunFailure: true, // Keep screenshots of failed tests
   screenshotsFolder: 'cypress/results/screenshots',
   reporter: 'cypress-multi-reporters',
   reporterOptions: {

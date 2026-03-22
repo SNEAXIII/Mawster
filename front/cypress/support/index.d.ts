@@ -8,6 +8,35 @@ declare namespace Cypress {
     truncateDb(): Chainable<void>;
 
     /**
+     * Create N users with optional game accounts, alliances, and battlegroup assignments
+     * in a single backend request. Returns a map of discord_token → user result.
+     */
+    apiBatchSetup(
+      specs: Array<{
+        discord_token: string;
+        role?: string;
+        game_pseudo?: string;
+        create_alliance?: { name: string; tag: string };
+        join_alliance_token?: string;
+        battlegroup?: number;
+      }>
+    ): Chainable<
+      Record<
+        string,
+        {
+          access_token: string;
+          refresh_token: string;
+          user_id: string;
+          login: string;
+          email: string;
+          discord_id: string;
+          account_id: string | null;
+          alliance_id: string | null;
+        }
+      >
+    >;
+
+    /**
      * Register a user via Discord OAuth mock (direct backend call) and return tokens.
      */
     registerUser(accessToken?: string): Chainable<{

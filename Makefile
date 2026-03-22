@@ -41,7 +41,7 @@ e2e-parallel: e2e-db
 	python scripts/e2e_parallel.py --workers $(if $(N),$(N),4)
 
 e2e-parallel-quiet: e2e-db
-	python scripts/e2e_parallel.py --workers $(if $(N),$(N),8) --quiet
+	python scripts/e2e_parallel.py --workers $(if $(N),$(N),4) --quiet
 
 else
 # ── Linux / macOS ─────────────────────────────────────────────────────────────
