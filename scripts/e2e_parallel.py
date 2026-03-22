@@ -15,12 +15,27 @@ import argparse
 import atexit
 import os
 import platform
+import re
 import signal
 import subprocess
 import sys
 import threading
 import time
 from pathlib import Path
+
+# Matches the final summary line printed by Cypress after all specs:
+#   "  √  All specs passed!                        01:39       60       54        -        6        - "
+#   "  ×  2 of 3 specs failed                      01:39       60       58        2        -        - "
+# Groups: tests, passing, failing, pending, skipped  ("-" means 0)
+FINAL_SUMMARY_RE = re.compile(
+    r"(?:passed!|failed!?)\s+"  # end of status text
+    r"\S+\s+"                   # duration (e.g. 01:39)
+    r"(\d+|-)\s+"               # tests
+    r"(\d+|-)\s+"               # passing
+    r"(\d+|-)\s+"               # failing
+    r"(\d+|-)\s+"               # pending
+    r"(\d+|-)"                  # skipped
+)
 
 ROOT = Path(__file__).parent.parent
 API_DIR = ROOT / "api"
@@ -104,12 +119,27 @@ def wait_for_http(url: str, label: str, timeout: int = HEALTH_TIMEOUT) -> None:
     raise TimeoutError(f"{label} at {url} did not become ready within {timeout}s")
 
 
-def pipe_output(stream, prefix: str, quiet: bool = False) -> None:
-    """Read lines from a subprocess stream and print them with a worker prefix."""
+def pipe_output(stream, prefix: str, quiet: bool = False, stats: dict | None = None) -> None:
+    """Read lines from a subprocess stream and print them with a worker prefix.
+
+    If `stats` is provided, accumulate numeric results from the Cypress
+    'Results:' summary block (Tests / Passing / Failing / Pending / Skipped).
+    """
     try:
         for line in iter(stream.readline, b""):
+            decoded = line.decode(errors="replace").rstrip()
             if not quiet:
-                print(f"{prefix} {line.decode(errors='replace').rstrip()}")
+                print(f"{prefix} {decoded}")
+            if stats is not None:
+                m = FINAL_SUMMARY_RE.search(decoded)
+                if m:
+                    def _n(s: str) -> int:
+                        return int(s) if s != "-" else 0
+                    stats["tests"] = _n(m.group(1))
+                    stats["passing"] = _n(m.group(2))
+                    stats["failing"] = _n(m.group(3))
+                    stats["pending"] = _n(m.group(4))
+                    stats["skipped"] = _n(m.group(5))
     except Exception:
         pass
 
@@ -217,8 +247,11 @@ def distribute_specs(specs: list[Path], n: int) -> list[list[Path]]:
     return buckets
 
 
-def run_cypress(worker: int, specs: list[Path]) -> int:
-    """Run a Cypress instance for this worker with its assigned spec list."""
+def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
+    """Run a Cypress instance for this worker with its assigned spec list.
+
+    Collects aggregated test counts into `stats` (passed by reference).
+    """
     api_port = BASE_API_PORT + worker
     front_port = BASE_FRONT_PORT + worker
     spec_list = ",".join(str(s.relative_to(FRONT_DIR)) for s in specs)
@@ -239,8 +272,10 @@ def run_cypress(worker: int, specs: list[Path]) -> int:
         stderr=subprocess.STDOUT,
     )
     prefix = f"[W{worker}|cypress]"
-    threading.Thread(target=pipe_output, args=(proc.stdout, prefix), daemon=True).start()
+    output_thread = threading.Thread(target=pipe_output, args=(proc.stdout, prefix, False, stats))
+    output_thread.start()
     proc.wait()
+    output_thread.join(timeout=5)
     log(f"Worker {worker}: Cypress finished with exit code {proc.returncode}")
     return proc.returncode
 
@@ -300,12 +335,22 @@ def main() -> None:
         help="Number of parallel workers (1-8, default: 2)",
     )
     parser.add_argument(
+        "--spec", type=str, default=None,
+        metavar="PATTERN",
+        help="Run a single spec file (relative to front/cypress/e2e/ or absolute glob). Forces --workers 1.",
+    )
+    parser.add_argument(
         "--quiet", "-q", action="store_true",
         help="Hide backend and frontend logs (Cypress output still shown)",
     )
     args = parser.parse_args()
-    n = args.workers
     quiet = args.quiet
+
+    if args.spec:
+        n = 1
+        log(f"--spec provided: forcing 1 worker for '{args.spec}'")
+    else:
+        n = args.workers
 
     log(f"Starting E2E parallel run with {n} worker(s)...")
 
@@ -435,19 +480,49 @@ def main() -> None:
 
     # Phase 3: run Cypress workers in parallel
     log("All servers ready. Launching Cypress workers...")
-    specs = get_spec_files()
-    log(f"Found {len(specs)} spec file(s) to distribute across {n} worker(s).")
+    if args.spec:
+        # Resolve the spec path relative to front/cypress/e2e/ if not absolute
+        spec_path = Path(args.spec)
+        if not spec_path.is_absolute():
+            candidate = FRONT_DIR / "cypress" / "e2e" / args.spec
+            if not candidate.exists():
+                # Try as-is relative to FRONT_DIR
+                candidate = FRONT_DIR / args.spec
+            spec_path = candidate
+        if not spec_path.exists():
+            log(f"ERROR: spec not found: {spec_path}")
+            sys.exit(1)
+        specs = [spec_path]
+        log(f"Running single spec: {spec_path.relative_to(FRONT_DIR)}")
+    else:
+        specs = get_spec_files()
+        log(f"Found {len(specs)} spec file(s) to distribute across {n} worker(s).")
     spec_buckets = distribute_specs(specs, n)
     results: list[int] = [0] * n
+    worker_stats: list[dict] = [{} for _ in range(n)]
 
     def cypress_worker(worker: int) -> None:
-        results[worker] = run_cypress(worker, spec_buckets[worker])
+        results[worker] = run_cypress(worker, spec_buckets[worker], worker_stats[worker])
 
     cypress_threads = [threading.Thread(target=cypress_worker, args=(i,)) for i in range(n)]
     for t in cypress_threads:
         t.start()
     for t in cypress_threads:
         t.join()
+
+    # Merge and print combined results
+    merged: dict[str, int] = {}
+    for stats in worker_stats:
+        for key, val in stats.items():
+            merged[key] = merged.get(key, 0) + val
+
+    if merged:
+        log("-" * 50)
+        log("MERGED RESULTS (all workers combined):")
+        for key in ["tests", "passing", "failing", "pending", "skipped"]:
+            val = merged.get(key, 0)
+            log(f"  {key.capitalize():<10}: {val}")
+        log("-" * 50)
 
     exit_code = max(results)
     log(f"Done. {'All tests passed.' if exit_code == 0 else f'{sum(1 for r in results if r != 0)} worker(s) had failures.'}")
