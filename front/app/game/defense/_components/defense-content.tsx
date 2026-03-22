@@ -7,11 +7,21 @@ import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { Shield } from 'lucide-react';
 
+import dynamic from 'next/dynamic';
+import { ConfirmationDialog } from '@/components/confirmation-dialog';
+import { useCurrentWar } from '../_hooks/use-current-war';
+
 import { useAllianceSelector } from '@/hooks/use-alliance-selector';
 import { useDefenseActions } from '../_hooks/use-defense-actions';
 
 import DefenseHeader from './defense-header';
 import DefenseGrid from './defense-grid';
+
+const WarBanner = dynamic(() => import('./war-banner'), { loading: () => null });
+const CreateWarDialog = dynamic(
+  () => import('../../war/_components/create-war-dialog'),
+  { loading: () => null }
+);
 
 interface DefensePageContentProps {
   onStateChange?: (allianceId: string, bg: number) => void;
@@ -62,6 +72,17 @@ export default function DefensePageContent({
     handleExportDefense,
     handleImportFile,
   } = useDefenseActions(selectedAllianceId, selectedBg, selectedAlliance?.tag);
+
+  const {
+    currentWar,
+    warLoading,
+    showCreateDialog,
+    setShowCreateDialog,
+    showEndConfirm,
+    setShowEndConfirm,
+    handleCreateWar,
+    handleEndWar,
+  } = useCurrentWar(selectedAllianceId);
 
   // Auto-select first alliance when alliances load and none is selected
   useEffect(() => {
@@ -119,6 +140,15 @@ export default function DefensePageContent({
         defenseSummary={defenseSummary}
       />
 
+      {userCanManage && (
+        <WarBanner
+          currentWar={currentWar}
+          warLoading={warLoading}
+          onOpenCreateDialog={() => setShowCreateDialog(true)}
+          onOpenEndConfirm={() => setShowEndConfirm(true)}
+        />
+      )}
+
       <DefenseGrid
         defenseSummary={defenseSummary}
         availableChampions={availableChampions}
@@ -138,6 +168,24 @@ export default function DefensePageContent({
         onImportReportClose={() => setImportReportOpen(false)}
         loading={defenseLoading}
         canManage={userCanManage}
+      />
+
+      <CreateWarDialog
+        open={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        onConfirm={handleCreateWar}
+      />
+
+      <ConfirmationDialog
+        open={showEndConfirm}
+        onOpenChange={setShowEndConfirm}
+        onConfirm={async () => {
+          setShowEndConfirm(false);
+          await handleEndWar();
+        }}
+        title={t.game.war.endWarConfirmTitle}
+        description={t.game.war.endWarConfirmDesc}
+        variant='destructive'
       />
     </div>
   );
