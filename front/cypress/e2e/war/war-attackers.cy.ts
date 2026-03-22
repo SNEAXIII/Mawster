@@ -73,7 +73,6 @@ describe('War – Attackers mode', () => {
       cy.uiLogin(ownerData.login);
       cy.navTo('war');
 
-      cy.getByCy('tab-war-defenders').click();
       // Switch to Attackers mode and verify it becomes active
       cy.getByCy('war-mode-attackers').click();
       cy.getByCy('war-mode-attackers').should('have.class', 'bg-primary');
@@ -90,7 +89,6 @@ describe('War – Attackers mode', () => {
 
         cy.uiLogin(ownerData.login);
         cy.navTo('war');
-        cy.getByCy('tab-war-defenders').click();
         cy.getByCy('war-mode-attackers').click();
 
         // Should see the attacker entry
@@ -108,7 +106,6 @@ describe('War – Attackers mode', () => {
 
         cy.uiLogin(ownerData.login);
         cy.navTo('war');
-        cy.getByCy('tab-war-defenders').click();
         cy.getByCy('war-mode-attackers').click();
 
         // Initial KO = 0
@@ -138,7 +135,6 @@ describe('War – Attackers mode', () => {
 
         cy.uiLogin(ownerData.login);
         cy.navTo('war');
-        cy.getByCy('tab-war-defenders').click();
         cy.getByCy('war-mode-attackers').click();
 
         cy.getByCy('attacker-entry-node-10').should('be.visible');
@@ -155,7 +151,6 @@ describe('War – Attackers mode', () => {
       ({ memberData, ownerData, allianceId, warId }) => {
         cy.uiLogin(ownerData.login);
         cy.navTo('war');
-        cy.getByCy('tab-war-defenders').click();
 
         // Mode toggle should show Attackers by default
         cy.getByCy('war-mode-attackers').click();
@@ -181,7 +176,6 @@ describe('War – Attackers mode', () => {
     setupAttackerScenario('atk-warn').then(({ memberData, ownerData }) => {
       cy.uiLogin(ownerData.login);
       cy.navTo('war');
-      cy.getByCy('tab-war-defenders').click();
       cy.getByCy('war-mode-attackers').click();
 
       // Click node 20 which has no defender
@@ -201,7 +195,6 @@ describe('War – Attackers mode', () => {
 
         cy.uiLogin(ownerData.login);
         cy.navTo('war');
-        cy.getByCy('tab-war-defenders').click();
         cy.getByCy('war-mode-attackers').click();
 
         // Panel should show 1/3
