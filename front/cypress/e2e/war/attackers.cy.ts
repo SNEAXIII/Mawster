@@ -11,7 +11,7 @@ import '../../support/e2e';
  * 1) Use `beforeEach(() => { cy.truncateDb(); })`.
  * 2) Create a war owner context with `setupWarOwner(...)`.
  * 3) Create and place enemy defenders first (node must contain a defender before attacker assignment).
- * 4) Open `/game/war`, select active war, switch to Defenders tab if needed, then switch to Attackers mode.
+ * 4) Open `/game/war` — the war map is visible directly. Switch to Attackers mode via the mode toggle (canManage only).
  *
  * Data policy for reliable tests:
  * - Use fixed battlegroup and deterministic nodes (example: node 1, 2, 3, 4).
