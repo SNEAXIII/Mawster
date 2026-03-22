@@ -4,12 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { toast } from 'sonner';
 import {
-  type War,
   type WarDefenseSummary,
   type AvailableAttacker,
-  getWars,
-  createWar,
-  endWar,
   getWarDefense,
   placeWarDefender,
   removeWarDefender,
@@ -19,49 +15,30 @@ import {
   updateWarKo,
 } from '@/app/services/war';
 
-export function useWarActions(selectedAllianceId: string, selectedBg: number) {
+export function useWarActions(
+  selectedAllianceId: string,
+  selectedBg: number,
+  activeWarId: string,
+) {
   const { t } = useI18n();
 
-  const [wars, setWars] = useState<War[]>([]);
-  const [selectedWarId, setSelectedWarId] = useState('');
   const [warSummary, setWarSummary] = useState<WarDefenseSummary | null>(null);
   const [warLoading, setWarLoading] = useState(false);
   const [selectorNode, setSelectorNode] = useState<number | null>(null);
   const [attackerSelectorNode, setAttackerSelectorNode] = useState<number | null>(null);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [showEndWarConfirm, setShowEndWarConfirm] = useState(false);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const tRef = useRef(t);
   useEffect(() => { tRef.current = t; }, [t]);
 
-  const activeWarId = wars.find((w) => w.status === 'active')?.id ?? '';
-
-  // ─── Fetch wars ──────────────────────────────────────────
-  const fetchWars = useCallback(
-    async (allianceId: string) => {
-      if (!allianceId) return;
-      try {
-        const data = await getWars(allianceId);
-        setWars(data);
-        if (data.length > 0) {
-          setSelectedWarId((current) => current || data[0]?.id || '');
-        }
-      } catch {
-        toast.error(tRef.current.game.war.loadError);
-      }
-    },
-    []
-  );
-
   // ─── Fetch war defense ───────────────────────────────────
   const fetchWarDefense = useCallback(
     async (silent = false) => {
-      if (!selectedAllianceId || !selectedWarId) return;
+      if (!selectedAllianceId || !activeWarId) return;
       if (!silent) setWarLoading(true);
       try {
-        const summary = await getWarDefense(selectedAllianceId, selectedWarId, selectedBg);
+        const summary = await getWarDefense(selectedAllianceId, activeWarId, selectedBg);
         setWarSummary(summary);
       } catch {
         if (!silent) toast.error(tRef.current.game.war.loadError);
@@ -69,23 +46,15 @@ export function useWarActions(selectedAllianceId: string, selectedBg: number) {
         if (!silent) setWarLoading(false);
       }
     },
-    [selectedAllianceId, selectedWarId, selectedBg]
+    [selectedAllianceId, activeWarId, selectedBg]
   );
 
   useEffect(() => {
-    if (selectedAllianceId) {
-      setSelectedWarId('');
-      setWars([]);
-      fetchWars(selectedAllianceId);
-    }
-  }, [selectedAllianceId, fetchWars]);
-
-  useEffect(() => {
     setWarSummary(null);
-    if (selectedWarId) {
+    if (activeWarId) {
       fetchWarDefense();
     }
-  }, [selectedWarId, selectedBg, fetchWarDefense]);
+  }, [activeWarId, selectedBg, fetchWarDefense]);
 
   // Polling every 10s
   useEffect(() => {
@@ -232,54 +201,20 @@ export function useWarActions(selectedAllianceId: string, selectedBg: number) {
     }
   };
 
-  const handleCreateWar = async (opponentName: string) => {
-    if (!selectedAllianceId) return;
-    try {
-      const war = await createWar(selectedAllianceId, opponentName);
-      toast.success(t.game.war.createSuccess.replace('{name}', opponentName));
-      setWars((prev) => [war, ...prev]);
-      setSelectedWarId(war.id);
-    } catch (err: any) {
-      toast.error(err.message || t.game.war.createError);
-      throw err;
-    }
-  };
-
-  const handleEndWar = async () => {
-    if (!selectedAllianceId || !selectedWarId) return;
-    try {
-      const updated = await endWar(selectedAllianceId, selectedWarId);
-      toast.success(t.game.war.endWarSuccess);
-      setWars((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
-    } catch (err: any) {
-      toast.error(err.message || t.game.war.endWarError);
-    }
-  };
-
   return {
-    wars,
-    selectedWarId,
-    setSelectedWarId,
     warSummary,
     warLoading,
     selectorNode,
     setSelectorNode,
     attackerSelectorNode,
     setAttackerSelectorNode,
-    showCreateDialog,
-    setShowCreateDialog,
     showClearConfirm,
     setShowClearConfirm,
-    showEndWarConfirm,
-    setShowEndWarConfirm,
-    activeWarId,
     handlePlaceDefender,
     handleRemoveDefender,
     handleClearBg,
     handleAssignAttacker,
     handleRemoveAttacker,
-    handleCreateWar,
-    handleEndWar,
     handleUpdateKo,
   };
 }
