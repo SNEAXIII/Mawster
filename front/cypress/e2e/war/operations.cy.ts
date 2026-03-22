@@ -18,7 +18,7 @@ describe('War – Operations (declare, place, remove)', () => {
         cy.getByCy('create-war-confirm').click();
 
         cy.contains('War declared against MightyFoes').should('be.visible');
-        cy.getByCy('war-select').should('contain', 'MightyFoes');
+        cy.getByCy('war-opponent-name').should('contain', 'MightyFoes');
       }
     );
   });
@@ -33,8 +33,6 @@ describe('War – Operations (declare, place, remove)', () => {
         cy.apiCreateWar(ownerData.access_token, allianceId, 'PlaceEnemy').then(() => {
           cy.uiLogin(ownerData.login);
           cy.navTo('war');
-
-          cy.getByCy('tab-war-defenders').click();
 
           cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
           cy.getByCy('war-champion-search').type('Iron Man');
@@ -59,7 +57,6 @@ describe('War – Operations (declare, place, remove)', () => {
         cy.apiCreateWar(ownerData.access_token, allianceId, 'HiddenEnemy').then(() => {
           cy.uiLogin(ownerData.login);
           cy.navTo('war');
-          cy.getByCy('tab-war-defenders').click();
 
           // Place Iron Man on node 1
           cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -91,7 +88,6 @@ describe('War – Operations (declare, place, remove)', () => {
 
             cy.uiLogin(ownerData.login);
             cy.navTo('war');
-            cy.getByCy('tab-war-defenders').click();
 
             cy.getByCy('war-node-5').scrollIntoView().should('not.contain', '+');
             cy.getByCy('war-node-5').find('button').click({ force: true });
@@ -115,7 +111,6 @@ describe('War – Operations (declare, place, remove)', () => {
 
             cy.uiLogin(ownerData.login);
             cy.navTo('war');
-            cy.getByCy('tab-war-defenders').click();
 
             cy.getByCy('clear-war-bg-btn').should('be.visible').click();
             cy.getByCy('confirmation-dialog-confirm').click();
@@ -139,7 +134,6 @@ describe('War – Operations (declare, place, remove)', () => {
 
             cy.uiLogin(ownerData.login);
             cy.navTo('war');
-            cy.getByCy('tab-war-defenders').click();
 
             // BG1 node 1 should be empty
             cy.getByCy('war-node-1').should('contain', '+');
