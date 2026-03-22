@@ -108,7 +108,7 @@ def pipe_output(stream, prefix: str) -> None:
     """Read lines from a subprocess stream and print them with a worker prefix."""
     try:
         for line in iter(stream.readline, b""):
-            print(f"{prefix} {line.decode(errors='replace').rstrip()}", flush=True)
+            print(f"{prefix} {line.decode(errors='replace').rstrip()}")
     except Exception:
         pass
 
@@ -149,7 +149,7 @@ def start_frontend(worker: int, base_env: dict) -> subprocess.Popen:
     }
     log(f"Worker {worker}: starting frontend — PORT={front_port}  API_PORT={api_port}  NEXTAUTH_URL=http://localhost:{front_port}")
     proc = subprocess.Popen(
-        [NPM, "run", "dev"],
+        [NPX, "next", "dev", "--turbopack", "--port", str(front_port)],
         cwd=str(FRONT_DIR),
         env=env,
         stdout=subprocess.PIPE,
