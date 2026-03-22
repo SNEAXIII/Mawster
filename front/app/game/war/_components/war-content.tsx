@@ -1,20 +1,21 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAllianceSelector } from '@/hooks/use-alliance-selector';
 import { useI18n } from '@/app/i18n';
 import { useRequiredSession } from '@/hooks/use-required-session';
 import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { type WarPlacement } from '@/app/services/war';
+import { type War, type WarPlacement, getCurrentWar, createWar, endWar } from '@/app/services/war';
 import { useWarActions } from '../_hooks/use-war-actions';
-import { useCurrentWar } from '../../defense/_hooks/use-current-war';
 import { toast } from 'sonner';
 import { WarMode } from './war-types';
 import WarHeader from './war-header';
 import WarDefendersTab from './war-defenders-tab';
+import WarManagementBar from './war-management-bar';
+import CreateWarDialog from './create-war-dialog';
 
 const WarChampionSelector = dynamic(() => import('./war-champion-selector'), {
   loading: () => null,
@@ -39,7 +40,42 @@ export default function WarContent() {
     loading,
   } = useAllianceSelector();
 
-  const { currentWar } = useCurrentWar(selectedAllianceId);
+  const [currentWar, setCurrentWar] = useState<War | null>(null);
+  const [managementLoading, setManagementLoading] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [warMode, setWarMode] = useState<WarMode>(WarMode.Defenders);
+
+  // ─── Auto-select first alliance ──────────────────────────
+  useEffect(() => {
+    if (alliances.length > 0 && !selectedAllianceId) {
+      setSelectedAllianceId(alliances[0].id);
+    }
+  }, [alliances, selectedAllianceId, setSelectedAllianceId]);
+
+  // ─── Fetch current war when alliance changes ──────────────
+  const fetchCurrentWar = useCallback(async () => {
+    if (!selectedAllianceId) return;
+    setManagementLoading(true);
+    try {
+      const war = await getCurrentWar(selectedAllianceId);
+      setCurrentWar(war);
+    } catch (err: any) {
+      if (err.status === 404) {
+        setCurrentWar(null);
+      } else {
+        toast.error(t.game.war.loadError);
+      }
+    } finally {
+      setManagementLoading(false);
+    }
+  }, [selectedAllianceId, t.game.war.loadError]);
+
+  useEffect(() => {
+    setCurrentWar(null);
+    fetchCurrentWar();
+  }, [selectedAllianceId, fetchCurrentWar]);
+
   const activeWarId = currentWar?.id ?? '';
 
   const {
@@ -59,16 +95,12 @@ export default function WarContent() {
     handleUpdateKo,
   } = useWarActions(selectedAllianceId, selectedBg, activeWarId);
 
-  const [warMode, setWarMode] = useState<WarMode>(WarMode.Defenders);
-
-  // ─── Auto-select first alliance ──────────────────────────
-  useEffect(() => {
-    if (alliances.length > 0 && !selectedAllianceId) {
-      setSelectedAllianceId(alliances[0].id);
-    }
-  }, [alliances, selectedAllianceId, setSelectedAllianceId]);
-
   // ─── Actions ─────────────────────────────────────────────
+
+  const placements: WarPlacement[] = warSummary?.placements ?? [];
+
+  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
+  const canManageWar = selectedAlliance ? canManage(selectedAlliance) : false;
 
   const handleNodeClick = (nodeNumber: number) => {
     if (!activeWarId) return;
@@ -80,20 +112,36 @@ export default function WarContent() {
       }
       setAttackerSelectorNode(nodeNumber);
     } else {
-      const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
       if (!selectedAlliance || !canManage(selectedAlliance)) return;
       setSelectorNode(nodeNumber);
+    }
+  };
+
+  const handleCreateWar = async (opponentName: string) => {
+    try {
+      const war = await createWar(selectedAllianceId, opponentName);
+      toast.success(t.game.war.createSuccess.replace('{name}', opponentName));
+      setCurrentWar(war);
+    } catch (err: any) {
+      toast.error(err.message || t.game.war.createError);
+      throw err;
+    }
+  };
+
+  const handleEndWar = async () => {
+    if (!currentWar) return;
+    try {
+      await endWar(selectedAllianceId, currentWar.id);
+      toast.success(t.game.war.endWarSuccess);
+      setCurrentWar(null);
+    } catch (err: any) {
+      toast.error(err.message || t.game.war.endWarError);
     }
   };
 
   // ─── Render ──────────────────────────────────────────────
 
   if (loading) return <FullPageSpinner />;
-
-  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
-  const canManageWar = selectedAlliance ? canManage(selectedAlliance) : false;
-  const placements: WarPlacement[] = warSummary?.placements ?? [];
-  const activeWar = currentWar ?? undefined;
 
   return (
     <div className='w-full px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
@@ -107,12 +155,22 @@ export default function WarContent() {
             onAllianceChange={setSelectedAllianceId}
           />
 
-          {/* ── Defenders tab ────────────────────────────── */}
+          {/* ── Management bar (officers/owners only) ──── */}
+          {canManageWar && (
+            <WarManagementBar
+              activeWar={currentWar}
+              loading={managementLoading}
+              onClickDeclare={() => setShowCreateDialog(true)}
+              onClickEndWar={() => setShowEndConfirm(true)}
+            />
+          )}
+
+          {/* ── War map ──────────────────────────────────── */}
           {!activeWarId ? (
             <p className='text-muted-foreground'>{t.game.war.noActiveWar}</p>
           ) : (
             <WarDefendersTab
-              activeWar={activeWar}
+              activeWar={currentWar ?? undefined}
               selectedBg={selectedBg}
               onBgChange={setSelectedBg}
               canManageWar={canManageWar}
@@ -129,6 +187,26 @@ export default function WarContent() {
           )}
         </>
       )}
+
+      {/* Declare war dialog */}
+      <CreateWarDialog
+        open={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        onConfirm={handleCreateWar}
+      />
+
+      {/* End war confirm */}
+      <ConfirmationDialog
+        open={showEndConfirm}
+        onOpenChange={setShowEndConfirm}
+        onConfirm={async () => {
+          setShowEndConfirm(false);
+          await handleEndWar();
+        }}
+        title={t.game.war.endWarConfirmTitle}
+        description={t.game.war.endWarConfirmDesc}
+        variant='destructive'
+      />
 
       {/* Defender champion selector */}
       <WarChampionSelector
