@@ -1,49 +1,27 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useAllianceSelector } from '@/hooks/use-alliance-selector';
 import { useI18n } from '@/app/i18n';
-import { toast } from 'sonner';
 import { useRequiredSession } from '@/hooks/use-required-session';
 import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { FullPageSpinner } from '@/components/full-page-spinner';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { Swords, Trash2 } from 'lucide-react';
-
-import { type Alliance, getMyAlliances } from '@/app/services/game';
-import {
-  type War,
-  type WarDefenseSummary,
-  type WarPlacement,
-  getWars,
-  createWar,
-  getWarDefense,
-  placeWarDefender,
-  removeWarDefender,
-  clearWarBg,
-} from '@/app/services/war';
-
-const WarDefenseMap = dynamic(() => import('./war-defense-map'), {
-  loading: () => <FullPageSpinner />,
-});
+import { type War, type WarPlacement, getCurrentWar, createWar, endWar } from '@/app/services/war';
+import { useWarActions } from '../_hooks/use-war-actions';
+import { toast } from 'sonner';
+import { WarMode } from './war-types';
+import WarHeader from './war-header';
+import WarDefendersTab from './war-defenders-tab';
+import WarManagementBar from './war-management-bar';
+import CreateWarDialog from './create-war-dialog';
 
 const WarChampionSelector = dynamic(() => import('./war-champion-selector'), {
   loading: () => null,
 });
 
-const WarSidePanel = dynamic(() => import('./war-side-panel'), {
-  loading: () => <FullPageSpinner />,
-});
-
-const CreateWarDialog = dynamic(() => import('./create-war-dialog'), {
+const WarAttackerSelector = dynamic(() => import('./war-attacker-selector'), {
   loading: () => null,
 });
 
@@ -53,171 +31,111 @@ export default function WarContent() {
 
   useRequiredSession();
 
-  const [alliances, setAlliances] = useState<Alliance[]>([]);
-  const [selectedAllianceId, setSelectedAllianceId] = useState('');
-  const [wars, setWars] = useState<War[]>([]);
-  const [selectedWarId, setSelectedWarId] = useState('');
-  const [selectedBg, setSelectedBg] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [warLoading, setWarLoading] = useState(false);
+  const {
+    alliances,
+    selectedAllianceId,
+    setSelectedAllianceId,
+    selectedBg,
+    setSelectedBg,
+    loading,
+  } = useAllianceSelector();
 
-  const [warSummary, setWarSummary] = useState<WarDefenseSummary | null>(null);
-
-  const [selectorNode, setSelectorNode] = useState<number | null>(null);
+  const [currentWar, setCurrentWar] = useState<War | null>(null);
+  const [managementLoading, setManagementLoading] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [warMode, setWarMode] = useState<WarMode>(WarMode.Defenders);
 
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // ─── Fetch alliances ─────────────────────────────────────
-  const fetchAlliances = useCallback(async () => {
-    try {
-      const data = await getMyAlliances();
-      setAlliances(data);
-      if (data.length > 0 && !selectedAllianceId) {
-        setSelectedAllianceId(data[0].id);
-      }
-    } catch {
-      toast.error(t.game.war.loadError);
-    } finally {
-      setLoading(false);
+  // ─── Auto-select first alliance ──────────────────────────
+  useEffect(() => {
+    if (alliances.length > 0 && !selectedAllianceId) {
+      setSelectedAllianceId(alliances[0].id);
     }
-  }, [t, selectedAllianceId]);
+  }, [alliances, selectedAllianceId, setSelectedAllianceId]);
 
-  // ─── Fetch wars ──────────────────────────────────────────
-  const fetchWars = useCallback(
-    async (allianceId: string) => {
-      if (!allianceId) return;
-      try {
-        const data = await getWars(allianceId);
-        setWars(data);
-        if (data.length > 0 && !selectedWarId) {
-          setSelectedWarId(data[0].id);
-        }
-      } catch {
+  // ─── Fetch current war when alliance changes ──────────────
+  const fetchCurrentWar = useCallback(async () => {
+    if (!selectedAllianceId) return;
+    setManagementLoading(true);
+    try {
+      const war = await getCurrentWar(selectedAllianceId);
+      setCurrentWar(war);
+    } catch (err: any) {
+      if (err.status === 404) {
+        setCurrentWar(null);
+      } else {
         toast.error(t.game.war.loadError);
       }
-    },
-    [t, selectedWarId]
-  );
-
-  // ─── Fetch war defense ───────────────────────────────────
-  const fetchWarDefense = useCallback(
-    async (silent = false) => {
-      if (!selectedAllianceId || !selectedWarId) return;
-      if (!silent) setWarLoading(true);
-      try {
-        const summary = await getWarDefense(selectedAllianceId, selectedWarId, selectedBg);
-        setWarSummary(summary);
-      } catch {
-        if (!silent) toast.error(t.game.war.loadError);
-      } finally {
-        if (!silent) setWarLoading(false);
-      }
-    },
-    [selectedAllianceId, selectedWarId, selectedBg, t]
-  );
-
-  useEffect(() => {
-    fetchAlliances();
-  }, []);
-
-  useEffect(() => {
-    if (selectedAllianceId) {
-      setSelectedWarId('');
-      setWars([]);
-      fetchWars(selectedAllianceId);
+    } finally {
+      setManagementLoading(false);
     }
-  }, [selectedAllianceId]);
+  }, [selectedAllianceId, t.game.war.loadError]);
 
   useEffect(() => {
-    setWarSummary(null);
-    if (selectedWarId) {
-      fetchWarDefense();
-    }
-  }, [selectedWarId, selectedBg]);
+    setCurrentWar(null);
+    fetchCurrentWar();
+  }, [selectedAllianceId, fetchCurrentWar]);
 
-  // Polling every 10s
-  useEffect(() => {
-    if (pollRef.current) clearInterval(pollRef.current);
-    if (selectedWarId) {
-      pollRef.current = setInterval(() => fetchWarDefense(true), 10_000);
-    }
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, [fetchWarDefense, selectedWarId]);
+  const activeWarId = currentWar?.id ?? '';
+
+  const {
+    warSummary,
+    warLoading,
+    selectorNode,
+    setSelectorNode,
+    attackerSelectorNode,
+    setAttackerSelectorNode,
+    showClearConfirm,
+    setShowClearConfirm,
+    handlePlaceDefender,
+    handleRemoveDefender,
+    handleClearBg,
+    handleAssignAttacker,
+    handleRemoveAttacker,
+    handleUpdateKo,
+  } = useWarActions(selectedAllianceId, selectedBg, activeWarId);
 
   // ─── Actions ─────────────────────────────────────────────
 
+  const placements: WarPlacement[] = warSummary?.placements ?? [];
+
+  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
+  const canManageWar = selectedAlliance ? canManage(selectedAlliance) : false;
+
   const handleNodeClick = (nodeNumber: number) => {
-    const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
-    if (!selectedAlliance || !canManage(selectedAlliance)) return;
-    setSelectorNode(nodeNumber);
-  };
-
-  const handlePlaceDefender = async (
-    championId: string,
-    championName: string,
-    stars: number,
-    rank: number,
-    ascension: number
-  ) => {
-    if (!selectedAllianceId || !selectedWarId || selectorNode === null) return;
-    try {
-      await placeWarDefender(
-        selectedAllianceId,
-        selectedWarId,
-        selectedBg,
-        selectorNode,
-        championId,
-        stars,
-        rank,
-        ascension
-      );
-      toast.success(
-        t.game.war.placeSuccess
-          .replace('{name}', championName)
-          .replace('{node}', String(selectorNode))
-      );
-      await fetchWarDefense();
-    } catch (err: any) {
-      toast.error(err.message || t.game.war.placeError);
-    }
-  };
-
-  const handleRemoveDefender = async (nodeNumber: number) => {
-    if (!selectedAllianceId || !selectedWarId) return;
-    try {
-      await removeWarDefender(selectedAllianceId, selectedWarId, selectedBg, nodeNumber);
-      toast.success(t.game.war.removeSuccess);
-      await fetchWarDefense();
-    } catch (err: any) {
-      toast.error(err.message || t.game.war.removeError);
-    }
-  };
-
-  const handleClearBg = async () => {
-    if (!selectedAllianceId || !selectedWarId) return;
-    try {
-      await clearWarBg(selectedAllianceId, selectedWarId, selectedBg);
-      toast.success(t.game.war.clearSuccess);
-      await fetchWarDefense();
-    } catch {
-      toast.error(t.game.war.loadError);
+    if (!activeWarId) return;
+    if (warMode === WarMode.Attackers) {
+      const hasDefender = placements.some((p) => p.node_number === nodeNumber);
+      if (!hasDefender) {
+        toast.warning(t.game.war.defenderRequired);
+        return;
+      }
+      setAttackerSelectorNode(nodeNumber);
+    } else {
+      if (!selectedAlliance || !canManage(selectedAlliance)) return;
+      setSelectorNode(nodeNumber);
     }
   };
 
   const handleCreateWar = async (opponentName: string) => {
-    if (!selectedAllianceId) return;
     try {
       const war = await createWar(selectedAllianceId, opponentName);
       toast.success(t.game.war.createSuccess.replace('{name}', opponentName));
-      setWars((prev) => [war, ...prev]);
-      setSelectedWarId(war.id);
+      setCurrentWar(war);
     } catch (err: any) {
       toast.error(err.message || t.game.war.createError);
       throw err;
+    }
+  };
+
+  const handleEndWar = async () => {
+    if (!currentWar) return;
+    try {
+      await endWar(selectedAllianceId, currentWar.id);
+      toast.success(t.game.war.endWarSuccess);
+      setCurrentWar(null);
+    } catch (err: any) {
+      toast.error(err.message || t.game.war.endWarError);
     }
   };
 
@@ -225,155 +143,72 @@ export default function WarContent() {
 
   if (loading) return <FullPageSpinner />;
 
-  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
-  const canManageWar = selectedAlliance ? canManage(selectedAlliance) : false;
-  const placements: WarPlacement[] = warSummary?.placements ?? [];
-
   return (
-    <div className='flex flex-col gap-4'>
-      {/* Header */}
-      <div className='flex flex-col gap-1'>
-        <h1 className='text-2xl font-bold flex items-center gap-2'>
-          <Swords className='w-6 h-6' />
-          {t.game.war.title}
-        </h1>
-        <p className='text-muted-foreground text-sm'>{t.game.war.description}</p>
-      </div>
-
+    <div className='w-full px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
       {alliances.length === 0 ? (
         <p className='text-muted-foreground'>{t.game.war.noAlliance}</p>
       ) : (
         <>
-          {/* Controls */}
-          <div className='flex flex-wrap items-center gap-3'>
-            {/* Alliance selector */}
-            <Select
-              value={selectedAllianceId}
-              onValueChange={setSelectedAllianceId}
-            >
-              <SelectTrigger
-                className='w-48'
-                data-cy='alliance-select'
-              >
-                <SelectValue placeholder={t.game.defense.alliance} />
-              </SelectTrigger>
-              <SelectContent>
-                {alliances.map((a) => (
-                  <SelectItem
-                    key={a.id}
-                    value={a.id}
-                  >
-                    [{a.tag}] {a.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <WarHeader
+            alliances={alliances}
+            selectedAllianceId={selectedAllianceId}
+            onAllianceChange={setSelectedAllianceId}
+          />
 
-            {/* War selector */}
-            <Select
-              value={selectedWarId}
-              onValueChange={setSelectedWarId}
-            >
-              <SelectTrigger
-                className='w-56'
-                data-cy='war-select'
-              >
-                <SelectValue placeholder={t.game.war.selectWar} />
-              </SelectTrigger>
-              <SelectContent>
-                {wars.map((w) => (
-                  <SelectItem
-                    key={w.id}
-                    value={w.id}
-                    data-cy={`war-option-${w.id}`}
-                  >
-                    vs {w.opponent_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* ── Management bar (officers/owners only) ──── */}
+          {canManageWar && (
+            <WarManagementBar
+              activeWar={currentWar}
+              loading={managementLoading}
+              onClickDeclare={() => setShowCreateDialog(true)}
+              onClickEndWar={() => setShowEndConfirm(true)}
+            />
+          )}
 
-            {/* BG selector */}
-            <Select
-              value={String(selectedBg)}
-              onValueChange={(v) => setSelectedBg(Number(v))}
-            >
-              <SelectTrigger
-                className='w-36'
-                data-cy='bg-select'
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[1, 2, 3].map((bg) => (
-                  <SelectItem
-                    key={bg}
-                    value={String(bg)}
-                    data-cy={`bg-option-${bg}`}
-                  >
-                    {t.game.defense.battlegroup} {bg}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Declare war button (officers only) */}
-            {canManageWar && (
-              <Button
-                variant='default'
-                onClick={() => setShowCreateDialog(true)}
-                data-cy='declare-war-btn'
-              >
-                <Swords className='w-4 h-4 mr-2' />
-                {t.game.war.declareWar}
-              </Button>
-            )}
-
-            {/* Clear BG button */}
-            {canManageWar && selectedWarId && placements.length > 0 && (
-              <Button
-                variant='outline'
-                onClick={() => setShowClearConfirm(true)}
-                data-cy='clear-war-bg-btn'
-              >
-                <Trash2 className='w-4 h-4 mr-2' />
-                {t.game.war.clearAll}
-              </Button>
-            )}
-          </div>
-
-          {wars.length === 0 ? (
-            <p className='text-muted-foreground'>{t.game.war.noWar}</p>
-          ) : !selectedWarId ? (
-            <p className='text-muted-foreground'>{t.game.war.selectWar}</p>
-          ) : warLoading ? (
-            <FullPageSpinner />
+          {/* ── War map ──────────────────────────────────── */}
+          {!activeWarId ? (
+            <p className='text-muted-foreground'>{t.game.war.noActiveWar}</p>
           ) : (
-            <div className='flex flex-col lg:flex-row gap-4'>
-              {/* Map */}
-              <div className='flex-1 overflow-x-auto'>
-                <WarDefenseMap
-                  placements={placements}
-                  onNodeClick={handleNodeClick}
-                  onRemove={handleRemoveDefender}
-                  canManage={canManageWar}
-                />
-              </div>
-
-              {/* Side panel */}
-              <div className='lg:w-64 shrink-0'>
-                <WarSidePanel
-                  placements={placements}
-                  onRemoveDefender={handleRemoveDefender}
-                  canManage={canManageWar}
-                />
-              </div>
-            </div>
+            <WarDefendersTab
+              activeWar={currentWar ?? undefined}
+              selectedBg={selectedBg}
+              onBgChange={setSelectedBg}
+              canManageWar={canManageWar}
+              warMode={warMode}
+              onWarModeChange={setWarMode}
+              warLoading={warLoading}
+              placements={placements}
+              onNodeClick={handleNodeClick}
+              onRemoveDefender={handleRemoveDefender}
+              onRemoveAttacker={handleRemoveAttacker}
+              onUpdateKo={handleUpdateKo}
+              onOpenClearConfirm={() => setShowClearConfirm(true)}
+            />
           )}
         </>
       )}
 
-      {/* Champion selector */}
+      {/* Declare war dialog */}
+      <CreateWarDialog
+        open={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        onConfirm={handleCreateWar}
+      />
+
+      {/* End war confirm */}
+      <ConfirmationDialog
+        open={showEndConfirm}
+        onOpenChange={setShowEndConfirm}
+        onConfirm={async () => {
+          setShowEndConfirm(false);
+          await handleEndWar();
+        }}
+        title={t.game.war.endWarConfirmTitle}
+        description={t.game.war.endWarConfirmDesc}
+        variant='destructive'
+      />
+
+      {/* Defender champion selector */}
       <WarChampionSelector
         open={selectorNode !== null}
         onClose={() => setSelectorNode(null)}
@@ -382,11 +217,16 @@ export default function WarContent() {
         onSelect={handlePlaceDefender}
       />
 
-      {/* Create war dialog */}
-      <CreateWarDialog
-        open={showCreateDialog}
-        onClose={() => setShowCreateDialog(false)}
-        onConfirm={handleCreateWar}
+      {/* Attacker selector */}
+      <WarAttackerSelector
+        open={attackerSelectorNode !== null}
+        onClose={() => setAttackerSelectorNode(null)}
+        nodeNumber={attackerSelectorNode ?? 0}
+        allianceId={selectedAllianceId}
+        warId={activeWarId}
+        battlegroup={selectedBg}
+        placements={placements}
+        onSelect={handleAssignAttacker}
       />
 
       {/* Clear confirm dialog */}

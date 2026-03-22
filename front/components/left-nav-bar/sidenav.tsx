@@ -11,12 +11,14 @@ import NavLinks, { Role } from './nav-links';
 import LanguageSwitcher from '@/components/language-switcher';
 import ThemePicker from '@/components/theme-picker';
 import { useI18n } from '@/app/i18n';
+import { useAllianceContext } from '@/app/contexts/alliance-context';
 
 export default function SideNavBar() {
   const { data: session } = useSession();
   const { t } = useI18n();
   const isAuthenticated = session && !session.error && session.user;
   const userRole: Role = (isAuthenticated ? (session.user.role as Role) : null) || Role.all;
+  const { hasAlliance } = useAllianceContext();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -50,7 +52,7 @@ export default function SideNavBar() {
 
       {/* Navigation Links Section */}
       <div className='flex grow flex-row justify-between gap-1 md:flex-col md:gap-2 overflow-x-auto md:overflow-x-visible'>
-        <NavLinks userRole={userRole} />
+        <NavLinks userRole={userRole} hasAlliance={hasAlliance} />
         <div
           className='hidden h-auto w-full grow rounded-md bg-muted/50 md:block'
           aria-hidden='true'

@@ -136,9 +136,11 @@ Cypress.Commands.add('uiLogin', (userName: string) => {
 
 // ── Navigate via navbar click ────────────────────────────────────────────────
 
-// Pages that no longer have a nav link — navigate via URL instead
+// Pages where cy.visit is preferred over nav click (avoids Radix scroll-lock contamination
+// across tests, or pages that have no nav link)
 const NAV_URL_FALLBACK: Record<string, string> = {
   defense: '/game/defense',
+  war: '/game/war',
 };
 
 Cypress.Commands.add('navTo', (page: string) => {
@@ -604,6 +606,76 @@ Cypress.Commands.add(
     });
   }
 );
+
+Cypress.Commands.add(
+  'apiAssignWarAttacker',
+  (
+    token: string,
+    allianceId: string,
+    warId: string,
+    battlegroup: number,
+    nodeNumber: number,
+    championUserId: string
+  ) => {
+    cy.request({
+      method: 'POST',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/attacker`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { champion_user_id: championUserId },
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      return res.body;
+    });
+  }
+);
+
+Cypress.Commands.add(
+  'apiRemoveWarAttacker',
+  (token: string, allianceId: string, warId: string, battlegroup: number, nodeNumber: number) => {
+    cy.request({
+      method: 'DELETE',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/attacker`,
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      return res.body;
+    });
+  }
+);
+
+Cypress.Commands.add(
+  'apiUpdateWarKo',
+  (
+    token: string,
+    allianceId: string,
+    warId: string,
+    battlegroup: number,
+    nodeNumber: number,
+    koCount: number
+  ) => {
+    cy.request({
+      method: 'PATCH',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/ko`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { ko_count: koCount },
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      return res.body;
+    });
+  }
+);
+
+Cypress.Commands.add('apiEndWar', (token: string, allianceId: string, warId: string) => {
+  cy.request({
+    method: 'POST',
+    url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/end`,
+    headers: { Authorization: `Bearer ${token}` },
+    body: {},
+  }).then((res) => {
+    expect(res.status).to.eq(200);
+    return res.body;
+  });
+});
 
 // ── War setup helper ──────────────────────────────────────────────────────────
 

@@ -54,7 +54,7 @@ export function ConfirmationDialog({
           {children}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelText ?? t.common.cancel}</AlertDialogCancel>
+          <AlertDialogCancel data-cy='confirmation-dialog-cancel'>{cancelText ?? t.common.cancel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className={variant === 'destructive' ? 'bg-red-600 hover:bg-red-700' : ''}

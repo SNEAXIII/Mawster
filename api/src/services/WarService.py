@@ -7,10 +7,20 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from src.models.Champion import Champion
+from src.models.ChampionUser import ChampionUser
+from src.models.DefensePlacement import DefensePlacement
+from src.models.GameAccount import GameAccount
 from src.models.War import War
 from src.models.WarDefensePlacement import WarDefensePlacement
-from src.dto.dto_war import WarCreateRequest, WarResponse, WarPlacementCreateRequest, WarPlacementResponse, WarDefenseSummaryResponse
+from src.dto.dto_war import (
+    WarResponse,
+    WarPlacementCreateRequest,
+    WarPlacementResponse,
+    WarDefenseSummaryResponse,
+    AvailableAttackerResponse,
+)
 from src.utils.db import SessionDep
+from src.utils.logging_config import debug_log
 
 
 class WarService:
@@ -23,6 +33,14 @@ class WarService:
         opponent_name: str,
         created_by_id: uuid.UUID,
     ) -> WarResponse:
+        existing = await session.exec(
+            select(War).where(War.alliance_id == alliance_id, War.status == "active")
+        )
+        if existing.first() is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="An active war already exists for this alliance",
+            )
         war = War(
             alliance_id=alliance_id,
             opponent_name=opponent_name,
@@ -48,6 +66,23 @@ class WarService:
         result = await session.exec(stmt)
         wars = result.all()
         return [WarResponse.model_validate(w) for w in wars]
+
+    @classmethod
+    async def get_current_war(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+    ) -> WarResponse:
+        result = await session.exec(
+            select(War).where(War.alliance_id == alliance_id, War.status == "active")
+        )
+        war = result.first()
+        if war is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No active war for this alliance",
+            )
+        return WarResponse.model_validate(await cls._load_war(session, war.id))
 
     @classmethod
     async def get_war(
@@ -103,6 +138,8 @@ class WarService:
             .options(
                 selectinload(WarDefensePlacement.champion),  # type: ignore[arg-type]
                 selectinload(WarDefensePlacement.placed_by),  # type: ignore[arg-type]
+                selectinload(WarDefensePlacement.attacker_champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+                selectinload(WarDefensePlacement.attacker_champion_user).selectinload(ChampionUser.game_account),  # type: ignore[arg-type]
             )
         )
         result = await session.exec(stmt)
@@ -118,10 +155,31 @@ class WarService:
             .options(
                 selectinload(WarDefensePlacement.champion),  # type: ignore[arg-type]
                 selectinload(WarDefensePlacement.placed_by),  # type: ignore[arg-type]
+                selectinload(WarDefensePlacement.attacker_champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+                selectinload(WarDefensePlacement.attacker_champion_user).selectinload(ChampionUser.game_account),  # type: ignore[arg-type]
             )
         )
         result = await session.exec(stmt)
         return result.one()
+
+    @classmethod
+    async def _get_placement_by_node(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        battlegroup: int,
+        node_number: int,
+    ) -> Optional[WarDefensePlacement]:
+        result = await session.exec(
+            select(WarDefensePlacement).where(
+                and_(
+                    WarDefensePlacement.war_id == war_id,
+                    WarDefensePlacement.battlegroup == battlegroup,
+                    WarDefensePlacement.node_number == node_number,
+                )
+            )
+        )
+        return result.first()
 
     @classmethod
     async def place_defender(
@@ -137,7 +195,7 @@ class WarService:
         if champion is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion not found")
 
-        # Check champion not already placed in this BG (unique per champion_id+war_id+battlegroup)
+        # Check champion not already placed as defender in this BG
         existing_champ = await session.exec(
             select(WarDefensePlacement).where(
                 and_(
@@ -152,6 +210,24 @@ class WarService:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="This champion is already placed on another node in this battlegroup",
+            )
+
+        # Check champion not already assigned as attacker in this BG
+        existing_as_attacker = await session.exec(
+            select(WarDefensePlacement)
+            .join(ChampionUser, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
+            .where(
+                and_(
+                    WarDefensePlacement.war_id == war_id,
+                    WarDefensePlacement.battlegroup == battlegroup,
+                    ChampionUser.champion_id == req.champion_id,
+                )
+            )
+        )
+        if existing_as_attacker.first():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This champion is already assigned as an attacker in this battlegroup",
             )
 
         # Replace if node already occupied
@@ -214,6 +290,20 @@ class WarService:
         await session.commit()
 
     @classmethod
+    async def end_war(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+    ) -> WarResponse:
+        war = await cls.get_war(session, war_id, alliance_id)
+        war.status = "ended"
+        session.add(war)
+        await session.commit()
+        await session.refresh(war)
+        return WarResponse.model_validate(await cls._load_war(session, war.id))
+
+    @classmethod
     async def clear_bg(
         cls,
         session: SessionDep,
@@ -234,3 +324,202 @@ class WarService:
             await session.delete(p)
         await session.commit()
         return count
+
+    # ─── Attacker endpoints ───────────────────────────────────────────────────
+
+    @classmethod
+    async def get_available_attackers(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+        battlegroup: int,
+    ) -> list[AvailableAttackerResponse]:
+        # Get members assigned to this battlegroup
+        members_result = await session.exec(
+            select(GameAccount)
+            .where(
+                and_(
+                    GameAccount.alliance_id == alliance_id,
+                    GameAccount.alliance_group == battlegroup,
+                )
+            )
+            .options(
+                selectinload(GameAccount.roster).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+            )
+        )
+        members = members_result.all()
+
+        # Get defender champion_ids for this war+BG
+        placements = await cls._get_placements(session, war_id, battlegroup)
+        defender_champion_ids = {p.champion_id for p in placements}
+
+        # Get champion_user_ids already placed in regular defense for members currently in this BG.
+        # Join on GameAccount to use the member's current alliance_group rather than the stored
+        # battlegroup in DefensePlacement (which may be stale if the member was reassigned).
+        defense_result = await session.exec(
+            select(DefensePlacement.champion_user_id)
+            .join(GameAccount, DefensePlacement.game_account_id == GameAccount.id)
+            .where(
+                and_(
+                    DefensePlacement.alliance_id == alliance_id,
+                    GameAccount.alliance_group == battlegroup,
+                )
+            )
+        )
+        defense_champion_user_ids = set(defense_result.all())
+
+        result: list[AvailableAttackerResponse] = []
+        for acc in members:
+            for cu in acc.roster:
+                if cu.champion_id not in defender_champion_ids and cu.id not in defense_champion_user_ids:
+                    result.append(AvailableAttackerResponse(
+                        champion_user_id=cu.id,
+                        game_account_id=acc.id,
+                        game_pseudo=acc.game_pseudo,
+                        champion_id=cu.champion_id,
+                        champion_name=cu.champion.name,
+                        champion_class=cu.champion.champion_class,
+                        image_url=cu.champion.image_url,
+                        rarity=cu.rarity,
+                    ))
+        return result
+
+    @classmethod
+    async def assign_attacker(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+        battlegroup: int,
+        node_number: int,
+        champion_user_id: uuid.UUID,
+    ) -> WarPlacementResponse:
+        # 1. Node must have a defender
+        placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
+        if placement is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="This node has no defender — place a defender first",
+            )
+
+        # 2. Load the champion user
+        cu_stmt = (
+            select(ChampionUser)
+            .where(ChampionUser.id == champion_user_id)
+            .options(selectinload(ChampionUser.game_account))  # type: ignore[arg-type]
+        )
+        cu = (await session.exec(cu_stmt)).first()
+        debug_log(str(cu))
+        if cu is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+
+        ga = cu.game_account
+        # 3. Validate member belongs to this alliance + battlegroup
+        if ga.alliance_id != alliance_id or ga.alliance_group != battlegroup:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This champion does not belong to a member of this alliance battlegroup",
+            )
+
+        # 4. Check champion not already used as defender in this BG
+        all_placements = await cls._get_placements(session, war_id, battlegroup)
+        defender_champion_ids = {p.champion_id for p in all_placements}
+        if cu.champion_id in defender_champion_ids:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This champion is already placed as a defender in this battlegroup",
+            )
+
+        # 5. Check champion not already placed in regular alliance defense
+        defense_check = await session.exec(
+            select(DefensePlacement).where(
+                and_(
+                    DefensePlacement.champion_user_id == champion_user_id,
+                    DefensePlacement.alliance_id == alliance_id,
+                    DefensePlacement.battlegroup == battlegroup,
+                )
+            )
+        )
+        if defense_check.first():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This champion is already placed in the alliance defense",
+            )
+
+        # 7. Check member has fewer than 3 attackers in this war+BG.
+        # Use a direct DB query instead of relying on selectinload being populated on all placements.
+        attacker_count_result = await session.exec(
+            select(WarDefensePlacement)
+            .join(ChampionUser, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
+            .where(
+                and_(
+                    WarDefensePlacement.war_id == war_id,
+                    WarDefensePlacement.battlegroup == battlegroup,
+                    ChampionUser.game_account_id == ga.id,
+                )
+            ).group_by(ChampionUser.id)
+        )
+        all_attackers = attacker_count_result.all()
+        all_attackers_ids = set(a.attacker_champion_user_id for a in all_attackers)
+        all_attackers_ids.add(champion_user_id)  # include the new one we're trying to add
+        member_attacker_count = len(all_attackers_ids)
+        if member_attacker_count > 3:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This member already has 3 attackers assigned in this battlegroup",
+            )
+
+        # 8. Assign
+        placement_id = placement.id
+        placement.attacker_champion_user_id = champion_user_id
+        session.add(placement)
+        await session.commit()
+        session.expire(placement)
+
+        return WarPlacementResponse.model_validate(
+            await cls._load_placement(session, placement_id)
+        )
+
+    @classmethod
+    async def remove_attacker(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        battlegroup: int,
+        node_number: int,
+    ) -> WarPlacementResponse:
+        placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
+        if placement is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No defender on this node")
+        if placement.attacker_champion_user_id is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No attacker assigned to this node")
+
+        placement.attacker_champion_user_id = None
+        session.add(placement)
+        await session.commit()
+
+        return WarPlacementResponse.model_validate(
+            await cls._load_placement(session, placement.id)
+        )
+
+    @classmethod
+    async def update_ko(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        battlegroup: int,
+        node_number: int,
+        ko_count: int,
+    ) -> WarPlacementResponse:
+        placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
+        if placement is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No defender on this node")
+
+        placement.ko_count = ko_count
+        session.add(placement)
+        await session.commit()
+
+        return WarPlacementResponse.model_validate(
+            await cls._load_placement(session, placement.id)
+        )

@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from src.models.War import War
     from src.models.Champion import Champion
     from src.models.GameAccount import GameAccount
+    from src.models.ChampionUser import ChampionUser
 
 
 class WarDefensePlacement(SQLModel, table=True):
@@ -26,6 +27,8 @@ class WarDefensePlacement(SQLModel, table=True):
     ascension: int = Field(default=0, ge=0, le=2)
     placed_by_id: Optional[uuid.UUID] = Field(default=None, foreign_key="game_account.id")
     created_at: datetime = Field(default_factory=datetime.now)
+    attacker_champion_user_id: Optional[uuid.UUID] = Field(default=None, foreign_key="champion_user.id")
+    ko_count: int = Field(default=0, ge=0)
 
     # Relations
     war: "War" = Relationship(back_populates="placements")
@@ -34,4 +37,7 @@ class WarDefensePlacement(SQLModel, table=True):
     )
     placed_by: Optional["GameAccount"] = Relationship(
         sa_relationship_kwargs={"foreign_keys": "[WarDefensePlacement.placed_by_id]"},
+    )
+    attacker_champion_user: Optional["ChampionUser"] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[WarDefensePlacement.attacker_champion_user_id]"},
     )

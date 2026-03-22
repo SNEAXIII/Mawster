@@ -27,7 +27,7 @@ from src.security.secrets import SECRET
 from src.utils.logging_config import setup_logging
 
 # Initialize logging before anything else
-setup_logging()
+setup_logging(logging.INFO if IS_PROD else logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 if not IS_PROD:

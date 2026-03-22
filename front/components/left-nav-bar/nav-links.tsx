@@ -19,9 +19,10 @@ const roleHierarchy: Record<Role, Role[]> = {
 };
 interface NavLinksProps {
   userRole: Role;
+  hasAlliance: boolean;
 }
 
-export default function NavLinks({ userRole }: Readonly<NavLinksProps>) {
+export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksProps>) {
   const pathname = usePathname();
   const { t } = useI18n();
 
@@ -42,6 +43,7 @@ export default function NavLinks({ userRole }: Readonly<NavLinksProps>) {
       icon: Swords,
       role: Role.user,
       cy: 'nav-war',
+      requiresAlliance: true,
     },
     {
       name: t.nav.administration,
@@ -57,6 +59,9 @@ export default function NavLinks({ userRole }: Readonly<NavLinksProps>) {
       {links.map((link) => {
         const LinkIcon = link.icon;
         if (!roleHierarchy[userRole]?.includes(link.role)) {
+          return null;
+        }
+        if (link.requiresAlliance && !hasAlliance) {
           return null;
         }
         const isActive =

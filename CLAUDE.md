@@ -243,7 +243,7 @@ Gère le cycle de vie des serveurs dev et test depuis l'assistant. Démarre/arr�
 | Outil MCP | Description |
 | --- | --- |
 | `mcp__server-runner__start_dev` | Lance mariadb (3306) + API (8000) + Frontend (3000) en mode dev |
-| `mcp__server-runner__start_test` | Lance mariadb-test (3307) + API (8001) + Frontend (3000) en mode test |
+| `mcp__server-runner__start_test` | Lance mariadb-test (3307) + API (8001) + Frontend (3001) en mode test |
 | `mcp__server-runner__stop` | Arrête tous les serveurs démarrés |
 | `mcp__server-runner__status` | Mode actif, PIDs, ports, uptime |
 | `mcp__server-runner__run_e2e` | Démarre le mode test si besoin, lance Cypress, retourne les résultats |

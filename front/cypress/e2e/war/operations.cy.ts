@@ -18,7 +18,7 @@ describe('War – Operations (declare, place, remove)', () => {
         cy.getByCy('create-war-confirm').click();
 
         cy.contains('War declared against MightyFoes').should('be.visible');
-        cy.getByCy('war-select').should('contain', 'MightyFoes');
+        cy.getByCy('war-opponent-name').should('contain', 'MightyFoes');
       }
     );
   });
@@ -116,6 +116,31 @@ describe('War – Operations (declare, place, remove)', () => {
             cy.getByCy('confirmation-dialog-confirm').click();
             cy.contains('Battlegroup cleared').should('be.visible');
             cy.getByCy('war-node-10').should('contain', '+');
+          });
+        });
+      }
+    );
+  });
+
+  // ── Switch battlegroup ────────────────────────────────────────────────────
+
+  it('officer can switch between battlegroups with G1/G2/G3 buttons', () => {
+    setupWarOwner('war-op-bg-switch', 'BgSwitchOp', 'BgSwitchAlliance', 'BS').then(
+      ({ adminData, ownerData, allianceId }) => {
+        cy.apiLoadChampion(adminData.access_token, 'Gamora', 'Cosmic').then((champs) => {
+          cy.apiCreateWar(ownerData.access_token, allianceId, 'BgEnemy').then((war) => {
+            // Place in BG2
+            cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 2, 1, champs[0].id, 7, 3);
+
+            cy.uiLogin(ownerData.login);
+            cy.navTo('war');
+
+            // BG1 node 1 should be empty
+            cy.getByCy('war-node-1').should('contain', '+');
+
+            // Switch to G2
+            cy.getByCy('bg-btn-2').click();
+            cy.getByCy('war-node-1').should('not.contain', '+');
           });
         });
       }

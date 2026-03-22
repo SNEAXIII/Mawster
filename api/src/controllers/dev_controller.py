@@ -1,6 +1,7 @@
 """Dev-only controller — all routes are disabled when MODE=prod."""
 import importlib.util
 import logging
+import os
 import uuid
 from pathlib import Path
 
@@ -14,6 +15,7 @@ from src.dto.dto_token import LoginResponse, TokenBody
 from src.dto.dto_utilisateurs import UserProfile
 from src.enums.Roles import Roles
 from src.models import User, GameAccount
+from src.security.secrets import SECRET
 from src.services.JWTService import JWTService
 from src.services.UserService import UserService
 from src.utils.db import SessionDep
@@ -158,3 +160,26 @@ async def promote_user(body: PromoteRequest, session: SessionDep):
     await session.commit()
     await session.refresh(user)
     return {"message": f"User promoted to {body.role}", "user_id": str(user.id)}
+
+
+class EnvInfo(BaseModel):
+    """Non-sensitive environment info for debugging."""
+    mode: str
+    api_port: int
+    db_host: str
+    db_port: int
+    db_name: str
+    db_user: str
+
+
+@dev_controller.get("/env-info", response_model=EnvInfo)
+async def get_env_info():
+    """Return non-sensitive environment configuration for debugging (test/dev mode only)."""
+    return EnvInfo(
+        mode=os.getenv("MODE", "dev"),
+        api_port=SECRET.API_PORT,
+        db_host=SECRET.MARIADB_HOST,
+        db_port=SECRET.MARIADB_PORT,
+        db_name=SECRET.MARIADB_DATABASE,
+        db_user=SECRET.MARIADB_USER,
+    )
