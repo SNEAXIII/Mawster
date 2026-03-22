@@ -237,7 +237,7 @@ const fr: Translations = {
       defenders: 'Défenseurs',
       declareWar: 'Déclarer une guerre',
       declareWarTooltip: 'Une seule guerre peut être déclenchée à la fois',
-      noActiveWar: 'Aucune guerre en cours',
+      noActiveWar: 'Aucune guerre en cours, contactez vos officiers d\'alliance pour déclarer une guerre.',
       modeDefenders: 'Défenseurs',
       modeAttackers: 'Attaquants',
       opponentName: 'Nom de l\'adversaire',

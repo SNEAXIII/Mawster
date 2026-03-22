@@ -233,7 +233,7 @@ const en = {
       defenders: 'Defenders',
       declareWar: 'Declare War',
       declareWarTooltip: 'Only one war can be active at a time',
-      noActiveWar: 'No active war in progress',
+      noActiveWar: 'No active war in progress, contact your alliance officers to declare a war.',
       modeDefenders: 'Defenders',
       modeAttackers: 'Attackers',
       opponentName: 'Opponent Name',
