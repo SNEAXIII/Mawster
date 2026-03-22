@@ -41,12 +41,14 @@
     ".next/dev/types/**/*.ts",
     ".next-*/types/**/*.ts",
     ".next-*/dev/types/**/*.ts",
-    ".next-3010/types/**/*.ts",
-    ".next-3010/dev/types/**/*.ts",
+    ".next-e2e/types/**/*.ts",
+    ".next-e2e/dev/types/**/*.ts",
+    ".next-3012/types/**/*.ts",
+    ".next-3012/dev/types/**/*.ts",
+    ".next-3013/types/**/*.ts",
+    ".next-3013/dev/types/**/*.ts",
     ".next-3011/types/**/*.ts",
-    ".next-3011/dev/types/**/*.ts",
-    ".next-3001/types/**/*.ts",
-    ".next-3001/dev/types/**/*.ts"
+    ".next-3011/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

@@ -38,7 +38,10 @@ e2e-open: e2e-db
 	@Write-Host 'Lancement de Cypress...'; Set-Location front; npx cypress open
 
 e2e-parallel: e2e-db
-	python scripts/e2e_parallel.py --workers $(if $(N),$(N),2)
+	python scripts/e2e_parallel.py --workers $(if $(N),$(N),4)
+
+e2e-parallel-quiet: e2e-db
+	python scripts/e2e_parallel.py --workers $(if $(N),$(N),8) --quiet
 
 else
 # ── Linux / macOS ─────────────────────────────────────────────────────────────
@@ -83,6 +86,9 @@ e2e-open: e2e-db
 
 e2e-parallel: e2e-db ## Run E2E tests in parallel (N=2 by default, max 8)
 	python scripts/e2e_parallel.py --workers $(if $(N),$(N),2)
+
+e2e-parallel-quiet: e2e-db ## Run E2E tests in parallel, hide server logs (N=2 by default, max 8)
+	python scripts/e2e_parallel.py --workers $(if $(N),$(N),2) --quiet
 
 endif
 

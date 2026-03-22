@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerApiUrl } from '@/app/lib/serverApiUrl';
+import { isServerDev } from '@/app/lib/dev-mode';
 
 /**
  * Dev-only proxy: fetches the list of users from the backend
@@ -7,7 +8,7 @@ import { getServerApiUrl } from '@/app/lib/serverApiUrl';
  * endpoint are disabled in production.
  */
 export async function GET() {
-  if (process.env.NODE_ENV !== 'development') {
+  if (!isServerDev()) {
     return NextResponse.json({ message: 'Not found' }, { status: 404 });
   }
 

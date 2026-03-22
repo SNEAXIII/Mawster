@@ -4,7 +4,9 @@ import Credentials from 'next-auth/providers/credentials';
 import jwt from 'jsonwebtoken';
 import { getServerApiUrl } from '@/app/lib/serverApiUrl';
 
-const IS_DEV = process.env.NODE_ENV === 'development';
+import { isServerDev } from '@/app/lib/dev-mode';
+
+const IS_DEV = isServerDev();
 
 interface JwtPayload {
   user_id: string;

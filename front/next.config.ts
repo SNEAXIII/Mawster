@@ -5,8 +5,8 @@ const NEXT_PUBLIC_API_CLIENT_HOST = process.env.NEXT_PUBLIC_API_CLIENT_HOST ?? '
 const API_CLIENT_END_PART = process.env.NODE_ENV === 'production' ? '/api/back' : `:${API_PORT}`;
 const port = process.env.PORT ?? '3000';
 const nextConfig: NextConfig = {
-  output: 'standalone',
-  distDir: port !== '3000' ? `.next-${port}` : '.next',
+  output: process.env.NEXT_E2E_BUILD ? undefined : 'standalone',
+  distDir: process.env.NEXT_DIST_DIR ?? (port !== '3000' ? `.next-${port}` : '.next'),
   async rewrites() {
     return [
       {

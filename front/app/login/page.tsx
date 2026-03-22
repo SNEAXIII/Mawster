@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Loader, AlertCircle, User } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 
-const IS_DEV = process.env.NODE_ENV === 'development';
+import { IS_DEV } from '@/app/lib/dev-mode';
 
 interface DevUser {
   id: string;

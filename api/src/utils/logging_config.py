@@ -61,7 +61,7 @@ def setup_logging(level: int = logging.INFO) -> None:
     # Detect whether we're running inside a container environment. In container
     # mode we prefer logging to stdout/stderr only and let Docker handle
     # rotation/retention (avoids duplicate file logs).
-    CONTAINER_MODE = os.getenv("CONTAINER") == "1"
+    CONTAINER_MODE = os.getenv("CONTAINER") == "1" or os.getenv("MODE") == "testing"
 
     # Root logger
     root = logging.getLogger()

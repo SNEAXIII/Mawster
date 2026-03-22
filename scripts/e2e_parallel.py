@@ -7,7 +7,7 @@ Usage:
 
 Each worker N gets:
   - Backend on port 8010+N  (MariaDB DB: mawster_test_N)
-  - Frontend on port 3010+N (Next.js distDir: .next-3010+N)
+  - Frontend on port 3010+N (next start serving shared .next-e2e build)
   - Cypress instance with split=total,splitIndex=N
 """
 
@@ -104,16 +104,17 @@ def wait_for_http(url: str, label: str, timeout: int = HEALTH_TIMEOUT) -> None:
     raise TimeoutError(f"{label} at {url} did not become ready within {timeout}s")
 
 
-def pipe_output(stream, prefix: str) -> None:
+def pipe_output(stream, prefix: str, quiet: bool = False) -> None:
     """Read lines from a subprocess stream and print them with a worker prefix."""
     try:
         for line in iter(stream.readline, b""):
-            print(f"{prefix} {line.decode(errors='replace').rstrip()}")
+            if not quiet:
+                print(f"{prefix} {line.decode(errors='replace').rstrip()}")
     except Exception:
         pass
 
 
-def start_backend(worker: int, base_env: dict) -> subprocess.Popen:
+def start_backend(worker: int, base_env: dict, quiet: bool = False) -> subprocess.Popen:
     api_port = BASE_API_PORT + worker
     db = f"{DB_PREFIX}{worker}"
     env = {
@@ -132,11 +133,38 @@ def start_backend(worker: int, base_env: dict) -> subprocess.Popen:
         stderr=subprocess.STDOUT,
     )
     prefix = f"[W{worker}|api:{api_port}]"
-    threading.Thread(target=pipe_output, args=(proc.stdout, prefix), daemon=True).start()
+    threading.Thread(target=pipe_output, args=(proc.stdout, prefix, quiet), daemon=True).start()
     return proc
 
 
-def start_frontend(worker: int, base_env: dict) -> subprocess.Popen:
+def build_frontend(base_env: dict) -> None:
+    """Run a single `next build` before launching workers.
+
+    The build uses NEXT_PUBLIC_DEV_MODE=true so the dev user-picker is
+    included in the bundle.  All workers then share this output via
+    NEXT_DIST_DIR=.next-e2e.
+    """
+    log("Building frontend (single shared build)...")
+    env = {
+        **base_env,
+        "PORT": "3000",
+        "API_PORT": str(BASE_API_PORT),   # placeholder — rewrites are runtime-read anyway
+        "NEXT_PUBLIC_DEV_MODE": "true",
+        "NEXT_DIST_DIR": ".next-e2e",
+        "NEXT_E2E_BUILD": "true",
+        "PYTHONIOENCODING": "utf-8",
+    }
+    result = subprocess.run(
+        [NPX, "next", "build"],
+        cwd=str(FRONT_DIR),
+        env=env,
+    )
+    if result.returncode != 0:
+        raise RuntimeError("next build failed")
+    log("Frontend build complete.")
+
+
+def start_frontend(worker: int, base_env: dict, quiet: bool = False) -> subprocess.Popen:
     api_port = BASE_API_PORT + worker
     front_port = BASE_FRONT_PORT + worker
     env = {
@@ -145,18 +173,21 @@ def start_frontend(worker: int, base_env: dict) -> subprocess.Popen:
         "API_PORT": str(api_port),
         "NEXTAUTH_URL": f"http://localhost:{front_port}",
         "WORKER_ID": str(worker),
+        "NEXT_DIST_DIR": ".next-e2e",
+        "NEXT_E2E_BUILD": "true",
+        "DEV_MODE": "true",
         "PYTHONIOENCODING": "utf-8",
     }
     log(f"Worker {worker}: starting frontend — PORT={front_port}  API_PORT={api_port}  NEXTAUTH_URL=http://localhost:{front_port}")
     proc = subprocess.Popen(
-        [NPX, "next", "dev", "--turbopack", "--port", str(front_port)],
+        [NPX, "next", "start", "--port", str(front_port)],
         cwd=str(FRONT_DIR),
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
     prefix = f"[W{worker}|front:{front_port}]"
-    threading.Thread(target=pipe_output, args=(proc.stdout, prefix), daemon=True).start()
+    threading.Thread(target=pipe_output, args=(proc.stdout, prefix, quiet), daemon=True).start()
     return proc
 
 
@@ -212,8 +243,13 @@ def main() -> None:
         metavar="N", choices=range(1, 9),
         help="Number of parallel workers (1-8, default: 2)",
     )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true",
+        help="Hide backend and frontend logs (Cypress output still shown)",
+    )
     args = parser.parse_args()
     n = args.workers
+    quiet = args.quiet
 
     log(f"Starting E2E parallel run with {n} worker(s)...")
 
@@ -245,13 +281,12 @@ def main() -> None:
                     p.kill()
                 except Exception:
                     pass
-        # Remove worker Next.js build dirs so Next.js doesn't re-add them to tsconfig.json
+        # Remove the shared e2e build dir
         import shutil
-        for i in range(n):
-            next_dir = FRONT_DIR / f".next-{BASE_FRONT_PORT + i}"
-            if next_dir.exists():
-                shutil.rmtree(next_dir, ignore_errors=True)
-                log(f"Removed {next_dir.name}")
+        next_dir = FRONT_DIR / ".next-e2e"
+        if next_dir.exists():
+            shutil.rmtree(next_dir, ignore_errors=True)
+            log(f"Removed {next_dir.name}")
 
     atexit.register(cleanup)
 
@@ -264,14 +299,21 @@ def main() -> None:
     if hasattr(signal, "SIGTERM"):
         signal.signal(signal.SIGTERM, handle_sigint)
 
+    # Phase 0: build the frontend once (shared across all workers)
+    try:
+        build_frontend(base_env)
+    except RuntimeError as exc:
+        log(f"ERROR: {exc}")
+        sys.exit(1)
+
     # Phase 1: create DBs and start servers in parallel
     errors: list[str] = []
 
     def setup_worker(worker: int) -> None:
         try:
             docker_create_db(worker)
-            backend = start_backend(worker, base_env)
-            frontend = start_frontend(worker, base_env)
+            backend = start_backend(worker, base_env, quiet)
+            frontend = start_frontend(worker, base_env, quiet)
             with lock:
                 procs.extend([backend, frontend])
         except Exception as exc:
@@ -296,11 +338,11 @@ def main() -> None:
     def health_check_worker(worker: int) -> None:
         try:
             wait_for_http(
-                f"http://localhost:{BASE_API_PORT + worker}/docs",
+                f"http://localhost:{BASE_API_PORT + worker}",
                 f"Backend {worker}",
             )
             wait_for_http(
-                f"http://localhost:{BASE_FRONT_PORT + worker}",
+                f"http://localhost:{BASE_FRONT_PORT + worker}/api/auth/providers",
                 f"Frontend {worker}",
             )
         except TimeoutError as exc:

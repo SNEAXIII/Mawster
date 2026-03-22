@@ -10,6 +10,7 @@
  */
 export function getServerApiUrl(): string {
   const port = process.env['API_PORT'] ?? '8000';
-  const host = process.env.NODE_ENV === 'production' ? 'api' : 'localhost';
+  const isDockerProd = process.env.NODE_ENV === 'production' && process.env['DEV_MODE'] !== 'true';
+  const host = isDockerProd ? 'api' : 'localhost';
   return `http://${host}:${port}`;
 }

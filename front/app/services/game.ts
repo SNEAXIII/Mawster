@@ -41,7 +41,7 @@ export interface AllianceOfficer {
 
 // ─── Helpers ─────────────────────────────────────────────
 const PROXY = '/api/back';
-const IS_DEV = process.env.NODE_ENV === 'development';
+import { IS_DEV } from '@/app/lib/dev-mode';
 
 const jsonHeaders: HeadersInit = {
   Accept: 'application/json',
