@@ -38,14 +38,14 @@ describe('Defense – War controls (WarBanner)', () => {
   it('officer sees "End War" when active war exists', () => {
     setupDefenseOwner('wc-active', 'ActiveOwner', 'ActiveAlliance', 'ACT').then(
       ({ ownerData, allianceId }) => {
-        cy.apiCreateWar(ownerData.access_token, allianceId, 'EnemyAlliance');
+        cy.apiCreateWar(ownerData.access_token, allianceId, 'EnemyAlliance').then(() => {
+          cy.uiLogin(ownerData.login);
+          cy.navTo('defense');
 
-        cy.uiLogin(ownerData.login);
-        cy.navTo('defense');
-
-        cy.getByCy('end-war-btn').should('be.visible');
-        cy.getByCy('current-war-opponent').should('have.text', 'EnemyAlliance');
-        cy.getByCy('declare-war-btn').should('not.exist');
+          cy.getByCy('end-war-btn').should('be.visible');
+          cy.getByCy('current-war-opponent').should('have.text', 'EnemyAlliance');
+          cy.getByCy('declare-war-btn').should('not.exist');
+        });
       }
     );
   });
@@ -53,16 +53,16 @@ describe('Defense – War controls (WarBanner)', () => {
   it('officer can end a war via confirm dialog and banner resets', () => {
     setupDefenseOwner('wc-end', 'EndOwner', 'EndAlliance', 'END').then(
       ({ ownerData, allianceId }) => {
-        cy.apiCreateWar(ownerData.access_token, allianceId, 'EnemyToEnd');
+        cy.apiCreateWar(ownerData.access_token, allianceId, 'EnemyToEnd').then(() => {
+          cy.uiLogin(ownerData.login);
+          cy.navTo('defense');
 
-        cy.uiLogin(ownerData.login);
-        cy.navTo('defense');
+          cy.getByCy('end-war-btn').click();
+          cy.getByCy('confirmation-dialog-confirm').click();
 
-        cy.getByCy('end-war-btn').click();
-        cy.getByCy('confirmation-dialog-confirm').click();
-
-        cy.getByCy('declare-war-btn').should('be.visible');
-        cy.getByCy('end-war-btn').should('not.exist');
+          cy.getByCy('declare-war-btn').should('be.visible');
+          cy.getByCy('end-war-btn').should('not.exist');
+        });
       }
     );
   });
