@@ -144,6 +144,7 @@ def start_frontend(worker: int, base_env: dict) -> subprocess.Popen:
         "PORT": str(front_port),
         "API_PORT": str(api_port),
         "NEXTAUTH_URL": f"http://localhost:{front_port}",
+        "WORKER_ID": str(worker),
         "PYTHONIOENCODING": "utf-8",
     }
     log(f"Worker {worker}: starting frontend — PORT={front_port}  API_PORT={api_port}  NEXTAUTH_URL=http://localhost:{front_port}")
