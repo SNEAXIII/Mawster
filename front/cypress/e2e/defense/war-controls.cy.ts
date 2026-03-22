@@ -73,12 +73,11 @@ describe('Defense – War controls (WarBanner)', () => {
         setupUser('wc-member-user').then((memberData) => {
           cy.apiCreateGameAccount(memberData.access_token, 'MemberPlayer', true).then(
             (memberAcc) => {
-              cy.apiForceJoinAlliance(memberAcc.id, allianceId);
-
-              cy.uiLogin(memberData.login);
-              cy.navTo('defense');
-
-              cy.getByCy('war-banner').should('not.exist');
+              return cy.apiForceJoinAlliance(memberAcc.id, allianceId).then(() => {
+                cy.uiLogin(memberData.login);
+                cy.navTo('defense');
+                cy.getByCy('war-banner').should('not.exist');
+              });
             }
           );
         });
