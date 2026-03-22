@@ -140,15 +140,6 @@ export default function DefensePageContent({
         defenseSummary={defenseSummary}
       />
 
-      {userCanManage && (
-        <WarBanner
-          currentWar={currentWar}
-          warLoading={warLoading}
-          onOpenCreateDialog={() => setShowCreateDialog(true)}
-          onOpenEndConfirm={() => setShowEndConfirm(true)}
-        />
-      )}
-
       <DefenseGrid
         defenseSummary={defenseSummary}
         availableChampions={availableChampions}
@@ -168,24 +159,6 @@ export default function DefensePageContent({
         onImportReportClose={() => setImportReportOpen(false)}
         loading={defenseLoading}
         canManage={userCanManage}
-      />
-
-      <CreateWarDialog
-        open={showCreateDialog}
-        onClose={() => setShowCreateDialog(false)}
-        onConfirm={handleCreateWar}
-      />
-
-      <ConfirmationDialog
-        open={showEndConfirm}
-        onOpenChange={setShowEndConfirm}
-        onConfirm={async () => {
-          setShowEndConfirm(false);
-          await handleEndWar();
-        }}
-        title={t.game.war.endWarConfirmTitle}
-        description={t.game.war.endWarConfirmDesc}
-        variant='destructive'
       />
     </div>
   );
