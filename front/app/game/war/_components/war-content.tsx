@@ -8,13 +8,12 @@ import { useRequiredSession } from '@/hooks/use-required-session';
 import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import TabBar, { type TabItem } from '@/components/tab-bar';
 import { type WarPlacement } from '@/app/services/war';
 import { useWarActions } from '../_hooks/use-war-actions';
+import { useCurrentWar } from '../../defense/_hooks/use-current-war';
 import { toast } from 'sonner';
-import { WarTab, WarMode } from './war-types';
+import { WarMode } from './war-types';
 import WarHeader from './war-header';
-import WarManagementTab from './war-management-tab';
 import WarDefendersTab from './war-defenders-tab';
 
 const WarChampionSelector = dynamic(() => import('./war-champion-selector'), {
@@ -25,13 +24,9 @@ const WarAttackerSelector = dynamic(() => import('./war-attacker-selector'), {
   loading: () => null,
 });
 
-const CreateWarDialog = dynamic(() => import('./create-war-dialog'), {
-  loading: () => null,
-});
-
 export default function WarContent() {
   const { t } = useI18n();
-  const { canManage, loading: roleLoading } = useAllianceRole();
+  const { canManage } = useAllianceRole();
 
   useRequiredSession();
 
@@ -44,34 +39,26 @@ export default function WarContent() {
     loading,
   } = useAllianceSelector();
 
+  const { currentWar } = useCurrentWar(selectedAllianceId);
+  const activeWarId = currentWar?.id ?? '';
+
   const {
-    wars,
-    selectedWarId,
-    setSelectedWarId,
     warSummary,
     warLoading,
     selectorNode,
     setSelectorNode,
     attackerSelectorNode,
     setAttackerSelectorNode,
-    showCreateDialog,
-    setShowCreateDialog,
     showClearConfirm,
     setShowClearConfirm,
-    showEndWarConfirm,
-    setShowEndWarConfirm,
-    activeWarId,
     handlePlaceDefender,
     handleRemoveDefender,
     handleClearBg,
     handleAssignAttacker,
     handleRemoveAttacker,
-    handleCreateWar,
-    handleEndWar,
     handleUpdateKo,
-  } = useWarActions(selectedAllianceId, selectedBg);
+  } = useWarActions(selectedAllianceId, selectedBg, activeWarId);
 
-  const [activeTab, setActiveTab] = useState<WarTab>(WarTab.Management);
   const [warMode, setWarMode] = useState<WarMode>(WarMode.Defenders);
 
   // ─── Auto-select first alliance ──────────────────────────
@@ -80,16 +67,6 @@ export default function WarContent() {
       setSelectedAllianceId(alliances[0].id);
     }
   }, [alliances, selectedAllianceId, setSelectedAllianceId]);
-
-  // Redirect non-officers away from management tab
-  useEffect(() => {
-    if (!loading && !roleLoading && activeTab === WarTab.Management) {
-      const alliance = alliances.find((a) => a.id === selectedAllianceId);
-      if (alliance && !canManage(alliance)) {
-        setActiveTab(WarTab.Defenders);
-      }
-    }
-  }, [loading, roleLoading, selectedAllianceId, alliances, canManage, activeTab]);
 
   // ─── Actions ─────────────────────────────────────────────
 
@@ -116,16 +93,7 @@ export default function WarContent() {
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
   const canManageWar = selectedAlliance ? canManage(selectedAlliance) : false;
   const placements: WarPlacement[] = warSummary?.placements ?? [];
-  const selectedWar = wars.find((w) => w.id === selectedWarId);
-  const activeWar = wars.find((w) => w.id === activeWarId);
-  const hasActiveWar = wars.some((w) => w.status === 'active');
-
-  const tabs: TabItem<WarTab>[] = [
-    ...(canManageWar
-      ? [{ value: WarTab.Management, label: t.game.war.management, cy: 'tab-war-management' }]
-      : []),
-    { value: WarTab.Defenders, label: t.game.war.defenders, cy: 'tab-war-defenders' },
-  ];
+  const activeWar = currentWar ?? undefined;
 
   return (
     <div className='w-full px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
@@ -139,50 +107,25 @@ export default function WarContent() {
             onAllianceChange={setSelectedAllianceId}
           />
 
-          {/* Tabs */}
-          <TabBar
-            tabs={tabs}
-            value={activeTab}
-            onChange={setActiveTab}
-          />
-
-          {/* ── Management tab ──────────────────────────── */}
-          {activeTab === WarTab.Management && (
-            <WarManagementTab
-              wars={wars}
-              selectedWarId={selectedWarId}
-              onWarChange={setSelectedWarId}
-              canManageWar={canManageWar}
-              hasActiveWar={hasActiveWar}
-              selectedWar={selectedWar}
-              onOpenCreateDialog={() => setShowCreateDialog(true)}
-              onOpenEndWarConfirm={() => setShowEndWarConfirm(true)}
-            />
-          )}
-
           {/* ── Defenders tab ────────────────────────────── */}
-          {activeTab === WarTab.Defenders && (
-            <>
-              {!activeWarId ? (
-                <p className='text-muted-foreground'>{t.game.war.noActiveWar}</p>
-              ) : (
-                <WarDefendersTab
-                  activeWar={selectedWar}
-                  selectedBg={selectedBg}
-                  onBgChange={setSelectedBg}
-                  canManageWar={canManageWar}
-                  warMode={warMode}
-                  onWarModeChange={setWarMode}
-                  warLoading={warLoading}
-                  placements={placements}
-                  onNodeClick={handleNodeClick}
-                  onRemoveDefender={handleRemoveDefender}
-                  onRemoveAttacker={handleRemoveAttacker}
-                  onUpdateKo={handleUpdateKo}
-                  onOpenClearConfirm={() => setShowClearConfirm(true)}
-                />
-              )}
-            </>
+          {!activeWarId ? (
+            <p className='text-muted-foreground'>{t.game.war.noActiveWar}</p>
+          ) : (
+            <WarDefendersTab
+              activeWar={activeWar}
+              selectedBg={selectedBg}
+              onBgChange={setSelectedBg}
+              canManageWar={canManageWar}
+              warMode={warMode}
+              onWarModeChange={setWarMode}
+              warLoading={warLoading}
+              placements={placements}
+              onNodeClick={handleNodeClick}
+              onRemoveDefender={handleRemoveDefender}
+              onRemoveAttacker={handleRemoveAttacker}
+              onUpdateKo={handleUpdateKo}
+              onOpenClearConfirm={() => setShowClearConfirm(true)}
+            />
           )}
         </>
       )}
@@ -206,26 +149,6 @@ export default function WarContent() {
         battlegroup={selectedBg}
         placements={placements}
         onSelect={handleAssignAttacker}
-      />
-
-      {/* Create war dialog */}
-      <CreateWarDialog
-        open={showCreateDialog}
-        onClose={() => setShowCreateDialog(false)}
-        onConfirm={handleCreateWar}
-      />
-
-      {/* End war confirm dialog */}
-      <ConfirmationDialog
-        open={showEndWarConfirm}
-        onOpenChange={setShowEndWarConfirm}
-        onConfirm={async () => {
-          setShowEndWarConfirm(false);
-          await handleEndWar();
-        }}
-        title={t.game.war.endWarConfirmTitle}
-        description={t.game.war.endWarConfirmDesc}
-        variant='destructive'
       />
 
       {/* Clear confirm dialog */}
