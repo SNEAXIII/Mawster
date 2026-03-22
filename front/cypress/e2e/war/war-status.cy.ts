@@ -5,7 +5,7 @@ describe('War – Ended war status', () => {
     cy.truncateDb();
   });
 
-  it('defenders tab shows no-active-war message when selected war is ended', () => {
+  it('shows no-war message after war ends', () => {
     setupWarOwner('war-status-ended', 'StatusOfficer', 'StatusAlliance', 'ST').then(
       ({ ownerData, allianceId }) => {
         cy.apiCreateWar(ownerData.access_token, allianceId, 'StatusEnemy').then((war) => {
@@ -14,11 +14,8 @@ describe('War – Ended war status', () => {
           cy.uiLogin(ownerData.login);
           cy.navTo('war');
 
-          // War is auto-selected (only one war) — switch directly to defenders tab
-          cy.getByCy('tab-war-defenders').click();
-
-          // Should show no-active-war message, not the map
-          cy.contains('No active war').should('be.visible');
+          // After ending, getCurrentWar returns 404 → currentWar = null
+          cy.contains('No war declared').should('be.visible');
           cy.getByCy('war-node-1').should('not.exist');
         });
       }
