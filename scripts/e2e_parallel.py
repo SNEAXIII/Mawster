@@ -164,12 +164,14 @@ def parse_cypress_failures(cypress_log: Path) -> list[dict]:
         stripped = line.strip()
 
         if not in_failures:
-            parts = stripped.split()
+            clean = re.sub(r"\x1b\[[0-9;]*m", "", stripped)
+            parts = clean.split()
             if len(parts) == 2 and parts[1] == "failing" and parts[0].isdigit():
                 in_failures = True
             continue
 
-        if stripped == "(Results)":
+        clean = re.sub(r"\x1b\[[0-9;]*m", "", stripped)
+        if clean == "(Results)":
             flush()
             break
 
@@ -224,7 +226,6 @@ def parse_backend_markers(backend_log: Path) -> dict[str, list[str]]:
 def build_merged_report(
     n: int,
     merged_stats: dict,
-    results: list[int],
 ) -> None:
     """Build and write front/cypress/results/report.json.
 
@@ -730,7 +731,7 @@ def main() -> None:
         log("-" * 50)
 
     # Write failure report (always, even if 0 failures)
-    build_merged_report(n, merged, results)
+    build_merged_report(n, merged)
 
     elapsed = time.time() - start_time
     minutes, seconds = divmod(int(elapsed), 60)
