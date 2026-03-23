@@ -155,7 +155,7 @@ def parse_cypress_failures(cypress_log: Path) -> list[dict]:
     def flush():
         nonlocal current_title, current_error_lines
         if current_title and current_error_lines:
-            error = "\n".join(l.strip() for l in current_error_lines if l.strip())
+            error = "\n".join(ln.strip() for ln in current_error_lines if ln.strip())
             failures.append({"title": current_title, "error": error})
         current_title = None
         current_error_lines = []
