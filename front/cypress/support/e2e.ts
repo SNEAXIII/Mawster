@@ -15,24 +15,24 @@ export const BACKEND: string = (Cypress.env('backendUrl') as string | undefined)
 // ── E2E log markers — correlate backend logs with test boundaries ─────────
 
 beforeEach(() => {
-  const title = Cypress.currentTest.titlePath.join(' > ')
+  const title = Cypress.currentTest.titlePath.join(' > ');
   cy.request({
     method: 'POST',
     url: `${BACKEND}/dev/log-marker`,
     body: { event: 'start', title },
     failOnStatusCode: false,
-  })
+  });
 })
 
 afterEach(() => {
-  const title = Cypress.currentTest.titlePath.join(' > ')
-  const passed = Cypress.currentTest.state === 'passed'
+  const title = Cypress.currentTest.titlePath.join(' > ');
+  const passed = Cypress.currentTest.state === 'passed';
   cy.request({
     method: 'POST',
     url: `${BACKEND}/dev/log-marker`,
     body: { event: 'end', title, passed },
     failOnStatusCode: false,
-  })
+  });
 })
 
 // ── Shared types ─────────────────────────────────────────────────────────────

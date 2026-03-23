@@ -119,27 +119,74 @@ def wait_for_http(url: str, label: str, timeout: int = HEALTH_TIMEOUT) -> None:
     raise TimeoutError(f"{label} at {url} did not become ready within {timeout}s")
 
 
-def pipe_output(stream, prefix: str, quiet: bool = False, stats: dict | None = None) -> None:
+def extract_failures(cypress_log: Path) -> Path | None:
+    """Extract failing-test blocks from a cypress.log using a state machine.
+
+    Cypress failure section starts with "  N failing" and ends before "(Results)".
+    Returns the failures.log path if any failures were found, else None.
+    """
+    try:
+        lines = cypress_log.read_text(encoding="utf-8").splitlines()
+    except Exception:
+        return None
+
+    failures: list[str] = []
+    in_failures = False
+
+    for line in lines:
+        stripped = line.strip()
+        if not in_failures:
+            # "  2 failing" — exactly two tokens, second is "failing", first is a number
+            parts = stripped.split()
+            if len(parts) == 2 and parts[1] == "failing" and parts[0].isdigit():
+                in_failures = True
+                failures.append(line)
+        else:
+            if stripped == "(Results)":
+                break
+            failures.append(line)
+
+    if not failures:
+        return None
+
+    out = cypress_log.parent / "failures.log"
+    out.write_text("\n".join(failures), encoding="utf-8")
+    return out
+
+
+def worker_log_dir(worker: int) -> Path:
+    return FRONT_DIR / "cypress" / "results" / f"worker-{worker}"
+
+
+def pipe_output(stream, prefix: str, quiet: bool = False, stats: dict | None = None, log_file: "Path | None" = None) -> None:
     """Read lines from a subprocess stream and print them with a worker prefix.
 
     If `stats` is provided, accumulate numeric results from the Cypress
     'Results:' summary block (Tests / Passing / Failing / Pending / Skipped).
+    If `log_file` is provided, all lines are written to that file.
     """
     try:
-        for line in iter(stream.readline, b""):
-            decoded = line.decode(errors="replace").rstrip()
-            if not quiet:
-                print(f"{prefix} {decoded}")
-            if stats is not None:
-                m = FINAL_SUMMARY_RE.search(decoded)
-                if m:
-                    def _n(s: str) -> int:
-                        return int(s) if s != "-" else 0
-                    stats["tests"] = _n(m.group(1))
-                    stats["passing"] = _n(m.group(2))
-                    stats["failing"] = _n(m.group(3))
-                    stats["pending"] = _n(m.group(4))
-                    stats["skipped"] = _n(m.group(5))
+        fh = log_file.open("w", encoding="utf-8") if log_file else None
+        try:
+            for line in iter(stream.readline, b""):
+                decoded = line.decode(errors="replace").rstrip()
+                if not quiet:
+                    print(f"{prefix} {decoded}")
+                if fh:
+                    fh.write(decoded + "\n")
+                if stats is not None:
+                    m = FINAL_SUMMARY_RE.search(decoded)
+                    if m:
+                        def _n(s: str) -> int:
+                            return int(s) if s != "-" else 0
+                        stats["tests"] = _n(m.group(1))
+                        stats["passing"] = _n(m.group(2))
+                        stats["failing"] = _n(m.group(3))
+                        stats["pending"] = _n(m.group(4))
+                        stats["skipped"] = _n(m.group(5))
+        finally:
+            if fh:
+                fh.close()
     except Exception:
         pass
 
@@ -155,6 +202,8 @@ def start_backend(worker: int, base_env: dict, quiet: bool = False) -> subproces
         "PYTHONIOENCODING": "utf-8",
     }
     log(f"Worker {worker}: starting backend  — PORT={api_port}  DB={db}  MODE=testing")
+    log_dir = worker_log_dir(worker)
+    log_dir.mkdir(parents=True, exist_ok=True)
     proc = subprocess.Popen(
         ["uv", "run", "app_testing.py"],
         cwd=str(API_DIR),
@@ -164,7 +213,7 @@ def start_backend(worker: int, base_env: dict, quiet: bool = False) -> subproces
         start_new_session=not IS_WINDOWS,
     )
     prefix = f"[W{worker}|api:{api_port}]"
-    threading.Thread(target=pipe_output, args=(proc.stdout, prefix, quiet), daemon=True).start()
+    threading.Thread(target=pipe_output, args=(proc.stdout, prefix, quiet), kwargs={"log_file": log_dir / "backend.log"}, daemon=True).start()
     return proc
 
 
@@ -212,6 +261,8 @@ def start_frontend(worker: int, base_env: dict, quiet: bool = False) -> subproce
         "PYTHONIOENCODING": "utf-8",
     }
     log(f"Worker {worker}: starting frontend — PORT={front_port}  API_PORT={api_port}  NEXTAUTH_URL=http://localhost:{front_port}")
+    log_dir = worker_log_dir(worker)
+    log_dir.mkdir(parents=True, exist_ok=True)
     proc = subprocess.Popen(
         [NPX, "next", "start", "--port", str(front_port)],
         cwd=str(FRONT_DIR),
@@ -221,7 +272,7 @@ def start_frontend(worker: int, base_env: dict, quiet: bool = False) -> subproce
         start_new_session=not IS_WINDOWS,
     )
     prefix = f"[W{worker}|front:{front_port}]"
-    threading.Thread(target=pipe_output, args=(proc.stdout, prefix, quiet), daemon=True).start()
+    threading.Thread(target=pipe_output, args=(proc.stdout, prefix, quiet), kwargs={"log_file": log_dir / "frontend.log"}, daemon=True).start()
     return proc
 
 
@@ -252,35 +303,47 @@ def distribute_specs(specs: list[Path], n: int) -> list[list[Path]]:
 
 
 def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
-    """Run a Cypress instance for this worker with its assigned spec list.
+    """Run a Cypress instance for this worker on the given spec files.
 
     Collects aggregated test counts into `stats` (passed by reference).
     """
     api_port = BASE_API_PORT + worker
     front_port = BASE_FRONT_PORT + worker
-    spec_list = ",".join(str(s.relative_to(FRONT_DIR)) for s in specs)
-    log(f"Worker {worker}: launching Cypress ({len(specs)} specs)...")
+
+    cmd = [
+        NPX, "cypress", "run",
+        "--spec", ",".join(str(s) for s in specs),
+        "--env", f"backendUrl=http://localhost:{api_port}",
+        "--config", (
+            f"baseUrl=http://localhost:{front_port},"
+            f"screenshotsFolder=cypress/results/screenshots/screenshots-{worker},"
+            f"videosFolder=cypress/results/videos/videos-{worker}"
+        ),
+    ]
+    log(f"Worker {worker}: launching Cypress ({len(specs)} spec(s))...")
+
+    log_dir = worker_log_dir(worker)
+    log_dir.mkdir(parents=True, exist_ok=True)
+    cypress_log = log_dir / "cypress.log"
     proc = subprocess.Popen(
-        [
-            NPX, "cypress", "run",
-            "--spec", spec_list,
-            "--env", f"backendUrl=http://localhost:{api_port}",
-            "--config", (
-                f"baseUrl=http://localhost:{front_port},"
-                f"screenshotsFolder=cypress/results/screenshots-{worker},"
-                f"videosFolder=cypress/results/videos-{worker}"
-            ),
-        ],
+        cmd,
         cwd=str(FRONT_DIR),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
     prefix = f"[W{worker}|cypress]"
-    output_thread = threading.Thread(target=pipe_output, args=(proc.stdout, prefix, False, stats))
+    output_thread = threading.Thread(target=pipe_output, args=(proc.stdout, prefix, False, stats), kwargs={"log_file": cypress_log})
     output_thread.start()
     proc.wait()
     output_thread.join(timeout=5)
     log(f"Worker {worker}: Cypress finished with exit code {proc.returncode}")
+
+    if proc.returncode != 0:
+        failures_log = extract_failures(cypress_log)
+        if failures_log:
+            log(f"Worker {worker}: failures → {failures_log.relative_to(ROOT)}")
+        log(f"Worker {worker}: full logs → front/cypress/results/worker-{worker}/")
+
     return proc.returncode
 
 
@@ -511,7 +574,6 @@ def main() -> None:
         if not spec_path.is_absolute():
             candidate = FRONT_DIR / "cypress" / "e2e" / args.spec
             if not candidate.exists():
-                # Try as-is relative to FRONT_DIR
                 candidate = FRONT_DIR / args.spec
             spec_path = candidate
         if not spec_path.exists():
