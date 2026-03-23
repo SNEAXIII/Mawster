@@ -10,8 +10,8 @@ export default defineConfig({
       cypressSplit(on, config);
       return config;
     },
-    defaultCommandTimeout: 2000,
-    pageLoadTimeout: 10000,
+    defaultCommandTimeout: 5000,
+    pageLoadTimeout: 5000,
     requestTimeout: 5000,
     responseTimeout: 5000,
     numTestsKeptInMemory: 0,

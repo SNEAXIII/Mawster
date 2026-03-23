@@ -108,14 +108,21 @@ function stopAll(): void {
 }
 
 function spawnDetached(cmdArgs: string[], cwd: string, env?: Record<string, string>): number {
-  // Wrap in cmd /c on Windows so PATH resolution works for uv, npm, etc.
-  const child = spawn('cmd', ['/c', cmdArgs.join(' ')], {
-    cwd,
-    env: { ...process.env, ...env },
-    stdio: 'ignore',
-    detached: true,
-    windowsHide: true,
-  });
+  const isWin = process.platform === 'win32';
+  const child = isWin
+    ? spawn('cmd', ['/c', cmdArgs.join(' ')], {
+        cwd,
+        env: { ...process.env, ...env },
+        stdio: 'ignore',
+        detached: true,
+        windowsHide: true,
+      })
+    : spawn(cmdArgs[0], cmdArgs.slice(1), {
+        cwd,
+        env: { ...process.env, ...env },
+        stdio: 'ignore',
+        detached: true,
+      });
   child.unref();
   if (child.pid === undefined) throw new Error(`Failed to spawn: ${cmdArgs.join(' ')}`);
   return child.pid;

@@ -65,22 +65,22 @@ e2e-stop:
 	fi
 
 e2e: e2e-db
-	cd api && MODE=testing uv run app_testing.py & echo $$! > .e2e-api.pid
-	cd front && NEXTAUTH_SECRET=$(NEXTAUTH_SECRET) NEXTAUTH_URL=$(NEXTAUTH_URL) npm run testing & echo $$! > .e2e-front.pid
+	cd api && MODE=testing uv run app_testing.py > /dev/null 2>&1 & echo $$! > .e2e-api.pid
+	cd front && NEXTAUTH_SECRET=$(NEXTAUTH_SECRET) NEXTAUTH_URL=$(NEXTAUTH_URL) npm run testing > /dev/null 2>&1 & echo $$! > .e2e-front.pid
 	@echo "Attente de l'API (port 8001)..."; \
 	for i in $$(seq 1 30); do curl -s http://localhost:8001 >/dev/null 2>&1 && break || sleep 2; done
-	@echo "Attente du frontend (port 3000)..."; \
-	for i in $$(seq 1 60); do curl -s http://localhost:3000 >/dev/null 2>&1 && break || sleep 2; done
+	@echo "Attente du frontend (port 3001)..."; \
+	for i in $$(seq 1 60); do curl -s http://localhost:3001 >/dev/null 2>&1 && break || sleep 2; done
 	@echo "Lancement de Cypress..."
 	(cd front && npx cypress run $(if $(SPEC),--spec $(SPEC),)); STATUS=$$?; $(MAKE) e2e-stop; exit $$STATUS
 
 e2e-open: e2e-db
-	cd api && MODE=testing uv run app_testing.py & echo $$! > .e2e-api.pid
-	cd front && NEXTAUTH_SECRET=$(NEXTAUTH_SECRET) NEXTAUTH_URL=$(NEXTAUTH_URL) npm run testing & echo $$! > .e2e-front.pid
+	cd api && MODE=testing uv run app_testing.py > /dev/null 2>&1 & echo $$! > .e2e-api.pid
+	cd front && NEXTAUTH_SECRET=$(NEXTAUTH_SECRET) NEXTAUTH_URL=$(NEXTAUTH_URL) npm run testing > /dev/null 2>&1 & echo $$! > .e2e-front.pid
 	@echo "Attente de l'API (port 8001)..."; \
 	for i in $$(seq 1 30); do curl -s http://localhost:8001 >/dev/null 2>&1 && break || sleep 2; done
-	@echo "Attente du frontend (port 3000)..."; \
-	for i in $$(seq 1 60); do curl -s http://localhost:3000 >/dev/null 2>&1 && break || sleep 2; done
+	@echo "Attente du frontend (port 3001)..."; \
+	for i in $$(seq 1 60); do curl -s http://localhost:3001 >/dev/null 2>&1 && break || sleep 2; done
 	@echo "Lancement de Cypress..."
 	(cd front && npx cypress open)
 

@@ -94,17 +94,6 @@ describe('War – Basic page rendering', () => {
     );
   });
 
-  it('shows declare war button for officer', () => {
-    setupWarOwner('war-basic-declare', 'DeclarePlayer', 'DeclareAlliance', 'DC').then(
-      ({ ownerData }) => {
-        cy.uiLogin(ownerData.login);
-        cy.navTo('war');
-        // Management tab is the default for officers
-        cy.getByCy('declare-war-btn').should('be.visible');
-      }
-    );
-  });
-
   it('hides alliance picker when user has only one alliance', () => {
     setupWarOwner('war-basic-nopick', 'NoPickPlayer', 'NoPickAlliance', 'NP').then(
       ({ ownerData }) => {

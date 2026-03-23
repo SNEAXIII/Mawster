@@ -161,6 +161,7 @@ def start_backend(worker: int, base_env: dict, quiet: bool = False) -> subproces
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        start_new_session=not IS_WINDOWS,
     )
     prefix = f"[W{worker}|api:{api_port}]"
     threading.Thread(target=pipe_output, args=(proc.stdout, prefix, quiet), daemon=True).start()
@@ -179,6 +180,7 @@ def build_frontend(base_env: dict) -> None:
         **base_env,
         "PORT": "3000",
         "API_PORT": str(BASE_API_PORT),   # placeholder — rewrites are runtime-read anyway
+        "API_SERVER_HOST": "localhost",
         "NEXT_PUBLIC_DEV_MODE": "true",
         "NEXT_DIST_DIR": ".next-e2e",
         "NEXT_E2E_BUILD": "true",
@@ -201,6 +203,7 @@ def start_frontend(worker: int, base_env: dict, quiet: bool = False) -> subproce
         **base_env,
         "PORT": str(front_port),
         "API_PORT": str(api_port),
+        "API_SERVER_HOST": "localhost",
         "NEXTAUTH_URL": f"http://localhost:{front_port}",
         "WORKER_ID": str(worker),
         "NEXT_DIST_DIR": ".next-e2e",
@@ -215,6 +218,7 @@ def start_frontend(worker: int, base_env: dict, quiet: bool = False) -> subproce
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        start_new_session=not IS_WINDOWS,
     )
     prefix = f"[W{worker}|front:{front_port}]"
     threading.Thread(target=pipe_output, args=(proc.stdout, prefix, quiet), daemon=True).start()
@@ -312,13 +316,20 @@ def kill_ports(ports: list[int]) -> None:
             t.join()
     else:
         def _kill_port(port: int) -> None:
+            # fuser -k kills all processes on the port (IPv4 + IPv6)
             result = subprocess.run(
-                ["lsof", "-ti", f"tcp:{port}"],
+                ["fuser", "-k", "-KILL", f"{port}/tcp"],
                 capture_output=True, text=True,
             )
-            for pid in result.stdout.strip().splitlines():
-                subprocess.run(["kill", "-9", pid], capture_output=True)
-                log(f"Killed PID {pid} on port {port}")
+            if result.returncode != 0:
+                # fuser not available or no process found — fallback to lsof
+                result = subprocess.run(
+                    ["lsof", "-ti", f":{port}"],
+                    capture_output=True, text=True,
+                )
+                for pid in result.stdout.strip().splitlines():
+                    subprocess.run(["kill", "-9", pid.strip()], capture_output=True)
+                    log(f"Killed PID {pid} on port {port}")
 
         kill_threads = [threading.Thread(target=_kill_port, args=(p,)) for p in port_set]
         for t in kill_threads:
@@ -365,6 +376,7 @@ def main() -> None:
     check_mariadb_running()
 
     base_env = os.environ.copy()
+    base_env.setdefault("NEXTAUTH_SECRET", "e2e-local-nextauth-secret")
     procs: list[subprocess.Popen] = []
     lock = threading.Lock()
 
@@ -372,17 +384,29 @@ def main() -> None:
         log("Shutting down all servers...")
         for p in procs:
             try:
-                p.terminate()
+                if IS_WINDOWS:
+                    p.terminate()
+                else:
+                    os.killpg(os.getpgid(p.pid), signal.SIGTERM)
             except Exception:
-                pass
+                try:
+                    p.terminate()
+                except Exception:
+                    pass
         for p in procs:
             try:
                 p.wait(timeout=5)
             except Exception:
                 try:
-                    p.kill()
+                    if IS_WINDOWS:
+                        p.kill()
+                    else:
+                        os.killpg(os.getpgid(p.pid), signal.SIGKILL)
                 except Exception:
-                    pass
+                    try:
+                        p.kill()
+                    except Exception:
+                        pass
         # Remove the shared e2e build dir
         import shutil
         next_dir = FRONT_DIR / ".next-e2e"

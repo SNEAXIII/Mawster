@@ -155,13 +155,11 @@ export default function WarContent() {
             onAllianceChange={setSelectedAllianceId}
           />
 
-          {/* ── Management bar (officers/owners only) ──── */}
-          {canManageWar && (
+          {/* ── Management bar (officers/owners only, no active war) ──── */}
+          {canManageWar && !currentWar && (
             <WarManagementBar
-              activeWar={currentWar}
               loading={managementLoading}
               onClickDeclare={() => setShowCreateDialog(true)}
-              onClickEndWar={() => setShowEndConfirm(true)}
             />
           )}
 
@@ -183,6 +181,7 @@ export default function WarContent() {
               onRemoveAttacker={handleRemoveAttacker}
               onUpdateKo={handleUpdateKo}
               onOpenClearConfirm={() => setShowClearConfirm(true)}
+              onClickEndWar={() => setShowEndConfirm(true)}
             />
           )}
         </>

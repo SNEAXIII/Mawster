@@ -114,92 +114,26 @@ describe('Defense – Placement via UI', () => {
   // Rarity labels on war map and side panel
   // =========================================================================
 
-  it('shows correct rarity label 7★R3·200 on war map and side panel', () => {
-    setupDefenseScenario('def-pl-label', 'LabelPlyr', 'LB', [
-      { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3', options: { signature: 200 } },
-    ]).then(({ ownerData }) => {
-      cy.uiLogin(ownerData.login);
-      cy.navTo('defense');
+  (
+    [
+      { prefix: 'def-pl-label', pseudo: 'LabelPlyr', tag: 'LB', node: 1,  expected: '7★R3·200',    champ: { name: 'Spider-Man',  cls: 'Cosmic',  rarity: '7r3', options: { signature: 200 } } },
+      { prefix: 'def-pl-asc',   pseudo: 'AscPlyr',   tag: 'AS', node: 10, expected: '7★R5·A1·200', champ: { name: 'Doctor Doom', cls: 'Mystic',  rarity: '7r5', options: { signature: 200, ascension: 1, is_ascendable: true } } },
+      { prefix: 'def-pl-asc2',  pseudo: 'Asc2Plyr',  tag: 'A2', node: 5,  expected: '7★R5·A2·200', champ: { name: 'Blade',       cls: 'Skill',   rarity: '7r5', options: { signature: 200, ascension: 2, is_ascendable: true } } },
+      { prefix: 'def-pl-zsig',  pseudo: 'ZSigPlyr',  tag: 'ZS', node: 3,  expected: '7★R4·0',      champ: { name: 'Wolverine',   cls: 'Mutant',  rarity: '7r4', options: { signature: 0 } } },
+      { prefix: 'def-pl-6star', pseudo: 'SixPlyr',   tag: '6S', node: 7,  expected: '6★R5·20',     champ: { name: 'Hulk',        cls: 'Science', rarity: '6r5', options: { signature: 20 } } },
+    ] as const
+  ).forEach(({ prefix, pseudo, tag, node, expected, champ }) => {
+    it(`shows correct rarity label ${expected} on war map and side panel`, () => {
+      setupDefenseScenario(prefix, pseudo, tag, [champ]).then(({ ownerData }) => {
+        cy.uiLogin(ownerData.login);
+        cy.navTo('defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
-      cy.getByCy('champion-card-Spider-Man').click();
+        cy.getByCy(`war-node-${node}`).scrollIntoView().click({ force: true });
+        cy.getByCy(`champion-card-${champ.name.replace(/ /g, '-')}`).click();
 
-      // Rarity label on war map node: 7★R3·200
-      cy.getByCy('war-node-1').should('contain', '7★R3·200');
-
-      // Rarity label on side panel defender card
-      cy.getByCy('defender-card-1').should('contain', '7★R3·200');
-    });
-  });
-
-  it('shows rarity label with ascension 7★R5·A1·200 on war map and side panel', () => {
-    setupDefenseScenario('def-pl-asc', 'AscPlyr', 'AS', [
-      {
-        name: 'Doctor Doom',
-        cls: 'Mystic',
-        rarity: '7r5',
-        options: { signature: 200, ascension: 1, is_ascendable: true },
-      },
-    ]).then(({ ownerData }) => {
-      cy.uiLogin(ownerData.login);
-      cy.navTo('defense');
-
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
-      cy.getByCy('champion-card-Doctor-Doom').click();
-
-      // Rarity label with ascension: 7★R5·A1·200
-      cy.getByCy('war-node-10').should('contain', '7★R5·A1·200');
-      cy.getByCy('defender-card-10').should('contain', '7★R5·A1·200');
-    });
-  });
-
-  it('shows rarity label with ascension level 2: 7★R5·A2·200', () => {
-    setupDefenseScenario('def-pl-asc2', 'Asc2Plyr', 'A2', [
-      {
-        name: 'Blade',
-        cls: 'Skill',
-        rarity: '7r5',
-        options: { signature: 200, ascension: 2, is_ascendable: true },
-      },
-    ]).then(({ ownerData }) => {
-      cy.uiLogin(ownerData.login);
-      cy.navTo('defense');
-
-      cy.getByCy('war-node-5').scrollIntoView().click({ force: true });
-      cy.getByCy('champion-card-Blade').click();
-
-      cy.getByCy('war-node-5').should('contain', '7★R5·A2·200');
-      cy.getByCy('defender-card-5').should('contain', '7★R5·A2·200');
-    });
-  });
-
-  it('shows rarity label 7★R4·0 for zero-signature champion', () => {
-    setupDefenseScenario('def-pl-zsig', 'ZSigPlyr', 'ZS', [
-      { name: 'Wolverine', cls: 'Mutant', rarity: '7r4', options: { signature: 0 } },
-    ]).then(({ ownerData }) => {
-      cy.uiLogin(ownerData.login);
-      cy.navTo('defense');
-
-      cy.getByCy('war-node-3').scrollIntoView().click({ force: true });
-      cy.getByCy('champion-card-Wolverine').click();
-
-      cy.getByCy('war-node-3').should('contain', '7★R4·0');
-      cy.getByCy('defender-card-3').should('contain', '7★R4·0');
-    });
-  });
-
-  it('shows rarity label 6★R5·20 for 6-star champion', () => {
-    setupDefenseScenario('def-pl-6star', 'SixPlyr', '6S', [
-      { name: 'Hulk', cls: 'Science', rarity: '6r5', options: { signature: 20 } },
-    ]).then(({ ownerData }) => {
-      cy.uiLogin(ownerData.login);
-      cy.navTo('defense');
-
-      cy.getByCy('war-node-7').scrollIntoView().click({ force: true });
-      cy.getByCy('champion-card-Hulk').click();
-
-      cy.getByCy('war-node-7').should('contain', '6★R5·20');
-      cy.getByCy('defender-card-7').should('contain', '6★R5·20');
+        cy.getByCy(`war-node-${node}`).should('contain', expected);
+        cy.getByCy(`defender-card-${node}`).should('contain', expected);
+      });
     });
   });
 
@@ -207,45 +141,22 @@ describe('Defense – Placement via UI', () => {
   // Preferred attacker display
   // =========================================================================
 
-  it('preferred attacker shows ⚔ prefix and yellow color on war map and side panel', () => {
+  it('preferred attacker shows ⚔ prefix, non-preferred does not', () => {
     setupDefenseScenario('def-pl-pref', 'PrefPlyr', 'PR', [
-      {
-        name: 'Iron Man',
-        cls: 'Tech',
-        rarity: '7r5',
-        options: { signature: 200, is_preferred_attacker: true },
-      },
+      { name: 'Iron Man', cls: 'Tech',   rarity: '7r5', options: { signature: 200, is_preferred_attacker: true } },
+      { name: 'Wolverine', cls: 'Mutant', rarity: '7r3', options: { signature: 100, is_preferred_attacker: false } },
     ]).then(({ ownerData }) => {
       cy.uiLogin(ownerData.login);
       cy.navTo('defense');
 
       cy.getByCy('war-node-20').scrollIntoView().click({ force: true });
       cy.getByCy('champion-card-Iron-Man').click();
-
-      // War map: ⚔ prefix on rarity label
       cy.getByCy('war-node-20').should('contain', '⚔');
       cy.getByCy('war-node-20').should('contain', '7★R5·200');
-
-      // Side panel: ⚔ prefix on node number
       cy.getByCy('defender-card-20').should('contain', '⚔');
-    });
-  });
-
-  it('non-preferred attacker does NOT show ⚔ prefix', () => {
-    setupDefenseScenario('def-pl-nopref', 'NoPrefPlyr', 'NP', [
-      {
-        name: 'Wolverine',
-        cls: 'Mutant',
-        rarity: '7r3',
-        options: { signature: 100, is_preferred_attacker: false },
-      },
-    ]).then(({ ownerData }) => {
-      cy.uiLogin(ownerData.login);
-      cy.navTo('defense');
 
       cy.getByCy('war-node-15').scrollIntoView().click({ force: true });
       cy.getByCy('champion-card-Wolverine').click();
-
       cy.getByCy('war-node-15').should('not.contain', '⚔');
       cy.getByCy('defender-card-15').should('not.contain', '⚔');
     });

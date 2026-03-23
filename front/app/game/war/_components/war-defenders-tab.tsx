@@ -31,6 +31,7 @@ interface WarDefendersTabProps {
   onRemoveAttacker: (node: number) => Promise<void>;
   onUpdateKo: (node: number, newKo: number) => Promise<void>;
   onOpenClearConfirm: () => void;
+  onClickEndWar: () => void;
 }
 
 export default function WarDefendersTab({
@@ -47,6 +48,7 @@ export default function WarDefendersTab({
   onRemoveAttacker,
   onUpdateKo,
   onOpenClearConfirm,
+  onClickEndWar,
 }: Readonly<WarDefendersTabProps>) {
   const { t } = useI18n();
 
@@ -58,7 +60,7 @@ export default function WarDefendersTab({
         {activeWar && (
           <div className='flex items-center gap-2'>
             <Swords className='w-4 h-4 text-muted-foreground' />
-            <span className='text-sm font-semibold'>vs {activeWar.opponent_name}</span>
+            <span data-cy='war-opponent-name' className='text-sm font-semibold'>vs {activeWar.opponent_name}</span>
           </div>
         )}
 
@@ -126,6 +128,18 @@ export default function WarDefendersTab({
           >
             <Trash2 className='w-4 h-4 mr-2' />
             {t.game.war.clearAll}
+          </Button>
+        )}
+
+        {/* End war button */}
+        {canManageWar && (
+          <Button
+            variant='destructive'
+            onClick={onClickEndWar}
+            className='ml-auto'
+            data-cy='end-war-btn'
+          >
+            {t.game.war.endWar}
           </Button>
         )}
       </div>
