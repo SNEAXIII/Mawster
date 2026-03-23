@@ -10,7 +10,8 @@ Cypress.Commands.overwrite<'type', 'element'>('type', (originalFn, subject, text
   return originalFn(subject, text, { delay: 0, ...options });
 });
 
-export const BACKEND: string = (Cypress.env('backendUrl') as string | undefined) ?? 'http://localhost:8001';
+export const BACKEND: string =
+  (Cypress.env('backendUrl') as string | undefined) ?? 'http://localhost:8001';
 
 // ── E2E log markers — correlate backend logs with test boundaries ─────────
 
@@ -22,18 +23,18 @@ beforeEach(() => {
     body: { event: 'start', title },
     failOnStatusCode: false,
   });
-})
+});
 
 afterEach(() => {
   const title = Cypress.currentTest.titlePath.join(' > ');
-  const passed = Cypress.currentTest.state === 'passed';
+  const passed = (Cypress.currentTest as any).state === 'passed';
   cy.request({
     method: 'POST',
     url: `${BACKEND}/dev/log-marker`,
     body: { event: 'end', title, passed },
     failOnStatusCode: false,
   });
-})
+});
 
 // ── Shared types ─────────────────────────────────────────────────────────────
 
@@ -317,13 +318,13 @@ Cypress.Commands.add(
       return res.body;
     });
   }
-);
+)
 
 // ── Run fixtures (truncate DB + seed) ────────────────────────────────────────
 
 Cypress.Commands.add('runFixtures', () => {
   cy.request('POST', `${BACKEND}/dev/fixtures`);
-});
+})
 
 // ── Create upgrade request (direct backend call) ──────────────────────────────
 
@@ -339,7 +340,7 @@ Cypress.Commands.add(
       })
       .then((res) => res.body);
   }
-);
+)
 
 // ── Upgrade champion rank (direct backend call) ───────────────────────────────
 
@@ -351,7 +352,7 @@ Cypress.Commands.add('apiUpgradeChampion', (token: string, championUserId: strin
       headers: { Authorization: `Bearer ${token}` },
     })
     .then((res) => res.body);
-});
+})
 
 // ── Helper: extract UserSetupData from a BatchSetupUserResult ────────────────
 
