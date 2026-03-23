@@ -291,3 +291,20 @@ async def get_env_info():
         db_name=SECRET.MARIADB_DATABASE,
         db_user=SECRET.MARIADB_USER,
     )
+
+
+class LogMarkerRequest(BaseModel):
+    event: str          # "start" or "end"
+    title: str          # full test title, e.g. "war > place defender > node 1"
+    passed: bool | None = None  # None for start, True/False for end
+
+
+@dev_controller.post("/log-marker", status_code=200)
+async def log_test_marker(body: LogMarkerRequest):
+    """Write a test boundary marker into the backend log. Testing only."""
+    if body.event == "start":
+        logger.info("===TEST_START=== %s", body.title)
+    else:
+        state = "PASS" if body.passed else "FAIL"
+        logger.info("===TEST_END=== %s %s", body.title, state)
+    return {"ok": True}
