@@ -119,39 +119,157 @@ def wait_for_http(url: str, label: str, timeout: int = HEALTH_TIMEOUT) -> None:
     raise TimeoutError(f"{label} at {url} did not become ready within {timeout}s")
 
 
-def extract_failures(cypress_log: Path) -> Path | None:
-    """Extract failing-test blocks from a cypress.log using a state machine.
+def parse_cypress_failures(cypress_log: Path) -> list[dict]:
+    """Parse failing tests from a cypress.log file.
 
-    Cypress failure section starts with "  N failing" and ends before "(Results)".
-    Returns the failures.log path if any failures were found, else None.
+    Returns a list of {"title": str, "error": str} dicts.
+
+    Cypress stdout failure section looks like:
+
+        2 failing
+
+        1) describe title
+             test title:
+           AssertionError: expected 200 to equal 404
+               at Context.<anonymous> (cypress/e2e/foo.cy.ts:42:7)
+
+        2) ...
+
+        (Results)
     """
     try:
         lines = cypress_log.read_text(encoding="utf-8").splitlines()
     except Exception:
-        return None
+        return []
 
-    failures: list[str] = []
+    failures: list[dict] = []
     in_failures = False
+    current_title: str | None = None
+    current_error_lines: list[str] = []
+
+    # Regex: "  1) some text" — numbered failure header
+    failure_header_re = re.compile(r"^\s+\d+\)\s+(.+)")
+    # Regex: "       test title:" — the actual it() name line (indented more)
+    test_name_re = re.compile(r"^\s{7,}(.+):$")
+
+    def flush():
+        if current_title and current_error_lines:
+            error = "\n".join(l.strip() for l in current_error_lines if l.strip())
+            failures.append({"title": current_title, "error": error})
 
     for line in lines:
         stripped = line.strip()
+
         if not in_failures:
-            # "  2 failing" — exactly two tokens, second is "failing", first is a number
             parts = stripped.split()
             if len(parts) == 2 and parts[1] == "failing" and parts[0].isdigit():
                 in_failures = True
-                failures.append(line)
-        else:
-            if stripped == "(Results)":
-                break
-            failures.append(line)
+            continue
 
-    if not failures:
-        return None
+        if stripped == "(Results)":
+            flush()
+            break
 
-    out = cypress_log.parent / "failures.log"
-    out.write_text("\n".join(failures), encoding="utf-8")
-    return out
+        m_header = failure_header_re.match(line)
+        if m_header:
+            flush()
+            current_title = m_header.group(1).strip()
+            current_error_lines = []
+            continue
+
+        if current_title is not None:
+            m_name = test_name_re.match(line)
+            if m_name:
+                current_title = f"{current_title} > {m_name.group(1).strip()}"
+            else:
+                current_error_lines.append(line)
+
+    flush()
+    return failures
+
+
+def parse_backend_markers(backend_log: Path) -> dict[str, list[str]]:
+    """Extract per-test log lines from a backend.log using ===TEST_START===/===TEST_END=== markers.
+
+    Returns a dict mapping test title → list of log lines captured between its markers.
+    """
+    try:
+        lines = backend_log.read_text(encoding="utf-8").splitlines()
+    except Exception:
+        return {}
+
+    result: dict[str, list[str]] = {}
+    current_title: str | None = None
+    current_lines: list[str] = []
+
+    for line in lines:
+        if "===TEST_START===" in line:
+            idx = line.index("===TEST_START===") + len("===TEST_START===")
+            current_title = line[idx:].strip()
+            current_lines = []
+        elif "===TEST_END===" in line:
+            if current_title is not None:
+                result[current_title] = current_lines
+            current_title = None
+            current_lines = []
+        elif current_title is not None:
+            current_lines.append(line)
+
+    return result
+
+
+def build_merged_report(
+    n: int,
+    merged_stats: dict,
+    results: list[int],
+) -> None:
+    """Build and write front/cypress/results/report.json.
+
+    Reads per-worker cypress.log and backend.log, correlates failures with
+    backend log lines captured between ===TEST_START=== / ===TEST_END=== markers.
+    """
+    import json
+
+    all_failures: list[dict] = []
+
+    for worker in range(n):
+        log_dir = worker_log_dir(worker)
+        cypress_log = log_dir / "cypress.log"
+        backend_log = log_dir / "backend.log"
+
+        cypress_failures = parse_cypress_failures(cypress_log)
+        backend_markers = parse_backend_markers(backend_log)
+
+        for failure in cypress_failures:
+            title = failure["title"]
+            backend_logs = backend_markers.get(title, [])
+            if not backend_logs:
+                # Fuzzy fallback: find any marker key that ends with / contains the title
+                for key, val in backend_markers.items():
+                    if title.endswith(key) or key.endswith(title):
+                        backend_logs = val
+                        break
+
+            all_failures.append({
+                "title": title,
+                "worker": worker,
+                "cypress_error": failure["error"],
+                "backend_logs": backend_logs,
+            })
+
+    report = {
+        "summary": {
+            "tests": merged_stats.get("tests", 0),
+            "passing": merged_stats.get("passing", 0),
+            "failing": merged_stats.get("failing", 0),
+        },
+        "failures": all_failures,
+    }
+
+    out = FRONT_DIR / "cypress" / "results" / "report.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+    log(f"Report written → {out.relative_to(ROOT)}  ({len(all_failures)} failure(s))")
 
 
 def worker_log_dir(worker: int) -> Path:
@@ -339,9 +457,6 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     log(f"Worker {worker}: Cypress finished with exit code {proc.returncode}")
 
     if proc.returncode != 0:
-        failures_log = extract_failures(cypress_log)
-        if failures_log:
-            log(f"Worker {worker}: failures → {failures_log.relative_to(ROOT)}")
         log(f"Worker {worker}: full logs → front/cypress/results/worker-{worker}/")
 
     return proc.returncode
@@ -610,6 +725,9 @@ def main() -> None:
             val = merged.get(key, 0)
             log(f"  {key.capitalize():<10}: {val}")
         log("-" * 50)
+
+    # Write failure report (always, even if 0 failures)
+    build_merged_report(n, merged, results)
 
     elapsed = time.time() - start_time
     minutes, seconds = divmod(int(elapsed), 60)
