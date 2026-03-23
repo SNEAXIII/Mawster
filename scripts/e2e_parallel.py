@@ -153,9 +153,12 @@ def parse_cypress_failures(cypress_log: Path) -> list[dict]:
     test_name_re = re.compile(r"^\s{7,}(.+):$")
 
     def flush():
+        nonlocal current_title, current_error_lines
         if current_title and current_error_lines:
             error = "\n".join(l.strip() for l in current_error_lines if l.strip())
             failures.append({"title": current_title, "error": error})
+        current_title = None
+        current_error_lines = []
 
     for line in lines:
         stripped = line.strip()
