@@ -1,6 +1,5 @@
 'use client';
 
-import { Swords } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/app/i18n';
 import type { War } from '@/app/services/war';
@@ -17,7 +16,7 @@ export default function WarManagementBar({
   loading,
   onClickDeclare,
   onClickEndWar,
-}: WarManagementBarProps) {
+}: Readonly<WarManagementBarProps>) {
   const { t } = useI18n();
 
   if (loading) {
@@ -39,23 +38,12 @@ export default function WarManagementBar({
   }
 
   return (
-    <div className='flex items-center gap-3'>
-      <div className='flex items-center gap-2'>
-        <Swords className='w-4 h-4 text-muted-foreground' />
-        <span
-          className='text-sm font-semibold'
-          data-cy='war-opponent-name'
-        >
-          vs {activeWar.opponent_name}
-        </span>
-      </div>
-      <Button
-        variant='destructive'
-        onClick={onClickEndWar}
-        data-cy='end-war-btn'
-      >
-        {t.game.war.endWar}
-      </Button>
-    </div>
+    <Button
+      variant='destructive'
+      onClick={onClickEndWar}
+      data-cy='end-war-btn'
+    >
+      {t.game.war.endWar}
+    </Button>
   );
 }

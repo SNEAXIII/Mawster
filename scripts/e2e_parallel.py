@@ -24,17 +24,17 @@ import time
 from pathlib import Path
 
 # Matches the final summary line printed by Cypress after all specs:
-#   "  √  All specs passed!                        01:39       60       54        -        6        - "
-#   "  ×  2 of 3 specs failed                      01:39       60       58        2        -        - "
+#   "  √  All specs passed!                        01:39   60   54    -    6    -"
+#   "  ×  1 of 6 failed (17%)                      01:16   55   54    1    -    -"
 # Groups: tests, passing, failing, pending, skipped  ("-" means 0)
 FINAL_SUMMARY_RE = re.compile(
-    r"(?:passed!|failed!?)\s+"  # end of status text
-    r"\S+\s+"                   # duration (e.g. 01:39)
-    r"(\d+|-)\s+"               # tests
-    r"(\d+|-)\s+"               # passing
-    r"(\d+|-)\s+"               # failing
-    r"(\d+|-)\s+"               # pending
-    r"(\d+|-)"                  # skipped
+    r"(?:passed!|failed.*?)"  # "passed!" or "failed" + optional suffix like " (17%)"
+    r"\s+[\d:]+\s+"           # duration (e.g. 01:16)
+    r"(\d+|-)\s+"             # tests
+    r"(\d+|-)\s+"             # passing
+    r"(\d+|-)\s+"             # failing
+    r"(\d+|-)\s+"             # pending
+    r"(\d+|-)"                # skipped
 )
 
 ROOT = Path(__file__).parent.parent
@@ -352,6 +352,7 @@ def main() -> None:
     else:
         n = args.workers
 
+    start_time = time.time()
     log(f"Starting E2E parallel run with {n} worker(s)...")
 
     ports_to_free = [
@@ -524,8 +525,12 @@ def main() -> None:
             log(f"  {key.capitalize():<10}: {val}")
         log("-" * 50)
 
+    elapsed = time.time() - start_time
+    minutes, seconds = divmod(int(elapsed), 60)
+    duration_str = f"{minutes}m{seconds:02d}s" if minutes else f"{seconds}s"
+
     exit_code = max(results)
-    log(f"Done. {'All tests passed.' if exit_code == 0 else f'{sum(1 for r in results if r != 0)} worker(s) had failures.'}")
+    log(f"Done in {duration_str}. {'All tests passed.' if exit_code == 0 else f'{sum(1 for r in results if r != 0)} worker(s) had failures.'}")
     sys.exit(exit_code)
 
 
