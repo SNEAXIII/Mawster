@@ -1,5 +1,5 @@
 # Root Makefile — E2E test orchestration
-.PHONY: help e2e e2e-open e2e-db e2e-stop
+.PHONY: help e2e e2e-open e2e-parallel e2e-db e2e-stop
 
 NEXTAUTH_SECRET ?= e2e-local-nextauth-secret
 NEXTAUTH_URL    ?= http://localhost:3000
@@ -13,10 +13,11 @@ SHELL := powershell.exe
 help:
 	@Write-Host "e2e          --> demarrer les services + lancer Cypress headless"
 	@Write-Host "e2e-open     --> demarrer les services + ouvrir l'UI Cypress"
+	@Write-Host "e2e-parallel --> lancer les tests E2E en parallèle (N=4 par défaut, max 8)"
 	@Write-Host "e2e-db       --> demarrer uniquement mariadb-test"
 	@Write-Host "e2e-stop     --> arreter l'API et le frontend de test"
 	@Write-Host "Logs : .e2e-api.log  .e2e-front.log"
-	@Write-Host "Variables : SPEC=cypress/e2e/account.cy.ts  NEXTAUTH_SECRET=..."
+	@Write-Host "Variables : N=4  SPEC=war/war-management.cy.ts  Q=1  NEXTAUTH_SECRET=..."
 
 e2e-stop:
 	if (Test-Path .e2e-api.pid) { Stop-Process -Id (Get-Content .e2e-api.pid) -Force -ErrorAction SilentlyContinue; Remove-Item .e2e-api.pid -Force -ErrorAction SilentlyContinue }
@@ -36,15 +37,22 @@ e2e-open: e2e-db
 	@Write-Host 'Attente du frontend (port 3000)...'; for ($$i = 0; $$i -lt 60; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 3000 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
 	@Write-Host 'Lancement de Cypress...'; Set-Location front; npx cypress open
 
+e2e-parallel: e2e-db
+	python scripts/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) $(if $(Q),--quiet,)
+
+e2e-parallel-quiet: e2e-db
+	python scripts/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) --quiet
+
 else
 # ── Linux / macOS ─────────────────────────────────────────────────────────────
 
 help:
 	@echo "e2e          --> demarrer les services + lancer Cypress headless"
 	@echo "e2e-open     --> demarrer les services + ouvrir l'UI Cypress"
+	@echo "e2e-parallel --> lancer les tests E2E en parallèle (N=4 par défaut, max 8)"
 	@echo "e2e-db       --> demarrer uniquement mariadb-test"
 	@echo "e2e-stop     --> arreter l'API et le frontend de test"
-	@echo "Variables : SPEC=cypress/e2e/account.cy.ts  NEXTAUTH_SECRET=..."
+	@echo "Variables : N=4  SPEC=war/war-management.cy.ts  Q=1  NEXTAUTH_SECRET=..."
 
 e2e-stop:
 	@if [ -f .e2e-api.pid ]; then \
@@ -57,24 +65,30 @@ e2e-stop:
 	fi
 
 e2e: e2e-db
-	cd api && MODE=testing uv run app_testing.py & echo $$! > .e2e-api.pid
-	cd front && NEXTAUTH_SECRET=$(NEXTAUTH_SECRET) NEXTAUTH_URL=$(NEXTAUTH_URL) npm run testing & echo $$! > .e2e-front.pid
+	cd api && MODE=testing uv run app_testing.py > /dev/null 2>&1 & echo $$! > .e2e-api.pid
+	cd front && NEXTAUTH_SECRET=$(NEXTAUTH_SECRET) NEXTAUTH_URL=$(NEXTAUTH_URL) npm run testing > /dev/null 2>&1 & echo $$! > .e2e-front.pid
 	@echo "Attente de l'API (port 8001)..."; \
 	for i in $$(seq 1 30); do curl -s http://localhost:8001 >/dev/null 2>&1 && break || sleep 2; done
-	@echo "Attente du frontend (port 3000)..."; \
-	for i in $$(seq 1 60); do curl -s http://localhost:3000 >/dev/null 2>&1 && break || sleep 2; done
+	@echo "Attente du frontend (port 3001)..."; \
+	for i in $$(seq 1 60); do curl -s http://localhost:3001 >/dev/null 2>&1 && break || sleep 2; done
 	@echo "Lancement de Cypress..."
 	(cd front && npx cypress run $(if $(SPEC),--spec $(SPEC),)); STATUS=$$?; $(MAKE) e2e-stop; exit $$STATUS
 
 e2e-open: e2e-db
-	cd api && MODE=testing uv run app_testing.py & echo $$! > .e2e-api.pid
-	cd front && NEXTAUTH_SECRET=$(NEXTAUTH_SECRET) NEXTAUTH_URL=$(NEXTAUTH_URL) npm run testing & echo $$! > .e2e-front.pid
+	cd api && MODE=testing uv run app_testing.py > /dev/null 2>&1 & echo $$! > .e2e-api.pid
+	cd front && NEXTAUTH_SECRET=$(NEXTAUTH_SECRET) NEXTAUTH_URL=$(NEXTAUTH_URL) npm run testing > /dev/null 2>&1 & echo $$! > .e2e-front.pid
 	@echo "Attente de l'API (port 8001)..."; \
 	for i in $$(seq 1 30); do curl -s http://localhost:8001 >/dev/null 2>&1 && break || sleep 2; done
-	@echo "Attente du frontend (port 3000)..."; \
-	for i in $$(seq 1 60); do curl -s http://localhost:3000 >/dev/null 2>&1 && break || sleep 2; done
+	@echo "Attente du frontend (port 3001)..."; \
+	for i in $$(seq 1 60); do curl -s http://localhost:3001 >/dev/null 2>&1 && break || sleep 2; done
 	@echo "Lancement de Cypress..."
 	(cd front && npx cypress open)
+
+e2e-parallel: e2e-db ## Run E2E tests in parallel (N=4 by default, max 8)
+	python scripts/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) $(if $(Q),--quiet,)
+
+e2e-parallel-quiet: e2e-db ## Run E2E tests in parallel, hide server logs (N=4 by default, max 8)
+	python scripts/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) --quiet
 
 endif
 

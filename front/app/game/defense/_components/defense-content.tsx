@@ -1,53 +1,27 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { useI18n } from '@/app/i18n';
-import { toast } from 'sonner';
 import { useRequiredSession } from '@/hooks/use-required-session';
 import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { FullPageSpinner } from '@/components/full-page-spinner';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Shield } from 'lucide-react';
+
+import dynamic from 'next/dynamic';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { Shield, Trash2, Download, Upload } from 'lucide-react';
+import { useCurrentWar } from '../_hooks/use-current-war';
 
-import { type Alliance, getMyAlliances } from '@/app/services/game';
-import {
-  type DefenseSummary,
-  type AvailableChampion,
-  type BgMember,
-  type DefenseImportReport,
-  getDefense,
-  placeDefender,
-  removeDefender,
-  clearDefense,
-  getAvailableChampions,
-  getBgMembers,
-  exportDefense,
-  importDefense,
-} from '@/app/services/defense';
+import { useAllianceSelector } from '@/hooks/use-alliance-selector';
+import { useDefenseActions } from '../_hooks/use-defense-actions';
 
-import DefenseImportReportDialog from './defense-import-report-dialog';
+import DefenseHeader from './defense-header';
+import DefenseGrid from './defense-grid';
 
-const WarMap = dynamic(() => import('./war-map'), {
-  loading: () => <FullPageSpinner />,
-});
-
-const ChampionSelector = dynamic(() => import('./champion-selector'), {
-  loading: () => null,
-});
-
-const DefenseSidePanel = dynamic(() => import('./defense-side-panel'), {
-  loading: () => <FullPageSpinner />,
-});
+const WarBanner = dynamic(() => import('./war-banner'), { loading: () => null });
+const CreateWarDialog = dynamic(
+  () => import('../../war/_components/create-war-dialog'),
+  { loading: () => null }
+);
 
 interface DefensePageContentProps {
   onStateChange?: (allianceId: string, bg: number) => void;
@@ -64,99 +38,61 @@ export default function DefensePageContent({
   const { status } = useRequiredSession();
   const { canManage, isOwner } = useAllianceRole();
 
-  // State
-  const [alliances, setAlliances] = useState<Alliance[]>([]);
-  const [selectedAllianceId, setSelectedAllianceId] = useState<string>(initialAllianceId ?? '');
-  const [selectedBg, setSelectedBg] = useState<number>(initialBg ?? 1);
-  const [loading, setLoading] = useState(true);
-  const [defenseLoading, setDefenseLoading] = useState(false);
-
-  // Defense data
-  const [defenseSummary, setDefenseSummary] = useState<DefenseSummary | null>(null);
-  const [availableChampions, setAvailableChampions] = useState<AvailableChampion[]>([]);
-  const [bgMembers, setBgMembers] = useState<BgMember[]>([]);
-
-  // Dialogs
-  const [selectorNode, setSelectorNode] = useState<number | null>(null);
-  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
-  const [importReport, setImportReport] = useState<DefenseImportReport | null>(null);
-  const [importReportOpen, setImportReportOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Alliance selector
+  const {
+    alliances,
+    selectedAllianceId,
+    setSelectedAllianceId,
+    selectedBg,
+    setSelectedBg,
+    loading,
+  } = useAllianceSelector({ initialAllianceId, initialBg });
 
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
   const userCanManage = selectedAlliance
     ? canManage(selectedAlliance) || isOwner(selectedAlliance)
     : false;
 
-  // ─── Data fetching ─────────────────────────────────────
-  const fetchAlliances = useCallback(async () => {
-    try {
-      const data = await getMyAlliances();
-      setAlliances(data);
-      if (data.length > 0 && !selectedAllianceId) {
-        const firstId = data[0].id;
-        setSelectedAllianceId(firstId);
-        onStateChange?.(firstId, selectedBg);
-      }
-    } catch (err: any) {
-      toast.error(t.game.defense.loadError);
-    }
-  }, [t, selectedAllianceId, selectedBg, onStateChange]);
+  const {
+    defenseSummary,
+    availableChampions,
+    bgMembers,
+    defenseLoading,
+    selectorNode,
+    setSelectorNode,
+    clearConfirmOpen,
+    setClearConfirmOpen,
+    importReportOpen,
+    setImportReportOpen,
+    importReport,
+    fileInputRef,
+    handlePlaceDefender,
+    handleRemoveDefender,
+    handleClearDefense,
+    handleExportDefense,
+    handleImportFile,
+  } = useDefenseActions(selectedAllianceId, selectedBg, selectedAlliance?.tag);
 
-  const fetchDefense = useCallback(
-    async (silent = false) => {
-      if (!selectedAllianceId) return;
-      if (!silent) setDefenseLoading(true);
-      try {
-        const [defense, champions, members] = await Promise.all([
-          getDefense(selectedAllianceId, selectedBg),
-          getAvailableChampions(selectedAllianceId, selectedBg),
-          getBgMembers(selectedAllianceId, selectedBg),
-        ]);
-        setDefenseSummary(defense);
-        setAvailableChampions(champions);
-        setBgMembers(members);
-      } catch (err: any) {
-        if (!silent) toast.error(t.game.defense.loadError);
-      } finally {
-        if (!silent) setDefenseLoading(false);
-      }
-    },
-    [selectedAllianceId, selectedBg, t]
-  );
+  const {
+    currentWar,
+    warLoading,
+    showCreateDialog,
+    setShowCreateDialog,
+    showEndConfirm,
+    setShowEndConfirm,
+    handleCreateWar,
+    handleEndWar,
+  } = useCurrentWar(selectedAllianceId);
 
-  const fetchDefenseRef = useRef(fetchDefense);
+  // Auto-select first alliance when alliances load and none is selected
   useEffect(() => {
-    fetchDefenseRef.current = fetchDefense;
-  }, [fetchDefense]);
-
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const resetPollTimer = useCallback(() => {
-    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-    pollIntervalRef.current = setInterval(() => fetchDefenseRef.current(true), 10_000);
-  }, []);
-
-  useEffect(() => {
-    if (status !== 'authenticated') return;
-    setLoading(true);
-    fetchAlliances().finally(() => setLoading(false));
-  }, [status]);
-
-  useEffect(() => {
-    if (selectedAllianceId) {
-      fetchDefense();
+    if (alliances.length > 0 && !selectedAllianceId) {
+      const firstId = alliances[0].id;
+      setSelectedAllianceId(firstId);
+      onStateChange?.(firstId, selectedBg);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAllianceId, selectedBg]);
-
-  useEffect(() => {
-    if (!selectedAllianceId) return;
-    resetPollTimer();
-    return () => {
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-    };
-  }, [selectedAllianceId, selectedBg, resetPollTimer]);
+  }, [alliances]);
 
   // ─── Actions ───────────────────────────────────────────
   const handleNodeClick = (nodeNumber: number) => {
@@ -164,118 +100,15 @@ export default function DefensePageContent({
     setSelectorNode(nodeNumber);
   };
 
-  const handlePlaceDefender = async (
-    championUserId: string,
-    gameAccountId: string,
-    championName: string
-  ) => {
-    if (!selectedAllianceId || selectorNode === null) return;
-    try {
-      await placeDefender(
-        selectedAllianceId,
-        selectedBg,
-        selectorNode,
-        championUserId,
-        gameAccountId
-      );
-      toast.success(
-        t.game.defense.placeSuccess
-          .replace('{name}', championName)
-          .replace('{node}', String(selectorNode))
-      );
-      setSelectorNode(null);
-      await fetchDefense(true);
-      resetPollTimer();
-    } catch (err: any) {
-      toast.error(err.message || t.game.defense.placeError);
-    }
-  };
-
-  const handleRemoveDefender = async (nodeNumber: number) => {
-    if (!selectedAllianceId) return;
-    try {
-      await removeDefender(selectedAllianceId, selectedBg, nodeNumber);
-      toast.success(t.game.defense.removeSuccess);
-      await fetchDefense(true);
-      resetPollTimer();
-    } catch (err: any) {
-      toast.error(err.message || t.game.defense.removeError);
-    }
-  };
-
-  const handleClearDefense = async () => {
-    if (!selectedAllianceId) return;
-    try {
-      await clearDefense(selectedAllianceId, selectedBg);
-      toast.success(t.game.defense.clearSuccess);
-      await fetchDefense(true);
-      resetPollTimer();
-    } catch (err: any) {
-      toast.error(err.message || t.game.defense.clearError);
-    }
-    setClearConfirmOpen(false);
-  };
-
-  const handleBgChange = (bg: string) => {
-    const newBg = Number.parseInt(bg);
-    setSelectedBg(newBg);
-    if (selectedAllianceId) onStateChange?.(selectedAllianceId, newBg);
+  const handleBgChange = (bg: number) => {
+    setSelectedBg(bg);
+    if (selectedAllianceId) onStateChange?.(selectedAllianceId, bg);
   };
 
   const handleAllianceChange = (allianceId: string) => {
     setSelectedAllianceId(allianceId);
     setSelectedBg(1);
     onStateChange?.(allianceId, 1);
-  };
-
-  // ─── Import / Export ───────────────────────────────────
-  const handleExport = async () => {
-    if (!selectedAllianceId) return;
-    try {
-      const items = await exportDefense(selectedAllianceId, selectedBg);
-      if (items.length === 0) {
-        toast.warning(t.game.defense.importExport.emptyExport);
-        return;
-      }
-      const json = JSON.stringify(items, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      const tag = selectedAlliance?.tag ?? 'defense';
-      a.download = `defense_${tag}_bg${selectedBg}_${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success(
-        t.game.defense.importExport.exportedCount.replace('{count}', String(items.length))
-      );
-    } catch (err: any) {
-      toast.error(err.message || t.game.defense.importExport.exportError);
-    }
-  };
-
-  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !selectedAllianceId) return;
-    e.target.value = '';
-
-    try {
-      const text = await file.text();
-      const placements = JSON.parse(text);
-      if (!Array.isArray(placements) || placements.length === 0) {
-        toast.error(t.game.defense.importExport.invalidFile);
-        return;
-      }
-      const report = await importDefense(selectedAllianceId, selectedBg, placements);
-      setImportReport(report);
-      setImportReportOpen(true);
-      await fetchDefense(true);
-      resetPollTimer();
-    } catch (err: any) {
-      toast.error(err.message || t.game.defense.importExport.importError);
-    }
   };
 
   // ─── Render ────────────────────────────────────────────
@@ -293,178 +126,39 @@ export default function DefensePageContent({
 
   return (
     <div className='space-y-4'>
-      {/* Header */}
-      <div className='flex flex-col sm:flex-row items-start sm:items-center gap-3'>
-        <div className='flex items-center gap-2'>
-          <Shield className='w-6 h-6 text-blue-400' />
-          <h1 className='text-xl font-bold'>{t.game.defense.title}</h1>
-        </div>
-      </div>
-
-      {/* Controls */}
-      <Card>
-        <CardContent className='p-4'>
-          <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center'>
-            {/* Alliance selector */}
-            <div className='flex items-center gap-2'>
-              <label className='text-sm font-medium whitespace-nowrap'>
-                {t.game.defense.alliance}:
-              </label>
-              <Select
-                value={selectedAllianceId}
-                onValueChange={handleAllianceChange}
-              >
-                <SelectTrigger
-                  className='w-[200px]'
-                  data-cy='defense-alliance-select'
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {alliances.map((a) => (
-                    <SelectItem
-                      key={a.id}
-                      value={a.id}
-                    >
-                      [{a.tag}] {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* BG selector */}
-            <div className='flex flex-wrap items-center gap-2'>
-              <label className='text-sm font-medium whitespace-nowrap'>
-                {t.game.defense.battlegroup}:
-              </label>
-              <div className='flex gap-1'>
-                {[1, 2, 3].map((bg) => (
-                  <Button
-                    key={bg}
-                    variant={selectedBg === bg ? 'default' : 'outline'}
-                    size='sm'
-                    onClick={() => handleBgChange(String(bg))}
-                    data-cy={`defense-bg-${bg}`}
-                  >
-                    BG {bg}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Clear button */}
-            {userCanManage && defenseSummary && defenseSummary.placements.length > 0 && (
-              <Button
-                variant='destructive'
-                size='sm'
-                className='ml-auto'
-                data-cy='defense-clear-all'
-                onClick={() => setClearConfirmOpen(true)}
-              >
-                <Trash2 className='w-4 h-4 mr-1' />
-                {t.game.defense.clearAll}
-              </Button>
-            )}
-
-            {/* Export / Import — managers only */}
-            {userCanManage && (
-              <div className='flex gap-1 ml-auto'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={handleExport}
-                  data-cy='defense-export'
-                >
-                  <Download className='w-4 h-4 mr-1' />
-                  {t.game.defense.importExport.exportBtn}
-                </Button>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => fileInputRef.current?.click()}
-                  data-cy='defense-import'
-                >
-                  <Upload className='w-4 h-4 mr-1' />
-                  {t.game.defense.importExport.importBtn}
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Main content */}
-      {defenseLoading ? (
-        <FullPageSpinner />
-      ) : (
-        <div className='flex flex-col lg:flex-row gap-4'>
-          {/* War Map */}
-          <div className='flex-1 min-w-0'>
-            <Card>
-              <CardContent className='p-2 sm:p-3 overflow-x-auto'>
-                <WarMap
-                  placements={defenseSummary?.placements ?? []}
-                  onNodeClick={handleNodeClick}
-                  onRemove={handleRemoveDefender}
-                  canManage={userCanManage}
-                />
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Side panel */}
-          <div className='w-full lg:w-72 xl:w-80 shrink-0'>
-            <Card>
-              <CardContent className='p-3'>
-                <DefenseSidePanel
-                  members={bgMembers}
-                  placements={defenseSummary?.placements ?? []}
-                  onRemoveDefender={handleRemoveDefender}
-                  canManage={userCanManage}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {/* Champion selector dialog */}
-      {selectorNode !== null && (
-        <ChampionSelector
-          open={selectorNode !== null}
-          onClose={() => setSelectorNode(null)}
-          nodeNumber={selectorNode}
-          availableChampions={availableChampions}
-          onSelect={handlePlaceDefender}
-        />
-      )}
-
-      {/* Clear confirmation */}
-      <ConfirmationDialog
-        open={clearConfirmOpen}
-        onOpenChange={setClearConfirmOpen}
-        title={t.game.defense.clearConfirmTitle}
-        description={t.game.defense.clearConfirmDesc}
-        confirmText={t.common.confirm}
-        onConfirm={handleClearDefense}
-        variant='destructive'
+      <h2 className='text-xl font-bold'>{t.game.defense.title}</h2>
+      <DefenseHeader
+        alliances={alliances}
+        selectedAllianceId={selectedAllianceId}
+        onAllianceChange={handleAllianceChange}
+        selectedBg={selectedBg}
+        onBgChange={handleBgChange}
+        onExport={handleExportDefense}
+        onImportClick={() => fileInputRef.current?.click()}
+        onClearClick={() => setClearConfirmOpen(true)}
+        canManage={userCanManage}
+        defenseSummary={defenseSummary}
       />
 
-      {/* Hidden file input for import */}
-      <input
-        ref={fileInputRef}
-        type='file'
-        accept='.json'
-        className='hidden'
-        onChange={handleImportFile}
-      />
-
-      {/* Import report dialog */}
-      <DefenseImportReportDialog
-        open={importReportOpen}
-        onClose={() => setImportReportOpen(false)}
-        report={importReport}
+      <DefenseGrid
+        defenseSummary={defenseSummary}
+        availableChampions={availableChampions}
+        bgMembers={bgMembers}
+        selectorNode={selectorNode}
+        onNodeClick={handleNodeClick}
+        onPlace={handlePlaceDefender}
+        onRemove={handleRemoveDefender}
+        clearConfirmOpen={clearConfirmOpen}
+        onClearConfirm={handleClearDefense}
+        setClearConfirmOpen={setClearConfirmOpen}
+        onSelectorClose={() => setSelectorNode(null)}
+        fileInputRef={fileInputRef}
+        onImportFile={handleImportFile}
+        importReportOpen={importReportOpen}
+        importReport={importReport}
+        onImportReportClose={() => setImportReportOpen(false)}
+        loading={defenseLoading}
+        canManage={userCanManage}
       />
     </div>
   );

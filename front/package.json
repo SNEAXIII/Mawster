@@ -3,7 +3,7 @@
   "scripts": {
     "build": "next build",
     "dev": "cross-env API_PORT=8000 next dev --turbopack",
-    "testing": "cross-env API_PORT=8001 next dev --turbopack",
+    "testing": "cross-env NEXTAUTH_URL='http://localhost:3001' cross-env API_PORT=8001 next dev --turbopack --port 3001",
     "start": "next start",
     "prod": "npm run build && npm run start",
     "cypress:open": "cypress open",
@@ -61,6 +61,7 @@
     "cypress": "^15.11.0",
     "cypress-multi-reporters": "^2.0.5",
     "cypress-parallel": "^0.15.0",
+    "cypress-split": "^1.24.28",
     "mocha-junit-reporter": "^2.2.1",
     "prettier": "^3.8.1",
     "sass": "^1.98.0"

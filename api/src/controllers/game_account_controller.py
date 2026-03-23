@@ -65,6 +65,7 @@ async def get_my_game_accounts(
     accounts = await GameAccountService.get_game_accounts_by_user(
         session=session,
         user_id=current_user.id,
+        load_alliance=True,
     )
     return [_to_response(acc) for acc in accounts]
 

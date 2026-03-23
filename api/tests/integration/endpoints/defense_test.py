@@ -161,7 +161,7 @@ class TestGetDefense:
             f"/alliances/{data['alliance'].id}/defense/bg/4",
             headers=headers,
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_get_defense_includes_preferred_attacker(self):

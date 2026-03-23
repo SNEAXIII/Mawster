@@ -15,12 +15,12 @@ from src.dto.dto_defense import (
 from src.models import User
 from src.models.GameAccount import GameAccount
 from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
-from src.Messages.defense_messages import BATTLEGROUP_INVALID
 from src.services.AllianceService import AllianceService
 from src.services.AuthService import AuthService
 from src.services.DefensePlacementService import DefensePlacementService
 from src.utils.db import SessionDep
 from src.utils.logging_config import audit_log
+from src.utils.path_params import BattlegroupPath
 from sqlmodel import select
 
 defense_controller = APIRouter(
@@ -64,14 +64,11 @@ def _to_placement_response(p) -> DefensePlacementResponse:
 )
 async def get_defense(
     alliance_id: uuid.UUID,
-    battlegroup: int,
+    battlegroup: BattlegroupPath,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get the full defense layout for a battlegroup."""
-    if battlegroup < 1 or battlegroup > 3:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
-
     await _get_user_account_in_alliance(session, current_user, alliance_id)
 
     placements = await DefensePlacementService.get_defense(session, alliance_id, battlegroup)
@@ -96,15 +93,12 @@ async def get_defense(
 )
 async def place_defender(
     alliance_id: uuid.UUID,
-    battlegroup: int,
+    battlegroup: BattlegroupPath,
     body: DefensePlacementCreateRequest,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Place a defender on a node. Owner/officer can place for any BG member."""
-    if battlegroup < 1 or battlegroup > 3:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
-
     my_account = await _get_user_account_in_alliance(session, current_user, alliance_id)
 
     # Check if user is owner/officer (can place for others) or placing for themselves
@@ -150,15 +144,12 @@ async def place_defender(
 )
 async def remove_defender(
     alliance_id: uuid.UUID,
-    battlegroup: int,
+    battlegroup: BattlegroupPath,
     node_number: int,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Remove a defender from a node. Officers/owners only."""
-    if battlegroup < 1 or battlegroup > 3:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
-
     await _get_user_account_in_alliance(session, current_user, alliance_id)
 
     alliance = await AllianceService._load_alliance_with_relations(session, alliance_id)
@@ -182,14 +173,11 @@ async def remove_defender(
 )
 async def clear_defense(
     alliance_id: uuid.UUID,
-    battlegroup: int,
+    battlegroup: BattlegroupPath,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Clear all defense placements for a battlegroup. Officers/owners only."""
-    if battlegroup < 1 or battlegroup > 3:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
-
     await _get_user_account_in_alliance(session, current_user, alliance_id)
 
     alliance = await AllianceService._load_alliance_with_relations(session, alliance_id)
@@ -212,14 +200,11 @@ async def clear_defense(
 )
 async def get_available_champions(
     alliance_id: uuid.UUID,
-    battlegroup: int,
+    battlegroup: BattlegroupPath,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get all champions available for placement (not already placed, from BG members)."""
-    if battlegroup < 1 or battlegroup > 3:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
-
     await _get_user_account_in_alliance(session, current_user, alliance_id)
 
     return await DefensePlacementService.get_available_champions(
@@ -232,14 +217,11 @@ async def get_available_champions(
 )
 async def get_bg_members(
     alliance_id: uuid.UUID,
-    battlegroup: int,
+    battlegroup: BattlegroupPath,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get all members in a battlegroup with their defender counts."""
-    if battlegroup < 1 or battlegroup > 3:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
-
     await _get_user_account_in_alliance(session, current_user, alliance_id)
 
     return await DefensePlacementService.get_bg_members_with_counts(
@@ -247,7 +229,7 @@ async def get_bg_members(
     )
 
 
-# â”€â”€â”€ Export / Import â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# =================== Export / Import ===================
 
 
 @defense_controller.get(
@@ -256,14 +238,11 @@ async def get_bg_members(
 )
 async def export_defense(
     alliance_id: uuid.UUID,
-    battlegroup: int,
+    battlegroup: BattlegroupPath,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Export the current defense as portable JSON (no IDs). Officers/owners only."""
-    if battlegroup < 1 or battlegroup > 3:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
-
     await _get_user_account_in_alliance(session, current_user, alliance_id)
 
     alliance = await AllianceService._load_alliance_with_relations(session, alliance_id)
@@ -288,16 +267,13 @@ async def export_defense(
 )
 async def import_defense(
     alliance_id: uuid.UUID,
-    battlegroup: int,
+    battlegroup: BattlegroupPath,
     body: DefenseImportRequest,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Import a defense layout from JSON. Clears existing defense first.
     Officers/owners only. Returns a before/after comparison + errors."""
-    if battlegroup < 1 or battlegroup > 3:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=BATTLEGROUP_INVALID)
-
     my_account = await _get_user_account_in_alliance(session, current_user, alliance_id)
 
     alliance = await AllianceService._load_alliance_with_relations(session, alliance_id)

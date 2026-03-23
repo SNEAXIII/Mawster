@@ -14,6 +14,7 @@ const RESULTS_DIR = path.join(FRONT_DIR, 'cypress', 'results');
 const REPORTS_DIR = path.join(RESULTS_DIR, 'reports');
 const VIDEOS_DIR = path.join(RESULTS_DIR, 'videos');
 const SCREENSHOTS_DIR = path.join(RESULTS_DIR, 'screenshots');
+const HISTORY_FILE = path.join(ROOT, 'runner-results', 'e2e-history.json');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -117,6 +118,45 @@ function parseXmlResults(): TestResults {
   };
 }
 
+// ── History ───────────────────────────────────────────────────────────────────
+
+interface HistoryEntry {
+  timestamp: string;
+  branch: string;
+  type: 'all' | 'specific' | 'failing' | 'parallel';
+  specs?: string[];
+  durationMs: number;
+  summary: { total: number; passed: number; failed: number };
+  failedTests: string[];
+}
+
+function currentBranch(): string {
+  try {
+    return execSync('git rev-parse --abbrev-ref HEAD', { cwd: ROOT, stdio: 'pipe' })
+      .toString()
+      .trim();
+  } catch {
+    return 'unknown';
+  }
+}
+
+function saveToHistory(entry: HistoryEntry): void {
+  const dir = path.dirname(HISTORY_FILE);
+  fs.mkdirSync(dir, { recursive: true });
+
+  let history: HistoryEntry[] = [];
+  if (fs.existsSync(HISTORY_FILE)) {
+    try {
+      history = JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf-8')) as HistoryEntry[];
+    } catch {
+      history = [];
+    }
+  }
+
+  history.push(entry);
+  fs.writeFileSync(HISTORY_FILE, JSON.stringify(history, null, 2));
+}
+
 function runCypress(specs?: string[]): TestResults {
   clearResults();
 
@@ -147,7 +187,68 @@ server.registerTool(
       "Supprime les résultats précédents, lance tous les tests Cypress, et retourne le résumé ainsi que les détails de chaque test échoué (suite, nom du test, message d'erreur).",
   },
   async () => {
+    const start = Date.now();
     const results = runCypress();
+    const durationMs = Date.now() - start;
+    saveToHistory({
+      timestamp: new Date().toISOString(),
+      branch: currentBranch(),
+      type: 'all',
+      durationMs,
+      summary: results.summary,
+      failedTests: results.failures.map((f) => f.test),
+    });
+    return {
+      content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
+    };
+  }
+);
+
+server.registerTool(
+  'run_specific_tests',
+  {
+    description:
+      'Lance uniquement les specs Cypress spécifiées (par fichier et/ou filtre de nom), et retourne le résumé + détails des échecs. Utiliser pour cibler un seul fichier de test ou un seul test par son nom.',
+    inputSchema: {
+      spec_files: z
+        .array(z.string())
+        .describe(
+          'Liste des chemins de specs à lancer, relatifs au dossier front/. Ex: ["cypress/e2e/war/management.cy.ts"]'
+        ),
+      grep: z
+        .string()
+        .optional()
+        .describe(
+          'Filtre optionnel sur le nom du test (passé à --env grep=...). Ex: "ended war shows"'
+        ),
+    },
+  },
+  async ({ spec_files, grep }) => {
+    clearResults();
+
+    const start = Date.now();
+    const specArg = spec_files.length > 0 ? `--spec "${spec_files.join(',')}"` : '';
+    const grepArg = grep ? `--env grep="${grep}"` : '';
+    const cmd = `npx cypress run ${specArg} ${grepArg}`.trim();
+
+    try {
+      execSync(cmd, { cwd: FRONT_DIR, stdio: 'pipe', timeout: 600_000 });
+    } catch {
+      // Cypress exits with code 1 when tests fail — not a real error
+    }
+
+    const durationMs = Date.now() - start;
+    const results = parseXmlResults();
+    saveToHistory({
+      timestamp: new Date().toISOString(),
+      branch: currentBranch(),
+      type: 'specific',
+      specs: spec_files,
+      durationMs,
+      summary: results.summary,
+      failedTests: results.failures.map((f) => f.test),
+    });
+
     return {
       content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
     };
@@ -168,9 +269,91 @@ server.registerTool(
     },
   },
   async ({ spec_files }) => {
+    const start = Date.now();
     const results = runCypress(spec_files);
+    const durationMs = Date.now() - start;
+    saveToHistory({
+      timestamp: new Date().toISOString(),
+      branch: currentBranch(),
+      type: 'failing',
+      specs: spec_files,
+      durationMs,
+      summary: results.summary,
+      failedTests: results.failures.map((f) => f.test),
+    });
     return {
       content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
+    };
+  }
+);
+
+server.registerTool(
+  'run_parallel',
+  {
+    description:
+      'Lance les tests E2E en parallèle via e2e_parallel.py (plusieurs workers, chacun avec son propre backend+frontend+DB). Retourne le rapport enrichi avec les logs backend par test échoué. Nécessite Docker (mariadb-test sur le port 3307).',
+    inputSchema: {
+      workers: z
+        .number()
+        .int()
+        .min(1)
+        .max(8)
+        .optional()
+        .describe('Nombre de workers parallèles (1-8, défaut: 2)'),
+      spec: z
+        .string()
+        .optional()
+        .describe(
+          'Spec unique à lancer (relatif à front/cypress/e2e/). Ex: "war/war.cy.ts". Force 1 worker.'
+        ),
+    },
+  },
+  async ({ workers = 2, spec }) => {
+    const REPORT_FILE = path.join(RESULTS_DIR, 'report.json');
+    const start = Date.now();
+
+    const workersArg = spec ? '' : `--workers ${workers}`;
+    const specArg = spec ? `--spec "${spec}"` : '';
+    const cmd = `python scripts/e2e_parallel.py ${workersArg} ${specArg} --quiet`.trim();
+
+    try {
+      execSync(cmd, { cwd: ROOT, stdio: 'pipe', timeout: 1_200_000 });
+    } catch {
+      // e2e_parallel.py exits with non-zero when tests fail — not a real error
+    }
+
+    const durationMs = Date.now() - start;
+
+    let report: unknown = { summary: { tests: 0, passing: 0, failing: 0 }, failures: [] };
+    if (fs.existsSync(REPORT_FILE)) {
+      try {
+        report = JSON.parse(fs.readFileSync(REPORT_FILE, 'utf-8'));
+      } catch {
+        // keep empty report
+      }
+    }
+
+    const typedReport = report as {
+      summary: { tests: number; passing: number; failing: number };
+      failures: { title: string }[];
+    };
+
+    saveToHistory({
+      timestamp: new Date().toISOString(),
+      branch: currentBranch(),
+      type: 'parallel',
+      specs: spec ? [spec] : undefined,
+      durationMs,
+      summary: {
+        total: typedReport.summary.tests,
+        passed: typedReport.summary.passing,
+        failed: typedReport.summary.failing,
+      },
+      failedTests: typedReport.failures.map((f) => f.title),
+    });
+
+    return {
+      content: [{ type: 'text', text: JSON.stringify(report, null, 2) }],
     };
   }
 );

@@ -4,6 +4,7 @@ export interface War {
   id: string;
   alliance_id: string;
   opponent_name: string;
+  status: 'active' | 'ended';
   created_by_pseudo: string;
   created_at: string;
 }
@@ -21,12 +22,30 @@ export interface WarPlacement {
   ascension: number;
   placed_by_pseudo: string | null;
   created_at: string;
+  ko_count: number;
+  attacker_champion_user_id: string | null;
+  attacker_pseudo: string | null;
+  attacker_champion_name: string | null;
+  attacker_champion_class: string | null;
+  attacker_image_url: string | null;
+  attacker_rarity: string | null;
 }
 
 export interface WarDefenseSummary {
   war_id: string;
   battlegroup: number;
   placements: WarPlacement[];
+}
+
+export interface AvailableAttacker {
+  champion_user_id: string;
+  game_account_id: string;
+  game_pseudo: string;
+  champion_id: string;
+  champion_name: string;
+  champion_class: string;
+  image_url: string | null;
+  rarity: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────
@@ -54,6 +73,14 @@ export async function getWars(allianceId: string): Promise<War[]> {
     headers: jsonHeaders,
   });
   await throwOnError(response, 'Failed to load wars');
+  return response.json();
+}
+
+export async function getCurrentWar(allianceId: string): Promise<War> {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/current`, {
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, 'Failed to load current war');
   return response.json();
 }
 
@@ -121,6 +148,15 @@ export async function removeWarDefender(
   await throwOnError(response, 'Failed to remove defender');
 }
 
+export async function endWar(allianceId: string, warId: string): Promise<War> {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/${warId}/end`, {
+    method: 'POST',
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, 'Failed to end war');
+  return response.json();
+}
+
 export async function clearWarBg(
   allianceId: string,
   warId: string,
@@ -131,4 +167,71 @@ export async function clearWarBg(
     { method: 'DELETE', headers: jsonHeaders }
   );
   await throwOnError(response, 'Failed to clear war battlegroup');
+}
+
+// ─── Attacker API ─────────────────────────────────────────
+
+export async function getAvailableAttackers(
+  allianceId: string,
+  warId: string,
+  battlegroup: number
+): Promise<AvailableAttacker[]> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-attackers`,
+    { headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to load available attackers');
+  return response.json();
+}
+
+export async function assignWarAttacker(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  nodeNumber: number,
+  championUserId: string
+): Promise<WarPlacement> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/attacker`,
+    {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ champion_user_id: championUserId }),
+    }
+  );
+  await throwOnError(response, 'Failed to assign attacker');
+  return response.json();
+}
+
+export async function removeWarAttacker(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  nodeNumber: number
+): Promise<WarPlacement> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/attacker`,
+    { method: 'DELETE', headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to remove attacker');
+  return response.json();
+}
+
+export async function updateWarKo(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  nodeNumber: number,
+  koCount: number
+): Promise<WarPlacement> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/ko`,
+    {
+      method: 'PATCH',
+      headers: jsonHeaders,
+      body: JSON.stringify({ ko_count: koCount }),
+    }
+  );
+  await throwOnError(response, 'Failed to update KO count');
+  return response.json();
 }

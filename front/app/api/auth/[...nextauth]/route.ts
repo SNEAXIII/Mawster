@@ -2,9 +2,11 @@ import NextAuth from 'next-auth';
 import Discord from 'next-auth/providers/discord';
 import Credentials from 'next-auth/providers/credentials';
 import jwt from 'jsonwebtoken';
-import { SERVER_API_URL } from '@/next.config';
+import { getServerApiUrl } from '@/app/lib/serverApiUrl';
 
-const IS_DEV = process.env.NODE_ENV === 'development';
+import { isServerDev } from '@/app/lib/dev-mode';
+
+const IS_DEV = isServerDev();
 
 interface JwtPayload {
   user_id: string;
@@ -20,7 +22,7 @@ async function refreshBackendToken(token: any): Promise<any> {
   try {
     // 1. Try backend refresh token first
     if (token.backendRefreshToken) {
-      const refreshRes = await fetch(`${SERVER_API_URL}/auth/refresh`, {
+      const refreshRes = await fetch(`${getServerApiUrl()}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: token.backendRefreshToken }),
@@ -67,7 +69,7 @@ async function refreshBackendToken(token: any): Promise<any> {
 
       const discordTokens = await discordRes.json();
 
-      const backendRes = await fetch(`${SERVER_API_URL}/auth/discord`, {
+      const backendRes = await fetch(`${getServerApiUrl()}/auth/discord`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ access_token: discordTokens.access_token }),
@@ -131,7 +133,7 @@ export const {
             async authorize(credentials) {
               if (!credentials?.user_id) return null;
 
-              const res = await fetch(`${SERVER_API_URL}/dev/login`, {
+              const res = await fetch(`${getServerApiUrl()}/dev/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: credentials.user_id }),
@@ -183,7 +185,7 @@ export const {
       // Login initial via Discord OAuth
       if (account?.provider === 'discord' && account.access_token) {
         try {
-          const res = await fetch(`${SERVER_API_URL}/auth/discord`, {
+          const res = await fetch(`${getServerApiUrl()}/auth/discord`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ access_token: account.access_token }),
@@ -240,7 +242,7 @@ export const {
       // Fetch full user profile from backend /auth/session
       try {
         if (token.accessToken) {
-          const res = await fetch(`${SERVER_API_URL}/auth/session`, {
+          const res = await fetch(`${getServerApiUrl()}/auth/session`, {
             method: 'GET',
             headers: {
               Authorization: `Bearer ${token.accessToken}`,

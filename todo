@@ -2,3 +2,13 @@ ajouter une feature
     "je compte up ce perso"
     je veux que ce groupe aie tel perso monté def par les admins (commme la update request mais pas nominatif a une personne spécifique)
     un écran de visualisation / comparatif des persos monté par groupe/par alliance avec filters
+    faire un selecteur de joueur pour display son path
+    mettre les synergies
+    mettre un champ texte
+    afficheer un attaquant préf
+
+bug
+    si un mec a 3 perso de select, ca bloque le switch pour un autre perso
+    bloquer les lignes si le boug peut pas aller a un endroit
+    ne pas tout display quand on veut placer un def
+    regrouper les champions comme la def pour select un attanquant

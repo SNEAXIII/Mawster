@@ -5,7 +5,36 @@ Cypress.on('uncaught:exception', (err) => {
   if (err.message.includes('ResizeObserver')) return false;
 });
 
-export const BACKEND: string = (Cypress.env('backendUrl') as string | undefined) ?? 'http://localhost:8001';
+// Remove the default 10ms per-keystroke delay globally
+Cypress.Commands.overwrite<'type', 'element'>('type', (originalFn, subject, text, options) => {
+  return originalFn(subject, text, { delay: 0, ...options });
+});
+
+export const BACKEND: string =
+  (Cypress.env('backendUrl') as string | undefined) ?? 'http://localhost:8001';
+
+// ── E2E log markers — correlate backend logs with test boundaries ─────────
+
+beforeEach(() => {
+  const title = Cypress.currentTest.titlePath.join(' > ');
+  cy.request({
+    method: 'POST',
+    url: `${BACKEND}/dev/log-marker`,
+    body: { event: 'start', title },
+    failOnStatusCode: false,
+  });
+});
+
+afterEach(() => {
+  const title = Cypress.currentTest.titlePath.join(' > ');
+  const passed = (Cypress.currentTest as any).state === 'passed';
+  cy.request({
+    method: 'POST',
+    url: `${BACKEND}/dev/log-marker`,
+    body: { event: 'end', title, passed },
+    failOnStatusCode: false,
+  });
+});
 
 // ── Shared types ─────────────────────────────────────────────────────────────
 
@@ -30,6 +59,36 @@ Cypress.Commands.add('truncateDb', () => {
   cy.request('POST', `${BACKEND}/dev/truncate`).then((res) => {
     expect(res.status).to.eq(200);
   });
+});
+
+// ── Batch setup (single request to create N users with accounts/alliances) ───
+
+interface BatchSetupUserSpec {
+  discord_token: string;
+  role?: string;
+  game_pseudo?: string;
+  create_alliance?: { name: string; tag: string };
+  join_alliance_token?: string;
+  battlegroup?: number;
+}
+
+interface BatchSetupUserResult {
+  access_token: string;
+  refresh_token: string;
+  user_id: string;
+  login: string;
+  email: string;
+  discord_id: string;
+  account_id: string | null;
+  alliance_id: string | null;
+}
+
+Cypress.Commands.add('apiBatchSetup', (specs: BatchSetupUserSpec[]) => {
+  cy.request({
+    method: 'POST',
+    url: `${BACKEND}/dev/batch-setup`,
+    body: specs,
+  }).then((res) => res.body.users as Record<string, BatchSetupUserResult>);
 });
 
 // ── Register user via Discord mock (direct backend call) ─────────────────────
@@ -136,9 +195,11 @@ Cypress.Commands.add('uiLogin', (userName: string) => {
 
 // ── Navigate via navbar click ────────────────────────────────────────────────
 
-// Pages that no longer have a nav link — navigate via URL instead
+// Pages where cy.visit is preferred over nav click (avoids Radix scroll-lock contamination
+// across tests, or pages that have no nav link)
 const NAV_URL_FALLBACK: Record<string, string> = {
   defense: '/game/defense',
+  war: '/game/war',
 };
 
 Cypress.Commands.add('navTo', (page: string) => {
@@ -293,131 +354,107 @@ Cypress.Commands.add('apiUpgradeChampion', (token: string, championUserId: strin
     .then((res) => res.body);
 });
 
-// ── Helper: register + promote via API, returns user data ────────────────────
+// ── Helper: extract UserSetupData from a BatchSetupUserResult ────────────────
 
-function getProfile(
-  accessToken: string
-): Cypress.Chainable<{ id: string; login: string; email: string; discord_id: string }> {
-  // Decode user_id from JWT since /auth/session doesn't include it
-  const payload = JSON.parse(atob(accessToken.split('.')[1]));
-  const userId: string = payload.user_id;
-
-  return cy
-    .request({
-      method: 'GET',
-      url: `${BACKEND}/auth/session`,
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-    .then((res) => ({
-      id: userId,
-      login: res.body.login,
-      email: res.body.email,
-      discord_id: res.body.discord_id,
-    }));
+function toUserSetupData(r: BatchSetupUserResult): UserSetupData {
+  return {
+    access_token: r.access_token,
+    refresh_token: r.refresh_token,
+    user_id: r.user_id,
+    login: r.login,
+    email: r.email,
+    discord_id: r.discord_id,
+  };
 }
+
+// ── Setup helpers (all use /dev/batch-setup — 1 request instead of N) ────────
 
 export function setupAdmin(discordToken = 'cypress-admin-token'): Cypress.Chainable<UserSetupData> {
-  let profile: { id: string; login: string; email: string; discord_id: string };
-
   return cy
-    .registerUser(discordToken)
-    .then((tokens) => getProfile(tokens.access_token))
-    .then((p) => {
-      profile = p;
-      return cy.request({
-        method: 'POST',
-        url: `${BACKEND}/dev/promote`,
-        body: { user_id: profile.id, role: 'admin' },
-      });
-    })
-    .then(() =>
-      cy.request({
-        method: 'POST',
-        url: `${BACKEND}/dev/login`,
-        body: { user_id: profile.id },
-      })
-    )
-    .then((loginRes) => ({
-      access_token: loginRes.body.access_token,
-      refresh_token: loginRes.body.refresh_token,
-      user_id: profile.id,
-      login: profile.login,
-      email: profile.email,
-      discord_id: profile.discord_id,
-    }));
+    .apiBatchSetup([{ discord_token: discordToken, role: 'admin' }])
+    .then((users) => toUserSetupData(users[discordToken]));
 }
-
-// ── Helper: register a regular user via API, returns user data ───────────────
 
 export function setupUser(discordToken = 'cypress-test-token'): Cypress.Chainable<UserSetupData> {
-  return cy.registerUser(discordToken).then((tokens) => {
-    return getProfile(tokens.access_token).then((profile) => ({
-      ...tokens,
-      user_id: profile.id,
-      login: profile.login,
-      email: profile.email,
-      discord_id: profile.discord_id,
-    }));
-  });
+  return cy
+    .apiBatchSetup([{ discord_token: discordToken }])
+    .then((users) => toUserSetupData(users[discordToken]));
 }
-
-// ── Helper: user + game account + alliance (no admin, no BG) ─────────────────
 
 export function setupAllianceOwner(
   tokenPrefix: string,
   pseudo: string,
   allianceName: string,
   allianceTag: string
-): Cypress.Chainable<{
-  userData: UserSetupData;
-  accountId: string;
-  allianceId: string;
-}> {
-  let userData: UserSetupData;
-  let accountId: string;
-  let allianceId: string;
-
-  return setupUser(`${tokenPrefix}-owner`)
-    .then((user) => {
-      userData = user;
-      return cy.apiCreateGameAccount(user.access_token, pseudo, true);
-    })
-    .then((acc) => {
-      accountId = acc.id;
-      return cy.apiCreateAlliance(userData.access_token, allianceName, allianceTag, accountId);
-    })
-    .then((alliance) => {
-      allianceId = alliance.id;
-    })
-    .then(() => ({ userData, accountId, allianceId }));
+): Cypress.Chainable<{ userData: UserSetupData; accountId: string; allianceId: string }> {
+  const ownerToken = `${tokenPrefix}-owner`;
+  return cy
+    .apiBatchSetup([
+      {
+        discord_token: ownerToken,
+        game_pseudo: pseudo,
+        create_alliance: { name: allianceName, tag: allianceTag },
+      },
+    ])
+    .then((users) => {
+      const r = users[ownerToken];
+      return { userData: toUserSetupData(r), accountId: r.account_id!, allianceId: r.alliance_id! };
+    });
 }
-
-// ── Helper: admin + user + game account (no alliance) ────────────────────────
+export function setupAllianceWithMember(
+  tokenPrefix: string,
+  ownerPseudo: string,
+  memberPseudo: string,
+  allianceName: string,
+  allianceTag: string
+): Cypress.Chainable<{
+  ownerData: UserSetupData;
+  memberData: UserSetupData;
+  allianceId: string;
+  ownerAccId: string;
+  memberAccId: string;
+}> {
+  const ownerToken = `${tokenPrefix}-owner`;
+  const memberToken = `${tokenPrefix}-member`;
+  return cy
+    .apiBatchSetup([
+      {
+        discord_token: ownerToken,
+        game_pseudo: ownerPseudo,
+        create_alliance: { name: allianceName, tag: allianceTag },
+      },
+      {
+        discord_token: memberToken,
+        game_pseudo: memberPseudo,
+        join_alliance_token: ownerToken,
+      },
+    ])
+    .then((users) => ({
+      ownerData: toUserSetupData(users[ownerToken]),
+      memberData: toUserSetupData(users[memberToken]),
+      allianceId: users[ownerToken].alliance_id!,
+      ownerAccId: users[ownerToken].account_id!,
+      memberAccId: users[memberToken].account_id!,
+    }));
+}
 
 export function setupRosterUser(
   tokenPrefix: string,
   pseudo: string
-): Cypress.Chainable<{
-  adminData: UserSetupData;
-  userData: UserSetupData;
-  accountId: string;
-}> {
-  let adminData: UserSetupData;
-  let userData: UserSetupData;
-
-  return setupAdmin(`${tokenPrefix}-admin`)
-    .then((admin) => {
-      adminData = admin;
-      return setupUser(`${tokenPrefix}-user`);
-    })
-    .then((user) => {
-      userData = user;
-      return cy.apiCreateGameAccount(user.access_token, pseudo, true);
-    })
-    .then((acc) => ({ adminData, userData, accountId: acc.id }));
+): Cypress.Chainable<{ adminData: UserSetupData; userData: UserSetupData; accountId: string }> {
+  const adminToken = `${tokenPrefix}-admin`;
+  const userToken = `${tokenPrefix}-user`;
+  return cy
+    .apiBatchSetup([
+      { discord_token: adminToken, role: 'admin' },
+      { discord_token: userToken, game_pseudo: pseudo },
+    ])
+    .then((users) => ({
+      adminData: toUserSetupData(users[adminToken]),
+      userData: toUserSetupData(users[userToken]),
+      accountId: users[userToken].account_id!,
+    }));
 }
-
-// ── Helper: admin + owner with game account, alliance and BG1 ────────────────
 
 export function setupDefenseOwner(
   tokenPrefix: string,
@@ -430,32 +467,25 @@ export function setupDefenseOwner(
   allianceId: string;
   ownerAccId: string;
 }> {
-  let adminData: UserSetupData;
-  let ownerData: UserSetupData;
-  let allianceId: string;
-  let ownerAccId: string;
-
-  return setupAdmin(`${tokenPrefix}-admin`)
-    .then((admin) => {
-      adminData = admin;
-      return setupUser(`${tokenPrefix}-owner`);
-    })
-    .then((owner) => {
-      ownerData = owner;
-      return cy.apiCreateGameAccount(owner.access_token, pseudo, true);
-    })
-    .then((ownerAcc) => {
-      ownerAccId = ownerAcc.id;
-      return cy.apiCreateAlliance(ownerData.access_token, allianceName, allianceTag, ownerAccId);
-    })
-    .then((alliance) => {
-      allianceId = alliance.id;
-      return cy.apiSetMemberGroup(ownerData.access_token, allianceId, ownerAccId, 1);
-    })
-    .then(() => ({ adminData, ownerData, allianceId, ownerAccId }));
+  const adminToken = `${tokenPrefix}-admin`;
+  const ownerToken = `${tokenPrefix}-owner`;
+  return cy
+    .apiBatchSetup([
+      { discord_token: adminToken, role: 'admin' },
+      {
+        discord_token: ownerToken,
+        game_pseudo: pseudo,
+        create_alliance: { name: allianceName, tag: allianceTag },
+        battlegroup: 1,
+      },
+    ])
+    .then((users) => ({
+      adminData: toUserSetupData(users[adminToken]),
+      ownerData: toUserSetupData(users[ownerToken]),
+      allianceId: users[ownerToken].alliance_id!,
+      ownerAccId: users[ownerToken].account_id!,
+    }));
 }
-
-// ── Helper: admin + owner + member, both assigned to BG1 ─────────────────────
 
 export function setupDefenseOwnerAndMember(
   tokenPrefix: string,
@@ -471,44 +501,86 @@ export function setupDefenseOwnerAndMember(
   ownerAccId: string;
   memberAccId: string;
 }> {
-  let adminData: UserSetupData;
-  let ownerData: UserSetupData;
-  let memberData: UserSetupData;
-  let allianceId: string;
-  let ownerAccId: string;
-  let memberAccId: string;
-
-  return setupAdmin(`${tokenPrefix}-admin`)
-    .then((admin) => {
-      adminData = admin;
-      return setupUser(`${tokenPrefix}-owner`);
-    })
-    .then((owner) => {
-      ownerData = owner;
-      return cy.apiCreateGameAccount(owner.access_token, ownerPseudo, true);
-    })
-    .then((ownerAcc) => {
-      ownerAccId = ownerAcc.id;
-      return cy.apiCreateAlliance(ownerData.access_token, allianceName, allianceTag, ownerAccId);
-    })
-    .then((alliance) => {
-      allianceId = alliance.id;
-      return cy.apiSetMemberGroup(ownerData.access_token, allianceId, ownerAccId, 1);
-    })
-    .then(() => setupUser(`${tokenPrefix}-member`))
-    .then((member) => {
-      memberData = member;
-      return cy.apiCreateGameAccount(member.access_token, memberPseudo, true);
-    })
-    .then((memberAcc) => {
-      memberAccId = memberAcc.id;
-      cy.apiForceJoinAlliance(memberAccId, allianceId);
-      return cy.apiSetMemberGroup(ownerData.access_token, allianceId, memberAccId, 1);
-    })
-    .then(() => ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }));
+  const adminToken = `${tokenPrefix}-admin`;
+  const ownerToken = `${tokenPrefix}-owner`;
+  const memberToken = `${tokenPrefix}-member`;
+  return cy
+    .apiBatchSetup([
+      { discord_token: adminToken, role: 'admin' },
+      {
+        discord_token: ownerToken,
+        game_pseudo: ownerPseudo,
+        create_alliance: { name: allianceName, tag: allianceTag },
+        battlegroup: 1,
+      },
+      {
+        discord_token: memberToken,
+        game_pseudo: memberPseudo,
+        join_alliance_token: ownerToken,
+        battlegroup: 1,
+      },
+    ])
+    .then((users) => ({
+      adminData: toUserSetupData(users[adminToken]),
+      ownerData: toUserSetupData(users[ownerToken]),
+      memberData: toUserSetupData(users[memberToken]),
+      allianceId: users[ownerToken].alliance_id!,
+      ownerAccId: users[ownerToken].account_id!,
+      memberAccId: users[memberToken].account_id!,
+    }));
 }
 
-// ── Helper: owner + member force-joined (no admin, no BG assignment) ─────────
+export type ChampDef = {
+  name: string;
+  cls: string;
+  rarity: string;
+  options?: {
+    signature?: number;
+    is_preferred_attacker?: boolean;
+    ascension?: number;
+    is_ascendable?: boolean;
+  };
+};
+
+export function setupDefenseScenario(
+  prefix: string,
+  pseudo: string,
+  tag: string,
+  champDefs: ChampDef[]
+): Cypress.Chainable<{
+  adminData: UserSetupData;
+  ownerData: UserSetupData;
+  allianceId: string;
+  ownerAccId: string;
+  championUsers: { name: string; cuId: string }[];
+}> {
+  return setupDefenseOwner(prefix, pseudo, `${tag}All`, tag).then(
+    ({ adminData, ownerData, allianceId, ownerAccId }) => {
+      const championUsers: { name: string; cuId: string }[] = [];
+      let chain = cy.wrap(null);
+      for (const def of champDefs) {
+        chain = chain.then(() =>
+          cy
+            .apiLoadChampion(adminData.access_token, def.name, def.cls, {
+              is_ascendable: def.options?.is_ascendable ?? false,
+            })
+            .then((champs) =>
+              cy
+                .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, def.rarity, {
+                  signature: def.options?.signature ?? 0,
+                  is_preferred_attacker: def.options?.is_preferred_attacker ?? false,
+                  ascension: def.options?.ascension ?? 0,
+                })
+                .then((cu) => {
+                  championUsers.push({ name: def.name, cuId: cu.id });
+                })
+            )
+        );
+      }
+      return chain.then(() => ({ adminData, ownerData, allianceId, ownerAccId, championUsers }));
+    }
+  );
+}
 
 export function setupOwnerMemberAlliance(
   tokenPrefix: string,
@@ -523,34 +595,28 @@ export function setupOwnerMemberAlliance(
   ownerAccId: string;
   memberAccId: string;
 }> {
-  let ownerData: UserSetupData;
-  let memberData: UserSetupData;
-  let allianceId: string;
-  let ownerAccId: string;
-  let memberAccId: string;
-
-  return setupUser(`${tokenPrefix}-owner`)
-    .then((owner) => {
-      ownerData = owner;
-      return cy.apiCreateGameAccount(owner.access_token, ownerPseudo, true);
-    })
-    .then((ownerAcc) => {
-      ownerAccId = ownerAcc.id;
-      return cy.apiCreateAlliance(ownerData.access_token, allianceName, allianceTag, ownerAccId);
-    })
-    .then((alliance) => {
-      allianceId = alliance.id;
-      return setupUser(`${tokenPrefix}-member`);
-    })
-    .then((member) => {
-      memberData = member;
-      return cy.apiCreateGameAccount(member.access_token, memberPseudo, true);
-    })
-    .then((memberAcc) => {
-      memberAccId = memberAcc.id;
-      return cy.apiForceJoinAlliance(memberAccId, allianceId);
-    })
-    .then(() => ({ ownerData, memberData, allianceId, ownerAccId, memberAccId }));
+  const ownerToken = `${tokenPrefix}-owner`;
+  const memberToken = `${tokenPrefix}-member`;
+  return cy
+    .apiBatchSetup([
+      {
+        discord_token: ownerToken,
+        game_pseudo: ownerPseudo,
+        create_alliance: { name: allianceName, tag: allianceTag },
+      },
+      {
+        discord_token: memberToken,
+        game_pseudo: memberPseudo,
+        join_alliance_token: ownerToken,
+      },
+    ])
+    .then((users) => ({
+      ownerData: toUserSetupData(users[ownerToken]),
+      memberData: toUserSetupData(users[memberToken]),
+      allianceId: users[ownerToken].alliance_id!,
+      ownerAccId: users[ownerToken].account_id!,
+      memberAccId: users[memberToken].account_id!,
+    }));
 }
 
 // ── War API commands ──────────────────────────────────────────────────────────
@@ -605,6 +671,76 @@ Cypress.Commands.add(
   }
 );
 
+Cypress.Commands.add(
+  'apiAssignWarAttacker',
+  (
+    token: string,
+    allianceId: string,
+    warId: string,
+    battlegroup: number,
+    nodeNumber: number,
+    championUserId: string
+  ) => {
+    cy.request({
+      method: 'POST',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/attacker`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { champion_user_id: championUserId },
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      return res.body;
+    });
+  }
+);
+
+Cypress.Commands.add(
+  'apiRemoveWarAttacker',
+  (token: string, allianceId: string, warId: string, battlegroup: number, nodeNumber: number) => {
+    cy.request({
+      method: 'DELETE',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/attacker`,
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      return res.body;
+    });
+  }
+);
+
+Cypress.Commands.add(
+  'apiUpdateWarKo',
+  (
+    token: string,
+    allianceId: string,
+    warId: string,
+    battlegroup: number,
+    nodeNumber: number,
+    koCount: number
+  ) => {
+    cy.request({
+      method: 'PATCH',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/ko`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { ko_count: koCount },
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      return res.body;
+    });
+  }
+);
+
+Cypress.Commands.add('apiEndWar', (token: string, allianceId: string, warId: string) => {
+  cy.request({
+    method: 'POST',
+    url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/end`,
+    headers: { Authorization: `Bearer ${token}` },
+    body: {},
+  }).then((res) => {
+    expect(res.status).to.eq(200);
+    return res.body;
+  });
+});
+
 // ── War setup helper ──────────────────────────────────────────────────────────
 
 export function setupWarOwner(
@@ -618,26 +754,83 @@ export function setupWarOwner(
   allianceId: string;
   ownerAccId: string;
 }> {
-  let adminData: UserSetupData;
-  let ownerData: UserSetupData;
-  let allianceId: string;
-  let ownerAccId: string;
+  const adminToken = `${tokenPrefix}-admin`;
+  const ownerToken = `${tokenPrefix}-owner`;
+  return cy
+    .apiBatchSetup([
+      { discord_token: adminToken, role: 'admin' },
+      {
+        discord_token: ownerToken,
+        game_pseudo: ownerPseudo,
+        create_alliance: { name: allianceName, tag: allianceTag },
+      },
+    ])
+    .then((users) => ({
+      adminData: toUserSetupData(users[adminToken]),
+      ownerData: toUserSetupData(users[ownerToken]),
+      allianceId: users[ownerToken].alliance_id!,
+      ownerAccId: users[ownerToken].account_id!,
+    }));
+}
 
-  return setupAdmin(`${tokenPrefix}-admin`)
-    .then((admin) => {
-      adminData = admin;
-      return setupUser(`${tokenPrefix}-owner`);
-    })
-    .then((owner) => {
-      ownerData = owner;
-      return cy.apiCreateGameAccount(owner.access_token, ownerPseudo, true);
-    })
-    .then((ownerAcc) => {
-      ownerAccId = ownerAcc.id;
-      return cy.apiCreateAlliance(ownerData.access_token, allianceName, allianceTag, ownerAccId);
-    })
-    .then((alliance) => {
-      allianceId = alliance.id;
-      return cy.wrap({ adminData, ownerData, allianceId, ownerAccId });
+export function setupAttackerScenario(prefix: string): Cypress.Chainable<{
+  adminToken: string;
+  ownerData: UserSetupData;
+  memberData: UserSetupData;
+  allianceId: string;
+  ownerAccId: string;
+  memberAccId: string;
+  warId: string;
+  championUserId: string;
+}> {
+  const adminToken = `${prefix}-admin`;
+  const ownerToken = `${prefix}-owner`;
+  const memberToken = `${prefix}-member`;
+
+  return cy
+    .apiBatchSetup([
+      { discord_token: adminToken, role: 'admin' },
+      {
+        discord_token: ownerToken,
+        game_pseudo: `${prefix}Owner`,
+        create_alliance: { name: `${prefix}Alliance`, tag: prefix.slice(0, 3).toUpperCase() },
+        battlegroup: 1,
+      },
+      {
+        discord_token: memberToken,
+        game_pseudo: `${prefix}Member`.slice(0, 16),
+        join_alliance_token: ownerToken,
+        battlegroup: 1,
+      },
+    ])
+    .then((users) => {
+      const adminAT = users[adminToken].access_token;
+      const ownerData = toUserSetupData(users[ownerToken]);
+      const memberData = toUserSetupData(users[memberToken]);
+      const allianceId = users[ownerToken].alliance_id!;
+      const ownerAccId = users[ownerToken].account_id!;
+      const memberAccId = users[memberToken].account_id!;
+
+      return cy.apiCreateWar(ownerData.access_token, allianceId, 'AttackerEnemy')
+        .then((war) =>
+          cy.apiLoadChampion(adminAT, 'Iron Man', 'Tech').then((champs) =>
+            cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 1, 10, champs[0].id, 7, 3, 0)
+              .then(() => war.id)
+          )
+        )
+        .then((warId) =>
+          cy.apiLoadChampion(adminAT, 'Wolverine', 'Mutant').then((champs) =>
+            cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3').then((cu) => ({
+              adminToken: adminAT,
+              ownerData,
+              memberData,
+              allianceId,
+              ownerAccId,
+              memberAccId,
+              warId,
+              championUserId: cu.id,
+            }))
+          )
+        );
     });
 }

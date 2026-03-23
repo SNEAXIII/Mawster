@@ -1,6 +1,6 @@
-Lance les tests E2E complets (démarre le mode test si besoin, puis Cypress).
+Lance tous les tests E2E en parallèle (chaque worker a son propre backend + frontend + DB).
 
-Use `mcp__server-runner__run_e2e` and report the results.
+## Étapes
 
-## Note
-Ne jamais appeler `/server-test` avant cette commande — `run_e2e` bascule automatiquement en mode test.
+1. Appeler `mcp__cypress-runner__run_parallel` (défaut : 2 workers) et reporter les résultats.
+2. Si des suites échouent, les relancer avec `/test-e2e-failing`.

@@ -5,6 +5,7 @@ from typing import Optional
 from src.models.Alliance import Alliance
 from src.models.AllianceOfficer import AllianceOfficer
 from src.models.Champion import Champion
+from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
 from tests.utils.utils_constant import (
     GAME_PSEUDO,
@@ -167,3 +168,24 @@ async def push_champion(
     champ = get_champion(name=name, champion_class=champion_class, **kwargs)
     await load_objects([champ])
     return champ
+
+
+async def push_champion_user(
+    game_account: GameAccount,
+    champion: Champion,
+    stars: int = 7,
+    rank: int = 3,
+    signature: int = 0,
+    ascension: int = 0,
+) -> ChampionUser:
+    """Add a champion to a game account's roster and return the ChampionUser."""
+    cu = ChampionUser(
+        game_account_id=game_account.id,
+        champion_id=champion.id,
+        stars=stars,
+        rank=rank,
+        signature=signature,
+        ascension=ascension,
+    )
+    await load_objects([cu])
+    return cu

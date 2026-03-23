@@ -36,9 +36,17 @@ AUDIT_LOG_FILE = LOG_DIR / "audit.log"
 MAX_BYTES = 10 * 1024 * 1024  # 10 MB per file
 BACKUP_COUNT = 10  # keep 10 rotated files
 
-LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
-AUDIT_FORMAT = "%(asctime)s | AUDIT | %(message)s"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+def _build_formats() -> tuple[str, str]:
+    port = os.getenv("PORT", "")
+    prefix = f"[:{port}] " if port else ""
+    return (
+        f"%(asctime)s | %(levelname)-8s | {prefix}%(name)s | %(message)s",
+        f"%(asctime)s | AUDIT | {prefix}%(message)s",
+    )
+
+LOG_FORMAT, AUDIT_FORMAT = _build_formats()
 
 
 # ---------------------------------------------------------------------------
@@ -53,7 +61,7 @@ def setup_logging(level: int = logging.INFO) -> None:
     # Detect whether we're running inside a container environment. In container
     # mode we prefer logging to stdout/stderr only and let Docker handle
     # rotation/retention (avoids duplicate file logs).
-    CONTAINER_MODE = os.getenv("CONTAINER") == "1"
+    CONTAINER_MODE = os.getenv("CONTAINER") == "1" or os.getenv("MODE") == "testing"
 
     # Root logger
     root = logging.getLogger()
@@ -145,3 +153,12 @@ def audit_log(event: str, *, user_id: str = "anonymous", detail: str = "") -> No
     if detail:
         parts.append(f"detail={detail}")
     _audit.info(" | ".join(parts))
+
+_debug = logging.getLogger("debug")
+
+def debug_log(message: str, **kwargs) -> None:
+    """Write a debug log with structured key=value pairs."""
+    parts = [message] + [f"{k}={v}" for k, v in kwargs.items()]
+    _debug.debug("======================================")
+    _debug.debug(" | ".join(parts))
+    _debug.debug("======================================")

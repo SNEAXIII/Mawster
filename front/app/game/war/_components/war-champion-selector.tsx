@@ -131,13 +131,13 @@ export default function WarChampionSelector({
               <SearchInput
                 value={search}
                 onChange={setSearch}
-                placeholder='Search champion...'
+                placeholder={t.game.war.searchChampion}
                 data-cy='war-champion-search'
               />
             </div>
             <div className='overflow-y-auto flex-1 p-3'>
               {loading && champions.length === 0 ? (
-                <div className='text-center text-muted-foreground py-8'>Loading...</div>
+                <div className='text-center text-muted-foreground py-8'>{t.game.war.loadingChampions}</div>
               ) : (
                 <>
                   <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2'>
@@ -177,7 +177,7 @@ export default function WarChampionSelector({
                         onClick={() => fetchChampions(search, page + 1)}
                         disabled={loading}
                       >
-                        Load more
+                        {t.game.war.loadMore}
                       </Button>
                     </div>
                   )}
@@ -204,13 +204,13 @@ export default function WarChampionSelector({
                 className='ml-auto'
                 onClick={() => setSelected(null)}
               >
-                ← Change
+                {t.game.war.changeChampion}
               </Button>
             </div>
 
             {/* Rarity selector */}
             <div>
-              <div className='text-sm font-medium mb-2'>Rarity</div>
+              <div className='text-sm font-medium mb-2'>{t.game.war.rarity}</div>
               <div className='flex flex-wrap gap-2'>
                 {WAR_RARITIES.map((r) => (
                   <button
@@ -233,7 +233,7 @@ export default function WarChampionSelector({
             {/* Ascension selector */}
             {selected.is_ascendable && (
               <div>
-                <div className='text-sm font-medium mb-2'>Ascension</div>
+                <div className='text-sm font-medium mb-2'>{t.game.war.ascension}</div>
                 <div className='flex gap-2'>
                   {[0, 1, 2].map((a) => (
                     <button
@@ -246,7 +246,7 @@ export default function WarChampionSelector({
                       )}
                       onClick={() => setAscension(a)}
                     >
-                      {a === 0 ? 'None' : `A${a}`}
+                      {a === 0 ? t.game.war.ascensionNone : `A${a}`}
                     </button>
                   ))}
                 </div>
@@ -264,7 +264,7 @@ export default function WarChampionSelector({
                 onClick={handleConfirm}
                 data-cy='war-confirm-place'
               >
-                Place on node #{nodeNumber}
+                {t.game.war.placeOnNode.replace('{node}', String(nodeNumber))}
               </Button>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { SERVER_API_URL } from '@/next.config';
+import { getServerApiUrl } from '@/app/lib/serverApiUrl';
 
 /**
  * Catch-all proxy : toute requête vers /api/back/<path>
@@ -21,7 +21,7 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
   const backendPath = path.join('/');
   const url = new URL(req.url);
   const search = url.search; // conserve les query params
-  const backendUrl = `${SERVER_API_URL}/${backendPath}${search}`;
+  const backendUrl = `${getServerApiUrl()}/${backendPath}${search}`;
 
   // Prépare les headers
   const headers: HeadersInit = {

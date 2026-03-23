@@ -11,7 +11,8 @@ import { XMLParser } from 'fast-xml-parser';
 const ROOT = path.resolve(import.meta.dirname, '../..');
 const API_DIR = path.join(ROOT, 'api');
 const FRONT_DIR = path.join(ROOT, 'front');
-const STATE_FILE = path.join(ROOT, '.server-runner-state.json');
+const STATE_FILE_DEV = path.join(ROOT, '.server-runner-state-dev.json');
+const STATE_FILE_TEST = path.join(ROOT, '.server-runner-state-test.json');
 const REPORTS_DIR = path.join(FRONT_DIR, 'cypress', 'results', 'reports');
 const VIDEOS_DIR = path.join(FRONT_DIR, 'cypress', 'results', 'videos');
 const SCREENSHOTS_DIR = path.join(FRONT_DIR, 'cypress', 'results', 'screenshots');
@@ -31,23 +32,41 @@ interface CypressResults {
   failures: Array<{ spec: string; suite: string; test: string; error: string }>;
 }
 
+// ── Env helpers ───────────────────────────────────────────────────────────────
+
+function readDbEnv(): Record<string, string> {
+  const dbEnvPath = path.join(ROOT, 'db.env');
+  if (!fs.existsSync(dbEnvPath)) return {};
+  return Object.fromEntries(
+    fs.readFileSync(dbEnvPath, 'utf-8')
+      .split('\n')
+      .filter((l) => l.includes('=') && !l.startsWith('#'))
+      .map((l) => l.split('=').map((s) => s.trim()) as [string, string])
+  );
+}
+
 // ── State helpers ──────────────────────────────────────────────────────────────
 
-function readState(): State | null {
-  if (!fs.existsSync(STATE_FILE)) return null;
+function stateFile(mode: Mode): string {
+  return mode === 'dev' ? STATE_FILE_DEV : STATE_FILE_TEST;
+}
+
+function readState(mode: Mode): State | null {
+  const file = stateFile(mode);
+  if (!fs.existsSync(file)) return null;
   try {
-    return JSON.parse(fs.readFileSync(STATE_FILE, 'utf-8')) as State;
+    return JSON.parse(fs.readFileSync(file, 'utf-8')) as State;
   } catch {
     return null;
   }
 }
 
 function writeState(state: State): void {
-  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+  fs.writeFileSync(stateFile(state.mode), JSON.stringify(state, null, 2));
 }
 
-function clearState(): void {
-  fs.rmSync(STATE_FILE, { force: true });
+function clearState(mode: Mode): void {
+  fs.rmSync(stateFile(mode), { force: true });
 }
 
 // ── Process helpers ────────────────────────────────────────────────────────────
@@ -75,23 +94,35 @@ function killPid(pid: number): void {
   }
 }
 
-function stopAll(): void {
-  const state = readState();
+function stopMode(mode: Mode): void {
+  const state = readState(mode);
   if (!state) return;
   killPid(state.pids.api);
   killPid(state.pids.front);
-  clearState();
+  clearState(mode);
+}
+
+function stopAll(): void {
+  stopMode('dev');
+  stopMode('test');
 }
 
 function spawnDetached(cmdArgs: string[], cwd: string, env?: Record<string, string>): number {
-  // Wrap in cmd /c on Windows so PATH resolution works for uv, npm, etc.
-  const child = spawn('cmd', ['/c', cmdArgs.join(' ')], {
-    cwd,
-    env: { ...process.env, ...env },
-    stdio: 'ignore',
-    detached: true,
-    windowsHide: true,
-  });
+  const isWin = process.platform === 'win32';
+  const child = isWin
+    ? spawn('cmd', ['/c', cmdArgs.join(' ')], {
+        cwd,
+        env: { ...process.env, ...env },
+        stdio: 'ignore',
+        detached: true,
+        windowsHide: true,
+      })
+    : spawn(cmdArgs[0], cmdArgs.slice(1), {
+        cwd,
+        env: { ...process.env, ...env },
+        stdio: 'ignore',
+        detached: true,
+      });
   child.unref();
   if (child.pid === undefined) throw new Error(`Failed to spawn: ${cmdArgs.join(' ')}`);
   return child.pid;
@@ -126,7 +157,7 @@ function waitForPort(port: number, timeoutMs: number): Promise<boolean> {
 // ── Start helpers ──────────────────────────────────────────────────────────────
 
 async function startDev(): Promise<State> {
-  stopAll();
+  stopMode('dev');
 
   execSync('docker compose -f compose-dev.yaml up mariadb phpmyadmin -d', { cwd: ROOT, stdio: 'pipe' });
 
@@ -142,18 +173,17 @@ async function startDev(): Promise<State> {
 }
 
 async function startTest(): Promise<State> {
-  stopAll();
+  stopMode('test');
 
   execSync('docker compose -f compose-dev.yaml up mariadb-test phpmyadmin-test -d', { cwd: ROOT, stdio: 'pipe' });
 
   const apiPid = spawnDetached(['uv', 'run', 'app_testing.py'], API_DIR, { MODE: 'testing' });
   const frontPid = spawnDetached(['npm', 'run', 'testing'], FRONT_DIR, {
     NEXTAUTH_SECRET: 'e2e-local-nextauth-secret',
-    NEXTAUTH_URL: 'http://localhost:3000',
   });
 
   await waitForPort(8001, 60_000);
-  await waitForPort(3000, 120_000);
+  await waitForPort(3001, 120_000);
 
   const state: State = { mode: 'test', pids: { api: apiPid, front: frontPid }, startedAt: new Date().toISOString() };
   writeState(state);
@@ -258,7 +288,7 @@ const server = new McpServer({ name: 'server-runner', version: '1.0.0' });
 
 server.registerTool(
   'start_dev',
-  { description: 'Lance mariadb (3306) + API FastAPI (port 8000) + Frontend Next.js (port 3000) en mode dev. Arrête le mode test si actif.' },
+  { description: 'Lance mariadb (3306) + API FastAPI (port 8000) + Frontend Next.js (port 3000) en mode dev. N\'affecte pas le mode test.' },
   async () => {
     const state = await startDev();
     return {
@@ -277,17 +307,27 @@ server.registerTool(
 
 server.registerTool(
   'start_test',
-  { description: 'Lance mariadb-test (3307) + API FastAPI (port 8001) + Frontend Next.js (port 3000) en mode test. Arrête le mode dev si actif.' },
+  { description: 'Lance mariadb-test (3307) + API FastAPI (port 8001) + Frontend Next.js (port 3001) en mode test. N\'affecte pas le mode dev.' },
   async () => {
     const state = await startTest();
+    const db = readDbEnv();
     return {
       content: [{
         type: 'text',
         text: JSON.stringify({
           status: 'ready',
           mode: state.mode,
-          ports: { api: 8001, front: 3000, phpmyadmin: 8081 },
+          ports: { api: 8001, front: 3001, phpmyadmin: 8081 },
           pids: state.pids,
+          env: {
+            MODE: 'testing',
+            API_PORT: 8001,
+            FRONT_PORT: 3001,
+            MARIADB_PORT: 3307,
+            MARIADB_DATABASE: db['MARIADB_DATABASE'] ?? 'mawster',
+            MARIADB_USER: db['MARIADB_USER'] ?? 'user',
+            NEXTAUTH_URL: 'http://localhost:3001',
+          },
         }, null, 2),
       }],
     };
@@ -296,17 +336,21 @@ server.registerTool(
 
 server.registerTool(
   'stop',
-  { description: 'Arrête tous les serveurs (API + Frontend) démarrés via server-runner, quel que soit le mode.' },
+  { description: 'Arrête tous les serveurs (dev + test) démarrés via server-runner.' },
   async () => {
-    const state = readState();
-    if (!state) {
+    const devState = readState('dev');
+    const testState = readState('test');
+    if (!devState && !testState) {
       return { content: [{ type: 'text', text: JSON.stringify({ status: 'already_stopped' }) }] };
     }
     stopAll();
     return {
       content: [{
         type: 'text',
-        text: JSON.stringify({ status: 'stopped', mode: state.mode, pids: state.pids }, null, 2),
+        text: JSON.stringify({
+          status: 'stopped',
+          stopped: [devState ? 'dev' : null, testState ? 'test' : null].filter(Boolean),
+        }, null, 2),
       }],
     };
   },
@@ -314,24 +358,30 @@ server.registerTool(
 
 server.registerTool(
   'status',
-  { description: 'Retourne le mode actif (dev/test/none), les PIDs, les ports, et l\'uptime des serveurs démarrés via server-runner.' },
+  { description: 'Retourne l\'état des serveurs dev (3000/8000) et test (3001/8001) indépendamment.' },
   async () => {
-    const state = readState();
-    if (!state) {
-      return { content: [{ type: 'text', text: JSON.stringify({ running: false }) }] };
-    }
-    const apiAlive = isAlive(state.pids.api);
-    const frontAlive = isAlive(state.pids.front);
+    const devState = readState('dev');
+    const testState = readState('test');
+
+    const modeStatus = (state: State | null, ports: { api: number; front: number; phpmyadmin: number }) => {
+      if (!state) return { running: false };
+      const apiAlive = isAlive(state.pids.api);
+      const frontAlive = isAlive(state.pids.front);
+      return {
+        running: apiAlive || frontAlive,
+        ports,
+        pids: state.pids,
+        alive: { api: apiAlive, front: frontAlive },
+        uptime: formatUptime(state.startedAt),
+      };
+    };
+
     return {
       content: [{
         type: 'text',
         text: JSON.stringify({
-          running: apiAlive || frontAlive,
-          mode: state.mode,
-          ports: state.mode === 'dev' ? { api: 8000, front: 3000, phpmyadmin: 8080 } : { api: 8001, front: 3000, phpmyadmin: 8081 },
-          pids: state.pids,
-          alive: { api: apiAlive, front: frontAlive },
-          uptime: formatUptime(state.startedAt),
+          dev: modeStatus(devState, { api: 8000, front: 3000, phpmyadmin: 8080 }),
+          test: modeStatus(testState, { api: 8001, front: 3001, phpmyadmin: 8081 }),
         }, null, 2),
       }],
     };
@@ -342,8 +392,8 @@ server.registerTool(
   'run_e2e',
   { description: 'Démarre les serveurs en mode test si nécessaire, puis lance tous les tests Cypress E2E et retourne le résumé + les détails des échecs.' },
   async () => {
-    const state = readState();
-    if (!state || state.mode !== 'test') {
+    const testState = readState('test');
+    if (!testState || !isAlive(testState.pids.api) || !isAlive(testState.pids.front)) {
       await startTest();
     }
     const results = runCypress();

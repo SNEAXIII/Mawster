@@ -1,6 +1,7 @@
 import '@/app/ui/global.css';
 import { inter } from '@/app/ui/fonts';
 import SideNavBar from '@/components/left-nav-bar/sidenav';
+import TestModeBanner from '@/components/test-mode-banner';
 import { Providers } from './providers';
 import { Toaster } from '@/components/ui/sonner';
 interface RootLayoutProps {
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       suppressHydrationWarning
     >
       <body className={`${inter.className} antialiased`}>
+        <TestModeBanner />
         <Providers>
           <div className='flex h-screen flex-col md:flex-row md:overflow-hidden'>
             <div className='w-full flex-none md:w-64'>
