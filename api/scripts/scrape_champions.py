@@ -284,15 +284,18 @@ def action_resize():
     print(f"\nResizing {len(champions_data)} champion images to {size}x{size}...\n")
 
     for champ in champions_data:
-        base_name = champ.get("image_url")
-        if not base_name:
+        image_url = champ.get("image_url")
+        if not image_url:
             skipped_count += 1
             continue
 
+        filename = Path(image_url).name  # "groot.png"
+        stem = Path(image_url).stem      # "groot"
+
         # Source is always the original .png
-        source_path = OUTPUT_DIR / f"{base_name}.png"
-        # Output: <base_name>_NxN.png
-        output_filename = f"{base_name}_{size}x{size}.png"
+        source_path = OUTPUT_DIR / filename
+        # Output: <stem>_NxN.png
+        output_filename = f"{stem}_{size}x{size}.png"
         output_path = OUTPUT_DIR / output_filename
 
         if not source_path.exists():
