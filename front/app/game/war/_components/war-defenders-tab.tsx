@@ -147,17 +147,19 @@ export default function WarDefendersTab({
       {warLoading ? (
         <FullPageSpinner />
       ) : (
-        <div className='flex gap-4'>
-          <div className='overflow-x-auto flex-1'>
+        <div className='flex gap-4 flex-col lg:flex-row'>
+          <div className='overflow-x-auto flex-1 min-w-0'>
+            <div className='w-max mx-auto'>
             <WarDefenseMap
               placements={placements}
               onNodeClick={onNodeClick}
               onRemove={onRemoveDefender}
               canManage={canManageWar && warMode === WarMode.Defenders}
             />
+            </div>
           </div>
           {warMode === WarMode.Attackers && (
-            <div className='w-64 flex-shrink-0'>
+            <div className='w-64 shrink-0'>
               <WarAttackerPanel
                 placements={placements}
                 onRemoveAttacker={onRemoveAttacker}
