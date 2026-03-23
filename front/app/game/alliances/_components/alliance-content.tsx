@@ -59,13 +59,11 @@ export default function AllianceContent() {
   const [creating, setCreating] = useState(false);
   const [roleRefreshKey, setRoleRefreshKey] = useState(0);
 
-  // Tabs — read from URL or default
   const initialTab = (searchParams.get('tab') as AllianceTab) || AllianceTab.Alliances;
   const [activeTab, setActiveTab] = useState<AllianceTab>(
     Object.values(AllianceTab).includes(initialTab) ? initialTab : AllianceTab.Alliances
   );
 
-  // Sync tab to URL
   const handleDefenseStateChange = useCallback(
     (allianceId: string, bg: number) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -77,6 +75,7 @@ export default function AllianceContent() {
     [pathname, searchParams, router]
   );
 
+  // Skip first render to avoid overwriting URL params on mount
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) {
@@ -92,29 +91,25 @@ export default function AllianceContent() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }, [activeTab]);
 
-  // Invitations received by current user
   const [myInvitations, setMyInvitations] = useState<AllianceInvitation[]>([]);
-
-  // Pending invitations sent by alliance (for officers to cancel)
   const [pendingInvitations, setPendingInvitations] = useState<
     Record<string, AllianceInvitation[]>
   >({});
 
-  // Create form
   const [name, setName] = useState('');
   const [tag, setTag] = useState('');
   const [ownerId, setOwnerId] = useState('');
 
-  // Member management
   const [memberAllianceId, setMemberAllianceId] = useState<string | null>(null);
   const [memberAccountId, setMemberAccountId] = useState('');
 
-  // Roster viewer
   const [rosterTarget, setRosterTarget] = useState<{
     gameAccountId: string;
     pseudo: string;
     canRequestUpgrade: boolean;
   } | null>(null);
+
+  const bumpRoleKey = () => setRoleRefreshKey((k) => k + 1);
 
   const fetchEligibleOwners = async () => {
     try {
@@ -168,7 +163,7 @@ export default function AllianceContent() {
               results[alliance.id] = invitations;
             }
           } catch {
-            // ignore
+            // ignore per-alliance fetch failure
           }
         })
       );
@@ -178,6 +173,16 @@ export default function AllianceContent() {
     setPendingInvitations(results);
   };
 
+  const refreshMembership = () =>
+    Promise.all([
+      refreshAlliances(),
+      fetchEligibleOwners(),
+      fetchEligibleMembers(),
+      fetchMyAccounts(),
+      fetchMyInvitations(),
+      refreshHasAlliance(),
+    ]);
+
   useEffect(() => {
     if (status === 'authenticated') {
       Promise.all([
@@ -185,20 +190,16 @@ export default function AllianceContent() {
         fetchEligibleOwners(),
         fetchMyAccounts(),
         fetchMyInvitations(),
-      ]).then(() => {
-        // createOpen stays false — will be overridden below after alliances load
-      });
+      ]);
     }
   }, [status]);
 
-  // Fetch pending invitations when alliances change
   useEffect(() => {
     if (alliances.length > 0) {
       fetchPendingInvitations(alliances);
     }
   }, [alliances]);
 
-  // Redirect away from create tab if no eligible accounts after loading
   useEffect(() => {
     if (!loading && activeTab === AllianceTab.Create && eligibleOwners.length === 0) {
       router.replace('/game/alliances');
@@ -217,14 +218,8 @@ export default function AllianceContent() {
       setTag('');
       setOwnerId('');
       setActiveTab(AllianceTab.Alliances);
-      setRoleRefreshKey((k) => k + 1);
-      await Promise.all([
-        refreshAlliances(),
-        fetchEligibleOwners(),
-        fetchEligibleMembers(),
-        fetchMyAccounts(),
-        refreshHasAlliance(),
-      ]);
+      bumpRoleKey();
+      await refreshMembership();
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || t.game.alliances.createError);
@@ -233,7 +228,6 @@ export default function AllianceContent() {
     }
   };
 
-  // ---- Members ----
   const handleOpenInviteMember = (allianceId: string) => {
     setMemberAllianceId(allianceId);
     setMemberAccountId('');
@@ -255,24 +249,16 @@ export default function AllianceContent() {
   };
 
   const handleMemberRefresh = async () => {
-    setRoleRefreshKey((k) => k + 1);
+    bumpRoleKey();
     await Promise.all([refreshAlliances(), fetchEligibleMembers(), fetchMyAccounts()]);
   };
 
-  // ---- Invitations (accept / decline) ----
   const handleAcceptInvitation = async (invitationId: string) => {
     try {
       await acceptInvitation(invitationId);
       toast.success(t.game.alliances.acceptInvitationSuccess);
-      setRoleRefreshKey((k) => k + 1);
-      await Promise.all([
-        refreshAlliances(),
-        fetchEligibleOwners(),
-        fetchEligibleMembers(),
-        fetchMyAccounts(),
-        fetchMyInvitations(),
-        refreshHasAlliance(),
-      ]);
+      bumpRoleKey();
+      await refreshMembership();
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || t.game.alliances.acceptInvitationError);
@@ -294,7 +280,6 @@ export default function AllianceContent() {
     try {
       await cancelInvitation(allianceId, invitationId);
       toast.success(t.game.alliances.cancelInvitationSuccess);
-      // Update pending invitations locally
       setPendingInvitations((prev) => {
         const updated = { ...prev };
         if (updated[allianceId]) {
@@ -305,7 +290,6 @@ export default function AllianceContent() {
         }
         return updated;
       });
-      // Refresh eligible members since cancelled invite frees up the account
       await fetchEligibleMembers();
     } catch (err: any) {
       console.error(err);
@@ -328,7 +312,6 @@ export default function AllianceContent() {
   return (
     <AllianceRoleProvider refreshKey={roleRefreshKey}>
       <div className='w-full px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
-        {/* My Invitations — always visible above tabs */}
         {myInvitations.length > 0 && (
           <InvitationsSection
             invitations={myInvitations}
@@ -337,14 +320,12 @@ export default function AllianceContent() {
           />
         )}
 
-        {/* Tabs */}
         <TabBar
           tabs={tabs}
           value={activeTab}
           onChange={setActiveTab}
         />
 
-        {/* Create tab */}
         {activeTab === AllianceTab.Create && eligibleOwners.length > 0 && (
           <CreateAllianceForm
             hasAnyAccounts={hasAnyAccounts}
@@ -360,7 +341,6 @@ export default function AllianceContent() {
           />
         )}
 
-        {/* Alliances tab */}
         {activeTab === AllianceTab.Alliances && (
           <AlliancesTab
             alliances={alliances}
@@ -384,7 +364,6 @@ export default function AllianceContent() {
           />
         )}
 
-        {/* Defense tab */}
         {activeTab === AllianceTab.Defense && (
           <DefensePageContent
             onStateChange={handleDefenseStateChange}
@@ -393,7 +372,6 @@ export default function AllianceContent() {
           />
         )}
 
-        {/* Roster viewer dialog */}
         <AllianceRosterDialog
           open={!!rosterTarget}
           onOpenChange={(open) => {

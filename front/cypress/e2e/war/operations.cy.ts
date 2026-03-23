@@ -84,7 +84,16 @@ describe('War – Operations (declare, place, remove)', () => {
       ({ adminData, ownerData, allianceId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Science').then((champs) => {
           cy.apiCreateWar(ownerData.access_token, allianceId, 'RemoveEnemy').then((war) => {
-            cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 1, 5, champs[0].id, 7, 3);
+            cy.apiPlaceWarDefender(
+              ownerData.access_token,
+              allianceId,
+              war.id,
+              1,
+              5,
+              champs[0].id,
+              7,
+              3
+            );
 
             cy.uiLogin(ownerData.login);
             cy.navTo('war');
@@ -107,7 +116,16 @@ describe('War – Operations (declare, place, remove)', () => {
       ({ adminData, ownerData, allianceId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
           cy.apiCreateWar(ownerData.access_token, allianceId, 'ClearEnemy').then((war) => {
-            cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 1, 10, champs[0].id, 7, 3);
+            cy.apiPlaceWarDefender(
+              ownerData.access_token,
+              allianceId,
+              war.id,
+              1,
+              10,
+              champs[0].id,
+              7,
+              3
+            );
 
             cy.uiLogin(ownerData.login);
             cy.navTo('war');
@@ -130,7 +148,16 @@ describe('War – Operations (declare, place, remove)', () => {
         cy.apiLoadChampion(adminData.access_token, 'Gamora', 'Cosmic').then((champs) => {
           cy.apiCreateWar(ownerData.access_token, allianceId, 'BgEnemy').then((war) => {
             // Place in BG2
-            cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 2, 1, champs[0].id, 7, 3);
+            cy.apiPlaceWarDefender(
+              ownerData.access_token,
+              allianceId,
+              war.id,
+              2,
+              1,
+              champs[0].id,
+              7,
+              3
+            );
 
             cy.uiLogin(ownerData.login);
             cy.navTo('war');

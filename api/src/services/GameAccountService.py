@@ -66,14 +66,12 @@ class GameAccountService:
 
     @classmethod
     async def get_game_accounts_by_user(
-        cls, session: SessionDep, user_id: uuid.UUID
+        cls, session: SessionDep, user_id: uuid.UUID, load_alliance: bool = False
     ) -> list[GameAccount]:
-        sql = (
-            select(GameAccount)
-            .where(GameAccount.user_id == user_id)
-            .options(selectinload(GameAccount.alliance))  # type: ignore[arg-type]
-            .order_by(GameAccount.is_primary.desc())  # type: ignore[union-attr]
-        )
+        sql = select(GameAccount).where(GameAccount.user_id == user_id)
+        if load_alliance:
+            sql = sql.options(selectinload(GameAccount.alliance))  # type: ignore[arg-type]
+        sql = sql.order_by(GameAccount.is_primary.desc())  # type: ignore[union-attr]
         result = await session.exec(sql)
         return result.all()
 

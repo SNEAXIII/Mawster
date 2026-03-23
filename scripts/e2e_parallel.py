@@ -540,9 +540,30 @@ def main() -> None:
     quiet = args.quiet
 
     if args.spec:
-        n = 1
-        log(f"--spec provided: forcing 1 worker for '{args.spec}'")
+        # Resolve and validate all specs before touching any server
+        resolved_specs: list[Path] = []
+        for raw in [s.strip() for s in args.spec.split(",") if s.strip()]:
+            spec_path = Path(raw)
+            if not spec_path.is_absolute():
+                candidate = FRONT_DIR / "cypress" / "e2e" / raw
+                if not candidate.exists():
+                    candidate = FRONT_DIR / raw
+                spec_path = candidate
+            if not spec_path.exists():
+                available = sorted(
+                    p.relative_to(FRONT_DIR / "cypress" / "e2e")
+                    for p in (FRONT_DIR / "cypress" / "e2e").rglob("*.cy.ts")
+                )
+                log(f"ERROR: spec not found: {raw}")
+                log("Available specs:")
+                for s in available:
+                    log(f"  {s}")
+                sys.exit(1)
+            resolved_specs.append(spec_path)
+        n = min(args.workers, len(resolved_specs))
+        log(f"--spec provided: {len(resolved_specs)} spec(s), using {n} worker(s)")
     else:
+        resolved_specs = []
         n = args.workers
 
     start_time = time.time()
@@ -687,19 +708,9 @@ def main() -> None:
 
     # Phase 3: run Cypress workers in parallel
     log("All servers ready. Launching Cypress workers...")
-    if args.spec:
-        # Resolve the spec path relative to front/cypress/e2e/ if not absolute
-        spec_path = Path(args.spec)
-        if not spec_path.is_absolute():
-            candidate = FRONT_DIR / "cypress" / "e2e" / args.spec
-            if not candidate.exists():
-                candidate = FRONT_DIR / args.spec
-            spec_path = candidate
-        if not spec_path.exists():
-            log(f"ERROR: spec not found: {spec_path}")
-            sys.exit(1)
-        specs = [spec_path]
-        log(f"Running single spec: {spec_path.relative_to(FRONT_DIR)}")
+    if resolved_specs:
+        specs = resolved_specs
+        log(f"Running {len(specs)} spec(s): {[str(s.relative_to(FRONT_DIR)) for s in specs]}")
     else:
         specs = get_spec_files()
         log(f"Found {len(specs)} spec file(s) to distribute across {n} worker(s).")

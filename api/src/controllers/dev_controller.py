@@ -5,7 +5,6 @@ import os
 import uuid
 from pathlib import Path
 from typing import Literal
-
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -17,6 +16,9 @@ from src.dto.dto_utilisateurs import UserProfile
 from src.enums.Roles import Roles
 from src.models import User, GameAccount
 from src.security.secrets import SECRET
+from src.services.DiscordAuthService import DiscordAuthService
+from src.services.GameAccountService import GameAccountService
+from src.services.AllianceService import AllianceService
 from src.services.JWTService import JWTService
 from src.services.UserService import UserService
 from src.utils.db import SessionDep
@@ -199,10 +201,6 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
     Users are processed in order — you can reference an earlier user's alliance via
     join_alliance_token. Testing only.
     """
-    from src.services.DiscordAuthService import DiscordAuthService
-    from src.services.GameAccountService import GameAccountService
-    from src.services.AllianceService import AllianceService
-
     results: dict[str, SetupUserResult] = {}
 
     for spec in specs:

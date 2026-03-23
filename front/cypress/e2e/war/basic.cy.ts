@@ -33,11 +33,10 @@ describe('War – Basic page rendering', () => {
       ({ adminData, ownerData, allianceId }) => {
         setupUser('war-basic-member-member').then((memberData) => {
           cy.apiCreateGameAccount(memberData.access_token, 'RegularMember', true).then((acc) => {
-            cy.apiForceJoinAlliance(acc.id, allianceId).then(() => {
-              cy.uiLogin(memberData.login);
-              cy.navTo('war');
-              cy.getByCy('declare-war-btn').should('not.exist');
-            });
+            cy.apiForceJoinAlliance(acc.id, allianceId);
+            cy.uiLogin(memberData.login);
+            cy.navTo('war');
+            cy.getByCy('declare-war-btn').should('not.exist');
           });
         });
       }
@@ -55,11 +54,10 @@ describe('War – Basic page rendering', () => {
   it('shows war opponent after creation', () => {
     setupWarOwner('war-basic-sel', 'SelPlayer', 'SelAlliance', 'SL').then(
       ({ ownerData, allianceId }) => {
-        cy.apiCreateWar(ownerData.access_token, allianceId, 'Enemy Alliance').then(() => {
-          cy.uiLogin(ownerData.login);
-          cy.navTo('war');
-          cy.getByCy('war-opponent-name').should('contain', 'Enemy Alliance');
-        });
+        cy.apiCreateWar(ownerData.access_token, allianceId, 'Enemy Alliance');
+        cy.uiLogin(ownerData.login);
+        cy.navTo('war');
+        cy.getByCy('war-opponent-name').should('contain', 'Enemy Alliance');
       }
     );
   });
@@ -67,14 +65,13 @@ describe('War – Basic page rendering', () => {
   it('shows 50 war-map nodes after selecting a war and going to defenders tab', () => {
     setupWarOwner('war-basic-nodes', 'NodeWarPlayer', 'NodeWarAlliance', 'ND').then(
       ({ ownerData, allianceId }) => {
-        cy.apiCreateWar(ownerData.access_token, allianceId, 'NodeEnemy').then(() => {
-          cy.uiLogin(ownerData.login);
-          cy.navTo('war');
+        cy.apiCreateWar(ownerData.access_token, allianceId, 'NodeEnemy');
+        cy.uiLogin(ownerData.login);
+        cy.navTo('war');
 
-          for (let i = 1; i <= 50; i++) {
-            cy.getByCy(`war-node-${i}`).should('exist');
-          }
-        });
+        for (let i = 1; i <= 50; i++) {
+          cy.getByCy(`war-node-${i}`).should('exist');
+        }
       }
     );
   });
@@ -82,14 +79,13 @@ describe('War – Basic page rendering', () => {
   it('shows G1/G2/G3 battlegroup buttons in defenders tab', () => {
     setupWarOwner('war-basic-bg', 'BGWarPlayer', 'BGWarAlliance', 'BG').then(
       ({ ownerData, allianceId }) => {
-        cy.apiCreateWar(ownerData.access_token, allianceId, 'BGEnemy').then(() => {
-          cy.uiLogin(ownerData.login);
-          cy.navTo('war');
+        cy.apiCreateWar(ownerData.access_token, allianceId, 'BGEnemy');
+        cy.uiLogin(ownerData.login);
+        cy.navTo('war');
 
-          cy.getByCy('bg-btn-1').should('be.visible');
-          cy.getByCy('bg-btn-2').should('be.visible');
-          cy.getByCy('bg-btn-3').should('be.visible');
-        });
+        cy.getByCy('bg-btn-1').should('be.visible');
+        cy.getByCy('bg-btn-2').should('be.visible');
+        cy.getByCy('bg-btn-3').should('be.visible');
       }
     );
   });
@@ -109,14 +105,13 @@ describe('War – Basic page rendering', () => {
   it('shows mode toggle in defenders tab', () => {
     setupWarOwner('war-basic-toggle', 'TogglePlayer', 'ToggleAlliance', 'TG').then(
       ({ ownerData, allianceId }) => {
-        cy.apiCreateWar(ownerData.access_token, allianceId, 'ToggleEnemy').then(() => {
-          cy.uiLogin(ownerData.login);
-          cy.navTo('war');
+        cy.apiCreateWar(ownerData.access_token, allianceId, 'ToggleEnemy');
+        cy.uiLogin(ownerData.login);
+        cy.navTo('war');
 
-          cy.getByCy('war-mode-toggle').should('be.visible');
-          cy.getByCy('war-mode-defenders').should('be.visible');
-          cy.getByCy('war-mode-attackers').should('be.visible');
-        });
+        cy.getByCy('war-mode-toggle').should('be.visible');
+        cy.getByCy('war-mode-defenders').should('be.visible');
+        cy.getByCy('war-mode-attackers').should('be.visible');
       }
     );
   });
@@ -124,13 +119,12 @@ describe('War – Basic page rendering', () => {
   it('defaults to defenders mode', () => {
     setupWarOwner('war-basic-toggle-default', 'ToggleDefPlayer', 'ToggleDefAlliance', 'TD').then(
       ({ ownerData, allianceId }) => {
-        cy.apiCreateWar(ownerData.access_token, allianceId, 'ToggleDefEnemy').then(() => {
-          cy.uiLogin(ownerData.login);
-          cy.navTo('war');
+        cy.apiCreateWar(ownerData.access_token, allianceId, 'ToggleDefEnemy');
+        cy.uiLogin(ownerData.login);
+        cy.navTo('war');
 
-          cy.getByCy('war-mode-defenders').should('have.class', 'bg-primary');
-          cy.getByCy('war-mode-attackers').should('not.have.class', 'bg-primary');
-        });
+        cy.getByCy('war-mode-defenders').should('have.class', 'bg-primary');
+        cy.getByCy('war-mode-attackers').should('not.have.class', 'bg-primary');
       }
     );
   });
@@ -138,14 +132,13 @@ describe('War – Basic page rendering', () => {
   it('switches to attackers mode on click', () => {
     setupWarOwner('war-basic-toggle-switch', 'ToggleSwPlayer', 'ToggleSwAlliance', 'TS').then(
       ({ ownerData, allianceId }) => {
-        cy.apiCreateWar(ownerData.access_token, allianceId, 'ToggleSwEnemy').then(() => {
-          cy.uiLogin(ownerData.login);
-          cy.navTo('war');
+        cy.apiCreateWar(ownerData.access_token, allianceId, 'ToggleSwEnemy');
+        cy.uiLogin(ownerData.login);
+        cy.navTo('war');
 
-          cy.getByCy('war-mode-attackers').click();
-          cy.getByCy('war-mode-attackers').should('have.class', 'bg-primary');
-          cy.getByCy('war-mode-defenders').should('not.have.class', 'bg-primary');
-        });
+        cy.getByCy('war-mode-attackers').click();
+        cy.getByCy('war-mode-attackers').should('have.class', 'bg-primary');
+        cy.getByCy('war-mode-defenders').should('not.have.class', 'bg-primary');
       }
     );
   });
@@ -153,14 +146,13 @@ describe('War – Basic page rendering', () => {
   it('mode toggle is hidden for non-officer members', () => {
     setupWarOwner('war-basic-toggle-member', 'ToggleMbrOwner', 'ToggleMbrAlliance', 'TM').then(
       ({ ownerData, allianceId }) => {
-        cy.apiCreateWar(ownerData.access_token, allianceId, 'ToggleMbrEnemy').then(() => {
-          setupUser('war-basic-toggle-member-user').then((memberData) => {
-            cy.apiCreateGameAccount(memberData.access_token, 'ToggleMember', true).then((acc) => {
-              cy.apiForceJoinAlliance(acc.id, allianceId).then(() => {
-                cy.uiLogin(memberData.login);
-                cy.navTo('war');
-                cy.getByCy('war-mode-toggle').should('not.exist');
-              });
+        cy.apiCreateWar(ownerData.access_token, allianceId, 'ToggleMbrEnemy');
+        setupUser('war-basic-toggle-member-user').then((memberData) => {
+          cy.apiCreateGameAccount(memberData.access_token, 'ToggleMember', true).then((acc) => {
+            cy.apiForceJoinAlliance(acc.id, allianceId).then(() => {
+              cy.uiLogin(memberData.login);
+              cy.navTo('war');
+              cy.getByCy('war-mode-toggle').should('not.exist');
             });
           });
         });
@@ -171,15 +163,14 @@ describe('War – Basic page rendering', () => {
   it('switches back to defenders mode from attackers', () => {
     setupWarOwner('war-basic-toggle-back', 'ToggleBackPlayer', 'ToggleBackAlliance', 'TB').then(
       ({ ownerData, allianceId }) => {
-        cy.apiCreateWar(ownerData.access_token, allianceId, 'ToggleBackEnemy').then(() => {
-          cy.uiLogin(ownerData.login);
-          cy.navTo('war');
+        cy.apiCreateWar(ownerData.access_token, allianceId, 'ToggleBackEnemy');
+        cy.uiLogin(ownerData.login);
+        cy.navTo('war');
 
-          cy.getByCy('war-mode-attackers').click();
-          cy.getByCy('war-mode-defenders').click();
-          cy.getByCy('war-mode-defenders').should('have.class', 'bg-primary');
-          cy.getByCy('war-mode-attackers').should('not.have.class', 'bg-primary');
-        });
+        cy.getByCy('war-mode-attackers').click();
+        cy.getByCy('war-mode-defenders').click();
+        cy.getByCy('war-mode-defenders').should('have.class', 'bg-primary');
+        cy.getByCy('war-mode-attackers').should('not.have.class', 'bg-primary');
       }
     );
   });

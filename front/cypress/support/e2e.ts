@@ -318,13 +318,13 @@ Cypress.Commands.add(
       return res.body;
     });
   }
-)
+);
 
 // ── Run fixtures (truncate DB + seed) ────────────────────────────────────────
 
 Cypress.Commands.add('runFixtures', () => {
   cy.request('POST', `${BACKEND}/dev/fixtures`);
-})
+});
 
 // ── Create upgrade request (direct backend call) ──────────────────────────────
 
@@ -340,7 +340,7 @@ Cypress.Commands.add(
       })
       .then((res) => res.body);
   }
-)
+);
 
 // ── Upgrade champion rank (direct backend call) ───────────────────────────────
 
@@ -352,7 +352,7 @@ Cypress.Commands.add('apiUpgradeChampion', (token: string, championUserId: strin
       headers: { Authorization: `Bearer ${token}` },
     })
     .then((res) => res.body);
-})
+});
 
 // ── Helper: extract UserSetupData from a BatchSetupUserResult ────────────────
 
@@ -400,6 +400,42 @@ export function setupAllianceOwner(
       const r = users[ownerToken];
       return { userData: toUserSetupData(r), accountId: r.account_id!, allianceId: r.alliance_id! };
     });
+}
+export function setupAllianceWithMember(
+  tokenPrefix: string,
+  ownerPseudo: string,
+  memberPseudo: string,
+  allianceName: string,
+  allianceTag: string
+): Cypress.Chainable<{
+  ownerData: UserSetupData;
+  memberData: UserSetupData;
+  allianceId: string;
+  ownerAccId: string;
+  memberAccId: string;
+}> {
+  const ownerToken = `${tokenPrefix}-owner`;
+  const memberToken = `${tokenPrefix}-member`;
+  return cy
+    .apiBatchSetup([
+      {
+        discord_token: ownerToken,
+        game_pseudo: ownerPseudo,
+        create_alliance: { name: allianceName, tag: allianceTag },
+      },
+      {
+        discord_token: memberToken,
+        game_pseudo: memberPseudo,
+        join_alliance_token: ownerToken,
+      },
+    ])
+    .then((users) => ({
+      ownerData: toUserSetupData(users[ownerToken]),
+      memberData: toUserSetupData(users[memberToken]),
+      allianceId: users[ownerToken].alliance_id!,
+      ownerAccId: users[ownerToken].account_id!,
+      memberAccId: users[memberToken].account_id!,
+    }));
 }
 
 export function setupRosterUser(
@@ -492,6 +528,58 @@ export function setupDefenseOwnerAndMember(
       ownerAccId: users[ownerToken].account_id!,
       memberAccId: users[memberToken].account_id!,
     }));
+}
+
+export type ChampDef = {
+  name: string;
+  cls: string;
+  rarity: string;
+  options?: {
+    signature?: number;
+    is_preferred_attacker?: boolean;
+    ascension?: number;
+    is_ascendable?: boolean;
+  };
+};
+
+export function setupDefenseScenario(
+  prefix: string,
+  pseudo: string,
+  tag: string,
+  champDefs: ChampDef[]
+): Cypress.Chainable<{
+  adminData: UserSetupData;
+  ownerData: UserSetupData;
+  allianceId: string;
+  ownerAccId: string;
+  championUsers: { name: string; cuId: string }[];
+}> {
+  return setupDefenseOwner(prefix, pseudo, `${tag}All`, tag).then(
+    ({ adminData, ownerData, allianceId, ownerAccId }) => {
+      const championUsers: { name: string; cuId: string }[] = [];
+      let chain = cy.wrap(null);
+      for (const def of champDefs) {
+        chain = chain.then(() =>
+          cy
+            .apiLoadChampion(adminData.access_token, def.name, def.cls, {
+              is_ascendable: def.options?.is_ascendable ?? false,
+            })
+            .then((champs) =>
+              cy
+                .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, def.rarity, {
+                  signature: def.options?.signature ?? 0,
+                  is_preferred_attacker: def.options?.is_preferred_attacker ?? false,
+                  ascension: def.options?.ascension ?? 0,
+                })
+                .then((cu) => {
+                  championUsers.push({ name: def.name, cuId: cu.id });
+                })
+            )
+        );
+      }
+      return chain.then(() => ({ adminData, ownerData, allianceId, ownerAccId, championUsers }));
+    }
+  );
 }
 
 export function setupOwnerMemberAlliance(
@@ -683,4 +771,66 @@ export function setupWarOwner(
       allianceId: users[ownerToken].alliance_id!,
       ownerAccId: users[ownerToken].account_id!,
     }));
+}
+
+export function setupAttackerScenario(prefix: string): Cypress.Chainable<{
+  adminToken: string;
+  ownerData: UserSetupData;
+  memberData: UserSetupData;
+  allianceId: string;
+  ownerAccId: string;
+  memberAccId: string;
+  warId: string;
+  championUserId: string;
+}> {
+  const adminToken = `${prefix}-admin`;
+  const ownerToken = `${prefix}-owner`;
+  const memberToken = `${prefix}-member`;
+
+  return cy
+    .apiBatchSetup([
+      { discord_token: adminToken, role: 'admin' },
+      {
+        discord_token: ownerToken,
+        game_pseudo: `${prefix}Owner`,
+        create_alliance: { name: `${prefix}Alliance`, tag: prefix.slice(0, 3).toUpperCase() },
+        battlegroup: 1,
+      },
+      {
+        discord_token: memberToken,
+        game_pseudo: `${prefix}Member`.slice(0, 16),
+        join_alliance_token: ownerToken,
+        battlegroup: 1,
+      },
+    ])
+    .then((users) => {
+      const adminAT = users[adminToken].access_token;
+      const ownerData = toUserSetupData(users[ownerToken]);
+      const memberData = toUserSetupData(users[memberToken]);
+      const allianceId = users[ownerToken].alliance_id!;
+      const ownerAccId = users[ownerToken].account_id!;
+      const memberAccId = users[memberToken].account_id!;
+
+      return cy.apiCreateWar(ownerData.access_token, allianceId, 'AttackerEnemy')
+        .then((war) =>
+          cy.apiLoadChampion(adminAT, 'Iron Man', 'Tech').then((champs) =>
+            cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 1, 10, champs[0].id, 7, 3, 0)
+              .then(() => war.id)
+          )
+        )
+        .then((warId) =>
+          cy.apiLoadChampion(adminAT, 'Wolverine', 'Mutant').then((champs) =>
+            cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3').then((cu) => ({
+              adminToken: adminAT,
+              ownerData,
+              memberData,
+              allianceId,
+              ownerAccId,
+              memberAccId,
+              warId,
+              championUserId: cu.id,
+            }))
+          )
+        );
+    });
 }

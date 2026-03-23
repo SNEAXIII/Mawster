@@ -123,7 +123,7 @@ function parseXmlResults(): TestResults {
 interface HistoryEntry {
   timestamp: string;
   branch: string;
-  type: 'all' | 'specific' | 'failing';
+  type: 'all' | 'specific' | 'failing' | 'parallel';
   specs?: string[];
   durationMs: number;
   summary: { total: number; passed: number; failed: number };
@@ -283,6 +283,77 @@ server.registerTool(
     });
     return {
       content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
+    };
+  }
+);
+
+server.registerTool(
+  'run_parallel',
+  {
+    description:
+      'Lance les tests E2E en parallèle via e2e_parallel.py (plusieurs workers, chacun avec son propre backend+frontend+DB). Retourne le rapport enrichi avec les logs backend par test échoué. Nécessite Docker (mariadb-test sur le port 3307).',
+    inputSchema: {
+      workers: z
+        .number()
+        .int()
+        .min(1)
+        .max(8)
+        .optional()
+        .describe('Nombre de workers parallèles (1-8, défaut: 2)'),
+      spec: z
+        .string()
+        .optional()
+        .describe(
+          'Spec unique à lancer (relatif à front/cypress/e2e/). Ex: "war/war.cy.ts". Force 1 worker.'
+        ),
+    },
+  },
+  async ({ workers = 2, spec }) => {
+    const REPORT_FILE = path.join(RESULTS_DIR, 'report.json');
+    const start = Date.now();
+
+    const workersArg = spec ? '' : `--workers ${workers}`;
+    const specArg = spec ? `--spec "${spec}"` : '';
+    const cmd = `python scripts/e2e_parallel.py ${workersArg} ${specArg} --quiet`.trim();
+
+    try {
+      execSync(cmd, { cwd: ROOT, stdio: 'pipe', timeout: 1_200_000 });
+    } catch {
+      // e2e_parallel.py exits with non-zero when tests fail — not a real error
+    }
+
+    const durationMs = Date.now() - start;
+
+    let report: unknown = { summary: { tests: 0, passing: 0, failing: 0 }, failures: [] };
+    if (fs.existsSync(REPORT_FILE)) {
+      try {
+        report = JSON.parse(fs.readFileSync(REPORT_FILE, 'utf-8'));
+      } catch {
+        // keep empty report
+      }
+    }
+
+    const typedReport = report as {
+      summary: { tests: number; passing: number; failing: number };
+      failures: { title: string }[];
+    };
+
+    saveToHistory({
+      timestamp: new Date().toISOString(),
+      branch: currentBranch(),
+      type: 'parallel',
+      specs: spec ? [spec] : undefined,
+      durationMs,
+      summary: {
+        total: typedReport.summary.tests,
+        passed: typedReport.summary.passing,
+        failed: typedReport.summary.failing,
+      },
+      failedTests: typedReport.failures.map((f) => f.title),
+    });
+
+    return {
+      content: [{ type: 'text', text: JSON.stringify(report, null, 2) }],
     };
   }
 );
