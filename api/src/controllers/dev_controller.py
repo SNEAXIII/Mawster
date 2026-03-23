@@ -4,6 +4,7 @@ import logging
 import os
 import uuid
 from pathlib import Path
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -294,7 +295,7 @@ async def get_env_info():
 
 
 class LogMarkerRequest(BaseModel):
-    event: str          # "start" or "end"
+    event: Literal["start", "end"]
     title: str          # full test title, e.g. "war > place defender > node 1"
     passed: bool | None = None  # None for start, True/False for end
 
