@@ -277,7 +277,7 @@ def build_merged_report(
 
 
 def worker_log_dir(worker: int) -> Path:
-    return FRONT_DIR / "cypress" / "results" / f"worker-{worker}"
+    return FRONT_DIR / "cypress" / "results" / "workers" / f"worker-{worker}"
 
 
 def pipe_output(stream, prefix: str, quiet: bool = False, stats: dict | None = None, log_file: "Path | None" = None) -> None:
@@ -461,7 +461,7 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     log(f"Worker {worker}: Cypress finished with exit code {proc.returncode}")
 
     if proc.returncode != 0:
-        log(f"Worker {worker}: full logs → front/cypress/results/worker-{worker}/")
+        log(f"Worker {worker}: full logs → front/cypress/results/workers/worker-{worker}/")
 
     return proc.returncode
 
