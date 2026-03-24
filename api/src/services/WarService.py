@@ -312,7 +312,6 @@ class WarService:
     async def get_available_attackers(
         cls,
         session: SessionDep,
-        war_id: uuid.UUID,
         alliance_id: uuid.UUID,
         battlegroup: int,
     ) -> list[AvailableAttackerResponse]:
@@ -397,16 +396,7 @@ class WarService:
                 detail="This champion does not belong to a member of this alliance battlegroup",
             )
 
-        # 4. Check champion not already used as defender in this BG
-        all_placements = await cls._get_placements(session, war_id, battlegroup)
-        defender_champion_ids = {p.champion_id for p in all_placements}
-        if champion_user.champion_id in defender_champion_ids:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="This champion is already placed as a defender in this battlegroup",
-            )
-
-        # 5. Check champion not already placed in regular alliance defense
+        # 4. Check champion not already placed in regular alliance defense
         defense_check = await session.exec(
             select(DefensePlacement).where(
                 and_(
@@ -422,7 +412,7 @@ class WarService:
                 detail="This champion is already placed in the alliance defense",
             )
 
-        # 7. Check member has fewer than 3 attackers in this war+BG.
+        # 5. Check member has fewer than 3 attackers in this war+BG.
         # Use a direct DB query instead of relying on selectinload being populated on all placements.
         attacker_count_result = await session.exec(
             select(WarDefensePlacement)
@@ -445,7 +435,7 @@ class WarService:
                 detail="This member already has 3 attackers assigned in this battlegroup",
             )
 
-        # 8. Assign
+        # 6. Assign
         placement_id = placement.id
         placement.attacker_champion_user_id = champion_user_id
         session.add(placement)
