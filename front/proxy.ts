@@ -37,22 +37,24 @@ function buildCsp(nonce: string): string {
 }
 
 export async function proxy(request: NextRequest) {
-  const nonce = generateNonce();
-  const csp = buildCsp(nonce);
+  // const nonce = generateNonce();
+  // const csp = buildCsp(nonce);
 
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-nonce', nonce);
+  // requestHeaders.set('x-nonce', nonce);
 
   const { pathname } = request.nextUrl;
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET, secureCookie: !isServerDev() });
   const isTokenExpired = token?.expired || !token?.backendAuthenticated;
 
   const withCsp = (res: NextResponse) => {
-    res.headers.set('Content-Security-Policy', csp);
+    // res.headers.set('Content-Security-Policy', csp);
     return res;
   };
-  const next = () => withCsp(NextResponse.next({ request: { headers: requestHeaders } }));
-  const redirect = (url: string | URL) => withCsp(NextResponse.redirect(new URL(url, request.url)));
+  // const next = () => withCsp(NextResponse.next({ request: { headers: requestHeaders } }));
+  const next = () => NextResponse.next({ request: { headers: requestHeaders } });
+  // const redirect = (url: string | URL) => withCsp(NextResponse.redirect(new URL(url, request.url)));
+  const redirect = (url: string | URL) => NextResponse.redirect(new URL(url, request.url));
 
   // 1. Redirect authenticated users away from login/register pages
   if (token && !isTokenExpired && (pathname === '/login' || pathname === '/register')) {
