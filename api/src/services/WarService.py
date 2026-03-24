@@ -186,11 +186,11 @@ class WarService:
         session: SessionDep,
         war_id: uuid.UUID,
         battlegroup: int,
-        req: WarPlacementCreateRequest,
+        placement_request: WarPlacementCreateRequest,
         placed_by_id: uuid.UUID,
     ) -> WarPlacementResponse:
         # Validate champion exists
-        champion = await session.get(Champion, req.champion_id)
+        champion = await session.get(Champion, placement_request.champion_id)
         if champion is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion not found")
 
@@ -200,8 +200,8 @@ class WarService:
                 and_(
                     WarDefensePlacement.war_id == war_id,
                     WarDefensePlacement.battlegroup == battlegroup,
-                    WarDefensePlacement.champion_id == req.champion_id,
-                    WarDefensePlacement.node_number != req.node_number,
+                    WarDefensePlacement.champion_id == placement_request.champion_id,
+                    WarDefensePlacement.node_number != placement_request.node_number,
                 )
             )
         )
@@ -211,31 +211,13 @@ class WarService:
                 detail="This champion is already placed on another node in this battlegroup",
             )
 
-        # Check champion not already assigned as attacker in this BG
-        existing_as_attacker = await session.exec(
-            select(WarDefensePlacement)
-            .join(ChampionUser, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
-            .where(
-                and_(
-                    WarDefensePlacement.war_id == war_id,
-                    WarDefensePlacement.battlegroup == battlegroup,
-                    ChampionUser.champion_id == req.champion_id,
-                )
-            )
-        )
-        if existing_as_attacker.first():
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="This champion is already assigned as an attacker in this battlegroup",
-            )
-
         # Replace if node already occupied
         existing_node = await session.exec(
             select(WarDefensePlacement).where(
                 and_(
                     WarDefensePlacement.war_id == war_id,
                     WarDefensePlacement.battlegroup == battlegroup,
-                    WarDefensePlacement.node_number == req.node_number,
+                    WarDefensePlacement.node_number == placement_request.node_number,
                 )
             )
         )
@@ -247,11 +229,11 @@ class WarService:
         placement = WarDefensePlacement(
             war_id=war_id,
             battlegroup=battlegroup,
-            node_number=req.node_number,
-            champion_id=req.champion_id,
-            stars=req.stars,
-            rank=req.rank,
-            ascension=req.ascension,
+            node_number=placement_request.node_number,
+            champion_id=placement_request.champion_id,
+            stars=placement_request.stars,
+            rank=placement_request.rank,
+            ascension=placement_request.ascension,
             placed_by_id=placed_by_id,
         )
         session.add(placement)
