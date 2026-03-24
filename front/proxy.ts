@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { isServerDev } from '@/app/lib/dev-mode';
 
 const PUBLIC_PATHS = ['/', '/api/auth', '/login', '/register'];
 const ADMIN_PATHS = ['/admin'];
@@ -11,7 +12,7 @@ function isPathMatching(path: string, paths: string[]): boolean {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET, secureCookie: !isServerDev() });
   const isTokenExpired = token?.expired || !token?.backendAuthenticated;
 
   // 1. Redirect authenticated users away from login/register pages
