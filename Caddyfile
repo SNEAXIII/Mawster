@@ -18,10 +18,6 @@ www.mawster.app {
         reverse_proxy api:8000
     }
 
-    handle_path /myadmin* {
-        reverse_proxy myadmin:80
-    }
-
     handle {
         reverse_proxy front:3000
     }

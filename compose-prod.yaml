@@ -12,13 +12,16 @@ services:
     env_file: db.env
     volumes:
       - data_db:/var/lib/mysql
-    # ports:
-    #   - "3306:3306"
     healthcheck:
       test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
       interval: 10s
       timeout: 5s
       retries: 5
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '5'
 
   api:
     # image: sneaxiii/mawster-api:latest
@@ -63,13 +66,17 @@ services:
     env_file:
       - front.env
     command: ['sh', 'run.sh']
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '5'
 
   caddy:
     image: caddy:2.10
     container_name: caddy
     restart: unless-stopped
     ports:
-      - '80:80'
       - '443:443'
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
@@ -80,16 +87,12 @@ services:
     depends_on:
       - front
       - api
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: myadmin
-    networks:
-      - internal
-    environment:
-      - PMA_HOST=mariadb
-      - PMA_PORT=3306
-    depends_on:
-      - mariadb
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '5'
+
 volumes:
   caddy_data:
   caddy_config:

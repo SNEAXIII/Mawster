@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { getServerApiUrl } from '@/app/lib/serverApiUrl';
+import { isServerDev } from '@/app/lib/dev-mode';
 
 /**
  * Catch-all proxy : toute requête vers /api/back/<path>
@@ -8,7 +9,7 @@ import { getServerApiUrl } from '@/app/lib/serverApiUrl';
  * récupéré dans le cookie NextAuth (jamais exposé au client).
  */
 async function proxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: !isServerDev() });
 
   if (!token?.accessToken) {
     return NextResponse.json({ message: 'Non authentifié' }, { status: 401 });
