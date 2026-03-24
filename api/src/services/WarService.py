@@ -1,5 +1,6 @@
 import uuid
 from typing import Optional
+from itertools import product
 
 from fastapi import HTTPException
 from sqlmodel import select, and_
@@ -350,13 +351,7 @@ class WarService:
         )
         members = members_result.all()
 
-        # Get defender champion_ids for this war+BG
-        placements = await cls._get_placements(session, war_id, battlegroup)
-        defender_champion_ids = {p.champion_id for p in placements}
-
         # Get champion_user_ids already placed in regular defense for members currently in this BG.
-        # Join on GameAccount to use the member's current alliance_group rather than the stored
-        # battlegroup in DefensePlacement (which may be stale if the member was reassigned).
         defense_result = await session.exec(
             select(DefensePlacement.champion_user_id)
             .join(GameAccount, DefensePlacement.game_account_id == GameAccount.id)
@@ -368,21 +363,22 @@ class WarService:
             )
         )
         defense_champion_user_ids = set(defense_result.all())
-
         result: list[AvailableAttackerResponse] = []
-        for acc in members:
-            for cu in acc.roster:
-                if cu.champion_id not in defender_champion_ids and cu.id not in defense_champion_user_ids:
-                    result.append(AvailableAttackerResponse(
-                        champion_user_id=cu.id,
-                        game_account_id=acc.id,
-                        game_pseudo=acc.game_pseudo,
-                        champion_id=cu.champion_id,
-                        champion_name=cu.champion.name,
-                        champion_class=cu.champion.champion_class,
-                        image_url=cu.champion.image_url,
-                        rarity=cu.rarity,
-                    ))
+        for game_account in members:
+            for champion_user in game_account.roster:
+                # Remove a champion if a user already placed it in defense
+                if champion_user.id in defense_champion_user_ids:
+                    continue
+                result.append(AvailableAttackerResponse(
+                    champion_user_id=champion_user.id,
+                    game_account_id=game_account.id,
+                    game_pseudo=game_account.game_pseudo,
+                    champion_id=champion_user.champion_id,
+                    champion_name=champion_user.champion.name,
+                    champion_class=champion_user.champion.champion_class,
+                    image_url=champion_user.champion.image_url,
+                    rarity=champion_user.rarity,
+                ))
         return result
 
     @classmethod
@@ -399,24 +395,24 @@ class WarService:
         placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
         if placement is None:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="This node has no defender — place a defender first",
             )
 
         # 2. Load the champion user
-        cu_stmt = (
+        champion_user_stmt = (
             select(ChampionUser)
             .where(ChampionUser.id == champion_user_id)
             .options(selectinload(ChampionUser.game_account))  # type: ignore[arg-type]
         )
-        cu = (await session.exec(cu_stmt)).first()
-        debug_log(str(cu))
-        if cu is None:
+        champion_user = (await session.exec(champion_user_stmt)).first()
+        debug_log(str(champion_user))
+        if champion_user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
 
-        ga = cu.game_account
+        game_account = champion_user.game_account
         # 3. Validate member belongs to this alliance + battlegroup
-        if ga.alliance_id != alliance_id or ga.alliance_group != battlegroup:
+        if game_account.alliance_id != alliance_id or game_account.alliance_group != battlegroup:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="This champion does not belong to a member of this alliance battlegroup",
@@ -425,7 +421,7 @@ class WarService:
         # 4. Check champion not already used as defender in this BG
         all_placements = await cls._get_placements(session, war_id, battlegroup)
         defender_champion_ids = {p.champion_id for p in all_placements}
-        if cu.champion_id in defender_champion_ids:
+        if champion_user.champion_id in defender_champion_ids:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="This champion is already placed as a defender in this battlegroup",
@@ -456,7 +452,7 @@ class WarService:
                 and_(
                     WarDefensePlacement.war_id == war_id,
                     WarDefensePlacement.battlegroup == battlegroup,
-                    ChampionUser.game_account_id == ga.id,
+                    ChampionUser.game_account_id == game_account.id,
                 )
             ).group_by(ChampionUser.id)
         )
