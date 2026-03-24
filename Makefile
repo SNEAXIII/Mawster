@@ -27,14 +27,14 @@ e2e: e2e-db
 	$$env:MODE = 'testing'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c uv run app_testing.py' -WorkingDirectory api -RedirectStandardOutput ../.e2e-api.log -RedirectStandardError ../.e2e-api.log).Id | Out-File -Encoding ascii .e2e-api.pid
 	$$env:NEXTAUTH_SECRET = '$(NEXTAUTH_SECRET)'; $$env:NEXTAUTH_URL = '$(NEXTAUTH_URL)'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c npm run testing' -WorkingDirectory front -RedirectStandardOutput ../.e2e-front.log -RedirectStandardError ../.e2e-front.log).Id | Out-File -Encoding ascii .e2e-front.pid
 	@Write-Host 'Attente de l API (port 8001)...'; for ($$i = 0; $$i -lt 30; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 8001 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
-	@Write-Host 'Attente du frontend (port 3000)...'; for ($$i = 0; $$i -lt 60; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 3000 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
+	@Write-Host 'Attente du frontend (port 3001)...'; for ($$i = 0; $$i -lt 60; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 3001 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
 	@Write-Host 'Lancement de Cypress...'; Set-Location front; npx cypress run $(if $(SPEC),--spec $(SPEC),); $$EXIT = $$LASTEXITCODE; Set-Location ..; if (Test-Path .e2e-api.pid) { Stop-Process -Id (Get-Content .e2e-api.pid) -Force -EA SilentlyContinue; Remove-Item .e2e-api.pid -Force -EA SilentlyContinue }; if (Test-Path .e2e-front.pid) { Stop-Process -Id (Get-Content .e2e-front.pid) -Force -EA SilentlyContinue; Remove-Item .e2e-front.pid -Force -EA SilentlyContinue }; exit $$EXIT
 
 e2e-open: e2e-db
 	$$env:MODE = 'testing'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c uv run app_testing.py' -WorkingDirectory api -RedirectStandardOutput ../.e2e-api.log -RedirectStandardError ../.e2e-api.log).Id | Out-File -Encoding ascii .e2e-api.pid
 	$$env:NEXTAUTH_SECRET = '$(NEXTAUTH_SECRET)'; $$env:NEXTAUTH_URL = '$(NEXTAUTH_URL)'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c npm run testing' -WorkingDirectory front -RedirectStandardOutput ../.e2e-front.log -RedirectStandardError ../.e2e-front.log).Id | Out-File -Encoding ascii .e2e-front.pid
 	@Write-Host 'Attente de l API (port 8001)...'; for ($$i = 0; $$i -lt 30; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 8001 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
-	@Write-Host 'Attente du frontend (port 3000)...'; for ($$i = 0; $$i -lt 60; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 3000 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
+	@Write-Host 'Attente du frontend (port 3001)...'; for ($$i = 0; $$i -lt 60; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 3001 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
 	@Write-Host 'Lancement de Cypress...'; Set-Location front; npx cypress open
 
 e2e-parallel: e2e-db
@@ -85,10 +85,10 @@ e2e-open: e2e-db
 	(cd front && npx cypress open)
 
 e2e-parallel: e2e-db ## Run E2E tests in parallel (N=4 by default, max 8)
-	python scripts/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) $(if $(Q),--quiet,)
+	python3 scripts/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) $(if $(Q),--quiet,)
 
 e2e-parallel-quiet: e2e-db ## Run E2E tests in parallel, hide server logs (N=4 by default, max 8)
-	python scripts/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) --quiet
+	python3 scripts/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) --quiet
 
 endif
 

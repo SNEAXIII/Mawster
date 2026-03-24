@@ -60,7 +60,12 @@ export default function WarDefendersTab({
         {activeWar && (
           <div className='flex items-center gap-2'>
             <Swords className='w-4 h-4 text-muted-foreground' />
-            <span data-cy='war-opponent-name' className='text-sm font-semibold'>vs {activeWar.opponent_name}</span>
+            <span
+              data-cy='war-opponent-name'
+              className='text-sm font-semibold'
+            >
+              vs {activeWar.opponent_name}
+            </span>
           </div>
         )}
 
@@ -87,10 +92,11 @@ export default function WarDefendersTab({
         </div>
 
         {/* Mode toggle — visible to officers only */}
-        {canManageWar && <div
-          className='flex gap-1 rounded-md border p-1'
-          data-cy='war-mode-toggle'
-        >
+        {canManageWar && (
+          <div
+            className='flex gap-1 rounded-md border p-1'
+            data-cy='war-mode-toggle'
+          >
             <button
               onClick={() => onWarModeChange(WarMode.Defenders)}
               className={cn(
@@ -117,7 +123,8 @@ export default function WarDefendersTab({
               <Swords className='w-3.5 h-3.5' />
               {t.game.war.modeAttackers}
             </button>
-          </div>}
+          </div>
+        )}
 
         {/* Clear BG button */}
         {canManageWar && placements.length > 0 && (
@@ -148,14 +155,14 @@ export default function WarDefendersTab({
         <FullPageSpinner />
       ) : (
         <div className='flex gap-4 flex-col lg:flex-row'>
-          <div className='overflow-x-auto flex-1 min-w-0'>
-            <div className='w-max mx-auto'>
-            <WarDefenseMap
-              placements={placements}
-              onNodeClick={onNodeClick}
-              onRemove={onRemoveDefender}
-              canManage={canManageWar && warMode === WarMode.Defenders}
-            />
+          <div className='overflow-x-auto flex-1 min-w-0 rounded-xl border bg-card shadow-sm'>
+            <div className='p-2 sm:p-3 w-max mx-auto'>
+              <WarDefenseMap
+                placements={placements}
+                onNodeClick={onNodeClick}
+                onRemove={onRemoveDefender}
+                canManage={canManageWar && warMode === WarMode.Defenders}
+              />
             </div>
           </div>
           {warMode === WarMode.Attackers && (

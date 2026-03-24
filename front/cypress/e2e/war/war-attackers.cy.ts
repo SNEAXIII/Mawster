@@ -27,7 +27,7 @@ describe('War – Attackers mode', () => {
       ({ ownerData, memberData, allianceId, warId, championUserId }) => {
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
         goToAttackersMode(ownerData.login);
-        cy.getByCy('attacker-entry-node-10').should('be.visible');
+        cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
       }
     );
   });
@@ -59,7 +59,7 @@ describe('War – Attackers mode', () => {
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
         goToAttackersMode(ownerData.login);
 
-        cy.getByCy('attacker-entry-node-10').should('be.visible');
+        cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
         cy.getByCy('remove-attacker-node-10').click();
         cy.getByCy('attacker-entry-node-10').should('not.exist');
       }
@@ -75,7 +75,7 @@ describe('War – Attackers mode', () => {
       cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
       cy.getByCy('war-attacker-search').should('be.visible');
       cy.getByCy('attacker-card-Wolverine').should('be.visible').click();
-      cy.getByCy('attacker-entry-node-10').should('be.visible');
+      cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
     });
   });
 
@@ -97,7 +97,7 @@ describe('War – Attackers mode', () => {
       ({ memberData, ownerData, allianceId, warId, championUserId }) => {
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
         goToAttackersMode(ownerData.login);
-        cy.contains('1/3').should('be.visible');
+        cy.contains('1/3').scrollIntoView().should('be.visible');
       }
     );
   });

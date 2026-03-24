@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { getMyAlliances } from '@/app/services/game';
 
@@ -14,7 +14,7 @@ const AllianceContext = createContext<AllianceContextValue>({
   refreshHasAlliance: async () => {},
 });
 
-export function AllianceProvider({ children }: { children: React.ReactNode }) {
+export function AllianceProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const { data: session } = useSession();
   const isAuthenticated = !!(session && !session.error && session.user);
   const [hasAlliance, setHasAlliance] = useState(false);
@@ -36,8 +36,13 @@ export function AllianceProvider({ children }: { children: React.ReactNode }) {
     refreshHasAlliance();
   }, [refreshHasAlliance]);
 
+  const contextValue = useMemo(
+    () => ({ hasAlliance, refreshHasAlliance }),
+    [hasAlliance, refreshHasAlliance]
+  );
+
   return (
-    <AllianceContext.Provider value={{ hasAlliance, refreshHasAlliance }}>
+    <AllianceContext.Provider value={contextValue}>
       {children}
     </AllianceContext.Provider>
   );

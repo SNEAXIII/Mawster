@@ -43,7 +43,7 @@ export default function WarDefenseMap({
   onNodeClick,
   onRemove,
   canManage,
-}: WarDefenseMapProps) {
+}: Readonly<WarDefenseMapProps>) {
   const adapted = placements.map(toDefensePlacement);
   return (
     <WarMap

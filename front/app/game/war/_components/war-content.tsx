@@ -164,9 +164,7 @@ export default function WarContent() {
           )}
 
           {/* ── War map ──────────────────────────────────── */}
-          {!activeWarId ? (
-            <p className='text-muted-foreground'>{t.game.war.noActiveWar}</p>
-          ) : (
+          {activeWarId ? (
             <WarDefendersTab
               activeWar={currentWar ?? undefined}
               selectedBg={selectedBg}
@@ -183,6 +181,8 @@ export default function WarContent() {
               onOpenClearConfirm={() => setShowClearConfirm(true)}
               onClickEndWar={() => setShowEndConfirm(true)}
             />
+          ) : (
+            <p className='text-muted-foreground'>{t.game.war.noActiveWar}</p>
           )}
         </>
       )}

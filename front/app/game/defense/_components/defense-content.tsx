@@ -8,20 +8,14 @@ import { FullPageSpinner } from '@/components/full-page-spinner';
 import { Shield } from 'lucide-react';
 
 import dynamic from 'next/dynamic';
-import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { useCurrentWar } from '../_hooks/use-current-war';
 
 import { useAllianceSelector } from '@/hooks/use-alliance-selector';
 import { useDefenseActions } from '../_hooks/use-defense-actions';
+import { DefenseActionsProvider } from '../_hooks/defense-actions-context';
 
 import DefenseHeader from './defense-header';
 import DefenseGrid from './defense-grid';
 
-const WarBanner = dynamic(() => import('./war-banner'), { loading: () => null });
-const CreateWarDialog = dynamic(
-  () => import('../../war/_components/create-war-dialog'),
-  { loading: () => null }
-);
 
 interface DefensePageContentProps {
   onStateChange?: (allianceId: string, bg: number) => void;
@@ -53,36 +47,14 @@ export default function DefensePageContent({
     ? canManage(selectedAlliance) || isOwner(selectedAlliance)
     : false;
 
+  const defenseActions = useDefenseActions(selectedAllianceId, selectedBg, selectedAlliance?.tag);
   const {
     defenseSummary,
-    availableChampions,
-    bgMembers,
-    defenseLoading,
-    selectorNode,
     setSelectorNode,
-    clearConfirmOpen,
     setClearConfirmOpen,
-    importReportOpen,
-    setImportReportOpen,
-    importReport,
     fileInputRef,
-    handlePlaceDefender,
-    handleRemoveDefender,
-    handleClearDefense,
     handleExportDefense,
-    handleImportFile,
-  } = useDefenseActions(selectedAllianceId, selectedBg, selectedAlliance?.tag);
-
-  const {
-    currentWar,
-    warLoading,
-    showCreateDialog,
-    setShowCreateDialog,
-    showEndConfirm,
-    setShowEndConfirm,
-    handleCreateWar,
-    handleEndWar,
-  } = useCurrentWar(selectedAllianceId);
+  } = defenseActions;
 
   // Auto-select first alliance when alliances load and none is selected
   useEffect(() => {
@@ -127,39 +99,25 @@ export default function DefensePageContent({
   return (
     <div className='space-y-4'>
       <h2 className='text-xl font-bold'>{t.game.defense.title}</h2>
-      <DefenseHeader
-        alliances={alliances}
-        selectedAllianceId={selectedAllianceId}
-        onAllianceChange={handleAllianceChange}
-        selectedBg={selectedBg}
-        onBgChange={handleBgChange}
-        onExport={handleExportDefense}
-        onImportClick={() => fileInputRef.current?.click()}
-        onClearClick={() => setClearConfirmOpen(true)}
-        canManage={userCanManage}
-        defenseSummary={defenseSummary}
-      />
+      <DefenseActionsProvider value={defenseActions}>
+        <DefenseHeader
+          alliances={alliances}
+          selectedAllianceId={selectedAllianceId}
+          onAllianceChange={handleAllianceChange}
+          selectedBg={selectedBg}
+          onBgChange={handleBgChange}
+          onExport={handleExportDefense}
+          onImportClick={() => fileInputRef.current?.click()}
+          onClearClick={() => setClearConfirmOpen(true)}
+          canManage={userCanManage}
+          defenseSummary={defenseSummary}
+        />
 
-      <DefenseGrid
-        defenseSummary={defenseSummary}
-        availableChampions={availableChampions}
-        bgMembers={bgMembers}
-        selectorNode={selectorNode}
-        onNodeClick={handleNodeClick}
-        onPlace={handlePlaceDefender}
-        onRemove={handleRemoveDefender}
-        clearConfirmOpen={clearConfirmOpen}
-        onClearConfirm={handleClearDefense}
-        setClearConfirmOpen={setClearConfirmOpen}
-        onSelectorClose={() => setSelectorNode(null)}
-        fileInputRef={fileInputRef}
-        onImportFile={handleImportFile}
-        importReportOpen={importReportOpen}
-        importReport={importReport}
-        onImportReportClose={() => setImportReportOpen(false)}
-        loading={defenseLoading}
-        canManage={userCanManage}
-      />
+        <DefenseGrid
+          onNodeClick={handleNodeClick}
+          canManage={userCanManage}
+        />
+      </DefenseActionsProvider>
     </div>
   );
 }

@@ -1,17 +1,11 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import React from 'react';
 import { useI18n } from '@/app/i18n';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import {
-  type DefenseSummary,
-  type AvailableChampion,
-  type BgMember,
-  type DefenseImportReport,
-} from '@/app/services/defense';
+import { useDefenseActionsContext } from '../_hooks/defense-actions-context';
 
 import DefenseImportReportDialog from './defense-import-report-dialog';
 
@@ -28,65 +22,46 @@ const DefenseSidePanel = dynamic(() => import('./defense-side-panel'), {
 });
 
 interface DefenseGridProps {
-  defenseSummary: DefenseSummary | null;
-  availableChampions: AvailableChampion[];
-  bgMembers: BgMember[];
-  selectorNode: number | null;
   onNodeClick: (node: number) => void;
-  onPlace: (championUserId: string, gameAccountId: string, championName: string) => void;
-  onRemove: (node: number) => Promise<void>;
-  clearConfirmOpen: boolean;
-  onClearConfirm: () => void;
-  setClearConfirmOpen: (open: boolean) => void;
-  onSelectorClose: () => void;
-  fileInputRef: React.RefObject<HTMLInputElement | null>;
-  onImportFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  importReportOpen: boolean;
-  importReport: DefenseImportReport | null;
-  onImportReportClose: () => void;
-  loading: boolean;
   canManage: boolean;
 }
 
-export default function DefenseGrid({
-  defenseSummary,
-  availableChampions,
-  bgMembers,
-  selectorNode,
-  onNodeClick,
-  onPlace,
-  onRemove,
-  clearConfirmOpen,
-  onClearConfirm,
-  setClearConfirmOpen,
-  onSelectorClose,
-  fileInputRef,
-  onImportFile,
-  importReportOpen,
-  importReport,
-  onImportReportClose,
-  loading,
-  canManage,
-}: Readonly<DefenseGridProps>) {
+export default function DefenseGrid({ onNodeClick, canManage }: Readonly<DefenseGridProps>) {
   const { t } = useI18n();
+  const {
+    defenseSummary,
+    availableChampions,
+    bgMembers,
+    defenseLoading,
+    selectorNode,
+    setSelectorNode,
+    clearConfirmOpen,
+    setClearConfirmOpen,
+    importReportOpen,
+    importReport,
+    setImportReportOpen,
+    fileInputRef,
+    handleImportFile,
+    handlePlaceDefender,
+    handleRemoveDefender,
+    handleClearDefense,
+  } = useDefenseActionsContext();
 
-  if (loading) return <FullPageSpinner />;
+  if (defenseLoading) return <FullPageSpinner />;
 
   return (
     <>
       <div className='flex flex-col-reverse lg:flex-row gap-4'>
         {/* War Map */}
-        <div className='flex-1 min-w-0'>
-          <Card>
-            <CardContent className='p-2 sm:p-3 overflow-x-auto'>
-              <WarMap
-                placements={defenseSummary?.placements ?? []}
-                onNodeClick={onNodeClick}
-                onRemove={onRemove}
-                canManage={canManage}
-              />
-            </CardContent>
-          </Card>
+        <div className='overflow-x-auto flex-1 min-w-0 rounded-xl border bg-card shadow-sm'>
+          <div className='p-2 sm:p-3 w-max mx-auto'>
+            <WarMap
+              placements={defenseSummary?.placements ?? []}
+              onNodeClick={onNodeClick}
+              onRemove={handleRemoveDefender}
+              canManage={canManage}
+            />
+          </div>
         </div>
 
         {/* Side panel */}
@@ -96,7 +71,7 @@ export default function DefenseGrid({
               <DefenseSidePanel
                 members={bgMembers}
                 placements={defenseSummary?.placements ?? []}
-                onRemoveDefender={onRemove}
+                onRemoveDefender={handleRemoveDefender}
                 canManage={canManage}
               />
             </CardContent>
@@ -108,10 +83,10 @@ export default function DefenseGrid({
       {selectorNode !== null && (
         <ChampionSelector
           open={selectorNode !== null}
-          onClose={onSelectorClose}
+          onClose={() => setSelectorNode(null)}
           nodeNumber={selectorNode}
           availableChampions={availableChampions}
-          onSelect={onPlace}
+          onSelect={handlePlaceDefender}
         />
       )}
 
@@ -122,7 +97,7 @@ export default function DefenseGrid({
         title={t.game.defense.clearConfirmTitle}
         description={t.game.defense.clearConfirmDesc}
         confirmText={t.common.confirm}
-        onConfirm={onClearConfirm}
+        onConfirm={handleClearDefense}
         variant='destructive'
       />
 
@@ -132,13 +107,13 @@ export default function DefenseGrid({
         type='file'
         accept='.json'
         className='hidden'
-        onChange={onImportFile}
+        onChange={handleImportFile}
       />
 
       {/* Import report dialog */}
       <DefenseImportReportDialog
         open={importReportOpen}
-        onClose={onImportReportClose}
+        onClose={() => setImportReportOpen(false)}
         report={importReport}
       />
     </>
