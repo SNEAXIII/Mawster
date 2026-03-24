@@ -1,6 +1,5 @@
 import uuid
 from typing import Optional
-from itertools import product
 
 from fastapi import HTTPException
 from sqlmodel import select, and_
@@ -11,7 +10,7 @@ from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.DefensePlacement import DefensePlacement
 from src.models.GameAccount import GameAccount
-from src.models.War import War
+from src.models.War import War, WarStatus
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.dto.dto_war import (
     WarResponse,
@@ -21,7 +20,6 @@ from src.dto.dto_war import (
     AvailableAttackerResponse,
 )
 from src.utils.db import SessionDep
-from src.utils.logging_config import debug_log
 
 
 class WarService:
@@ -35,7 +33,7 @@ class WarService:
         created_by_id: uuid.UUID,
     ) -> WarResponse:
         existing = await session.exec(
-            select(War).where(War.alliance_id == alliance_id, War.status == "active")
+            select(War).where(War.alliance_id == alliance_id, War.status == WarStatus.active)
         )
         if existing.first() is not None:
             raise HTTPException(
@@ -75,7 +73,7 @@ class WarService:
         alliance_id: uuid.UUID,
     ) -> WarResponse:
         result = await session.exec(
-            select(War).where(War.alliance_id == alliance_id, War.status == "active")
+            select(War).where(War.alliance_id == alliance_id, War.status == WarStatus.active)
         )
         war = result.first()
         if war is None:
@@ -298,7 +296,7 @@ class WarService:
         alliance_id: uuid.UUID,
     ) -> WarResponse:
         war = await cls.get_war(session, war_id, alliance_id)
-        war.status = "ended"
+        war.status = WarStatus.ended
         session.add(war)
         await session.commit()
         await session.refresh(war)
@@ -406,7 +404,6 @@ class WarService:
             .options(selectinload(ChampionUser.game_account))  # type: ignore[arg-type]
         )
         champion_user = (await session.exec(champion_user_stmt)).first()
-        debug_log(str(champion_user))
         if champion_user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
 

@@ -1,7 +1,13 @@
 import uuid
 from datetime import datetime
+from enum import Enum
 from typing import List, TYPE_CHECKING
 from sqlmodel import Field, Relationship, SQLModel
+
+
+class WarStatus(str, Enum):
+    active = "active"
+    ended = "ended"
 
 if TYPE_CHECKING:
     from src.models.Alliance import Alliance
@@ -15,7 +21,7 @@ class War(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
     opponent_name: str = Field(max_length=100)
-    status: str = Field(default="active", max_length=20)
+    status: WarStatus = Field(default=WarStatus.active)
     created_by_id: uuid.UUID = Field(foreign_key="game_account.id")
     created_at: datetime = Field(default_factory=datetime.now)
 
