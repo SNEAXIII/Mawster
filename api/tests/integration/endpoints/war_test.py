@@ -658,21 +658,6 @@ class TestAssignAttacker:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_assign_attacker_defender_champion_rejected(self):
-        """Champion used as defender cannot be assigned as attacker."""
-        data = await _setup_attacker_scenario()
-        # Add Spider-Man (which is a defender) to member's roster
-        spider_cu = await push_champion_user(data["member"], data["champ"], stars=7, rank=3)
-        headers = create_auth_headers(user_id=str(USER2_ID))
-
-        response = await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
-            payload={"champion_user_id": str(spider_cu.id)},
-            headers=headers,
-        )
-        assert response.status_code == 409
-
-    @pytest.mark.asyncio
     async def test_assign_attacker_limit_3_per_member(self):
         """A member cannot have more than 3 attackers in the same BG."""
         data = await _setup_attacker_scenario()

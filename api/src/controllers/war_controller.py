@@ -241,7 +241,6 @@ async def clear_war_bg(
 )
 async def get_available_attackers(
     alliance_id: uuid.UUID,
-    war_id: uuid.UUID,
     battlegroup: BattlegroupPath,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
@@ -249,7 +248,7 @@ async def get_available_attackers(
 ):
     """List available attackers (BG roster minus defenders). All members can view."""
     await _get_user_account_in_alliance(session, current_user, alliance_id)
-    return await WarService.get_available_attackers(session, war_id, alliance_id, battlegroup)
+    return await WarService.get_available_attackers(session, alliance_id, battlegroup)
 
 
 @war_controller.post(
