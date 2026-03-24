@@ -3,12 +3,13 @@
 generate_env.py — Interactive generator for production .env files.
 
 Generates:
-  - db.env       (MariaDB credentials)
-  - api.env      (FastAPI settings + DB credentials)
-  - front.env    (Next.js / NextAuth settings)
+  - db.env          (MariaDB credentials)
+  - api.env         (FastAPI settings + DB credentials)
+  - front.env       (Next.js / NextAuth settings)
+  - graphana.env    (Grafana monitoring)
 
 Run:
-    python generate_env.py
+    python env/generate_env.py
 """
 
 import secrets
@@ -132,7 +133,12 @@ def main() -> None:
     token_expire       = prompt("Access token expiry (minutes)",  default="60")
     api_port           = prompt("API port",                       default="8000")
 
-    # ── 5. Write files ─────────────────────────────────────────────────────────
+    # ── 5. Monitoring (Grafana) ────────────────────────────────────────────────
+    section("Monitoring (Grafana)")
+
+    grafana_password = prompt("Grafana admin password", default=gen_hex(16), secret=True)
+
+    # ── 6. Write files ─────────────────────────────────────────────────────────
     print(f"\n{c(BOLD, '── Writing files ──────────────────────────────────')}")
 
     # db.env
@@ -166,7 +172,12 @@ def main() -> None:
         f"DISCORD_CLIENT_SECRET={discord_client_secret or 'PASTE_FROM_DISCORD_DEVELOPER_PORTAL'}",
     ])
 
-    # ── 6. Summary ─────────────────────────────────────────────────────────────
+    # graphana.env
+    write_env(ROOT / "graphana.env", [
+        f'GF_SECURITY_ADMIN_PASSWORD="{grafana_password}"',  # NOSONAR — user-provided input, not a hardcoded secret
+    ])
+
+    # ── 7. Summary ─────────────────────────────────────────────────────────────
     print(f"\n{c(BOLD, '── Done ───────────────────────────────────────────')}")
     print(f"""
   {c(BOLD, 'Next steps:')}

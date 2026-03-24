@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
     networks:
       - internal
-    env_file: db.env
+    env_file: env/db.env
     volumes:
       - data_db:/var/lib/mysql
     healthcheck:
@@ -26,7 +26,7 @@ services:
   api:
     # image: sneaxiii/mawster-api:latest
     build:
-      context: ./api
+      context: ../api
       dockerfile: api.Dockerfile
     container_name: api
     restart: unless-stopped
@@ -36,11 +36,11 @@ services:
       mariadb:
         condition: service_healthy
     env_file:
-      - api.env
+      - env/api.env
     command: ['sh', 'run.sh']
     # Mount logs directory on the host for persistence and inspection
     volumes:
-      - ./api/logs:/app/api/logs
+      - ../api/logs:/app/api/logs
     # Explicitly set production mode so backend behaves accordingly
     environment:
       - MODE=prod
@@ -55,7 +55,7 @@ services:
   front:
     # image: sneaxiii/mawster-front:latest
     build:
-      context: ./front
+      context: ../front
       dockerfile: front.Dockerfile
     container_name: front
     restart: unless-stopped
@@ -64,7 +64,7 @@ services:
     depends_on:
       - api
     env_file:
-      - front.env
+      - env/front.env
     command: ['sh', 'run.sh']
     logging:
       driver: 'json-file'
@@ -79,7 +79,7 @@ services:
     ports:
       - '443:443'
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
     networks:
@@ -138,8 +138,9 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    env_file:
+      - env/graphana.env
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-changeme}
       - GF_SERVER_ROOT_URL=https://logs.mawster.app
       - GF_SERVER_SERVE_FROM_SUB_PATH=false
     depends_on:
