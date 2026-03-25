@@ -18,7 +18,7 @@ import socket
 import argparse
 import atexit
 import os
-import platform
+import platform as _platform
 import re
 import signal
 import subprocess
@@ -26,6 +26,11 @@ import sys
 import threading
 import time
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from linux_model import LinuxModel, LinuxHeadlessModel  # noqa: E402  # pylint: disable=import-error,wrong-import-position
+from windows_model import WindowsModel  # noqa: E402  # pylint: disable=import-error,wrong-import-position
+from IOsModel import IOsModel  # noqa: E402  # pylint: disable=import-error,wrong-import-position
 
 # Matches the final summary line printed by Cypress after all specs:
 #   "  √  All specs passed!                        01:39   60   54    -    6    -"
@@ -41,21 +46,18 @@ FINAL_SUMMARY_RE = re.compile(
     r"(\d+|-)"                # skipped
 )
 
-ROOT = Path(__file__).parent.parent
-API_DIR = ROOT / "api"
-FRONT_DIR = ROOT / "front"
 
-BASE_API_PORT = 8010
-BASE_FRONT_PORT = 3010
-DB_PREFIX = "mawster_test_"
-MARIADB_HOST = "127.0.0.1"
-MARIADB_PORT = int(os.environ.get("MARIADB_PORT", "3307"))
-MARIADB_ROOT_PASSWORD = os.environ.get("MARIADB_ROOT_PASSWORD", "rootpassword")  # NOSONAR
-HEALTH_TIMEOUT = 20
 
-IS_WINDOWS = platform.system() == "Windows"
-NPM = "npm.cmd" if IS_WINDOWS else "npm"
-NPX = "npx.cmd" if IS_WINDOWS else "npx"
+def _get_os_model() -> "IOsModel":
+    if _platform.system() == "Windows":
+        return WindowsModel()
+    if os.environ.get("CI") == "true":
+        return LinuxHeadlessModel()
+    return LinuxModel()
+
+OS = _get_os_model()
+NPM = OS.npm
+NPX = OS.npx
 
 
 def log(msg: str) -> None:
@@ -68,15 +70,15 @@ def _run_sql(sql: str) -> subprocess.CompletedProcess:
     Tries 'mariadb' CLI first (works in CI via TCP on MARIADB_PORT).
     Falls back to 'docker exec' if the binary is not found (local dev).
     """
-    root_args = ["-uroot", f"-p{MARIADB_ROOT_PASSWORD}", "-e", sql]
+    root_args = ["-uroot", f"-p{OS.MARIADB_ROOT_PASSWORD}", "-e", sql]
     try:
         return subprocess.run(
-            ["mariadb", "-h", MARIADB_HOST, "-P", str(MARIADB_PORT)] + root_args,
+            ["mariadb", "-h", OS.MARIADB_HOST, "-P", str(OS.MARIADB_PORT)] + root_args,
             capture_output=True,
             text=True,
         )
     except FileNotFoundError:
-        container = os.environ.get("MARIADB_CONTAINER", "mariadb-test")
+        container = OS.MARIADB_CONTAINER
         return subprocess.run(
             ["docker", "exec", container, "mariadb"] + root_args,
             capture_output=True,
@@ -86,20 +88,20 @@ def _run_sql(sql: str) -> subprocess.CompletedProcess:
 
 def check_mariadb_running() -> None:
     """Verify MariaDB is reachable on MARIADB_HOST:MARIADB_PORT."""
-    log(f"Checking if MariaDB is reachable on {MARIADB_HOST}:{MARIADB_PORT}...")
+    log(f"Checking if MariaDB is reachable on {OS.MARIADB_HOST}:{OS.MARIADB_PORT}...")
     try:
-        with socket.create_connection((MARIADB_HOST, MARIADB_PORT), timeout=5):
+        with socket.create_connection((OS.MARIADB_HOST, OS.MARIADB_PORT), timeout=5):
             pass
         log("MariaDB is reachable.")
     except OSError:
-        log(f"ERROR: MariaDB is not reachable on {MARIADB_HOST}:{MARIADB_PORT}.")
+        log(f"ERROR: MariaDB is not reachable on {OS.MARIADB_HOST}:{OS.MARIADB_PORT}.")
         log("Start it with: make e2e-db")
         sys.exit(1)
 
 
 def create_db(worker: int) -> None:
     """CREATE DATABASE IF NOT EXISTS mawster_test_N and GRANT privileges."""
-    db = f"{DB_PREFIX}{worker}"
+    db = f"{OS.DB_PREFIX}{worker}"
     db_user = os.environ.get("MARIADB_USER", "user")
     log(f"Worker {worker}: creating database {db}...")
     sql = (
@@ -113,7 +115,7 @@ def create_db(worker: int) -> None:
     log(f"Worker {worker}: database {db} created.")
 
 
-def wait_for_http(url: str, label: str, timeout: int = HEALTH_TIMEOUT) -> None:
+def wait_for_http(url: str, label: str, timeout: int = OS.HEALTH_TIMEOUT) -> None:
     """Poll url until HTTP response received (any status code = server is up)."""
     deadline = time.time() + timeout
     while time.time() < deadline:
@@ -249,7 +251,7 @@ def build_merged_report(
     all_failures: list[dict] = []
 
     for worker in range(n):
-        log_dir = worker_log_dir(worker)
+        log_dir = OS.worker_log_dir(worker)
         cypress_log = log_dir / "cypress.log"
         backend_log = log_dir / "backend.log"
 
@@ -288,14 +290,13 @@ def build_merged_report(
         "failures": all_failures,
     }
 
-    out = FRONT_DIR / "cypress" / "results" / "report.json"
+    out = OS.FRONT_DIR / "cypress" / "results" / "report.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
-    log(f"Report written → {out.relative_to(ROOT)}  ({len(all_failures)} failure(s))")
+    log(f"Report written → {out.relative_to(OS.ROOT)}  ({len(all_failures)} failure(s))")
 
 
-def worker_log_dir(worker: int) -> Path:
-    return FRONT_DIR / "cypress" / "results" / "workers" / f"worker-{worker}"
+
 
 
 def pipe_output(stream, prefix: str, quiet: bool = False, stats: dict | None = None, log_file: "Path | None" = None) -> None:
@@ -333,8 +334,8 @@ def pipe_output(stream, prefix: str, quiet: bool = False, stats: dict | None = N
 
 
 def start_backend(worker: int, base_env: dict, quiet: bool = False) -> subprocess.Popen:
-    api_port = BASE_API_PORT + worker
-    db = f"{DB_PREFIX}{worker}"
+    api_port = OS.BASE_API_PORT + worker
+    db = f"{OS.DB_PREFIX}{worker}"
     env = {
         **base_env,
         "MODE": "testing",
@@ -343,15 +344,15 @@ def start_backend(worker: int, base_env: dict, quiet: bool = False) -> subproces
         "PYTHONIOENCODING": "utf-8",
     }
     log(f"Worker {worker}: starting backend  — PORT={api_port}  DB={db}  MODE=testing")
-    log_dir = worker_log_dir(worker)
+    log_dir = OS.worker_log_dir(worker)
     log_dir.mkdir(parents=True, exist_ok=True)
     proc = subprocess.Popen(
         ["uv", "run", "app_testing.py"],
-        cwd=str(API_DIR),
+        cwd=str(OS.API_DIR),
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        start_new_session=not IS_WINDOWS,
+        start_new_session=OS.start_new_session,
     )
     prefix = f"[W{worker}|api:{api_port}]"
     threading.Thread(target=pipe_output, args=(proc.stdout, prefix, quiet), kwargs={"log_file": log_dir / "backend.log"}, daemon=True).start()
@@ -369,7 +370,7 @@ def build_frontend(base_env: dict) -> None:
     env = {
         **base_env,
         "PORT": "3000",
-        "API_PORT": str(BASE_API_PORT),   # placeholder — rewrites are runtime-read anyway
+        "API_PORT": str(OS.BASE_API_PORT),   # placeholder — rewrites are runtime-read anyway
         "API_SERVER_HOST": "localhost",
         "NEXT_PUBLIC_DEV_MODE": "true",
         "NEXT_DIST_DIR": ".next-e2e",
@@ -378,7 +379,7 @@ def build_frontend(base_env: dict) -> None:
     }
     result = subprocess.run(
         [NPX, "next", "build"],
-        cwd=str(FRONT_DIR),
+        cwd=str(OS.FRONT_DIR),
         env=env,
     )
     if result.returncode != 0:
@@ -387,8 +388,8 @@ def build_frontend(base_env: dict) -> None:
 
 
 def start_frontend(worker: int, base_env: dict, quiet: bool = False) -> subprocess.Popen:
-    api_port = BASE_API_PORT + worker
-    front_port = BASE_FRONT_PORT + worker
+    api_port = OS.BASE_API_PORT + worker
+    front_port = OS.BASE_FRONT_PORT + worker
     env = {
         **base_env,
         "PORT": str(front_port),
@@ -402,15 +403,15 @@ def start_frontend(worker: int, base_env: dict, quiet: bool = False) -> subproce
         "PYTHONIOENCODING": "utf-8",
     }
     log(f"Worker {worker}: starting frontend — PORT={front_port}  API_PORT={api_port}  NEXTAUTH_URL=http://localhost:{front_port}")
-    log_dir = worker_log_dir(worker)
+    log_dir = OS.worker_log_dir(worker)
     log_dir.mkdir(parents=True, exist_ok=True)
     proc = subprocess.Popen(
         [NPX, "next", "start", "--port", str(front_port)],
-        cwd=str(FRONT_DIR),
+        cwd=str(OS.FRONT_DIR),
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        start_new_session=not IS_WINDOWS,
+        start_new_session=OS.start_new_session,
     )
     prefix = f"[W{worker}|front:{front_port}]"
     threading.Thread(target=pipe_output, args=(proc.stdout, prefix, quiet), kwargs={"log_file": log_dir / "frontend.log"}, daemon=True).start()
@@ -419,7 +420,7 @@ def start_frontend(worker: int, base_env: dict, quiet: bool = False) -> subproce
 
 def get_spec_files() -> list[Path]:
     """Return all Cypress spec files sorted by path."""
-    return sorted((FRONT_DIR / "cypress" / "e2e").rglob("*.cy.ts"))
+    return sorted((OS.FRONT_DIR / "cypress" / "e2e").rglob("*.cy.ts"))
 
 
 def count_tests(spec: Path) -> int:
@@ -448,8 +449,8 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
 
     Collects aggregated test counts into `stats` (passed by reference).
     """
-    api_port = BASE_API_PORT + worker
-    front_port = BASE_FRONT_PORT + worker
+    api_port = OS.BASE_API_PORT + worker
+    front_port = OS.BASE_FRONT_PORT + worker
 
     cmd = [
         NPX, "cypress", "run",
@@ -463,17 +464,13 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     ]
     log(f"Worker {worker}: launching Cypress ({len(specs)} spec(s))...")
 
-    log_dir = worker_log_dir(worker)
+    log_dir = OS.worker_log_dir(worker)
     log_dir.mkdir(parents=True, exist_ok=True)
     cypress_log = log_dir / "cypress.log"
-    # Wrap with xvfb-run -a on Linux headless environments (CI).
-    # -a auto-selects a free display number, avoiding conflicts between workers.
-    # On machines with a real X server (local dev), xvfb-run is a no-op passthrough.
-    if not IS_WINDOWS and subprocess.run(["which", "xvfb-run"], capture_output=True).returncode == 0:
-        cmd = ["xvfb-run", "-a"] + cmd
+    cmd = OS.cypress_cmd(cmd)
     proc = subprocess.Popen(
         cmd,
-        cwd=str(FRONT_DIR),
+        cwd=str(OS.FRONT_DIR),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
@@ -494,56 +491,11 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
 
 def kill_ports(ports: list[int]) -> None:
     """Kill any process currently listening on the given ports (parallel)."""
-    port_set = set(ports)
-
-    if IS_WINDOWS:
-        # Single netstat call, then taskkill in parallel
-        result = subprocess.run(["netstat", "-ano"], capture_output=True, text=True)
-        # Map port -> set of PIDs
-        victims: dict[int, set[str]] = {p: set() for p in port_set}
-        for line in result.stdout.splitlines():
-            if "LISTENING" not in line:
-                continue
-            for port in port_set:
-                if f":{port} " in line:
-                    parts = line.split()
-                    victims[port].add(parts[-1])
-
-        def _kill_pid(pid: str, port: int) -> None:
-            subprocess.run(["taskkill", "/F", "/PID", pid], capture_output=True)
-            log(f"Killed PID {pid} on port {port}")
-
-        kill_threads = [
-            threading.Thread(target=_kill_pid, args=(pid, port))
-            for port, pids in victims.items()
-            for pid in pids
-        ]
-        for t in kill_threads:
-            t.start()
-        for t in kill_threads:
-            t.join()
-    else:
-        def _kill_port(port: int) -> None:
-            # fuser -k kills all processes on the port (IPv4 + IPv6)
-            result = subprocess.run(
-                ["fuser", "-k", "-KILL", f"{port}/tcp"],
-                capture_output=True, text=True,
-            )
-            if result.returncode != 0:
-                # fuser not available or no process found — fallback to lsof
-                result = subprocess.run(
-                    ["lsof", "-ti", f":{port}"],
-                    capture_output=True, text=True,
-                )
-                for pid in result.stdout.strip().splitlines():
-                    subprocess.run(["kill", "-9", pid.strip()], capture_output=True)
-                    log(f"Killed PID {pid} on port {port}")
-
-        kill_threads = [threading.Thread(target=_kill_port, args=(p,)) for p in port_set]
-        for t in kill_threads:
-            t.start()
-        for t in kill_threads:
-            t.join()
+    kill_threads = [threading.Thread(target=OS.kill_port, args=(p,)) for p in ports]
+    for t in kill_threads:
+        t.start()
+    for t in kill_threads:
+        t.join()
 
 
 def main() -> None:
@@ -571,14 +523,14 @@ def main() -> None:
         for raw in [s.strip() for s in args.spec.split(",") if s.strip()]:
             spec_path = Path(raw)
             if not spec_path.is_absolute():
-                candidate = FRONT_DIR / "cypress" / "e2e" / raw
+                candidate = OS.FRONT_DIR / "cypress" / "e2e" / raw
                 if not candidate.exists():
-                    candidate = FRONT_DIR / raw
+                    candidate = OS.FRONT_DIR / raw
                 spec_path = candidate
             if not spec_path.exists():
                 available = sorted(
-                    p.relative_to(FRONT_DIR / "cypress" / "e2e")
-                    for p in (FRONT_DIR / "cypress" / "e2e").rglob("*.cy.ts")
+                    p.relative_to(OS.FRONT_DIR / "cypress" / "e2e")
+                    for p in (OS.FRONT_DIR / "cypress" / "e2e").rglob("*.cy.ts")
                 )
                 log(f"ERROR: spec not found: {raw}")
                 log("Available specs:")
@@ -596,8 +548,8 @@ def main() -> None:
     log(f"Starting E2E parallel run with {n} worker(s)...")
 
     ports_to_free = [
-        *[BASE_API_PORT + i for i in range(n)],
-        *[BASE_FRONT_PORT + i for i in range(n)],
+        *[OS.BASE_API_PORT + i for i in range(n)],
+        *[OS.BASE_FRONT_PORT + i for i in range(n)],
     ]
     log(f"Freeing ports: {ports_to_free}")
     kill_ports(ports_to_free)
@@ -613,7 +565,7 @@ def main() -> None:
         log("Shutting down all servers...")
         for p in procs:
             try:
-                if IS_WINDOWS:
+                if not OS.start_new_session:
                     p.terminate()
                 else:
                     os.killpg(os.getpgid(p.pid), signal.SIGTERM)
@@ -627,7 +579,7 @@ def main() -> None:
                 p.wait(timeout=5)
             except Exception:
                 try:
-                    if IS_WINDOWS:
+                    if not OS.start_new_session:
                         p.kill()
                     else:
                         os.killpg(os.getpgid(p.pid), signal.SIGKILL)
@@ -637,7 +589,7 @@ def main() -> None:
                     except Exception:
                         pass
         # Remove the shared e2e build dir
-        next_dir = FRONT_DIR / ".next-e2e"
+        next_dir = OS.FRONT_DIR / ".next-e2e"
         if next_dir.exists():
             shutil.rmtree(next_dir, ignore_errors=True)
             log(f"Removed {next_dir.name}")
@@ -709,11 +661,11 @@ def main() -> None:
     def health_check_worker(worker: int) -> None:
         try:
             wait_for_http(
-                f"http://localhost:{BASE_API_PORT + worker}",
+                f"http://localhost:{OS.BASE_API_PORT + worker}",
                 f"Backend {worker}",
             )
             wait_for_http(
-                f"http://localhost:{BASE_FRONT_PORT + worker}/api/auth/providers",
+                f"http://localhost:{OS.BASE_FRONT_PORT + worker}/api/auth/providers",
                 f"Frontend {worker}",
             )
         except TimeoutError as exc:
@@ -735,7 +687,7 @@ def main() -> None:
     log("All servers ready. Launching Cypress workers...")
     if resolved_specs:
         specs = resolved_specs
-        log(f"Running {len(specs)} spec(s): {[str(s.relative_to(FRONT_DIR)) for s in specs]}")
+        log(f"Running {len(specs)} spec(s): {[str(s.relative_to(OS.FRONT_DIR)) for s in specs]}")
     else:
         specs = get_spec_files()
         log(f"Found {len(specs)} spec file(s) to distribute across {n} worker(s).")
