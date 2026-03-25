@@ -12,47 +12,29 @@ describe('Defense – Overflow & Error Cases', () => {
   it('owner with 5/5 defenders is filtered out — 6th champion auto-places for the remaining member', () => {
     setupDefenseOwnerAndMember('def-ov-full', 'FullOwn', 'FullMem', 'FullAll', 'FL').then(
       ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
-        const champNames = ['Spider-Man', 'Wolverine', 'Iron Man', 'Doctor Doom', 'Blade', 'Hulk'];
-        const champClasses = ['Cosmic', 'Mutant', 'Tech', 'Mystic', 'Skill', 'Science'];
-
-        // Load all 6 champions and add to owner's roster
-        let chain = cy.wrap(null);
+        const champDefs = [
+          { name: 'Spider-Man', cls: 'Cosmic' },
+          { name: 'Wolverine',  cls: 'Mutant' },
+          { name: 'Iron Man',   cls: 'Tech' },
+          { name: 'Doctor Doom', cls: 'Mystic' },
+          { name: 'Blade',      cls: 'Skill' },
+          { name: 'Hulk',       cls: 'Science' },
+        ];
         const ownerCUs: string[] = [];
-        for (let i = 0; i < 6; i++) {
-          const name = champNames[i];
-          const cls = champClasses[i];
-          chain = chain.then(() => {
-            return cy.apiLoadChampion(adminData.access_token, name, cls).then((champs) => {
-              return cy
-                .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-                .then((cu) => {
-                  ownerCUs.push(cu.id);
-                  // Also add the same champion to memberAcc for the 6th one
-                  if (i === 5) {
-                    return cy.apiAddChampionToRoster(
-                      memberData.access_token,
-                      memberAccId,
-                      champs[0].id,
-                      '7r3'
-                    );
-                  }
-                });
-            });
-          });
-        }
 
-        // Place 5 champions for owner via API
-        chain.then(() => {
-          for (let i = 0; i < 5; i++) {
-            cy.apiPlaceDefender(
-              ownerData.access_token,
-              allianceId,
-              1,
-              i + 1,
-              ownerCUs[i],
-              ownerAccId
-            );
-          }
+        cy.apiLoadChampions(adminData.access_token, champDefs).then((champMap) => {
+          champDefs.forEach((def, i) => {
+            cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap[def.name].id, '7r3')
+              .then((cu) => { ownerCUs.push(cu.id); });
+            // 6th champion also added to member
+            if (i === 5) {
+              cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champMap[def.name].id, '7r3');
+            }
+          });
+        }).then(() => {
+          ownerCUs.slice(0, 5).forEach((cuId, i) => {
+            cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, i + 1, cuId, ownerAccId);
+          });
 
           cy.uiLogin(ownerData.login);
           cy.navTo('defense');
@@ -81,34 +63,22 @@ describe('Defense – Overflow & Error Cases', () => {
   it('counter turns red when player has 5/5 defenders', () => {
     setupDefenseOwner('def-ov-red', 'RedCntPlyr', 'RedCntAll', 'RC').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        const champNames = ['Spider-Man', 'Wolverine', 'Iron Man', 'Doctor Doom', 'Blade'];
-        const champClasses = ['Cosmic', 'Mutant', 'Tech', 'Mystic', 'Skill'];
+        const champDefs = [
+          { name: 'Spider-Man', cls: 'Cosmic' },
+          { name: 'Wolverine',  cls: 'Mutant' },
+          { name: 'Iron Man',   cls: 'Tech' },
+          { name: 'Doctor Doom', cls: 'Mystic' },
+          { name: 'Blade',      cls: 'Skill' },
+        ];
 
-        let chain = cy.wrap(null);
-        for (let i = 0; i < 5; i++) {
-          const name = champNames[i];
-          const cls = champClasses[i];
-          chain = chain.then(() =>
-            cy
-              .apiLoadChampion(adminData.access_token, name, cls)
-              .then((champs) =>
-                cy
-                  .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-                  .then((cu) =>
-                    cy.apiPlaceDefender(
-                      ownerData.access_token,
-                      allianceId,
-                      1,
-                      i + 1,
-                      cu.id,
-                      ownerAccId
-                    )
-                  )
-              )
-          );
-        }
-
-        chain.then(() => {
+        cy.apiLoadChampions(adminData.access_token, champDefs).then((champMap) => {
+          champDefs.forEach((def, i) => {
+            cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap[def.name].id, '7r3')
+              .then((cu) => {
+                cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, i + 1, cu.id, ownerAccId);
+              });
+          });
+        }).then(() => {
           cy.uiLogin(ownerData.login);
           cy.navTo('defense');
 

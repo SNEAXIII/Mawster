@@ -60,6 +60,15 @@ declare namespace Cypress {
     ): Chainable<any>;
 
     /**
+     * Load multiple champions in a single bulk request.
+     * Returns a map of champion name → { id, name }.
+     */
+    apiLoadChampions(
+      adminToken: string,
+      champions: Array<{ name: string; cls: string; is_ascendable?: boolean }>
+    ): Chainable<Record<string, { id: string; name: string }>>;
+
+    /**
      * Create an alliance via backend API.
      */
     apiCreateAlliance(token: string, name: string, tag: string, ownerId: string): Chainable<any>;

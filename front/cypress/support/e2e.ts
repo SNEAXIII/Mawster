@@ -153,6 +153,40 @@ Cypress.Commands.add(
   }
 );
 
+// ── Load multiple champions at once (single bulk request) ───────────────────
+
+Cypress.Commands.add(
+  'apiLoadChampions',
+  (
+    adminToken: string,
+    champions: Array<{ name: string; cls: string; is_ascendable?: boolean }>
+  ) => {
+    cy.request({
+      method: 'POST',
+      url: `${BACKEND}/admin/champions/load`,
+      headers: { Authorization: `Bearer ${adminToken}` },
+      body: champions.map((c) => ({
+        name: c.name,
+        champion_class: c.cls,
+        is_ascendable: c.is_ascendable ?? false,
+      })),
+    }).then(() =>
+      cy
+        .request({
+          method: 'GET',
+          url: `${BACKEND}/champions`,
+          headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        .then((res) => {
+          const all: Array<{ id: string; name: string }> = res.body.champions ?? res.body;
+          return Object.fromEntries(
+            champions.map((c) => [c.name, all.find((x) => x.name === c.name)!])
+          ) as Record<string, { id: string; name: string }>;
+        })
+    );
+  }
+);
+
 // ── Create alliance (direct backend call) ────────────────────────────────────
 
 Cypress.Commands.add(
@@ -557,27 +591,29 @@ export function setupDefenseScenario(
   return setupDefenseOwner(prefix, pseudo, `${tag}All`, tag).then(
     ({ adminData, ownerData, allianceId, ownerAccId }) => {
       const championUsers: { name: string; cuId: string }[] = [];
-      let chain = cy.wrap(null);
-      for (const def of champDefs) {
-        chain = chain.then(() =>
-          cy
-            .apiLoadChampion(adminData.access_token, def.name, def.cls, {
-              is_ascendable: def.options?.is_ascendable ?? false,
-            })
-            .then((champs) =>
-              cy
-                .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, def.rarity, {
-                  signature: def.options?.signature ?? 0,
-                  is_preferred_attacker: def.options?.is_preferred_attacker ?? false,
-                  ascension: def.options?.ascension ?? 0,
-                })
-                .then((cu) => {
-                  championUsers.push({ name: def.name, cuId: cu.id });
-                })
-            )
-        );
-      }
-      return chain.then(() => ({ adminData, ownerData, allianceId, ownerAccId, championUsers }));
+      return cy
+        .apiLoadChampions(
+          adminData.access_token,
+          champDefs.map((d) => ({ name: d.name, cls: d.cls, is_ascendable: d.options?.is_ascendable }))
+        )
+        .then((champMap) => {
+          champDefs.forEach((def) => {
+            cy.apiAddChampionToRoster(
+              ownerData.access_token,
+              ownerAccId,
+              champMap[def.name].id,
+              def.rarity,
+              {
+                signature: def.options?.signature ?? 0,
+                is_preferred_attacker: def.options?.is_preferred_attacker ?? false,
+                ascension: def.options?.ascension ?? 0,
+              }
+            ).then((cu) => {
+              championUsers.push({ name: def.name, cuId: cu.id });
+            });
+          });
+        })
+        .then(() => ({ adminData, ownerData, allianceId, ownerAccId, championUsers }));
     }
   );
 }
@@ -811,26 +847,37 @@ export function setupAttackerScenario(prefix: string): Cypress.Chainable<{
       const ownerAccId = users[ownerToken].account_id!;
       const memberAccId = users[memberToken].account_id!;
 
-      return cy.apiCreateWar(ownerData.access_token, allianceId, 'AttackerEnemy')
-        .then((war) =>
-          cy.apiLoadChampion(adminAT, 'Iron Man', 'Tech').then((champs) =>
-            cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 1, 10, champs[0].id, 7, 3, 0)
-              .then(() => war.id)
-          )
-        )
-        .then((warId) =>
-          cy.apiLoadChampion(adminAT, 'Wolverine', 'Mutant').then((champs) =>
-            cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3').then((cu) => ({
-              adminToken: adminAT,
-              ownerData,
-              memberData,
+      return cy
+        .apiLoadChampions(adminAT, [
+          { name: 'Iron Man', cls: 'Tech' },
+          { name: 'Wolverine', cls: 'Mutant' },
+        ])
+        .then((champMap) =>
+          cy.apiCreateWar(ownerData.access_token, allianceId, 'AttackerEnemy').then((war) => {
+            cy.apiPlaceWarDefender(
+              ownerData.access_token,
               allianceId,
-              ownerAccId,
-              memberAccId,
-              warId,
-              championUserId: cu.id,
-            }))
-          )
+              war.id,
+              1,
+              10,
+              champMap['Iron Man'].id,
+              7,
+              3,
+              0
+            );
+            return cy
+              .apiAddChampionToRoster(memberData.access_token, memberAccId, champMap['Wolverine'].id, '7r3')
+              .then((cu) => ({
+                adminToken: adminAT,
+                ownerData,
+                memberData,
+                allianceId,
+                ownerAccId,
+                memberAccId,
+                warId: war.id,
+                championUserId: cu.id,
+              }));
+          })
         );
     });
 }
