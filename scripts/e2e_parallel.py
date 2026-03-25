@@ -84,6 +84,7 @@ NPM = OS.npm
 NPX = OS.npx
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[mKHFABCDJG]")
 
+
 def worker_log_dir(worker: int) -> Path:
     return FRONT_DIR / "cypress" / "results" / "workers" / f"worker-{worker}"
 
@@ -507,14 +508,15 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     log_dir.mkdir(parents=True, exist_ok=True)
     cypress_log = log_dir / "cypress.log"
 
-    specs = ",".join(str(s) for s in specs)
+    spec_count = len(specs)
+    spec_arg = ",".join(str(s) for s in specs)
 
     cmd = [
         NPX,
         "cypress",
         "run",
         "--spec",
-        specs,
+        spec_arg,
         "--env",
         f"backendUrl=http://localhost:{api_port}",
         "--config",
@@ -524,7 +526,7 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
             f"videosFolder={videos_path}"
         ),
     ]
-    log(f"Worker {worker}: launching Cypress ({len(specs)} spec(s))...")
+    log(f"Worker {worker}: launching Cypress ({spec_count} spec(s))...")
 
     cmd = OS.cypress_cmd(cmd)
     proc = subprocess.Popen(
@@ -594,6 +596,15 @@ def resolve_spec_paths(raw_specs: str) -> set[Path]:
     return resolved_specs
 
 
+def kill_probably_used_ports(worker_number: int) -> None:
+    ports_to_free = [
+        *[BASE_API_PORT + i for i in range(worker_number)],
+        *[BASE_FRONT_PORT + i for i in range(worker_number)],
+    ]
+    log(f"Freeing ports: {ports_to_free}")
+    kill_ports(ports_to_free)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run Mawster E2E tests in parallel.")
     parser.add_argument(
@@ -634,12 +645,7 @@ def main() -> None:
     start_time = time.time()
     log(f"Starting E2E parallel run with {worker_number} worker(s)...")
 
-    ports_to_free = [
-        *[BASE_API_PORT + i for i in range(worker_number)],
-        *[BASE_FRONT_PORT + i for i in range(worker_number)],
-    ]
-    log(f"Freeing ports: {ports_to_free}")
-    kill_ports(ports_to_free)
+    kill_probably_used_ports(worker_number)
 
     check_mariadb_running()
 
