@@ -82,7 +82,7 @@ def _get_os_model() -> "IOsModel":
 OS = _get_os_model()
 NPM = OS.npm
 NPX = OS.npx
-
+ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[mKHFABCDJG]")
 
 def worker_log_dir(worker: int) -> Path:
     return FRONT_DIR / "cypress" / "results" / "workers" / f"worker-{worker}"
@@ -335,15 +335,15 @@ def pipe_output(
     try:
         fh = log_file.open("w", encoding="utf-8") if log_file else None
         try:
-            ansi_escape = re.compile(r"\x1b\[[0-9;]*[mKHFABCDJG]")
             for line in iter(stream.readline, b""):
                 decoded = line.decode(errors="replace").rstrip()
+                clean = ANSI_ESCAPE.sub("", decoded)
                 if not quiet:
                     print(f"{prefix} {decoded}")
                 if fh:
-                    fh.write(ansi_escape.sub("", decoded) + "\n")
+                    fh.write(clean + "\n")
                 if stats is not None:
-                    m = FINAL_SUMMARY_RE.search(decoded)
+                    m = FINAL_SUMMARY_RE.search(clean)
                     if m:
 
                         def _n(s: str) -> int:
