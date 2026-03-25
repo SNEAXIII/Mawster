@@ -114,9 +114,7 @@ describe('Roster – Detailed UI', () => {
         cy.contains('DoctorVoodoo added / updated').should('be.visible');
 
         // Verify sig 200 is displayed on the card
-        cy.getByCy('champion-card-DoctorVoodoo')
-          .find('[data-cy="champion-sig"]')
-          .should('contain', 'sig 200');
+        cy.getByCy('champion-card-DoctorVoodoo').find('[data-cy="champion-sig"]').should('contain', 'sig 200');
       });
     });
 
@@ -140,9 +138,7 @@ describe('Roster – Detailed UI', () => {
         cy.contains('Magik added / updated').should('be.visible');
 
         // Verify sig 150 on the card
-        cy.getByCy('champion-card-Magik')
-          .find('[data-cy="champion-sig"]')
-          .should('contain', 'sig 150');
+        cy.getByCy('champion-card-Magik').find('[data-cy="champion-sig"]').should('contain', 'sig 150');
       });
     });
 
@@ -200,10 +196,7 @@ describe('Roster – Detailed UI', () => {
         cy.contains('AscHero added / updated').should('be.visible');
 
         // Verify ascension badge "· A1" is shown on the card
-        cy.getByCy('champion-card-AscHero')
-          .find('[data-cy="champion-ascension"]')
-          .should('exist')
-          .and('contain', 'A1');
+        cy.getByCy('champion-card-AscHero').find('[data-cy="champion-ascension"]').should('exist').and('contain', 'A1');
       });
     });
 
@@ -276,9 +269,7 @@ describe('Roster – Detailed UI', () => {
           cy.getByCy('champion-ascension').should('not.exist');
 
           // Click ascend button (FiStar) on the card via title attribute
-          cy.getByCy('champion-card-AscCardHero')
-            .find('[title="Ascension"]')
-            .click({ force: true });
+          cy.getByCy('champion-card-AscCardHero').find('[title="Ascension"]').click({ force: true });
 
           // Confirm ascension in dialog
           cy.get('[role="alertdialog"]').should('be.visible');
@@ -337,16 +328,10 @@ describe('Roster – Detailed UI', () => {
           .and('contain', '⚔');
 
         // Signature 200
-        cy.getByCy('champion-card-Omega')
-          .find('[data-cy="champion-sig"]')
-          .should('exist')
-          .and('contain', 'sig 200');
+        cy.getByCy('champion-card-Omega').find('[data-cy="champion-sig"]').should('exist').and('contain', 'sig 200');
 
         // Ascension A2
-        cy.getByCy('champion-card-Omega')
-          .find('[data-cy="champion-ascension"]')
-          .should('exist')
-          .and('contain', 'A2');
+        cy.getByCy('champion-card-Omega').find('[data-cy="champion-ascension"]').should('exist').and('contain', 'A2');
       });
     });
   });
@@ -390,46 +375,40 @@ describe('Roster – Detailed UI', () => {
     });
 
     it('editing and re-submitting updates the champion in the roster', () => {
-      setupRosterUser('ui-edit-update', 'EditUpdPlayer').then(
-        ({ adminData, userData, accountId }) => {
-          cy.apiLoadChampion(adminData.access_token, 'EditUpd', 'Skill', {
-            is_ascendable: true,
-          }).then((champs) => {
-            cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r2', {
-              signature: 50,
-              ascension: 0,
-            });
-
-            cy.uiLogin(userData.login);
-            cy.navTo('roster');
-
-            // Click edit
-            cy.getByCy('champion-edit').first().click({ force: true });
-
-            // Change rarity to 7r4
-            cy.getByCy('rarity-7r4').click();
-
-            // Change signature to 200
-            cy.getByCy('sig-input').clear().type('200');
-
-            // Set ascension to A1
-            cy.getByCy('ascension-1').click();
-
-            // Submit update
-            cy.getByCy('champion-submit').click();
-            cy.contains('EditUpd added / updated').should('be.visible');
-
-            // Verify updated values on the card
-            cy.getByCy('rarity-group-7r4').contains('EditUpd').should('be.visible');
-            cy.getByCy('champion-card-EditUpd')
-              .find('[data-cy="champion-sig"]')
-              .should('contain', 'sig 200');
-            cy.getByCy('champion-card-EditUpd')
-              .find('[data-cy="champion-ascension"]')
-              .should('contain', 'A1');
+      setupRosterUser('ui-edit-update', 'EditUpdPlayer').then(({ adminData, userData, accountId }) => {
+        cy.apiLoadChampion(adminData.access_token, 'EditUpd', 'Skill', {
+          is_ascendable: true,
+        }).then((champs) => {
+          cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r2', {
+            signature: 50,
+            ascension: 0,
           });
-        }
-      );
+
+          cy.uiLogin(userData.login);
+          cy.navTo('roster');
+
+          // Click edit
+          cy.getByCy('champion-edit').first().click({ force: true });
+
+          // Change rarity to 7r4
+          cy.getByCy('rarity-7r4').click();
+
+          // Change signature to 200
+          cy.getByCy('sig-input').clear().type('200');
+
+          // Set ascension to A1
+          cy.getByCy('ascension-1').click();
+
+          // Submit update
+          cy.getByCy('champion-submit').click();
+          cy.contains('EditUpd added / updated').should('be.visible');
+
+          // Verify updated values on the card
+          cy.getByCy('rarity-group-7r4').contains('EditUpd').should('be.visible');
+          cy.getByCy('champion-card-EditUpd').find('[data-cy="champion-sig"]').should('contain', 'sig 200');
+          cy.getByCy('champion-card-EditUpd').find('[data-cy="champion-ascension"]').should('contain', 'A1');
+        });
+      });
     });
   });
 
@@ -498,9 +477,7 @@ describe('Roster – Detailed UI', () => {
         cy.get('[data-cy="champion-delete"]').should('have.length', 1);
         // Should now be in the 7r2 group
         cy.getByCy('rarity-group-7r2').contains('Kingpin').should('be.visible');
-        cy.getByCy('champion-card-Kingpin')
-          .find('[data-cy="champion-sig"]')
-          .should('contain', 'sig 200');
+        cy.getByCy('champion-card-Kingpin').find('[data-cy="champion-sig"]').should('contain', 'sig 200');
       });
     });
   });

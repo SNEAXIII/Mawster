@@ -1,8 +1,4 @@
-import {
-  setupDefenseScenario,
-  setupDefenseOwnerAndMember,
-  type UserSetupData,
-} from '../../support/e2e';
+import { setupDefenseScenario, setupDefenseOwnerAndMember, type UserSetupData } from '../../support/e2e';
 
 describe('Defense – Placement via UI', () => {
   beforeEach(() => {
@@ -39,11 +35,56 @@ describe('Defense – Placement via UI', () => {
 
   (
     [
-      { prefix: 'def-pl-label', pseudo: 'LabelPlyr', tag: 'LB', node: 1,  expected: '7★R3·200',    champ: { name: 'Spider-Man',  cls: 'Cosmic',  rarity: '7r3', options: { signature: 200 } } },
-      { prefix: 'def-pl-asc',   pseudo: 'AscPlyr',   tag: 'AS', node: 10, expected: '7★R5·A1·200', champ: { name: 'Doctor Doom', cls: 'Mystic',  rarity: '7r5', options: { signature: 200, ascension: 1, is_ascendable: true } } },
-      { prefix: 'def-pl-asc2',  pseudo: 'Asc2Plyr',  tag: 'A2', node: 5,  expected: '7★R5·A2·200', champ: { name: 'Blade',       cls: 'Skill',   rarity: '7r5', options: { signature: 200, ascension: 2, is_ascendable: true } } },
-      { prefix: 'def-pl-zsig',  pseudo: 'ZSigPlyr',  tag: 'ZS', node: 3,  expected: '7★R4·0',      champ: { name: 'Wolverine',   cls: 'Mutant',  rarity: '7r4', options: { signature: 0 } } },
-      { prefix: 'def-pl-6star', pseudo: 'SixPlyr',   tag: '6S', node: 7,  expected: '6★R5·20',     champ: { name: 'Hulk',        cls: 'Science', rarity: '6r5', options: { signature: 20 } } },
+      {
+        prefix: 'def-pl-label',
+        pseudo: 'LabelPlyr',
+        tag: 'LB',
+        node: 1,
+        expected: '7★R3·200',
+        champ: { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3', options: { signature: 200 } },
+      },
+      {
+        prefix: 'def-pl-asc',
+        pseudo: 'AscPlyr',
+        tag: 'AS',
+        node: 10,
+        expected: '7★R5·A1·200',
+        champ: {
+          name: 'Doctor Doom',
+          cls: 'Mystic',
+          rarity: '7r5',
+          options: { signature: 200, ascension: 1, is_ascendable: true },
+        },
+      },
+      {
+        prefix: 'def-pl-asc2',
+        pseudo: 'Asc2Plyr',
+        tag: 'A2',
+        node: 5,
+        expected: '7★R5·A2·200',
+        champ: {
+          name: 'Blade',
+          cls: 'Skill',
+          rarity: '7r5',
+          options: { signature: 200, ascension: 2, is_ascendable: true },
+        },
+      },
+      {
+        prefix: 'def-pl-zsig',
+        pseudo: 'ZSigPlyr',
+        tag: 'ZS',
+        node: 3,
+        expected: '7★R4·0',
+        champ: { name: 'Wolverine', cls: 'Mutant', rarity: '7r4', options: { signature: 0 } },
+      },
+      {
+        prefix: 'def-pl-6star',
+        pseudo: 'SixPlyr',
+        tag: '6S',
+        node: 7,
+        expected: '6★R5·20',
+        champ: { name: 'Hulk', cls: 'Science', rarity: '6r5', options: { signature: 20 } },
+      },
     ] as const
   ).forEach(({ prefix, pseudo, tag, node, expected, champ }) => {
     it(`shows correct rarity label ${expected} on war map and side panel`, () => {
@@ -66,7 +107,7 @@ describe('Defense – Placement via UI', () => {
 
   it('preferred attacker shows ⚔ prefix, non-preferred does not', () => {
     setupDefenseScenario('def-pl-pref', 'PrefPlyr', 'PR', [
-      { name: 'Iron Man',  cls: 'Tech',   rarity: '7r5', options: { signature: 200, is_preferred_attacker: true } },
+      { name: 'Iron Man', cls: 'Tech', rarity: '7r5', options: { signature: 200, is_preferred_attacker: true } },
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r3', options: { signature: 100, is_preferred_attacker: false } },
     ]).then(({ ownerData }) => {
       cy.uiLogin(ownerData.login);
@@ -92,7 +133,7 @@ describe('Defense – Placement via UI', () => {
   it('champion selector shows ⚔ marker for preferred attacker champions', () => {
     setupDefenseScenario('def-pl-sel-pref', 'SelPrefPlyr', 'SP', [
       { name: 'Captain America', cls: 'Science', rarity: '7r3', options: { is_preferred_attacker: true } },
-      { name: 'Wolverine',       cls: 'Mutant',  rarity: '7r3', options: { is_preferred_attacker: false } },
+      { name: 'Wolverine', cls: 'Mutant', rarity: '7r3', options: { is_preferred_attacker: false } },
     ]).then(({ ownerData }) => {
       cy.uiLogin(ownerData.login);
       cy.navTo('defense');
@@ -111,9 +152,14 @@ describe('Defense – Placement via UI', () => {
 
   it('places 3 champions sequentially via UI and verifies all labels and counts', () => {
     setupDefenseScenario('def-pl-seq', 'SeqPlyr', 'SQ', [
-      { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r5', options: { signature: 200, is_preferred_attacker: true, ascension: 1, is_ascendable: true } },
-      { name: 'Wolverine',  cls: 'Mutant', rarity: '7r4', options: { signature: 100 } },
-      { name: 'Iron Man',   cls: 'Tech',   rarity: '7r3', options: { signature: 20 } },
+      {
+        name: 'Spider-Man',
+        cls: 'Cosmic',
+        rarity: '7r5',
+        options: { signature: 200, is_preferred_attacker: true, ascension: 1, is_ascendable: true },
+      },
+      { name: 'Wolverine', cls: 'Mutant', rarity: '7r4', options: { signature: 100 } },
+      { name: 'Iron Man', cls: 'Tech', rarity: '7r3', options: { signature: 20 } },
     ]).then(({ ownerData }) => {
       cy.uiLogin(ownerData.login);
       cy.navTo('defense');
@@ -149,11 +195,16 @@ describe('Defense – Placement via UI', () => {
 
   it('places 5 champions via UI and counter shows 5/5', () => {
     setupDefenseScenario('def-pl-five', 'FivePlyr', 'FV', [
-      { name: 'Spider-Man',  cls: 'Cosmic',  rarity: '7r5', options: { signature: 200 } },
-      { name: 'Wolverine',   cls: 'Mutant',  rarity: '7r4', options: { signature: 100 } },
-      { name: 'Iron Man',    cls: 'Tech',    rarity: '7r3', options: { signature: 20 } },
-      { name: 'Doctor Doom', cls: 'Mystic',  rarity: '7r5', options: { signature: 200, ascension: 2, is_ascendable: true } },
-      { name: 'Blade',       cls: 'Skill',   rarity: '7r3', options: { signature: 0 } },
+      { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r5', options: { signature: 200 } },
+      { name: 'Wolverine', cls: 'Mutant', rarity: '7r4', options: { signature: 100 } },
+      { name: 'Iron Man', cls: 'Tech', rarity: '7r3', options: { signature: 20 } },
+      {
+        name: 'Doctor Doom',
+        cls: 'Mystic',
+        rarity: '7r5',
+        options: { signature: 200, ascension: 2, is_ascendable: true },
+      },
+      { name: 'Blade', cls: 'Skill', rarity: '7r3', options: { signature: 0 } },
     ]).then(({ ownerData }) => {
       cy.uiLogin(ownerData.login);
       cy.navTo('defense');
@@ -193,8 +244,8 @@ describe('Defense – Placement via UI', () => {
   it('search filter in champion selector filters champions by name', () => {
     setupDefenseScenario('def-pl-search', 'SearchPlyr', 'SR', [
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3' },
-      { name: 'Wolverine',  cls: 'Mutant', rarity: '7r3' },
-      { name: 'Iron Man',   cls: 'Tech',   rarity: '7r3' },
+      { name: 'Wolverine', cls: 'Mutant', rarity: '7r3' },
+      { name: 'Iron Man', cls: 'Tech', rarity: '7r3' },
     ]).then(({ ownerData }) => {
       cy.uiLogin(ownerData.login);
       cy.navTo('defense');
@@ -216,7 +267,7 @@ describe('Defense – Placement via UI', () => {
   it('search filter by champion class', () => {
     setupDefenseScenario('def-pl-class-search', 'ClsSearchPlyr', 'CS', [
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3' },
-      { name: 'Wolverine',  cls: 'Mutant', rarity: '7r3' },
+      { name: 'Wolverine', cls: 'Mutant', rarity: '7r3' },
     ]).then(({ ownerData }) => {
       cy.uiLogin(ownerData.login);
       cy.navTo('defense');
@@ -235,7 +286,7 @@ describe('Defense – Placement via UI', () => {
   it('champion selector shows rarity label and ascension badge for each champion card', () => {
     setupDefenseScenario('def-pl-sel-label', 'SelLabelPlyr', 'SL', [
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r5', options: { ascension: 1, is_ascendable: true } },
-      { name: 'Wolverine',  cls: 'Mutant', rarity: '7r3' },
+      { name: 'Wolverine', cls: 'Mutant', rarity: '7r3' },
     ]).then(({ ownerData }) => {
       cy.uiLogin(ownerData.login);
       cy.navTo('defense');
@@ -254,7 +305,7 @@ describe('Defense – Placement via UI', () => {
   it('placed champion is excluded from the selector for second placement', () => {
     setupDefenseScenario('def-pl-excl', 'ExclPlyr', 'EX', [
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3', options: { signature: 200 } },
-      { name: 'Wolverine',  cls: 'Mutant', rarity: '7r3', options: { signature: 100 } },
+      { name: 'Wolverine', cls: 'Mutant', rarity: '7r3', options: { signature: 100 } },
     ]).then(({ ownerData }) => {
       cy.uiLogin(ownerData.login);
       cy.navTo('defense');
@@ -277,7 +328,7 @@ describe('Defense – Placement via UI', () => {
   it('clicking an occupied node opens selector and replaces the defender', () => {
     setupDefenseScenario('def-pl-replace', 'ReplPlyr', 'RP', [
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3', options: { signature: 200 } },
-      { name: 'Wolverine',  cls: 'Mutant', rarity: '7r4', options: { signature: 100 } },
+      { name: 'Wolverine', cls: 'Mutant', rarity: '7r4', options: { signature: 100 } },
     ]).then(({ ownerData }) => {
       cy.uiLogin(ownerData.login);
       cy.navTo('defense');
@@ -314,13 +365,21 @@ describe('Defense – Placement via UI', () => {
         cy.getByCy('champion-card-Spider-Man').click();
         cy.contains('Select Player').should('be.visible');
 
-        cy.getByCy('owner-row-MultiOwn').should('be.visible').and('contain', '7★R5').and('contain', 'sig 200').and('contain', '0/5');
-        cy.getByCy('owner-row-MultiMem').should('be.visible').and('contain', '7★R3').and('contain', 'sig 100').and('contain', '0/5');
+        cy.getByCy('owner-row-MultiOwn')
+          .should('be.visible')
+          .and('contain', '7★R5')
+          .and('contain', 'sig 200')
+          .and('contain', '0/5');
+        cy.getByCy('owner-row-MultiMem')
+          .should('be.visible')
+          .and('contain', '7★R3')
+          .and('contain', 'sig 100')
+          .and('contain', '0/5');
 
         cy.getByCy('owner-row-MultiOwn').click();
         cy.contains('Spider-Man placed on node #1').should('be.visible');
         cy.getByCy('defender-count-MultiOwn').should('contain', '1/5');
-      }
+      },
     );
   });
 
@@ -328,8 +387,14 @@ describe('Defense – Placement via UI', () => {
     setupDefenseOwnerAndMember('def-pl-opref', 'OPrefOwn', 'OPrefMem', 'OPrefAll', 'OP').then(
       ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', { signature: 200, is_preferred_attacker: true });
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', { signature: 50, is_preferred_attacker: false });
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', {
+            signature: 200,
+            is_preferred_attacker: true,
+          });
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
+            signature: 50,
+            is_preferred_attacker: false,
+          });
         });
 
         cy.uiLogin(ownerData.login);
@@ -341,7 +406,7 @@ describe('Defense – Placement via UI', () => {
 
         cy.getByCy('owner-row-OPrefOwn').should('contain', '⚔').and('contain', '7★');
         cy.getByCy('owner-row-OPrefMem').should('not.contain', '⚔');
-      }
+      },
     );
   });
 
@@ -349,8 +414,14 @@ describe('Defense – Placement via UI', () => {
     setupDefenseOwnerAndMember('def-pl-oasc', 'OAscOwn', 'OAscMem', 'OAscAll', 'OA').then(
       ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Doctor Doom', 'Mystic', { is_ascendable: true }).then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', { signature: 200, ascension: 2 });
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r5', { signature: 100, ascension: 0 });
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', {
+            signature: 200,
+            ascension: 2,
+          });
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r5', {
+            signature: 100,
+            ascension: 0,
+          });
         });
 
         cy.uiLogin(ownerData.login);
@@ -362,7 +433,7 @@ describe('Defense – Placement via UI', () => {
 
         cy.getByCy('owner-row-OAscOwn').should('contain', 'A2').and('contain', 'sig 200');
         cy.getByCy('owner-row-OAscMem').should('not.contain', '· A').and('contain', 'sig 100');
-      }
+      },
     );
   });
 
@@ -374,10 +445,10 @@ describe('Defense – Placement via UI', () => {
     setupDefenseOwnerAndMember('def-pl-iso', 'IsoOwner', 'IsoMember', 'IsoAll', 'IS').then(
       ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', { signature: 200 })
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', { signature: 200 }),
         );
         cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) =>
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r4', { signature: 100 })
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r4', { signature: 100 }),
         );
 
         cy.uiLogin(ownerData.login);
@@ -397,7 +468,7 @@ describe('Defense – Placement via UI', () => {
 
         cy.getByCy('defender-count-IsoOwner').should('contain', '1/5');
         cy.getByCy('defender-count-IsoMember').should('contain', '1/5');
-      }
+      },
     );
   });
 

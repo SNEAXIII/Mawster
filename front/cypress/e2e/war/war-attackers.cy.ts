@@ -23,47 +23,41 @@ describe('War – Attackers mode', () => {
   // ── Assign attacker via API and check sidebar ─────────────────────────────
 
   it('assigned attacker appears in the attacker panel', () => {
-    setupAttackerScenario('atk-sidebar').then(
-      ({ ownerData, memberData, allianceId, warId, championUserId }) => {
-        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-        goToAttackersMode(ownerData.login);
-        cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
-      }
-    );
+    setupAttackerScenario('atk-sidebar').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      goToAttackersMode(ownerData.login);
+      cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
+    });
   });
 
   // ── KO increment / decrement ──────────────────────────────────────────────
 
   it('member can increment and decrement KO count', () => {
-    setupAttackerScenario('atk-ko').then(
-      ({ memberData, ownerData, allianceId, warId, championUserId }) => {
-        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-        goToAttackersMode(ownerData.login);
+    setupAttackerScenario('atk-ko').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      goToAttackersMode(ownerData.login);
 
-        cy.getByCy('ko-value-node-10').should('have.text', '0');
-        cy.getByCy('ko-inc-node-10').click();
-        cy.getByCy('ko-value-node-10').should('have.text', '1');
-        cy.getByCy('ko-inc-node-10').click();
-        cy.getByCy('ko-value-node-10').should('have.text', '2');
-        cy.getByCy('ko-dec-node-10').click();
-        cy.getByCy('ko-value-node-10').should('have.text', '1');
-      }
-    );
+      cy.getByCy('ko-value-node-10').should('have.text', '0');
+      cy.getByCy('ko-inc-node-10').click();
+      cy.getByCy('ko-value-node-10').should('have.text', '1');
+      cy.getByCy('ko-inc-node-10').click();
+      cy.getByCy('ko-value-node-10').should('have.text', '2');
+      cy.getByCy('ko-dec-node-10').click();
+      cy.getByCy('ko-value-node-10').should('have.text', '1');
+    });
   });
 
   // ── Remove attacker ───────────────────────────────────────────────────────
 
   it('member can remove an assigned attacker', () => {
-    setupAttackerScenario('atk-remove').then(
-      ({ memberData, ownerData, allianceId, warId, championUserId }) => {
-        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-        goToAttackersMode(ownerData.login);
+    setupAttackerScenario('atk-remove').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      goToAttackersMode(ownerData.login);
 
-        cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
-        cy.getByCy('remove-attacker-node-10').click();
-        cy.getByCy('attacker-entry-node-10').should('not.exist');
-      }
-    );
+      cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
+      cy.getByCy('remove-attacker-node-10').click();
+      cy.getByCy('attacker-entry-node-10').should('not.exist');
+    });
   });
 
   // ── Assign via UI (click node in Attackers mode) ──────────────────────────
@@ -93,12 +87,10 @@ describe('War – Attackers mode', () => {
   // ── x/3 counter visible in panel ─────────────────────────────────────────
 
   it('attacker panel shows x/3 counter per member', () => {
-    setupAttackerScenario('atk-count').then(
-      ({ memberData, ownerData, allianceId, warId, championUserId }) => {
-        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-        goToAttackersMode(ownerData.login);
-        cy.contains('1/3').scrollIntoView().should('be.visible');
-      }
-    );
+    setupAttackerScenario('atk-count').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      goToAttackersMode(ownerData.login);
+      cy.contains('1/3').scrollIntoView().should('be.visible');
+    });
   });
 });

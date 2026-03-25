@@ -23,20 +23,13 @@ describe('Defense – Overflow & Error Cases', () => {
           const cls = champClasses[i];
           chain = chain.then(() => {
             return cy.apiLoadChampion(adminData.access_token, name, cls).then((champs) => {
-              return cy
-                .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-                .then((cu) => {
-                  ownerCUs.push(cu.id);
-                  // Also add the same champion to memberAcc for the 6th one
-                  if (i === 5) {
-                    return cy.apiAddChampionToRoster(
-                      memberData.access_token,
-                      memberAccId,
-                      champs[0].id,
-                      '7r3'
-                    );
-                  }
-                });
+              return cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3').then((cu) => {
+                ownerCUs.push(cu.id);
+                // Also add the same champion to memberAcc for the 6th one
+                if (i === 5) {
+                  return cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3');
+                }
+              });
             });
           });
         }
@@ -44,14 +37,7 @@ describe('Defense – Overflow & Error Cases', () => {
         // Place 5 champions for owner via API
         chain.then(() => {
           for (let i = 0; i < 5; i++) {
-            cy.apiPlaceDefender(
-              ownerData.access_token,
-              allianceId,
-              1,
-              i + 1,
-              ownerCUs[i],
-              ownerAccId
-            );
+            cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, i + 1, ownerCUs[i], ownerAccId);
           }
 
           cy.uiLogin(ownerData.login);
@@ -74,7 +60,7 @@ describe('Defense – Overflow & Error Cases', () => {
           // Owner still has 5/5
           cy.getByCy('defender-count-FullOwn').scrollIntoView().should('contain', '5/5');
         });
-      }
+      },
     );
   });
 
@@ -94,17 +80,8 @@ describe('Defense – Overflow & Error Cases', () => {
               .then((champs) =>
                 cy
                   .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-                  .then((cu) =>
-                    cy.apiPlaceDefender(
-                      ownerData.access_token,
-                      allianceId,
-                      1,
-                      i + 1,
-                      cu.id,
-                      ownerAccId
-                    )
-                  )
-              )
+                  .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, i + 1, cu.id, ownerAccId)),
+              ),
           );
         }
 
@@ -113,11 +90,9 @@ describe('Defense – Overflow & Error Cases', () => {
           cy.navTo('defense');
 
           // Counter should be red (text-red-400 CSS class)
-          cy.getByCy('defender-count-RedCntPlyr')
-            .should('contain', '5/5')
-            .and('have.class', 'text-red-400');
+          cy.getByCy('defender-count-RedCntPlyr').should('contain', '5/5').and('have.class', 'text-red-400');
         });
-      }
+      },
     );
   });
 
@@ -127,18 +102,14 @@ describe('Defense – Overflow & Error Cases', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
         cy.uiLogin(ownerData.login);
         cy.navTo('defense');
 
-        cy.getByCy('defender-count-NormCntPlyr')
-          .should('contain', '1/5')
-          .and('not.have.class', 'text-red-400');
-      }
+        cy.getByCy('defender-count-NormCntPlyr').should('contain', '1/5').and('not.have.class', 'text-red-400');
+      },
     );
   });
 
@@ -168,9 +139,7 @@ describe('Defense – Overflow & Error Cases', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
         cy.uiLogin(ownerData.login);
@@ -179,7 +148,7 @@ describe('Defense – Overflow & Error Cases', () => {
         // Open selector for a different node — only champion is already placed
         cy.getByCy('war-node-2').scrollIntoView().click({ force: true });
         cy.contains('No champions available').should('be.visible');
-      }
+      },
     );
   });
 
@@ -192,12 +161,7 @@ describe('Defense – Overflow & Error Cases', () => {
       ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-          return cy.apiAddChampionToRoster(
-            memberData.access_token,
-            memberAccId,
-            champs[0].id,
-            '7r4'
-          );
+          return cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r4');
         });
 
         cy.uiLogin(ownerData.login);
@@ -214,7 +178,7 @@ describe('Defense – Overflow & Error Cases', () => {
         // Should be back on champion grid
         cy.contains('Select Champion').should('be.visible');
         cy.getByCy('champion-card-Spider-Man').should('be.visible');
-      }
+      },
     );
   });
 
@@ -223,27 +187,25 @@ describe('Defense – Overflow & Error Cases', () => {
   // =========================================================================
 
   it('closing the selector dialog without selecting does not place anything', () => {
-    setupDefenseOwner('def-ov-close', 'ClosePlyr', 'CloseAll', 'CL').then(
-      ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-        );
+    setupDefenseOwner('def-ov-close', 'ClosePlyr', 'CloseAll', 'CL').then(({ adminData, ownerData, ownerAccId }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
+      );
 
-        cy.uiLogin(ownerData.login);
-        cy.navTo('defense');
+      cy.uiLogin(ownerData.login);
+      cy.navTo('defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
-        cy.contains('Select Champion').should('be.visible');
+      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      cy.contains('Select Champion').should('be.visible');
 
-        // Close the dialog by pressing Escape
-        cy.get('body').type('{esc}');
-        cy.contains('Select Champion').should('not.exist');
+      // Close the dialog by pressing Escape
+      cy.get('body').type('{esc}');
+      cy.contains('Select Champion').should('not.exist');
 
-        // Node should still be empty
-        cy.getByCy('war-node-1').should('contain', '+');
-        cy.getByCy('defender-count-ClosePlyr').should('contain', '0/5');
-      }
-    );
+      // Node should still be empty
+      cy.getByCy('war-node-1').should('contain', '+');
+      cy.getByCy('defender-count-ClosePlyr').should('contain', '0/5');
+    });
   });
 
   // =========================================================================
@@ -251,26 +213,24 @@ describe('Defense – Overflow & Error Cases', () => {
   // =========================================================================
 
   it('single-owner champion places directly without showing owner picker', () => {
-    setupDefenseOwner('def-ov-direct', 'DirectPlyr', 'DirectAll', 'DR').then(
-      ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', {
-            signature: 200,
-          })
-        );
+    setupDefenseOwner('def-ov-direct', 'DirectPlyr', 'DirectAll', 'DR').then(({ adminData, ownerData, ownerAccId }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', {
+          signature: 200,
+        }),
+      );
 
-        cy.uiLogin(ownerData.login);
-        cy.navTo('defense');
+      cy.uiLogin(ownerData.login);
+      cy.navTo('defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
-        cy.getByCy('champion-card-Spider-Man').click();
+      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      cy.getByCy('champion-card-Spider-Man').click();
 
-        // Should directly place without showing "Select Player"
-        cy.contains('Select Player').should('not.exist');
-        cy.contains('Spider-Man placed on node #1').should('be.visible');
-        cy.getByCy('defender-count-DirectPlyr').should('contain', '1/5');
-      }
-    );
+      // Should directly place without showing "Select Player"
+      cy.contains('Select Player').should('not.exist');
+      cy.contains('Spider-Man placed on node #1').should('be.visible');
+      cy.getByCy('defender-count-DirectPlyr').should('contain', '1/5');
+    });
   });
 
   // =========================================================================
@@ -282,15 +242,10 @@ describe('Defense – Overflow & Error Cases', () => {
       ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-          return cy.apiAddChampionToRoster(
-            memberData.access_token,
-            memberAccId,
-            champs[0].id,
-            '7r4'
-          );
+          return cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r4');
         });
         cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) =>
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
         );
 
         cy.uiLogin(ownerData.login);
@@ -304,7 +259,7 @@ describe('Defense – Overflow & Error Cases', () => {
         // Wolverine has 1 owner → shows pseudo and count
         cy.getByCy('champion-card-Wolverine').should('contain', 'CntOwn');
         cy.getByCy('champion-card-Wolverine').should('contain', '0/5');
-      }
+      },
     );
   });
 });

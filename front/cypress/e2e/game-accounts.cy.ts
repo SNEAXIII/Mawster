@@ -78,9 +78,7 @@ describe('Game Accounts – UI', () => {
       cy.navTo('profile');
       cy.contains('OldPseudo').scrollIntoView().should('be.visible');
 
-      cy.getByCy('account-row-OldPseudo')
-        .find('[data-cy="account-edit-btn-0"]')
-        .click({ force: true });
+      cy.getByCy('account-row-OldPseudo').find('[data-cy="account-edit-btn-0"]').click({ force: true });
 
       cy.get('input[maxlength="16"]').clear().type('NewPseudo');
       cy.getByCy('account-edit-confirm').first().click({ force: true });
@@ -102,9 +100,7 @@ describe('Game Accounts – UI', () => {
       cy.navTo('profile');
       cy.contains('ToDelete').scrollIntoView().should('be.visible');
 
-      cy.getByCy('account-row-ToDelete')
-        .find('[data-cy="account-delete-btn"]')
-        .click({ force: true });
+      cy.getByCy('account-row-ToDelete').find('[data-cy="account-delete-btn"]').click({ force: true });
 
       cy.get('[role="alertdialog"]').should('be.visible');
       cy.get('[role="alertdialog"]').contains('button', 'Delete').click();
@@ -125,25 +121,13 @@ describe('Game Accounts – UI', () => {
 
       cy.uiLogin(login);
       cy.navTo('profile');
-      cy.getByCy('account-row-Account1')
-        .scrollIntoView()
-        .find('[data-cy="account-primary-badge"]')
-        .should('exist');
-      cy.getByCy('account-row-Account2')
-        .scrollIntoView()
-        .find('[data-cy="account-primary-badge"]')
-        .should('not.exist');
+      cy.getByCy('account-row-Account1').scrollIntoView().find('[data-cy="account-primary-badge"]').should('exist');
+      cy.getByCy('account-row-Account2').scrollIntoView().find('[data-cy="account-primary-badge"]').should('not.exist');
 
       cy.getByCy('account-star-btn-1').click();
 
-      cy.getByCy('account-row-Account2')
-        .scrollIntoView()
-        .find('[data-cy="account-primary-badge"]')
-        .should('exist');
-      cy.getByCy('account-row-Account1')
-        .scrollIntoView()
-        .find('[data-cy="account-primary-badge"]')
-        .should('not.exist');
+      cy.getByCy('account-row-Account2').scrollIntoView().find('[data-cy="account-primary-badge"]').should('exist');
+      cy.getByCy('account-row-Account1').scrollIntoView().find('[data-cy="account-primary-badge"]').should('not.exist');
     });
   });
 
@@ -160,10 +144,7 @@ describe('Game Accounts – UI', () => {
 
       cy.contains('SecondAccount').scrollIntoView().should('be.visible');
 
-      cy.getByCy('account-row-MainAccount')
-        .scrollIntoView()
-        .find('[data-cy="account-primary-badge"]')
-        .should('exist');
+      cy.getByCy('account-row-MainAccount').scrollIntoView().find('[data-cy="account-primary-badge"]').should('exist');
       cy.getByCy('account-row-SecondAccount')
         .scrollIntoView()
         .find('[data-cy="account-primary-badge"]')
