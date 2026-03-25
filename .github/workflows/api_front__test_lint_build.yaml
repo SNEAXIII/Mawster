@@ -93,8 +93,8 @@ jobs:
         run: npm ci
 
       # ── MariaDB client (needed by e2e_parallel.py to create per-worker DBs) ──
-      - name: Install MariaDB client
-        run: sudo apt-get install -y mariadb-client
+      - name: Install dependencies
+        run: sudo apt-get install -y mariadb-client xvfb
 
       # ── Run Cypress ──
       - name: Run Cypress E2E tests

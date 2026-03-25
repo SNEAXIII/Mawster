@@ -10,7 +10,11 @@ Each worker N gets:
   - Frontend on port 3010+N (next start serving shared .next-e2e build)
   - Cypress instance with split=total,splitIndex=N
 """
-
+import urllib.request
+import urllib.error
+import shutil
+import json
+import socket
 import argparse
 import atexit
 import os
@@ -46,8 +50,8 @@ BASE_FRONT_PORT = 3010
 DB_PREFIX = "mawster_test_"
 MARIADB_HOST = "127.0.0.1"
 MARIADB_PORT = int(os.environ.get("MARIADB_PORT", "3307"))
-MARIADB_ROOT_PASSWORD = os.environ.get("MARIADB_ROOT_PASSWORD", "rootpassword")
-HEALTH_TIMEOUT = 120
+MARIADB_ROOT_PASSWORD = os.environ.get("MARIADB_ROOT_PASSWORD", "rootpassword")  # NOSONAR
+HEALTH_TIMEOUT = 20
 
 IS_WINDOWS = platform.system() == "Windows"
 NPM = "npm.cmd" if IS_WINDOWS else "npm"
@@ -82,7 +86,6 @@ def _run_sql(sql: str) -> subprocess.CompletedProcess:
 
 def check_mariadb_running() -> None:
     """Verify MariaDB is reachable on MARIADB_HOST:MARIADB_PORT."""
-    import socket
     log(f"Checking if MariaDB is reachable on {MARIADB_HOST}:{MARIADB_PORT}...")
     try:
         with socket.create_connection((MARIADB_HOST, MARIADB_PORT), timeout=5):
@@ -112,9 +115,6 @@ def create_db(worker: int) -> None:
 
 def wait_for_http(url: str, label: str, timeout: int = HEALTH_TIMEOUT) -> None:
     """Poll url until HTTP response received (any status code = server is up)."""
-    import urllib.request
-    import urllib.error
-
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
@@ -243,7 +243,6 @@ def build_merged_report(
     Reads per-worker cypress.log and backend.log, correlates failures with
     backend log lines captured between ===TEST_START=== / ===TEST_END=== markers.
     """
-    import json
 
     all_failures: list[dict] = []
 
@@ -458,12 +457,14 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     log_dir = worker_log_dir(worker)
     log_dir.mkdir(parents=True, exist_ok=True)
     cypress_log = log_dir / "cypress.log"
-    # Each worker gets a unique Xvfb display to avoid conflicts (:99, :100, ...)
-    cypress_env = {**os.environ, "DISPLAY": f":{99 + worker}"}
+    # Wrap with xvfb-run -a on Linux headless environments (CI).
+    # -a auto-selects a free display number, avoiding conflicts between workers.
+    # On machines with a real X server (local dev), xvfb-run is a no-op passthrough.
+    if not IS_WINDOWS and subprocess.run(["which", "xvfb-run"], capture_output=True).returncode == 0:
+        cmd = ["xvfb-run", "-a"] + cmd
     proc = subprocess.Popen(
         cmd,
         cwd=str(FRONT_DIR),
-        env=cypress_env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
@@ -625,7 +626,6 @@ def main() -> None:
                     except Exception:
                         pass
         # Remove the shared e2e build dir
-        import shutil
         next_dir = FRONT_DIR / ".next-e2e"
         if next_dir.exists():
             shutil.rmtree(next_dir, ignore_errors=True)
