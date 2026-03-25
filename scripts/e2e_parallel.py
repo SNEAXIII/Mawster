@@ -571,8 +571,8 @@ def kill_ports(ports: list[int]) -> None:
     run_parallel(kill_threads)
 
 
-def resolve_spec_paths(raw_specs: str) -> list[Path]:
-    resolved_specs: list[Path] = []
+def resolve_spec_paths(raw_specs: str) -> set[Path]:
+    resolved_specs: set[Path] = set()
     for raw in [s.strip() for s in raw_specs.split(",") if s.strip()]:
         spec_path = Path(raw)
         if not spec_path.is_absolute():
@@ -590,7 +590,7 @@ def resolve_spec_paths(raw_specs: str) -> list[Path]:
             for s in available:
                 log(f"  {s}")
             sys.exit(1)
-        resolved_specs.append(spec_path)
+        resolved_specs.add(spec_path)
     return resolved_specs
 
 
@@ -620,10 +620,10 @@ def main() -> None:
     args = parser.parse_args()
     quiet = args.quiet
 
-    resolved_specs: list[Path] = []
+    resolved_specs: set[Path] = set()
     worker_number = args.workers
     if args.spec:
-        resolved_specs = resolve_spec_paths(args.spec)
+        resolved_specs = set(resolve_spec_paths(args.spec))
         log(
             f"--spec provided: {len(resolved_specs)} spec(s), using {worker_number} worker(s)"
         )
