@@ -14,19 +14,17 @@ describe('Defense – Basic page rendering', () => {
   });
 
   it('shows the defense page with alliance and BG selectors', () => {
-    setupAllianceOwner('def-basic-page', 'BasicPlayer', 'BasicAlliance', 'BA').then(
-      ({ userData }) => {
-        cy.uiLogin(userData.login);
-        cy.navTo('defense');
+    setupAllianceOwner('def-basic-page', 'BasicPlayer', 'BasicAlliance', 'BA').then(({ userData }) => {
+      cy.uiLogin(userData.login);
+      cy.navTo('defense');
 
-        cy.contains('Defense Placement').should('be.visible');
-        cy.contains('Alliance:').should('be.visible');
-        cy.contains('Battlegroup:').should('be.visible');
-        cy.getByCy('defense-bg-1').should('be.visible');
-        cy.getByCy('defense-bg-2').should('be.visible');
-        cy.getByCy('defense-bg-3').should('be.visible');
-      }
-    );
+      cy.contains('Defense Placement').should('be.visible');
+      cy.contains('Alliance:').should('be.visible');
+      cy.contains('Battlegroup:').should('be.visible');
+      cy.getByCy('defense-bg-1').should('be.visible');
+      cy.getByCy('defense-bg-2').should('be.visible');
+      cy.getByCy('defense-bg-3').should('be.visible');
+    });
   });
 
   it('switches between battlegroups', () => {
@@ -42,52 +40,44 @@ describe('Defense – Basic page rendering', () => {
   });
 
   it('shows the Members side panel', () => {
-    setupAllianceOwner('def-basic-members', 'MembersPlayer', 'MembersAlliance', 'MP').then(
-      ({ userData }) => {
-        cy.uiLogin(userData.login);
-        cy.navTo('defense');
-        cy.contains('Members').should('be.visible');
-      }
-    );
+    setupAllianceOwner('def-basic-members', 'MembersPlayer', 'MembersAlliance', 'MP').then(({ userData }) => {
+      cy.uiLogin(userData.login);
+      cy.navTo('defense');
+      cy.contains('Members').should('be.visible');
+    });
   });
 
   it('shows 50 war-map nodes on the page', () => {
-    setupAllianceOwner('def-basic-nodes', 'NodePlayer', 'NodeAlliance', 'ND').then(
-      ({ userData }) => {
-        cy.uiLogin(userData.login);
-        cy.navTo('defense');
+    setupAllianceOwner('def-basic-nodes', 'NodePlayer', 'NodeAlliance', 'ND').then(({ userData }) => {
+      cy.uiLogin(userData.login);
+      cy.navTo('defense');
 
-        for (let i = 1; i <= 50; i++) {
-          cy.getByCy(`war-node-${i}`).should('exist');
-        }
+      for (let i = 1; i <= 50; i++) {
+        cy.getByCy(`war-node-${i}`).should('exist');
       }
-    );
+    });
   });
 
   it("empty nodes show '+' placeholder", () => {
-    setupAllianceOwner('def-basic-empty', 'EmptyPlyr', 'EmptyAlliance', 'EM').then(
-      ({ userData }) => {
-        cy.uiLogin(userData.login);
-        cy.navTo('defense');
+    setupAllianceOwner('def-basic-empty', 'EmptyPlyr', 'EmptyAlliance', 'EM').then(({ userData }) => {
+      cy.uiLogin(userData.login);
+      cy.navTo('defense');
 
-        cy.getByCy('war-node-1').should('contain', '+');
-        cy.getByCy('war-node-50').should('contain', '+');
-      }
-    );
+      cy.getByCy('war-node-1').should('contain', '+');
+      cy.getByCy('war-node-50').should('contain', '+');
+    });
   });
 
   it('shows section labels (Boss, Mini Boss, Tier 2, Tier 1)', () => {
-    setupAllianceOwner('def-basic-sections', 'SectionPlyr', 'SectionAlliance', 'SE').then(
-      ({ userData }) => {
-        cy.uiLogin(userData.login);
-        cy.navTo('defense');
+    setupAllianceOwner('def-basic-sections', 'SectionPlyr', 'SectionAlliance', 'SE').then(({ userData }) => {
+      cy.uiLogin(userData.login);
+      cy.navTo('defense');
 
-        cy.contains('Boss').should('exist');
-        cy.contains('Mini Boss').should('exist');
-        cy.contains('Tier 2').should('exist');
-        cy.contains('Tier 1').should('exist');
-      }
-    );
+      cy.contains('Boss').should('exist');
+      cy.contains('Mini Boss').should('exist');
+      cy.contains('Tier 2').should('exist');
+      cy.contains('Tier 1').should('exist');
+    });
   });
 
   it('shows 0/5 defender count when no champions placed', () => {
@@ -99,7 +89,7 @@ describe('Defense – Basic page rendering', () => {
         cy.navTo('defense');
 
         cy.getByCy('defender-count-EmptyCountPlyr').should('contain', '0/5');
-      }
+      },
     );
   });
 
@@ -111,7 +101,7 @@ describe('Defense – Basic page rendering', () => {
         cy.uiLogin(userData.login);
         cy.navTo('defense');
         cy.contains('No defenders placed.').scrollIntoView().should('be.visible');
-      }
+      },
     );
   });
 
@@ -124,7 +114,7 @@ describe('Defense – Basic page rendering', () => {
         cy.navTo('defense');
         cy.getByCy('member-section-UserNamePlyr').scrollIntoView().should('be.visible');
         cy.getByCy('member-section-UserNamePlyr').should('contain', 'UserNamePlyr');
-      }
+      },
     );
   });
 
@@ -139,7 +129,7 @@ describe('Defense – Basic page rendering', () => {
 
         cy.getByCy('member-section-TwoMemOwner').scrollIntoView().should('be.visible');
         cy.getByCy('member-section-TwoMemMember').scrollIntoView().should('be.visible');
-      }
+      },
     );
   });
 });

@@ -48,16 +48,10 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
           .and('contain', '⚔');
 
         // Signature 200
-        cy.getByCy('champion-card-Omega')
-          .find('[data-cy="champion-sig"]')
-          .should('exist')
-          .and('contain', 'sig 200');
+        cy.getByCy('champion-card-Omega').find('[data-cy="champion-sig"]').should('exist').and('contain', 'sig 200');
 
         // Ascension A2
-        cy.getByCy('champion-card-Omega')
-          .find('[data-cy="champion-ascension"]')
-          .should('exist')
-          .and('contain', 'A2');
+        cy.getByCy('champion-card-Omega').find('[data-cy="champion-ascension"]').should('exist').and('contain', 'A2');
       });
     });
   });
@@ -101,46 +95,40 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
     });
 
     it('editing and re-submitting updates the champion in the roster', () => {
-      setupRosterUser('ui-edit-update', 'EditUpdPlayer').then(
-        ({ adminData, userData, accountId }) => {
-          cy.apiLoadChampion(adminData.access_token, 'EditUpd', 'Skill', {
-            is_ascendable: true,
-          }).then((champs) => {
-            cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r2', {
-              signature: 50,
-              ascension: 0,
-            });
-
-            cy.uiLogin(userData.login);
-            cy.navTo('roster');
-
-            // Click edit
-            cy.getByCy('champion-edit').first().click({ force: true });
-
-            // Change rarity to 7r4
-            cy.getByCy('rarity-7r4').click();
-
-            // Change signature to 200
-            cy.getByCy('sig-input').clear().type('200');
-
-            // Set ascension to A1
-            cy.getByCy('ascension-1').click();
-
-            // Submit update
-            cy.getByCy('champion-submit').click();
-            cy.contains('EditUpd added / updated').should('be.visible');
-
-            // Verify updated values on the card
-            cy.getByCy('rarity-group-7r4').contains('EditUpd').should('be.visible');
-            cy.getByCy('champion-card-EditUpd')
-              .find('[data-cy="champion-sig"]')
-              .should('contain', 'sig 200');
-            cy.getByCy('champion-card-EditUpd')
-              .find('[data-cy="champion-ascension"]')
-              .should('contain', 'A1');
+      setupRosterUser('ui-edit-update', 'EditUpdPlayer').then(({ adminData, userData, accountId }) => {
+        cy.apiLoadChampion(adminData.access_token, 'EditUpd', 'Skill', {
+          is_ascendable: true,
+        }).then((champs) => {
+          cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r2', {
+            signature: 50,
+            ascension: 0,
           });
-        }
-      );
+
+          cy.uiLogin(userData.login);
+          cy.navTo('roster');
+
+          // Click edit
+          cy.getByCy('champion-edit').first().click({ force: true });
+
+          // Change rarity to 7r4
+          cy.getByCy('rarity-7r4').click();
+
+          // Change signature to 200
+          cy.getByCy('sig-input').clear().type('200');
+
+          // Set ascension to A1
+          cy.getByCy('ascension-1').click();
+
+          // Submit update
+          cy.getByCy('champion-submit').click();
+          cy.contains('EditUpd added / updated').should('be.visible');
+
+          // Verify updated values on the card
+          cy.getByCy('rarity-group-7r4').contains('EditUpd').should('be.visible');
+          cy.getByCy('champion-card-EditUpd').find('[data-cy="champion-sig"]').should('contain', 'sig 200');
+          cy.getByCy('champion-card-EditUpd').find('[data-cy="champion-ascension"]').should('contain', 'A1');
+        });
+      });
     });
   });
 
@@ -209,9 +197,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
         cy.get('[data-cy="champion-delete"]').should('have.length', 1);
         // Should now be in the 7r2 group
         cy.getByCy('rarity-group-7r2').contains('Kingpin').should('be.visible');
-        cy.getByCy('champion-card-Kingpin')
-          .find('[data-cy="champion-sig"]')
-          .should('contain', 'sig 200');
+        cy.getByCy('champion-card-Kingpin').find('[data-cy="champion-sig"]').should('contain', 'sig 200');
       });
     });
   });

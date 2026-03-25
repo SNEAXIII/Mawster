@@ -6,30 +6,30 @@ describe('Defense – Remove defender', () => {
   });
 
   it('removes a defender from side panel and counter decrements', () => {
-    setupDefenseOwner('def-op-rm', 'RmPlyr', 'RmAll', 'RM').then(
-      ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        cy.apiLoadChampions(adminData.access_token, [
-          { name: 'Spider-Man', cls: 'Cosmic' },
-          { name: 'Wolverine',  cls: 'Mutant' },
-        ]).then((champMap) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Spider-Man'].id, '7r5', { signature: 200 })
-            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId));
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Wolverine'].id, '7r4', { signature: 100 })
-            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 2, cu.id, ownerAccId));
-        });
+    setupDefenseOwner('def-op-rm', 'RmPlyr', 'RmAll', 'RM').then(({ adminData, ownerData, allianceId, ownerAccId }) => {
+      cy.apiLoadChampions(adminData.access_token, [
+        { name: 'Spider-Man', cls: 'Cosmic' },
+        { name: 'Wolverine', cls: 'Mutant' },
+      ]).then((champMap) => {
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Spider-Man'].id, '7r5', {
+          signature: 200,
+        }).then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId));
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Wolverine'].id, '7r4', {
+          signature: 100,
+        }).then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 2, cu.id, ownerAccId));
+      });
 
-        cy.uiLogin(ownerData.login);
-        cy.navTo('defense');
+      cy.uiLogin(ownerData.login);
+      cy.navTo('defense');
 
-        cy.getByCy('defender-count-RmPlyr').should('contain', '2/5');
+      cy.getByCy('defender-count-RmPlyr').should('contain', '2/5');
 
-        // Click remove on the side panel (force click because button is hidden until hover)
-        cy.getByCy('member-section-RmPlyr').find('button').first().click({ force: true });
+      // Click remove on the side panel (force click because button is hidden until hover)
+      cy.getByCy('member-section-RmPlyr').find('button').first().click({ force: true });
 
-        cy.getByCy('defender-count-RmPlyr').should('contain', '1/5');
-        cy.contains('Defender removed').should('be.visible');
-      }
-    );
+      cy.getByCy('defender-count-RmPlyr').should('contain', '1/5');
+      cy.contains('Defender removed').should('be.visible');
+    });
   });
 
   it('removes a defender from the war map red X button', () => {
@@ -40,9 +40,7 @@ describe('Defense – Remove defender', () => {
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', {
               signature: 200,
             })
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 5, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 5, cu.id, ownerAccId)),
         );
 
         cy.uiLogin(ownerData.login);
@@ -56,7 +54,7 @@ describe('Defense – Remove defender', () => {
         cy.getByCy('defender-count-RmMapPlyr').should('contain', '0/5');
         cy.getByCy('war-node-5').should('contain', '+');
         cy.contains('Defender removed').should('be.visible');
-      }
+      },
     );
   });
 
@@ -64,7 +62,7 @@ describe('Defense – Remove defender', () => {
     setupDefenseOwner('def-op-rmreapp', 'RmReappPlyr', 'RmReappAll', 'RR').then(
       ({ adminData, ownerData, ownerAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
         );
 
         cy.uiLogin(ownerData.login);
@@ -87,7 +85,7 @@ describe('Defense – Remove defender', () => {
         // Spider-Man should reappear in selector
         cy.getByCy('war-node-2').scrollIntoView().click({ force: true });
         cy.getByCy('champion-card-Spider-Man').should('be.visible');
-      }
+      },
     );
   });
 });

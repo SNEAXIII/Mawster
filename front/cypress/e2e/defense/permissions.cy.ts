@@ -1,9 +1,4 @@
-import {
-  setupUser,
-  setupDefenseOwner,
-  setupDefenseOwnerAndMember,
-  setupOwnerMemberAlliance,
-} from '../../support/e2e';
+import { setupUser, setupDefenseOwner, setupDefenseOwnerAndMember, setupOwnerMemberAlliance } from '../../support/e2e';
 
 describe('Defense – Permissions', () => {
   beforeEach(() => {
@@ -27,14 +22,12 @@ describe('Defense – Permissions', () => {
   });
 
   it('export and import buttons are hidden from a regular member', () => {
-    setupOwnerMemberAlliance('def-perm-hid', 'PermHidOwn', 'PermHidMem', 'PermHidAll', 'PH').then(
-      ({ memberData }) => {
-        cy.uiLogin(memberData.login);
-        cy.navTo('defense');
-        cy.getByCy('defense-export').should('not.exist');
-        cy.getByCy('defense-import').should('not.exist');
-      }
-    );
+    setupOwnerMemberAlliance('def-perm-hid', 'PermHidOwn', 'PermHidMem', 'PermHidAll', 'PH').then(({ memberData }) => {
+      cy.uiLogin(memberData.login);
+      cy.navTo('defense');
+      cy.getByCy('defense-export').should('not.exist');
+      cy.getByCy('defense-import').should('not.exist');
+    });
   });
 
   it('export and import buttons are visible to an officer', () => {
@@ -45,7 +38,7 @@ describe('Defense – Permissions', () => {
         cy.navTo('defense');
         cy.getByCy('defense-export').should('be.visible');
         cy.getByCy('defense-import').should('be.visible');
-      }
+      },
     );
   });
 
@@ -70,38 +63,30 @@ describe('Defense – Permissions', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
         cy.uiLogin(ownerData.login);
         cy.navTo('defense');
         cy.getByCy('defense-clear-all').should('be.visible');
-      }
+      },
     );
   });
 
   it('clear all button is hidden from a regular member even with placements', () => {
-    setupDefenseOwnerAndMember(
-      'def-perm-clr-mem',
-      'ClrMemOwn',
-      'ClrMember',
-      'ClrMemAll',
-      'CM'
-    ).then(({ adminData, ownerData, memberData, allianceId, ownerAccId }) => {
-      cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-        cy
-          .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-          .then((cu) =>
-            cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-          )
-      );
+    setupDefenseOwnerAndMember('def-perm-clr-mem', 'ClrMemOwn', 'ClrMember', 'ClrMemAll', 'CM').then(
+      ({ adminData, ownerData, memberData, allianceId, ownerAccId }) => {
+        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
+          cy
+            .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
+        );
 
-      cy.uiLogin(memberData.login);
-      cy.navTo('defense');
-      cy.getByCy('defense-clear-all').should('not.exist');
-    });
+        cy.uiLogin(memberData.login);
+        cy.navTo('defense');
+        cy.getByCy('defense-clear-all').should('not.exist');
+      },
+    );
   });
 
   // =========================================================================
@@ -109,16 +94,14 @@ describe('Defense – Permissions', () => {
   // =========================================================================
 
   it('clicking an empty node does NOT open champion selector for a regular member', () => {
-    setupOwnerMemberAlliance('def-perm-click', 'ClickOwn', 'ClickMem', 'ClickAll', 'CK').then(
-      ({ memberData }) => {
-        cy.uiLogin(memberData.login);
-        cy.navTo('defense');
+    setupOwnerMemberAlliance('def-perm-click', 'ClickOwn', 'ClickMem', 'ClickAll', 'CK').then(({ memberData }) => {
+      cy.uiLogin(memberData.login);
+      cy.navTo('defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
-        // Selector dialog should NOT appear
-        cy.contains('Select Champion').should('not.exist');
-      }
-    );
+      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      // Selector dialog should NOT appear
+      cy.contains('Select Champion').should('not.exist');
+    });
   });
 
   it('clicking an empty node opens champion selector for the owner', () => {
@@ -126,7 +109,7 @@ describe('Defense – Permissions', () => {
       ({ adminData, ownerData, ownerAccId }) => {
         // Load a champion so the selector won't be empty
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
         );
 
         cy.uiLogin(ownerData.login);
@@ -135,7 +118,7 @@ describe('Defense – Permissions', () => {
         cy.getByCy('war-node-5').click();
         cy.contains('Select Champion').should('be.visible');
         cy.contains('Node #5').should('be.visible');
-      }
+      },
     );
   });
 });

@@ -30,10 +30,7 @@ describe('Roster – Ascension', () => {
       cy.contains('AscHero added / updated').should('be.visible');
 
       // Verify ascension badge "· A1" is shown on the card
-      cy.getByCy('champion-card-AscHero')
-        .find('[data-cy="champion-ascension"]')
-        .should('exist')
-        .and('contain', 'A1');
+      cy.getByCy('champion-card-AscHero').find('[data-cy="champion-ascension"]').should('exist').and('contain', 'A1');
     });
   });
 
@@ -106,9 +103,7 @@ describe('Roster – Ascension', () => {
         cy.getByCy('champion-ascension').should('not.exist');
 
         // Click ascend button (FiStar) on the card via title attribute
-        cy.getByCy('champion-card-AscCardHero')
-          .find('[title="Ascension"]')
-          .click({ force: true });
+        cy.getByCy('champion-card-AscCardHero').find('[title="Ascension"]').click({ force: true });
 
         // Confirm ascension in dialog
         cy.get('[role="alertdialog"]').should('be.visible');

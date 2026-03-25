@@ -15,9 +15,7 @@ describe('Defense – Import & BG isolation', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
         // Export via API
@@ -54,47 +52,43 @@ describe('Defense – Import & BG isolation', () => {
           cy.getByCy('defender-count-ImportPlyr').should('contain', '1/5');
           cy.getByCy('member-section-ImportPlyr').find('[title*="Spider-Man"]').should('exist');
         });
-      }
+      },
     );
   });
 
   it('import via UI file upload shows import report dialog', () => {
-    setupDefenseOwner('def-op-impui', 'ImpUIPlyr', 'ImpUIAll', 'IU').then(
-      ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-        );
+    setupDefenseOwner('def-op-impui', 'ImpUIPlyr', 'ImpUIAll', 'IU').then(({ adminData, ownerData, ownerAccId }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
+      );
 
-        cy.uiLogin(ownerData.login);
-        cy.navTo('defense');
+      cy.uiLogin(ownerData.login);
+      cy.navTo('defense');
 
-        // Prepare import JSON
-        const importData = [
-          { champion_name: 'Spider-Man', rarity: '7r3', node_number: 1, owner_name: 'ImpUIPlyr' },
-        ];
+      // Prepare import JSON
+      const importData = [{ champion_name: 'Spider-Man', rarity: '7r3', node_number: 1, owner_name: 'ImpUIPlyr' }];
 
-        // Create a file and upload it
-        const blob = new Blob([JSON.stringify(importData)], { type: 'application/json' });
-        const file = new File([blob], 'defense_import.json', { type: 'application/json' });
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
+      // Create a file and upload it
+      const blob = new Blob([JSON.stringify(importData)], { type: 'application/json' });
+      const file = new File([blob], 'defense_import.json', { type: 'application/json' });
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
 
-        cy.get('input[type="file"]').then((input) => {
-          const el = input[0] as HTMLInputElement;
-          el.files = dataTransfer.files;
-          cy.wrap(input).trigger('change', { force: true });
-        });
+      cy.get('input[type="file"]').then((input) => {
+        const el = input[0] as HTMLInputElement;
+        el.files = dataTransfer.files;
+        cy.wrap(input).trigger('change', { force: true });
+      });
 
-        cy.contains('Import Report').should('be.visible');
-      }
-    );
+      cy.contains('Import Report').should('be.visible');
+    });
   });
 
   it('import with unknown champion shows error in report', () => {
     setupDefenseOwner('def-op-imperr', 'ImpErrPlyr', 'ImpErrAll', 'IE').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
         );
 
         // Import via API with an unknown champion
@@ -130,7 +124,7 @@ describe('Defense – Import & BG isolation', () => {
         cy.uiLogin(ownerData.login);
         cy.navTo('defense');
         cy.getByCy('defender-count-ImpErrPlyr').should('contain', '1/5');
-      }
+      },
     );
   });
 
@@ -138,7 +132,7 @@ describe('Defense – Import & BG isolation', () => {
     setupDefenseOwner('def-op-impunk', 'ImpUnkPlyr', 'ImpUnkAll', 'IK').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
         );
 
         cy.request({
@@ -161,7 +155,7 @@ describe('Defense – Import & BG isolation', () => {
           expect(importRes.body.error_count).to.eq(1);
           expect(importRes.body.errors[0].reason).to.include('not found');
         });
-      }
+      },
     );
   });
 
@@ -170,10 +164,11 @@ describe('Defense – Import & BG isolation', () => {
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
         cy.apiLoadChampions(adminData.access_token, [
           { name: 'Spider-Man', cls: 'Cosmic' },
-          { name: 'Wolverine',  cls: 'Mutant' },
+          { name: 'Wolverine', cls: 'Mutant' },
         ]).then((champMap) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Spider-Man'].id, '7r5')
-            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId));
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Spider-Man'].id, '7r5').then((cu) =>
+            cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId),
+          );
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Wolverine'].id, '7r4');
         });
 
@@ -206,7 +201,7 @@ describe('Defense – Import & BG isolation', () => {
         cy.getByCy('defender-count-ImpClrPlyr').should('contain', '1/5');
         cy.getByCy('war-node-1').should('contain', '+'); // Spider-Man cleared
         cy.getByCy('war-node-10').should('contain', 'ImpClrPlyr'); // Wolverine placed
-      }
+      },
     );
   });
 
@@ -220,9 +215,7 @@ describe('Defense – Import & BG isolation', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
         cy.uiLogin(ownerData.login);
@@ -238,7 +231,7 @@ describe('Defense – Import & BG isolation', () => {
         // Switch back to BG1: Spider-Man still there
         cy.getByCy('defense-bg-1').click();
         cy.getByCy('war-node-1').should('contain', 'BGIsoPlyr');
-      }
+      },
     );
   });
 });

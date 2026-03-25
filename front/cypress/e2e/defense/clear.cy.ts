@@ -10,12 +10,14 @@ describe('Defense – Clear All', () => {
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
         cy.apiLoadChampions(adminData.access_token, [
           { name: 'Spider-Man', cls: 'Cosmic' },
-          { name: 'Wolverine',  cls: 'Mutant' },
+          { name: 'Wolverine', cls: 'Mutant' },
         ]).then((champMap) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Spider-Man'].id, '7r5')
-            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId));
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Wolverine'].id, '7r4')
-            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 2, cu.id, ownerAccId));
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Spider-Man'].id, '7r5').then((cu) =>
+            cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId),
+          );
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Wolverine'].id, '7r4').then((cu) =>
+            cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 2, cu.id, ownerAccId),
+          );
         });
 
         cy.uiLogin(ownerData.login);
@@ -28,7 +30,7 @@ describe('Defense – Clear All', () => {
 
         cy.getByCy('defender-count-ClearPlyr').should('contain', '0/5');
         cy.contains('Defense cleared').should('be.visible');
-      }
+      },
     );
   });
 
@@ -38,9 +40,7 @@ describe('Defense – Clear All', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 10, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 10, cu.id, ownerAccId)),
         );
 
         cy.uiLogin(ownerData.login);
@@ -52,7 +52,7 @@ describe('Defense – Clear All', () => {
         cy.contains('button', 'Confirm').click();
 
         cy.getByCy('war-node-10').should('contain', '+');
-      }
+      },
     );
   });
 
@@ -62,9 +62,7 @@ describe('Defense – Clear All', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
         cy.uiLogin(ownerData.login);
@@ -74,7 +72,7 @@ describe('Defense – Clear All', () => {
         cy.contains('button', 'Confirm').click();
 
         cy.contains('No defenders placed.').scrollIntoView().should('be.visible');
-      }
+      },
     );
   });
 
@@ -84,9 +82,7 @@ describe('Defense – Clear All', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
         cy.uiLogin(ownerData.login);
@@ -100,7 +96,7 @@ describe('Defense – Clear All', () => {
 
         // Defenders remain intact
         cy.getByCy('defender-count-ClrCancelPlyr').should('contain', '1/5');
-      }
+      },
     );
   });
 });

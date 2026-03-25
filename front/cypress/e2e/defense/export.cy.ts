@@ -13,9 +13,7 @@ describe('Defense – Export', () => {
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', {
               signature: 200,
             })
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
         cy.intercept('GET', `**/alliances/${allianceId}/defense/bg/1/export`).as('exportReq');
@@ -33,7 +31,7 @@ describe('Defense – Export', () => {
           expect(body[0]).to.have.property('owner_name', 'ExportPlyr');
           expect(body[0]).to.have.property('rarity', '7r5');
         });
-      }
+      },
     );
   });
 
@@ -56,12 +54,14 @@ describe('Defense – Export', () => {
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
         cy.apiLoadChampions(adminData.access_token, [
           { name: 'Spider-Man', cls: 'Cosmic' },
-          { name: 'Wolverine',  cls: 'Mutant' },
+          { name: 'Wolverine', cls: 'Mutant' },
         ]).then((champMap) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Spider-Man'].id, '7r5')
-            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId));
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Wolverine'].id, '7r4')
-            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 10, cu.id, ownerAccId));
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Spider-Man'].id, '7r5').then((cu) =>
+            cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId),
+          );
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Wolverine'].id, '7r4').then((cu) =>
+            cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 10, cu.id, ownerAccId),
+          );
         });
 
         cy.intercept('GET', `**/alliances/${allianceId}/defense/bg/1/export`).as('exportMulti');
@@ -80,7 +80,7 @@ describe('Defense – Export', () => {
           expect(nodes).to.include(1);
           expect(nodes).to.include(10);
         });
-      }
+      },
     );
   });
 });

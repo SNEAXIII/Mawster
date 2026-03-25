@@ -114,9 +114,7 @@ describe('Roster – Rarity & Signature', () => {
         cy.contains('DoctorVoodoo added / updated').should('be.visible');
 
         // Verify sig 200 is displayed on the card
-        cy.getByCy('champion-card-DoctorVoodoo')
-          .find('[data-cy="champion-sig"]')
-          .should('contain', 'sig 200');
+        cy.getByCy('champion-card-DoctorVoodoo').find('[data-cy="champion-sig"]').should('contain', 'sig 200');
       });
     });
 
@@ -140,9 +138,7 @@ describe('Roster – Rarity & Signature', () => {
         cy.contains('Magik added / updated').should('be.visible');
 
         // Verify sig 150 on the card
-        cy.getByCy('champion-card-Magik')
-          .find('[data-cy="champion-sig"]')
-          .should('contain', 'sig 150');
+        cy.getByCy('champion-card-Magik').find('[data-cy="champion-sig"]').should('contain', 'sig 150');
       });
     });
 

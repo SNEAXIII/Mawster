@@ -64,18 +64,16 @@ describe('Roster – Champion Upgrade', () => {
   it('cannot upgrade past max rank via API', () => {
     setupRosterUser('upg-past', 'MaxPastPlayer').then(({ adminData, userData, accountId }) => {
       cy.apiLoadChampion(adminData.access_token, 'MaxPastHero', 'Skill').then((champs) => {
-        cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r5').then(
-          (cu) => {
-            cy.request({
-              method: 'PATCH',
-              url: `${BACKEND}/champion-users/${cu.id}/upgrade`,
-              headers: { Authorization: `Bearer ${userData.access_token}` },
-              failOnStatusCode: false,
-            }).then((res) => {
-              expect(res.status).to.be.oneOf([400, 422]);
-            });
-          }
-        );
+        cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r5').then((cu) => {
+          cy.request({
+            method: 'PATCH',
+            url: `${BACKEND}/champion-users/${cu.id}/upgrade`,
+            headers: { Authorization: `Bearer ${userData.access_token}` },
+            failOnStatusCode: false,
+          }).then((res) => {
+            expect(res.status).to.be.oneOf([400, 422]);
+          });
+        });
       });
     });
   });

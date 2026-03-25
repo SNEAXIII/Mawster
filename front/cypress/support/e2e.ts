@@ -10,8 +10,7 @@ Cypress.Commands.overwrite<'type', 'element'>('type', (originalFn, subject, text
   return originalFn(subject, text, { delay: 0, ...options });
 });
 
-export const BACKEND: string =
-  (Cypress.env('backendUrl') as string | undefined) ?? 'http://localhost:8001';
+export const BACKEND: string = (Cypress.env('backendUrl') as string | undefined) ?? 'http://localhost:8001';
 
 // ── E2E log markers — correlate backend logs with test boundaries ─────────
 
@@ -122,12 +121,7 @@ Cypress.Commands.add('apiCreateGameAccount', (token: string, pseudo: string, isP
 
 Cypress.Commands.add(
   'apiLoadChampion',
-  (
-    adminToken: string,
-    name: string,
-    championClass: string,
-    options: { is_ascendable?: boolean } = {}
-  ) => {
+  (adminToken: string, name: string, championClass: string, options: { is_ascendable?: boolean } = {}) => {
     cy.request({
       method: 'POST',
       url: `${BACKEND}/admin/champions/load`,
@@ -150,17 +144,14 @@ Cypress.Commands.add(
         })
         .then((getRes) => getRes.body.champions);
     });
-  }
+  },
 );
 
 // ── Load multiple champions at once (single bulk request) ───────────────────
 
 Cypress.Commands.add(
   'apiLoadChampions',
-  (
-    adminToken: string,
-    champions: Array<{ name: string; cls: string; is_ascendable?: boolean }>
-  ) => {
+  (adminToken: string, champions: Array<{ name: string; cls: string; is_ascendable?: boolean }>) => {
     cy.request({
       method: 'POST',
       url: `${BACKEND}/admin/champions/load`,
@@ -179,30 +170,28 @@ Cypress.Commands.add(
         })
         .then((res) => {
           const all: Array<{ id: string; name: string }> = res.body.champions ?? res.body;
-          return Object.fromEntries(
-            champions.map((c) => [c.name, all.find((x) => x.name === c.name)!])
-          ) as Record<string, { id: string; name: string }>;
-        })
+          return Object.fromEntries(champions.map((c) => [c.name, all.find((x) => x.name === c.name)!])) as Record<
+            string,
+            { id: string; name: string }
+          >;
+        }),
     );
-  }
+  },
 );
 
 // ── Create alliance (direct backend call) ────────────────────────────────────
 
-Cypress.Commands.add(
-  'apiCreateAlliance',
-  (token: string, name: string, tag: string, ownerId: string) => {
-    cy.request({
-      method: 'POST',
-      url: `${BACKEND}/alliances`,
-      headers: { Authorization: `Bearer ${token}` },
-      body: { name, tag, owner_id: ownerId },
-    }).then((res) => {
-      expect(res.status).to.eq(201);
-      return res.body;
-    });
-  }
-);
+Cypress.Commands.add('apiCreateAlliance', (token: string, name: string, tag: string, ownerId: string) => {
+  cy.request({
+    method: 'POST',
+    url: `${BACKEND}/alliances`,
+    headers: { Authorization: `Bearer ${token}` },
+    body: { name, tag, owner_id: ownerId },
+  }).then((res) => {
+    expect(res.status).to.eq(201);
+    return res.body;
+  });
+});
 
 // ── Force-join a game account into an alliance (dev endpoint, bypasses invitations) ──
 
@@ -247,20 +236,17 @@ Cypress.Commands.add('navTo', (page: string) => {
 
 // ── Invite member to alliance (direct backend call) ─────────────────────────
 
-Cypress.Commands.add(
-  'apiInviteMember',
-  (token: string, allianceId: string, gameAccountId: string) => {
-    cy.request({
-      method: 'POST',
-      url: `${BACKEND}/alliances/${allianceId}/invitations`,
-      headers: { Authorization: `Bearer ${token}` },
-      body: { game_account_id: gameAccountId },
-    }).then((res) => {
-      expect(res.status).to.eq(201);
-      return res.body;
-    });
-  }
-);
+Cypress.Commands.add('apiInviteMember', (token: string, allianceId: string, gameAccountId: string) => {
+  cy.request({
+    method: 'POST',
+    url: `${BACKEND}/alliances/${allianceId}/invitations`,
+    headers: { Authorization: `Bearer ${token}` },
+    body: { game_account_id: gameAccountId },
+  }).then((res) => {
+    expect(res.status).to.eq(201);
+    return res.body;
+  });
+});
 
 // ── Add champion to player roster (direct backend call) ─────────────────────
 
@@ -271,7 +257,7 @@ Cypress.Commands.add(
     gameAccountId: string,
     championId: string,
     rarity: string,
-    options: { signature?: number; is_preferred_attacker?: boolean; ascension?: number } = {}
+    options: { signature?: number; is_preferred_attacker?: boolean; ascension?: number } = {},
   ) => {
     cy.request({
       method: 'POST',
@@ -289,7 +275,7 @@ Cypress.Commands.add(
       expect(res.status).to.eq(201);
       return res.body;
     });
-  }
+  },
 );
 
 // ── Place defender on defense node (direct backend call) ────────────────────
@@ -302,7 +288,7 @@ Cypress.Commands.add(
     battlegroup: number,
     nodeNumber: number,
     championUserId: string,
-    gameAccountId: string
+    gameAccountId: string,
   ) => {
     cy.request({
       method: 'POST',
@@ -317,7 +303,7 @@ Cypress.Commands.add(
       expect(res.status).to.eq(201);
       return res.body;
     });
-  }
+  },
 );
 
 // ── Set member battlegroup (direct backend call) ─────────────────────────────
@@ -334,25 +320,22 @@ Cypress.Commands.add(
       expect(res.status).to.eq(200);
       return res.body;
     });
-  }
+  },
 );
 
 // ── Add officer to alliance (direct backend call) ───────────────────────────
 
-Cypress.Commands.add(
-  'apiAddOfficer',
-  (token: string, allianceId: string, gameAccountId: string) => {
-    cy.request({
-      method: 'POST',
-      url: `${BACKEND}/alliances/${allianceId}/officers`,
-      headers: { Authorization: `Bearer ${token}` },
-      body: { game_account_id: gameAccountId },
-    }).then((res) => {
-      expect(res.status).to.eq(201);
-      return res.body;
-    });
-  }
-);
+Cypress.Commands.add('apiAddOfficer', (token: string, allianceId: string, gameAccountId: string) => {
+  cy.request({
+    method: 'POST',
+    url: `${BACKEND}/alliances/${allianceId}/officers`,
+    headers: { Authorization: `Bearer ${token}` },
+    body: { game_account_id: gameAccountId },
+  }).then((res) => {
+    expect(res.status).to.eq(201);
+    return res.body;
+  });
+});
 
 // ── Run fixtures (truncate DB + seed) ────────────────────────────────────────
 
@@ -362,19 +345,16 @@ Cypress.Commands.add('runFixtures', () => {
 
 // ── Create upgrade request (direct backend call) ──────────────────────────────
 
-Cypress.Commands.add(
-  'apiCreateUpgradeRequest',
-  (token: string, championUserId: string, requestedRarity: string) => {
-    return cy
-      .request({
-        method: 'POST',
-        url: `${BACKEND}/champion-users/upgrade-requests`,
-        headers: { Authorization: `Bearer ${token}` },
-        body: { champion_user_id: championUserId, requested_rarity: requestedRarity },
-      })
-      .then((res) => res.body);
-  }
-);
+Cypress.Commands.add('apiCreateUpgradeRequest', (token: string, championUserId: string, requestedRarity: string) => {
+  return cy
+    .request({
+      method: 'POST',
+      url: `${BACKEND}/champion-users/upgrade-requests`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { champion_user_id: championUserId, requested_rarity: requestedRarity },
+    })
+    .then((res) => res.body);
+});
 
 // ── Upgrade champion rank (direct backend call) ───────────────────────────────
 
@@ -410,16 +390,14 @@ export function setupAdmin(discordToken = 'cypress-admin-token'): Cypress.Chaina
 }
 
 export function setupUser(discordToken = 'cypress-test-token'): Cypress.Chainable<UserSetupData> {
-  return cy
-    .apiBatchSetup([{ discord_token: discordToken }])
-    .then((users) => toUserSetupData(users[discordToken]));
+  return cy.apiBatchSetup([{ discord_token: discordToken }]).then((users) => toUserSetupData(users[discordToken]));
 }
 
 export function setupAllianceOwner(
   tokenPrefix: string,
   pseudo: string,
   allianceName: string,
-  allianceTag: string
+  allianceTag: string,
 ): Cypress.Chainable<{ userData: UserSetupData; accountId: string; allianceId: string }> {
   const ownerToken = `${tokenPrefix}-owner`;
   return cy
@@ -440,7 +418,7 @@ export function setupAllianceWithMember(
   ownerPseudo: string,
   memberPseudo: string,
   allianceName: string,
-  allianceTag: string
+  allianceTag: string,
 ): Cypress.Chainable<{
   ownerData: UserSetupData;
   memberData: UserSetupData;
@@ -474,7 +452,7 @@ export function setupAllianceWithMember(
 
 export function setupRosterUser(
   tokenPrefix: string,
-  pseudo: string
+  pseudo: string,
 ): Cypress.Chainable<{ adminData: UserSetupData; userData: UserSetupData; accountId: string }> {
   const adminToken = `${tokenPrefix}-admin`;
   const userToken = `${tokenPrefix}-user`;
@@ -494,7 +472,7 @@ export function setupDefenseOwner(
   tokenPrefix: string,
   pseudo: string,
   allianceName: string,
-  allianceTag: string
+  allianceTag: string,
 ): Cypress.Chainable<{
   adminData: UserSetupData;
   ownerData: UserSetupData;
@@ -526,7 +504,7 @@ export function setupDefenseOwnerAndMember(
   ownerPseudo: string,
   memberPseudo: string,
   allianceName: string,
-  allianceTag: string
+  allianceTag: string,
 ): Cypress.Chainable<{
   adminData: UserSetupData;
   ownerData: UserSetupData;
@@ -580,7 +558,7 @@ export function setupDefenseScenario(
   prefix: string,
   pseudo: string,
   tag: string,
-  champDefs: ChampDef[]
+  champDefs: ChampDef[],
 ): Cypress.Chainable<{
   adminData: UserSetupData;
   ownerData: UserSetupData;
@@ -594,27 +572,21 @@ export function setupDefenseScenario(
       return cy
         .apiLoadChampions(
           adminData.access_token,
-          champDefs.map((d) => ({ name: d.name, cls: d.cls, is_ascendable: d.options?.is_ascendable }))
+          champDefs.map((d) => ({ name: d.name, cls: d.cls, is_ascendable: d.options?.is_ascendable })),
         )
         .then((champMap) => {
           champDefs.forEach((def) => {
-            cy.apiAddChampionToRoster(
-              ownerData.access_token,
-              ownerAccId,
-              champMap[def.name].id,
-              def.rarity,
-              {
-                signature: def.options?.signature ?? 0,
-                is_preferred_attacker: def.options?.is_preferred_attacker ?? false,
-                ascension: def.options?.ascension ?? 0,
-              }
-            ).then((cu) => {
+            cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap[def.name].id, def.rarity, {
+              signature: def.options?.signature ?? 0,
+              is_preferred_attacker: def.options?.is_preferred_attacker ?? false,
+              ascension: def.options?.ascension ?? 0,
+            }).then((cu) => {
               championUsers.push({ name: def.name, cuId: cu.id });
             });
           });
         })
         .then(() => ({ adminData, ownerData, allianceId, ownerAccId, championUsers }));
-    }
+    },
   );
 }
 
@@ -623,7 +595,7 @@ export function setupOwnerMemberAlliance(
   ownerPseudo: string,
   memberPseudo: string,
   allianceName: string,
-  allianceTag: string
+  allianceTag: string,
 ): Cypress.Chainable<{
   ownerData: UserSetupData;
   memberData: UserSetupData;
@@ -680,7 +652,7 @@ Cypress.Commands.add(
     championId: string,
     stars: number,
     rank: number,
-    ascension = 0
+    ascension = 0,
   ) => {
     cy.request({
       method: 'POST',
@@ -691,7 +663,7 @@ Cypress.Commands.add(
       expect(res.status).to.eq(201);
       return res.body;
     });
-  }
+  },
 );
 
 Cypress.Commands.add(
@@ -704,7 +676,7 @@ Cypress.Commands.add(
     }).then((res) => {
       expect(res.status).to.eq(204);
     });
-  }
+  },
 );
 
 Cypress.Commands.add(
@@ -715,7 +687,7 @@ Cypress.Commands.add(
     warId: string,
     battlegroup: number,
     nodeNumber: number,
-    championUserId: string
+    championUserId: string,
   ) => {
     cy.request({
       method: 'POST',
@@ -726,7 +698,7 @@ Cypress.Commands.add(
       expect(res.status).to.eq(200);
       return res.body;
     });
-  }
+  },
 );
 
 Cypress.Commands.add(
@@ -740,19 +712,12 @@ Cypress.Commands.add(
       expect(res.status).to.eq(200);
       return res.body;
     });
-  }
+  },
 );
 
 Cypress.Commands.add(
   'apiUpdateWarKo',
-  (
-    token: string,
-    allianceId: string,
-    warId: string,
-    battlegroup: number,
-    nodeNumber: number,
-    koCount: number
-  ) => {
+  (token: string, allianceId: string, warId: string, battlegroup: number, nodeNumber: number, koCount: number) => {
     cy.request({
       method: 'PATCH',
       url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/ko`,
@@ -762,7 +727,7 @@ Cypress.Commands.add(
       expect(res.status).to.eq(200);
       return res.body;
     });
-  }
+  },
 );
 
 Cypress.Commands.add('apiEndWar', (token: string, allianceId: string, warId: string) => {
@@ -783,7 +748,7 @@ export function setupWarOwner(
   tokenPrefix: string,
   ownerPseudo: string,
   allianceName: string,
-  allianceTag: string
+  allianceTag: string,
 ): Cypress.Chainable<{
   adminData: UserSetupData;
   ownerData: UserSetupData;
@@ -854,17 +819,7 @@ export function setupAttackerScenario(prefix: string): Cypress.Chainable<{
         ])
         .then((champMap) =>
           cy.apiCreateWar(ownerData.access_token, allianceId, 'AttackerEnemy').then((war) => {
-            cy.apiPlaceWarDefender(
-              ownerData.access_token,
-              allianceId,
-              war.id,
-              1,
-              10,
-              champMap['Iron Man'].id,
-              7,
-              3,
-              0
-            );
+            cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 1, 10, champMap['Iron Man'].id, 7, 3, 0);
             return cy
               .apiAddChampionToRoster(memberData.access_token, memberAccId, champMap['Wolverine'].id, '7r3')
               .then((cu) => ({
@@ -877,7 +832,7 @@ export function setupAttackerScenario(prefix: string): Cypress.Chainable<{
                 warId: war.id,
                 championUserId: cu.id,
               }));
-          })
+          }),
         );
     });
 }
