@@ -319,46 +319,49 @@ def build_merged_report(
     log(f"Report written → {out.relative_to(ROOT)}  ({len(all_failures)} failure(s))")
 
 
+def _parse_int(s: str) -> int:
+    return int(s) if s != "-" else 0
+
+
 def pipe_output(
     stream,
     prefix: str,
     quiet: bool = False,
-    stats: dict | None = None,
     log_file: "Path | None" = None,
 ) -> None:
-    """Read lines from a subprocess stream and print them with a worker prefix.
-
-    If `stats` is provided, accumulate numeric results from the Cypress
-    'Results:' summary block (Tests / Passing / Failing / Pending / Skipped).
-    If `log_file` is provided, all lines are written to that file.
-    """
+    """Read lines from a subprocess stream, print with prefix, and write to log file."""
     try:
         fh = log_file.open("w", encoding="utf-8") if log_file else None
         try:
             for line in iter(stream.readline, b""):
                 decoded = line.decode(errors="replace").rstrip()
-                clean = ANSI_ESCAPE.sub("", decoded)
                 if not quiet:
                     print(f"{prefix} {decoded}")
                 if fh:
-                    fh.write(clean + "\n")
-                if stats is not None:
-                    m = FINAL_SUMMARY_RE.search(clean)
-                    if m:
-
-                        def _n(s: str) -> int:
-                            return int(s) if s != "-" else 0
-
-                        stats["tests"] = _n(m.group(1))
-                        stats["passing"] = _n(m.group(2))
-                        stats["failing"] = _n(m.group(3))
-                        stats["pending"] = _n(m.group(4))
-                        stats["skipped"] = _n(m.group(5))
+                    fh.write(ANSI_ESCAPE.sub("", decoded) + "\n")
         finally:
             if fh:
                 fh.close()
     except Exception:
         pass
+
+
+def parse_cypress_stats(cypress_log: Path) -> dict:
+    """Extract test counts from a cypress log file after the run completes."""
+    try:
+        for line in reversed(cypress_log.read_text(encoding="utf-8").splitlines()):
+            m = FINAL_SUMMARY_RE.search(line)
+            if m:
+                return {
+                    "tests": _parse_int(m.group(1)),
+                    "passing": _parse_int(m.group(2)),
+                    "failing": _parse_int(m.group(3)),
+                    "pending": _parse_int(m.group(4)),
+                    "skipped": _parse_int(m.group(5)),
+                }
+    except Exception:
+        pass
+    return {}
 
 
 def start_backend(worker: int, base_env: dict, quiet: bool = False) -> subprocess.Popen:
@@ -535,7 +538,7 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
 
     output_thread = threading.Thread(
         target=pipe_output,
-        args=(proc.stdout, prefix, False, stats),
+        args=(proc.stdout, prefix),
         kwargs={"log_file": cypress_log},
     )
 
@@ -543,6 +546,7 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     worker_start = time.time()
     proc.wait()
     output_thread.join(timeout=5)
+    stats.update(parse_cypress_stats(cypress_log))
     stats["duration_seconds"] = round(time.time() - worker_start, 1)
     log(f"Worker {worker}: Cypress finished with exit code {proc.returncode}")
 
