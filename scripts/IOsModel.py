@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import subprocess
 
 
 class IOsModel(ABC):
@@ -22,3 +23,11 @@ class IOsModel(ABC):
     @abstractmethod
     def start_new_session(self) -> bool:
         """Whether to use start_new_session=True in subprocess.Popen."""
+
+    @abstractmethod
+    def terminate_proc(self, p: subprocess.Popen) -> None:
+        """Send SIGTERM (or equivalent) to the process (group)."""
+
+    @abstractmethod
+    def kill_proc(self, p: subprocess.Popen) -> None:
+        """Send SIGKILL (or equivalent) to the process (group)."""

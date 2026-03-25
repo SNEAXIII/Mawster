@@ -1,3 +1,5 @@
+import os
+import signal
 import subprocess
 from IOsModel import IOsModel  # pylint: disable=import-error
 
@@ -22,6 +24,12 @@ class LinuxModel(IOsModel):
     @property
     def start_new_session(self) -> bool:
         return True
+
+    def terminate_proc(self, p: subprocess.Popen) -> None:
+        os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+
+    def kill_proc(self, p: subprocess.Popen) -> None:
+        os.killpg(os.getpgid(p.pid), signal.SIGKILL)
 
 
 class LinuxHeadlessModel(LinuxModel):

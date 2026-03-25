@@ -28,11 +28,20 @@ import threading
 import time
 from pathlib import Path
 
+from dataclasses import dataclass, asdict
+
 sys.path.insert(0, str(Path(__file__).parent))
 from config import (  # noqa: E402  # pylint: disable=import-error,wrong-import-position
-    ROOT, API_DIR, FRONT_DIR,
-    BASE_API_PORT, BASE_FRONT_PORT,
-    DB_PREFIX, MARIADB_HOST, MARIADB_PORT, MARIADB_ROOT_PASSWORD, MARIADB_CONTAINER,
+    ROOT,
+    API_DIR,
+    FRONT_DIR,
+    BASE_API_PORT,
+    BASE_FRONT_PORT,
+    DB_PREFIX,
+    MARIADB_HOST,
+    MARIADB_PORT,
+    MARIADB_ROOT_PASSWORD,
+    MARIADB_CONTAINER,
     HEALTH_TIMEOUT,
 )
 from linux_model import LinuxModel, LinuxHeadlessModel  # noqa: E402  # pylint: disable=import-error,wrong-import-position
@@ -52,6 +61,14 @@ FINAL_SUMMARY_RE = re.compile(
     r"(\d+|-)\s+"  # pending
     r"(\d+|-)"  # skipped
 )
+
+
+@dataclass
+class WorkerFailure:
+    worker: int
+    title: str
+    cypress_error: str
+    backend_logs: list[str]
 
 
 def _get_os_model() -> "IOsModel":
@@ -248,7 +265,6 @@ def parse_backend_markers(backend_log: Path) -> dict[str, list[str]]:
 
 
 def build_merged_report(
-    n: int,
     merged_stats: dict,
     worker_stats: list[dict],
     total_duration: float,
@@ -259,9 +275,9 @@ def build_merged_report(
     backend log lines captured between ===TEST_START=== / ===TEST_END=== markers.
     """
 
-    all_failures: list[dict] = []
+    all_failures: list[WorkerFailure] = []
 
-    for worker in range(n):
+    for worker in range(len(worker_stats)):
         log_dir = worker_log_dir(worker)
         cypress_log = log_dir / "cypress.log"
         backend_log = log_dir / "backend.log"
@@ -272,25 +288,19 @@ def build_merged_report(
         for failure in cypress_failures:
             title = failure["title"]
             backend_logs = backend_markers.get(title, [])
-            if not backend_logs:
-                # Fuzzy fallback: find any marker key that ends with / contains the title
-                for key, val in backend_markers.items():
-                    if title.endswith(key) or key.endswith(title):
-                        backend_logs = val
-                        break
 
             all_failures.append(
-                {
-                    "title": title,
-                    "worker": worker,
-                    "cypress_error": failure["error"],
-                    "backend_logs": backend_logs,
-                }
+                WorkerFailure(
+                    title=title,
+                    worker=worker,
+                    cypress_error=failure["error"],
+                    backend_logs=backend_logs,
+                )
             )
 
     workers_timing = [
-        {"worker": i, "duration_seconds": worker_stats[i].get("duration_seconds", 0)}
-        for i in range(n)
+        {"worker": index, "duration_seconds": worker.get("duration_seconds", 0)}
+        for (index, worker) in enumerate(worker_stats)
     ]
     report = {
         "summary": {
@@ -300,15 +310,13 @@ def build_merged_report(
             "total_duration_seconds": round(total_duration, 1),
             "workers": workers_timing,
         },
-        "failures": all_failures,
+        "failures": [asdict(f) for f in all_failures],
     }
 
     out = FRONT_DIR / "cypress" / "results" / "report.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
-    log(
-        f"Report written → {out.relative_to(ROOT)}  ({len(all_failures)} failure(s))"
-    )
+    log(f"Report written → {out.relative_to(ROOT)}  ({len(all_failures)} failure(s))")
 
 
 def pipe_output(
@@ -489,27 +497,32 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     """
     api_port = BASE_API_PORT + worker
     front_port = BASE_FRONT_PORT + worker
+    screenshots_path = f"cypress/results/screenshots/screenshots-{worker}"
+    videos_path = f"cypress/results/videos/videos-{worker}"
+
+    log_dir = worker_log_dir(worker)
+    log_dir.mkdir(parents=True, exist_ok=True)
+    cypress_log = log_dir / "cypress.log"
+
+    specs = ",".join(str(s) for s in specs)
 
     cmd = [
         NPX,
         "cypress",
         "run",
         "--spec",
-        ",".join(str(s) for s in specs),
+        specs,
         "--env",
         f"backendUrl=http://localhost:{api_port}",
         "--config",
         (
             f"baseUrl=http://localhost:{front_port},"
-            f"screenshotsFolder=cypress/results/screenshots/screenshots-{worker},"
-            f"videosFolder=cypress/results/videos/videos-{worker}"
+            f"screenshotsFolder={screenshots_path},"
+            f"videosFolder={videos_path}"
         ),
     ]
     log(f"Worker {worker}: launching Cypress ({len(specs)} spec(s))...")
 
-    log_dir = worker_log_dir(worker)
-    log_dir.mkdir(parents=True, exist_ok=True)
-    cypress_log = log_dir / "cypress.log"
     cmd = OS.cypress_cmd(cmd)
     proc = subprocess.Popen(
         cmd,
@@ -517,12 +530,15 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
+
     prefix = f"[W{worker}|cypress]"
+
     output_thread = threading.Thread(
         target=pipe_output,
         args=(proc.stdout, prefix, False, stats),
         kwargs={"log_file": cypress_log},
     )
+
     output_thread.start()
     worker_start = time.time()
     proc.wait()
@@ -538,13 +554,40 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     return proc.returncode
 
 
+def run_parallel(threads: list[threading.Thread]) -> None:
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+
 def kill_ports(ports: list[int]) -> None:
     """Kill any process currently listening on the given ports (parallel)."""
     kill_threads = [threading.Thread(target=OS.kill_port, args=(p,)) for p in ports]
-    for t in kill_threads:
-        t.start()
-    for t in kill_threads:
-        t.join()
+    run_parallel(kill_threads)
+
+
+def resolve_spec_paths(raw_specs: str) -> list[Path]:
+    resolved_specs: list[Path] = []
+    for raw in [s.strip() for s in raw_specs.split(",") if s.strip()]:
+        spec_path = Path(raw)
+        if not spec_path.is_absolute():
+            candidate = FRONT_DIR / "cypress" / "e2e" / raw
+            if not candidate.exists():
+                candidate = FRONT_DIR / raw
+            spec_path = candidate
+        if not spec_path.exists():
+            available = sorted(
+                p.relative_to(FRONT_DIR / "cypress" / "e2e")
+                for p in (FRONT_DIR / "cypress" / "e2e").rglob("*.cy.ts")
+            )
+            log(f"ERROR: spec not found: {raw}")
+            log("Available specs:")
+            for s in available:
+                log(f"  {s}")
+            sys.exit(1)
+        resolved_specs.append(spec_path)
+    return resolved_specs
 
 
 def main() -> None:
@@ -573,39 +616,23 @@ def main() -> None:
     args = parser.parse_args()
     quiet = args.quiet
 
+    resolved_specs: list[Path] = []
+    worker_number = args.workers
     if args.spec:
-        # Resolve and validate all specs before touching any server
-        resolved_specs: list[Path] = []
-        for raw in [s.strip() for s in args.spec.split(",") if s.strip()]:
-            spec_path = Path(raw)
-            if not spec_path.is_absolute():
-                candidate = FRONT_DIR / "cypress" / "e2e" / raw
-                if not candidate.exists():
-                    candidate = FRONT_DIR / raw
-                spec_path = candidate
-            if not spec_path.exists():
-                available = sorted(
-                    p.relative_to(FRONT_DIR / "cypress" / "e2e")
-                    for p in (FRONT_DIR / "cypress" / "e2e").rglob("*.cy.ts")
-                )
-                log(f"ERROR: spec not found: {raw}")
-                log("Available specs:")
-                for s in available:
-                    log(f"  {s}")
-                sys.exit(1)
-            resolved_specs.append(spec_path)
-        n = min(args.workers, len(resolved_specs))
-        log(f"--spec provided: {len(resolved_specs)} spec(s), using {n} worker(s)")
-    else:
-        resolved_specs = []
-        n = args.workers
+        resolved_specs = resolve_spec_paths(args.spec)
+        log(
+            f"--spec provided: {len(resolved_specs)} spec(s), using {worker_number} worker(s)"
+        )
+    worker_number = (
+        min(worker_number, len(resolved_specs)) if resolved_specs else args.workers
+    )
 
     start_time = time.time()
-    log(f"Starting E2E parallel run with {n} worker(s)...")
+    log(f"Starting E2E parallel run with {worker_number} worker(s)...")
 
     ports_to_free = [
-        *[BASE_API_PORT + i for i in range(n)],
-        *[BASE_FRONT_PORT + i for i in range(n)],
+        *[BASE_API_PORT + i for i in range(worker_number)],
+        *[BASE_FRONT_PORT + i for i in range(worker_number)],
     ]
     log(f"Freeing ports: {ports_to_free}")
     kill_ports(ports_to_free)
@@ -621,29 +648,17 @@ def main() -> None:
         log("Shutting down all servers...")
         for p in procs:
             try:
-                if not OS.start_new_session:
-                    p.terminate()
-                else:
-                    os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+                OS.terminate_proc(p)
             except Exception:
-                try:
-                    p.terminate()
-                except Exception:
-                    pass
+                pass
         for p in procs:
             try:
                 p.wait(timeout=5)
-            except Exception:
+            except subprocess.TimeoutExpired:
                 try:
-                    if not OS.start_new_session:
-                        p.kill()
-                    else:
-                        os.killpg(os.getpgid(p.pid), signal.SIGKILL)
+                    OS.kill_proc(p)
                 except Exception:
-                    try:
-                        p.kill()
-                    except Exception:
-                        pass
+                    pass
         # Remove the shared e2e build dir
         next_dir = FRONT_DIR / ".next-e2e"
         if next_dir.exists():
@@ -694,13 +709,11 @@ def main() -> None:
             with lock:
                 errors.append(f"Worker {worker}: {exc}")
 
-    all_threads = [threading.Thread(target=run_build)] + [
-        threading.Thread(target=setup_worker, args=(i,)) for i in range(n)
+    all_threads = [
+        threading.Thread(target=setup_worker, args=(i,)) for i in range(worker_number)
     ]
-    for t in all_threads:
-        t.start()
-    for t in all_threads:
-        t.join()
+    all_threads.append(threading.Thread(target=run_build))
+    run_parallel(all_threads)
 
     if build_error:
         log(f"ERROR: {build_error[0]}")
@@ -729,12 +742,10 @@ def main() -> None:
                 health_errors.append(str(exc))
 
     health_threads = [
-        threading.Thread(target=health_check_worker, args=(i,)) for i in range(n)
+        threading.Thread(target=health_check_worker, args=(i,))
+        for i in range(worker_number)
     ]
-    for t in health_threads:
-        t.start()
-    for t in health_threads:
-        t.join()
+    run_parallel(health_threads)
 
     if health_errors:
         for err in health_errors:
@@ -750,10 +761,12 @@ def main() -> None:
         )
     else:
         specs = get_spec_files()
-        log(f"Found {len(specs)} spec file(s) to distribute across {n} worker(s).")
-    spec_buckets = distribute_specs(specs, n)
-    results: list[int] = [0] * n
-    worker_stats: list[dict] = [{} for _ in range(n)]
+        log(
+            f"Found {len(specs)} spec file(s) to distribute across {worker_number} worker(s)."
+        )
+    spec_buckets = distribute_specs(specs, worker_number)
+    results: list[int] = [0] * worker_number
+    worker_stats: list[dict] = [{} for _ in range(worker_number)]
 
     def cypress_worker(worker: int) -> None:
         results[worker] = run_cypress(
@@ -761,12 +774,9 @@ def main() -> None:
         )
 
     cypress_threads = [
-        threading.Thread(target=cypress_worker, args=(i,)) for i in range(n)
+        threading.Thread(target=cypress_worker, args=(i,)) for i in range(worker_number)
     ]
-    for t in cypress_threads:
-        t.start()
-    for t in cypress_threads:
-        t.join()
+    run_parallel(cypress_threads)
 
     # Merge and print combined results
     merged: dict[str, int] = {}
@@ -785,7 +795,7 @@ def main() -> None:
     elapsed = time.time() - start_time
 
     # Write failure report (always, even if 0 failures)
-    build_merged_report(n, merged, worker_stats, elapsed)
+    build_merged_report(merged, worker_stats, elapsed)
     minutes, seconds = divmod(int(elapsed), 60)
     duration_str = f"{minutes}m{seconds:02d}s" if minutes else f"{seconds}s"
 

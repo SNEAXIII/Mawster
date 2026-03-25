@@ -27,3 +27,9 @@ class WindowsModel(IOsModel):
     @property
     def start_new_session(self) -> bool:
         return False
+
+    def terminate_proc(self, p: subprocess.Popen) -> None:
+        p.terminate()
+
+    def kill_proc(self, p: subprocess.Popen) -> None:
+        p.kill()
