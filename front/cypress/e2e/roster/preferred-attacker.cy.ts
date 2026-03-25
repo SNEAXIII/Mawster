@@ -46,28 +46,26 @@ describe('Roster – Preferred Attacker', () => {
   });
 
   it('can untoggle preferred attacker', () => {
-    setupRosterUser('pref-untoggle', 'UntogglePlayer').then(
-      ({ adminData, userData, accountId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Quake', 'Science').then((champs) => {
-          // Set as preferred attacker via API
-          cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r1', {
-            is_preferred_attacker: true,
-          });
-
-          cy.uiLogin(userData.login);
-          cy.navTo('roster');
-
-          // Should initially show ⚔ yellow name
-          cy.getByCy('preferred-attacker-name').should('be.visible');
-
-          // Click the ⚔ toggle to turn it OFF
-          cy.getByCy('preferred-attacker-toggle').first().click({ force: true });
-
-          // ⚔ prefix should be gone from the champion name
-          cy.getByCy('preferred-attacker-name').should('not.exist');
+    setupRosterUser('pref-untoggle', 'UntogglePlayer').then(({ adminData, userData, accountId }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Quake', 'Science').then((champs) => {
+        // Set as preferred attacker via API
+        cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r1', {
+          is_preferred_attacker: true,
         });
-      }
-    );
+
+        cy.uiLogin(userData.login);
+        cy.navTo('roster');
+
+        // Should initially show ⚔ yellow name
+        cy.getByCy('preferred-attacker-name').should('be.visible');
+
+        // Click the ⚔ toggle to turn it OFF
+        cy.getByCy('preferred-attacker-toggle').first().click({ force: true });
+
+        // ⚔ prefix should be gone from the champion name
+        cy.getByCy('preferred-attacker-name').should('not.exist');
+      });
+    });
   });
 
   it('preferred attacker flag is set via the add form checkbox', () => {

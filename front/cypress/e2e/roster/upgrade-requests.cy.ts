@@ -9,11 +9,7 @@ describe('Roster – Upgrade Requests', () => {
    * Helper: create an alliance with an owner and a member using force-join.
    * Also loads a champion and adds it to the member's roster at 7r1.
    */
-  function setupAllianceWithMember(
-    adminToken: string,
-    championName: string,
-    championClass: string
-  ) {
+  function setupAllianceWithMember(adminToken: string, championName: string, championClass: string) {
     let ownerData: UserSetupData;
     let memberData: UserSetupData;
     let allianceId: string;
@@ -44,16 +40,14 @@ describe('Roster – Upgrade Requests', () => {
       })
       .then((champs) => {
         champId = champs[0].id;
-        return cy
-          .apiAddChampionToRoster(memberData.access_token, memberAccId, champId, '7r1')
-          .then((cu) => ({
-            ownerData,
-            memberData,
-            allianceId,
-            memberAccId,
-            champId,
-            championUserId: cu.id as string,
-          }));
+        return cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champId, '7r1').then((cu) => ({
+          ownerData,
+          memberData,
+          allianceId,
+          memberAccId,
+          champId,
+          championUserId: cu.id as string,
+        }));
       });
   }
 
@@ -104,7 +98,7 @@ describe('Roster – Upgrade Requests', () => {
           cy.getByCy('upgrade-requests-section').click();
           cy.getByCy('upgrade-request-item').should('have.length', 1);
           cy.contains('Wolverine').should('be.visible');
-        }
+        },
       );
     });
   });
@@ -129,7 +123,7 @@ describe('Roster – Upgrade Requests', () => {
           // Reload the page – the request should be gone (completed)
           cy.reload();
           cy.getByCy('upgrade-requests-section').should('not.exist');
-        }
+        },
       );
     });
   });
@@ -153,7 +147,7 @@ describe('Roster – Upgrade Requests', () => {
           cy.reload();
           // Request should still be visible because champion is at 7r2, not 7r4
           cy.getByCy('upgrade-requests-section').should('be.visible');
-        }
+        },
       );
     });
   });
@@ -178,7 +172,7 @@ describe('Roster – Upgrade Requests', () => {
           cy.reload();
           // Request should be gone since champion rarity >= target rarity
           cy.getByCy('upgrade-requests-section').should('not.exist');
-        }
+        },
       );
     });
   });
@@ -187,28 +181,26 @@ describe('Roster – Upgrade Requests', () => {
 
   it("officer can cancel a member's upgrade request in the roster preview", () => {
     setupAdmin('ur-t4-admin').then((admin) => {
-      setupAllianceWithMember(admin.access_token, 'Thor', 'Cosmic').then(
-        ({ ownerData, championUserId }) => {
-          cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
+      setupAllianceWithMember(admin.access_token, 'Thor', 'Cosmic').then(({ ownerData, championUserId }) => {
+        cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 
-          cy.uiLogin(ownerData.login);
-          cy.navTo('alliances');
+        cy.uiLogin(ownerData.login);
+        cy.navTo('alliances');
 
-          // Wait for alliance roles to load before opening roster dialog
-          cy.getByCy('invite-member-toggle').should('be.visible');
-          cy.getByCy('view-roster-URMember').click();
+        // Wait for alliance roles to load before opening roster dialog
+        cy.getByCy('invite-member-toggle').should('be.visible');
+        cy.getByCy('view-roster-URMember').click();
 
-          cy.getByCy('upgrade-requests-section').should('be.visible');
-          // Expand the collapsible section (defaultOpen=false)
-          cy.getByCy('upgrade-requests-section').click();
-          cy.getByCy('cancel-upgrade-request').first().click();
+        cy.getByCy('upgrade-requests-section').should('be.visible');
+        // Expand the collapsible section (defaultOpen=false)
+        cy.getByCy('upgrade-requests-section').click();
+        cy.getByCy('cancel-upgrade-request').first().click();
 
-          // Confirm in the dialog ("Cancel request" is the action button)
-          cy.get('[role="alertdialog"]').contains('button', 'Cancel request').click();
+        // Confirm in the dialog ("Cancel request" is the action button)
+        cy.get('[role="alertdialog"]').contains('button', 'Cancel request').click();
 
-          cy.getByCy('upgrade-requests-section').should('not.exist');
-        }
-      );
+        cy.getByCy('upgrade-requests-section').should('not.exist');
+      });
     });
   });
 
@@ -330,7 +322,7 @@ describe('Roster – Upgrade Requests', () => {
           cy.getByCy('upgrade-requests-section').click();
           // But the cancel button is NOT shown (member has can_manage = false)
           cy.getByCy('cancel-upgrade-request').should('not.exist');
-        }
+        },
       );
     });
   });
@@ -373,12 +365,7 @@ describe('Roster – Upgrade Requests', () => {
               return cy.apiLoadChampion(admin.access_token, 'ThanosMulti', 'Cosmic');
             })
             .then((c2) => {
-              return cy.apiAddChampionToRoster(
-                memberData.access_token,
-                memberAccId,
-                c2[0].id,
-                '7r1'
-              );
+              return cy.apiAddChampionToRoster(memberData.access_token, memberAccId, c2[0].id, '7r1');
             })
             .then((cu2) => {
               cy.apiCreateUpgradeRequest(ownerData.access_token, cu2.id, '7r4');
@@ -399,30 +386,28 @@ describe('Roster – Upgrade Requests', () => {
 
   it('cancel button on champion card cancels the pending request (alliance dialog)', () => {
     setupAdmin('ur-t9-admin').then((admin) => {
-      setupAllianceWithMember(admin.access_token, 'SentryCard', 'Science').then(
-        ({ ownerData, championUserId }) => {
-          cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
+      setupAllianceWithMember(admin.access_token, 'SentryCard', 'Science').then(({ ownerData, championUserId }) => {
+        cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 
-          cy.uiLogin(ownerData.login);
-          cy.navTo('alliances');
+        cy.uiLogin(ownerData.login);
+        cy.navTo('alliances');
 
-          // Wait for alliance roles to load
-          cy.getByCy('invite-member-toggle').should('be.visible');
-          cy.getByCy('view-roster-URMember').click();
+        // Wait for alliance roles to load
+        cy.getByCy('invite-member-toggle').should('be.visible');
+        cy.getByCy('view-roster-URMember').click();
 
-          // The cancel-pending-request button is on the champion card in the dialog
-          cy.getByCy('cancel-pending-request').should('exist');
-          cy.getByCy('cancel-pending-request').first().click({ force: true });
+        // The cancel-pending-request button is on the champion card in the dialog
+        cy.getByCy('cancel-pending-request').should('exist');
+        cy.getByCy('cancel-pending-request').first().click({ force: true });
 
-          // Confirm in the cancel confirmation dialog
-          cy.get('[role="alertdialog"]').contains('button', 'Cancel request').click();
+        // Confirm in the cancel confirmation dialog
+        cy.get('[role="alertdialog"]').contains('button', 'Cancel request').click();
 
-          // After cancelling the only request, the upgrade-requests-section should disappear
-          // and the pending request button should be gone
-          cy.getByCy('cancel-pending-request').should('not.exist');
-          cy.getByCy('upgrade-requests-section').should('not.exist');
-        }
-      );
+        // After cancelling the only request, the upgrade-requests-section should disappear
+        // and the pending request button should be gone
+        cy.getByCy('cancel-pending-request').should('not.exist');
+        cy.getByCy('upgrade-requests-section').should('not.exist');
+      });
     });
   });
 });

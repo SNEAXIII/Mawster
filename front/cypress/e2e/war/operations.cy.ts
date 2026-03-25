@@ -8,42 +8,38 @@ describe('War – Operations (declare, place, remove)', () => {
   // ── Declare war via UI ────────────────────────────────────────────────────
 
   it('officer can declare a war via the dialog', () => {
-    setupWarOwner('war-op-declare', 'DeclareOp', 'DeclareOpAlliance', 'DO').then(
-      ({ ownerData }) => {
-        cy.uiLogin(ownerData.login);
-        cy.navTo('war');
+    setupWarOwner('war-op-declare', 'DeclareOp', 'DeclareOpAlliance', 'DO').then(({ ownerData }) => {
+      cy.uiLogin(ownerData.login);
+      cy.navTo('war');
 
-        cy.getByCy('declare-war-btn').click();
-        cy.getByCy('opponent-name-input').type('MightyFoes');
-        cy.getByCy('create-war-confirm').click();
+      cy.getByCy('declare-war-btn').click();
+      cy.getByCy('opponent-name-input').type('MightyFoes');
+      cy.getByCy('create-war-confirm').click();
 
-        cy.contains('War declared against MightyFoes').should('be.visible');
-        cy.getByCy('war-opponent-name').should('contain', 'MightyFoes');
-      }
-    );
+      cy.contains('War declared against MightyFoes').should('be.visible');
+      cy.getByCy('war-opponent-name').should('contain', 'MightyFoes');
+    });
   });
 
   // ── Place defender via UI ─────────────────────────────────────────────────
 
   it('officer can place a champion on a war node', () => {
-    setupWarOwner('war-op-place', 'PlaceOp', 'PlaceOpAlliance', 'PO').then(
-      ({ adminData, ownerData, allianceId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Iron Man', 'Tech');
+    setupWarOwner('war-op-place', 'PlaceOp', 'PlaceOpAlliance', 'PO').then(({ adminData, ownerData, allianceId }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Iron Man', 'Tech');
 
-        cy.apiCreateWar(ownerData.access_token, allianceId, 'PlaceEnemy').then(() => {
-          cy.uiLogin(ownerData.login);
-          cy.navTo('war');
+      cy.apiCreateWar(ownerData.access_token, allianceId, 'PlaceEnemy').then(() => {
+        cy.uiLogin(ownerData.login);
+        cy.navTo('war');
 
-          cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
-          cy.getByCy('war-champion-search').type('Iron Man');
-          cy.getByCy('war-champion-card-Iron-Man').click();
-          cy.getByCy('war-confirm-place').click();
+        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        cy.getByCy('war-champion-search').type('Iron Man');
+        cy.getByCy('war-champion-card-Iron-Man').click();
+        cy.getByCy('war-confirm-place').click();
 
-          cy.contains('placed on node #1').should('be.visible');
-          cy.getByCy('war-node-1').should('not.contain', '+');
-        });
-      }
-    );
+        cy.contains('placed on node #1').should('be.visible');
+        cy.getByCy('war-node-1').should('not.contain', '+');
+      });
+    });
   });
 
   // ── Placed champion disappears from selector ──────────────────────────────
@@ -73,7 +69,7 @@ describe('War – Operations (declare, place, remove)', () => {
           cy.getByCy('war-champion-search').clear().type('Thor');
           cy.getByCy('war-champion-card-Thor').should('be.visible');
         });
-      }
+      },
     );
   });
 
@@ -84,16 +80,7 @@ describe('War – Operations (declare, place, remove)', () => {
       ({ adminData, ownerData, allianceId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Science').then((champs) => {
           cy.apiCreateWar(ownerData.access_token, allianceId, 'RemoveEnemy').then((war) => {
-            cy.apiPlaceWarDefender(
-              ownerData.access_token,
-              allianceId,
-              war.id,
-              1,
-              5,
-              champs[0].id,
-              7,
-              3
-            );
+            cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 1, 5, champs[0].id, 7, 3);
 
             cy.uiLogin(ownerData.login);
             cy.navTo('war');
@@ -105,39 +92,28 @@ describe('War – Operations (declare, place, remove)', () => {
             cy.getByCy('war-node-5').should('contain', '+');
           });
         });
-      }
+      },
     );
   });
 
   // ── Clear BG ──────────────────────────────────────────────────────────────
 
   it('officer can clear all defenders in a battlegroup', () => {
-    setupWarOwner('war-op-clear', 'ClearOp', 'ClearOpAlliance', 'CO').then(
-      ({ adminData, ownerData, allianceId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-          cy.apiCreateWar(ownerData.access_token, allianceId, 'ClearEnemy').then((war) => {
-            cy.apiPlaceWarDefender(
-              ownerData.access_token,
-              allianceId,
-              war.id,
-              1,
-              10,
-              champs[0].id,
-              7,
-              3
-            );
+    setupWarOwner('war-op-clear', 'ClearOp', 'ClearOpAlliance', 'CO').then(({ adminData, ownerData, allianceId }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
+        cy.apiCreateWar(ownerData.access_token, allianceId, 'ClearEnemy').then((war) => {
+          cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 1, 10, champs[0].id, 7, 3);
 
-            cy.uiLogin(ownerData.login);
-            cy.navTo('war');
+          cy.uiLogin(ownerData.login);
+          cy.navTo('war');
 
-            cy.getByCy('clear-war-bg-btn').should('be.visible').click();
-            cy.getByCy('confirmation-dialog-confirm').click();
-            cy.contains('Battlegroup cleared').should('be.visible');
-            cy.getByCy('war-node-10').should('contain', '+');
-          });
+          cy.getByCy('clear-war-bg-btn').should('be.visible').click();
+          cy.getByCy('confirmation-dialog-confirm').click();
+          cy.contains('Battlegroup cleared').should('be.visible');
+          cy.getByCy('war-node-10').should('contain', '+');
         });
-      }
-    );
+      });
+    });
   });
 
   // ── Switch battlegroup ────────────────────────────────────────────────────
@@ -148,16 +124,7 @@ describe('War – Operations (declare, place, remove)', () => {
         cy.apiLoadChampion(adminData.access_token, 'Gamora', 'Cosmic').then((champs) => {
           cy.apiCreateWar(ownerData.access_token, allianceId, 'BgEnemy').then((war) => {
             // Place in BG2
-            cy.apiPlaceWarDefender(
-              ownerData.access_token,
-              allianceId,
-              war.id,
-              2,
-              1,
-              champs[0].id,
-              7,
-              3
-            );
+            cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 2, 1, champs[0].id, 7, 3);
 
             cy.uiLogin(ownerData.login);
             cy.navTo('war');
@@ -170,7 +137,7 @@ describe('War – Operations (declare, place, remove)', () => {
             cy.getByCy('war-node-1').should('not.contain', '+');
           });
         });
-      }
+      },
     );
   });
 });

@@ -53,7 +53,7 @@ jobs:
       MARIADB_ROOT_PASSWORD: rootpassword
       MARIADB_DATABASE: mawster-testing
     services:
-      mariadb:
+      mariadb-test:
         image: mariadb
         env:
           MARIADB_USER: user
@@ -61,7 +61,7 @@ jobs:
           MARIADB_ROOT_PASSWORD: rootpassword
           MARIADB_DATABASE: mawster-testing
         ports:
-          - 3306:3306
+          - 3307:3306
         options: >-
           --health-cmd="healthcheck.sh --connect --innodb_initialized"
           --health-interval=10s
@@ -80,14 +80,6 @@ jobs:
       - name: Install API dependencies
         working-directory: ./api
         run: uv sync
-      - name: Start API server
-        working-directory: ./api
-        env:
-          SECRET_KEY: ci-test-secret-key-for-e2e-tests
-          MARIADB_PORT: 3306
-          ALGORITHM: HS256
-          ACCESS_TOKEN_EXPIRE_MINUTES: 60
-        run: uv run app_testing.py &
 
       # ── Frontend setup ──
       - name: Setup Node.js
@@ -99,43 +91,20 @@ jobs:
       - name: Install frontend dependencies
         working-directory: ./front
         run: npm ci
-      - name: Start frontend dev server
-        working-directory: ./front
-        env:
-          NEXTAUTH_SECRET: ci-test-nextauth-secret
-          NEXTAUTH_URL: http://localhost:3000
-        run: npm run testing &
 
-      # ── Wait for services ──
-      - name: Wait for API
-        run: |
-          for i in $(seq 1 30); do
-            curl -s http://localhost:8001 > /dev/null && break
-            sleep 2
-          done
-      - name: Wait for frontend
-        run: |
-          for i in $(seq 1 60); do
-            curl -s http://localhost:3000 > /dev/null && break
-            sleep 2
-          done
+      # ── MariaDB client (needed by e2e_parallel.py to create per-worker DBs) ──
+      - name: Install dependencies
+        run: sudo apt-get install -y mariadb-client xvfb
 
       # ── Run Cypress ──
       - name: Run Cypress E2E tests
-        working-directory: ./front
-        run: npx cypress run
-      - name: Upload Cypress videos
-        if: failure()
+        run: python3 scripts/e2e_parallel.py --workers 2 --quiet
+      - name: Upload Cypress results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-videos
-          path: front/cypress/results/videos
-      - name: Upload Cypress screenshots
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-screenshots
-          path: front/cypress/results/screenshots
+          name: cypress-results
+          path: front/cypress/results
 
   changes:
     if: github.ref_name == 'release'

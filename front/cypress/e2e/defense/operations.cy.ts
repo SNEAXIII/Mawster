@@ -10,39 +10,33 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
   // =========================================================================
 
   it('removes a defender from side panel and counter decrements', () => {
-    setupDefenseOwner('def-op-rm', 'RmPlyr', 'RmAll', 'RM').then(
-      ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy
-            .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', {
-              signature: 200,
-            })
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
-        );
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) =>
-          cy
-            .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r4', {
-              signature: 100,
-            })
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 2, cu.id, ownerAccId)
-            )
-        );
+    setupDefenseOwner('def-op-rm', 'RmPlyr', 'RmAll', 'RM').then(({ adminData, ownerData, allianceId, ownerAccId }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
+        cy
+          .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', {
+            signature: 200,
+          })
+          .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
+      );
+      cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) =>
+        cy
+          .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r4', {
+            signature: 100,
+          })
+          .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 2, cu.id, ownerAccId)),
+      );
 
-        cy.uiLogin(ownerData.login);
-        cy.navTo('defense');
+      cy.uiLogin(ownerData.login);
+      cy.navTo('defense');
 
-        cy.getByCy('defender-count-RmPlyr').should('contain', '2/5');
+      cy.getByCy('defender-count-RmPlyr').should('contain', '2/5');
 
-        // Click remove on the side panel (force click because button is hidden until hover)
-        cy.getByCy('member-section-RmPlyr').find('button').first().click({ force: true });
+      // Click remove on the side panel (force click because button is hidden until hover)
+      cy.getByCy('member-section-RmPlyr').find('button').first().click({ force: true });
 
-        cy.getByCy('defender-count-RmPlyr').should('contain', '1/5');
-        cy.contains('Defender removed').should('be.visible');
-      }
-    );
+      cy.getByCy('defender-count-RmPlyr').should('contain', '1/5');
+      cy.contains('Defender removed').should('be.visible');
+    });
   });
 
   it('removes a defender from the war map red X button', () => {
@@ -53,9 +47,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', {
               signature: 200,
             })
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 5, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 5, cu.id, ownerAccId)),
         );
 
         cy.uiLogin(ownerData.login);
@@ -69,7 +61,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
         cy.getByCy('defender-count-RmMapPlyr').should('contain', '0/5');
         cy.getByCy('war-node-5').should('contain', '+');
         cy.contains('Defender removed').should('be.visible');
-      }
+      },
     );
   });
 
@@ -77,7 +69,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
     setupDefenseOwner('def-op-rmreapp', 'RmReappPlyr', 'RmReappAll', 'RR').then(
       ({ adminData, ownerData, ownerAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
         );
 
         cy.uiLogin(ownerData.login);
@@ -100,7 +92,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
         // Spider-Man should reappear in selector
         cy.getByCy('war-node-2').scrollIntoView().click({ force: true });
         cy.getByCy('champion-card-Spider-Man').should('be.visible');
-      }
+      },
     );
   });
 
@@ -114,16 +106,12 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
         cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r4')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 2, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 2, cu.id, ownerAccId)),
         );
 
         cy.uiLogin(ownerData.login);
@@ -136,7 +124,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
 
         cy.getByCy('defender-count-ClearPlyr').should('contain', '0/5');
         cy.contains('Defense cleared').should('be.visible');
-      }
+      },
     );
   });
 
@@ -146,9 +134,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 10, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 10, cu.id, ownerAccId)),
         );
 
         cy.uiLogin(ownerData.login);
@@ -160,7 +146,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
         cy.contains('button', 'Confirm').click();
 
         cy.getByCy('war-node-10').should('contain', '+');
-      }
+      },
     );
   });
 
@@ -170,9 +156,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
         cy.uiLogin(ownerData.login);
@@ -182,7 +166,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
         cy.contains('button', 'Confirm').click();
 
         cy.contains('No defenders placed.').scrollIntoView().should('be.visible');
-      }
+      },
     );
   });
 
@@ -192,9 +176,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
         cy.uiLogin(ownerData.login);
@@ -208,7 +190,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
 
         // Defenders remain intact
         cy.getByCy('defender-count-ClrCancelPlyr').should('contain', '1/5');
-      }
+      },
     );
   });
 
@@ -224,9 +206,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', {
               signature: 200,
             })
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
         cy.intercept('GET', `**/alliances/${allianceId}/defense/bg/1/export`).as('exportReq');
@@ -244,7 +224,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
           expect(body[0]).to.have.property('owner_name', 'ExportPlyr');
           expect(body[0]).to.have.property('rarity', '7r5');
         });
-      }
+      },
     );
   });
 
@@ -268,16 +248,12 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
         cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r4')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 10, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 10, cu.id, ownerAccId)),
         );
 
         cy.intercept('GET', `**/alliances/${allianceId}/defense/bg/1/export`).as('exportMulti');
@@ -296,7 +272,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
           expect(nodes).to.include(1);
           expect(nodes).to.include(10);
         });
-      }
+      },
     );
   });
 
@@ -310,9 +286,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
         // Export via API
@@ -349,47 +323,43 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
           cy.getByCy('defender-count-ImportPlyr').should('contain', '1/5');
           cy.getByCy('member-section-ImportPlyr').find('[title*="Spider-Man"]').should('exist');
         });
-      }
+      },
     );
   });
 
   it('import via UI file upload shows import report dialog', () => {
-    setupDefenseOwner('def-op-impui', 'ImpUIPlyr', 'ImpUIAll', 'IU').then(
-      ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-        );
+    setupDefenseOwner('def-op-impui', 'ImpUIPlyr', 'ImpUIAll', 'IU').then(({ adminData, ownerData, ownerAccId }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
+      );
 
-        cy.uiLogin(ownerData.login);
-        cy.navTo('defense');
+      cy.uiLogin(ownerData.login);
+      cy.navTo('defense');
 
-        // Prepare import JSON
-        const importData = [
-          { champion_name: 'Spider-Man', rarity: '7r3', node_number: 1, owner_name: 'ImpUIPlyr' },
-        ];
+      // Prepare import JSON
+      const importData = [{ champion_name: 'Spider-Man', rarity: '7r3', node_number: 1, owner_name: 'ImpUIPlyr' }];
 
-        // Create a file and upload it
-        const blob = new Blob([JSON.stringify(importData)], { type: 'application/json' });
-        const file = new File([blob], 'defense_import.json', { type: 'application/json' });
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
+      // Create a file and upload it
+      const blob = new Blob([JSON.stringify(importData)], { type: 'application/json' });
+      const file = new File([blob], 'defense_import.json', { type: 'application/json' });
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
 
-        cy.get('input[type="file"]').then((input) => {
-          const el = input[0] as HTMLInputElement;
-          el.files = dataTransfer.files;
-          cy.wrap(input).trigger('change', { force: true });
-        });
+      cy.get('input[type="file"]').then((input) => {
+        const el = input[0] as HTMLInputElement;
+        el.files = dataTransfer.files;
+        cy.wrap(input).trigger('change', { force: true });
+      });
 
-        cy.contains('Import Report').should('be.visible');
-      }
-    );
+      cy.contains('Import Report').should('be.visible');
+    });
   });
 
   it('import with unknown champion shows error in report', () => {
     setupDefenseOwner('def-op-imperr', 'ImpErrPlyr', 'ImpErrAll', 'IE').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
         );
 
         // Import via API with an unknown champion
@@ -425,7 +395,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
         cy.uiLogin(ownerData.login);
         cy.navTo('defense');
         cy.getByCy('defender-count-ImpErrPlyr').should('contain', '1/5');
-      }
+      },
     );
   });
 
@@ -433,7 +403,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
     setupDefenseOwner('def-op-impunk', 'ImpUnkPlyr', 'ImpUnkAll', 'IK').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
         );
 
         cy.request({
@@ -456,7 +426,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
           expect(importRes.body.error_count).to.eq(1);
           expect(importRes.body.errors[0].reason).to.include('not found');
         });
-      }
+      },
     );
   });
 
@@ -466,12 +436,10 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
         cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) =>
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r4')
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r4'),
         );
 
         // Import different placement → previous gets cleared
@@ -503,7 +471,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
         cy.getByCy('defender-count-ImpClrPlyr').should('contain', '1/5');
         cy.getByCy('war-node-1').should('contain', '+'); // Spider-Man cleared
         cy.getByCy('war-node-10').should('contain', 'ImpClrPlyr'); // Wolverine placed
-      }
+      },
     );
   });
 
@@ -517,9 +485,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy
             .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) =>
-              cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)
-            )
+            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
         cy.uiLogin(ownerData.login);
@@ -535,7 +501,7 @@ describe('Defense – Operations (remove, clear, export, import)', () => {
         // Switch back to BG1: Spider-Man still there
         cy.getByCy('defense-bg-1').click();
         cy.getByCy('war-node-1').should('contain', 'BGIsoPlyr');
-      }
+      },
     );
   });
 });
