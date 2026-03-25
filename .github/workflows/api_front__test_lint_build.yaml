@@ -98,7 +98,7 @@ jobs:
 
       # ── Run Cypress ──
       - name: Run Cypress E2E tests
-        run: 	python3 scripts/e2e_parallel.py --workers 4 --quiet
+        run: python3 scripts/e2e_parallel.py --workers 2 --quiet
       - name: Upload Cypress results
         if: always()
         uses: actions/upload-artifact@v4
