@@ -61,7 +61,7 @@ jobs:
           MARIADB_ROOT_PASSWORD: rootpassword
           MARIADB_DATABASE: mawster-testing
         ports:
-          - 3306:3306
+          - 3307:3306
         options: >-
           --health-cmd="healthcheck.sh --connect --innodb_initialized"
           --health-interval=10s
