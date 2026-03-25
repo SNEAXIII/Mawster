@@ -28,7 +28,7 @@ export default function ModaleSettings() {
     <Dialog>
       <DialogTrigger asChild>
         <Button
-          data-cy='mobile-settings-trigger'
+          data-cy='modale-settings-trigger'
           variant='ghost'
           className='flex h-12 min-w-12 items-center justify-center rounded-md p-3'
           aria-label={t.nav.settings}
@@ -36,7 +36,7 @@ export default function ModaleSettings() {
           <Settings className='h-5 w-5' />
         </Button>
       </DialogTrigger>
-      <DialogContent data-cy='mobile-settings-sheet'>
+      <DialogContent data-cy='modale-settings-content'>
         <DialogHeader>
           <DialogTitle>{t.nav.settings}</DialogTitle>
         </DialogHeader>
@@ -59,6 +59,7 @@ export default function ModaleSettings() {
               onClick={handleSignOut}
               className='px-2 hover:bg-destructive/30 hover:text-destructive'
               aria-label={t.nav.signOut}
+              data-cy='modale-settings-sign-out'
             >
               <LogOut className='h-5 w-5' />
             </Button>

@@ -9,7 +9,7 @@ import { LogIn } from 'lucide-react';
 import NavLinks, { Role } from './nav-links';
 import LanguageSwitcher from '@/components/language-switcher';
 import ThemePicker from '@/components/theme-picker';
-import ModaleSettings from './mobile-settings-sheet';
+import ModaleSettings from './modale-settings';
 import { useI18n } from '@/app/i18n';
 import { useAllianceContext } from '@/app/contexts/alliance-context';
 

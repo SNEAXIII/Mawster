@@ -5,27 +5,27 @@ describe('Mobile Settings Sheet', () => {
     cy.truncateDb();
   });
 
-  it('shows the settings button on mobile and hides it on desktop', () => {
-    setupUser('mobile-settings-visibility').then(({ login }) => {
+  it('shows the settings button on mobile and on desktop', () => {
+    setupUser('modale-settings-visibility').then(({ login }) => {
       cy.uiLogin(login);
 
       // Mobile: button should be visible
       cy.viewport(375, 667);
-      cy.getByCy('mobile-settings-trigger').should('be.visible');
+      cy.getByCy('modale-settings-trigger').should('be.visible');
 
-      // Desktop: button should not be visible
+      // Desktop: button should be visible
       cy.viewport(1280, 800);
-      cy.getByCy('mobile-settings-trigger').should('not.be.visible');
+      cy.getByCy('modale-settings-trigger').should('be.visible');
     });
   });
 
   it('opens the settings sheet when the button is clicked on mobile', () => {
-    setupUser('mobile-settings-open').then(({ login }) => {
+    setupUser('modale-settings-open').then(({ login }) => {
       cy.viewport(375, 667);
       cy.uiLogin(login);
 
-      cy.getByCy('mobile-settings-trigger').click();
-      cy.getByCy('mobile-settings-sheet').should('be.visible');
+      cy.getByCy('modale-settings-trigger').click();
+      cy.getByCy('modale-settings-content').should('be.visible');
       cy.contains('Settings').should('be.visible');
       cy.contains('Language').should('be.visible');
       cy.contains('Theme').should('be.visible');
@@ -33,16 +33,16 @@ describe('Mobile Settings Sheet', () => {
   });
 
   it('toggles language from EN to FR via the settings sheet', () => {
-    setupUser('mobile-settings-lang').then(({ login }) => {
+    setupUser('modale-settings-lang').then(({ login }) => {
       cy.viewport(375, 667);
       cy.uiLogin(login);
 
       // Open settings sheet
-      cy.getByCy('mobile-settings-trigger').click();
-      cy.getByCy('mobile-settings-sheet').should('be.visible');
+      cy.getByCy('modale-settings-trigger').click();
+      cy.getByCy('modale-settings-content').should('be.visible');
 
       // Initially EN — flag shows FR (next language)
-      cy.getByCy('mobile-settings-sheet').within(() => {
+      cy.getByCy('modale-settings-content').within(() => {
         cy.contains('🇫🇷').click();
       });
 
@@ -51,17 +51,30 @@ describe('Mobile Settings Sheet', () => {
     });
   });
 
+  it('signs out when the sign out button is clicked', () => {
+    setupUser('modale-settings-signout').then(({ login }) => {
+      cy.uiLogin(login);
+      cy.navTo('profile');
+
+      cy.getByCy('modale-settings-trigger').click();
+      cy.getByCy('modale-settings-content').should('be.visible');
+      cy.getByCy('modale-settings-sign-out').click();
+
+      cy.url().should('include', '/login?callbackUrl=/profile');
+    });
+  });
+
   it('toggles theme via the settings sheet', () => {
-    setupUser('mobile-settings-theme').then(({ login }) => {
+    setupUser('modale-settings-theme').then(({ login }) => {
       cy.viewport(375, 667);
       cy.uiLogin(login);
 
       // Open settings sheet
-      cy.getByCy('mobile-settings-trigger').click();
-      cy.getByCy('mobile-settings-sheet').should('be.visible');
+      cy.getByCy('modale-settings-trigger').click();
+      cy.getByCy('modale-settings-content').should('be.visible');
 
       // Click the theme toggle button inside the sheet
-      cy.getByCy('mobile-settings-sheet').within(() => {
+      cy.getByCy('modale-settings-content').within(() => {
         cy.get('button[aria-label]').last().click();
       });
 
