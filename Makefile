@@ -1,5 +1,5 @@
 # Root Makefile — E2E test orchestration
-.PHONY: help e2e e2e-open e2e-parallel e2e-db e2e-stop
+.PHONY: help e2e e2e-open e2e-parallel e2e-parallel-quiet e2e-db e2e-stop
 
 NEXTAUTH_SECRET ?= e2e-local-nextauth-secret
 NEXTAUTH_URL    ?= http://localhost:3000
@@ -14,6 +14,7 @@ help:
 	@Write-Host "e2e          --> demarrer les services + lancer Cypress headless"
 	@Write-Host "e2e-open     --> demarrer les services + ouvrir l'UI Cypress"
 	@Write-Host "e2e-parallel --> lancer les tests E2E en parallèle (N=4 par défaut, max 8)"
+	@Write-Host "e2e-parallel-quiet --> lancer les tests E2E en parallèle en mode silencieux (N=4 par défaut, max 8)"
 	@Write-Host "e2e-db       --> demarrer uniquement mariadb-test"
 	@Write-Host "e2e-stop     --> arreter l'API et le frontend de test"
 	@Write-Host "Logs : .e2e-api.log  .e2e-front.log"
@@ -50,6 +51,7 @@ help:
 	@echo "e2e          --> demarrer les services + lancer Cypress headless"
 	@echo "e2e-open     --> demarrer les services + ouvrir l'UI Cypress"
 	@echo "e2e-parallel --> lancer les tests E2E en parallèle (N=4 par défaut, max 8)"
+	@echo "e2e-parallel-quiet --> lancer les tests E2E en parallèle en mode silencieux (N=4 par défaut, max 8)"
 	@echo "e2e-db       --> demarrer uniquement mariadb-test"
 	@echo "e2e-stop     --> arreter l'API et le frontend de test"
 	@echo "Variables : N=4  SPEC=war/war-management.cy.ts  Q=1  NEXTAUTH_SECRET=..."
