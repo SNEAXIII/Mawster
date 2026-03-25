@@ -458,9 +458,12 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     log_dir = worker_log_dir(worker)
     log_dir.mkdir(parents=True, exist_ok=True)
     cypress_log = log_dir / "cypress.log"
+    # Each worker gets a unique Xvfb display to avoid conflicts (:99, :100, ...)
+    cypress_env = {**os.environ, "DISPLAY": f":{99 + worker}"}
     proc = subprocess.Popen(
         cmd,
         cwd=str(FRONT_DIR),
+        env=cypress_env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
