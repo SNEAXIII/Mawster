@@ -23,8 +23,12 @@ from starlette import status
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+
 from src.security.secrets import SECRET
 from src.utils.logging_config import setup_logging
+from src.utils.rate_limiter import limiter
 
 # Initialize logging before anything else
 setup_logging(logging.INFO if IS_PROD else logging.DEBUG)
@@ -36,9 +40,8 @@ if not IS_PROD:
 app = FastAPI(title="Mawster", version="1.0.0")
 
 # Rate limiter (utilise l'IP du client — X-Forwarded-For si disponible, sinon connexion directe)
-# limiter = Limiter(key_func=get_remote_address)
-# app.state.limiter = limiter
-# app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS — origines définies dans api.env (ALLOWED_ORIGINS), jamais "*" en prod
 _cors_origins = [origin.strip() for origin in SECRET.ALLOWED_ORIGINS.split(",") if origin.strip()]
