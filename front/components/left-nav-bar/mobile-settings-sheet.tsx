@@ -1,38 +1,45 @@
 'use client';
 
-import { Settings } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import LanguageSwitcher from '@/components/language-switcher';
 import ThemePicker from '@/components/theme-picker';
 import { useI18n } from '@/app/i18n';
+import { useRouter } from 'next/dist/client/components/navigation';
+import { signOut } from 'next-auth/react';
 
-export default function MobileSettingsSheet() {
+export default function ModaleSettings() {
   const { t } = useI18n();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut({ redirect: false });
+      router.push('/');
+      router.refresh();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
+    <Dialog>
+      <DialogTrigger asChild>
         <Button
           data-cy='mobile-settings-trigger'
           variant='ghost'
-          className='flex h-[48px] w-full items-center justify-center rounded-md p-3 md:hidden'
+          className='flex h-12 min-w-12 items-center justify-center rounded-md p-3'
           aria-label={t.nav.settings}
         >
           <Settings className='h-5 w-5' />
         </Button>
-      </SheetTrigger>
-      <SheetContent side='bottom' className='md:hidden' data-cy='mobile-settings-sheet'>
-        <SheetHeader>
-          <SheetTitle>{t.nav.settings}</SheetTitle>
-        </SheetHeader>
+      </DialogTrigger>
+      <DialogContent data-cy='mobile-settings-sheet'>
+        <DialogHeader>
+          <DialogTitle>{t.nav.settings}</DialogTitle>
+        </DialogHeader>
         <div className='mt-4 space-y-4'>
           <div className='flex items-center justify-between'>
             <span className='text-sm font-medium'>{t.nav.language}</span>
@@ -43,8 +50,21 @@ export default function MobileSettingsSheet() {
             <span className='text-sm font-medium'>{t.nav.theme}</span>
             <ThemePicker />
           </div>
+          <Separator />
+          <div className='flex items-center justify-between'>
+            <span className='text-sm font-medium'>{t.nav.signOut}</span>
+            <Button
+              type='button'
+              variant='destructive'
+              onClick={handleSignOut}
+              className='px-2 hover:bg-destructive/30 hover:text-destructive'
+              aria-label={t.nav.signOut}
+            >
+              <LogOut className='h-5 w-5' />
+            </Button>
+          </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

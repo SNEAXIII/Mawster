@@ -1,16 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { signOut, useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import MainMawsterLogo from '@/components/MawsterLogo';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { LogIn, LogOut } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import NavLinks, { Role } from './nav-links';
 import LanguageSwitcher from '@/components/language-switcher';
 import ThemePicker from '@/components/theme-picker';
-import MobileSettingsSheet from './mobile-settings-sheet';
+import ModaleSettings from './mobile-settings-sheet';
 import { useI18n } from '@/app/i18n';
 import { useAllianceContext } from '@/app/contexts/alliance-context';
 
@@ -20,17 +19,7 @@ export default function SideNavBar() {
   const isAuthenticated = session && !session.error && session.user;
   const userRole: Role = (isAuthenticated ? (session.user.role as Role) : null) || Role.all;
   const { hasAlliance } = useAllianceContext();
-  const router = useRouter();
 
-  const handleSignOut = async () => {
-    try {
-      await signOut({ redirect: false });
-      router.push('/');
-      router.refresh();
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
-  };
 
   return (
     <div className='flex h-full flex-col px-3 py-2 md:py-4 md:px-2'>
@@ -45,10 +34,7 @@ export default function SideNavBar() {
             <MainMawsterLogo />
           </div>
         </Link>
-        <div className='flex flex-col'>
-          <LanguageSwitcher />
-          <ThemePicker />
-        </div>
+
       </div>
 
       {/* Navigation Links Section */}
@@ -58,27 +44,15 @@ export default function SideNavBar() {
           className='hidden h-auto w-full grow rounded-md bg-muted/50 md:block'
           aria-hidden='true'
         />
-
         <Separator className='hidden md:block' />
-
-        {/* Session-specific Section */}
-        <MobileSettingsSheet />
-
         {isAuthenticated ? (
-          <Button
-            type='button'
-            variant='ghost'
-            onClick={handleSignOut}
-            className='flex h-[48px] items-center justify-center gap-2 rounded-md p-3 text-sm font-medium md:justify-start md:w-full hover:bg-destructive/10 hover:text-destructive'
-            aria-label={t.nav.signOut}
-          >
-            <LogOut className='h-5 w-5' />
-            <span className='hidden md:block'>{t.nav.signOut}</span>
-          </Button>
+            <ModaleSettings />
         ) : (
           <Link
             href='/login'
-            className='flex h-[48px] items-center justify-center gap-2 rounded-md bg-primary p-3 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 md:justify-start md:px-3'
+            className='
+            flex items-center justify-center gap-2 rounded-md p-3 text-sm font-medium md:justify-start h-12 min-w-12
+            bg-primary text-primary-foreground transition hover:bg-primary/90 md:px-3'
             aria-label={t.nav.signIn}
           >
             <LogIn className='h-5 w-5' />
