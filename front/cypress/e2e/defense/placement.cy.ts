@@ -1,7 +1,6 @@
 import {
   setupDefenseScenario,
   setupDefenseOwnerAndMember,
-  type UserSetupData,
 } from '../../support/e2e';
 
 describe('Defense – Placement via UI', () => {
