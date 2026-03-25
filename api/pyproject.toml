@@ -50,3 +50,12 @@ testpaths = ["tests"]
 source = ["src"]
 omit = ["tests/*", "migrations/*", "scripts/*"]
 concurrency = ["greenlet", "thread"]
+
+[dependency-groups]
+dev = [
+    "aiosqlite>=0.22.1",
+    "anyio>=4.12.1",
+    "httpx>=0.28.1",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+]
