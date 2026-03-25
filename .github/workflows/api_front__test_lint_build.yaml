@@ -92,6 +92,10 @@ jobs:
         working-directory: ./front
         run: npm ci
 
+      # ── MariaDB client (needed by e2e_parallel.py to create per-worker DBs) ──
+      - name: Install MariaDB client
+        run: sudo apt-get install -y mariadb-client
+
       # ── Run Cypress ──
       - name: Run Cypress E2E tests
         run: 	python3 scripts/e2e_parallel.py --workers 4 --quiet
