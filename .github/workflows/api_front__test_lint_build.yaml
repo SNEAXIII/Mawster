@@ -53,7 +53,7 @@ jobs:
       MARIADB_ROOT_PASSWORD: rootpassword
       MARIADB_DATABASE: mawster-testing
     services:
-      mariadb:
+      mariadb-test:
         image: mariadb
         env:
           MARIADB_USER: user
