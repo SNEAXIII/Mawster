@@ -10,6 +10,7 @@ import { LogIn, LogOut } from 'lucide-react';
 import NavLinks, { Role } from './nav-links';
 import LanguageSwitcher from '@/components/language-switcher';
 import ThemePicker from '@/components/theme-picker';
+import MobileSettingsSheet from './mobile-settings-sheet';
 import { useI18n } from '@/app/i18n';
 import { useAllianceContext } from '@/app/contexts/alliance-context';
 
@@ -61,6 +62,8 @@ export default function SideNavBar() {
         <Separator className='hidden md:block' />
 
         {/* Session-specific Section */}
+        <MobileSettingsSheet />
+
         {isAuthenticated ? (
           <Button
             type='button'
