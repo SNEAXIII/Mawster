@@ -237,6 +237,8 @@ def parse_backend_markers(backend_log: Path) -> dict[str, list[str]]:
 def build_merged_report(
     n: int,
     merged_stats: dict,
+    worker_stats: list[dict],
+    total_duration: float,
 ) -> None:
     """Build and write front/cypress/results/report.json.
 
@@ -271,11 +273,17 @@ def build_merged_report(
                 "backend_logs": backend_logs,
             })
 
+    workers_timing = [
+        {"worker": i, "duration_seconds": worker_stats[i].get("duration_seconds", 0)}
+        for i in range(n)
+    ]
     report = {
         "summary": {
             "tests": merged_stats.get("tests", 0),
             "passing": merged_stats.get("passing", 0),
             "failing": merged_stats.get("failing", 0),
+            "total_duration_seconds": round(total_duration, 1),
+            "workers": workers_timing,
         },
         "failures": all_failures,
     }
@@ -300,12 +308,13 @@ def pipe_output(stream, prefix: str, quiet: bool = False, stats: dict | None = N
     try:
         fh = log_file.open("w", encoding="utf-8") if log_file else None
         try:
+            ansi_escape = re.compile(r"\x1b\[[0-9;]*[mKHFABCDJG]")
             for line in iter(stream.readline, b""):
                 decoded = line.decode(errors="replace").rstrip()
                 if not quiet:
                     print(f"{prefix} {decoded}")
                 if fh:
-                    fh.write(decoded + "\n")
+                    fh.write(ansi_escape.sub("", decoded) + "\n")
                 if stats is not None:
                     m = FINAL_SUMMARY_RE.search(decoded)
                     if m:
@@ -471,8 +480,10 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     prefix = f"[W{worker}|cypress]"
     output_thread = threading.Thread(target=pipe_output, args=(proc.stdout, prefix, False, stats), kwargs={"log_file": cypress_log})
     output_thread.start()
+    worker_start = time.time()
     proc.wait()
     output_thread.join(timeout=5)
+    stats["duration_seconds"] = round(time.time() - worker_start, 1)
     log(f"Worker {worker}: Cypress finished with exit code {proc.returncode}")
 
     if proc.returncode != 0:
@@ -755,10 +766,10 @@ def main() -> None:
             log(f"  {key.capitalize():<10}: {val}")
         log("-" * 50)
 
-    # Write failure report (always, even if 0 failures)
-    build_merged_report(n, merged)
-
     elapsed = time.time() - start_time
+
+    # Write failure report (always, even if 0 failures)
+    build_merged_report(n, merged, worker_stats, elapsed)
     minutes, seconds = divmod(int(elapsed), 60)
     duration_str = f"{minutes}m{seconds:02d}s" if minutes else f"{seconds}s"
 
