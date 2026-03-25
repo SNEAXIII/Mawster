@@ -44,8 +44,9 @@ FRONT_DIR = ROOT / "front"
 BASE_API_PORT = 8010
 BASE_FRONT_PORT = 3010
 DB_PREFIX = "mawster_test_"
-MARIADB_CONTAINER = "mariadb-test"
-MARIADB_ROOT_PASSWORD = "rootpassword"
+MARIADB_HOST = "127.0.0.1"
+MARIADB_PORT = int(os.environ.get("MARIADB_PORT", "3307"))
+MARIADB_ROOT_PASSWORD = os.environ.get("MARIADB_ROOT_PASSWORD", "rootpassword")
 HEALTH_TIMEOUT = 120
 
 IS_WINDOWS = platform.system() == "Windows"
@@ -57,26 +58,44 @@ def log(msg: str) -> None:
     print(f"[e2e-parallel] {msg}", flush=True)
 
 
+def _run_sql(sql: str) -> subprocess.CompletedProcess:
+    """Execute SQL against MariaDB.
+
+    Tries 'mariadb' CLI first (works in CI via TCP on MARIADB_PORT).
+    Falls back to 'docker exec' if the binary is not found (local dev).
+    """
+    root_args = ["-uroot", f"-p{MARIADB_ROOT_PASSWORD}", "-e", sql]
+    try:
+        return subprocess.run(
+            ["mariadb", "-h", MARIADB_HOST, "-P", str(MARIADB_PORT)] + root_args,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        container = os.environ.get("MARIADB_CONTAINER", "mariadb-test")
+        return subprocess.run(
+            ["docker", "exec", container, "mariadb"] + root_args,
+            capture_output=True,
+            text=True,
+        )
+
+
 def check_mariadb_running() -> None:
-    """Verify the mariadb-test container is up."""
-    log("Checking if mariadb-test container is running...")
-    result = subprocess.run(
-        [
-            "docker", "exec", MARIADB_CONTAINER,
-            "mariadb", "-uroot", f"-p{MARIADB_ROOT_PASSWORD}",
-            "-e", "SELECT 1;",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        log("ERROR: mariadb-test container is not running.")
+    """Verify MariaDB is reachable on MARIADB_HOST:MARIADB_PORT."""
+    import socket
+    log(f"Checking if MariaDB is reachable on {MARIADB_HOST}:{MARIADB_PORT}...")
+    try:
+        with socket.create_connection((MARIADB_HOST, MARIADB_PORT), timeout=5):
+            pass
+        log("MariaDB is reachable.")
+    except OSError:
+        log(f"ERROR: MariaDB is not reachable on {MARIADB_HOST}:{MARIADB_PORT}.")
         log("Start it with: make e2e-db")
         sys.exit(1)
 
 
-def docker_create_db(worker: int) -> None:
-    """CREATE DATABASE IF NOT EXISTS mawster_test_N and GRANT privileges via docker exec."""
+def create_db(worker: int) -> None:
+    """CREATE DATABASE IF NOT EXISTS mawster_test_N and GRANT privileges."""
     db = f"{DB_PREFIX}{worker}"
     db_user = os.environ.get("MARIADB_USER", "user")
     log(f"Worker {worker}: creating database {db}...")
@@ -85,15 +104,7 @@ def docker_create_db(worker: int) -> None:
         f" GRANT ALL PRIVILEGES ON `{db}`.* TO '{db_user}'@'%';"
         f" FLUSH PRIVILEGES;"
     )
-    result = subprocess.run(
-        [
-            "docker", "exec", MARIADB_CONTAINER,
-            "mariadb", "-uroot", f"-p{MARIADB_ROOT_PASSWORD}",
-            "-e", sql,
-        ],
-        capture_output=True,
-        text=True,
-    )
+    result = _run_sql(sql)
     if result.returncode != 0:
         raise RuntimeError(f"Failed to create DB {db}: {result.stderr}")
     log(f"Worker {worker}: database {db} created.")
@@ -646,7 +657,7 @@ def main() -> None:
 
     def setup_worker(worker: int) -> None:
         try:
-            docker_create_db(worker)
+            create_db(worker)
             backend = start_backend(worker, base_env, quiet)
             with lock:
                 procs.append(backend)
