@@ -34,6 +34,9 @@ const en = {
     users: 'Users',
     signIn: 'Sign in',
     toggleTheme: 'Toggle theme',
+    settings: 'Settings',
+    language: 'Language',
+    theme: 'Theme',
     signOut: 'Sign out',
   },
 

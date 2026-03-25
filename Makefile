@@ -1,5 +1,5 @@
 # Root Makefile — E2E test orchestration
-.PHONY: help e2e e2e-open e2e-parallel e2e-db e2e-stop
+.PHONY: help e2e e2e-open e2e-parallel e2e-parallel-quiet e2e-db e2e-stop
 
 NEXTAUTH_SECRET ?= e2e-local-nextauth-secret
 NEXTAUTH_URL    ?= http://localhost:3000
@@ -14,6 +14,7 @@ help:
 	@Write-Host "e2e          --> demarrer les services + lancer Cypress headless"
 	@Write-Host "e2e-open     --> demarrer les services + ouvrir l'UI Cypress"
 	@Write-Host "e2e-parallel --> lancer les tests E2E en parallèle (N=4 par défaut, max 8)"
+	@Write-Host "e2e-parallel-quiet --> lancer les tests E2E en parallèle en mode silencieux (N=4 par défaut, max 8)"
 	@Write-Host "e2e-db       --> demarrer uniquement mariadb-test"
 	@Write-Host "e2e-stop     --> arreter l'API et le frontend de test"
 	@Write-Host "Logs : .e2e-api.log  .e2e-front.log"
@@ -24,15 +25,15 @@ e2e-stop:
 	if (Test-Path .e2e-front.pid) { Stop-Process -Id (Get-Content .e2e-front.pid) -Force -ErrorAction SilentlyContinue; Remove-Item .e2e-front.pid -Force -ErrorAction SilentlyContinue }
 
 e2e: e2e-db
-	$$env:MODE = 'testing'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c uv run app_testing.py' -WorkingDirectory api -RedirectStandardOutput ../.e2e-api.log -RedirectStandardError ../.e2e-api.log).Id | Out-File -Encoding ascii .e2e-api.pid
-	$$env:NEXTAUTH_SECRET = '$(NEXTAUTH_SECRET)'; $$env:NEXTAUTH_URL = '$(NEXTAUTH_URL)'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c npm run testing' -WorkingDirectory front -RedirectStandardOutput ../.e2e-front.log -RedirectStandardError ../.e2e-front.log).Id | Out-File -Encoding ascii .e2e-front.pid
+	$$env:MODE = 'testing'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c uv run app_testing.py 2>&1' -WorkingDirectory api -RedirectStandardOutput ../.e2e-api.log).Id | Out-File -Encoding ascii .e2e-api.pid
+	$$env:NEXTAUTH_SECRET = '$(NEXTAUTH_SECRET)'; $$env:NEXTAUTH_URL = '$(NEXTAUTH_URL)'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c npm run testing 2>&1' -WorkingDirectory front -RedirectStandardOutput ../.e2e-front.log).Id | Out-File -Encoding ascii .e2e-front.pid
 	@Write-Host 'Attente de l API (port 8001)...'; for ($$i = 0; $$i -lt 30; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 8001 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
 	@Write-Host 'Attente du frontend (port 3001)...'; for ($$i = 0; $$i -lt 60; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 3001 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
 	@Write-Host 'Lancement de Cypress...'; Set-Location front; npx cypress run $(if $(SPEC),--spec $(SPEC),); $$EXIT = $$LASTEXITCODE; Set-Location ..; if (Test-Path .e2e-api.pid) { Stop-Process -Id (Get-Content .e2e-api.pid) -Force -EA SilentlyContinue; Remove-Item .e2e-api.pid -Force -EA SilentlyContinue }; if (Test-Path .e2e-front.pid) { Stop-Process -Id (Get-Content .e2e-front.pid) -Force -EA SilentlyContinue; Remove-Item .e2e-front.pid -Force -EA SilentlyContinue }; exit $$EXIT
 
 e2e-open: e2e-db
-	$$env:MODE = 'testing'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c uv run app_testing.py' -WorkingDirectory api -RedirectStandardOutput ../.e2e-api.log -RedirectStandardError ../.e2e-api.log).Id | Out-File -Encoding ascii .e2e-api.pid
-	$$env:NEXTAUTH_SECRET = '$(NEXTAUTH_SECRET)'; $$env:NEXTAUTH_URL = '$(NEXTAUTH_URL)'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c npm run testing' -WorkingDirectory front -RedirectStandardOutput ../.e2e-front.log -RedirectStandardError ../.e2e-front.log).Id | Out-File -Encoding ascii .e2e-front.pid
+	$$env:MODE = 'testing'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c uv run app_testing.py 2>&1' -WorkingDirectory api -RedirectStandardOutput ../.e2e-api.log).Id | Out-File -Encoding ascii .e2e-api.pid
+	$$env:NEXTAUTH_SECRET = '$(NEXTAUTH_SECRET)'; $$env:NEXTAUTH_URL = '$(NEXTAUTH_URL)'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c npm run testing 2>&1' -WorkingDirectory front -RedirectStandardOutput ../.e2e-front.log).Id | Out-File -Encoding ascii .e2e-front.pid
 	@Write-Host 'Attente de l API (port 8001)...'; for ($$i = 0; $$i -lt 30; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 8001 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
 	@Write-Host 'Attente du frontend (port 3001)...'; for ($$i = 0; $$i -lt 60; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 3001 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
 	@Write-Host 'Lancement de Cypress...'; Set-Location front; npx cypress open
@@ -50,6 +51,7 @@ help:
 	@echo "e2e          --> demarrer les services + lancer Cypress headless"
 	@echo "e2e-open     --> demarrer les services + ouvrir l'UI Cypress"
 	@echo "e2e-parallel --> lancer les tests E2E en parallèle (N=4 par défaut, max 8)"
+	@echo "e2e-parallel-quiet --> lancer les tests E2E en parallèle en mode silencieux (N=4 par défaut, max 8)"
 	@echo "e2e-db       --> demarrer uniquement mariadb-test"
 	@echo "e2e-stop     --> arreter l'API et le frontend de test"
 	@echo "Variables : N=4  SPEC=war/war-management.cy.ts  Q=1  NEXTAUTH_SECRET=..."

@@ -1,5 +1,5 @@
 'use client';
-import { Home, User, Sword, Shield, Settings, Swords } from 'lucide-react';
+import { Home, User, Sword, Shield, Swords, UserStar } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useI18n } from '@/app/i18n';
@@ -48,7 +48,7 @@ export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksPro
     {
       name: t.nav.administration,
       href: '/admin',
-      icon: Settings,
+      icon: UserStar,
       role: Role.admin,
       cy: 'nav-administration',
     },
@@ -72,7 +72,7 @@ export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksPro
             href={link.href}
             data-cy={link.cy}
             className={cn(
-              'flex h-[48px] grow items-center justify-center gap-2 rounded-md bg-muted/50 p-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground md:flex-none md:justify-start md:p-2 md:px-3',
+              'flex h-12 grow items-center justify-center gap-2 rounded-md bg-muted/50 p-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground md:flex-none md:justify-start md:p-2 md:px-3',
               isActive && 'bg-accent text-accent-foreground font-semibold'
             )}
           >

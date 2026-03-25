@@ -19,7 +19,7 @@ declare namespace Cypress {
         create_alliance?: { name: string; tag: string };
         join_alliance_token?: string;
         battlegroup?: number;
-      }>
+      }>,
     ): Chainable<
       Record<
         string,
@@ -56,8 +56,17 @@ declare namespace Cypress {
       adminToken: string,
       name: string,
       championClass: string,
-      options?: { is_ascendable?: boolean }
+      options?: { is_ascendable?: boolean },
     ): Chainable<any>;
+
+    /**
+     * Load multiple champions in a single bulk request.
+     * Returns a map of champion name → { id, name }.
+     */
+    apiLoadChampions(
+      adminToken: string,
+      champions: Array<{ name: string; cls: string; is_ascendable?: boolean }>,
+    ): Chainable<Record<string, { id: string; name: string }>>;
 
     /**
      * Create an alliance via backend API.
@@ -72,7 +81,7 @@ declare namespace Cypress {
       gameAccountId: string,
       championId: string,
       rarity: string,
-      options?: { signature?: number; is_preferred_attacker?: boolean; ascension?: number }
+      options?: { signature?: number; is_preferred_attacker?: boolean; ascension?: number },
     ): Chainable<any>;
 
     /**
@@ -84,18 +93,13 @@ declare namespace Cypress {
       battlegroup: number,
       nodeNumber: number,
       championUserId: string,
-      gameAccountId: string
+      gameAccountId: string,
     ): Chainable<any>;
 
     /**
      * Set (or unset) the battlegroup for an alliance member via backend API.
      */
-    apiSetMemberGroup(
-      token: string,
-      allianceId: string,
-      gameAccountId: string,
-      group: number | null
-    ): Chainable<any>;
+    apiSetMemberGroup(token: string, allianceId: string, gameAccountId: string, group: number | null): Chainable<any>;
 
     /**
      * Invite a game account to an alliance via backend API.
@@ -120,11 +124,7 @@ declare namespace Cypress {
     /**
      * Create an upgrade request for a champion user (POST /champion-users/upgrade-requests).
      */
-    apiCreateUpgradeRequest(
-      token: string,
-      championUserId: string,
-      requestedRarity: string
-    ): Chainable<any>;
+    apiCreateUpgradeRequest(token: string, championUserId: string, requestedRarity: string): Chainable<any>;
 
     /**
      * Upgrade a champion to the next rank (PATCH /champion-users/{id}/upgrade).
@@ -161,7 +161,7 @@ declare namespace Cypress {
       championId: string,
       stars: number,
       rank: number,
-      ascension?: number
+      ascension?: number,
     ): Chainable<any>;
 
     /** Remove a defender from a war node (direct backend call). */
@@ -170,7 +170,7 @@ declare namespace Cypress {
       allianceId: string,
       warId: string,
       battlegroup: number,
-      nodeNumber: number
+      nodeNumber: number,
     ): Chainable<void>;
 
     /** Mark a war as ended (direct backend call). */
@@ -183,7 +183,7 @@ declare namespace Cypress {
       warId: string,
       battlegroup: number,
       nodeNumber: number,
-      championUserId: string
+      championUserId: string,
     ): Chainable<any>;
 
     /** Remove attacker from a war node (direct backend call). */
@@ -192,7 +192,7 @@ declare namespace Cypress {
       allianceId: string,
       warId: string,
       battlegroup: number,
-      nodeNumber: number
+      nodeNumber: number,
     ): Chainable<any>;
 
     /** Update KO count for a war node (direct backend call). */
@@ -202,7 +202,7 @@ declare namespace Cypress {
       warId: string,
       battlegroup: number,
       nodeNumber: number,
-      koCount: number
+      koCount: number,
     ): Chainable<any>;
   }
 }
