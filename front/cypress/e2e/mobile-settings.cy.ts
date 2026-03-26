@@ -6,8 +6,8 @@ describe('Mobile Settings Sheet', () => {
   });
 
   it('shows the settings button on mobile and on desktop', () => {
-    setupUser('modale-settings-visibility').then(({ login }) => {
-      cy.uiLogin(login);
+    setupUser('modale-settings-visibility').then(({ user_id }) => {
+      cy.apiLogin(user_id);
 
       // Mobile: button should be visible
       cy.viewport(375, 667);
@@ -20,9 +20,9 @@ describe('Mobile Settings Sheet', () => {
   });
 
   it('opens the settings sheet when the button is clicked on mobile', () => {
-    setupUser('modale-settings-open').then(({ login }) => {
+    setupUser('modale-settings-open').then(({ user_id }) => {
       cy.viewport(375, 667);
-      cy.uiLogin(login);
+      cy.apiLogin(user_id);
 
       cy.getByCy('modale-settings-trigger').click();
       cy.getByCy('modale-settings-content').should('be.visible');
@@ -33,9 +33,9 @@ describe('Mobile Settings Sheet', () => {
   });
 
   it('toggles language from EN to FR via the settings sheet', () => {
-    setupUser('modale-settings-lang').then(({ login }) => {
+    setupUser('modale-settings-lang').then(({ user_id }) => {
       cy.viewport(375, 667);
-      cy.uiLogin(login);
+      cy.apiLogin(user_id);
 
       // Open settings sheet
       cy.getByCy('modale-settings-trigger').click();
@@ -52,8 +52,8 @@ describe('Mobile Settings Sheet', () => {
   });
 
   it('signs out when the sign out button is clicked', () => {
-    setupUser('modale-settings-signout').then(({ login }) => {
-      cy.uiLogin(login);
+    setupUser('modale-settings-signout').then(({ user_id }) => {
+      cy.apiLogin(user_id);
       cy.navTo('profile');
 
       cy.getByCy('modale-settings-trigger').click();
@@ -65,9 +65,9 @@ describe('Mobile Settings Sheet', () => {
   });
 
   it('toggles theme via the settings sheet', () => {
-    setupUser('modale-settings-theme').then(({ login }) => {
+    setupUser('modale-settings-theme').then(({ user_id }) => {
       cy.viewport(375, 667);
-      cy.uiLogin(login);
+      cy.apiLogin(user_id);
 
       // Open settings sheet
       cy.getByCy('modale-settings-trigger').click();

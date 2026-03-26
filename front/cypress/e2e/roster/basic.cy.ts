@@ -10,29 +10,29 @@ describe('Roster – Basic', () => {
   // =========================================================================
 
   it('shows no-accounts message when user has no game accounts', () => {
-    setupUser('roster-noacc-token').then(({ login }) => {
-      cy.uiLogin(login);
+    setupUser('roster-noacc-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
       cy.navTo('roster');
       cy.contains('No game accounts yet. Add one to get started!').should('be.visible');
     });
   });
 
   it('shows empty roster message', () => {
-    setupUser('roster-empty-token').then(({ login, access_token }) => {
+    setupUser('roster-empty-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'EmptyRoster', true);
 
-      cy.uiLogin(login);
+      cy.apiLogin(user_id);
       cy.navTo('roster');
       cy.contains('roster is empty').should('be.visible');
     });
   });
 
   it('shows account selector when user has multiple accounts', () => {
-    setupUser('roster-multi-token').then(({ login, access_token }) => {
+    setupUser('roster-multi-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'Account1', true);
       cy.apiCreateGameAccount(access_token, 'Account2', false);
 
-      cy.uiLogin(login);
+      cy.apiLogin(user_id);
       cy.navTo('roster');
       cy.contains('Select a game account').should('be.visible');
     });
@@ -46,7 +46,7 @@ describe('Roster – Basic', () => {
     setupRosterUser('roster-add', 'RosterPlayer').then(({ adminData, userData }) => {
       cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Science');
 
-      cy.uiLogin(userData.login);
+      cy.apiLogin(userData.user_id);
       cy.navTo('roster');
 
       cy.contains('Add / Update a Champion').click();
@@ -59,7 +59,7 @@ describe('Roster – Basic', () => {
     setupRosterUser('roster-addchamp', 'WolverinePlayer').then(({ adminData, userData }) => {
       cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant');
 
-      cy.uiLogin(userData.login);
+      cy.apiLogin(userData.user_id);
       cy.navTo('roster');
 
       cy.contains('Add / Update a Champion').click();
@@ -81,7 +81,7 @@ describe('Roster – Basic', () => {
     setupRosterUser('roster-del', 'HulkPlayer').then(({ adminData, userData }) => {
       cy.apiLoadChampion(adminData.access_token, 'HulkDel', 'Science');
 
-      cy.uiLogin(userData.login);
+      cy.apiLogin(userData.user_id);
       cy.navTo('roster');
 
       // Add champion first
@@ -108,7 +108,7 @@ describe('Roster – Basic', () => {
       cy.apiLoadChampion(adminData.access_token, 'Thor', 'Cosmic').then((champs) => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r3');
 
-        cy.uiLogin(userData.login);
+        cy.apiLogin(userData.user_id);
         cy.navTo('roster');
         cy.contains('Thor').should('be.visible');
       });
@@ -120,7 +120,7 @@ describe('Roster – Basic', () => {
       cy.apiLoadChampion(adminData.access_token, 'Iron Man', 'Tech').then((champs) => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '6r4');
 
-        cy.uiLogin(userData.login);
+        cy.apiLogin(userData.user_id);
         cy.navTo('roster');
 
         // Update via UI: click edit, change rarity
@@ -138,7 +138,7 @@ describe('Roster – Basic', () => {
     setupRosterUser('roster-nosearch', 'NoSearchPlayer').then(({ adminData, userData }) => {
       cy.apiLoadChampion(adminData.access_token, 'Medusa', 'Cosmic');
 
-      cy.uiLogin(userData.login);
+      cy.apiLogin(userData.user_id);
       cy.navTo('roster');
       cy.contains('Add / Update a Champion').click();
       cy.getByCy('champion-search').type('ZZZZZZZZZ');
@@ -151,7 +151,7 @@ describe('Roster – Basic', () => {
       cy.apiLoadChampion(adminData.access_token, 'Storm', 'Mutant').then((champs) => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r1');
 
-        cy.uiLogin(userData.login);
+        cy.apiLogin(userData.user_id);
         cy.navTo('roster');
 
         // Add same champion again with higher rank (same star level = upsert)
@@ -172,7 +172,7 @@ describe('Roster – Basic', () => {
     setupRosterUser('roster-sig', 'SigPlayer').then(({ adminData, userData }) => {
       cy.apiLoadChampion(adminData.access_token, 'DoctorSig', 'Mystic');
 
-      cy.uiLogin(userData.login);
+      cy.apiLogin(userData.user_id);
       cy.navTo('roster');
 
       cy.contains('Add / Update a Champion').click();
@@ -188,10 +188,10 @@ describe('Roster – Basic', () => {
   });
 
   it('hides upgrade requests section when no requests exist', () => {
-    setupUser('roster-upgrades-token').then(({ login, access_token }) => {
+    setupUser('roster-upgrades-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'UpgradeAcc', true);
 
-      cy.uiLogin(login);
+      cy.apiLogin(user_id);
       cy.navTo('roster');
       cy.contains('Upgrade Requests').should('not.exist');
     });

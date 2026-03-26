@@ -55,7 +55,7 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
   it("regular member cannot cancel upgrade requests in another member's roster preview", () => {
     setupAdmin('ur-t6-admin').then((admin) => {
       let ownerData: UserSetupData;
-      let member1Login: string;
+      let member1UserId: string;
       let allianceId: string;
       let memberAccId: string;
 
@@ -87,12 +87,12 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
               return setupUser('ur-t6-member1');
             })
             .then((m1) => {
-              member1Login = m1.login;
+              member1UserId = m1.user_id;
               return cy.apiCreateGameAccount(m1.access_token, 'T6Member1', true);
             })
             .then((m1Acc) => {
               cy.apiForceJoinAlliance(m1Acc.id, allianceId);
-              cy.uiLogin(member1Login);
+              cy.apiLogin(member1UserId);
               cy.navTo('alliances');
 
               // Regular member1 views member2's roster
@@ -113,7 +113,7 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
         ({ ownerData, memberData, championUserId }) => {
           cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 
-          cy.uiLogin(memberData.login);
+          cy.apiLogin(memberData.user_id);
           cy.navTo('roster');
 
           // The section IS visible (member can see their requests)
@@ -170,7 +170,7 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
             .then((cu2) => {
               cy.apiCreateUpgradeRequest(ownerData.access_token, cu2.id, '7r4');
 
-              cy.uiLogin(memberData.login);
+              cy.apiLogin(memberData.user_id);
               cy.navTo('roster');
 
               cy.getByCy('upgrade-requests-section').should('be.visible');
@@ -189,7 +189,7 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
       setupAllianceWithMember(admin.access_token, 'SentryCard', 'Science').then(({ ownerData, championUserId }) => {
         cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('alliances');
 
         // Wait for alliance roles to load

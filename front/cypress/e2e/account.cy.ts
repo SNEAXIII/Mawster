@@ -27,8 +27,8 @@ describe('Login & Profile – UI', () => {
   });
 
   it('displays profile info after login', () => {
-    setupUser('profile-token').then(({ login, email, discord_id }) => {
-      cy.uiLogin(login);
+    setupUser('profile-token').then(({ login, email, discord_id, user_id }) => {
+      cy.apiLogin(user_id);
       cy.navTo('profile');
       cy.contains('Account Information').should('be.visible');
       cy.getByCy('username-row').should('contain', login);
@@ -39,16 +39,16 @@ describe('Login & Profile – UI', () => {
   });
 
   it('shows admin role badge for admin users', () => {
-    setupAdmin('admin-badge-token').then(({ login }) => {
-      cy.uiLogin(login);
+    setupAdmin('admin-badge-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
       cy.navTo('profile');
       cy.contains('admin').should('be.visible');
     });
   });
 
   it('signs out and redirects to login', () => {
-    setupUser('signout-token').then(({ login }) => {
-      cy.uiLogin(login);
+    setupUser('signout-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
       cy.navTo('profile');
       cy.getByCy('sign-out-btn').click();
       cy.url().should('include', '/login');
@@ -65,8 +65,8 @@ describe('Login & Profile – UI', () => {
   // =========================================================================
 
   it('admin can see and access all admin routes via navbar', () => {
-    setupAdmin('admin-routes-token').then(({ login }) => {
-      cy.uiLogin(login);
+    setupAdmin('admin-routes-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
 
       // Admin nav links should be visible
       cy.getByCy('nav-administration').should('be.visible');
@@ -85,8 +85,8 @@ describe('Login & Profile – UI', () => {
   });
 
   it('non-admin user cannot see admin nav links', () => {
-    setupUser('no-admin-routes-token').then(({ login }) => {
-      cy.uiLogin(login);
+    setupUser('no-admin-routes-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
 
       // User nav links should be visible
       cy.getByCy('nav-profile').should('be.visible');

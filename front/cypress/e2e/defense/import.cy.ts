@@ -47,7 +47,7 @@ describe('Defense – Import & BG isolation', () => {
           });
 
           // Verify in UI
-          cy.uiLogin(ownerData.login);
+          cy.apiLogin(ownerData.user_id);
           cy.navTo('defense');
           cy.getByCy('defender-count-ImportPlyr').should('contain', '1/5');
           cy.getByCy('member-section-ImportPlyr').find('[title*="Spider-Man"]').should('exist');
@@ -62,7 +62,7 @@ describe('Defense – Import & BG isolation', () => {
         cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
       );
 
-      cy.uiLogin(ownerData.login);
+      cy.apiLogin(ownerData.user_id);
       cy.navTo('defense');
 
       // Prepare import JSON
@@ -121,7 +121,7 @@ describe('Defense – Import & BG isolation', () => {
         });
 
         // Verify only Spider-Man was placed
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('defense');
         cy.getByCy('defender-count-ImpErrPlyr').should('contain', '1/5');
       },
@@ -196,7 +196,7 @@ describe('Defense – Import & BG isolation', () => {
         });
 
         // Verify in UI
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('defense');
         cy.getByCy('defender-count-ImpClrPlyr').should('contain', '1/5');
         cy.getByCy('war-node-1').should('contain', '+'); // Spider-Man cleared
@@ -218,7 +218,7 @@ describe('Defense – Import & BG isolation', () => {
             .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('defense');
 
         // BG1: Spider-Man on node 1

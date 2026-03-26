@@ -18,7 +18,7 @@ describe('Defense – Export', () => {
 
         cy.intercept('GET', `**/alliances/${allianceId}/defense/bg/1/export`).as('exportReq');
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('defense');
 
         cy.getByCy('defense-export').click();
@@ -36,12 +36,12 @@ describe('Defense – Export', () => {
   });
 
   it('export shows warning toast when no defenders to export', () => {
-    setupUser('def-op-exp-empty-tok').then(({ login, access_token }) => {
+    setupUser('def-op-exp-empty-tok').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'ExpEmptyPlyr', true).then((acc) => {
         cy.apiCreateAlliance(access_token, 'ExpEmptyAll', 'EE', acc.id);
       });
 
-      cy.uiLogin(login);
+      cy.apiLogin(user_id);
       cy.navTo('defense');
 
       cy.getByCy('defense-export').click();
@@ -66,7 +66,7 @@ describe('Defense – Export', () => {
 
         cy.intercept('GET', `**/alliances/${allianceId}/defense/bg/1/export`).as('exportMulti');
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('defense');
 
         cy.getByCy('defense-export').click();

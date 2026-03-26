@@ -214,6 +214,7 @@ Cypress.Commands.add('apiLogin', (userId: string) => {
   cy.request('POST', '/api/dev/login', { user_id: userId }).then((res) => {
     cy.setCookie('authjs.session-token', res.body.sessionToken);
   });
+  cy.visit('/');
 });
 
 // ── UI login via dev-login flow ──────────────────────────────────────────────

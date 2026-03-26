@@ -6,8 +6,8 @@ describe('Defense – Basic page rendering', () => {
   });
 
   it('shows no-alliance message when user has no alliances', () => {
-    setupUser('def-basic-noally-token').then(({ login }) => {
-      cy.uiLogin(login);
+    setupUser('def-basic-noally-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
       cy.navTo('defense');
       cy.contains('need to join an alliance').should('be.visible');
     });
@@ -15,7 +15,7 @@ describe('Defense – Basic page rendering', () => {
 
   it('shows the defense page with alliance and BG selectors', () => {
     setupAllianceOwner('def-basic-page', 'BasicPlayer', 'BasicAlliance', 'BA').then(({ userData }) => {
-      cy.uiLogin(userData.login);
+      cy.apiLogin(userData.user_id);
       cy.navTo('defense');
 
       cy.contains('Defense Placement').should('be.visible');
@@ -29,7 +29,7 @@ describe('Defense – Basic page rendering', () => {
 
   it('switches between battlegroups', () => {
     setupAllianceOwner('def-basic-bg', 'BGPlayer', 'BGAlliance', 'BG').then(({ userData }) => {
-      cy.uiLogin(userData.login);
+      cy.apiLogin(userData.user_id);
       cy.navTo('defense');
 
       cy.getByCy('defense-bg-2').click();
@@ -41,7 +41,7 @@ describe('Defense – Basic page rendering', () => {
 
   it('shows the Members side panel', () => {
     setupAllianceOwner('def-basic-members', 'MembersPlayer', 'MembersAlliance', 'MP').then(({ userData }) => {
-      cy.uiLogin(userData.login);
+      cy.apiLogin(userData.user_id);
       cy.navTo('defense');
       cy.contains('Members').should('be.visible');
     });
@@ -49,7 +49,7 @@ describe('Defense – Basic page rendering', () => {
 
   it('shows 50 war-map nodes on the page', () => {
     setupAllianceOwner('def-basic-nodes', 'NodePlayer', 'NodeAlliance', 'ND').then(({ userData }) => {
-      cy.uiLogin(userData.login);
+      cy.apiLogin(userData.user_id);
       cy.navTo('defense');
 
       for (let i = 1; i <= 50; i++) {
@@ -60,7 +60,7 @@ describe('Defense – Basic page rendering', () => {
 
   it("empty nodes show '+' placeholder", () => {
     setupAllianceOwner('def-basic-empty', 'EmptyPlyr', 'EmptyAlliance', 'EM').then(({ userData }) => {
-      cy.uiLogin(userData.login);
+      cy.apiLogin(userData.user_id);
       cy.navTo('defense');
 
       cy.getByCy('war-node-1').should('contain', '+');
@@ -70,7 +70,7 @@ describe('Defense – Basic page rendering', () => {
 
   it('shows section labels (Boss, Mini Boss, Tier 2, Tier 1)', () => {
     setupAllianceOwner('def-basic-sections', 'SectionPlyr', 'SectionAlliance', 'SE').then(({ userData }) => {
-      cy.uiLogin(userData.login);
+      cy.apiLogin(userData.user_id);
       cy.navTo('defense');
 
       cy.contains('Boss').should('exist');
@@ -85,7 +85,7 @@ describe('Defense – Basic page rendering', () => {
       ({ userData, accountId, allianceId }) => {
         cy.apiSetMemberGroup(userData.access_token, allianceId, accountId, 1);
 
-        cy.uiLogin(userData.login);
+        cy.apiLogin(userData.user_id);
         cy.navTo('defense');
 
         cy.getByCy('defender-count-EmptyCountPlyr').should('contain', '0/5');
@@ -98,7 +98,7 @@ describe('Defense – Basic page rendering', () => {
       ({ userData, accountId, allianceId }) => {
         cy.apiSetMemberGroup(userData.access_token, allianceId, accountId, 1);
 
-        cy.uiLogin(userData.login);
+        cy.apiLogin(userData.user_id);
         cy.navTo('defense');
         cy.contains('No defenders placed.').scrollIntoView().should('be.visible');
       },
@@ -110,7 +110,7 @@ describe('Defense – Basic page rendering', () => {
       ({ userData, accountId, allianceId }) => {
         cy.apiSetMemberGroup(userData.access_token, allianceId, accountId, 1);
 
-        cy.uiLogin(userData.login);
+        cy.apiLogin(userData.user_id);
         cy.navTo('defense');
         cy.getByCy('member-section-UserNamePlyr').scrollIntoView().should('be.visible');
         cy.getByCy('member-section-UserNamePlyr').should('contain', 'UserNamePlyr');
@@ -124,7 +124,7 @@ describe('Defense – Basic page rendering', () => {
         cy.apiSetMemberGroup(ownerData.access_token, allianceId, ownerAccId, 1);
         cy.apiSetMemberGroup(ownerData.access_token, allianceId, memberAccId, 1);
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('defense');
 
         cy.getByCy('member-section-TwoMemOwner').scrollIntoView().should('be.visible');

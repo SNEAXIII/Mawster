@@ -10,11 +10,11 @@ describe('Defense – Permissions', () => {
   // =========================================================================
 
   it('export and import buttons are visible to the alliance owner', () => {
-    setupUser('def-perm-owner-tok').then(({ login, access_token }) => {
+    setupUser('def-perm-owner-tok').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'PermOwner', true).then((acc) => {
         cy.apiCreateAlliance(access_token, 'PermOwnerAll', 'PO', acc.id);
       });
-      cy.uiLogin(login);
+      cy.apiLogin(user_id);
       cy.navTo('defense');
       cy.getByCy('defense-export').should('be.visible');
       cy.getByCy('defense-import').should('be.visible');
@@ -23,7 +23,7 @@ describe('Defense – Permissions', () => {
 
   it('export and import buttons are hidden from a regular member', () => {
     setupOwnerMemberAlliance('def-perm-hid', 'PermHidOwn', 'PermHidMem', 'PermHidAll', 'PH').then(({ memberData }) => {
-      cy.uiLogin(memberData.login);
+      cy.apiLogin(memberData.user_id);
       cy.navTo('defense');
       cy.getByCy('defense-export').should('not.exist');
       cy.getByCy('defense-import').should('not.exist');
@@ -34,7 +34,7 @@ describe('Defense – Permissions', () => {
     setupOwnerMemberAlliance('def-perm-off', 'PermOffOwn', 'PermOfficer', 'PermOffAll', 'PF').then(
       ({ ownerData, memberData, allianceId, memberAccId }) => {
         cy.apiAddOfficer(ownerData.access_token, allianceId, memberAccId);
-        cy.uiLogin(memberData.login);
+        cy.apiLogin(memberData.user_id);
         cy.navTo('defense');
         cy.getByCy('defense-export').should('be.visible');
         cy.getByCy('defense-import').should('be.visible');
@@ -47,11 +47,11 @@ describe('Defense – Permissions', () => {
   // =========================================================================
 
   it('clear all button is hidden when no defenders are placed', () => {
-    setupUser('def-perm-clr-empty-tok').then(({ login, access_token }) => {
+    setupUser('def-perm-clr-empty-tok').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'ClrEmptyOwn', true).then((acc) => {
         cy.apiCreateAlliance(access_token, 'ClrEmptyAll', 'CE', acc.id);
       });
-      cy.uiLogin(login);
+      cy.apiLogin(user_id);
       cy.navTo('defense');
       cy.getByCy('defense-clear-all').should('not.exist');
     });
@@ -66,7 +66,7 @@ describe('Defense – Permissions', () => {
             .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('defense');
         cy.getByCy('defense-clear-all').should('be.visible');
       },
@@ -82,7 +82,7 @@ describe('Defense – Permissions', () => {
             .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
-        cy.uiLogin(memberData.login);
+        cy.apiLogin(memberData.user_id);
         cy.navTo('defense');
         cy.getByCy('defense-clear-all').should('not.exist');
       },
@@ -95,7 +95,7 @@ describe('Defense – Permissions', () => {
 
   it('clicking an empty node does NOT open champion selector for a regular member', () => {
     setupOwnerMemberAlliance('def-perm-click', 'ClickOwn', 'ClickMem', 'ClickAll', 'CK').then(({ memberData }) => {
-      cy.uiLogin(memberData.login);
+      cy.apiLogin(memberData.user_id);
       cy.navTo('defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -112,7 +112,7 @@ describe('Defense – Permissions', () => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
         );
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('defense');
 
         cy.getByCy('war-node-5').click();

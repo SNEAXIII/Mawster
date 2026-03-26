@@ -9,7 +9,7 @@ describe('Alliances – Member Groups', () => {
 
   it('displays all four group column headers', () => {
     setupOwnerMemberAlliance('grp-headers', 'HdrOwner', 'HdrMember', 'HdrAlliance', 'HD').then(({ ownerData }) => {
-      cy.uiLogin(ownerData.login);
+      cy.apiLogin(ownerData.user_id);
       cy.navTo('alliances');
 
       cy.getByCy('alliance-card-HdrAlliance').within(() => {
@@ -29,7 +29,7 @@ describe('Alliances – Member Groups', () => {
         cy.apiSetMemberGroup(ownerData.access_token, allianceId, ownerAccId, 1);
         cy.apiSetMemberGroup(ownerData.access_token, allianceId, memberAccId, 2);
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('alliances');
 
         cy.getByCy('alliance-card-PlaceAlliance').within(() => {
@@ -45,7 +45,7 @@ describe('Alliances – Member Groups', () => {
   it('shows unassigned member under the No group column by default', () => {
     setupOwnerMemberAlliance('grp-nogroup', 'NoGrpOwner', 'NoGrpMember', 'NoGrpAlliance', 'NG').then(
       ({ ownerData }) => {
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('alliances');
 
         cy.getByCy('alliance-card-NoGrpAlliance').within(() => {
@@ -62,7 +62,7 @@ describe('Alliances – Member Groups', () => {
         cy.apiSetMemberGroup(ownerData.access_token, allianceId, memberAccId, 3);
         cy.apiSetMemberGroup(ownerData.access_token, allianceId, memberAccId, null);
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('alliances');
 
         cy.getByCy('alliance-card-ClearAlliance').within(() => {
@@ -78,7 +78,7 @@ describe('Alliances – Member Groups', () => {
   it('group picker shows all three groups when none are full', () => {
     setupOwnerMemberAlliance('grp-picker-all', 'PickerOwner', 'PickerMember', 'PickerAlliance', 'PK').then(
       ({ ownerData }) => {
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('alliances');
 
         cy.getByCy('alliance-card-PickerAlliance').within(() => {
@@ -118,7 +118,7 @@ describe('Alliances – Member Groups', () => {
             });
           });
 
-          cy.uiLogin(ownerData.login);
+          cy.apiLogin(ownerData.user_id);
           cy.navTo('alliances');
 
           cy.getByCy('alliance-card-FullAlliance').within(() => {
@@ -154,7 +154,7 @@ describe('Alliances – Member Groups', () => {
             });
           });
 
-          cy.uiLogin(ownerData.login);
+          cy.apiLogin(ownerData.user_id);
           cy.navTo('alliances');
 
           // Owner is already in group 1 — picker should still show G1

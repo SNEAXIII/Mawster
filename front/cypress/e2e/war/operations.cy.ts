@@ -9,7 +9,7 @@ describe('War – Operations (declare, place, remove)', () => {
 
   it('officer can declare a war via the dialog', () => {
     setupWarOwner('war-op-declare', 'DeclareOp', 'DeclareOpAlliance', 'DO').then(({ ownerData }) => {
-      cy.uiLogin(ownerData.login);
+      cy.apiLogin(ownerData.user_id);
       cy.navTo('war');
 
       cy.getByCy('declare-war-btn').click();
@@ -28,7 +28,7 @@ describe('War – Operations (declare, place, remove)', () => {
       cy.apiLoadChampion(adminData.access_token, 'Iron Man', 'Tech');
 
       cy.apiCreateWar(ownerData.access_token, allianceId, 'PlaceEnemy').then(() => {
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('war');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -51,7 +51,7 @@ describe('War – Operations (declare, place, remove)', () => {
         cy.apiLoadChampion(adminData.access_token, 'Thor', 'Cosmic');
 
         cy.apiCreateWar(ownerData.access_token, allianceId, 'HiddenEnemy').then(() => {
-          cy.uiLogin(ownerData.login);
+          cy.apiLogin(ownerData.user_id);
           cy.navTo('war');
 
           // Place Iron Man on node 1
@@ -82,7 +82,7 @@ describe('War – Operations (declare, place, remove)', () => {
           cy.apiCreateWar(ownerData.access_token, allianceId, 'RemoveEnemy').then((war) => {
             cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 1, 5, champs[0].id, 7, 3);
 
-            cy.uiLogin(ownerData.login);
+            cy.apiLogin(ownerData.user_id);
             cy.navTo('war');
 
             cy.getByCy('war-node-5').scrollIntoView().should('not.contain', '+');
@@ -104,7 +104,7 @@ describe('War – Operations (declare, place, remove)', () => {
         cy.apiCreateWar(ownerData.access_token, allianceId, 'ClearEnemy').then((war) => {
           cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 1, 10, champs[0].id, 7, 3);
 
-          cy.uiLogin(ownerData.login);
+          cy.apiLogin(ownerData.user_id);
           cy.navTo('war');
 
           cy.getByCy('clear-war-bg-btn').should('be.visible').click();
@@ -122,7 +122,7 @@ describe('War – Operations (declare, place, remove)', () => {
     setupAttackerScenario('war-op-rm-atk').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-      cy.uiLogin(ownerData.login);
+      cy.apiLogin(ownerData.user_id);
       cy.navTo('war');
 
       cy.getByCy('war-node-10').scrollIntoView().should('not.contain', '+');
@@ -136,7 +136,7 @@ describe('War – Operations (declare, place, remove)', () => {
     setupAttackerScenario('war-op-rm-cancel').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-      cy.uiLogin(ownerData.login);
+      cy.apiLogin(ownerData.user_id);
       cy.navTo('war');
 
       cy.getByCy('war-node-10').scrollIntoView().find('button').click({ force: true });
@@ -153,7 +153,7 @@ describe('War – Operations (declare, place, remove)', () => {
     setupAttackerScenario('war-op-rm-confirm').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-      cy.uiLogin(ownerData.login);
+      cy.apiLogin(ownerData.user_id);
       cy.navTo('war');
 
       cy.getByCy('war-node-10').scrollIntoView().find('button').click({ force: true });
@@ -174,7 +174,7 @@ describe('War – Operations (declare, place, remove)', () => {
             // Place in BG2
             cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 2, 1, champs[0].id, 7, 3);
 
-            cy.uiLogin(ownerData.login);
+            cy.apiLogin(ownerData.user_id);
             cy.navTo('war');
 
             // BG1 node 1 should be empty

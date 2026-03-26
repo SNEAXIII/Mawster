@@ -10,16 +10,16 @@ describe('Game Accounts – UI', () => {
   // =========================================================================
 
   it('shows the game accounts section on the profile page', () => {
-    setupUser('ga-section-token').then(({ login }) => {
-      cy.uiLogin(login);
+    setupUser('ga-section-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
       cy.navTo('profile');
       cy.contains('Game Accounts').should('be.visible');
     });
   });
 
   it('shows empty state when no accounts exist', () => {
-    setupUser('ga-empty-token').then(({ login }) => {
-      cy.uiLogin(login);
+    setupUser('ga-empty-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
       cy.navTo('profile');
       cy.contains('No game accounts yet').scrollIntoView().should('be.visible');
     });
@@ -30,8 +30,8 @@ describe('Game Accounts – UI', () => {
   // =========================================================================
 
   it('creates a game account via the profile form', () => {
-    setupUser('ga-create-token').then(({ login }) => {
-      cy.uiLogin(login);
+    setupUser('ga-create-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
       cy.navTo('profile');
 
       cy.getByCy('account-pseudo-input').scrollIntoView().type('MyGamePseudo');
@@ -43,8 +43,8 @@ describe('Game Accounts – UI', () => {
   });
 
   it('shows the Primary badge on the first created account', () => {
-    setupUser('ga-primary-token').then(({ login }) => {
-      cy.uiLogin(login);
+    setupUser('ga-primary-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
       cy.navTo('profile');
 
       cy.getByCy('account-pseudo-input').scrollIntoView().type('PrimaryPlayer');
@@ -56,11 +56,11 @@ describe('Game Accounts – UI', () => {
   });
 
   it('displays account count', () => {
-    setupUser('ga-count-token').then(({ login, access_token }) => {
+    setupUser('ga-count-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'Account1', true);
       cy.apiCreateGameAccount(access_token, 'Account2', false);
 
-      cy.uiLogin(login);
+      cy.apiLogin(user_id);
       cy.navTo('profile');
       cy.contains('2/10 accounts').scrollIntoView().should('be.visible');
     });
@@ -71,10 +71,10 @@ describe('Game Accounts – UI', () => {
   // =========================================================================
 
   it('edits a game account pseudo via the pencil icon', () => {
-    setupUser('ga-edit-token').then(({ login, access_token }) => {
+    setupUser('ga-edit-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'OldPseudo', true);
 
-      cy.uiLogin(login);
+      cy.apiLogin(user_id);
       cy.navTo('profile');
       cy.contains('OldPseudo').scrollIntoView().should('be.visible');
 
@@ -93,10 +93,10 @@ describe('Game Accounts – UI', () => {
   // =========================================================================
 
   it('deletes a game account with confirmation dialog', () => {
-    setupUser('ga-delete-token').then(({ login, access_token }) => {
+    setupUser('ga-delete-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'ToDelete', true);
 
-      cy.uiLogin(login);
+      cy.apiLogin(user_id);
       cy.navTo('profile');
       cy.contains('ToDelete').scrollIntoView().should('be.visible');
 
@@ -115,11 +115,11 @@ describe('Game Accounts – UI', () => {
   // =========================================================================
 
   it('sets the primary account', () => {
-    setupUser('ga-setprim-token').then(({ login, access_token }) => {
+    setupUser('ga-setprim-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'Account1', true);
       cy.apiCreateGameAccount(access_token, 'Account2', false);
 
-      cy.uiLogin(login);
+      cy.apiLogin(user_id);
       cy.navTo('profile');
       cy.getByCy('account-row-Account1').scrollIntoView().find('[data-cy="account-primary-badge"]').should('exist');
       cy.getByCy('account-row-Account2').scrollIntoView().find('[data-cy="account-primary-badge"]').should('not.exist');
@@ -132,10 +132,10 @@ describe('Game Accounts – UI', () => {
   });
 
   it('create new account does not steal primary from the first', () => {
-    setupUser('ga-newprim-token').then(({ login, access_token }) => {
+    setupUser('ga-newprim-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'MainAccount', true);
 
-      cy.uiLogin(login);
+      cy.apiLogin(user_id);
       cy.navTo('profile');
 
       cy.getByCy('collapsible-add-a-game-account').scrollIntoView().click();

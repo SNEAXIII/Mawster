@@ -56,7 +56,7 @@ describe('Roster – Upgrade Requests', () => {
   it('officer can request an upgrade for a member in the roster preview', () => {
     setupAdmin('ur-t1-admin').then((admin) => {
       setupAllianceWithMember(admin.access_token, 'Spider-Man', 'Science').then(({ ownerData }) => {
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('alliances');
 
         // Wait for alliance roles to load before opening roster dialog
@@ -90,7 +90,7 @@ describe('Roster – Upgrade Requests', () => {
         ({ ownerData, memberData, championUserId }) => {
           cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 
-          cy.uiLogin(memberData.login);
+          cy.apiLogin(memberData.user_id);
           cy.navTo('roster');
 
           // The section is collapsed by default, need to expand it
@@ -112,7 +112,7 @@ describe('Roster – Upgrade Requests', () => {
           cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 
           // Verify the request is visible on the member's roster page
-          cy.uiLogin(memberData.login);
+          cy.apiLogin(memberData.user_id);
           cy.navTo('roster');
           cy.getByCy('upgrade-requests-section').should('be.visible');
 
@@ -137,7 +137,7 @@ describe('Roster – Upgrade Requests', () => {
           // Request 7r4 but champion is at 7r1
           cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r4');
 
-          cy.uiLogin(memberData.login);
+          cy.apiLogin(memberData.user_id);
           cy.navTo('roster');
           cy.getByCy('upgrade-requests-section').should('be.visible');
 
@@ -161,7 +161,7 @@ describe('Roster – Upgrade Requests', () => {
           // Request 7r2 but champion is at 7r1
           cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r2');
 
-          cy.uiLogin(memberData.login);
+          cy.apiLogin(memberData.user_id);
           cy.navTo('roster');
           cy.getByCy('upgrade-requests-section').should('be.visible');
 
@@ -184,7 +184,7 @@ describe('Roster – Upgrade Requests', () => {
       setupAllianceWithMember(admin.access_token, 'Thor', 'Cosmic').then(({ ownerData, championUserId }) => {
         cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('alliances');
 
         // Wait for alliance roles to load before opening roster dialog
@@ -230,7 +230,7 @@ describe('Roster – Upgrade Requests', () => {
           // Owner creates a request on their own champion
           cy.apiCreateUpgradeRequest(ownerData.access_token, cu.id, '7r3');
 
-          cy.uiLogin(ownerData.login);
+          cy.apiLogin(ownerData.user_id);
           cy.navTo('roster');
 
           cy.getByCy('upgrade-requests-section').should('be.visible');

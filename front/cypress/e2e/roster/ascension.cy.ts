@@ -10,7 +10,7 @@ describe('Roster – Ascension', () => {
       // Load champion with is_ascendable = true
       cy.apiLoadChampion(adminData.access_token, 'AscHero', 'Mutant', { is_ascendable: true });
 
-      cy.uiLogin(userData.login);
+      cy.apiLogin(userData.user_id);
       cy.navTo('roster');
 
       cy.contains('Add / Update a Champion').click();
@@ -40,7 +40,7 @@ describe('Roster – Ascension', () => {
         is_ascendable: true,
       });
 
-      cy.uiLogin(userData.login);
+      cy.apiLogin(userData.user_id);
       cy.navTo('roster');
 
       cy.contains('Add / Update a Champion').click();
@@ -68,7 +68,7 @@ describe('Roster – Ascension', () => {
       // Load champion without is_ascendable (default false)
       cy.apiLoadChampion(adminData.access_token, 'NoAscChamp', 'Tech');
 
-      cy.uiLogin(userData.login);
+      cy.apiLogin(userData.user_id);
       cy.navTo('roster');
 
       cy.contains('Add / Update a Champion').click();
@@ -96,7 +96,7 @@ describe('Roster – Ascension', () => {
           ascension: 0,
         });
 
-        cy.uiLogin(userData.login);
+        cy.apiLogin(userData.user_id);
         cy.navTo('roster');
 
         // No ascension badge initially

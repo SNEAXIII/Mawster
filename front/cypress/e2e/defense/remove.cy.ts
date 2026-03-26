@@ -19,7 +19,7 @@ describe('Defense – Remove defender', () => {
         }).then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 2, cu.id, ownerAccId));
       });
 
-      cy.uiLogin(ownerData.login);
+      cy.apiLogin(ownerData.user_id);
       cy.navTo('defense');
 
       cy.getByCy('defender-count-RmPlyr').should('contain', '2/5');
@@ -43,7 +43,7 @@ describe('Defense – Remove defender', () => {
             .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 5, cu.id, ownerAccId)),
         );
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('defense');
 
         cy.getByCy('defender-count-RmMapPlyr').should('contain', '1/5');
@@ -65,7 +65,7 @@ describe('Defense – Remove defender', () => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
         );
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('defense');
 
         // Place via UI

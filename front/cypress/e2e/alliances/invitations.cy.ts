@@ -11,7 +11,7 @@ describe('Alliances – Invitations', () => {
         return cy.apiCreateGameAccount(newMember.access_token, 'NewMemberAcc', true);
       });
 
-      cy.uiLogin(ownerData.login);
+      cy.apiLogin(ownerData.user_id);
       cy.navTo('alliances');
 
       cy.getByCy('alliance-card-InviteAlliance').should('be.visible');
@@ -40,7 +40,7 @@ describe('Alliances – Invitations', () => {
           return cy.apiCreateGameAccount(invitee.access_token, 'JoinPlayer', true).then((inviteeAccount) => {
             cy.apiInviteMember(ownerData.access_token, allianceId, inviteeAccount.id);
 
-            cy.uiLogin(invitee.login);
+            cy.apiLogin(invitee.user_id);
             cy.navTo('alliances');
 
             // Verify invitation content before accepting
@@ -71,7 +71,7 @@ describe('Alliances – Invitations', () => {
       cy.apiCreateGameAccount(ownerData.access_token, 'SecondAcc', false).then((secondAccount) => {
         cy.apiInviteMember(ownerData.access_token, allianceId, secondAccount.id);
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('alliances');
 
         // The invitation for the owner's own second account must be visible
@@ -98,7 +98,7 @@ describe('Alliances – Invitations', () => {
           return cy.apiCreateGameAccount(invitee.access_token, 'DeclinePlayer', true).then((inviteeAccount) => {
             cy.apiInviteMember(ownerData.access_token, allianceId, inviteeAccount.id);
 
-            cy.uiLogin(invitee.login);
+            cy.apiLogin(invitee.user_id);
             cy.navTo('alliances');
 
             cy.getByCy('my-invitations-section').should('be.visible');

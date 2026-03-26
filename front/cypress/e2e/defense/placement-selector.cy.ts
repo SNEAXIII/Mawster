@@ -15,7 +15,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r3' },
       { name: 'Iron Man', cls: 'Tech', rarity: '7r3' },
     ]).then(({ ownerData }) => {
-      cy.uiLogin(ownerData.login);
+      cy.apiLogin(ownerData.user_id);
       cy.navTo('defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -37,7 +37,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3' },
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r3' },
     ]).then(({ ownerData }) => {
-      cy.uiLogin(ownerData.login);
+      cy.apiLogin(ownerData.user_id);
       cy.navTo('defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -56,7 +56,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r5', options: { ascension: 1, is_ascendable: true } },
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r3' },
     ]).then(({ ownerData }) => {
-      cy.uiLogin(ownerData.login);
+      cy.apiLogin(ownerData.user_id);
       cy.navTo('defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -75,7 +75,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3', options: { signature: 200 } },
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r3', options: { signature: 100 } },
     ]).then(({ ownerData }) => {
-      cy.uiLogin(ownerData.login);
+      cy.apiLogin(ownerData.user_id);
       cy.navTo('defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -98,7 +98,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3', options: { signature: 200 } },
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r4', options: { signature: 100 } },
     ]).then(({ ownerData }) => {
-      cy.uiLogin(ownerData.login);
+      cy.apiLogin(ownerData.user_id);
       cy.navTo('defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -126,7 +126,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
           cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', { signature: 100 });
         });
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -165,7 +165,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
           });
         });
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -192,7 +192,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
           });
         });
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -219,7 +219,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
           cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r4', { signature: 100 }),
         );
 
-        cy.uiLogin(ownerData.login);
+        cy.apiLogin(ownerData.user_id);
         cy.navTo('defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -248,7 +248,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
     setupDefenseScenario('def-pl-title', 'TitlePlyr', 'TT', [
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3', options: { signature: 200 } },
     ]).then(({ ownerData }) => {
-      cy.uiLogin(ownerData.login);
+      cy.apiLogin(ownerData.user_id);
       cy.navTo('defense');
 
       cy.getByCy('war-node-1').should('have.attr', 'title').and('include', 'Empty');

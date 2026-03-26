@@ -8,7 +8,7 @@ describe('War – Management (declare and end)', () => {
   it('officer can end a war via the end war button', () => {
     setupWarOwner('war-mgmt-end', 'EndWarOfficer', 'EndWarAlliance', 'EW').then(({ ownerData, allianceId }) => {
       cy.apiCreateWar(ownerData.access_token, allianceId, 'TargetEnemy');
-      cy.uiLogin(ownerData.login);
+      cy.apiLogin(ownerData.user_id);
       cy.navTo('war');
 
       // Active war shows opponent name and end-war button
@@ -28,7 +28,7 @@ describe('War – Management (declare and end)', () => {
     setupAllianceWithMember('war-mgmt-end-member', 'Owner', 'MemberUser', 'EndWarAlliance', 'EWA').then(
       ({ ownerData, memberData, allianceId }) => {
         cy.apiCreateWar(ownerData.access_token, allianceId, 'TargetEnemy');
-        cy.uiLogin(memberData.login);
+        cy.apiLogin(memberData.user_id);
         cy.navTo('war');
 
         // Active war shows opponent name and end-war button

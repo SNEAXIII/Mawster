@@ -14,7 +14,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
       setupRosterUser('ui-combined', 'CombinedPlayer').then(({ adminData, userData }) => {
         cy.apiLoadChampion(adminData.access_token, 'Omega', 'Mutant', { is_ascendable: true });
 
-        cy.uiLogin(userData.login);
+        cy.apiLogin(userData.user_id);
         cy.navTo('roster');
 
         cy.contains('Add / Update a Champion').click();
@@ -73,7 +73,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
             is_preferred_attacker: true,
           });
 
-          cy.uiLogin(userData.login);
+          cy.apiLogin(userData.user_id);
           cy.navTo('roster');
 
           // Click the edit button on the champion card
@@ -104,7 +104,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
             ascension: 0,
           });
 
-          cy.uiLogin(userData.login);
+          cy.apiLogin(userData.user_id);
           cy.navTo('roster');
 
           // Click edit
@@ -145,7 +145,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
             signature: 200,
           });
 
-          cy.uiLogin(userData.login);
+          cy.apiLogin(userData.user_id);
           cy.navTo('roster');
 
           // Open form and search for the same champion
@@ -167,7 +167,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
       setupRosterUser('ui-already-dup', 'AlreadyDupPlayer').then(({ adminData, userData }) => {
         cy.apiLoadChampion(adminData.access_token, 'Kingpin', 'Skill');
 
-        cy.uiLogin(userData.login);
+        cy.apiLogin(userData.user_id);
         cy.navTo('roster');
 
         // Add Kingpin at 7r1 with sig 20
