@@ -24,10 +24,10 @@ services:
         max-file: '5'
 
   api:
-    # image: sneaxiii/mawster-api:latest
-    build:
-      context: ./api
-      dockerfile: api.Dockerfile
+    image: sneaxiii/mawster-api:latest
+    # build:
+      # context: ./api
+      # dockerfile: api.Dockerfile
     container_name: api
     restart: unless-stopped
     networks:
@@ -53,10 +53,10 @@ services:
         max-file: '5'
 
   front:
-    # image: sneaxiii/mawster-front:latest
-    build:
-      context: ./front
-      dockerfile: front.Dockerfile
+    image: sneaxiii/mawster-front:latest
+    # build:
+      # context: ./front
+      # dockerfile: front.Dockerfile
     container_name: front
     restart: unless-stopped
     networks:
