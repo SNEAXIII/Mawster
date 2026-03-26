@@ -72,7 +72,7 @@ export default function WarAttackerPanel({
 
               {/* Per-node entries */}
               <div className='space-y-1.5'>
-                {group.entries.map((p) => (
+                {[...group.entries].sort((a, b) => a.node_number - b.node_number).map((p) => (
                   <div
                     key={p.id}
                     className='flex items-center gap-2 rounded-md border bg-card px-2 py-1.5'
