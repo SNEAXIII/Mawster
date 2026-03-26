@@ -132,6 +132,12 @@ declare namespace Cypress {
     apiUpgradeChampion(token: string, championUserId: string): Chainable<any>;
 
     /**
+     * Log in via the dev API (no UI). Faster than uiLogin.
+     * Pass ownerData.user_id (UUID).
+     */
+    apiLogin(userId: string): Chainable<void>;
+
+    /**
      * Log in via the dev-login UI on the login page.
      * Clicks the button matching the user's login name.
      */

@@ -205,6 +205,17 @@ Cypress.Commands.add('apiForceJoinAlliance', (gameAccountId: string, allianceId:
   });
 });
 
+// ── API login — bypasses the UI entirely ─────────────────────────────────────
+
+Cypress.Commands.add('apiLogin', (userId: string) => {
+  cy.clearAllCookies();
+  cy.clearAllSessionStorage();
+  cy.clearAllLocalStorage();
+  cy.request('POST', '/api/dev/login', { user_id: userId }).then((res) => {
+    cy.setCookie('authjs.session-token', res.body.sessionToken);
+  });
+});
+
 // ── UI login via dev-login flow ──────────────────────────────────────────────
 
 Cypress.Commands.add('uiLogin', (userName: string) => {
