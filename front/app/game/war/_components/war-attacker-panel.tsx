@@ -5,24 +5,16 @@ import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
 import { X, Minus, Plus, Swords } from 'lucide-react';
 import { type WarPlacement } from '@/app/services/war';
-
-interface WarAttackerPanelProps {
-  placements: WarPlacement[];
-  onRemoveAttacker: (nodeNumber: number) => void;
-  onUpdateKo: (nodeNumber: number, newKo: number) => void;
-}
+import { useWar } from '../_context/war-context';
 
 interface MemberGroup {
   pseudo: string;
   entries: WarPlacement[];
 }
 
-export default function WarAttackerPanel({
-  placements,
-  onRemoveAttacker,
-  onUpdateKo,
-}: Readonly<WarAttackerPanelProps>) {
+export default function WarAttackerPanel() {
   const { t } = useI18n();
+  const { placements, handleRemoveAttacker, handleUpdateKo } = useWar();
 
   const assigned = placements.filter((p) => p.attacker_champion_user_id !== null);
 
@@ -108,7 +100,7 @@ export default function WarAttackerPanel({
                           'bg-muted hover:bg-accent transition-colors',
                           p.ko_count <= 0 && 'opacity-40 cursor-not-allowed'
                         )}
-                        onClick={() => p.ko_count > 0 && onUpdateKo(p.node_number, p.ko_count - 1)}
+                        onClick={() => p.ko_count > 0 && handleUpdateKo(p.node_number, p.ko_count - 1)}
                         disabled={p.ko_count <= 0}
                         data-cy={`ko-dec-node-${p.node_number}`}
                       >
@@ -123,7 +115,7 @@ export default function WarAttackerPanel({
                       <button
                         type='button'
                         className='w-5 h-5 rounded flex items-center justify-center text-xs bg-muted hover:bg-accent transition-colors'
-                        onClick={() => onUpdateKo(p.node_number, p.ko_count + 1)}
+                        onClick={() => handleUpdateKo(p.node_number, p.ko_count + 1)}
                         data-cy={`ko-inc-node-${p.node_number}`}
                       >
                         <Plus className='w-2.5 h-2.5' />
@@ -134,7 +126,7 @@ export default function WarAttackerPanel({
                     <button
                       type='button'
                       className='w-5 h-5 rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center flex-shrink-0'
-                      onClick={() => onRemoveAttacker(p.node_number)}
+                      onClick={() => handleRemoveAttacker(p.node_number)}
                       title={t.game.war.removeAttacker}
                       data-cy={`remove-attacker-node-${p.node_number}`}
                     >

@@ -7,7 +7,7 @@ import { cn } from '@/app/lib/utils';
 import { useI18n } from '@/app/i18n';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { WarMode } from './war-types';
-import type { War, WarPlacement } from '@/app/services/war';
+import { useWar } from '../_context/war-context';
 
 const WarDefenseMap = dynamic(() => import('./war-defense-map'), {
   loading: () => <FullPageSpinner />,
@@ -17,54 +17,36 @@ const WarAttackerPanel = dynamic(() => import('./war-attacker-panel'), {
   loading: () => null,
 });
 
-interface WarDefendersTabProps {
-  activeWar: War | undefined;
-  selectedBg: number;
-  onBgChange: (bg: number) => void;
-  canManageWar: boolean;
-  warMode: WarMode;
-  onWarModeChange: (mode: WarMode) => void;
-  warLoading: boolean;
-  placements: WarPlacement[];
-  onNodeClick: (node: number) => void;
-  onRemoveDefender: (node: number) => void;
-  onRemoveAttacker: (node: number) => Promise<void>;
-  onUpdateKo: (node: number, newKo: number) => Promise<void>;
-  onOpenClearConfirm: () => void;
-  onClickEndWar: () => void;
-}
-
-export default function WarDefendersTab({
-  activeWar,
-  selectedBg,
-  onBgChange,
-  canManageWar,
-  warMode,
-  onWarModeChange,
-  warLoading,
-  placements,
-  onNodeClick,
-  onRemoveDefender,
-  onRemoveAttacker,
-  onUpdateKo,
-  onOpenClearConfirm,
-  onClickEndWar,
-}: Readonly<WarDefendersTabProps>) {
+export default function WarDefendersTab() {
   const { t } = useI18n();
+  const {
+    currentWar,
+    selectedBg,
+    setSelectedBg,
+    canManageWar,
+    warMode,
+    setWarMode,
+    warLoading,
+    placements,
+    handleNodeClick,
+    handleRemoveDefender,
+    setShowClearConfirm,
+    setShowEndConfirm,
+  } = useWar();
 
   return (
     <div className='space-y-4'>
       {/* Controls row: opponent name + BG picker + mode toggle + clear */}
       <div className='flex flex-wrap items-center gap-3'>
         {/* Opponent name */}
-        {activeWar && (
+        {currentWar && (
           <div className='flex items-center gap-2'>
             <Swords className='w-4 h-4 text-muted-foreground' />
             <span
               data-cy='war-opponent-name'
               className='text-sm font-semibold'
             >
-              vs {activeWar.opponent_name}
+              vs {currentWar.opponent_name}
             </span>
           </div>
         )}
@@ -77,7 +59,7 @@ export default function WarDefendersTab({
           {[1, 2, 3].map((bg) => (
             <button
               key={bg}
-              onClick={() => onBgChange(bg)}
+              onClick={() => setSelectedBg(bg)}
               className={cn(
                 'px-3 py-1 rounded text-sm font-semibold transition-colors',
                 selectedBg === bg
@@ -98,7 +80,7 @@ export default function WarDefendersTab({
             data-cy='war-mode-toggle'
           >
             <button
-              onClick={() => onWarModeChange(WarMode.Defenders)}
+              onClick={() => setWarMode(WarMode.Defenders)}
               className={cn(
                 'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold transition-colors',
                 warMode === WarMode.Defenders
@@ -111,7 +93,7 @@ export default function WarDefendersTab({
               {t.game.war.modeDefenders}
             </button>
             <button
-              onClick={() => onWarModeChange(WarMode.Attackers)}
+              onClick={() => setWarMode(WarMode.Attackers)}
               className={cn(
                 'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold transition-colors',
                 warMode === WarMode.Attackers
@@ -130,7 +112,7 @@ export default function WarDefendersTab({
         {canManageWar && placements.length > 0 && (
           <Button
             variant='outline'
-            onClick={onOpenClearConfirm}
+            onClick={() => setShowClearConfirm(true)}
             data-cy='clear-war-bg-btn'
           >
             <Trash2 className='w-4 h-4 mr-2' />
@@ -142,7 +124,7 @@ export default function WarDefendersTab({
         {canManageWar && (
           <Button
             variant='destructive'
-            onClick={onClickEndWar}
+            onClick={() => setShowEndConfirm(true)}
             className='ml-auto'
             data-cy='end-war-btn'
           >
@@ -159,21 +141,15 @@ export default function WarDefendersTab({
             <div className='p-2 sm:p-3 w-max mx-auto'>
               <WarDefenseMap
                 placements={placements}
-                onNodeClick={onNodeClick}
-                onRemove={onRemoveDefender}
+                onNodeClick={handleNodeClick}
+                onRemove={handleRemoveDefender}
                 canManage={canManageWar && warMode === WarMode.Defenders}
               />
             </div>
           </div>
-          {warMode === WarMode.Attackers && (
-            <div className='w-64 shrink-0'>
-              <WarAttackerPanel
-                placements={placements}
-                onRemoveAttacker={onRemoveAttacker}
-                onUpdateKo={onUpdateKo}
-              />
-            </div>
-          )}
+          <div className='w-64 shrink-0'>
+            <WarAttackerPanel />
+          </div>
         </div>
       )}
     </div>

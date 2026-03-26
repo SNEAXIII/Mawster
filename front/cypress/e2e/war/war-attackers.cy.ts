@@ -93,4 +93,18 @@ describe('War – Attackers mode', () => {
       cy.contains('1/3').scrollIntoView().should('be.visible');
     });
   });
+
+  // ── Member sees their own assigned attacks ────────────────────────────────
+
+  it('member can see their own assigned attacks in the attacker panel', () => {
+    setupAttackerScenario('atk-member-view').then(({ memberData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+
+      // Log in as the member (not the owner/officer)
+      cy.apiLogin(memberData.user_id);
+      cy.navTo('war');
+
+      cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
+    });
+  });
 });

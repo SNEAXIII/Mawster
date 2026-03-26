@@ -1,25 +1,15 @@
 'use client';
 
 import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
 import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
 import { X } from 'lucide-react';
 import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils';
-import { type WarPlacement } from '@/app/services/war';
+import { useWar } from '../_context/war-context';
 
-interface WarSidePanelProps {
-  placements: WarPlacement[];
-  onRemoveDefender: (nodeNumber: number) => void;
-  canManage: boolean;
-}
-
-export default function WarSidePanel({
-  placements,
-  onRemoveDefender,
-  canManage,
-}: WarSidePanelProps) {
+export default function WarSidePanel() {
   const { t } = useI18n();
+  const { placements, handleRemoveDefender, canManageWar } = useWar();
 
   const sorted = [...placements].sort((a, b) => a.node_number - b.node_number);
 
@@ -50,10 +40,10 @@ export default function WarSidePanel({
               <span className={cn('text-[10px] font-mono leading-none', rarityBadgeClass(p.rarity))}>
                 {rarityLabel(p.rarity, 0, p.ascension)}
               </span>
-              {canManage && (
+              {canManageWar && (
                 <button
                   className='absolute -top-1 -right-1 z-10 hidden group-hover:flex bg-red-600 hover:bg-red-700 text-white rounded-full w-4 h-4 items-center justify-center'
-                  onClick={() => onRemoveDefender(p.node_number)}
+                  onClick={() => handleRemoveDefender(p.node_number)}
                   title={t.game.war.removeDefender}
                 >
                   <X className='w-2.5 h-2.5' />

@@ -1,17 +1,11 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useState } from 'react';
-import { useAllianceSelector } from '@/hooks/use-alliance-selector';
-import { useI18n } from '@/app/i18n';
 import { useRequiredSession } from '@/hooks/use-required-session';
-import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { type War, type WarPlacement, getCurrentWar, createWar, endWar } from '@/app/services/war';
-import { useWarActions } from '../_hooks/use-war-actions';
-import { toast } from 'sonner';
-import { WarMode } from './war-types';
+import { useI18n } from '@/app/i18n';
+import { WarProvider, useWar } from '../_context/war-context';
 import WarHeader from './war-header';
 import WarDefendersTab from './war-defenders-tab';
 import WarManagementBar from './war-management-bar';
@@ -26,9 +20,15 @@ const WarAttackerSelector = dynamic(() => import('./war-attacker-selector'), {
 });
 
 export default function WarContent() {
-  const { t } = useI18n();
-  const { canManage } = useAllianceRole();
+  return (
+    <WarProvider>
+      <WarLayout />
+    </WarProvider>
+  );
+}
 
+function WarLayout() {
+  const { t } = useI18n();
   useRequiredSession();
 
   const {
@@ -36,113 +36,31 @@ export default function WarContent() {
     selectedAllianceId,
     setSelectedAllianceId,
     selectedBg,
-    setSelectedBg,
     loading,
-  } = useAllianceSelector();
-
-  const [currentWar, setCurrentWar] = useState<War | null>(null);
-  const [managementLoading, setManagementLoading] = useState(false);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showEndConfirm, setShowEndConfirm] = useState(false);
-  const [warMode, setWarMode] = useState<WarMode>(WarMode.Defenders);
-
-  // ─── Auto-select first alliance ──────────────────────────
-  useEffect(() => {
-    if (alliances.length > 0 && !selectedAllianceId) {
-      setSelectedAllianceId(alliances[0].id);
-    }
-  }, [alliances, selectedAllianceId, setSelectedAllianceId]);
-
-  // ─── Fetch current war when alliance changes ──────────────
-  const fetchCurrentWar = useCallback(async () => {
-    if (!selectedAllianceId) return;
-    setManagementLoading(true);
-    try {
-      const war = await getCurrentWar(selectedAllianceId);
-      setCurrentWar(war);
-    } catch (err: any) {
-      if (err.status === 404) {
-        setCurrentWar(null);
-      } else {
-        toast.error(t.game.war.loadError);
-      }
-    } finally {
-      setManagementLoading(false);
-    }
-  }, [selectedAllianceId, t.game.war.loadError]);
-
-  useEffect(() => {
-    setCurrentWar(null);
-    fetchCurrentWar();
-  }, [selectedAllianceId, fetchCurrentWar]);
-
-  const activeWarId = currentWar?.id ?? '';
-
-  const {
-    warSummary,
-    warLoading,
+    canManageWar,
+    currentWar,
+    activeWarId,
+    managementLoading,
+    placements,
     selectorNode,
     setSelectorNode,
     attackerSelectorNode,
     setAttackerSelectorNode,
     showClearConfirm,
     setShowClearConfirm,
+    showCreateDialog,
+    setShowCreateDialog,
+    showEndConfirm,
+    setShowEndConfirm,
     pendingRemoveNode,
     setPendingRemoveNode,
-    handleConfirmRemoveDefender,
+    handleCreateWar,
+    handleEndWar,
     handlePlaceDefender,
-    handleRemoveDefender,
-    handleClearBg,
     handleAssignAttacker,
-    handleRemoveAttacker,
-    handleUpdateKo,
-  } = useWarActions(selectedAllianceId, selectedBg, activeWarId);
-
-  // ─── Actions ─────────────────────────────────────────────
-
-  const placements: WarPlacement[] = warSummary?.placements ?? [];
-
-  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
-  const canManageWar = selectedAlliance ? canManage(selectedAlliance) : false;
-
-  const handleNodeClick = (nodeNumber: number) => {
-    if (!activeWarId) return;
-    if (warMode === WarMode.Attackers) {
-      const hasDefender = placements.some((p) => p.node_number === nodeNumber);
-      if (!hasDefender) {
-        toast.warning(t.game.war.defenderRequired);
-        return;
-      }
-      setAttackerSelectorNode(nodeNumber);
-    } else {
-      if (!selectedAlliance || !canManage(selectedAlliance)) return;
-      setSelectorNode(nodeNumber);
-    }
-  };
-
-  const handleCreateWar = async (opponentName: string) => {
-    try {
-      const war = await createWar(selectedAllianceId, opponentName);
-      toast.success(t.game.war.createSuccess.replace('{name}', opponentName));
-      setCurrentWar(war);
-    } catch (err: any) {
-      toast.error(err.message || t.game.war.createError);
-      throw err;
-    }
-  };
-
-  const handleEndWar = async () => {
-    if (!currentWar) return;
-    try {
-      await endWar(selectedAllianceId, currentWar.id);
-      toast.success(t.game.war.endWarSuccess);
-      setCurrentWar(null);
-    } catch (err: any) {
-      toast.error(err.message || t.game.war.endWarError);
-    }
-  };
-
-  // ─── Render ──────────────────────────────────────────────
+    handleConfirmRemoveDefender,
+    handleClearBg,
+  } = useWar();
 
   if (loading) return <FullPageSpinner />;
 
@@ -168,22 +86,7 @@ export default function WarContent() {
 
           {/* ── War map ──────────────────────────────────── */}
           {activeWarId ? (
-            <WarDefendersTab
-              activeWar={currentWar ?? undefined}
-              selectedBg={selectedBg}
-              onBgChange={setSelectedBg}
-              canManageWar={canManageWar}
-              warMode={warMode}
-              onWarModeChange={setWarMode}
-              warLoading={warLoading}
-              placements={placements}
-              onNodeClick={handleNodeClick}
-              onRemoveDefender={handleRemoveDefender}
-              onRemoveAttacker={handleRemoveAttacker}
-              onUpdateKo={handleUpdateKo}
-              onOpenClearConfirm={() => setShowClearConfirm(true)}
-              onClickEndWar={() => setShowEndConfirm(true)}
-            />
+            <WarDefendersTab />
           ) : (
             <p className='text-muted-foreground'>{t.game.war.noActiveWar}</p>
           )}
