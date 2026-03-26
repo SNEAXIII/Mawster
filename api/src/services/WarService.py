@@ -341,6 +341,9 @@ class WarService:
                 )
             )
         )
+        # TODO AJOUTER UN CHECK SI la personne a déja 3 attaquants placés dans la guerre, 
+        # TODO même si pas dans la défense, pour éviter de faire planter le frontend après
+        # TODO que la personne ait sélectionné un attaquant et que ça plante au moment de l'assignation
         defense_champion_user_ids = set(defense_result.all())
         result: list[AvailableAttackerResponse] = []
         for game_account in members:
@@ -422,6 +425,7 @@ class WarService:
                     WarDefensePlacement.war_id == war_id,
                     WarDefensePlacement.battlegroup == battlegroup,
                     ChampionUser.game_account_id == game_account.id,
+                    WarDefensePlacement.node_number != placement_request.node_number,
                 )
             ).group_by(ChampionUser.id)
         )
