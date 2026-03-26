@@ -20,17 +20,6 @@ describe('War – Attackers mode', () => {
     });
   });
 
-  // ── Attacker panel visible in Attackers mode ──────────────────────────────
-
-  it('attacker panel is visible in Attackers mode', () => {
-    setupAttackerScenario('atk-panel').then(({ ownerData }) => {
-      goToAttackersMode(ownerData.user_id);
-      cy.getByCy('war-attacker-panel').should('be.visible');
-      cy.getByCy('war-mode-attackers').click();
-      cy.getByCy('war-attacker-panel').should('be.visible');
-    });
-  });
-
   // ── Assign attacker via API and check sidebar ─────────────────────────────
 
   it('assigned attacker appears in the attacker panel', () => {

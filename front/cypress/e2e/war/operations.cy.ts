@@ -30,7 +30,7 @@ describe('War – Operations (declare, place, remove)', () => {
       cy.apiCreateWar(ownerData.access_token, allianceId, 'PlaceEnemy').then(() => {
         cy.apiLogin(ownerData.user_id);
         cy.navTo('war');
-
+        cy.getByCy('war-mode-defenders').click();
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
         cy.getByCy('war-champion-search').type('Iron Man');
         cy.getByCy('war-champion-card-Iron-Man').click();
