@@ -39,10 +39,10 @@ e2e-open: e2e-db
 	@Write-Host 'Lancement de Cypress...'; Set-Location front; npx cypress open
 
 e2e-parallel: e2e-db
-	python scripts/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) $(if $(Q),--quiet,)
+	python scripts/e2e_parallel.py --workers $(if $(N),$(N),3) $(if $(SPEC),--spec $(SPEC),) $(if $(Q),--quiet,)
 
 e2e-parallel-quiet: e2e-db
-	python scripts/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) --quiet
+	python scripts/e2e_parallel.py --workers $(if $(N),$(N),3) $(if $(SPEC),--spec $(SPEC),) --quiet
 
 else
 # ── Linux / macOS ─────────────────────────────────────────────────────────────

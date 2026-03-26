@@ -150,13 +150,13 @@ MariaDB in production, SQLite in-memory for integration tests. Migrations manage
 
 ```
 # E2E
-mcp__cypress-runner__run_failing_tests  (or skill: test-cypress-failing)
+mcp__cypress-runner__run_parallel with spec_files=[...]  (or skill: test-e2e-failing)
 
 # Backend
 mcp__pytest-runner__run_failing_tests   (or skill: test-backend-failing)
 ```
 
-Only use `run_e2e` / `run_all_tests` after structural changes that could affect unrelated tests.
+Only use `run_parallel` (all specs) / `run_all_tests` after structural changes that could affect unrelated tests.
 
 ---
 
@@ -224,8 +224,7 @@ Runs Cypress E2E tests from the assistant. Prefer this over `npm run cypress:run
 
 | Tool                                        | Description                        |
 | ------------------------------------------- | ---------------------------------- |
-| `mcp__cypress-runner__run_all_tests`        | Run the full Cypress E2E suite     |
-| `mcp__cypress-runner__run_failing_tests`    | Re-run only previously failed tests |
+| `mcp__cypress-runner__run_parallel`         | Run specs in parallel (pass `spec_files` to target specific specs) |
 
 ### pytest-runner
 
