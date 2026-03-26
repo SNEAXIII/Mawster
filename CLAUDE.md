@@ -136,21 +136,23 @@ MariaDB in production, SQLite in-memory for integration tests. Migrations manage
 | `setupAdmin(token)` | Need an admin token (e.g. to call `/admin/*` endpoints) |
 | `setupAllianceOwner(prefix, pseudo, name, tag)` | Need a user with game account + alliance |
 | `setupWarOwner(prefix, pseudo, name, tag)` | Need admin + owner + alliance for war tests — returns `{ adminData, ownerData, allianceId, ownerAccId }` |
+| `setupAttackerScenario(prefix)` | Need owner + member + alliance + war + placed defender + roster champion for attacker tests — returns `{ adminToken, ownerData, memberData, allianceId, ownerAccId, memberAccId, warId, championUserId }` |
 | `setupDefenseOwner(prefix, pseudo, name, tag)` | Need admin + owner + alliance + BG1 for defense tests |
 | `setupRosterUser(prefix, pseudo)` | Need admin + user + game account for roster tests |
 
 **Rules for setup helpers:**
 
-- Admin endpoints (`/admin/*`) require an admin token — always use `adminData.access_token`, never `ownerData.access_token`
+- Admin endpoints (`/admin/*`) require an admin token — always use `adminData.access_token` or `adminToken`, never `ownerData.access_token`
 - Use `cy.apiLoadChampion(adminToken, name, class)` to load a champion; it returns the champion array so you can chain `.then(champs => ...)` to get the ID
 - Never write raw `cy.request({ method: 'POST', url: '.../admin/champions/load', ... })` in tests — use `cy.apiLoadChampion` instead
 - After loading a champion and needing its ID, chain directly: `cy.apiLoadChampion(...).then(champs => cy.apiPlaceWarDefender(..., champs[0].id, ...))`
+- Use `cy.apiAssignWarAttacker(token, allianceId, warId, battlegroup, nodeNumber, championUserId)` to assign an attacker to a war node — uses the member's `access_token`
 
 **After fixing failing tests — re-run only those specs:**
 
 ```
 # E2E
-mcp__cypress-runner__run_parallel with spec_files=[...]  (or skill: test-e2e-failing)
+mcp__cypress-runner__run_parallel with spec_files=["war/operations.cy.ts", ...]  (short paths — not full paths; or skill: test-e2e-failing)
 
 # Backend
 mcp__pytest-runner__run_failing_tests   (or skill: test-backend-failing)

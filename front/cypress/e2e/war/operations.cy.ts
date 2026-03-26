@@ -53,6 +53,7 @@ describe('War – Operations (declare, place, remove)', () => {
         cy.apiCreateWar(ownerData.access_token, allianceId, 'HiddenEnemy').then(() => {
           cy.apiLogin(ownerData.user_id);
           cy.navTo('war');
+          cy.getByCy('war-mode-defenders').click();
 
           // Place Iron Man on node 1
           cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -84,6 +85,7 @@ describe('War – Operations (declare, place, remove)', () => {
 
             cy.apiLogin(ownerData.user_id);
             cy.navTo('war');
+            cy.getByCy('war-mode-defenders').click();
 
             cy.getByCy('war-node-5').scrollIntoView().should('not.contain', '+');
             cy.getByCy('war-node-5').find('button').click({ force: true });
@@ -124,6 +126,7 @@ describe('War – Operations (declare, place, remove)', () => {
 
       cy.apiLogin(ownerData.user_id);
       cy.navTo('war');
+      cy.getByCy('war-mode-defenders').click();
 
       cy.getByCy('war-node-10').scrollIntoView().should('not.contain', '+');
       cy.getByCy('war-node-10').find('button').click({ force: true });
@@ -138,6 +141,7 @@ describe('War – Operations (declare, place, remove)', () => {
 
       cy.apiLogin(ownerData.user_id);
       cy.navTo('war');
+      cy.getByCy('war-mode-defenders').click();
 
       cy.getByCy('war-node-10').scrollIntoView().find('button').click({ force: true });
       cy.getByCy('confirmation-dialog-confirm').should('be.visible');
@@ -155,6 +159,7 @@ describe('War – Operations (declare, place, remove)', () => {
 
       cy.apiLogin(ownerData.user_id);
       cy.navTo('war');
+      cy.getByCy('war-mode-defenders').click();
 
       cy.getByCy('war-node-10').scrollIntoView().find('button').click({ force: true });
       cy.getByCy('confirmation-dialog-confirm').click();

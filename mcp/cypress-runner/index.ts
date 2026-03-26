@@ -192,27 +192,32 @@ server.registerTool(
         .min(1)
         .max(8)
         .optional()
-        .describe('Nombre de workers parallèles (1-8, défaut: 2)'),
-      spec: z
-        .string()
+        .describe('Nombre de workers parallèles (1-8, défaut: 4)'),
+      spec_files: z
+        .array(z.string())
         .optional()
         .describe(
-          'Spec unique à lancer (relatif à front/cypress/e2e/). Ex: "war/war.cy.ts". Force 1 worker.'
+          'Liste de specs à lancer (chemins courts relatifs à front/cypress/e2e/). Ex: ["war/operations.cy.ts", "war/basic.cy.ts"]. Force 1 worker par spec.'
         ),
     },
   },
-  async ({ workers = 2, spec }) => {
+  async ({ workers = 4, spec_files }) => {
     const REPORT_FILE = path.join(RESULTS_DIR, 'report.json');
     const start = Date.now();
 
+    const spec = spec_files && spec_files.length > 0 ? spec_files.join(',') : undefined;
     const workersArg = spec ? '' : `--workers ${workers}`;
     const specArg = spec ? `--spec "${spec}"` : '';
     const cmd = `python scripts/e2e_parallel.py ${workersArg} ${specArg} --quiet`.trim();
 
     try {
       execSync(cmd, { cwd: ROOT, stdio: 'pipe', timeout: 1_200_000 });
-    } catch {
+    } catch (err: unknown) {
       // e2e_parallel.py exits with non-zero when tests fail — not a real error
+      const e = err as { stdout?: Buffer; stderr?: Buffer };
+      const output = (e.stdout?.toString() ?? '') + (e.stderr?.toString() ?? '');
+      const tail = output.split('\n').slice(-20).join('\n');
+      if (tail.trim()) process.stderr.write(`\n[cypress-runner] tail -20:\n${tail}\n`);
     }
 
     const durationMs = Date.now() - start;
@@ -235,7 +240,7 @@ server.registerTool(
       timestamp: new Date().toISOString(),
       branch: currentBranch(),
       type: 'parallel',
-      specs: spec ? [spec] : undefined,
+      specs: spec_files ?? undefined,
       durationMs,
       summary: {
         total: typedReport.summary.tests,
