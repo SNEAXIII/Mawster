@@ -30,6 +30,11 @@ from pathlib import Path
 
 from dataclasses import dataclass, asdict
 
+# Force UTF-8 stdout on Windows to handle Cypress box-drawing characters (┌─┐│)
+# Without this, print() raises UnicodeEncodeError on cp1252 systems, killing pipe_output.
+if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 sys.path.insert(0, str(Path(__file__).parent))
 from config import (  # noqa: E402  # pylint: disable=import-error,wrong-import-position
     ROOT,

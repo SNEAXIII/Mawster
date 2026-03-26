@@ -157,22 +157,6 @@ function saveToHistory(entry: HistoryEntry): void {
   fs.writeFileSync(HISTORY_FILE, JSON.stringify(history, null, 2));
 }
 
-function runCypress(specs?: string[]): TestResults {
-  clearResults();
-
-  const specArg = specs && specs.length > 0 ? `--spec "${specs.join(',')}"` : '';
-
-  const cmd = `npx cypress run ${specArg}`.trim();
-
-  try {
-    execSync(cmd, { cwd: FRONT_DIR, stdio: 'pipe', timeout: 600_000 });
-  } catch {
-    // Cypress exits with code 1 when tests fail — not a real error
-  }
-
-  return parseXmlResults();
-}
-
 // ── MCP Server ────────────────────────────────────────────────────────────────
 
 const server = new McpServer({
@@ -205,20 +189,20 @@ server.registerTool(
     const REPORT_FILE = path.join(RESULTS_DIR, 'report.json');
     const start = Date.now();
 
-    const spec = spec_files && spec_files.length > 0 ? spec_files.join(',') : undefined;
-    const workersArg = spec ? '' : `--workers ${workers}`;
-    const specArg = spec ? `--spec "${spec}"` : '';
-    const cmd = `python scripts/e2e_parallel.py ${workersArg} ${specArg} --quiet`.trim();
+    const cmd = ['python', 'scripts/e2e_parallel.py'];
+    if (spec_files && spec_files.length > 0) {
+      cmd.push('--spec', spec_files.join(','));
+    }
+    cmd.push('--quiet');
+
+    const cmdStr = cmd.map((c) => (c.includes(' ') ? `"${c}"` : c)).join(' ');
 
     try {
-      execSync(cmd, { cwd: ROOT, stdio: 'pipe', timeout: 1_200_000 });
-    } catch (err: unknown) {
+      execSync(cmdStr, { cwd: ROOT, stdio: 'pipe', timeout: 1_200_000 });
+    } catch {
       // e2e_parallel.py exits with non-zero when tests fail — not a real error
-      const e = err as { stdout?: Buffer; stderr?: Buffer };
-      const output = (e.stdout?.toString() ?? '') + (e.stderr?.toString() ?? '');
-      const tail = output.split('\n').slice(-20).join('\n');
-      if (tail.trim()) process.stderr.write(`\n[cypress-runner] tail -20:\n${tail}\n`);
     }
+
 
     const durationMs = Date.now() - start;
 
