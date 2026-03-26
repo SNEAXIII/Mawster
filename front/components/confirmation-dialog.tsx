@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,6 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
 import { useI18n } from '@/app/i18n';
 
 type ConfirmationDialogProps = Readonly<{
@@ -25,6 +26,7 @@ type ConfirmationDialogProps = Readonly<{
   variant?: 'default' | 'destructive';
   children?: ReactNode;
   trigger?: ReactNode;
+  requireConfirmText?: string;
 }>;
 
 export function ConfirmationDialog({
@@ -38,13 +40,22 @@ export function ConfirmationDialog({
   variant = 'default',
   children,
   trigger,
+  requireConfirmText,
 }: ConfirmationDialogProps) {
   const { t } = useI18n();
+  const [typedValue, setTypedValue] = useState('');
+
+  function handleOpenChange(next: boolean) {
+    if (!next) setTypedValue('');
+    onOpenChange(next);
+  }
+
+  const canConfirm = !requireConfirmText || typedValue === requireConfirmText;
 
   return (
     <AlertDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
     >
       {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
       <AlertDialogContent>
@@ -53,11 +64,20 @@ export function ConfirmationDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
           {children}
         </AlertDialogHeader>
+        {requireConfirmText && (
+          <Input
+            value={typedValue}
+            onChange={(e) => setTypedValue(e.target.value)}
+            placeholder={requireConfirmText}
+            data-cy='confirm-text-input'
+          />
+        )}
         <AlertDialogFooter>
           <AlertDialogCancel data-cy='confirmation-dialog-cancel'>{cancelText ?? t.common.cancel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
-            className={variant === 'destructive' ? 'bg-red-600 hover:bg-red-700' : ''}
+            disabled={!canConfirm}
+            className={variant === 'destructive' ? 'bg-red-600 hover:bg-red-700 disabled:opacity-50' : ''}
             data-cy='confirmation-dialog-confirm'
           >
             {confirmText ?? t.common.confirm}

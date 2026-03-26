@@ -255,7 +255,7 @@ const fr: Translations = {
       createError: 'Erreur lors de la déclaration de guerre',
       endWar: 'Terminer la guerre',
       endWarConfirmTitle: 'Terminer la guerre',
-      endWarConfirmDesc: 'Êtes-vous sûr de vouloir marquer cette guerre comme terminée ?',
+      endWarConfirmDesc: 'Cette action est irréversible. Toutes les données de guerre seront verrouillées. Saisissez "confirm" ci-dessous pour continuer.',
       ended: 'Terminée',
       endWarSuccess: 'Guerre terminée avec succès',
       endWarError: 'Erreur lors de la fin de la guerre',

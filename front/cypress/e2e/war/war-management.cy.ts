@@ -15,8 +15,10 @@ describe('War – Management (declare and end)', () => {
       cy.getByCy('war-opponent-name').should('contain', 'TargetEnemy');
       cy.getByCy('end-war-btn').should('be.visible').click();
 
-      // Confirm dialog
-      cy.getByCy('confirmation-dialog-confirm').click();
+      // Confirm dialog — must type "confirm" to unlock the button
+      cy.getByCy('confirmation-dialog-confirm').should('be.disabled');
+      cy.getByCy('confirm-text-input').type('confirm');
+      cy.getByCy('confirmation-dialog-confirm').should('not.be.disabled').click();
 
       // After ending: declare button visible, map gone
       cy.getByCy('declare-war-btn').should('be.visible');

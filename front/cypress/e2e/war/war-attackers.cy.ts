@@ -1,22 +1,33 @@
 import { setupAttackerScenario } from '../../support/e2e';
+function goToAttackersMode(userId: string) {
+  cy.apiLogin(userId);
+  cy.navTo('war');
+  cy.getByCy('war-mode-attackers').click();
+}
 
 describe('War – Attackers mode', () => {
   beforeEach(() => {
     cy.truncateDb();
   });
 
-  function goToAttackersMode(userId: string) {
-    cy.apiLogin(userId);
-    cy.navTo('war');
-    cy.getByCy('war-mode-attackers').click();
-  }
-
-  // ── Attacker panel visible in Attackers mode ──────────────────────────────
+  // ── Attackers mode is selected by default ─────────────────────────────────
 
   it('attackers panel is visible by default (Attackers mode)', () => {
     setupAttackerScenario('atk-panel').then(({ ownerData }) => {
-      goToAttackersMode(ownerData.user_id);
+      cy.apiLogin(ownerData.user_id);
+      cy.navTo('war');
       cy.getByCy('war-mode-attackers').should('have.class', 'bg-primary');
+    });
+  });
+
+  // ── Attacker panel visible in Attackers mode ──────────────────────────────
+
+  it('attacker panel is visible in Attackers mode', () => {
+    setupAttackerScenario('atk-panel').then(({ ownerData }) => {
+      goToAttackersMode(ownerData.user_id);
+      cy.getByCy('war-attacker-panel').should('be.visible');
+      cy.getByCy('war-mode-attackers').click();
+      cy.getByCy('war-attacker-panel').should('be.visible');
     });
   });
 

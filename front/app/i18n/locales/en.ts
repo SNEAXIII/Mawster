@@ -251,7 +251,7 @@ const en = {
       createError: 'Failed to declare war',
       endWar: 'End War',
       endWarConfirmTitle: 'End War',
-      endWarConfirmDesc: 'Are you sure you want to mark this war as ended?',
+      endWarConfirmDesc: 'This action is irreversible. All war data will be locked. Type "confirm" below to proceed.',
       ended: 'Ended',
       endWarSuccess: 'War ended successfully',
       endWarError: 'Failed to end war',

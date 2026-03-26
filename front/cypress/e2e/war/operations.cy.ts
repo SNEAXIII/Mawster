@@ -166,26 +166,23 @@ describe('War – Operations (declare, place, remove)', () => {
 
   // ── Switch battlegroup ────────────────────────────────────────────────────
 
-  it('officer can switch between battlegroups with G1/G2/G3 buttons', () => {
-    setupWarOwner('war-op-bg-switch', 'BgSwitchOp', 'BgSwitchAlliance', 'BS').then(
-      ({ adminData, ownerData, allianceId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Gamora', 'Cosmic').then((champs) => {
-          cy.apiCreateWar(ownerData.access_token, allianceId, 'BgEnemy').then((war) => {
-            // Place in BG2
-            cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 2, 1, champs[0].id, 7, 3);
+  it('any member can switch between battlegroups with G1/G2/G3 buttons', () => {
+    setupAttackerScenario('war-op-bg-switch').then(({ adminToken, ownerData, memberData, allianceId, warId }) => {
+      cy.apiLoadChampion(adminToken, 'Gamora', 'Cosmic').then((champs) => {
+        // Place Gamora in BG2 node 1
+        cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 2, 1, champs[0].id, 7, 3, 0);
 
-            cy.apiLogin(ownerData.user_id);
-            cy.navTo('war');
+        // Log in as a regular member (not an officer)
+        cy.apiLogin(memberData.user_id);
+        cy.navTo('war');
 
-            // BG1 node 1 should be empty
-            cy.getByCy('war-node-1').should('contain', '+');
+        // BG1 node 1 should be empty (Iron Man is at node 10)
+        cy.getByCy('war-node-1').should('contain', '+');
 
-            // Switch to G2
-            cy.getByCy('bg-btn-2').click();
-            cy.getByCy('war-node-1').should('not.contain', '+');
-          });
-        });
-      },
-    );
+        // Switch to G2 — available to all members, not just officers
+        cy.getByCy('bg-btn-2').click();
+        cy.getByCy('war-node-1').should('not.contain', '+');
+      });
+    });
   });
 });

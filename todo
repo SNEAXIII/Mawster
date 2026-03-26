@@ -26,4 +26,5 @@ prio:
     mettre en couleur les combat d'un boug
     ne pas rerender le tree quand un delete un champ
 
-
+ultra prio:
+    backup db

@@ -30,7 +30,7 @@ export default function WarAttackerPanel() {
   const groups = Array.from(groupMap.values()).sort((a, b) => a.pseudo.localeCompare(b.pseudo));
 
   return (
-    <div className='flex flex-col gap-3'>
+    <div className='flex flex-col gap-3' data-cy='war-attacker-panel'>
       <div className='text-sm font-semibold text-muted-foreground uppercase tracking-wide px-1'>
         {t.game.war.attackersPanelTitle.replace('{assigned}', String(assigned.length))}
       </div>

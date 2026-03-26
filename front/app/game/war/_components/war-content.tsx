@@ -111,6 +111,7 @@ function WarLayout() {
         title={t.game.war.endWarConfirmTitle}
         description={t.game.war.endWarConfirmDesc}
         variant='destructive'
+        requireConfirmText='confirm'
       />
 
       {/* Defender champion selector */}

@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Shield, Swords, Trash2 } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
@@ -8,6 +9,28 @@ import { useI18n } from '@/app/i18n';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { WarMode } from './war-types';
 import { useWar } from '../_context/war-context';
+
+type ToggleButtonProps = {
+  active: boolean;
+  onClick: () => void;
+  dataCy?: string;
+  children: ReactNode;
+};
+
+function ToggleButton({ active, onClick, dataCy, children }: Readonly<ToggleButtonProps>) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold transition-colors',
+        active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'
+      )}
+      data-cy={dataCy}
+    >
+      {children}
+    </button>
+  );
+}
 
 const WarDefenseMap = dynamic(() => import('./war-defense-map'), {
   loading: () => <FullPageSpinner />,
@@ -57,19 +80,14 @@ export default function WarDefendersTab() {
           data-cy='bg-picker'
         >
           {[1, 2, 3].map((bg) => (
-            <button
+            <ToggleButton
               key={bg}
+              active={selectedBg === bg}
               onClick={() => setSelectedBg(bg)}
-              className={cn(
-                'px-3 py-1 rounded text-sm font-semibold transition-colors',
-                selectedBg === bg
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-accent'
-              )}
-              data-cy={`bg-btn-${bg}`}
+              dataCy={`bg-btn-${bg}`}
             >
               G{bg}
-            </button>
+            </ToggleButton>
           ))}
         </div>
 
@@ -79,35 +97,24 @@ export default function WarDefendersTab() {
             className='flex gap-1 rounded-md border p-1'
             data-cy='war-mode-toggle'
           >
-            <button
-              onClick={() => setWarMode(WarMode.Defenders)}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold transition-colors',
-                warMode === WarMode.Defenders
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-accent'
-              )}
-              data-cy='war-mode-defenders'
-            >
-              <Shield className='w-3.5 h-3.5' />
-              {t.game.war.modeDefenders}
-            </button>
-            <button
+            <ToggleButton
+              active={warMode === WarMode.Attackers}
               onClick={() => setWarMode(WarMode.Attackers)}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold transition-colors',
-                warMode === WarMode.Attackers
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-accent'
-              )}
-              data-cy='war-mode-attackers'
+              dataCy='war-mode-attackers'
             >
               <Swords className='w-3.5 h-3.5' />
               {t.game.war.modeAttackers}
-            </button>
+            </ToggleButton>
+            <ToggleButton
+              active={warMode === WarMode.Defenders}
+              onClick={() => setWarMode(WarMode.Defenders)}
+              dataCy='war-mode-defenders'
+            >
+              <Shield className='w-3.5 h-3.5' />
+              {t.game.war.modeDefenders}
+            </ToggleButton>
           </div>
         )}
-
         {/* Clear BG button */}
         {canManageWar && placements.length > 0 && (
           <Button
