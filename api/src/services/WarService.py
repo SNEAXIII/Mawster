@@ -431,7 +431,7 @@ class WarService:
             ).group_by(ChampionUser.id)
         )
         all_attackers = attacker_count_result.all()
-        debug_log(str(all_attackers))
+        debug_log(str(all_attackers)) # TOODOODDO
         all_attackers_ids = {a.attacker_champion_user_id for a in all_attackers}
         all_attackers_ids.add(champion_user_id)  # include the new one we're trying to add
         member_attacker_count = len(all_attackers_ids)
