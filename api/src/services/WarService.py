@@ -20,6 +20,7 @@ from src.dto.dto_war import (
     AvailableAttackerResponse,
 )
 from src.utils.db import SessionDep
+from src.utils.logging_config import debug_log
 
 
 class WarService:
@@ -424,13 +425,14 @@ class WarService:
                 and_(
                     WarDefensePlacement.war_id == war_id,
                     WarDefensePlacement.battlegroup == battlegroup,
-                    ChampionUser.game_account_id == game_account.id,
-                    WarDefensePlacement.node_number != placement_request.node_number,
+                    WarDefensePlacement.node_number != node_number, # exclude current node since we're replacing any existing attacker
+                    # ChampionUser.game_account_id == game_account.id,
                 )
             ).group_by(ChampionUser.id)
         )
         all_attackers = attacker_count_result.all()
-        all_attackers_ids = set(a.attacker_champion_user_id for a in all_attackers)
+        debug_log(str(all_attackers))
+        all_attackers_ids = {a.attacker_champion_user_id for a in all_attackers}
         all_attackers_ids.add(champion_user_id)  # include the new one we're trying to add
         member_attacker_count = len(all_attackers_ids)
         if member_attacker_count > 3:
