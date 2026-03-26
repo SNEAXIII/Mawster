@@ -46,7 +46,7 @@ export default function SideNavBar() {
         />
         <Separator className='hidden md:block' />
         {isAuthenticated ? (
-            <modalSettings />
+            <ModalSettings />
         ) : (
           <Link
             href='/login'

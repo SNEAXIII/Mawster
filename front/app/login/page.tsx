@@ -8,10 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Loader, AlertCircle, User } from 'lucide-react';
+import { Loader, AlertCircle } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 
 import { IS_DEV } from '@/app/lib/dev-mode';
+import { MawsterLogo } from '@/components/MawsterLogo';
 
 interface DevUser {
   id: string;
@@ -76,7 +77,10 @@ function LoginPageContent() {
       return <p className='text-xs text-muted-foreground text-center'>{t.login.devNoUsers}</p>;
     }
     return (
-      <div className='max-h-60 overflow-y-auto space-y-1' data-cy='dev-user-list'>
+      <div
+        className='max-h-60 overflow-y-auto space-y-1'
+        data-cy='dev-user-list'
+      >
         {devUsers.map((u) => (
           <button
             key={u.id}
@@ -87,7 +91,10 @@ function LoginPageContent() {
             data-cy={`dev-login-${u.login}`}
           >
             <span className='font-medium truncate'>{u.login}</span>
-            <Badge variant='secondary' className='ml-2 shrink-0 text-[10px]'>
+            <Badge
+              variant='secondary'
+              className='ml-2 shrink-0 text-[10px]'
+            >
               {u.role}
             </Badge>
           </button>
@@ -100,10 +107,8 @@ function LoginPageContent() {
     <div className='min-h-full flex items-center justify-center bg-gradient-to-br from-background to-muted p-4 sm:p-6'>
       <Card className='w-full max-w-md mx-auto shadow-lg transition-all duration-300 hover:shadow-xl'>
         <CardHeader className='space-y-1'>
-          <div className='flex justify-center mb-2'>
-            <div className='w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center'>
-              <User className='w-8 h-8 text-primary' />
-            </div>
+          <div className='flex mx-auto'>
+            <MawsterLogo />
           </div>
           <CardTitle className='text-2xl font-bold text-center'>{t.login.title}</CardTitle>
           <p className='text-sm text-center text-muted-foreground'>{t.login.subtitle}</p>
