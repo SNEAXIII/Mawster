@@ -123,8 +123,8 @@ export default function AllianceCard({
                   className='flex items-center justify-between gap-2 p-2 rounded-md bg-amber-50 border border-amber-200'
                 >
                   <div className='space-y-0.5'>
-                    <p className='text-sm text-foreground'>{inv.game_account_pseudo}</p>
-                    <p className='text-xs text-muted-foreground'>
+                    <p className='text-sm text-black'>{inv.game_account_pseudo}</p>
+                    <p className='text-xs text-black/60'>
                       {t.game.alliances.invitedBy} {inv.invited_by_pseudo}
                     </p>
                   </div>
