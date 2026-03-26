@@ -1,4 +1,4 @@
-import { setupWarOwner } from '../../support/e2e';
+import { setupWarOwner, setupAttackerScenario } from '../../support/e2e';
 
 describe('War – Operations (declare, place, remove)', () => {
   beforeEach(() => {
@@ -113,6 +113,54 @@ describe('War – Operations (declare, place, remove)', () => {
           cy.getByCy('war-node-10').should('contain', '+');
         });
       });
+    });
+  });
+
+  // ── Remove defender with attacker assigned → confirmation dialog ──────────
+
+  it('removing a defender with an assigned attacker shows a confirmation dialog', () => {
+    setupAttackerScenario('war-op-rm-atk').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+
+      cy.uiLogin(ownerData.login);
+      cy.navTo('war');
+
+      cy.getByCy('war-node-10').scrollIntoView().should('not.contain', '+');
+      cy.getByCy('war-node-10').find('button').click({ force: true });
+
+      cy.getByCy('confirmation-dialog-confirm').should('be.visible');
+    });
+  });
+
+  it('cancelling the confirmation dialog keeps the defender and attacker', () => {
+    setupAttackerScenario('war-op-rm-cancel').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+
+      cy.uiLogin(ownerData.login);
+      cy.navTo('war');
+
+      cy.getByCy('war-node-10').scrollIntoView().find('button').click({ force: true });
+      cy.getByCy('confirmation-dialog-confirm').should('be.visible');
+
+      // Close dialog without confirming
+      cy.getByCy('confirmation-dialog-cancel').click({ force: true });
+
+      cy.getByCy('war-node-10').should('not.contain', '+');
+    });
+  });
+
+  it('confirming the dialog removes the defender (and its attacker) from the node', () => {
+    setupAttackerScenario('war-op-rm-confirm').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+
+      cy.uiLogin(ownerData.login);
+      cy.navTo('war');
+
+      cy.getByCy('war-node-10').scrollIntoView().find('button').click({ force: true });
+      cy.getByCy('confirmation-dialog-confirm').click();
+
+      cy.contains('Defender removed').should('be.visible');
+      cy.getByCy('war-node-10').should('contain', '+');
     });
   });
 

@@ -793,7 +793,7 @@ export function setupAttackerScenario(prefix: string): Cypress.Chainable<{
       { discord_token: adminToken, role: 'admin' },
       {
         discord_token: ownerToken,
-        game_pseudo: `${prefix}Owner`,
+        game_pseudo: `${prefix}Owner`.slice(0, 16),
         create_alliance: { name: `${prefix}Alliance`, tag: prefix.slice(0, 3).toUpperCase() },
         battlegroup: 1,
       },

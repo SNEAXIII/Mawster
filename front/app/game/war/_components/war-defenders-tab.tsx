@@ -27,7 +27,7 @@ interface WarDefendersTabProps {
   warLoading: boolean;
   placements: WarPlacement[];
   onNodeClick: (node: number) => void;
-  onRemoveDefender: (node: number) => Promise<void>;
+  onRemoveDefender: (node: number) => void;
   onRemoveAttacker: (node: number) => Promise<void>;
   onUpdateKo: (node: number, newKo: number) => Promise<void>;
   onOpenClearConfirm: () => void;

@@ -281,6 +281,8 @@ const en = {
       assignError: 'Failed to assign attacker',
       removeAttackerSuccess: 'Attacker removed',
       removeAttackerError: 'Failed to remove attacker',
+      removeDefenderWithAttackerTitle: 'Remove Defender',
+      removeDefenderWithAttackerDesc: 'An attacker is already assigned to this node. Removing the defender will also clear the attacker. Continue?',
       koUpdateError: 'Failed to update KO count',
       attackerLimitReached: 'Maximum 3 attackers per member reached',
       defenderRequired: 'This node needs a defender before assigning an attacker',

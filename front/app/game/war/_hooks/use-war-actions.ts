@@ -27,6 +27,7 @@ export function useWarActions(
   const [selectorNode, setSelectorNode] = useState<number | null>(null);
   const [attackerSelectorNode, setAttackerSelectorNode] = useState<number | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [pendingRemoveNode, setPendingRemoveNode] = useState<number | null>(null);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const tRef = useRef(t);
@@ -99,7 +100,17 @@ export function useWarActions(
     }
   };
 
-  const handleRemoveDefender = async (nodeNumber: number) => {
+  const handleRemoveDefender = (nodeNumber: number) => {
+    if (!selectedAllianceId || !activeWarId) return;
+    const placement = warSummary?.placements.find((p) => p.node_number === nodeNumber);
+    if (placement?.attacker_champion_user_id) {
+      setPendingRemoveNode(nodeNumber);
+      return;
+    }
+    void doRemoveDefender(nodeNumber);
+  };
+
+  const doRemoveDefender = async (nodeNumber: number) => {
     if (!selectedAllianceId || !activeWarId) return;
     try {
       await removeWarDefender(selectedAllianceId, activeWarId, selectedBg, nodeNumber);
@@ -108,6 +119,13 @@ export function useWarActions(
     } catch (err: any) {
       toast.error(err.message || t.game.war.removeError);
     }
+  };
+
+  const handleConfirmRemoveDefender = async () => {
+    if (pendingRemoveNode === null) return;
+    const node = pendingRemoveNode;
+    setPendingRemoveNode(null);
+    await doRemoveDefender(node);
   };
 
   const handleClearBg = async () => {
@@ -210,6 +228,9 @@ export function useWarActions(
     setAttackerSelectorNode,
     showClearConfirm,
     setShowClearConfirm,
+    pendingRemoveNode,
+    setPendingRemoveNode,
+    handleConfirmRemoveDefender,
     handlePlaceDefender,
     handleRemoveDefender,
     handleClearBg,

@@ -285,6 +285,8 @@ const fr: Translations = {
       assignError: "Erreur lors de l'assignation de l'attaquant",
       removeAttackerSuccess: 'Attaquant retiré',
       removeAttackerError: "Erreur lors du retrait de l'attaquant",
+      removeDefenderWithAttackerTitle: 'Retirer le défenseur',
+      removeDefenderWithAttackerDesc: 'Un attaquant est déjà assigné à ce nœud. Retirer le défenseur supprimera également l\'attaquant. Continuer ?',
       koUpdateError: 'Erreur lors de la mise à jour du compteur KO',
       attackerLimitReached: '3 attaquants maximum par membre atteint',
       defenderRequired: 'Ce nœud doit avoir un défenseur avant d\'assigner un attaquant',

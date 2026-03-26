@@ -87,6 +87,9 @@ export default function WarContent() {
     setAttackerSelectorNode,
     showClearConfirm,
     setShowClearConfirm,
+    pendingRemoveNode,
+    setPendingRemoveNode,
+    handleConfirmRemoveDefender,
     handlePlaceDefender,
     handleRemoveDefender,
     handleClearBg,
@@ -226,6 +229,16 @@ export default function WarContent() {
         battlegroup={selectedBg}
         placements={placements}
         onSelect={handleAssignAttacker}
+      />
+
+      {/* Remove defender with attacker confirm dialog */}
+      <ConfirmationDialog
+        open={pendingRemoveNode !== null}
+        onOpenChange={(open) => { if (!open) setPendingRemoveNode(null); }}
+        onConfirm={handleConfirmRemoveDefender}
+        title={t.game.war.removeDefenderWithAttackerTitle}
+        description={t.game.war.removeDefenderWithAttackerDesc}
+        variant='destructive'
       />
 
       {/* Clear confirm dialog */}
