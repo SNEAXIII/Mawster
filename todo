@@ -11,5 +11,8 @@ bug
     si un mec a 3 perso de select, ca bloque le switch pour un autre perso
     bloquer les lignes si le boug peut pas aller a un endroit
     ne pas tout display quand on veut placer un def
-    regrouper les champions comme la def pour select un attanquant
     allias qui marchent pas coté client
+    fixer les multi appel api auth me
+    faire en sorte que je j'ai une pup up pour me prévenir que je veux replace un champion qui a déja un combat
+    aficcher dans la pop up le combat en cours
+    fixer la nav bar qui met 3 ans a render

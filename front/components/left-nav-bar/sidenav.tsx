@@ -9,7 +9,7 @@ import { LogIn } from 'lucide-react';
 import NavLinks, { Role } from './nav-links';
 import LanguageSwitcher from '@/components/language-switcher';
 import ThemePicker from '@/components/theme-picker';
-import ModaleSettings from './modale-settings';
+import ModalSettings from './modal-settings';
 import { useI18n } from '@/app/i18n';
 import { useAllianceContext } from '@/app/contexts/alliance-context';
 
@@ -46,7 +46,7 @@ export default function SideNavBar() {
         />
         <Separator className='hidden md:block' />
         {isAuthenticated ? (
-            <ModaleSettings />
+            <modalSettings />
         ) : (
           <Link
             href='/login'
