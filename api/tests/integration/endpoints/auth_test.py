@@ -21,6 +21,8 @@ from tests.integration.endpoints.setup.user_setup import (
     push_one_user,
     get_generic_user,
 )
+from src.utils.email_hash import hash_email
+from src.models import User
 from tests.utils.utils_client import (
     execute_get_request,
     execute_post_request,
@@ -221,6 +223,24 @@ class TestDiscordLogin:
         assert body["token_type"] == TOKEN_TYPE
         assert REGEX_BEARER.match(body["access_token"])
         assert REGEX_BEARER.match(body["refresh_token"])
+
+    @pytest.mark.asyncio
+    async def test_duplicate_email_hash_returns_409(self):
+        """A Discord login whose email is already used by another account returns 409."""
+        # The mock always returns email="test@example.com" with discord_id=1.
+        # Pre-insert a user with the same email but a different discord_id.
+        existing = User(
+            login="otheruser",
+            email_hash=hash_email("test@example.com"),
+            discord_id="other_discord_999",
+            role=Roles.USER,
+        )
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert response.status_code == 409
 
 
 # =========================================================================
