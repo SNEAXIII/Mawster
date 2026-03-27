@@ -12,7 +12,6 @@ EXAMPLE_EMAIL = "user@gmail.com"
 
 class UserBaseResponse(BaseModel):
     login: str = Field(examples=["User"])
-    email: EmailStr = Field(examples=[EXAMPLE_EMAIL])
     role: Roles = Field(examples=[Roles.USER.value])
 
 

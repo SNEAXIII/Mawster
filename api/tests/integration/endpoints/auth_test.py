@@ -70,7 +70,6 @@ class TestGetSession:
         assert response.status_code == 200
         body = response.json()
         assert body["login"] == USER_LOGIN
-        assert body["email"] == USER_EMAIL
 
     @pytest.mark.asyncio
     async def test_no_auth_header_returns_401(self):
@@ -148,7 +147,6 @@ class TestPostSession:
         assert response.status_code == 200
         body = response.json()
         assert body["login"] == USER_LOGIN
-        assert body["email"] == USER_EMAIL
 
     @pytest.mark.asyncio
     async def test_malformed_token_returns_401(self):
@@ -313,7 +311,7 @@ class TestDevEndpoints:
         user_entry = body[0]
         assert "id" in user_entry
         assert "login" in user_entry
-        assert "email" in user_entry
+        assert "email_hash" in user_entry
         assert "role" in user_entry
 
     @pytest.mark.asyncio

@@ -127,7 +127,9 @@ def main() -> None:
     section("API settings")
 
     api_secret_key     = gen_hex(64)
+    email_pepper       = gen_hex(32)
     print(f"  SECRET_KEY            [{c(DIM, '(auto-generated)')}]")
+    print(f"  EMAIL_PEPPER          [{c(DIM, '(auto-generated)')}]")
     algo               = prompt("JWT algorithm",                  default="HS256")
     token_expire       = prompt("Access token expiry (minutes)",  default="60")
     api_port           = prompt("API port",                       default="8000")
@@ -155,6 +157,7 @@ def main() -> None:
         f"ALGORITHM={algo}",
         f"ACCESS_TOKEN_EXPIRE_MINUTES={token_expire}",
         f"API_PORT={api_port}",
+        f"EMAIL_PEPPER={email_pepper}",
     ])
 
     # front.env

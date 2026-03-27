@@ -11,6 +11,7 @@ from starlette import status
 from src.enums.Roles import Roles
 from src.models import User, LoginLog
 from src.utils.db import SessionDep
+from src.utils.email_hash import hash_email
 
 DISCORD_API_URL = "https://discord.com/api/v10"
 
@@ -158,7 +159,8 @@ class DiscordAuthService:
             return existing_user
 
         # 2. Verifier qu'il n'y a pas de conflit email
-        sql = select(User).where(User.email == email)
+        email_hash = hash_email(email)
+        sql = select(User).where(User.email_hash == email_hash)
         result = await session.exec(sql)
         email_user = result.first()
         if email_user:
@@ -171,7 +173,7 @@ class DiscordAuthService:
 
         new_user = User(
             login=unique_login,
-            email=email,
+            email_hash=email_hash,
             discord_id=discord_id,
             avatar_url=avatar_url,
             role=Roles.USER,

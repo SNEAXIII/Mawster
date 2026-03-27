@@ -15,7 +15,8 @@ class User(SQLModel, table=True):
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     login: str = Field(unique=True)
-    email: str = Field(unique=True)
+    email_hash: Optional[str] = Field(default=None, unique=True)
+    email_hash_version: int = Field(default=1)
     disabled_at: Optional[datetime] = Field(default=None)
     deleted_at: Optional[datetime] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.now)
