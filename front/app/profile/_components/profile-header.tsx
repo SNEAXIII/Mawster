@@ -16,12 +16,10 @@ function getInitials(name: string | undefined | null): string {
 
 export function ProfileHeader({
   name,
-  email,
   avatarUrl,
   role,
 }: Readonly<{
   name?: string | null;
-  email?: string | null;
   avatarUrl?: string | null;
   role?: string | null;
 }>) {
@@ -39,7 +37,6 @@ export function ProfileHeader({
           </Avatar>
           <div className='text-center sm:text-left space-y-1.5'>
             <h1 className='text-xl sm:text-2xl font-bold'>{name ?? t.profile.user}</h1>
-            <p className='text-muted-foreground text-sm'>{email ?? ''}</p>
             <Badge variant='secondary' className='gap-1'>
               <Shield className='h-3 w-3' />
               {role?.toLowerCase() ?? t.profile.user.toLowerCase()}

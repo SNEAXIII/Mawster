@@ -42,7 +42,6 @@ export default function TableHeaderUsers({
     <TableHeader>
       <TableRow>
         <TableHead>{t.dashboard.tableHeaders.login}</TableHead>
-        <TableHead>{t.dashboard.tableHeaders.email}</TableHead>
         <TableHead>
           <DropdownRadioMenu
             labelButton={t.dashboard.tableHeaders.role}

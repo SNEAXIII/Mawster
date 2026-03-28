@@ -2,11 +2,12 @@ from sqlmodel import Session
 from src.enums.Roles import Roles
 from src.models import User
 from src.fixtures import sync_engine
+from src.utils.email_hash import hash_email
 
 master_account = "misterbalise"
 
 admin = User(
-    email="misterbalise2@gmail.com",
+    email_hash=hash_email("misterbalise2@gmail.com"),
     login=master_account,
     discord_id="403941390586871808",
     role=Roles.SUPER_ADMIN,

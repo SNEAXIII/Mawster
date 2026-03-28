@@ -28,7 +28,7 @@ from tests.utils.utils_client import (
     execute_post_request,
     create_auth_headers,
 )
-from tests.utils.utils_constant import USER_LOGIN, USER_ID, USER_EMAIL
+from tests.utils.utils_constant import USER_LOGIN, USER_ID
 from tests.utils.utils_db import get_test_session, load_objects
 
 app.dependency_overrides[get_session] = get_test_session
@@ -45,14 +45,12 @@ ENDPOINT_DEV_LOGIN = "/dev/login"
 
 # --- Utility functions ---
 def _create_jwt(
-    login=USER_LOGIN,
     user_id=str(USER_ID),
-    email=USER_EMAIL,
     role=Roles.USER,
 ) -> str:
     """Create a valid JWT token for testing."""
     return JWTService.create_token(
-        {"sub": login, "user_id": user_id, "email": email, "role": role, "type": "access"}
+        {"user_id": user_id, "role": role, "type": "access"}
     )
 
 
@@ -94,9 +92,7 @@ class TestGetSession:
     async def test_expired_token_returns_401(self):
         """An expired JWT should yield 401, not 200."""
         payload = {
-            "sub": USER_LOGIN,
             "user_id": str(USER_ID),
-            "email": USER_EMAIL,
             "role": Roles.USER,
             "exp": 0,  # expired in 1970
         }

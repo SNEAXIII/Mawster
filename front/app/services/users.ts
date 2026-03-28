@@ -3,7 +3,6 @@ import { possibleRoles, possibleStatus } from '@/app/lib/constants';
 // ─── Types ───────────────────────────────────────────────
 export interface User {
   login: string;
-  email: string;
   role: string;
   id: string;
   created_at: string;
@@ -64,7 +63,7 @@ export const getUsers = async (
   const qs = new URLSearchParams({ page: String(page), size: String(size) });
   if (status && status !== possibleStatus[0].value) qs.set('status', status);
   if (role && role !== possibleRoles[0].value) qs.set('role', role);
-  if (search && search.trim()) qs.set('search', search.trim());
+  if (search?.trim()) qs.set('search', search.trim());
 
   const response = await fetch(`${PROXY}/admin/users?${qs}`, { headers: jsonHeaders });
   await throwOnError(response, 'Erreur lors de la récupération des utilisateurs');

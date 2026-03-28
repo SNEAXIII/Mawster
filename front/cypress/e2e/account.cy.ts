@@ -27,12 +27,11 @@ describe('Login & Profile – UI', () => {
   });
 
   it('displays profile info after login', () => {
-    setupUser('profile-token').then(({ login, email, discord_id, user_id }) => {
+    setupUser('profile-token').then(({ login, discord_id, user_id }) => {
       cy.apiLogin(user_id);
       cy.navTo('profile');
       cy.contains('Account Information').should('be.visible');
       cy.getByCy('username-row').should('contain', login);
-      cy.getByCy('email-row').should('contain', email);
       cy.getByCy('discord-id-row').should('contain', discord_id);
       cy.getByCy('member-since-row').should('be.visible');
     });

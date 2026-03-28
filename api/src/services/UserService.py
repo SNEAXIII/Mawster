@@ -212,9 +212,7 @@ class UserService:
     def build_search_filter(cls, sql, search: Optional[str]):
         if search and search.strip():
             pattern = f"%{search.strip()}%"
-            sql = sql.where(
-                (User.login.ilike(pattern)) | (User.email.ilike(pattern))
-            )
+            sql = sql.where(User.login.ilike(pattern))
         return sql
 
     @classmethod
