@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/search-input';
 import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
-import { RARITY_LABELS, getClassColors, shortenChampionName } from '@/app/services/roster';
-import { parseRarity } from '@/app/game/defense/_components/defense-utils';
+import { getClassColors, shortenChampionName } from '@/app/services/roster';
 
 const PROXY = '/api/back';
 

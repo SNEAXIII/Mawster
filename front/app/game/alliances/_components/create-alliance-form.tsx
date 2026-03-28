@@ -30,7 +30,7 @@ interface CreateAllianceFormProps {
 }
 
 export default function CreateAllianceForm({
-  hasAnyAccounts,
+  hasAnyAccounts: _hasAnyAccounts,
   eligibleOwners,
   name,
   tag,

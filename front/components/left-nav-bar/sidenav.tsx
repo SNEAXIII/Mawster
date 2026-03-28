@@ -3,12 +3,9 @@
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import MainMawsterLogo from '@/components/MawsterLogo';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { LogIn } from 'lucide-react';
 import NavLinks, { Role } from './nav-links';
-import LanguageSwitcher from '@/components/language-switcher';
-import ThemePicker from '@/components/theme-picker';
 import ModalSettings from './modal-settings';
 import { useI18n } from '@/app/i18n';
 import { useAllianceContext } from '@/app/contexts/alliance-context';

@@ -10,50 +10,14 @@ function isPathMatching(path: string, paths: string[]): boolean {
   return paths.some((basePath) => path === basePath || path.startsWith(`${basePath}/`));
 }
 
-function generateNonce(): string {
-  const array = new Uint8Array(16);
-  crypto.getRandomValues(array);
-  return Buffer.from(array).toString('base64');
-}
-
-function buildCsp(nonce: string): string {
-  const policy: Record<string, string[]> = {
-    'default-src':     ["'self'"],
-    'script-src':      ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"],
-    'style-src':       ["'self'", "'unsafe-inline'"],
-    'img-src':         ["'self'", 'data:', 'https://cdn.discordapp.com'],
-    'font-src':        ["'self'", 'data:'],
-    'connect-src':     ["'self'"],
-    'frame-src':       ["'none'"],
-    'frame-ancestors': ["'none'"],
-    'object-src':      ["'none'"],
-    'base-uri':        ["'self'"],
-    'form-action':     ["'self'"],
-  };
-
-  return Object.entries(policy)
-    .map(([directive, sources]) => `${directive} ${sources.join(' ')}`)
-    .join('; ');
-}
-
 export async function proxy(request: NextRequest) {
-  // const nonce = generateNonce();
-  // const csp = buildCsp(nonce);
-
   const requestHeaders = new Headers(request.headers);
-  // requestHeaders.set('x-nonce', nonce);
 
   const { pathname } = request.nextUrl;
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET, secureCookie: !isServerDev() });
   const isTokenExpired = token?.expired || !token?.backendAuthenticated;
 
-  const withCsp = (res: NextResponse) => {
-    // res.headers.set('Content-Security-Policy', csp);
-    return res;
-  };
-  // const next = () => withCsp(NextResponse.next({ request: { headers: requestHeaders } }));
   const next = () => NextResponse.next({ request: { headers: requestHeaders } });
-  // const redirect = (url: string | URL) => withCsp(NextResponse.redirect(new URL(url, request.url)));
   const redirect = (url: string | URL) => NextResponse.redirect(new URL(url, request.url));
 
   // 1. Redirect authenticated users away from login/register pages

@@ -7,7 +7,6 @@ import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { Shield } from 'lucide-react';
 
-import dynamic from 'next/dynamic';
 
 import { useAllianceSelector } from '@/hooks/use-alliance-selector';
 import { useDefenseActions } from '../_hooks/use-defense-actions';

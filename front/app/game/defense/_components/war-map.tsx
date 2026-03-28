@@ -31,12 +31,6 @@ function getNodeHoverColor(nodeNumber: number): string {
   return 'hover:bg-red-900/60';
 }
 
-function getSectionLabel(nodeNumber: number): string {
-  if (nodeNumber >= 46) return 'Boss';
-  if (nodeNumber >= 37) return 'Blue';
-  if (nodeNumber >= 19) return 'Purple';
-  return 'Red';
-}
 
 export function WarMapPlaceHolder() {
   return <div className='w-3'></div>;
@@ -179,7 +173,6 @@ const MAP_SECTIONS = [
 ];
 
 export default function WarMap({ placements, onNodeClick, onRemove, canManage, hidePseudo = false, hideSig = false }: WarMapProps) {
-  const { t } = useI18n();
   const placementMap = new Map<number, DefensePlacement>();
   for (const p of placements) {
     placementMap.set(p.node_number, p);

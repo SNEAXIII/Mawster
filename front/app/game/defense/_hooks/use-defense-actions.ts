@@ -54,7 +54,7 @@ export function useDefenseActions(
         setDefenseSummary(defense);
         setAvailableChampions(champions);
         setBgMembers(members);
-      } catch (err: any) {
+      } catch {
         if (!silent) toast.error(t.game.defense.loadError);
       } finally {
         if (!silent) setDefenseLoading(false);

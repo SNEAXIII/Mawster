@@ -161,7 +161,7 @@ export const {
       token,
       user,
       account,
-      profile,
+      profile: _profile,
     }: {
       token: any;
       user: any;

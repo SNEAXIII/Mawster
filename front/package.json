@@ -7,7 +7,9 @@
     "start": "next start",
     "prod": "npm run build && npm run start",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run"
+    "cypress:run": "cypress run",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint ."
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -54,6 +56,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^25.4.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
@@ -62,9 +65,13 @@
     "cypress-multi-reporters": "^2.0.5",
     "cypress-parallel": "^0.15.0",
     "cypress-split": "^1.24.28",
+    "eslint": "^10.1.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "mocha-junit-reporter": "^2.2.1",
     "prettier": "^3.8.1",
-    "sass": "^1.98.0"
+    "sass": "^1.98.0",
+    "typescript-eslint": "^8.57.2"
   },
   "overrides": {
     "diff": "^8.0.2",

@@ -23,7 +23,7 @@ export interface RosterExportEntry {
 
 // ─── Validation helpers ──────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 function validateEntry(
   obj: Record<string, unknown>,
   idx: number,

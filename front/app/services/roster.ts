@@ -1,5 +1,4 @@
 import { Champion } from './champions';
-import { GameAccount } from './game';
 
 // ─── Types ───────────────────────────────────────────────
 export enum ChampionRarity {
