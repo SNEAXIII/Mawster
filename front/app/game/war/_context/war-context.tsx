@@ -134,7 +134,9 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const tRef = useRef(t);
-  useEffect(() => { tRef.current = t; }, [t]);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
 
   // ─── Derived values ────────────────────────────────────────────────────────
   const activeWarId = currentWar?.id ?? '';
@@ -360,7 +362,12 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
   const handleRemoveAttacker = async (nodeNumber: number) => {
     if (!selectedAllianceId || !activeWarId) return;
     try {
-      const updated = await removeWarAttacker(selectedAllianceId, activeWarId, selectedBg, nodeNumber);
+      const updated = await removeWarAttacker(
+        selectedAllianceId,
+        activeWarId,
+        selectedBg,
+        nodeNumber
+      );
       toast.success(t.game.war.removeAttackerSuccess);
       setWarSummary((prev) =>
         prev
@@ -380,7 +387,13 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
   const handleUpdateKo = async (nodeNumber: number, newKo: number) => {
     if (!selectedAllianceId || !activeWarId) return;
     try {
-      const updated = await updateWarKo(selectedAllianceId, activeWarId, selectedBg, nodeNumber, newKo);
+      const updated = await updateWarKo(
+        selectedAllianceId,
+        activeWarId,
+        selectedBg,
+        nodeNumber,
+        newKo
+      );
       setWarSummary((prev) =>
         prev
           ? {
@@ -439,10 +452,23 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      alliances, selectedAllianceId, selectedBg, loading, canManageWar,
-      currentWar, activeWarId, managementLoading, warLoading, placements,
-      warMode, selectorNode, attackerSelectorNode,
-      showClearConfirm, showCreateDialog, showEndConfirm, pendingRemoveNode,
+      alliances,
+      selectedAllianceId,
+      selectedBg,
+      loading,
+      canManageWar,
+      currentWar,
+      activeWarId,
+      managementLoading,
+      warLoading,
+      placements,
+      warMode,
+      selectorNode,
+      attackerSelectorNode,
+      showClearConfirm,
+      showCreateDialog,
+      showEndConfirm,
+      pendingRemoveNode,
       handleNodeClick,
     ]
   );

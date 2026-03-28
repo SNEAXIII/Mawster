@@ -73,11 +73,15 @@ export function ConfirmationDialog({
           />
         )}
         <AlertDialogFooter>
-          <AlertDialogCancel data-cy='confirmation-dialog-cancel'>{cancelText ?? t.common.cancel}</AlertDialogCancel>
+          <AlertDialogCancel data-cy='confirmation-dialog-cancel'>
+            {cancelText ?? t.common.cancel}
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             disabled={!canConfirm}
-            className={variant === 'destructive' ? 'bg-red-600 hover:bg-red-700 disabled:opacity-50' : ''}
+            className={
+              variant === 'destructive' ? 'bg-red-600 hover:bg-red-700 disabled:opacity-50' : ''
+            }
             data-cy='confirmation-dialog-confirm'
           >
             {confirmText ?? t.common.confirm}

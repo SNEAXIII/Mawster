@@ -8,6 +8,8 @@
     "prod": "npm run build && npm run start",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "lint": "eslint . --fix",
     "lint:check": "eslint ."
   },

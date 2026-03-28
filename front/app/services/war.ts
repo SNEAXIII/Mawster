@@ -99,10 +99,9 @@ export async function getWarDefense(
   warId: string,
   battlegroup: number
 ): Promise<WarDefenseSummary> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}`,
-    { headers: jsonHeaders }
-  );
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}`, {
+    headers: jsonHeaders,
+  });
   await throwOnError(response, 'Failed to load war defense');
   return response.json();
 }

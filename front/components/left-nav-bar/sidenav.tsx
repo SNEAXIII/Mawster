@@ -17,7 +17,6 @@ export default function SideNavBar() {
   const userRole: Role = (isAuthenticated ? (session.user.role as Role) : null) || Role.all;
   const { hasAlliance } = useAllianceContext();
 
-
   return (
     <div className='flex h-full flex-col px-3 py-2 md:py-4 md:px-2'>
       {/* Logo Section — hidden on mobile */}
@@ -31,19 +30,21 @@ export default function SideNavBar() {
             <MainMawsterLogo />
           </div>
         </Link>
-
       </div>
 
       {/* Navigation Links Section */}
       <div className='flex grow flex-row justify-between gap-1 md:flex-col md:gap-2 overflow-x-auto md:overflow-x-visible'>
-        <NavLinks userRole={userRole} hasAlliance={hasAlliance} />
+        <NavLinks
+          userRole={userRole}
+          hasAlliance={hasAlliance}
+        />
         <div
           className='hidden h-auto w-full grow rounded-md bg-muted/50 md:block'
           aria-hidden='true'
         />
         <Separator className='hidden md:block' />
         {isAuthenticated ? (
-            <ModalSettings />
+          <ModalSettings />
         ) : (
           <Link
             href='/login'

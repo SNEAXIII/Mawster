@@ -2,7 +2,13 @@
 
 import { LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import LanguageSwitcher from '@/components/language-switcher';
 import ThemePicker from '@/components/theme-picker';

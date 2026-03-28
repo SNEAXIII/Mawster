@@ -241,7 +241,11 @@ export default function AllianceContent() {
       toast.success(t.game.alliances.inviteSuccess);
       setMemberAllianceId(null);
       setMemberAccountId('');
-      await Promise.all([fetchEligibleMembers(), fetchPendingInvitations(alliances), fetchMyInvitations()]);
+      await Promise.all([
+        fetchEligibleMembers(),
+        fetchPendingInvitations(alliances),
+        fetchMyInvitations(),
+      ]);
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || t.game.alliances.inviteError);

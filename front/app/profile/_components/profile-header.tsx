@@ -30,14 +30,20 @@ export function ProfileHeader({
       <CardContent className='pt-6'>
         <div className='flex flex-col sm:flex-row items-center gap-4 sm:gap-6'>
           <Avatar className='h-20 w-20 sm:h-24 sm:w-24 ring-2 ring-offset-2 ring-primary/20'>
-            <AvatarImage src={avatarUrl ?? undefined} alt={name ?? 'Avatar'} />
+            <AvatarImage
+              src={avatarUrl ?? undefined}
+              alt={name ?? 'Avatar'}
+            />
             <AvatarFallback className='text-xl sm:text-2xl font-bold bg-primary/10 text-primary'>
               {getInitials(name)}
             </AvatarFallback>
           </Avatar>
           <div className='text-center sm:text-left space-y-1.5'>
             <h1 className='text-xl sm:text-2xl font-bold'>{name ?? t.profile.user}</h1>
-            <Badge variant='secondary' className='gap-1'>
+            <Badge
+              variant='secondary'
+              className='gap-1'
+            >
               <Shield className='h-3 w-3' />
               {role?.toLowerCase() ?? t.profile.user.toLowerCase()}
             </Badge>

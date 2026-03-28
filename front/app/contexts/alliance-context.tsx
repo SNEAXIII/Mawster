@@ -41,11 +41,7 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
     [hasAlliance, refreshHasAlliance]
   );
 
-  return (
-    <AllianceContext.Provider value={contextValue}>
-      {children}
-    </AllianceContext.Provider>
-  );
+  return <AllianceContext.Provider value={contextValue}>{children}</AllianceContext.Provider>;
 }
 
 export function useAllianceContext() {

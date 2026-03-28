@@ -61,9 +61,7 @@ export default function AllianceMemberRow({
     setIsChangingGroup(true);
     try {
       await setMemberGroup(allianceId, member.id, group);
-      const groupLabel = group
-        ? `${t.game.alliances.group} ${group}`
-        : t.game.alliances.noGroup;
+      const groupLabel = group ? `${t.game.alliances.group} ${group}` : t.game.alliances.noGroup;
       toast.success(
         t.game.alliances.groupSetSuccess
           .replace('{pseudo}', member.game_pseudo)
@@ -111,7 +109,11 @@ export default function AllianceMemberRow({
           </TooltipProvider>
 
           {/* Actions dropdown (promote / demote / leave / exclude) */}
-          <AllianceMemberActions member={member} alliance={alliance} onRefresh={onRefresh} />
+          <AllianceMemberActions
+            member={member}
+            alliance={alliance}
+            onRefresh={onRefresh}
+          />
 
           {/* Group selector — only for officers/owners */}
           {userCanManage && (

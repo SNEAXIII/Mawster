@@ -14,7 +14,11 @@ export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
 
   const { pathname } = request.nextUrl;
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET, secureCookie: !isServerDev() });
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+    secureCookie: !isServerDev(),
+  });
   const isTokenExpired = token?.expired || !token?.backendAuthenticated;
 
   const next = () => NextResponse.next({ request: { headers: requestHeaders } });

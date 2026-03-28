@@ -38,11 +38,7 @@ interface AllianceMemberActionsProps {
   onRefresh: () => void;
 }
 
-export function AllianceMemberActions({
-  member,
-  alliance,
-  onRefresh,
-}: AllianceMemberActionsProps) {
+export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceMemberActionsProps) {
   const { t } = useI18n();
   const { isMine: isMineCheck, isOwner, canManage } = useAllianceRole();
 
@@ -172,10 +168,7 @@ export function AllianceMemberActions({
         open={isPromoteDialogOpen}
         onOpenChange={setIsPromoteDialogOpen}
         title={t.common.confirm}
-        description={t.game.alliances.promoteOfficerConfirm.replace(
-          '{pseudo}',
-          member.game_pseudo
-        )}
+        description={t.game.alliances.promoteOfficerConfirm.replace('{pseudo}', member.game_pseudo)}
         onConfirm={() => handleAction(AllianceMemberAction.PROMOTE)}
         confirmText={t.game.alliances.promoteOfficer}
       />

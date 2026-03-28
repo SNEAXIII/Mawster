@@ -31,7 +31,6 @@ function getNodeHoverColor(nodeNumber: number): string {
   return 'hover:bg-red-900/60';
 }
 
-
 export function WarMapPlaceHolder() {
   return <div className='w-3'></div>;
 }
@@ -172,7 +171,14 @@ const MAP_SECTIONS = [
   },
 ];
 
-export default function WarMap({ placements, onNodeClick, onRemove, canManage, hidePseudo = false, hideSig = false }: WarMapProps) {
+export default function WarMap({
+  placements,
+  onNodeClick,
+  onRemove,
+  canManage,
+  hidePseudo = false,
+  hideSig = false,
+}: WarMapProps) {
   const placementMap = new Map<number, DefensePlacement>();
   for (const p of placements) {
     placementMap.set(p.node_number, p);

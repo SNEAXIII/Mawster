@@ -138,7 +138,9 @@ function WarLayout() {
       {/* Remove defender with attacker confirm dialog */}
       <ConfirmationDialog
         open={pendingRemoveNode !== null}
-        onOpenChange={(open) => { if (!open) setPendingRemoveNode(null); }}
+        onOpenChange={(open) => {
+          if (!open) setPendingRemoveNode(null);
+        }}
         onConfirm={handleConfirmRemoveDefender}
         title={t.game.war.removeDefenderWithAttackerTitle}
         description={t.game.war.removeDefenderWithAttackerDesc}

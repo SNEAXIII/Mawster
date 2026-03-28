@@ -8,7 +8,9 @@ import { type War, getCurrentWar, createWar, endWar } from '@/app/services/war';
 export function useCurrentWar(allianceId: string) {
   const { t } = useI18n();
   const tRef = useRef(t);
-  useEffect(() => { tRef.current = t; }, [t]);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
 
   const [currentWar, setCurrentWar] = useState<War | null>(null);
   const [warLoading, setWarLoading] = useState(false);

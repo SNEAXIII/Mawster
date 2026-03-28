@@ -251,7 +251,8 @@ const en = {
       createError: 'Failed to declare war',
       endWar: 'End War',
       endWarConfirmTitle: 'End War',
-      endWarConfirmDesc: 'This action is irreversible. All war data will be locked. Type "confirm" below to proceed.',
+      endWarConfirmDesc:
+        'This action is irreversible. All war data will be locked. Type "confirm" below to proceed.',
       ended: 'Ended',
       endWarSuccess: 'War ended successfully',
       endWarError: 'Failed to end war',
@@ -282,7 +283,8 @@ const en = {
       removeAttackerSuccess: 'Attacker removed',
       removeAttackerError: 'Failed to remove attacker',
       removeDefenderWithAttackerTitle: 'Remove Defender',
-      removeDefenderWithAttackerDesc: 'An attacker is already assigned to this node. Removing the defender will also clear the attacker. Continue?',
+      removeDefenderWithAttackerDesc:
+        'An attacker is already assigned to this node. Removing the defender will also clear the attacker. Continue?',
       koUpdateError: 'Failed to update KO count',
       attackerLimitReached: 'Maximum 3 attackers per member reached',
       defenderRequired: 'This node needs a defender before assigning an attacker',

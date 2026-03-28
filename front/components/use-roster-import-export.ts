@@ -23,7 +23,6 @@ export interface RosterExportEntry {
 
 // ─── Validation helpers ──────────────────────────────────
 
- 
 function validateEntry(
   obj: Record<string, unknown>,
   idx: number,
