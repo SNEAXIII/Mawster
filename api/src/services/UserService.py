@@ -76,12 +76,6 @@ class UserService:
         return user
 
     @classmethod
-    async def get_user_by_email(cls, session: SessionDep, email: str) -> Optional[User]:
-        sql = select(User).where(User.email == email)
-        result = await session.exec(sql)
-        return result.first()
-
-    @classmethod
     def _validate_target_user_for_action(
         cls,
         user: Optional[User],
@@ -218,9 +212,7 @@ class UserService:
     def build_search_filter(cls, sql, search: Optional[str]):
         if search and search.strip():
             pattern = f"%{search.strip()}%"
-            sql = sql.where(
-                (User.login.ilike(pattern)) | (User.email.ilike(pattern))
-            )
+            sql = sql.where(User.login.ilike(pattern))
         return sql
 
     @classmethod

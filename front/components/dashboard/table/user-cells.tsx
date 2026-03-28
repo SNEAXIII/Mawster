@@ -9,10 +9,6 @@ export function RowUserLogin(props: { login: string }) {
   return <TableCell className={'lg:w-44'}>{truncateString(props.login, 15)}</TableCell>;
 }
 
-export function RowUserEmail(props: { email: string }) {
-  return <TableCell className={'lg:w-80'}>{truncateString(props.email, 35)}</TableCell>;
-}
-
 export function RowUserRole(props: { role: string }) {
   return <TableCell>{props.role}</TableCell>;
 }

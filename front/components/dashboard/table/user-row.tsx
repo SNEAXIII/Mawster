@@ -2,7 +2,6 @@ import { TableRow } from '@/components/ui/table';
 import { User } from '@/app/services/users';
 import {
   RowUserCreatedAt,
-  RowUserEmail,
   RowUserLastLoginDate,
   RowUserLogin,
   RowUserRole,
@@ -20,7 +19,6 @@ export function UserRow({ user, loadUsers, currentUserRole }: UserRowProps) {
   return (
     <TableRow>
       <RowUserLogin login={user.login} />
-      <RowUserEmail email={user.email} />
       <RowUserRole role={user.role} />
       <RowUserCreatedAt created_at={user.created_at} />
       <RowUserLastLoginDate lastLoginDate={user.last_login_date} />

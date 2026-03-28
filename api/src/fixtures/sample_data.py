@@ -19,6 +19,7 @@ from sqlmodel import Session, select
 
 from src.enums.Roles import Roles
 from src.models import User, LoginLog
+from src.utils.email_hash import hash_email
 from src.models.GameAccount import GameAccount
 from src.models.Alliance import Alliance
 from src.models.Champion import Champion
@@ -126,10 +127,10 @@ def load_sample_data():
 
             game_accounts: list = []
 
-            # ── Index 0 — Super admin  (misterbalise2@gmail.com) ─────────────────
-            print("🚀 Creating super admin (misterbalise2@gmail.com)...")
+            # ── Index 0 — Super admin ────────────────────────────────────────────
+            print("🚀 Creating super admin...")
             super_admin = User(
-                email="misterbalise2@gmail.com",
+                email_hash=hash_email("misterbalise2@gmail.com"),
                 login="misterbalise2",
                 discord_id="403941390586871808",
                 role=Roles.SUPER_ADMIN,
@@ -152,10 +153,10 @@ def load_sample_data():
             for entry in _build_roster(super_admin_game.id, 0, champions_db, has_7r5=False):
                 session.add(entry)
 
-            # ── Index 1 — Simple admin  (misterbalise@gmail.com) ─────────────────
-            print("🚀 Creating simple admin (misterbalise@gmail.com)...")
+            # ── Index 1 — Simple admin ───────────────────────────────────────────
+            print("🚀 Creating simple admin...")
             simple_admin = User(
-                email="misterbalise@gmail.com",
+                email_hash=hash_email("misterbalise@gmail.com"),
                 login="misterbalise",
                 discord_id="1274730290698256406",
                 role=Roles.ADMIN,
@@ -189,7 +190,7 @@ def load_sample_data():
 
                 user = User(
                     login=login,
-                    email=email,
+                    email_hash=hash_email(email),
                     discord_id=discord_id,
                     role=Roles.USER,
                     created_at=fake.date_time_between(start_date="-1y", end_date=NOW),
@@ -243,8 +244,8 @@ def load_sample_data():
             print(f"✅ {total} game accounts, all in alliance '{alliance_name}' [{alliance_tag}]")
             print("✅ Each user: 10×7r3 + 10×7r4, sig ∈ {{0, 20, 200}} — fully deterministic")
             print(f"✅ {with_7r5} regular users also have 1×7r5 champion")
-            print("✅ Super admin : login=misterbalise  | email=misterbalise2@gmail.com | game=Mr DrBalise")
-            print("✅ Simple admin: login=misterbalise2 | email=misterbalise@gmail.com  | game=B DrBalise")
+            print("✅ Super admin : login=misterbalise  | game=Mr DrBalise")
+            print("✅ Simple admin: login=misterbalise2 | game=B DrBalise")
             print("✅ Sample data loaded successfully!")
 
     except Exception as e:

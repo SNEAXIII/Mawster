@@ -7,12 +7,10 @@ import { InfoRow } from './info-row';
 
 export function AccountInfoCard({
   name,
-  email,
   discordId,
   createdAt,
 }: Readonly<{
   name?: string | null;
-  email?: string | null;
   discordId?: string | null;
   createdAt?: string | null;
 }>) {
@@ -31,13 +29,6 @@ export function AccountInfoCard({
             value={name}
             fallback={t.common.notAvailable}
             dataCy='username-row'
-          />
-          <InfoRow
-            icon={<Mail className='h-4 w-4' />}
-            label={t.profile.email}
-            value={email}
-            fallback={t.common.notAvailable}
-            dataCy='email-row'
           />
           <InfoRow
             icon={<FaDiscord className='h-4 w-4' />}
