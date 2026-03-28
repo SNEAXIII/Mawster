@@ -28,19 +28,18 @@ declare module 'next-auth' {
 
 declare module 'next-auth/jwt' {
   interface JWT {
-    accessToken: string;
-    accessTokenExpires: number;
-    expired: boolean;
+    accessToken?: string;
+    accessTokenExpires?: number;
+    expired?: boolean;
     backendAuthenticated?: boolean;
     backendRefreshToken?: string;
     discordRefreshToken?: string;
     id?: string;
-    user_id: string;
-    sub: string;
-    email: string;
-    role: string;
-    avatar_url: string | null;
-    discord_id: string;
-    created_at: string | null;
+    user_id?: string;
+    sub?: string;
+    role?: string;
+    avatar_url?: string | null;
+    discord_id?: string;
+    created_at?: string | null;
   }
 }

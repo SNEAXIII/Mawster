@@ -359,7 +359,7 @@ export function useRosterImportExport({
             oldSignature: row.oldSignature,
           });
         }
-      } catch (_err: unknown) {
+      } catch (err) {
         // Bulk failed entirely
         for (const row of previewRows) {
           results.push({
@@ -373,7 +373,7 @@ export function useRosterImportExport({
             newSignature: row.newSignature,
             oldRarity: row.oldRarity,
             oldSignature: row.oldSignature,
-            error: err.message || t.roster.importExport.serverError,
+            error: (err instanceof Error ? err.message : undefined) || t.roster.importExport.serverError,
           });
         }
       }

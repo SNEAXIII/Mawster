@@ -90,7 +90,8 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
           : action === AllianceMemberAction.DEMOTE
             ? t.game.alliances.officerRemoveError
             : t.game.alliances.memberRemoveError;
-      toast.error(err?.message || errorMsg);
+      const errMessage = err instanceof Error ? err.message : undefined;
+      toast.error(errMessage || errorMsg);
     } finally {
       setIsLoading((prev) => ({ ...prev, [action]: false }));
     }
