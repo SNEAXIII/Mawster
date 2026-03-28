@@ -162,12 +162,12 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       if ((err as { status?: number }).status === 404) {
         setCurrentWar(null);
       } else {
-        toast.error(t.game.war.loadError);
+        toast.error(tRef.current.game.war.loadError);
       }
     } finally {
       setManagementLoading(false);
     }
-  }, [selectedAllianceId, t.game.war.loadError]);
+  }, [selectedAllianceId]);
 
   useEffect(() => {
     setCurrentWar(null);

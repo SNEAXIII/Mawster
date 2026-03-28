@@ -22,7 +22,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
               <SideNavBar />
             </div>
             <Toaster />
-            <div className='grow overflow-y-auto p-3 sm:p-6 md:p-8 lg:p-12'>{children}</div>
+            <div className='grow overflow-y-auto p-3'>{children}</div>
           </div>
         </Providers>
       </body>

@@ -117,13 +117,14 @@ async def check_user_role(
 ):
     uri = request.url.path.rstrip("/")
     method = request.method
-    logger.debug("%s %s", method, uri)
     start_time = perf_counter()
     response: _StreamingResponse = await next_function(request)
     process_time = perf_counter() - start_time
     if not IS_PROD:
         response.headers["X-Process-Time"] = str(process_time)
-    logger.info("%s %s → %s (%.3fs)", method, uri, response.status_code, process_time)
+    if not uri.startswith("/static"):
+        logger.debug("%s %s", method, uri)
+        logger.info("%s %s → %s (%.3fs)", method, uri, response.status_code, process_time)
     return response
 
 
