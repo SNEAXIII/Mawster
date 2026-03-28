@@ -95,8 +95,8 @@ export function useAddChampionForm(selectedAccountId: string | null) {
       reset();
       setTimeout(() => searchInputRef.current?.focus(), 50);
       return updated;
-    } catch (e: any) {
-      toast.error(e.message || t.roster.errors.addError);
+    } catch (e: unknown) {
+      toast.error((e as Error).message || t.roster.errors.addError);
       return null;
     } finally {
       setAdding(false);

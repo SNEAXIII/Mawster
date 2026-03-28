@@ -2,6 +2,7 @@ import NextAuth from 'next-auth';
 import Discord from 'next-auth/providers/discord';
 import Credentials from 'next-auth/providers/credentials';
 import jwt from 'jsonwebtoken';
+import type { JWT } from 'next-auth/jwt';
 import { getServerApiUrl } from '@/app/lib/serverApiUrl';
 
 import { isServerDev } from '@/app/lib/dev-mode';
@@ -18,7 +19,7 @@ interface JwtPayload {
  * Rafraichit le token backend via le refresh_token backend.
  * Si le refresh backend échoue, tente un re-login via Discord refresh token.
  */
-async function refreshBackendToken(token: any): Promise<any> {
+async function refreshBackendToken(token: JWT): Promise<JWT> {
   try {
     // 1. Try backend refresh token first
     if (token.backendRefreshToken) {
@@ -150,24 +151,14 @@ export const {
                 role: decoded.role,
                 accessToken: data.access_token,
                 refreshToken: data.refresh_token,
-              } as any;
+              };
             },
           }),
         ]
       : []),
   ],
   callbacks: {
-    async jwt({
-      token,
-      user,
-      account,
-      profile: _profile,
-    }: {
-      token: any;
-      user: any;
-      account?: any;
-      profile?: any;
-    }) {
+    async jwt({ token, user, account, profile: _profile }) {
       // Dev login via CredentialsProvider (no Discord)
       if (account?.provider === 'dev-login' && user) {
         return {
@@ -230,7 +221,7 @@ export const {
       // JWT backend expiré : tenter un refresh
       return await refreshBackendToken(token);
     },
-    async session({ session, token }: { session: any; token: any }) {
+    async session({ session, token }) {
       if (token.expired || !token.backendAuthenticated) {
         return {
           ...session,

@@ -23,8 +23,8 @@ export function useCurrentWar(allianceId: string) {
     try {
       const war = await getCurrentWar(id);
       setCurrentWar(war);
-    } catch (err: any) {
-      if (err.status === 404) {
+    } catch (err: unknown) {
+      if ((err as { status?: number }).status === 404) {
         setCurrentWar(null);
       } else {
         toast.error(tRef.current.game.war.loadError);
@@ -44,8 +44,8 @@ export function useCurrentWar(allianceId: string) {
       const war = await createWar(allianceId, opponentName);
       toast.success(tRef.current.game.war.createSuccess.replace('{name}', opponentName));
       setCurrentWar(war);
-    } catch (err: any) {
-      toast.error(err.message || tRef.current.game.war.createError);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || tRef.current.game.war.createError);
       throw err;
     }
   };
@@ -56,8 +56,8 @@ export function useCurrentWar(allianceId: string) {
       await endWar(allianceId, currentWar.id);
       toast.success(tRef.current.game.war.endWarSuccess);
       setCurrentWar(null);
-    } catch (err: any) {
-      toast.error(err.message || tRef.current.game.war.endWarError);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || tRef.current.game.war.endWarError);
     }
   };
 

@@ -67,6 +67,7 @@ export default function AddChampionForm({
     } else {
       reset();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialEntry]);
 
   const existingEntries = selectedChampion

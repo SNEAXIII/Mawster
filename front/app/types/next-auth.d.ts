@@ -21,6 +21,8 @@ declare module 'next-auth' {
     name?: string;
     email?: string;
     role?: string;
+    accessToken?: string;
+    refreshToken?: string;
   }
 }
 
@@ -29,6 +31,10 @@ declare module 'next-auth/jwt' {
     accessToken: string;
     accessTokenExpires: number;
     expired: boolean;
+    backendAuthenticated?: boolean;
+    backendRefreshToken?: string;
+    discordRefreshToken?: string;
+    id?: string;
     user_id: string;
     sub: string;
     email: string;

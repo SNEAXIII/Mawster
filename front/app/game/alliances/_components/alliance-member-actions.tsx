@@ -82,7 +82,7 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
           break;
       }
       onRefresh();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       const errorMsg =
         action === AllianceMemberAction.PROMOTE

@@ -53,7 +53,7 @@ async function throwOnError(response: Response, fallback: string) {
   const data = await response.json().catch(() => ({}));
   const msg = data.message ?? data.detail ?? fallback;
   const err = new Error(`Erreur ${response.status}: ${msg}`);
-  (err as any).status = response.status;
+  (err as Error & { status: number }).status = response.status;
   throw err;
 }
 

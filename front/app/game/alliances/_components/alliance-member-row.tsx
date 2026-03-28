@@ -68,8 +68,8 @@ export default function AllianceMemberRow({
           .replace('{group}', groupLabel)
       );
       onRefresh();
-    } catch (err: any) {
-      toast.error(err?.message || t.game.alliances.groupSetError);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.alliances.groupSetError);
     } finally {
       setIsChangingGroup(false);
     }

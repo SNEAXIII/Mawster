@@ -12,8 +12,8 @@ export default function Loading({ usersPerPage }: LoadingProps) {
   return (
     <div className='container mx-auto py-6'>
       <Table>
-        {/* 
-        // @ts-ignore useless warning for placeholder*/}
+        {/*
+        // @ts-expect-error useless warning for placeholder*/}
         <TableHeaderUsers />
         <TableBody>
           {Array.from({ length: usersPerPage }, (_, index) => (

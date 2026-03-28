@@ -140,7 +140,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   // ─── Derived values ────────────────────────────────────────────────────────
   const activeWarId = currentWar?.id ?? '';
-  const placements: WarPlacement[] = warSummary?.placements ?? [];
+  const placements = useMemo<WarPlacement[]>(() => warSummary?.placements ?? [], [warSummary]);
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
   const canManageWar = selectedAlliance ? canManage(selectedAlliance) : false;
 
@@ -158,8 +158,8 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     try {
       const war = await getCurrentWar(selectedAllianceId);
       setCurrentWar(war);
-    } catch (err: any) {
-      if (err.status === 404) {
+    } catch (err: unknown) {
+      if ((err as { status?: number }).status === 404) {
         setCurrentWar(null);
       } else {
         toast.error(t.game.war.loadError);
@@ -232,8 +232,8 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       const war = await createWar(selectedAllianceId, opponentName);
       toast.success(t.game.war.createSuccess.replace('{name}', opponentName));
       setCurrentWar(war);
-    } catch (err: any) {
-      toast.error(err.message || t.game.war.createError);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.createError);
       throw err;
     }
   };
@@ -244,8 +244,8 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       await endWar(selectedAllianceId, currentWar.id);
       toast.success(t.game.war.endWarSuccess);
       setCurrentWar(null);
-    } catch (err: any) {
-      toast.error(err.message || t.game.war.endWarError);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.endWarError);
     }
   };
 
@@ -274,8 +274,8 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
           .replace('{node}', String(selectorNode))
       );
       await fetchWarDefense();
-    } catch (err: any) {
-      toast.error(err.message || t.game.war.placeError);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.placeError);
     }
   };
 
@@ -285,8 +285,8 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       await removeWarDefender(selectedAllianceId, activeWarId, selectedBg, nodeNumber);
       toast.success(t.game.war.removeSuccess);
       await fetchWarDefense();
-    } catch (err: any) {
-      toast.error(err.message || t.game.war.removeError);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.removeError);
     }
   };
 
@@ -354,8 +354,8 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
             }
           : prev
       );
-    } catch (err: any) {
-      toast.error(err.message || t.game.war.assignError);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.assignError);
     }
   };
 
@@ -379,8 +379,8 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
             }
           : prev
       );
-    } catch (err: any) {
-      toast.error(err.message || t.game.war.removeAttackerError);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.removeAttackerError);
     }
   };
 
@@ -404,8 +404,8 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
             }
           : prev
       );
-    } catch (err: any) {
-      toast.error(err.message || t.game.war.loadError);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.loadError);
     }
   };
 

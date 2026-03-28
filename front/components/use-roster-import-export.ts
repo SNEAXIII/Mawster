@@ -292,8 +292,8 @@ export function useRosterImportExport({
 
         setPreviewRows(rows);
         setPreviewOpen(true);
-      } catch (err: any) {
-        toast.error(err.message || t.roster.importExport.fileReadError);
+      } catch (err: unknown) {
+        toast.error((err as Error).message || t.roster.importExport.fileReadError);
       }
     },
     [roster, t]
@@ -359,7 +359,7 @@ export function useRosterImportExport({
             oldSignature: row.oldSignature,
           });
         }
-      } catch (err: any) {
+      } catch (_err: unknown) {
         // Bulk failed entirely
         for (const row of previewRows) {
           results.push({

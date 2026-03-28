@@ -154,7 +154,7 @@ export default function WarDefendersTab() {
               />
             </div>
           </div>
-          <div className='w-64 shrink-0'>
+          <div className='w-64 shrink-0 self-start sticky top-0 flex flex-col max-h-[calc(100vh-8rem)]'>
             <WarAttackerPanel />
           </div>
         </div>

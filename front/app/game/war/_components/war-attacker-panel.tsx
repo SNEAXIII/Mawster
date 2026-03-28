@@ -31,17 +31,17 @@ export default function WarAttackerPanel() {
 
   return (
     <div
-      className='flex flex-col gap-3'
+      className='flex flex-col gap-3 min-h-0 flex-1'
       data-cy='war-attacker-panel'
     >
-      <div className='text-sm font-semibold text-muted-foreground uppercase tracking-wide px-1'>
+      <div className='text-sm font-semibold text-muted-foreground uppercase tracking-wide px-1 shrink-0'>
         {t.game.war.attackersPanelTitle.replace('{assigned}', String(assigned.length))}
       </div>
 
       {assigned.length === 0 ? (
         <div className='text-sm text-muted-foreground px-1'>{t.game.war.noAvailableAttackers}</div>
       ) : (
-        <div className='space-y-4'>
+        <div className='space-y-4 overflow-y-auto min-h-0'>
           {groups.map((group) => (
             <div key={group.pseudo}>
               {/* Member header: pseudo + count + attacker portraits */}
