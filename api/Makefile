@@ -1,4 +1,4 @@
-MIGRATION_MESSAGE := "init"
+MESSAGE := "init"
 
 .PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions reset-db init-db cancel-last test test-cov
 
@@ -29,7 +29,7 @@ run-testing:
 	uv run app_testing.py
 
 create-mig:
-	uv run alembic revision --autogenerate -m "$(MIGRATION_MESSAGE)"
+	uv run alembic revision --autogenerate -m "$(MESSAGE)"
 
 migrate:
 	uv run alembic upgrade head

@@ -48,7 +48,7 @@ class DevUser(BaseModel):
     """Minimal user info for the dev user picker."""
     id: uuid.UUID
     login: str
-    email: str
+    email_hash: str | None
     role: str
 
 
@@ -76,7 +76,6 @@ class SetupUserResult(BaseModel):
     refresh_token: str
     user_id: str
     login: str
-    email: str
     discord_id: str
     account_id: str | None = None
     alliance_id: str | None = None
@@ -106,7 +105,7 @@ async def dev_list_users(session: SessionDep):
     result = await session.exec(select(User))
     users = result.all()
     return [
-        DevUser(id=str(u.id), login=u.login, email=u.email, role=u.role)
+        DevUser(id=str(u.id), login=u.login, email_hash=u.email_hash, role=u.role)
         for u in users
     ]
 
@@ -119,7 +118,7 @@ async def dev_login(body: DevLoginRequest, session: SessionDep) -> LoginResponse
     refresh_token = JWTService.create_refresh_token(user)
 
     audit_log("auth.dev_login", user_id=str(user.id), detail="method=dev")
-    logger.warning("DEV LOGIN — user: %s (%s)", user.login, user.email)
+    logger.warning("DEV LOGIN — user: %s", user.login)
 
     return LoginResponse(
         token_type="bearer",
@@ -260,7 +259,6 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
             refresh_token=refresh_token,
             user_id=str(user.id),
             login=user.login,
-            email=user.email,
             discord_id=user.discord_id,
             account_id=account_id,
             alliance_id=alliance_id,

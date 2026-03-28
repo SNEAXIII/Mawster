@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     # En dev, défaut permissif ; en prod, DOIT être défini dans api.env
     ALLOWED_ORIGINS: str = Field(... if IS_PROD else "http://localhost:3000")
     API_PORT: int = Field(... if IS_PROD else 8000)
+    EMAIL_PEPPER: str = Field(... if IS_PROD else "dev-email-pepper")
+    EMAIL_PEPPER_VERSION: int = Field(default=1)
     model_config = SettingsConfigDict(env_file=api_file)
 
 

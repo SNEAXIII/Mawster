@@ -2,7 +2,7 @@ import uuid
 from typing import Optional
 
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 from src.enums.Roles import Roles
@@ -12,7 +12,6 @@ EXAMPLE_EMAIL = "user@gmail.com"
 
 class UserBaseResponse(BaseModel):
     login: str = Field(examples=["User"])
-    email: EmailStr = Field(examples=[EXAMPLE_EMAIL])
     role: Roles = Field(examples=[Roles.USER.value])
 
 
