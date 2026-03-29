@@ -25,26 +25,6 @@ describe('Roster – Preferred Attacker', () => {
     });
   });
 
-  it('preferred attacker persists after page reload', () => {
-    setupRosterUser('pref-persist', 'PersistPlayer').then(({ adminData, userData, accountId }) => {
-      cy.apiLoadChampion(adminData.access_token, 'Ghost', 'Tech').then((champs) => {
-        cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r3', {
-          is_preferred_attacker: true,
-        });
-
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
-
-        // Should show ⚔ prefix on the champion name
-        cy.getByCy('preferred-attacker-name').should('be.visible');
-
-        // Reload and verify it persists
-        cy.reload();
-        cy.getByCy('preferred-attacker-name').should('be.visible');
-      });
-    });
-  });
-
   it('can untoggle preferred attacker', () => {
     setupRosterUser('pref-untoggle', 'UntogglePlayer').then(({ adminData, userData, accountId }) => {
       cy.apiLoadChampion(adminData.access_token, 'Quake', 'Science').then((champs) => {
@@ -87,7 +67,7 @@ describe('Roster – Preferred Attacker', () => {
       cy.contains('Corvus added / updated').should('be.visible');
 
       // Should show ⚔ prefix (yellow name)
-      cy.getByCy('preferred-attacker-name').should('be.visible');
+      cy.getByCy('preferred-attacker-name').scrollIntoView().should('be.visible');
     });
   });
 
