@@ -24,11 +24,11 @@ describe('Roster – Rarity & Signature', () => {
         // Select 7★R3 rarity
         cy.getByCy('rarity-7r3').click();
         cy.getByCy('champion-submit').click();
-        cy.contains('Medusa added / updated').should('be.visible');
+        cy.contains('Medusa added / updated').scrollIntoView().should('be.visible');
 
         // Verify the champion appears inside the correct rarity group
         cy.getByCy('rarity-group-7r3').should('exist');
-        cy.getByCy('rarity-group-7r3').contains('Medusa').should('be.visible');
+        cy.getByCy('rarity-group-7r3').contains('Medusa').scrollIntoView().should('be.visible');
       });
     });
 
@@ -46,14 +46,14 @@ describe('Roster – Rarity & Signature', () => {
         cy.getByCy('champion-result-Thor').click();
         cy.getByCy('rarity-7r4').click();
         cy.getByCy('champion-submit').click();
-        cy.contains('Thor added / updated').should('be.visible');
+        cy.contains('Thor added / updated').scrollIntoView().should('be.visible');
 
         // Add Hulk at 6r5
         cy.getByCy('champion-search').type('Hulk');
         cy.getByCy('champion-result-Hulk').click();
         cy.getByCy('rarity-6r5').click();
         cy.getByCy('champion-submit').click();
-        cy.contains('Hulk added / updated').should('be.visible');
+        cy.contains('Hulk added / updated').scrollIntoView().should('be.visible');
 
         // Thor in 7r4 group, Hulk in 6r5 group
         cy.getByCy('rarity-group-7r4').find('[data-cy="champion-card-Thor"]').should('exist');
@@ -111,7 +111,7 @@ describe('Roster – Rarity & Signature', () => {
         cy.getByCy('sig-input').should('have.value', '200');
 
         cy.getByCy('champion-submit').click();
-        cy.contains('DoctorVoodoo added / updated').should('be.visible');
+        cy.contains('DoctorVoodoo added / updated').scrollIntoView().should('be.visible');
 
         // Verify sig 200 is displayed on the card
         cy.getByCy('champion-card-DoctorVoodoo').find('[data-cy="champion-sig"]').should('contain', 'sig 200');
@@ -135,7 +135,7 @@ describe('Roster – Rarity & Signature', () => {
         cy.getByCy('sig-input').should('have.value', '150');
 
         cy.getByCy('champion-submit').click();
-        cy.contains('Magik added / updated').should('be.visible');
+        cy.contains('Magik added / updated').scrollIntoView().should('be.visible');
 
         // Verify sig 150 on the card
         cy.getByCy('champion-card-Magik').find('[data-cy="champion-sig"]').should('contain', 'sig 150');
@@ -155,7 +155,7 @@ describe('Roster – Rarity & Signature', () => {
         cy.getByCy('rarity-7r1').click();
         // Sig defaults to 0 — just submit
         cy.getByCy('champion-submit').click();
-        cy.contains('Phoenix added / updated').should('be.visible');
+        cy.contains('Phoenix added / updated').scrollIntoView().should('be.visible');
 
         // Card should show "sig 0" with the dim style (text-white/50)
         cy.getByCy('champion-card-Phoenix')
