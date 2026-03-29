@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAllianceSelector } from '@/hooks/use-alliance-selector';
 import dynamic from 'next/dynamic';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useI18n } from '@/app/i18n';
@@ -47,12 +46,11 @@ export enum AllianceTab {
 export default function AllianceContent() {
   const { locale, t } = useI18n();
   const { status } = useRequiredSession();
-  const { refreshHasAlliance } = useAllianceContext();
+  const { alliances, loading, refresh: refreshAlliances } = useAllianceContext();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const { alliances, loading, refresh: refreshAlliances } = useAllianceSelector();
   const [eligibleOwners, setEligibleOwners] = useState<GameAccount[]>([]);
   const [eligibleMembers, setEligibleMembers] = useState<GameAccount[]>([]);
   const [hasAnyAccounts, setHasAnyAccounts] = useState(true);
@@ -181,7 +179,6 @@ export default function AllianceContent() {
       fetchEligibleMembers(),
       fetchMyAccounts(),
       fetchMyInvitations(),
-      refreshHasAlliance(),
     ]);
 
   useEffect(() => {
