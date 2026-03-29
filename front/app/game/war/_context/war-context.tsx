@@ -257,12 +257,13 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     ascension: number
   ) => {
     if (!selectedAllianceId || !activeWarId || selectorNode === null) return;
+    const node = selectorNode;
     try {
-      await placeWarDefender(
+      const placement = await placeWarDefender(
         selectedAllianceId,
         activeWarId,
         selectedBg,
-        selectorNode,
+        node,
         championId,
         stars,
         rank,
@@ -271,9 +272,19 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       toast.success(
         t.game.war.placeSuccess
           .replace('{name}', championName)
-          .replace('{node}', String(selectorNode))
+          .replace('{node}', String(node))
       );
-      await fetchWarDefense();
+      setWarSummary((prev) =>
+        prev
+          ? {
+              ...prev,
+              placements: [
+                ...prev.placements.filter((p) => p.node_number !== node),
+                placement,
+              ],
+            }
+          : prev
+      );
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.placeError);
     }
@@ -284,7 +295,11 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     try {
       await removeWarDefender(selectedAllianceId, activeWarId, selectedBg, nodeNumber);
       toast.success(t.game.war.removeSuccess);
-      await fetchWarDefense();
+      setWarSummary((prev) =>
+        prev
+          ? { ...prev, placements: prev.placements.filter((p) => p.node_number !== nodeNumber) }
+          : prev
+      );
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.removeError);
     }
@@ -312,7 +327,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     try {
       await clearWarBg(selectedAllianceId, activeWarId, selectedBg);
       toast.success(t.game.war.clearSuccess);
-      await fetchWarDefense();
+      setWarSummary((prev) => (prev ? { ...prev, placements: [] } : prev));
     } catch {
       toast.error(t.game.war.loadError);
     }
