@@ -1,13 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/search-input';
 import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
-import { RARITY_LABELS, getClassColors, shortenChampionName } from '@/app/services/roster';
-import { parseRarity } from '@/app/game/defense/_components/defense-utils';
+import { getClassColors, shortenChampionName } from '@/app/services/roster';
 
 const PROXY = '/api/back';
 
@@ -39,7 +38,13 @@ interface WarChampionSelectorProps {
   onClose: () => void;
   nodeNumber: number;
   placedChampionIds: Set<string>;
-  onSelect: (championId: string, championName: string, stars: number, rank: number, ascension: number) => void;
+  onSelect: (
+    championId: string,
+    championName: string,
+    stars: number,
+    rank: number,
+    ascension: number
+  ) => void;
 }
 
 export default function WarChampionSelector({
@@ -60,27 +65,25 @@ export default function WarChampionSelector({
   const [selected, setSelected] = useState<ChampionEntry | null>(null);
   const [selectedRarity, setSelectedRarity] = useState<SelectedRarity>({ stars: 7, rank: 3 });
   const [ascension, setAscension] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const fetchChampions = useCallback(
-    async (q: string, p: number) => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams({ page: String(p), size: '60' });
-        if (q) params.set('search', q);
-        const res = await fetch(`${PROXY}/champions?${params}`, {
-          headers: { Accept: 'application/json' },
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        setChampions(p === 1 ? data.champions : (prev) => [...prev, ...data.champions]);
-        setTotalPages(data.total_pages);
-        setPage(p);
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+  const fetchChampions = useCallback(async (q: string, p: number) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ page: String(p), size: '60' });
+      if (q) params.set('search', q);
+      const res = await fetch(`${PROXY}/champions?${params}`, {
+        headers: { Accept: 'application/json' },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setChampions(p === 1 ? data.champions : (prev) => [...prev, ...data.champions]);
+      setTotalPages(data.total_pages);
+      setPage(p);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -93,6 +96,8 @@ export default function WarChampionSelector({
       setSelected(null);
       setSearch('');
       setPage(1);
+    } else {
+      setTimeout(() => searchInputRef.current?.focus(), 50);
     }
   }, [open]);
 
@@ -114,7 +119,8 @@ export default function WarChampionSelector({
       <div className='bg-card border rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col'>
         <div className='p-4 border-b flex items-center justify-between'>
           <h2 className='font-semibold'>
-            {t.game.defense.selectChampion} — {t.game.defense.nodeEmpty.replace('{node}', String(nodeNumber))}
+            {t.game.defense.selectChampion} —{' '}
+            {t.game.defense.nodeEmpty.replace('{node}', String(nodeNumber))}
           </h2>
           <Button
             variant='ghost'
@@ -129,6 +135,7 @@ export default function WarChampionSelector({
           <>
             <div className='p-3 border-b'>
               <SearchInput
+                ref={searchInputRef}
                 value={search}
                 onChange={setSearch}
                 placeholder={t.game.war.searchChampion}
@@ -137,37 +144,41 @@ export default function WarChampionSelector({
             </div>
             <div className='overflow-y-auto flex-1 p-3'>
               {loading && champions.length === 0 ? (
-                <div className='text-center text-muted-foreground py-8'>{t.game.war.loadingChampions}</div>
+                <div className='text-center text-muted-foreground py-8'>
+                  {t.game.war.loadingChampions}
+                </div>
               ) : (
                 <>
                   <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2'>
-                    {champions.filter((c) => !placedChampionIds.has(c.id)).map((champ) => {
-                      const classColors = getClassColors(champ.champion_class);
-                      return (
-                        <button
-                          key={champ.id}
-                          className={cn(
-                            'flex flex-col items-center gap-1 p-2 rounded-lg border transition-all',
-                            'hover:ring-2 hover:ring-primary/60 hover:border-primary/60'
-                          )}
-                          onClick={() => handleChampionClick(champ)}
-                          data-cy={`war-champion-card-${champ.name.replaceAll(/\s+/g, '-')}`}
-                        >
-                          <ChampionPortrait
-                            imageUrl={champ.image_url}
-                            name={champ.name}
-                            rarity='7r3'
-                            size={48}
-                          />
-                          <span className='text-[10px] text-center truncate w-full leading-tight'>
-                            {shortenChampionName(champ.name)}
-                          </span>
-                          <span className={cn('text-[9px] font-medium', classColors.label)}>
-                            {champ.champion_class}
-                          </span>
-                        </button>
-                      );
-                    })}
+                    {champions
+                      .filter((c) => !placedChampionIds.has(c.id))
+                      .map((champ) => {
+                        const classColors = getClassColors(champ.champion_class);
+                        return (
+                          <button
+                            key={champ.id}
+                            className={cn(
+                              'flex flex-col items-center gap-1 p-2 rounded-lg border transition-all',
+                              'hover:ring-2 hover:ring-primary/60 hover:border-primary/60'
+                            )}
+                            onClick={() => handleChampionClick(champ)}
+                            data-cy={`war-champion-card-${champ.name.replaceAll(/\s+/g, '-')}`}
+                          >
+                            <ChampionPortrait
+                              imageUrl={champ.image_url}
+                              name={champ.name}
+                              rarity='7r3'
+                              size={48}
+                            />
+                            <span className='text-[10px] text-center truncate w-full leading-tight'>
+                              {shortenChampionName(champ.name)}
+                            </span>
+                            <span className={cn('text-[9px] font-medium', classColors.label)}>
+                              {champ.champion_class}
+                            </span>
+                          </button>
+                        );
+                      })}
                   </div>
                   {page < totalPages && (
                     <div className='text-center mt-4'>

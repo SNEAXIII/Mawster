@@ -9,7 +9,11 @@ import { isServerDev } from '@/app/lib/dev-mode';
  * récupéré dans le cookie NextAuth (jamais exposé au client).
  */
 async function proxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: !isServerDev() });
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+    secureCookie: !isServerDev(),
+  });
 
   if (!token?.accessToken) {
     return NextResponse.json({ message: 'Non authentifié' }, { status: 401 });

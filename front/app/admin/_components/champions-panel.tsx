@@ -62,12 +62,13 @@ export default function ChampionsPanel() {
       setTotalPage(data.total_pages);
     } catch (err) {
       setError(
-        (err as any).status === 401 ? t.dashboard.errors.unauthorized : t.champions.errors.loadError
+        (err as { status?: number }).status === 401 ? t.dashboard.errors.unauthorized : t.champions.errors.loadError
       );
     } finally {
       setIsLoading(false);
       setCanReset(!(perPage === BASE_SIZE && selectedClass === BASE_CLASS && searchQuery === ''));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, perPage, selectedClass, searchQuery]);
 
   useEffect(() => {
@@ -78,6 +79,7 @@ export default function ChampionsPanel() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, perPage, selectedClass, searchQuery]);
 
   function resetPagination() {

@@ -21,20 +21,25 @@ declare module 'next-auth' {
     name?: string;
     email?: string;
     role?: string;
+    accessToken?: string;
+    refreshToken?: string;
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
-    accessToken: string;
-    accessTokenExpires: number;
-    expired: boolean;
-    user_id: string;
-    sub: string;
-    email: string;
-    role: string;
-    avatar_url: string | null;
-    discord_id: string;
-    created_at: string | null;
+    accessToken?: string;
+    accessTokenExpires?: number;
+    expired?: boolean;
+    backendAuthenticated?: boolean;
+    backendRefreshToken?: string;
+    discordRefreshToken?: string;
+    id?: string;
+    user_id?: string;
+    sub?: string;
+    role?: string;
+    avatar_url?: string | null;
+    discord_id?: string;
+    created_at?: string | null;
   }
 }

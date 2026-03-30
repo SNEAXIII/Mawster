@@ -43,6 +43,7 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', activeTab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const tabs: TabItem<AdminTab>[] = [

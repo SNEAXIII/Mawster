@@ -39,7 +39,13 @@ export function useAddChampionForm(selectedAccountId: string | null) {
     searchTimerRef.current = setTimeout(async () => {
       try {
         const res = await searchChampions(val, 10);
-        setSearchResults(res.champions);
+        if (res.champions.length === 1) {
+          setSelectedChampion(res.champions[0]);
+          setChampionSearch(res.champions[0].name);
+          setSearchResults([]);
+        } else {
+          setSearchResults(res.champions);
+        }
       } catch {
         // ignore search errors
       }
@@ -56,7 +62,6 @@ export function useAddChampionForm(selectedAccountId: string | null) {
     setSelectedChampion(null);
     setChampionSearch('');
     setSearchResults([]);
-    setSignatureValue(0);
     setIsPreferredAttacker(false);
     setAscension(0);
   }, []);
@@ -95,8 +100,8 @@ export function useAddChampionForm(selectedAccountId: string | null) {
       reset();
       setTimeout(() => searchInputRef.current?.focus(), 50);
       return updated;
-    } catch (e: any) {
-      toast.error(e.message || t.roster.errors.addError);
+    } catch (e: unknown) {
+      toast.error((e as Error).message || t.roster.errors.addError);
       return null;
     } finally {
       setAdding(false);

@@ -45,7 +45,7 @@ function getNodeRowClass(
 function AfterCell({
   after,
   error,
-  emptyLabel,
+  emptyLabel: _emptyLabel,
   removedLabel,
 }: Readonly<{
   after: DefenseReportItem | undefined;

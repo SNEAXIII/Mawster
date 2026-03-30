@@ -54,7 +54,7 @@ export function useDefenseActions(
         setDefenseSummary(defense);
         setAvailableChampions(champions);
         setBgMembers(members);
-      } catch (err: any) {
+      } catch {
         if (!silent) toast.error(t.game.defense.loadError);
       } finally {
         if (!silent) setDefenseLoading(false);
@@ -113,8 +113,8 @@ export function useDefenseActions(
       setSelectorNode(null);
       await fetchDefense(true);
       resetPollTimer();
-    } catch (err: any) {
-      toast.error(err.message || t.game.defense.placeError);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.defense.placeError);
     }
   };
 
@@ -125,8 +125,8 @@ export function useDefenseActions(
       toast.success(t.game.defense.removeSuccess);
       await fetchDefense(true);
       resetPollTimer();
-    } catch (err: any) {
-      toast.error(err.message || t.game.defense.removeError);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.defense.removeError);
     }
   };
 
@@ -137,8 +137,8 @@ export function useDefenseActions(
       toast.success(t.game.defense.clearSuccess);
       await fetchDefense(true);
       resetPollTimer();
-    } catch (err: any) {
-      toast.error(err.message || t.game.defense.clearError);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.defense.clearError);
     }
     setClearConfirmOpen(false);
   };
@@ -166,8 +166,8 @@ export function useDefenseActions(
       toast.success(
         t.game.defense.importExport.exportedCount.replace('{count}', String(items.length))
       );
-    } catch (err: any) {
-      toast.error(err.message || t.game.defense.importExport.exportError);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.defense.importExport.exportError);
     }
   };
 
@@ -188,8 +188,8 @@ export function useDefenseActions(
       setImportReportOpen(true);
       await fetchDefense(true);
       resetPollTimer();
-    } catch (err: any) {
-      toast.error(err.message || t.game.defense.importExport.importError);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.defense.importExport.importError);
     }
   };
 

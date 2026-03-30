@@ -74,6 +74,7 @@ export default function UsersPanel({ currentUserRole }: Readonly<UsersPanelProps
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, usersPerPage, selectedStatus, selectedRole, searchQuery]);
 
   function resetPagination() {

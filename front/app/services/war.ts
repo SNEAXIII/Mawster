@@ -62,7 +62,7 @@ async function throwOnError(response: Response, fallback: string) {
   const data = await response.json().catch(() => ({}));
   const msg = data.message ?? data.detail ?? fallback;
   const err = new Error(`Erreur ${response.status}: ${msg}`);
-  (err as any).status = response.status;
+  (err as Error & { status: number }).status = response.status;
   throw err;
 }
 
@@ -99,10 +99,9 @@ export async function getWarDefense(
   warId: string,
   battlegroup: number
 ): Promise<WarDefenseSummary> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}`,
-    { headers: jsonHeaders }
-  );
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}`, {
+    headers: jsonHeaders,
+  });
   await throwOnError(response, 'Failed to load war defense');
   return response.json();
 }

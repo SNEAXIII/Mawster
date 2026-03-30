@@ -37,7 +37,9 @@ export default function WarSidePanel() {
                 size={40}
               />
               <span className='text-[10px] text-white/80'>#{p.node_number}</span>
-              <span className={cn('text-[10px] font-mono leading-none', rarityBadgeClass(p.rarity))}>
+              <span
+                className={cn('text-[10px] font-mono leading-none', rarityBadgeClass(p.rarity))}
+              >
                 {rarityLabel(p.rarity, 0, p.ascension)}
               </span>
               {canManageWar && (

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Mail, Calendar } from 'lucide-react';
+import { User, Calendar } from 'lucide-react';
 import { FaDiscord } from 'react-icons/fa';
 import { useI18n } from '@/app/i18n';
 import { formatDateLong } from '@/app/lib/utils';

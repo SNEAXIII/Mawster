@@ -42,6 +42,38 @@ describe('Roster – Basic', () => {
   // Add champion
   // =========================================================================
 
+  it('shows multiple results and allows selecting one when search matches two champions', () => {
+    setupRosterUser('roster-multi-result', 'RosterMulti').then(({ adminData, userData }) => {
+      cy.apiLoadChampion(adminData.access_token, 'SpiderA', 'Science');
+      cy.apiLoadChampion(adminData.access_token, 'SpiderB', 'Tech');
+
+      cy.apiLogin(userData.user_id);
+      cy.navTo('roster');
+
+      cy.contains('Add / Update a Champion').click();
+      cy.getByCy('champion-search').type('Spider');
+
+      // Two results shown — no auto-select
+      cy.getByCy('champion-result-SpiderA').should('be.visible');
+      cy.getByCy('champion-result-SpiderB').should('be.visible');
+
+      // Click SpiderA
+      cy.getByCy('champion-result-SpiderA').click();
+      cy.getByCy('champion-submit').should('not.be.disabled');
+
+      // Search bar filled with clicked champion name and preview visible
+      cy.getByCy('champion-search').should('have.value', 'SpiderA');
+      cy.getByCy('champion-selected-preview')
+        .should('be.visible')
+        .and('contain', 'SpiderA')
+        .and('contain', 'Science');
+
+      cy.getByCy('rarity-6r4').click();
+      cy.getByCy('champion-submit').click();
+      cy.contains('SpiderA added / updated').should('be.visible');
+    });
+  });
+
   it('opens the Add Champion form and searches for a champion', () => {
     setupRosterUser('roster-add', 'RosterPlayer').then(({ adminData, userData }) => {
       cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Science');
@@ -64,7 +96,15 @@ describe('Roster – Basic', () => {
 
       cy.contains('Add / Update a Champion').click();
       cy.getByCy('champion-search').type('Wolverine');
-      cy.getByCy('champion-result-Wolverine').click();
+      cy.getByCy('champion-submit').should('not.be.disabled');
+
+      // Search bar auto-filled and preview visible below selector
+      cy.getByCy('champion-search').should('have.value', 'Wolverine');
+      cy.getByCy('champion-selected-preview')
+        .should('be.visible')
+        .and('contain', 'Wolverine')
+        .and('contain', 'Mutant');
+
       cy.getByCy('rarity-6r4').click();
       cy.getByCy('champion-submit').click();
 
@@ -87,7 +127,7 @@ describe('Roster – Basic', () => {
       // Add champion first
       cy.contains('Add / Update a Champion').click();
       cy.getByCy('champion-search').type('HulkDel');
-      cy.getByCy('champion-result-HulkDel').click();
+      cy.getByCy('champion-submit').should('not.be.disabled');
       cy.getByCy('rarity-6r4').click();
       cy.getByCy('champion-submit').click();
       cy.contains('HulkDel added / updated').should('be.visible');
@@ -126,7 +166,7 @@ describe('Roster – Basic', () => {
         // Update via UI: click edit, change rarity
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Iron Man');
-        cy.getByCy('champion-result-Iron Man').click();
+        cy.getByCy('champion-submit').should('not.be.disabled');
         cy.getByCy('rarity-7r2').click();
         cy.getByCy('champion-submit').click();
         cy.contains('Iron Man added / updated').should('be.visible');
@@ -157,7 +197,7 @@ describe('Roster – Basic', () => {
         // Add same champion again with higher rank (same star level = upsert)
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Storm');
-        cy.getByCy('champion-result-Storm').click();
+        cy.getByCy('champion-submit').should('not.be.disabled');
         cy.getByCy('rarity-7r2').click();
         cy.getByCy('champion-submit').click();
         cy.contains('Storm added / updated').should('be.visible');
@@ -177,7 +217,7 @@ describe('Roster – Basic', () => {
 
       cy.contains('Add / Update a Champion').click();
       cy.getByCy('champion-search').type('DoctorSig');
-      cy.getByCy('champion-result-DoctorSig').click();
+      cy.getByCy('champion-submit').should('not.be.disabled');
       cy.getByCy('rarity-6r4').click();
       // Set sig to 200 via preset button
       cy.contains('button', '200').click();

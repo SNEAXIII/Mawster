@@ -23,7 +23,6 @@ export interface RosterExportEntry {
 
 // ─── Validation helpers ──────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function validateEntry(
   obj: Record<string, unknown>,
   idx: number,
@@ -293,8 +292,8 @@ export function useRosterImportExport({
 
         setPreviewRows(rows);
         setPreviewOpen(true);
-      } catch (err: any) {
-        toast.error(err.message || t.roster.importExport.fileReadError);
+      } catch (err: unknown) {
+        toast.error((err as Error).message || t.roster.importExport.fileReadError);
       }
     },
     [roster, t]
@@ -360,7 +359,7 @@ export function useRosterImportExport({
             oldSignature: row.oldSignature,
           });
         }
-      } catch (err: any) {
+      } catch (err) {
         // Bulk failed entirely
         for (const row of previewRows) {
           results.push({
@@ -374,7 +373,7 @@ export function useRosterImportExport({
             newSignature: row.newSignature,
             oldRarity: row.oldRarity,
             oldSignature: row.oldSignature,
-            error: err.message || t.roster.importExport.serverError,
+            error: (err instanceof Error ? err.message : undefined) || t.roster.importExport.serverError,
           });
         }
       }

@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAllianceSelector } from '@/hooks/use-alliance-selector';
 import dynamic from 'next/dynamic';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useI18n } from '@/app/i18n';
@@ -47,12 +46,11 @@ export enum AllianceTab {
 export default function AllianceContent() {
   const { locale, t } = useI18n();
   const { status } = useRequiredSession();
-  const { refreshHasAlliance } = useAllianceContext();
+  const { alliances, loading, refresh: refreshAlliances } = useAllianceContext();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const { alliances, loading, refresh: refreshAlliances } = useAllianceSelector();
   const [eligibleOwners, setEligibleOwners] = useState<GameAccount[]>([]);
   const [eligibleMembers, setEligibleMembers] = useState<GameAccount[]>([]);
   const [hasAnyAccounts, setHasAnyAccounts] = useState(true);
@@ -89,6 +87,7 @@ export default function AllianceContent() {
       params.delete('bg');
     }
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const [myInvitations, setMyInvitations] = useState<AllianceInvitation[]>([]);
@@ -180,7 +179,6 @@ export default function AllianceContent() {
       fetchEligibleMembers(),
       fetchMyAccounts(),
       fetchMyInvitations(),
-      refreshHasAlliance(),
     ]);
 
   useEffect(() => {
@@ -192,6 +190,7 @@ export default function AllianceContent() {
         fetchMyInvitations(),
       ]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   useEffect(() => {
@@ -204,6 +203,7 @@ export default function AllianceContent() {
     if (!loading && activeTab === AllianceTab.Create && eligibleOwners.length === 0) {
       router.replace('/game/alliances');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, activeTab, eligibleOwners]);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -220,9 +220,9 @@ export default function AllianceContent() {
       setActiveTab(AllianceTab.Alliances);
       bumpRoleKey();
       await refreshMembership();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err?.message || t.game.alliances.createError);
+      toast.error((err as Error).message || t.game.alliances.createError);
     } finally {
       setCreating(false);
     }
@@ -241,10 +241,14 @@ export default function AllianceContent() {
       toast.success(t.game.alliances.inviteSuccess);
       setMemberAllianceId(null);
       setMemberAccountId('');
-      await Promise.all([fetchEligibleMembers(), fetchPendingInvitations(alliances), fetchMyInvitations()]);
-    } catch (err: any) {
+      await Promise.all([
+        fetchEligibleMembers(),
+        fetchPendingInvitations(alliances),
+        fetchMyInvitations(),
+      ]);
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err?.message || t.game.alliances.inviteError);
+      toast.error((err as Error).message || t.game.alliances.inviteError);
     }
   };
 
@@ -259,9 +263,9 @@ export default function AllianceContent() {
       toast.success(t.game.alliances.acceptInvitationSuccess);
       bumpRoleKey();
       await refreshMembership();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err?.message || t.game.alliances.acceptInvitationError);
+      toast.error((err as Error).message || t.game.alliances.acceptInvitationError);
     }
   };
 
@@ -270,9 +274,9 @@ export default function AllianceContent() {
       await declineInvitation(invitationId);
       toast.success(t.game.alliances.declineInvitationSuccess);
       await fetchMyInvitations();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err?.message || t.game.alliances.declineInvitationError);
+      toast.error((err as Error).message || t.game.alliances.declineInvitationError);
     }
   };
 
@@ -291,9 +295,9 @@ export default function AllianceContent() {
         return updated;
       });
       await fetchEligibleMembers();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err?.message || t.game.alliances.cancelInvitationError);
+      toast.error((err as Error).message || t.game.alliances.cancelInvitationError);
     }
   };
 

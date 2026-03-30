@@ -72,8 +72,6 @@ if IS_TESTING:
     import hashlib
     from src.services.DiscordAuthService import DiscordAuthService, DISCORD_TOKEN_INVALID_EXCEPTION
 
-    _original_verify = DiscordAuthService.verify_discord_token
-
     async def _fake_verify(cls, access_token: str) -> dict:
         if not access_token:
             raise DISCORD_TOKEN_INVALID_EXCEPTION
@@ -117,13 +115,14 @@ async def check_user_role(
 ):
     uri = request.url.path.rstrip("/")
     method = request.method
-    logger.debug("%s %s", method, uri)
     start_time = perf_counter()
     response: _StreamingResponse = await next_function(request)
     process_time = perf_counter() - start_time
     if not IS_PROD:
         response.headers["X-Process-Time"] = str(process_time)
-    logger.info("%s %s → %s (%.3fs)", method, uri, response.status_code, process_time)
+    if not uri.startswith("/static"):
+        logger.debug("%s %s", method, uri)
+        logger.info("%s %s → %s (%.3fs)", method, uri, response.status_code, process_time)
     return response
 
 

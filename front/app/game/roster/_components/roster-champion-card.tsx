@@ -43,7 +43,7 @@ export default function RosterChampionCard({
 
   return (
     <div
-      className={`rounded-md bg-gray-900 ${classColors.border} border-[3px] shadow hover:shadow-lg transition-shadow relative group overflow-hidden`}
+      className={`rounded-md bg-gray-900 ${classColors.border} border-[3px] shadow hover:shadow-lg transition-shadow relative group`}
       data-cy={`champion-card-${entry.champion_name}`}
     >
       {/* Action buttons — always visible on touch, hover on desktop */}

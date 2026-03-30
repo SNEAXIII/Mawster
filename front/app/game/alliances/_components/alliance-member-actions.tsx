@@ -38,11 +38,7 @@ interface AllianceMemberActionsProps {
   onRefresh: () => void;
 }
 
-export function AllianceMemberActions({
-  member,
-  alliance,
-  onRefresh,
-}: AllianceMemberActionsProps) {
+export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceMemberActionsProps) {
   const { t } = useI18n();
   const { isMine: isMineCheck, isOwner, canManage } = useAllianceRole();
 
@@ -86,7 +82,7 @@ export function AllianceMemberActions({
           break;
       }
       onRefresh();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       const errorMsg =
         action === AllianceMemberAction.PROMOTE
@@ -94,7 +90,8 @@ export function AllianceMemberActions({
           : action === AllianceMemberAction.DEMOTE
             ? t.game.alliances.officerRemoveError
             : t.game.alliances.memberRemoveError;
-      toast.error(err?.message || errorMsg);
+      const errMessage = err instanceof Error ? err.message : undefined;
+      toast.error(errMessage || errorMsg);
     } finally {
       setIsLoading((prev) => ({ ...prev, [action]: false }));
     }
@@ -172,10 +169,7 @@ export function AllianceMemberActions({
         open={isPromoteDialogOpen}
         onOpenChange={setIsPromoteDialogOpen}
         title={t.common.confirm}
-        description={t.game.alliances.promoteOfficerConfirm.replace(
-          '{pseudo}',
-          member.game_pseudo
-        )}
+        description={t.game.alliances.promoteOfficerConfirm.replace('{pseudo}', member.game_pseudo)}
         onConfirm={() => handleAction(AllianceMemberAction.PROMOTE)}
         confirmText={t.game.alliances.promoteOfficer}
       />

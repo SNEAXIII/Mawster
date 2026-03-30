@@ -3,12 +3,9 @@
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import MainMawsterLogo from '@/components/MawsterLogo';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { LogIn } from 'lucide-react';
 import NavLinks, { Role } from './nav-links';
-import LanguageSwitcher from '@/components/language-switcher';
-import ThemePicker from '@/components/theme-picker';
 import ModalSettings from './modal-settings';
 import { useI18n } from '@/app/i18n';
 import { useAllianceContext } from '@/app/contexts/alliance-context';
@@ -19,7 +16,6 @@ export default function SideNavBar() {
   const isAuthenticated = session && !session.error && session.user;
   const userRole: Role = (isAuthenticated ? (session.user.role as Role) : null) || Role.all;
   const { hasAlliance } = useAllianceContext();
-
 
   return (
     <div className='flex h-full flex-col px-3 py-2 md:py-4 md:px-2'>
@@ -34,19 +30,21 @@ export default function SideNavBar() {
             <MainMawsterLogo />
           </div>
         </Link>
-
       </div>
 
       {/* Navigation Links Section */}
       <div className='flex grow flex-row justify-between gap-1 md:flex-col md:gap-2 overflow-x-auto md:overflow-x-visible'>
-        <NavLinks userRole={userRole} hasAlliance={hasAlliance} />
+        <NavLinks
+          userRole={userRole}
+          hasAlliance={hasAlliance}
+        />
         <div
           className='hidden h-auto w-full grow rounded-md bg-muted/50 md:block'
           aria-hidden='true'
         />
         <Separator className='hidden md:block' />
         {isAuthenticated ? (
-            <ModalSettings />
+          <ModalSettings />
         ) : (
           <Link
             href='/login'

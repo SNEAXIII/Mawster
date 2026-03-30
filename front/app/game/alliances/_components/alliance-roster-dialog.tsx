@@ -65,6 +65,7 @@ export default function AllianceRosterDialog({
       })
       .catch(() => setError(t.game.alliances.rosterError))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, gameAccountId]);
 
   // Group roster by rarity descending

@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
  * Returns a stable function that, when called, delays execution by `delay` ms.
  * If called again before the delay expires, the previous timer is reset.
  */
-export function useDebouncedCallback<T extends (...args: any[]) => void>(
+export function useDebouncedCallback<T extends (...args: unknown[]) => void>(
   callback: T,
   delay: number
 ): T {
@@ -24,7 +24,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => void>(
     };
   }, []);
 
-  const debouncedFn = ((...args: any[]) => {
+  const debouncedFn = ((...args: Parameters<T>) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       callbackRef.current(...args);

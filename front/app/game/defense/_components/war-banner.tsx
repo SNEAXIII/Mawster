@@ -23,13 +23,19 @@ export default function WarBanner({
   if (warLoading) return null;
 
   return (
-    <div className='flex items-center gap-3' data-cy='war-banner'>
+    <div
+      className='flex items-center gap-3'
+      data-cy='war-banner'
+    >
       {currentWar ? (
         <>
           <div className='flex items-center gap-1.5 text-sm'>
             <Swords className='w-4 h-4 text-muted-foreground' />
             <span className='text-muted-foreground'>vs</span>
-            <span className='font-semibold' data-cy='current-war-opponent'>
+            <span
+              className='font-semibold'
+              data-cy='current-war-opponent'
+            >
               {currentWar.opponent_name}
             </span>
           </div>

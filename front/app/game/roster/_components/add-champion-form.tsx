@@ -67,6 +67,7 @@ export default function AddChampionForm({
     } else {
       reset();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialEntry]);
 
   const existingEntries = selectedChampion
@@ -125,7 +126,10 @@ export default function AddChampionForm({
 
           {/* Selected champion preview */}
           {selectedChampion && (
-            <div className='mt-1'>
+            <div
+              className='mt-1'
+              data-cy='champion-selected-preview'
+            >
               <div className='flex items-center gap-2 text-sm text-green-700'>
                 {selectedChampion.image_url && (
                   <img

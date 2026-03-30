@@ -89,6 +89,7 @@ export default function RosterContent() {
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', activeTab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   // Roster
@@ -136,6 +137,7 @@ export default function RosterContent() {
   useEffect(() => {
     if (authStatus !== 'authenticated') return;
     fetchAccounts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authStatus]);
 
   // Re-fetch accounts when switching to Roster tab
@@ -143,6 +145,7 @@ export default function RosterContent() {
     if (activeTab === RosterTab.Roster && authStatus === 'authenticated') {
       fetchAccounts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   // Load roster when account changes
@@ -156,6 +159,7 @@ export default function RosterContent() {
       .then(setRoster)
       .catch(() => setError(t.roster.errors.loadRoster))
       .finally(() => setLoadingRoster(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAccountId]);
 
   const handleFormSuccess = useCallback((updated: RosterEntry[]) => {
@@ -171,12 +175,13 @@ export default function RosterContent() {
       const updated = await getRoster(selectedAccountId);
       setRoster(updated);
       toast.success(t.roster.removeSuccess.replace('{name}', name));
-    } catch (e: any) {
-      toast.error(e.message || t.roster.errors.deleteError);
-      setError(e.message || t.roster.errors.deleteError);
+    } catch (e: unknown) {
+      toast.error((e as Error).message || t.roster.errors.deleteError);
+      setError((e as Error).message || t.roster.errors.deleteError);
     } finally {
       setDeleteTarget(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deleteTarget, selectedAccountId]);
 
   const startEditEntry = useCallback((entry: RosterEntry) => {
@@ -198,11 +203,12 @@ export default function RosterContent() {
           .replace('{name}', upgradeTarget.champion_name)
           .replace('{rarity}', RARITY_LABELS[nextRarity] ?? nextRarity)
       );
-    } catch (e: any) {
-      toast.error(e.message || t.roster.errors.upgradeError);
+    } catch (e: unknown) {
+      toast.error((e as Error).message || t.roster.errors.upgradeError);
     } finally {
       setUpgradeTarget(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [upgradeTarget, selectedAccountId]);
 
   const handleTogglePreferredAttacker = useCallback(
@@ -213,10 +219,11 @@ export default function RosterContent() {
           const updated = await getRoster(selectedAccountId);
           setRoster(updated);
         }
-      } catch (e: any) {
-        toast.error(e.message || t.roster.preferredAttackerToggle);
+      } catch (e: unknown) {
+        toast.error((e as Error).message || t.roster.preferredAttackerToggle);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [selectedAccountId]
   );
 
@@ -227,11 +234,12 @@ export default function RosterContent() {
       const updated = await getRoster(selectedAccountId);
       setRoster(updated);
       toast.success(t.roster.ascendSuccess.replace('{name}', ascendTarget.champion_name));
-    } catch (e: any) {
-      toast.error(e.message || t.roster.ascendError);
+    } catch (e: unknown) {
+      toast.error((e as Error).message || t.roster.ascendError);
     } finally {
       setAscendTarget(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ascendTarget, selectedAccountId]);
 
   // Group roster by rarity, sorted descending (7r5 first → 6r4 last)
