@@ -15,7 +15,7 @@ describe('Roster – Ascension', () => {
 
       cy.contains('Add / Update a Champion').click();
       cy.getByCy('champion-search').type('AscHero');
-      cy.getByCy('champion-result-AscHero').click();
+      cy.getByCy('champion-submit').should('not.be.disabled');
       cy.getByCy('rarity-7r3').click();
 
       // Ascension buttons should be enabled for ascendable champion
@@ -45,7 +45,7 @@ describe('Roster – Ascension', () => {
 
       cy.contains('Add / Update a Champion').click();
       cy.getByCy('champion-search').type('AscHeroMax');
-      cy.getByCy('champion-result-AscHeroMax').click();
+      cy.getByCy('champion-submit').should('not.be.disabled');
       cy.getByCy('rarity-7r4').click();
 
       // Select A2
@@ -73,7 +73,7 @@ describe('Roster – Ascension', () => {
 
       cy.contains('Add / Update a Champion').click();
       cy.getByCy('champion-search').type('NoAscChamp');
-      cy.getByCy('champion-result-NoAscChamp').click();
+      cy.getByCy('champion-submit').should('not.be.disabled');
 
       // A1 and A2 buttons should be disabled
       cy.getByCy('ascension-1').should('be.disabled');
