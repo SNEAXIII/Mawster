@@ -56,7 +56,6 @@ export function useAddChampionForm(selectedAccountId: string | null) {
     setSelectedChampion(null);
     setChampionSearch('');
     setSearchResults([]);
-    setSignatureValue(0);
     setIsPreferredAttacker(false);
     setAscension(0);
   }, []);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/search-input';
@@ -65,6 +65,7 @@ export default function WarChampionSelector({
   const [selected, setSelected] = useState<ChampionEntry | null>(null);
   const [selectedRarity, setSelectedRarity] = useState<SelectedRarity>({ stars: 7, rank: 3 });
   const [ascension, setAscension] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const fetchChampions = useCallback(async (q: string, p: number) => {
     setLoading(true);
@@ -95,6 +96,8 @@ export default function WarChampionSelector({
       setSelected(null);
       setSearch('');
       setPage(1);
+    } else {
+      setTimeout(() => searchInputRef.current?.focus(), 50);
     }
   }, [open]);
 
@@ -132,6 +135,7 @@ export default function WarChampionSelector({
           <>
             <div className='p-3 border-b'>
               <SearchInput
+                ref={searchInputRef}
                 value={search}
                 onChange={setSearch}
                 placeholder={t.game.war.searchChampion}

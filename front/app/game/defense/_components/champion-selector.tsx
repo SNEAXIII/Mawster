@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ export default function ChampionSelector({
   const { t } = useI18n();
   const [search, setSearch] = useState('');
   const [selectedChampion, setSelectedChampion] = useState<AvailableChampion | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return availableChampions;
@@ -45,6 +46,12 @@ export default function ChampionSelector({
       return () => cancelAnimationFrame(id);
     }
     setReady(false);
+  }, [open]);
+
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    }
   }, [open]);
 
   const handleSelectChampion = (champ: AvailableChampion) => {
@@ -87,6 +94,7 @@ export default function ChampionSelector({
         {!selectedChampion ? (
           <>
             <SearchInput
+              ref={searchInputRef}
               placeholder={t.roster.searchChampion}
               value={search}
               onChange={setSearch}
