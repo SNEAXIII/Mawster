@@ -57,7 +57,7 @@ describe('Roster – Preferred Attacker', () => {
 
       cy.contains('Add / Update a Champion').click();
       cy.getByCy('champion-search').type('Corvus');
-      cy.getByCy('champion-result-Corvus').click();
+      cy.getByCy('champion-selected-preview').should('exist');
       cy.getByCy('rarity-7r2').click();
 
       // Check the Preferred Attacker checkbox
