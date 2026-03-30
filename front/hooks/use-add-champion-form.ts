@@ -39,7 +39,13 @@ export function useAddChampionForm(selectedAccountId: string | null) {
     searchTimerRef.current = setTimeout(async () => {
       try {
         const res = await searchChampions(val, 10);
-        setSearchResults(res.champions);
+        if (res.champions.length === 1) {
+          setSelectedChampion(res.champions[0]);
+          setChampionSearch(res.champions[0].name);
+          setSearchResults([]);
+        } else {
+          setSearchResults(res.champions);
+        }
       } catch {
         // ignore search errors
       }
