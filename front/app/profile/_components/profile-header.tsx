@@ -40,10 +40,7 @@ export function ProfileHeader({
           </Avatar>
           <div className='text-center sm:text-left space-y-1.5'>
             <h1 className='text-xl sm:text-2xl font-bold'>{name ?? t.profile.user}</h1>
-            <Badge
-              variant='secondary'
-              className='gap-1'
-            >
+            <Badge variant='secondary' className='gap-1'>
               <Shield className='h-3 w-3' />
               {role?.toLowerCase() ?? t.profile.user.toLowerCase()}
             </Badge>
