@@ -19,7 +19,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Omega');
-        cy.getByCy('champion-result-Omega').click();
+        cy.getByCy('champion-selected-preview').should('exist');
 
         // Set rarity 7r5
         cy.getByCy('rarity-7r5').click();
@@ -151,7 +151,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
           // Open form and search for the same champion
           cy.contains('Add / Update a Champion').click();
           cy.getByCy('champion-search').type('Doom');
-          cy.getByCy('champion-result-Doom').click();
+          cy.getByCy('champion-selected-preview').should('exist');
 
           // "Already in roster" indicator should appear
           cy.getByCy('already-in-roster').should('be.visible');
@@ -173,7 +173,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
         // Add Kingpin at 7r1 with sig 20
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Kingpin');
-        cy.getByCy('champion-result-Kingpin').click();
+        cy.getByCy('champion-selected-preview').should('exist');
         cy.getByCy('rarity-7r1').click();
         cy.contains('button', '20').click();
         cy.getByCy('champion-submit').click();
@@ -181,7 +181,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
 
         // Now search for same champion again
         cy.getByCy('champion-search').type('Kingpin');
-        cy.getByCy('champion-result-Kingpin').click();
+        cy.getByCy('champion-selected-preview').should('exist');
 
         // "Already in roster" indicator should appear with previous entry info
         cy.getByCy('already-in-roster').should('be.visible');
