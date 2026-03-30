@@ -1,61 +1,26 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Mawster — MCOC (Marvel Contest of Champions) alliance management tool.
 
-## Project Overview
-
-Mawster is a MCOC (Marvel Contest of Champions) alliance management tool.
-
-- **Backend**: FastAPI + SQLModel + MariaDB (async), Python 3.12, managed with **uv**
-- **Frontend**: Next.js (App Router, Turbopack), React 19, Tailwind CSS 4, shadcn/ui
+- **Backend**: FastAPI + SQLModel + MariaDB (async), Python 3.12, **uv**
+- **Frontend**: Next.js App Router, React 19, Tailwind CSS 4, shadcn/ui
 - **Auth**: Discord OAuth2 → NextAuth 5 → Backend JWT (HS256)
-- **i18n**: Custom hook `useI18n()` with EN/FR locale files in `front/app/i18n/locales/`
+- **i18n**: `useI18n()` hook — `front/app/i18n/locales/en.ts` & `fr.ts`
 
 ---
 
-## Backend Commands (`api/`)
+## Commands
 
-Always run from the `api/` directory via `make`. **Never** run raw `pytest`, `alembic`, or `uvicorn` directly.
+**Backend** (`api/`) — always via `make`, never raw `pytest`/`alembic`/`uvicorn`. Use skills: `make`, `db-reset`, `db-migrate`, `db-fixtures`, `db-champions`, `test-backend`.
 
-| Task                 | Command                                           |
-| -------------------- | ------------------------------------------------- |
-| Run dev server       | `make run-dev`                                    |
-| Install deps (dev)   | `make install-dev`                                |
-| Create migration     | `make reset-db` then `make create-mig MIGRATION_MESSAGE="description"` |
-| Apply migrations     | `make reset-db` then `make migrate`                                    |
-| Run all tests        | `make test`                                       |
-| Run tests + coverage | `make test-cov`                                   |
-| Load fixtures        | `make fixtures`                                   |
-| Load champions       | `make load-champions`                             |
-| Reset database       | `make reset-db`                                   |
-| Lint                 | `uvx ruff check`                                  |
+Single test file: `uv run pytest tests/unit/dto/dto_from_model_test.py -v`
+Lint: `uvx ruff check` (run at end of every backend session)
 
-To run a single test file: `uv run pytest tests/unit/dto/dto_from_model_test.py -v`
+**Frontend** (`front/`): `npm run dev` / `npm run build` (run build to catch TS errors)
 
-## Frontend Commands (`front/`)
+**E2E**: `mcp__cypress-runner__run_parallel` — source of truth. Pass `spec_files=["roster/foo.cy.ts"]` for targeted runs. Requires Docker (mariadb-test on port 3307).
 
-| Task                      | Command                |
-| ------------------------- | ---------------------- |
-| Run dev server            | `npm run dev`          |
-| Build                     | `npm run build`        |
-| Run Cypress (interactive) | `npm run cypress:open` |
-| Run Cypress (headless)    | `npm run cypress:run`  |
-
-## E2E Commands (root Makefile)
-
-**IMPORTANT** : `mcp__server-runner__run_e2e` bascule automatiquement en mode test si nécessaire — ne jamais appeler `start_test` avant `run_e2e`, ça causerait un double redémarrage des serveurs et doublerait le temps d'attente.
-
-Ces commandes démarrent automatiquement l'API de test, le frontend, et Cypress.
-
-| Task                              | Command                                   |
-| --------------------------------- | ----------------------------------------- |
-| Lancer tous les tests E2E         | `make e2e`                                |
-| Ouvrir Cypress en mode interactif | `make e2e-open`                           |
-| Un seul spec                      | `SPEC=cypress/e2e/account.cy.ts make e2e` |
-| Démarrer seulement la DB de test  | `make e2e-db`                             |
-| Arrêter API + frontend de test    | `make e2e-stop`                           |
-
-**Prérequis** : Docker en cours d'exécution (pour `mariadb-test` sur le port 3307).
+**Servers**: use `/server-dev`, `/server-stop`, `/server-status` skills.
 
 ---
 
@@ -63,195 +28,98 @@ Ces commandes démarrent automatiquement l'API de test, le frontend, et Cypress.
 
 ### Backend (`api/src/`)
 
-- **`controllers/`** — APIRouter modules; thin, delegate to services
-- **`services/`** — Stateless service classes with business logic
-- **`models/`** — SQLModel table classes (User, Alliance, GameAccount, Champion, ChampionUser, DefensePlacement, AllianceOfficer, AllianceInvitation, RequestedUpgrade, LoginLog)
-- **`dto/`** — Pydantic `BaseModel` schemas for request/response
-- **`security/`** — Settings loaded from `api.env`
-- **`utils/db.py`** — Async engine and session factory
+- `controllers/` → thin routers, delegate to `services/`
+- `services/` → business logic
+- `models/` → SQLModel tables: User, Alliance, GameAccount, Champion, ChampionUser, DefensePlacement, AllianceOfficer, AllianceInvitation, RequestedUpgrade, LoginLog
+- `dto/` → Pydantic request/response schemas
+- `security/` → settings from `api.env`
 
-**Patterns:**
-
-- All DB operations are `async`/`await` with `AsyncSession`
-- Relationships must use `selectinload()` — no lazy loading in async SQLModel
-- Auth via `Depends(AuthService.get_current_user_in_jwt)` in controllers
-- Raise `HTTPException` with proper status codes for errors
+**Patterns**: async/await + `AsyncSession`; `selectinload()` for relationships (no lazy loading); auth via `Depends(AuthService.get_current_user_in_jwt)`; raise `HTTPException` for errors.
 
 **API routers:** `/admin`, `/auth`, `/users`, `/game-accounts`, `/alliances`, `/champion-users`, `/champions`, `/defense`
 
-### Frontend (`front/`)
+### Frontend (`front/app/`)
 
-- **`app/`** — Next.js App Router pages (`game/roster/`, `game/defense/`, `game/alliances/`, `admin/`, `profile/`, `login/`, `register/`)
-- **`app/services/`** — API call wrappers (e.g., `roster.ts`, `defense.ts`, `game.ts`)
-- **`app/lib/apiClient`** — Axios/fetch client that auto-attaches JWT from NextAuth session
-- **`app/i18n/`** — `useI18n()` hook + `locales/en.ts` & `locales/fr.ts`
-- **`components/ui/`** — shadcn/ui primitives (Radix-based); **never modify directly**
-- **`components/`** — App-specific shared components
-- **`hooks/`** — Custom React hooks
+Pages: `game/roster/`, `game/defense/`, `game/alliances/`, `admin/`, `profile/`, `login/`, `register/`
 
-Pages use `_components/` subdirectories for page-scoped components.
+- `services/` — API wrappers; `lib/apiClient` — auto-attaches JWT
+- `components/ui/` — shadcn/ui (Radix) — **never modify directly**
+- Pages use `_components/` for page-scoped components (keep files ≤150 lines)
 
-### Auth Flow
+Auth: NextAuth Discord OAuth2 → backend `POST /auth/discord` → JWT stored in session, attached as `Authorization: Bearer`.
 
-1. User clicks "Login with Discord" → NextAuth Discord OAuth2
-2. NextAuth POSTs Discord `access_token` to `POST /auth/discord` (backend)
-3. Backend verifies token with Discord API, creates/finds user, returns JWT
-4. JWT stored in NextAuth session; `apiClient` attaches it as `Authorization: Bearer`
-
-### Database
-
-MariaDB in production, SQLite in-memory for integration tests. Migrations managed by Alembic via `make create-mig` / `make migrate`.
+DB: MariaDB (prod), SQLite in-memory (integration tests). Migrations via Alembic — always `make reset-db` before `make create-mig` / `make migrate`.
 
 ---
 
 ## Testing
 
-**Backend:**
-
-- Unit tests: `api/tests/unit/` (no DB)
-- Integration tests: `api/tests/integration/endpoints/` (SQLite in-memory, `httpx.AsyncClient`)
-- Setup factories: `tests/integration/endpoints/setup/`
-- Helpers: `tests/utils/`
-- Always update tests alongside code changes
-
-**Frontend (Cypress E2E):**
-
-- Tests in `front/cypress/e2e/` (organized by feature: `alliances/`, `defense/`, `war/`, `roster/`, etc.)
-- Base URL: `http://localhost:3000`
-- Support file: `front/cypress/support/e2e.ts` — all custom commands and setup helpers live here
-- Type declarations: `front/cypress/support/index.d.ts` — update when adding a new `Cypress.Commands.add`
+**Backend**: unit in `api/tests/unit/`, integration in `api/tests/integration/endpoints/`. Always update tests alongside code changes.
 
 **E2E conventions:**
 
-- Every `describe` block starts with `beforeEach(() => { cy.truncateDb(); })` — never share DB state between tests
-- Use `data-cy` attributes for all selectors; query them with `cy.getByCy('...')` — never use CSS classes or text for selection
-- Add `data-cy` to any new interactive element that tests need to reach
-- `ConfirmationDialog` confirm button exposes `data-cy='confirmation-dialog-confirm'`
+- `beforeEach(() => { cy.truncateDb(); })` in every `describe`
+- `data-cy` attributes + `cy.getByCy('...')` — never CSS classes or text
+- `ConfirmationDialog` confirm: `data-cy='confirmation-dialog-confirm'`
 
-**Setup helpers** (defined in `e2e.ts`, import from `'../../support/e2e'`):
+**Setup helpers** (import from `'../../support/e2e'`):
 
-| Helper | Use when |
+| Helper | Returns |
 | --- | --- |
-| `setupUser(token)` | Need a bare user with no game account |
-| `setupAdmin(token)` | Need an admin token (e.g. to call `/admin/*` endpoints) |
-| `setupAllianceOwner(prefix, pseudo, name, tag)` | Need a user with game account + alliance |
-| `setupWarOwner(prefix, pseudo, name, tag)` | Need admin + owner + alliance for war tests — returns `{ adminData, ownerData, allianceId, ownerAccId }` |
-| `setupAttackerScenario(prefix)` | Need owner + member + alliance + war + placed defender + roster champion for attacker tests — returns `{ adminToken, ownerData, memberData, allianceId, ownerAccId, memberAccId, warId, championUserId }` |
-| `setupDefenseOwner(prefix, pseudo, name, tag)` | Need admin + owner + alliance + BG1 for defense tests |
-| `setupRosterUser(prefix, pseudo)` | Need admin + user + game account for roster tests |
+| `setupUser(token)` | bare user, no game account |
+| `setupAdmin(token)` | admin token |
+| `setupAllianceOwner(prefix, pseudo, name, tag)` | user + game account + alliance |
+| `setupWarOwner(prefix, pseudo, name, tag)` | `{ adminData, ownerData, allianceId, ownerAccId }` |
+| `setupAttackerScenario(prefix)` | `{ adminToken, ownerData, memberData, allianceId, ownerAccId, memberAccId, warId, championUserId }` |
+| `setupDefenseOwner(prefix, pseudo, name, tag)` | admin + owner + alliance + BG1 |
+| `setupRosterUser(prefix, pseudo)` | admin + user + game account |
 
-**Rules for setup helpers:**
+**Rules:**
 
-- Admin endpoints (`/admin/*`) require an admin token — always use `adminData.access_token` or `adminToken`, never `ownerData.access_token`
-- Use `cy.apiLoadChampion(adminToken, name, class)` to load a champion; it returns the champion array so you can chain `.then(champs => ...)` to get the ID
-- Never write raw `cy.request({ method: 'POST', url: '.../admin/champions/load', ... })` in tests — use `cy.apiLoadChampion` instead
-- After loading a champion and needing its ID, chain directly: `cy.apiLoadChampion(...).then(champs => cy.apiPlaceWarDefender(..., champs[0].id, ...))`
-- Use `cy.apiAssignWarAttacker(token, allianceId, warId, battlegroup, nodeNumber, championUserId)` to assign an attacker to a war node — uses the member's `access_token`
-
-**After fixing failing tests — re-run only those specs:**
-
-```
-# E2E
-mcp__cypress-runner__run_parallel with spec_files=["war/operations.cy.ts", ...]  (short paths — not full paths; or skill: test-e2e-failing)
-
-# Backend
-mcp__pytest-runner__run_failing_tests   (or skill: test-backend-failing)
-```
-
-Only use `run_parallel` (all specs) / `run_all_tests` after structural changes that could affect unrelated tests.
+- Admin endpoints → always `adminData.access_token` / `adminToken`, never `ownerData.access_token`
+- Load champions: `cy.apiLoadChampion(adminToken, name, class)` → returns array, chain `.then(champs => ...)`
+- Assign attacker: `cy.apiAssignWarAttacker(token, allianceId, warId, battlegroup, nodeNumber, championUserId)`
+- After fixes: re-run only failing specs with `mcp__cypress-runner__run_parallel spec_files=[...]`
 
 ---
 
 ## Key Conventions
 
-- **Language**: all code, comments, and variable names in **English**
-- **Commits**: conventional commits (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`)
-- **i18n**: always `const { t } = useI18n()` — never hardcode user-visible strings; add keys to both `en.ts` and `fr.ts`
-- **Icons**: `lucide-react` for general icons, `react-icons/fi` (Feather) for action buttons
-- **Styling**: Tailwind with semantic tokens (`bg-card`, `text-muted-foreground`), dark mode first
-- **Components**: keep ≤150 lines; split into `_components/` subdirectory if larger
-- **Lint**: run `uvx ruff check` at end of every backend session; `npm run build` to catch frontend TS errors
-
----
-
-## Docker
-
-- Dev DB only: `docker compose -f compose-dev.yaml up -d` (starts MariaDB + phpMyAdmin on ports 3306/8080)
-- Production: `docker compose -f compose-prod.yaml up -d` (Caddy TLS reverse proxy on 80/443)
-- Images: `sneaxiii/mawster-api` and `sneaxiii/mawster-front`; Watchtower auto-deploys every 300s
+- **Language**: English (code, comments, variables)
+- **Commits**: `feat:` `fix:` `refactor:` `test:` `docs:`
+- **i18n**: `useI18n()` always — never hardcode strings; add keys to both `en.ts` and `fr.ts`
+- **Icons**: `lucide-react` general / `react-icons/fi` action buttons
+- **Styling**: Tailwind semantic tokens (`bg-card`, `text-muted-foreground`), dark mode first
 
 ---
 
 ## Context-Mode
 
-Raw tool output floods the context window. Use context-mode MCP tools to keep raw data in the sandbox.
+Keep raw output out of context. Rules:
 
-### Tool Selection
+- **Read** only when about to `Edit` immediately after — use `ctx_execute_file` for everything else
+- **No Explore agents** — use `ctx_batch_execute(commands, queries)` instead
+- Bash only for: git, mkdir, rm, mv, short commands
+- No WebFetch / curl / wget — use `ctx_fetch_and_index`
+- Responses ≤500 words; write artifacts to files
 
-1. **GATHER**: `batch_execute(commands, queries)` — Primary tool for research. Runs all commands, auto-indexes, and searches. ONE call replaces many individual steps.
-2. **FOLLOW-UP**: `search(queries: ["q1", "q2", ...])` — Use for all follow-up questions. ONE call, many queries.
-3. **PROCESSING**: `execute(language, code)` or `execute_file(path, language, code)` — Use for API calls, log analysis, and data processing.
-4. **WEB**: `fetch_and_index(url)` then `search(queries)` — Fetch, index, then query. Never dump raw HTML.
-
-### Rules
-
-- DO NOT use Bash for commands producing >20 lines of output — use `execute` or `batch_execute`.
-- **CRITICAL — Read vs ctx_execute_file**: Use `Read` ONLY when you are about to `Edit` the file immediately after. For ANY other file reading (exploration, analysis, debugging, searching for bugs) use `ctx_execute_file` instead. Violating this rule floods the context window.
-- **CRITICAL — No Explore agents**: NEVER launch Explore subagents for codebase research. Use `batch_execute(commands, queries)` instead — it keeps output out of context and costs far fewer tokens.
-- DO NOT use WebFetch — use `fetch_and_index` instead.
-- DO NOT use curl/wget in Bash — use `execute` or `fetch_and_index`.
-- Bash is ONLY for git, mkdir, rm, mv, navigation, and short commands.
-
-### Output
-
-- Keep responses under 500 words.
-- Write artifacts (code, configs) to FILES — never return them as inline text.
-- Return only: file path + 1-line description.
+Tools: `ctx_batch_execute` (research) → `ctx_search` (follow-up) → `ctx_execute`/`ctx_execute_file` (processing) → `ctx_fetch_and_index` + `ctx_search` (web)
 
 ---
 
 ## MCP Servers
 
-> **⚠️ IMPORTANT — après toute modification d'un serveur MCP** (nouveau tool, nouveau paramètre, changement de schéma) : prévenir l'utilisateur qu'il doit **redémarrer Claude Code** pour que le nouveau schéma soit pris en compte. Sans redémarrage, les anciens paramètres (ou l'absence de paramètres) restent actifs et les appels se font avec le mauvais schéma.
+> After any MCP server modification (new tool, param, schema): tell user to **restart Claude Code**.
 
-Four MCP servers are configured in `.mcp.json`:
+- **context-mode**: keeps output out of context window
+- **cypress-runner**: `mcp__cypress-runner__run_parallel`
+- **pytest-runner**: `mcp__pytest-runner__run_all_tests` / `mcp__pytest-runner__run_failing_tests`
+- **server-runner**: `start_dev` / `start_test` / `stop` / `status`
+- **github**: `mcp__github__*` — requires `GITHUB_PERSONAL_ACCESS_TOKEN`
 
-### context-mode
+---
 
-Keeps raw command/file output out of the context window (see [Context-Mode](#context-mode) section above).
+## Docker
 
-### cypress-runner
-
-Runs Cypress E2E tests from the assistant. Prefer this over `npm run cypress:run` via Bash.
-
-| Tool                                        | Description                        |
-| ------------------------------------------- | ---------------------------------- |
-| `mcp__cypress-runner__run_parallel`         | Run specs in parallel (pass `spec_files` to target specific specs) |
-
-### pytest-runner
-
-Runs backend pytest tests from the assistant. Prefer this over `make test` via Bash when output is large.
-
-| Tool                                       | Description                        |
-| ------------------------------------------ | ---------------------------------- |
-| `mcp__pytest-runner__run_all_tests`        | Run the full pytest suite          |
-| `mcp__pytest-runner__run_failing_tests`    | Re-run only previously failed tests |
-
-### server-runner
-
-Gère le cycle de vie des serveurs dev et test depuis l'assistant. Démarre/arrête API + Frontend + DB en un seul appel.
-
-| Outil MCP | Description |
-| --- | --- |
-| `mcp__server-runner__start_dev` | Lance mariadb (3306) + API (8000) + Frontend (3000) en mode dev |
-| `mcp__server-runner__start_test` | Lance mariadb-test (3307) + API (8001) + Frontend (3001) en mode test |
-| `mcp__server-runner__stop` | Arrête tous les serveurs démarrés |
-| `mcp__server-runner__status` | Mode actif, PIDs, ports, uptime |
-| `mcp__server-runner__run_e2e` | Démarre le mode test si besoin, lance Cypress, retourne les résultats |
-
-### github
-
-Interact with GitHub (issues, PRs, branches, files) without leaving the assistant.
-
-- Use `mcp__github__*` tools for all GitHub operations (create PR, merge, comment, etc.)
-- `GITHUB_PERSONAL_ACCESS_TOKEN` must be set in the environment.
+- Dev: `docker compose -f compose-dev.yaml up -d` (MariaDB + phpMyAdmin 3306/8080)
+- Prod: `docker compose -f compose-prod.yaml up -d` (Caddy TLS 80/443); Watchtower auto-deploys every 300s
