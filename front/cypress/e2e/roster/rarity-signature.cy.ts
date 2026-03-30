@@ -19,7 +19,7 @@ describe('Roster – Rarity & Signature', () => {
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Medusa');
-        cy.getByCy('champion-result-Medusa').click();
+        cy.getByCy('champion-selected-preview').should('contain', 'Medusa');
 
         // Select 7★R3 rarity
         cy.getByCy('rarity-7r3').click();
@@ -43,14 +43,14 @@ describe('Roster – Rarity & Signature', () => {
         // Add Thor at 7r4
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Thor');
-        cy.getByCy('champion-result-Thor').click();
+        cy.getByCy('champion-selected-preview').should('contain', 'Thor');
         cy.getByCy('rarity-7r4').click();
         cy.getByCy('champion-submit').click();
         cy.contains('Thor added / updated').scrollIntoView().should('be.visible');
 
         // Add Hulk at 6r5
         cy.getByCy('champion-search').type('Hulk');
-        cy.getByCy('champion-result-Hulk').click();
+        cy.getByCy('champion-selected-preview').should('contain', 'Hulk');
         cy.getByCy('rarity-6r5').click();
         cy.getByCy('champion-submit').click();
         cy.contains('Hulk added / updated').scrollIntoView().should('be.visible');
@@ -74,7 +74,7 @@ describe('Roster – Rarity & Signature', () => {
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Venom');
-        cy.getByCy('champion-result-Venom').click();
+        cy.getByCy('champion-selected-preview').should('contain', 'Venom');
 
         // Click 7r2 and verify it gets the active state
         cy.getByCy('rarity-7r2').click();
@@ -102,7 +102,7 @@ describe('Roster – Rarity & Signature', () => {
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('DoctorVoodoo');
-        cy.getByCy('champion-result-DoctorVoodoo').click();
+        cy.getByCy('champion-selected-preview').should('contain', 'DoctorVoodoo');
         cy.getByCy('rarity-7r2').click();
 
         // Click the 200 preset button
@@ -127,7 +127,7 @@ describe('Roster – Rarity & Signature', () => {
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Magik');
-        cy.getByCy('champion-result-Magik').click();
+        cy.getByCy('champion-selected-preview').should('contain', 'Magik');
         cy.getByCy('rarity-6r4').click();
 
         // Select all and type custom value
@@ -151,7 +151,7 @@ describe('Roster – Rarity & Signature', () => {
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Phoenix');
-        cy.getByCy('champion-result-Phoenix').click();
+        cy.getByCy('champion-selected-preview').should('contain', 'Phoenix');
         cy.getByCy('rarity-7r1').click();
         // Sig defaults to 0 — just submit
         cy.getByCy('champion-submit').click();
