@@ -177,7 +177,7 @@ async function startTest(): Promise<State> {
 
   execSync('docker compose -f compose-dev.yaml up mariadb-test phpmyadmin-test -d', { cwd: ROOT, stdio: 'pipe' });
 
-  const apiPid = spawnDetached(['uv', 'run', 'app_testing.py'], API_DIR, { MODE: 'testing' });
+  const apiPid = spawnDetached(['uv', 'run', 'app_testing.py'], API_DIR);
   const frontPid = spawnDetached(['npm', 'run', 'testing'], FRONT_DIR, {
     NEXTAUTH_SECRET: 'e2e-local-nextauth-secret',
   });
