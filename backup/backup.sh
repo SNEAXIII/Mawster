@@ -12,6 +12,8 @@ RCLONE_REMOTE="gdrive-crypt:mawster"
 
 # ── 1. Dump ───────────────────────────────────────────────────────────────────
 echo "[backup] $(date '+%Y-%m-%d %H:%M:%S') — Starting dump: $FILENAME"
+echo "[backup] Dumping database: ${MARIADB_DATABASE}"
+echo "[backup] Local backup directory: ${BACKUP_DIR}"
 mysqldump \
   --host=mariadb \
   --user=root \
