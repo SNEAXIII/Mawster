@@ -132,6 +132,8 @@ def main() -> None:
     print(f"  EMAIL_PEPPER          [{c(DIM, '(auto-generated)')}]")
     algo               = prompt("JWT algorithm",                  default="HS256")
     token_expire       = prompt("Access token expiry (minutes)",  default="60")
+    refresh_expire     = prompt("Refresh token expiry (days)",    default="7")
+    bcrypt_rounds      = prompt("Bcrypt hash rounds",             default="12")
     api_port           = prompt("API port",                       default="8000")
 
     # ── 5. Write files ─────────────────────────────────────────────────────────
@@ -156,6 +158,8 @@ def main() -> None:
         f"MARIADB_DATABASE={db_name}",
         f"ALGORITHM={algo}",
         f"ACCESS_TOKEN_EXPIRE_MINUTES={token_expire}",
+        f"REFRESH_TOKEN_EXPIRE_DAYS={refresh_expire}",
+        f"BCRYPT_HASH_ROUND={bcrypt_rounds}",
         f"API_PORT={api_port}",
         f"EMAIL_PEPPER={email_pepper}",
     ])
