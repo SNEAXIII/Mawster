@@ -203,3 +203,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Backup
+backup/rclone.conf
+backups/

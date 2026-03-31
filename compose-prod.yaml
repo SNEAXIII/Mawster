@@ -23,6 +23,28 @@ services:
         max-size: '10m'
         max-file: '5'
 
+  backup:
+    build: ./backup
+    container_name: backup
+    restart: unless-stopped
+    networks:
+      - internal
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    env_file:
+      - db.env
+    volumes:
+      - ./backups:/backups
+      - ./backup/rclone.conf:/root/.config/rclone/rclone.conf:ro
+    environment:
+      - TZ=Europe/Paris
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
   api:
     image: sneaxiii/mawster-api:latest
     # build:
