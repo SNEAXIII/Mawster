@@ -105,6 +105,14 @@ Keep raw output out of context. Rules:
 
 Tools: `ctx_batch_execute` (research) → `ctx_search` (follow-up) → `ctx_execute`/`ctx_execute_file` (processing) → `ctx_fetch_and_index` + `ctx_search` (web)
 
+**`ctx_batch_execute` usage — parameters must be JSON arrays, NOT strings:**
+```json
+{
+  "commands": ["ls backup/", "cat backup/backup.sh"],
+  "queries": ["backup system structure", "docker compose service"]
+}
+```
+
 ---
 
 ## MCP Servers

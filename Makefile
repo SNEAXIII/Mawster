@@ -1,5 +1,6 @@
-# Root Makefile — E2E test orchestration
-.PHONY: help e2e e2e-open e2e-parallel e2e-parallel-quiet e2e-db e2e-stop
+# Root Makefile — E2E test orchestration + backup operations
+.PHONY: help e2e e2e-open e2e-parallel e2e-parallel-quiet e2e-db e2e-stop \
+        backup-deploy backup-now backup-list backup-logs backup-restore backup-restore-remote
 
 NEXTAUTH_SECRET ?= e2e-local-nextauth-secret
 NEXTAUTH_URL    ?= http://localhost:3000
@@ -96,3 +97,33 @@ endif
 
 e2e-db:
 	docker compose -f compose-dev.yaml up mariadb-test -d
+
+# ── Backup ────────────────────────────────────────────────────────────────────
+
+## Build the backup image and (re)start the backup container
+backup-deploy:
+	docker compose -f compose-prod.yaml up -d --build backup
+
+## Trigger a backup immediately (runs backup.sh inside the container)
+backup-now:
+	docker exec backup /usr/local/bin/backup.sh
+
+## List local backup files
+backup-list:
+	ls -lh backups/mawster_*.sql.gz 2>/dev/null || echo "(no local backups)"
+
+## Tail the backup container logs
+backup-logs:
+	docker compose -f compose-prod.yaml logs -f backup
+
+## Restore from a local backup  —  usage: make backup-restore FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz
+backup-restore:
+	@test -n "$(FILE)" || (echo "Usage: make backup-restore FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
+	docker exec -e MARIADB_ROOT_PASSWORD="$$(grep MARIADB_ROOT_PASSWORD db.env | cut -d= -f2)" \
+		backup /usr/local/bin/restore.sh $(FILE)
+
+## Restore from Google Drive  —  usage: make backup-restore-remote FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz
+backup-restore-remote:
+	@test -n "$(FILE)" || (echo "Usage: make backup-restore-remote FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
+	docker exec -e MARIADB_ROOT_PASSWORD="$$(grep MARIADB_ROOT_PASSWORD db.env | cut -d= -f2)" \
+		backup /usr/local/bin/restore.sh --remote $(FILE)

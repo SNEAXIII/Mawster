@@ -20,6 +20,6 @@ COPY --chown=root:root --chmod=555 scripts ./scripts
 COPY --chown=root:root --chmod=555 static ./static
 
 RUN uv sync --no-dev --frozen
-RUN find . -type f -name "*.sh" -exec dos2unix {} \;
+RUN find . -type f -name "*.sh" -exec sed -i 's/\r$//' {} \;
 
 USER fastapi
