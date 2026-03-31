@@ -56,6 +56,15 @@ e2e-parallel: e2e-db
 e2e-parallel-quiet: e2e-db
 	python scripts/e2e_parallel.py --workers $(if $(N),$(N),3) $(if $(SPEC),--spec $(SPEC),) --quiet
 
+backup-list:
+	Get-ChildItem backups\mawster_*.sql.gz -ErrorAction SilentlyContinue | Select-Object Length,Name | Format-Table -AutoSize; if (-not (Test-Path 'backups\mawster_*.sql.gz')) { Write-Host '(no local backups)' }
+
+backup-restore:
+	if (-not '$(FILE)') { Write-Host 'Usage: make backup-restore FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz'; exit 1 }; $$pass = (Select-String 'MARIADB_ROOT_PASSWORD' db.env).Line.Split('=')[1]; docker exec -e "MARIADB_ROOT_PASSWORD=$$pass" backup /usr/local/bin/restore.sh $(FILE)
+
+backup-restore-remote:
+	if (-not '$(FILE)') { Write-Host 'Usage: make backup-restore-remote FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz'; exit 1 }; $$pass = (Select-String 'MARIADB_ROOT_PASSWORD' db.env).Line.Split('=')[1]; docker exec -e "MARIADB_ROOT_PASSWORD=$$pass" backup /usr/local/bin/restore.sh --remote $(FILE)
+
 else
 # ── Linux / macOS ─────────────────────────────────────────────────────────────
 
@@ -116,6 +125,19 @@ e2e-parallel: e2e-db ## Run E2E tests in parallel (N=4 by default, max 8)
 e2e-parallel-quiet: e2e-db ## Run E2E tests in parallel, hide server logs (N=4 by default, max 8)
 	python3 scripts/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) --quiet
 
+backup-list:
+	ls -lh backups/mawster_*.sql.gz 2>/dev/null || echo "(no local backups)"
+
+backup-restore:
+	@test -n "$(FILE)" || (echo "Usage: make backup-restore FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
+	docker exec -e MARIADB_ROOT_PASSWORD="$$(grep MARIADB_ROOT_PASSWORD db.env | cut -d= -f2)" \
+		backup /usr/local/bin/restore.sh $(FILE)
+
+backup-restore-remote:
+	@test -n "$(FILE)" || (echo "Usage: make backup-restore-remote FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
+	docker exec -e MARIADB_ROOT_PASSWORD="$$(grep MARIADB_ROOT_PASSWORD db.env | cut -d= -f2)" \
+		backup /usr/local/bin/restore.sh --remote $(FILE)
+
 endif
 
 e2e-db:
@@ -131,22 +153,7 @@ backup-deploy:
 backup-now:
 	docker exec backup /usr/local/bin/backup.sh
 
-## List local backup files
-backup-list:
-	ls -lh backups/mawster_*.sql.gz 2>/dev/null || echo "(no local backups)"
-
 ## Tail the backup container logs
 backup-logs:
 	docker compose -f compose-prod.yaml logs -f backup
 
-## Restore from a local backup  —  usage: make backup-restore FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz
-backup-restore:
-	@test -n "$(FILE)" || (echo "Usage: make backup-restore FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
-	docker exec -e MARIADB_ROOT_PASSWORD="$$(grep MARIADB_ROOT_PASSWORD db.env | cut -d= -f2)" \
-		backup /usr/local/bin/restore.sh $(FILE)
-
-## Restore from Google Drive  —  usage: make backup-restore-remote FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz
-backup-restore-remote:
-	@test -n "$(FILE)" || (echo "Usage: make backup-restore-remote FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
-	docker exec -e MARIADB_ROOT_PASSWORD="$$(grep MARIADB_ROOT_PASSWORD db.env | cut -d= -f2)" \
-		backup /usr/local/bin/restore.sh --remote $(FILE)
