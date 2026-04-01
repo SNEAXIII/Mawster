@@ -377,6 +377,7 @@ def start_backend(worker: int, base_env: dict, quiet: bool = False) -> subproces
         **base_env,
         "MODE": "testing",
         "MARIADB_DATABASE": db,
+        "MARIADB_PORT": str(MARIADB_PORT),
         "PORT": str(api_port),
         "PYTHONIOENCODING": "utf-8",
     }

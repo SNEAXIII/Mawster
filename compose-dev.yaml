@@ -1,45 +1,53 @@
 networks:
-  internal:
+  internal-dev:
     driver: bridge
 
 services:
-  mariadb:
+  mariadb-dev:
     image: mariadb
     ports:
-      - 3306:3306
-    container_name: mariadb
+      - 3305:3306
+    container_name: mariadb-dev
     networks:
-      - internal
-    env_file: db.env
+      - internal-dev
+    environment:
+      - MARIADB_DATABASE=mawster
+      - MARIADB_USER=user
+      - MARIADB_PASSWORD=password
+      - MARIADB_ROOT_PASSWORD=rootpassword
     volumes:
       - ./db/mawster-db:/var/lib/mysql
-  phpmyadmin:
+  phpmyadmin-dev:
     image: phpmyadmin/phpmyadmin
     ports:
       - 8080:80
-    container_name: myadmin
+    container_name: myadmin-dev
     networks:
-      - internal
+      - internal-dev
     environment:
-      - PMA_HOST=mariadb
+      - PMA_HOST=mariadb-dev
       - PMA_PORT=3306
     depends_on:
-      - mariadb
+      - mariadb-dev
   mariadb-test:
     image: mariadb
     ports:
       - 3307:3306
     container_name: mariadb-test
     networks:
-      - internal
-    env_file: db.env
+      - internal-dev
+    environment:
+      - MARIADB_DATABASE=mawster
+      - MARIADB_USER=user
+      - MARIADB_PASSWORD=password
+      - MARIADB_ROOT_PASSWORD=rootpassword
   phpmyadmin-test:
     image: phpmyadmin/phpmyadmin
     ports:
       - 8081:80
     container_name: myadmin-test
     networks:
-      - internal
+      - internal-dev
     environment:
       - PMA_HOST=mariadb-test
       - PMA_PORT=3306
