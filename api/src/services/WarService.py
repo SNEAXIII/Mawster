@@ -482,6 +482,9 @@ class WarService:
         if placement is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No defender on this node")
 
+        if placement.attacker_champion_user_id is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot update KO count: no attacker assigned to this node")
+
         placement.ko_count = ko_count
         session.add(placement)
         await session.commit()

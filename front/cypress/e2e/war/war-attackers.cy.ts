@@ -104,6 +104,31 @@ describe('War – Attackers mode', () => {
     });
   });
 
+  // ── KO and remove buttons hidden when no attacker ────────────────────────
+
+  it('ko buttons and remove button are hidden in selector when no attacker is assigned', () => {
+    setupAttackerScenario('atk-no-attacker-btns').then(({ ownerData }) => {
+      goToAttackersMode(ownerData.user_id);
+
+      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      cy.getByCy('war-attacker-search').should('be.visible');
+      cy.getByCy('attacker-entry-node-10').should('be.visible');
+      cy.getByCy('ko-counter-node-10').should('not.exist');
+      cy.getByCy('remove-attacker-node-10').should('not.exist');
+    });
+  });
+
+  it('ko buttons and remove button appear in panel after assigning an attacker', () => {
+    setupAttackerScenario('atk-btns-appear').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      goToAttackersMode(ownerData.user_id);
+
+      cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
+      cy.getByCy('ko-counter-node-10').should('be.visible');
+      cy.getByCy('remove-attacker-node-10').should('be.visible');
+    });
+  });
+
   // ── x/3 counter visible in panel ─────────────────────────────────────────
 
   it('attacker panel shows x/3 counter per member', () => {

@@ -834,9 +834,15 @@ class TestRemoveAttacker:
 class TestUpdateKo:
     @pytest.mark.asyncio
     async def test_update_ko_success_by_member(self):
-        """Non-officer member can update KO count."""
+        """Non-officer member can update KO count when an attacker is assigned."""
         data = await _setup_attacker_scenario()
         headers = create_auth_headers(user_id=str(USER2_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers,
+        )
 
         response = await execute_patch_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/ko",
@@ -845,6 +851,19 @@ class TestUpdateKo:
         )
         assert response.status_code == 200
         assert response.json()["ko_count"] == 3
+
+    @pytest.mark.asyncio
+    async def test_update_ko_without_attacker_returns_400(self):
+        """KO update is rejected when no attacker is assigned to the node."""
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        response = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/ko",
+            payload={"ko_count": 2},
+            headers=headers,
+        )
+        assert response.status_code == 400
 
     @pytest.mark.asyncio
     async def test_update_ko_negative_rejected(self):
