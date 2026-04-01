@@ -212,16 +212,22 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
   const handleNodeClick = useCallback(
     (nodeNumber: number) => {
       if (!activeWarId) return;
-      if (warMode === WarMode.Attackers) {
-        const hasDefender = placements.some((p) => p.node_number === nodeNumber);
-        if (!hasDefender) {
-          toast.warning(t.game.war.defenderRequired);
-          return;
+      switch (warMode) {
+        case WarMode.Attackers: {
+          const hasDefender = placements.some((p) => p.node_number === nodeNumber);
+          if (!hasDefender) {
+            toast.warning(t.game.war.defenderRequired);
+            return;
+          }
+          setAttackerSelectorNode(nodeNumber);
+          break;
         }
-        setAttackerSelectorNode(nodeNumber);
-      } else {
-        if (!selectedAlliance || !canManage(selectedAlliance)) return;
-        setSelectorNode(nodeNumber);
+        case WarMode.Defenders:
+          if (!selectedAlliance || !canManage(selectedAlliance)) return;
+          setSelectorNode(nodeNumber);
+          break;
+        case WarMode.Plan:
+          break;
       }
     },
     [activeWarId, warMode, placements, t, selectedAlliance, canManage]

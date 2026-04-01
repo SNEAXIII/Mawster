@@ -244,6 +244,7 @@ const fr: Translations = {
         "Aucune guerre en cours, contactez vos officiers d'alliance pour déclarer une guerre.",
       modeDefenders: 'Défenseurs',
       modeAttackers: 'Attaquants',
+      modePlan: 'Plan',
       opponentName: "Nom de l'adversaire",
       noWar: 'Aucune guerre déclarée.',
       selectWar: 'Sélectionner une guerre',

@@ -20,7 +20,7 @@ export default function AttackerEntryRow({ placement }: { placement: WarPlacemen
         <ChampionPortrait
           imageUrl={placement.attacker_image_url}
           name={placement.attacker_champion_name ?? ''}
-          rarity={placement.attacker_rarity ?? '7r3'}
+          rarity={placement.attacker_rarity ?? ''}
           size={35}
         />
         <Swords className='w-4 h-4 text-muted-foreground flex-shrink-0' />

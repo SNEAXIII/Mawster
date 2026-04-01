@@ -239,6 +239,7 @@ const en = {
       noActiveWar: 'No active war in progress, contact your alliance officers to declare a war.',
       modeDefenders: 'Defenders',
       modeAttackers: 'Attackers',
+      modePlan: 'Plan',
       opponentName: 'Opponent Name',
       noWar: 'No war declared yet.',
       selectWar: 'Select a war',

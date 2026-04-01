@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { Shield, Swords, Trash2 } from 'lucide-react';
+import { Shield, Swords, Trash2, NotebookPen } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import { useI18n } from '@/app/i18n';
 import { FullPageSpinner } from '@/components/full-page-spinner';
@@ -37,7 +37,7 @@ const WarDefenseMap = dynamic(() => import('./war-defense-map'), {
 });
 
 const WarAttackerPanel = dynamic(() => import('./war-attacker-panel'), {
-  loading: () => null,
+  loading: () => <FullPageSpinner />,
 });
 
 export default function WarDefendersTab() {
@@ -112,6 +112,14 @@ export default function WarDefendersTab() {
             >
               <Shield className='w-3.5 h-3.5' />
               {t.game.war.modeDefenders}
+            </ToggleButton>
+            <ToggleButton
+              active={warMode === WarMode.Plan}
+              onClick={() => setWarMode(WarMode.Plan)}
+              dataCy='war-mode-plan'
+            >
+              <NotebookPen className='w-3.5 h-3.5' />
+              {t.game.war.modePlan}
             </ToggleButton>
           </div>
         )}
