@@ -139,6 +139,36 @@ describe('War – Attackers mode', () => {
     });
   });
 
+  // ── Attacker selector dialog: close without crash ────────────────────────
+
+  it('closing the attacker selector dialog does not crash the page', () => {
+    setupAttackerScenario('atk-dialog-close').then(({ ownerData }) => {
+      goToAttackersMode(ownerData.user_id);
+
+      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      cy.getByCy('war-attacker-search').should('be.visible');
+
+      // Close via Escape — regression: used to crash during close animation
+      cy.get('body').type('{esc}');
+      cy.getByCy('war-attacker-search').should('not.exist');
+
+      // Page should still be functional — reopen the dialog
+      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      cy.getByCy('war-attacker-search').should('be.visible');
+    });
+  });
+
+  it('attacker entry row is visible inside the selector dialog when attacker is assigned', () => {
+    setupAttackerScenario('atk-dialog-entry').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      goToAttackersMode(ownerData.user_id);
+
+      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      cy.getByCy('war-attacker-search').should('be.visible');
+      cy.getByCy('war-attacker-search').find('[data-cy="attacker-entry-node-10"]').should('be.visible');
+    });
+  });
+
   // ── Member sees their own assigned attacks ────────────────────────────────
 
   it('member can see their own assigned attacks in the attacker panel', () => {

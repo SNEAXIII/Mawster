@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 import { SearchInput } from '@/components/search-input';
 import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
@@ -41,7 +42,7 @@ export default function WarAttackerSelector({
   battlegroup,
   placements,
   onSelect,
-}: WarAttackerSelectorProps) {
+}: Readonly<WarAttackerSelectorProps>) {
   const { t } = useI18n();
   const [available, setAvailable] = useState<AvailableAttacker[]>([]);
   const [playerSearch, setPlayerSearch] = useState('');
@@ -69,8 +70,6 @@ export default function WarAttackerSelector({
       setChampionSearch('');
     }
   }, [open, fetchAvailable]);
-
-  if (!open) return null;
 
   // Count already-assigned attackers per pseudo from current placements
   const assignedByPseudo = new Map<string, number>();
@@ -104,29 +103,32 @@ export default function WarAttackerSelector({
     group.attackers.push(a);
   }
   const groups = Array.from(groupMap.values());
+
   return (
-    <div
-      className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4'
-      data-cy='war-attacker-search'
+    <Dialog
+      open={open}
+      onOpenChange={(v) => !v && onClose()}
     >
-      <div className='bg-card border rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col'>
-        <div className='p-4 border-b flex items-center justify-between'>
-          <h2 className='font-semibold'>
+      <DialogContent
+        className='max-w-2xl max-h-[90vh] overflow-hidden flex flex-col gap-0 p-0'
+        data-cy='war-attacker-search'
+      >
+        <DialogHeader className='px-6 py-4'>
+          <DialogTitle>
             {t.game.war.selectAttacker.replace('{node}', String(nodeNumber))}
-          </h2>
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={onClose}
-          >
-            ✕
-          </Button>
-        </div>
-        <AttackerEntryRow
-          placement={placements.find((placement) => placement.node_number === nodeNumber)!}
-          mode='full'
-        />
-        <div className='p-3 border-b flex gap-2'>
+          </DialogTitle>
+        </DialogHeader>
+        <Separator />
+        {placements.find((p) => p.node_number === nodeNumber) && (
+          <div className='px-3'>
+            <AttackerEntryRow
+              placement={placements.find((p) => p.node_number === nodeNumber)!}
+              mode='full'
+            />
+          </div>
+        )}
+        <Separator />
+        <div className='px-4 py-3 flex gap-2'>
           <SearchInput
             value={playerSearch}
             onChange={setPlayerSearch}
@@ -140,6 +142,7 @@ export default function WarAttackerSelector({
             data-cy='war-attacker-search-champion'
           />
         </div>
+        <Separator />
         <div className='overflow-y-auto flex-1 p-3 space-y-4'>
           {loading ? (
             <div className='text-center text-muted-foreground py-8'>{t.common.loading}</div>
@@ -168,7 +171,7 @@ export default function WarAttackerSelector({
                         key={a.champion_user_id}
                         className={cn(
                           'flex flex-col items-center gap-1 p-2 rounded-lg border transition-all',
-                          'hover:ring-2 hover:ring-primary/60 hover:border-primary/60'
+                          'hover:ring-2 hover:ring-primary/60'
                         )}
                         onClick={() => {
                           onSelect(a);
@@ -199,15 +202,7 @@ export default function WarAttackerSelector({
             ))
           )}
         </div>
-        <div className='p-3 border-t flex justify-end'>
-          <Button
-            variant='outline'
-            onClick={onClose}
-          >
-            {t.common.cancel}
-          </Button>
-        </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

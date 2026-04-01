@@ -241,6 +241,42 @@ describe('Defense – Champion Selector & Owner Picker', () => {
   });
 
   // =========================================================================
+  // Current placement entry in selector
+  // =========================================================================
+
+  it('selector shows empty node entry when node has no defender', () => {
+    setupDefenseScenario('def-pl-entry-empty', 'EntryEmptyPlyr', 'EE', [
+      { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3' },
+    ]).then(({ ownerData }) => {
+      cy.apiLogin(ownerData.user_id);
+      cy.navTo('defense');
+
+      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      cy.getByCy('defense-current-placement').should('contain', 'Empty');
+    });
+  });
+
+  it('selector shows current champion and player when node already has a defender', () => {
+    setupDefenseScenario('def-pl-entry-filled', 'EntryFilledPlyr', 'EF', [
+      { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3' },
+      { name: 'Wolverine', cls: 'Mutant', rarity: '7r4' },
+    ]).then(({ ownerData }) => {
+      cy.apiLogin(ownerData.user_id);
+      cy.navTo('defense');
+
+      // Place Spider-Man on node 1
+      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      cy.getByCy('champion-card-Spider-Man').click();
+
+      // Reopen node 1 — should show Spider-Man as current placement
+      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      cy.getByCy('defense-current-placement')
+        .should('contain', 'Spider-Man')
+        .and('contain', 'EntryFilledPlyr');
+    });
+  });
+
+  // =========================================================================
   // Node title verification
   // =========================================================================
 

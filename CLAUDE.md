@@ -90,6 +90,7 @@ DB: MariaDB (prod), SQLite in-memory (integration tests). Migrations via Alembic
 - **i18n**: `useI18n()` always — never hardcode strings; add keys to both `en.ts` and `fr.ts`
 - **Icons**: `lucide-react` general / `react-icons/fi` action buttons
 - **Styling**: Tailwind semantic tokens (`bg-card`, `text-muted-foreground`), dark mode first
+- **Explain changes**: After every Edit/Write, briefly explain what changed, why, and the expected effect
 
 ---
 
