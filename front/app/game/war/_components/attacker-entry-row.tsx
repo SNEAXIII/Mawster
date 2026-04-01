@@ -11,9 +11,11 @@ interface AttackerEntryRowProps {
   placement: WarPlacement;
   /** compact: small portraits, hollow frames, no labels — full: large portraits, star frames, player name + node */
   mode?: 'compact' | 'full';
+  /** readonly: hides KO controls and remove button */
+  readonly?: boolean;
 }
 
-export default function AttackerEntryRow({ placement, mode = 'compact' }: Readonly<AttackerEntryRowProps>) {
+export default function AttackerEntryRow({ placement, mode = 'compact', readonly = false }: Readonly<AttackerEntryRowProps>) {
   const { t } = useI18n();
   const { handleRemoveAttacker, handleUpdateKo } = useWar();
 
@@ -61,7 +63,12 @@ export default function AttackerEntryRow({ placement, mode = 'compact' }: Readon
         <div className='text-[10px] text-muted-foreground'>#{placement.node_number}</div>
       </div>
 
-      {placement.attacker_champion_user_id && (
+      {placement.attacker_champion_user_id && readonly && (
+        <span className={cn('font-mono text-sm text-muted-foreground', isFull ? 'text-sm' : 'text-xs')}>
+          {placement.ko_count} KO
+        </span>
+      )}
+      {placement.attacker_champion_user_id && !readonly && (
         <>
           <div
             className='flex items-center gap-1'

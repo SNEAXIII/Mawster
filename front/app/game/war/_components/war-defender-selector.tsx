@@ -7,6 +7,10 @@ import { SearchInput } from '@/components/search-input';
 import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
 import { getClassColors, shortenChampionName } from '@/app/services/roster';
+import { type WarPlacement } from '@/app/services/war';
+import { Separator } from '@/components/ui/separator';
+import { ConfirmationDialog } from '@/components/confirmation-dialog';
+import AttackerEntryRow from './attacker-entry-row';
 
 const PROXY = '/api/back';
 
@@ -38,6 +42,7 @@ interface WarChampionSelectorProps {
   onClose: () => void;
   nodeNumber: number;
   placedChampionIds: Set<string>;
+  currentPlacement?: WarPlacement;
   onSelect: (
     championId: string,
     championName: string,
@@ -52,6 +57,7 @@ export default function WarChampionSelector({
   onClose,
   nodeNumber,
   placedChampionIds,
+  currentPlacement,
   onSelect,
 }: WarChampionSelectorProps) {
   const { t } = useI18n();
@@ -65,6 +71,7 @@ export default function WarChampionSelector({
   const [selected, setSelected] = useState<ChampionEntry | null>(null);
   const [selectedRarity, setSelectedRarity] = useState<SelectedRarity>({ stars: 7, rank: 3 });
   const [ascension, setAscension] = useState(0);
+  const [showReplaceConfirm, setShowReplaceConfirm] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const fetchChampions = useCallback(async (q: string, p: number) => {
@@ -110,11 +117,62 @@ export default function WarChampionSelector({
 
   const handleConfirm = () => {
     if (!selected) return;
+    if (currentPlacement?.attacker_champion_user_id) {
+      setShowReplaceConfirm(true);
+      return;
+    }
+    doSelect();
+  };
+
+  const doSelect = () => {
+    if (!selected) return;
     onSelect(selected.id, selected.name, selectedRarity.stars, selectedRarity.rank, ascension);
     onClose();
   };
 
   return (
+    <>
+    <ConfirmationDialog
+      open={showReplaceConfirm}
+      onOpenChange={(v) => setShowReplaceConfirm(v)}
+      title={t.game.war.replaceDefenderWithAttackerTitle}
+      description={t.game.war.replaceDefenderWithAttackerDesc}
+      variant='destructive'
+      onConfirm={doSelect}
+      data-cy='war-replace-defender-confirm'
+    >
+      {selected && (
+        <div className='flex flex-col gap-3 mt-2'>
+          <div className='flex items-center gap-3 px-2'>
+            <ChampionPortrait
+              imageUrl={selected.image_url}
+              name={selected.name}
+              rarity={`${selectedRarity.stars}r${selectedRarity.rank}`}
+              size={48}
+            />
+            <div>
+              <div className='text-sm font-semibold'>{selected.name}</div>
+              <div className='text-xs text-muted-foreground'>
+                {selectedRarity.stars}★R{selectedRarity.rank}
+                {ascension > 0 && <span className='text-purple-400'> · A{ascension}</span>}
+              </div>
+            </div>
+          </div>
+          {currentPlacement && (
+            <>
+              <Separator />
+              <div className='flex justify-center'>
+                <AttackerEntryRow
+                  placement={currentPlacement}
+                  mode='full'
+                  readonly
+                />
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </ConfirmationDialog>
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4'>
       <div className='bg-card border rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col'>
         <div className='p-4 border-b flex items-center justify-between'>
@@ -130,6 +188,17 @@ export default function WarChampionSelector({
             ✕
           </Button>
         </div>
+        {currentPlacement && (
+          <>
+            <div className='px-6 py-2'>
+              <AttackerEntryRow
+                placement={currentPlacement}
+                mode='full'
+              />
+            </div>
+            <Separator />
+          </>
+        )}
 
         {!selected ? (
           <>
@@ -282,5 +351,6 @@ export default function WarChampionSelector({
         )}
       </div>
     </div>
+    </>
   );
 }

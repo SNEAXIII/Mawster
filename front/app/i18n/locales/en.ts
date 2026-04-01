@@ -283,6 +283,9 @@ const en = {
       assignError: 'Failed to assign attacker',
       removeAttackerSuccess: 'Attacker removed',
       removeAttackerError: 'Failed to remove attacker',
+      replaceDefenderWithAttackerTitle: 'Replace Defender',
+      replaceDefenderWithAttackerDesc:
+        'An attacker is already assigned to this node. Replacing the defender will also clear the attacker. Continue?',
       removeDefenderWithAttackerTitle: 'Remove Defender',
       removeDefenderWithAttackerDesc:
         'An attacker is already assigned to this node. Removing the defender will also clear the attacker. Continue?',

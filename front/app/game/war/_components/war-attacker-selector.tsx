@@ -104,6 +104,63 @@ export default function WarAttackerSelector({
   }
   const groups = Array.from(groupMap.values());
 
+  let content: React.ReactNode;
+  if (loading) {
+    content = <div className='text-center text-muted-foreground py-8'>{t.common.loading}</div>;
+  } else if (error) {
+    content = (
+      <div className='text-center text-destructive py-8'>{t.game.war.availableAttackersError}</div>
+    );
+  } else if (groups.length === 0) {
+    content = (
+      <div className='text-center text-muted-foreground py-8'>{t.game.war.noAvailableAttackers}</div>
+    );
+  } else {
+    content = groups.map((group) => (
+      <div key={group.gameAccountId}>
+        <div className='text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1'>
+          {group.pseudo}{' '}
+          <span className='text-primary font-bold'>
+            {t.game.war.memberAttackers.replace('{count}', String(group.assignedCount))}
+          </span>
+        </div>
+        <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2'>
+          {group.attackers.map((a) => {
+            const classColors = getClassColors(a.champion_class);
+            return (
+              <button
+                key={a.champion_user_id}
+                className={cn(
+                  'flex flex-col items-center gap-1 p-2 rounded-lg border transition-all',
+                  'hover:ring-2 hover:ring-primary/60'
+                )}
+                onClick={() => {
+                  onSelect(a);
+                  onClose();
+                }}
+                data-cy={`attacker-card-${a.champion_name.replaceAll(/\s+/g, '-')}`}
+              >
+                <ChampionPortrait
+                  imageUrl={a.image_url}
+                  name={a.champion_name}
+                  rarity={a.rarity}
+                  size={48}
+                />
+                <span className='text-[10px] text-center truncate w-full leading-tight'>
+                  {shortenChampionName(a.champion_name)}
+                </span>
+                <span className='text-[9px] font-mono text-muted-foreground'>{a.rarity}</span>
+                <span className={cn('text-[9px] font-medium', classColors.label)}>
+                  {a.champion_class}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    ));
+  }
+
   return (
     <Dialog
       open={open}
@@ -143,65 +200,7 @@ export default function WarAttackerSelector({
           />
         </div>
         <Separator />
-        <div className='overflow-y-auto flex-1 p-3 space-y-4'>
-          {loading ? (
-            <div className='text-center text-muted-foreground py-8'>{t.common.loading}</div>
-          ) : error ? (
-            <div className='text-center text-destructive py-8'>
-              {t.game.war.availableAttackersError}
-            </div>
-          ) : groups.length === 0 ? (
-            <div className='text-center text-muted-foreground py-8'>
-              {t.game.war.noAvailableAttackers}
-            </div>
-          ) : (
-            groups.map((group) => (
-              <div key={group.gameAccountId}>
-                <div className='text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1'>
-                  {group.pseudo}{' '}
-                  <span className='text-primary font-bold'>
-                    {t.game.war.memberAttackers.replace('{count}', String(group.assignedCount))}
-                  </span>
-                </div>
-                <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2'>
-                  {group.attackers.map((a) => {
-                    const classColors = getClassColors(a.champion_class);
-                    return (
-                      <button
-                        key={a.champion_user_id}
-                        className={cn(
-                          'flex flex-col items-center gap-1 p-2 rounded-lg border transition-all',
-                          'hover:ring-2 hover:ring-primary/60'
-                        )}
-                        onClick={() => {
-                          onSelect(a);
-                          onClose();
-                        }}
-                        data-cy={`attacker-card-${a.champion_name.replaceAll(/\s+/g, '-')}`}
-                      >
-                        <ChampionPortrait
-                          imageUrl={a.image_url}
-                          name={a.champion_name}
-                          rarity={a.rarity}
-                          size={48}
-                        />
-                        <span className='text-[10px] text-center truncate w-full leading-tight'>
-                          {shortenChampionName(a.champion_name)}
-                        </span>
-                        <span className='text-[9px] font-mono text-muted-foreground'>
-                          {a.rarity}
-                        </span>
-                        <span className={cn('text-[9px] font-medium', classColors.label)}>
-                          {a.champion_class}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        <div className='overflow-y-auto flex-1 p-3 space-y-4'>{content}</div>
       </DialogContent>
     </Dialog>
   );
