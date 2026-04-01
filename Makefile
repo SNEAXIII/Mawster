@@ -1,6 +1,6 @@
 # Root Makefile — E2E test orchestration + backup operations
 .PHONY: help e2e e2e-open e2e-parallel e2e-parallel-quiet e2e-db e2e-stop \
-        backup-deploy backup-now backup-list backup-logs backup-restore backup-restore-remote
+        backup-deploy backup-now backup-list backup-logs backup-restore backup-restore-remote deploy db
 
 NEXTAUTH_SECRET ?= e2e-local-nextauth-secret
 NEXTAUTH_URL    ?= http://localhost:3000
@@ -13,6 +13,8 @@ SHELL := powershell.exe
 
 help:
 	@echo ""
+	@echo "deploy                --> builder les images et (re)demarrer tous les containers de production"
+	@echo "db-dev                --> demarrer les services de base de donnees en mode developpement"
 	@echo "=== E2E ==="
 	@echo "e2e                  --> demarrer les services + lancer Cypress headless"
 	@echo "e2e-open             --> demarrer les services + ouvrir l'UI Cypress"
@@ -70,6 +72,8 @@ else
 
 help:
 	@echo ""
+	@echo "deploy                --> builder les images et (re)demarrer tous les containers de production"
+	@echo "db-dev                --> demarrer les services de base de donnees en mode"
 	@echo "=== E2E ==="
 	@echo "e2e                   --> demarrer les services + lancer Cypress headless"
 	@echo "e2e-open              --> demarrer les services + ouvrir l'UI Cypress"
@@ -157,3 +161,11 @@ backup-now:
 backup-logs:
 	docker compose -f compose-prod.yaml logs -f backup
 
+deploy:
+	docker compose -f compose-prod.yaml pull
+	docker compose -f compose-prod.yaml build
+	docker compose -f compose-prod.yaml -f compose-db-access.yaml up -d
+	docker compose -f compose-prod.yaml logs -f
+
+db-dev:
+	docker compose -f compose-dev.yaml up -d
