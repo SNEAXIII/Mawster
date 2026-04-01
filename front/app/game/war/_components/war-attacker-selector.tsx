@@ -161,6 +161,8 @@ export default function WarAttackerSelector({
     ));
   }
 
+  const currentPlacement = placements.find((p) => p.node_number === nodeNumber);
+
   return (
     <Dialog
       open={open}
@@ -175,15 +177,17 @@ export default function WarAttackerSelector({
             {t.game.war.selectAttacker.replace('{node}', String(nodeNumber))}
           </DialogTitle>
         </DialogHeader>
-        <Separator />
-        {placements.find((p) => p.node_number === nodeNumber) && (
-          <div className='px-3'>
-            <AttackerEntryRow
-              placement={placements.find((p) => p.node_number === nodeNumber)!}
-              mode='full'
-            />
-          </div>
-        )}
+        {currentPlacement ? (
+          <>
+            <Separator />
+            <div className='px-3'>
+              <AttackerEntryRow
+                placement={currentPlacement}
+                mode='full'
+              />
+            </div>
+          </>
+        ) : null}
         <Separator />
         <div className='px-4 py-3 flex gap-2'>
           <SearchInput

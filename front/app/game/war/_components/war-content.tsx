@@ -65,6 +65,10 @@ function WarLayout() {
 
   if (loading) return <FullPageSpinner />;
 
+  const pendingPlacement = pendingRemoveNode !== null
+    ? placements.find((p) => p.node_number === pendingRemoveNode)
+    : undefined;
+
   return (
     <div className='w-full px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
       {alliances.length === 0 ? (
@@ -148,16 +152,15 @@ function WarLayout() {
         description={t.game.war.removeDefenderWithAttackerDesc}
         variant='destructive'
       >
-        {pendingRemoveNode !== null &&
-          placements.find((p) => p.node_number === pendingRemoveNode) && (
-            <div className='flex justify-center'>
-              <AttackerEntryRow
-                placement={placements.find((p) => p.node_number === pendingRemoveNode)!}
-                mode='full'
-                readonly
-              />
-            </div>
-          )}
+        {pendingPlacement && (
+          <div className='flex justify-center'>
+            <AttackerEntryRow
+              placement={pendingPlacement}
+              mode='full'
+              readonly
+            />
+          </div>
+        )}
       </ConfirmationDialog>
 
       {/* Clear confirm dialog */}

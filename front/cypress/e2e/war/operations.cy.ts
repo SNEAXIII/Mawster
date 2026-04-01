@@ -320,6 +320,29 @@ describe('War – Operations (declare, place, remove)', () => {
     );
   });
 
+  // ── Defender selector dialog: close without crash ────────────────────────
+
+  it('closing the defender selector dialog does not crash the page', () => {
+    setupWarOwner('war-op-def-esc', 'DefEscOp', 'DefEscAlliance', 'DE').then(({ ownerData, allianceId }) => {
+      cy.apiCreateWar(ownerData.access_token, allianceId, 'DefEscEnemy').then(() => {
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('war');
+        cy.getByCy('war-mode-defenders').click();
+
+        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        cy.getByCy('war-champion-search').should('be.visible');
+
+        // Close via Escape — regression: hand-rolled overlay didn't support Escape
+        cy.get('body').type('{esc}');
+        cy.getByCy('war-champion-search').should('not.exist');
+
+        // Page should still be functional — reopen the selector
+        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        cy.getByCy('war-champion-search').should('be.visible');
+      });
+    });
+  });
+
   // ── Switch battlegroup ────────────────────────────────────────────────────
 
   it('any member can switch between battlegroups with G1/G2/G3 buttons', () => {

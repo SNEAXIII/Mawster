@@ -51,11 +51,6 @@ export default function ChampionSelector({
     setReady(false);
   }, [open]);
 
-  useEffect(() => {
-    if (open) {
-      setTimeout(() => searchInputRef.current?.focus(), 50);
-    }
-  }, [open]);
 
   const handleSelectChampion = (champ: AvailableChampion) => {
     if (champ.owners.length === 1) {
@@ -85,7 +80,13 @@ export default function ChampionSelector({
       open={open}
       onOpenChange={(v) => !v && handleClose()}
     >
-      <DialogContent className='max-w-2xl max-h-[80vh] overflow-hidden flex flex-col'>
+      <DialogContent
+        className='max-w-2xl max-h-[80vh] overflow-hidden flex flex-col'
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          searchInputRef.current?.focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>
             {selectedChampion

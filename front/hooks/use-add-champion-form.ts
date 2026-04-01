@@ -98,7 +98,7 @@ export function useAddChampionForm(selectedAccountId: string | null) {
       const updated = await getRoster(selectedAccountId);
       toast.success(t.roster.addSuccess.replace('{name}', selectedChampion.name));
       reset();
-      setTimeout(() => searchInputRef.current?.focus(), 50);
+      requestAnimationFrame(() => searchInputRef.current?.focus());
       return updated;
     } catch (e: unknown) {
       toast.error((e as Error).message || t.roster.errors.addError);
