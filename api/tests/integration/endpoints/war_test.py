@@ -796,19 +796,26 @@ class TestRemoveAttacker:
         data = await _setup_attacker_scenario()
         headers = create_auth_headers(user_id=str(USER2_ID))
 
-        # First assign
+        # Assign attacker
         await execute_post_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
             payload={"champion_user_id": str(data["champion_user"].id)},
             headers=headers,
         )
-        # Then remove
+        # Set some KOs
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/ko",
+            payload={"ko_count": 2},
+            headers=headers,
+        )
+        # Remove attacker — should also reset KOs
         response = await execute_delete_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
             headers=headers,
         )
         assert response.status_code == 200
         assert response.json()["attacker_champion_user_id"] is None
+        assert response.json()["ko_count"] == 0
 
     @pytest.mark.asyncio
     async def test_remove_attacker_not_assigned_returns_404(self):

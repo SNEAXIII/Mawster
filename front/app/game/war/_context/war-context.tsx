@@ -270,18 +270,13 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
         ascension
       );
       toast.success(
-        t.game.war.placeSuccess
-          .replace('{name}', championName)
-          .replace('{node}', String(node))
+        t.game.war.placeSuccess.replace('{name}', championName).replace('{node}', String(node))
       );
       setWarSummary((prev) =>
         prev
           ? {
               ...prev,
-              placements: [
-                ...prev.placements.filter((p) => p.node_number !== node),
-                placement,
-              ],
+              placements: [...prev.placements.filter((p) => p.node_number !== node), placement],
             }
           : prev
       );

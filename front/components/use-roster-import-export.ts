@@ -373,7 +373,8 @@ export function useRosterImportExport({
             newSignature: row.newSignature,
             oldRarity: row.oldRarity,
             oldSignature: row.oldSignature,
-            error: (err instanceof Error ? err.message : undefined) || t.roster.importExport.serverError,
+            error:
+              (err instanceof Error ? err.message : undefined) || t.roster.importExport.serverError,
           });
         }
       }

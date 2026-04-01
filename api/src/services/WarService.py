@@ -461,6 +461,7 @@ class WarService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No attacker assigned to this node")
 
         placement.attacker_champion_user_id = None
+        placement.ko_count = 0
         session.add(placement)
         await session.commit()
 

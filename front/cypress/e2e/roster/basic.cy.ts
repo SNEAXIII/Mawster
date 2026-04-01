@@ -63,10 +63,7 @@ describe('Roster – Basic', () => {
 
       // Search bar filled with clicked champion name and preview visible
       cy.getByCy('champion-search').should('have.value', 'SpiderA');
-      cy.getByCy('champion-selected-preview')
-        .should('be.visible')
-        .and('contain', 'SpiderA')
-        .and('contain', 'Science');
+      cy.getByCy('champion-selected-preview').should('be.visible').and('contain', 'SpiderA').and('contain', 'Science');
 
       cy.getByCy('rarity-6r4').click();
       cy.getByCy('champion-submit').click();
@@ -100,10 +97,7 @@ describe('Roster – Basic', () => {
 
       // Search bar auto-filled and preview visible below selector
       cy.getByCy('champion-search').should('have.value', 'Wolverine');
-      cy.getByCy('champion-selected-preview')
-        .should('be.visible')
-        .and('contain', 'Wolverine')
-        .and('contain', 'Mutant');
+      cy.getByCy('champion-selected-preview').should('be.visible').and('contain', 'Wolverine').and('contain', 'Mutant');
 
       cy.getByCy('rarity-6r4').click();
       cy.getByCy('champion-submit').click();

@@ -2,10 +2,9 @@
 
 import { useI18n } from '@/app/i18n';
 import ChampionPortrait from '@/components/champion-portrait';
-import { cn } from '@/app/lib/utils';
-import { X, Minus, Plus, Swords } from 'lucide-react';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '../_context/war-context';
+import AttackerEntryRow from './attacker-entry-row';
 
 interface MemberGroup {
   pseudo: string;
@@ -14,7 +13,7 @@ interface MemberGroup {
 
 export default function WarAttackerPanel() {
   const { t } = useI18n();
-  const { placements, handleRemoveAttacker, handleUpdateKo } = useWar();
+  const { placements } = useWar();
 
   const assigned = placements.filter((p) => p.attacker_champion_user_id !== null);
 
@@ -58,17 +57,17 @@ export default function WarAttackerPanel() {
                 <div className='flex items-center gap-0.5 ml-1'>
                   {group.entries
                     .filter(
-                      (p, i, arr) =>
+                      (placement, i, arr) =>
                         arr.findIndex(
-                          (q) => q.attacker_champion_name === p.attacker_champion_name
+                          (q) => q.attacker_champion_name === placement.attacker_champion_name
                         ) === i
                     )
-                    .map((p) => (
+                    .map((placement) => (
                       <ChampionPortrait
-                        key={p.id}
-                        imageUrl={p.attacker_image_url}
-                        name={p.attacker_champion_name ?? ''}
-                        rarity={p.attacker_rarity ?? '7r3'}
+                        key={placement.id}
+                        imageUrl={placement.attacker_image_url}
+                        name={placement.attacker_champion_name ?? ''}
+                        rarity={placement.attacker_rarity ?? '7r3'}
                         size={35}
                       />
                     ))}
@@ -79,80 +78,11 @@ export default function WarAttackerPanel() {
               <div className='space-y-1.5'>
                 {[...group.entries]
                   .sort((a, b) => a.node_number - b.node_number)
-                  .map((p) => (
-                    <div
-                      key={p.id}
-                      className='flex items-center gap-2 rounded-md border bg-card px-2 py-1.5'
-                      data-cy={`attacker-entry-node-${p.node_number}`}
-                    >
-                      {/* Attacker vs Defender portraits */}
-                      <div className='flex items-center gap-1 flex-shrink-0'>
-                        <ChampionPortrait
-                          imageUrl={p.attacker_image_url}
-                          name={p.attacker_champion_name ?? ''}
-                          rarity={p.attacker_rarity ?? '7r3'}
-                          size={35}
-                        />
-                        <Swords className='w-4 h-4 text-muted-foreground flex-shrink-0' />
-                        <ChampionPortrait
-                          imageUrl={p.image_url}
-                          name={p.champion_name}
-                          rarity={p.rarity}
-                          size={35}
-                        />
-                      </div>
-
-                      <div className='flex-1 min-w-0'>
-                        <div className='text-[10px] text-muted-foreground'>#{p.node_number}</div>
-                      </div>
-
-                      {/* KO counter */}
-                      <div
-                        className='flex items-center gap-1'
-                        data-cy={`ko-counter-node-${p.node_number}`}
-                      >
-                        <button
-                          type='button'
-                          className={cn(
-                            'w-5 h-5 rounded flex items-center justify-center text-xs',
-                            'bg-muted hover:bg-accent transition-colors',
-                            p.ko_count <= 0 && 'opacity-40 cursor-not-allowed'
-                          )}
-                          onClick={() =>
-                            p.ko_count > 0 && handleUpdateKo(p.node_number, p.ko_count - 1)
-                          }
-                          disabled={p.ko_count <= 0}
-                          data-cy={`ko-dec-node-${p.node_number}`}
-                        >
-                          <Minus className='w-2.5 h-2.5' />
-                        </button>
-                        <span
-                          className='text-xs font-mono w-4 text-center'
-                          data-cy={`ko-value-node-${p.node_number}`}
-                        >
-                          {p.ko_count}
-                        </span>
-                        <button
-                          type='button'
-                          className='w-5 h-5 rounded flex items-center justify-center text-xs bg-muted hover:bg-accent transition-colors'
-                          onClick={() => handleUpdateKo(p.node_number, p.ko_count + 1)}
-                          data-cy={`ko-inc-node-${p.node_number}`}
-                        >
-                          <Plus className='w-2.5 h-2.5' />
-                        </button>
-                      </div>
-
-                      {/* Remove attacker */}
-                      <button
-                        type='button'
-                        className='w-5 h-5 rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center flex-shrink-0'
-                        onClick={() => handleRemoveAttacker(p.node_number)}
-                        title={t.game.war.removeAttacker}
-                        data-cy={`remove-attacker-node-${p.node_number}`}
-                      >
-                        <X className='w-2.5 h-2.5' />
-                      </button>
-                    </div>
+                  .map((placement) => (
+                    <AttackerEntryRow
+                      key={placement.id}
+                      placement={placement}
+                    />
                   ))}
               </div>
             </div>

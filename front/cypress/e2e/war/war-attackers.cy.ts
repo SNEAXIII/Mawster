@@ -60,6 +60,25 @@ describe('War – Attackers mode', () => {
     });
   });
 
+  it('removing an attacker resets the KO count to 0', () => {
+    setupAttackerScenario('atk-ko-reset').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      goToAttackersMode(ownerData.user_id);
+
+      cy.getByCy('ko-inc-node-10').click();
+      cy.getByCy('ko-inc-node-10').click();
+      cy.getByCy('ko-value-node-10').should('have.text', '2');
+
+      cy.getByCy('remove-attacker-node-10').click();
+      cy.getByCy('attacker-entry-node-10').should('not.exist');
+
+      // Re-assign and verify KO is reset
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
+      cy.getByCy('ko-value-node-10').should('have.text', '0');
+    });
+  });
+
   // ── Assign via UI (click node in Attackers mode) ──────────────────────────
 
   it('member can assign attacker by clicking a node in Attackers mode', () => {
