@@ -113,7 +113,7 @@ jobs:
         run: python3 scripts/e2e_parallel.py --workers 2 --quiet
       - name: Upload Cypress results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cypress-results
           path: front/cypress/results
