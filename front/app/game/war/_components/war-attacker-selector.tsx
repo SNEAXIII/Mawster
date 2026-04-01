@@ -12,6 +12,7 @@ import {
   type WarPlacement,
   getAvailableAttackers,
 } from '@/app/services/war';
+import AttackerEntryRow from './attacker-entry-row';
 
 interface WarAttackerSelectorProps {
   open: boolean;
@@ -90,18 +91,19 @@ export default function WarAttackerSelector({
   // Group by member
   const groupMap = new Map<string, GroupedAttackers>();
   for (const a of filtered) {
-    if (!groupMap.has(a.game_account_id)) {
-      groupMap.set(a.game_account_id, {
+    let group = groupMap.get(a.game_account_id);
+    if (!group) {
+      group = {
         pseudo: a.game_pseudo,
         gameAccountId: a.game_account_id,
         attackers: [],
         assignedCount: assignedByPseudo.get(a.game_pseudo) ?? 0,
-      });
+      };
+      groupMap.set(a.game_account_id, group);
     }
-    groupMap.get(a.game_account_id)!.attackers.push(a);
+    group.attackers.push(a);
   }
   const groups = Array.from(groupMap.values());
-
   return (
     <div
       className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4'
@@ -120,7 +122,10 @@ export default function WarAttackerSelector({
             ✕
           </Button>
         </div>
-
+        <AttackerEntryRow
+          placement={placements.find((placement) => placement.node_number === nodeNumber)!}
+          mode='full'
+        />
         <div className='p-3 border-b flex gap-2'>
           <SearchInput
             value={playerSearch}
@@ -135,23 +140,18 @@ export default function WarAttackerSelector({
             data-cy='war-attacker-search-champion'
           />
         </div>
-
         <div className='overflow-y-auto flex-1 p-3 space-y-4'>
-          {loading && (
+          {loading ? (
             <div className='text-center text-muted-foreground py-8'>{t.common.loading}</div>
-          )}
-          {error && (
+          ) : error ? (
             <div className='text-center text-destructive py-8'>
               {t.game.war.availableAttackersError}
             </div>
-          )}
-          {!loading && !error && groups.length === 0 && (
+          ) : groups.length === 0 ? (
             <div className='text-center text-muted-foreground py-8'>
               {t.game.war.noAvailableAttackers}
             </div>
-          )}
-          {!loading &&
-            !error &&
+          ) : (
             groups.map((group) => (
               <div key={group.gameAccountId}>
                 <div className='text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1'>
@@ -196,9 +196,9 @@ export default function WarAttackerSelector({
                   })}
                 </div>
               </div>
-            ))}
+            ))
+          )}
         </div>
-
         <div className='p-3 border-t flex justify-end'>
           <Button
             variant='outline'
