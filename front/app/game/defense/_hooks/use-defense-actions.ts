@@ -110,7 +110,6 @@ export function useDefenseActions(
           .replace('{name}', championName)
           .replace('{node}', String(selectorNode))
       );
-      setSelectorNode(null);
       await fetchDefense(true);
       resetPollTimer();
     } catch (err: unknown) {

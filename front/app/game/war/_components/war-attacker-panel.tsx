@@ -4,6 +4,7 @@ import { useI18n } from '@/app/i18n';
 import ChampionPortrait from '@/components/champion-portrait';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '../_context/war-context';
+import { WarMode } from './war-types';
 import AttackerEntryRow from './attacker-entry-row';
 
 interface MemberGroup {
@@ -13,7 +14,7 @@ interface MemberGroup {
 
 export default function WarAttackerPanel() {
   const { t } = useI18n();
-  const { placements } = useWar();
+  const { placements, warMode } = useWar();
 
   const assigned = placements.filter((p) => p.attacker_champion_user_id !== null);
 
@@ -82,6 +83,7 @@ export default function WarAttackerPanel() {
                     <AttackerEntryRow
                       key={placement.id}
                       placement={placement}
+                      readonly={warMode !== WarMode.Attackers}
                     />
                   ))}
               </div>
