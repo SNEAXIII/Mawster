@@ -74,6 +74,7 @@ describe('War – Attackers mode', () => {
 
       // Re-assign and verify KO is reset
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      cy.reload();
       cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
       cy.getByCy('ko-value-node-10').should('have.text', '0');
     });
