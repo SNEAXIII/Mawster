@@ -17,6 +17,7 @@ medium:
     ne pas tout display quand on veut placer un def
     faire un selecteur de joueur pour display son path
     bloquer les lignes si le boug peut pas aller a un endroit
+    backup db auto google
 
 
 prio:
@@ -29,5 +30,3 @@ prio:
     fixer la scoll bar en attaque trop relou
     fixer faire en sorte que ca auto selext le champs de saisi de champ
 
-ultra prio:
-    backup db
