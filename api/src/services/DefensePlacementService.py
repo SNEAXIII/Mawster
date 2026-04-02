@@ -235,6 +235,24 @@ class DefensePlacementService:
         return count
 
     @classmethod
+    async def _get_defender_counts(
+        cls, session: SessionDep, alliance_id: uuid.UUID, battlegroup: int
+    ) -> dict[uuid.UUID, int]:
+        """Return a mapping of game_account_id → number of defenders placed in this battlegroup."""
+        result = await session.exec(
+            select(DefensePlacement).where(
+                and_(
+                    DefensePlacement.alliance_id == alliance_id,
+                    DefensePlacement.battlegroup == battlegroup,
+                )
+            )
+        )
+        counts: dict[uuid.UUID, int] = {}
+        for p in result.all():
+            counts[p.game_account_id] = counts.get(p.game_account_id, 0) + 1
+        return counts
+
+    @classmethod
     async def get_available_champions(
         cls,
         session: SessionDep,
@@ -285,17 +303,7 @@ class DefensePlacementService:
         placed_champion_ids = set(placed_cu_result.all())
 
         # Get defender counts per player
-        count_stmt = select(DefensePlacement).where(
-            and_(
-                DefensePlacement.alliance_id == alliance_id,
-                DefensePlacement.battlegroup == battlegroup,
-            )
-        )
-        count_result = await session.exec(count_stmt)
-        all_placed = count_result.all()
-        defender_counts: dict[uuid.UUID, int] = {}
-        for p in all_placed:
-            defender_counts[p.game_account_id] = defender_counts.get(p.game_account_id, 0) + 1
+        defender_counts = await cls._get_defender_counts(session, alliance_id, battlegroup)
 
         # Group by champion_id
         champion_groups: dict[uuid.UUID, dict] = {}
@@ -357,17 +365,7 @@ class DefensePlacementService:
         )
         members = members_result.all()
 
-        count_stmt = select(DefensePlacement).where(
-            and_(
-                DefensePlacement.alliance_id == alliance_id,
-                DefensePlacement.battlegroup == battlegroup,
-            )
-        )
-        count_result = await session.exec(count_stmt)
-        all_placed = count_result.all()
-        defender_counts: dict[uuid.UUID, int] = {}
-        for p in all_placed:
-            defender_counts[p.game_account_id] = defender_counts.get(p.game_account_id, 0) + 1
+        defender_counts = await cls._get_defender_counts(session, alliance_id, battlegroup)
 
         # Fetch alliance to determine the owner
         alliance = await session.get(Alliance, alliance_id)
