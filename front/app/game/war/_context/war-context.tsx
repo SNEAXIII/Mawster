@@ -49,6 +49,7 @@ interface WarContextValue {
   setSelectedBg: (bg: number) => void;
   loading: boolean;
   canManageWar: boolean;
+  isMine: (gameAccountId: string) => boolean;
 
   // War
   currentWar: War | null;
@@ -113,7 +114,7 @@ export function useWar(): WarContextValue {
 
 export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
   const { t } = useI18n();
-  const { canManage } = useAllianceRole();
+  const { canManage, isMine } = useAllianceRole();
 
   const {
     alliances,
@@ -480,6 +481,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       setSelectedBg,
       loading,
       canManageWar,
+      isMine,
       currentWar,
       activeWarId,
       managementLoading,
