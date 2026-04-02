@@ -153,6 +153,21 @@ class TestAddSynergy:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
+    async def test_add_synergy_other_member_champion_rejected(self):
+        """A member cannot add another member's champion as synergy provider."""
+        data = await _setup_synergy_scenario()
+        # owner tries to add synergy_cu which belongs to member (USER2)
+        response = await execute_post_request(
+            _synergy_url(data["alliance"].id, data["war"].id),
+            payload={
+                "champion_user_id": str(data["synergy_cu"].id),
+                "target_champion_user_id": str(data["attacker_cu"].id),
+            },
+            headers=data["headers_owner"],
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
     async def test_add_synergy_duplicate_rejected(self):
         """Same champion cannot be synergy provider twice in same war+BG."""
         data = await _setup_synergy_scenario()
