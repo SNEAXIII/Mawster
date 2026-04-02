@@ -1,4 +1,4 @@
-import { setupAttackerScenario } from '../../support/e2e';
+import { setupAttackerScenario, BACKEND } from '../../support/e2e';
 function goToAttackersMode(userId: string) {
   cy.apiLogin(userId);
   cy.navTo('war');
@@ -66,6 +66,7 @@ describe('War – Attackers mode', () => {
       goToAttackersMode(ownerData.user_id);
 
       cy.getByCy('ko-inc-node-10').click();
+      cy.getByCy('ko-value-node-10').should('have.text', '1');
       cy.getByCy('ko-inc-node-10').click();
       cy.getByCy('ko-value-node-10').should('have.text', '2');
 
@@ -202,7 +203,7 @@ describe('War – Attackers mode', () => {
         cy.then(() => {
           cy.request({
             method: 'POST',
-            url: `${Cypress.env('NEXT_PUBLIC_API_URL')}/alliances/${allianceId}/wars/${warId}/bg/1/node/13/attacker`,
+            url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/node/13/attacker`,
             headers: { Authorization: `Bearer ${memberData.access_token}` },
             body: { champion_user_id: cuIds[3] },
             failOnStatusCode: false,
@@ -246,8 +247,10 @@ describe('War – Attackers mode', () => {
             });
           });
           // Via UI: click node 10 and reassign to Vision — must succeed (not hit the limit)
+          // Members don't have canManageWar so the mode toggle is hidden; they see Attackers view by default
           cy.then(() => {
-            goToAttackersMode(memberData.user_id);
+            cy.apiLogin(memberData.user_id);
+            cy.navTo('war');
             cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
             cy.getByCy('war-attacker-search').should('be.visible');
             cy.getByCy('attacker-card-Vision').should('be.visible').click();

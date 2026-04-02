@@ -18,7 +18,7 @@ Lint: `uvx ruff check` (run at end of every backend session)
 
 **Frontend** (`front/`): `npm run dev` / `npm run build` (run build to catch TS errors)
 
-**E2E**: `mcp__cypress-runner__run_parallel` — source of truth. Pass `spec_files=["roster/foo.cy.ts"]` for targeted runs. Requires Docker (mariadb-test on port 3307).
+**E2E**: Always use the `/test-e2e` skill — **never** call `mcp__cypress-runner__run_parallel` directly. For failing tests only: `/test-e2e-failing`. Pass `spec_files=["roster/foo.cy.ts"]` for targeted runs. Requires Docker (mariadb-test on port 3307).
 
 **Servers**: use `/server-dev`, `/server-stop`, `/server-status` skills.
 
