@@ -255,7 +255,7 @@ describe('War – Attackers mode', () => {
             cy.getByCy('war-attacker-search').should('be.visible');
             cy.getByCy('attacker-card-Vision').should('be.visible').click();
             cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
-            cy.getByCy('attacker-entry-node-10').should('contain.text', 'Vision');
+            cy.getByCy('attacker-entry-node-10').should('have.attr', 'data-attacker', 'Vision');
           });
         });
       },

@@ -30,6 +30,7 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
     <div
       className={cn('flex items-center gap-2 rounded-md bg-card', boxPaddingSize, !isFull && 'border')}
       data-cy={`attacker-entry-node-${placement.node_number}`}
+      data-attacker={placement.attacker_champion_name ?? ''}
     >
       <div className='flex items-center gap-1 shrink-0'>
         {placement.attacker_image_url ? (
