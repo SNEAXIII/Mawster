@@ -87,6 +87,7 @@ export default function WarAttackerPanel() {
                         <SynergyPopover
                           key={placement.attacker_champion_user_id}
                           championUserId={placement.attacker_champion_user_id!}
+                          gameAccountId={placement.attacker_game_account_id ?? ''}
                           championName={placement.attacker_champion_name ?? ''}
                           imageUrl={placement.attacker_image_url}
                           rarity={placement.attacker_rarity ?? '7r3'}

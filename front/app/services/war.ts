@@ -24,6 +24,7 @@ export interface WarPlacement {
   created_at: string;
   ko_count: number;
   attacker_champion_user_id: string | null;
+  attacker_game_account_id: string | null;
   attacker_pseudo: string | null;
   attacker_champion_name: string | null;
   attacker_champion_class: string | null;

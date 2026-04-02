@@ -596,6 +596,16 @@ class WarService:
                 detail="Target champion is not assigned as a node attacker in this war+BG",
             )
 
+        # 2b. Synergy provider must belong to the same game account as the target attacker
+        target_cu = (await session.exec(
+            select(ChampionUser).where(ChampionUser.id == target_champion_user_id)
+        )).first()
+        if target_cu is None or target_cu.game_account_id != game_account.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Synergy provider must belong to the same game account as the target attacker",
+            )
+
         # 3. champion_user_id not already in regular alliance defense for this BG
         defense_check = await session.exec(
             select(DefensePlacement).where(

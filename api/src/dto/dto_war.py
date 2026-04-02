@@ -59,6 +59,7 @@ class WarPlacementResponse(BaseModel):
     created_at: datetime
     ko_count: int = 0
     attacker_champion_user_id: Optional[uuid.UUID] = None
+    attacker_game_account_id: Optional[uuid.UUID] = None
     attacker_pseudo: Optional[str] = None
     attacker_champion_name: Optional[str] = None
     attacker_champion_class: Optional[str] = None
@@ -86,6 +87,7 @@ class WarPlacementResponse(BaseModel):
             'created_at': data.created_at,
             'ko_count': data.ko_count,
             'attacker_champion_user_id': data.attacker_champion_user_id,
+            'attacker_game_account_id': attacker.game_account_id if attacker else None,
             'attacker_pseudo': attacker.game_account.game_pseudo if attacker else None,
             'attacker_champion_name': attacker.champion.name if attacker else None,
             'attacker_champion_class': attacker.champion.champion_class if attacker else None,
