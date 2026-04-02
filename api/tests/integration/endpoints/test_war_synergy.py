@@ -7,6 +7,7 @@ from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
     execute_post_request,
+    execute_patch_request,
     execute_delete_request,
 )
 from tests.utils.utils_constant import (
@@ -56,12 +57,12 @@ async def _setup_synergy_scenario():
     headers_member = create_auth_headers(user_id=str(USER2_ID))
 
     # Assign both to BG1
-    await execute_post_request(
+    await execute_patch_request(
         f"/alliances/{alliance.id}/members/{owner.id}/group",
         payload={"group": 1},
         headers=headers_owner,
     )
-    await execute_post_request(
+    await execute_patch_request(
         f"/alliances/{alliance.id}/members/{member.id}/group",
         payload={"group": 1},
         headers=headers_owner,
