@@ -22,7 +22,6 @@ export function UserRow({ user, loadUsers, currentUserRole }: UserRowProps) {
       <RowUserRole role={user.role} />
       <RowUserCreatedAt created_at={user.created_at} />
       <RowUserLastLoginDate lastLoginDate={user.last_login_date} />
-      {/* TODO FIX THIS ESLINT ERROR */}
       <UserStatusBadge
         deleted_at={!!user.deleted_at}
         disabled_at={!!user.disabled_at}
