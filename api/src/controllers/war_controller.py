@@ -78,30 +78,7 @@ async def _assert_officer_or_owner(
     alliance = await AllianceService._load_alliance_with_relations(session, alliance_id)
     if alliance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
-
-    # Collect current user's game account IDs
-    user_accounts_result = await session.exec(
-        select(GameAccount).where(GameAccount.user_id == current_user.id)
-    )
-    user_accounts = user_accounts_result.all()
-    user_account_ids = {a.id for a in user_accounts}
-
-    # Check owner
-    if alliance.owner_id in user_account_ids:
-        account = next(a for a in user_accounts if a.id == alliance.owner_id)
-        return account
-
-    # Check officers
-    officer_ids = {off.game_account_id for off in alliance.officers}
-    common = user_account_ids & officer_ids
-    if common:
-        account = next(a for a in user_accounts if a.id in common)
-        return account
-
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="Only the alliance owner or an officer can perform this action",
-    )
+    return await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
 
 
 @war_controller.post(

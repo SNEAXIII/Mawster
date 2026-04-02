@@ -20,6 +20,14 @@ MAX_MEMBERS_PER_ALLIANCE = 30
 
 class AllianceService:
     @staticmethod
+    async def _get_user_accounts(session: SessionDep, user_id: uuid.UUID) -> list[GameAccount]:
+        """Get all game accounts belonging to a user."""
+        result = await session.exec(
+            select(GameAccount).where(GameAccount.user_id == user_id)
+        )
+        return result.all()
+
+    @staticmethod
     async def _get_user_account_ids(session: SessionDep, user_id: uuid.UUID) -> set[uuid.UUID]:
         """Get the set of game account IDs belonging to a user."""
         result = await session.exec(
@@ -67,18 +75,21 @@ class AllianceService:
     @classmethod
     async def _assert_is_owner_or_officer(
         cls, session: SessionDep, alliance: Alliance, current_user_id: uuid.UUID
-    ) -> None:
-        """Check that current_user owns at least one game account that is owner or officer of the alliance."""
-        user_account_ids = await cls._get_user_account_ids(session, current_user_id)
+    ) -> GameAccount:
+        """Check that current_user owns at least one game account that is owner or officer of the alliance.
+        Returns the matching GameAccount (owner or officer account)."""
+        user_accounts = await cls._get_user_accounts(session, current_user_id)
+        user_account_ids = {a.id for a in user_accounts}
 
         # Check owner
         if alliance.owner_id in user_account_ids:
-            return
+            return next(a for a in user_accounts if a.id == alliance.owner_id)
 
         # Check officers
         officer_ids = {off.game_account_id for off in alliance.officers}
-        if user_account_ids & officer_ids:
-            return
+        common = user_account_ids & officer_ids
+        if common:
+            return next(a for a in user_accounts if a.id in common)
 
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
