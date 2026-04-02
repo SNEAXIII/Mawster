@@ -769,6 +769,52 @@ class TestAssignAttacker:
         assert "Wolverine" not in names
 
     @pytest.mark.asyncio
+    async def test_reassign_attacker_on_occupied_node_does_not_count_as_extra(self):
+        """Replacing the attacker on a node already assigned to this member must not
+        trigger the 3-attacker limit — the old assignment is being replaced, not added."""
+        data = await _setup_attacker_scenario()
+        alliance = data["alliance"]
+        war = data["war"]
+        member = data["member"]
+        headers_officer = create_auth_headers(user_id=str(USER_ID))
+        headers_member = create_auth_headers(user_id=str(USER2_ID))
+
+        # Place 3 defenders on nodes 11, 12, 13
+        defender_champs = [("Thor", "Cosmic"), ("Iron Man", "Tech"), ("Hulk", "Science")]
+        for i, (name, cls) in enumerate(defender_champs):
+            c = await push_champion(name=name, champion_class=cls)
+            await execute_post_request(
+                f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
+                payload={"node_number": 11 + i, "champion_id": str(c.id), "stars": 7, "rank": 3, "ascension": 0},
+                headers=headers_officer,
+            )
+
+        # Assign 3 different champions from member's roster to nodes 11, 12, 13
+        attacker_champs_cu = []
+        for i, (name, cls) in enumerate([("Black Panther", "Cosmic"), ("Captain Marvel", "Cosmic"), ("Doctor Strange", "Mystic")]):
+            ac = await push_champion(name=name, champion_class=cls)
+            cu = await push_champion_user(member, ac, stars=7, rank=3)
+            attacker_champs_cu.append(cu)
+            resp = await execute_post_request(
+                f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/{11 + i}/attacker",
+                payload={"champion_user_id": str(cu.id)},
+                headers=headers_member,
+            )
+            assert resp.status_code == 200
+
+        # Replace the attacker on node 11 with a new champion — member still has 3 total
+        # This must NOT be rejected by the limit check (was a bug: counted as 4th attacker)
+        replacement_champ = await push_champion(name="Vision", champion_class="Tech")
+        replacement_cu = await push_champion_user(member, replacement_champ, stars=7, rank=3)
+        response = await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/11/attacker",
+            payload={"champion_user_id": str(replacement_cu.id)},
+            headers=headers_member,
+        )
+        assert response.status_code == 200
+        assert response.json()["attacker_champion_name"] == "Vision"
+
+    @pytest.mark.asyncio
     async def test_assign_attacker_non_member_forbidden(self):
         data = await _setup_attacker_scenario()
         user3 = User(

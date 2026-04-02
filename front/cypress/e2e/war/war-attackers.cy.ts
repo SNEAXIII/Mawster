@@ -169,6 +169,96 @@ describe('War – Attackers mode', () => {
     });
   });
 
+  // ── 3-attacker limit ──────────────────────────────────────────────────────
+
+  it('assigning a 4th attacker is rejected', () => {
+    setupAttackerScenario('atk-limit').then(({ adminToken, memberData, memberAccId, ownerData, allianceId, warId }) => {
+      // Place 3 extra defenders (nodes 11, 12, 13) and load 4 attacker champions
+      cy.apiLoadChampions(adminToken, [
+        { name: 'Thor', cls: 'Cosmic' },
+        { name: 'Captain Marvel', cls: 'Cosmic' },
+        { name: 'Doctor Strange', cls: 'Mystic' },
+        { name: 'Vision', cls: 'Tech' },
+      ]).then((champMap) => {
+        [11, 12, 13].forEach((node, i) => {
+          const name = ['Thor', 'Captain Marvel', 'Doctor Strange'][i];
+          cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 1, node, champMap[name].id, 7, 3, 0);
+        });
+        // Add 4 attacker champions to member's roster
+        const attackerNames = ['Thor', 'Captain Marvel', 'Doctor Strange', 'Vision'];
+        const cuIds: string[] = [];
+        attackerNames.forEach((name) => {
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champMap[name].id, '7r3').then((cu: any) => {
+            cuIds.push(cu.id);
+          });
+        });
+        // Assign 3 attackers → all succeed
+        cy.then(() => {
+          [10, 11, 12].forEach((node, i) => {
+            cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, node, cuIds[i]);
+          });
+        });
+        // Try 4th → should fail with 409
+        cy.then(() => {
+          cy.request({
+            method: 'POST',
+            url: `${Cypress.env('NEXT_PUBLIC_API_URL')}/alliances/${allianceId}/wars/${warId}/bg/1/node/13/attacker`,
+            headers: { Authorization: `Bearer ${memberData.access_token}` },
+            body: { champion_user_id: cuIds[3] },
+            failOnStatusCode: false,
+          }).then((res) => {
+            expect(res.status).to.eq(409);
+          });
+        });
+      });
+    });
+  });
+
+  it('replacing attacker on occupied node via UI does not count as extra (regression)', () => {
+    // Scenario: member already has 3 attackers (nodes 10, 11, 12).
+    // Clicking node 10 and selecting a new champion must reassign, not hit the limit.
+    setupAttackerScenario('atk-replace').then(
+      ({ adminToken, memberData, memberAccId, ownerData, allianceId, warId }) => {
+        cy.apiLoadChampions(adminToken, [
+          { name: 'Thor', cls: 'Cosmic' },
+          { name: 'Captain Marvel', cls: 'Cosmic' },
+          { name: 'Doctor Strange', cls: 'Mystic' },
+          { name: 'Vision', cls: 'Tech' },
+        ]).then((champMap) => {
+          [11, 12, 13].forEach((node, i) => {
+            const name = ['Thor', 'Captain Marvel', 'Doctor Strange'][i];
+            cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 1, node, champMap[name].id, 7, 3, 0);
+          });
+          // Add 4 attacker champions to member's roster
+          const attackerNames = ['Thor', 'Captain Marvel', 'Doctor Strange', 'Vision'];
+          const cuIds: string[] = [];
+          attackerNames.forEach((name) => {
+            cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champMap[name].id, '7r3').then(
+              (cu: any) => {
+                cuIds.push(cu.id);
+              },
+            );
+          });
+          // Assign 3 attackers via API
+          cy.then(() => {
+            [10, 11, 12].forEach((node, i) => {
+              cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, node, cuIds[i]);
+            });
+          });
+          // Via UI: click node 10 and reassign to Vision — must succeed (not hit the limit)
+          cy.then(() => {
+            goToAttackersMode(memberData.user_id);
+            cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+            cy.getByCy('war-attacker-search').should('be.visible');
+            cy.getByCy('attacker-card-Vision').should('be.visible').click();
+            cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
+            cy.getByCy('attacker-entry-node-10').should('contain.text', 'Vision');
+          });
+        });
+      },
+    );
+  });
+
   // ── Member sees their own assigned attacks ────────────────────────────────
 
   it('member can see their own assigned attacks in the attacker panel', () => {
