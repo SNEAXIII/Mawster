@@ -288,7 +288,7 @@ async def add_war_synergy(
     """Add a synergy champion for a battlegroup. All members can add."""
     await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
     return await WarService.add_synergy_attacker(
-        session, war_id, alliance_id, battlegroup, body.champion_user_id, body.target_champion_user_id
+        session, war_id, alliance_id, battlegroup, body.champion_user_id, body.target_champion_user_id, current_user.id
     )
 
 

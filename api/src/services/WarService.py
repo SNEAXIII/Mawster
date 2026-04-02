@@ -556,6 +556,7 @@ class WarService:
         battlegroup: int,
         champion_user_id: uuid.UUID,
         target_champion_user_id: uuid.UUID,
+        current_user_id: uuid.UUID,
     ) -> WarSynergyResponse:
         # 1. Load champion_user and validate it belongs to this alliance + BG
         cu_stmt = (
@@ -568,6 +569,11 @@ class WarService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
 
         game_account = champion_user.game_account
+        if game_account.user_id != current_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only add your own champions as synergy providers",
+            )
         if game_account.alliance_id != alliance_id or game_account.alliance_group != battlegroup:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
