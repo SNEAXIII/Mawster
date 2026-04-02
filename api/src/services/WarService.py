@@ -12,12 +12,14 @@ from src.models.DefensePlacement import DefensePlacement
 from src.models.GameAccount import GameAccount
 from src.models.War import War, WarStatus
 from src.models.WarDefensePlacement import WarDefensePlacement
+from src.models.WarSynergyAttacker import WarSynergyAttacker
 from src.dto.dto_war import (
     WarResponse,
     WarPlacementCreateRequest,
     WarPlacementResponse,
     WarDefenseSummaryResponse,
     AvailableAttackerResponse,
+    WarSynergyResponse,
 )
 from src.utils.db import SessionDep
 
@@ -412,7 +414,7 @@ class WarService:
                 detail="This champion is already placed in the alliance defense",
             )
 
-        # 5. Check member has fewer than 3 attackers in this war+BG.
+        # 5. Check member has fewer than 3 attackers in this war+BG (union of node attackers + synergy).
         # Use a direct DB query instead of relying on selectinload being populated on all placements.
         attacker_count_result = await session.exec(
             select(WarDefensePlacement)
@@ -428,6 +430,18 @@ class WarService:
         all_attackers = attacker_count_result.all()
         all_attackers_ids = set(a.attacker_champion_user_id for a in all_attackers if a.node_number != node_number)  # exclude the current node since we're replacing any existing attacker there
         all_attackers_ids.add(champion_user_id)  # include the new one we're trying to add
+        # Union with synergy attackers (couteau suisse deduplicates automatically)
+        synergy_result = await session.exec(
+            select(WarSynergyAttacker).where(
+                and_(
+                    WarSynergyAttacker.war_id == war_id,
+                    WarSynergyAttacker.battlegroup == battlegroup,
+                    WarSynergyAttacker.game_account_id == game_account.id,
+                )
+            )
+        )
+        synergy_ids = {s.champion_user_id for s in synergy_result.all()}
+        all_attackers_ids = all_attackers_ids | synergy_ids
         member_attacker_count = len(all_attackers_ids)
         if member_attacker_count > 3:
             raise HTTPException(
@@ -492,3 +506,179 @@ class WarService:
         return WarPlacementResponse.model_validate(
             await cls._load_placement(session, placement.id)
         )
+
+    # ─── Synergy endpoints ────────────────────────────────────────────────────
+
+    @classmethod
+    async def _load_synergy(cls, session: SessionDep, synergy_id: uuid.UUID) -> WarSynergyAttacker:
+        stmt = (
+            select(WarSynergyAttacker)
+            .where(WarSynergyAttacker.id == synergy_id)
+            .options(
+                selectinload(WarSynergyAttacker.game_account),  # type: ignore[arg-type]
+                selectinload(WarSynergyAttacker.champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+                selectinload(WarSynergyAttacker.target_champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+            )
+        )
+        result = await session.exec(stmt)
+        return result.one()
+
+    @classmethod
+    async def get_synergy_attackers(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        battlegroup: int,
+    ) -> list[WarSynergyResponse]:
+        stmt = (
+            select(WarSynergyAttacker)
+            .where(
+                and_(
+                    WarSynergyAttacker.war_id == war_id,
+                    WarSynergyAttacker.battlegroup == battlegroup,
+                )
+            )
+            .options(
+                selectinload(WarSynergyAttacker.game_account),  # type: ignore[arg-type]
+                selectinload(WarSynergyAttacker.champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+                selectinload(WarSynergyAttacker.target_champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+            )
+        )
+        result = await session.exec(stmt)
+        return [WarSynergyResponse.model_validate(s) for s in result.all()]
+
+    @classmethod
+    async def add_synergy_attacker(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+        battlegroup: int,
+        champion_user_id: uuid.UUID,
+        target_champion_user_id: uuid.UUID,
+    ) -> WarSynergyResponse:
+        # 1. Load champion_user and validate it belongs to this alliance + BG
+        cu_stmt = (
+            select(ChampionUser)
+            .where(ChampionUser.id == champion_user_id)
+            .options(selectinload(ChampionUser.game_account))  # type: ignore[arg-type]
+        )
+        champion_user = (await session.exec(cu_stmt)).first()
+        if champion_user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+
+        game_account = champion_user.game_account
+        if game_account.alliance_id != alliance_id or game_account.alliance_group != battlegroup:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This champion does not belong to a member of this alliance battlegroup",
+            )
+
+        # 2. target_champion_user_id must be assigned as a node attacker in this war+BG
+        target_check = await session.exec(
+            select(WarDefensePlacement).where(
+                and_(
+                    WarDefensePlacement.war_id == war_id,
+                    WarDefensePlacement.battlegroup == battlegroup,
+                    WarDefensePlacement.attacker_champion_user_id == target_champion_user_id,
+                )
+            )
+        )
+        if target_check.first() is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Target champion is not assigned as a node attacker in this war+BG",
+            )
+
+        # 3. champion_user_id not already in regular alliance defense for this BG
+        defense_check = await session.exec(
+            select(DefensePlacement).where(
+                and_(
+                    DefensePlacement.champion_user_id == champion_user_id,
+                    DefensePlacement.alliance_id == alliance_id,
+                    DefensePlacement.battlegroup == battlegroup,
+                )
+            )
+        )
+        if defense_check.first():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This champion is already placed in the alliance defense",
+            )
+
+        # 4. 3-slot limit: union of node attackers + synergy attackers
+        node_result = await session.exec(
+            select(WarDefensePlacement)
+            .join(ChampionUser, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
+            .where(
+                and_(
+                    WarDefensePlacement.war_id == war_id,
+                    WarDefensePlacement.battlegroup == battlegroup,
+                    ChampionUser.game_account_id == game_account.id,
+                )
+            )
+        )
+        node_ids = {p.attacker_champion_user_id for p in node_result.all()}
+
+        synergy_result = await session.exec(
+            select(WarSynergyAttacker).where(
+                and_(
+                    WarSynergyAttacker.war_id == war_id,
+                    WarSynergyAttacker.battlegroup == battlegroup,
+                    WarSynergyAttacker.game_account_id == game_account.id,
+                )
+            )
+        )
+        synergy_ids = {s.champion_user_id for s in synergy_result.all()}
+
+        total_slots = len(node_ids | synergy_ids | {champion_user_id})
+        if total_slots > 3:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This member already has 3 attackers assigned in this battlegroup",
+            )
+
+        # 5. Insert (unique constraint handles duplicate)
+        synergy = WarSynergyAttacker(
+            war_id=war_id,
+            battlegroup=battlegroup,
+            game_account_id=game_account.id,
+            champion_user_id=champion_user_id,
+            target_champion_user_id=target_champion_user_id,
+        )
+        session.add(synergy)
+        try:
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This champion is already a synergy provider in this war+BG",
+            )
+
+        return WarSynergyResponse.model_validate(
+            await cls._load_synergy(session, synergy.id)
+        )
+
+    @classmethod
+    async def remove_synergy_attacker(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        battlegroup: int,
+        champion_user_id: uuid.UUID,
+    ) -> None:
+        result = await session.exec(
+            select(WarSynergyAttacker).where(
+                and_(
+                    WarSynergyAttacker.war_id == war_id,
+                    WarSynergyAttacker.battlegroup == battlegroup,
+                    WarSynergyAttacker.champion_user_id == champion_user_id,
+                )
+            )
+        )
+        synergy = result.first()
+        if synergy is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Synergy attacker not found")
+        await session.delete(synergy)
+        await session.commit()

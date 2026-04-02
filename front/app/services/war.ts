@@ -48,6 +48,22 @@ export interface AvailableAttacker {
   rarity: string;
 }
 
+export interface WarSynergy {
+  id: string;
+  war_id: string;
+  battlegroup: number;
+  game_account_id: string;
+  champion_user_id: string;
+  target_champion_user_id: string;
+  champion_name: string;
+  champion_class: string;
+  image_url: string | null;
+  rarity: string;
+  target_champion_name: string;
+  game_pseudo: string;
+  created_at: string;
+}
+
 // ─── Helpers ─────────────────────────────────────────────
 
 const PROXY = '/api/back';
@@ -233,4 +249,54 @@ export async function updateWarKo(
   );
   await throwOnError(response, 'Failed to update KO count');
   return response.json();
+}
+
+// ─── Synergy API ──────────────────────────────────────────
+
+export async function getWarSynergies(
+  allianceId: string,
+  warId: string,
+  battlegroup: number
+): Promise<WarSynergy[]> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy`,
+    { headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to load synergy attackers');
+  return response.json();
+}
+
+export async function addWarSynergy(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  championUserId: string,
+  targetChampionUserId: string
+): Promise<WarSynergy> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy`,
+    {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        champion_user_id: championUserId,
+        target_champion_user_id: targetChampionUserId,
+      }),
+    }
+  );
+  await throwOnError(response, 'Failed to add synergy attacker');
+  return response.json();
+}
+
+export async function removeWarSynergy(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  championUserId: string
+): Promise<void> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy/${championUserId}`,
+    { method: 'DELETE', headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to remove synergy attacker');
 }

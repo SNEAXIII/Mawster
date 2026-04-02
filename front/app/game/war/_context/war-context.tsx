@@ -19,6 +19,7 @@ import {
   type WarPlacement,
   type WarDefenseSummary,
   type AvailableAttacker,
+  type WarSynergy,
   getCurrentWar,
   createWar,
   endWar,
@@ -29,6 +30,9 @@ import {
   assignWarAttacker,
   removeWarAttacker,
   updateWarKo,
+  getWarSynergies,
+  addWarSynergy,
+  removeWarSynergy,
 } from '@/app/services/war';
 import { WarMode } from '../_components/war-types';
 
@@ -88,6 +92,11 @@ interface WarContextValue {
   handleAssignAttacker: (attacker: AvailableAttacker) => Promise<void>;
   handleRemoveAttacker: (node: number) => Promise<void>;
   handleUpdateKo: (node: number, newKo: number) => Promise<void>;
+
+  // Synergy
+  synergies: WarSynergy[];
+  handleAddSynergy: (championUserId: string, targetChampionUserId: string) => Promise<void>;
+  handleRemoveSynergy: (championUserId: string) => Promise<void>;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -126,6 +135,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   // ─── Defense state ─────────────────────────────────────────────────────────
   const [warSummary, setWarSummary] = useState<WarDefenseSummary | null>(null);
+  const [synergies, setSynergies] = useState<WarSynergy[]>([]);
   const [warLoading, setWarLoading] = useState(false);
   const [selectorNode, setSelectorNode] = useState<number | null>(null);
   const [attackerSelectorNode, setAttackerSelectorNode] = useState<number | null>(null);
@@ -180,8 +190,12 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       if (!selectedAllianceId || !activeWarId) return;
       if (!silent) setWarLoading(true);
       try {
-        const summary = await getWarDefense(selectedAllianceId, activeWarId, selectedBg);
+        const [summary, synergyList] = await Promise.all([
+          getWarDefense(selectedAllianceId, activeWarId, selectedBg),
+          getWarSynergies(selectedAllianceId, activeWarId, selectedBg),
+        ]);
         setWarSummary(summary);
+        setSynergies(synergyList);
       } catch {
         if (!silent) toast.error(tRef.current.game.war.loadError);
       } finally {
@@ -425,6 +439,36 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
   };
 
+  const handleAddSynergy = async (championUserId: string, targetChampionUserId: string) => {
+    if (!selectedAllianceId || !activeWarId) return;
+    try {
+      const synergy = await addWarSynergy(
+        selectedAllianceId,
+        activeWarId,
+        selectedBg,
+        championUserId,
+        targetChampionUserId
+      );
+      toast.success(
+        t.game.war.synergy.addSuccess.replace('{target}', synergy.target_champion_name)
+      );
+      setSynergies((prev) => [...prev, synergy]);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.synergy.addError);
+    }
+  };
+
+  const handleRemoveSynergy = async (championUserId: string) => {
+    if (!selectedAllianceId || !activeWarId) return;
+    try {
+      await removeWarSynergy(selectedAllianceId, activeWarId, selectedBg, championUserId);
+      toast.success(t.game.war.synergy.removeSuccess);
+      setSynergies((prev) => prev.filter((s) => s.champion_user_id !== championUserId));
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.synergy.removeError);
+    }
+  };
+
   // ─── Context value ─────────────────────────────────────────────────────────
 
   const value = useMemo<WarContextValue>(
@@ -465,6 +509,9 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       handleAssignAttacker,
       handleRemoveAttacker,
       handleUpdateKo,
+      synergies,
+      handleAddSynergy,
+      handleRemoveSynergy,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -486,6 +533,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       showEndConfirm,
       pendingRemoveNode,
       handleNodeClick,
+      synergies,
     ]
   );
 

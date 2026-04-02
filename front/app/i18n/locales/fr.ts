@@ -301,6 +301,17 @@ const fr: Translations = {
       availableAttackersError: 'Erreur lors du chargement des attaquants disponibles',
       attackersPanelTitle: '{assigned}/50 combats attribués',
       memberAttackers: '{count}/3',
+      synergy: {
+        add: 'Ajouter une synergie',
+        revoke: 'Révoquer',
+        label: 'Synergie',
+        for: 'Synergie pour : {champion}',
+        tooltip: 'Champion synergie — apporte un bonus passif pour toute la guerre',
+        addSuccess: 'Synergie ajoutée pour {target}',
+        addError: "Erreur lors de l'ajout de la synergie",
+        removeSuccess: 'Synergie révoquée',
+        removeError: 'Erreur lors de la révocation de la synergie',
+      },
     },
   },
 
