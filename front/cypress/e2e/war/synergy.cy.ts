@@ -66,7 +66,7 @@ describe('War Synergy', () => {
               cy.getByCy('synergy-trigger-Wolverine').click();
 
               // Revoke
-              cy.getByCy('synergy-revoke-Wolverine').click();
+              cy.getByCy('synergy-revoke-Deadpool').click();
 
               // Badge should be gone
               cy.getByCy('synergy-trigger-Wolverine').should('not.contain', 'Deadpool');
