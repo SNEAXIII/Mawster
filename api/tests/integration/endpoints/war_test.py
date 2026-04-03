@@ -636,7 +636,7 @@ class TestAvailableAttackers:
 
         headers = create_auth_headers(user_id=str(USER2_ID))
         response = await execute_get_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-attackers/{data['member'].id}",
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-attackers?attacker_id={data['member'].id}",
             headers=headers,
         )
         assert response.status_code == 200
@@ -661,7 +661,7 @@ class TestAvailableAttackers:
         await load_objects([user3, acc3])
 
         response = await execute_get_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-attackers/{data['member'].id}",
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-attackers?attacker_id={data['member'].id}",
             headers=create_auth_headers(user_id=str(USER3_ID)),
         )
         assert response.status_code == 403

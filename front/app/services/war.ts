@@ -193,7 +193,7 @@ export async function getAvailableAttackers(
   battlegroup: number,
   targetGameAccountId?: string
 ): Promise<AvailableAttacker[]> {
-  const suffix = targetGameAccountId ? `/${targetGameAccountId}` : '';
+  const suffix = targetGameAccountId ? `?attacker_id=${targetGameAccountId}` : '';
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-attackers${suffix}`,
     { headers: jsonHeaders }

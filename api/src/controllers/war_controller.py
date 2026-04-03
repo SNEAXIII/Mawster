@@ -190,24 +190,9 @@ async def get_available_attackers(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     war: WarDep,
+    attacker_id: uuid.UUID | None = None,
 ):
-    """List available attackers (BG roster minus defenders). All members can view."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
-    return await WarService.get_available_attackers(session, alliance_id, battlegroup)
-
-@war_controller.get(
-    "/{war_id}/bg/{battlegroup}/available-attackers/{attacker_id}",
-    response_model=list[AvailableAttackerResponse],
-)
-async def get_available_attackers_for_a_user(
-    alliance_id: uuid.UUID,
-    battlegroup: BattlegroupPath,
-    attacker_id: uuid.UUID,
-    session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
-    war: WarDep,
-):
-    """List available attackers (BG roster minus defenders). All members can view."""
+    """List available attackers (BG roster minus defenders). Pass attacker_id to filter to a single member."""
     await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
     return await WarService.get_available_attackers(session, alliance_id, battlegroup, attacker_id)
 
