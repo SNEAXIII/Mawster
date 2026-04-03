@@ -611,22 +611,192 @@ def kill_probably_used_ports(worker_number: int) -> None:
     kill_ports(ports_to_free)
 
 
+# ── Distributed-runner helpers ────────────────────────────────────────────────
+
+def write_worker_stats(worker: int, stats: dict) -> None:
+    """Persist per-worker cypress stats for the --merge step."""
+    out = worker_log_dir(worker) / "stats.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(stats, ensure_ascii=False), encoding="utf-8")
+
+
+def read_worker_stats(worker: int) -> dict:
+    """Read persisted stats for one worker."""
+    p = worker_log_dir(worker) / "stats.json"
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def run_prep(base_env: dict) -> None:
+    """Build the frontend once, then exit.
+
+    Run this before launching distributed workers:
+        python scripts/e2e_parallel.py --prep
+    """
+    check_mariadb_running()
+    try:
+        build_frontend(base_env)
+    except RuntimeError as exc:
+        log(f"ERROR: {exc}")
+        sys.exit(1)
+    log("Prep complete. Launch workers with: --worker-id N --total-workers M")
+
+
+def run_merge(total_workers: int) -> None:
+    """Merge per-worker stats/logs into a single report.json.
+
+    Run this after all workers have finished:
+        python scripts/e2e_parallel.py --merge --workers N
+    """
+    log(f"Merging results from {total_workers} worker(s)...")
+    worker_stats = [read_worker_stats(i) for i in range(total_workers)]
+
+    merged: dict[str, int] = {}
+    for stats in worker_stats:
+        for key, val in stats.items():
+            if isinstance(val, (int, float)):
+                merged[key] = int(merged.get(key, 0) + val)
+
+    if merged:
+        log("-" * 50)
+        log("MERGED RESULTS (all workers combined):")
+        for key in ["tests", "passing", "failing", "pending", "skipped"]:
+            log(f"  {key.capitalize():<10}: {merged.get(key, 0)}")
+        log("-" * 50)
+
+    # total_duration = wall time of the slowest worker (they ran in parallel)
+    total_duration = max(
+        (s.get("duration_seconds", 0) for s in worker_stats), default=0.0
+    )
+    build_merged_report(merged, worker_stats, total_duration)
+
+    failing = merged.get("failing", 0)
+    minutes, seconds = divmod(int(total_duration), 60)
+    duration_str = f"{minutes}m{seconds:02d}s" if minutes else f"{seconds}s"
+    log(f"Done in {duration_str}. {'All tests passed.' if failing == 0 else f'{failing} test(s) failed.'}")
+    sys.exit(1 if failing > 0 else 0)
+
+
+def run_as_single_worker(
+    worker_id: int,
+    total_workers: int,
+    quiet: bool,
+    resolved_specs: set[Path],
+    base_env: dict,
+) -> None:
+    """Run as one isolated worker in a distributed setup.
+
+    Does NOT build the frontend (assumes --prep was already run).
+    Does NOT merge results (run --merge after all workers finish).
+
+    Usage:
+        python scripts/e2e_parallel.py --worker-id 0 --total-workers 4
+    """
+    log(f"Worker mode: id={worker_id}/{total_workers - 1}")
+    start_time = time.time()
+
+    ports = [BASE_API_PORT + worker_id, BASE_FRONT_PORT + worker_id]
+    log(f"Freeing ports: {ports}")
+    kill_ports(ports)
+
+    check_mariadb_running()
+
+    procs: list[subprocess.Popen] = []
+
+    def cleanup() -> None:
+        log(f"Worker {worker_id}: shutting down...")
+        for p in procs:
+            try:
+                OS.terminate_proc(p)
+            except Exception:
+                pass
+        for p in procs:
+            try:
+                p.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                try:
+                    OS.kill_proc(p)
+                except Exception:
+                    pass
+        # Do NOT remove .next-e2e — other workers may still be running.
+
+    atexit.register(cleanup)
+
+    def handle_sigint(sig, frame) -> None:
+        log("Interrupted — cleaning up...")
+        cleanup()
+        sys.exit(1)
+
+    signal.signal(signal.SIGINT, handle_sigint)
+    if hasattr(signal, "SIGTERM"):
+        signal.signal(signal.SIGTERM, handle_sigint)
+
+    try:
+        create_db(worker_id)
+        procs.append(start_backend(worker_id, base_env, quiet))
+        procs.append(start_frontend(worker_id, base_env, quiet))
+    except Exception as exc:
+        log(f"ERROR: {exc}")
+        sys.exit(1)
+
+    try:
+        wait_for_http(f"http://localhost:{BASE_API_PORT + worker_id}", f"Backend {worker_id}")
+        wait_for_http(
+            f"http://localhost:{BASE_FRONT_PORT + worker_id}/api/auth/providers",
+            f"Frontend {worker_id}",
+        )
+    except TimeoutError as exc:
+        log(f"ERROR: {exc}")
+        sys.exit(1)
+
+    if resolved_specs:
+        specs = list(resolved_specs)
+        log(f"Worker {worker_id}: running {len(specs)} explicit spec(s)")
+    else:
+        all_specs = get_spec_files()
+        log(f"Distributing {len(all_specs)} spec(s) across {total_workers} worker(s)...")
+        buckets = distribute_specs(all_specs, total_workers)
+        specs = buckets[worker_id]
+        log(f"Worker {worker_id}: {len(specs)} spec(s) assigned")
+
+    stats: dict = {}
+    exit_code = run_cypress(worker_id, specs, stats)
+    write_worker_stats(worker_id, stats)
+
+    minutes, seconds = divmod(int(time.time() - start_time), 60)
+    duration_str = f"{minutes}m{seconds:02d}s" if minutes else f"{seconds}s"
+    log(f"Worker {worker_id} done in {duration_str}. Exit code: {exit_code}")
+    sys.exit(exit_code)
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run Mawster E2E tests in parallel.")
+    parser = argparse.ArgumentParser(
+        description="Run Mawster E2E tests in parallel.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Modes:
+  threaded (default)   python scripts/e2e_parallel.py --workers 2
+  prep                 python scripts/e2e_parallel.py --prep
+  worker               python scripts/e2e_parallel.py --worker-id 0 --total-workers 4
+  merge                python scripts/e2e_parallel.py --merge --workers 4
+        """,
+    )
     parser.add_argument(
         "--workers",
         type=int,
         default=2,
         metavar="N",
-        choices=range(1, 9),
-        help="Number of parallel workers (1-8, default: 2)",
+        choices=range(1, 17),
+        help="Number of parallel workers (1-16, default: 2). Also used by --merge.",
     )
     parser.add_argument(
         "--spec",
         type=str,
         default=None,
         metavar="PATTERN",
-        help="Run a single spec file (relative to front/cypress/e2e/ or absolute glob). Forces --workers 1.",
+        help="Run specific spec file(s), comma-separated (relative to front/cypress/e2e/).",
     )
     parser.add_argument(
         "--quiet",
@@ -634,16 +804,64 @@ def main() -> None:
         action="store_true",
         help="Hide backend and frontend logs (Cypress output still shown)",
     )
+    # ── Distributed-runner flags ──────────────────────────────────────────────
+    parser.add_argument(
+        "--prep",
+        action="store_true",
+        help="Build the frontend only (next build) and exit. Run before launching distributed workers.",
+    )
+    parser.add_argument(
+        "--worker-id",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Run as worker N in a distributed setup. Requires --total-workers.",
+    )
+    parser.add_argument(
+        "--total-workers",
+        type=int,
+        default=None,
+        metavar="M",
+        help="Total number of workers in the distributed run. Required with --worker-id.",
+    )
+    parser.add_argument(
+        "--merge",
+        action="store_true",
+        help="Merge per-worker results into report.json. Use --workers N to set the worker count.",
+    )
     args = parser.parse_args()
     quiet = args.quiet
 
+    base_env = os.environ.copy()
+    base_env.setdefault("NEXTAUTH_SECRET", "e2e-local-nextauth-secret")
+
     resolved_specs: set[Path] = set()
-    worker_number = args.workers
     if args.spec:
         resolved_specs = set(resolve_spec_paths(args.spec))
-        log(
-            f"--spec provided: {len(resolved_specs)} spec(s), using {worker_number} worker(s)"
-        )
+
+    # ── Route to the requested mode ───────────────────────────────────────────
+
+    if args.prep:
+        run_prep(base_env)
+        return
+
+    if args.merge:
+        run_merge(args.workers)
+        return
+
+    if args.worker_id is not None:
+        if args.total_workers is None:
+            parser.error("--worker-id requires --total-workers")
+        if not (0 <= args.worker_id < args.total_workers):
+            parser.error(f"--worker-id must be in range [0, {args.total_workers - 1}]")
+        run_as_single_worker(args.worker_id, args.total_workers, quiet, resolved_specs, base_env)
+        return
+
+    # ── Default: threaded mode (existing behaviour) ───────────────────────────
+
+    worker_number = args.workers
+    if resolved_specs:
+        log(f"--spec provided: {len(resolved_specs)} spec(s), using {worker_number} worker(s)")
     worker_number = (
         min(worker_number, len(resolved_specs)) if resolved_specs else args.workers
     )
@@ -655,8 +873,6 @@ def main() -> None:
 
     check_mariadb_running()
 
-    base_env = os.environ.copy()
-    base_env.setdefault("NEXTAUTH_SECRET", "e2e-local-nextauth-secret")
     procs: list[subprocess.Popen] = []
     lock = threading.Lock()
 

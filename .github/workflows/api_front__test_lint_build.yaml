@@ -43,8 +43,9 @@ jobs:
         working-directory: ${{ env.WORKDIR }}
         run: uv run pytest tests/integration -v --tb=short -n auto
 
-  e2e:
-    name: E2E Tests
+  # ── Phase 1: build frontend + API image once, share via artifacts/cache ──────
+  e2e-prepare:
+    name: E2E Prepare (build)
     runs-on: ubuntu-latest
     needs: lint-test-python
     env:
@@ -70,18 +71,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      # ── API setup ──
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           enable-cache: true
-      - name: Install API dependencies
-        working-directory: ./api
-        run: uv sync
-
-      # ── Frontend setup ──
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -91,15 +85,11 @@ jobs:
       - name: Install frontend dependencies
         working-directory: ./front
         run: npm ci
-
-      # ── MariaDB client (needed by e2e_parallel.py to create per-worker DBs) ──
-      - name: Install dependencies
-        run: sudo apt-get install -y mariadb-client xvfb
-
-      # ── Build API Docker image (validates Dockerfile + seeds GHA layer cache) ──
+      - name: Install mariadb-client
+        run: sudo apt-get install -y mariadb-client
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Build API Docker image
+      - name: Build API Docker image (seeds GHA layer cache)
         uses: docker/build-push-action@v6
         with:
           context: ./api
@@ -107,13 +97,119 @@ jobs:
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Build frontend (.next-e2e)
+        run: python3 scripts/e2e_parallel.py --prep --quiet
+      - name: Upload .next-e2e artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-next-build
+          path: front/.next-e2e
+          retention-days: 1
 
-      # ── Run Cypress ──
-      - name: Run Cypress E2E tests
-        run: python3 scripts/e2e_parallel.py --workers 2 --quiet
-      - name: Upload Cypress results
+  # ── Phase 2: 4 workers en parallèle, chacun sur son propre runner ────────────
+  e2e-worker:
+    name: E2E Worker ${{ matrix.worker_id }}
+    runs-on: ubuntu-latest
+    needs: e2e-prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        worker_id: [0, 1, 2, 3]
+    env:
+      MARIADB_USER: user
+      MARIADB_PASSWORD: password
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: mawster-testing
+    services:
+      mariadb-test:
+        image: mariadb
+        env:
+          MARIADB_USER: user
+          MARIADB_PASSWORD: password
+          MARIADB_ROOT_PASSWORD: rootpassword
+          MARIADB_DATABASE: mawster-testing
+        ports:
+          - 3307:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+      - name: Install API dependencies
+        working-directory: ./api
+        run: uv sync
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: ./front
+        run: npm ci
+      - name: Install mariadb-client
+        run: sudo apt-get install -y mariadb-client xvfb
+      - name: Download .next-e2e artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-next-build
+          path: front/.next-e2e
+      - name: Run E2E worker ${{ matrix.worker_id }}
+        run: >
+          python3 scripts/e2e_parallel.py
+          --worker-id ${{ matrix.worker_id }}
+          --total-workers 4
+          --quiet
+      - name: Upload worker results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results-${{ matrix.worker_id }}
+          path: front/cypress/results/workers/worker-${{ matrix.worker_id }}
+          retention-days: 1
+
+  # ── Phase 3: merge tous les résultats en un seul report.json ─────────────────
+  e2e-merge:
+    name: E2E Merge Results
+    runs-on: ubuntu-latest
+    needs: e2e-worker
+    if: always()
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Download worker 0 results
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-results-0
+          path: front/cypress/results/workers/worker-0
+      - name: Download worker 1 results
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-results-1
+          path: front/cypress/results/workers/worker-1
+      - name: Download worker 2 results
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-results-2
+          path: front/cypress/results/workers/worker-2
+      - name: Download worker 3 results
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-results-3
+          path: front/cypress/results/workers/worker-3
+      - name: Merge results
+        run: python3 scripts/e2e_parallel.py --merge --workers 4
+      - name: Upload final report
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: cypress-results
           path: front/cypress/results
@@ -161,7 +257,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - changes
-      - e2e
+      - e2e-merge
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -193,7 +289,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - changes
-      - e2e
+      - e2e-merge
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
