@@ -17,6 +17,7 @@ medium:
     ne pas tout display quand on veut placer un def
     faire un selecteur de joueur pour display son path
     bloquer les lignes si le boug peut pas aller a un endroit
+    backup db auto google
 
 
 prio:
@@ -25,9 +26,8 @@ prio:
     afficheer un attaquant préf seletion attaque + case a cocher pour filter
     mettre les prefight
     mettre en couleur les combat d'un boug
-    ne pas rerender le tree quand un delete un champ
-    fixer la scoll bar en attaque trop relou
-    fixer faire en sorte que ca auto selext le champs de saisi de champ
+    mettre les bans
+    faire un refresh dynamique
 
-ultra prio:
-    backup db
+criTIQUE
+    corriger les syns, ca prends les syn du compte user connecté par celui qui doit etre ciblé

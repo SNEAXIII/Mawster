@@ -1,0 +1,1 @@
+0 8,10,12,14,16,18,20,22 * * * /usr/local/bin/backup.sh >> /var/log/backup.log 2>&1

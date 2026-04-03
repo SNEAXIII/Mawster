@@ -18,7 +18,7 @@ Lint: `uvx ruff check` (run at end of every backend session)
 
 **Frontend** (`front/`): `npm run dev` / `npm run build` (run build to catch TS errors)
 
-**E2E**: `mcp__cypress-runner__run_parallel` — source of truth. Pass `spec_files=["roster/foo.cy.ts"]` for targeted runs. Requires Docker (mariadb-test on port 3307).
+**E2E**: Always use the `/test-e2e` skill — **never** call `mcp__cypress-runner__run_parallel` directly. For failing tests only: `/test-e2e-failing`. Pass `spec_files=["roster/foo.cy.ts"]` for targeted runs. Requires Docker (mariadb-test on port 3307).
 
 **Servers**: use `/server-dev`, `/server-stop`, `/server-status` skills.
 
@@ -90,6 +90,7 @@ DB: MariaDB (prod), SQLite in-memory (integration tests). Migrations via Alembic
 - **i18n**: `useI18n()` always — never hardcode strings; add keys to both `en.ts` and `fr.ts`
 - **Icons**: `lucide-react` general / `react-icons/fi` action buttons
 - **Styling**: Tailwind semantic tokens (`bg-card`, `text-muted-foreground`), dark mode first
+- **Explain changes**: After every Edit/Write, briefly explain what changed, why, and the expected effect
 
 ---
 
@@ -104,6 +105,14 @@ Keep raw output out of context. Rules:
 - Responses ≤500 words; write artifacts to files
 
 Tools: `ctx_batch_execute` (research) → `ctx_search` (follow-up) → `ctx_execute`/`ctx_execute_file` (processing) → `ctx_fetch_and_index` + `ctx_search` (web)
+
+**`ctx_batch_execute` usage — parameters must be JSON arrays, NOT strings:**
+```json
+{
+  "commands": ["ls backup/", "cat backup/backup.sh"],
+  "queries": ["backup system structure", "docker compose service"]
+}
+```
 
 ---
 

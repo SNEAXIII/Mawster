@@ -159,7 +159,7 @@ function waitForPort(port: number, timeoutMs: number): Promise<boolean> {
 async function startDev(): Promise<State> {
   stopMode('dev');
 
-  execSync('docker compose -f compose-dev.yaml up mariadb phpmyadmin -d', { cwd: ROOT, stdio: 'pipe' });
+  execSync('docker compose -f compose-dev.yaml up mariadb-dev phpmyadmin-dev -d', { cwd: ROOT, stdio: 'pipe' });
 
   const apiPid = spawnDetached(['uv', 'run', 'fastapi', 'dev', '--reload'], API_DIR);
   const frontPid = spawnDetached(['npm', 'run', 'dev'], FRONT_DIR);

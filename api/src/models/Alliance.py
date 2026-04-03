@@ -24,7 +24,6 @@ class Alliance(SQLModel, table=True):
         )
     )
     created_at: datetime = Field(default_factory=datetime.now)
-    # TODO: add url field later
 
     # Relations
     owner: "GameAccount" = Relationship(

@@ -754,6 +754,41 @@ Cypress.Commands.add('apiEndWar', (token: string, allianceId: string, warId: str
   });
 });
 
+Cypress.Commands.add(
+  'apiAddWarSynergy',
+  (
+    token: string,
+    allianceId: string,
+    warId: string,
+    battlegroup: number,
+    championUserId: string,
+    targetChampionUserId: string,
+  ) => {
+    cy.request({
+      method: 'POST',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { champion_user_id: championUserId, target_champion_user_id: targetChampionUserId },
+    }).then((res) => {
+      expect(res.status).to.eq(201);
+      return res.body;
+    });
+  },
+);
+
+Cypress.Commands.add(
+  'apiRemoveWarSynergy',
+  (token: string, allianceId: string, warId: string, battlegroup: number, championUserId: string) => {
+    cy.request({
+      method: 'DELETE',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy/${championUserId}`,
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((res) => {
+      expect(res.status).to.eq(204);
+    });
+  },
+);
+
 // ── War setup helper ──────────────────────────────────────────────────────────
 
 export function setupWarOwner(

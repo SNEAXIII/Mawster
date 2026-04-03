@@ -244,6 +244,7 @@ const fr: Translations = {
         "Aucune guerre en cours, contactez vos officiers d'alliance pour déclarer une guerre.",
       modeDefenders: 'Défenseurs',
       modeAttackers: 'Attaquants',
+      modePlan: 'Plan',
       opponentName: "Nom de l'adversaire",
       noWar: 'Aucune guerre déclarée.',
       selectWar: 'Sélectionner une guerre',
@@ -287,6 +288,9 @@ const fr: Translations = {
       assignError: "Erreur lors de l'assignation de l'attaquant",
       removeAttackerSuccess: 'Attaquant retiré',
       removeAttackerError: "Erreur lors du retrait de l'attaquant",
+      replaceDefenderWithAttackerTitle: 'Remplacer le défenseur',
+      replaceDefenderWithAttackerDesc:
+        "Un attaquant est déjà assigné à ce nœud. Remplacer le défenseur supprimera également l'attaquant. Continuer ?",
       removeDefenderWithAttackerTitle: 'Retirer le défenseur',
       removeDefenderWithAttackerDesc:
         "Un attaquant est déjà assigné à ce nœud. Retirer le défenseur supprimera également l'attaquant. Continuer ?",
@@ -297,6 +301,17 @@ const fr: Translations = {
       availableAttackersError: 'Erreur lors du chargement des attaquants disponibles',
       attackersPanelTitle: '{assigned}/50 combats attribués',
       memberAttackers: '{count}/3',
+      synergy: {
+        add: 'Ajouter une synergie',
+        revoke: 'Révoquer',
+        label: 'Synergie',
+        for: 'Synergie pour : {champion}',
+        tooltip: 'Champion synergie — apporte un bonus passif pour toute la guerre',
+        addSuccess: 'Synergie ajoutée pour {target}',
+        addError: "Erreur lors de l'ajout de la synergie",
+        removeSuccess: 'Synergie révoquée',
+        removeError: 'Erreur lors de la révocation de la synergie',
+      },
     },
   },
 

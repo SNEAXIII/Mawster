@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from starlette import status
 
 from src.dto.dto_war import (
@@ -13,17 +13,16 @@ from src.dto.dto_war import (
     WarAttackerAssignRequest,
     WarKoUpdateRequest,
     AvailableAttackerResponse,
+    WarSynergyCreateRequest,
+    WarSynergyResponse,
 )
 from src.models import User
-from src.models.GameAccount import GameAccount
 from src.models.War import War
-from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.services.AllianceService import AllianceService
 from src.services.AuthService import AuthService
 from src.services.WarService import WarService
 from src.utils.db import SessionDep
 from src.utils.path_params import BattlegroupPath
-from sqlmodel import select
 
 war_controller = APIRouter(
     prefix="/alliances/{alliance_id}/wars",
@@ -48,60 +47,6 @@ async def _get_war(
 WarDep = Annotated[War, Depends(_get_war)]
 
 
-async def _get_user_account_in_alliance(
-    session: SessionDep,
-    current_user: User,
-    alliance_id: uuid.UUID,
-) -> GameAccount:
-    """Find the current user's game account that belongs to this alliance."""
-    result = await session.exec(
-        select(GameAccount).where(
-            GameAccount.user_id == current_user.id,
-            GameAccount.alliance_id == alliance_id,
-        )
-    )
-    account = result.first()
-    if account is None:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a member of this alliance",
-        )
-    return account
-
-
-async def _assert_officer_or_owner(
-    session: SessionDep,
-    current_user: User,
-    alliance_id: uuid.UUID,
-) -> GameAccount:
-    """Ensure the current user is owner or officer of the alliance."""
-    alliance = await AllianceService._load_alliance_with_relations(session, alliance_id)
-    if alliance is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
-
-    # Collect current user's game account IDs
-    user_accounts_result = await session.exec(
-        select(GameAccount).where(GameAccount.user_id == current_user.id)
-    )
-    user_accounts = user_accounts_result.all()
-    user_account_ids = {a.id for a in user_accounts}
-
-    # Check owner
-    if alliance.owner_id in user_account_ids:
-        account = next(a for a in user_accounts if a.id == alliance.owner_id)
-        return account
-
-    # Check officers
-    officer_ids = {off.game_account_id for off in alliance.officers}
-    common = user_account_ids & officer_ids
-    if common:
-        account = next(a for a in user_accounts if a.id in common)
-        return account
-
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="Only the alliance owner or an officer can perform this action",
-    )
 
 
 @war_controller.post(
@@ -116,7 +61,7 @@ async def create_war(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Declare a new war against an opponent. Officers/owner only."""
-    account = await _assert_officer_or_owner(session, current_user, alliance_id)
+    account = await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
     return await WarService.create_war(session, alliance_id, body.opponent_name, account.id)
 
 
@@ -130,7 +75,7 @@ async def list_wars(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """List all wars for an alliance. All members can view."""
-    await _get_user_account_in_alliance(session, current_user, alliance_id)
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
     return await WarService.get_wars(session, alliance_id)
 
 
@@ -144,7 +89,7 @@ async def get_current_war(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get the currently active war for an alliance. All members can view."""
-    await _get_user_account_in_alliance(session, current_user, alliance_id)
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
     return await WarService.get_current_war(session, alliance_id)
 
 
@@ -161,7 +106,7 @@ async def get_war_defense(
     war: WarDep,
 ):
     """Get defense placements for a war battlegroup. All members can view."""
-    await _get_user_account_in_alliance(session, current_user, alliance_id)
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
     return await WarService.get_war_defense(session, war_id, battlegroup)
 
 
@@ -180,7 +125,7 @@ async def place_war_defender(
     war: WarDep,
 ):
     """Place a champion on a war defense node. Officers/owner only."""
-    account = await _assert_officer_or_owner(session, current_user, alliance_id)
+    account = await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
     return await WarService.place_defender(session, war_id, battlegroup, body, account.id)
 
 
@@ -198,7 +143,7 @@ async def remove_war_defender(
     war: WarDep,
 ):
     """Remove a defender from a war node. Officers/owner only."""
-    await _assert_officer_or_owner(session, current_user, alliance_id)
+    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
     await WarService.remove_defender(session, war_id, battlegroup, node_number)
 
 
@@ -213,7 +158,7 @@ async def end_war(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Mark a war as ended. Officers/owner only."""
-    await _assert_officer_or_owner(session, current_user, alliance_id)
+    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
     return await WarService.end_war(session, war_id, alliance_id)
 
 
@@ -230,7 +175,7 @@ async def clear_war_bg(
     war: WarDep,
 ):
     """Clear all defenders in a war battlegroup. Officers/owner only."""
-    await _assert_officer_or_owner(session, current_user, alliance_id)
+    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
     count = await WarService.clear_bg(session, war_id, battlegroup)
     return {"deleted": count}
 
@@ -245,11 +190,11 @@ async def get_available_attackers(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     war: WarDep,
+    attacker_id: uuid.UUID | None = None,
 ):
-    """List available attackers (BG roster minus defenders). All members can view."""
-    await _get_user_account_in_alliance(session, current_user, alliance_id)
-    return await WarService.get_available_attackers(session, alliance_id, battlegroup)
-
+    """List available attackers (BG roster minus defenders). Pass attacker_id to filter to a single member."""
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    return await WarService.get_available_attackers(session, alliance_id, battlegroup, attacker_id)
 
 @war_controller.post(
     "/{war_id}/bg/{battlegroup}/node/{node_number}/attacker",
@@ -266,7 +211,7 @@ async def assign_war_attacker(
     war: WarDep,
 ):
     """Assign an attacker to a war node. All members can assign."""
-    await _get_user_account_in_alliance(session, current_user, alliance_id)
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
     return await WarService.assign_attacker(
         session, war_id, alliance_id, battlegroup, node_number, body.champion_user_id
     )
@@ -286,7 +231,7 @@ async def remove_war_attacker(
     war: WarDep,
 ):
     """Remove the attacker from a war node. All members can remove."""
-    await _get_user_account_in_alliance(session, current_user, alliance_id)
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
     return await WarService.remove_attacker(session, war_id, battlegroup, node_number)
 
 
@@ -305,5 +250,61 @@ async def update_war_ko(
     war: WarDep,
 ):
     """Update the KO count for a war node. All members can update."""
-    await _get_user_account_in_alliance(session, current_user, alliance_id)
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
     return await WarService.update_ko(session, war_id, battlegroup, node_number, body.ko_count)
+
+
+@war_controller.get(
+    "/{war_id}/bg/{battlegroup}/synergy",
+    response_model=list[WarSynergyResponse],
+)
+async def get_war_synergy(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """List synergy champions for a battlegroup. All members can view."""
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    return await WarService.get_synergy_attackers(session, war_id, battlegroup)
+
+
+@war_controller.post(
+    "/{war_id}/bg/{battlegroup}/synergy",
+    response_model=WarSynergyResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_war_synergy(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    body: WarSynergyCreateRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """Add a synergy champion for a battlegroup. All members can add."""
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    return await WarService.add_synergy_attacker(
+        session, war_id, alliance_id, battlegroup, body.champion_user_id, body.target_champion_user_id, current_user.id
+    )
+
+
+@war_controller.delete(
+    "/{war_id}/bg/{battlegroup}/synergy/{champion_user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def remove_war_synergy(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    champion_user_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """Remove a synergy champion from a battlegroup. All members can remove."""
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await WarService.remove_synergy_attacker(session, war_id, battlegroup, champion_user_id)

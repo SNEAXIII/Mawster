@@ -297,10 +297,7 @@ async def get_alliance_invitations(
 ):
     """Get all pending invitations for an alliance.
     Only the owner or an officer can view."""
-    alliance = await AllianceService.get_alliance(session, alliance_id)
-    if alliance is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
-    await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
+    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
     invitations = await AllianceInvitationService.get_invitations_for_alliance(session, alliance_id)
     return [_invitation_to_response(inv) for inv in invitations]
 
@@ -418,10 +415,7 @@ async def set_member_group(
 ):
     """Set the group (1, 2, 3 or null) for a member. Max 10 members per group.
     Only the owner or an officer can manage groups."""
-    alliance = await AllianceService.get_alliance(session, alliance_id)
-    if alliance is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
-    await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
+    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
     updated = await AllianceService.set_member_group(
         session=session,
         alliance_id=alliance_id,

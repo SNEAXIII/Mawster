@@ -10,13 +10,14 @@ import WarHeader from './war-header';
 import WarDefendersTab from './war-defenders-tab';
 import WarManagementBar from './war-management-bar';
 import CreateWarDialog from './create-war-dialog';
+import AttackerEntryRow from './attacker-entry-row';
 
-const WarChampionSelector = dynamic(() => import('./war-champion-selector'), {
-  loading: () => null,
+const WarDefenderSelector = dynamic(() => import('./war-defender-selector'), {
+  loading: () => <FullPageSpinner />,
 });
 
 const WarAttackerSelector = dynamic(() => import('./war-attacker-selector'), {
-  loading: () => null,
+  loading: () => <FullPageSpinner />,
 });
 
 export default function WarContent() {
@@ -63,6 +64,10 @@ function WarLayout() {
   } = useWar();
 
   if (loading) return <FullPageSpinner />;
+
+  const pendingPlacement = pendingRemoveNode !== null
+    ? placements.find((p) => p.node_number === pendingRemoveNode)
+    : undefined;
 
   return (
     <div className='w-full px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
@@ -115,11 +120,12 @@ function WarLayout() {
       />
 
       {/* Defender champion selector */}
-      <WarChampionSelector
+      <WarDefenderSelector
         open={selectorNode !== null}
         onClose={() => setSelectorNode(null)}
         nodeNumber={selectorNode ?? 0}
         placedChampionIds={new Set(placements.map((p) => p.champion_id))}
+        currentPlacement={placements.find((p) => p.node_number === selectorNode)}
         onSelect={handlePlaceDefender}
       />
 
@@ -145,7 +151,17 @@ function WarLayout() {
         title={t.game.war.removeDefenderWithAttackerTitle}
         description={t.game.war.removeDefenderWithAttackerDesc}
         variant='destructive'
-      />
+      >
+        {pendingPlacement && (
+          <div className='flex justify-center'>
+            <AttackerEntryRow
+              placement={pendingPlacement}
+              mode='full'
+              readonly
+            />
+          </div>
+        )}
+      </ConfirmationDialog>
 
       {/* Clear confirm dialog */}
       <ConfirmationDialog

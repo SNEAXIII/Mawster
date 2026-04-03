@@ -1,49 +1,96 @@
+import uuid
+
 import pytest
 
+from main import app
+from src.enums.Roles import Roles
+from src.utils.db import get_session
+from tests.integration.endpoints.setup.user_setup import push_one_admin, push_one_user
+from tests.integration.endpoints.setup.game_setup import push_champion
+from tests.utils.utils_client import (
+    create_auth_headers,
+    execute_patch_request,
+    execute_get_request,
+)
+from tests.utils.utils_constant import USER_ID
+from tests.utils.utils_db import get_test_session
 
-"""
-IMPLEMENTATION INSTRUCTIONS — Champion ascendable endpoint
+app.dependency_overrides[get_session] = get_test_session
 
-Endpoint under test:
-- PATCH /admin/champions/{champion_id}/ascendable
-
-Expected behavior:
-1) Admin can toggle `is_ascendable` true -> false.
-2) Admin can toggle `is_ascendable` false -> true.
-3) Regular user receives 403.
-4) Unauthenticated request receives 401.
-5) Unknown champion receives 404.
-
-Implementation notes:
-- Reuse fixtures/helpers from `champion_test.py` where possible.
-- Keep payload empty (endpoint toggles state server-side).
-- Validate state change by reading champion after patch.
-"""
+ADMIN_HEADERS = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
+USER_HEADERS = create_auth_headers(user_id=str(USER_ID), role=Roles.USER)
 
 
-@pytest.mark.skip(reason='TODO: implement ascendable endpoint integration coverage')
 class TestChampionAscendableEndpoint:
-    async def test_admin_can_toggle_true_to_false(self):
-        """Steps: create ascendable champion, PATCH once, assert 200 and is_ascendable=False."""
-        # Intentionally pending implementation.
-        pass
+    @pytest.mark.asyncio
+    async def test_admin_can_toggle_true_to_false(self, session):
+        await push_one_admin()
+        champ = await push_champion("Hercules", "Cosmic", is_ascendable=True)
 
-    async def test_admin_can_toggle_false_to_true(self):
-        """Steps: create non-ascendable champion, PATCH once, assert 200 and is_ascendable=True."""
-        # Intentionally pending implementation.
-        pass
+        response = await execute_patch_request(
+            f"/admin/champions/{champ.id}/ascendable",
+            payload=None,
+            headers=ADMIN_HEADERS,
+        )
 
-    async def test_non_admin_is_forbidden(self):
-        """Steps: call PATCH as USER role, assert 403."""
-        # Intentionally pending implementation.
-        pass
+        assert response.status_code == 200
+        assert response.json()["is_ascendable"] is False
 
-    async def test_unauthenticated_is_401(self):
-        """Steps: call PATCH without token, assert 401."""
-        # Intentionally pending implementation.
-        pass
+        get_resp = await execute_get_request(
+            f"/champions/{champ.id}", headers=ADMIN_HEADERS
+        )
+        assert get_resp.json()["is_ascendable"] is False
 
-    async def test_unknown_champion_is_404(self):
-        """Steps: call PATCH with random UUID as admin, assert 404."""
-        # Intentionally pending implementation.
-        pass
+    @pytest.mark.asyncio
+    async def test_admin_can_toggle_false_to_true(self, session):
+        await push_one_admin()
+        champ = await push_champion("Spider-Man", "Science", is_ascendable=False)
+
+        response = await execute_patch_request(
+            f"/admin/champions/{champ.id}/ascendable",
+            payload=None,
+            headers=ADMIN_HEADERS,
+        )
+
+        assert response.status_code == 200
+        assert response.json()["is_ascendable"] is True
+
+        get_resp = await execute_get_request(
+            f"/champions/{champ.id}", headers=ADMIN_HEADERS
+        )
+        assert get_resp.json()["is_ascendable"] is True
+
+    @pytest.mark.asyncio
+    async def test_non_admin_is_forbidden(self, session):
+        await push_one_user()
+        champ = await push_champion("Wolverine", "Mutant")
+
+        response = await execute_patch_request(
+            f"/admin/champions/{champ.id}/ascendable",
+            payload=None,
+            headers=USER_HEADERS,
+        )
+
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_unauthenticated_is_401(self, session):
+        response = await execute_patch_request(
+            f"/admin/champions/{uuid.uuid4()}/ascendable",
+            payload=None,
+            headers=None,
+        )
+
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_unknown_champion_is_404(self, session):
+        await push_one_admin()
+
+        response = await execute_patch_request(
+            f"/admin/champions/{uuid.uuid4()}/ascendable",
+            payload=None,
+            headers=ADMIN_HEADERS,
+        )
+
+        assert response.status_code == 404

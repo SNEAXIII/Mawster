@@ -12,6 +12,7 @@ from src.models.Alliance import Alliance
 from src.models.AllianceInvitation import AllianceInvitation
 from src.models.AllianceOfficer import AllianceOfficer
 from src.enums.InvitationStatus import InvitationStatus
+from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.utils.db import SessionDep
 
 MAX_MEMBERS_PER_GROUP = 10
@@ -20,12 +21,62 @@ MAX_MEMBERS_PER_ALLIANCE = 30
 
 class AllianceService:
     @staticmethod
-    async def _get_user_account_ids(session: SessionDep, user_id: uuid.UUID) -> set[uuid.UUID]:
-        """Get the set of game account IDs belonging to a user."""
+    async def _get_user_accounts(session: SessionDep, user_id: uuid.UUID) -> list[GameAccount]:
+        """Get all game accounts belonging to a user."""
         result = await session.exec(
             select(GameAccount).where(GameAccount.user_id == user_id)
         )
-        return {acc.id for acc in result.all()}
+        return result.all()
+
+    @classmethod
+    async def _get_user_account_ids(cls, session: SessionDep, user_id: uuid.UUID) -> set[uuid.UUID]:
+        return {acc.id for acc in await cls._get_user_accounts(session, user_id)}
+
+    @staticmethod
+    async def get_user_account_in_alliance(
+        session: SessionDep,
+        user_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+    ) -> GameAccount:
+        """Return the user's game account in this alliance. Raises 403 if not a member."""
+        result = await session.exec(
+            select(GameAccount).where(
+                GameAccount.user_id == user_id,
+                GameAccount.alliance_id == alliance_id,
+            )
+        )
+        account = result.first()
+        if account is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not a member of this alliance",
+            )
+        return account
+
+    @classmethod
+    async def assert_officer_or_owner_by_id(
+        cls, session: SessionDep, alliance_id: uuid.UUID, user_id: uuid.UUID
+    ) -> GameAccount:
+        """Load alliance and assert user is owner or officer. Raises 404/403."""
+        alliance = await cls._load_alliance_with_relations(session, alliance_id)
+        if alliance is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+        return await cls._assert_is_owner_or_officer(session, alliance, user_id)
+
+    @staticmethod
+    async def is_alliance_member(
+        session: SessionDep,
+        user_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+    ) -> bool:
+        """Return True if the user has any game account in the given alliance."""
+        result = await session.exec(
+            select(GameAccount).where(
+                GameAccount.user_id == user_id,
+                GameAccount.alliance_id == alliance_id,
+            )
+        )
+        return result.first() is not None
 
     @staticmethod
     def _assert_not_in_alliance(game_account: GameAccount) -> None:
@@ -67,18 +118,21 @@ class AllianceService:
     @classmethod
     async def _assert_is_owner_or_officer(
         cls, session: SessionDep, alliance: Alliance, current_user_id: uuid.UUID
-    ) -> None:
-        """Check that current_user owns at least one game account that is owner or officer of the alliance."""
-        user_account_ids = await cls._get_user_account_ids(session, current_user_id)
+    ) -> GameAccount:
+        """Check that current_user owns at least one game account that is owner or officer of the alliance.
+        Returns the matching GameAccount (owner or officer account)."""
+        user_accounts = await cls._get_user_accounts(session, current_user_id)
+        user_account_ids = {a.id for a in user_accounts}
 
         # Check owner
         if alliance.owner_id in user_account_ids:
-            return
+            return next(a for a in user_accounts if a.id == alliance.owner_id)
 
         # Check officers
         officer_ids = {off.game_account_id for off in alliance.officers}
-        if user_account_ids & officer_ids:
-            return
+        common = user_account_ids & officer_ids
+        if common:
+            return next(a for a in user_accounts if a.id in common)
 
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

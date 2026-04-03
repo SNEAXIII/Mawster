@@ -36,7 +36,6 @@ entity "alliance" as alliance <<table>> {
   tag : varchar(10)
   description : text (nullable)
   created_at : timestamp
-  ' TODO: add url later
 }
 
 entity "game_account" as game_account <<table>> {

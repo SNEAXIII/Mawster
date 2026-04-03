@@ -87,6 +87,7 @@ export default function DefenseGrid({ onNodeClick, canManage }: Readonly<Defense
           nodeNumber={selectorNode}
           availableChampions={availableChampions}
           onSelect={handlePlaceDefender}
+          currentPlacement={defenseSummary?.placements.find((p) => p.node_number === selectorNode)}
         />
       )}
 

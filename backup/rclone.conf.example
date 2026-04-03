@@ -1,0 +1,30 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# rclone.conf — Google Drive + crypt remote configuration
+#
+# HOW TO GENERATE THE REAL FILE ON THE SERVER:
+#   1. Install rclone on the host:  curl https://rclone.org/install.sh | sudo bash
+#   2. Run: rclone config
+#   3. Create a remote named "gdrive" of type "drive" (follow OAuth flow)
+#   4. Create a remote named "gdrive-crypt" of type "crypt" on top of "gdrive"
+#      - Remote: gdrive:mawster-backups
+#      - filename_encryption: standard
+#      - directory_name_encryption: true
+#      - Set a strong password + salt (save them somewhere safe — loss = data loss)
+#   5. Copy the resulting ~/.config/rclone/rclone.conf to ./backup/rclone.conf
+#   6. Never commit rclone.conf (it is gitignored)
+# ─────────────────────────────────────────────────────────────────────────────
+
+[gdrive]
+type = drive
+client_id = YOUR_OAUTH_CLIENT_ID
+client_secret = YOUR_OAUTH_CLIENT_SECRET
+scope = drive
+token = {"access_token":"...","token_type":"Bearer","refresh_token":"...","expiry":"..."}
+
+[gdrive-crypt]
+type = crypt
+remote = gdrive:mawster-backups
+filename_encryption = standard
+directory_name_encryption = true
+password = YOUR_RCLONE_CRYPT_PASSWORD
+password2 = YOUR_RCLONE_CRYPT_SALT

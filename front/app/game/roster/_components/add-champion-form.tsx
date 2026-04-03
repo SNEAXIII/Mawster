@@ -63,7 +63,7 @@ export default function AddChampionForm({
         searchInputRef.current?.focus();
       }, 100);
     } else if (open) {
-      setTimeout(() => searchInputRef.current?.focus(), 50);
+      requestAnimationFrame(() => searchInputRef.current?.focus());
     } else {
       reset();
     }

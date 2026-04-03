@@ -62,7 +62,9 @@ export default function ChampionsPanel() {
       setTotalPage(data.total_pages);
     } catch (err) {
       setError(
-        (err as { status?: number }).status === 401 ? t.dashboard.errors.unauthorized : t.champions.errors.loadError
+        (err as { status?: number }).status === 401
+          ? t.dashboard.errors.unauthorized
+          : t.champions.errors.loadError
       );
     } finally {
       setIsLoading(false);

@@ -239,6 +239,7 @@ const en = {
       noActiveWar: 'No active war in progress, contact your alliance officers to declare a war.',
       modeDefenders: 'Defenders',
       modeAttackers: 'Attackers',
+      modePlan: 'Plan',
       opponentName: 'Opponent Name',
       noWar: 'No war declared yet.',
       selectWar: 'Select a war',
@@ -282,6 +283,9 @@ const en = {
       assignError: 'Failed to assign attacker',
       removeAttackerSuccess: 'Attacker removed',
       removeAttackerError: 'Failed to remove attacker',
+      replaceDefenderWithAttackerTitle: 'Replace Defender',
+      replaceDefenderWithAttackerDesc:
+        'An attacker is already assigned to this node. Replacing the defender will also clear the attacker. Continue?',
       removeDefenderWithAttackerTitle: 'Remove Defender',
       removeDefenderWithAttackerDesc:
         'An attacker is already assigned to this node. Removing the defender will also clear the attacker. Continue?',
@@ -292,6 +296,17 @@ const en = {
       availableAttackersError: 'Failed to load available attackers',
       attackersPanelTitle: '{assigned}/50 fights attributed',
       memberAttackers: '{count}/3',
+      synergy: {
+        add: 'Add a synergy',
+        revoke: 'Revoke',
+        label: 'Synergy',
+        for: 'Synergy for: {champion}',
+        tooltip: 'Synergy champion — brings passive bonus for the whole war',
+        addSuccess: 'Synergy added for {target}',
+        addError: 'Failed to add synergy',
+        removeSuccess: 'Synergy removed',
+        removeError: 'Failed to remove synergy',
+      },
     },
   },
 

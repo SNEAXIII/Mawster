@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/search-input';
 import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
-import { type AvailableChampion, type ChampionOwner } from '@/app/services/defense';
+import { type AvailableChampion, type ChampionOwner, type DefensePlacement } from '@/app/services/defense';
 import { RARITY_LABELS, getClassColors, shortenChampionName } from '@/app/services/roster';
+import { Separator } from '@/components/ui/separator';
 
 interface ChampionSelectorProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface ChampionSelectorProps {
   nodeNumber: number;
   availableChampions: AvailableChampion[];
   onSelect: (championUserId: string, gameAccountId: string, championName: string) => void;
+  currentPlacement?: DefensePlacement;
 }
 
 export default function ChampionSelector({
@@ -24,6 +26,7 @@ export default function ChampionSelector({
   nodeNumber,
   availableChampions,
   onSelect,
+  currentPlacement,
 }: ChampionSelectorProps) {
   const { t } = useI18n();
   const [search, setSearch] = useState('');
@@ -48,11 +51,6 @@ export default function ChampionSelector({
     setReady(false);
   }, [open]);
 
-  useEffect(() => {
-    if (open) {
-      setTimeout(() => searchInputRef.current?.focus(), 50);
-    }
-  }, [open]);
 
   const handleSelectChampion = (champ: AvailableChampion) => {
     if (champ.owners.length === 1) {
@@ -82,7 +80,13 @@ export default function ChampionSelector({
       open={open}
       onOpenChange={(v) => !v && handleClose()}
     >
-      <DialogContent className='max-w-2xl max-h-[80vh] overflow-hidden flex flex-col'>
+      <DialogContent
+        className='max-w-2xl max-h-[80vh] overflow-hidden flex flex-col'
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          searchInputRef.current?.focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>
             {selectedChampion
@@ -90,6 +94,31 @@ export default function ChampionSelector({
               : `${t.game.defense.selectChampion} — Node #${nodeNumber}`}
           </DialogTitle>
         </DialogHeader>
+
+        <Separator />
+        <div className='px-6 py-3 flex items-center gap-3' data-cy='defense-current-placement'>
+          {currentPlacement ? (
+            <>
+              <ChampionPortrait
+                imageUrl={currentPlacement.champion_image_url}
+                name={currentPlacement.champion_name}
+                rarity={currentPlacement.rarity}
+                size={44}
+              />
+              <div className='min-w-0'>
+                <div className='text-sm font-medium truncate'>{currentPlacement.champion_name}</div>
+                <div className='text-xs text-muted-foreground'>
+                  {currentPlacement.game_pseudo} · #{currentPlacement.node_number}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className='text-sm text-muted-foreground'>
+              {t.game.defense.nodeEmpty.replace('{node}', String(nodeNumber))}
+            </div>
+          )}
+        </div>
+        <Separator />
 
         {!selectedChampion ? (
           <>

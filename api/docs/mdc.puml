@@ -31,7 +31,6 @@ entity "Alliance" as alliance {
   name
   tag
   description
-  ' TODO: add url later
 }
 
 entity "GameAccount" as game_account {

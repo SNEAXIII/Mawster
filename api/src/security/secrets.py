@@ -11,13 +11,10 @@ IS_TESTING = os.getenv("MODE") == "testing"
 
 _log = logging.getLogger(__name__)
 
-if not IS_PROD:
-    print(f"Selected mode {IS_PROD = }, {IS_TESTING = }")
-
 
 def _default_database() -> int:
     """Return the default database port based on mode."""
-    return 3306 if not IS_TESTING else 3307
+    return 3305 if not IS_TESTING else 3307
 
 
 class Settings(BaseSettings):
@@ -58,3 +55,7 @@ def _warn_if_weak_defaults() -> None:
 
 
 _warn_if_weak_defaults()
+
+if not IS_PROD:
+    print(f"Selected mode {IS_PROD = }, {IS_TESTING = }")
+    print(f"Secret settings loaded: MARIADB_DATABASE={SECRET.MARIADB_DATABASE}, MARIADB_USER={SECRET.MARIADB_USER}, MARIADB_HOST={SECRET.MARIADB_HOST}, MARIADB_PORT={SECRET.MARIADB_PORT}")

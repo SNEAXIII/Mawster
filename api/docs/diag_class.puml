@@ -30,7 +30,6 @@
     + tag : str
     + description : Optional[str]
     + created_at : datetime
-    ' TODO: add url later
     --
     + members : List[GameAccount]
     + configurations : List[DefenseConfiguration]
