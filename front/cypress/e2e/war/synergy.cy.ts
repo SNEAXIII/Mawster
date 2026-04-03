@@ -1,4 +1,4 @@
-import { setupAttackerScenario } from '../../support/e2e';
+import { BACKEND, setupAttackerScenario } from '../../support/e2e';
 
 describe('War Synergy', () => {
   beforeEach(() => {
@@ -17,6 +17,7 @@ describe('War Synergy', () => {
           cy.apiAddChampionToRoster(memberData.access_token, memberAccId, synChamp.id, '7r3').then(
             (synCu) => {
               // Visit war page
+              cy.apiLogin(memberData.user_id);
               cy.visit('/game/war');
               cy.getByCy('war-attacker-panel').should('be.visible');
 
@@ -57,6 +58,7 @@ describe('War Synergy', () => {
                 championUserId,
               );
 
+              cy.apiLogin(memberData.user_id);
               cy.visit('/game/war');
               cy.getByCy('war-attacker-panel').should('be.visible');
 
@@ -78,8 +80,7 @@ describe('War Synergy', () => {
   it('removing attacker from last node auto-removes their synergy (couteau suisse)', () => {
     setupAttackerScenario('syn4').then(
       ({ adminToken, ownerData, memberData, allianceId, memberAccId, warId, championUserId }) => {
-        const backendUrl = Cypress.env('backendUrl') ?? 'http://localhost:8001';
-        const synergyUrl = `${backendUrl}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
+        const synergyUrl = `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
 
         // Assign Wolverine as node attacker on node 10
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
@@ -113,9 +114,8 @@ describe('War Synergy', () => {
 
   it('duplicate synergy provider rejected', () => {
     setupAttackerScenario('syn5').then(
-      ({ adminToken, ownerData, memberData, allianceId, memberAccId, warId, championUserId }) => {
-        const backendUrl = Cypress.env('backendUrl') ?? 'http://localhost:8001';
-        const synergyUrl = `${backendUrl}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
+      ({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
+        const synergyUrl = `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
 
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
@@ -137,8 +137,7 @@ describe('War Synergy', () => {
   it('target must be an assigned node attacker', () => {
     setupAttackerScenario('syn6').then(
       ({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
-        const backendUrl = Cypress.env('backendUrl') ?? 'http://localhost:8001';
-        const synergyUrl = `${backendUrl}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
+        const synergyUrl = `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
 
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
@@ -194,7 +193,7 @@ describe('War Synergy', () => {
                       ).then((cu4) => {
                         cy.request({
                           method: 'POST',
-                          url: `${Cypress.env('backendUrl') ?? 'http://localhost:8001'}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`,
+                          url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`,
                           headers: { Authorization: `Bearer ${memberData.access_token}` },
                           body: {
                             champion_user_id: cu4.id,
