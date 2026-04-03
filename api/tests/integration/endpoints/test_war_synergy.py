@@ -330,6 +330,50 @@ class TestRemoveSynergy:
         assert response.status_code == 204
 
     @pytest.mark.asyncio
+    async def test_remove_attacker_last_node_auto_removes_synergy(self):
+        """Removing an attacker from their last node auto-removes their synergy provider entry (couteau suisse)."""
+        data = await _setup_synergy_scenario()
+        alliance = data["alliance"]
+        war = data["war"]
+        headers_owner = data["headers_owner"]
+        headers_member = data["headers_member"]
+
+        # Place defender on node 11 and assign synergy_cu as node attacker (couteau suisse: node fighter + provider)
+        second_def = await push_champion(name="Thor", champion_class="Cosmic")
+        await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
+            payload={"node_number": 11, "champion_id": str(second_def.id), "stars": 7, "rank": 3, "ascension": 0},
+            headers=headers_owner,
+        )
+        await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/11/attacker",
+            payload={"champion_user_id": str(data["synergy_cu"].id)},
+            headers=headers_member,
+        )
+
+        # synergy_cu also provides synergy to attacker_cu
+        await execute_post_request(
+            _synergy_url(alliance.id, war.id),
+            payload={
+                "champion_user_id": str(data["synergy_cu"].id),
+                "target_champion_user_id": str(data["attacker_cu"].id),
+            },
+            headers=headers_member,
+        )
+        get_resp = await execute_get_request(_synergy_url(alliance.id, war.id), headers=headers_member)
+        assert len(get_resp.json()) == 1
+
+        # Remove synergy_cu from their only node (node 11) — this is their last fight
+        await execute_delete_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/11/attacker",
+            headers=headers_member,
+        )
+
+        # Synergy provider entry should be auto-removed
+        get_resp2 = await execute_get_request(_synergy_url(alliance.id, war.id), headers=headers_member)
+        assert get_resp2.json() == []
+
+    @pytest.mark.asyncio
     async def test_remove_synergy_not_found_returns_404(self):
         data = await _setup_synergy_scenario()
         response = await execute_delete_request(

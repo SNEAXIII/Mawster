@@ -26,8 +26,8 @@ prio:
     afficheer un attaquant préf seletion attaque + case a cocher pour filter
     mettre les prefight
     mettre en couleur les combat d'un boug
-    fixer la scoll bar en attaque trop relou
     mettre les bans
+    faire un refresh dynamique
 
 criTIQUE
     corriger les syns, ca prends les syn du compte user connecté par celui qui doit etre ciblé

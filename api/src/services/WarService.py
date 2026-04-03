@@ -477,10 +477,36 @@ class WarService:
         if placement.attacker_champion_user_id is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No attacker assigned to this node")
 
+        removed_champion_user_id = placement.attacker_champion_user_id
         placement.attacker_champion_user_id = None
         placement.ko_count = 0
         session.add(placement)
         await session.commit()
+
+        # If this was the attacker's last node in this war+BG, remove their synergy entry
+        remaining = await session.exec(
+            select(WarDefensePlacement).where(
+                and_(
+                    WarDefensePlacement.war_id == war_id,
+                    WarDefensePlacement.battlegroup == battlegroup,
+                    WarDefensePlacement.attacker_champion_user_id == removed_champion_user_id,
+                )
+            )
+        )
+        if not remaining.first():
+            synergy_result = await session.exec(
+                select(WarSynergyAttacker).where(
+                    and_(
+                        WarSynergyAttacker.war_id == war_id,
+                        WarSynergyAttacker.battlegroup == battlegroup,
+                        WarSynergyAttacker.champion_user_id == removed_champion_user_id,
+                    )
+                )
+            )
+            synergy = synergy_result.first()
+            if synergy:
+                await session.delete(synergy)
+                await session.commit()
 
         return WarPlacementResponse.model_validate(
             await cls._load_placement(session, placement.id)
