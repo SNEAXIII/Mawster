@@ -626,6 +626,46 @@ class TestAvailableAttackers:
         )
         assert response.status_code == 403
 
+    @pytest.mark.asyncio
+    async def test_available_attackers_for_user_returns_own_champions_only(self):
+        """GET available-attackers/{attacker_id} returns only that attacker's champions."""
+        data = await _setup_attacker_scenario()
+        # Give owner a champion so there are 2 accounts with champions in BG1
+        extra_champ = await push_champion(name="Iron Man", champion_class="Tech")
+        await push_champion_user(data["owner"], extra_champ, stars=6, rank=3)
+
+        headers = create_auth_headers(user_id=str(USER2_ID))
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-attackers?attacker_id={data['member'].id}",
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert isinstance(body, list)
+        names = [a["champion_name"] for a in body]
+        assert "Wolverine" in names
+        assert "Iron Man" not in names  # owner's champion must not appear
+
+    @pytest.mark.asyncio
+    async def test_available_attackers_for_user_non_member_forbidden(self):
+        """GET available-attackers/{attacker_id} returns 403 for non-members."""
+        data = await _setup_attacker_scenario()
+        user3 = User(
+            id=USER3_ID,
+            login="user3b",
+            email="user3b@test.com",
+            role=Roles.USER,
+            discord_id="discord_user3_atk_filtered",
+        )
+        acc3 = get_game_account(user_id=USER3_ID, game_pseudo="OutsiderAtkF")
+        await load_objects([user3, acc3])
+
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-attackers?attacker_id={data['member'].id}",
+            headers=create_auth_headers(user_id=str(USER3_ID)),
+        )
+        assert response.status_code == 403
+
 
 # ─── TestAssignAttacker ───────────────────────────────────
 

@@ -59,6 +59,7 @@ class WarPlacementResponse(BaseModel):
     created_at: datetime
     ko_count: int = 0
     attacker_champion_user_id: Optional[uuid.UUID] = None
+    attacker_game_account_id: Optional[uuid.UUID] = None
     attacker_pseudo: Optional[str] = None
     attacker_champion_name: Optional[str] = None
     attacker_champion_class: Optional[str] = None
@@ -86,6 +87,7 @@ class WarPlacementResponse(BaseModel):
             'created_at': data.created_at,
             'ko_count': data.ko_count,
             'attacker_champion_user_id': data.attacker_champion_user_id,
+            'attacker_game_account_id': attacker.game_account_id if attacker else None,
             'attacker_pseudo': attacker.game_account.game_pseudo if attacker else None,
             'attacker_champion_name': attacker.champion.name if attacker else None,
             'attacker_champion_class': attacker.champion.champion_class if attacker else None,
@@ -117,3 +119,49 @@ class AvailableAttackerResponse(BaseModel):
     champion_class: str
     image_url: Optional[str] = None
     rarity: str
+
+
+class WarSynergyCreateRequest(BaseModel):
+    champion_user_id: uuid.UUID
+    target_champion_user_id: uuid.UUID
+
+
+class WarSynergyResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    war_id: uuid.UUID
+    battlegroup: int
+    game_account_id: uuid.UUID
+    champion_user_id: uuid.UUID
+    target_champion_user_id: uuid.UUID
+    champion_name: str
+    champion_class: str
+    image_url: Optional[str] = None
+    rarity: str
+    target_champion_name: str
+    game_pseudo: str
+    created_at: datetime
+
+    @model_validator(mode='before')
+    @classmethod
+    def flatten_relations(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            return data
+        cu = data.champion_user
+        target = data.target_champion_user
+        return {
+            'id': data.id,
+            'war_id': data.war_id,
+            'battlegroup': data.battlegroup,
+            'game_account_id': data.game_account_id,
+            'champion_user_id': data.champion_user_id,
+            'target_champion_user_id': data.target_champion_user_id,
+            'champion_name': cu.champion.name,
+            'champion_class': cu.champion.champion_class,
+            'image_url': cu.champion.image_url,
+            'rarity': cu.rarity,
+            'target_champion_name': target.champion.name,
+            'game_pseudo': data.game_account.game_pseudo,
+            'created_at': data.created_at,
+        }

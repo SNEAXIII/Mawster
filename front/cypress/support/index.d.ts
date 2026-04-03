@@ -210,5 +210,24 @@ declare namespace Cypress {
       nodeNumber: number,
       koCount: number,
     ): Chainable<any>;
+
+    /** Add a synergy champion for a war battlegroup (direct backend call). */
+    apiAddWarSynergy(
+      token: string,
+      allianceId: string,
+      warId: string,
+      battlegroup: number,
+      championUserId: string,
+      targetChampionUserId: string,
+    ): Chainable<any>;
+
+    /** Remove a synergy champion from a war battlegroup (direct backend call). */
+    apiRemoveWarSynergy(
+      token: string,
+      allianceId: string,
+      warId: string,
+      battlegroup: number,
+      championUserId: string,
+    ): Chainable<void>;
   }
 }

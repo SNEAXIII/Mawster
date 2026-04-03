@@ -13,6 +13,8 @@ from src.dto.dto_war import (
     WarAttackerAssignRequest,
     WarKoUpdateRequest,
     AvailableAttackerResponse,
+    WarSynergyCreateRequest,
+    WarSynergyResponse,
 )
 from src.models import User
 from src.models.War import War
@@ -188,11 +190,11 @@ async def get_available_attackers(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     war: WarDep,
+    attacker_id: uuid.UUID | None = None,
 ):
-    """List available attackers (BG roster minus defenders). All members can view."""
+    """List available attackers (BG roster minus defenders). Pass attacker_id to filter to a single member."""
     await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
-    return await WarService.get_available_attackers(session, alliance_id, battlegroup)
-
+    return await WarService.get_available_attackers(session, alliance_id, battlegroup, attacker_id)
 
 @war_controller.post(
     "/{war_id}/bg/{battlegroup}/node/{node_number}/attacker",
@@ -250,3 +252,59 @@ async def update_war_ko(
     """Update the KO count for a war node. All members can update."""
     await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
     return await WarService.update_ko(session, war_id, battlegroup, node_number, body.ko_count)
+
+
+@war_controller.get(
+    "/{war_id}/bg/{battlegroup}/synergy",
+    response_model=list[WarSynergyResponse],
+)
+async def get_war_synergy(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """List synergy champions for a battlegroup. All members can view."""
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    return await WarService.get_synergy_attackers(session, war_id, battlegroup)
+
+
+@war_controller.post(
+    "/{war_id}/bg/{battlegroup}/synergy",
+    response_model=WarSynergyResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_war_synergy(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    body: WarSynergyCreateRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """Add a synergy champion for a battlegroup. All members can add."""
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    return await WarService.add_synergy_attacker(
+        session, war_id, alliance_id, battlegroup, body.champion_user_id, body.target_champion_user_id, current_user.id
+    )
+
+
+@war_controller.delete(
+    "/{war_id}/bg/{battlegroup}/synergy/{champion_user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def remove_war_synergy(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    champion_user_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """Remove a synergy champion from a battlegroup. All members can remove."""
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await WarService.remove_synergy_attacker(session, war_id, battlegroup, champion_user_id)

@@ -296,6 +296,17 @@ const en = {
       availableAttackersError: 'Failed to load available attackers',
       attackersPanelTitle: '{assigned}/50 fights attributed',
       memberAttackers: '{count}/3',
+      synergy: {
+        add: 'Add a synergy',
+        revoke: 'Revoke',
+        label: 'Synergy',
+        for: 'Synergy for: {champion}',
+        tooltip: 'Synergy champion — brings passive bonus for the whole war',
+        addSuccess: 'Synergy added for {target}',
+        addError: 'Failed to add synergy',
+        removeSuccess: 'Synergy removed',
+        removeError: 'Failed to remove synergy',
+      },
     },
   },
 

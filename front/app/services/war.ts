@@ -24,6 +24,7 @@ export interface WarPlacement {
   created_at: string;
   ko_count: number;
   attacker_champion_user_id: string | null;
+  attacker_game_account_id: string | null;
   attacker_pseudo: string | null;
   attacker_champion_name: string | null;
   attacker_champion_class: string | null;
@@ -46,6 +47,22 @@ export interface AvailableAttacker {
   champion_class: string;
   image_url: string | null;
   rarity: string;
+}
+
+export interface WarSynergy {
+  id: string;
+  war_id: string;
+  battlegroup: number;
+  game_account_id: string;
+  champion_user_id: string;
+  target_champion_user_id: string;
+  champion_name: string;
+  champion_class: string;
+  image_url: string | null;
+  rarity: string;
+  target_champion_name: string;
+  game_pseudo: string;
+  created_at: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────
@@ -173,10 +190,12 @@ export async function clearWarBg(
 export async function getAvailableAttackers(
   allianceId: string,
   warId: string,
-  battlegroup: number
+  battlegroup: number,
+  targetGameAccountId?: string
 ): Promise<AvailableAttacker[]> {
+  const suffix = targetGameAccountId ? `?attacker_id=${targetGameAccountId}` : '';
   const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-attackers`,
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-attackers${suffix}`,
     { headers: jsonHeaders }
   );
   await throwOnError(response, 'Failed to load available attackers');
@@ -233,4 +252,54 @@ export async function updateWarKo(
   );
   await throwOnError(response, 'Failed to update KO count');
   return response.json();
+}
+
+// ─── Synergy API ──────────────────────────────────────────
+
+export async function getWarSynergies(
+  allianceId: string,
+  warId: string,
+  battlegroup: number
+): Promise<WarSynergy[]> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy`,
+    { headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to load synergy attackers');
+  return response.json();
+}
+
+export async function addWarSynergy(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  championUserId: string,
+  targetChampionUserId: string
+): Promise<WarSynergy> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy`,
+    {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        champion_user_id: championUserId,
+        target_champion_user_id: targetChampionUserId,
+      }),
+    }
+  );
+  await throwOnError(response, 'Failed to add synergy attacker');
+  return response.json();
+}
+
+export async function removeWarSynergy(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  championUserId: string
+): Promise<void> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy/${championUserId}`,
+    { method: 'DELETE', headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to remove synergy attacker');
 }
