@@ -153,14 +153,30 @@ class TestAddSynergy:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_add_synergy_other_member_champion_rejected(self):
-        """A member cannot add another member's champion as synergy provider."""
+    async def test_add_synergy_target_champion_not_found(self):
+        """target_champion_user_id referencing a non-existent ChampionUser returns 404."""
         data = await _setup_synergy_scenario()
-        # owner tries to add synergy_cu which belongs to member (USER2)
         response = await execute_post_request(
             _synergy_url(data["alliance"].id, data["war"].id),
             payload={
                 "champion_user_id": str(data["synergy_cu"].id),
+                "target_champion_user_id": str(uuid.uuid4()),
+            },
+            headers=data["headers_member"],
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_add_synergy_other_member_champion_rejected(self):
+        """A user cannot add a champion from a different game account as synergy provider for another user's attacker."""
+        data = await _setup_synergy_scenario()
+        # owner adds their own champion as provider, targeting member's attacker → different user_ids → 403
+        owner_champ = await push_champion(name="Thor", champion_class="Cosmic")
+        owner_cu = await push_champion_user(data["owner"], owner_champ, stars=7, rank=3)
+        response = await execute_post_request(
+            _synergy_url(data["alliance"].id, data["war"].id),
+            payload={
+                "champion_user_id": str(owner_cu.id),
                 "target_champion_user_id": str(data["attacker_cu"].id),
             },
             headers=data["headers_owner"],

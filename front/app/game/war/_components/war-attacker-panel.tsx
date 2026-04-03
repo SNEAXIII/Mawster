@@ -83,6 +83,7 @@ export default function WarAttackerPanel() {
                   {/* 3-slot portrait row: node attackers (clickable for synergy) + synergy-only */}
                   <div className='flex items-center gap-0.5 ml-1'>
                     {nodePortraits.map((placement) => (
+                      console.warn('Rendering portrait for', placement.attacker_pseudo, { placement }),
                       warMode === WarMode.Attackers ? (
                         <SynergyPopover
                           key={placement.attacker_champion_user_id}
@@ -90,7 +91,7 @@ export default function WarAttackerPanel() {
                           gameAccountId={placement.attacker_game_account_id ?? ''}
                           championName={placement.attacker_champion_name ?? ''}
                           imageUrl={placement.attacker_image_url}
-                          rarity={placement.attacker_rarity ?? '7r3'}
+                          rarity={placement.attacker_rarity ?? ''}
                           size={35}
                         />
                       ) : (
@@ -98,7 +99,7 @@ export default function WarAttackerPanel() {
                           key={placement.attacker_champion_user_id}
                           imageUrl={placement.attacker_image_url}
                           name={placement.attacker_champion_name ?? ''}
-                          rarity={placement.attacker_rarity ?? '7r3'}
+                          rarity={placement.attacker_rarity ?? ''}
                           size={35}
                         />
                       )

@@ -27,20 +27,17 @@ export default function SynergySelectorDialog({
   const { selectedAllianceId, activeWarId, selectedBg, handleAddSynergy, synergies } = useWar();
   const [attackers, setAttackers] = useState<AvailableAttacker[]>([]);
   const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     if (!open || !selectedAllianceId || !activeWarId) return;
     setLoading(true);
-    getAvailableAttackers(selectedAllianceId, activeWarId, selectedBg)
+    getAvailableAttackers(selectedAllianceId, activeWarId, selectedBg, targetGameAccountId)
       .then(setAttackers)
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [open, selectedAllianceId, activeWarId, selectedBg]);
+  }, [open, selectedAllianceId, activeWarId, selectedBg, targetGameAccountId]);
 
   const usedSynergyIds = new Set(synergies.map((s) => s.champion_user_id));
-  const available = attackers.filter(
-    (a) => a.game_account_id === targetGameAccountId && !usedSynergyIds.has(a.champion_user_id)
-  );
+  const available = attackers.filter((a) => !usedSynergyIds.has(a.champion_user_id));
 
   return (
     <Dialog

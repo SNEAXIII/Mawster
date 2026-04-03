@@ -316,16 +316,18 @@ class WarService:
         session: SessionDep,
         alliance_id: uuid.UUID,
         battlegroup: int,
+        attacker_id: Optional[uuid.UUID] = None,
     ) -> list[AvailableAttackerResponse]:
-        # Get members assigned to this battlegroup
+        # Get members assigned to this battlegroup (or just the specific attacker)
+        member_conditions = and_(
+            GameAccount.alliance_id == alliance_id,
+            GameAccount.alliance_group == battlegroup,
+        )
+        if attacker_id is not None:
+            member_conditions = and_(GameAccount.id == attacker_id)
         members_result = await session.exec(
             select(GameAccount)
-            .where(
-                and_(
-                    GameAccount.alliance_id == alliance_id,
-                    GameAccount.alliance_group == battlegroup,
-                )
-            )
+            .where(member_conditions)
             .options(
                 selectinload(GameAccount.roster).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
             )
@@ -333,16 +335,17 @@ class WarService:
         members = members_result.all()
 
         # Get champion_user_ids already placed in regular defense for members currently in this BG.
-        defense_result = await session.exec(
-            select(DefensePlacement.champion_user_id)
-            .join(GameAccount, DefensePlacement.game_account_id == GameAccount.id)
-            .where(
-                and_(
-                    DefensePlacement.alliance_id == alliance_id,
-                    GameAccount.alliance_group == battlegroup,
-                )
-            )
+        defense_conditions = and_(
+            DefensePlacement.alliance_id == alliance_id,
+            GameAccount.alliance_group == battlegroup,
         )
+        if attacker_id is not None:
+            defense_conditions = and_(DefensePlacement.game_account_id == attacker_id)
+        request_sql = select(
+            DefensePlacement.champion_user_id).join(
+                GameAccount, DefensePlacement.game_account_id == GameAccount.id
+            ).where(defense_conditions)
+        defense_result = await session.exec(request_sql)
         defense_champion_user_ids = set(defense_result.all())
         result: list[AvailableAttackerResponse] = []
         for game_account in members:
@@ -567,9 +570,17 @@ class WarService:
         champion_user = (await session.exec(cu_stmt)).first()
         if champion_user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+        tcu_stmt = (
+            select(ChampionUser)
+            .where(ChampionUser.id == target_champion_user_id)
+            .options(selectinload(ChampionUser.game_account))  # type: ignore[arg-type]
+        )
+        target_champion_user = (await session.exec(tcu_stmt)).first()
+        if target_champion_user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target champion user not found")
 
         game_account = champion_user.game_account
-        if game_account.user_id != current_user_id:
+        if game_account.user_id != target_champion_user.game_account.user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only add your own champions as synergy providers",
@@ -592,7 +603,7 @@ class WarService:
         )
         if target_check.first() is None:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Target champion is not assigned as a node attacker in this war+BG",
             )
 

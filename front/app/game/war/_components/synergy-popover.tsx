@@ -51,7 +51,7 @@ export default function SynergyPopover({
               size={size}
             />
             {boundSynergies.length > 0 && (
-              <SynergyBadge targetChampionName={championName} />
+              <SynergyBadge targetChampionName={championName} className='z' />
             )}
           </button>
         </PopoverTrigger>
@@ -101,7 +101,6 @@ export default function SynergyPopover({
           </button>
         </PopoverContent>
       </Popover>
-
       <SynergySelectorDialog
         open={selectorOpen}
         onClose={() => setSelectorOpen(false)}

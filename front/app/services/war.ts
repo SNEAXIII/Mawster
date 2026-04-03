@@ -190,10 +190,12 @@ export async function clearWarBg(
 export async function getAvailableAttackers(
   allianceId: string,
   warId: string,
-  battlegroup: number
+  battlegroup: number,
+  targetGameAccountId?: string
 ): Promise<AvailableAttacker[]> {
+  const suffix = targetGameAccountId ? `/${targetGameAccountId}` : '';
   const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-attackers`,
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-attackers${suffix}`,
     { headers: jsonHeaders }
   );
   await throwOnError(response, 'Failed to load available attackers');
