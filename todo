@@ -30,4 +30,5 @@ prio:
     faire un refresh dynamique
 
 criTIQUE
-    corriger les syns, ca prends les syn du compte user connecté par celui qui doit etre ciblé
+    alias a check coté client
+    afficher attacker pref
