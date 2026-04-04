@@ -78,7 +78,7 @@ interface WarContextValue {
 
   // Actions
   handleNodeClick: (node: number) => void;
-  handleCreateWar: (opponentName: string) => Promise<void>;
+  handleCreateWar: (opponentName: string, bannedChampionIds: string[]) => Promise<void>;
   handleEndWar: () => Promise<void>;
   handlePlaceDefender: (
     championId: string,
@@ -248,9 +248,9 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     [activeWarId, warMode, placements, t, selectedAlliance, canManage]
   );
 
-  const handleCreateWar = async (opponentName: string) => {
+  const handleCreateWar = async (opponentName: string, bannedChampionIds: string[]) => {
     try {
-      const war = await createWar(selectedAllianceId, opponentName);
+      const war = await createWar(selectedAllianceId, opponentName, bannedChampionIds);
       toast.success(t.game.war.createSuccess.replace('{name}', opponentName));
       setCurrentWar(war);
     } catch (err: unknown) {

@@ -307,6 +307,12 @@ const en = {
         removeSuccess: 'Synergy removed',
         removeError: 'Failed to remove synergy',
       },
+      bans: {
+        label: 'Banned Champions',
+        placeholder: 'Search champion to ban...',
+        maxReached: 'Maximum {max} bans reached',
+        none: 'No bans',
+      },
     },
   },
 
