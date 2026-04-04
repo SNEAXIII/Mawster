@@ -32,3 +32,4 @@ prio:
 criTIQUE
     alias a check coté client
     afficher attacker pref
+    afficher un champ de saisi

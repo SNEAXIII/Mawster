@@ -312,6 +312,12 @@ const fr: Translations = {
         removeSuccess: 'Synergie révoquée',
         removeError: 'Erreur lors de la révocation de la synergie',
       },
+      bans: {
+        label: 'Champions bannis',
+        placeholder: 'Rechercher un champion à bannir...',
+        maxReached: 'Maximum {max} bans atteint',
+        none: 'Aucun ban',
+      },
     },
   },
 
