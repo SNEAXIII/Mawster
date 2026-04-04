@@ -12,6 +12,7 @@ class WarStatus(str, Enum):
 if TYPE_CHECKING:
     from src.models.Alliance import Alliance
     from src.models.GameAccount import GameAccount
+    from src.models.WarBan import WarBan
     from src.models.WarDefensePlacement import WarDefensePlacement
 
 
@@ -33,3 +34,6 @@ class War(SQLModel, table=True):
         sa_relationship_kwargs={"foreign_keys": "[War.created_by_id]"},
     )
     placements: List["WarDefensePlacement"] = Relationship(back_populates="war")
+    bans: List["WarBan"] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[WarBan.war_id]"},
+    )

@@ -1,12 +1,15 @@
 import uuid
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from src.dto.dto_champion import ChampionResponse
 
 
 class WarCreateRequest(BaseModel):
     opponent_name: str = Field(..., max_length=100, min_length=1)
+    banned_champion_ids: List[uuid.UUID] = Field(default_factory=list, max_length=5)
 
 
 class WarResponse(BaseModel):
@@ -18,6 +21,7 @@ class WarResponse(BaseModel):
     status: str
     created_by_pseudo: str
     created_at: datetime
+    banned_champions: List[ChampionResponse] = []
 
     @model_validator(mode='before')
     @classmethod
@@ -31,6 +35,7 @@ class WarResponse(BaseModel):
             'status': data.status,
             'created_by_pseudo': data.created_by.game_pseudo,
             'created_at': data.created_at,
+            'banned_champions': [ban.champion for ban in data.bans],
         }
 
 

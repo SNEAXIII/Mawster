@@ -62,7 +62,7 @@ async def create_war(
 ):
     """Declare a new war against an opponent. Officers/owner only."""
     account = await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
-    return await WarService.create_war(session, alliance_id, body.opponent_name, account.id)
+    return await WarService.create_war(session, alliance_id, body.opponent_name, account.id, body.banned_champion_ids)
 
 
 @war_controller.get(
@@ -194,7 +194,7 @@ async def get_available_attackers(
 ):
     """List available attackers (BG roster minus defenders). Pass attacker_id to filter to a single member."""
     await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
-    return await WarService.get_available_attackers(session, alliance_id, battlegroup, attacker_id)
+    return await WarService.get_available_attackers(session, alliance_id, battlegroup, attacker_id, war)
 
 @war_controller.post(
     "/{war_id}/bg/{battlegroup}/node/{node_number}/attacker",
