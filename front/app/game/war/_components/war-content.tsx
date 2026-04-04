@@ -5,7 +5,6 @@ import { useRequiredSession } from '@/hooks/use-required-session';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useI18n } from '@/app/i18n';
-import ChampionPortrait from '@/components/champion-portrait';
 import { WarProvider, useWar } from '../_context/war-context';
 import WarHeader from './war-header';
 import WarDefendersTab from './war-defenders-tab';
@@ -88,31 +87,6 @@ function WarLayout() {
               loading={managementLoading}
               onClickDeclare={() => setShowCreateDialog(true)}
             />
-          )}
-
-          {/* ── Banned champions ─────────────────────────── */}
-          {currentWar && (
-            <div className='flex items-center gap-2 flex-wrap'>
-              <span className='text-sm shrink-0'>{t.game.war.bans.label}:</span>
-              {currentWar.banned_champions.length === 0 ? (
-                <span className='text-sm'>{t.game.war.bans.none}</span>
-              ) : (
-                currentWar.banned_champions.map((c) => (
-                  <div
-                    key={c.id}
-                    title={c.name}
-                    data-cy={`ban-display-${c.id}`}
-                  >
-                    <ChampionPortrait
-                      imageUrl={c.image_url}
-                      name={c.name}
-                      rarity={'7r6'}
-                      size={45}
-                    />
-                  </div>
-                ))
-              )}
-            </div>
           )}
 
           {/* ── War map ──────────────────────────────────── */}
