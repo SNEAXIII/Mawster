@@ -40,7 +40,7 @@ def delete_db(retries: int = 20, delay: float = 0.2):
     """Delete the DB file on disk (opt-in via TEST_DELETE_DB env var)."""
     if os.getenv("TEST_DELETE_DB") in ("1", "true", "True"):
         if os.path.exists(DB_NAME):
-            for attempt in range(retries):
+            for _ in range(retries):
                 try:
                     os.remove(DB_NAME)
                     return
