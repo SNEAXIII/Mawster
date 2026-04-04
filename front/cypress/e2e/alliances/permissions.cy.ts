@@ -86,4 +86,75 @@ describe('Alliances – Permissions', () => {
       },
     );
   });
+
+  // =========================================================================
+  // Owner actions — promote, demote, exclude
+  // =========================================================================
+
+  it('owner can promote a member to officer', () => {
+    setupOwnerMemberAlliance('perm-promote', 'PromoteOwner', 'PromoteMember', 'PromoteAlliance', 'PR').then(
+      ({ ownerData, allianceId }) => {
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('alliances');
+
+        cy.getByCy('alliance-card-PromoteAlliance')
+          .should('be.visible')
+          .within(() => {
+            cy.getByCy('promote-officer-PromoteMember').should('be.visible').click();
+          });
+
+        cy.getByCy('confirmation-dialog-confirm').click();
+
+        cy.getByCy('alliance-card-PromoteAlliance').within(() => {
+          cy.getByCy('demote-officer-PromoteMember').should('be.visible');
+          cy.getByCy('promote-officer-PromoteMember').should('not.exist');
+        });
+      },
+    );
+  });
+
+  it('owner can demote an officer back to member', () => {
+    setupOwnerMemberAlliance('perm-demote', 'DemoteOwner', 'DemoteMember', 'DemoteAlliance', 'DM').then(
+      ({ ownerData, allianceId, memberAccId }) => {
+        cy.apiAddOfficer(ownerData.access_token, allianceId, memberAccId);
+
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('alliances');
+
+        cy.getByCy('alliance-card-DemoteAlliance')
+          .should('be.visible')
+          .within(() => {
+            cy.getByCy('demote-officer-DemoteMember').should('be.visible').click();
+          });
+
+        cy.getByCy('confirmation-dialog-confirm').click();
+
+        cy.getByCy('alliance-card-DemoteAlliance').within(() => {
+          cy.getByCy('promote-officer-DemoteMember').should('be.visible');
+          cy.getByCy('demote-officer-DemoteMember').should('not.exist');
+        });
+      },
+    );
+  });
+
+  it('owner can exclude a member from the alliance', () => {
+    setupOwnerMemberAlliance('perm-exclude', 'ExcludeOwner', 'ExcludeMember', 'ExcludeAlliance', 'EX').then(
+      ({ ownerData }) => {
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('alliances');
+
+        cy.getByCy('alliance-card-ExcludeAlliance')
+          .should('be.visible')
+          .within(() => {
+            cy.getByCy('exclude-member-ExcludeMember').should('be.visible').click();
+          });
+
+        cy.getByCy('confirmation-dialog-confirm').click();
+
+        cy.getByCy('alliance-card-ExcludeAlliance').within(() => {
+          cy.getByCy('member-row-ExcludeMember').should('not.exist');
+        });
+      },
+    );
+  });
 });

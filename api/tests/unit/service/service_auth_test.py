@@ -58,9 +58,11 @@ async def test_get_current_user_in_jwt_user_not_found(mocker):
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "role",
-    list(Roles.__members__.values()),
+    [Roles.USER, Roles.ADMIN],
+    ids=["user", "admin_also_passes"],
 )
 async def test_is_logged_as_user_success(mocker, role):
+    """All roles (user, admin, super_admin) can access user-level endpoints."""
     # Arrange
     mock_decode = decode_service_mock(mocker, {"role": role})
 

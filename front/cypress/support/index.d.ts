@@ -117,6 +117,16 @@ declare namespace Cypress {
     apiAddOfficer(token: string, allianceId: string, gameAccountId: string): Chainable<any>;
 
     /**
+     * Demote an officer back to member in an alliance via backend API.
+     */
+    apiRemoveOfficer(token: string, allianceId: string, gameAccountId: string): Chainable<any>;
+
+    /**
+     * Remove (exclude) a member from an alliance via backend API.
+     */
+    apiRemoveMember(token: string, allianceId: string, gameAccountId: string): Chainable<any>;
+
+    /**
      * Truncate the DB then run all fixture scripts (POST /dev/fixtures).
      */
     runFixtures(): void;

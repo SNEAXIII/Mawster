@@ -94,32 +94,19 @@ describe('War – Basic page rendering', () => {
 
   // ── Mode toggle ────────────────────────────────────────────────────────────
 
-  it('shows mode toggle in defenders tab', () => {
+  it('shows mode toggle defaulting to attackers mode', () => {
     setupWarOwner('war-basic-toggle', 'TogglePlayer', 'ToggleAlliance', 'TG').then(({ ownerData, allianceId }) => {
       cy.apiCreateWar(ownerData.access_token, allianceId, 'ToggleEnemy');
       cy.apiLogin(ownerData.user_id);
       cy.navTo('war');
 
       cy.getByCy('war-mode-toggle').should('be.visible');
-      cy.getByCy('war-mode-defenders').should('be.visible');
-      cy.getByCy('war-mode-attackers').should('be.visible');
+      cy.getByCy('war-mode-attackers').should('have.class', 'bg-primary');
+      cy.getByCy('war-mode-defenders').should('not.have.class', 'bg-primary');
     });
   });
 
-  it('defaults to attackers mode', () => {
-    setupWarOwner('war-basic-toggle-default', 'ToggleDefPlayer', 'ToggleDefAlliance', 'TD').then(
-      ({ ownerData, allianceId }) => {
-        cy.apiCreateWar(ownerData.access_token, allianceId, 'ToggleDefEnemy');
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
-
-        cy.getByCy('war-mode-defenders').should('not.have.class', 'bg-primary');
-        cy.getByCy('war-mode-attackers').should('have.class', 'bg-primary');
-      },
-    );
-  });
-
-  it('switches to defender mode on click', () => {
+  it('switches between defender and attacker modes', () => {
     setupWarOwner('war-basic-toggle-switch', 'ToggleSwPlayer', 'ToggleSwAlliance', 'TS').then(
       ({ ownerData, allianceId }) => {
         cy.apiCreateWar(ownerData.access_token, allianceId, 'ToggleSwEnemy');
@@ -150,18 +137,17 @@ describe('War – Basic page rendering', () => {
     );
   });
 
-  it('switches back to defenders mode from attackers', () => {
-    setupWarOwner('war-basic-toggle-back', 'ToggleBackPlayer', 'ToggleBackAlliance', 'TB').then(
-      ({ ownerData, allianceId }) => {
-        cy.apiCreateWar(ownerData.access_token, allianceId, 'ToggleBackEnemy');
+  // ── Ended war ──────────────────────────────────────────────────────────────
+
+  it('shows no-war message and hides nodes after war ends', () => {
+    setupWarOwner('war-basic-ended', 'EndedPlayer', 'EndedAlliance', 'EN').then(({ ownerData, allianceId }) => {
+      cy.apiCreateWar(ownerData.access_token, allianceId, 'EndedEnemy').then((war) => {
+        cy.apiEndWar(ownerData.access_token, allianceId, war.id);
         cy.apiLogin(ownerData.user_id);
         cy.navTo('war');
-
-        cy.getByCy('war-mode-attackers').click();
-        cy.getByCy('war-mode-defenders').click();
-        cy.getByCy('war-mode-defenders').should('have.class', 'bg-primary');
-        cy.getByCy('war-mode-attackers').should('not.have.class', 'bg-primary');
-      },
-    );
+        cy.contains('No war declared').should('be.visible');
+        cy.getByCy('war-node-1').should('not.exist');
+      });
+    });
   });
 });

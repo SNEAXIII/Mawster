@@ -95,4 +95,20 @@ describe('Login & Profile – UI', () => {
       cy.getByCy('nav-administration').should('not.exist');
     });
   });
+
+  // =========================================================================
+  // Dev picker — list rendering
+  // =========================================================================
+
+  it('dev user list is scrollable and shows all users when many are registered', () => {
+    // Create enough users so the list overflows max-h-60 (15rem ≈ 240px)
+    Array.from({ length: 15 }, (_, i) => i).forEach((i) => {
+      cy.registerUser(`account-scroll-user${i}`);
+    });
+
+    cy.visit('/login');
+
+    cy.getByCy('dev-user-list').should('exist');
+    cy.getByCy('dev-user-list').find('button').should('have.length', 15);
+  });
 });

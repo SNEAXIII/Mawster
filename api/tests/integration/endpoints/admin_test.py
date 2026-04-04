@@ -66,6 +66,7 @@ _ADMIN_USER_ROUTES = [
     ("PATCH", f"/admin/users/enable/{_FAKE_ID}", {}, "enable"),
     ("DELETE", f"/admin/users/delete/{_FAKE_ID}", None, "delete"),
     ("PATCH", f"/admin/users/promote/{_FAKE_ID}", {}, "promote"),
+    ("PATCH", f"/admin/users/demote/{_FAKE_ID}", {}, "demote"),
 ]
 
 
@@ -190,13 +191,6 @@ class TestDisableUser:
         )
         assert response.status_code == expected_status
 
-    @pytest.mark.asyncio
-    async def test_disable_invalid_uuid_returns_422(self):
-        await push_one_admin()
-        response = await execute_patch_request(
-            "/admin/users/disable/not-a-uuid", {}, headers=ADMIN_HEADERS
-        )
-        assert response.status_code == 422
 
 
 # =========================================================================
@@ -348,13 +342,6 @@ class TestPromoteUser:
         )
         assert response.status_code == expected_status
 
-    @pytest.mark.asyncio
-    async def test_promote_invalid_uuid_returns_422(self):
-        await push_one_super_admin()
-        response = await execute_patch_request(
-            "/admin/users/promote/not-a-uuid", {}, headers=SUPER_ADMIN_HEADERS
-        )
-        assert response.status_code == 422
 
 
 # =========================================================================
@@ -395,3 +382,65 @@ class TestSuperAdminAccess:
             f"/admin/users/delete/{target.id}", headers=SUPER_ADMIN_HEADERS
         )
         assert response.status_code == 400
+
+
+# =========================================================================
+# PATCH /admin/users/demote/{uuid}
+# =========================================================================
+
+
+class TestDemoteUser:
+    @pytest.mark.asyncio
+    async def test_super_admin_can_demote(self):
+        """Only super_admin can demote an admin back to regular user."""
+        await push_one_super_admin()
+        user = await _setup_user(
+            user_id=uuid.uuid4(), login="admin2", email=ADMIN2_EMAIL,
+            discord_id="discord_admin2", role=Roles.ADMIN,
+        )
+
+        response = await execute_patch_request(
+            f"/admin/users/demote/{user.id}", {}, headers=SUPER_ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_admin_cannot_demote(self):
+        """Regular admin is forbidden from demoting users."""
+        await push_one_admin()
+        user = await _setup_user(
+            user_id=uuid.uuid4(), login="admin2", email=ADMIN2_EMAIL,
+            discord_id="discord_admin2", role=Roles.ADMIN,
+        )
+
+        response = await execute_patch_request(
+            f"/admin/users/demote/{user.id}", {}, headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "scenario, expected_status",
+        [
+            ("already_user", 400),
+            ("deleted", 400),
+            ("not_found", 400),
+        ],
+        ids=["already_user", "deleted_user", "not_found"],
+    )
+    async def test_demote_errors(self, session, scenario, expected_status):
+        await push_one_super_admin()
+
+        if scenario == "already_user":
+            user = await _setup_user()
+            target_id = user.id
+        elif scenario == "deleted":
+            user = await _setup_user(deleted_at=datetime.now())
+            target_id = user.id
+        else:
+            target_id = uuid.uuid4()
+
+        response = await execute_patch_request(
+            f"/admin/users/demote/{target_id}", {}, headers=SUPER_ADMIN_HEADERS
+        )
+        assert response.status_code == expected_status

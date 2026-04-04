@@ -349,6 +349,33 @@ Cypress.Commands.add('apiAddOfficer', (token: string, allianceId: string, gameAc
   });
 });
 
+// ── Remove officer from alliance (direct backend call) ──────────────────────
+
+Cypress.Commands.add('apiRemoveOfficer', (token: string, allianceId: string, gameAccountId: string) => {
+  cy.request({
+    method: 'DELETE',
+    url: `${BACKEND}/alliances/${allianceId}/officers`,
+    headers: { Authorization: `Bearer ${token}` },
+    body: { game_account_id: gameAccountId },
+  }).then((res) => {
+    expect(res.status).to.eq(200);
+    return res.body;
+  });
+});
+
+// ── Remove member from alliance (direct backend call) ───────────────────────
+
+Cypress.Commands.add('apiRemoveMember', (token: string, allianceId: string, gameAccountId: string) => {
+  cy.request({
+    method: 'DELETE',
+    url: `${BACKEND}/alliances/${allianceId}/members/${gameAccountId}`,
+    headers: { Authorization: `Bearer ${token}` },
+  }).then((res) => {
+    expect(res.status).to.eq(200);
+    return res.body;
+  });
+});
+
 // ── Run fixtures (truncate DB + seed) ────────────────────────────────────────
 
 Cypress.Commands.add('runFixtures', () => {
