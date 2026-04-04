@@ -1051,3 +1051,164 @@ class TestGetCurrentWar:
             headers=headers,
         )
         assert response.status_code == 403
+
+
+# ─── TestWarBans ──────────────────────────────────────────
+
+class TestWarBans:
+    @pytest.mark.asyncio
+    async def test_create_war_with_bans_returns_banned_champions(self):
+        """War created with bans returns banned_champions in the response."""
+        data = await _setup_alliance()
+        headers = create_auth_headers(user_id=str(USER_ID))
+        champ2 = await push_champion(name="Thor", champion_class="Cosmic")
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={
+                "opponent_name": "Banned Enemy",
+                "banned_champion_ids": [str(data["champ"].id), str(champ2.id)],
+            },
+            headers=headers,
+        )
+        assert response.status_code == 201
+        body = response.json()
+        assert "banned_champions" in body
+        banned_names = [c["name"] for c in body["banned_champions"]]
+        assert "Spider-Man" in banned_names
+        assert "Thor" in banned_names
+
+    @pytest.mark.asyncio
+    async def test_create_war_without_bans_returns_empty_list(self):
+        """War created without bans returns empty banned_champions."""
+        data = await _setup_alliance()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={"opponent_name": "No Bans Enemy"},
+            headers=headers,
+        )
+        assert response.status_code == 201
+        assert response.json()["banned_champions"] == []
+
+    @pytest.mark.asyncio
+    async def test_create_war_with_6_bans_rejected(self):
+        """More than 5 bans is rejected."""
+        data = await _setup_alliance()
+        headers = create_auth_headers(user_id=str(USER_ID))
+        extra_champs = []
+        for i, (name, cls) in enumerate([("Thor", "Cosmic"), ("Iron Man", "Tech"), ("Hulk", "Science"), ("Black Widow", "Skill"), ("Vision", "Tech")]):
+            extra_champs.append(await push_champion(name=name, champion_class=cls))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={
+                "opponent_name": "Too Many Bans",
+                "banned_champion_ids": [str(data["champ"].id)] + [str(c.id) for c in extra_champs],
+            },
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_create_war_with_duplicate_bans_rejected(self):
+        """Duplicate champion in ban list is rejected."""
+        data = await _setup_alliance()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={
+                "opponent_name": "Duplicate Bans",
+                "banned_champion_ids": [str(data["champ"].id), str(data["champ"].id)],
+            },
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_create_war_with_nonexistent_champion_rejected(self):
+        """Unknown champion id in bans returns 404."""
+        data = await _setup_alliance()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={
+                "opponent_name": "Ghost Ban",
+                "banned_champion_ids": [str(uuid.uuid4())],
+            },
+            headers=headers,
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_available_attackers_excludes_banned_champion(self):
+        """A champion banned in the war must not appear in available attackers."""
+        data = await _setup_attacker_scenario()
+        headers_officer = create_auth_headers(user_id=str(USER_ID))
+        headers_member = create_auth_headers(user_id=str(USER2_ID))
+
+        # End current war, create a new one banning Wolverine (champ2 = data["champ2"])
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={},
+            headers=headers_officer,
+        )
+        new_war_resp = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={
+                "opponent_name": "Ban War",
+                "banned_champion_ids": [str(data["champ2"].id)],
+            },
+            headers=headers_officer,
+        )
+        assert new_war_resp.status_code == 201
+        new_war_id = new_war_resp.json()["id"]
+
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/wars/{new_war_id}/bg/1/available-attackers",
+            headers=headers_member,
+        )
+        assert response.status_code == 200
+        names = [a["champion_name"] for a in response.json()]
+        assert "Wolverine" not in names
+
+    @pytest.mark.asyncio
+    async def test_assign_attacker_banned_champion_rejected(self):
+        """Assigning a banned champion as attacker is rejected with 409."""
+        data = await _setup_attacker_scenario()
+        headers_officer = create_auth_headers(user_id=str(USER_ID))
+        headers_member = create_auth_headers(user_id=str(USER2_ID))
+
+        # End current war, create a new one banning Wolverine
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={},
+            headers=headers_officer,
+        )
+        new_war_resp = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={
+                "opponent_name": "Ban Attacker War",
+                "banned_champion_ids": [str(data["champ2"].id)],
+            },
+            headers=headers_officer,
+        )
+        new_war_id = new_war_resp.json()["id"]
+
+        # Place a defender on node 10 in the new war
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{new_war_id}/bg/1/place",
+            payload={"node_number": 10, "champion_id": str(data["champ"].id), "stars": 7, "rank": 3, "ascension": 0},
+            headers=headers_officer,
+        )
+
+        # Try to assign banned Wolverine as attacker
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{new_war_id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers_member,
+        )
+        assert response.status_code == 409

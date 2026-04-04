@@ -416,3 +416,57 @@ class TestGetSynergy:
         assert len(body) == 1
         assert body[0]["champion_name"] == "Deadpool"
         assert body[0]["target_champion_name"] == "Wolverine"
+
+
+# ─── TestSynergyBans ──────────────────────────────────────
+
+class TestSynergyBans:
+    @pytest.mark.asyncio
+    async def test_add_synergy_banned_champion_rejected(self):
+        """Synergy provider whose champion is banned in the war is rejected with 409."""
+        data = await _setup_synergy_scenario()
+        alliance = data["alliance"]
+        war = data["war"]
+        headers_owner = data["headers_owner"]
+        headers_member = data["headers_member"]
+
+        # End current war, create a new one banning Deadpool (synergy_cu's champion)
+        await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/end",
+            payload={},
+            headers=headers_owner,
+        )
+        deadpool_champ_id = data["synergy_cu"].champion_id
+        new_war_resp = await execute_post_request(
+            f"/alliances/{alliance.id}/wars",
+            payload={
+                "opponent_name": "Ban Synergy War",
+                "banned_champion_ids": [str(deadpool_champ_id)],
+            },
+            headers=headers_owner,
+        )
+        assert new_war_resp.status_code == 201
+        new_war_id = new_war_resp.json()["id"]
+
+        # Place defender on node 10 and assign attacker_cu
+        await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{new_war_id}/bg/1/place",
+            payload={"node_number": 10, "champion_id": str(data["attacker_cu"].champion_id), "stars": 7, "rank": 3, "ascension": 0},
+            headers=headers_owner,
+        )
+        await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{new_war_id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["attacker_cu"].id)},
+            headers=headers_member,
+        )
+
+        # Try to add banned Deadpool as synergy provider
+        response = await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{new_war_id}/bg/1/synergy",
+            payload={
+                "champion_user_id": str(data["synergy_cu"].id),
+                "target_champion_user_id": str(data["attacker_cu"].id),
+            },
+            headers=headers_member,
+        )
+        assert response.status_code == 409
