@@ -60,31 +60,6 @@ export default function WarDefendersTab() {
 
   return (
     <div className='space-y-4'>
-      {/* Banned champions */}
-      {currentWar && (
-        <div className='flex items-center gap-2 flex-wrap'>
-          <span className='text-sm shrink-0'>{t.game.war.bans.label}:</span>
-          {currentWar.banned_champions.length === 0 ? (
-            <span className='text-sm'>{t.game.war.bans.none}</span>
-          ) : (
-            currentWar.banned_champions.map((c) => (
-              <div
-                key={c.id}
-                title={c.name}
-                data-cy={`ban-display-${c.id}`}
-              >
-                <ChampionPortrait
-                  imageUrl={c.image_url}
-                  name={c.name}
-                  rarity={'7r6'}
-                  size={45}
-                />
-              </div>
-            ))
-          )}
-        </div>
-      )}
-
       {/* Controls row: opponent name + BG picker + mode toggle + clear */}
       <div className='flex flex-wrap items-center gap-3'>
         {/* Opponent name */}
@@ -160,7 +135,28 @@ export default function WarDefendersTab() {
             {t.game.war.clearAll}
           </Button>
         )}
-
+        {/* Banned champions */}
+        <div className='flex items-center gap-2 flex-wrap'>
+          <span className='text-sm shrink-0'>{t.game.war.bans.label}:</span>
+          {currentWar.banned_champions.length === 0 ? (
+            <span className='text-sm'>{t.game.war.bans.none}</span>
+          ) : (
+            currentWar.banned_champions.map((c) => (
+              <div
+                key={c.id}
+                title={c.name}
+                data-cy={`ban-display-${c.id}`}
+              >
+                <ChampionPortrait
+                  imageUrl={c.image_url}
+                  name={c.name}
+                  rarity={'7r6'}
+                  size={45}
+                />
+              </div>
+            ))
+          )}
+        </div>
         {/* End war button */}
         {canManageWar && (
           <Button
