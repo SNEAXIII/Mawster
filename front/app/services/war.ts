@@ -1,5 +1,13 @@
 // ─── War Service ─────────────────────────────────────────
 
+export interface BannedChampion {
+  id: string;
+  name: string;
+  champion_class: string;
+  image_url: string | null;
+  rarity: string | null;
+}
+
 export interface War {
   id: string;
   alliance_id: string;
@@ -7,6 +15,7 @@ export interface War {
   status: 'active' | 'ended';
   created_by_pseudo: string;
   created_at: string;
+  banned_champions: BannedChampion[];
 }
 
 export interface WarPlacement {
@@ -101,11 +110,15 @@ export async function getCurrentWar(allianceId: string): Promise<War> {
   return response.json();
 }
 
-export async function createWar(allianceId: string, opponentName: string): Promise<War> {
+export async function createWar(
+  allianceId: string,
+  opponentName: string,
+  bannedChampionIds: string[] = []
+): Promise<War> {
   const response = await fetch(`${PROXY}/alliances/${allianceId}/wars`, {
     method: 'POST',
     headers: jsonHeaders,
-    body: JSON.stringify({ opponent_name: opponentName }),
+    body: JSON.stringify({ opponent_name: opponentName, banned_champion_ids: bannedChampionIds }),
   });
   await throwOnError(response, 'Failed to create war');
   return response.json();

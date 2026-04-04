@@ -155,7 +155,7 @@ declare namespace Cypress {
     getByCy(selector: string): Chainable<JQuery<HTMLElement>>;
 
     /** Declare a war against an opponent (direct backend call). */
-    apiCreateWar(token: string, allianceId: string, opponentName: string): Chainable<any>;
+    apiCreateWar(token: string, allianceId: string, opponentName: string, bannedChampionIds?: string[]): Chainable<any>;
 
     /** Place a champion on a war defense node (direct backend call). */
     apiPlaceWarDefender(

@@ -11,6 +11,7 @@ from src.models.ChampionUser import ChampionUser
 from src.models.DefensePlacement import DefensePlacement
 from src.models.GameAccount import GameAccount
 from src.models.War import War, WarStatus
+from src.models.WarBan import WarBan
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarSynergyAttacker import WarSynergyAttacker
 from src.dto.dto_war import (
@@ -33,7 +34,17 @@ class WarService:
         alliance_id: uuid.UUID,
         opponent_name: str,
         created_by_id: uuid.UUID,
+        banned_champion_ids: list[uuid.UUID] | None = None,
     ) -> WarResponse:
+        if banned_champion_ids is None:
+            banned_champion_ids = []
+
+        if len(banned_champion_ids) != len(set(banned_champion_ids)):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Banned champion list contains duplicates",
+            )
+
         existing = await session.exec(
             select(War).where(War.alliance_id == alliance_id, War.status == WarStatus.active)
         )
@@ -42,14 +53,27 @@ class WarService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail="An active war already exists for this alliance",
             )
+
+        for champion_id in banned_champion_ids:
+            champ = await session.get(Champion, champion_id)
+            if champ is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Champion {champion_id} not found",
+                )
+
         war = War(
             alliance_id=alliance_id,
             opponent_name=opponent_name,
             created_by_id=created_by_id,
         )
         session.add(war)
+        await session.flush()
+
+        for champion_id in banned_champion_ids:
+            session.add(WarBan(war_id=war.id, champion_id=champion_id))
+
         await session.commit()
-        await session.refresh(war)
         return WarResponse.model_validate(await cls._load_war(session, war.id))
 
     @classmethod
@@ -61,7 +85,10 @@ class WarService:
         stmt = (
             select(War)
             .where(War.alliance_id == alliance_id)
-            .options(selectinload(War.created_by))  # type: ignore[arg-type]
+            .options(
+                selectinload(War.created_by),  # type: ignore[arg-type]
+                selectinload(War.bans).selectinload(WarBan.champion),  # type: ignore[arg-type]
+            )
             .order_by(War.created_at.desc())  # type: ignore[attr-defined]
         )
         result = await session.exec(stmt)
@@ -102,7 +129,10 @@ class WarService:
         stmt = (
             select(War)
             .where(War.id == war_id)
-            .options(selectinload(War.created_by))  # type: ignore[arg-type]
+            .options(
+                selectinload(War.created_by),  # type: ignore[arg-type]
+                selectinload(War.bans).selectinload(WarBan.champion),  # type: ignore[arg-type]
+            )
         )
         result = await session.exec(stmt)
         return result.first()
@@ -317,6 +347,7 @@ class WarService:
         alliance_id: uuid.UUID,
         battlegroup: int,
         attacker_id: Optional[uuid.UUID] = None,
+        war: Optional[War] = None,
     ) -> list[AvailableAttackerResponse]:
         # Get members assigned to this battlegroup (or just the specific attacker)
         member_conditions = and_(
@@ -347,11 +378,13 @@ class WarService:
             ).where(defense_conditions)
         defense_result = await session.exec(request_sql)
         defense_champion_user_ids = set(defense_result.all())
+        banned_champion_ids: set[uuid.UUID] = {ban.champion_id for ban in war.bans} if war else set()
         result: list[AvailableAttackerResponse] = []
         for game_account in members:
             for champion_user in game_account.roster:
-                # Remove a champion if a user already placed it in defense
                 if champion_user.id in defense_champion_user_ids:
+                    continue
+                if champion_user.champion_id in banned_champion_ids:
                     continue
                 result.append(AvailableAttackerResponse(
                     champion_user_id=champion_user.id,
@@ -401,7 +434,19 @@ class WarService:
                 detail="This champion does not belong to a member of this alliance battlegroup",
             )
 
-        # 4. Check champion not already placed in regular alliance defense
+        # 4. Check champion is not banned in this war
+        ban_check = await session.exec(
+            select(WarBan).where(
+                and_(WarBan.war_id == war_id, WarBan.champion_id == champion_user.champion_id)
+            )
+        )
+        if ban_check.first():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This champion is banned for this war",
+            )
+
+        # 5. Check champion not already placed in regular alliance defense
         defense_check = await session.exec(
             select(DefensePlacement).where(
                 and_(
@@ -643,7 +688,19 @@ class WarService:
                 detail="Synergy provider must belong to the same game account as the target attacker",
             )
 
-        # 3. champion_user_id not already in regular alliance defense for this BG
+        # 3. Check synergy provider's champion is not banned in this war
+        synergy_ban_check = await session.exec(
+            select(WarBan).where(
+                and_(WarBan.war_id == war_id, WarBan.champion_id == champion_user.champion_id)
+            )
+        )
+        if synergy_ban_check.first():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This champion is banned for this war",
+            )
+
+        # 3b. champion_user_id not already in regular alliance defense for this BG
         defense_check = await session.exec(
             select(DefensePlacement).where(
                 and_(

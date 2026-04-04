@@ -15,6 +15,7 @@ help:
 	@echo "install      --> install prod dependencies (uv sync)"
 	@echo "install-dev  --> install prod + dev dependencies"
 	@echo "reset-db     --> reset the database"
+	@echo "repopulate-db --> reset the database and load champions + fixtures"
 
 install:
 	uv sync --no-dev
@@ -54,3 +55,8 @@ test:
 
 test-cov:
 	uv run pytest tests --cov --cov-report term-missing -v
+
+repopulate-db:
+	make reset-db
+	make load-champions
+	make fixtures
