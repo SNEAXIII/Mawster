@@ -641,12 +641,12 @@ export function setupOwnerMemberAlliance(
 
 // ── War API commands ──────────────────────────────────────────────────────────
 
-Cypress.Commands.add('apiCreateWar', (token: string, allianceId: string, opponentName: string) => {
+Cypress.Commands.add('apiCreateWar', (token: string, allianceId: string, opponentName: string, bannedChampionIds: string[] = []) => {
   cy.request({
     method: 'POST',
     url: `${BACKEND}/alliances/${allianceId}/wars`,
     headers: { Authorization: `Bearer ${token}` },
-    body: { opponent_name: opponentName },
+    body: { opponent_name: opponentName, banned_champion_ids: bannedChampionIds },
   }).then((res) => {
     expect(res.status).to.eq(201);
     return res.body;

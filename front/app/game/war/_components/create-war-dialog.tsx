@@ -12,11 +12,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { FiX } from 'react-icons/fi';
 import { type Champion, getChampions } from '@/app/services/champions';
+import ChampionPortrait from '@/components/champion-portrait';
 
-const MAX_BANS = 5;
+const MAX_BANS = 6;
 
 interface CreateWarDialogProps {
   open: boolean;
@@ -109,18 +109,26 @@ export default function CreateWarDialog({ open, onClose, onConfirm }: CreateWarD
 
               {/* Selected bans */}
               {bannedChampions.length > 0 && (
-                <div className='flex flex-wrap gap-1 mt-2'>
+                <div className='flex flex-wrap gap-2 mt-2'>
                   {bannedChampions.map((c) => (
-                    <Badge
+                    <button
                       key={c.id}
-                      variant='secondary'
-                      className='gap-1 cursor-pointer'
+                      type='button'
+                      title={c.name}
+                      className='relative group'
                       onClick={() => toggleBan(c.id)}
                       data-cy={`ban-badge-${c.id}`}
                     >
-                      {c.name}
-                      <FiX className='h-3 w-3' />
-                    </Badge>
+                      <ChampionPortrait
+                        imageUrl={c.image_url}
+                        name={c.name}
+                        rarity='7r6'
+                        size={50}
+                      />
+                      <div className='absolute inset-0 rounded bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none'>
+                        <FiX className='text-white w-4 h-4' />
+                      </div>
+                    </button>
                   ))}
                 </div>
               )}
@@ -137,22 +145,28 @@ export default function CreateWarDialog({ open, onClose, onConfirm }: CreateWarD
 
               {/* Dropdown results */}
               {filtered.length > 0 && (
-                <div className='border rounded-md mt-1 max-h-40 overflow-y-auto bg-popover'>
+                <div className='border rounded-md mt-1 max-h-48 overflow-y-auto bg-popover'>
                   {filtered.slice(0, 20).map((c) => {
                     const selected = bannedIds.includes(c.id);
                     return (
                       <button
                         key={c.id}
                         type='button'
-                        className={`w-full text-left px-3 py-1.5 text-sm hover:bg-accent flex items-center gap-2 ${selected ? 'text-primary font-medium' : ''}`}
+                        className={`w-full text-left px-2 py-1 text-sm hover:bg-accent flex items-center gap-2 ${selected ? 'bg-accent/50' : ''}`}
                         onClick={() => {
                           toggleBan(c.id);
                           setSearch('');
                         }}
                         data-cy={`ban-option-${c.id}`}
                       >
-                        <span>{c.name}</span>
-                        <span className='text-muted-foreground text-xs'>{c.champion_class}</span>
+                        <ChampionPortrait
+                          imageUrl={c.image_url}
+                          name={c.name}
+                          rarity='7r6'
+                          size={40}
+                        />
+                        <span className={selected ? 'font-medium' : ''}>{c.name}</span>
+                        <span className='text-muted-foreground text-xs ml-auto'>{c.champion_class}</span>
                       </button>
                     );
                   })}
