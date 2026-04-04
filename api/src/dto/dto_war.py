@@ -9,7 +9,7 @@ from src.dto.dto_champion import ChampionResponse
 
 class WarCreateRequest(BaseModel):
     opponent_name: str = Field(..., max_length=100, min_length=1)
-    banned_champion_ids: List[uuid.UUID] = Field(default_factory=list, max_length=5)
+    banned_champion_ids: List[uuid.UUID] = Field(default_factory=list, max_length=6)
 
 
 class WarResponse(BaseModel):
