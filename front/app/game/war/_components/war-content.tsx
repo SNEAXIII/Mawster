@@ -5,7 +5,7 @@ import { useRequiredSession } from '@/hooks/use-required-session';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useI18n } from '@/app/i18n';
-import { Badge } from '@/components/ui/badge';
+import ChampionPortrait from '@/components/champion-portrait';
 import { WarProvider, useWar } from '../_context/war-context';
 import WarHeader from './war-header';
 import WarDefendersTab from './war-defenders-tab';
@@ -93,19 +93,23 @@ function WarLayout() {
           {/* ── Banned champions ─────────────────────────── */}
           {currentWar && (
             <div className='flex items-center gap-2 flex-wrap'>
-              <span className='text-sm text-muted-foreground'>{t.game.war.bans.label}:</span>
+              <span className='text-sm shrink-0'>{t.game.war.bans.label}:</span>
               {currentWar.banned_champions.length === 0 ? (
-                <span className='text-sm text-muted-foreground'>{t.game.war.bans.none}</span>
+                <span className='text-sm'>{t.game.war.bans.none}</span>
               ) : (
                 currentWar.banned_champions.map((c) => (
-                  <Badge
+                  <div
                     key={c.id}
-                    variant='destructive'
-                    className='gap-1'
+                    title={c.name}
                     data-cy={`ban-display-${c.id}`}
                   >
-                    {c.name}
-                  </Badge>
+                    <ChampionPortrait
+                      imageUrl={c.image_url}
+                      name={c.name}
+                      rarity={'7r6'}
+                      size={45}
+                    />
+                  </div>
                 ))
               )}
             </div>
