@@ -18,6 +18,7 @@ def _make_war(**overrides):
         "status": "active",
         "created_at": datetime(2025, 1, 1, 12, 0, 0),
         "created_by": _ns(game_pseudo="OwnerPlayer"),
+        "bans": [],
     }
     defaults.update(overrides)
     return _ns(**defaults)

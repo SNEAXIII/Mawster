@@ -41,7 +41,7 @@ class WarService:
 
         if len(banned_champion_ids) != len(set(banned_champion_ids)):
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Banned champion list contains duplicates",
             )
 

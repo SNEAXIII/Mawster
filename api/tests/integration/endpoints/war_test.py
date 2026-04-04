@@ -1094,11 +1094,11 @@ class TestWarBans:
 
     @pytest.mark.asyncio
     async def test_create_war_with_6_bans_rejected(self):
-        """More than 5 bans is rejected."""
+        """More than 6 bans is rejected."""
         data = await _setup_alliance()
         headers = create_auth_headers(user_id=str(USER_ID))
         extra_champs = []
-        for i, (name, cls) in enumerate([("Thor", "Cosmic"), ("Iron Man", "Tech"), ("Hulk", "Science"), ("Black Widow", "Skill"), ("Vision", "Tech")]):
+        for i, (name, cls) in enumerate([("Thor", "Cosmic"), ("Iron Man", "Tech"), ("Hulk", "Science"), ("Black Widow", "Skill"), ("Vision", "Tech"), ("Wolverine", "Mutant")]):
             extra_champs.append(await push_champion(name=name, champion_class=cls))
 
         response = await execute_post_request(
