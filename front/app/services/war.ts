@@ -74,6 +74,21 @@ export interface WarSynergy {
   created_at: string;
 }
 
+export interface WarPrefight {
+  id: string;
+  war_id: string;
+  battlegroup: number;
+  game_account_id: string;
+  champion_user_id: string;
+  target_node_number: number;
+  champion_name: string;
+  champion_class: string;
+  image_url: string | null;
+  rarity: string;
+  game_pseudo: string;
+  created_at: string;
+}
+
 // ─── Helpers ─────────────────────────────────────────────
 
 const PROXY = '/api/back';
@@ -315,4 +330,54 @@ export async function removeWarSynergy(
     { method: 'DELETE', headers: jsonHeaders }
   );
   await throwOnError(response, 'Failed to remove synergy attacker');
+}
+
+// ─── Prefight API ─────────────────────────────────────────
+
+export async function getWarPrefights(
+  allianceId: string,
+  warId: string,
+  battlegroup: number
+): Promise<WarPrefight[]> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight`,
+    { headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to load pre-fight attackers');
+  return response.json();
+}
+
+export async function addWarPrefight(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  championUserId: string,
+  targetNodeNumber: number
+): Promise<WarPrefight> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight`,
+    {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        champion_user_id: championUserId,
+        target_node_number: targetNodeNumber,
+      }),
+    }
+  );
+  await throwOnError(response, 'Failed to add pre-fight attacker');
+  return response.json();
+}
+
+export async function removeWarPrefight(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  championUserId: string
+): Promise<void> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight/${championUserId}`,
+    { method: 'DELETE', headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to remove pre-fight attacker');
 }
