@@ -306,6 +306,7 @@ const en = {
         addError: 'Failed to add synergy',
         removeSuccess: 'Synergy removed',
         removeError: 'Failed to remove synergy',
+        search: 'Search champion...',
       },
       prefight: {
         label: 'Pre-fight',

@@ -311,6 +311,7 @@ const fr: Translations = {
         addError: "Erreur lors de l'ajout de la synergie",
         removeSuccess: 'Synergie révoquée',
         removeError: 'Erreur lors de la révocation de la synergie',
+        search: 'Rechercher un champion...',
       },
       prefight: {
         label: 'Précombat',
