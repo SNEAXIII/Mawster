@@ -1,5 +1,8 @@
+import logging
 import uuid
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from fastapi import HTTPException
 from sqlmodel import select, and_
@@ -674,10 +677,12 @@ class WarService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No attacker assigned to this node")
 
         removed_champion_user_id = placement.attacker_champion_user_id
+        logger.debug("[remove_attacker] war=%s bg=%s node=%s removed_champion_user_id=%s", war_id, battlegroup, node_number, removed_champion_user_id)
         placement.attacker_champion_user_id = None
         placement.ko_count = 0
         session.add(placement)
         await session.commit()
+        logger.debug("[remove_attacker] attacker cleared from placement id=%s", placement.id)
 
         # If this was the attacker's last node in this war+BG, remove their synergy entry
         remaining = await session.exec(
@@ -689,7 +694,9 @@ class WarService:
                 )
             )
         )
-        if not remaining.first():
+        has_remaining = remaining.first()
+        logger.debug("[remove_attacker] attacker has remaining nodes: %s (node=%s)", has_remaining is not None, has_remaining.node_number if has_remaining else "-")
+        if not has_remaining:
             synergy_result = await session.exec(
                 select(WarSynergyAttacker).where(
                     and_(
@@ -700,9 +707,29 @@ class WarService:
                 )
             )
             synergy = synergy_result.first()
+            logger.debug("[remove_attacker] synergy where attacker=provider: %s", "none" if not synergy else f"id={synergy.id} target_champion_user_id={synergy.target_champion_user_id}")
             if synergy:
                 await session.delete(synergy)
                 await session.commit()
+                logger.debug("[remove_attacker] deleted provider synergy id=%s", synergy.id)
+
+        # Clean up synergy entries where the removed attacker was the target
+        target_synergy_result = await session.exec(
+            select(WarSynergyAttacker).where(
+                and_(
+                    WarSynergyAttacker.war_id == war_id,
+                    WarSynergyAttacker.battlegroup == battlegroup,
+                    WarSynergyAttacker.target_champion_user_id == removed_champion_user_id,
+                )
+            )
+        )
+        target_synergies = target_synergy_result.all()
+        logger.debug("[remove_attacker] synergies where attacker=target: %d entries", len(target_synergies))
+        for ts in target_synergies:
+            logger.debug("[remove_attacker]   -> deleting synergy id=%s provider_champion_user_id=%s target_champion_user_id=%s", ts.id, ts.champion_user_id, ts.target_champion_user_id)
+            await session.delete(ts)
+        if target_synergies:
+            await session.commit()
 
         # Clean up prefight entries targeting this node
         prefight_cleanup_result = await session.exec(
@@ -715,11 +742,14 @@ class WarService:
             )
         )
         prefights_to_delete = prefight_cleanup_result.all()
+        logger.debug("[remove_attacker] prefights targeting node %s: %d entries", node_number, len(prefights_to_delete))
         for pf in prefights_to_delete:
+            logger.debug("[remove_attacker]   -> deleting prefight id=%s champion_user_id=%s game_account_id=%s", pf.id, pf.champion_user_id, pf.game_account_id)
             await session.delete(pf)
         if prefights_to_delete:
             await session.commit()
 
+        logger.debug("[remove_attacker] done")
         return WarPlacementResponse.model_validate(
             await cls._load_placement(session, placement.id)
         )

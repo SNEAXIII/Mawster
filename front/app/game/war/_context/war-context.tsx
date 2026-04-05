@@ -422,6 +422,8 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
             }
           : prev
       );
+      const updatedSynergies = await getWarSynergies(selectedAllianceId, activeWarId, selectedBg);
+      setSynergies(updatedSynergies);
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.removeAttackerError);
     }

@@ -251,14 +251,3 @@ declare namespace Cypress {
   }
 }
 
-export function setupPrefightScenario(prefix: string): Cypress.Chainable<{
-  adminToken: string;
-  ownerData: { access_token: string };
-  memberData: { access_token: string };
-  allianceId: string;
-  ownerAccId: string;
-  memberAccId: string;
-  warId: string;
-  championUserId: string;
-  prefightChampionUserId: string;
-}>;
