@@ -20,6 +20,7 @@ import {
   type WarDefenseSummary,
   type AvailableAttacker,
   type WarSynergy,
+  type WarPrefight,
   getCurrentWar,
   createWar,
   endWar,
@@ -33,6 +34,9 @@ import {
   getWarSynergies,
   addWarSynergy,
   removeWarSynergy,
+  getWarPrefights,
+  addWarPrefight,
+  removeWarPrefight,
 } from '@/app/services/war';
 import { WarMode } from '../_components/war-types';
 
@@ -98,6 +102,11 @@ interface WarContextValue {
   synergies: WarSynergy[];
   handleAddSynergy: (championUserId: string, targetChampionUserId: string) => Promise<void>;
   handleRemoveSynergy: (championUserId: string) => Promise<void>;
+
+  // Prefight
+  prefights: WarPrefight[];
+  handleAddPrefight: (championUserId: string, targetNodeNumber: number) => Promise<void>;
+  handleRemovePrefight: (championUserId: string) => Promise<void>;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -137,6 +146,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
   // ─── Defense state ─────────────────────────────────────────────────────────
   const [warSummary, setWarSummary] = useState<WarDefenseSummary | null>(null);
   const [synergies, setSynergies] = useState<WarSynergy[]>([]);
+  const [prefights, setPrefights] = useState<WarPrefight[]>([]);
   const [warLoading, setWarLoading] = useState(false);
   const [selectorNode, setSelectorNode] = useState<number | null>(null);
   const [attackerSelectorNode, setAttackerSelectorNode] = useState<number | null>(null);
@@ -191,12 +201,14 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       if (!selectedAllianceId || !activeWarId) return;
       if (!silent) setWarLoading(true);
       try {
-        const [summary, synergyList] = await Promise.all([
+        const [summary, synergyList, prefightList] = await Promise.all([
           getWarDefense(selectedAllianceId, activeWarId, selectedBg),
           getWarSynergies(selectedAllianceId, activeWarId, selectedBg),
+          getWarPrefights(selectedAllianceId, activeWarId, selectedBg),
         ]);
         setWarSummary(summary);
         setSynergies(synergyList);
+        setPrefights(prefightList);
       } catch {
         if (!silent) toast.error(tRef.current.game.war.loadError);
       } finally {
@@ -470,6 +482,36 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
   };
 
+  const handleAddPrefight = async (championUserId: string, targetNodeNumber: number) => {
+    if (!selectedAllianceId || !activeWarId) return;
+    try {
+      const prefight = await addWarPrefight(
+        selectedAllianceId,
+        activeWarId,
+        selectedBg,
+        championUserId,
+        targetNodeNumber
+      );
+      toast.success(
+        t.game.war.prefight.addSuccess.replace('#{node}', String(prefight.target_node_number))
+      );
+      setPrefights((prev) => [...prev, prefight]);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.prefight.addError);
+    }
+  };
+
+  const handleRemovePrefight = async (championUserId: string) => {
+    if (!selectedAllianceId || !activeWarId) return;
+    try {
+      await removeWarPrefight(selectedAllianceId, activeWarId, selectedBg, championUserId);
+      toast.success(t.game.war.prefight.removeSuccess);
+      setPrefights((prev) => prev.filter((p) => p.champion_user_id !== championUserId));
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.prefight.removeError);
+    }
+  };
+
   // ─── Context value ─────────────────────────────────────────────────────────
 
   const value = useMemo<WarContextValue>(
@@ -514,6 +556,9 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       synergies,
       handleAddSynergy,
       handleRemoveSynergy,
+      prefights,
+      handleAddPrefight,
+      handleRemovePrefight,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -536,6 +581,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       pendingRemoveNode,
       handleNodeClick,
       synergies,
+      prefights,
     ]
   );
 
