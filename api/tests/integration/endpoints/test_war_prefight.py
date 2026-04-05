@@ -310,6 +310,95 @@ class TestAddPrefight:
         assert response.status_code == 409
 
 
+class TestAddPrefightHasPrefightFlag:
+    @pytest.mark.asyncio
+    async def test_add_prefight_champion_without_has_prefight_rejected(self):
+        data = await _setup_prefight_scenario()
+        no_pf_champ = await push_champion("Thor", "Cosmic", has_prefight=False)
+        no_pf_cu = await push_champion_user(
+            data["member"],
+            no_pf_champ,
+        )
+        url = _prefight_url(data["alliance"].id, data["war"].id)
+        resp = await execute_post_request(
+            url,
+            payload={"champion_user_id": str(no_pf_cu.id), "target_node_number": 5},
+            headers=data["headers_member"],
+        )
+        assert resp.status_code == 422
+
+
+class TestPrefightMultiNode:
+    @pytest.mark.asyncio
+    async def test_same_champion_can_prefight_different_nodes(self):
+        data = await _setup_prefight_scenario()
+        second_champ = await push_champion("Captain Marvel", "Cosmic")
+        second_cu = await push_champion_user(
+            data["member"],
+            second_champ,
+        )
+        alliance_id = data["alliance"].id
+        war_id = data["war"].id
+        # Place defender on node 6
+        await execute_post_request(
+            f"/alliances/{alliance_id}/wars/{war_id}/bg/1/place",
+            payload={"node_number": 6, "champion_id": str(second_champ.id), "stars": 7, "rank": 3, "ascension": 0},
+            headers=data["headers_owner"],
+        )
+        # Assign attacker to node 6
+        await execute_post_request(
+            f"/alliances/{alliance_id}/wars/{war_id}/bg/1/node/6/attacker",
+            payload={"champion_user_id": str(second_cu.id)},
+            headers=data["headers_member"],
+        )
+        url = _prefight_url(alliance_id, war_id)
+        resp1 = await execute_post_request(
+            url,
+            payload={"champion_user_id": str(data["prefight_cu"].id), "target_node_number": 5},
+            headers=data["headers_member"],
+        )
+        assert resp1.status_code == 201
+        # Same champion, different node → 201
+        resp2 = await execute_post_request(
+            url,
+            payload={"champion_user_id": str(data["prefight_cu"].id), "target_node_number": 6},
+            headers=data["headers_member"],
+        )
+        assert resp2.status_code == 201
+
+    @pytest.mark.asyncio
+    async def test_same_champion_same_node_duplicate_still_rejected(self):
+        data = await _setup_prefight_scenario()
+        url = _prefight_url(data["alliance"].id, data["war"].id)
+        payload = {"champion_user_id": str(data["prefight_cu"].id), "target_node_number": 5}
+        resp1 = await execute_post_request(url, payload=payload, headers=data["headers_member"])
+        assert resp1.status_code == 201
+        resp2 = await execute_post_request(url, payload=payload, headers=data["headers_member"])
+        assert resp2.status_code == 409
+
+
+class TestGetAvailablePrefightAttackers:
+    @pytest.mark.asyncio
+    async def test_returns_only_has_prefight_champions(self):
+        data = await _setup_prefight_scenario()
+        url = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-prefight-attackers"
+        resp = await execute_get_request(url, headers=data["headers_member"])
+        assert resp.status_code == 200
+        ids = [item["champion_user_id"] for item in resp.json()]
+        # prefight_cu has has_prefight=True → included
+        assert str(data["prefight_cu"].id) in ids
+        # attacker_cu has has_prefight=False → excluded
+        assert str(data["attacker_cu"].id) not in ids
+
+    @pytest.mark.asyncio
+    async def test_returns_200_list(self):
+        data = await _setup_prefight_scenario()
+        url = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-prefight-attackers"
+        resp = await execute_get_request(url, headers=data["headers_member"])
+        assert resp.status_code == 200
+        assert isinstance(resp.json(), list)
+
+
 class TestRemovePrefight:
     @pytest.mark.asyncio
     async def test_remove_prefight_success(self):
