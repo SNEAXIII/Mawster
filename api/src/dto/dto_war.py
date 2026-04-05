@@ -126,6 +126,18 @@ class AvailableAttackerResponse(BaseModel):
     rarity: str
 
 
+class AvailablePrefightAttackerResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    champion_user_id: uuid.UUID
+    game_account_id: uuid.UUID
+    game_pseudo: str
+    champion_id: uuid.UUID
+    champion_name: str
+    champion_class: str
+    image_url: Optional[str] = None
+    rarity: str
+
+
 class WarSynergyCreateRequest(BaseModel):
     champion_user_id: uuid.UUID
     target_champion_user_id: uuid.UUID

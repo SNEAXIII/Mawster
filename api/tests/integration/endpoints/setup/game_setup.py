@@ -147,6 +147,7 @@ def get_champion(
     is_7_star: bool = False,
     alias: str | None = None,
     is_ascendable: bool = False,
+    has_prefight: bool = False,
 ) -> Champion:
     return Champion(
         id=champion_id or uuid.uuid4(),
@@ -156,6 +157,7 @@ def get_champion(
         is_7_star=is_7_star,
         alias=alias,
         is_ascendable=is_ascendable,
+        has_prefight=has_prefight,
     )
 
 
