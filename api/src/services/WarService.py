@@ -1147,7 +1147,7 @@ class WarService:
             await session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This champion is already a pre-fight provider in this war+BG",
+                detail="This champion is already assigned as pre-fight on this node",
             )
 
         return WarPrefightResponse.model_validate(
