@@ -5,6 +5,7 @@ import ChampionPortrait from '@/components/champion-portrait';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '../_context/war-context';
 import PrefightBadge from './prefight-badge';
+import PrefightEntryRow from './prefight-entry-row';
 import { WarMode } from './war-types';
 import AttackerEntryRow from './attacker-entry-row';
 import SynergyPopover from './synergy-popover';
@@ -21,7 +22,7 @@ export default function WarAttackerPanel() {
 
   const assigned = placements.filter((p) => p.attacker_champion_user_id !== null);
 
-  // Group by attacker member
+  // Group by attacker member (node attackers)
   const groupMap = new Map<string, MemberGroup>();
   for (const p of assigned) {
     const pseudo = p.attacker_pseudo ?? '?';
@@ -29,6 +30,12 @@ export default function WarAttackerPanel() {
       groupMap.set(pseudo, { pseudo, entries: [] });
     }
     groupMap.get(pseudo)!.entries.push(p);
+  }
+  // Also include prefight-only providers (no node assignments)
+  for (const pf of prefights) {
+    if (!groupMap.has(pf.game_pseudo)) {
+      groupMap.set(pf.game_pseudo, { pseudo: pf.game_pseudo, entries: [] });
+    }
   }
   const groups = Array.from(groupMap.values()).sort((a, b) => a.pseudo.localeCompare(b.pseudo));
 
@@ -158,6 +165,15 @@ export default function WarAttackerPanel() {
                         readonly={warMode !== WarMode.Attackers}
                       />
                     ))}
+                  {/* Prefight entries for this member */}
+                  {memberPrefights.map((pf) => (
+                    <PrefightEntryRow
+                      key={pf.id}
+                      prefight={pf}
+                      targetPlacement={placements.find((p) => p.node_number === pf.target_node_number)}
+                      readonly={warMode !== WarMode.Attackers}
+                    />
+                  ))}
                 </div>
               </div>
             );
