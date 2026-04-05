@@ -90,4 +90,71 @@ describe('War Prefight', () => {
       }
     );
   });
+
+  it('API — same champion can prefight two different nodes', () => {
+    setupPrefightScenario('pf5').then(
+      ({ adminToken, ownerData, memberData, allianceId, warId, championUserId, memberAccId, prefightChampionUserId }) => {
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+
+        cy.apiLoadChampion(adminToken, 'Captain Marvel', 'Cosmic').then((champs) => {
+          cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 1, 11, champs[0].id, 7, 3, 0);
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3').then((cu) => {
+            cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 11, cu.id);
+
+            const prefightUrl = `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/prefight`;
+
+            cy.request({
+              method: 'POST',
+              url: prefightUrl,
+              headers: { Authorization: `Bearer ${memberData.access_token}` },
+              body: { champion_user_id: prefightChampionUserId, target_node_number: 10 },
+            }).then((res) => {
+              expect(res.status).to.eq(201);
+
+              cy.request({
+                method: 'POST',
+                url: prefightUrl,
+                headers: { Authorization: `Bearer ${memberData.access_token}` },
+                body: { champion_user_id: prefightChampionUserId, target_node_number: 11 },
+              }).then((res2) => expect(res2.status).to.eq(201));
+            });
+          });
+        });
+      }
+    );
+  });
+
+  it('API — champion without has_prefight is rejected (422)', () => {
+    setupAttackerScenario('pf6').then(
+      ({ adminToken, memberData, allianceId, warId, championUserId, memberAccId }) => {
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+
+        cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs) => {
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3').then((ironManCu) => {
+            cy.request({
+              method: 'POST',
+              url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/prefight`,
+              headers: { Authorization: `Bearer ${memberData.access_token}` },
+              body: { champion_user_id: ironManCu.id, target_node_number: 10 },
+              failOnStatusCode: false,
+            }).then((res) => expect(res.status).to.eq(422));
+          });
+        });
+      }
+    );
+  });
+
+  it('prefight entry row visible for prefight provider in attackers panel', () => {
+    setupPrefightScenario('pf7').then(
+      ({ memberData, allianceId, warId, championUserId, prefightChampionUserId }) => {
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+        cy.apiAddWarPrefight(memberData.access_token, allianceId, warId, 1, prefightChampionUserId, 10);
+
+        cy.apiLogin(memberData.user_id);
+        cy.visit('/game/war');
+        cy.getByCy('war-attacker-panel').should('be.visible');
+        cy.getByCy('prefight-entry-node-10').should('be.visible');
+      }
+    );
+  });
 });
