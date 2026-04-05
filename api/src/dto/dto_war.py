@@ -170,3 +170,46 @@ class WarSynergyResponse(BaseModel):
             'game_pseudo': data.game_account.game_pseudo,
             'created_at': data.created_at,
         }
+
+
+class WarPrefightCreateRequest(BaseModel):
+    champion_user_id: uuid.UUID
+    target_node_number: int = Field(..., ge=1, le=55)
+
+
+class WarPrefightResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    war_id: uuid.UUID
+    battlegroup: int
+    game_account_id: uuid.UUID
+    champion_user_id: uuid.UUID
+    target_node_number: int
+    champion_name: str
+    champion_class: str
+    image_url: Optional[str] = None
+    rarity: str
+    game_pseudo: str
+    created_at: datetime
+
+    @model_validator(mode='before')
+    @classmethod
+    def flatten_relations(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            return data
+        cu = data.champion_user
+        return {
+            'id': data.id,
+            'war_id': data.war_id,
+            'battlegroup': data.battlegroup,
+            'game_account_id': data.game_account_id,
+            'champion_user_id': data.champion_user_id,
+            'target_node_number': data.target_node_number,
+            'champion_name': cu.champion.name,
+            'champion_class': cu.champion.champion_class,
+            'image_url': cu.champion.image_url,
+            'rarity': cu.rarity,
+            'game_pseudo': data.game_account.game_pseudo,
+            'created_at': data.created_at,
+        }
