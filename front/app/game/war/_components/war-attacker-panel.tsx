@@ -4,6 +4,7 @@ import { useI18n } from '@/app/i18n';
 import ChampionPortrait from '@/components/champion-portrait';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '../_context/war-context';
+import PrefightBadge from './prefight-badge';
 import { WarMode } from './war-types';
 import AttackerEntryRow from './attacker-entry-row';
 import SynergyPopover from './synergy-popover';
@@ -16,7 +17,7 @@ interface MemberGroup {
 
 export default function WarAttackerPanel() {
   const { t } = useI18n();
-  const { placements, warMode, synergies } = useWar();
+  const { placements, warMode, synergies, prefights } = useWar();
 
   const assigned = placements.filter((p) => p.attacker_champion_user_id !== null);
 
@@ -58,9 +59,15 @@ export default function WarAttackerPanel() {
               (s) => !nodeAttackerIds.has(s.champion_user_id)
             );
 
+            const memberPrefights = prefights.filter((p) => p.game_pseudo === group.pseudo);
+            const prefightOnlyProviders = memberPrefights.filter(
+              (p) => !nodeAttackerIds.has(p.champion_user_id)
+            );
+
             const totalSlots = new Set([
               ...nodeAttackerIds,
               ...memberSynergies.map((s) => s.champion_user_id),
+              ...memberPrefights.map((p) => p.champion_user_id),
             ]).size;
 
             // Deduplicated node attacker portraits (unique by champion_user_id)
@@ -83,7 +90,6 @@ export default function WarAttackerPanel() {
                   {/* 3-slot portrait row: node attackers (clickable for synergy) + synergy-only */}
                   <div className='flex items-center gap-0.5 ml-1'>
                     {nodePortraits.map((placement) => (
-                      console.warn('Rendering portrait for', placement.attacker_pseudo, { placement }),
                       warMode === WarMode.Attackers ? (
                         <SynergyPopover
                           key={placement.attacker_champion_user_id}
@@ -119,6 +125,23 @@ export default function WarAttackerPanel() {
                           size={35}
                         />
                         <SynergyBadge targetChampionName={s.target_champion_name} />
+                      </div>
+                    ))}
+
+                    {/* Prefight-only champions */}
+                    {prefightOnlyProviders.map((p) => (
+                      <div
+                        key={p.champion_user_id}
+                        className='relative'
+                        title={t.game.war.prefight.tooltip}
+                      >
+                        <ChampionPortrait
+                          imageUrl={p.image_url}
+                          name={p.champion_name}
+                          rarity={p.rarity}
+                          size={35}
+                        />
+                        <PrefightBadge nodeNumber={p.target_node_number} />
                       </div>
                     ))}
                   </div>

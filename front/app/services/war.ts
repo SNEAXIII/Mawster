@@ -332,6 +332,21 @@ export async function removeWarSynergy(
   await throwOnError(response, 'Failed to remove synergy attacker');
 }
 
+// ─── Available Prefight Attackers API ─────────────────────
+
+export async function getAvailablePrefightAttackers(
+  allianceId: string,
+  warId: string,
+  battlegroup: number
+): Promise<AvailableAttacker[]> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-prefight-attackers`,
+    { headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to load available pre-fight attackers');
+  return response.json();
+}
+
 // ─── Prefight API ─────────────────────────────────────────
 
 export async function getWarPrefights(
