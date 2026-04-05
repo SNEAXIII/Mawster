@@ -214,4 +214,72 @@ describe('War Synergy', () => {
       },
     );
   });
+
+  it('search input filters synergy candidates by name', () => {
+    setupAttackerScenario('syn7').then(
+      ({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+
+        // Load two different champions as potential synergy providers
+        cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs1) => {
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs1[0].id, '7r3').then(() => {
+            cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs2) => {
+              cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs2[0].id, '7r3').then(() => {
+                cy.apiLogin(memberData.user_id);
+                cy.visit('/game/war');
+                cy.getByCy('war-attacker-panel').should('be.visible');
+
+                // Open synergy selector
+                cy.getByCy('synergy-trigger-Wolverine').click();
+                cy.getByCy('synergy-add-Wolverine').click();
+                cy.getByCy('synergy-selector').should('be.visible');
+
+                // Both champions visible before filtering
+                cy.getByCy('synergy-pick-Deadpool').should('be.visible');
+                cy.getByCy('synergy-pick-Storm').should('be.visible');
+
+                // Type in search — only Deadpool should remain
+                cy.getByCy('synergy-search').type('dead');
+                cy.getByCy('synergy-pick-Deadpool').should('be.visible');
+                cy.getByCy('synergy-pick-Storm').should('not.exist');
+              });
+            });
+          });
+        });
+      },
+    );
+  });
+
+  it('clearing the search restores the full synergy candidate list', () => {
+    setupAttackerScenario('syn8').then(
+      ({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+
+        cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs1) => {
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs1[0].id, '7r3').then(() => {
+            cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs2) => {
+              cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs2[0].id, '7r3').then(() => {
+                cy.apiLogin(memberData.user_id);
+                cy.visit('/game/war');
+                cy.getByCy('war-attacker-panel').should('be.visible');
+
+                cy.getByCy('synergy-trigger-Wolverine').click();
+                cy.getByCy('synergy-add-Wolverine').click();
+                cy.getByCy('synergy-selector').should('be.visible');
+
+                // Filter then clear
+                cy.getByCy('synergy-search').type('dead');
+                cy.getByCy('synergy-pick-Storm').should('not.exist');
+                cy.getByCy('synergy-search').clear();
+
+                // Both champions back
+                cy.getByCy('synergy-pick-Deadpool').should('be.visible');
+                cy.getByCy('synergy-pick-Storm').should('be.visible');
+              });
+            });
+          });
+        });
+      },
+    );
+  });
 });
