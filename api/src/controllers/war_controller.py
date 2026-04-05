@@ -13,8 +13,11 @@ from src.dto.dto_war import (
     WarAttackerAssignRequest,
     WarKoUpdateRequest,
     AvailableAttackerResponse,
+    AvailablePrefightAttackerResponse,
     WarSynergyCreateRequest,
     WarSynergyResponse,
+    WarPrefightCreateRequest,
+    WarPrefightResponse,
 )
 from src.models import User
 from src.models.War import War
@@ -196,6 +199,23 @@ async def get_available_attackers(
     await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
     return await WarService.get_available_attackers(session, alliance_id, battlegroup, attacker_id, war)
 
+@war_controller.get(
+    "/{war_id}/bg/{battlegroup}/available-prefight-attackers",
+    response_model=list[AvailablePrefightAttackerResponse],
+)
+async def get_available_prefight_attackers(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """List available pre-fight champions (has_prefight=True) for the BG."""
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    return await WarService.get_available_prefight_attackers(session, alliance_id, battlegroup, war)
+
+
 @war_controller.post(
     "/{war_id}/bg/{battlegroup}/node/{node_number}/attacker",
     response_model=WarPlacementResponse,
@@ -308,3 +328,64 @@ async def remove_war_synergy(
     """Remove a synergy champion from a battlegroup. All members can remove."""
     await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
     await WarService.remove_synergy_attacker(session, war_id, battlegroup, champion_user_id)
+
+
+@war_controller.get(
+    "/{war_id}/bg/{battlegroup}/prefight",
+    response_model=list[WarPrefightResponse],
+)
+async def get_war_prefight(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """List pre-fight champions for a battlegroup. All members can view."""
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    return await WarService.get_prefight_attackers(session, war_id, battlegroup)
+
+
+@war_controller.post(
+    "/{war_id}/bg/{battlegroup}/prefight",
+    response_model=WarPrefightResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_war_prefight(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    body: WarPrefightCreateRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """Add a pre-fight champion for a battlegroup. All members can add."""
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    return await WarService.add_prefight_attacker(
+        session,
+        war_id,
+        alliance_id,
+        battlegroup,
+        body.champion_user_id,
+        body.target_node_number,
+    )
+
+
+@war_controller.delete(
+    "/{war_id}/bg/{battlegroup}/prefight/{champion_user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def remove_war_prefight(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    champion_user_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """Remove a pre-fight champion. Any alliance member can remove."""
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await WarService.remove_prefight_attacker(session, war_id, battlegroup, champion_user_id)

@@ -130,6 +130,17 @@ class ChampionService:
         return champion
 
     @classmethod
+    async def toggle_prefight(
+        cls, session: SessionDep, champion_id: uuid.UUID
+    ) -> Champion:
+        champion = await cls.get_champion_by_id(session, champion_id)
+        champion.has_prefight = not champion.has_prefight
+        session.add(champion)
+        await session.commit()
+        await session.refresh(champion)
+        return champion
+
+    @classmethod
     async def load_champions(
         cls, session: SessionDep, champions_data: list[ChampionLoadRequest]
     ) -> dict:

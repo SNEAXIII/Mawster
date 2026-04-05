@@ -3,7 +3,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Check, Pencil, Trash2, X } from 'lucide-react';
+import { Check, Flame, Pencil, Trash2, X } from 'lucide-react';
 import { ClassBadge } from '@/components/class-badge';
 import { ActionIconButton } from '@/components/action-icon-button';
 import { Champion, getChampionImageUrl } from '@/app/services/champions';
@@ -20,6 +20,7 @@ interface ChampionTableRowProps {
   onAliasChange: (value: string) => void;
   onDelete: (champion: Champion) => void;
   onToggleAscendable: (champion: Champion) => void;
+  onTogglePrefight: (champion: Champion) => void;
 }
 
 export default function ChampionTableRow({
@@ -33,6 +34,7 @@ export default function ChampionTableRow({
   onAliasChange,
   onDelete,
   onToggleAscendable,
+  onTogglePrefight,
 }: ChampionTableRowProps) {
   const { t } = useI18n();
   return (
@@ -107,6 +109,21 @@ export default function ChampionTableRow({
           }`}
         >
           {champion.is_ascendable ? t.common.yes : t.common.no}
+        </button>
+      </td>
+
+      {/* Pre-fight */}
+      <td className='p-3'>
+        <button
+          onClick={() => onTogglePrefight(champion)}
+          className={`px-2 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1 ${
+            champion.has_prefight
+              ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+              : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+          }`}
+        >
+          <Flame className='h-3 w-3' />
+          {champion.has_prefight ? t.common.yes : t.common.no}
         </button>
       </td>
 

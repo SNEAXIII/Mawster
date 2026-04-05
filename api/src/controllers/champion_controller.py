@@ -12,6 +12,7 @@ from src.dto.dto_champion import (
 from src.Messages.champion_messages import (
     CHAMPION_ALIAS_UPDATED,
     CHAMPION_ASCENDABLE_UPDATED,
+    CHAMPION_PREFIGHT_UPDATED,
     CHAMPION_DELETED,
     CHAMPION_LOAD_SUCCESS,
 )
@@ -77,6 +78,15 @@ async def toggle_champion_ascendable(
 ):
     champion = await ChampionService.toggle_ascendable(session, champion_id)
     return {"message": CHAMPION_ASCENDABLE_UPDATED, "is_ascendable": champion.is_ascendable}
+
+
+@champion_controller.patch("/{champion_id}/prefight", status_code=200)
+async def toggle_champion_prefight(
+    session: SessionDep,
+    champion_id: uuid.UUID,
+):
+    champion = await ChampionService.toggle_prefight(session, champion_id)
+    return {"message": CHAMPION_PREFIGHT_UPDATED, "has_prefight": champion.has_prefight}
 
 
 @champion_controller.post("/load", status_code=200)

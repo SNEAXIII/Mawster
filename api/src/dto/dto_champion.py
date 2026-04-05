@@ -14,6 +14,7 @@ class ChampionResponse(BaseModel):
     image_url: Optional[str] = None
     is_7_star: bool = False
     is_ascendable: bool = False
+    has_prefight: bool = False
     alias: Optional[str] = None
 
 

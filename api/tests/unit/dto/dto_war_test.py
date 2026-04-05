@@ -112,3 +112,35 @@ class TestWarPlacementResponseDTO:
         p = _make_placement(placed_by=None)
         dto = WarPlacementResponse.model_validate(p)
         assert dto.placed_by_pseudo is None
+
+
+def test_war_prefight_response_flatten():
+    from src.dto.dto_war import WarPrefightResponse
+    from unittest.mock import MagicMock
+    import uuid
+    from datetime import datetime
+
+    cu = MagicMock()
+    cu.champion.name = "Quake"
+    cu.champion.champion_class = "Science"
+    cu.champion.image_url = None
+    cu.rarity = "7r3"
+
+    ga = MagicMock()
+    ga.game_pseudo = "Player1"
+
+    obj = MagicMock()
+    obj.id = uuid.uuid4()
+    obj.war_id = uuid.uuid4()
+    obj.battlegroup = 1
+    obj.game_account_id = uuid.uuid4()
+    obj.champion_user_id = uuid.uuid4()
+    obj.target_node_number = 5
+    obj.champion_user = cu
+    obj.game_account = ga
+    obj.created_at = datetime.now()
+
+    result = WarPrefightResponse.model_validate(obj)
+    assert result.champion_name == "Quake"
+    assert result.target_node_number == 5
+    assert result.game_pseudo == "Player1"
