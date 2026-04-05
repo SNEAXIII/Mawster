@@ -138,7 +138,7 @@ export default function WarDefendersTab() {
         {/* Banned champions */}
         <div className='flex items-center gap-2 flex-wrap'>
           <span className='text-sm shrink-0'>{t.game.war.bans.label}:</span>
-          {currentWar.banned_champions.length === 0 ? (
+          {!currentWar || currentWar.banned_champions.length === 0 ? (
             <span className='text-sm'>{t.game.war.bans.none}</span>
           ) : (
             currentWar.banned_champions.map((c) => (
