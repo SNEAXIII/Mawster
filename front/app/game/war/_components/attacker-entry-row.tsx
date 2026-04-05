@@ -7,6 +7,7 @@ import { X, Minus, Plus, Swords, CircleQuestionMark } from 'lucide-react';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '../_context/war-context';
 import PrefightPopover from './prefight-popover';
+import PrefightBadge from './prefight-badge';
 
 interface AttackerEntryRowProps {
   placement: WarPlacement;
@@ -18,7 +19,8 @@ interface AttackerEntryRowProps {
 
 export default function AttackerEntryRow({ placement, mode = 'compact', readonly = false }: Readonly<AttackerEntryRowProps>) {
   const { t } = useI18n();
-  const { handleRemoveAttacker, handleUpdateKo } = useWar();
+  const { handleRemoveAttacker, handleUpdateKo, prefights } = useWar();
+  const nodePrefights = prefights.filter((p) => p.target_node_number === placement.node_number);
 
   const isFull = mode === 'full';
   const portraitSize = isFull ? 55 : 40;
@@ -65,6 +67,17 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
           rarity={placement.rarity}
           size={portraitSize}
         />
+        {nodePrefights.map((p) => (
+          <div key={p.champion_user_id} className='relative' title={t.game.war.prefight.tooltip}>
+            <ChampionPortrait
+              imageUrl={p.image_url}
+              name={p.champion_name}
+              rarity={p.rarity}
+              size={portraitSize}
+            />
+            <PrefightBadge nodeNumber={p.target_node_number} />
+          </div>
+        ))}
       </div>
 
       <div className='flex-1 min-w-0'>
