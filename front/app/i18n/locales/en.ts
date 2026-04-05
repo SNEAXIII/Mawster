@@ -401,6 +401,7 @@ const en = {
       class: 'Class',
       alias: 'Aliases',
       isAscendable: 'Ascendable',
+      hasPrefight: 'Pre-fight',
       actions: 'Actions',
     },
     exportJson: 'Export JSON',

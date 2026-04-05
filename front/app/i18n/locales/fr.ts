@@ -408,6 +408,7 @@ const fr: Translations = {
       class: 'Classe',
       alias: 'Alias',
       isAscendable: 'Ascentionnable',
+      hasPrefight: 'Précombat',
       actions: 'Actions',
     },
     exportJson: 'Exporter JSON',

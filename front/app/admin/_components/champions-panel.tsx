@@ -7,6 +7,7 @@ import {
   loadChampions,
   exportAllChampions,
   toggleChampionAscendable,
+  toggleChampionPrefight,
   Champion,
   championClasses,
 } from '@/app/services/champions';
@@ -120,6 +121,17 @@ export default function ChampionsPanel() {
       const result = await toggleChampionAscendable(champion.id);
       setChampions((prev) =>
         prev.map((c) => (c.id === champion.id ? { ...c, is_ascendable: result.is_ascendable } : c))
+      );
+    } catch {
+      // ignore
+    }
+  }
+
+  async function handleTogglePrefight(champion: Champion) {
+    try {
+      const result = await toggleChampionPrefight(champion.id);
+      setChampions((prev) =>
+        prev.map((c) => (c.id === champion.id ? { ...c, has_prefight: result.has_prefight } : c))
       );
     } catch {
       // ignore
@@ -260,6 +272,7 @@ export default function ChampionsPanel() {
                 <th className='text-left p-3'>{t.champions.tableHeaders.class}</th>
                 <th className='text-left p-3'>{t.champions.tableHeaders.alias}</th>
                 <th className='text-left p-3'>{t.champions.tableHeaders.isAscendable}</th>
+                <th className='text-left p-3'>{t.champions.tableHeaders.hasPrefight}</th>
                 <th className='text-left p-3 w-24'>{t.champions.tableHeaders.actions}</th>
               </tr>
             </thead>
@@ -283,6 +296,7 @@ export default function ChampionsPanel() {
                   onAliasChange={setEditingAlias}
                   onDelete={setDeleteTarget}
                   onToggleAscendable={handleToggleAscendable}
+                  onTogglePrefight={handleTogglePrefight}
                 />
               ))}
             </tbody>

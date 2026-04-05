@@ -6,6 +6,7 @@ export interface Champion {
   image_url: string | null;
   is_7_star: boolean;
   is_ascendable: boolean;
+  has_prefight: boolean;
   alias: string | null;
 }
 
@@ -140,6 +141,17 @@ export const toggleChampionAscendable = async (
     headers: jsonHeaders,
   });
   await throwOnError(response, "Erreur lors du basculement de l'ascension");
+  return response.json();
+};
+
+export const toggleChampionPrefight = async (
+  championId: string
+): Promise<{ has_prefight: boolean }> => {
+  const response = await fetch(`${PROXY}/admin/champions/${championId}/prefight`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, 'Erreur lors du basculement du précombat');
   return response.json();
 };
 
