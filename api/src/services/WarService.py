@@ -21,6 +21,7 @@ from src.dto.dto_war import (
     WarPlacementResponse,
     WarDefenseSummaryResponse,
     AvailableAttackerResponse,
+    AvailablePrefightAttackerResponse,
     WarSynergyResponse,
     WarPrefightResponse,
 )
@@ -427,6 +428,106 @@ class WarService:
                 if war and len(all_attackers_ids) >= 3 and champion_user.id not in all_attackers_ids:
                     continue
                 result.append(AvailableAttackerResponse(
+                    champion_user_id=champion_user.id,
+                    game_account_id=game_account.id,
+                    game_pseudo=game_account.game_pseudo,
+                    champion_id=champion_user.champion_id,
+                    champion_name=champion_user.champion.name,
+                    champion_class=champion_user.champion.champion_class,
+                    image_url=champion_user.champion.image_url,
+                    rarity=champion_user.rarity,
+                ))
+        return result
+
+    @classmethod
+    async def get_available_prefight_attackers(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        battlegroup: int,
+        war: Optional[War] = None,
+    ) -> list[AvailablePrefightAttackerResponse]:
+        # Load all BG members with their roster
+        member_conditions = and_(
+            GameAccount.alliance_id == alliance_id,
+            GameAccount.alliance_group == battlegroup,
+        )
+        members_result = await session.exec(
+            select(GameAccount)
+            .where(member_conditions)
+            .options(
+                selectinload(GameAccount.roster).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+            )
+        )
+        members = members_result.all()
+
+        # Defense exclusions
+        defense_conditions = and_(
+            DefensePlacement.alliance_id == alliance_id,
+            GameAccount.alliance_group == battlegroup,
+        )
+        request_sql = select(DefensePlacement.champion_user_id).join(
+            GameAccount, DefensePlacement.game_account_id == GameAccount.id
+        ).where(defense_conditions)
+        defense_result = await session.exec(request_sql)
+        defense_champion_user_ids = set(defense_result.all())
+
+        banned_champion_ids: set[uuid.UUID] = {ban.champion_id for ban in war.bans} if war else set()
+
+        result: list[AvailablePrefightAttackerResponse] = []
+        for game_account in members:
+            all_attackers_ids: set[uuid.UUID] = set()
+            if war:
+                node_result = await session.exec(
+                    select(WarDefensePlacement)
+                    .join(ChampionUser, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
+                    .where(
+                        and_(
+                            WarDefensePlacement.war_id == war.id,
+                            WarDefensePlacement.battlegroup == battlegroup,
+                            ChampionUser.game_account_id == game_account.id,
+                        )
+                    )
+                )
+                all_attackers_ids = {p.attacker_champion_user_id for p in node_result.all()}
+                synergy_result = await session.exec(
+                    select(WarSynergyAttacker).where(
+                        and_(
+                            WarSynergyAttacker.war_id == war.id,
+                            WarSynergyAttacker.battlegroup == battlegroup,
+                            WarSynergyAttacker.game_account_id == game_account.id,
+                        )
+                    )
+                )
+                synergy_ids = {s.champion_user_id for s in synergy_result.all()}
+                all_attackers_ids = all_attackers_ids | synergy_ids
+                prefight_result = await session.exec(
+                    select(WarPrefightAttacker).where(
+                        and_(
+                            WarPrefightAttacker.war_id == war.id,
+                            WarPrefightAttacker.battlegroup == battlegroup,
+                            WarPrefightAttacker.game_account_id == game_account.id,
+                        )
+                    )
+                )
+                prefight_ids = {pf.champion_user_id for pf in prefight_result.all()}
+                all_attackers_ids = all_attackers_ids | prefight_ids
+
+            member_attacker_count = len(all_attackers_ids)
+            if member_attacker_count >= 3:
+                continue
+
+            for champion_user in game_account.roster:
+                # Only champions with has_prefight capability
+                if not champion_user.champion.has_prefight:
+                    continue
+                if champion_user.id in defense_champion_user_ids:
+                    continue
+                if champion_user.champion_id in banned_champion_ids:
+                    continue
+                if champion_user.id in all_attackers_ids:
+                    continue
+                result.append(AvailablePrefightAttackerResponse(
                     champion_user_id=champion_user.id,
                     game_account_id=game_account.id,
                     game_pseudo=game_account.game_pseudo,
@@ -929,6 +1030,13 @@ class WarService:
         champion_user = (await session.exec(champion_user_stmt)).first()
         if champion_user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+
+        # 1c. Champion must have has_prefight capability
+        if not champion_user.champion.has_prefight:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="This champion does not have a pre-fight ability",
+            )
 
         game_account = champion_user.game_account
         # 1b. Provider must belong to this alliance + BG (any BG member's champion is valid)

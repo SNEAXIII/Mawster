@@ -99,7 +99,7 @@ async def _setup_prefight_scenario():
     )
 
     # Member's second champion for pre-fight
-    prefight_champ = await push_champion(name="Quake", champion_class="Science")
+    prefight_champ = await push_champion(name="Quake", champion_class="Science", has_prefight=True)
     prefight_cu = await push_champion_user(member, prefight_champ, stars=7, rank=3)
 
     return {
@@ -203,7 +203,7 @@ class TestAddPrefight:
     async def test_add_prefight_teammate_champion_allowed(self):
         """Any BG member can use any other BG member's champion as pre-fight provider."""
         data = await _setup_prefight_scenario()
-        owner_champ = await push_champion(name="Thor", champion_class="Cosmic")
+        owner_champ = await push_champion(name="Thor", champion_class="Cosmic", has_prefight=True)
         owner_cu = await push_champion_user(data["owner"], owner_champ, stars=7, rank=3)
         response = await execute_post_request(
             _prefight_url(data["alliance"].id, data["war"].id),
@@ -219,7 +219,7 @@ class TestAddPrefight:
     async def test_add_prefight_any_bg_member_can_target_any_node(self):
         """Owner can pre-fight a node where member is the attacker."""
         data = await _setup_prefight_scenario()
-        owner_champ = await push_champion(name="Gamora", champion_class="Cosmic")
+        owner_champ = await push_champion(name="Gamora", champion_class="Cosmic", has_prefight=True)
         owner_cu = await push_champion_user(data["owner"], owner_champ, stars=7, rank=3)
         response = await execute_post_request(
             _prefight_url(data["alliance"].id, data["war"].id),
@@ -235,7 +235,7 @@ class TestAddPrefight:
     async def test_add_prefight_defense_conflict_rejected(self):
         """Champion already in alliance defense cannot be pre-fight provider."""
         data = await _setup_prefight_scenario()
-        defense_champ = await push_champion(name="Captain America", champion_class="Science")
+        defense_champ = await push_champion(name="Captain America", champion_class="Science", has_prefight=True)
         defense_cu = await push_champion_user(data["member"], defense_champ, stars=7, rank=3)
         await load_objects([
             DefensePlacement(
@@ -283,7 +283,7 @@ class TestAddPrefight:
             )
 
         # Now member has 3 node attackers → adding pre-fight must fail
-        extra_champ = await push_champion(name="Black Widow", champion_class="Skill")
+        extra_champ = await push_champion(name="Black Widow", champion_class="Skill", has_prefight=True)
         extra_cu = await push_champion_user(member, extra_champ, stars=7, rank=3)
         response = await execute_post_request(
             _prefight_url(alliance.id, war.id),

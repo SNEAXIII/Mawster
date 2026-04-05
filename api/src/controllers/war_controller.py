@@ -13,6 +13,7 @@ from src.dto.dto_war import (
     WarAttackerAssignRequest,
     WarKoUpdateRequest,
     AvailableAttackerResponse,
+    AvailablePrefightAttackerResponse,
     WarSynergyCreateRequest,
     WarSynergyResponse,
     WarPrefightCreateRequest,
@@ -197,6 +198,23 @@ async def get_available_attackers(
     """List available attackers (BG roster minus defenders). Pass attacker_id to filter to a single member."""
     await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
     return await WarService.get_available_attackers(session, alliance_id, battlegroup, attacker_id, war)
+
+@war_controller.get(
+    "/{war_id}/bg/{battlegroup}/available-prefight-attackers",
+    response_model=list[AvailablePrefightAttackerResponse],
+)
+async def get_available_prefight_attackers(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """List available pre-fight champions (has_prefight=True) for the BG."""
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    return await WarService.get_available_prefight_attackers(session, alliance_id, battlegroup, war)
+
 
 @war_controller.post(
     "/{war_id}/bg/{battlegroup}/node/{node_number}/attacker",
