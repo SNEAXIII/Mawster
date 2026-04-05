@@ -54,7 +54,10 @@ export default function PrefightSelectorDialog({
     }
   }, [open, fetchAvailable]);
 
-  const usedPrefightIds = new Set(prefights.map((p) => p.champion_user_id));
+  // Only exclude champions already prefighting THIS specific node (same champion can prefight other nodes)
+  const usedPrefightIds = new Set(
+    prefights.filter((p) => p.target_node_number === targetNodeNumber).map((p) => p.champion_user_id)
+  );
 
   const filtered = available
     .filter((a) => !usedPrefightIds.has(a.champion_user_id))
