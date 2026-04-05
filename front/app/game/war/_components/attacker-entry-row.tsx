@@ -6,6 +6,7 @@ import { cn } from '@/app/lib/utils';
 import { X, Minus, Plus, Swords, CircleQuestionMark } from 'lucide-react';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '../_context/war-context';
+import PrefightPopover from './prefight-popover';
 
 interface AttackerEntryRowProps {
   placement: WarPlacement;
@@ -33,7 +34,16 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
       data-attacker={placement.attacker_champion_name ?? ''}
     >
       <div className='flex items-center gap-1 shrink-0'>
-        {placement.attacker_image_url ? (
+        {placement.attacker_champion_user_id && !readonly ? (
+          <PrefightPopover
+            nodeNumber={placement.node_number}
+            gameAccountId={placement.attacker_game_account_id ?? ''}
+            championName={placement.attacker_champion_name ?? ''}
+            imageUrl={placement.attacker_image_url}
+            rarity={placement.attacker_rarity ?? ''}
+            size={portraitSize}
+          />
+        ) : placement.attacker_image_url ? (
           <ChampionPortrait
             imageUrl={placement.attacker_image_url}
             name={placement.attacker_champion_name ?? ''}
