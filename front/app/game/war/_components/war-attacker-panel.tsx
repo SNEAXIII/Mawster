@@ -4,12 +4,10 @@ import { useI18n } from '@/app/i18n';
 import ChampionPortrait from '@/components/champion-portrait';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '../_context/war-context';
-import PrefightBadge from './prefight-badge';
 import PrefightEntryRow from './prefight-entry-row';
 import { WarMode } from './war-types';
 import AttackerEntryRow from './attacker-entry-row';
 import SynergyPopover from './synergy-popover';
-import SynergyBadge from './synergy-badge';
 
 interface MemberGroup {
   pseudo: string;
@@ -122,36 +120,26 @@ export default function WarAttackerPanel() {
 
                     {/* Synergy-only champions (not on any node) */}
                     {synergyOnlyProviders.map((s) => (
-                      <div
+                      <ChampionPortrait
                         key={s.champion_user_id}
-                        className='relative'
-                        title={t.game.war.synergy.tooltip}
-                      >
-                        <ChampionPortrait
-                          imageUrl={s.image_url}
-                          name={s.champion_name}
-                          rarity={s.rarity}
-                          size={35}
-                        />
-                        <SynergyBadge targetChampionName={s.target_champion_name} />
-                      </div>
+                        imageUrl={s.image_url}
+                        name={s.champion_name}
+                        rarity={s.rarity}
+                        size={35}
+                        mode='synergy'
+                      />
                     ))}
 
                     {/* Prefight-only champions */}
                     {prefightOnlyProviders.map((p) => (
-                      <div
+                      <ChampionPortrait
                         key={p.champion_user_id}
-                        className='relative'
-                        title={t.game.war.prefight.tooltip}
-                      >
-                        <ChampionPortrait
-                          imageUrl={p.image_url}
-                          name={p.champion_name}
-                          rarity={p.rarity}
-                          size={35}
-                        />
-                        <PrefightBadge nodeNumber={p.target_node_number} />
-                      </div>
+                        imageUrl={p.image_url}
+                        name={p.champion_name}
+                        rarity={p.rarity}
+                        size={35}
+                        mode='prefight'
+                      />
                     ))}
                   </div>
                 </div>

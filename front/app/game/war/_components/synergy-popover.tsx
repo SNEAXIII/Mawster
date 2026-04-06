@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import ChampionPortrait from '@/components/champion-portrait';
-import SynergyBadge from './synergy-badge';
 import SynergySelectorDialog from './synergy-selector';
 import { useWar } from '../_context/war-context';
 
@@ -49,10 +48,9 @@ export default function SynergyPopover({
               name={championName}
               rarity={rarity}
               size={size}
+              mode='synergy'
             />
-            {boundSynergies.length > 0 && (
-              <SynergyBadge targetChampionName={championName} className='z' />
-            )}
+
           </button>
         </PopoverTrigger>
         <PopoverContent
