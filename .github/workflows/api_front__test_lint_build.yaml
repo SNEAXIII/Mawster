@@ -86,13 +86,20 @@ jobs:
         run: npm ci
       - name: Build frontend (next build)
         working-directory: ./front
-        run: NEXT_PUBLIC_DEV_MODE=true NEXT_DIST_DIR=.next-e2e NEXT_E2E_BUILD=true npx next build
+        env:
+          NEXT_PUBLIC_DEV_MODE: "true"
+          NEXT_DIST_DIR: .next-e2e
+          NEXT_E2E_BUILD: "true"
+          API_PORT: "8000"
+          API_SERVER_HOST: localhost
+        run: npx next build
       - name: Upload frontend build
         uses: actions/upload-artifact@v4
         with:
           name: next-e2e-build
           path: front/.next-e2e
           retention-days: 1
+          if-no-files-found: error
 
       # ── API Docker image (validates Dockerfile + seeds GHA layer cache) ──
       - name: Set up Docker Buildx
