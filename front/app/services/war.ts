@@ -74,6 +74,21 @@ export interface WarSynergy {
   created_at: string;
 }
 
+export interface WarPrefight {
+  id: string;
+  war_id: string;
+  battlegroup: number;
+  game_account_id: string;
+  champion_user_id: string;
+  target_node_number: number;
+  champion_name: string;
+  champion_class: string;
+  image_url: string | null;
+  rarity: string;
+  game_pseudo: string;
+  created_at: string;
+}
+
 // ─── Helpers ─────────────────────────────────────────────
 
 const PROXY = '/api/back';
@@ -204,9 +219,13 @@ export async function getAvailableAttackers(
   allianceId: string,
   warId: string,
   battlegroup: number,
-  targetGameAccountId?: string
+  targetGameAccountId?: string,
+  nodeNumber?: number
 ): Promise<AvailableAttacker[]> {
-  const suffix = targetGameAccountId ? `?attacker_id=${targetGameAccountId}` : '';
+  const params = new URLSearchParams();
+  if (targetGameAccountId) params.set('attacker_id', targetGameAccountId);
+  if (nodeNumber !== undefined) params.set('node_number', String(nodeNumber));
+  const suffix = params.toString() ? `?${params}` : '';
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-attackers${suffix}`,
     { headers: jsonHeaders }
@@ -315,4 +334,69 @@ export async function removeWarSynergy(
     { method: 'DELETE', headers: jsonHeaders }
   );
   await throwOnError(response, 'Failed to remove synergy attacker');
+}
+
+// ─── Available Prefight Attackers API ─────────────────────
+
+export async function getAvailablePrefightAttackers(
+  allianceId: string,
+  warId: string,
+  battlegroup: number
+): Promise<AvailableAttacker[]> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-prefight-attackers`,
+    { headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to load available pre-fight attackers');
+  return response.json();
+}
+
+// ─── Prefight API ─────────────────────────────────────────
+
+export async function getWarPrefights(
+  allianceId: string,
+  warId: string,
+  battlegroup: number
+): Promise<WarPrefight[]> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight`,
+    { headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to load pre-fight attackers');
+  return response.json();
+}
+
+export async function addWarPrefight(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  championUserId: string,
+  targetNodeNumber: number
+): Promise<WarPrefight> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight`,
+    {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        champion_user_id: championUserId,
+        target_node_number: targetNodeNumber,
+      }),
+    }
+  );
+  await throwOnError(response, 'Failed to add pre-fight attacker');
+  return response.json();
+}
+
+export async function removeWarPrefight(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  championUserId: string
+): Promise<void> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight/${championUserId}`,
+    { method: 'DELETE', headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to remove pre-fight attacker');
 }

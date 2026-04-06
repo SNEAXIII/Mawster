@@ -142,7 +142,7 @@ Cypress.Commands.add(
           url: `${BACKEND}/champions?search=${encodeURIComponent(name)}`,
           headers: { Authorization: `Bearer ${adminToken}` },
         })
-        .then((getRes) => getRes.body.champions);
+        .then((getRes) => getRes.body.champions.filter((c: { name: string }) => c.name === name));
     });
   },
 );
@@ -789,6 +789,31 @@ Cypress.Commands.add(
   },
 );
 
+// ── Prefight API commands ─────────────────────────────────────────────────────
+
+Cypress.Commands.add(
+  'apiAddWarPrefight',
+  (token: string, allianceId: string, warId: string, battlegroup: number, championUserId: string, targetNodeNumber: number) => {
+    return cy.request({
+      method: 'POST',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { champion_user_id: championUserId, target_node_number: targetNodeNumber },
+    });
+  },
+);
+
+Cypress.Commands.add(
+  'apiRemoveWarPrefight',
+  (token: string, allianceId: string, warId: string, battlegroup: number, championUserId: string) => {
+    return cy.request({
+      method: 'DELETE',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight/${championUserId}`,
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+);
+
 // ── War setup helper ──────────────────────────────────────────────────────────
 
 export function setupWarOwner(
@@ -882,4 +907,51 @@ export function setupAttackerScenario(prefix: string): Cypress.Chainable<{
           }),
         );
     });
+}
+
+export function setupPrefightScenario(prefix: string): Cypress.Chainable<{
+  adminToken: string;
+  ownerData: UserSetupData;
+  memberData: UserSetupData;
+  allianceId: string;
+  ownerAccId: string;
+  memberAccId: string;
+  warId: string;
+  championUserId: string;
+  prefightChampionUserId: string;
+}> {
+  return setupAttackerScenario(prefix).then((scenario) => {
+    return cy
+      .apiLoadChampion(scenario.adminToken, 'Storm', 'Mutant')
+      .then((champs: { id: string }[]) => {
+        const stormId = champs[0].id;
+        return cy
+          .request({
+            method: 'PATCH',
+            url: `${BACKEND}/admin/champions/${stormId}/prefight`,
+            headers: { Authorization: `Bearer ${scenario.adminToken}` },
+          })
+          .then(() =>
+            cy.request({
+              method: 'POST',
+              url: `${BACKEND}/champion-users`,
+            headers: { Authorization: `Bearer ${scenario.memberData.access_token}` },
+            body: {
+              champion_id: stormId,
+              game_account_id: scenario.memberAccId,
+              stars: 6,
+              rank: 3,
+              ascension: 0,
+              rarity: '7r3',
+            },
+          })
+          .then((resp: Cypress.Response<{ id: string }>) => {
+            return {
+              ...scenario,
+              prefightChampionUserId: resp.body.id,
+            };
+          })
+        );
+      });
+  });
 }

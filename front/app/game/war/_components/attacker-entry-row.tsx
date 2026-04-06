@@ -6,6 +6,7 @@ import { cn } from '@/app/lib/utils';
 import { X, Minus, Plus, Swords, CircleQuestionMark } from 'lucide-react';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '../_context/war-context';
+import PrefightPopover from './prefight-popover';
 
 interface AttackerEntryRowProps {
   placement: WarPlacement;
@@ -17,7 +18,8 @@ interface AttackerEntryRowProps {
 
 export default function AttackerEntryRow({ placement, mode = 'compact', readonly = false }: Readonly<AttackerEntryRowProps>) {
   const { t } = useI18n();
-  const { handleRemoveAttacker, handleUpdateKo } = useWar();
+  const { handleRemoveAttacker, handleUpdateKo, prefights } = useWar();
+  const nodePrefights = prefights.filter((p) => p.target_node_number === placement.node_number);
 
   const isFull = mode === 'full';
   const portraitSize = isFull ? 55 : 40;
@@ -33,7 +35,16 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
       data-attacker={placement.attacker_champion_name ?? ''}
     >
       <div className='flex items-center gap-1 shrink-0'>
-        {placement.attacker_image_url ? (
+        {placement.attacker_champion_user_id && !readonly ? (
+          <PrefightPopover
+            nodeNumber={placement.node_number}
+            gameAccountId={placement.attacker_game_account_id ?? ''}
+            championName={placement.attacker_champion_name ?? ''}
+            imageUrl={placement.attacker_image_url}
+            rarity={placement.attacker_rarity ?? ''}
+            size={portraitSize}
+          />
+        ) : placement.attacker_image_url ? (
           <ChampionPortrait
             imageUrl={placement.attacker_image_url}
             name={placement.attacker_champion_name ?? ''}
@@ -55,6 +66,17 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
           rarity={placement.rarity}
           size={portraitSize}
         />
+        {nodePrefights.map((p) => (
+          <div key={p.champion_user_id} className='relative' title={t.game.war.prefight.tooltip}>
+            <ChampionPortrait
+              imageUrl={p.image_url}
+              name={p.champion_name}
+              rarity={p.rarity}
+              size={portraitSize}
+              mode='prefight'
+            />
+          </div>
+        ))}
       </div>
 
       <div className='flex-1 min-w-0'>

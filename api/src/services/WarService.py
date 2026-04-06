@@ -14,13 +14,16 @@ from src.models.War import War, WarStatus
 from src.models.WarBan import WarBan
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarSynergyAttacker import WarSynergyAttacker
+from src.models.WarPrefightAttacker import WarPrefightAttacker
 from src.dto.dto_war import (
     WarResponse,
     WarPlacementCreateRequest,
     WarPlacementResponse,
     WarDefenseSummaryResponse,
     AvailableAttackerResponse,
+    AvailablePrefightAttackerResponse,
     WarSynergyResponse,
+    WarPrefightResponse,
 )
 from src.utils.db import SessionDep
 
@@ -348,6 +351,7 @@ class WarService:
         battlegroup: int,
         attacker_id: Optional[uuid.UUID] = None,
         war: Optional[War] = None,
+        node_number: Optional[int] = None,
     ) -> list[AvailableAttackerResponse]:
         # Get members assigned to this battlegroup (or just the specific attacker)
         member_conditions = and_(
@@ -381,10 +385,58 @@ class WarService:
         banned_champion_ids: set[uuid.UUID] = {ban.champion_id for ban in war.bans} if war else set()
         result: list[AvailableAttackerResponse] = []
         for game_account in members:
+            all_attackers_ids: set[uuid.UUID] = set()
+            if war:
+                node_result = await session.exec(
+                    select(WarDefensePlacement)
+                    .join(ChampionUser, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
+                    .where(
+                        and_(
+                            WarDefensePlacement.war_id == war.id,
+                            WarDefensePlacement.battlegroup == battlegroup,
+                            ChampionUser.game_account_id == game_account.id,
+                        )
+                    )
+                )
+                node_placements = node_result.all()
+                all_attackers_ids = {p.attacker_champion_user_id for p in node_placements}
+                synergy_result = await session.exec(
+                    select(WarSynergyAttacker).where(
+                        and_(
+                            WarSynergyAttacker.war_id == war.id,
+                            WarSynergyAttacker.battlegroup == battlegroup,
+                            WarSynergyAttacker.game_account_id == game_account.id,
+                        )
+                    )
+                )
+                synergy_ids = {s.champion_user_id for s in synergy_result.all()}
+                all_attackers_ids = all_attackers_ids | synergy_ids
+                prefight_result = await session.exec(
+                    select(WarPrefightAttacker).where(
+                        and_(
+                            WarPrefightAttacker.war_id == war.id,
+                            WarPrefightAttacker.battlegroup == battlegroup,
+                            WarPrefightAttacker.game_account_id == game_account.id,
+                        )
+                    )
+                )
+                prefight_ids = {pf.champion_user_id for pf in prefight_result.all()}
+                all_attackers_ids = all_attackers_ids | prefight_ids
+            # When replacing the attacker on a specific node, exclude that slot from the limit count.
+            ids_for_limit = all_attackers_ids
+            if war and node_number is not None:
+                replacing_id = next(
+                    (p.attacker_champion_user_id for p in node_placements if p.node_number == node_number),
+                    None,
+                )
+                if replacing_id is not None:
+                    ids_for_limit = all_attackers_ids - {replacing_id}
             for champion_user in game_account.roster:
                 if champion_user.id in defense_champion_user_ids:
                     continue
                 if champion_user.champion_id in banned_champion_ids:
+                    continue
+                if war and len(ids_for_limit) >= 3 and champion_user.id not in all_attackers_ids:
                     continue
                 result.append(AvailableAttackerResponse(
                     champion_user_id=champion_user.id,
@@ -397,6 +449,55 @@ class WarService:
                     rarity=champion_user.rarity,
                 ))
         return result
+
+    @classmethod
+    async def get_available_prefight_attackers(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        battlegroup: int,
+        war: War = None,
+    ) -> list[AvailablePrefightAttackerResponse]:
+        # Exclude champion_users already on defense in this BG
+        defense_subq = (
+            select(DefensePlacement.champion_user_id)
+            .join(GameAccount, DefensePlacement.game_account_id == GameAccount.id)
+            .where(and_(
+                DefensePlacement.alliance_id == alliance_id,
+                GameAccount.alliance_group == battlegroup,
+            ))
+            .scalar_subquery()
+        )
+
+        stmt = (
+            select(ChampionUser, GameAccount, Champion)
+            .join(GameAccount, ChampionUser.game_account_id == GameAccount.id)  # type: ignore[arg-type]
+            .join(Champion, ChampionUser.champion_id == Champion.id)  # type: ignore[arg-type]
+            .where(
+                GameAccount.alliance_id == alliance_id,
+                GameAccount.alliance_group == battlegroup,
+                Champion.has_prefight == True,  # noqa: E712
+                ChampionUser.id.not_in(defense_subq),  # type: ignore[union-attr]
+            )
+        )
+        banned_champion_ids: list[uuid.UUID] = [ban.champion_id for ban in war.bans] if war else []
+        if banned_champion_ids:
+            stmt = stmt.where(ChampionUser.champion_id.not_in(banned_champion_ids))  # type: ignore[union-attr]
+
+        rows = (await session.exec(stmt)).all()  # type: ignore[arg-type]
+        return [
+            AvailablePrefightAttackerResponse(
+                champion_user_id=cu.id,
+                game_account_id=ga.id,
+                game_pseudo=ga.game_pseudo,
+                champion_id=cu.champion_id,
+                champion_name=champ.name,
+                champion_class=champ.champion_class,
+                image_url=champ.image_url,
+                rarity=cu.rarity,
+            )
+            for cu, ga, champ in rows
+        ]
 
     @classmethod
     async def assign_attacker(
@@ -489,7 +590,17 @@ class WarService:
             )
         )
         synergy_ids = {s.champion_user_id for s in synergy_result.all()}
-        all_attackers_ids = all_attackers_ids | synergy_ids
+        prefight_result = await session.exec(
+            select(WarPrefightAttacker).where(
+                and_(
+                    WarPrefightAttacker.war_id == war_id,
+                    WarPrefightAttacker.battlegroup == battlegroup,
+                    WarPrefightAttacker.game_account_id == game_account.id,
+                )
+            )
+        )
+        prefight_ids = {pf.champion_user_id for pf in prefight_result.all()}
+        all_attackers_ids = all_attackers_ids | synergy_ids | prefight_ids
         member_attacker_count = len(all_attackers_ids)
         if member_attacker_count > 3:
             raise HTTPException(
@@ -552,6 +663,38 @@ class WarService:
             if synergy:
                 await session.delete(synergy)
                 await session.commit()
+
+            # Clean up synergy entries where the removed attacker was the target
+            target_synergy_result = await session.exec(
+                select(WarSynergyAttacker).where(
+                    and_(
+                        WarSynergyAttacker.war_id == war_id,
+                        WarSynergyAttacker.battlegroup == battlegroup,
+                        WarSynergyAttacker.target_champion_user_id == removed_champion_user_id,
+                    )
+                )
+            )
+            target_synergies = target_synergy_result.all()
+            for ts in target_synergies:
+                await session.delete(ts)
+            if target_synergies:
+                await session.commit()
+
+        # Clean up prefight entries targeting this node
+        prefight_cleanup_result = await session.exec(
+            select(WarPrefightAttacker).where(
+                and_(
+                    WarPrefightAttacker.war_id == war_id,
+                    WarPrefightAttacker.battlegroup == battlegroup,
+                    WarPrefightAttacker.target_node_number == node_number,
+                )
+            )
+        )
+        prefights_to_delete = prefight_cleanup_result.all()
+        for pf in prefights_to_delete:
+            await session.delete(pf)
+        if prefights_to_delete:
+            await session.commit()
 
         return WarPlacementResponse.model_validate(
             await cls._load_placement(session, placement.id)
@@ -741,7 +884,18 @@ class WarService:
         )
         synergy_ids = {s.champion_user_id for s in synergy_result.all()}
 
-        total_slots = len(node_ids | synergy_ids | {champion_user_id})
+        prefight_result = await session.exec(
+            select(WarPrefightAttacker).where(
+                and_(
+                    WarPrefightAttacker.war_id == war_id,
+                    WarPrefightAttacker.battlegroup == battlegroup,
+                    WarPrefightAttacker.game_account_id == game_account.id,
+                )
+            )
+        )
+        prefight_ids = {pf.champion_user_id for pf in prefight_result.all()}
+
+        total_slots = len(node_ids | synergy_ids | prefight_ids | {champion_user_id})
         if total_slots > 3:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -791,4 +945,210 @@ class WarService:
         if synergy is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Synergy attacker not found")
         await session.delete(synergy)
+        await session.commit()
+
+    # ─── Prefight endpoints ───────────────────────────────────────────────────
+
+    @classmethod
+    async def _load_prefight(cls, session: SessionDep, prefight_id: uuid.UUID) -> WarPrefightAttacker:
+        stmt = (
+            select(WarPrefightAttacker)
+            .where(WarPrefightAttacker.id == prefight_id)
+            .options(
+                selectinload(WarPrefightAttacker.game_account),  # type: ignore[arg-type]
+                selectinload(WarPrefightAttacker.champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+            )
+        )
+        return (await session.exec(stmt)).one()
+
+    @classmethod
+    async def get_prefight_attackers(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        battlegroup: int,
+    ) -> list[WarPrefightResponse]:
+        stmt = (
+            select(WarPrefightAttacker)
+            .where(
+                and_(
+                    WarPrefightAttacker.war_id == war_id,
+                    WarPrefightAttacker.battlegroup == battlegroup,
+                )
+            )
+            .options(
+                selectinload(WarPrefightAttacker.game_account),  # type: ignore[arg-type]
+                selectinload(WarPrefightAttacker.champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+            )
+        )
+        result = await session.exec(stmt)
+        return [WarPrefightResponse.model_validate(p) for p in result.all()]
+
+    @classmethod
+    async def add_prefight_attacker(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+        battlegroup: int,
+        champion_user_id: uuid.UUID,
+        target_node_number: int,
+    ) -> WarPrefightResponse:
+        # 1. Load champion_user with game_account
+        champion_user_stmt = (
+            select(ChampionUser)
+            .where(ChampionUser.id == champion_user_id)
+            .options(
+                selectinload(ChampionUser.game_account),  # type: ignore[arg-type]
+                selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+            )
+        )
+        champion_user = (await session.exec(champion_user_stmt)).first()
+        if champion_user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+
+        # 1c. Champion must have has_prefight capability
+        if not champion_user.champion.has_prefight:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="This champion does not have a pre-fight ability",
+            )
+
+        game_account = champion_user.game_account
+        # 1b. Provider must belong to this alliance + BG (any BG member's champion is valid)
+        if game_account.alliance_id != alliance_id or game_account.alliance_group != battlegroup:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This champion does not belong to a member of this alliance battlegroup",
+            )
+
+        # 2. Target node must have a defender placed in this war+BG
+        target_placement = await cls._get_placement_by_node(session, war_id, battlegroup, target_node_number)
+        if target_placement is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Target node has no defender placed in this war+BG",
+            )
+
+        # 2b. Target node must have an attacker assigned
+        if target_placement.attacker_champion_user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Target node has no attacker assigned",
+            )
+
+        # 3. Provider champion not banned in this war
+        ban_check = await session.exec(
+            select(WarBan).where(
+                and_(WarBan.war_id == war_id, WarBan.champion_id == champion_user.champion_id)
+            )
+        )
+        if ban_check.first():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This champion is banned for this war",
+            )
+
+        # 3b. Provider not in regular alliance defense for this BG
+        defense_check = await session.exec(
+            select(DefensePlacement).where(
+                and_(
+                    DefensePlacement.champion_user_id == champion_user_id,
+                    DefensePlacement.alliance_id == alliance_id,
+                    DefensePlacement.battlegroup == battlegroup,
+                )
+            )
+        )
+        if defense_check.first():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This champion is already placed in the alliance defense",
+            )
+
+        # 4. 3-slot limit: union of node attackers + synergy + pre-fight for this game account
+        node_result = await session.exec(
+            select(WarDefensePlacement)
+            .join(ChampionUser, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
+            .where(
+                and_(
+                    WarDefensePlacement.war_id == war_id,
+                    WarDefensePlacement.battlegroup == battlegroup,
+                    ChampionUser.game_account_id == game_account.id,
+                )
+            )
+        )
+        node_ids = {p.attacker_champion_user_id for p in node_result.all()}
+
+        synergy_result = await session.exec(
+            select(WarSynergyAttacker).where(
+                and_(
+                    WarSynergyAttacker.war_id == war_id,
+                    WarSynergyAttacker.battlegroup == battlegroup,
+                    WarSynergyAttacker.game_account_id == game_account.id,
+                )
+            )
+        )
+        synergy_ids = {s.champion_user_id for s in synergy_result.all()}
+
+        prefight_result = await session.exec(
+            select(WarPrefightAttacker).where(
+                and_(
+                    WarPrefightAttacker.war_id == war_id,
+                    WarPrefightAttacker.battlegroup == battlegroup,
+                    WarPrefightAttacker.game_account_id == game_account.id,
+                )
+            )
+        )
+        prefight_ids = {pf.champion_user_id for pf in prefight_result.all()}
+
+        total_slots = len(node_ids | synergy_ids | prefight_ids | {champion_user_id})
+        if total_slots > 3:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This member already has 3 attackers assigned in this battlegroup",
+            )
+
+        # 5. Insert (unique constraint handles duplicate)
+        prefight = WarPrefightAttacker(
+            war_id=war_id,
+            battlegroup=battlegroup,
+            game_account_id=game_account.id,
+            champion_user_id=champion_user_id,
+            target_node_number=target_node_number,
+        )
+        session.add(prefight)
+        try:
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This champion is already assigned as pre-fight on this node",
+            )
+
+        return WarPrefightResponse.model_validate(
+            await cls._load_prefight(session, prefight.id)
+        )
+
+    @classmethod
+    async def remove_prefight_attacker(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        battlegroup: int,
+        champion_user_id: uuid.UUID,
+    ) -> None:
+        result = await session.exec(
+            select(WarPrefightAttacker).where(
+                and_(
+                    WarPrefightAttacker.war_id == war_id,
+                    WarPrefightAttacker.battlegroup == battlegroup,
+                    WarPrefightAttacker.champion_user_id == champion_user_id,
+                )
+            )
+        )
+        prefight = result.first()
+        if prefight is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pre-fight entry not found")
+        await session.delete(prefight)
         await session.commit()

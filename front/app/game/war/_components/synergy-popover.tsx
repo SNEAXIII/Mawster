@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import ChampionPortrait from '@/components/champion-portrait';
-import SynergyBadge from './synergy-badge';
 import SynergySelectorDialog from './synergy-selector';
 import { useWar } from '../_context/war-context';
 
@@ -50,9 +49,6 @@ export default function SynergyPopover({
               rarity={rarity}
               size={size}
             />
-            {boundSynergies.length > 0 && (
-              <SynergyBadge targetChampionName={championName} className='z' />
-            )}
           </button>
         </PopoverTrigger>
         <PopoverContent
@@ -74,7 +70,12 @@ export default function SynergyPopover({
                     rarity={s.rarity}
                     size={32}
                   />
-                  <span className='text-xs font-medium truncate flex-1'>{s.champion_name}</span>
+                  <span
+                    className='text-xs font-medium truncate flex-1'
+                    data-cy={`synergy-provider-${s.champion_name.replaceAll(/\s+/g, '-')}`}
+                  >
+                    {s.champion_name}
+                  </span>
                   <button
                     className='shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors'
                     data-cy={`synergy-revoke-${s.champion_name.replaceAll(/\s+/g, '-')}`}

@@ -1,4 +1,4 @@
-import { setupAttackerScenario, BACKEND } from '../../support/e2e';
+import { setupAttackerScenario, setupPrefightScenario, BACKEND } from '../../support/e2e';
 function goToAttackersMode(userId: string) {
   cy.apiLogin(userId);
   cy.navTo('war');
@@ -259,6 +259,35 @@ describe('War – Attackers mode', () => {
           });
         });
       },
+    );
+  });
+
+  // ── Removing attacker cascades to prefight ───────────────────────────────
+
+  it('removing an attacker also removes its prefight assignment', () => {
+    setupPrefightScenario('atk-prefight-cascade').then(
+      ({ ownerData, memberData, allianceId, warId, championUserId, prefightChampionUserId }) => {
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+        cy.apiAddWarPrefight(memberData.access_token, allianceId, warId, 1, prefightChampionUserId, 10);
+
+        // Verify prefight exists
+        cy.request({
+          method: 'GET',
+          url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/prefight`,
+          headers: { Authorization: `Bearer ${memberData.access_token}` },
+        }).then((res) => expect(res.body).to.have.length(1));
+
+        // Owner removes the attacker via UI
+        goToAttackersMode(ownerData.user_id);
+        cy.getByCy('remove-attacker-node-10').click();
+
+        // Prefight must have been cascade-deleted
+        cy.request({
+          method: 'GET',
+          url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/prefight`,
+          headers: { Authorization: `Bearer ${memberData.access_token}` },
+        }).then((res) => expect(res.body).to.have.length(0));
+      }
     );
   });
 

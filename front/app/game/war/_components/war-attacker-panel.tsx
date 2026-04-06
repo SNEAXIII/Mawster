@@ -4,10 +4,10 @@ import { useI18n } from '@/app/i18n';
 import ChampionPortrait from '@/components/champion-portrait';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '../_context/war-context';
+import PrefightEntryRow from './prefight-entry-row';
 import { WarMode } from './war-types';
 import AttackerEntryRow from './attacker-entry-row';
 import SynergyPopover from './synergy-popover';
-import SynergyBadge from './synergy-badge';
 
 interface MemberGroup {
   pseudo: string;
@@ -16,11 +16,11 @@ interface MemberGroup {
 
 export default function WarAttackerPanel() {
   const { t } = useI18n();
-  const { placements, warMode, synergies } = useWar();
+  const { placements, warMode, synergies, prefights } = useWar();
 
   const assigned = placements.filter((p) => p.attacker_champion_user_id !== null);
 
-  // Group by attacker member
+  // Group by attacker member (node attackers)
   const groupMap = new Map<string, MemberGroup>();
   for (const p of assigned) {
     const pseudo = p.attacker_pseudo ?? '?';
@@ -28,6 +28,12 @@ export default function WarAttackerPanel() {
       groupMap.set(pseudo, { pseudo, entries: [] });
     }
     groupMap.get(pseudo)!.entries.push(p);
+  }
+  // Also include prefight-only providers (no node assignments)
+  for (const pf of prefights) {
+    if (!groupMap.has(pf.game_pseudo)) {
+      groupMap.set(pf.game_pseudo, { pseudo: pf.game_pseudo, entries: [] });
+    }
   }
   const groups = Array.from(groupMap.values()).sort((a, b) => a.pseudo.localeCompare(b.pseudo));
 
@@ -44,37 +50,45 @@ export default function WarAttackerPanel() {
         <div className='text-sm text-muted-foreground px-1'>{t.game.war.noAvailableAttackers}</div>
       ) : (
         <div className='space-y-4 overflow-y-auto min-h-0'>
-          {groups.map((group) => {
+          {groups.map((memberGroup) => {
             // Node attacker unique champion_user_ids for this member
             const nodeAttackerIds = new Set(
-              group.entries
+              memberGroup.entries
                 .map((e) => e.attacker_champion_user_id)
                 .filter(Boolean) as string[]
             );
 
             // Synergy champions for this member (by pseudo match)
-            const memberSynergies = synergies.filter((s) => s.game_pseudo === group.pseudo);
+            const memberSynergies = synergies.filter((s) => s.game_pseudo === memberGroup.pseudo);
             const synergyOnlyProviders = memberSynergies.filter(
               (s) => !nodeAttackerIds.has(s.champion_user_id)
             );
 
+            const memberPrefights = prefights.filter((p) => p.game_pseudo === memberGroup.pseudo);
+          
+            const prefightOnlyProviders = [...new Map(
+              memberPrefights
+                .filter((p) => !nodeAttackerIds.has(p.champion_user_id))
+                .map((p) => [p.champion_user_id, p])
+            ).values()];
             const totalSlots = new Set([
               ...nodeAttackerIds,
               ...memberSynergies.map((s) => s.champion_user_id),
+              ...memberPrefights.map((p) => p.champion_user_id),
             ]).size;
 
             // Deduplicated node attacker portraits (unique by champion_user_id)
-            const nodePortraits = group.entries.filter(
+            const nodePortraits = memberGroup.entries.filter(
               (p, i, arr) =>
                 arr.findIndex((q) => q.attacker_champion_user_id === p.attacker_champion_user_id) === i
             );
 
             return (
-              <div key={group.pseudo}>
+              <div key={memberGroup.pseudo}>
                 {/* Member header: pseudo + slot count + portrait row */}
-                <div className='flex items-center gap-1.5 mb-1.5 px-1'>
+                <div className='flex items-center gap-1.5 mb-1.5 px-1' data-cy={`attacker-member-${memberGroup.pseudo}`}>
                   <span className='text-xs font-semibold text-muted-foreground uppercase tracking-wide'>
-                    {group.pseudo}
+                    {memberGroup.pseudo}
                   </span>
                   <span className='text-primary font-bold text-xs'>
                     {t.game.war.memberAttackers.replace('{count}', String(totalSlots))}
@@ -83,7 +97,6 @@ export default function WarAttackerPanel() {
                   {/* 3-slot portrait row: node attackers (clickable for synergy) + synergy-only */}
                   <div className='flex items-center gap-0.5 ml-1'>
                     {nodePortraits.map((placement) => (
-                      console.warn('Rendering portrait for', placement.attacker_pseudo, { placement }),
                       warMode === WarMode.Attackers ? (
                         <SynergyPopover
                           key={placement.attacker_champion_user_id}
@@ -107,26 +120,33 @@ export default function WarAttackerPanel() {
 
                     {/* Synergy-only champions (not on any node) */}
                     {synergyOnlyProviders.map((s) => (
-                      <div
+                      <ChampionPortrait
                         key={s.champion_user_id}
-                        className='relative'
-                        title={t.game.war.synergy.tooltip}
-                      >
-                        <ChampionPortrait
-                          imageUrl={s.image_url}
-                          name={s.champion_name}
-                          rarity={s.rarity}
-                          size={35}
-                        />
-                        <SynergyBadge targetChampionName={s.target_champion_name} />
-                      </div>
+                        imageUrl={s.image_url}
+                        name={s.champion_name}
+                        rarity={s.rarity}
+                        size={35}
+                        mode='synergy'
+                      />
+                    ))}
+
+                    {/* Prefight-only champions */}
+                    {prefightOnlyProviders.map((p) => (
+                      <ChampionPortrait
+                        key={p.champion_user_id}
+                        imageUrl={p.image_url}
+                        name={p.champion_name}
+                        rarity={p.rarity}
+                        size={35}
+                        mode='prefight'
+                      />
                     ))}
                   </div>
                 </div>
 
                 {/* Per-node entries */}
                 <div className='space-y-1.5'>
-                  {[...group.entries]
+                  {[...memberGroup.entries]
                     .sort((a, b) => a.node_number - b.node_number)
                     .map((placement) => (
                       <AttackerEntryRow
@@ -135,6 +155,15 @@ export default function WarAttackerPanel() {
                         readonly={warMode !== WarMode.Attackers}
                       />
                     ))}
+                  {/* Prefight entries for this member */}
+                  {memberPrefights.map((pf) => (
+                    <PrefightEntryRow
+                      key={pf.id}
+                      prefight={pf}
+                      targetPlacement={placements.find((p) => p.node_number === pf.target_node_number)}
+                      readonly={warMode !== WarMode.Attackers}
+                    />
+                  ))}
                 </div>
               </div>
             );

@@ -229,5 +229,25 @@ declare namespace Cypress {
       battlegroup: number,
       championUserId: string,
     ): Chainable<void>;
+
+    /** Add a prefight champion for a war battlegroup node (direct backend call). */
+    apiAddWarPrefight(
+      token: string,
+      allianceId: string,
+      warId: string,
+      battlegroup: number,
+      championUserId: string,
+      targetNodeNumber: number,
+    ): Chainable<Cypress.Response<unknown>>;
+
+    /** Remove a prefight champion from a war battlegroup (direct backend call). */
+    apiRemoveWarPrefight(
+      token: string,
+      allianceId: string,
+      warId: string,
+      battlegroup: number,
+      championUserId: string,
+    ): Chainable<Cypress.Response<unknown>>;
   }
 }
+
