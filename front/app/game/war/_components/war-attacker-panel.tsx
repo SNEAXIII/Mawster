@@ -50,21 +50,21 @@ export default function WarAttackerPanel() {
         <div className='text-sm text-muted-foreground px-1'>{t.game.war.noAvailableAttackers}</div>
       ) : (
         <div className='space-y-4 overflow-y-auto min-h-0'>
-          {groups.map((group) => {
+          {groups.map((memberGroup) => {
             // Node attacker unique champion_user_ids for this member
             const nodeAttackerIds = new Set(
-              group.entries
+              memberGroup.entries
                 .map((e) => e.attacker_champion_user_id)
                 .filter(Boolean) as string[]
             );
 
             // Synergy champions for this member (by pseudo match)
-            const memberSynergies = synergies.filter((s) => s.game_pseudo === group.pseudo);
+            const memberSynergies = synergies.filter((s) => s.game_pseudo === memberGroup.pseudo);
             const synergyOnlyProviders = memberSynergies.filter(
               (s) => !nodeAttackerIds.has(s.champion_user_id)
             );
 
-            const memberPrefights = prefights.filter((p) => p.game_pseudo === group.pseudo);
+            const memberPrefights = prefights.filter((p) => p.game_pseudo === memberGroup.pseudo);
           
             const prefightOnlyProviders = [...new Map(
               memberPrefights
@@ -78,17 +78,17 @@ export default function WarAttackerPanel() {
             ]).size;
 
             // Deduplicated node attacker portraits (unique by champion_user_id)
-            const nodePortraits = group.entries.filter(
+            const nodePortraits = memberGroup.entries.filter(
               (p, i, arr) =>
                 arr.findIndex((q) => q.attacker_champion_user_id === p.attacker_champion_user_id) === i
             );
 
             return (
-              <div key={group.pseudo}>
+              <div key={memberGroup.pseudo}>
                 {/* Member header: pseudo + slot count + portrait row */}
-                <div className='flex items-center gap-1.5 mb-1.5 px-1'>
+                <div className='flex items-center gap-1.5 mb-1.5 px-1' data-cy={`attacker-member-${memberGroup.pseudo}`}>
                   <span className='text-xs font-semibold text-muted-foreground uppercase tracking-wide'>
-                    {group.pseudo}
+                    {memberGroup.pseudo}
                   </span>
                   <span className='text-primary font-bold text-xs'>
                     {t.game.war.memberAttackers.replace('{count}', String(totalSlots))}
@@ -146,7 +146,7 @@ export default function WarAttackerPanel() {
 
                 {/* Per-node entries */}
                 <div className='space-y-1.5'>
-                  {[...group.entries]
+                  {[...memberGroup.entries]
                     .sort((a, b) => a.node_number - b.node_number)
                     .map((placement) => (
                       <AttackerEntryRow

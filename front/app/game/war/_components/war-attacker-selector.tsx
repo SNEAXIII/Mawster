@@ -54,14 +54,14 @@ export default function WarAttackerSelector({
     setLoading(true);
     setError(false);
     try {
-      const data = await getAvailableAttackers(allianceId, warId, battlegroup);
+      const data = await getAvailableAttackers(allianceId, warId, battlegroup, undefined, nodeNumber);
       setAvailable(data);
     } catch {
       setError(true);
     } finally {
       setLoading(false);
     }
-  }, [allianceId, warId, battlegroup]);
+  }, [allianceId, warId, battlegroup, nodeNumber]);
 
   useEffect(() => {
     if (open) {

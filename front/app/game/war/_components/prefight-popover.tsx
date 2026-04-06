@@ -45,7 +45,6 @@ export default function PrefightPopover({
               name={championName}
               rarity={rarity}
               size={size}
-              mode ='prefight'
             />
           </button>
         </PopoverTrigger>
