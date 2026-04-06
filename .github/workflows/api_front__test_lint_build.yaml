@@ -93,17 +93,13 @@ jobs:
           API_PORT: "8000"
           API_SERVER_HOST: localhost
         run: npx next build
-      - name: Verify build output
-        run: |
-          echo "=== front/ contents ==="
-          ls -la front/
-          echo "=== front/.next-e2e exists? ==="
-          ls -la front/.next-e2e 2>/dev/null && echo "EXISTS" || echo "NOT FOUND"
+      - name: Archive frontend build
+        run: tar -czf /tmp/next-e2e-build.tar.gz -C front .next-e2e
       - name: Upload frontend build
         uses: actions/upload-artifact@v4
         with:
           name: next-e2e-build
-          path: front/.next-e2e
+          path: /tmp/next-e2e-build.tar.gz
           retention-days: 1
           if-no-files-found: error
 
@@ -173,7 +169,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: next-e2e-build
-          path: front/.next-e2e
+          path: /tmp
+      - name: Extract frontend build
+        run: tar -xzf /tmp/next-e2e-build.tar.gz -C front
 
       # ── Run Cypress ──
       - name: Run Cypress E2E tests (runner ${{ matrix.runner }})
