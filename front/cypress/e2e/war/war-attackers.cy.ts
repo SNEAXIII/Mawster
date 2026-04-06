@@ -1,4 +1,4 @@
-import { setupAttackerScenario, BACKEND } from '../../support/e2e';
+import { setupAttackerScenario, setupPrefightScenario, BACKEND } from '../../support/e2e';
 function goToAttackersMode(userId: string) {
   cy.apiLogin(userId);
   cy.navTo('war');
@@ -259,6 +259,25 @@ describe('War – Attackers mode', () => {
           });
         });
       },
+    );
+  });
+
+  // ── Removing attacker cascades to prefight ───────────────────────────────
+
+  it('removing an attacker also removes its prefight assignment', () => {
+    setupPrefightScenario('atk-prefight-cascade').then(
+      ({ memberData, allianceId, warId, championUserId, prefightChampionUserId }) => {
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+        cy.apiAddWarPrefight(memberData.access_token, allianceId, warId, 1, prefightChampionUserId, 10);
+
+        goToAttackersMode(memberData.user_id);
+
+        cy.getByCy('prefight-trigger-node-10').find('[title]').should('exist');
+        cy.getByCy('remove-attacker-node-10').click();
+
+        // Prefight badge must be gone — cascade delete
+        cy.getByCy('prefight-trigger-node-10').find('[title]').should('not.exist');
+      }
     );
   });
 
