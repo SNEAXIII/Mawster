@@ -10,6 +10,17 @@ from starlette import status
 from src.services.ChampionService import ChampionService
 from src.services.UpgradeRequestService import UpgradeRequestService
 from src.enums.ChampionRarity import ChampionRarity
+from src.Messages.champion_user_messages import (
+    CHAMPION_CANNOT_BE_ASCENDED,
+    CHAMPION_NOT_FOUND,
+    GAME_ACCOUNT_NOT_FOUND,
+    champion_already_max_ascension,
+    champion_already_max_rank,
+    champion_name_not_found,
+    invalid_ascension_level,
+    invalid_rarity,
+    invalid_rarity_format,
+)
 from src.models.GameAccount import GameAccount
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
@@ -28,7 +39,7 @@ class ChampionUserService:
         if rarity not in VALID_RARITIES:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid rarity '{rarity}'. Must be one of: {', '.join(sorted(VALID_RARITIES))}",
+                detail=invalid_rarity(rarity, ", ".join(sorted(VALID_RARITIES))),
             )
 
     @classmethod
@@ -43,7 +54,7 @@ class ChampionUserService:
         if m is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid rarity format '{rarity}'",
+                detail=invalid_rarity_format(rarity),
             )
         return int(m.group(1)), int(m.group(2))
 
@@ -57,7 +68,7 @@ class ChampionUserService:
         if ascension not in (0, 1, 2):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid ascension level '{ascension}'. Must be 0, 1, or 2.",
+                detail=invalid_ascension_level(ascension),
             )
         if not champion.is_ascendable:
             return 0
@@ -81,7 +92,7 @@ class ChampionUserService:
         if game_account is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Game account not found",
+                detail=GAME_ACCOUNT_NOT_FOUND,
             )
 
         # Verify the champion exists
@@ -89,7 +100,7 @@ class ChampionUserService:
         if champion is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Champion not found",
+                detail=CHAMPION_NOT_FOUND,
             )
 
         # Validate ascension
@@ -149,7 +160,7 @@ class ChampionUserService:
         if game_account is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Game account not found",
+                detail=GAME_ACCOUNT_NOT_FOUND,
             )
 
         results = []
@@ -173,7 +184,7 @@ class ChampionUserService:
             if champion is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Champion '{champion_name}' not found",
+                    detail=champion_name_not_found(champion_name),
                 )
 
             is_preferred_attacker = entry.get("is_preferred_attacker", False)
@@ -292,7 +303,7 @@ class ChampionUserService:
         if next_rarity not in VALID_RARITIES:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Champion is already at maximum rank ({current_rarity})",
+                detail=champion_already_max_rank(current_rarity),
             )
 
         champion_user.rank = next_rank
@@ -315,19 +326,19 @@ class ChampionUserService:
         if champion is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Champion not found",
+                detail=CHAMPION_NOT_FOUND,
             )
 
         if not champion.is_ascendable:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="This champion cannot be ascended",
+                detail=CHAMPION_CANNOT_BE_ASCENDED,
             )
 
         if champion_user.ascension >= 2:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Champion is already at maximum ascension (A{champion_user.ascension})",
+                detail=champion_already_max_ascension(champion_user.ascension),
             )
 
         champion_user.ascension += 1

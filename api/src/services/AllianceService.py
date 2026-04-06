@@ -12,7 +12,25 @@ from src.models.Alliance import Alliance
 from src.models.AllianceInvitation import AllianceInvitation
 from src.models.AllianceOfficer import AllianceOfficer
 from src.enums.InvitationStatus import InvitationStatus
-from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
+from src.Messages.alliance_messages import (
+    ALLIANCE_NOT_FOUND,
+    CANNOT_REMOVE_OWNER,
+    GAME_ACCOUNT_ALREADY_IN_ALLIANCE,
+    GAME_ACCOUNT_ALREADY_OFFICER,
+    GAME_ACCOUNT_MUST_BE_MEMBER_TO_BECOME_OFFICER,
+    GAME_ACCOUNT_NOT_FOUND,
+    GAME_ACCOUNT_NOT_MEMBER_OF_ALLIANCE,
+    GAME_ACCOUNT_NOT_OFFICER,
+    GAME_ACCOUNT_NOT_YOURS,
+    INVALID_GROUP_VALUE,
+    NOT_ALLIANCE_MEMBER,
+    OFFICER_CANNOT_REMOVE_OFFICER,
+    OWNER_GAME_ACCOUNT_NOT_FOUND,
+    OWNER_OR_OFFICER_REQUIRED,
+    OWNER_REQUIRED,
+    alliance_max_members_reached,
+    group_max_members_reached,
+)
 from src.utils.db import SessionDep
 
 MAX_MEMBERS_PER_GROUP = 10
@@ -49,7 +67,7 @@ class AllianceService:
         if account is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="You are not a member of this alliance",
+                detail=NOT_ALLIANCE_MEMBER,
             )
         return account
 
@@ -84,7 +102,7 @@ class AllianceService:
         if game_account.alliance_id is not None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This game account is already in an alliance",
+                detail=GAME_ACCOUNT_ALREADY_IN_ALLIANCE,
             )
 
     @staticmethod
@@ -95,7 +113,7 @@ class AllianceService:
         if game_account is None or game_account.alliance_id != alliance_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Game account is not a member of this alliance",
+                detail=GAME_ACCOUNT_NOT_MEMBER_OF_ALLIANCE,
             )
 
     @classmethod
@@ -136,7 +154,7 @@ class AllianceService:
 
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the alliance owner or an officer can perform this action",
+            detail=OWNER_OR_OFFICER_REQUIRED,
         )
 
     @classmethod
@@ -148,7 +166,7 @@ class AllianceService:
         if alliance.owner_id not in user_account_ids:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only the alliance owner can perform this action",
+                detail=OWNER_REQUIRED,
             )
 
     @classmethod
@@ -169,14 +187,14 @@ class AllianceService:
         if not (user_account_ids & officer_ids):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only the alliance owner or an officer can perform this action",
+                detail=OWNER_OR_OFFICER_REQUIRED,
             )
 
         # Caller is officer — cannot remove another officer
         if target_game_account_id in officer_ids:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="An officer cannot remove another officer",
+                detail=OFFICER_CANNOT_REMOVE_OFFICER,
             )
 
     @classmethod
@@ -194,13 +212,13 @@ class AllianceService:
         if owner is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Owner game account not found",
+                detail=OWNER_GAME_ACCOUNT_NOT_FOUND,
             )
         # Verify the game account belongs to the current user
         if owner.user_id != current_user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="This game account does not belong to you",
+                detail=GAME_ACCOUNT_NOT_YOURS,
             )
         # A player can only belong to one alliance at a time
         cls._assert_not_in_alliance(owner)
@@ -366,7 +384,7 @@ class AllianceService:
         if game_account is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Game account not found",
+                detail=GAME_ACCOUNT_NOT_FOUND,
             )
         cls._assert_not_in_alliance(game_account)
         # Enforce member limit
@@ -379,7 +397,7 @@ class AllianceService:
         if current_count >= MAX_MEMBERS_PER_ALLIANCE:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"This alliance already has {MAX_MEMBERS_PER_ALLIANCE} members (maximum reached)",
+                detail=alliance_max_members_reached(MAX_MEMBERS_PER_ALLIANCE),
             )
         game_account.alliance_id = alliance_id
         session.add(game_account)
@@ -398,12 +416,12 @@ class AllianceService:
         if alliance is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Alliance not found",
+                detail=ALLIANCE_NOT_FOUND,
             )
         if alliance.owner_id == game_account_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot remove the owner from the alliance",
+                detail=CANNOT_REMOVE_OWNER,
             )
         game_account = await session.get(GameAccount, game_account_id)
         cls._assert_is_alliance_member(game_account, alliance_id)
@@ -439,13 +457,13 @@ class AllianceService:
         if game_account is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Game account not found",
+                detail=GAME_ACCOUNT_NOT_FOUND,
             )
         # officer must be a member of the alliance
         if game_account.alliance_id != alliance_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Game account must be a member of the alliance to become an officer",
+                detail=GAME_ACCOUNT_MUST_BE_MEMBER_TO_BECOME_OFFICER,
             )
         # Check not already officer
         existing = await session.exec(
@@ -457,7 +475,7 @@ class AllianceService:
         if existing.first() is not None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Game account is already an officer of this alliance",
+                detail=GAME_ACCOUNT_ALREADY_OFFICER,
             )
         officer = AllianceOfficer(
             alliance_id=alliance_id,
@@ -485,7 +503,7 @@ class AllianceService:
         if officer is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="This game account is not an officer of this alliance",
+                detail=GAME_ACCOUNT_NOT_OFFICER,
             )
         await session.delete(officer)
         await session.commit()
@@ -508,7 +526,7 @@ class AllianceService:
             if group not in (1, 2, 3):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Group must be 1, 2, 3 or null",
+                    detail=INVALID_GROUP_VALUE,
                 )
             # Count current members in this group (excluding the target account)
             count_result = await session.exec(
@@ -522,7 +540,7 @@ class AllianceService:
             if current_count >= MAX_MEMBERS_PER_GROUP:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
-                    detail=f"Group {group} already has {MAX_MEMBERS_PER_GROUP} members (maximum reached)",
+                    detail=group_max_members_reached(group, MAX_MEMBERS_PER_GROUP),
                 )
         game_account.alliance_group = group
         session.add(game_account)
@@ -552,7 +570,7 @@ class AllianceService:
         if alliance is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Alliance not found",
+                detail=ALLIANCE_NOT_FOUND,
             )
         officer_ids = {off.game_account_id for off in alliance.officers}
         return [

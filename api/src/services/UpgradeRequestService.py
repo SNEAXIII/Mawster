@@ -9,6 +9,13 @@ from starlette import status
 from src.models.RequestedUpgrade import RequestedUpgrade
 from src.models.ChampionUser import ChampionUser
 from src.enums.ChampionRarity import ChampionRarity
+from src.Messages.upgrade_request_messages import (
+    CHAMPION_USER_ENTRY_NOT_FOUND,
+    UPGRADE_REQUEST_ALREADY_EXISTS,
+    UPGRADE_REQUEST_NOT_FOUND,
+    invalid_requested_rarity,
+    requested_rarity_must_be_higher,
+)
 from src.utils.db import SessionDep
 
 VALID_RARITIES = {r.value for r in ChampionRarity}
@@ -28,7 +35,10 @@ class UpgradeRequestService:
         if requested_rarity not in VALID_RARITIES:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid rarity '{requested_rarity}'. Must be one of: {', '.join(sorted(VALID_RARITIES))}",
+                detail=invalid_requested_rarity(
+                    requested_rarity,
+                    ", ".join(sorted(VALID_RARITIES)),
+                ),
             )
 
         # Load champion_user with champion relationship
@@ -42,7 +52,7 @@ class UpgradeRequestService:
         if champion_user is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Champion user entry not found",
+                detail=CHAMPION_USER_ENTRY_NOT_FOUND,
             )
 
         # requested_rarity must be higher than current
@@ -50,7 +60,7 @@ class UpgradeRequestService:
         if requested_rarity <= current:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Requested rarity '{requested_rarity}' must be higher than current rarity '{current}'",
+                detail=requested_rarity_must_be_higher(requested_rarity, current),
             )
 
         # Check if a pending request already exists for this champion_user + rarity
@@ -66,7 +76,7 @@ class UpgradeRequestService:
         if existing.first() is not None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="An upgrade request for this rarity already exists",
+                detail=UPGRADE_REQUEST_ALREADY_EXISTS,
             )
 
         upgrade_request = RequestedUpgrade(
@@ -110,7 +120,7 @@ class UpgradeRequestService:
         if upgrade_request is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Upgrade request not found",
+                detail=UPGRADE_REQUEST_NOT_FOUND,
             )
         await session.delete(upgrade_request)
         await session.commit()

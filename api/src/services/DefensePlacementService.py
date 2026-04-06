@@ -13,6 +13,16 @@ from src.models.ChampionUser import ChampionUser
 from src.models.DefensePlacement import DefensePlacement
 from src.models.GameAccount import GameAccount
 from src.dto.dto_defense import DefenseExportItem, DefenseImportError, DefenseReportItem
+from src.Messages.defense_messages import (
+    CHAMPION_ALREADY_PLACED_OTHER_NODE,
+    CHAMPION_NOT_BELONG_TO_PLAYER,
+    CHAMPION_NOT_FOUND_IN_ROSTER,
+    GAME_ACCOUNT_NOT_FOUND,
+    NO_DEFENDER_ON_NODE,
+    PLAYER_NOT_IN_ALLIANCE,
+    PLAYER_NOT_IN_BATTLEGROUP,
+    player_max_defenders_reached,
+)
 from src.utils.db import SessionDep
 
 MAX_DEFENDERS_PER_PLAYER = 5
@@ -78,12 +88,12 @@ class DefensePlacementService:
         if champion_user is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Champion not found in roster",
+                detail=CHAMPION_NOT_FOUND_IN_ROSTER,
             )
         if champion_user.game_account_id != game_account_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="This champion does not belong to the specified player",
+                detail=CHAMPION_NOT_BELONG_TO_PLAYER,
             )
 
         # 2. Verify game_account is in the alliance and in this battlegroup
@@ -91,17 +101,17 @@ class DefensePlacementService:
         if game_account is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Game account not found",
+                detail=GAME_ACCOUNT_NOT_FOUND,
             )
         if game_account.alliance_id != alliance_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Player is not in this alliance",
+                detail=PLAYER_NOT_IN_ALLIANCE,
             )
         if game_account.alliance_group != battlegroup:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Player is not in this battlegroup",
+                detail=PLAYER_NOT_IN_BATTLEGROUP,
             )
 
         # 3. Check node is not already occupied (replace if so)
@@ -134,7 +144,7 @@ class DefensePlacementService:
         if existing_champ.first():
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This champion is already placed on another node",
+                detail=CHAMPION_ALREADY_PLACED_OTHER_NODE,
             )
 
         # 5. Check max defenders per player (5)
@@ -151,7 +161,7 @@ class DefensePlacementService:
         if len(player_placements) >= MAX_DEFENDERS_PER_PLAYER:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Player already has {MAX_DEFENDERS_PER_PLAYER} defenders placed",
+                detail=player_max_defenders_reached(MAX_DEFENDERS_PER_PLAYER),
             )
 
         # 6. Create the placement
@@ -207,7 +217,7 @@ class DefensePlacementService:
         if placement is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No defender on this node",
+                detail=NO_DEFENDER_ON_NODE,
             )
         await session.delete(placement)
         await session.commit()
