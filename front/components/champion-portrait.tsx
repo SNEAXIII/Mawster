@@ -16,7 +16,8 @@ interface ChampionPortraitProps {
   /** Outer size in px (default 56) */
   size?: number;
   /** Optional badge rendered absolutely over the portrait (bottom-right) */
-  mode?: mode ;
+  mode?: mode;
+  dataCy?: string;
 }
 
 /**
@@ -29,6 +30,7 @@ export default function ChampionPortrait({
   rarity,
   size = 56,
   mode = 'normal',
+  dataCy,
 }: Readonly<ChampionPortraitProps>) {
   const frameUrl = getStarFrameUrl(rarity);
   const imgSize = 60; // pre-resized thumbnails
@@ -38,6 +40,7 @@ export default function ChampionPortrait({
     <div
       className='relative shrink-0'
       style={{ width: size, height: size }}
+      data-cy={dataCy ?? `champion-portrait-${name}-${mode}`}
     >
       {/* Star frame – behind */}
       <img

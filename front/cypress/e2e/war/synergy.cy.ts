@@ -32,7 +32,7 @@ describe('War Synergy', () => {
               cy.getByCy('synergy-pick-Deadpool').click();
 
               // Badge should now be visible on the Wolverine portrait
-              cy.getByCy('synergy-trigger-Wolverine').find('[title]').should('exist');
+              cy.getByCy('attacker-member-syn1Member').find('Deadpool').should('exist');
             },
           );
         });

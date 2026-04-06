@@ -48,7 +48,6 @@ export default function SynergyPopover({
               name={championName}
               rarity={rarity}
               size={size}
-              mode='synergy'
             />
 
           </button>

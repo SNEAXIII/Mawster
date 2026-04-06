@@ -21,7 +21,9 @@ describe('War Prefight', () => {
         cy.getByCy('prefight-pick-Storm').click();
         cy.getByCy('prefight-selector').should('not.exist');
 
-        cy.getByCy('prefight-trigger-node-10').find('[title]').should('exist');
+        // Re-open the popover to confirm Storm was assigned (revoke button visible)
+        cy.getByCy('prefight-trigger-node-10').click();
+        cy.getByCy('prefight-revoke-Storm').should('exist');
       }
     );
   });

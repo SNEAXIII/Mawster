@@ -351,6 +351,7 @@ class WarService:
         battlegroup: int,
         attacker_id: Optional[uuid.UUID] = None,
         war: Optional[War] = None,
+        node_number: Optional[int] = None,
     ) -> list[AvailableAttackerResponse]:
         # Get members assigned to this battlegroup (or just the specific attacker)
         member_conditions = and_(
@@ -397,7 +398,8 @@ class WarService:
                         )
                     )
                 )
-                all_attackers_ids = {p.attacker_champion_user_id for p in node_result.all()}
+                node_placements = node_result.all()
+                all_attackers_ids = {p.attacker_champion_user_id for p in node_placements}
                 synergy_result = await session.exec(
                     select(WarSynergyAttacker).where(
                         and_(
@@ -420,12 +422,21 @@ class WarService:
                 )
                 prefight_ids = {pf.champion_user_id for pf in prefight_result.all()}
                 all_attackers_ids = all_attackers_ids | prefight_ids
+            # When replacing the attacker on a specific node, exclude that slot from the limit count.
+            ids_for_limit = all_attackers_ids
+            if war and node_number is not None:
+                replacing_id = next(
+                    (p.attacker_champion_user_id for p in node_placements if p.node_number == node_number),
+                    None,
+                )
+                if replacing_id is not None:
+                    ids_for_limit = all_attackers_ids - {replacing_id}
             for champion_user in game_account.roster:
                 if champion_user.id in defense_champion_user_ids:
                     continue
                 if champion_user.champion_id in banned_champion_ids:
                     continue
-                if war and len(all_attackers_ids) >= 3 and champion_user.id not in all_attackers_ids:
+                if war and len(ids_for_limit) >= 3 and champion_user.id not in all_attackers_ids:
                     continue
                 result.append(AvailableAttackerResponse(
                     champion_user_id=champion_user.id,

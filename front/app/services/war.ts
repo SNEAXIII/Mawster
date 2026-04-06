@@ -219,9 +219,13 @@ export async function getAvailableAttackers(
   allianceId: string,
   warId: string,
   battlegroup: number,
-  targetGameAccountId?: string
+  targetGameAccountId?: string,
+  nodeNumber?: number
 ): Promise<AvailableAttacker[]> {
-  const suffix = targetGameAccountId ? `?attacker_id=${targetGameAccountId}` : '';
+  const params = new URLSearchParams();
+  if (targetGameAccountId) params.set('attacker_id', targetGameAccountId);
+  if (nodeNumber !== undefined) params.set('node_number', String(nodeNumber));
+  const suffix = params.toString() ? `?${params}` : '';
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-attackers${suffix}`,
     { headers: jsonHeaders }

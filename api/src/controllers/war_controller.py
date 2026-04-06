@@ -194,10 +194,11 @@ async def get_available_attackers(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     war: WarDep,
     attacker_id: uuid.UUID | None = None,
+    node_number: int | None = None,
 ):
     """List available attackers (BG roster minus defenders). Pass attacker_id to filter to a single member."""
     await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
-    return await WarService.get_available_attackers(session, alliance_id, battlegroup, attacker_id, war)
+    return await WarService.get_available_attackers(session, alliance_id, battlegroup, attacker_id, war, node_number)
 
 @war_controller.get(
     "/{war_id}/bg/{battlegroup}/available-prefight-attackers",
