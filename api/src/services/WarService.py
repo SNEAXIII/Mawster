@@ -25,6 +25,35 @@ from src.dto.dto_war import (
     WarSynergyResponse,
     WarPrefightResponse,
 )
+from src.Messages.war_messages import (
+    ACTIVE_WAR_ALREADY_EXISTS,
+    BANNED_CHAMPION_LIST_DUPLICATES,
+    CHAMPION_ALREADY_IN_ALLIANCE_DEFENSE,
+    CHAMPION_ALREADY_PLACED_IN_BG,
+    CHAMPION_ALREADY_PREFIGHT_ON_NODE,
+    CHAMPION_ALREADY_SYNERGY_PROVIDER,
+    CHAMPION_BANNED_FOR_WAR,
+    CHAMPION_NOT_FOUND,
+    CHAMPION_NOT_IN_ALLIANCE_BG,
+    CHAMPION_NO_PREFIGHT_ABILITY,
+    CHAMPION_USER_NOT_FOUND,
+    KO_COUNT_NO_ATTACKER_ASSIGNED,
+    MEMBER_ALREADY_HAS_3_ATTACKERS,
+    NODE_HAS_NO_DEFENDER_PLACE_FIRST,
+    NO_ACTIVE_WAR_FOR_ALLIANCE,
+    NO_ATTACKER_ASSIGNED_ON_NODE,
+    NO_DEFENDER_ON_NODE,
+    ONLY_OWN_CHAMPIONS_SYNERGY,
+    PREFIGHT_ENTRY_NOT_FOUND,
+    SYNERGY_ATTACKER_NOT_FOUND,
+    SYNERGY_PROVIDER_MUST_MATCH_TARGET_ACCOUNT,
+    TARGET_CHAMPION_USER_NOT_FOUND,
+    TARGET_NODE_NO_ATTACKER_ASSIGNED,
+    TARGET_NODE_NO_DEFENDER_IN_WAR_BG,
+    TARGET_NOT_ASSIGNED_AS_NODE_ATTACKER,
+    WAR_NOT_FOUND,
+    champion_with_id_not_found,
+)
 from src.utils.db import SessionDep
 
 
@@ -45,7 +74,7 @@ class WarService:
         if len(banned_champion_ids) != len(set(banned_champion_ids)):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail="Banned champion list contains duplicates",
+                detail=BANNED_CHAMPION_LIST_DUPLICATES,
             )
 
         existing = await session.exec(
@@ -54,7 +83,7 @@ class WarService:
         if existing.first() is not None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="An active war already exists for this alliance",
+                detail=ACTIVE_WAR_ALREADY_EXISTS,
             )
 
         for champion_id in banned_champion_ids:
@@ -62,7 +91,7 @@ class WarService:
             if champ is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Champion {champion_id} not found",
+                    detail=champion_with_id_not_found(champion_id),
                 )
 
         war = War(
@@ -111,7 +140,7 @@ class WarService:
         if war is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No active war for this alliance",
+                detail=NO_ACTIVE_WAR_FOR_ALLIANCE,
             )
         return WarResponse.model_validate(await cls._load_war(session, war.id))
 
@@ -124,7 +153,7 @@ class WarService:
     ) -> War:
         war = await cls._load_war(session, war_id)
         if war is None or war.alliance_id != alliance_id:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="War not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=WAR_NOT_FOUND)
         return war
 
     @classmethod
@@ -227,7 +256,7 @@ class WarService:
         # Validate champion exists
         champion = await session.get(Champion, placement_request.champion_id)
         if champion is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_NOT_FOUND)
 
         # Check champion not already placed as defender in this BG
         existing_champ = await session.exec(
@@ -243,7 +272,7 @@ class WarService:
         if existing_champ.first():
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This champion is already placed on another node in this battlegroup",
+                detail=CHAMPION_ALREADY_PLACED_IN_BG,
             )
 
         # Replace if node already occupied
@@ -300,7 +329,7 @@ class WarService:
         if placement is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No defender on this node",
+                detail=NO_DEFENDER_ON_NODE,
             )
         await session.delete(placement)
         await session.commit()
@@ -514,7 +543,7 @@ class WarService:
         if placement is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail="This node has no defender — place a defender first",
+                detail=NODE_HAS_NO_DEFENDER_PLACE_FIRST,
             )
 
         # 2. Load the champion user
@@ -525,14 +554,14 @@ class WarService:
         )
         champion_user = (await session.exec(champion_user_stmt)).first()
         if champion_user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)
 
         game_account = champion_user.game_account
         # 3. Validate member belongs to this alliance + battlegroup
         if game_account.alliance_id != alliance_id or game_account.alliance_group != battlegroup:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="This champion does not belong to a member of this alliance battlegroup",
+                detail=CHAMPION_NOT_IN_ALLIANCE_BG,
             )
 
         # 4. Check champion is not banned in this war
@@ -544,7 +573,7 @@ class WarService:
         if ban_check.first():
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This champion is banned for this war",
+                detail=CHAMPION_BANNED_FOR_WAR,
             )
 
         # 5. Check champion not already placed in regular alliance defense
@@ -560,7 +589,7 @@ class WarService:
         if defense_check.first():
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This champion is already placed in the alliance defense",
+                detail=CHAMPION_ALREADY_IN_ALLIANCE_DEFENSE,
             )
 
         # 5. Check member has fewer than 3 attackers in this war+BG (union of node attackers + synergy).
@@ -577,7 +606,7 @@ class WarService:
             )
         )
         all_attackers = attacker_count_result.all()
-        all_attackers_ids = set(a.attacker_champion_user_id for a in all_attackers if a.node_number != node_number)  # exclude the current node since we're replacing any existing attacker there
+        all_attackers_ids = {a.attacker_champion_user_id for a in all_attackers if a.node_number != node_number}  # exclude the current node since we're replacing any existing attacker there
         all_attackers_ids.add(champion_user_id)  # include the new one we're trying to add
         # Union with synergy attackers (couteau suisse deduplicates automatically)
         synergy_result = await session.exec(
@@ -605,7 +634,7 @@ class WarService:
         if member_attacker_count > 3:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This member already has 3 attackers assigned in this battlegroup",
+                detail=MEMBER_ALREADY_HAS_3_ATTACKERS,
             )
 
         # 6. Assign
@@ -629,9 +658,9 @@ class WarService:
     ) -> WarPlacementResponse:
         placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
         if placement is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No defender on this node")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=NO_DEFENDER_ON_NODE)
         if placement.attacker_champion_user_id is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No attacker assigned to this node")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=NO_ATTACKER_ASSIGNED_ON_NODE)
 
         removed_champion_user_id = placement.attacker_champion_user_id
         placement.attacker_champion_user_id = None
@@ -711,10 +740,10 @@ class WarService:
     ) -> WarPlacementResponse:
         placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
         if placement is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No defender on this node")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=NO_DEFENDER_ON_NODE)
 
         if placement.attacker_champion_user_id is None:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot update KO count: no attacker assigned to this node")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=KO_COUNT_NO_ATTACKER_ASSIGNED)
 
         placement.ko_count = ko_count
         session.add(placement)
@@ -783,7 +812,7 @@ class WarService:
         )
         champion_user = (await session.exec(cu_stmt)).first()
         if champion_user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)
         tcu_stmt = (
             select(ChampionUser)
             .where(ChampionUser.id == target_champion_user_id)
@@ -791,18 +820,18 @@ class WarService:
         )
         target_champion_user = (await session.exec(tcu_stmt)).first()
         if target_champion_user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target champion user not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=TARGET_CHAMPION_USER_NOT_FOUND)
 
         game_account = champion_user.game_account
         if game_account.user_id != target_champion_user.game_account.user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="You can only add your own champions as synergy providers",
+                detail=ONLY_OWN_CHAMPIONS_SYNERGY,
             )
         if game_account.alliance_id != alliance_id or game_account.alliance_group != battlegroup:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="This champion does not belong to a member of this alliance battlegroup",
+                detail=CHAMPION_NOT_IN_ALLIANCE_BG,
             )
 
         # 2. target_champion_user_id must be assigned as a node attacker in this war+BG
@@ -818,7 +847,7 @@ class WarService:
         if target_check.first() is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail="Target champion is not assigned as a node attacker in this war+BG",
+                detail=TARGET_NOT_ASSIGNED_AS_NODE_ATTACKER,
             )
 
         # 2b. Synergy provider must belong to the same game account as the target attacker
@@ -828,7 +857,7 @@ class WarService:
         if target_cu is None or target_cu.game_account_id != game_account.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Synergy provider must belong to the same game account as the target attacker",
+                detail=SYNERGY_PROVIDER_MUST_MATCH_TARGET_ACCOUNT,
             )
 
         # 3. Check synergy provider's champion is not banned in this war
@@ -840,7 +869,7 @@ class WarService:
         if synergy_ban_check.first():
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This champion is banned for this war",
+                detail=CHAMPION_BANNED_FOR_WAR,
             )
 
         # 3b. champion_user_id not already in regular alliance defense for this BG
@@ -856,7 +885,7 @@ class WarService:
         if defense_check.first():
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This champion is already placed in the alliance defense",
+                detail=CHAMPION_ALREADY_IN_ALLIANCE_DEFENSE,
             )
 
         # 4. 3-slot limit: union of node attackers + synergy attackers
@@ -899,7 +928,7 @@ class WarService:
         if total_slots > 3:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This member already has 3 attackers assigned in this battlegroup",
+                detail=MEMBER_ALREADY_HAS_3_ATTACKERS,
             )
 
         # 5. Insert (unique constraint handles duplicate)
@@ -917,7 +946,7 @@ class WarService:
             await session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This champion is already a synergy provider in this war+BG",
+                detail=CHAMPION_ALREADY_SYNERGY_PROVIDER,
             )
 
         return WarSynergyResponse.model_validate(
@@ -943,7 +972,7 @@ class WarService:
         )
         synergy = result.first()
         if synergy is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Synergy attacker not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=SYNERGY_ATTACKER_NOT_FOUND)
         await session.delete(synergy)
         await session.commit()
 
@@ -1005,13 +1034,13 @@ class WarService:
         )
         champion_user = (await session.exec(champion_user_stmt)).first()
         if champion_user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Champion user not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)
 
         # 1c. Champion must have has_prefight capability
         if not champion_user.champion.has_prefight:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail="This champion does not have a pre-fight ability",
+                detail=CHAMPION_NO_PREFIGHT_ABILITY,
             )
 
         game_account = champion_user.game_account
@@ -1019,7 +1048,7 @@ class WarService:
         if game_account.alliance_id != alliance_id or game_account.alliance_group != battlegroup:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="This champion does not belong to a member of this alliance battlegroup",
+                detail=CHAMPION_NOT_IN_ALLIANCE_BG,
             )
 
         # 2. Target node must have a defender placed in this war+BG
@@ -1027,14 +1056,14 @@ class WarService:
         if target_placement is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail="Target node has no defender placed in this war+BG",
+                detail=TARGET_NODE_NO_DEFENDER_IN_WAR_BG,
             )
 
         # 2b. Target node must have an attacker assigned
         if target_placement.attacker_champion_user_id is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail="Target node has no attacker assigned",
+                detail=TARGET_NODE_NO_ATTACKER_ASSIGNED,
             )
 
         # 3. Provider champion not banned in this war
@@ -1046,7 +1075,7 @@ class WarService:
         if ban_check.first():
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This champion is banned for this war",
+                detail=CHAMPION_BANNED_FOR_WAR,
             )
 
         # 3b. Provider not in regular alliance defense for this BG
@@ -1062,7 +1091,7 @@ class WarService:
         if defense_check.first():
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This champion is already placed in the alliance defense",
+                detail=CHAMPION_ALREADY_IN_ALLIANCE_DEFENSE,
             )
 
         # 4. 3-slot limit: union of node attackers + synergy + pre-fight for this game account
@@ -1105,7 +1134,7 @@ class WarService:
         if total_slots > 3:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This member already has 3 attackers assigned in this battlegroup",
+                detail=MEMBER_ALREADY_HAS_3_ATTACKERS,
             )
 
         # 5. Insert (unique constraint handles duplicate)
@@ -1123,7 +1152,7 @@ class WarService:
             await session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This champion is already assigned as pre-fight on this node",
+                detail=CHAMPION_ALREADY_PREFIGHT_ON_NODE,
             )
 
         return WarPrefightResponse.model_validate(
@@ -1149,6 +1178,6 @@ class WarService:
         )
         prefight = result.first()
         if prefight is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pre-fight entry not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=PREFIGHT_ENTRY_NOT_FOUND)
         await session.delete(prefight)
         await session.commit()

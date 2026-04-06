@@ -9,6 +9,11 @@ from sqlmodel import select
 from starlette import status
 
 from src.enums.Roles import Roles
+from src.Messages.discord_auth_messages import (
+    DISCORD_API_ERROR,
+    DISCORD_TOKEN_INVALID,
+    EMAIL_CONFLICT,
+)
 from src.models import User, LoginLog
 from src.utils.db import SessionDep
 from src.utils.email_hash import hash_email
@@ -17,17 +22,17 @@ DISCORD_API_URL = "https://discord.com/api/v10"
 
 EMAIL_CONFLICT_EXCEPTION = HTTPException(
     status_code=status.HTTP_409_CONFLICT,
-    detail="Un compte avec cette adresse email existe deja.",
+    detail=EMAIL_CONFLICT,
 )
 
 DISCORD_TOKEN_INVALID_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Le token Discord est invalide ou expire.",
+    detail=DISCORD_TOKEN_INVALID,
 )
 
 DISCORD_API_ERROR_EXCEPTION = HTTPException(
     status_code=status.HTTP_502_BAD_GATEWAY,
-    detail="Impossible de verifier le token aupres de Discord.",
+    detail=DISCORD_API_ERROR,
 )
 
 

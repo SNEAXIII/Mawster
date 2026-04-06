@@ -6,6 +6,7 @@ from sqlmodel import select
 from sqlalchemy.orm import selectinload
 from starlette import status
 
+from src.Messages.game_account_messages import max_game_accounts_reached
 from src.models.GameAccount import GameAccount
 from src.utils.db import SessionDep
 
@@ -45,7 +46,7 @@ class GameAccountService:
         if len(existing_accounts) >= MAX_GAME_ACCOUNTS_PER_USER:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Maximum {MAX_GAME_ACCOUNTS_PER_USER} game accounts allowed per user",
+                detail=max_game_accounts_reached(MAX_GAME_ACCOUNTS_PER_USER),
             )
         # First account is always primary
         if len(existing_accounts) == 0:
