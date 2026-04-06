@@ -93,6 +93,12 @@ jobs:
           API_PORT: "8000"
           API_SERVER_HOST: localhost
         run: npx next build
+      - name: Verify build output
+        run: |
+          echo "=== front/ contents ==="
+          ls -la front/
+          echo "=== front/.next-e2e exists? ==="
+          ls -la front/.next-e2e 2>/dev/null && echo "EXISTS" || echo "NOT FOUND"
       - name: Upload frontend build
         uses: actions/upload-artifact@v4
         with:
