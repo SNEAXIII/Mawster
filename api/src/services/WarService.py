@@ -3,7 +3,6 @@ from typing import Optional
 
 from fastapi import HTTPException
 from sqlmodel import select, and_
-from sqlalchemy import func, union_all
 from sqlalchemy.orm import selectinload
 from starlette import status
 
