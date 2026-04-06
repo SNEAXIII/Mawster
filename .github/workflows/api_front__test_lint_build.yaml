@@ -79,9 +79,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: front/package-lock.json
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            front/node_modules
+            ~/.cache/Cypress
+          key: node-modules-${{ runner.os }}-${{ hashFiles('front/package-lock.json') }}
       - name: Install frontend dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         working-directory: ./front
         run: npm ci
       - name: Build frontend (next build)
@@ -158,9 +165,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: front/package-lock.json
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            front/node_modules
+            ~/.cache/Cypress
+          key: node-modules-${{ runner.os }}-${{ hashFiles('front/package-lock.json') }}
       - name: Install frontend dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         working-directory: ./front
         run: npm ci
       - name: Install MariaDB client
