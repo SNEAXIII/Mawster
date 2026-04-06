@@ -927,8 +927,14 @@ export function setupPrefightScenario(prefix: string): Cypress.Chainable<{
         const stormId = champs[0].id;
         return cy
           .request({
-            method: 'POST',
-            url: `${BACKEND}/champion-users`,
+            method: 'PATCH',
+            url: `${BACKEND}/admin/champions/${stormId}/prefight`,
+            headers: { Authorization: `Bearer ${scenario.adminToken}` },
+          })
+          .then(() =>
+            cy.request({
+              method: 'POST',
+              url: `${BACKEND}/champion-users`,
             headers: { Authorization: `Bearer ${scenario.memberData.access_token}` },
             body: {
               champion_id: stormId,
@@ -936,7 +942,7 @@ export function setupPrefightScenario(prefix: string): Cypress.Chainable<{
               stars: 6,
               rank: 3,
               ascension: 0,
-              rarity: 'Common',
+              rarity: '7r3',
             },
           })
           .then((resp: Cypress.Response<{ id: string }>) => {
@@ -944,7 +950,8 @@ export function setupPrefightScenario(prefix: string): Cypress.Chainable<{
               ...scenario,
               prefightChampionUserId: resp.body.id,
             };
-          });
+          })
+        );
       });
   });
 }
