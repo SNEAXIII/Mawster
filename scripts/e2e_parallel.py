@@ -133,9 +133,27 @@ def check_mariadb_running() -> None:
         sys.exit(1)
 
 
+def get_db_name(worker: int) -> str:
+    """Return the database name for this worker.
+
+    If MARIADB_DATABASE is already set in the environment (e.g. a CI service
+    container pre-created it) and this is worker 0, reuse it directly so no
+    mariadb-client is needed. For any other worker, always create a dedicated DB.
+    """
+    if worker == 0 and os.environ.get("MARIADB_DATABASE"):
+        return os.environ["MARIADB_DATABASE"]
+    return f"{DB_PREFIX}{worker}"
+
+
 def create_db(worker: int) -> None:
-    """CREATE DATABASE IF NOT EXISTS mawster_test_N and GRANT privileges."""
-    db = f"{DB_PREFIX}{worker}"
+    """CREATE DATABASE IF NOT EXISTS mawster_test_N and GRANT privileges.
+
+    Skipped when the database is pre-configured via MARIADB_DATABASE (worker 0).
+    """
+    db = get_db_name(worker)
+    if worker == 0 and os.environ.get("MARIADB_DATABASE"):
+        log(f"Worker {worker}: using pre-configured database {db}, skipping creation.")
+        return
     db_user = os.environ.get("MARIADB_USER", "user")
     log(f"Worker {worker}: creating database {db}...")
     sql = (
@@ -372,7 +390,7 @@ def parse_cypress_stats(cypress_log: Path) -> dict:
 
 def start_backend(worker: int, base_env: dict, quiet: bool = False) -> subprocess.Popen:
     api_port = BASE_API_PORT + worker
-    db = f"{DB_PREFIX}{worker}"
+    db = get_db_name(worker)
     env = {
         **base_env,
         "MODE": "testing",

@@ -110,18 +110,6 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-      # ── API Docker image (validates Dockerfile + seeds GHA layer cache) ──
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Build API Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./api
-          file: ./api/api.Dockerfile
-          push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
   e2e:
     name: E2E Tests (runner ${{ matrix.runner }})
     runs-on: ubuntu-latest
@@ -177,8 +165,6 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         working-directory: ./front
         run: npm ci
-      - name: Install MariaDB client
-        run: sudo apt-get install -y mariadb-client xvfb
       - name: Download frontend build
         uses: actions/download-artifact@v4
         with:
