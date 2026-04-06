@@ -19,7 +19,7 @@ describe('War Synergy', () => {
               // Visit war page
               cy.apiLogin(memberData.user_id);
               cy.visit('/game/war');
-              cy.getByCy('war-attacker-panel').should('be.visible');
+              cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
               // Click the attacker portrait to open synergy popover
               cy.getByCy('synergy-trigger-Wolverine').click();
@@ -28,11 +28,14 @@ describe('War Synergy', () => {
               cy.getByCy('synergy-add-Wolverine').click();
 
               // Pick Deadpool in selector
-              cy.getByCy('synergy-selector').should('be.visible');
+              cy.getByCy('synergy-selector').should('be.visible');;
               cy.getByCy('synergy-pick-Deadpool').click();
 
-              // Badge should now be visible on the Wolverine portrait
-              cy.getByCy('attacker-member-syn1Member').find('Deadpool').should('exist');
+              cy.getByCy('champion-portrait-Deadpool-synergy').should('be.visible');;
+
+              // Synergy provider should now appear in the popover trigger
+              cy.getByCy('synergy-trigger-Wolverine').click();
+              cy.getByCy('synergy-provider-Deadpool').should('be.visible');;
             },
           );
         });
@@ -60,7 +63,7 @@ describe('War Synergy', () => {
 
               cy.apiLogin(memberData.user_id);
               cy.visit('/game/war');
-              cy.getByCy('war-attacker-panel').should('be.visible');
+              cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');;
 
               // Open popover on the node attacker
               cy.getByCy('synergy-trigger-Wolverine').click();
@@ -69,7 +72,9 @@ describe('War Synergy', () => {
               cy.getByCy('synergy-revoke-Deadpool').click();
 
               // Badge should be gone
-              cy.getByCy('synergy-trigger-Wolverine').should('not.contain', 'Deadpool');
+              cy.getByCy('synergy-trigger-Wolverine').click();
+              cy.getByCy('synergy-provider-Deadpool').should('not.exist');
+              cy.getByCy('champion-portrait-Deadpool-synergy').should('not.exist');
             },
           );
         });
@@ -227,20 +232,20 @@ describe('War Synergy', () => {
               cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs2[0].id, '7r3').then(() => {
                 cy.apiLogin(memberData.user_id);
                 cy.visit('/game/war');
-                cy.getByCy('war-attacker-panel').should('be.visible');
+                cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');;
 
                 // Open synergy selector
                 cy.getByCy('synergy-trigger-Wolverine').click();
                 cy.getByCy('synergy-add-Wolverine').click();
-                cy.getByCy('synergy-selector').should('be.visible');
+                cy.getByCy('synergy-selector').should('be.visible');;
 
                 // Both champions visible before filtering
-                cy.getByCy('synergy-pick-Deadpool').should('be.visible');
-                cy.getByCy('synergy-pick-Storm').should('be.visible');
+                cy.getByCy('synergy-pick-Deadpool').should('be.visible');;
+                cy.getByCy('synergy-pick-Storm').should('be.visible');;
 
                 // Type in search — only Deadpool should remain
                 cy.getByCy('synergy-search').type('dead');
-                cy.getByCy('synergy-pick-Deadpool').should('be.visible');
+                cy.getByCy('synergy-pick-Deadpool').should('be.visible');;
                 cy.getByCy('synergy-pick-Storm').should('not.exist');
               });
             });
@@ -261,11 +266,11 @@ describe('War Synergy', () => {
               cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs2[0].id, '7r3').then(() => {
                 cy.apiLogin(memberData.user_id);
                 cy.visit('/game/war');
-                cy.getByCy('war-attacker-panel').should('be.visible');
+                cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');;
 
                 cy.getByCy('synergy-trigger-Wolverine').click();
                 cy.getByCy('synergy-add-Wolverine').click();
-                cy.getByCy('synergy-selector').should('be.visible');
+                cy.getByCy('synergy-selector').should('be.visible');;
 
                 // Filter then clear
                 cy.getByCy('synergy-search').type('dead');
@@ -273,8 +278,8 @@ describe('War Synergy', () => {
                 cy.getByCy('synergy-search').clear();
 
                 // Both champions back
-                cy.getByCy('synergy-pick-Deadpool').should('be.visible');
-                cy.getByCy('synergy-pick-Storm').should('be.visible');
+                cy.getByCy('synergy-pick-Deadpool').should('be.visible');;
+                cy.getByCy('synergy-pick-Storm').should('be.visible');;
               });
             });
           });
