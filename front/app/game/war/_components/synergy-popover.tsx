@@ -49,7 +49,6 @@ export default function SynergyPopover({
               rarity={rarity}
               size={size}
             />
-
           </button>
         </PopoverTrigger>
         <PopoverContent
@@ -71,7 +70,12 @@ export default function SynergyPopover({
                     rarity={s.rarity}
                     size={32}
                   />
-                  <span className='text-xs font-medium truncate flex-1'>{s.champion_name}</span>
+                  <span
+                    className='text-xs font-medium truncate flex-1'
+                    data-cy={`synergy-provider-${s.champion_name.replaceAll(/\s+/g, '-')}`}
+                  >
+                    {s.champion_name}
+                  </span>
                   <button
                     className='shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors'
                     data-cy={`synergy-revoke-${s.champion_name.replaceAll(/\s+/g, '-')}`}
