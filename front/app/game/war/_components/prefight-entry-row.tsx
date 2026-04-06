@@ -6,7 +6,6 @@ import { cn } from '@/app/lib/utils';
 import { X, Flame } from 'lucide-react';
 import { type WarPrefight, type WarPlacement } from '@/app/services/war';
 import { useWar } from '../_context/war-context';
-import PrefightBadge from './prefight-badge';
 
 interface PrefightEntryRowProps {
   prefight: WarPrefight;
@@ -43,8 +42,8 @@ export default function PrefightEntryRow({
             name={prefight.champion_name}
             rarity={prefight.rarity}
             size={portraitSize}
+            mode='prefight'
           />
-          <PrefightBadge nodeNumber={prefight.target_node_number} />
         </div>
         <Flame className={cn('text-orange-500 shrink-0', iconSize)} />
         {/* Target node defender portrait */}

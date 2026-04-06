@@ -3,6 +3,10 @@
 import React from 'react';
 import { getChampionImageUrl } from '@/app/services/champions';
 import { getStarFrameUrl } from '@/app/services/roster';
+import SynergyBadge from '@/app/game/war/_components/synergy-badge';
+import PrefightBadge from '@/app/game/war/_components/prefight-badge';
+
+type mode = 'normal' | 'synergy' | 'prefight';
 
 interface ChampionPortraitProps {
   imageUrl: string | null;
@@ -10,6 +14,8 @@ interface ChampionPortraitProps {
   rarity: string;
   /** Outer size in px (default 56) */
   size?: number;
+  /** Optional badge rendered absolutely over the portrait (bottom-right) */
+  mode?: mode ;
 }
 
 /**
@@ -21,7 +27,8 @@ export default function ChampionPortrait({
   name,
   rarity,
   size = 56,
-}: ChampionPortraitProps) {
+  mode = 'normal',
+}: Readonly<ChampionPortraitProps>) {
   const frameUrl = getStarFrameUrl(rarity);
   const imgSize = 60; // pre-resized thumbnails
 
@@ -48,6 +55,8 @@ export default function ChampionPortrait({
           ?
         </div>
       )}
+      {mode === 'synergy' && <SynergyBadge />}
+      {mode === 'prefight' && <PrefightBadge />}
     </div>
   );
 }

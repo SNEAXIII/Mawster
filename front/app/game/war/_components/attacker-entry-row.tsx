@@ -7,7 +7,6 @@ import { X, Minus, Plus, Swords, CircleQuestionMark } from 'lucide-react';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '../_context/war-context';
 import PrefightPopover from './prefight-popover';
-import PrefightBadge from './prefight-badge';
 
 interface AttackerEntryRowProps {
   placement: WarPlacement;
@@ -74,8 +73,8 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
               name={p.champion_name}
               rarity={p.rarity}
               size={portraitSize}
+              mode='prefight'
             />
-            <PrefightBadge nodeNumber={p.target_node_number} />
           </div>
         ))}
       </div>
