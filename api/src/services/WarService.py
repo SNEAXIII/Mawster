@@ -3,6 +3,7 @@ from typing import Optional
 
 from fastapi import HTTPException
 from sqlmodel import select, and_
+from sqlalchemy import func, union_all
 from sqlalchemy.orm import selectinload
 from starlette import status
 
@@ -445,99 +446,48 @@ class WarService:
         session: SessionDep,
         alliance_id: uuid.UUID,
         battlegroup: int,
-        war: Optional[War] = None,
+        war: War = None,
     ) -> list[AvailablePrefightAttackerResponse]:
-        # Load all BG members with their roster
-        member_conditions = and_(
-            GameAccount.alliance_id == alliance_id,
-            GameAccount.alliance_group == battlegroup,
+        # Exclude champion_users already on defense in this BG
+        defense_subq = (
+            select(DefensePlacement.champion_user_id)
+            .join(GameAccount, DefensePlacement.game_account_id == GameAccount.id)
+            .where(and_(
+                DefensePlacement.alliance_id == alliance_id,
+                GameAccount.alliance_group == battlegroup,
+            ))
+            .scalar_subquery()
         )
-        members_result = await session.exec(
-            select(GameAccount)
-            .where(member_conditions)
-            .options(
-                selectinload(GameAccount.roster).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+
+        stmt = (
+            select(ChampionUser, GameAccount, Champion)
+            .join(GameAccount, ChampionUser.game_account_id == GameAccount.id)  # type: ignore[arg-type]
+            .join(Champion, ChampionUser.champion_id == Champion.id)  # type: ignore[arg-type]
+            .where(
+                GameAccount.alliance_id == alliance_id,
+                GameAccount.alliance_group == battlegroup,
+                Champion.has_prefight == True,  # noqa: E712
+                ChampionUser.id.not_in(defense_subq),  # type: ignore[union-attr]
             )
         )
-        members = members_result.all()
+        banned_champion_ids: list[uuid.UUID] = [ban.champion_id for ban in war.bans] if war else []
+        if banned_champion_ids:
+            stmt = stmt.where(ChampionUser.champion_id.not_in(banned_champion_ids))  # type: ignore[union-attr]
 
-        # Defense exclusions
-        defense_conditions = and_(
-            DefensePlacement.alliance_id == alliance_id,
-            GameAccount.alliance_group == battlegroup,
-        )
-        request_sql = select(DefensePlacement.champion_user_id).join(
-            GameAccount, DefensePlacement.game_account_id == GameAccount.id
-        ).where(defense_conditions)
-        defense_result = await session.exec(request_sql)
-        defense_champion_user_ids = set(defense_result.all())
-
-        banned_champion_ids: set[uuid.UUID] = {ban.champion_id for ban in war.bans} if war else set()
-
-        result: list[AvailablePrefightAttackerResponse] = []
-        for game_account in members:
-            all_attackers_ids: set[uuid.UUID] = set()
-            if war:
-                node_result = await session.exec(
-                    select(WarDefensePlacement)
-                    .join(ChampionUser, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
-                    .where(
-                        and_(
-                            WarDefensePlacement.war_id == war.id,
-                            WarDefensePlacement.battlegroup == battlegroup,
-                            ChampionUser.game_account_id == game_account.id,
-                        )
-                    )
-                )
-                all_attackers_ids = {p.attacker_champion_user_id for p in node_result.all()}
-                synergy_result = await session.exec(
-                    select(WarSynergyAttacker).where(
-                        and_(
-                            WarSynergyAttacker.war_id == war.id,
-                            WarSynergyAttacker.battlegroup == battlegroup,
-                            WarSynergyAttacker.game_account_id == game_account.id,
-                        )
-                    )
-                )
-                synergy_ids = {s.champion_user_id for s in synergy_result.all()}
-                all_attackers_ids = all_attackers_ids | synergy_ids
-                prefight_result = await session.exec(
-                    select(WarPrefightAttacker).where(
-                        and_(
-                            WarPrefightAttacker.war_id == war.id,
-                            WarPrefightAttacker.battlegroup == battlegroup,
-                            WarPrefightAttacker.game_account_id == game_account.id,
-                        )
-                    )
-                )
-                prefight_ids = {pf.champion_user_id for pf in prefight_result.all()}
-                all_attackers_ids = all_attackers_ids | prefight_ids
-
-            member_attacker_count = len(all_attackers_ids)
-            if member_attacker_count >= 3:
-                continue
-
-            for champion_user in game_account.roster:
-                # Only champions with has_prefight capability
-                if not champion_user.champion.has_prefight:
-                    continue
-                if champion_user.id in defense_champion_user_ids:
-                    continue
-                if champion_user.champion_id in banned_champion_ids:
-                    continue
-                if champion_user.id in all_attackers_ids:
-                    continue
-                result.append(AvailablePrefightAttackerResponse(
-                    champion_user_id=champion_user.id,
-                    game_account_id=game_account.id,
-                    game_pseudo=game_account.game_pseudo,
-                    champion_id=champion_user.champion_id,
-                    champion_name=champion_user.champion.name,
-                    champion_class=champion_user.champion.champion_class,
-                    image_url=champion_user.champion.image_url,
-                    rarity=champion_user.rarity,
-                ))
-        return result
+        rows = (await session.exec(stmt)).all()  # type: ignore[arg-type]
+        return [
+            AvailablePrefightAttackerResponse(
+                champion_user_id=cu.id,
+                game_account_id=ga.id,
+                game_pseudo=ga.game_pseudo,
+                champion_id=cu.champion_id,
+                champion_name=champ.name,
+                champion_class=champ.champion_class,
+                image_url=champ.image_url,
+                rarity=cu.rarity,
+            )
+            for cu, ga, champ in rows
+        ]
 
     @classmethod
     async def assign_attacker(
