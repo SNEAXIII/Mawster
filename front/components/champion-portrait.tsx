@@ -5,6 +5,7 @@ import { getChampionImageUrl } from '@/app/services/champions';
 import { getStarFrameUrl } from '@/app/services/roster';
 import SynergyBadge from '@/app/game/war/_components/synergy-badge';
 import PrefightBadge from '@/app/game/war/_components/prefight-badge';
+import { cn } from '@/app/lib/utils';
 
 type mode = 'normal' | 'synergy' | 'prefight';
 
@@ -31,6 +32,7 @@ export default function ChampionPortrait({
 }: Readonly<ChampionPortraitProps>) {
   const frameUrl = getStarFrameUrl(rarity);
   const imgSize = 60; // pre-resized thumbnails
+  const baseClass = 'absolute inset-1.5 pb-0.75 w-[calc(100%-12px)] h-[calc(100%-12px)]';
 
   return (
     <div
@@ -48,15 +50,15 @@ export default function ChampionPortrait({
         <img
           src={getChampionImageUrl(imageUrl, imgSize) ?? ''}
           alt={name}
-          className='absolute inset-[6px] pb-[3px] w-[calc(100%-12px)] h-[calc(100%-12px)] object-cover z-10'
+          className={cn(baseClass,'object-cover z-10')}
         />
       ) : (
-        <div className='absolute inset-[6px] pb-[3px] w-[calc(100%-12px)] h-[calc(100%-12px)] bg-gray-700 flex items-center justify-center text-gray-400 text-xs z-10'>
+        <div className={cn(baseClass, 'bg-gray-700 flex items-center justify-center text-gray-400 text-xs z-10')}>
           ?
         </div>
       )}
-      {mode === 'synergy' && <SynergyBadge />}
-      {mode === 'prefight' && <PrefightBadge />}
+      {mode === 'synergy' && <SynergyBadge additionalClasses='z-30' />}
+      {mode === 'prefight' && <PrefightBadge additionalClasses='z-30' />}
     </div>
   );
 }
