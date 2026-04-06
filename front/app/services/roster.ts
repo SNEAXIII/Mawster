@@ -139,6 +139,7 @@ export interface RosterEntry {
   is_preferred_attacker: boolean;
   ascension: number;
   is_ascendable: boolean;
+  has_prefight: boolean;
 }
 
 export interface BulkChampionEntry {
