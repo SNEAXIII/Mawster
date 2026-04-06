@@ -671,6 +671,11 @@ def main() -> None:
         metavar="N",
         help="Number of CI runners to distribute specs across (used with --plan, default: 4).",
     )
+    parser.add_argument(
+        "--skip-build",
+        action="store_true",
+        help="Skip the Next.js build step; assume .next-e2e already exists.",
+    )
     args = parser.parse_args()
 
     if args.plan:
@@ -715,11 +720,12 @@ def main() -> None:
                     OS.kill_proc(p)
                 except Exception:
                     pass
-        # Remove the shared e2e build dir
-        next_dir = FRONT_DIR / ".next-e2e"
-        if next_dir.exists():
-            shutil.rmtree(next_dir, ignore_errors=True)
-            log(f"Removed {next_dir.name}")
+        # Remove the shared e2e build dir (only if we built it)
+        if not args.skip_build:
+            next_dir = FRONT_DIR / ".next-e2e"
+            if next_dir.exists():
+                shutil.rmtree(next_dir, ignore_errors=True)
+                log(f"Removed {next_dir.name}")
 
     atexit.register(cleanup)
 
@@ -733,7 +739,7 @@ def main() -> None:
         signal.signal(signal.SIGTERM, handle_sigint)
 
     # Phase 0+1 in parallel:
-    #   - build the frontend once (shared across all workers)
+    #   - build the frontend once (shared across all workers), unless --skip-build
     #   - create DBs and start backends (don't need the build)
     # Frontends start after the build completes.
     errors: list[str] = []
@@ -747,6 +753,10 @@ def main() -> None:
         except RuntimeError as exc:
             build_error.append(str(exc))
             build_event.set()  # unblock waiting workers
+
+    if args.skip_build:
+        log("--skip-build: skipping Next.js build, using existing .next-e2e directory.")
+        build_event.set()  # unblock workers immediately
 
     def setup_worker(worker: int) -> None:
         try:
@@ -768,7 +778,8 @@ def main() -> None:
     all_threads = [
         threading.Thread(target=setup_worker, args=(i,)) for i in range(worker_number)
     ]
-    all_threads.append(threading.Thread(target=run_build))
+    if not args.skip_build:
+        all_threads.append(threading.Thread(target=run_build))
     run_parallel(all_threads)
 
     if build_error:

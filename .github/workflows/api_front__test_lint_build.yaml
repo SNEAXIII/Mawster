@@ -56,10 +56,60 @@ jobs:
         id: plan
         run: echo "matrix=$(python3 scripts/e2e_parallel.py --plan --runners 4)" >> $GITHUB_OUTPUT
 
+  e2e-build:
+    name: E2E — Build frontend & API
+    runs-on: ubuntu-latest
+    needs: lint-test-python
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── API ──
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+      - name: Install API dependencies
+        working-directory: ./api
+        run: uv sync
+
+      # ── Frontend ──
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: ./front
+        run: npm ci
+      - name: Build frontend (next build)
+        working-directory: ./front
+        run: NEXT_PUBLIC_DEV_MODE=true NEXT_DIST_DIR=.next-e2e NEXT_E2E_BUILD=true npx next build
+      - name: Upload frontend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-e2e-build
+          path: front/.next-e2e
+          retention-days: 1
+
+      # ── API Docker image (validates Dockerfile + seeds GHA layer cache) ──
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build API Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./api
+          file: ./api/api.Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   e2e:
     name: E2E Tests (runner ${{ matrix.runner }})
     runs-on: ubuntu-latest
-    needs: e2e-plan
+    needs: [e2e-plan, e2e-build]
     strategy:
       fail-fast: false
       matrix:
@@ -87,8 +137,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      # ── API setup ──
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -97,8 +145,6 @@ jobs:
       - name: Install API dependencies
         working-directory: ./api
         run: uv sync
-
-      # ── Frontend setup ──
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -108,29 +154,20 @@ jobs:
       - name: Install frontend dependencies
         working-directory: ./front
         run: npm ci
-
-      # ── MariaDB client (needed by e2e_parallel.py to create per-worker DBs) ──
-      - name: Install dependencies
+      - name: Install MariaDB client
         run: sudo apt-get install -y mariadb-client xvfb
-
-      # ── Build API Docker image (validates Dockerfile + seeds GHA layer cache) ──
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Build API Docker image
-        uses: docker/build-push-action@v6
+      - name: Download frontend build
+        uses: actions/download-artifact@v4
         with:
-          context: ./api
-          file: ./api/api.Dockerfile
-          push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          name: next-e2e-build
+          path: front/.next-e2e
 
       # ── Run Cypress ──
       - name: Run Cypress E2E tests (runner ${{ matrix.runner }})
-        run: python3 scripts/e2e_parallel.py --workers 1 --spec "${{ matrix.specs }}" --quiet
+        run: python3 scripts/e2e_parallel.py --workers 1 --spec "${{ matrix.specs }}" --skip-build --quiet
       - name: Upload Cypress results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: cypress-results-runner-${{ matrix.runner }}
           path: front/cypress/results
