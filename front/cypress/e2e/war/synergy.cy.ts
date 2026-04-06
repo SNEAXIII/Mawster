@@ -31,7 +31,7 @@ describe('War Synergy', () => {
               cy.getByCy('synergy-selector').should('be.visible');;
               cy.getByCy('synergy-pick-Deadpool').click();
 
-              cy.getByCy('champion-portrait-Deadpool-synergy').should('be.visible');;
+              cy.getByCy('champion-portrait-Deadpool-synergy').scrollIntoView().should('be.visible');;
 
               // Synergy provider should now appear in the popover trigger
               cy.getByCy('synergy-trigger-Wolverine').click();

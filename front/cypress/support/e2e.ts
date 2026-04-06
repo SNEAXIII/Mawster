@@ -142,7 +142,7 @@ Cypress.Commands.add(
           url: `${BACKEND}/champions?search=${encodeURIComponent(name)}`,
           headers: { Authorization: `Bearer ${adminToken}` },
         })
-        .then((getRes) => getRes.body.champions);
+        .then((getRes) => getRes.body.champions.filter((c: { name: string }) => c.name === name));
     });
   },
 );
