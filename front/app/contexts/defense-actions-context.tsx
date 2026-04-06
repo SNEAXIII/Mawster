@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import type { useDefenseActions } from './use-defense-actions';
+import type { useDefenseActions } from '@/app/game/defense/_hooks/use-defense-actions';
 
 type DefenseActionsContextValue = ReturnType<typeof useDefenseActions>;
 

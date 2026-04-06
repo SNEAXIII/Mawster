@@ -9,7 +9,7 @@ import { useI18n } from '@/app/i18n';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import ChampionPortrait from '@/components/champion-portrait';
 import { WarMode } from './war-types';
-import { useWar } from '../_context/war-context';
+import { useWar } from '@/app/contexts/war-context';
 
 type ToggleButtonProps = {
   active: boolean;

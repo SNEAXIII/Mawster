@@ -7,7 +7,7 @@ import ChampionPortrait from '@/components/champion-portrait';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type AvailableAttacker, getAvailableAttackers } from '@/app/services/war';
-import { useWar } from '../_context/war-context';
+import { useWar } from '@/app/contexts/war-context';
 
 interface SynergySelectorDialogProps {
   open: boolean;

@@ -9,7 +9,7 @@ import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
 import { getClassColors, shortenChampionName } from '@/app/services/roster';
 import { type AvailableAttacker, getAvailablePrefightAttackers } from '@/app/services/war';
-import { useWar } from '../_context/war-context';
+import { useWar } from '@/app/contexts/war-context';
 
 interface PrefightSelectorDialogProps {
   open: boolean;

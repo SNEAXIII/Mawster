@@ -5,7 +5,7 @@ import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
 import { X, Minus, Plus, Swords, CircleQuestionMark } from 'lucide-react';
 import { type WarPlacement } from '@/app/services/war';
-import { useWar } from '../_context/war-context';
+import { useWar } from '@/app/contexts/war-context';
 import PrefightPopover from './prefight-popover';
 
 interface AttackerEntryRowProps {
