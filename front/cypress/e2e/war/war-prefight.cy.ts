@@ -12,13 +12,14 @@ describe('War Prefight', () => {
 
         cy.apiLogin(memberData.user_id);
         cy.visit('/game/war');
-        cy.getByCy('war-attacker-panel').should('be.visible');
+        cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
         cy.getByCy('prefight-trigger-node-10').click();
         cy.getByCy('prefight-add-node-10').click();
 
         cy.getByCy('prefight-selector').should('be.visible');
         cy.getByCy('prefight-pick-Storm').click();
+        cy.getByCy('prefight-selector').should('not.exist');
 
         cy.getByCy('prefight-trigger-node-10').find('[title]').should('exist');
       }
@@ -33,7 +34,7 @@ describe('War Prefight', () => {
 
         cy.apiLogin(memberData.user_id);
         cy.visit('/game/war');
-        cy.getByCy('war-attacker-panel').should('be.visible');
+        cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
         cy.getByCy('prefight-trigger-node-10').click();
         cy.getByCy('prefight-revoke-Storm').click();
@@ -198,7 +199,7 @@ describe('War Prefight', () => {
 
         cy.apiLogin(memberData.user_id);
         cy.visit('/game/war');
-        cy.getByCy('war-attacker-panel').should('be.visible');
+        cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
         cy.getByCy('prefight-entry-node-10').should('be.visible');
       }
     );
