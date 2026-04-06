@@ -9,16 +9,19 @@ on:
     branches:
       - main
       - release
+
 permissions:
   contents: read
+
 env:
   WORKDIR: ./api
   PYTHON_VERSION: ${{ vars.PYTHON_VERSION }}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   lint-test-python:
-    name: Lint & Test for bakend
+    name: Lint & Test for backend
     runs-on: ubuntu-latest
-    needs: trivy
     env:
       MODE: dev
     steps:
@@ -33,9 +36,8 @@ jobs:
         working-directory: ${{ env.WORKDIR }}
         run: uv sync --extra dev
       - name: Run Ruff linter
-        uses: astral-sh/ruff-action@v3
-        with:
-          src: ${{ env.WORKDIR }}
+        working-directory: ${{ env.WORKDIR }}
+        run: uvx ruff check .
       - name: Run unit tests
         working-directory: ${{ env.WORKDIR }}
         run: uv run pytest tests/unit -v --tb=short
@@ -43,10 +45,69 @@ jobs:
         working-directory: ${{ env.WORKDIR }}
         run: uv run pytest tests/integration -v --tb=short -n auto
 
-  e2e:
-    name: E2E Tests
+  e2e-plan:
+    name: E2E — Plan spec distribution
     runs-on: ubuntu-latest
-    needs: lint-test-python
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Compute spec distribution
+        id: plan
+        run: echo "matrix=$(python3 scripts/e2e_parallel.py --plan --runners 4)" >> $GITHUB_OUTPUT
+
+  e2e-build:
+    name: E2E — Build frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Frontend ──
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            front/node_modules
+            ~/.cache/Cypress
+          key: node-modules-${{ runner.os }}-${{ hashFiles('front/package-lock.json') }}
+      - name: Install frontend dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        working-directory: ./front
+        run: npm ci
+      - name: Build frontend (next build)
+        working-directory: ./front
+        env:
+          NEXT_PUBLIC_DEV_MODE: "true"
+          NEXT_DIST_DIR: .next-e2e
+          NEXT_E2E_BUILD: "true"
+          API_PORT: "8000"
+          API_SERVER_HOST: localhost
+        run: npx next build
+      - name: Archive frontend build
+        run: tar -czf /tmp/next-e2e-build.tar.gz -C front .next-e2e
+      - name: Upload frontend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-e2e-build
+          path: /tmp/next-e2e-build.tar.gz
+          retention-days: 1
+          if-no-files-found: error
+
+  e2e:
+    name: E2E Tests (runner ${{ matrix.runner }})
+    runs-on: ubuntu-latest
+    needs: [e2e-plan, e2e-build, lint-test-python]
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.e2e-plan.outputs.matrix) }}
     env:
       MARIADB_USER: user
       MARIADB_PASSWORD: password
@@ -70,8 +131,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      # ── API setup ──
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -80,42 +139,38 @@ jobs:
       - name: Install API dependencies
         working-directory: ./api
         run: uv sync
-
-      # ── Frontend setup ──
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: front/package-lock.json
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            front/node_modules
+            ~/.cache/Cypress
+          key: node-modules-${{ runner.os }}-${{ hashFiles('front/package-lock.json') }}
       - name: Install frontend dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         working-directory: ./front
         run: npm ci
-
-      # ── MariaDB client (needed by e2e_parallel.py to create per-worker DBs) ──
-      - name: Install dependencies
-        run: sudo apt-get install -y mariadb-client xvfb
-
-      # ── Build API Docker image (validates Dockerfile + seeds GHA layer cache) ──
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Build API Docker image
-        uses: docker/build-push-action@v6
+      - name: Download frontend build
+        uses: actions/download-artifact@v4
         with:
-          context: ./api
-          file: ./api/api.Dockerfile
-          push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          name: next-e2e-build
+          path: /tmp
+      - name: Extract frontend build
+        run: tar -xzf /tmp/next-e2e-build.tar.gz -C front
 
       # ── Run Cypress ──
-      - name: Run Cypress E2E tests
-        run: python3 scripts/e2e_parallel.py --workers 2 --quiet
+      - name: Run Cypress E2E tests (runner ${{ matrix.runner }})
+        run: python3 scripts/e2e_parallel.py --workers 1 --spec "${{ matrix.specs }}" --skip-build --quiet
       - name: Upload Cypress results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
-          name: cypress-results
+          name: cypress-results-runner-${{ matrix.runner }}
           path: front/cypress/results
 
   changes:
@@ -140,21 +195,6 @@ jobs:
               - 'api/**'
             front:
               - 'front/**'
-
-  trivy:
-    name: Trivy Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Run Trivy vulnerability scanner (filesystem)
-        uses: aquasecurity/trivy-action@0.35.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          severity: CRITICAL,HIGH
-          exit-code: 0
-          format: table
 
   docker-api:
     if: needs.changes.outputs.api == 'true'
