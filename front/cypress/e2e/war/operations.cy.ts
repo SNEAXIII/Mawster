@@ -202,8 +202,13 @@ describe('War – Operations (declare, place, remove)', () => {
       cy.apiLogin(ownerData.user_id);
       cy.navTo('war');
 
+      cy.intercept('PATCH', '**/node/10/ko').as('updateKo');
       cy.getByCy('ko-inc-node-10').click();
+      cy.wait('@updateKo');
+      cy.getByCy('ko-counter-node-10').should('contain', '1');
       cy.getByCy('ko-inc-node-10').click();
+      cy.wait('@updateKo');
+      cy.getByCy('ko-counter-node-10').should('contain', '2');
 
       cy.getByCy('war-mode-defenders').click();
       cy.getByCy('war-node-10').scrollIntoView().find('button').click({ force: true });
