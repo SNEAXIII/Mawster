@@ -67,10 +67,12 @@ export default function WarAttackerPanel() {
             );
 
             const memberPrefights = prefights.filter((p) => p.game_pseudo === group.pseudo);
-            const prefightOnlyProviders = memberPrefights.filter(
-              (p) => !nodeAttackerIds.has(p.champion_user_id)
-            );
-
+          
+            const prefightOnlyProviders = [...new Map(
+              memberPrefights
+                .filter((p) => !nodeAttackerIds.has(p.champion_user_id))
+                .map((p) => [p.champion_user_id, p])
+            ).values()];
             const totalSlots = new Set([
               ...nodeAttackerIds,
               ...memberSynergies.map((s) => s.champion_user_id),
