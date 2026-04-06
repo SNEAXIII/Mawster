@@ -5,7 +5,7 @@ import { useI18n } from '@/app/i18n';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import ChampionPortrait from '@/components/champion-portrait';
 import SynergySelectorDialog from './synergy-selector';
-import { useWar } from '../_context/war-context';
+import { useWar } from '@/app/contexts/war-context';
 
 interface SynergyPopoverProps {
   /** The node attacker champion (target that benefits from synergy) */

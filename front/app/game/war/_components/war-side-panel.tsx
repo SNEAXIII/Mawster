@@ -5,7 +5,7 @@ import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
 import { X } from 'lucide-react';
 import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils';
-import { useWar } from '../_context/war-context';
+import { useWar } from '@/app/contexts/war-context';
 
 export default function WarSidePanel() {
   const { t } = useI18n();

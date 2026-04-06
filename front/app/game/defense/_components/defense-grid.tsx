@@ -5,7 +5,7 @@ import { useI18n } from '@/app/i18n';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { useDefenseActionsContext } from '../_hooks/defense-actions-context';
+import { useDefenseActionsContext } from '@/app/contexts/defense-actions-context';
 
 import DefenseImportReportDialog from './defense-import-report-dialog';
 

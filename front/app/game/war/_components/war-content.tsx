@@ -5,7 +5,7 @@ import { useRequiredSession } from '@/hooks/use-required-session';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useI18n } from '@/app/i18n';
-import { WarProvider, useWar } from '../_context/war-context';
+import { WarProvider, useWar } from '@/app/contexts/war-context';
 import WarHeader from './war-header';
 import WarDefendersTab from './war-defenders-tab';
 import WarManagementBar from './war-management-bar';

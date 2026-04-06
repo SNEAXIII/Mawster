@@ -9,7 +9,7 @@ import { Shield } from 'lucide-react';
 
 import { useAllianceSelector } from '@/hooks/use-alliance-selector';
 import { useDefenseActions } from '../_hooks/use-defense-actions';
-import { DefenseActionsProvider } from '../_hooks/defense-actions-context';
+import { DefenseActionsProvider } from '@/app/contexts/defense-actions-context';
 
 import DefenseHeader from './defense-header';
 import DefenseGrid from './defense-grid';

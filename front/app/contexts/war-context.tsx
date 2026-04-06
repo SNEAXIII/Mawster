@@ -38,7 +38,7 @@ import {
   addWarPrefight,
   removeWarPrefight,
 } from '@/app/services/war';
-import { WarMode } from '../_components/war-types';
+import { WarMode } from '@/app/game/war/_components/war-types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

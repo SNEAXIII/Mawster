@@ -3,7 +3,7 @@
 import { useI18n } from '@/app/i18n';
 import ChampionPortrait from '@/components/champion-portrait';
 import { type WarPlacement } from '@/app/services/war';
-import { useWar } from '../_context/war-context';
+import { useWar } from '@/app/contexts/war-context';
 import PrefightEntryRow from './prefight-entry-row';
 import { WarMode } from './war-types';
 import AttackerEntryRow from './attacker-entry-row';
