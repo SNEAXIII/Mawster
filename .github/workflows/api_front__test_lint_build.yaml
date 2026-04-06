@@ -43,10 +43,27 @@ jobs:
         working-directory: ${{ env.WORKDIR }}
         run: uv run pytest tests/integration -v --tb=short -n auto
 
-  e2e:
-    name: E2E Tests
+  e2e-plan:
+    name: E2E — Plan spec distribution
     runs-on: ubuntu-latest
     needs: lint-test-python
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Compute spec distribution
+        id: plan
+        run: echo "matrix=$(python3 scripts/e2e_parallel.py --plan --runners 4)" >> $GITHUB_OUTPUT
+
+  e2e:
+    name: E2E Tests (runner ${{ matrix.runner }})
+    runs-on: ubuntu-latest
+    needs: e2e-plan
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.e2e-plan.outputs.matrix) }}
     env:
       MARIADB_USER: user
       MARIADB_PASSWORD: password
@@ -109,13 +126,13 @@ jobs:
           cache-to: type=gha,mode=max
 
       # ── Run Cypress ──
-      - name: Run Cypress E2E tests
-        run: python3 scripts/e2e_parallel.py --workers 2 --quiet
+      - name: Run Cypress E2E tests (runner ${{ matrix.runner }})
+        run: python3 scripts/e2e_parallel.py --workers 1 --spec "${{ matrix.specs }}" --quiet
       - name: Upload Cypress results
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: cypress-results
+          name: cypress-results-runner-${{ matrix.runner }}
           path: front/cypress/results
 
   changes:

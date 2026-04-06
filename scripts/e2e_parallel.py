@@ -95,7 +95,7 @@ def worker_log_dir(worker: int) -> Path:
 
 
 def log(msg: str) -> None:
-    print(f"[e2e-parallel] {msg}", flush=True)
+    print(f"[e2e-parallel] {msg}", flush=True, file=sys.stderr)
 
 
 def _run_sql(sql: str) -> subprocess.CompletedProcess:
@@ -598,7 +598,10 @@ def resolve_spec_paths(raw_specs: str) -> set[Path]:
             for s in available:
                 log(f"  {s}")
             sys.exit(1)
-        resolved_specs.add(spec_path)
+        if spec_path.is_dir():
+            resolved_specs.update(spec_path.rglob("*.cy.ts"))
+        else:
+            resolved_specs.add(spec_path)
     return resolved_specs
 
 
@@ -609,6 +612,28 @@ def kill_probably_used_ports(worker_number: int) -> None:
     ]
     log(f"Freeing ports: {ports_to_free}")
     kill_ports(ports_to_free)
+
+
+def plan(runners: int) -> None:
+    """Print a GitHub Actions matrix JSON and exit.
+
+    Each entry is {"runner": "N", "specs": "path1,path2,..."}
+    with paths relative to FRONT_DIR (forward-slash, cross-platform).
+    """
+    specs = get_spec_files()
+    buckets = distribute_specs(specs, runners)
+    matrix = [
+        {
+            "runner": str(i),
+            "specs": ",".join(
+                str(s.relative_to(FRONT_DIR)).replace("\\", "/") for s in bucket
+            ),
+        }
+        for i, bucket in enumerate(buckets)
+        if bucket
+    ]
+    print(json.dumps(matrix))
+    sys.exit(0)
 
 
 def main() -> None:
@@ -634,7 +659,22 @@ def main() -> None:
         action="store_true",
         help="Hide backend and frontend logs (Cypress output still shown)",
     )
+    parser.add_argument(
+        "--plan",
+        action="store_true",
+        help="Print a GitHub Actions matrix JSON for --runners runners and exit (no tests run).",
+    )
+    parser.add_argument(
+        "--runners",
+        type=int,
+        default=4,
+        metavar="N",
+        help="Number of CI runners to distribute specs across (used with --plan, default: 4).",
+    )
     args = parser.parse_args()
+
+    if args.plan:
+        plan(args.runners)
     quiet = args.quiet
 
     resolved_specs: set[Path] = set()
