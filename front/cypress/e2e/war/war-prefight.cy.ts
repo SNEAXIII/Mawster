@@ -144,6 +144,52 @@ describe('War Prefight', () => {
     );
   });
 
+  it('API — banned champion is excluded from available-prefight-attackers', () => {
+    setupPrefightScenario('pf8').then(
+      ({ ownerData, memberData, allianceId, warId }) => {
+        const availableUrl = (wid: string) =>
+          `${BACKEND}/alliances/${allianceId}/wars/${wid}/bg/1/available-prefight-attackers`;
+
+        // Get Storm's champion_id from the current available list
+        cy.request({
+          method: 'GET',
+          url: availableUrl(warId),
+          headers: { Authorization: `Bearer ${memberData.access_token}` },
+        }).then((res) => {
+          const stormEntry = res.body.find((e: any) => e.champion_name === 'Storm');
+          const stormChampionId = stormEntry.champion_id;
+
+          // End current war
+          cy.request({
+            method: 'POST',
+            url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/end`,
+            headers: { Authorization: `Bearer ${ownerData.access_token}` },
+            body: {},
+          });
+
+          // Create new war banning Storm
+          cy.request({
+            method: 'POST',
+            url: `${BACKEND}/alliances/${allianceId}/wars`,
+            headers: { Authorization: `Bearer ${ownerData.access_token}` },
+            body: { opponent_name: 'Ban Storm War', banned_champion_ids: [stormChampionId] },
+          }).then((warRes) => {
+            const newWarId = warRes.body.id;
+
+            cy.request({
+              method: 'GET',
+              url: availableUrl(newWarId),
+              headers: { Authorization: `Bearer ${memberData.access_token}` },
+            }).then((availableRes) => {
+              const names = availableRes.body.map((e: any) => e.champion_name);
+              expect(names).not.to.include('Storm');
+            });
+          });
+        });
+      }
+    );
+  });
+
   it('prefight entry row visible for prefight provider in attackers panel', () => {
     setupPrefightScenario('pf7').then(
       ({ memberData, allianceId, warId, championUserId, prefightChampionUserId }) => {

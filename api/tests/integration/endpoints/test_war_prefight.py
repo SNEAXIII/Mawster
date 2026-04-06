@@ -398,6 +398,73 @@ class TestGetAvailablePrefightAttackers:
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
 
+    @pytest.mark.asyncio
+    async def test_excludes_banned_champion(self):
+        """Champion banned in the war does not appear in available-prefight-attackers."""
+        data = await _setup_prefight_scenario()
+        alliance = data["alliance"]
+        war = data["war"]
+        prefight_cu = data["prefight_cu"]
+
+        # End current war and create a new one banning the prefight champion (Quake)
+        await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/end",
+            payload={},
+            headers=data["headers_owner"],
+        )
+        new_war_resp = await execute_post_request(
+            f"/alliances/{alliance.id}/wars",
+            payload={
+                "opponent_name": "Ban Prefight War",
+                "banned_champion_ids": [str(prefight_cu.champion_id)],
+            },
+            headers=data["headers_owner"],
+        )
+        assert new_war_resp.status_code == 201
+        new_war_id = new_war_resp.json()["id"]
+
+        url = f"/alliances/{alliance.id}/wars/{new_war_id}/bg/1/available-prefight-attackers"
+        resp = await execute_get_request(url, headers=data["headers_member"])
+        assert resp.status_code == 200
+        ids = [item["champion_user_id"] for item in resp.json()]
+        assert str(prefight_cu.id) not in ids
+
+
+class TestRemoveAttackerCascade:
+    @pytest.mark.asyncio
+    async def test_remove_attacker_deletes_prefight_on_node(self):
+        """Removing a node attacker cascades and deletes prefight entries targeting that node."""
+        data = await _setup_prefight_scenario()
+        alliance = data["alliance"]
+        war = data["war"]
+
+        # Add a prefight targeting node 5 (where attacker_cu is assigned)
+        await execute_post_request(
+            _prefight_url(alliance.id, war.id),
+            payload={"champion_user_id": str(data["prefight_cu"].id), "target_node_number": 5},
+            headers=data["headers_member"],
+        )
+
+        # Verify the prefight exists
+        get_resp = await execute_get_request(
+            _prefight_url(alliance.id, war.id),
+            headers=data["headers_member"],
+        )
+        assert len(get_resp.json()) == 1
+
+        # Remove the attacker from node 5
+        await execute_delete_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/5/attacker",
+            headers=data["headers_member"],
+        )
+
+        # Prefight targeting node 5 must have been cascade-deleted
+        get_resp2 = await execute_get_request(
+            _prefight_url(alliance.id, war.id),
+            headers=data["headers_member"],
+        )
+        assert get_resp2.json() == []
+
 
 class TestRemovePrefight:
     @pytest.mark.asyncio
