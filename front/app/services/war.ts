@@ -54,6 +54,7 @@ export interface AvailableAttacker {
   game_pseudo: string;
   champion_id: string;
   champion_name: string;
+  champion_alias: string | null;
   champion_class: string;
   image_url: string | null;
   rarity: string;

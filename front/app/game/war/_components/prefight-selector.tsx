@@ -65,8 +65,11 @@ export default function PrefightSelectorDialog({
     .filter((a) => {
       const matchPlayer =
         !playerSearch || a.game_pseudo.toLowerCase().includes(playerSearch.toLowerCase());
+      const alias = (a.champion_alias ?? '').toLowerCase();
       const matchChampion =
-        !championSearch || a.champion_name.toLowerCase().includes(championSearch.toLowerCase());
+        !championSearch
+        || a.champion_name.toLowerCase().includes(championSearch.toLowerCase())
+        || alias.includes(championSearch.toLowerCase());
       return matchPlayer && matchChampion;
     });
 

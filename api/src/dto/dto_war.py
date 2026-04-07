@@ -123,6 +123,7 @@ class AvailableAttackerResponse(BaseModel):
     game_pseudo: str
     champion_id: uuid.UUID
     champion_name: str
+    champion_alias: Optional[str] = None
     champion_class: str
     image_url: Optional[str] = None
     rarity: str
@@ -138,6 +139,7 @@ class AvailablePrefightAttackerResponse(BaseModel):
     game_pseudo: str
     champion_id: uuid.UUID
     champion_name: str
+    champion_alias: Optional[str] = None
     champion_class: str
     image_url: Optional[str] = None
     rarity: str

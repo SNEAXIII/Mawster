@@ -48,7 +48,11 @@ export default function SynergySelectorDialog({
       && a.champion_user_id !== targetChampionUserId
   );
   const filtered = query
-    ? available.filter((a) => a.champion_name.toLowerCase().includes(query.toLowerCase()))
+    ? available.filter((a) => {
+      const q = query.toLowerCase();
+      return a.champion_name.toLowerCase().includes(q)
+        || (a.champion_alias ?? '').toLowerCase().includes(q);
+    })
     : available;
 
   return (
