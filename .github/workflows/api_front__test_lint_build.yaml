@@ -17,6 +17,7 @@ env:
   WORKDIR: ./api
   PYTHON_VERSION: ${{ vars.PYTHON_VERSION }}
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  E2E_RUNNERS: "8"
 
 jobs:
   lint-test-python:
@@ -26,7 +27,7 @@ jobs:
       MODE: dev
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -52,26 +53,26 @@ jobs:
       matrix: ${{ steps.plan.outputs.matrix }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Compute spec distribution
         id: plan
-        run: echo "matrix=$(python3 scripts/e2e_parallel.py --plan --runners 6)" >> $GITHUB_OUTPUT
+        run: echo "matrix=$(python3 scripts/e2e_parallel.py --plan --runners ${{ env.E2E_RUNNERS }})" >> $GITHUB_OUTPUT
 
   e2e-build:
     name: E2E — Build frontend
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # ── Frontend ──
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             front/node_modules
@@ -93,7 +94,7 @@ jobs:
       - name: Archive frontend build
         run: tar -czf /tmp/next-e2e-build.tar.gz -C front .next-e2e
       - name: Upload frontend build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: next-e2e-build
           path: /tmp/next-e2e-build.tar.gz
@@ -130,7 +131,7 @@ jobs:
           --health-retries=25
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -140,12 +141,12 @@ jobs:
         working-directory: ./api
         run: uv sync
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             front/node_modules
@@ -156,7 +157,7 @@ jobs:
         working-directory: ./front
         run: npm ci
       - name: Download frontend build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: next-e2e-build
           path: /tmp
@@ -168,7 +169,7 @@ jobs:
         run: python3 scripts/e2e_parallel.py --workers 1 --spec "${{ matrix.specs }}" --skip-build --quiet
       - name: Upload Cypress results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: cypress-results-runner-${{ matrix.runner }}
           path: front/cypress/results
@@ -183,11 +184,11 @@ jobs:
       front: ${{ steps.filter.outputs.front }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Detect changes
-        uses: dorny/paths-filter@v4
+        uses: dorny/paths-filter@v5
         id: filter
         with:
           filters: |
@@ -206,7 +207,7 @@ jobs:
       - e2e
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -238,7 +239,7 @@ jobs:
       - e2e
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
