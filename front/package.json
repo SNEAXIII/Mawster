@@ -67,7 +67,7 @@
     "cypress": "^15.13.0",
     "cypress-multi-reporters": "^2.0.5",
     "cypress-parallel": "^0.15.0",
-    "cypress-split": "^1.24.28",
+    "cypress-split": "^1.24.31",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.0.1",
