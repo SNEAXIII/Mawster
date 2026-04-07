@@ -39,6 +39,7 @@ export interface WarPlacement {
   attacker_champion_class: string | null;
   attacker_image_url: string | null;
   attacker_rarity: string | null;
+  attacker_is_preferred_attacker: boolean | null;
 }
 
 export interface WarDefenseSummary {

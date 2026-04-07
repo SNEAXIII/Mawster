@@ -106,6 +106,7 @@ export default function WarAttackerPanel() {
                           imageUrl={placement.attacker_image_url}
                           rarity={placement.attacker_rarity ?? ''}
                           size={35}
+                          isPreferred={placement.attacker_is_preferred_attacker ?? false}
                         />
                       ) : (
                         <ChampionPortrait
@@ -114,6 +115,7 @@ export default function WarAttackerPanel() {
                           name={placement.attacker_champion_name ?? ''}
                           rarity={placement.attacker_rarity ?? ''}
                           size={35}
+                          isPreferred={placement.attacker_is_preferred_attacker ?? false}
                         />
                       )
                     ))}

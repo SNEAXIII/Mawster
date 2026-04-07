@@ -70,6 +70,7 @@ class WarPlacementResponse(BaseModel):
     attacker_champion_class: Optional[str] = None
     attacker_image_url: Optional[str] = None
     attacker_rarity: Optional[str] = None
+    attacker_is_preferred_attacker: Optional[bool] = None
 
     @model_validator(mode='before')
     @classmethod
@@ -98,6 +99,7 @@ class WarPlacementResponse(BaseModel):
             'attacker_champion_class': attacker.champion.champion_class if attacker else None,
             'attacker_image_url': attacker.champion.image_url if attacker else None,
             'attacker_rarity': f"{attacker.stars}r{attacker.rank}" if attacker else None,
+            'attacker_is_preferred_attacker': attacker.is_preferred_attacker if attacker else None,
         }
 
 
