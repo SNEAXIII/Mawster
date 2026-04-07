@@ -167,6 +167,20 @@ class TestAddSynergy:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
+    async def test_add_synergy_same_provider_and_target_rejected(self):
+        """Provider champion cannot be the same as target champion."""
+        data = await _setup_synergy_scenario()
+        response = await execute_post_request(
+            _synergy_url(data["alliance"].id, data["war"].id),
+            payload={
+                "champion_user_id": str(data["attacker_cu"].id),
+                "target_champion_user_id": str(data["attacker_cu"].id),
+            },
+            headers=data["headers_member"],
+        )
+        assert response.status_code == 409
+
+    @pytest.mark.asyncio
     async def test_add_synergy_other_member_champion_rejected(self):
         """A user cannot add a champion from a different game account as synergy provider for another user's attacker."""
         data = await _setup_synergy_scenario()

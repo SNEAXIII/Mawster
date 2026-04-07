@@ -46,6 +46,7 @@ from src.Messages.war_messages import (
     ONLY_OWN_CHAMPIONS_SYNERGY,
     PREFIGHT_ENTRY_NOT_FOUND,
     SYNERGY_ATTACKER_NOT_FOUND,
+    SYNERGY_PROVIDER_CANNOT_BE_TARGET,
     SYNERGY_PROVIDER_MUST_MATCH_TARGET_ACCOUNT,
     TARGET_CHAMPION_USER_NOT_FOUND,
     TARGET_NODE_NO_ATTACKER_ASSIGNED,
@@ -810,6 +811,12 @@ class WarService:
             .where(ChampionUser.id == champion_user_id)
             .options(selectinload(ChampionUser.game_account))  # type: ignore[arg-type]
         )
+        if champion_user_id == target_champion_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=SYNERGY_PROVIDER_CANNOT_BE_TARGET,
+            )
+        
         champion_user = (await session.exec(cu_stmt)).first()
         if champion_user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)

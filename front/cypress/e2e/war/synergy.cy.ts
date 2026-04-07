@@ -255,6 +255,24 @@ describe('War Synergy', () => {
     );
   });
 
+  it('does not allow selecting the same champion as synergy provider', () => {
+    setupAttackerScenario('syn8').then(
+      ({ memberData, allianceId, warId, championUserId }) => {
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+
+        cy.apiLogin(memberData.user_id);
+        cy.visit('/game/war');
+        cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+
+        cy.getByCy('synergy-trigger-Wolverine').click();
+        cy.getByCy('synergy-add-Wolverine').click();
+        cy.getByCy('synergy-selector').should('be.visible');
+
+        cy.getByCy('synergy-pick-Wolverine').should('not.exist');
+      },
+    );
+  });
+
   it('clearing the search restores the full synergy candidate list', () => {
     setupAttackerScenario('syn8').then(
       ({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {

@@ -40,7 +40,11 @@ export default function SynergySelectorDialog({
   }, [open, selectedAllianceId, activeWarId, selectedBg, targetGameAccountId]);
 
   const usedSynergyIds = new Set(synergies.map((s) => s.champion_user_id));
-  const available = attackers.filter((a) => !usedSynergyIds.has(a.champion_user_id));
+  const available = attackers.filter(
+    (a) =>
+      !usedSynergyIds.has(a.champion_user_id)
+      && a.champion_user_id !== targetChampionUserId
+  );
   const filtered = query
     ? available.filter((a) => a.champion_name.toLowerCase().includes(query.toLowerCase()))
     : available;
