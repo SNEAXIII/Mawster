@@ -126,9 +126,9 @@ jobs:
           - 3307:3306
         options: >-
           --health-cmd="healthcheck.sh --connect --innodb_initialized"
-          --health-interval=10s
+          --health-interval=2s
           --health-timeout=5s
-          --health-retries=5
+          --health-retries=25
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
