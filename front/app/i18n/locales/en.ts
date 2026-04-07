@@ -70,7 +70,6 @@ const en = {
     user: 'User',
     accountInfo: 'Account Information',
     username: 'Username',
-    email: 'Email',
     discordId: 'Discord ID',
     memberSince: 'Member since',
     discordConnection: 'Discord Connection',
@@ -334,7 +333,6 @@ const en = {
   dashboard: {
     tableHeaders: {
       login: 'Login',
-      email: 'Email',
       role: 'Role',
       creation: 'Created',
       lastLogin: 'Last login',
@@ -385,7 +383,7 @@ const en = {
       unauthorized: 'Unauthorized',
       loadError: 'An error occurred while loading users',
     },
-    searchPlaceholder: 'Search by login or email...',
+    searchPlaceholder: 'Search by login...',
   },
 
   // Champions management

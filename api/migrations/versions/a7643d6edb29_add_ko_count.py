@@ -1,4 +1,4 @@
-"""b
+"""add_ko_count
 
 Revision ID: a7643d6edb29
 Revises: 59cb9b765093

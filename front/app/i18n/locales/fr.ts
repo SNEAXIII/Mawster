@@ -72,7 +72,6 @@ const fr: Translations = {
     user: 'Utilisateur',
     accountInfo: 'Informations du compte',
     username: "Nom d'utilisateur",
-    email: 'Email',
     discordId: 'Discord ID',
     memberSince: 'Membre depuis',
     discordConnection: 'Connexion Discord',
@@ -339,7 +338,6 @@ const fr: Translations = {
   dashboard: {
     tableHeaders: {
       login: 'Login',
-      email: 'Email',
       role: 'Rôle',
       creation: 'Création',
       lastLogin: 'Dernière connexion',
@@ -392,7 +390,7 @@ const fr: Translations = {
       unauthorized: 'Non autorisé',
       loadError: 'Une erreur est survenue lors du chargement des utilisateurs',
     },
-    searchPlaceholder: 'Rechercher par login ou email...',
+    searchPlaceholder: 'Rechercher par login...',
   },
 
   // Gestion des champions
