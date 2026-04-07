@@ -477,6 +477,9 @@ class WarService:
                     champion_class=champion_user.champion.champion_class,
                     image_url=champion_user.champion.image_url,
                     rarity=champion_user.rarity,
+                    ascension=champion_user.ascension,
+                    signature=champion_user.signature,
+                    is_preferred_attacker=champion_user.is_preferred_attacker,
                 ))
         return result
 
@@ -525,6 +528,7 @@ class WarService:
                 champion_class=champ.champion_class,
                 image_url=champ.image_url,
                 rarity=cu.rarity,
+                is_preferred_attacker=cu.is_preferred_attacker,
             )
             for cu, ga, champ in rows
         ]

@@ -56,6 +56,9 @@ export interface AvailableAttacker {
   champion_class: string;
   image_url: string | null;
   rarity: string;
+  ascension: number;
+  signature: number;
+  is_preferred_attacker: boolean;
 }
 
 export interface WarSynergy {

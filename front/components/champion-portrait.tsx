@@ -5,6 +5,7 @@ import { getChampionImageUrl } from '@/app/services/champions';
 import { getStarFrameUrl } from '@/app/services/roster';
 import SynergyBadge from '@/app/game/war/_components/synergy-badge';
 import PrefightBadge from '@/app/game/war/_components/prefight-badge';
+import PreferredBadge from '@/app/game/war/_components/preferred-badge';
 import { cn } from '@/app/lib/utils';
 
 type mode = 'normal' | 'synergy' | 'prefight';
@@ -17,6 +18,8 @@ interface ChampionPortraitProps {
   size?: number;
   /** Optional badge rendered absolutely over the portrait (bottom-right) */
   mode?: mode;
+  /** Star badge at top-left indicating a player's preferred attacker */
+  isPreferred?: boolean;
   dataCy?: string;
 }
 
@@ -30,6 +33,7 @@ export default function ChampionPortrait({
   rarity,
   size = 56,
   mode = 'normal',
+  isPreferred = false,
   dataCy,
 }: Readonly<ChampionPortraitProps>) {
   const frameUrl = getStarFrameUrl(rarity);
@@ -62,6 +66,7 @@ export default function ChampionPortrait({
       )}
       {mode === 'synergy' && <SynergyBadge additionalClasses='z-30' />}
       {mode === 'prefight' && <PrefightBadge additionalClasses='z-30' />}
+      {isPreferred && <PreferredBadge additionalClasses='z-30' />}
     </div>
   );
 }

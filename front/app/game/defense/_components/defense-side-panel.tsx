@@ -99,6 +99,7 @@ export default function DefenseSidePanel({
                           name={p.champion_name}
                           rarity={p.rarity}
                           size={40}
+                          isPreferred={p.is_preferred_attacker}
                         />
                         <span
                           className={cn(
@@ -108,7 +109,7 @@ export default function DefenseSidePanel({
                               : 'text-muted-foreground'
                           )}
                         >
-                          {p.is_preferred_attacker && '⚔ '}#{p.node_number}
+                          #{p.node_number}
                         </span>
                         <span
                           className={cn(

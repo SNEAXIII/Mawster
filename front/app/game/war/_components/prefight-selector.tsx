@@ -8,6 +8,7 @@ import { SearchInput } from '@/components/search-input';
 import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
 import { getClassColors, shortenChampionName } from '@/app/services/roster';
+import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils';
 import { type AvailableAttacker, getAvailablePrefightAttackers } from '@/app/services/war';
 import { useWar } from '@/app/contexts/war-context';
 
@@ -123,11 +124,14 @@ export default function PrefightSelectorDialog({
                   name={a.champion_name}
                   rarity={a.rarity}
                   size={48}
+                  isPreferred={a.is_preferred_attacker}
                 />
                 <span className='text-[10px] text-center truncate w-full leading-tight'>
                   {shortenChampionName(a.champion_name)}
                 </span>
-                <span className='text-[9px] font-mono text-muted-foreground'>{a.rarity}</span>
+                <span className={cn('text-[9px] font-mono leading-none', rarityBadgeClass(a.rarity))}>
+                  {rarityLabel(a.rarity, a.signature, a.ascension)}
+                </span>
                 <span className={cn('text-[9px] font-medium', classColors.label)}>
                   {a.champion_class}
                 </span>

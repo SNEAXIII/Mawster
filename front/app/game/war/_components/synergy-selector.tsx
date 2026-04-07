@@ -8,6 +8,8 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type AvailableAttacker, getAvailableAttackers } from '@/app/services/war';
 import { useWar } from '@/app/contexts/war-context';
+import { cn } from '@/app/lib/utils';
+import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils';
 
 interface SynergySelectorDialogProps {
   open: boolean;
@@ -94,11 +96,14 @@ export default function SynergySelectorDialog({
                     name={a.champion_name}
                     rarity={a.rarity}
                     size={48}
+                    isPreferred={a.is_preferred_attacker}
                   />
                   <span className='text-[10px] text-center truncate w-full leading-tight'>
                     {a.champion_name}
                   </span>
-                  <span className='text-[9px] font-mono text-muted-foreground'>{a.rarity}</span>
+                  <span className={cn('text-[9px] font-mono leading-none', rarityBadgeClass(a.rarity))}>
+                    {rarityLabel(a.rarity, a.signature, a.ascension)}
+                  </span>
                 </button>
               ))}
             </div>

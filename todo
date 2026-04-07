@@ -24,12 +24,9 @@ prio:
     permettre de marquer un combat terminé
     allias qui marchent pas coté client
     afficheer un attaquant préf seletion attaque + case a cocher pour filter
-    mettre les prefight
     mettre en couleur les combat d'un boug
-    mettre les bans
     faire un refresh dynamique
 
 criTIQUE
     alias a check coté client
     afficher attacker pref + la sig
-    les icons pref et syns sont fucked

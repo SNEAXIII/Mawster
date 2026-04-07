@@ -124,6 +124,9 @@ class AvailableAttackerResponse(BaseModel):
     champion_class: str
     image_url: Optional[str] = None
     rarity: str
+    ascension: int
+    signature: int
+    is_preferred_attacker: bool = False
 
 
 class AvailablePrefightAttackerResponse(BaseModel):
@@ -136,6 +139,7 @@ class AvailablePrefightAttackerResponse(BaseModel):
     champion_class: str
     image_url: Optional[str] = None
     rarity: str
+    is_preferred_attacker: bool = False
 
 
 class WarSynergyCreateRequest(BaseModel):
