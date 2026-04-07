@@ -55,7 +55,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Compute spec distribution
         id: plan
-        run: echo "matrix=$(python3 scripts/e2e_parallel.py --plan --runners 4)" >> $GITHUB_OUTPUT
+        run: echo "matrix=$(python3 scripts/e2e_parallel.py --plan --runners 6)" >> $GITHUB_OUTPUT
 
   e2e-build:
     name: E2E — Build frontend
@@ -125,9 +125,9 @@ jobs:
           - 3307:3306
         options: >-
           --health-cmd="healthcheck.sh --connect --innodb_initialized"
-          --health-interval=10s
+          --health-interval=2s
           --health-timeout=5s
-          --health-retries=5
+          --health-retries=25s
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
