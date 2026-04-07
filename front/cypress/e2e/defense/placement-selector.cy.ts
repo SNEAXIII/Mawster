@@ -172,8 +172,9 @@ describe('Defense – Champion Selector & Owner Picker', () => {
         cy.getByCy('champion-card-Wolverine').click();
         cy.contains('Select Player').should('be.visible');
 
-        cy.getByCy('owner-row-OPrefOwn').should('contain', '⚔').and('contain', '7★');
-        cy.getByCy('owner-row-OPrefMem').should('not.contain', '⚔');
+        cy.getByCy('owner-row-OPrefOwn').find('[data-cy="preferred-badge"]').should('exist');
+        cy.getByCy('owner-row-OPrefOwn').should('contain', '7★');
+        cy.getByCy('owner-row-OPrefMem').find('[data-cy="preferred-badge"]').should('not.exist');
       },
     );
   });

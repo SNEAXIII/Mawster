@@ -115,14 +115,14 @@ describe('Defense – Placement via UI', () => {
 
       cy.getByCy('war-node-20').scrollIntoView().click({ force: true });
       cy.getByCy('champion-card-Iron-Man').click();
-      cy.getByCy('war-node-20').should('contain', '⚔');
+      cy.getByCy('war-node-20').find('[data-cy="preferred-badge"]').should('exist');
       cy.getByCy('war-node-20').should('contain', '7★R5·200');
-      cy.getByCy('defender-card-20').should('contain', '⚔');
+      cy.getByCy('defender-card-20').find('[data-cy="preferred-badge"]').should('exist');
 
       cy.getByCy('war-node-15').scrollIntoView().click({ force: true });
       cy.getByCy('champion-card-Wolverine').click();
-      cy.getByCy('war-node-15').should('not.contain', '⚔');
-      cy.getByCy('defender-card-15').should('not.contain', '⚔');
+      cy.getByCy('war-node-15').find('[data-cy="preferred-badge"]').should('not.exist');
+      cy.getByCy('defender-card-15').find('[data-cy="preferred-badge"]').should('not.exist');
     });
   });
 
@@ -141,8 +141,8 @@ describe('Defense – Placement via UI', () => {
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.contains('Select Champion').should('be.visible');
 
-      cy.getByCy('champion-card-Captain-America').should('contain', '⚔');
-      cy.getByCy('champion-card-Wolverine').should('not.contain', '⚔');
+      cy.getByCy('champion-card-Captain-America').find('[data-cy="preferred-badge"]').should('exist');
+      cy.getByCy('champion-card-Wolverine').find('[data-cy="preferred-badge"]').should('not.exist');
     });
   });
 
@@ -179,11 +179,15 @@ describe('Defense – Placement via UI', () => {
       cy.contains('Iron Man placed on node #1').should('be.visible');
       cy.getByCy('defender-count-SeqPlyr').should('contain', '3/5');
 
-      cy.getByCy('war-node-50').should('contain', '⚔').and('contain', '7★R5·A1·200').and('contain', 'SeqPlyr');
-      cy.getByCy('war-node-40').should('not.contain', '⚔').and('contain', '7★R4·100').and('contain', 'SeqPlyr');
-      cy.getByCy('war-node-1').should('not.contain', '⚔').and('contain', '7★R3·20').and('contain', 'SeqPlyr');
+      cy.getByCy('war-node-50').find('[data-cy="preferred-badge"]').should('exist');
+      cy.getByCy('war-node-50').should('contain', '7★R5·A1·200').and('contain', 'SeqPlyr');
+      cy.getByCy('war-node-40').find('[data-cy="preferred-badge"]').should('not.exist');
+      cy.getByCy('war-node-40').should('contain', '7★R4·100').and('contain', 'SeqPlyr');
+      cy.getByCy('war-node-1').find('[data-cy="preferred-badge"]').should('not.exist');
+      cy.getByCy('war-node-1').should('contain', '7★R3·20').and('contain', 'SeqPlyr');
 
-      cy.getByCy('defender-card-50').should('contain', '7★R5·A1·200').and('contain', '⚔');
+      cy.getByCy('defender-card-50').should('contain', '7★R5·A1·200');
+      cy.getByCy('defender-card-50').find('[data-cy="preferred-badge"]').should('exist');
       cy.getByCy('defender-card-40').should('contain', '7★R4·100');
       cy.getByCy('defender-card-1').should('contain', '7★R3·20');
 
