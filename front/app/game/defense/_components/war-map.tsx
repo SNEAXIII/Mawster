@@ -42,7 +42,7 @@ export function WarMapNode({
   canManage,
   hidePseudo = false,
   hideSig = false,
-}: WarMapNodeProps) {
+}: Readonly<WarMapNodeProps>) {
   const { t } = useI18n();
   const colorClasses = getNodeColor(nodeNumber);
   const hoverClasses = getNodeHoverColor(nodeNumber);
@@ -82,24 +82,21 @@ export function WarMapNode({
           <X className='w-3 h-3' />
         </button>
       )}
-
       {placement ? (
         <div className='flex flex-col items-center gap-0.5'>
           <ChampionPortrait
             imageUrl={placement.champion_image_url}
             name={placement.champion_name}
             rarity={placement.rarity}
-            size={36}
+            size={45}
+            isPreferred={placement.is_preferred_attacker}
           />
           <span
             className={cn(
               'text-[10px] font-medium leading-none',
-              placement.is_preferred_attacker
-                ? 'text-yellow-400'
-                : rarityBadgeClass(placement.rarity)
+              rarityBadgeClass(placement.rarity)
             )}
           >
-            {placement.is_preferred_attacker && '⚔ '}
             {hideSig
               ? (() => {
                   const { stars, rank } = parseRarity(placement.rarity);
@@ -110,7 +107,7 @@ export function WarMapNode({
               : rarityLabel(placement.rarity, placement.signature, placement.ascension)}
           </span>
           {!hidePseudo && placement.game_pseudo && (
-            <span className='text-[9px] text-white/80 truncate max-w-[56px] sm:max-w-[64px] text-center leading-tight'>
+            <span className='text-[9px] text-white/80 truncate max-w-14 sm:max-w-16 text-center leading-tight'>
               {placement.game_pseudo}
             </span>
           )}
@@ -178,7 +175,7 @@ export default function WarMap({
   canManage,
   hidePseudo = false,
   hideSig = false,
-}: WarMapProps) {
+}: Readonly<WarMapProps>) {
   const placementMap = new Map<number, DefensePlacement>();
   for (const p of placements) {
     placementMap.set(p.node_number, p);

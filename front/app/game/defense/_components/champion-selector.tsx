@@ -27,7 +27,7 @@ export default function ChampionSelector({
   availableChampions,
   onSelect,
   currentPlacement,
-}: ChampionSelectorProps) {
+}: Readonly<ChampionSelectorProps>) {
   const { t } = useI18n();
   const [search, setSearch] = useState('');
   const [selectedChampion, setSelectedChampion] = useState<AvailableChampion | null>(null);
@@ -158,11 +158,9 @@ export default function ChampionSelector({
                           name={champ.champion_name}
                           rarity={bestOwner.rarity}
                           size={48}
+                          isPreferred={champ.owners.every((o) => o.is_preferred_attacker)}
                         />
                         <span className='text-[10px] text-center truncate w-full leading-tight'>
-                          {champ.owners.every((o) => o.is_preferred_attacker) && (
-                            <span className='text-yellow-400 font-bold'>⚔ </span>
-                          )}
                           {shortenChampionName(champ.champion_name)}
                         </span>
                         <span className={cn('text-[9px] font-medium', classColors.label)}>
@@ -223,10 +221,10 @@ export default function ChampionSelector({
                     name={selectedChampion.champion_name}
                     rarity={owner.rarity}
                     size={44}
+                    isPreferred={owner.is_preferred_attacker}
                   />
                   <div className='flex flex-col items-start'>
                     <span className='font-medium text-sm'>
-                      {owner.is_preferred_attacker && <span className='text-yellow-400'>⚔ </span>}
                       {owner.game_pseudo}
                     </span>
                     <span className='text-xs text-muted-foreground'>

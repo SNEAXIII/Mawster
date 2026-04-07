@@ -123,6 +123,7 @@ export default function RosterChampionCard({
           name={entry.champion_name}
           rarity={entry.rarity}
           size={72}
+          isPreferred={entry.is_preferred_attacker}
         />
       </div>
 
@@ -135,7 +136,6 @@ export default function RosterChampionCard({
         title={entry.champion_name}
         data-cy={entry.is_preferred_attacker ? 'preferred-attacker-name' : undefined}
       >
-        {entry.is_preferred_attacker && '⚔ '}
         {shortenChampionName(entry.champion_name)}
       </p>
 
