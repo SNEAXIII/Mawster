@@ -304,4 +304,37 @@ describe('War – Attackers mode', () => {
       cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
     });
   });
+
+  // ── Preferred attacker badge ──────────────────────────────────────────────
+
+  it('preferred attacker shows badge in attacker selector', () => {
+    setupAttackerScenario('atk-pref-selector').then(({ adminToken, memberData, memberAccId, ownerData }) => {
+      cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
+          is_preferred_attacker: true,
+        }).then(() => {
+          goToAttackersMode(ownerData.user_id);
+          cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+          cy.getByCy('war-attacker-search').should('be.visible');
+          cy.getByCy('attacker-card-Deadpool').find('[data-cy="preferred-badge"]').should('exist');
+          cy.getByCy('attacker-card-Wolverine').find('[data-cy="preferred-badge"]').should('not.exist');
+        });
+      });
+    });
+  });
+
+  it('preferred attacker badge shows in panel after assigning', () => {
+    setupAttackerScenario('atk-pref-panel').then(({ adminToken, memberData, memberAccId, ownerData, allianceId, warId }) => {
+      cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
+          is_preferred_attacker: true,
+        }).then((cu) => {
+          cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, cu.id);
+          goToAttackersMode(ownerData.user_id);
+          cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
+          cy.getByCy('attacker-entry-node-10').find('[data-cy="preferred-badge"]').should('exist');
+        });
+      });
+    });
+  });
 });
