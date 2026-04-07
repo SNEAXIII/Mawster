@@ -220,6 +220,37 @@ describe('War Synergy', () => {
     );
   });
 
+  it('preferred attacker shows badge in synergy selector', () => {
+    setupAttackerScenario('syn-pref-sel').then(
+      ({ adminToken, memberData, memberAccId, allianceId, warId, championUserId }) => {
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+
+        cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
+            is_preferred_attacker: true,
+          });
+        });
+
+        cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
+            is_preferred_attacker: false,
+          });
+        });
+
+        cy.apiLogin(memberData.user_id);
+        cy.visit('/game/war');
+        cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+
+        cy.getByCy('synergy-trigger-Wolverine').click();
+        cy.getByCy('synergy-add-Wolverine').click();
+        cy.getByCy('synergy-selector').should('be.visible');
+
+        cy.getByCy('synergy-pick-Deadpool').find('[data-cy="preferred-badge"]').should('exist');
+        cy.getByCy('synergy-pick-Storm').find('[data-cy="preferred-badge"]').should('not.exist');
+      },
+    );
+  });
+
   it('search input filters synergy candidates by name', () => {
     setupAttackerScenario('syn7').then(
       ({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {

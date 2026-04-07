@@ -193,6 +193,38 @@ describe('War Prefight', () => {
     );
   });
 
+  it('preferred attacker shows badge in prefight selector', () => {
+    setupAttackerScenario('pf-pref-sel').then(
+      ({ adminToken, memberData, memberAccId, allianceId, warId, championUserId }) => {
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+
+        cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
+          const stormId = champs[0].id;
+
+          cy.request({
+            method: 'PATCH',
+            url: `${BACKEND}/admin/champions/${stormId}/prefight`,
+            headers: { Authorization: `Bearer ${adminToken}` },
+          });
+
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, stormId, '7r3', {
+            is_preferred_attacker: true,
+          });
+
+          cy.apiLogin(memberData.user_id);
+          cy.visit('/game/war');
+          cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+
+          cy.getByCy('prefight-trigger-node-10').click();
+          cy.getByCy('prefight-add-node-10').click();
+          cy.getByCy('prefight-selector').should('be.visible');
+
+          cy.getByCy('prefight-pick-Storm').find('[data-cy="preferred-badge"]').should('exist');
+        });
+      },
+    );
+  });
+
   it('prefight entry row visible for prefight provider in attackers panel', () => {
     setupPrefightScenario('pf7').then(
       ({ memberData, allianceId, warId, championUserId, prefightChampionUserId }) => {
