@@ -15,6 +15,7 @@ interface SynergyPopoverProps {
   imageUrl: string | null;
   rarity: string;
   size?: number;
+  isPreferred?: boolean;
 }
 
 export default function SynergyPopover({
@@ -24,6 +25,7 @@ export default function SynergyPopover({
   imageUrl,
   rarity,
   size = 35,
+  isPreferred = false,
 }: Readonly<SynergyPopoverProps>) {
   const { t } = useI18n();
   const { synergies, handleRemoveSynergy } = useWar();
@@ -48,6 +50,7 @@ export default function SynergyPopover({
               name={championName}
               rarity={rarity}
               size={size}
+              isPreferred={isPreferred}
             />
           </button>
         </PopoverTrigger>

@@ -391,6 +391,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
                       attacker_champion_class: attacker.champion_class,
                       attacker_image_url: attacker.image_url,
                       attacker_rarity: attacker.rarity,
+                      attacker_is_preferred_attacker: attacker.is_preferred_attacker,
                     }
                   : p
               ),

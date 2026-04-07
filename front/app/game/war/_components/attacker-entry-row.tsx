@@ -43,6 +43,7 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
             imageUrl={placement.attacker_image_url}
             rarity={placement.attacker_rarity ?? ''}
             size={portraitSize}
+            isPreferred={placement.attacker_is_preferred_attacker ?? false}
           />
         ) : placement.attacker_image_url ? (
           <ChampionPortrait
@@ -50,6 +51,7 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
             name={placement.attacker_champion_name ?? ''}
             rarity={placement.attacker_rarity ?? ''}
             size={portraitSize}
+            isPreferred={placement.attacker_is_preferred_attacker ?? false}
           />
         ) : (
           <div

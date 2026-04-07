@@ -14,6 +14,7 @@ interface PrefightPopoverProps {
   imageUrl: string | null;
   rarity: string;
   size?: number;
+  isPreferred?: boolean;
 }
 
 export default function PrefightPopover({
@@ -23,6 +24,7 @@ export default function PrefightPopover({
   imageUrl,
   rarity,
   size = 35,
+  isPreferred = false,
 }: Readonly<PrefightPopoverProps>) {
   const { t } = useI18n();
   const { prefights, handleRemovePrefight } = useWar();
@@ -45,6 +47,7 @@ export default function PrefightPopover({
               name={championName}
               rarity={rarity}
               size={size}
+              isPreferred={isPreferred}
             />
           </button>
         </PopoverTrigger>
