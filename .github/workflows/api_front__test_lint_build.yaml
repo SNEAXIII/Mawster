@@ -67,12 +67,12 @@ jobs:
 
       # ── Frontend ──
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             front/node_modules
@@ -94,7 +94,7 @@ jobs:
       - name: Archive frontend build
         run: tar -czf /tmp/next-e2e-build.tar.gz -C front .next-e2e
       - name: Upload frontend build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: next-e2e-build
           path: /tmp/next-e2e-build.tar.gz
@@ -141,12 +141,12 @@ jobs:
         working-directory: ./api
         run: uv sync
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
       - name: Cache node_modules
         id: cache-node-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             front/node_modules
@@ -157,7 +157,7 @@ jobs:
         working-directory: ./front
         run: npm ci
       - name: Download frontend build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: next-e2e-build
           path: /tmp
@@ -169,7 +169,7 @@ jobs:
         run: python3 scripts/e2e_parallel.py --workers 1 --spec "${{ matrix.specs }}" --skip-build --quiet
       - name: Upload Cypress results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: cypress-results-runner-${{ matrix.runner }}
           path: front/cypress/results
@@ -188,7 +188,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Detect changes
-        uses: dorny/paths-filter@v4
+        uses: dorny/paths-filter@v5
         id: filter
         with:
           filters: |
