@@ -10,6 +10,7 @@ export default function PreferredBadge({ additionalClasses = '' }: Readonly<{ ad
         'absolute top-0 left-0 bg-yellow-500 text-white rounded-full p-0.5 flex items-center justify-center',
         additionalClasses
       )}
+      data-cy='preferred-badge'
     >
       <Swords className='w-2.5 h-2.5' />
     </div>
