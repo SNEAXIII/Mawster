@@ -29,6 +29,7 @@ class DefensePlacementResponse(BaseModel):
     game_account_id: uuid.UUID
     game_pseudo: str
     champion_name: str
+    champion_alias: Optional[str] = None
     champion_class: str
     champion_image_url: Optional[str] = None
     rarity: str
@@ -54,6 +55,7 @@ class DefensePlacementResponse(BaseModel):
             'game_account_id': data.game_account_id,
             'game_pseudo': data.game_account.game_pseudo,
             'champion_name': data.champion_user.champion.name,
+            'champion_alias': data.champion_user.champion.alias,
             'champion_class': data.champion_user.champion.champion_class,
             'champion_image_url': data.champion_user.champion.image_url,
             'rarity': data.champion_user.rarity,

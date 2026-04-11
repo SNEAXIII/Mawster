@@ -1,4 +1,4 @@
-import { setupDefenseScenario, setupDefenseOwnerAndMember } from '../../support/e2e';
+import { setupDefenseOwner, setupDefenseScenario, setupDefenseOwnerAndMember } from '../../support/e2e';
 
 describe('Defense – Champion Selector & Owner Picker', () => {
   beforeEach(() => {
@@ -45,6 +45,30 @@ describe('Defense – Champion Selector & Owner Picker', () => {
       cy.getByCy('champion-card-Wolverine').should('be.visible');
       cy.getByCy('champion-card-Spider-Man').should('not.exist');
     });
+  });
+
+  it('search filter by champion alias finds the champion', () => {
+    setupDefenseOwner('def-pl-alias-search', 'AliasPlyr', 'AliasAll', 'AS').then(
+      ({ adminData, ownerData, ownerAccId }) => {
+        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic', { alias: 'spidey;peter' }).then((champs) => {
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+        });
+        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+        });
+
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('defense');
+
+        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        cy.contains('Select Champion').should('be.visible');
+
+        // Search by alias — "spidey" should surface Spider-Man only
+        cy.get('input[placeholder]').type('spidey');
+        cy.getByCy('champion-card-Spider-Man').should('be.visible');
+        cy.getByCy('champion-card-Wolverine').should('not.exist');
+      },
+    );
   });
 
   // =========================================================================

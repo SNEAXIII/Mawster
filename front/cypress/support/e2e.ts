@@ -121,7 +121,7 @@ Cypress.Commands.add('apiCreateGameAccount', (token: string, pseudo: string, isP
 
 Cypress.Commands.add(
   'apiLoadChampion',
-  (adminToken: string, name: string, championClass: string, options: { is_ascendable?: boolean } = {}) => {
+  (adminToken: string, name: string, championClass: string, options: { is_ascendable?: boolean; alias?: string } = {}) => {
     cy.request({
       method: 'POST',
       url: `${BACKEND}/admin/champions/load`,
@@ -131,6 +131,7 @@ Cypress.Commands.add(
           name,
           champion_class: championClass,
           is_ascendable: options.is_ascendable ?? false,
+          ...(options.alias !== undefined ? { alias: options.alias } : {}),
         },
       ],
     }).then((res) => {
