@@ -26,6 +26,7 @@ function toDefensePlacement(p: WarPlacement): DefensePlacement {
     game_account_id: '',
     game_pseudo: p.attacker_pseudo ?? '',
     champion_name: p.champion_name,
+    champion_alias: null,
     champion_class: p.champion_class,
     champion_image_url: p.image_url,
     rarity: p.rarity,
