@@ -91,7 +91,7 @@ export default function ChampionPortrait({
       {mode === 'synergy' && <SynergyBadge additionalClasses='z-30' />}
       {mode === 'prefight' && <PrefightBadge additionalClasses='z-30' />}
       {isPreferred && <PreferredBadge additionalClasses='z-30' />}
-      {showSaga && <SagaBadge additionalClasses='z-30' />}
+      {showSaga && <SagaBadge additionalClasses='z-30' size={Number(size/2.5)}/>}
       {(ascension === 1 || ascension === 2) && (
         <AscensionBadge level={ascension} additionalClasses='z-30' />
       )}

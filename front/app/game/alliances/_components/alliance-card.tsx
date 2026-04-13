@@ -4,14 +4,8 @@ import React from 'react';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Shield, UserPlus, Users, X } from 'lucide-react';
+import InviteMemberCombo from './alliance-invite-member-combo';
 import { type Alliance, type GameAccount, type AllianceInvitation } from '@/app/services/game';
 import { formatDateMedium } from '@/app/lib/utils';
 import { useAllianceRole } from '@/hooks/use-alliance-role';
@@ -162,27 +156,11 @@ export default function AllianceCard({
             {userCanManage &&
               (memberAllianceId === alliance.id ? (
                 <div className='flex flex-wrap items-center gap-2'>
-                  <Select
-                    value={memberAccountId}
-                    onValueChange={onMemberAccountChange}
-                  >
-                    <SelectTrigger
-                      className='w-full sm:w-48 h-8 text-xs'
-                      data-cy='invite-member-select'
-                    >
-                      <SelectValue placeholder={t.game.alliances.selectMember} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {eligibleMembers.map((acc) => (
-                        <SelectItem
-                          key={acc.id}
-                          value={acc.id}
-                        >
-                          {acc.game_pseudo}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <InviteMemberCombo
+                    eligibleMembers={eligibleMembers}
+                    memberAccountId={memberAccountId}
+                    onMemberAccountChange={onMemberAccountChange}
+                  />
                   <Button
                     size='sm'
                     disabled={!memberAccountId}
