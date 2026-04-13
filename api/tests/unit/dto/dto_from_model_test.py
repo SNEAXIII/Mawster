@@ -1,4 +1,5 @@
 """Unit tests for DTO model_validate with from_attributes."""
+
 import uuid
 from datetime import datetime
 from types import SimpleNamespace
@@ -22,6 +23,7 @@ from src.enums.InvitationStatus import InvitationStatus
 # ---------------------------------------------------------------------------
 
 TEST_ALLIANCE_NAME = "Test Alliance"
+
 
 def _ns(**kwargs):
     return SimpleNamespace(**kwargs)
@@ -68,6 +70,7 @@ def _make_champion_user(champion=None, **overrides):
 # ChampionResponse.model_validate
 # ---------------------------------------------------------------------------
 
+
 class TestChampionResponseModelValidate:
     def test_maps_all_fields(self):
         champ = _make_champion()
@@ -103,6 +106,7 @@ class TestChampionResponseModelValidate:
 # ChampionUserResponse.model_validate
 # ---------------------------------------------------------------------------
 
+
 class TestChampionUserResponseModelValidate:
     def test_maps_all_fields(self):
         cu = _make_champion_user()
@@ -128,9 +132,15 @@ class TestChampionUserResponseModelValidate:
 # ChampionUserDetailResponse.model_validate
 # ---------------------------------------------------------------------------
 
+
 class TestChampionUserDetailResponseModelValidate:
     def test_maps_champion_user_and_champion_fields(self):
-        champ = _make_champion(name="Doom", champion_class="Mystic", is_ascendable=True, is_saga_attacker=True)
+        champ = _make_champion(
+            name="Doom",
+            champion_class="Mystic",
+            is_ascendable=True,
+            is_saga_attacker=True,
+        )
         cu = _make_champion_user(champion=champ)
         dto = ChampionUserDetailResponse.model_validate(cu)
 
@@ -159,10 +169,35 @@ class TestChampionUserDetailResponseModelValidate:
 
         assert dto.is_ascendable is False
 
+    def test_saga_champion(self):
+        champ = _make_champion(is_saga_attacker=True, is_saga_defender=True)
+        cu = _make_champion_user(champion=champ)
+        dto = ChampionUserDetailResponse.model_validate(cu)
+
+        assert dto.is_saga_attacker is True
+        assert dto.is_saga_defender is True
+
+    def test_from_dict_passthrough(self):
+        data = {
+            "id": uuid.uuid4(),
+            "game_account_id": uuid.uuid4(),
+            "champion_id": uuid.uuid4(),
+            "rarity": "7r3",
+            "signature": 200,
+            "is_preferred_attacker": True,
+            "ascension": 1,
+            "champion_name": "Doom",
+            "champion_class": "Mystic",
+        }
+        dto = ChampionUserDetailResponse.model_validate(data)
+        assert dto.champion_name == "Doom"
+        assert dto.rarity == "7r3"
+
 
 # ---------------------------------------------------------------------------
 # UpgradeRequestResponse.model_validate
 # ---------------------------------------------------------------------------
+
 
 class TestUpgradeRequestResponseModelValidate:
     def test_maps_all_fields(self):
@@ -214,11 +249,12 @@ class TestUpgradeRequestResponseModelValidate:
 # DefensePlacementResponse.model_validate
 # ---------------------------------------------------------------------------
 
+
 class TestDefensePlacementResponseModelValidate:
     def test_maps_all_fields(self):
         now = datetime.now()
-        champ = _make_champion(name="Corvus", champion_class="Cosmic")
-        cu = _make_champion_user(champion=champ, stars=6, rank=4, ascension=0)
+        champ = _make_champion(name="Corvus", champion_class="Cosmic", alias="glaive")
+        cu = _make_champion_user(champion=champ, stars=6, rank=4, ascension=0, signature=150, is_preferred_attacker=True)
         placed_by = _ns(game_pseudo="Officer1")
         placement = _ns(
             id=uuid.uuid4(),
@@ -239,8 +275,12 @@ class TestDefensePlacementResponseModelValidate:
         assert dto.battlegroup == 2
         assert dto.game_pseudo == "Player1"
         assert dto.champion_name == "Corvus"
+        assert dto.champion_alias == "glaive"
         assert dto.champion_class == "Cosmic"
+        assert dto.champion_image_url == champ.image_url
         assert dto.rarity == "6r4"
+        assert dto.signature == 150
+        assert dto.is_preferred_attacker is True
         assert dto.placed_by_pseudo == "Officer1"
         assert dto.ascension == 0
         assert dto.is_saga_attacker is False
@@ -266,10 +306,49 @@ class TestDefensePlacementResponseModelValidate:
         assert dto.placed_by_id is None
         assert dto.placed_by_pseudo is None
 
+    def test_saga_defender(self):
+        champ = _make_champion(is_saga_attacker=True, is_saga_defender=True)
+        cu = _make_champion_user(champion=champ)
+        placement = _ns(
+            id=uuid.uuid4(),
+            alliance_id=uuid.uuid4(),
+            battlegroup=1,
+            node_number=5,
+            champion_user_id=cu.id,
+            game_account_id=cu.game_account_id,
+            game_account=_ns(game_pseudo="P"),
+            champion_user=cu,
+            placed_by_id=None,
+            placed_by=None,
+            created_at=datetime.now(),
+        )
+        dto = DefensePlacementResponse.model_validate(placement)
+        assert dto.is_saga_attacker is True
+        assert dto.is_saga_defender is True
+
+    def test_from_dict_passthrough(self):
+        data = {
+            "id": uuid.uuid4(),
+            "alliance_id": uuid.uuid4(),
+            "battlegroup": 1,
+            "node_number": 10,
+            "champion_user_id": uuid.uuid4(),
+            "game_account_id": uuid.uuid4(),
+            "game_pseudo": "Player1",
+            "champion_name": "Doom",
+            "champion_class": "Mystic",
+            "rarity": "7r3",
+            "created_at": datetime.now(),
+        }
+        dto = DefensePlacementResponse.model_validate(data)
+        assert dto.champion_name == "Doom"
+        assert dto.game_pseudo == "Player1"
+
 
 # ---------------------------------------------------------------------------
 # GameAccountResponse.model_validate
 # ---------------------------------------------------------------------------
+
 
 class TestGameAccountResponseModelValidate:
     def test_with_alliance(self):
@@ -315,6 +394,7 @@ class TestGameAccountResponseModelValidate:
 # AllianceOfficerResponse.model_validate
 # ---------------------------------------------------------------------------
 
+
 class TestAllianceOfficerResponseModelValidate:
     def test_maps_all_fields(self):
         now = datetime.now()
@@ -334,41 +414,48 @@ class TestAllianceOfficerResponseModelValidate:
 # AllianceMemberResponse.model_validate
 # ---------------------------------------------------------------------------
 
+
 class TestAllianceMemberResponseModelValidate:
     def test_owner(self):
         member_id = uuid.uuid4()
-        dto = AllianceMemberResponse.model_validate({
-            'id': member_id,
-            'user_id': uuid.uuid4(),
-            'game_pseudo': 'Owner',
-            'alliance_group': 1,
-            'is_owner': True,
-            'is_officer': False,
-        })
+        dto = AllianceMemberResponse.model_validate(
+            {
+                "id": member_id,
+                "user_id": uuid.uuid4(),
+                "game_pseudo": "Owner",
+                "alliance_group": 1,
+                "is_owner": True,
+                "is_officer": False,
+            }
+        )
         assert dto.is_owner is True
         assert dto.is_officer is False
 
     def test_officer(self):
-        dto = AllianceMemberResponse.model_validate({
-            'id': uuid.uuid4(),
-            'user_id': uuid.uuid4(),
-            'game_pseudo': 'Adj',
-            'alliance_group': None,
-            'is_owner': False,
-            'is_officer': True,
-        })
+        dto = AllianceMemberResponse.model_validate(
+            {
+                "id": uuid.uuid4(),
+                "user_id": uuid.uuid4(),
+                "game_pseudo": "Adj",
+                "alliance_group": None,
+                "is_owner": False,
+                "is_officer": True,
+            }
+        )
         assert dto.is_owner is False
         assert dto.is_officer is True
 
     def test_regular_member(self):
-        dto = AllianceMemberResponse.model_validate({
-            'id': uuid.uuid4(),
-            'user_id': uuid.uuid4(),
-            'game_pseudo': 'Normal',
-            'alliance_group': 3,
-            'is_owner': False,
-            'is_officer': False,
-        })
+        dto = AllianceMemberResponse.model_validate(
+            {
+                "id": uuid.uuid4(),
+                "user_id": uuid.uuid4(),
+                "game_pseudo": "Normal",
+                "alliance_group": 3,
+                "is_owner": False,
+                "is_officer": False,
+            }
+        )
         assert dto.is_owner is False
         assert dto.is_officer is False
         assert dto.alliance_group == 3
@@ -377,6 +464,7 @@ class TestAllianceMemberResponseModelValidate:
 # ---------------------------------------------------------------------------
 # AllianceResponse.model_validate
 # ---------------------------------------------------------------------------
+
 
 class TestAllianceResponseModelValidate:
     def test_maps_full_alliance(self):
@@ -450,6 +538,7 @@ class TestAllianceResponseModelValidate:
 # ---------------------------------------------------------------------------
 # AllianceInvitationResponse.model_validate
 # ---------------------------------------------------------------------------
+
 
 class TestAllianceInvitationResponseModelValidate:
     def test_maps_all_fields(self):
