@@ -6,6 +6,7 @@ export interface BannedChampion {
   champion_class: string;
   image_url: string | null;
   rarity: string | null;
+  alias: string | null;
 }
 
 export interface War {
