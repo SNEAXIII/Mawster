@@ -146,6 +146,7 @@ export default function WarDefendersTab() {
                 key={c.id}
                 title={c.name}
                 data-cy={`ban-display-${c.id}`}
+                className='flex flex-col items-center gap-0.5'
               >
                 <ChampionPortrait
                   imageUrl={c.image_url}
@@ -153,6 +154,11 @@ export default function WarDefendersTab() {
                   rarity={'7r6'}
                   size={45}
                 />
+                {c.alias && (
+                  <span className='text-[10px] text-muted-foreground leading-none max-w-[50px] truncate text-center'>
+                    {c.alias.split(';')[0]}
+                  </span>
+                )}
               </div>
             ))
           )}

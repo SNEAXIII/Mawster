@@ -38,9 +38,12 @@ export default function CreateWarDialog({ open, onClose, onConfirm }: CreateWarD
   }, [open]);
 
   const filtered = search.trim()
-    ? champions.filter((c) =>
-        c.name.toLowerCase().includes(search.trim().toLowerCase())
-      )
+    ? champions.filter((c) => {
+        const q = search.trim().toLowerCase();
+        if (c.name.toLowerCase().includes(q)) return true;
+        if (!c.alias) return false;
+        return c.alias.split(';').some((a) => a.trim().toLowerCase().includes(q));
+      })
     : [];
 
   const bannedChampions = champions.filter((c) => bannedIds.includes(c.id));
