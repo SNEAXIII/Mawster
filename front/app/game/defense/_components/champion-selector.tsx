@@ -37,7 +37,10 @@ export default function ChampionSelector({
     if (!search.trim()) return availableChampions;
     const q = search.toLowerCase();
     return availableChampions.filter(
-      (c) => c.champion_name.toLowerCase().includes(q) || c.champion_class.toLowerCase().includes(q)
+      (c) =>
+        c.champion_name.toLowerCase().includes(q) ||
+        c.champion_class.toLowerCase().includes(q) ||
+        (c.champion_alias ?? '').toLowerCase().includes(q)
     );
   }, [search, availableChampions]);
 

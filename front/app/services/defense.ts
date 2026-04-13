@@ -9,6 +9,7 @@ export interface DefensePlacement {
   game_account_id: string;
   game_pseudo: string;
   champion_name: string;
+  champion_alias: string | null;
   champion_class: string;
   champion_image_url: string | null;
   rarity: string;
@@ -43,6 +44,7 @@ export interface ChampionOwner {
 export interface AvailableChampion {
   champion_id: string;
   champion_name: string;
+  champion_alias: string | null;
   champion_class: string;
   image_url: string | null;
   owners: ChampionOwner[];

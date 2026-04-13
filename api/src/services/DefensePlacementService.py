@@ -330,6 +330,7 @@ class DefensePlacementService:
                 champion_groups[champ_id] = {
                     "champion_id": str(champ_id),
                     "champion_name": cu.champion.name,
+                    "champion_alias": cu.champion.alias,
                     "champion_class": cu.champion.champion_class,
                     "image_url": cu.champion.image_url,
                     "owners": [],

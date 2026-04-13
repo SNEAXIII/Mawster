@@ -826,3 +826,116 @@ class TestImportDefense:
             headers=headers,
         )
         assert response.status_code in (400, 422)
+
+
+class TestDefenseAlias:
+    """Alias is exposed in defense responses (available champions + placements)."""
+
+    @pytest.mark.asyncio
+    async def test_available_champions_includes_alias(self):
+        """Champion with an alias exposes it in the available-champions list."""
+        await load_objects([get_generic_user(is_base_id=True)])
+        await push_user2()
+
+        alliance, owner = await push_alliance_with_owner(
+            user_id=USER_ID,
+            game_pseudo=GAME_PSEUDO,
+            alliance_name=ALLIANCE_NAME,
+            alliance_tag=ALLIANCE_TAG,
+        )
+        owner.alliance_group = 1
+        await load_objects([owner])
+        await push_officer(alliance, owner)
+
+        # Champion with an alias
+        spidey = await push_champion(name="Spider-Man", champion_class="Science", alias="spidey;peter")
+        cu = ChampionUser(id=uuid.uuid4(), game_account_id=owner.id, champion_id=spidey.id, stars=7, rank=3)
+        await load_objects([cu])
+
+        headers = create_auth_headers(user_id=str(USER_ID))
+        response = await execute_get_request(
+            f"/alliances/{alliance.id}/defense/bg/1/available-champions",
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        entry = next(c for c in body if c["champion_name"] == "Spider-Man")
+        assert entry["champion_alias"] == "spidey;peter"
+
+    @pytest.mark.asyncio
+    async def test_available_champions_alias_none_when_absent(self):
+        """Champion without an alias returns champion_alias as null."""
+        await load_objects([get_generic_user(is_base_id=True)])
+        await push_user2()
+
+        alliance, owner = await push_alliance_with_owner(
+            user_id=USER_ID,
+            game_pseudo=GAME_PSEUDO,
+            alliance_name=ALLIANCE_NAME,
+            alliance_tag=ALLIANCE_TAG,
+        )
+        owner.alliance_group = 1
+        await load_objects([owner])
+        await push_officer(alliance, owner)
+
+        # Champion without alias
+        champ = await push_champion(name=IRON_MAN, champion_class="Tech")
+        cu = ChampionUser(id=uuid.uuid4(), game_account_id=owner.id, champion_id=champ.id, stars=6, rank=5)
+        await load_objects([cu])
+
+        headers = create_auth_headers(user_id=str(USER_ID))
+        response = await execute_get_request(
+            f"/alliances/{alliance.id}/defense/bg/1/available-champions",
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        entry = next(c for c in body if c["champion_name"] == IRON_MAN)
+        assert entry["champion_alias"] is None
+
+    @pytest.mark.asyncio
+    async def test_placement_response_includes_alias(self):
+        """Placing a champion returns champion_alias in the response body."""
+        data = await _setup_alliance_with_bg()
+        # Give the champion an alias
+        data["champ1"].alias = "spidey;peter"
+        await load_objects([data["champ1"]])
+
+        headers = create_auth_headers(user_id=str(USER_ID))
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 1,
+                "champion_user_id": str(data["cu_owner1"].id),
+                "game_account_id": str(data["owner"].id),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 201
+        body = response.json()
+        assert body["champion_alias"] == "spidey;peter"
+
+    @pytest.mark.asyncio
+    async def test_get_defense_placement_includes_alias(self):
+        """GET defense returns champion_alias for each placement."""
+        data = await _setup_alliance_with_bg()
+        data["champ1"].alias = "spidey;peter"
+        await load_objects([data["champ1"]])
+
+        headers = create_auth_headers(user_id=str(USER_ID))
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 1,
+                "champion_user_id": str(data["cu_owner1"].id),
+                "game_account_id": str(data["owner"].id),
+            },
+            headers=headers,
+        )
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1",
+            headers=headers,
+        )
+        assert response.status_code == 200
+        placement = response.json()["placements"][0]
+        assert placement["champion_alias"] == "spidey;peter"

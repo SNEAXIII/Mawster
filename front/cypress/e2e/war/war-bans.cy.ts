@@ -47,6 +47,35 @@ describe('War – Bans', () => {
     );
   });
 
+  it('ban selector filters by champion alias', () => {
+    setupWarOwner('war-bans-alias', 'BanAlias', 'BanAliasAlliance', 'BX').then(
+      ({ adminData, ownerData }) => {
+        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant', {
+          alias: 'wolvie;logan;claws',
+        }).then((champs) => {
+          const champ = champs[0];
+          cy.apiLogin(ownerData.user_id);
+          cy.navTo('war');
+
+          cy.getByCy('declare-war-btn').click();
+          cy.getByCy('opponent-name-input').type('AliasEnemy');
+
+          // Search by alias segment — should surface the champion
+          cy.getByCy('ban-search-input').type('wolvie');
+          cy.getByCy(`ban-option-${champ.id}`).should('exist');
+
+          // Search by second alias segment
+          cy.getByCy('ban-search-input').clear().type('logan');
+          cy.getByCy(`ban-option-${champ.id}`).should('exist');
+
+          // Search by non-matching term — should not appear
+          cy.getByCy('ban-search-input').clear().type('zzznomatch');
+          cy.getByCy(`ban-option-${champ.id}`).should('not.exist');
+        });
+      },
+    );
+  });
+
   it('cannot select more than 6 bans', () => {
     setupWarOwner('war-bans-max', 'BanOfficer3', 'BanAlliance3', 'BC').then(
       ({ adminData, ownerData }) => {
