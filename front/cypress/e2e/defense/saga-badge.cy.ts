@@ -14,7 +14,7 @@ describe('Defense – Saga & Ascension Badges (sagaMode defender)', () => {
   ) {
     return setupDefenseOwner(prefix, `${prefix}Plyr`, `${prefix}All`, prefix.slice(0, 3).toUpperCase()).then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, champName, champClass, sagaOpts).then(
+        cy.apiLoadChampion(adminData.access_token, champName, champClass, { ...sagaOpts, is_ascendable: ascension > 0 }).then(
           (champs: { id: string }[]) => {
             cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3', {
               ascension,

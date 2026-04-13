@@ -14,7 +14,7 @@ describe('War – Saga & Ascension Badges (sagaMode attacker)', () => {
   ) {
     return setupAttackerScenario(prefix).then(
       ({ adminToken, memberData, ownerData, allianceId, memberAccId, warId }) => {
-        cy.apiLoadChampion(adminToken, champName, champClass, sagaOpts).then(
+        cy.apiLoadChampion(adminToken, champName, champClass, { ...sagaOpts, is_ascendable: ascension > 0 }).then(
           (champs: { id: string }[]) => {
             cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
               ascension,
