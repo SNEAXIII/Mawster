@@ -7,6 +7,7 @@ import SynergyBadge from '@/app/game/war/_components/synergy-badge';
 import PrefightBadge from '@/app/game/war/_components/prefight-badge';
 import PreferredBadge from '@/app/game/war/_components/preferred-badge';
 import SagaBadge from '@/app/game/war/_components/saga-badge';
+import AscensionBadge from '@/app/game/war/_components/ascension-badge';
 import { cn } from '@/app/lib/utils';
 
 type mode = 'normal' | 'synergy' | 'prefight';
@@ -23,6 +24,8 @@ interface ChampionPortraitProps {
   isPreferred?: boolean;
   /** Amber "S" badge at middle-left when champion is a saga attacker or defender */
   isSaga?: boolean;
+  /** Purple "A1"/"A2" badge at top-right for ascension level (0 = no badge) */
+  ascension?: number;
   dataCy?: string;
 }
 
@@ -38,6 +41,7 @@ export default function ChampionPortrait({
   mode = 'normal',
   isPreferred = false,
   isSaga = false,
+  ascension = 0,
   dataCy,
 }: Readonly<ChampionPortraitProps>) {
   const frameUrl = getStarFrameUrl(rarity);
@@ -72,6 +76,9 @@ export default function ChampionPortrait({
       {mode === 'prefight' && <PrefightBadge additionalClasses='z-30' />}
       {isPreferred && <PreferredBadge additionalClasses='z-30' />}
       {isSaga && <SagaBadge additionalClasses='z-30' />}
+      {(ascension === 1 || ascension === 2) && (
+        <AscensionBadge level={ascension} additionalClasses='z-30' />
+      )}
     </div>
   );
 }
