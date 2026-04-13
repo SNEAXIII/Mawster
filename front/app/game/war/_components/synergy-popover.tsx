@@ -17,7 +17,8 @@ interface SynergyPopoverProps {
   size?: number;
   isPreferred?: boolean;
   ascension?: number;
-  isSaga?: boolean;
+  is_saga_attacker?: boolean;
+  is_saga_defender?: boolean;
 }
 
 export default function SynergyPopover({
@@ -29,7 +30,8 @@ export default function SynergyPopover({
   size = 35,
   isPreferred = false,
   ascension = 0,
-  isSaga = false,
+  is_saga_attacker = false,
+  is_saga_defender = false,
 }: Readonly<SynergyPopoverProps>) {
   const { t } = useI18n();
   const { synergies, handleRemoveSynergy } = useWar();
@@ -56,7 +58,9 @@ export default function SynergyPopover({
               size={size}
               isPreferred={isPreferred}
               ascension={ascension}
-              isSaga={isSaga}
+              is_saga_attacker={is_saga_attacker}
+              is_saga_defender={is_saga_defender}
+              sagaMode='attacker'
             />
           </button>
         </PopoverTrigger>
@@ -79,7 +83,9 @@ export default function SynergyPopover({
                     rarity={s.rarity}
                     size={32}
                     ascension={s.ascension}
-                    isSaga={s.is_saga_attacker || s.is_saga_defender}
+                    is_saga_attacker={s.is_saga_attacker}
+                    is_saga_defender={s.is_saga_defender}
+                    sagaMode='attacker'
                   />
                   <span
                     className='text-xs font-medium truncate flex-1'

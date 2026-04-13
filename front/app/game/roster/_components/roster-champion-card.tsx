@@ -125,7 +125,9 @@ export default function RosterChampionCard({
           size={72}
           isPreferred={entry.is_preferred_attacker}
           ascension={entry.ascension}
-          isSaga={entry.is_saga_attacker || entry.is_saga_defender}
+          is_saga_attacker={entry.is_saga_attacker}
+          is_saga_defender={entry.is_saga_defender}
+          sagaMode='all'
         />
       </div>
 

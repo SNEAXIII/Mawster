@@ -91,7 +91,9 @@ export function WarMapNode({
             size={45}
             isPreferred={placement.is_preferred_attacker}
             ascension={placement.ascension}
-            isSaga={placement.is_saga_attacker || placement.is_saga_defender}
+            is_saga_attacker={placement.is_saga_attacker}
+            is_saga_defender={placement.is_saga_defender}
+            sagaMode='defender'
           />
           <span
             className={cn(

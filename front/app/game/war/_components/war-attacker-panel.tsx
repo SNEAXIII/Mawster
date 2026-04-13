@@ -108,7 +108,8 @@ export default function WarAttackerPanel() {
                           size={35}
                           isPreferred={placement.attacker_is_preferred_attacker ?? false}
                           ascension={placement.attacker_ascension ?? 0}
-                          isSaga={(placement.attacker_is_saga_attacker ?? false) || (placement.attacker_is_saga_defender ?? false)}
+                          is_saga_attacker={placement.attacker_is_saga_attacker ?? false}
+                          is_saga_defender={placement.attacker_is_saga_defender ?? false}
                         />
                       ) : (
                         <ChampionPortrait
@@ -119,7 +120,9 @@ export default function WarAttackerPanel() {
                           size={35}
                           isPreferred={placement.attacker_is_preferred_attacker ?? false}
                           ascension={placement.attacker_ascension ?? 0}
-                          isSaga={(placement.attacker_is_saga_attacker ?? false) || (placement.attacker_is_saga_defender ?? false)}
+                          is_saga_attacker={placement.attacker_is_saga_attacker ?? false}
+                          is_saga_defender={placement.attacker_is_saga_defender ?? false}
+                          sagaMode='attacker'
                         />
                       )
                     ))}
@@ -134,7 +137,9 @@ export default function WarAttackerPanel() {
                         size={35}
                         mode='synergy'
                         ascension={s.ascension}
-                        isSaga={s.is_saga_attacker || s.is_saga_defender}
+                        is_saga_attacker={s.is_saga_attacker}
+                        is_saga_defender={s.is_saga_defender}
+                        sagaMode='attacker'
                       />
                     ))}
 
@@ -148,7 +153,9 @@ export default function WarAttackerPanel() {
                         size={35}
                         mode='prefight'
                         ascension={p.ascension}
-                        isSaga={p.is_saga_attacker || p.is_saga_defender}
+                        is_saga_attacker={p.is_saga_attacker}
+                        is_saga_defender={p.is_saga_defender}
+                        sagaMode='attacker'
                       />
                     ))}
                   </div>

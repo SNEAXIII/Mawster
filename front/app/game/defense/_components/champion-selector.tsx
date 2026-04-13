@@ -108,7 +108,9 @@ export default function ChampionSelector({
                 rarity={currentPlacement.rarity}
                 size={44}
                 ascension={currentPlacement.ascension}
-                isSaga={currentPlacement.is_saga_attacker || currentPlacement.is_saga_defender}
+                is_saga_attacker={currentPlacement.is_saga_attacker}
+                is_saga_defender={currentPlacement.is_saga_defender}
+                sagaMode='defender'
               />
               <div className='min-w-0'>
                 <div className='text-sm font-medium truncate'>{currentPlacement.champion_name}</div>
@@ -165,7 +167,9 @@ export default function ChampionSelector({
                           size={48}
                           isPreferred={champ.owners.every((o) => o.is_preferred_attacker)}
                           ascension={bestOwner.ascension}
-                          isSaga={champ.is_saga_attacker || champ.is_saga_defender}
+                          is_saga_attacker={champ.is_saga_attacker}
+                          is_saga_defender={champ.is_saga_defender}
+                          sagaMode='defender'
                         />
                         <span className='text-[10px] text-center truncate w-full leading-tight'>
                           {shortenChampionName(champ.champion_name)}
@@ -230,7 +234,9 @@ export default function ChampionSelector({
                     size={44}
                     isPreferred={owner.is_preferred_attacker}
                     ascension={owner.ascension}
-                    isSaga={selectedChampion.is_saga_attacker || selectedChampion.is_saga_defender}
+                    is_saga_attacker={selectedChampion.is_saga_attacker}
+                    is_saga_defender={selectedChampion.is_saga_defender}
+                    sagaMode='defender'
                   />
                   <div className='flex flex-col items-start'>
                     <span className='font-medium text-sm'>

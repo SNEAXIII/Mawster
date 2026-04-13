@@ -102,7 +102,9 @@ export default function SynergySelectorDialog({
                     size={48}
                     isPreferred={a.is_preferred_attacker}
                     ascension={a.ascension}
-                    isSaga={a.is_saga_attacker || a.is_saga_defender}
+                    is_saga_attacker={a.is_saga_attacker}
+                    is_saga_defender={a.is_saga_defender}
+                    sagaMode='attacker'
                   />
                   <span className='text-[10px] text-center truncate w-full leading-tight'>
                     {a.champion_name}
