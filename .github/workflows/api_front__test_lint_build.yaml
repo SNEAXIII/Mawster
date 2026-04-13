@@ -262,3 +262,21 @@ jobs:
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:${{ env.TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    environment: Api
+    needs: [docker-api, docker-front]
+    if: needs.docker-api.result == 'success' && needs.docker-front.result == 'success'
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /root/Mawster
+            docker compose -f compose-prod.yaml pull
+            docker compose -f compose-prod.yaml up -d

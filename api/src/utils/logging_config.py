@@ -38,6 +38,7 @@ BACKUP_COUNT = 10  # keep 10 rotated files
 
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
+
 def _build_formats() -> tuple[str, str]:
     port = os.getenv("PORT", "")
     prefix = f"[:{port}] " if port else ""
@@ -46,12 +47,14 @@ def _build_formats() -> tuple[str, str]:
         f"%(asctime)s | AUDIT | {prefix}%(message)s",
     )
 
+
 LOG_FORMAT, AUDIT_FORMAT = _build_formats()
 
 
 # ---------------------------------------------------------------------------
 # Setup
 # ---------------------------------------------------------------------------
+
 
 def setup_logging(level: int = logging.INFO) -> None:
     """Configure root logger with console + rotating file handlers.
@@ -154,7 +157,9 @@ def audit_log(event: str, *, user_id: str = "anonymous", detail: str = "") -> No
         parts.append(f"detail={detail}")
     _audit.info(" | ".join(parts))
 
+
 _debug = logging.getLogger("debug")
+
 
 def debug_log(message: str, **kwargs) -> None:
     """Write a debug log with structured key=value pairs."""

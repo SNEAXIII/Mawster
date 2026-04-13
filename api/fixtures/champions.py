@@ -1,11 +1,14 @@
 """Fixture: load all champions from scripts/champions.json into the database."""
+
 import json
 from pathlib import Path
 
 from src.dto.dto_champion import ChampionLoadRequest
 from src.services.ChampionService import ChampionService
 
-JSON_PATH = Path(__file__).resolve().parent.parent / "scripts" / "champions_to_load.json"
+JSON_PATH = (
+    Path(__file__).resolve().parent.parent / "scripts" / "champions_to_load.json"
+)
 
 
 async def run(session) -> dict:
