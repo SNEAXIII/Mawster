@@ -407,6 +407,8 @@ const fr: Translations = {
       alias: 'Alias',
       isAscendable: 'Ascentionnable',
       hasPrefight: 'Précombat',
+      isSagaAttacker: 'Attaquant Saga',
+      isSagaDefender: 'Défenseur Saga',
       actions: 'Actions',
     },
     exportJson: 'Exporter JSON',

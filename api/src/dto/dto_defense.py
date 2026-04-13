@@ -36,6 +36,8 @@ class DefensePlacementResponse(BaseModel):
     signature: int = 0
     is_preferred_attacker: bool = False
     ascension: int = 0
+    is_saga_attacker: bool = False
+    is_saga_defender: bool = False
     placed_by_id: Optional[uuid.UUID] = None
     placed_by_pseudo: Optional[str] = None
     created_at: datetime
@@ -62,6 +64,8 @@ class DefensePlacementResponse(BaseModel):
             'signature': data.champion_user.signature,
             'is_preferred_attacker': data.champion_user.is_preferred_attacker,
             'ascension': data.champion_user.ascension,
+            'is_saga_attacker': data.champion_user.champion.is_saga_attacker,
+            'is_saga_defender': data.champion_user.champion.is_saga_defender,
             'placed_by_id': data.placed_by_id,
             'placed_by_pseudo': data.placed_by.game_pseudo if data.placed_by else None,
             'created_at': data.created_at,

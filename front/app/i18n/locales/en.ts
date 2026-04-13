@@ -400,6 +400,8 @@ const en = {
       alias: 'Aliases',
       isAscendable: 'Ascendable',
       hasPrefight: 'Pre-fight',
+      isSagaAttacker: 'Saga Attacker',
+      isSagaDefender: 'Saga Defender',
       actions: 'Actions',
     },
     exportJson: 'Export JSON',

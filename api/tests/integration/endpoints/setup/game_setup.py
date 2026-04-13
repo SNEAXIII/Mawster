@@ -148,6 +148,8 @@ def get_champion(
     alias: str | None = None,
     is_ascendable: bool = False,
     has_prefight: bool = False,
+    is_saga_attacker: bool = False,
+    is_saga_defender: bool = False,
 ) -> Champion:
     return Champion(
         id=champion_id or uuid.uuid4(),
@@ -158,6 +160,8 @@ def get_champion(
         alias=alias,
         is_ascendable=is_ascendable,
         has_prefight=has_prefight,
+        is_saga_attacker=is_saga_attacker,
+        is_saga_defender=is_saga_defender,
     )
 
 

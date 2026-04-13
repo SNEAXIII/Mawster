@@ -141,6 +141,28 @@ class ChampionService:
         return champion
 
     @classmethod
+    async def toggle_saga_attacker(
+        cls, session: SessionDep, champion_id: uuid.UUID
+    ) -> Champion:
+        champion = await cls.get_champion_by_id(session, champion_id)
+        champion.is_saga_attacker = not champion.is_saga_attacker
+        session.add(champion)
+        await session.commit()
+        await session.refresh(champion)
+        return champion
+
+    @classmethod
+    async def toggle_saga_defender(
+        cls, session: SessionDep, champion_id: uuid.UUID
+    ) -> Champion:
+        champion = await cls.get_champion_by_id(session, champion_id)
+        champion.is_saga_defender = not champion.is_saga_defender
+        session.add(champion)
+        await session.commit()
+        await session.refresh(champion)
+        return champion
+
+    @classmethod
     async def load_champions(
         cls, session: SessionDep, champions_data: list[ChampionLoadRequest]
     ) -> dict:

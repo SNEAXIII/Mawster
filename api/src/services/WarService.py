@@ -481,6 +481,8 @@ class WarService:
                     ascension=champion_user.ascension,
                     signature=champion_user.signature,
                     is_preferred_attacker=champion_user.is_preferred_attacker,
+                    is_saga_attacker=champion_user.champion.is_saga_attacker,
+                    is_saga_defender=champion_user.champion.is_saga_defender,
                 ))
         return result
 
@@ -530,7 +532,10 @@ class WarService:
                 champion_class=champ.champion_class,
                 image_url=champ.image_url,
                 rarity=cu.rarity,
+                ascension=cu.ascension,
                 is_preferred_attacker=cu.is_preferred_attacker,
+                is_saga_attacker=champ.is_saga_attacker,
+                is_saga_defender=champ.is_saga_defender,
             )
             for cu, ga, champ in rows
         ]

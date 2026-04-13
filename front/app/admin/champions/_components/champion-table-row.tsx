@@ -21,6 +21,8 @@ interface ChampionTableRowProps {
   onDelete: (champion: Champion) => void;
   onToggleAscendable: (champion: Champion) => void;
   onTogglePrefight: (champion: Champion) => void;
+  onToggleSagaAttacker: (champion: Champion) => void;
+  onToggleSagaDefender: (champion: Champion) => void;
 }
 
 export default function ChampionTableRow({
@@ -35,6 +37,8 @@ export default function ChampionTableRow({
   onDelete,
   onToggleAscendable,
   onTogglePrefight,
+  onToggleSagaAttacker,
+  onToggleSagaDefender,
 }: ChampionTableRowProps) {
   const { t } = useI18n();
   return (
@@ -124,6 +128,34 @@ export default function ChampionTableRow({
         >
           <Flame className='h-3 w-3' />
           {champion.has_prefight ? t.common.yes : t.common.no}
+        </button>
+      </td>
+
+      {/* Saga Attacker */}
+      <td className='p-3'>
+        <button
+          onClick={() => onToggleSagaAttacker(champion)}
+          className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+            champion.is_saga_attacker
+              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+              : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+          }`}
+        >
+          {champion.is_saga_attacker ? t.common.yes : t.common.no}
+        </button>
+      </td>
+
+      {/* Saga Defender */}
+      <td className='p-3'>
+        <button
+          onClick={() => onToggleSagaDefender(champion)}
+          className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+            champion.is_saga_defender
+              ? 'bg-green-100 text-green-700 hover:bg-green-200'
+              : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+          }`}
+        >
+          {champion.is_saga_defender ? t.common.yes : t.common.no}
         </button>
       </td>
 
