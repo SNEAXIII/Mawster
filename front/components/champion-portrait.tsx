@@ -6,6 +6,7 @@ import { getStarFrameUrl } from '@/app/services/roster';
 import SynergyBadge from '@/app/game/war/_components/synergy-badge';
 import PrefightBadge from '@/app/game/war/_components/prefight-badge';
 import PreferredBadge from '@/app/game/war/_components/preferred-badge';
+import SagaBadge from '@/app/game/war/_components/saga-badge';
 import { cn } from '@/app/lib/utils';
 
 type mode = 'normal' | 'synergy' | 'prefight';
@@ -20,6 +21,8 @@ interface ChampionPortraitProps {
   mode?: mode;
   /** Star badge at top-left indicating a player's preferred attacker */
   isPreferred?: boolean;
+  /** Amber "S" badge at middle-left when champion is a saga attacker or defender */
+  isSaga?: boolean;
   dataCy?: string;
 }
 
@@ -34,6 +37,7 @@ export default function ChampionPortrait({
   size = 56,
   mode = 'normal',
   isPreferred = false,
+  isSaga = false,
   dataCy,
 }: Readonly<ChampionPortraitProps>) {
   const frameUrl = getStarFrameUrl(rarity);
@@ -67,6 +71,7 @@ export default function ChampionPortrait({
       {mode === 'synergy' && <SynergyBadge additionalClasses='z-30' />}
       {mode === 'prefight' && <PrefightBadge additionalClasses='z-30' />}
       {isPreferred && <PreferredBadge additionalClasses='z-30' />}
+      {isSaga && <SagaBadge additionalClasses='z-30' />}
     </div>
   );
 }
