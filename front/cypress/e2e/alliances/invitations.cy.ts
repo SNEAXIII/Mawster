@@ -20,16 +20,102 @@ describe('Alliances – Invitations', () => {
       cy.getByCy('invite-member-toggle').click();
       cy.wait('@eligibleMembers');
 
+      // Open combobox and select member
       cy.getByCy('invite-member-select').click();
-      cy.contains("[role='option']", 'NewMemberAcc', { timeout: 1000 }).click();
+      cy.contains("[role='option']", 'NewMemberAcc').click();
 
-      cy.getByCy('invite-member-submit').click({ timeout: 1000 });
+      cy.getByCy('invite-member-submit').click();
       cy.contains('Invitation sent successfully').should('be.visible');
 
       // Verify pending invitation content
       cy.contains('Pending invitations (1)').should('be.visible');
       cy.getByCy('pending-invitation-0').should('contain', 'NewMemberAcc');
       cy.getByCy('pending-invitation-0').should('contain', 'Invited by OwnerAcc');
+    });
+  });
+
+  describe('Invite member combobox', () => {
+    it('opens and shows eligible members', () => {
+      setupAllianceOwner('combo-open', 'OwnerAcc', 'ComboAlliance', 'CA').then(({ userData: ownerData }) => {
+        setupUser('combo-member-token').then((member) => {
+          return cy.apiCreateGameAccount(member.access_token, 'EligibleAcc', true);
+        });
+
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('alliances');
+
+        cy.intercept('GET', '**/alliances/eligible-members').as('eligibleMembers');
+        cy.getByCy('invite-member-toggle').click();
+        cy.wait('@eligibleMembers');
+
+        cy.getByCy('invite-member-select').click();
+        cy.contains("[role='option']", 'EligibleAcc').should('be.visible');
+      });
+    });
+
+    it('filters members by typing', () => {
+      setupAllianceOwner('combo-filter', 'OwnerAcc', 'FilterAlliance', 'FA').then(({ userData: ownerData }) => {
+        setupUser('combo-filter-m1').then((m1) => {
+          cy.apiCreateGameAccount(m1.access_token, 'AlphaPlayer', true);
+        });
+        setupUser('combo-filter-m2').then((m2) => {
+          cy.apiCreateGameAccount(m2.access_token, 'BetaPlayer', true);
+        });
+
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('alliances');
+
+        cy.intercept('GET', '**/alliances/eligible-members').as('eligibleMembers');
+        cy.getByCy('invite-member-toggle').click();
+        cy.wait('@eligibleMembers');
+
+        cy.getByCy('invite-member-select').click();
+        cy.get('[placeholder]').filter(':visible').type('Alpha');
+
+        cy.contains("[role='option']", 'AlphaPlayer').should('be.visible');
+        cy.contains("[role='option']", 'BetaPlayer').should('not.exist');
+      });
+    });
+
+    it('shows no results message when filter matches nothing', () => {
+      setupAllianceOwner('combo-empty', 'OwnerAcc', 'EmptyAlliance', 'EA').then(({ userData: ownerData }) => {
+        setupUser('combo-empty-member').then((m) => {
+          cy.apiCreateGameAccount(m.access_token, 'SomeMember', true);
+        });
+
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('alliances');
+
+        cy.intercept('GET', '**/alliances/eligible-members').as('eligibleMembers');
+        cy.getByCy('invite-member-toggle').click();
+        cy.wait('@eligibleMembers');
+
+        cy.getByCy('invite-member-select').click();
+        cy.get('[placeholder]').filter(':visible').type('zzznomatch');
+
+        cy.contains('No results found.').should('be.visible');
+      });
+    });
+
+    it('shows selected member name in trigger after selection', () => {
+      setupAllianceOwner('combo-select', 'OwnerAcc', 'SelectAlliance', 'SA').then(({ userData: ownerData }) => {
+        setupUser('combo-select-member').then((m) => {
+          cy.apiCreateGameAccount(m.access_token, 'PickedAcc', true);
+        });
+
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('alliances');
+
+        cy.intercept('GET', '**/alliances/eligible-members').as('eligibleMembers');
+        cy.getByCy('invite-member-toggle').click();
+        cy.wait('@eligibleMembers');
+
+        cy.getByCy('invite-member-select').click();
+        cy.contains("[role='option']", 'PickedAcc').click();
+
+        cy.getByCy('invite-member-select').should('contain.text', 'PickedAcc');
+        cy.getByCy('invite-member-submit').should('not.be.disabled');
+      });
     });
   });
 
