@@ -1,18 +1,27 @@
 'use client';
 
 import { cn } from '@/app/lib/utils';
+import Image from 'next/image';
 
-export default function SagaBadge({ additionalClasses = '' }: Readonly<{ additionalClasses?: string }>) {
+export default function SagaBadge({
+  additionalClasses = '',
+  size,
+}: Readonly<{ additionalClasses?: string; size: number }>) {
   return (
     <div
       className={cn(
-        'absolute left-0 top-1/2 -translate-y-1/2 bg-amber-500 text-white rounded-r text-[8px] font-bold leading-none px-0.5 py-0.5 flex items-center justify-center',
+        'absolute top-1/2 -translate-y-1/2 flex items-center justify-center',
         additionalClasses
       )}
+      style={{ left: -Math.round(size / 2.5) }}
       data-cy='saga-badge'
     >
-      {/* TODO METTRE UNE IMAGE */}
-      S
+      <Image
+        src='/static/frame/current_saga_mini.png'
+        alt=''
+        width={size}
+        height={size}
+      ></Image>
     </div>
   );
 }
