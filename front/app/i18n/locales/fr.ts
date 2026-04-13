@@ -20,6 +20,7 @@ const fr: Translations = {
     close: 'Fermer',
     yes: 'Oui',
     no: 'Non',
+    noResults: 'Aucun résultat trouvé.',
   },
 
   // Navigation

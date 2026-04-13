@@ -18,6 +18,7 @@ const en = {
     close: 'Close',
     yes: 'Yes',
     no: 'No',
+    noResults: 'No results found.',
   },
 
   // Navigation
