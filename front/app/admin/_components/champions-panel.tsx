@@ -8,6 +8,8 @@ import {
   exportAllChampions,
   toggleChampionAscendable,
   toggleChampionPrefight,
+  toggleChampionSagaAttacker,
+  toggleChampionSagaDefender,
   Champion,
   championClasses,
 } from '@/app/services/champions';
@@ -132,6 +134,28 @@ export default function ChampionsPanel() {
       const result = await toggleChampionPrefight(champion.id);
       setChampions((prev) =>
         prev.map((c) => (c.id === champion.id ? { ...c, has_prefight: result.has_prefight } : c))
+      );
+    } catch {
+      // ignore
+    }
+  }
+
+  async function handleToggleSagaAttacker(champion: Champion) {
+    try {
+      const result = await toggleChampionSagaAttacker(champion.id);
+      setChampions((prev) =>
+        prev.map((c) => (c.id === champion.id ? { ...c, is_saga_attacker: result.is_saga_attacker } : c))
+      );
+    } catch {
+      // ignore
+    }
+  }
+
+  async function handleToggleSagaDefender(champion: Champion) {
+    try {
+      const result = await toggleChampionSagaDefender(champion.id);
+      setChampions((prev) =>
+        prev.map((c) => (c.id === champion.id ? { ...c, is_saga_defender: result.is_saga_defender } : c))
       );
     } catch {
       // ignore
@@ -273,6 +297,8 @@ export default function ChampionsPanel() {
                 <th className='text-left p-3'>{t.champions.tableHeaders.alias}</th>
                 <th className='text-left p-3'>{t.champions.tableHeaders.isAscendable}</th>
                 <th className='text-left p-3'>{t.champions.tableHeaders.hasPrefight}</th>
+                <th className='text-left p-3'>{t.champions.tableHeaders.isSagaAttacker}</th>
+                <th className='text-left p-3'>{t.champions.tableHeaders.isSagaDefender}</th>
                 <th className='text-left p-3 w-24'>{t.champions.tableHeaders.actions}</th>
               </tr>
             </thead>
@@ -297,6 +323,8 @@ export default function ChampionsPanel() {
                   onDelete={setDeleteTarget}
                   onToggleAscendable={handleToggleAscendable}
                   onTogglePrefight={handleTogglePrefight}
+                  onToggleSagaAttacker={handleToggleSagaAttacker}
+                  onToggleSagaDefender={handleToggleSagaDefender}
                 />
               ))}
             </tbody>

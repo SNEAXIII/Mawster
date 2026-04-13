@@ -140,6 +140,8 @@ export interface RosterEntry {
   ascension: number;
   is_ascendable: boolean;
   has_prefight: boolean;
+  is_saga_attacker: boolean;
+  is_saga_defender: boolean;
 }
 
 export interface BulkChampionEntry {

@@ -7,6 +7,8 @@ export interface BannedChampion {
   image_url: string | null;
   rarity: string | null;
   alias: string | null;
+  is_saga_attacker: boolean;
+  is_saga_defender: boolean;
 }
 
 export interface War {
@@ -41,6 +43,11 @@ export interface WarPlacement {
   attacker_image_url: string | null;
   attacker_rarity: string | null;
   attacker_is_preferred_attacker: boolean | null;
+  is_saga_attacker: boolean;
+  is_saga_defender: boolean;
+  attacker_ascension: number | null;
+  attacker_is_saga_attacker: boolean | null;
+  attacker_is_saga_defender: boolean | null;
 }
 
 export interface WarDefenseSummary {
@@ -62,6 +69,8 @@ export interface AvailableAttacker {
   ascension: number;
   signature: number;
   is_preferred_attacker: boolean;
+  is_saga_attacker: boolean;
+  is_saga_defender: boolean;
 }
 
 export interface WarSynergy {
@@ -75,6 +84,9 @@ export interface WarSynergy {
   champion_class: string;
   image_url: string | null;
   rarity: string;
+  ascension: number;
+  is_saga_attacker: boolean;
+  is_saga_defender: boolean;
   target_champion_name: string;
   game_pseudo: string;
   created_at: string;
@@ -91,6 +103,9 @@ export interface WarPrefight {
   champion_class: string;
   image_url: string | null;
   rarity: string;
+  ascension: number;
+  is_saga_attacker: boolean;
+  is_saga_defender: boolean;
   game_pseudo: string;
   created_at: string;
 }

@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from sqlmodel import select
 from starlette import status
 
+from src.security.secrets import SECRET
 from src.enums.Roles import Roles
 from src.Messages.discord_auth_messages import (
     DISCORD_API_ERROR,
@@ -157,6 +158,10 @@ class DiscordAuthService:
             # Mettre a jour les infos Discord (avatar, email eventuellement)
             existing_user.avatar_url = avatar_url
             existing_user.set_last_login_date(datetime.now())
+            # Re-hash si le pepper a change depuis la derniere connexion
+            if existing_user.email_hash_version != SECRET.EMAIL_PEPPER_VERSION:
+                existing_user.email_hash = hash_email(email)
+                existing_user.email_hash_version = SECRET.EMAIL_PEPPER_VERSION
             login_log = LoginLog(user=existing_user)
             session.add(login_log)
             await session.commit()

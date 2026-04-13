@@ -7,6 +7,8 @@ export interface Champion {
   is_7_star: boolean;
   is_ascendable: boolean;
   has_prefight: boolean;
+  is_saga_attacker: boolean;
+  is_saga_defender: boolean;
   alias: string | null;
 }
 
@@ -152,6 +154,28 @@ export const toggleChampionPrefight = async (
     headers: jsonHeaders,
   });
   await throwOnError(response, 'Erreur lors du basculement du précombat');
+  return response.json();
+};
+
+export const toggleChampionSagaAttacker = async (
+  championId: string
+): Promise<{ is_saga_attacker: boolean }> => {
+  const response = await fetch(`${PROXY}/admin/champions/${championId}/saga-attacker`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, 'Erreur lors du basculement saga attaquant');
+  return response.json();
+};
+
+export const toggleChampionSagaDefender = async (
+  championId: string
+): Promise<{ is_saga_defender: boolean }> => {
+  const response = await fetch(`${PROXY}/admin/champions/${championId}/saga-defender`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, 'Erreur lors du basculement saga défenseur');
   return response.json();
 };
 

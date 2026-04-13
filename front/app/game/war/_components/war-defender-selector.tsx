@@ -21,6 +21,8 @@ interface ChampionEntry {
   champion_class: string;
   image_url: string | null;
   is_ascendable: boolean;
+  is_saga_attacker: boolean;
+  is_saga_defender: boolean;
 }
 
 interface SelectedRarity {
@@ -146,6 +148,9 @@ export default function WarDefenderSelector({
                 name={selected.name}
                 rarity={`${selectedRarity.stars}r${selectedRarity.rank}`}
                 size={48}
+                is_saga_attacker={selected.is_saga_attacker}
+                is_saga_defender={selected.is_saga_defender}
+                sagaMode='defender'
               />
               <div>
                 <div className='text-sm font-semibold'>{selected.name}</div>
@@ -240,6 +245,9 @@ export default function WarDefenderSelector({
                                 name={champ.name}
                                 rarity='7r3'
                                 size={48}
+                                is_saga_attacker={champ.is_saga_attacker}
+                                is_saga_defender={champ.is_saga_defender}
+                                sagaMode='defender'
                               />
                               <span className='text-[10px] text-center truncate w-full leading-tight'>
                                 {shortenChampionName(champ.name)}
@@ -275,6 +283,9 @@ export default function WarDefenderSelector({
                   name={selected.name}
                   rarity={`${selectedRarity.stars}r${selectedRarity.rank}`}
                   size={56}
+                  is_saga_attacker={selected.is_saga_attacker}
+                  is_saga_defender={selected.is_saga_defender}
+                  sagaMode='defender'
                 />
                 <div>
                   <div className='font-semibold'>{selected.name}</div>

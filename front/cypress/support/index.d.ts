@@ -56,7 +56,7 @@ declare namespace Cypress {
       adminToken: string,
       name: string,
       championClass: string,
-      options?: { is_ascendable?: boolean; alias?: string },
+      options?: { is_ascendable?: boolean; alias?: string; is_saga_attacker?: boolean; is_saga_defender?: boolean },
     ): Chainable<any>;
 
     /**
