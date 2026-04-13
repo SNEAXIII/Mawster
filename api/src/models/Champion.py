@@ -16,6 +16,8 @@ class Champion(SQLModel, table=True):
     is_7_star: bool = Field(default=False)
     is_ascendable: bool = Field(default=False)
     has_prefight: bool = Field(default=False)
+    is_saga_attacker: bool = Field(default=False)
+    is_saga_defender: bool = Field(default=False)
     alias: Optional[str] = Field(default=None, max_length=500)
 
     # Relations

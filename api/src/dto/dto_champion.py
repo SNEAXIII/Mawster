@@ -15,6 +15,8 @@ class ChampionResponse(BaseModel):
     is_7_star: bool = False
     is_ascendable: bool = False
     has_prefight: bool = False
+    is_saga_attacker: bool = False
+    is_saga_defender: bool = False
     alias: Optional[str] = None
 
 
