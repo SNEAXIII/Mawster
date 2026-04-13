@@ -35,6 +35,9 @@ def _make_champion(**overrides):
         "image_url": "/img/spider.png",
         "is_7_star": True,
         "is_ascendable": True,
+        "has_prefight": False,
+        "is_saga_attacker": False,
+        "is_saga_defender": False,
         "alias": "spidey;peter",
     }
     defaults.update(overrides)
@@ -76,6 +79,9 @@ class TestChampionResponseModelValidate:
         assert dto.image_url == "/img/spider.png"
         assert dto.is_7_star is True
         assert dto.is_ascendable is True
+        assert dto.has_prefight is False
+        assert dto.is_saga_attacker is False
+        assert dto.is_saga_defender is False
         assert dto.alias == "spidey;peter"
 
     def test_handles_none_optional_fields(self):
@@ -124,7 +130,7 @@ class TestChampionUserResponseModelValidate:
 
 class TestChampionUserDetailResponseModelValidate:
     def test_maps_champion_user_and_champion_fields(self):
-        champ = _make_champion(name="Doom", champion_class="Mystic", is_ascendable=True)
+        champ = _make_champion(name="Doom", champion_class="Mystic", is_ascendable=True, is_saga_attacker=True)
         cu = _make_champion_user(champion=champ)
         dto = ChampionUserDetailResponse.model_validate(cu)
 
@@ -139,6 +145,8 @@ class TestChampionUserDetailResponseModelValidate:
         assert dto.champion_name == "Doom"
         assert dto.champion_class == "Mystic"
         assert dto.is_ascendable is True
+        assert dto.is_saga_attacker is True
+        assert dto.is_saga_defender is False
         assert dto.image_url == champ.image_url
 
     def test_inherits_from_champion_user_response(self):
@@ -235,6 +243,8 @@ class TestDefensePlacementResponseModelValidate:
         assert dto.rarity == "6r4"
         assert dto.placed_by_pseudo == "Officer1"
         assert dto.ascension == 0
+        assert dto.is_saga_attacker is False
+        assert dto.is_saga_defender is False
 
     def test_placed_by_none(self):
         now = datetime.now()

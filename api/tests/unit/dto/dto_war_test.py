@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from types import SimpleNamespace
 
-from src.dto.dto_war import WarResponse, WarPlacementResponse
+from src.dto.dto_war import WarResponse, WarPlacementResponse, WarPrefightResponse
 
 
 def _ns(**kwargs):
@@ -29,6 +29,8 @@ def _make_placement(**overrides):
         name="Spider-Man",
         champion_class="Science",
         image_url="/img/spider.png",
+        is_saga_attacker=False,
+        is_saga_defender=False,
     )
     defaults = {
         "id": uuid.uuid4(),
@@ -96,6 +98,8 @@ class TestWarPlacementResponseDTO:
         assert dto.champion_class == "Science"
         assert dto.rarity == "7r3"
         assert dto.ascension == 0
+        assert dto.is_saga_attacker is False
+        assert dto.is_saga_defender is False
         assert dto.placed_by_pseudo == "OfficerPlayer"
 
     def test_placement_rarity_format(self):
@@ -114,33 +118,50 @@ class TestWarPlacementResponseDTO:
         assert dto.placed_by_pseudo is None
 
 
-def test_war_prefight_response_flatten():
-    from src.dto.dto_war import WarPrefightResponse
-    from unittest.mock import MagicMock
-    import uuid
-    from datetime import datetime
+def _make_prefight(**overrides):
+    champ = _ns(
+        name="Quake",
+        champion_class="Science",
+        image_url=None,
+        is_saga_attacker=False,
+        is_saga_defender=False,
+    )
+    cu = _ns(
+        champion=champ,
+        rarity="7r3",
+        ascension=0,
+    )
+    defaults = {
+        "id": uuid.uuid4(),
+        "war_id": uuid.uuid4(),
+        "battlegroup": 1,
+        "game_account_id": uuid.uuid4(),
+        "champion_user_id": uuid.uuid4(),
+        "target_node_number": 5,
+        "champion_user": cu,
+        "game_account": _ns(game_pseudo="Player1"),
+        "created_at": datetime(2025, 1, 1, 12, 0, 0),
+    }
+    defaults.update(overrides)
+    return _ns(**defaults)
 
-    cu = MagicMock()
-    cu.champion.name = "Quake"
-    cu.champion.champion_class = "Science"
-    cu.champion.image_url = None
-    cu.rarity = "7r3"
 
-    ga = MagicMock()
-    ga.game_pseudo = "Player1"
+class TestWarPrefightResponseDTO:
+    def test_prefight_serializes(self):
+        obj = _make_prefight()
+        dto = WarPrefightResponse.model_validate(obj)
 
-    obj = MagicMock()
-    obj.id = uuid.uuid4()
-    obj.war_id = uuid.uuid4()
-    obj.battlegroup = 1
-    obj.game_account_id = uuid.uuid4()
-    obj.champion_user_id = uuid.uuid4()
-    obj.target_node_number = 5
-    obj.champion_user = cu
-    obj.game_account = ga
-    obj.created_at = datetime.now()
+        assert dto.champion_name == "Quake"
+        assert dto.champion_class == "Science"
+        assert dto.image_url is None
+        assert dto.rarity == "7r3"
+        assert dto.ascension == 0
+        assert dto.is_saga_attacker is False
+        assert dto.is_saga_defender is False
+        assert dto.target_node_number == 5
+        assert dto.game_pseudo == "Player1"
 
-    result = WarPrefightResponse.model_validate(obj)
-    assert result.champion_name == "Quake"
-    assert result.target_node_number == 5
-    assert result.game_pseudo == "Player1"
+    def test_prefight_different_node(self):
+        obj = _make_prefight(target_node_number=42)
+        dto = WarPrefightResponse.model_validate(obj)
+        assert dto.target_node_number == 42
