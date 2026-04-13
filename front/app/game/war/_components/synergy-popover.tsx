@@ -16,6 +16,9 @@ interface SynergyPopoverProps {
   rarity: string;
   size?: number;
   isPreferred?: boolean;
+  ascension?: number;
+  is_saga_attacker?: boolean;
+  is_saga_defender?: boolean;
 }
 
 export default function SynergyPopover({
@@ -26,6 +29,9 @@ export default function SynergyPopover({
   rarity,
   size = 35,
   isPreferred = false,
+  ascension = 0,
+  is_saga_attacker = false,
+  is_saga_defender = false,
 }: Readonly<SynergyPopoverProps>) {
   const { t } = useI18n();
   const { synergies, handleRemoveSynergy } = useWar();
@@ -51,6 +57,10 @@ export default function SynergyPopover({
               rarity={rarity}
               size={size}
               isPreferred={isPreferred}
+              ascension={ascension}
+              is_saga_attacker={is_saga_attacker}
+              is_saga_defender={is_saga_defender}
+              sagaMode='attacker'
             />
           </button>
         </PopoverTrigger>
@@ -72,6 +82,10 @@ export default function SynergyPopover({
                     name={s.champion_name}
                     rarity={s.rarity}
                     size={32}
+                    ascension={s.ascension}
+                    is_saga_attacker={s.is_saga_attacker}
+                    is_saga_defender={s.is_saga_defender}
+                    sagaMode='attacker'
                   />
                   <span
                     className='text-xs font-medium truncate flex-1'

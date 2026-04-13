@@ -71,6 +71,11 @@ class WarPlacementResponse(BaseModel):
     attacker_image_url: Optional[str] = None
     attacker_rarity: Optional[str] = None
     attacker_is_preferred_attacker: Optional[bool] = None
+    is_saga_attacker: bool = False
+    is_saga_defender: bool = False
+    attacker_ascension: Optional[int] = None
+    attacker_is_saga_attacker: Optional[bool] = None
+    attacker_is_saga_defender: Optional[bool] = None
 
     @model_validator(mode='before')
     @classmethod
@@ -100,6 +105,11 @@ class WarPlacementResponse(BaseModel):
             'attacker_image_url': attacker.champion.image_url if attacker else None,
             'attacker_rarity': f"{attacker.stars}r{attacker.rank}" if attacker else None,
             'attacker_is_preferred_attacker': attacker.is_preferred_attacker if attacker else None,
+            'is_saga_attacker': data.champion.is_saga_attacker,
+            'is_saga_defender': data.champion.is_saga_defender,
+            'attacker_ascension': attacker.ascension if attacker else None,
+            'attacker_is_saga_attacker': attacker.champion.is_saga_attacker if attacker else None,
+            'attacker_is_saga_defender': attacker.champion.is_saga_defender if attacker else None,
         }
 
 
@@ -130,6 +140,8 @@ class AvailableAttackerResponse(BaseModel):
     ascension: int
     signature: int
     is_preferred_attacker: bool = False
+    is_saga_attacker: bool = False
+    is_saga_defender: bool = False
 
 
 class AvailablePrefightAttackerResponse(BaseModel):
@@ -143,7 +155,10 @@ class AvailablePrefightAttackerResponse(BaseModel):
     champion_class: str
     image_url: Optional[str] = None
     rarity: str
+    ascension: int = 0
     is_preferred_attacker: bool = False
+    is_saga_attacker: bool = False
+    is_saga_defender: bool = False
 
 
 class WarSynergyCreateRequest(BaseModel):
@@ -164,6 +179,9 @@ class WarSynergyResponse(BaseModel):
     champion_class: str
     image_url: Optional[str] = None
     rarity: str
+    ascension: int = 0
+    is_saga_attacker: bool = False
+    is_saga_defender: bool = False
     target_champion_name: str
     game_pseudo: str
     created_at: datetime
@@ -186,6 +204,9 @@ class WarSynergyResponse(BaseModel):
             'champion_class': cu.champion.champion_class,
             'image_url': cu.champion.image_url,
             'rarity': cu.rarity,
+            'ascension': cu.ascension,
+            'is_saga_attacker': cu.champion.is_saga_attacker,
+            'is_saga_defender': cu.champion.is_saga_defender,
             'target_champion_name': target.champion.name,
             'game_pseudo': data.game_account.game_pseudo,
             'created_at': data.created_at,
@@ -210,6 +231,9 @@ class WarPrefightResponse(BaseModel):
     champion_class: str
     image_url: Optional[str] = None
     rarity: str
+    ascension: int = 0
+    is_saga_attacker: bool = False
+    is_saga_defender: bool = False
     game_pseudo: str
     created_at: datetime
 
@@ -230,6 +254,9 @@ class WarPrefightResponse(BaseModel):
             'champion_class': cu.champion.champion_class,
             'image_url': cu.champion.image_url,
             'rarity': cu.rarity,
+            'ascension': cu.ascension,
+            'is_saga_attacker': cu.champion.is_saga_attacker,
+            'is_saga_defender': cu.champion.is_saga_defender,
             'game_pseudo': data.game_account.game_pseudo,
             'created_at': data.created_at,
         }

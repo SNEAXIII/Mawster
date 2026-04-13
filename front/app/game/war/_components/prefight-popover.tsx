@@ -15,6 +15,9 @@ interface PrefightPopoverProps {
   rarity: string;
   size?: number;
   isPreferred?: boolean;
+  ascension?: number;
+  is_saga_attacker?: boolean;
+  is_saga_defender?: boolean;
 }
 
 export default function PrefightPopover({
@@ -25,6 +28,9 @@ export default function PrefightPopover({
   rarity,
   size = 35,
   isPreferred = false,
+  ascension = 0,
+  is_saga_attacker = false,
+  is_saga_defender = false,
 }: Readonly<PrefightPopoverProps>) {
   const { t } = useI18n();
   const { prefights, handleRemovePrefight } = useWar();
@@ -48,6 +54,10 @@ export default function PrefightPopover({
               rarity={rarity}
               size={size}
               isPreferred={isPreferred}
+              ascension={ascension}
+              is_saga_attacker={is_saga_attacker}
+              is_saga_defender={is_saga_defender}
+              sagaMode='attacker'
             />
           </button>
         </PopoverTrigger>
@@ -63,6 +73,10 @@ export default function PrefightPopover({
                     name={p.champion_name}
                     rarity={p.rarity}
                     size={32}
+                    ascension={p.ascension}
+                    is_saga_attacker={p.is_saga_attacker}
+                    is_saga_defender={p.is_saga_defender}
+                    sagaMode='attacker'
                   />
                   <div className='flex flex-col flex-1 min-w-0'>
                     <span className='text-xs font-medium truncate'>{p.champion_name}</span>

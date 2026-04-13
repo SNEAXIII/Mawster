@@ -16,6 +16,8 @@ export interface DefensePlacement {
   signature: number;
   is_preferred_attacker: boolean;
   ascension: number;
+  is_saga_attacker: boolean;
+  is_saga_defender: boolean;
   placed_by_id: string | null;
   placed_by_pseudo: string | null;
   created_at: string;
@@ -47,6 +49,8 @@ export interface AvailableChampion {
   champion_alias: string | null;
   champion_class: string;
   image_url: string | null;
+  is_saga_attacker: boolean;
+  is_saga_defender: boolean;
   owners: ChampionOwner[];
 }
 

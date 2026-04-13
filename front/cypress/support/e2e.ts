@@ -121,7 +121,12 @@ Cypress.Commands.add('apiCreateGameAccount', (token: string, pseudo: string, isP
 
 Cypress.Commands.add(
   'apiLoadChampion',
-  (adminToken: string, name: string, championClass: string, options: { is_ascendable?: boolean; alias?: string } = {}) => {
+  (
+    adminToken: string,
+    name: string,
+    championClass: string,
+    options: { is_ascendable?: boolean; alias?: string; is_saga_attacker?: boolean; is_saga_defender?: boolean } = {},
+  ) => {
     cy.request({
       method: 'POST',
       url: `${BACKEND}/admin/champions/load`,
@@ -136,14 +141,36 @@ Cypress.Commands.add(
       ],
     }).then((res) => {
       expect(res.status).to.eq(200);
-      // Load endpoint doesn't return champion objects, so fetch them
       return cy
         .request({
           method: 'GET',
           url: `${BACKEND}/champions?search=${encodeURIComponent(name)}`,
           headers: { Authorization: `Bearer ${adminToken}` },
         })
-        .then((getRes) => getRes.body.champions.filter((c: { name: string }) => c.name === name));
+        .then((getRes) => {
+          const champs = getRes.body.champions.filter((c: { name: string }) => c.name === name);
+          const champId = champs[0].id;
+          let chain: Cypress.Chainable = cy.wrap(null);
+          if (options.is_saga_attacker) {
+            chain = chain.then(() =>
+              cy.request({
+                method: 'PATCH',
+                url: `${BACKEND}/admin/champions/${champId}/saga-attacker`,
+                headers: { Authorization: `Bearer ${adminToken}` },
+              }),
+            );
+          }
+          if (options.is_saga_defender) {
+            chain = chain.then(() =>
+              cy.request({
+                method: 'PATCH',
+                url: `${BACKEND}/admin/champions/${champId}/saga-defender`,
+                headers: { Authorization: `Bearer ${adminToken}` },
+              }),
+            );
+          }
+          return chain.then(() => cy.wrap(champs));
+        });
     });
   },
 );

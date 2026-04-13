@@ -1,4 +1,5 @@
 """Integration tests for /champion-users endpoints."""
+
 import uuid
 import pytest
 
@@ -41,6 +42,7 @@ CHAMPION_USERS_ROUTE = "/champion-users"
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 async def _push_champion_user(
     game_account_id: uuid.UUID,
     champion_id: uuid.UUID,
@@ -68,9 +70,27 @@ async def _push_champion_user(
 _FAKE_ID = str(uuid.uuid4())
 
 _CHAMPION_USER_ROUTES_NO_AUTH = [
-    ("POST", CHAMPION_USERS_ROUTE, {"game_account_id": _FAKE_ID, "champion_id": _FAKE_ID, "rarity": "6r4"}, "create"),
-    ("POST", f"{CHAMPION_USERS_ROUTE}/bulk", {"game_account_id": _FAKE_ID, "champions": [{"champion_name": "X", "rarity": "6r4"}]}, "bulk"),
-    ("PUT", f"{CHAMPION_USERS_ROUTE}/{_FAKE_ID}", {"game_account_id": _FAKE_ID, "champion_id": _FAKE_ID, "rarity": "6r4"}, "update"),
+    (
+        "POST",
+        CHAMPION_USERS_ROUTE,
+        {"game_account_id": _FAKE_ID, "champion_id": _FAKE_ID, "rarity": "6r4"},
+        "create",
+    ),
+    (
+        "POST",
+        f"{CHAMPION_USERS_ROUTE}/bulk",
+        {
+            "game_account_id": _FAKE_ID,
+            "champions": [{"champion_name": "X", "rarity": "6r4"}],
+        },
+        "bulk",
+    ),
+    (
+        "PUT",
+        f"{CHAMPION_USERS_ROUTE}/{_FAKE_ID}",
+        {"game_account_id": _FAKE_ID, "champion_id": _FAKE_ID, "rarity": "6r4"},
+        "update",
+    ),
     ("DELETE", f"{CHAMPION_USERS_ROUTE}/{_FAKE_ID}", None, "delete"),
     ("PATCH", f"{CHAMPION_USERS_ROUTE}/{_FAKE_ID}/upgrade", {}, "upgrade"),
 ]
@@ -82,7 +102,10 @@ class TestChampionUserAccessControl:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "method, url, payload",
-        [(action, route, payload) for action, route, payload, _ in _CHAMPION_USER_ROUTES_NO_AUTH],
+        [
+            (action, route, payload)
+            for action, route, payload, _ in _CHAMPION_USER_ROUTES_NO_AUTH
+        ],
         ids=[name for _, _, _, name in _CHAMPION_USER_ROUTES_NO_AUTH],
     )
     async def test_no_auth_returns_401(self, session, method, url, payload):
@@ -211,8 +234,18 @@ class TestCreateChampionUser:
     @pytest.mark.parametrize(
         "bad_rarity",
         ["invalid", "6r0", "6r6", "8r1", "5r4", "r4", "6", "", "7R5", "7r"],
-        ids=["garbage", "rank_zero", "rank_six", "star_eight", "star_five",
-             "no_star", "just_star", "empty", "uppercase", "no_rank_number"],
+        ids=[
+            "garbage",
+            "rank_zero",
+            "rank_six",
+            "star_eight",
+            "star_five",
+            "no_star",
+            "just_star",
+            "empty",
+            "uppercase",
+            "no_rank_number",
+        ],
     )
     async def test_invalid_rarity_parametrized_returns_400(self, session, bad_rarity):
         """All invalid rarity strings must return exactly 400."""
@@ -229,7 +262,9 @@ class TestCreateChampionUser:
             },
             headers=HEADERS,
         )
-        assert response.status_code == 400, f"Expected 400 for rarity='{bad_rarity}', got {response.status_code}"
+        assert response.status_code == 400, (
+            f"Expected 400 for rarity='{bad_rarity}', got {response.status_code}"
+        )
 
     @pytest.mark.asyncio
     async def test_response_body_structure(self):
@@ -249,7 +284,15 @@ class TestCreateChampionUser:
         )
         assert response.status_code == 201
         body = response.json()
-        assert set(body.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "is_preferred_attacker", "ascension"}
+        assert set(body.keys()) == {
+            "id",
+            "game_account_id",
+            "champion_id",
+            "rarity",
+            "signature",
+            "is_preferred_attacker",
+            "ascension",
+        }
         assert body["rarity"] == "7r5"
         assert body["signature"] == 200
         assert body["champion_id"] == str(champ.id)
@@ -497,7 +540,21 @@ class TestBulkAddChampions:
         assert isinstance(body, list)
         assert len(body) == 2
         for entry in body:
-            assert set(entry.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "champion_name", "champion_class", "image_url", "is_preferred_attacker", "ascension", "is_ascendable"}
+            assert set(entry.keys()) == {
+                "id",
+                "game_account_id",
+                "champion_id",
+                "rarity",
+                "signature",
+                "champion_name",
+                "champion_class",
+                "image_url",
+                "is_preferred_attacker",
+                "ascension",
+                "is_ascendable",
+                "is_saga_defender",
+                "is_saga_attacker",
+            }
 
     @pytest.mark.asyncio
     async def test_bulk_mixed_valid_and_invalid_champion_returns_404(self):
@@ -596,8 +653,14 @@ class TestGetRosterByGameAccount:
         assert len(body) == 1
         entry = body[0]
         expected_fields = {
-            "id", "game_account_id", "champion_id", "rarity", "signature",
-            "champion_name", "champion_class", "image_url",
+            "id",
+            "game_account_id",
+            "champion_id",
+            "rarity",
+            "signature",
+            "champion_name",
+            "champion_class",
+            "image_url",
         }
         assert expected_fields.issubset(entry.keys())
         assert entry["champion_name"] == "Doctor Doom"
@@ -993,7 +1056,15 @@ class TestUpgradeChampionRank:
         )
         assert response.status_code == 200
         body = response.json()
-        assert set(body.keys()) == {"id", "game_account_id", "champion_id", "rarity", "signature", "is_preferred_attacker", "ascension"}
+        assert set(body.keys()) == {
+            "id",
+            "game_account_id",
+            "champion_id",
+            "rarity",
+            "signature",
+            "is_preferred_attacker",
+            "ascension",
+        }
         assert body["id"] == str(entry.id)
         assert body["rarity"] == "7r2"
 
@@ -1020,6 +1091,7 @@ class TestUpgradeChampionRank:
 # =========================================================================
 # Preferred Attacker toggle — PATCH /champion-users/{id}/preferred-attacker
 # =========================================================================
+
 
 class TestPreferredAttacker:
     """PATCH /champion-users/{id}/preferred-attacker"""
@@ -1215,7 +1287,9 @@ class TestAllianceMemberRosterView:
         await push_one_user()
         await push_user2()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
-        member_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        member_acc = await push_member(
+            alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
+        )
         champ = await push_champion()
         await _push_champion_user(member_acc.id, champ.id, "7r3")
 
@@ -1281,7 +1355,9 @@ class TestCreateUpgradeRequest:
         await push_user2()
         alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
         await push_officer(alliance, owner_acc)
-        member_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        member_acc = await push_member(
+            alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
+        )
         champ = await push_champion()
         entry = await _push_champion_user(member_acc.id, champ.id, "6r4")
 
@@ -1370,7 +1446,9 @@ class TestGetUpgradeRequestsByAccount:
         await push_one_user()
         await push_user2()
         alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
-        member_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        member_acc = await push_member(
+            alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
+        )
         champ = await push_champion()
         entry = await _push_champion_user(member_acc.id, champ.id, "6r4")
 
@@ -1428,7 +1506,9 @@ class TestCancelUpgradeRequest:
         await push_user2()
         alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
         await push_officer(alliance, owner_acc)
-        member_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        member_acc = await push_member(
+            alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
+        )
         champ = await push_champion()
         entry = await _push_champion_user(member_acc.id, champ.id, "6r4")
 
@@ -1460,7 +1540,9 @@ class TestCancelUpgradeRequest:
             user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
         )
         await push_officer(alliance, owner_acc)
-        member_acc = await push_member(alliance, user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        member_acc = await push_member(
+            alliance, user_id=USER_ID, game_pseudo=GAME_PSEUDO
+        )
         champ = await push_champion()
         entry = await _push_champion_user(member_acc.id, champ.id, "6r4")
 

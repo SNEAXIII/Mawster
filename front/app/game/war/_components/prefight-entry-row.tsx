@@ -43,6 +43,10 @@ export default function PrefightEntryRow({
             rarity={prefight.rarity}
             size={portraitSize}
             mode='prefight'
+            ascension={prefight.ascension}
+            is_saga_attacker={prefight.is_saga_attacker}
+            is_saga_defender={prefight.is_saga_defender}
+            sagaMode='attacker'
           />
         </div>
         <Flame className={cn('text-orange-500 shrink-0', iconSize)} />
@@ -53,6 +57,10 @@ export default function PrefightEntryRow({
             name={targetPlacement.champion_name}
             rarity={targetPlacement.rarity}
             size={portraitSize}
+            ascension={targetPlacement.ascension}
+            is_saga_attacker={targetPlacement.is_saga_attacker}
+            is_saga_defender={targetPlacement.is_saga_defender}
+            sagaMode='defender'
           />
         ) : (
           <div

@@ -76,6 +76,8 @@ export function useAddChampionForm(selectedAccountId: string | null) {
       is_ascendable: entry.is_ascendable ?? false,
       has_prefight: entry.has_prefight ?? false,
       alias: null,
+      is_saga_attacker: entry.is_saga_attacker,
+      is_saga_defender: entry.is_saga_defender,
     };
     setSelectedChampion(champion);
     setChampionSearch(entry.champion_name);

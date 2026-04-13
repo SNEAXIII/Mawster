@@ -57,7 +57,6 @@ export default function WarDefendersTab() {
     setShowClearConfirm,
     setShowEndConfirm,
   } = useWar();
-
   return (
     <div className='space-y-4'>
       {/* Controls row: opponent name + BG picker + mode toggle + clear */}
@@ -153,12 +152,10 @@ export default function WarDefendersTab() {
                   name={c.name}
                   rarity={'7r6'}
                   size={45}
+                  is_saga_attacker={c.is_saga_attacker}
+                  is_saga_defender={c.is_saga_defender}
+                  sagaMode='attacker'
                 />
-                {c.alias && (
-                  <span className='text-[10px] text-muted-foreground leading-none max-w-[50px] truncate text-center'>
-                    {c.alias.split(';')[0]}
-                  </span>
-                )}
               </div>
             ))
           )}

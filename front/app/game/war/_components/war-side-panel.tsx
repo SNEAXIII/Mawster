@@ -35,6 +35,10 @@ export default function WarSidePanel() {
                 name={p.champion_name}
                 rarity={p.rarity}
                 size={40}
+                ascension={p.ascension}
+                is_saga_attacker={p.is_saga_attacker}
+                is_saga_defender={p.is_saga_defender}
+                sagaMode='defender'
               />
               <span className='text-[10px] text-white/80'>#{p.node_number}</span>
               <span
