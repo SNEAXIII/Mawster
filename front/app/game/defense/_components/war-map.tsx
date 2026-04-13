@@ -90,6 +90,8 @@ export function WarMapNode({
             rarity={placement.rarity}
             size={45}
             isPreferred={placement.is_preferred_attacker}
+            ascension={placement.ascension}
+            isSaga={placement.is_saga_attacker || placement.is_saga_defender}
           />
           <span
             className={cn(

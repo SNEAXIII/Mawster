@@ -124,6 +124,8 @@ export default function RosterChampionCard({
           rarity={entry.rarity}
           size={72}
           isPreferred={entry.is_preferred_attacker}
+          ascension={entry.ascension}
+          isSaga={entry.is_saga_attacker || entry.is_saga_defender}
         />
       </div>
 

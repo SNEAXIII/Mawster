@@ -332,6 +332,8 @@ class DefensePlacementService:
                     "champion_name": cu.champion.name,
                     "champion_alias": cu.champion.alias,
                     "champion_class": cu.champion.champion_class,
+                    "is_saga_attacker": cu.champion.is_saga_attacker,
+                    "is_saga_defender": cu.champion.is_saga_defender,
                     "image_url": cu.champion.image_url,
                     "owners": [],
                 }

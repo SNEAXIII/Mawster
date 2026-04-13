@@ -100,6 +100,8 @@ export default function DefenseSidePanel({
                           rarity={p.rarity}
                           size={40}
                           isPreferred={p.is_preferred_attacker}
+                          ascension={p.ascension}
+                          isSaga={p.is_saga_attacker || p.is_saga_defender}
                         />
                         <span
                           className={cn(

@@ -44,6 +44,8 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
             rarity={placement.attacker_rarity ?? ''}
             size={portraitSize}
             isPreferred={placement.attacker_is_preferred_attacker ?? false}
+            ascension={placement.attacker_ascension ?? 0}
+            isSaga={(placement.attacker_is_saga_attacker ?? false) || (placement.attacker_is_saga_defender ?? false)}
           />
         ) : placement.attacker_image_url ? (
           <ChampionPortrait
@@ -52,6 +54,8 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
             rarity={placement.attacker_rarity ?? ''}
             size={portraitSize}
             isPreferred={placement.attacker_is_preferred_attacker ?? false}
+            ascension={placement.attacker_ascension ?? 0}
+            isSaga={(placement.attacker_is_saga_attacker ?? false) || (placement.attacker_is_saga_defender ?? false)}
           />
         ) : (
           <div
@@ -67,6 +71,8 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
           name={placement.champion_name}
           rarity={placement.rarity}
           size={portraitSize}
+          ascension={placement.ascension}
+          isSaga={placement.is_saga_attacker || placement.is_saga_defender}
         />
         {nodePrefights.map((p) => (
           <div key={p.champion_user_id} className='relative' title={t.game.war.prefight.tooltip}>
@@ -76,6 +82,8 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
               rarity={p.rarity}
               size={portraitSize}
               mode='prefight'
+              ascension={p.ascension}
+              isSaga={p.is_saga_attacker || p.is_saga_defender}
             />
           </div>
         ))}

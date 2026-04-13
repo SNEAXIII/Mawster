@@ -150,6 +150,8 @@ export default function WarAttackerSelector({
                   rarity={a.rarity}
                   size={48}
                   isPreferred={a.is_preferred_attacker}
+                  ascension={a.ascension}
+                  isSaga={a.is_saga_attacker || a.is_saga_defender}
                 />
                 <span className='text-[10px] text-center truncate w-full leading-tight'>
                   {shortenChampionName(a.champion_name)}

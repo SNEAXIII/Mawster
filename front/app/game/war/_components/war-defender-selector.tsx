@@ -146,6 +146,7 @@ export default function WarDefenderSelector({
                 name={selected.name}
                 rarity={`${selectedRarity.stars}r${selectedRarity.rank}`}
                 size={48}
+                isSaga={selected.is_saga_attacker || selected.is_saga_defender}
               />
               <div>
                 <div className='text-sm font-semibold'>{selected.name}</div>
@@ -240,6 +241,7 @@ export default function WarDefenderSelector({
                                 name={champ.name}
                                 rarity='7r3'
                                 size={48}
+                                isSaga={champ.is_saga_attacker || champ.is_saga_defender}
                               />
                               <span className='text-[10px] text-center truncate w-full leading-tight'>
                                 {shortenChampionName(champ.name)}
@@ -275,6 +277,7 @@ export default function WarDefenderSelector({
                   name={selected.name}
                   rarity={`${selectedRarity.stars}r${selectedRarity.rank}`}
                   size={56}
+                  isSaga={selected.is_saga_attacker || selected.is_saga_defender}
                 />
                 <div>
                   <div className='font-semibold'>{selected.name}</div>

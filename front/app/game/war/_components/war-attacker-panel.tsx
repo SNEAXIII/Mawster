@@ -107,6 +107,8 @@ export default function WarAttackerPanel() {
                           rarity={placement.attacker_rarity ?? ''}
                           size={35}
                           isPreferred={placement.attacker_is_preferred_attacker ?? false}
+                          ascension={placement.attacker_ascension ?? 0}
+                          isSaga={(placement.attacker_is_saga_attacker ?? false) || (placement.attacker_is_saga_defender ?? false)}
                         />
                       ) : (
                         <ChampionPortrait
@@ -116,6 +118,8 @@ export default function WarAttackerPanel() {
                           rarity={placement.attacker_rarity ?? ''}
                           size={35}
                           isPreferred={placement.attacker_is_preferred_attacker ?? false}
+                          ascension={placement.attacker_ascension ?? 0}
+                          isSaga={(placement.attacker_is_saga_attacker ?? false) || (placement.attacker_is_saga_defender ?? false)}
                         />
                       )
                     ))}
@@ -129,6 +133,8 @@ export default function WarAttackerPanel() {
                         rarity={s.rarity}
                         size={35}
                         mode='synergy'
+                        ascension={s.ascension}
+                        isSaga={s.is_saga_attacker || s.is_saga_defender}
                       />
                     ))}
 
@@ -141,6 +147,8 @@ export default function WarAttackerPanel() {
                         rarity={p.rarity}
                         size={35}
                         mode='prefight'
+                        ascension={p.ascension}
+                        isSaga={p.is_saga_attacker || p.is_saga_defender}
                       />
                     ))}
                   </div>

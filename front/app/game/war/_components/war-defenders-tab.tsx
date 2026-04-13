@@ -153,6 +153,7 @@ export default function WarDefendersTab() {
                   name={c.name}
                   rarity={'7r6'}
                   size={45}
+                  isSaga={c.is_saga_attacker || c.is_saga_defender}
                 />
                 {c.alias && (
                   <span className='text-[10px] text-muted-foreground leading-none max-w-[50px] truncate text-center'>
