@@ -2,7 +2,11 @@ import { type NextRequest, NextResponse } from 'next/server';
 import path from 'node:path';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const launchEditor = require('react-dev-utils/launchEditor') as (fileName: string, lineNumber: number, colNumber: number) => void;
+const launchEditor = require('react-dev-utils/launchEditor') as (
+  fileName: string,
+  lineNumber: number,
+  colNumber: number
+) => void;
 
 // Force VS Code as editor on all platforms
 process.env.REACT_EDITOR = 'code';

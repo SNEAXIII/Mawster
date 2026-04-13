@@ -21,7 +21,9 @@ def load_sample_data():
             session.commit()
             print("✅ Admin loaded with success !")
         print("✅ Sample data loaded with success !")
-        print(f"⚠ Master account '{master_account}' created. Update discord_id to link with your Discord account.")
+        print(
+            f"⚠ Master account '{master_account}' created. Update discord_id to link with your Discord account."
+        )
 
     except Exception as e:
         session.rollback()

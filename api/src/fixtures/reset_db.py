@@ -11,10 +11,12 @@ def reset():
     print("🚀 Resetting database")
     with engine.connect() as conn:
         conn.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
-        result = conn.execute(text(
-            "SELECT table_name FROM information_schema.tables "
-            "WHERE table_schema = DATABASE()"
-        ))
+        result = conn.execute(
+            text(
+                "SELECT table_name FROM information_schema.tables "
+                "WHERE table_schema = DATABASE()"
+            )
+        )
         tables = [row[0] for row in result]
         for table in tables:
             conn.execute(text(f"DROP TABLE IF EXISTS `{table}`"))
