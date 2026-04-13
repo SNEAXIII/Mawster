@@ -40,7 +40,7 @@ describe('Defense – Saga & Ascension Badges (sagaMode defender)', () => {
   });
 
   it('does not show saga badge on defense map when only is_saga_attacker (defender mode)', () => {
-    setupAndPlaceDefender('def-saga-atk-only', 'SagaAtkOnly', 'Cosmic', { is_saga_attacker: true });
+    setupAndPlaceDefender('atk-only', 'SagaAtkOnly', 'Cosmic', { is_saga_attacker: true });
 
     cy.getByCy('war-node-1')
       .scrollIntoView()
@@ -49,7 +49,7 @@ describe('Defense – Saga & Ascension Badges (sagaMode defender)', () => {
   });
 
   it('shows saga badge when both flags set (defender mode shows it)', () => {
-    setupAndPlaceDefender('def-saga-both', 'SagaBothDef', 'Tech', {
+    setupAndPlaceDefender('saga-both', 'SagaBothDef', 'Tech', {
       is_saga_attacker: true,
       is_saga_defender: true,
     });
