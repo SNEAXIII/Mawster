@@ -1,7 +1,8 @@
 'use client';
 
 import { Suspense } from 'react';
-import AdminContent, { AdminTab } from '../_components/admin-content';
+import AdminContent from '../_components/admin-content';
+import { AdminTab } from '../_viewmodels/use-admin-viewmodel';
 
 export default function DashboardPage() {
   return (
