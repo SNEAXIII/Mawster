@@ -126,7 +126,6 @@ export default function ChampionTableRow({
               : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
           }`}
         >
-          <Flame className='h-3 w-3' />
           {champion.has_prefight ? t.common.yes : t.common.no}
         </button>
       </td>
