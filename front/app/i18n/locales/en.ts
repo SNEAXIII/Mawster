@@ -322,7 +322,7 @@ const en = {
         noneAvailable: 'No available champions',
       },
       bans: {
-        label: 'Banned Champions',
+        label: 'Bans',
         placeholder: 'Search champion to ban...',
         maxReached: 'Maximum {max} bans reached',
         none: 'No bans',

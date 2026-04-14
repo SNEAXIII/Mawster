@@ -327,7 +327,7 @@ const fr: Translations = {
         noneAvailable: 'Aucun champion disponible',
       },
       bans: {
-        label: 'Champions bannis',
+        label: 'Bannis',
         placeholder: 'Rechercher un champion à bannir...',
         maxReached: 'Maximum {max} bans atteint',
         none: 'Aucun ban',

@@ -22,11 +22,9 @@ medium:
 
 prio:
     permettre de marquer un combat terminé
-    allias qui marchent pas coté client
     afficheer un attaquant préf seletion attaque + case a cocher pour filter
     mettre en couleur les combat d'un boug
     faire un refresh dynamique
 
 criTIQUE
-    alias a check coté client
-    afficher attacker pref + la sig
+    Ajouter filtrer attacker saga + pref
