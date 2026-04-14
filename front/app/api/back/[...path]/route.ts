@@ -14,9 +14,8 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
   const session = await auth();
 
   if (!session?.accessToken || session.error === 'TokenExpiredError') {
-    const status = session?.error === 'TokenExpiredError' ? 401 : 401;
-    const message = session?.error === 'TokenExpiredError' ? 'Session expirée' : 'Non authentifié';
-    return NextResponse.json({ message }, { status });
+    const message = session?.error === 'TokenExpiredError' ? 'Session expired' : 'Unauthenticated';
+    return NextResponse.json({ message }, { status: 401 });
   }
 
   const { path } = await params;
