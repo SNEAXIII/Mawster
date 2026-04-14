@@ -1,9 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
-import { redirect, usePathname, useSearchParams, useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import React from 'react';
 import { useI18n } from '@/app/i18n';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import RosterImportExport from '@/components/roster-import-export';
@@ -15,244 +12,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getMyGameAccounts, GameAccount } from '@/app/services/game';
-import {
-  getRoster,
-  deleteRosterEntry,
-  RosterEntry,
-  RARITIES,
-  RARITY_LABELS,
-  upgradeChampionRank,
-  getNextRarity,
-  togglePreferredAttacker,
-  ascendChampion,
-} from '@/app/services/roster';
-
-import { AllianceRoleProvider, useAllianceRole } from '@/hooks/use-alliance-role';
+import { RARITY_LABELS, getNextRarity } from '@/app/services/roster';
+import { AllianceRoleProvider } from '@/hooks/use-alliance-role';
 import TabBar, { type TabItem } from '@/components/tab-bar';
 import GameAccountsSection from '@/components/profile/game-accounts-section';
 import AddChampionForm from './add-champion-form';
 import RosterGrid from './roster-grid';
 import UpgradeRequestsSection from './upgrade-requests-section';
+import { useRosterViewModel, RosterTab } from '../_viewmodels/use-roster-viewmodel';
 
-export enum RosterTab {
-  Roster = 'roster',
-  Accounts = 'accounts',
+interface RosterUpgradeSectionProps {
+  selectedAccountId: string;
+  refreshKey: number;
 }
 
-/** Sub-component that uses the AllianceRoleProvider to determine canCancel */
-function RosterUpgradeSection({
-  selectedAccountId,
-  allianceId,
-  refreshKey,
-}: Readonly<{
-  selectedAccountId: string | null;
-  allianceId: string | null;
-  refreshKey: number;
-}>) {
-  const { getRoleFor } = useAllianceRole();
-  const role = allianceId ? getRoleFor(allianceId) : undefined;
+function RosterUpgradeSection({ selectedAccountId, refreshKey }: Readonly<RosterUpgradeSectionProps>) {
   return (
     <UpgradeRequestsSection
       gameAccountId={selectedAccountId}
       refreshKey={refreshKey}
-      canCancel={role?.can_manage ?? false}
     />
   );
 }
 
 export default function RosterContent() {
-  const { status: authStatus } = useSession();
+  const vm = useRosterViewModel();
   const { t } = useI18n();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const router = useRouter();
 
-  // Game accounts
-  const [accounts, setAccounts] = useState<GameAccount[]>([]);
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
-  const [loadingAccounts, setLoadingAccounts] = useState(true);
-
-  // Tabs — read from URL or default
-  const initialTab = (searchParams.get('tab') as RosterTab) || RosterTab.Roster;
-  const [activeTab, setActiveTab] = useState<RosterTab>(
-    Object.values(RosterTab).includes(initialTab) ? initialTab : RosterTab.Roster
-  );
-
-  // Sync tab to URL
-  const isFirstRender = useRef(true);
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('tab', activeTab);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
-
-  // Roster
-  const [roster, setRoster] = useState<RosterEntry[]>([]);
-  const [loadingRoster, setLoadingRoster] = useState(false);
-
-  // Add champion form
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editEntry, setEditEntry] = useState<RosterEntry | null>(null);
-
-  // Delete
-  const [deleteTarget, setDeleteTarget] = useState<RosterEntry | null>(null);
-
-  // Upgrade
-  const [upgradeTarget, setUpgradeTarget] = useState<RosterEntry | null>(null);
-
-  // Ascend
-  const [ascendTarget, setAscendTarget] = useState<RosterEntry | null>(null);
-
-  // Upgrade requests refresh key
-  const [upgradeRefreshKey, setUpgradeRefreshKey] = useState(0);
-
-  // Error
-  const [error, setError] = useState<string | null>(null);
-
-  // Auth redirect
-  useEffect(() => {
-    if (authStatus === 'unauthenticated') redirect('/login');
-  }, [authStatus]);
-
-  // Load accounts
-  const fetchAccounts = useCallback(() => {
-    setLoadingAccounts(true);
-    getMyGameAccounts()
-      .then((accs) => {
-        setAccounts(accs);
-        const primary = accs.find((a) => a.is_primary);
-        setSelectedAccountId(primary?.id ?? accs[0]?.id ?? null);
-        if (accs.length === 0) setActiveTab(RosterTab.Accounts);
-      })
-      .catch(() => setError(t.roster.errors.loadAccounts))
-      .finally(() => setLoadingAccounts(false));
-  }, [t]);
-
-  useEffect(() => {
-    if (authStatus !== 'authenticated') return;
-    fetchAccounts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authStatus]);
-
-  // Re-fetch accounts when switching to Roster tab
-  useEffect(() => {
-    if (activeTab === RosterTab.Roster && authStatus === 'authenticated') {
-      fetchAccounts();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
-
-  // Load roster when account changes
-  useEffect(() => {
-    if (!selectedAccountId) {
-      setRoster([]);
-      return;
-    }
-    setLoadingRoster(true);
-    getRoster(selectedAccountId)
-      .then(setRoster)
-      .catch(() => setError(t.roster.errors.loadRoster))
-      .finally(() => setLoadingRoster(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAccountId]);
-
-  const handleFormSuccess = useCallback((updated: RosterEntry[]) => {
-    setRoster(updated);
-    setUpgradeRefreshKey((k) => k + 1);
-  }, []);
-
-  const confirmDelete = useCallback(async () => {
-    if (!deleteTarget || !selectedAccountId) return;
-    const name = deleteTarget.champion_name;
-    try {
-      await deleteRosterEntry(deleteTarget.id);
-      const updated = await getRoster(selectedAccountId);
-      setRoster(updated);
-      toast.success(t.roster.removeSuccess.replace('{name}', name));
-    } catch (e: unknown) {
-      toast.error((e as Error).message || t.roster.errors.deleteError);
-      setError((e as Error).message || t.roster.errors.deleteError);
-    } finally {
-      setDeleteTarget(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deleteTarget, selectedAccountId]);
-
-  const startEditEntry = useCallback((entry: RosterEntry) => {
-    setEditEntry(entry);
-    setShowAddForm(true);
-  }, []);
-
-  const confirmUpgrade = useCallback(async () => {
-    if (!upgradeTarget || !selectedAccountId) return;
-    const nextRarity = getNextRarity(upgradeTarget.rarity);
-    if (!nextRarity) return;
-    try {
-      await upgradeChampionRank(upgradeTarget.id);
-      const updated = await getRoster(selectedAccountId);
-      setRoster(updated);
-      setUpgradeRefreshKey((k) => k + 1);
-      toast.success(
-        t.roster.upgradeSuccess
-          .replace('{name}', upgradeTarget.champion_name)
-          .replace('{rarity}', RARITY_LABELS[nextRarity] ?? nextRarity)
-      );
-    } catch (e: unknown) {
-      toast.error((e as Error).message || t.roster.errors.upgradeError);
-    } finally {
-      setUpgradeTarget(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [upgradeTarget, selectedAccountId]);
-
-  const handleTogglePreferredAttacker = useCallback(
-    async (entry: RosterEntry) => {
-      try {
-        await togglePreferredAttacker(entry.id);
-        if (selectedAccountId) {
-          const updated = await getRoster(selectedAccountId);
-          setRoster(updated);
-        }
-      } catch (e: unknown) {
-        toast.error((e as Error).message || t.roster.preferredAttackerToggle);
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedAccountId]
-  );
-
-  const confirmAscend = useCallback(async () => {
-    if (!ascendTarget || !selectedAccountId) return;
-    try {
-      await ascendChampion(ascendTarget.id);
-      const updated = await getRoster(selectedAccountId);
-      setRoster(updated);
-      toast.success(t.roster.ascendSuccess.replace('{name}', ascendTarget.champion_name));
-    } catch (e: unknown) {
-      toast.error((e as Error).message || t.roster.ascendError);
-    } finally {
-      setAscendTarget(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ascendTarget, selectedAccountId]);
-
-  // Group roster by rarity, sorted descending (7r5 first → 6r4 last)
-  const groupedRoster = (() => {
-    const groups: Record<string, RosterEntry[]> = {};
-    for (const rarity of [...RARITIES].reverse()) {
-      const entries = roster.filter((r) => r.rarity === rarity);
-      if (entries.length > 0) groups[rarity] = entries;
-    }
-    return Object.entries(groups);
-  })();
-
-  if (authStatus === 'loading' || loadingAccounts) {
+  if (vm.authStatus === 'loading' || vm.loadingAccounts) {
     return (
       <div className='flex items-center justify-center h-64'>
         <p className='text-muted-foreground'>{t.common.loading}</p>
@@ -261,7 +48,7 @@ export default function RosterContent() {
   }
 
   const tabs: TabItem<RosterTab>[] = [
-    ...(accounts.length > 0
+    ...(vm.accounts.length > 0
       ? [{ value: RosterTab.Roster, label: t.roster.title, cy: 'tab-roster' }]
       : []),
     { value: RosterTab.Accounts, label: t.nav.gameAccounts, cy: 'tab-accounts' },
@@ -270,101 +57,73 @@ export default function RosterContent() {
   return (
     <AllianceRoleProvider>
       <div className='px-3 py-4 sm:p-6 max-w-6xl mx-auto'>
-        <TabBar
-          tabs={tabs}
-          value={activeTab}
-          onChange={setActiveTab}
-        />
+        <TabBar tabs={tabs} value={vm.activeTab} onChange={vm.setActiveTab} />
 
-        {/* Roster tab */}
-        {activeTab === RosterTab.Roster && (
+        {vm.activeTab === RosterTab.Roster && (
           <>
-            {accounts.length === 0 ? (
+            {vm.accounts.length === 0 ? (
               <p className='text-muted-foreground'>{t.roster.noAccounts}</p>
             ) : (
               <>
                 <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2'>
-                  {accounts.length > 1 && (
+                  {vm.accounts.length > 1 && (
                     <div className='mb-6'>
-                      <label className='block text-sm font-medium mb-2'>
-                        {t.roster.selectAccount}
-                      </label>
+                      <label className='block text-sm font-medium mb-2'>{t.roster.selectAccount}</label>
                       <Select
-                        value={selectedAccountId || ''}
-                        onValueChange={(val) => setSelectedAccountId(val || null)}
+                        value={vm.selectedAccountId || ''}
+                        onValueChange={(val) => vm.setSelectedAccountId(val || null)}
                       >
-                        <SelectTrigger
-                          className='w-full max-w-xs'
-                          data-cy='roster-account-select'
-                        >
+                        <SelectTrigger className='w-full max-w-xs' data-cy='roster-account-select'>
                           <SelectValue placeholder={t.roster.chooseAccount} />
                         </SelectTrigger>
                         <SelectContent>
-                          {accounts.map((acc) => (
-                            <SelectItem
-                              key={acc.id}
-                              value={acc.id}
-                            >
-                              {acc.game_pseudo}{' '}
-                              {acc.is_primary ? `(${t.game.accounts.primary})` : ''}
+                          {vm.accounts.map((acc) => (
+                            <SelectItem key={acc.id} value={acc.id}>
+                              {acc.game_pseudo}{acc.is_primary ? ` (${t.game.accounts.primary})` : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                   )}
-                  {selectedAccountId && (
+                  {vm.selectedAccountId && (
                     <RosterImportExport
-                      roster={roster}
-                      selectedAccountId={selectedAccountId}
-                      selectedAccountName={
-                        accounts.find((a) => a.id === selectedAccountId)?.game_pseudo ?? ''
-                      }
-                      onRosterUpdated={(updated) => {
-                        setRoster(updated);
-                        setUpgradeRefreshKey((k) => k + 1);
-                      }}
+                      roster={vm.roster}
+                      selectedAccountId={vm.selectedAccountId}
+                      selectedAccountName={vm.accounts.find((a) => a.id === vm.selectedAccountId)?.game_pseudo ?? ''}
+                      onRosterUpdated={(updated) => vm.handleFormSuccess(updated)}
                     />
                   )}
                 </div>
 
-                {error && (
-                  <ErrorBanner
-                    message={error}
-                    onDismiss={() => setError(null)}
-                    className='mb-4'
-                  />
+                {vm.error && (
+                  <ErrorBanner message={vm.error} onDismiss={vm.clearError} className='mb-4' />
                 )}
 
-                {selectedAccountId && (
+                {vm.selectedAccountId && (
                   <>
                     <AddChampionForm
-                      open={showAddForm}
-                      onOpenChange={setShowAddForm}
-                      selectedAccountId={selectedAccountId}
-                      roster={roster}
-                      initialEntry={editEntry}
-                      onSuccess={handleFormSuccess}
+                      open={vm.showAddForm}
+                      onOpenChange={vm.setShowAddForm}
+                      selectedAccountId={vm.selectedAccountId}
+                      roster={vm.roster}
+                      initialEntry={vm.editEntry}
+                      onSuccess={vm.handleFormSuccess}
                     />
-
                     <RosterUpgradeSection
-                      selectedAccountId={selectedAccountId}
-                      allianceId={
-                        accounts.find((a) => a.id === selectedAccountId)?.alliance_id ?? null
-                      }
-                      refreshKey={upgradeRefreshKey}
+                      selectedAccountId={vm.selectedAccountId}
+                      refreshKey={vm.upgradeRefreshKey}
                     />
-
-                    {loadingRoster ? (
+                    {vm.loadingRoster ? (
                       <p className='text-muted-foreground'>{t.common.loading}</p>
                     ) : (
                       <RosterGrid
-                        groupedRoster={groupedRoster}
-                        onEdit={startEditEntry}
-                        onDelete={setDeleteTarget}
-                        onUpgrade={setUpgradeTarget}
-                        onTogglePreferredAttacker={handleTogglePreferredAttacker}
-                        onAscend={setAscendTarget}
+                        groupedRoster={vm.groupedRoster}
+                        onEdit={vm.startEditEntry}
+                        onDelete={vm.setDeleteTarget}
+                        onUpgrade={vm.setUpgradeTarget}
+                        onTogglePreferredAttacker={vm.handleTogglePreferredAttacker}
+                        onAscend={vm.setAscendTarget}
                       />
                     )}
                   </>
@@ -374,59 +133,52 @@ export default function RosterContent() {
           </>
         )}
 
-        {/* Accounts tab */}
-        {activeTab === RosterTab.Accounts && (
-          <GameAccountsSection onAccountsChange={fetchAccounts} />
+        {vm.activeTab === RosterTab.Accounts && (
+          <GameAccountsSection onAccountsChange={vm.fetchAccounts} />
         )}
 
-        {/* Delete confirmation dialog */}
         <ConfirmationDialog
-          open={deleteTarget !== null}
-          onOpenChange={(open) => !open && setDeleteTarget(null)}
+          open={vm.deleteTarget !== null}
+          onOpenChange={(open) => !open && vm.setDeleteTarget(null)}
           title={t.roster.deleteConfirmTitle}
-          description={t.roster.deleteConfirmDesc.replace(
-            '{name}',
-            deleteTarget?.champion_name ?? ''
-          )}
+          description={t.roster.deleteConfirmDesc.replace('{name}', vm.deleteTarget?.champion_name ?? '')}
           confirmText={t.common.delete}
           cancelText={t.common.cancel}
-          onConfirm={confirmDelete}
+          onConfirm={vm.confirmDelete}
           variant='destructive'
         />
 
-        {/* Upgrade confirmation dialog */}
         <ConfirmationDialog
-          open={upgradeTarget !== null}
-          onOpenChange={(open) => !open && setUpgradeTarget(null)}
+          open={vm.upgradeTarget !== null}
+          onOpenChange={(open) => !open && vm.setUpgradeTarget(null)}
           title={t.roster.upgradeConfirmTitle}
           description={
-            upgradeTarget
+            vm.upgradeTarget
               ? t.roster.upgradeConfirmDesc
-                  .replace('{name}', upgradeTarget.champion_name)
-                  .replace('{from}', RARITY_LABELS[upgradeTarget.rarity] ?? upgradeTarget.rarity)
-                  .replace('{to}', RARITY_LABELS[getNextRarity(upgradeTarget.rarity) ?? ''] ?? '')
+                  .replace('{name}', vm.upgradeTarget.champion_name)
+                  .replace('{from}', RARITY_LABELS[vm.upgradeTarget.rarity] ?? vm.upgradeTarget.rarity)
+                  .replace('{to}', RARITY_LABELS[getNextRarity(vm.upgradeTarget.rarity) ?? ''] ?? '')
               : ''
           }
           confirmText={t.roster.upgradeConfirmButton}
           cancelText={t.common.cancel}
-          onConfirm={confirmUpgrade}
+          onConfirm={vm.confirmUpgrade}
         />
 
-        {/* Ascension confirmation dialog */}
         <ConfirmationDialog
-          open={ascendTarget !== null}
-          onOpenChange={(open) => !open && setAscendTarget(null)}
+          open={vm.ascendTarget !== null}
+          onOpenChange={(open) => !open && vm.setAscendTarget(null)}
           title={t.roster.ascendConfirmTitle}
           description={
-            ascendTarget
+            vm.ascendTarget
               ? t.roster.ascendConfirmDesc
-                  .replace('{name}', ascendTarget.champion_name)
-                  .replace('{level}', String((ascendTarget.ascension ?? 0) + 1))
+                  .replace('{name}', vm.ascendTarget.champion_name)
+                  .replace('{level}', String((vm.ascendTarget.ascension ?? 0) + 1))
               : ''
           }
           confirmText={t.roster.ascendConfirmButton}
           cancelText={t.common.cancel}
-          onConfirm={confirmAscend}
+          onConfirm={vm.confirmAscend}
         />
       </div>
     </AllianceRoleProvider>
