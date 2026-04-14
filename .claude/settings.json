@@ -32,6 +32,7 @@
     "typescript-lsp@claude-plugins-official": true,
     "claude-code-setup@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
-    "context-mode@context-mode": true
+    "context-mode@context-mode": true,
+    "code-simplifier@claude-plugins-official": true
   }
 }
