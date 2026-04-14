@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useI18n } from '@/app/i18n';
-import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import RosterImportExport from '@/components/roster-import-export';
 import { ErrorBanner } from '@/components/error-banner';
 import {
@@ -12,28 +11,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { RARITY_LABELS, getNextRarity } from '@/app/services/roster';
 import { AllianceRoleProvider } from '@/hooks/use-alliance-role';
+import { RosterDialogs } from './roster-dialogs';
 import TabBar, { type TabItem } from '@/components/tab-bar';
 import GameAccountsSection from '@/components/profile/game-accounts-section';
 import AddChampionForm from './add-champion-form';
 import RosterGrid from './roster-grid';
 import UpgradeRequestsSection from './upgrade-requests-section';
 import { useRosterViewModel, RosterTab } from '../_viewmodels/use-roster-viewmodel';
-
-interface RosterUpgradeSectionProps {
-  selectedAccountId: string;
-  refreshKey: number;
-}
-
-function RosterUpgradeSection({ selectedAccountId, refreshKey }: Readonly<RosterUpgradeSectionProps>) {
-  return (
-    <UpgradeRequestsSection
-      gameAccountId={selectedAccountId}
-      refreshKey={refreshKey}
-    />
-  );
-}
 
 export default function RosterContent() {
   const vm = useRosterViewModel();
@@ -110,8 +95,8 @@ export default function RosterContent() {
                       initialEntry={vm.editEntry}
                       onSuccess={vm.handleFormSuccess}
                     />
-                    <RosterUpgradeSection
-                      selectedAccountId={vm.selectedAccountId}
+                    <UpgradeRequestsSection
+                      gameAccountId={vm.selectedAccountId}
                       refreshKey={vm.upgradeRefreshKey}
                     />
                     {vm.loadingRoster ? (
@@ -137,48 +122,16 @@ export default function RosterContent() {
           <GameAccountsSection onAccountsChange={vm.fetchAccounts} />
         )}
 
-        <ConfirmationDialog
-          open={vm.deleteTarget !== null}
-          onOpenChange={(open) => !open && vm.setDeleteTarget(null)}
-          title={t.roster.deleteConfirmTitle}
-          description={t.roster.deleteConfirmDesc.replace('{name}', vm.deleteTarget?.champion_name ?? '')}
-          confirmText={t.common.delete}
-          cancelText={t.common.cancel}
-          onConfirm={vm.confirmDelete}
-          variant='destructive'
-        />
-
-        <ConfirmationDialog
-          open={vm.upgradeTarget !== null}
-          onOpenChange={(open) => !open && vm.setUpgradeTarget(null)}
-          title={t.roster.upgradeConfirmTitle}
-          description={
-            vm.upgradeTarget
-              ? t.roster.upgradeConfirmDesc
-                  .replace('{name}', vm.upgradeTarget.champion_name)
-                  .replace('{from}', RARITY_LABELS[vm.upgradeTarget.rarity] ?? vm.upgradeTarget.rarity)
-                  .replace('{to}', RARITY_LABELS[getNextRarity(vm.upgradeTarget.rarity) ?? ''] ?? '')
-              : ''
-          }
-          confirmText={t.roster.upgradeConfirmButton}
-          cancelText={t.common.cancel}
-          onConfirm={vm.confirmUpgrade}
-        />
-
-        <ConfirmationDialog
-          open={vm.ascendTarget !== null}
-          onOpenChange={(open) => !open && vm.setAscendTarget(null)}
-          title={t.roster.ascendConfirmTitle}
-          description={
-            vm.ascendTarget
-              ? t.roster.ascendConfirmDesc
-                  .replace('{name}', vm.ascendTarget.champion_name)
-                  .replace('{level}', String((vm.ascendTarget.ascension ?? 0) + 1))
-              : ''
-          }
-          confirmText={t.roster.ascendConfirmButton}
-          cancelText={t.common.cancel}
-          onConfirm={vm.confirmAscend}
+        <RosterDialogs
+          deleteTarget={vm.deleteTarget}
+          setDeleteTarget={vm.setDeleteTarget}
+          confirmDelete={vm.confirmDelete}
+          upgradeTarget={vm.upgradeTarget}
+          setUpgradeTarget={vm.setUpgradeTarget}
+          confirmUpgrade={vm.confirmUpgrade}
+          ascendTarget={vm.ascendTarget}
+          setAscendTarget={vm.setAscendTarget}
+          confirmAscend={vm.confirmAscend}
         />
       </div>
     </AllianceRoleProvider>
