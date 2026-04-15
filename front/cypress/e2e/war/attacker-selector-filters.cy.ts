@@ -16,8 +16,9 @@ describe('War – WarAttackerSelector filters', () => {
   // =========================================================================
 
   it('class filter shows only attackers of the selected class', () => {
-    setupAttackerScenario('atk-flt-cls').then(({ adminToken, ownerData, memberData, memberAccId, allianceId, warId }) => {
-      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
+    setupAttackerScenario('atk-flt-cls').then(({ adminToken, ownerData, memberData, memberAccId }) => {
+      // Add a Tech champion to the member roster alongside existing Wolverine (Mutant)
+      cy.apiLoadChampion(adminToken, 'Vision', 'Tech').then((champs) => {
         cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3');
       });
 
@@ -25,22 +26,21 @@ describe('War – WarAttackerSelector filters', () => {
       cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
       cy.getByCy('war-attacker-search').should('be.visible');
 
-      // Both classes visible initially
+      // Both attackers visible initially
       cy.getByCy('attacker-card-Wolverine').should('be.visible');
-      cy.getByCy('attacker-card-Storm').should('be.visible');
+      cy.getByCy('attacker-card-Vision').should('be.visible');
 
-      // Filter by Mutant
-      cy.getByCy('selector-class-filter').click();
-      cy.contains('[role="option"]', 'Mutant').click();
-
-      cy.getByCy('attacker-card-Wolverine').should('be.visible');
-      cy.getByCy('attacker-card-Storm').should('be.visible');
-
-      // Filter by Tech — no results for members with only Mutants
+      // Filter by Tech → only Vision
       cy.getByCy('selector-class-filter').click();
       cy.contains('[role="option"]', 'Tech').click();
+      cy.getByCy('attacker-card-Vision').should('be.visible');
       cy.getByCy('attacker-card-Wolverine').should('not.exist');
-      cy.getByCy('attacker-card-Storm').should('not.exist');
+
+      // Filter by Mutant → only Wolverine
+      cy.getByCy('selector-class-filter').click();
+      cy.contains('[role="option"]', 'Mutant').click();
+      cy.getByCy('attacker-card-Wolverine').should('be.visible');
+      cy.getByCy('attacker-card-Vision').should('not.exist');
     });
   });
 
