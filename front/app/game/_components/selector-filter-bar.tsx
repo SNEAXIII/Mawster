@@ -105,7 +105,7 @@ export default function SelectorFilterBar({
           className='h-8 text-xs text-muted-foreground'
           onClick={onReset}
         >
-          {t.dashboard.resetFilters}
+          {t.dashboard.pagination.resetFilters}
         </Button>
       )}
     </div>
