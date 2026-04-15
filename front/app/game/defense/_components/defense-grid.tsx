@@ -13,7 +13,7 @@ const WarMap = dynamic(() => import('./war-map'), {
   loading: () => <FullPageSpinner />,
 });
 
-const ChampionSelector = dynamic(() => import('./champion-selector'), {
+const AllianceDefenseSelector = dynamic(() => import('./alliance-defense-selector'), {
   loading: () => null,
 });
 
@@ -81,7 +81,7 @@ export default function DefenseGrid({ onNodeClick, canManage }: Readonly<Defense
 
       {/* Champion selector dialog */}
       {selectorNode !== null && (
-        <ChampionSelector
+        <AllianceDefenseSelector
           open={selectorNode !== null}
           onClose={() => setSelectorNode(null)}
           nodeNumber={selectorNode}
