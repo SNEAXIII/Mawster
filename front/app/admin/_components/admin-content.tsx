@@ -22,7 +22,7 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
   if (vm.status === 'loading') {
     return (
       <div className='flex items-center justify-center h-64'>
-        <p className='text-gray-500'>{t.common.loading}</p>
+        <p className='text-muted-foreground'>{t.common.loading}</p>
       </div>
     );
   }
