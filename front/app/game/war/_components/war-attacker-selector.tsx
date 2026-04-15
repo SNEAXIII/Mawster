@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
@@ -15,6 +15,7 @@ import {
   getAvailableAttackers,
 } from '@/app/services/war';
 import AttackerEntryRow from './attacker-entry-row';
+import SelectorFilterBar from '@/app/game/_components/selector-filter-bar';
 
 interface WarAttackerSelectorProps {
   open: boolean;
@@ -50,6 +51,9 @@ export default function WarAttackerSelector({
   const [championSearch, setChampionSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [classFilter, setClassFilter] = useState('');
+  const [sagaFilter, setSagaFilter] = useState(false);
+  const [preferredFilter, setPreferredFilter] = useState(false);
 
   const fetchAvailable = useCallback(async () => {
     setLoading(true);
@@ -69,6 +73,9 @@ export default function WarAttackerSelector({
       fetchAvailable();
       setPlayerSearch('');
       setChampionSearch('');
+      setClassFilter('');
+      setSagaFilter(false);
+      setPreferredFilter(false);
     }
   }, [open, fetchAvailable]);
 
@@ -80,15 +87,34 @@ export default function WarAttackerSelector({
     }
   }
 
+  const availableClasses = useMemo(
+    () => Array.from(new Set(available.map((a) => a.champion_class))).sort(),
+    [available]
+  );
+
+  const canReset =
+    playerSearch !== '' || championSearch !== '' || classFilter !== '' || sagaFilter || preferredFilter;
+
+  const handleReset = () => {
+    setPlayerSearch('');
+    setChampionSearch('');
+    setClassFilter('');
+    setSagaFilter(false);
+    setPreferredFilter(false);
+  };
+
   const filtered = available.filter((a) => {
     const matchPlayer =
       !playerSearch || a.game_pseudo.toLowerCase().includes(playerSearch.toLowerCase());
     const alias = (a.champion_alias ?? '').toLowerCase();
     const matchChampion =
-      !championSearch
-      || a.champion_name.toLowerCase().includes(championSearch.toLowerCase())
-      || alias.includes(championSearch.toLowerCase());
-    return matchPlayer && matchChampion;
+      !championSearch ||
+      a.champion_name.toLowerCase().includes(championSearch.toLowerCase()) ||
+      alias.includes(championSearch.toLowerCase());
+    const matchClass = !classFilter || a.champion_class === classFilter;
+    const matchSaga = !sagaFilter || a.is_saga_attacker;
+    const matchPreferred = !preferredFilter || a.is_preferred_attacker;
+    return matchPlayer && matchChampion && matchClass && matchSaga && matchPreferred;
   });
 
   // Group by member
@@ -200,18 +226,41 @@ export default function WarAttackerSelector({
           </>
         ) : null}
         <Separator />
-        <div className='px-4 py-3 flex gap-2'>
-          <SearchInput
-            value={playerSearch}
-            onChange={setPlayerSearch}
-            placeholder={t.game.war.searchPlayer}
-            data-cy='war-attacker-search-player'
-          />
-          <SearchInput
-            value={championSearch}
-            onChange={setChampionSearch}
-            placeholder={t.game.war.searchChampion}
-            data-cy='war-attacker-search-champion'
+        <div className='px-4 py-3 flex flex-col gap-2'>
+          <div className='flex gap-2'>
+            <SearchInput
+              value={playerSearch}
+              onChange={setPlayerSearch}
+              placeholder={t.game.war.searchPlayer}
+              data-cy='war-attacker-search-player'
+            />
+            <SearchInput
+              value={championSearch}
+              onChange={setChampionSearch}
+              placeholder={t.game.war.searchChampion}
+              data-cy='war-attacker-search-champion'
+            />
+          </div>
+          <SelectorFilterBar
+            classes={availableClasses}
+            classFilter={classFilter}
+            onClassChange={setClassFilter}
+            toggles={[
+              {
+                key: 'saga',
+                label: t.game.war.sagaAttackerFilter,
+                active: sagaFilter,
+                onToggle: setSagaFilter,
+              },
+              {
+                key: 'preferred',
+                label: t.game.war.preferredAttackerFilter,
+                active: preferredFilter,
+                onToggle: setPreferredFilter,
+              },
+            ]}
+            canReset={canReset}
+            onReset={handleReset}
           />
         </div>
         <Separator />
