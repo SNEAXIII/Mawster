@@ -218,6 +218,9 @@ const fr: Translations = {
       nodeEmpty: 'Nœud #{node} — Vide',
       ownersCount: '{count} possesseurs',
       preferredAttackerWarning: 'Attaquant préféré',
+      sagaDefenderFilter: 'Saga Défenseur',
+      notPreferredFilter: 'Non Préféré',
+      playerFilter: 'Joueur',
       importExport: {
         exportBtn: 'Exporter',
         importBtn: 'Importer',
@@ -301,6 +304,8 @@ const fr: Translations = {
       availableAttackersError: 'Erreur lors du chargement des attaquants disponibles',
       attackersPanelTitle: '{assigned}/50 combats attribués',
       memberAttackers: '{count}/3',
+      sagaAttackerFilter: 'Saga Attaquant',
+      preferredAttackerFilter: 'Préféré',
       synergy: {
         add: 'Ajouter une synergie',
         revoke: 'Révoquer',
