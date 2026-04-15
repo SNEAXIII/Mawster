@@ -214,6 +214,9 @@ const en = {
       nodeEmpty: 'Node #{node} — Empty',
       ownersCount: '{count} owners',
       preferredAttackerWarning: 'Preferred attacker',
+      sagaDefenderFilter: 'Saga Defender',
+      notPreferredFilter: 'Not Preferred',
+      playerFilter: 'Player',
       importExport: {
         exportBtn: 'Export',
         importBtn: 'Import',
@@ -296,6 +299,8 @@ const en = {
       availableAttackersError: 'Failed to load available attackers',
       attackersPanelTitle: '{assigned}/50 fights attributed',
       memberAttackers: '{count}/3',
+      sagaAttackerFilter: 'Saga Attacker',
+      preferredAttackerFilter: 'Preferred',
       synergy: {
         add: 'Add a synergy',
         revoke: 'Revoke',
