@@ -10,34 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AllianceRoleProvider, useAllianceRole } from '@/hooks/use-alliance-role';
+import { AllianceRoleProvider } from '@/hooks/use-alliance-role';
 import { RosterDialogs } from './roster-dialogs';
 import TabBar, { type TabItem } from '@/components/tab-bar';
 import GameAccountsSection from '@/components/profile/game-accounts-section';
 import AddChampionForm from './add-champion-form';
 import RosterGrid from './roster-grid';
-import UpgradeRequestsSection from './upgrade-requests-section';
+import RosterUpgradeSection from './roster-upgrade-section';
 import { useRosterViewModel, RosterTab } from '../_viewmodels/use-roster-viewmodel';
-
-function RosterUpgradeSection({
-  selectedAccountId,
-  allianceId,
-  refreshKey,
-}: {
-  selectedAccountId: string;
-  allianceId: string | null;
-  refreshKey: number;
-}) {
-  const { getRoleFor } = useAllianceRole();
-  const role = allianceId ? getRoleFor(allianceId) : undefined;
-  return (
-    <UpgradeRequestsSection
-      gameAccountId={selectedAccountId}
-      refreshKey={refreshKey}
-      canCancel={role?.can_manage ?? false}
-    />
-  );
-}
 
 export default function RosterContent() {
   const vm = useRosterViewModel();
