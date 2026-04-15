@@ -435,6 +435,8 @@ const fr: Translations = {
     selectAccount: 'Sélectionner un compte de jeu',
     chooseAccount: '-- Choisir un compte --',
     noAccounts: "Vous devez d'abord créer un compte de jeu pour gérer votre roster.",
+    classFilter: 'Classe',
+    selectClass: 'Filtrer par classe',
     addChampion: 'Ajouter un champion',
     addOrUpdate: 'Ajouter / Mettre à jour un champion',
     champion: 'Champion',

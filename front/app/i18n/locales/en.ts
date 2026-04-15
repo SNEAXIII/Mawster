@@ -427,6 +427,8 @@ const en = {
     selectAccount: 'Select a game account',
     chooseAccount: '-- Choose an account --',
     noAccounts: 'You need to create a game account first to manage your roster.',
+    classFilter: 'Class',
+    selectClass: 'Filter by class',
     addChampion: 'Add Champion',
     addOrUpdate: 'Add / Update a Champion',
     champion: 'Champion',
