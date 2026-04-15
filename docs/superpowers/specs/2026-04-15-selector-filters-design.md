@@ -3,7 +3,7 @@ Date: 2026-04-15
 
 ## Summary
 
-Add client-side filter bars (class, player, saga, preferred) + reset to the two champion selector dialogs. Rename `ChampionSelector` → `AllianceDefenseSelector` for naming consistency.
+Add client-side filter bars (class, player, saga, preferred) + reset to the two champion selector dialogs. Rename `ChampionSelector` → `AllianceDefenseSelector` for naming consistency. Extract shared filter bar UI into a `SelectorFilterBar` component to avoid duplication.
 
 ---
 
@@ -15,22 +15,53 @@ Add client-side filter bars (class, player, saga, preferred) + reset to the two 
 - Export default: `ChampionSelector` → `AllianceDefenseSelector`
 - Update import in `front/app/game/defense/_components/defense-grid.tsx`
 
-### 2. AllianceDefenseSelector — new filter bar
+### 2. Shared component: `SelectorFilterBar`
+
+Location: `front/app/game/_components/selector-filter-bar.tsx`
+
+Renders: class dropdown + configurable toggle buttons + reset button. Stateless — all state lives in the parent.
+
+```tsx
+interface ToggleConfig {
+  key: string;
+  label: string;
+  active: boolean;
+  onToggle: (v: boolean) => void;
+}
+
+interface SelectorFilterBarProps {
+  classes: string[];           // unique class values for dropdown
+  classFilter: string;
+  onClassChange: (v: string) => void;
+  players?: string[];          // optional — only for defense selector
+  playerFilter?: string;
+  onPlayerChange?: (v: string) => void;
+  toggles: ToggleConfig[];
+  canReset: boolean;
+  onReset: () => void;
+}
+```
+
+- Class dropdown: shadcn `Select`, placeholder from `t.roster.selectClass`
+- Toggle buttons: shadcn `Button` variant `outline`, active state = `bg-primary/10 border-primary text-primary`
+- Reset button: shadcn `Button` variant `ghost` size `sm`, shown only when `canReset`, label `t.dashboard.resetFilters`
+
+### 3. AllianceDefenseSelector — filter state & logic
 
 **New state:**
-| State | Type | Default | Description |
-|---|---|---|---|
-| `classFilter` | `string` | `''` | Filter by `champion_class` |
-| `playerFilter` | `string` | `''` | Filter by owner `game_pseudo` |
-| `sagaFilter` | `boolean` | `false` | Show only `is_saga_defender === true` |
-| `notPreferredFilter` | `boolean` | `false` | Show only champions where `owners.every(o => !o.is_preferred_attacker)` |
+| State | Type | Default |
+|---|---|---|
+| `classFilter` | `string` | `''` |
+| `playerFilter` | `string` | `''` |
+| `sagaFilter` | `boolean` | `false` |
+| `notPreferredFilter` | `boolean` | `false` |
 
-**Filter bar UI (rendered above the champion grid, replacing the lone SearchInput):**
-```
-[Search name/alias] [Player ▾] [Class ▾] [Saga Defender ○] [Not Preferred ○] [Reset ×]
-```
+**Derived (useMemo):**
+- `availableClasses` — unique sorted `champion_class` from `availableChampions`
+- `availablePlayers` — unique sorted `game_pseudo` from all `availableChampions[].owners[]`
+- `canReset` — `search !== '' || classFilter !== '' || playerFilter !== '' || sagaFilter || notPreferredFilter`
 
-**Filtering logic (extends existing `useMemo`):**
+**Filtering logic:**
 ```ts
 const filtered = useMemo(() => {
   return availableChampions.filter((c) => {
@@ -48,28 +79,40 @@ const filtered = useMemo(() => {
 }, [search, classFilter, playerFilter, sagaFilter, notPreferredFilter, availableChampions]);
 ```
 
-**Derived values:**
-- `availableClasses` — `useMemo` over `availableChampions` → unique sorted `champion_class` values
-- `availablePlayers` — `useMemo` over `availableChampions` → unique sorted `game_pseudo` from all owners
-- `canReset` — `search !== '' || classFilter !== '' || playerFilter !== '' || sagaFilter || notPreferredFilter`
+**Reset:** clears all filter state including `search`.
 
-**Reset:** clears all filter state + `search`.
+**Filter bar usage:**
+```tsx
+<SelectorFilterBar
+  classes={availableClasses}
+  classFilter={classFilter}
+  onClassChange={setClassFilter}
+  players={availablePlayers}
+  playerFilter={playerFilter}
+  onPlayerChange={setPlayerFilter}
+  toggles={[
+    { key: 'saga', label: t.game.defense.sagaDefenderFilter, active: sagaFilter, onToggle: setSagaFilter },
+    { key: 'notPreferred', label: t.game.defense.notPreferredFilter, active: notPreferredFilter, onToggle: setNotPreferredFilter },
+  ]}
+  canReset={canReset}
+  onReset={reset}
+/>
+```
 
-### 3. WarAttackerSelector — new filter bar
+### 4. WarAttackerSelector — filter state & logic
 
 **New state:**
-| State | Type | Default | Description |
-|---|---|---|---|
-| `classFilter` | `string` | `''` | Filter by `champion_class` |
-| `sagaFilter` | `boolean` | `false` | Show only `is_saga_attacker === true` |
-| `preferredFilter` | `boolean` | `false` | Show only `is_preferred_attacker === true` |
+| State | Type | Default |
+|---|---|---|
+| `classFilter` | `string` | `''` |
+| `sagaFilter` | `boolean` | `false` |
+| `preferredFilter` | `boolean` | `false` |
 
-**Filter bar UI (added after the two existing search inputs):**
-```
-[Player search] [Champion search] [Class ▾] [Saga Attacker ○] [Preferred ○] [Reset ×]
-```
+**Derived (useMemo):**
+- `availableClasses` — unique sorted `champion_class` from `available`
+- `canReset` — `playerSearch !== '' || championSearch !== '' || classFilter !== '' || sagaFilter || preferredFilter`
 
-**Filtering logic (extends existing `filtered`):**
+**Filtering logic (extends existing):**
 ```ts
 const filtered = available.filter((a) => {
   const matchPlayer = !playerSearch || a.game_pseudo.toLowerCase().includes(playerSearch.toLowerCase());
@@ -84,11 +127,22 @@ const filtered = available.filter((a) => {
 });
 ```
 
-**Derived values:**
-- `availableClasses` — unique sorted `champion_class` from `available`
-- `canReset` — `playerSearch || championSearch || classFilter || sagaFilter || preferredFilter`
-
 **Reset:** clears `playerSearch`, `championSearch`, `classFilter`, `sagaFilter`, `preferredFilter`.
+
+**Filter bar usage:**
+```tsx
+<SelectorFilterBar
+  classes={availableClasses}
+  classFilter={classFilter}
+  onClassChange={setClassFilter}
+  toggles={[
+    { key: 'saga', label: t.game.war.sagaAttackerFilter, active: sagaFilter, onToggle: setSagaFilter },
+    { key: 'preferred', label: t.game.war.preferredAttackerFilter, active: preferredFilter, onToggle: setPreferredFilter },
+  ]}
+  canReset={canReset}
+  onReset={reset}
+/>
+```
 
 ---
 
@@ -98,15 +152,15 @@ const filtered = available.filter((a) => {
 
 Under `game.defense`:
 ```ts
-sagaDefenderFilter: 'Saga Defender',  // fr: 'Saga Défenseur'
-notPreferredFilter: 'Not Preferred',  // fr: 'Non Préféré'
-playerFilter: 'Player',               // fr: 'Joueur'
+sagaDefenderFilter: 'Saga Defender',   // fr: 'Saga Défenseur'
+notPreferredFilter: 'Not Preferred',   // fr: 'Non Préféré'
+playerFilter: 'Player',                // fr: 'Joueur'
 ```
 
 Under `game.war`:
 ```ts
-sagaAttackerFilter: 'Saga Attacker',        // fr: 'Saga Attaquant'
-preferredAttackerFilter: 'Preferred',       // fr: 'Préféré'
+sagaAttackerFilter: 'Saga Attacker',      // fr: 'Saga Attaquant'
+preferredAttackerFilter: 'Preferred',     // fr: 'Préféré'
 ```
 
 ### Reused existing keys
@@ -116,22 +170,15 @@ preferredAttackerFilter: 'Preferred',       // fr: 'Préféré'
 
 ---
 
-## UI Components
-
-- **Class dropdown**: shadcn `Select` from `@/components/ui/select`
-- **Toggle filters**: shadcn `Button` variant `outline` with active state (`bg-primary/10 border-primary text-primary`)
-- **Reset button**: shadcn `Button` variant `ghost` size `sm`, shown only when `canReset`
-
----
-
 ## Files Modified
 
 | File | Change |
 |---|---|
-| `front/app/game/defense/_components/champion-selector.tsx` | Delete (replaced by alliance-defense-selector.tsx) |
-| `front/app/game/defense/_components/alliance-defense-selector.tsx` | New file (renamed + extended) |
+| `front/app/game/defense/_components/champion-selector.tsx` | Deleted (replaced) |
+| `front/app/game/defense/_components/alliance-defense-selector.tsx` | New — renamed + filter state + logic |
 | `front/app/game/defense/_components/defense-grid.tsx` | Update import |
-| `front/app/game/war/_components/war-attacker-selector.tsx` | Add filter bar |
+| `front/app/game/war/_components/war-attacker-selector.tsx` | Add filter state + logic + SelectorFilterBar |
+| `front/app/game/_components/selector-filter-bar.tsx` | New — shared filter bar UI |
 | `front/app/i18n/locales/en.ts` | Add new i18n keys |
 | `front/app/i18n/locales/fr.ts` | Add new i18n keys |
 
@@ -140,5 +187,5 @@ preferredAttackerFilter: 'Preferred',       // fr: 'Préféré'
 ## Out of Scope
 
 - Server-side pagination / API changes
-- Page navigation controls (per-page, prev/next) — client-side filter only
+- Page navigation controls (per-page, prev/next)
 - Modifying `PaginationControls` component
