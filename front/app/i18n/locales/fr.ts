@@ -219,7 +219,7 @@ const fr: Translations = {
       ownersCount: '{count} possesseurs',
       preferredAttackerWarning: 'Attaquant préféré',
       sagaDefenderFilter: 'Saga Défenseur',
-      notPreferredFilter: 'Non Préféré',
+      notPreferredFilter: 'Non préféré',
       playerFilter: 'Joueur',
       importExport: {
         exportBtn: 'Exporter',
