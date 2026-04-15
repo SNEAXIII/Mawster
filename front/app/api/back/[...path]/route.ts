@@ -1,51 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { auth } from '@/app/api/auth/[...nextauth]/route';
 import { getServerApiUrl } from '@/app/lib/serverApiUrl';
-import { isServerDev } from '@/app/lib/dev-mode';
 
 /**
- * Catch-all proxy : toute requête vers /api/back/<path>
- * est relayée côté serveur vers FastAPI avec le JWT backend
- * récupéré dans le cookie NextAuth (jamais exposé au client).
+ * Catch-all proxy: every request to /api/back/<path>
+ * is forwarded server-side to FastAPI with the backend JWT
+ * from the NextAuth session (never exposed to the client).
+ *
+ * Token refresh is handled transparently by the NextAuth jwt
+ * callback — no manual refresh or cookie encoding needed here.
  */
 async function proxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET,
-    secureCookie: !isServerDev(),
-  });
+  const session = await auth();
 
-  if (!token?.accessToken) {
-    return NextResponse.json({ message: 'Non authentifié' }, { status: 401 });
+  if (!session?.accessToken || session.error === 'TokenExpiredError') {
+    const message = session?.error === 'TokenExpiredError' ? 'Session expired' : 'Unauthenticated';
+    return NextResponse.json({ message }, { status: 401 });
   }
 
-  // Await params (Next.js 15+)
   const { path } = await params;
-
-  // Reconstruit l'URL backend
   const backendPath = path.join('/');
   const url = new URL(req.url);
-  const search = url.search; // conserve les query params
-  const backendUrl = `${getServerApiUrl()}/${backendPath}${search}`;
+  const backendUrl = `${getServerApiUrl()}/${backendPath}${url.search}`;
 
-  // Prépare les headers
   const headers: HeadersInit = {
-    Authorization: `Bearer ${token.accessToken}`,
+    Authorization: `Bearer ${session.accessToken}`,
   };
 
-  // Transmet le Content-Type s'il y a un body
   const contentType = req.headers.get('content-type');
   if (contentType) {
     headers['Content-Type'] = contentType;
   }
 
-  // Lit le body si présent (POST, PUT, PATCH, DELETE avec body)
   let body: string | undefined;
   if (!['GET', 'HEAD'].includes(req.method)) {
     try {
       body = await req.text();
     } catch {
-      // pas de body
+      // no body
     }
   }
 
@@ -56,7 +48,6 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
       body: body || undefined,
     });
 
-    // 204 No Content — renvoyer directement sans body
     if (res.status === 204) {
       return new NextResponse(null, { status: 204 });
     }
@@ -71,7 +62,7 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
     });
   } catch (error) {
     console.error(`[proxy] ${req.method} ${backendUrl} →`, error);
-    return NextResponse.json({ message: 'Erreur de proxy interne' }, { status: 502 });
+    return NextResponse.json({ message: 'Internal proxy error' }, { status: 502 });
   }
 }
 
