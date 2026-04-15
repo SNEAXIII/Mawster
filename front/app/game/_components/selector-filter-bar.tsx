@@ -37,7 +37,7 @@ export default function SelectorFilterBar({
   players,
   playerFilter,
   onPlayerChange,
-  toggles,
+  toggles = [],
   canReset,
   onReset,
 }: Readonly<SelectorFilterBarProps>) {
@@ -70,7 +70,7 @@ export default function SelectorFilterBar({
           onValueChange={(val) => onClassChange(val === 'all' ? '' : val)}
         >
           <SelectTrigger className='h-8 w-36 text-xs'>
-            <SelectValue placeholder={t.roster.classFilter} />
+            <SelectValue placeholder={t.roster.selectClass} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value='all'>{t.roster.classFilter}</SelectItem>
