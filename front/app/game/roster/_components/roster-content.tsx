@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { useI18n } from '@/app/i18n';
 import RosterImportExport from '@/components/roster-import-export';
 import { ErrorBanner } from '@/components/error-banner';
@@ -11,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AllianceRoleProvider } from '@/hooks/use-alliance-role';
+import { AllianceRoleProvider, useAllianceRole } from '@/hooks/use-alliance-role';
 import { RosterDialogs } from './roster-dialogs';
 import TabBar, { type TabItem } from '@/components/tab-bar';
 import GameAccountsSection from '@/components/profile/game-accounts-section';
@@ -19,6 +18,26 @@ import AddChampionForm from './add-champion-form';
 import RosterGrid from './roster-grid';
 import UpgradeRequestsSection from './upgrade-requests-section';
 import { useRosterViewModel, RosterTab } from '../_viewmodels/use-roster-viewmodel';
+
+function RosterUpgradeSection({
+  selectedAccountId,
+  allianceId,
+  refreshKey,
+}: {
+  selectedAccountId: string;
+  allianceId: string | null;
+  refreshKey: number;
+}) {
+  const { getRoleFor } = useAllianceRole();
+  const role = allianceId ? getRoleFor(allianceId) : undefined;
+  return (
+    <UpgradeRequestsSection
+      gameAccountId={selectedAccountId}
+      refreshKey={refreshKey}
+      canCancel={role?.can_manage ?? false}
+    />
+  );
+}
 
 export default function RosterContent() {
   const vm = useRosterViewModel();
@@ -95,8 +114,9 @@ export default function RosterContent() {
                       initialEntry={vm.editEntry}
                       onSuccess={vm.handleFormSuccess}
                     />
-                    <UpgradeRequestsSection
-                      gameAccountId={vm.selectedAccountId}
+                    <RosterUpgradeSection
+                      selectedAccountId={vm.selectedAccountId}
+                      allianceId={vm.accounts.find((a) => a.id === vm.selectedAccountId)?.alliance_id ?? null}
                       refreshKey={vm.upgradeRefreshKey}
                     />
                     {vm.loadingRoster ? (
