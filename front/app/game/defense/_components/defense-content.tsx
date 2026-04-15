@@ -1,18 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useI18n } from '@/app/i18n';
 import { useRequiredSession } from '@/hooks/use-required-session';
-import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { Shield } from 'lucide-react';
-
-import { useAllianceSelector } from '@/hooks/use-alliance-selector';
-import { useDefenseActions } from '../_hooks/use-defense-actions';
 import { DefenseActionsProvider } from '@/app/contexts/defense-actions-context';
-
 import DefenseHeader from './defense-header';
 import DefenseGrid from './defense-grid';
+import { useDefenseViewModel } from '../_viewmodels/use-defense-viewmodel';
 
 interface DefensePageContentProps {
   onStateChange?: (allianceId: string, bg: number) => void;
@@ -27,63 +22,12 @@ export default function DefensePageContent({
 }: Readonly<DefensePageContentProps> = {}) {
   const { t } = useI18n();
   const { status } = useRequiredSession();
-  const { canManage, isOwner } = useAllianceRole();
 
-  // Alliance selector
-  const {
-    alliances,
-    selectedAllianceId,
-    setSelectedAllianceId,
-    selectedBg,
-    setSelectedBg,
-    loading,
-  } = useAllianceSelector({ initialAllianceId, initialBg });
+  const vm = useDefenseViewModel({ onStateChange, initialAllianceId, initialBg });
 
-  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
-  const userCanManage = selectedAlliance
-    ? canManage(selectedAlliance) || isOwner(selectedAlliance)
-    : false;
+  if (vm.loading || status === 'loading') return <FullPageSpinner />;
 
-  const defenseActions = useDefenseActions(selectedAllianceId, selectedBg, selectedAlliance?.tag);
-  const {
-    defenseSummary,
-    setSelectorNode,
-    setClearConfirmOpen,
-    fileInputRef,
-    handleExportDefense,
-  } = defenseActions;
-
-  // Auto-select first alliance when alliances load and none is selected
-  useEffect(() => {
-    if (alliances.length > 0 && !selectedAllianceId) {
-      const firstId = alliances[0].id;
-      setSelectedAllianceId(firstId);
-      onStateChange?.(firstId, selectedBg);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [alliances]);
-
-  // ─── Actions ───────────────────────────────────────────
-  const handleNodeClick = (nodeNumber: number) => {
-    if (!userCanManage) return;
-    setSelectorNode(nodeNumber);
-  };
-
-  const handleBgChange = (bg: number) => {
-    setSelectedBg(bg);
-    if (selectedAllianceId) onStateChange?.(selectedAllianceId, bg);
-  };
-
-  const handleAllianceChange = (allianceId: string) => {
-    setSelectedAllianceId(allianceId);
-    setSelectedBg(1);
-    onStateChange?.(allianceId, 1);
-  };
-
-  // ─── Render ────────────────────────────────────────────
-  if (loading || status === 'loading') return <FullPageSpinner />;
-
-  if (alliances.length === 0) {
+  if (vm.alliances.length === 0) {
     return (
       <div className='flex flex-col items-center justify-center py-20 text-center'>
         <Shield className='w-16 h-16 text-muted-foreground mb-4' />
@@ -93,26 +37,27 @@ export default function DefensePageContent({
     );
   }
 
+  const { defenseActions } = vm;
+
   return (
     <div className='space-y-4'>
       <h2 className='text-xl font-bold'>{t.game.defense.title}</h2>
       <DefenseActionsProvider value={defenseActions}>
         <DefenseHeader
-          alliances={alliances}
-          selectedAllianceId={selectedAllianceId}
-          onAllianceChange={handleAllianceChange}
-          selectedBg={selectedBg}
-          onBgChange={handleBgChange}
-          onExport={handleExportDefense}
-          onImportClick={() => fileInputRef.current?.click()}
-          onClearClick={() => setClearConfirmOpen(true)}
-          canManage={userCanManage}
-          defenseSummary={defenseSummary}
+          alliances={vm.alliances}
+          selectedAllianceId={vm.selectedAllianceId}
+          onAllianceChange={vm.handleAllianceChange}
+          selectedBg={vm.selectedBg}
+          onBgChange={vm.handleBgChange}
+          onExport={defenseActions.handleExportDefense}
+          onImportClick={() => defenseActions.fileInputRef.current?.click()}
+          onClearClick={() => defenseActions.setClearConfirmOpen(true)}
+          canManage={vm.userCanManage}
+          defenseSummary={defenseActions.defenseSummary}
         />
-
         <DefenseGrid
-          onNodeClick={handleNodeClick}
-          canManage={userCanManage}
+          onNodeClick={vm.handleNodeClick}
+          canManage={vm.userCanManage}
         />
       </DefenseActionsProvider>
     </div>
