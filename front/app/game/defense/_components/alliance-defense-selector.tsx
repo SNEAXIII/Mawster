@@ -7,7 +7,11 @@ import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/search-input';
 import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
-import { type AvailableChampion, type ChampionOwner, type DefensePlacement } from '@/app/services/defense';
+import {
+  type AvailableChampion,
+  type ChampionOwner,
+  type DefensePlacement,
+} from '@/app/services/defense';
 import { RARITY_LABELS, getClassColors, shortenChampionName } from '@/app/services/roster';
 import { Separator } from '@/components/ui/separator';
 import SelectorFilterBar from '@/app/game/_components/selector-filter-bar';
@@ -44,7 +48,9 @@ export default function AllianceDefenseSelector({
   }, [availableChampions]);
 
   const availablePlayers = useMemo(() => {
-    const players = new Set(availableChampions.flatMap((c) => c.owners.map((o) => o.game_pseudo)));
+    const players = new Set(
+      availableChampions.flatMap((champ) => champ.owners.map((owner) => owner.game_pseudo))
+    );
     return Array.from(players).sort();
   }, [availableChampions]);
 
@@ -52,21 +58,27 @@ export default function AllianceDefenseSelector({
     search !== '' || classFilter !== '' || playerFilter !== '' || sagaFilter || notPreferredFilter;
 
   const filtered = useMemo(() => {
-    return availableChampions.filter((c) => {
-      const q = search.toLowerCase();
-      const matchSearch =
-        !search.trim() ||
-        c.champion_name.toLowerCase().includes(q) ||
-        c.champion_class.toLowerCase().includes(q) ||
-        (c.champion_alias ?? '').toLowerCase().includes(q);
-      const matchClass = !classFilter || c.champion_class === classFilter;
-      const matchPlayer =
-        !playerFilter || c.owners.some((o) => o.game_pseudo === playerFilter);
-      const matchSaga = !sagaFilter || c.is_saga_defender;
-      const matchNotPreferred =
-        !notPreferredFilter || c.owners.some((o) => !o.is_preferred_attacker);
-      return matchSearch && matchClass && matchPlayer && matchSaga && matchNotPreferred;
-    });
+    return availableChampions
+      .map((champ) => {
+        const owners = champ.owners.filter((owner) => {
+          const matchPlayer = !playerFilter || owner.game_pseudo === playerFilter;
+          const matchNotPreferred = !notPreferredFilter || !owner.is_preferred_attacker;
+          return matchPlayer && matchNotPreferred;
+        });
+        return { ...champ, owners };
+      })
+      .filter((champ) => {
+        if (champ.owners.length === 0) return false;
+        const query = search.toLowerCase();
+        const matchSearch =
+          !search.trim() ||
+          champ.champion_name.toLowerCase().includes(query) ||
+          champ.champion_class.toLowerCase().includes(query) ||
+          (champ.champion_alias ?? '').toLowerCase().includes(query);
+        const matchClass = !classFilter || champ.champion_class === classFilter;
+        const matchSaga = !sagaFilter || champ.is_saga_defender;
+        return matchSearch && matchClass && matchSaga;
+      });
   }, [search, classFilter, playerFilter, sagaFilter, notPreferredFilter, availableChampions]);
 
   // Defer rendering of the grid by one frame so the dialog open animation is smooth
@@ -115,7 +127,7 @@ export default function AllianceDefenseSelector({
   return (
     <Dialog
       open={open}
-      onOpenChange={(v) => !v && handleClose()}
+      onOpenChange={(isOpen) => !isOpen && handleClose()}
     >
       <DialogContent
         className='max-w-2xl max-h-[80vh] overflow-hidden flex flex-col'
@@ -133,7 +145,10 @@ export default function AllianceDefenseSelector({
         </DialogHeader>
 
         <Separator />
-        <div className='px-6 py-3 flex items-center gap-3' data-cy='defense-current-placement'>
+        <div
+          className='px-6 py-3 flex items-center gap-3'
+          data-cy='defense-current-placement'
+        >
           {currentPlacement ? (
             <>
               <ChampionPortrait
