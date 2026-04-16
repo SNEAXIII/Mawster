@@ -50,7 +50,7 @@ export default function SelectorFilterBar({
           value={playerFilter || 'all'}
           onValueChange={(val) => onPlayerChange(val === 'all' ? '' : val)}
         >
-          <SelectTrigger className='h-8 w-36 text-xs' data-cy='selector-player-filter'>
+          <SelectTrigger className='h-8 w-26 text-xs' data-cy='selector-player-filter'>
             <SelectValue placeholder={t.game.defense.playerFilter} />
           </SelectTrigger>
           <SelectContent>
@@ -69,7 +69,7 @@ export default function SelectorFilterBar({
           value={classFilter || 'all'}
           onValueChange={(val) => onClassChange(val === 'all' ? '' : val)}
         >
-          <SelectTrigger className='h-8 w-36 text-xs' data-cy='selector-class-filter'>
+          <SelectTrigger className='h-8 w-26 text-xs' data-cy='selector-class-filter'>
             <SelectValue placeholder={t.roster.selectClass} />
           </SelectTrigger>
           <SelectContent>
