@@ -47,7 +47,7 @@ export default function WarAttackerSelector({
 }: Readonly<WarAttackerSelectorProps>) {
   const { t } = useI18n();
   const [available, setAvailable] = useState<AvailableAttacker[]>([]);
-  const [playerSearch, setPlayerSearch] = useState('');
+  const [playerFilter, setPlayerFilter] = useState('');
   const [championSearch, setChampionSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -71,7 +71,7 @@ export default function WarAttackerSelector({
   useEffect(() => {
     if (open) {
       fetchAvailable();
-      setPlayerSearch('');
+      setPlayerFilter('');
       setChampionSearch('');
       setClassFilter('');
       setSagaFilter(false);
@@ -92,11 +92,16 @@ export default function WarAttackerSelector({
     [available]
   );
 
+  const availablePlayers = useMemo(
+    () => Array.from(new Set(available.map((a) => a.game_pseudo))).sort(),
+    [available]
+  );
+
   const canReset =
-    playerSearch !== '' || championSearch !== '' || classFilter !== '' || sagaFilter || preferredFilter;
+    playerFilter !== '' || championSearch !== '' || classFilter !== '' || sagaFilter || preferredFilter;
 
   const handleReset = () => {
-    setPlayerSearch('');
+    setPlayerFilter('');
     setChampionSearch('');
     setClassFilter('');
     setSagaFilter(false);
@@ -104,8 +109,7 @@ export default function WarAttackerSelector({
   };
 
   const filtered = available.filter((a) => {
-    const matchPlayer =
-      !playerSearch || a.game_pseudo.toLowerCase().includes(playerSearch.toLowerCase());
+    const matchPlayer = !playerFilter || a.game_pseudo === playerFilter;
     const alias = (a.champion_alias ?? '').toLowerCase();
     const matchChampion =
       !championSearch ||
@@ -227,24 +231,19 @@ export default function WarAttackerSelector({
         ) : null}
         <Separator />
         <div className='px-4 py-3 flex flex-col gap-2'>
-          <div className='flex gap-2'>
-            <SearchInput
-              value={playerSearch}
-              onChange={setPlayerSearch}
-              placeholder={t.game.war.searchPlayer}
-              data-cy='war-attacker-search-player'
-            />
-            <SearchInput
-              value={championSearch}
-              onChange={setChampionSearch}
-              placeholder={t.game.war.searchChampion}
-              data-cy='war-attacker-search-champion'
-            />
-          </div>
+          <SearchInput
+            value={championSearch}
+            onChange={setChampionSearch}
+            placeholder={t.game.war.searchChampion}
+            data-cy='war-attacker-search-champion'
+          />
           <SelectorFilterBar
             classes={availableClasses}
             classFilter={classFilter}
             onClassChange={setClassFilter}
+            players={availablePlayers}
+            playerFilter={playerFilter}
+            onPlayerChange={setPlayerFilter}
             toggles={[
               {
                 key: 'saga',
