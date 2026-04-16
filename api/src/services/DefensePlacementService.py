@@ -31,22 +31,6 @@ MAX_DEFENDERS_PER_PLAYER = 5
 class DefensePlacementService:
 
     @classmethod
-    async def _load_alliance_with_members(
-        cls, session: SessionDep, alliance_id: uuid.UUID
-    ) -> Optional[Alliance]:
-        stmt = (
-            select(Alliance)
-            .where(Alliance.id == alliance_id)
-            .options(
-                selectinload(Alliance.members),  # type: ignore[arg-type]
-                selectinload(Alliance.officers),  # type: ignore[arg-type]
-                selectinload(Alliance.owner),  # type: ignore[arg-type]
-            )
-        )
-        result = await session.exec(stmt)
-        return result.first()
-
-    @classmethod
     async def get_defense(
         cls,
         session: SessionDep,
