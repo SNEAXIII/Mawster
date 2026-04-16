@@ -64,7 +64,7 @@ export default function AllianceDefenseSelector({
         !playerFilter || c.owners.some((o) => o.game_pseudo === playerFilter);
       const matchSaga = !sagaFilter || c.is_saga_defender;
       const matchNotPreferred =
-        !notPreferredFilter || c.owners.every((o) => !o.is_preferred_attacker);
+        !notPreferredFilter || c.owners.some((o) => !o.is_preferred_attacker);
       return matchSearch && matchClass && matchPlayer && matchSaga && matchNotPreferred;
     });
   }, [search, classFilter, playerFilter, sagaFilter, notPreferredFilter, availableChampions]);
