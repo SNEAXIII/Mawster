@@ -25,17 +25,6 @@ export const RARITY_LABELS: Record<string, string> = {
 
 export const SIGNATURE_PRESETS = [0, 20, 100, 200];
 
-/** Tailwind classes for each rarity tier */
-export const RARITY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  '6r4': { bg: 'bg-purple-600', text: 'text-white', border: 'border-purple-500' },
-  '6r5': { bg: 'bg-red-600', text: 'text-white', border: 'border-red-500' },
-  '7r1': { bg: 'bg-blue-500', text: 'text-white', border: 'border-blue-400' },
-  '7r2': { bg: 'bg-green-500', text: 'text-white', border: 'border-green-400' },
-  '7r3': { bg: 'bg-yellow-500', text: 'text-black', border: 'border-yellow-400' },
-  '7r4': { bg: 'bg-orange-500', text: 'text-white', border: 'border-orange-400' },
-  '7r5': { bg: 'bg-rose-700', text: 'text-white', border: 'border-rose-600' },
-};
-
 // ─── Champion classes ────────────────────────────────────
 export enum ChampionClass {
   SKILL = 'Skill',
