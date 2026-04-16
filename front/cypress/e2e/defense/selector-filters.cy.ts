@@ -98,6 +98,32 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   // Not Preferred toggle
   // =========================================================================
 
+  it('not preferred toggle hides champion only when all its owners are preferred attackers', () => {
+    setupDefenseOwnerAndMember('def-flt-npref-multi', 'NPrefMultiOwn', 'NPrefMultiMem', 'NPrefMultiAll', 'NM').then(
+      ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
+        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
+          // owner: preferred, member: not preferred → champion stays visible (at least one non-preferred owner)
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3', {
+            is_preferred_attacker: true,
+          });
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
+            is_preferred_attacker: false,
+          });
+        });
+
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('defense');
+
+        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        cy.getByCy('champion-card-Spider-Man').should('be.visible');
+
+        cy.getByCy('selector-toggle-notPreferred').click();
+
+        cy.getByCy('champion-card-Spider-Man').should('be.visible');
+      },
+    );
+  });
+
   it('not preferred toggle shows only champions whose owners are not preferred attackers', () => {
     setupDefenseOwner('def-flt-npref', 'NPrefFltPlyr', 'NPrefAll', 'NP').then(
       ({ adminData, ownerData, ownerAccId }) => {
