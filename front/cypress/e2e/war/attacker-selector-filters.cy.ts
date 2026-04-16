@@ -98,6 +98,96 @@ describe('War – WarAttackerSelector filters', () => {
   });
 
   // =========================================================================
+  // Player filter
+  // =========================================================================
+
+  it('player filter shows only the selected player attackers', () => {
+    const prefix = 'atk';
+    const ownerPseudo = `${prefix}Owner`.slice(0, 16);
+    const memberPseudo = `${prefix}Member`.slice(0, 16);
+
+    setupAttackerScenario(prefix).then(({ adminToken, ownerData, ownerAccId }) => {
+      // Owner gets Storm; member already has Wolverine
+      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+      });
+
+      goToAttackersMode(ownerData.user_id);
+      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      cy.getByCy('war-attacker-search').should('be.visible');
+
+      // Both attackers visible initially
+      cy.getByCy('attacker-card-Storm').should('be.visible');
+      cy.getByCy('attacker-card-Wolverine').should('be.visible');
+
+      // Filter by member → only Wolverine
+      cy.getByCy('selector-player-filter').click();
+      cy.contains('[role="option"]', memberPseudo).click();
+      cy.getByCy('attacker-card-Wolverine').should('be.visible');
+      cy.getByCy('attacker-card-Storm').should('not.exist');
+
+      // Switch to owner → only Storm
+      cy.getByCy('selector-player-filter').click();
+      cy.contains('[role="option"]', ownerPseudo).click();
+      cy.getByCy('attacker-card-Storm').should('be.visible');
+      cy.getByCy('attacker-card-Wolverine').should('not.exist');
+    });
+  });
+
+  it('player filter combines with class filter', () => {
+    const prefix = 'atk';
+    const ownerPseudo = `${prefix}Owner`.slice(0, 16);
+
+    setupAttackerScenario(prefix).then(({ adminToken, ownerData, ownerAccId }) => {
+      // Owner gets Storm (Mutant) and Vision (Tech); member already has Wolverine (Mutant)
+      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+      });
+      cy.apiLoadChampion(adminToken, 'Vision', 'Tech').then((champs) => {
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+      });
+
+      goToAttackersMode(ownerData.user_id);
+      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      cy.getByCy('war-attacker-search').should('be.visible');
+
+      // Filter by owner + Mutant → only Storm (Vision excluded by class, Wolverine excluded by player)
+      cy.getByCy('selector-player-filter').click();
+      cy.contains('[role="option"]', ownerPseudo).click();
+      cy.getByCy('selector-class-filter').click();
+      cy.contains('[role="option"]', 'Mutant').click();
+
+      cy.getByCy('attacker-card-Storm').should('be.visible');
+      cy.getByCy('attacker-card-Vision').should('not.exist');
+      cy.getByCy('attacker-card-Wolverine').should('not.exist');
+    });
+  });
+
+  it('reset button clears player filter and restores all players attackers', () => {
+    const prefix = 'atk';
+    const ownerPseudo = `${prefix}Owner`.slice(0, 16);
+
+    setupAttackerScenario(prefix).then(({ adminToken, ownerData, ownerAccId }) => {
+      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+      });
+
+      goToAttackersMode(ownerData.user_id);
+      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      cy.getByCy('war-attacker-search').should('be.visible');
+
+      cy.getByCy('selector-player-filter').click();
+      cy.contains('[role="option"]', ownerPseudo).click();
+      cy.getByCy('attacker-card-Wolverine').should('not.exist');
+
+      cy.getByCy('selector-reset-filters').click();
+      cy.getByCy('attacker-card-Storm').should('be.visible');
+      cy.getByCy('attacker-card-Wolverine').should('be.visible');
+      cy.getByCy('selector-reset-filters').should('not.exist');
+    });
+  });
+
+  // =========================================================================
   // Reset button
   // =========================================================================
 
