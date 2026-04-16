@@ -1,5 +1,4 @@
 # ─── Defense error messages ──────────────────────────────
-BATTLEGROUP_INVALID = "Battlegroup must be 1, 2, or 3"
 CHAMPION_NOT_FOUND_IN_ROSTER = "Champion not found in roster"
 CHAMPION_NOT_BELONG_TO_PLAYER = "This champion does not belong to the specified player"
 GAME_ACCOUNT_NOT_FOUND = "Game account not found"

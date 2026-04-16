@@ -158,12 +158,3 @@ def audit_log(event: str, *, user_id: str = "anonymous", detail: str = "") -> No
     _audit.info(" | ".join(parts))
 
 
-_debug = logging.getLogger("debug")
-
-
-def debug_log(message: str, **kwargs) -> None:
-    """Write a debug log with structured key=value pairs."""
-    parts = [message] + [f"{k}={v}" for k, v in kwargs.items()]
-    _debug.debug("======================================")
-    _debug.debug(" | ".join(parts))
-    _debug.debug("======================================")

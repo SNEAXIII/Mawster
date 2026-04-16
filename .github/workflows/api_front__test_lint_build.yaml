@@ -3,12 +3,10 @@ name: CI Pipeline
 on:
   push:
     branches:
-      - main
       - release
   pull_request:
     branches:
       - main
-      - release
 
 permissions:
   contents: read
@@ -268,7 +266,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: Api
     needs: [docker-api, docker-front]
-    if: needs.docker-api.result == 'success' && needs.docker-front.result == 'success'
+    if: (needs.docker-api.result == 'success' || needs.docker-front.result == 'success') && needs.docker-api.result != 'failure' && needs.docker-front.result != 'failure'
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
