@@ -7,6 +7,8 @@ import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useI18n } from '@/app/i18n';
 import { WarProvider, useWar } from '@/app/contexts/war-context';
 import WarHeader from './war-header';
+import SeasonBanner from './season-banner';
+import SeasonBansPlaceholder from './season-bans-placeholder';
 import WarDefendersTab from './war-defenders-tab';
 import WarManagementBar from './war-management-bar';
 import CreateWarDialog from './create-war-dialog';
@@ -80,6 +82,8 @@ function WarLayout() {
             selectedAllianceId={selectedAllianceId}
             onAllianceChange={setSelectedAllianceId}
           />
+          <SeasonBanner />
+          <SeasonBansPlaceholder />
 
           {/* ── Management bar (officers/owners only, no active war) ──── */}
           {canManageWar && !currentWar && (
