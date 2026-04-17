@@ -31,6 +31,7 @@ from tests.utils.utils_db import load_objects
 from src.models import User
 from src.models.War import War
 from src.models.DefensePlacement import DefensePlacement
+from src.models.Season import Season
 from src.enums.Roles import Roles
 
 USER3_ID = uuid.UUID("00000000-0000-0000-0000-000000000003")
@@ -1212,3 +1213,41 @@ class TestWarBans:
             headers=headers_member,
         )
         assert response.status_code == 409
+
+
+# ─── TestWarSeasonLink ────────────────────────────────────
+
+class TestWarSeasonLink:
+    @pytest.mark.asyncio
+    async def test_war_created_with_active_season(self):
+        """War created while a season is active gets that season_id."""
+        data = await _setup_alliance()
+        season = Season(number=64, is_active=True)
+        await load_objects([season])
+
+        headers = create_auth_headers(user_id=str(USER_ID), role=Roles.USER)
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            {"opponent_name": OPPONENT, "banned_champion_ids": []},
+            headers,
+        )
+        assert response.status_code == 201
+        body = response.json()
+        assert body["season_id"] == str(season.id)
+        assert body["season_number"] == 64
+
+    @pytest.mark.asyncio
+    async def test_war_created_without_active_season_is_off_season(self):
+        """War created when no season is active has season_id=null."""
+        data = await _setup_alliance()
+
+        headers = create_auth_headers(user_id=str(USER_ID), role=Roles.USER)
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            {"opponent_name": OPPONENT, "banned_champion_ids": []},
+            headers,
+        )
+        assert response.status_code == 201
+        body = response.json()
+        assert body["season_id"] is None
+        assert body["season_number"] is None
