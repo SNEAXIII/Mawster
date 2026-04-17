@@ -22,6 +22,8 @@ class WarResponse(BaseModel):
     created_by_pseudo: str
     created_at: datetime
     banned_champions: List[ChampionResponse] = []
+    season_id: Optional[uuid.UUID] = None
+    season_number: Optional[int] = None
 
     @model_validator(mode='before')
     @classmethod
@@ -36,6 +38,8 @@ class WarResponse(BaseModel):
             'created_by_pseudo': data.created_by.game_pseudo,
             'created_at': data.created_at,
             'banned_champions': [ban.champion for ban in data.bans],
+            'season_id': data.season_id,
+            'season_number': data.season.number if data.season else None,
         }
 
 
