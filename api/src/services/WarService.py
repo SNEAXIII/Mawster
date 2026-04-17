@@ -124,6 +124,7 @@ class WarService:
             .options(
                 selectinload(War.created_by),  # type: ignore[arg-type]
                 selectinload(War.bans).selectinload(WarBan.champion),  # type: ignore[arg-type]
+                selectinload(War.season),  # type: ignore[arg-type]
             )
             .order_by(War.created_at.desc())  # type: ignore[attr-defined]
         )
