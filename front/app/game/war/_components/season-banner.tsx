@@ -1,17 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useI18n } from '@/app/i18n';
-import { getCurrentSeason, type Season } from '@/app/services/season';
 import { Badge } from '@/components/ui/badge';
 
-export default function SeasonBanner() {
-  const { t } = useI18n();
-  const [season, setSeason] = useState<Season | null | undefined>(undefined);
+interface Props {
+  season: { number: number } | null | undefined;
+}
 
-  useEffect(() => {
-    getCurrentSeason().then(setSeason).catch(() => setSeason(null));
-  }, []);
+export default function SeasonBanner({ season }: Readonly<Props>) {
+  const { t } = useI18n();
 
   if (season === undefined) return null;
 

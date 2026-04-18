@@ -2,9 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/app/i18n';
+import { War } from '@/app/services/war';
 
 interface WarManagementBarProps {
   loading: boolean;
+  currentWar: War | null;
   onClickDeclare: () => void;
 }
 
@@ -19,14 +21,16 @@ export default function WarManagementBar({
   }
 
   return (
-    <div className='flex items-center gap-3'>
-      <p className='text-muted-foreground text-sm'>{t.game.war.noWar}</p>
-      <Button
-        onClick={onClickDeclare}
-        data-cy='declare-war-btn'
-      >
-        {t.game.war.declareWar}
-      </Button>
-    </div>
+    <>
+      <div className='flex items-center gap-3'>
+        <p className='text-muted-foreground text-sm'>{t.game.war.noWar}</p>
+        <Button
+          onClick={onClickDeclare}
+          data-cy='declare-war-btn'
+        >
+          {t.game.war.declareWar}
+        </Button>
+      </div>
+    </>
   );
 }
