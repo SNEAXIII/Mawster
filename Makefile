@@ -167,5 +167,8 @@ deploy:
 	docker compose -f compose-prod.yaml -f compose-db-access.yaml up -d
 	docker compose -f compose-prod.yaml logs -f
 
+db-access:
+	docker compose -f compose-prod.yaml -f compose-prod.yaml -f compose-db-access.yaml up mariadb backup -d
+
 db-dev:
 	docker compose -f compose-dev.yaml up -d
