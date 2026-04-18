@@ -51,7 +51,7 @@ export function WarMapNode({
     <div
       className={cn(
         'relative flex flex-col items-center justify-center rounded-lg border-2 cursor-pointer transition-all',
-        'w-[60px] h-[72px] sm:w-[68px] sm:h-[82px] md:w-[74px] md:h-[88px]',
+        'w-15 h-18 sm:w-17 sm:h-20.5 md:w-18.5 md:h-22',
         colorClasses,
         hoverClasses,
         placement ? 'ring-1 ring-white/30' : 'opacity-80'
