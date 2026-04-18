@@ -58,9 +58,45 @@ describe('Admin — seasons panel', () => {
       cy.getByCy('seasons-panel').should('be.visible');
       cy.getByCy('season-number-input').type('100');
       cy.getByCy('create-season-btn').click();
-      cy.getByCy('season-row-100').should('be.visible');
-      cy.getByCy('activate-season-100').click();
-      cy.getByCy('season-active-indicator').should('be.visible');
+      cy.getByCy('season-row-100').should('be.visible').within(() => {
+        cy.getByCy('season-active-indicator').should('be.visible');
+      });
+
+      cy.getByCy('season-number-input').type('101');
+      cy.getByCy('create-season-btn').click();
+      cy.getByCy('season-row-101').should('be.visible').within(() => {
+        cy.getByCy('season-active-indicator').should('be.visible');
+      });
+      cy.getByCy('season-row-100').within(() => {
+        cy.getByCy('season-inactive-indicator').should('be.visible');
+      });
+    });
+  });
+
+  it('activating a season via button deactivates the previously active season', () => {
+    setupAdmin('season-swap-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
+      cy.navTo('admin');
+      cy.getByCy('tab-seasons').click();
+      cy.getByCy('seasons-panel').should('be.visible');
+
+      cy.getByCy('season-number-input').type('200');
+      cy.getByCy('create-season-btn').click();
+      cy.getByCy('season-row-200').should('be.visible');
+
+      cy.getByCy('season-number-input').type('201');
+      cy.getByCy('create-season-btn').click();
+      cy.getByCy('season-row-201').should('be.visible').within(() => {
+        cy.getByCy('season-active-indicator').should('be.visible');
+      });
+
+      cy.getByCy('activate-season-200').click();
+      cy.getByCy('season-row-200').within(() => {
+        cy.getByCy('season-active-indicator').should('be.visible');
+      });
+      cy.getByCy('season-row-201').within(() => {
+        cy.getByCy('season-inactive-indicator').should('be.visible');
+      });
     });
   });
 });
