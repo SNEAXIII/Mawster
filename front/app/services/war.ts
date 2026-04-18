@@ -19,6 +19,8 @@ export interface War {
   created_by_pseudo: string;
   created_at: string;
   banned_champions: BannedChampion[];
+  season_id: string | null;
+  season_number: number | null;
 }
 
 export interface WarPlacement {

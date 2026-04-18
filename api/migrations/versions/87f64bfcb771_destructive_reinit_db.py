@@ -1,8 +1,8 @@
-"""init
+"""Destructive reinit db
 
-Revision ID: ec1f9e092dd1
+Revision ID: 87f64bfcb771
 Revises: 
-Create Date: 2026-03-11 01:12:30.919113
+Create Date: 2026-04-18 18:39:44.238181
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel  # noqa: F401
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'ec1f9e092dd1'
+revision: str = '87f64bfcb771'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -38,14 +38,25 @@ def upgrade() -> None:
     sa.Column('image_url', sqlmodel.sql.sqltypes.AutoString(length=500), nullable=True),
     sa.Column('is_7_star', sa.Boolean(), nullable=False),
     sa.Column('is_ascendable', sa.Boolean(), nullable=False),
+    sa.Column('has_prefight', sa.Boolean(), nullable=False),
+    sa.Column('is_saga_attacker', sa.Boolean(), nullable=False),
+    sa.Column('is_saga_defender', sa.Boolean(), nullable=False),
     sa.Column('alias', sqlmodel.sql.sqltypes.AutoString(length=500), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
     )
+    op.create_table('season',
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('number', sa.Integer(), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('number')
+    )
     op.create_table('user',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('login', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('email', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('email_hash', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('email_hash_version', sa.Integer(), nullable=False),
     sa.Column('disabled_at', sa.DateTime(), nullable=True),
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
@@ -54,7 +65,7 @@ def upgrade() -> None:
     sa.Column('discord_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('avatar_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email'),
+    sa.UniqueConstraint('email_hash'),
     sa.UniqueConstraint('login')
     )
     op.create_index(op.f('ix_user_discord_id'), 'user', ['discord_id'], unique=True)
@@ -112,6 +123,19 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['game_account_id'], ['game_account.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('war',
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('alliance_id', sa.Uuid(), nullable=False),
+    sa.Column('opponent_name', sqlmodel.sql.sqltypes.AutoString(length=100), nullable=False),
+    sa.Column('status', sa.Enum('active', 'ended', name='warstatus'), nullable=False),
+    sa.Column('created_by_id', sa.Uuid(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('season_id', sa.Uuid(), nullable=True),
+    sa.ForeignKeyConstraint(['alliance_id'], ['alliance.id'], ),
+    sa.ForeignKeyConstraint(['created_by_id'], ['game_account.id'], ),
+    sa.ForeignKeyConstraint(['season_id'], ['season.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('defense_placement',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('alliance_id', sa.Uuid(), nullable=False),
@@ -139,14 +163,79 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['requester_game_account_id'], ['game_account.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('war_ban',
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('war_id', sa.Uuid(), nullable=False),
+    sa.Column('champion_id', sa.Uuid(), nullable=False),
+    sa.ForeignKeyConstraint(['champion_id'], ['champion.id'], ),
+    sa.ForeignKeyConstraint(['war_id'], ['war.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('war_id', 'champion_id', name='uq_war_ban_champion')
+    )
+    op.create_index(op.f('ix_war_ban_war_id'), 'war_ban', ['war_id'], unique=False)
+    op.create_table('war_defense_placement',
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('war_id', sa.Uuid(), nullable=False),
+    sa.Column('battlegroup', sa.Integer(), nullable=False),
+    sa.Column('node_number', sa.Integer(), nullable=False),
+    sa.Column('champion_id', sa.Uuid(), nullable=False),
+    sa.Column('stars', sa.Integer(), nullable=False),
+    sa.Column('rank', sa.Integer(), nullable=False),
+    sa.Column('ascension', sa.Integer(), nullable=False),
+    sa.Column('placed_by_id', sa.Uuid(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('attacker_champion_user_id', sa.Uuid(), nullable=True),
+    sa.Column('ko_count', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['attacker_champion_user_id'], ['champion_user.id'], ),
+    sa.ForeignKeyConstraint(['champion_id'], ['champion.id'], ),
+    sa.ForeignKeyConstraint(['placed_by_id'], ['game_account.id'], ),
+    sa.ForeignKeyConstraint(['war_id'], ['war.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('war_id', 'battlegroup', 'node_number', name='uq_war_defense_node')
+    )
+    op.create_table('war_prefight_attacker',
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('war_id', sa.Uuid(), nullable=False),
+    sa.Column('battlegroup', sa.Integer(), nullable=False),
+    sa.Column('game_account_id', sa.Uuid(), nullable=False),
+    sa.Column('champion_user_id', sa.Uuid(), nullable=False),
+    sa.Column('target_node_number', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['champion_user_id'], ['champion_user.id'], ),
+    sa.ForeignKeyConstraint(['game_account_id'], ['game_account.id'], ),
+    sa.ForeignKeyConstraint(['war_id'], ['war.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('war_id', 'battlegroup', 'champion_user_id', 'target_node_number', name='uq_war_prefight_champion_node')
+    )
+    op.create_table('war_synergy_attacker',
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('war_id', sa.Uuid(), nullable=False),
+    sa.Column('battlegroup', sa.Integer(), nullable=False),
+    sa.Column('game_account_id', sa.Uuid(), nullable=False),
+    sa.Column('champion_user_id', sa.Uuid(), nullable=False),
+    sa.Column('target_champion_user_id', sa.Uuid(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['champion_user_id'], ['champion_user.id'], ),
+    sa.ForeignKeyConstraint(['game_account_id'], ['game_account.id'], ),
+    sa.ForeignKeyConstraint(['target_champion_user_id'], ['champion_user.id'], ),
+    sa.ForeignKeyConstraint(['war_id'], ['war.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('war_id', 'battlegroup', 'champion_user_id', name='uq_war_synergy_champion')
+    )
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table('war_synergy_attacker')
+    op.drop_table('war_prefight_attacker')
+    op.drop_table('war_defense_placement')
+    op.drop_index(op.f('ix_war_ban_war_id'), table_name='war_ban')
+    op.drop_table('war_ban')
     op.drop_table('requested_upgrade')
     op.drop_table('defense_placement')
+    op.drop_table('war')
     op.drop_table('champion_user')
     op.drop_table('alliance_officer')
     op.drop_table('alliance_invitation')
@@ -154,6 +243,7 @@ def downgrade() -> None:
     op.drop_table('game_account')
     op.drop_index(op.f('ix_user_discord_id'), table_name='user')
     op.drop_table('user')
+    op.drop_table('season')
     op.drop_table('champion')
     op.drop_table('alliance')
     # ### end Alembic commands ###

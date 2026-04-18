@@ -7,7 +7,7 @@ import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useI18n } from '@/app/i18n';
 import { WarProvider, useWar } from '@/app/contexts/war-context';
 import WarHeader from './war-header';
-import WarDefendersTab from './war-defenders-tab';
+import WarTab from './war-tab';
 import WarManagementBar from './war-management-bar';
 import CreateWarDialog from './create-war-dialog';
 import AttackerEntryRow from './attacker-entry-row';
@@ -65,9 +65,10 @@ function WarLayout() {
 
   if (loading) return <FullPageSpinner />;
 
-  const pendingPlacement = pendingRemoveNode !== null
-    ? placements.find((p) => p.node_number === pendingRemoveNode)
-    : undefined;
+  const pendingPlacement =
+    pendingRemoveNode !== null
+      ? placements.find((p) => p.node_number === pendingRemoveNode)
+      : undefined;
 
   return (
     <div className='w-full px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
@@ -84,6 +85,7 @@ function WarLayout() {
           {/* ── Management bar (officers/owners only, no active war) ──── */}
           {canManageWar && !currentWar && (
             <WarManagementBar
+              currentWar={currentWar}
               loading={managementLoading}
               onClickDeclare={() => setShowCreateDialog(true)}
             />
@@ -91,7 +93,7 @@ function WarLayout() {
 
           {/* ── War map ──────────────────────────────────── */}
           {activeWarId ? (
-            <WarDefendersTab />
+            <WarTab />
           ) : (
             <p className='text-muted-foreground'>{t.game.war.noActiveWar}</p>
           )}

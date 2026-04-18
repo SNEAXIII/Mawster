@@ -60,7 +60,7 @@ describe('Mobile Settings Sheet', () => {
       cy.getByCy('modal-settings-content').should('be.visible');
       cy.getByCy('modal-settings-sign-out').click();
 
-      cy.url().should('include', '/login?callbackUrl=%2Fprofile');
+      cy.url().should('include', '/login?callbackUrl=/profile');
     });
   });
 

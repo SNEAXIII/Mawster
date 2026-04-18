@@ -13,4 +13,5 @@ from src.models.WarDefensePlacement import WarDefensePlacement  # noqa: F401
 from src.models.WarSynergyAttacker import WarSynergyAttacker  # noqa: F401
 from src.models.WarBan import WarBan  # noqa: F401
 from src.models.WarPrefightAttacker import WarPrefightAttacker  # noqa: F401
+from src.models.Season import Season  # noqa: F401
 from sqlmodel import SQLModel  # noqa: F401
