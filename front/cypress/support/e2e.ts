@@ -258,20 +258,18 @@ Cypress.Commands.add('uiLogin', (userName: string) => {
 
 // ── Navigate via navbar click ────────────────────────────────────────────────
 
-// Pages where cy.visit is preferred over nav click (avoids Radix scroll-lock contamination
-// across tests, or pages that have no nav link)
-const NAV_URL_FALLBACK: Record<string, string> = {
+const NAV_URLS: Record<string, string> = {
+  admin: '/admin',
+  administration: '/admin',
+  alliances: '/game/alliances',
   defense: '/game/defense',
+  profile: '/profile',
+  roster: '/game/roster',
   war: '/game/war',
 };
 
 Cypress.Commands.add('navTo', (page: string) => {
-  const fallback = NAV_URL_FALLBACK[page];
-  if (fallback) {
-    cy.visit(fallback);
-  } else {
-    cy.getByCy(`nav-${page}`).click();
-  }
+  cy.visit(NAV_URLS[page]);
 });
 
 // ── Invite member to alliance (direct backend call) ─────────────────────────

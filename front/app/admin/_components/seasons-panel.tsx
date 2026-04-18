@@ -67,10 +67,16 @@ export default function SeasonsPanel() {
 
       <div className="flex gap-2 items-center">
         <Input
-          type="number"
+          type="text"
+          inputMode="numeric"
           placeholder={t.game.season.admin.numberPlaceholder}
           value={newNumber}
-          onChange={(e) => setNewNumber(e.target.value)}
+          onKeyDown={(e) => {
+            if (!/^\d$/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+              e.preventDefault();
+            }
+          }}
+          onChange={(e) => setNewNumber(e.target.value.replace(/\D/g, ''))}
           className="w-32"
           data-cy="season-number-input"
         />
