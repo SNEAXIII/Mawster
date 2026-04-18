@@ -1,8 +1,8 @@
-mawster.app {
-    redir https://www.mawster.app{uri} permanent
+mawster.dev {
+    redir https://www.mawster.dev{uri} permanent
 }
 
-www.mawster.app {
+www.mawster.dev {
     encode zstd gzip
 
     # Headers de sécurité HTTP/HTTPS
