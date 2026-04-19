@@ -29,7 +29,7 @@ const fr: Translations = {
     profile: 'Mon Profil',
     gameAccounts: 'Comptes de jeu',
     alliances: 'Alliances',
-    roster: 'Roster',
+    roster: 'Compte',
     defense: 'Défense',
     war: 'Guerre',
     seasons: 'Saisons',
@@ -558,6 +558,9 @@ const fr: Translations = {
     saveSuccess: 'Maîtrises enregistrées avec succès !',
     saveError: "Échec de l'enregistrement des maîtrises",
     noMasteries: 'Aucune maîtrise configurée.',
+    modeAll: 'Tout',
+    modeOffense: 'Attaque',
+    modeDefense: 'Défense',
     names: {
       0: 'Dispersion Mystique',
       1: 'Tiens Bon',

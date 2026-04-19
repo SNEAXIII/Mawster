@@ -381,6 +381,30 @@ Cypress.Commands.add('runFixtures', () => {
   cy.request('POST', `${BACKEND}/dev/fixtures`);
 });
 
+// ── Mastery commands ──────────────────────────────────────────────────────────
+
+Cypress.Commands.add('apiCreateMastery', (adminToken: string, name: string, maxValue: number, order: number) => {
+  return cy
+    .request({
+      method: 'POST',
+      url: `${BACKEND}/admin/masteries`,
+      headers: { Authorization: `Bearer ${adminToken}` },
+      body: { name, max_value: maxValue, order },
+    })
+    .then((res) => res.body);
+});
+
+Cypress.Commands.add('apiSaveMasteries', (token: string, accountId: string, items: { mastery_id: string; unlocked: number; attack: number; defense: number }[]) => {
+  return cy
+    .request({
+      method: 'PUT',
+      url: `${BACKEND}/game-accounts/${accountId}/masteries`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: items,
+    })
+    .then((res) => res.body);
+});
+
 // ── Create upgrade request (direct backend call) ──────────────────────────────
 
 Cypress.Commands.add('apiCreateUpgradeRequest', (token: string, championUserId: string, requestedRarity: string) => {

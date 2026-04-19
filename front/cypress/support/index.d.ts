@@ -248,6 +248,21 @@ declare namespace Cypress {
       battlegroup: number,
       championUserId: string,
     ): Chainable<Cypress.Response<unknown>>;
+
+    /** Create a mastery definition (admin only). */
+    apiCreateMastery(
+      adminToken: string,
+      name: string,
+      maxValue: number,
+      order: number,
+    ): Chainable<{ id: string; name: string; max_value: number; order: number }>;
+
+    /** Save mastery values for a game account. */
+    apiSaveMasteries(
+      token: string,
+      accountId: string,
+      items: { mastery_id: string; unlocked: number; attack: number; defense: number }[],
+    ): Chainable<unknown>;
   }
 }
 

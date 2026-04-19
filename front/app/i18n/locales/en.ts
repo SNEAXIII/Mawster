@@ -27,7 +27,7 @@ const en = {
     profile: 'My Profile',
     gameAccounts: 'Game Accounts',
     alliances: 'Alliances',
-    roster: 'Roster',
+    roster: 'Account',
     defense: 'Defense',
     war: 'War',
     seasons: 'Seasons',
@@ -551,6 +551,9 @@ const en = {
     saveSuccess: 'Masteries saved successfully!',
     saveError: 'Failed to save masteries',
     noMasteries: 'No masteries configured yet.',
+    modeAll: 'All',
+    modeOffense: 'Offense',
+    modeDefense: 'Defense',
     names: {
       0: 'Mystic Dispersion',
       1: 'Stand Your Ground',

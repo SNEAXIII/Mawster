@@ -5,7 +5,7 @@ from main import app
 from src.enums.Roles import Roles
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2
-from tests.integration.endpoints.setup.game_setup import push_game_account
+from tests.integration.endpoints.setup.game_setup import push_game_account, push_alliance_with_owner, push_member
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
@@ -110,6 +110,27 @@ class TestGameAccountMasteries:
             f"/game-accounts/{account.id}/masteries", payload, headers=USER_HEADERS
         )
         assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_get_masteries_non_member_returns_403(self):
+        await push_one_user()
+        await push_user2()
+        account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        response = await execute_get_request(
+            f"/game-accounts/{account.id}/masteries", headers=USER2_HEADERS
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_get_masteries_alliance_member_can_view(self):
+        await push_one_user()
+        await push_user2()
+        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
+        await push_member(alliance, USER2_ID)
+        response = await execute_get_request(
+            f"/game-accounts/{owner_acc.id}/masteries", headers=USER2_HEADERS
+        )
+        assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_upsert_masteries_other_user_returns_403(self):

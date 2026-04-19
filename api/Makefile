@@ -8,6 +8,7 @@ help:
 	@echo "migrate      --> execute pending migrations"
 	@echo "fixtures     --> load all fixtures for dev purposes"
 	@echo "load-champions --> load champions from scripts/champions.json"
+	@echo "load-masteries --> load masteries from scripts/masteries.json"
 	@echo "init-db      --> load one user and basic bdd"
 	@echo "cancel-last  --> cancel last executed migration"
 	@echo "test         --> run tests (xdist enabled by default, set XDIST=0 to disable)"
@@ -40,6 +41,9 @@ fixtures:
 
 load-champions:
 	uv run python -m src.fixtures.load_champions
+
+load-masteries:
+	uv run python -m src.fixtures.load_masteries
 
 reset-db:
 	uv run python -m src.fixtures.reset_db

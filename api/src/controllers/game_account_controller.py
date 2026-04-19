@@ -12,6 +12,7 @@ from src.dto.dto_mastery import GameAccountMasteryUpsertItem, GameAccountMastery
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND, NOT_YOUR_GAME_ACCOUNT
 from src.models import User
 from src.models.GameAccount import GameAccount
+from src.services.AllianceService import AllianceService
 from src.services.AuthService import AuthService
 from src.services.GameAccountService import GameAccountService
 from src.services.MasteryService import MasteryService
@@ -143,8 +144,16 @@ async def delete_game_account(
 async def get_game_account_masteries(
     game_account_id: uuid.UUID,
     session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Get mastery values for a game account. Visible to all authenticated members."""
+    """Get mastery values for a game account. Visible to owner or alliance members."""
+    game_account = await GameAccountService.get_game_account(session, game_account_id)
+    if game_account is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
+    if game_account.user_id != current_user.id:
+        if game_account.alliance_id is None:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_GAME_ACCOUNT)
+        await AllianceService.get_user_account_in_alliance(session, current_user.id, game_account.alliance_id)
     return await MasteryService.get_for_account(session, game_account_id)
 
 
