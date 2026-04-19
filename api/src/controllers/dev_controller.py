@@ -15,6 +15,7 @@ from src.dto.dto_token import LoginResponse, TokenBody
 from src.dto.dto_utilisateurs import UserProfile
 from src.enums.Roles import Roles
 from src.models import User, GameAccount
+from src.models.Mastery import Mastery
 from src.security.secrets import SECRET
 from src.services.DiscordAuthService import DiscordAuthService
 from src.services.GameAccountService import GameAccountService
@@ -288,6 +289,22 @@ async def get_env_info():
         db_name=SECRET.MARIADB_DATABASE,
         db_user=SECRET.MARIADB_USER,
     )
+
+
+class DevCreateMasteryRequest(BaseModel):
+    name: str
+    max_value: int
+    order: int
+
+
+@dev_controller.post("/masteries", status_code=201)
+async def dev_create_mastery(body: DevCreateMasteryRequest, session: SessionDep):
+    """Create a mastery definition. For testing purposes only."""
+    mastery = Mastery(name=body.name, max_value=body.max_value, order=body.order)
+    session.add(mastery)
+    await session.commit()
+    await session.refresh(mastery)
+    return {"id": str(mastery.id), "name": mastery.name, "max_value": mastery.max_value, "order": mastery.order}
 
 
 class LogMarkerRequest(BaseModel):

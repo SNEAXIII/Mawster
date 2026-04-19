@@ -383,12 +383,11 @@ Cypress.Commands.add('runFixtures', () => {
 
 // ── Mastery commands ──────────────────────────────────────────────────────────
 
-Cypress.Commands.add('apiCreateMastery', (adminToken: string, name: string, maxValue: number, order: number) => {
+Cypress.Commands.add('apiCreateMastery', (_adminToken: string, name: string, maxValue: number, order: number) => {
   return cy
     .request({
       method: 'POST',
-      url: `${BACKEND}/admin/masteries`,
-      headers: { Authorization: `Bearer ${adminToken}` },
+      url: `${BACKEND}/dev/masteries`,
       body: { name, max_value: maxValue, order },
     })
     .then((res) => res.body);

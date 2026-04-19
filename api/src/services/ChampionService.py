@@ -185,6 +185,9 @@ class ChampionService:
                 if data.alias is not None:
                     existing.alias = data.alias
                 existing.is_ascendable = data.is_ascendable
+                existing.has_prefight = data.has_prefight
+                existing.is_saga_attacker = data.is_saga_attacker
+                existing.is_saga_defender = data.is_saga_defender
                 session.add(existing)
                 updated += 1
             else:
@@ -195,6 +198,9 @@ class ChampionService:
                     alias=data.alias,
                     is_7_star=False,
                     is_ascendable=data.is_ascendable,
+                    has_prefight=data.has_prefight,
+                    is_saga_attacker=data.is_saga_attacker,
+                    is_saga_defender=data.is_saga_defender,
                 )
                 session.add(new_champion)
                 created += 1
