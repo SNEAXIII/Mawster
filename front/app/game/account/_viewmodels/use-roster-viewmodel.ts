@@ -131,7 +131,7 @@ export function useRosterViewModel() {
       setMasteries(updated);
       toast.success(t.mastery.saveSuccess);
     } catch (e: unknown) {
-      toast.error((e as Error).message || t.mastery.saveError);
+      toast.error(e instanceof Error ? e.message : t.mastery.saveError);
     } finally {
       setSavingMasteries(false);
     }

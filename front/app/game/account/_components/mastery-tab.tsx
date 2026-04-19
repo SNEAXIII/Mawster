@@ -35,6 +35,8 @@ export default function MasteryTab({
     return <p className='text-muted-foreground'>{t.mastery.noMasteries}</p>;
   }
 
+  const toCyKey = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
+
   const updateField = (
     masteryId: string,
     field: 'unlocked' | 'attack' | 'defense',
@@ -54,7 +56,7 @@ export default function MasteryTab({
           const formItem = masteryForm.find((f) => f.mastery_id === mastery.mastery_id);
           if (!formItem) return null;
           return (
-            <Card key={mastery.mastery_id} data-cy={`mastery-card-${mastery.mastery_name.toLowerCase()}`}>
+            <Card key={mastery.mastery_id} data-cy={`mastery-card-${toCyKey(mastery.mastery_name)}`}>
               <CardHeader className='pb-2'>
                 <CardTitle className='text-sm uppercase tracking-wide'>
                   {mastery.mastery_name}
@@ -78,7 +80,7 @@ export default function MasteryTab({
                         }
                         disabled={!isOwner}
                         className='text-center'
-                        data-cy={`mastery-${mastery.mastery_name.toLowerCase()}-${field}`}
+                        data-cy={`mastery-${toCyKey(mastery.mastery_name)}-${field}`}
                       />
                     </div>
                   ))}
