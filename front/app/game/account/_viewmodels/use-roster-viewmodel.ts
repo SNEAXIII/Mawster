@@ -17,10 +17,12 @@ import {
   togglePreferredAttacker,
   ascendChampion,
 } from '@/app/services/roster';
+import { getMasteries, saveMasteries, MasteryEntry, MasteryUpsertItem } from '@/app/services/masteries';
 
 export enum RosterTab {
   Roster = 'roster',
-  Accounts = 'accounts',
+  Mastery = 'mastery',
+  Accounts = 'manage',
 }
 
 export function useRosterViewModel() {
@@ -47,6 +49,11 @@ export function useRosterViewModel() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
+
+  const [masteries, setMasteries] = useState<MasteryEntry[]>([]);
+  const [masteryForm, setMasteryForm] = useState<MasteryUpsertItem[]>([]);
+  const [loadingMasteries, setLoadingMasteries] = useState(false);
+  const [savingMasteries, setSavingMasteries] = useState(false);
 
   const [roster, setRoster] = useState<RosterEntry[]>([]);
   const [loadingRoster, setLoadingRoster] = useState(false);
@@ -95,6 +102,41 @@ export function useRosterViewModel() {
       .finally(() => setLoadingRoster(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAccountId]);
+
+  const fetchMasteries = useCallback(async (accountId: string) => {
+    setLoadingMasteries(true);
+    try {
+      const data = await getMasteries(accountId);
+      setMasteries(data);
+      setMasteryForm(
+        data.map((m) => ({
+          mastery_id: m.mastery_id,
+          unlocked: m.unlocked,
+          attack: m.attack,
+          defense: m.defense,
+        }))
+      );
+    } catch {
+      // silent — tab shows empty state
+    } finally {
+      setLoadingMasteries(false);
+    }
+  }, []);
+
+  const handleSaveMasteries = useCallback(async () => {
+    if (!selectedAccountId) return;
+    setSavingMasteries(true);
+    try {
+      const updated = await saveMasteries(selectedAccountId, masteryForm);
+      setMasteries(updated);
+      toast.success(t.mastery.saveSuccess);
+    } catch (e: unknown) {
+      toast.error((e as Error).message || t.mastery.saveError);
+    } finally {
+      setSavingMasteries(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccountId, masteryForm]);
 
   const handleFormSuccess = useCallback((updated: RosterEntry[]) => {
     setRoster(updated);
@@ -177,6 +219,13 @@ export function useRosterViewModel() {
     return Object.entries(groups);
   }, [roster]);
 
+  useEffect(() => {
+    if (activeTab === RosterTab.Mastery && selectedAccountId) {
+      fetchMasteries(selectedAccountId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, selectedAccountId]);
+
   const clearError = useCallback(() => setError(null), []);
 
   return {
@@ -209,5 +258,11 @@ export function useRosterViewModel() {
     handleTogglePreferredAttacker,
     clearError,
     fetchAccounts,
+    masteries,
+    masteryForm,
+    loadingMasteries,
+    savingMasteries,
+    setMasteryForm,
+    handleSaveMasteries,
   };
 }
