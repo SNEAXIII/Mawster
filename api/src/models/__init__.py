@@ -14,4 +14,6 @@ from src.models.WarSynergyAttacker import WarSynergyAttacker  # noqa: F401
 from src.models.WarBan import WarBan  # noqa: F401
 from src.models.WarPrefightAttacker import WarPrefightAttacker  # noqa: F401
 from src.models.Season import Season  # noqa: F401
+from src.models.Mastery import Mastery  # noqa: F401
+from src.models.GameAccountMastery import GameAccountMastery  # noqa: F401
 from sqlmodel import SQLModel  # noqa: F401
