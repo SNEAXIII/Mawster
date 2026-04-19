@@ -26,7 +26,7 @@ Initial seed list:
 
 | Name               | max_value |
 |--------------------|-----------|
-| ASSASSIN           | 6         |
+| ASSASSIN           | 5         |
 | RECOIL             | 3         |
 | LIQUID COURAGE     | 3         |
 | DOUBLE EDGE        | 3         |

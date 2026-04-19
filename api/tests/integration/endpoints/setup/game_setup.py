@@ -206,7 +206,7 @@ INITIAL_MASTERIES = [
     {"name": "MYSTIC DISPERSION", "max_value": 5, "order": 0},
     {"name": "STAND YOUR GROUND", "max_value": 5, "order": 1},
     {"name": "LIMBER", "max_value": 3, "order": 2},
-    {"name": "ASSASSIN", "max_value": 6, "order": 3},
+    {"name": "ASSASSIN", "max_value": 5, "order": 3},
     {"name": "RECOIL", "max_value": 3, "order": 4},
     {"name": "LIQUID COURAGE", "max_value": 3, "order": 5},
     {"name": "DOUBLE EDGE", "max_value": 3, "order": 6},

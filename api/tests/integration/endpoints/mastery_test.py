@@ -24,7 +24,7 @@ USER2_HEADERS = create_auth_headers(user_id=str(USER2_ID), role=Roles.USER)
 ADMIN_MASTERIES_URL = "/admin/masteries"
 
 
-async def _push_mastery(name: str = "ASSASSIN", max_value: int = 6, order: int = 0) -> Mastery:
+async def _push_mastery(name: str = "ASSASSIN", max_value: int = 5, order: int = 0) -> Mastery:
     mastery = Mastery(name=name, max_value=max_value, order=order)
     await load_objects([mastery])
     return mastery
@@ -49,7 +49,7 @@ class TestGameAccountMasteries:
     async def test_get_masteries_returns_all_with_defaults(self):
         await push_one_user()
         account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        mastery = await _push_mastery("ASSASSIN", 6)
+        mastery = await _push_mastery("ASSASSIN", 5)
         response = await execute_get_request(
             f"/game-accounts/{account.id}/masteries", headers=USER_HEADERS
         )
@@ -66,7 +66,7 @@ class TestGameAccountMasteries:
     async def test_upsert_masteries_ok(self):
         await push_one_user()
         account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        mastery = await _push_mastery("ASSASSIN", 6)
+        mastery = await _push_mastery("ASSASSIN", 5)
         payload = [{"mastery_id": str(mastery.id), "unlocked": 4, "attack": 4, "defense": 2}]
         response = await execute_put_request(
             f"/game-accounts/{account.id}/masteries", payload, headers=USER_HEADERS
@@ -82,7 +82,7 @@ class TestGameAccountMasteries:
     async def test_upsert_masteries_attack_exceeds_unlocked_returns_422(self):
         await push_one_user()
         account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        mastery = await _push_mastery("ASSASSIN", 6)
+        mastery = await _push_mastery("ASSASSIN", 5)
         payload = [{"mastery_id": str(mastery.id), "unlocked": 3, "attack": 4, "defense": 0}]
         response = await execute_put_request(
             f"/game-accounts/{account.id}/masteries", payload, headers=USER_HEADERS
@@ -93,7 +93,7 @@ class TestGameAccountMasteries:
     async def test_upsert_masteries_defense_exceeds_unlocked_returns_422(self):
         await push_one_user()
         account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        mastery = await _push_mastery("ASSASSIN", 6)
+        mastery = await _push_mastery("ASSASSIN", 5)
         payload = [{"mastery_id": str(mastery.id), "unlocked": 3, "attack": 0, "defense": 4}]
         response = await execute_put_request(
             f"/game-accounts/{account.id}/masteries", payload, headers=USER_HEADERS
@@ -104,7 +104,7 @@ class TestGameAccountMasteries:
     async def test_upsert_masteries_unlocked_exceeds_max_returns_422(self):
         await push_one_user()
         account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        mastery = await _push_mastery("ASSASSIN", 6)
+        mastery = await _push_mastery("ASSASSIN", 5)
         payload = [{"mastery_id": str(mastery.id), "unlocked": 99, "attack": 0, "defense": 0}]
         response = await execute_put_request(
             f"/game-accounts/{account.id}/masteries", payload, headers=USER_HEADERS

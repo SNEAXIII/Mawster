@@ -10,9 +10,9 @@ from src.dto.dto_mastery import (
 
 class TestMasteryCreateRequest:
     def test_valid(self):
-        m = MasteryCreateRequest(name="ASSASSIN", max_value=6, order=0)
+        m = MasteryCreateRequest(name="ASSASSIN", max_value=5, order=0)
         assert m.name == "ASSASSIN"
-        assert m.max_value == 6
+        assert m.max_value == 5
 
     def test_max_value_zero_invalid(self):
         with pytest.raises(ValidationError):
@@ -20,7 +20,7 @@ class TestMasteryCreateRequest:
 
     def test_name_empty_invalid(self):
         with pytest.raises(ValidationError):
-            MasteryCreateRequest(name="", max_value=6)
+            MasteryCreateRequest(name="", max_value=5)
 
 
 class TestMasteryUpdateRequest:

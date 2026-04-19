@@ -23,7 +23,7 @@ describe('Mastery tab', () => {
 
   it('shows all masteries with default 0 values when not yet saved', () => {
     setupRosterUser('mastery-defaults', 'MasteryUser').then(({ adminData, userData }) => {
-      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 6, 3);
+      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 5, 3);
       cy.apiCreateMastery(adminData.access_token, 'LIMBER', 3, 2);
 
       cy.apiLogin(userData.user_id);
@@ -43,7 +43,7 @@ describe('Mastery tab', () => {
 
   it('owner can save masteries and values persist after reload', () => {
     setupRosterUser('mastery-save', 'MasteryUser').then(({ adminData, userData, accountId }) => {
-      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 6, 3).then((mastery) => {
+      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 5, 3).then((mastery) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/account?tab=mastery');
 
@@ -68,7 +68,7 @@ describe('Mastery tab', () => {
 
   it('switches to mastery tab via tab bar', () => {
     setupRosterUser('mastery-tab-nav', 'MasteryUser').then(({ adminData, userData }) => {
-      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 6, 3);
+      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 5, 3);
 
       cy.apiLogin(userData.user_id);
       cy.visit('/game/account');
@@ -84,7 +84,7 @@ describe('Mastery tab', () => {
 
   it('shows pre-saved values when masteries already saved via API', () => {
     setupRosterUser('mastery-presaved', 'MasteryUser').then(({ adminData, userData, accountId }) => {
-      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 6, 3).then((mastery) => {
+      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 5, 3).then((mastery) => {
         cy.apiSaveMasteries(userData.access_token, accountId, [
           { mastery_id: mastery.id, unlocked: 5, attack: 4, defense: 3 },
         ]);
@@ -105,7 +105,7 @@ describe('Mastery tab', () => {
 
   it('blocks attack value exceeding unlocked', () => {
     setupRosterUser('mastery-validation', 'MasteryUser').then(({ adminData, userData }) => {
-      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 6, 3);
+      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 5, 3);
 
       cy.apiLogin(userData.user_id);
       cy.visit('/game/account?tab=mastery');
@@ -118,13 +118,13 @@ describe('Mastery tab', () => {
 
   it('blocks unlocked value exceeding max_value', () => {
     setupRosterUser('mastery-validation-max', 'MasteryUser').then(({ adminData, userData }) => {
-      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 6, 3);
+      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 5, 3);
 
       cy.apiLogin(userData.user_id);
       cy.visit('/game/account?tab=mastery');
 
       cy.getByCy('mastery-assassin-unlocked').clear().type('99');
-      cy.getByCy('mastery-assassin-unlocked').should('have.value', '6');
+      cy.getByCy('mastery-assassin-unlocked').should('have.value', '5');
     });
   });
 
@@ -134,9 +134,9 @@ describe('Mastery tab', () => {
 
   it('shows MAX badge when mastery is fully unlocked', () => {
     setupRosterUser('mastery-max-badge', 'MasteryUser').then(({ adminData, userData, accountId }) => {
-      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 6, 3).then((mastery) => {
+      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 5, 3).then((mastery) => {
         cy.apiSaveMasteries(userData.access_token, accountId, [
-          { mastery_id: mastery.id, unlocked: 6, attack: 0, defense: 0 },
+          { mastery_id: mastery.id, unlocked: 5, attack: 0, defense: 0 },
         ]);
 
         cy.apiLogin(userData.user_id);
@@ -162,7 +162,7 @@ describe('Mastery tab', () => {
       const ownerAccId = users['mastery-alliance-owner'].account_id!;
       const memberUserId = users['mastery-alliance-member'].user_id;
 
-      cy.apiCreateMastery(adminToken, 'ASSASSIN', 6, 3).then((mastery) => {
+      cy.apiCreateMastery(adminToken, 'ASSASSIN', 5, 3).then((mastery) => {
         cy.apiSaveMasteries(ownerToken, ownerAccId, [
           { mastery_id: mastery.id, unlocked: 4, attack: 3, defense: 2 },
         ]);
