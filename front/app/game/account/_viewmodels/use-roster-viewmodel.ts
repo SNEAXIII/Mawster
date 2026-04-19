@@ -103,6 +103,23 @@ export function useRosterViewModel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAccountId]);
 
+  const updateMasteryField = useCallback((
+    masteryId: string,
+    field: 'unlocked' | 'attack' | 'defense',
+    value: number,
+    masteryMaxValue: number,
+  ) => {
+    if (value < 0) return;
+    setMasteryForm((prev) => {
+      const current = prev.find((item) => item.mastery_id === masteryId);
+      const maxValue = field === 'unlocked' ? masteryMaxValue : (current?.unlocked ?? 0);
+      const clamped = Math.min(value, maxValue);
+      return prev.map((item) =>
+        item.mastery_id === masteryId ? { ...item, [field]: clamped } : item
+      );
+    });
+  }, []);
+
   const fetchMasteries = useCallback(async (accountId: string) => {
     setLoadingMasteries(true);
     try {
@@ -263,7 +280,7 @@ export function useRosterViewModel() {
     masteryForm,
     loadingMasteries,
     savingMasteries,
-    setMasteryForm,
+    updateMasteryField,
     handleSaveMasteries,
   };
 }

@@ -58,9 +58,11 @@ export default function MasteryMiniView({
         {masteries.map((m) => {
           const name =
             t.mastery.names[m.mastery_order as keyof typeof t.mastery.names] ?? m.mastery_name;
+          const cyKey = m.mastery_name.toLowerCase().replaceAll(/\s+/g, '-');
           return (
             <div
               key={m.mastery_id}
+              data-cy={`mastery-card-${cyKey}`}
               className='flex items-center justify-between text-sm px-1'
             >
               <span className='text-xs uppercase tracking-wide text-muted-foreground w-40 truncate'>

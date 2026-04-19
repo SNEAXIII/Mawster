@@ -127,7 +127,7 @@ export default function RosterContent() {
             loading={vm.loadingMasteries}
             saving={vm.savingMasteries}
             isOwner={vm.accounts.some((a) => a.id === vm.selectedAccountId)}
-            onFormChange={vm.setMasteryForm}
+            onFieldChange={vm.updateMasteryField}
             onSave={vm.handleSaveMasteries}
           />
         )}

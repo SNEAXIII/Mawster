@@ -12,7 +12,7 @@ interface MasteryTabProps {
   loading: boolean;
   saving: boolean;
   isOwner: boolean;
-  onFormChange: (form: MasteryUpsertItem[]) => void;
+  onFieldChange: (masteryId: string, field: 'unlocked' | 'attack' | 'defense', value: number, masteryMaxValue: number) => void;
   onSave: () => void;
 }
 
@@ -41,7 +41,7 @@ export default function MasteryTab({
   loading,
   saving,
   isOwner,
-  onFormChange,
+  onFieldChange,
   onSave,
 }: Readonly<MasteryTabProps>) {
   const { t } = useI18n();
@@ -55,20 +55,6 @@ export default function MasteryTab({
   }
 
   const toCyKey = (name: string) => name.toLowerCase().replaceAll(/\s+/g, '-');
-
-  const updateField = (
-    masteryId: string,
-    field: 'unlocked' | 'attack' | 'defense',
-    value: number,
-    maxValue: number
-  ) => {
-    if (value < 0 || value > maxValue) return;
-    onFormChange(
-      masteryForm.map((item) =>
-        item.mastery_id === masteryId ? { ...item, [field]: value } : item
-      )
-    );
-  };
 
   return (
     <div>
@@ -96,7 +82,7 @@ export default function MasteryTab({
               <CardContent>
                 <div className='grid grid-cols-3'>
                   {(['unlocked', 'attack', 'defense'] as const).map((field) => {
-                    const actualMaxValue =
+                    const displayMax =
                       field === 'unlocked' ? mastery.mastery_max_value : formItem.unlocked;
                     return (
                       <div key={field} className='text-center'>
@@ -106,19 +92,19 @@ export default function MasteryTab({
                             type='number'
                             value={formItem[field]}
                             onChange={(e) =>
-                              updateField(
+                              onFieldChange(
                                 mastery.mastery_id,
                                 field,
                                 Number(e.target.value),
-                                actualMaxValue
+                                mastery.mastery_max_value,
                               )
                             }
                             disabled={!isOwner}
-                            className={`text-center w-10 font-normal normal-case focus-visible:ring-0 ${getInputStyle(formItem[field], actualMaxValue)}`}
+                            className={`text-center w-10 font-normal normal-case focus-visible:ring-0 ${getInputStyle(formItem[field], displayMax)}`}
                             data-cy={`mastery-${toCyKey(mastery.mastery_name)}-${field}`}
                           />
                           <span className='text-muted-foreground font-normal normal-case ml-1'>
-                            / {actualMaxValue}
+                            / {displayMax}
                           </span>
                         </div>
                       </div>
