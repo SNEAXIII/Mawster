@@ -40,12 +40,17 @@ async def _mastery_responses(
     result = []
     for row in rows:
         mastery = await session.get(Mastery, row.mastery_id)
+        if mastery is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Data integrity error: mastery definition not found.",
+            )
         result.append(GameAccountMasteryResponse(
             id=row.id,
             mastery_id=row.mastery_id,
-            mastery_name=mastery.name if mastery else "",
-            mastery_max_value=mastery.max_value if mastery else 0,
-            mastery_order=mastery.order if mastery else 0,
+            mastery_name=mastery.name,
+            mastery_max_value=mastery.max_value,
+            mastery_order=mastery.order,
             unlocked=row.unlocked,
             attack=row.attack,
             defense=row.defense,
