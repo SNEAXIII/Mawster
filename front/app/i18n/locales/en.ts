@@ -538,6 +538,19 @@ const en = {
     preferredAttackerToggle: 'Toggle preferred attacker flag',
     preferredAttackerHint:
       'Marked as preferred attacker — officers can still place them in defense.',
+    manageTab: 'Manage',
+  },
+
+  mastery: {
+    title: 'Masteries',
+    tabLabel: 'Mastery',
+    unlocked: 'Unlocked',
+    attack: 'Attack',
+    defense: 'Defense',
+    save: 'Confirm',
+    saveSuccess: 'Masteries saved successfully!',
+    saveError: 'Failed to save masteries',
+    noMasteries: 'No masteries configured yet.',
   },
 } as const;
 

@@ -545,6 +545,19 @@ const fr: Translations = {
     preferredAttackerToggle: "Basculer le statut d'attaquant préféré",
     preferredAttackerHint:
       'Marqué comme attaquant préféré — les officiers peuvent quand même le placer en défense.',
+    manageTab: 'Gérer',
+  },
+
+  mastery: {
+    title: 'Maîtrises',
+    tabLabel: 'Maîtrise',
+    unlocked: 'Débloqué',
+    attack: 'Attaque',
+    defense: 'Défense',
+    save: 'Valider',
+    saveSuccess: 'Maîtrises enregistrées avec succès !',
+    saveError: "Échec de l'enregistrement des maîtrises",
+    noMasteries: 'Aucune maîtrise configurée.',
   },
 } as const;
 
