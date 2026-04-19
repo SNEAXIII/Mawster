@@ -264,7 +264,7 @@ const NAV_URLS: Record<string, string> = {
   alliances: '/game/alliances',
   defense: '/game/defense',
   profile: '/profile',
-  roster: '/game/roster',
+  roster: '/game/account',
   war: '/game/war',
 };
 

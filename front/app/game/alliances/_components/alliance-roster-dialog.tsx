@@ -12,8 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import RosterGrid from '@/app/game/roster/_components/roster-grid';
-import UpgradeRequestsSection from '@/app/game/roster/_components/upgrade-requests-section';
+import RosterGrid from '@/app/game/account/_components/roster-grid';
+import UpgradeRequestsSection from '@/app/game/account/_components/upgrade-requests-section';
 import { getRoster, RosterEntry, RARITIES, RARITY_LABELS } from '@/app/services/roster';
 import { useUpgradeRequests } from '@/hooks/use-upgrade-requests';
 

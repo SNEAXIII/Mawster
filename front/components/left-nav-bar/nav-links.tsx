@@ -29,7 +29,7 @@ export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksPro
   const links = [
     { name: t.nav.home, href: '/', icon: Home, role: Role.all, cy: 'nav-home' },
     { name: t.nav.profile, href: '/profile', icon: User, role: Role.user, cy: 'nav-profile' },
-    { name: t.nav.roster, href: '/game/roster', icon: Sword, role: Role.user, cy: 'nav-roster' },
+    { name: t.nav.roster, href: '/game/account', icon: Sword, role: Role.user, cy: 'nav-roster' },
     {
       name: t.nav.alliances,
       href: '/game/alliances',
