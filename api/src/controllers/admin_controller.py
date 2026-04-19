@@ -3,10 +3,8 @@ from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Query
 
-from src.dto.dto_mastery import MasteryCreateRequest, MasteryUpdateRequest, MasteryResponse
 from src.dto.dto_utilisateurs import UserAdminViewAllUsers
 from src.enums.Roles import Roles
-from src.Messages.mastery_messages import MASTERY_DELETED
 from src.Messages.user_messages import (
     TARGET_USER_DELETED_SUCCESSFULLY,
     TARGET_USER_DEMOTED_SUCCESSFULLY,
@@ -16,7 +14,6 @@ from src.Messages.user_messages import (
 )
 from src.models import User
 from src.services.AuthService import AuthService
-from src.services.MasteryService import MasteryService
 from src.services.UserService import UserService
 from src.utils.db import SessionDep
 from src.utils.logging_config import audit_log
@@ -107,31 +104,4 @@ async def patch_demote_user(
     await UserService.admin_patch_demote_user(session, user_uuid_to_demote)
     audit_log("admin.demote_user", user_id=str(current_user.id), detail=f"target_user_id={user_uuid_to_demote}")
     return {"message": TARGET_USER_DEMOTED_SUCCESSFULLY}
-
-
-# ─── Masteries ───────────────────────────────────────────────────────────────
-
-
-@admin_controller.get("/masteries", response_model=list[MasteryResponse], status_code=200)
-async def get_masteries(session: SessionDep):
-    masteries = await MasteryService.get_all(session)
-    return [MasteryResponse.model_validate(m) for m in masteries]
-
-
-@admin_controller.post("/masteries", response_model=MasteryResponse, status_code=201)
-async def create_mastery(body: MasteryCreateRequest, session: SessionDep):
-    mastery = await MasteryService.create(session, body.name, body.max_value, body.order)
-    return MasteryResponse.model_validate(mastery)
-
-
-@admin_controller.put("/masteries/{mastery_id}", response_model=MasteryResponse, status_code=200)
-async def update_mastery(mastery_id: uuid.UUID, body: MasteryUpdateRequest, session: SessionDep):
-    mastery = await MasteryService.update(session, mastery_id, body.name, body.order)
-    return MasteryResponse.model_validate(mastery)
-
-
-@admin_controller.delete("/masteries/{mastery_id}", status_code=200)
-async def delete_mastery(mastery_id: uuid.UUID, session: SessionDep):
-    await MasteryService.delete(session, mastery_id)
-    return {"message": MASTERY_DELETED}
 

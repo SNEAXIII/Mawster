@@ -558,6 +558,16 @@ const fr: Translations = {
     saveSuccess: 'Maîtrises enregistrées avec succès !',
     saveError: "Échec de l'enregistrement des maîtrises",
     noMasteries: 'Aucune maîtrise configurée.',
+    names: {
+      0: 'Dispersion Mystique',
+      1: 'Tiens Bon',
+      2: 'Agilité',
+      3: 'Assassin',
+      4: 'Recul',
+      5: 'Courage Liquide',
+      6: 'Double Tranchant',
+      7: 'Collier Tech',
+    },
   },
 } as const;
 

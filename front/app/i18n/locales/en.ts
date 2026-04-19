@@ -551,6 +551,16 @@ const en = {
     saveSuccess: 'Masteries saved successfully!',
     saveError: 'Failed to save masteries',
     noMasteries: 'No masteries configured yet.',
+    names: {
+      0: 'Mystic Dispersion',
+      1: 'Stand Your Ground',
+      2: 'Limber',
+      3: 'Assassin',
+      4: 'Recoil',
+      5: 'Liquid Courage',
+      6: 'Double Edge',
+      7: 'Collar Tech',
+    },
   },
 } as const;
 

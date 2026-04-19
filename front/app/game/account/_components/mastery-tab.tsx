@@ -24,24 +24,26 @@ export default function MasteryTab({
   isOwner,
   onFormChange,
   onSave,
-}: MasteryTabProps) {
+}: Readonly<MasteryTabProps>) {
   const { t } = useI18n();
 
   if (loading) {
     return <p className='text-muted-foreground'>{t.common.loading}</p>;
   }
 
-  if (masteries.length === 0) {
+  if (!loading && masteries.length === 0) {
     return <p className='text-muted-foreground'>{t.mastery.noMasteries}</p>;
   }
 
-  const toCyKey = (name: string) => name.toLowerCase().replace(/\s+/g, '-');
+  const toCyKey = (name: string) => name.toLowerCase().replaceAll(/\s+/g, '-');
 
   const updateField = (
     masteryId: string,
     field: 'unlocked' | 'attack' | 'defense',
-    value: number
+    value: number,
+    maxValue: number
   ) => {
+    if (value < 0 || value > maxValue) return; // Basic validation to prevent invalid values
     onFormChange(
       masteryForm.map((item) =>
         item.mastery_id === masteryId ? { ...item, [field]: value } : item
@@ -56,34 +58,50 @@ export default function MasteryTab({
           const formItem = masteryForm.find((f) => f.mastery_id === mastery.mastery_id);
           if (!formItem) return null;
           return (
-            <Card key={mastery.mastery_id} data-cy={`mastery-card-${toCyKey(mastery.mastery_name)}`}>
-              <CardHeader className='pb-2'>
+            <Card
+              key={mastery.mastery_id}
+              data-cy={`mastery-card-${toCyKey(mastery.mastery_name)}`}
+            >
+              <CardHeader className='px-4 p-4'>
                 <CardTitle className='text-sm uppercase tracking-wide'>
-                  {mastery.mastery_name}
-                  <span className='text-muted-foreground font-normal normal-case ml-1'>
-                    / {mastery.mastery_max_value}
-                  </span>
+                  {t.mastery.names[mastery.mastery_order as keyof typeof t.mastery.names] ??
+                    mastery.mastery_name}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className='grid grid-cols-3 gap-2'>
-                  {(['unlocked', 'attack', 'defense'] as const).map((field) => (
-                    <div key={field} className='text-center'>
-                      <p className='text-xs text-muted-foreground mb-1'>{t.mastery[field]}</p>
-                      <Input
-                        type='number'
-                        min={0}
-                        max={field === 'unlocked' ? mastery.mastery_max_value : formItem.unlocked}
-                        value={formItem[field]}
-                        onChange={(e) =>
-                          updateField(mastery.mastery_id, field, Number(e.target.value))
-                        }
-                        disabled={!isOwner}
+              <CardContent className='p-0 px-4 pb-4'>
+                <div className='grid grid-cols-3'>
+                  {(['unlocked', 'attack', 'defense'] as const).map((field) => {
+                    const actualMaxValue =
+                      field === 'unlocked' ? mastery.mastery_max_value : formItem.unlocked;
+                    return (
+                      <div
+                        key={field}
                         className='text-center'
-                        data-cy={`mastery-${toCyKey(mastery.mastery_name)}-${field}`}
-                      />
-                    </div>
-                  ))}
+                      >
+                        <p className='text-xs text-muted-foreground mb-1'>{t.mastery[field]}</p>
+                        <div className='flex items-center justify-center w-fit mx-auto'>
+                          <Input
+                            type='number'
+                            value={formItem[field]}
+                            onChange={(e) =>
+                              updateField(
+                                mastery.mastery_id,
+                                field,
+                                Number(e.target.value),
+                                actualMaxValue
+                              )
+                            }
+                            disabled={!isOwner}
+                            className='text-center w-10 text-foreground font-normal normal-case focus-visible:ring-0'
+                            data-cy={`mastery-${toCyKey(mastery.mastery_name)}-${field}`}
+                          />
+                          <span className='text-foreground font-normal normal-case ml-1'>
+                            / {actualMaxValue}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>

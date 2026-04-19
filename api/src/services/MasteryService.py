@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import HTTPException
-from sqlmodel import select, delete
+from sqlmodel import select
 from starlette import status
 
 from src.models.Mastery import Mastery
@@ -12,63 +12,41 @@ from src.Messages.mastery_messages import (
     MASTERY_ATTACK_EXCEEDS_UNLOCKED,
     MASTERY_DEFENSE_EXCEEDS_UNLOCKED,
 )
-from src.dto.dto_mastery import GameAccountMasteryUpsertItem
+from src.dto.dto_mastery import GameAccountMasteryUpsertItem, GameAccountMasteryResponse
 from src.utils.db import SessionDep
 
 
 class MasteryService:
-
-    # ─── Admin ───────────────────────────────────────────────────
-
-    @classmethod
-    async def get_all(cls, session: SessionDep) -> list[Mastery]:
-        result = await session.exec(select(Mastery).order_by(Mastery.order))
-        return list(result.all())
-
-    @classmethod
-    async def create(cls, session: SessionDep, name: str, max_value: int, order: int) -> Mastery:
-        mastery = Mastery(name=name, max_value=max_value, order=order)
-        session.add(mastery)
-        await session.commit()
-        await session.refresh(mastery)
-        return mastery
-
-    @classmethod
-    async def update(cls, session: SessionDep, mastery_id: uuid.UUID, name: str, order: int) -> Mastery:
-        mastery = await session.get(Mastery, mastery_id)
-        if mastery is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=MASTERY_NOT_FOUND)
-        mastery.name = name
-        mastery.order = order
-        session.add(mastery)
-        await session.commit()
-        await session.refresh(mastery)
-        return mastery
-
-    @classmethod
-    async def delete(cls, session: SessionDep, mastery_id: uuid.UUID) -> None:
-        mastery = await session.get(Mastery, mastery_id)
-        if mastery is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=MASTERY_NOT_FOUND)
-        # Delete associated GameAccountMastery rows first to avoid FK violation
-        await session.exec(
-            delete(GameAccountMastery).where(GameAccountMastery.mastery_id == mastery_id)
-        )
-        await session.delete(mastery)
-        await session.commit()
 
     # ─── Game account ─────────────────────────────────────────────
 
     @classmethod
     async def get_for_account(
         cls, session: SessionDep, game_account_id: uuid.UUID
-    ) -> list[GameAccountMastery]:
-        result = await session.exec(
-            select(GameAccountMastery).where(
-                GameAccountMastery.game_account_id == game_account_id
-            )
+    ) -> list[GameAccountMasteryResponse]:
+        all_masteries = list((await session.exec(select(Mastery))).all())
+        saved_rows = list(
+            (await session.exec(
+                select(GameAccountMastery).where(
+                    GameAccountMastery.game_account_id == game_account_id
+                )
+            )).all()
         )
-        return list(result.all())
+        saved_map = {row.mastery_id: row for row in saved_rows}
+        result = []
+        for mastery in sorted(all_masteries, key=lambda m: m.order):
+            row = saved_map.get(mastery.id)
+            result.append(GameAccountMasteryResponse(
+                id=row.id if row else None,
+                mastery_id=mastery.id,
+                mastery_name=mastery.name,
+                mastery_max_value=mastery.max_value,
+                mastery_order=mastery.order,
+                unlocked=row.unlocked if row else 0,
+                attack=row.attack if row else 0,
+                defense=row.defense if row else 0,
+            ))
+        return result
 
     @classmethod
     async def upsert_for_account(
@@ -83,17 +61,17 @@ class MasteryService:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=MASTERY_NOT_FOUND)
             if item.unlocked > mastery.max_value:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=MASTERY_VALUE_EXCEEDS_MAX,
                 )
             if item.attack > item.unlocked:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=MASTERY_ATTACK_EXCEEDS_UNLOCKED,
                 )
             if item.defense > item.unlocked:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=MASTERY_DEFENSE_EXCEEDS_UNLOCKED,
                 )
 

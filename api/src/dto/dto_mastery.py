@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -32,7 +33,7 @@ class GameAccountMasteryUpsertItem(BaseModel):
 class GameAccountMasteryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
+    id: Optional[uuid.UUID]
     mastery_id: uuid.UUID
     mastery_name: str
     mastery_max_value: int

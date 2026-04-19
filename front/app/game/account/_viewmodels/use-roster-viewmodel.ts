@@ -117,10 +117,11 @@ export function useRosterViewModel() {
         }))
       );
     } catch {
-      // silent — tab shows empty state
+      toast.error(t.mastery.saveError);
     } finally {
       setLoadingMasteries(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSaveMasteries = useCallback(async () => {

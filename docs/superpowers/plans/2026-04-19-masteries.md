@@ -368,17 +368,17 @@ class MasteryService:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=MASTERY_NOT_FOUND)
             if item.unlocked > mastery.max_value:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=MASTERY_VALUE_EXCEEDS_MAX,
                 )
             if item.attack > item.unlocked:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=MASTERY_ATTACK_EXCEEDS_UNLOCKED,
                 )
             if item.defense > item.unlocked:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=MASTERY_DEFENSE_EXCEEDS_UNLOCKED,
                 )
 

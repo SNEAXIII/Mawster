@@ -9,7 +9,6 @@ from src.dto.dto_game_account import (
     GameAccountResponse,
 )
 from src.dto.dto_mastery import GameAccountMasteryUpsertItem, GameAccountMasteryResponse
-from src.models.Mastery import Mastery
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND, NOT_YOUR_GAME_ACCOUNT
 from src.models import User
 from src.models.GameAccount import GameAccount
@@ -33,30 +32,6 @@ def _to_response(account: GameAccount) -> GameAccountResponse:
     """Convert a GameAccount ORM object to a response DTO, including alliance info."""
     return GameAccountResponse.model_validate(account)
 
-
-async def _mastery_responses(
-    session: SessionDep, rows: list
-) -> list[GameAccountMasteryResponse]:
-    result = []
-    for row in rows:
-        mastery = await session.get(Mastery, row.mastery_id)
-        if mastery is None:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Data integrity error: mastery definition not found.",
-            )
-        result.append(GameAccountMasteryResponse(
-            id=row.id,
-            mastery_id=row.mastery_id,
-            mastery_name=mastery.name,
-            mastery_max_value=mastery.max_value,
-            mastery_order=mastery.order,
-            unlocked=row.unlocked,
-            attack=row.attack,
-            defense=row.defense,
-        ))
-    result.sort(key=lambda r: r.mastery_order)
-    return result
 
 
 @game_account_controller.post(
@@ -170,8 +145,7 @@ async def get_game_account_masteries(
     session: SessionDep,
 ):
     """Get mastery values for a game account. Visible to all authenticated members."""
-    rows = await MasteryService.get_for_account(session, game_account_id)
-    return await _mastery_responses(session, rows)
+    return await MasteryService.get_for_account(session, game_account_id)
 
 
 @game_account_controller.put(
@@ -190,5 +164,4 @@ async def upsert_game_account_masteries(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
     if game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_GAME_ACCOUNT)
-    rows = await MasteryService.upsert_for_account(session, game_account_id, body)
-    return await _mastery_responses(session, rows)
+    return await MasteryService.upsert_for_account(session, game_account_id, body)
