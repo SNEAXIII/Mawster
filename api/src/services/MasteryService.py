@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import HTTPException
-from sqlmodel import select
+from sqlmodel import select, delete
 from starlette import status
 
 from src.models.Mastery import Mastery
@@ -51,11 +51,9 @@ class MasteryService:
         if mastery is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=MASTERY_NOT_FOUND)
         # Delete associated GameAccountMastery rows first to avoid FK violation
-        gam_result = await session.exec(
-            select(GameAccountMastery).where(GameAccountMastery.mastery_id == mastery_id)
+        await session.exec(
+            delete(GameAccountMastery).where(GameAccountMastery.mastery_id == mastery_id)
         )
-        for row in gam_result.all():
-            await session.delete(row)
         await session.delete(mastery)
         await session.commit()
 
