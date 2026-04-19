@@ -103,8 +103,8 @@ services:
       - '443:443'
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
+      - ./caddy/data:/data
+      - ./caddy/config:/config
     networks:
       - internal
     depends_on:
@@ -117,6 +117,4 @@ services:
         max-file: '5'
 
 volumes:
-  caddy_data:
-  caddy_config:
   data_db:

@@ -1,4 +1,5 @@
 **/.vscode/*
+caddy/
 .claude/settings.local.json
 test*.db*
 *db*/**

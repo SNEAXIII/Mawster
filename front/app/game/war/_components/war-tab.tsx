@@ -10,6 +10,8 @@ import { FullPageSpinner } from '@/components/full-page-spinner';
 import ChampionPortrait from '@/components/champion-portrait';
 import { WarMode } from './war-types';
 import { useWar } from '@/app/contexts/war-context';
+import SeasonBanner from './season-banner';
+
 
 type ToggleButtonProps = {
   active: boolean;
@@ -41,7 +43,7 @@ const WarAttackerPanel = dynamic(() => import('./war-attacker-panel'), {
   loading: () => <FullPageSpinner />,
 });
 
-export default function WarDefendersTab() {
+export default function WarTab() {
   const { t } = useI18n();
   const {
     currentWar,
@@ -61,6 +63,15 @@ export default function WarDefendersTab() {
     <div className='space-y-4'>
       {/* Controls row: opponent name + BG picker + mode toggle + clear */}
       <div className='flex flex-wrap items-center gap-3'>
+                    <SeasonBanner
+        season={
+          currentWar
+            ? currentWar.season_number !== null
+              ? { number: currentWar.season_number }
+              : null
+            : undefined
+        }
+      />
         {/* Opponent name */}
         {currentWar && (
           <div className='flex items-center gap-2'>

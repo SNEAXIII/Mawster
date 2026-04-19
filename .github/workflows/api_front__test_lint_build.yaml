@@ -186,14 +186,14 @@ jobs:
         with:
           fetch-depth: 0
       - name: Detect changes
-        uses: dorny/paths-filter@v4
         id: filter
-        with:
-          filters: |
-            api:
-              - 'api/**'
-            front:
-              - 'front/**'
+        run: |
+          BEFORE="${{ github.event.before }}"
+          SHA="${{ github.sha }}"
+          API=$(git diff --name-only "${BEFORE}...${SHA}" -- api/ | wc -l | tr -d ' ')
+          FRONT=$(git diff --name-only "${BEFORE}...${SHA}" -- front/ | wc -l | tr -d ' ')
+          echo "api=$([ "$API" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "front=$([ "$FRONT" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
 
   docker-api:
     if: needs.changes.outputs.api == 'true'

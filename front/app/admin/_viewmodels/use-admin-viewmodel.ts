@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 export enum AdminTab {
   Users = 'users',
   Champions = 'champions',
+  Seasons = 'seasons',
 }
 
 interface UseAdminViewModelOptions {

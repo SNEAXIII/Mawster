@@ -55,6 +55,7 @@ from src.Messages.war_messages import (
     WAR_NOT_FOUND,
     champion_with_id_not_found,
 )
+from src.services.SeasonService import SeasonService
 from src.utils.db import SessionDep
 
 
@@ -95,10 +96,12 @@ class WarService:
                     detail=champion_with_id_not_found(champion_id),
                 )
 
+        active_season = await SeasonService.get_active_season(session)
         war = War(
             alliance_id=alliance_id,
             opponent_name=opponent_name,
             created_by_id=created_by_id,
+            season_id=active_season.id if active_season else None,
         )
         session.add(war)
         await session.flush()
@@ -121,6 +124,7 @@ class WarService:
             .options(
                 selectinload(War.created_by),  # type: ignore[arg-type]
                 selectinload(War.bans).selectinload(WarBan.champion),  # type: ignore[arg-type]
+                selectinload(War.season),  # type: ignore[arg-type]
             )
             .order_by(War.created_at.desc())  # type: ignore[attr-defined]
         )
@@ -165,6 +169,7 @@ class WarService:
             .options(
                 selectinload(War.created_by),  # type: ignore[arg-type]
                 selectinload(War.bans).selectinload(WarBan.champion),  # type: ignore[arg-type]
+                selectinload(War.season),  # type: ignore[arg-type]
             )
         )
         result = await session.exec(stmt)

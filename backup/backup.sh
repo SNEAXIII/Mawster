@@ -22,6 +22,7 @@ mysqldump \
   --single-transaction \
   --routines \
   --triggers \
+  --complete-insert \
   | gzip > "${BACKUP_DIR}/${FILENAME}"
 
 SIZE=$(du -sh "${BACKUP_DIR}/${FILENAME}" | cut -f1)
