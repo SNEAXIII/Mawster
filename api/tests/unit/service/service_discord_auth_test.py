@@ -1,5 +1,4 @@
 """Unit tests for DiscordAuthService."""
-import uuid
 from unittest.mock import MagicMock, AsyncMock
 
 import httpx
