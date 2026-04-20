@@ -88,17 +88,19 @@ export default function MasteryTab({
                         <p className='text-xs text-muted-foreground mb-1'>{t.mastery[field]}</p>
                         <div className='flex items-center justify-center w-fit mx-auto'>
                           <Input
-                            type='number'
+                            type='text'
+                            inputMode='numeric'
                             value={formItem[field]}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              const digits = e.target.value.replace(/\D/g, '');
+                              const val = digits === '' ? 0 : parseInt(digits.slice(-1), 10);
                               onFieldChange(
                                 mastery.mastery_id,
                                 field,
-                                Number(e.target.value),
+                                val,
                                 mastery.mastery_max_value,
-                              )
-                            }
-                            onBlur={(e) => { e.target.value = String(formItem[field]); }}
+                              );
+                            }}
                             disabled={!isOwner}
                             className={`text-center w-10 font-normal normal-case focus-visible:ring-0 ${getInputStyle(formItem[field], displayMax)}`}
                             data-cy={`mastery-${toCyKey(mastery.mastery_name)}-${field}`}

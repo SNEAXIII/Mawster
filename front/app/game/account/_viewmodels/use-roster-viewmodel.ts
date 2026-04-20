@@ -114,9 +114,18 @@ export function useRosterViewModel() {
       const current = prev.find((item) => item.mastery_id === masteryId);
       const maxValue = field === 'unlocked' ? masteryMaxValue : (current?.unlocked ?? 0);
       const clamped = Math.min(value, maxValue);
-      return prev.map((item) =>
-        item.mastery_id === masteryId ? { ...item, [field]: clamped } : item
-      );
+      return prev.map((item) => {
+        if (item.mastery_id !== masteryId) return item;
+        if (field === 'unlocked') {
+          return {
+            ...item,
+            unlocked: clamped,
+            attack: Math.min(item.attack, clamped),
+            defense: Math.min(item.defense, clamped),
+          };
+        }
+        return { ...item, [field]: clamped };
+      });
     });
   }, []);
 
