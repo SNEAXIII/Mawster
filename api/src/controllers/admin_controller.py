@@ -105,5 +105,3 @@ async def patch_demote_user(
     audit_log("admin.demote_user", user_id=str(current_user.id), detail=f"target_user_id={user_uuid_to_demote}")
     return {"message": TARGET_USER_DEMOTED_SUCCESSFULLY}
 
-
-

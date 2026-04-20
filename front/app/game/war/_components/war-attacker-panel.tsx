@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import ChampionPortrait from '@/components/champion-portrait';
 import { type WarPlacement } from '@/app/services/war';
@@ -8,6 +9,8 @@ import PrefightEntryRow from './prefight-entry-row';
 import { WarMode } from './war-types';
 import AttackerEntryRow from './attacker-entry-row';
 import SynergyPopover from './synergy-popover';
+import MasteryDialog from '@/app/game/account/_components/mastery-dialog';
+import { Swords } from 'lucide-react';
 
 interface MemberGroup {
   pseudo: string;
@@ -17,6 +20,7 @@ interface MemberGroup {
 export default function WarAttackerPanel() {
   const { t } = useI18n();
   const { placements, warMode, synergies, prefights } = useWar();
+  const [masteryTarget, setMasteryTarget] = useState<{ gameAccountId: string; pseudo: string } | null>(null);
 
   const assigned = placements.filter((p) => p.attacker_champion_user_id !== null);
 
@@ -93,6 +97,15 @@ export default function WarAttackerPanel() {
                   <span className='text-primary font-bold text-xs'>
                     {t.game.war.memberAttackers.replace('{count}', String(totalSlots))}
                   </span>
+                  {memberGroup.entries[0]?.attacker_game_account_id && (
+                    <button
+                      onClick={() => setMasteryTarget({ gameAccountId: memberGroup.entries[0].attacker_game_account_id!, pseudo: memberGroup.pseudo })}
+                      className='text-muted-foreground hover:text-foreground transition-colors ml-auto'
+                      title={t.mastery.title}
+                    >
+                      <Swords size={13} />
+                    </button>
+                  )}
 
                   {/* 3-slot portrait row: node attackers (clickable for synergy) + synergy-only */}
                   <div className='flex items-center gap-0.5 ml-1'>
@@ -186,6 +199,16 @@ export default function WarAttackerPanel() {
             );
           })}
         </div>
+      )}
+
+      {masteryTarget && (
+        <MasteryDialog
+          open={!!masteryTarget}
+          onOpenChange={(open) => { if (!open) setMasteryTarget(null); }}
+          gameAccountId={masteryTarget.gameAccountId}
+          pseudo={masteryTarget.pseudo}
+          defaultMode='offense'
+        />
       )}
     </div>
   );

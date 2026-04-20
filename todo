@@ -2,11 +2,9 @@ technique:
     un écran de visualisation / comparatif des persos monté par groupe/par alliance avec filters
     je veux que ce groupe aie tel perso monté def par les admins (commme la update request mais pas nominatif a une personne spécifique)
     "je compte up ce perso"
-    enhance test handling
 
 
 low:
-    faire en sorte que je j'ai une pup up pour me prévenir que je veux replace un champion qui a déja un combat
     aficcher dans la pop up de suppr / edit le combat en cours
     mettre un champ texte pour les notes
 
@@ -24,7 +22,6 @@ prio:
     permettre de marquer un combat terminé
     afficheer un attaquant préf seletion attaque + case a cocher pour filter
     mettre en couleur les combat d'un boug
-    faire un refresh dynamique
 
 criTIQUE
-    Ajouter filtrer attacker saga + pref
+    meilleure affiche pour la def (déja placé etc)

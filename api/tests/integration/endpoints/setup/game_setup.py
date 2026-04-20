@@ -7,6 +7,7 @@ from src.models.AllianceOfficer import AllianceOfficer
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
+from src.models.Mastery import Mastery
 from tests.utils.utils_constant import (
     GAME_PSEUDO,
     GAME_PSEUDO_2,
@@ -195,3 +196,25 @@ async def push_champion_user(
     )
     await load_objects([cu])
     return cu
+
+
+# ---------------------------------------------------------------------------
+# Masteries
+# ---------------------------------------------------------------------------
+
+INITIAL_MASTERIES = [
+    {"name": "MYSTIC DISPERSION", "max_value": 5, "order": 0},
+    {"name": "STAND YOUR GROUND", "max_value": 5, "order": 1},
+    {"name": "LIMBER", "max_value": 3, "order": 2},
+    {"name": "ASSASSIN", "max_value": 5, "order": 3},
+    {"name": "RECOIL", "max_value": 3, "order": 4},
+    {"name": "LIQUID COURAGE", "max_value": 3, "order": 5},
+    {"name": "DOUBLE EDGE", "max_value": 3, "order": 6},
+    {"name": "COLLAR TECH", "max_value": 5, "order": 7},
+]
+
+
+async def push_initial_masteries() -> list[Mastery]:
+    masteries = [Mastery(**m) for m in INITIAL_MASTERIES]
+    await load_objects(masteries)
+    return masteries

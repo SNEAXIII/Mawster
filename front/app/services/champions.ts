@@ -92,6 +92,9 @@ export const loadChampions = async (
     image_url?: string | null;
     alias?: string | null;
     is_ascendable?: boolean;
+    has_prefight?: boolean;
+    is_saga_attacker?: boolean;
+    is_saga_defender?: boolean;
   }[]
 ): Promise<{ message: string; created: number; updated: number; skipped: number }> => {
   const response = await fetch(`${PROXY}/admin/champions/load`, {
@@ -110,9 +113,11 @@ export const exportAllChampions = async (): Promise<
     image_url: string | null;
     alias: string | null;
     is_ascendable: boolean;
+    has_prefight: boolean;
+    is_saga_attacker: boolean;
+    is_saga_defender: boolean;
   }[]
 > => {
-  // Fetch all champions in one big page (no images, just data)
   const response = await fetch(`${PROXY}/champions?page=1&size=9999`, {
     headers: jsonHeaders,
   });
@@ -124,6 +129,9 @@ export const exportAllChampions = async (): Promise<
     image_url: c.image_url,
     alias: c.alias,
     is_ascendable: c.is_ascendable,
+    has_prefight: c.has_prefight,
+    is_saga_attacker: c.is_saga_attacker,
+    is_saga_defender: c.is_saga_defender,
   }));
 };
 
