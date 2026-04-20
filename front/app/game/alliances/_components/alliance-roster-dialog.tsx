@@ -12,9 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import RosterGrid from '@/app/game/roster/_components/roster-grid';
-import UpgradeRequestsSection from '@/app/game/roster/_components/upgrade-requests-section';
+import RosterGrid from '@/app/game/account/_components/roster-grid';
+import UpgradeRequestsSection from '@/app/game/account/_components/upgrade-requests-section';
+import MasteryMiniView from '@/app/game/account/_components/mastery-mini-view';
 import { getRoster, RosterEntry, RARITIES, RARITY_LABELS } from '@/app/services/roster';
+import { getMasteries, MasteryEntry } from '@/app/services/masteries';
 import { useUpgradeRequests } from '@/hooks/use-upgrade-requests';
 
 interface AllianceRosterDialogProps {
@@ -35,6 +37,7 @@ export default function AllianceRosterDialog({
 }: AllianceRosterDialogProps) {
   const { t } = useI18n();
   const [roster, setRoster] = useState<RosterEntry[]>([]);
+  const [masteries, setMasteries] = useState<MasteryEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -59,9 +62,10 @@ export default function AllianceRosterDialog({
     if (!open || !gameAccountId) return;
     setLoading(true);
     setError('');
-    Promise.all([getRoster(gameAccountId), fetchUpgradeRequests(gameAccountId)])
-      .then(([rosterData]) => {
+    Promise.all([getRoster(gameAccountId), fetchUpgradeRequests(gameAccountId), getMasteries(gameAccountId)])
+      .then(([rosterData, , masteryData]) => {
         setRoster(rosterData);
+        setMasteries(masteryData);
       })
       .catch(() => setError(t.game.alliances.rosterError))
       .finally(() => setLoading(false));
@@ -120,6 +124,12 @@ export default function AllianceRosterDialog({
                 onUpgrade={canRequestUpgrade ? initiateUpgrade : undefined}
               />
             </>
+          )}
+
+          {!loading && masteries.length > 0 && (
+            <div className='mt-4 border-t pt-4 flex justify-center'>
+              <MasteryMiniView masteries={masteries} defaultMode='all' />
+            </div>
           )}
 
           <div className='flex justify-end pt-2'>

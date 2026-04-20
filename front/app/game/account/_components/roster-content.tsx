@@ -18,6 +18,7 @@ import AddChampionForm from './add-champion-form';
 import RosterGrid from './roster-grid';
 import RosterUpgradeSection from './roster-upgrade-section';
 import { useRosterViewModel, RosterTab } from '../_viewmodels/use-roster-viewmodel';
+import MasteryTab from './mastery-tab';
 
 export default function RosterContent() {
   const vm = useRosterViewModel();
@@ -35,7 +36,8 @@ export default function RosterContent() {
     ...(vm.accounts.length > 0
       ? [{ value: RosterTab.Roster, label: t.roster.title, cy: 'tab-roster' }]
       : []),
-    { value: RosterTab.Accounts, label: t.nav.gameAccounts, cy: 'tab-accounts' },
+    { value: RosterTab.Mastery, label: t.mastery.tabLabel, cy: 'tab-mastery' },
+    { value: RosterTab.Accounts, label: t.roster.manageTab, cy: 'tab-manage' },
   ];
 
   return (
@@ -116,6 +118,18 @@ export default function RosterContent() {
               </>
             )}
           </>
+        )}
+
+        {vm.activeTab === RosterTab.Mastery && (
+          <MasteryTab
+            masteries={vm.masteries}
+            masteryForm={vm.masteryForm}
+            loading={vm.loadingMasteries}
+            saving={vm.savingMasteries}
+            isOwner={vm.accounts.some((a) => a.id === vm.selectedAccountId)}
+            onFieldChange={vm.updateMasteryField}
+            onSave={vm.handleSaveMasteries}
+          />
         )}
 
         {vm.activeTab === RosterTab.Accounts && (

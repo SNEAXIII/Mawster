@@ -29,7 +29,7 @@ const fr: Translations = {
     profile: 'Mon Profil',
     gameAccounts: 'Comptes de jeu',
     alliances: 'Alliances',
-    roster: 'Roster',
+    roster: 'Compte',
     defense: 'Défense',
     war: 'Guerre',
     seasons: 'Saisons',
@@ -545,6 +545,32 @@ const fr: Translations = {
     preferredAttackerToggle: "Basculer le statut d'attaquant préféré",
     preferredAttackerHint:
       'Marqué comme attaquant préféré — les officiers peuvent quand même le placer en défense.',
+    manageTab: 'Gérer',
+  },
+
+  mastery: {
+    title: 'Maîtrises',
+    tabLabel: 'Maîtrise',
+    unlocked: 'Débloqué',
+    attack: 'Attaque',
+    defense: 'Défense',
+    save: 'Valider',
+    saveSuccess: 'Maîtrises enregistrées avec succès !',
+    saveError: "Échec de l'enregistrement des maîtrises",
+    noMasteries: 'Aucune maîtrise configurée.',
+    modeAll: 'Tout',
+    modeOffense: 'Attaque',
+    modeDefense: 'Défense',
+    names: {
+      0: 'Dispersion Mystique',
+      1: 'Tiens Bon',
+      2: 'Agilité',
+      3: 'Assassin',
+      4: 'Recul',
+      5: 'Courage Liquide',
+      6: 'Double Tranchant',
+      7: 'Collier Tech',
+    },
   },
 } as const;
 

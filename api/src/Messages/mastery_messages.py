@@ -1,0 +1,8 @@
+MASTERY_NOT_FOUND = "Mastery not found."
+MASTERY_CREATED = "Mastery created successfully."
+MASTERY_UPDATED = "Mastery updated successfully."
+MASTERY_DELETED = "Mastery deleted successfully."
+MASTERY_VALUE_EXCEEDS_MAX = "Unlocked value exceeds mastery max_value."
+MASTERY_ATTACK_EXCEEDS_UNLOCKED = "Attack value exceeds unlocked value."
+MASTERY_DEFENSE_EXCEEDS_UNLOCKED = "Defense value exceeds unlocked value."
+MASTERY_ACCOUNT_NOT_FOUND = "Game account not found or access denied."

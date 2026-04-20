@@ -27,7 +27,7 @@ const en = {
     profile: 'My Profile',
     gameAccounts: 'Game Accounts',
     alliances: 'Alliances',
-    roster: 'Roster',
+    roster: 'Account',
     defense: 'Defense',
     war: 'War',
     seasons: 'Seasons',
@@ -538,6 +538,32 @@ const en = {
     preferredAttackerToggle: 'Toggle preferred attacker flag',
     preferredAttackerHint:
       'Marked as preferred attacker — officers can still place them in defense.',
+    manageTab: 'Manage',
+  },
+
+  mastery: {
+    title: 'Masteries',
+    tabLabel: 'Mastery',
+    unlocked: 'Unlocked',
+    attack: 'Attack',
+    defense: 'Defense',
+    save: 'Confirm',
+    saveSuccess: 'Masteries saved successfully!',
+    saveError: 'Failed to save masteries',
+    noMasteries: 'No masteries configured yet.',
+    modeAll: 'All',
+    modeOffense: 'Offense',
+    modeDefense: 'Defense',
+    names: {
+      0: 'Mystic Dispersion',
+      1: 'Stand Your Ground',
+      2: 'Limber',
+      3: 'Assassin',
+      4: 'Recoil',
+      5: 'Liquid Courage',
+      6: 'Double Edge',
+      7: 'Collar Tech',
+    },
   },
 } as const;
 

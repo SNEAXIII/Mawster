@@ -264,7 +264,7 @@ const NAV_URLS: Record<string, string> = {
   alliances: '/game/alliances',
   defense: '/game/defense',
   profile: '/profile',
-  roster: '/game/roster',
+  roster: '/game/account',
   war: '/game/war',
 };
 
@@ -379,6 +379,29 @@ Cypress.Commands.add('apiAddOfficer', (token: string, allianceId: string, gameAc
 
 Cypress.Commands.add('runFixtures', () => {
   cy.request('POST', `${BACKEND}/dev/fixtures`);
+});
+
+// ── Mastery commands ──────────────────────────────────────────────────────────
+
+Cypress.Commands.add('apiCreateMastery', (_adminToken: string, name: string, maxValue: number, order: number) => {
+  return cy
+    .request({
+      method: 'POST',
+      url: `${BACKEND}/dev/masteries`,
+      body: { name, max_value: maxValue, order },
+    })
+    .then((res) => res.body);
+});
+
+Cypress.Commands.add('apiSaveMasteries', (token: string, accountId: string, items: { mastery_id: string; unlocked: number; attack: number; defense: number }[]) => {
+  return cy
+    .request({
+      method: 'PUT',
+      url: `${BACKEND}/game-accounts/${accountId}/masteries`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: items,
+    })
+    .then((res) => res.body);
 });
 
 // ── Create upgrade request (direct backend call) ──────────────────────────────
