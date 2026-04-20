@@ -31,7 +31,7 @@ export default function MasteryMiniView({
   }
 
   return (
-    <div className='space-y-3'>
+    <div className='space-y-3 max-w-xs'>
       {/* Mode tabs */}
       <div className='flex gap-1 bg-muted/40 rounded-lg p-1 w-fit'>
         {modes.map((m) => (

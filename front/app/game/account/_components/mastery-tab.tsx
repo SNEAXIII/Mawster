@@ -32,7 +32,6 @@ function getInputStyle(value: number, max: number) {
   if (max === 0) return '';
   if (value >= max) return 'bg-green-950/60 text-green-400';
   if (value > 0) return 'text-foreground';
-  return 'text-muted-foreground';
 }
 
 export default function MasteryTab({
@@ -99,6 +98,7 @@ export default function MasteryTab({
                                 mastery.mastery_max_value,
                               )
                             }
+                            onBlur={(e) => { e.target.value = String(formItem[field]); }}
                             disabled={!isOwner}
                             className={`text-center w-10 font-normal normal-case focus-visible:ring-0 ${getInputStyle(formItem[field], displayMax)}`}
                             data-cy={`mastery-${toCyKey(mastery.mastery_name)}-${field}`}

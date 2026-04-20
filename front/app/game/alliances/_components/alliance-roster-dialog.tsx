@@ -127,7 +127,7 @@ export default function AllianceRosterDialog({
           )}
 
           {!loading && masteries.length > 0 && (
-            <div className='mt-4 border-t pt-4'>
+            <div className='mt-4 border-t pt-4 flex justify-center'>
               <MasteryMiniView masteries={masteries} defaultMode='all' />
             </div>
           )}

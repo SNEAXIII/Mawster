@@ -43,22 +43,21 @@ describe('Mastery tab', () => {
 
   it('owner can save masteries and values persist after reload', () => {
     setupRosterUser('mastery-save', 'MasteryUser').then(({ adminData, userData, accountId }) => {
-      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 5, 3).then((mastery) => {
-        cy.apiLogin(userData.user_id);
-        cy.visit('/game/account?tab=mastery');
+      cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 5, 3);
+      cy.apiLogin(userData.user_id);
+      cy.visit('/game/account?tab=mastery');
 
-        cy.getByCy('mastery-assassin-unlocked').clear().type('4');
-        cy.getByCy('mastery-assassin-attack').clear().type('3');
-        cy.getByCy('mastery-assassin-defense').clear().type('2');
-        cy.getByCy('mastery-save-button').click();
+      cy.getByCy('mastery-assassin-unlocked').clear().type('4');
+      cy.getByCy('mastery-assassin-attack').clear().type('3');
+      cy.getByCy('mastery-assassin-defense').clear().type('2');
+      cy.getByCy('mastery-save-button').click();
 
-        cy.contains('Masteries saved').should('be.visible');
+      cy.contains('Masteries saved').should('be.visible');
 
-        cy.reload();
-        cy.getByCy('mastery-assassin-unlocked').should('have.value', '4');
-        cy.getByCy('mastery-assassin-attack').should('have.value', '3');
-        cy.getByCy('mastery-assassin-defense').should('have.value', '2');
-      });
+      cy.reload();
+      cy.getByCy('mastery-assassin-unlocked').should('have.value', '4');
+      cy.getByCy('mastery-assassin-attack').should('have.value', '3');
+      cy.getByCy('mastery-assassin-defense').should('have.value', '2');
     });
   });
 
@@ -112,6 +111,7 @@ describe('Mastery tab', () => {
 
       cy.getByCy('mastery-assassin-unlocked').clear().type('3');
       cy.getByCy('mastery-assassin-attack').clear().type('5');
+      cy.getByCy('mastery-assassin-unlocked').should('have.value', '3');
       cy.getByCy('mastery-assassin-attack').should('have.value', '3');
     });
   });
@@ -154,8 +154,16 @@ describe('Mastery tab', () => {
   it('alliance member sees owner masteries in roster dialog', () => {
     cy.apiBatchSetup([
       { discord_token: 'mastery-alliance-admin', role: 'admin' },
-      { discord_token: 'mastery-alliance-owner', game_pseudo: 'OwnerPseudo', create_alliance: { name: 'TestAlliance', tag: 'TA' } },
-      { discord_token: 'mastery-alliance-member', game_pseudo: 'MemberPseudo', join_alliance_token: 'mastery-alliance-owner' },
+      {
+        discord_token: 'mastery-alliance-owner',
+        game_pseudo: 'OwnerPseudo',
+        create_alliance: { name: 'TestAlliance', tag: 'TA' },
+      },
+      {
+        discord_token: 'mastery-alliance-member',
+        game_pseudo: 'MemberPseudo',
+        join_alliance_token: 'mastery-alliance-owner',
+      },
     ]).then((users) => {
       const adminToken = users['mastery-alliance-admin'].access_token;
       const ownerToken = users['mastery-alliance-owner'].access_token;
@@ -163,9 +171,7 @@ describe('Mastery tab', () => {
       const memberUserId = users['mastery-alliance-member'].user_id;
 
       cy.apiCreateMastery(adminToken, 'ASSASSIN', 5, 3).then((mastery) => {
-        cy.apiSaveMasteries(ownerToken, ownerAccId, [
-          { mastery_id: mastery.id, unlocked: 4, attack: 3, defense: 2 },
-        ]);
+        cy.apiSaveMasteries(ownerToken, ownerAccId, [{ mastery_id: mastery.id, unlocked: 4, attack: 3, defense: 2 }]);
 
         cy.apiLogin(memberUserId);
         cy.visit('/game/alliances');
