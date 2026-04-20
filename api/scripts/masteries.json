@@ -15,28 +15,33 @@
         "order": 2
     },
     {
-        "name": "ASSASSIN",
+        "name": "DESPAIR",
         "max_value": 5,
         "order": 3
     },
     {
-        "name": "RECOIL",
-        "max_value": 3,
+        "name": "ASSASSIN",
+        "max_value": 5,
         "order": 4
     },
     {
-        "name": "LIQUID COURAGE",
+        "name": "RECOIL",
         "max_value": 3,
         "order": 5
     },
     {
-        "name": "DOUBLE EDGE",
+        "name": "LIQUID COURAGE",
         "max_value": 3,
         "order": 6
     },
     {
+        "name": "DOUBLE EDGE",
+        "max_value": 3,
+        "order": 7
+    },
+    {
         "name": "COLLAR TECH",
         "max_value": 5,
-        "order": 7
+        "order": 8
     }
 ]
