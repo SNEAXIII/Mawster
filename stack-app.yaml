@@ -64,8 +64,6 @@ services:
 
   mariadb:
     image: mariadb:11.4
-    ports:
-      - "127.0.0.1:3306:3306"
     networks:
       - internal
     environment:
