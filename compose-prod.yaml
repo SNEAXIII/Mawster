@@ -46,7 +46,7 @@ services:
         max-file: "3"
 
   api:
-    image: sneaxiii/mawster-api:latest
+    image: sneaxiii/mawster-api:20260420085239
     # build:
       # context: ./api
       # dockerfile: api.Dockerfile
@@ -75,7 +75,7 @@ services:
         max-file: '5'
 
   front:
-    image: sneaxiii/mawster-front:latest
+    image: sneaxiii/mawster-front:20260420085240
     # build:
       # context: ./front
       # dockerfile: front.Dockerfile
