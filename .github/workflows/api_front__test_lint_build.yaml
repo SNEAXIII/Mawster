@@ -321,15 +321,19 @@ jobs:
             docker pull sneaxiii/mawster-front:latest
             docker pull sneaxiii/mawster-backup:latest
 
-            docker run --rm \
+            docker service create \
+              --name mawster-migrate \
               --network mawster_internal \
               --secret mawster_db_password \
               --secret mawster_db_root_password \
               -e MARIADB_USER=mawster \
               -e MARIADB_PORT=3306 \
               -e MARIADB_DATABASE=mawster \
+              --restart-condition none \
               sneaxiii/mawster-api:latest \
               sh migrate.sh
+            timeout 120 bash -c 'until [ "$(docker service ls --filter name=mawster-migrate --format "{{.Replicas}}")" = "0/1" ]; do sleep 2; done'
+            docker service rm mawster-migrate
 
             docker stack deploy \
               --with-registry-auth \
