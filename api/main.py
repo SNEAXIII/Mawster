@@ -26,6 +26,7 @@ from starlette.responses import JSONResponse
 
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from src.security.secrets import SECRET
 from src.utils.logging_config import setup_logging
@@ -39,6 +40,7 @@ if not IS_PROD:
     logger.info("Starting Mawster API — database: %s", SECRET.MARIADB_DATABASE)
 
 app = FastAPI(title="Mawster", version="1.0.0")
+Instrumentator().instrument(app).expose(app)
 
 # Rate limiter (utilise l'IP du client — X-Forwarded-For si disponible, sinon connexion directe)
 app.state.limiter = limiter

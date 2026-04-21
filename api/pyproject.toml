@@ -15,6 +15,7 @@ dependencies = [
     "bleach",
     "sentry-sdk",
     "slowapi",
+    "prometheus-fastapi-instrumentator",
 ]
 
 [project.optional-dependencies]
