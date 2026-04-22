@@ -356,6 +356,7 @@ jobs:
             docker pull sneaxiii/mawster-backup:latest
 
             docker service rm mawster-migrate 2>/dev/null || true
+            
             docker service create \
               --name mawster-migrate \
               --network internal \
@@ -366,7 +367,8 @@ jobs:
               -e MARIADB_DATABASE=mawster \
               --mode replicated-job \
               sneaxiii/mawster-migrate:latest sh migrate.sh
-            docker service logs -f mawster-migrate
+            
+            docker service logs mawster-migrate
             if docker service ps mawster-migrate --format "{{.CurrentState}}" | grep -q "^Failed"; then
               docker service rm mawster-migrate; exit 1
             fi
