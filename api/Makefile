@@ -13,8 +13,8 @@ help:
 	@echo "cancel-last  --> cancel last executed migration"
 	@echo "test         --> run tests (xdist enabled by default, set XDIST=0 to disable)"
 	@echo "test-cov     --> run test coverage (single-threaded)"
-	@echo "install      --> install prod dependencies (uv sync)"
-	@echo "install-dev  --> install prod + dev dependencies"
+	@echo "install      --> install prod dependencies only"
+	@echo "install-dev  --> install all dependencies (prod + dev + migrate groups)"
 	@echo "reset-db     --> reset the database"
 	@echo "repopulate-db --> reset the database and load champions + fixtures"
 
@@ -22,7 +22,7 @@ install:
 	uv sync --no-dev
 
 install-dev:
-	uv sync --extra dev
+	uv sync --all-groups
 
 run-dev:
 	uv run fastapi dev --reload

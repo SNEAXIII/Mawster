@@ -1,0 +1,233 @@
+networks:
+  traefik-public:
+    external: true
+  internal:
+    external: true
+    attachable: true
+
+secrets:
+  mawster_secret_key:
+    external: true
+  mawster_db_password:
+    external: true
+  mawster_db_root_password:
+    external: true
+  mawster_email_pepper:
+    external: true
+  mawster_nextauth_secret:
+    external: true
+  mawster_discord_client_id:
+    external: true
+  mawster_discord_client_secret:
+    external: true
+  mawster_rclone_conf:
+    external: true
+
+services:
+  traefik:
+    image: traefik:v3
+    ports:
+      - '80:80'
+      - '443:443'
+    networks:
+      - traefik-public
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_data:/data
+    command:
+      - --providers.swarm=true
+      - --providers.swarm.exposedByDefault=false
+      - --providers.swarm.network=traefik-public
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.letsencrypt.acme.email=misterbalise2@gmail.com
+      - --certificatesresolvers.letsencrypt.acme.storage=/data/acme.json
+      - --metrics.prometheus=true
+      - --metrics.prometheus.entrypoint=metrics
+      - --entrypoints.metrics.address=:8082
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '5'
+
+  mariadb:
+    image: mariadb:11.4
+    networks:
+      - internal
+    ports:
+      - '127.0.0.1:3306:3306'
+    environment:
+      MARIADB_USER: mawster
+      MARIADB_DATABASE: mawster
+      MARIADB_PASSWORD_FILE: /run/secrets/mawster_db_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/mawster_db_root_password
+    secrets:
+      - mawster_db_password
+      - mawster_db_root_password
+    volumes:
+      - data_db:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '5'
+
+  api:
+    image: sneaxiii/mawster-api:latest
+    networks:
+      - internal
+      - traefik-public
+    environment:
+      MODE: prod
+      CONTAINER: '1'
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: '60'
+      REFRESH_TOKEN_EXPIRE_DAYS: '7'
+      MARIADB_USER: mawster
+      MARIADB_PORT: '3306'
+      MARIADB_DATABASE: mawster
+      ALLOWED_ORIGINS: https://www.mawster.app
+      API_PORT: '8000'
+      EMAIL_PEPPER_VERSION: '1'
+    secrets:
+      - mawster_secret_key
+      - mawster_db_password
+      - mawster_db_root_password
+      - mawster_email_pepper
+    volumes:
+      - api_logs:/app/api/logs
+    command: ['sh', 'run.sh']
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.api-static.rule=Host(`www.mawster.app`) && PathPrefix(`/static/`)
+        - traefik.http.routers.api-static.entrypoints=websecure
+        - traefik.http.routers.api-static.tls.certresolver=letsencrypt
+        - traefik.http.routers.api-static.service=api-static
+        - traefik.http.services.api-static.loadbalancer.server.port=8000
+        - traefik.docker.network=traefik-public
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '5'
+
+  front:
+    image: sneaxiii/mawster-front:latest
+    networks:
+      - internal
+      - traefik-public
+    environment:
+      NEXTAUTH_URL: https://www.mawster.app
+      NEXTAUTH_URL_INTERNAL: http://front:3000
+    secrets:
+      - mawster_nextauth_secret
+      - mawster_discord_client_id
+      - mawster_discord_client_secret
+    command: ['sh', 'run.sh']
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.front.rule=Host(`www.mawster.app`)
+        - traefik.http.routers.front.entrypoints=websecure
+        - traefik.http.routers.front.tls.certresolver=letsencrypt
+        - traefik.http.routers.front.service=front
+        - traefik.http.services.front.loadbalancer.server.port=3000
+        - traefik.http.routers.front.middlewares=security-headers
+        - traefik.http.middlewares.security-headers.headers.frameDeny=true
+        - traefik.http.middlewares.security-headers.headers.contentTypeNosniff=true
+        - traefik.http.middlewares.security-headers.headers.referrerPolicy=strict-origin-when-cross-origin
+        - traefik.http.middlewares.security-headers.headers.permissionsPolicy=camera=(),microphone=(),geolocation=(),payment=(),usb=(),accelerometer=()
+        - traefik.http.middlewares.security-headers.headers.customResponseHeaders.Server=
+        - traefik.http.routers.apex-redirect.rule=Host(`mawster.app`)
+        - traefik.http.routers.apex-redirect.entrypoints=websecure
+        - traefik.http.routers.apex-redirect.tls.certresolver=letsencrypt
+        - traefik.http.routers.apex-redirect.middlewares=apex-to-www
+        - traefik.http.middlewares.apex-to-www.redirectregex.regex=^https://mawster.app/(.*)
+        - traefik.http.middlewares.apex-to-www.redirectregex.replacement=https://www.mawster.app/$${1}
+        - traefik.http.middlewares.apex-to-www.redirectregex.permanent=true
+        - traefik.docker.network=traefik-public
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '5'
+
+  backup:
+    image: sneaxiii/mawster-backup:latest
+    networks:
+      - internal
+    environment:
+      TZ: Europe/Paris
+      MARIADB_USER: mawster
+      MARIADB_DATABASE: mawster
+      MARIADB_PORT: '3306'
+    secrets:
+      - mawster_db_password
+      - mawster_db_root_password
+      - mawster_rclone_conf
+    volumes:
+      - type: bind
+        source: /root/Mawster/backups
+        target: /backups
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: '3'
+
+volumes:
+  data_db:
+  traefik_data:
+  api_logs:
