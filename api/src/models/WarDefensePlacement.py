@@ -27,7 +27,9 @@ class WarDefensePlacement(SQLModel, table=True):
     ascension: int = Field(default=0, ge=0, le=2)
     placed_by_id: Optional[uuid.UUID] = Field(default=None, foreign_key="game_account.id")
     created_at: datetime = Field(default_factory=datetime.now)
-    attacker_champion_user_id: Optional[uuid.UUID] = Field(default=None, foreign_key="champion_user.id")
+    attacker_champion_user_id: Optional[uuid.UUID] = Field(
+        default=None, foreign_key="champion_user.id"
+    )
     ko_count: int = Field(default=0, ge=0)
 
     # Relations

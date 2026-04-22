@@ -37,7 +37,9 @@ async def read_users_me(
 
 @auth_controller.post("/discord", status_code=200)
 @limiter.limit("5/minute")
-async def discord_login(request: Request, discord_data: DiscordLoginRequest, session: SessionDep) -> LoginResponse:
+async def discord_login(
+    request: Request, discord_data: DiscordLoginRequest, session: SessionDep
+) -> LoginResponse:
     """Authentification via Discord OAuth2.
 
     Appele par le serveur NextAuth apres un flow OAuth Discord reussi.
@@ -66,7 +68,9 @@ async def discord_login(request: Request, discord_data: DiscordLoginRequest, ses
 
 @auth_controller.post("/refresh", status_code=200)
 @limiter.limit("2/minute")
-async def refresh_access_token(request: Request, body: RefreshTokenRequest, session: SessionDep) -> LoginResponse:
+async def refresh_access_token(
+    request: Request, body: RefreshTokenRequest, session: SessionDep
+) -> LoginResponse:
     """Use a refresh token to obtain a new access token + refresh token pair."""
     data = JWTService.decode_refresh_token(body.refresh_token)
     user_id = data.get("user_id")

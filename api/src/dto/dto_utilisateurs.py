@@ -41,4 +41,5 @@ class DiscordLoginRequest(BaseModel):
     """DTO pour la connexion via Discord OAuth2.
     Le frontend envoie le token d'acces Discord ; le backend le verifie
     directement aupres de l'API Discord pour garantir l'authenticite."""
+
     access_token: str = Field(..., examples=["ya29.a0AfH6SM..."])

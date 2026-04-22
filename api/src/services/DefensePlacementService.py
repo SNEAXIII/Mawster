@@ -29,7 +29,6 @@ MAX_DEFENDERS_PER_PLAYER = 5
 
 
 class DefensePlacementService:
-
     @classmethod
     async def get_defense(
         cls,
@@ -321,24 +320,24 @@ class DefensePlacementService:
                     "image_url": cu.champion.image_url,
                     "owners": [],
                 }
-            champion_groups[champ_id]["owners"].append({
-                "champion_user_id": str(cu.id),
-                "game_account_id": str(cu.game_account_id),
-                "game_pseudo": member_map[cu.game_account_id].game_pseudo,
-                "rarity": cu.rarity,
-                "stars": cu.stars,
-                "rank": cu.rank,
-                "signature": cu.signature,
-                "is_preferred_attacker": cu.is_preferred_attacker,
-                "ascension": cu.ascension,
-                "defender_count": defender_counts.get(cu.game_account_id, 0),
-            })
+            champion_groups[champ_id]["owners"].append(
+                {
+                    "champion_user_id": str(cu.id),
+                    "game_account_id": str(cu.game_account_id),
+                    "game_pseudo": member_map[cu.game_account_id].game_pseudo,
+                    "rarity": cu.rarity,
+                    "stars": cu.stars,
+                    "rank": cu.rank,
+                    "signature": cu.signature,
+                    "is_preferred_attacker": cu.is_preferred_attacker,
+                    "ascension": cu.ascension,
+                    "defender_count": defender_counts.get(cu.game_account_id, 0),
+                }
+            )
 
         # Sort owners: prefer 7★ over 6★, then higher rank, then fewer defenders already placed
         for group in champion_groups.values():
-            group["owners"].sort(
-                key=lambda o: (-o["stars"], -o["rank"], o["defender_count"])
-            )
+            group["owners"].sort(key=lambda o: (-o["stars"], -o["rank"], o["defender_count"]))
 
         # Sort champions alphabetically
         result = sorted(champion_groups.values(), key=lambda g: g["champion_name"])
@@ -436,7 +435,9 @@ class DefensePlacementService:
         battlegroup: int,
         items: list[DefenseExportItem],
         placed_by_id: uuid.UUID | None = None,
-    ) -> tuple[list[DefenseReportItem], list[DefenseReportItem], list[DefenseImportError], int, int]:
+    ) -> tuple[
+        list[DefenseReportItem], list[DefenseReportItem], list[DefenseImportError], int, int
+    ]:
         """
         Import a defense layout.
 

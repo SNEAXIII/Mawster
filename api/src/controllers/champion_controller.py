@@ -97,7 +97,10 @@ async def toggle_champion_saga_attacker(
     champion_id: uuid.UUID,
 ):
     champion = await ChampionService.toggle_saga_attacker(session, champion_id)
-    return {"message": CHAMPION_SAGA_ATTACKER_UPDATED, "is_saga_attacker": champion.is_saga_attacker}
+    return {
+        "message": CHAMPION_SAGA_ATTACKER_UPDATED,
+        "is_saga_attacker": champion.is_saga_attacker,
+    }
 
 
 @champion_controller.patch("/{champion_id}/saga-defender", status_code=200)
@@ -106,7 +109,10 @@ async def toggle_champion_saga_defender(
     champion_id: uuid.UUID,
 ):
     champion = await ChampionService.toggle_saga_defender(session, champion_id)
-    return {"message": CHAMPION_SAGA_DEFENDER_UPDATED, "is_saga_defender": champion.is_saga_defender}
+    return {
+        "message": CHAMPION_SAGA_DEFENDER_UPDATED,
+        "is_saga_defender": champion.is_saga_defender,
+    }
 
 
 @champion_controller.post("/load", status_code=200)
@@ -115,7 +121,10 @@ async def load_champions(
     champions: list[ChampionLoadRequest],
 ):
     result = await ChampionService.load_champions(session, champions)
-    audit_log("admin.load_champions", detail=f"created={result['created']} updated={result['updated']} skipped={result['skipped']}")
+    audit_log(
+        "admin.load_champions",
+        detail=f"created={result['created']} updated={result['updated']} skipped={result['skipped']}",
+    )
     return {
         "message": CHAMPION_LOAD_SUCCESS,
         "created": result["created"],

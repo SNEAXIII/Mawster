@@ -1,4 +1,5 @@
 """Unit tests for AllianceService — access control and business logic."""
+
 import uuid
 
 import pytest
@@ -7,7 +8,11 @@ from fastapi import HTTPException
 from src.models.Alliance import Alliance
 from src.models.AllianceOfficer import AllianceOfficer
 from src.models.GameAccount import GameAccount
-from src.services.AllianceService import AllianceService, MAX_MEMBERS_PER_GROUP, MAX_MEMBERS_PER_ALLIANCE
+from src.services.AllianceService import (
+    AllianceService,
+    MAX_MEMBERS_PER_GROUP,
+    MAX_MEMBERS_PER_ALLIANCE,
+)
 from tests.utils.utils_constant import (
     USER_ID,
     USER2_ID,
@@ -21,6 +26,7 @@ from tests.utils.utils_constant import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _mock_session(mocker):
     session = mocker.AsyncMock()
@@ -80,7 +86,9 @@ class TestAssertIsOwnerOrOfficer:
         officer_acc = _make_account(user_id=USER2_ID, pseudo=GAME_PSEUDO_2)
         alliance = _make_alliance(
             owner_id=owner_acc.id,
-            officers=[_make_officer(uuid.uuid4(), officer_acc.id)] if is_officer or not is_owner else [],
+            officers=[_make_officer(uuid.uuid4(), officer_acc.id)]
+            if is_officer or not is_owner
+            else [],
         )
 
         if is_owner:
@@ -204,9 +212,7 @@ class TestAssertCanRemoveMember:
         session.exec.return_value = result_mock
 
         if should_pass:
-            await AllianceService._assert_can_remove_member(
-                session, alliance, caller_id, target_id
-            )
+            await AllianceService._assert_can_remove_member(session, alliance, caller_id, target_id)
         else:
             with pytest.raises(HTTPException) as exc:
                 await AllianceService._assert_can_remove_member(
@@ -226,10 +232,10 @@ class TestCreateAlliance:
     @pytest.mark.parametrize(
         "owner_exists, owner_belongs_to_user, already_in_alliance, expected_status",
         [
-            (True, True, False, None),    # success
-            (False, False, False, 404),   # owner not found
-            (True, False, False, 403),    # not your account
-            (True, True, True, 409),      # already in alliance
+            (True, True, False, None),  # success
+            (False, False, False, 404),  # owner not found
+            (True, False, False, 403),  # not your account
+            (True, True, True, 409),  # already in alliance
         ],
         ids=["success", "owner_not_found", "not_your_account", "already_in_alliance"],
     )
@@ -289,7 +295,9 @@ class TestAddMember:
         ],
         ids=["success", "account_not_found", "already_in_alliance", "alliance_full"],
     )
-    async def test_add_member(self, mocker, account_exists, already_in_alliance, current_member_count, expected_status):
+    async def test_add_member(
+        self, mocker, account_exists, already_in_alliance, current_member_count, expected_status
+    ):
         session = _mock_session(mocker)
         alliance_id = uuid.uuid4()
         ga_id = uuid.uuid4()
@@ -336,10 +344,10 @@ class TestRemoveMember:
     @pytest.mark.parametrize(
         "alliance_exists, is_owner, member_found, expected_status",
         [
-            (True, False, True, None),     # success
-            (False, False, False, 404),    # alliance not found
-            (True, True, True, 400),       # can't remove owner
-            (True, False, False, 404),     # member not in alliance
+            (True, False, True, None),  # success
+            (False, False, False, 404),  # alliance not found
+            (True, True, True, 400),  # can't remove owner
+            (True, False, False, 404),  # member not in alliance
         ],
         ids=["success", "alliance_not_found", "cannot_remove_owner", "member_not_found"],
     )
@@ -483,10 +491,10 @@ class TestSetMemberGroup:
     @pytest.mark.parametrize(
         "member_found, group, current_count, expected_status",
         [
-            (True, 1, 0, None),        # success
-            (True, None, 0, None),     # remove from group
-            (False, 1, 0, 404),        # not a member
-            (True, 5, 0, 400),         # invalid group number
+            (True, 1, 0, None),  # success
+            (True, None, 0, None),  # remove from group
+            (False, 1, 0, 404),  # not a member
+            (True, 5, 0, 400),  # invalid group number
             (True, 1, MAX_MEMBERS_PER_GROUP, 409),  # group full
         ],
         ids=["success", "remove_group", "not_member", "invalid_group", "group_full"],
@@ -629,9 +637,7 @@ class TestGetMyRoles:
         acc = _make_account(user_id=USER_ID, alliance_id=alliance_id)
         owner_acc = _make_account(user_id=USER2_ID, alliance_id=alliance_id)
 
-        alliance = _make_alliance(
-            owner_id=owner_acc.id, alliance_id=alliance_id, officers=[]
-        )
+        alliance = _make_alliance(owner_id=owner_acc.id, alliance_id=alliance_id, officers=[])
 
         accounts_result = mocker.MagicMock()
         accounts_result.all.return_value = [acc]

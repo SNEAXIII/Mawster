@@ -9,6 +9,4 @@ def invalid_requested_rarity(requested_rarity: str, valid_rarities: str) -> str:
 
 
 def requested_rarity_must_be_higher(requested_rarity: str, current_rarity: str) -> str:
-    return (
-        f"Requested rarity '{requested_rarity}' must be higher than current rarity '{current_rarity}'"
-    )
+    return f"Requested rarity '{requested_rarity}' must be higher than current rarity '{current_rarity}'"

@@ -1,4 +1,5 @@
 """Integration tests for defense placement endpoints."""
+
 import uuid
 
 import pytest
@@ -21,7 +22,7 @@ from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_member,
     push_officer,
-    push_champion
+    push_champion,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 from tests.utils.utils_db import load_objects
@@ -31,6 +32,7 @@ from src.models.ChampionUser import ChampionUser
 IRON_MAN = "Iron Man"
 
 # ─── Helpers ──────────────────────────────────────────────
+
 
 async def _setup_alliance_with_bg(
     owner_user_id=USER_ID,
@@ -56,9 +58,7 @@ async def _setup_alliance_with_bg(
     await push_officer(alliance, owner)
 
     # Add member in same BG
-    member = await push_member(
-        alliance, user_id=member_user_id, game_pseudo=GAME_PSEUDO_2
-    )
+    member = await push_member(alliance, user_id=member_user_id, game_pseudo=GAME_PSEUDO_2)
     member.alliance_group = battlegroup
     await load_objects([member])
 
@@ -113,6 +113,7 @@ async def _setup_alliance_with_bg(
 
 
 # ─── Test classes ─────────────────────────────────────────
+
 
 class TestGetDefense:
     """GET /alliances/{id}/defense/bg/{bg}"""
@@ -630,8 +631,11 @@ class TestExportDefense:
         data = await _setup_alliance_with_bg()
         other_user_id = uuid.uuid4()
         other_user = User(
-            id=other_user_id, login="outsider2", email="outsider2@test.com",
-            discord_id="outsider2", role="user",
+            id=other_user_id,
+            login="outsider2",
+            email="outsider2@test.com",
+            discord_id="outsider2",
+            role="user",
         )
         await load_objects([other_user])
         headers = create_auth_headers(user_id=str(other_user_id))
@@ -723,7 +727,7 @@ class TestImportDefense:
         body = response.json()
         assert len(body["before"]) == 1  # had Spider-Man on node 1
         assert body["before"][0]["champion_name"] == "Spider-Man"
-        assert len(body["after"]) == 1   # now Wolverine on node 10
+        assert len(body["after"]) == 1  # now Wolverine on node 10
         assert body["after"][0]["champion_name"] == "Wolverine"
 
     @pytest.mark.asyncio
@@ -848,8 +852,12 @@ class TestDefenseAlias:
         await push_officer(alliance, owner)
 
         # Champion with an alias
-        spidey = await push_champion(name="Spider-Man", champion_class="Science", alias="spidey;peter")
-        cu = ChampionUser(id=uuid.uuid4(), game_account_id=owner.id, champion_id=spidey.id, stars=7, rank=3)
+        spidey = await push_champion(
+            name="Spider-Man", champion_class="Science", alias="spidey;peter"
+        )
+        cu = ChampionUser(
+            id=uuid.uuid4(), game_account_id=owner.id, champion_id=spidey.id, stars=7, rank=3
+        )
         await load_objects([cu])
 
         headers = create_auth_headers(user_id=str(USER_ID))
@@ -880,7 +888,9 @@ class TestDefenseAlias:
 
         # Champion without alias
         champ = await push_champion(name=IRON_MAN, champion_class="Tech")
-        cu = ChampionUser(id=uuid.uuid4(), game_account_id=owner.id, champion_id=champ.id, stars=6, rank=5)
+        cu = ChampionUser(
+            id=uuid.uuid4(), game_account_id=owner.id, champion_id=champ.id, stars=6, rank=5
+        )
         await load_objects([cu])
 
         headers = create_auth_headers(user_id=str(USER_ID))

@@ -10,7 +10,6 @@ from src.utils.db import SessionDep
 
 
 class SeasonService:
-
     @classmethod
     async def get_active_season(cls, session: SessionDep) -> Season | None:
         result = await session.exec(select(Season).where(Season.is_active))

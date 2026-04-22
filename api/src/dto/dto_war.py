@@ -25,21 +25,21 @@ class WarResponse(BaseModel):
     season_id: Optional[uuid.UUID] = None
     season_number: Optional[int] = None
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     @classmethod
     def flatten_relations(cls, data: Any) -> Any:
         if isinstance(data, dict):
             return data
         return {
-            'id': data.id,
-            'alliance_id': data.alliance_id,
-            'opponent_name': data.opponent_name,
-            'status': data.status,
-            'created_by_pseudo': data.created_by.game_pseudo,
-            'created_at': data.created_at,
-            'banned_champions': [ban.champion for ban in data.bans],
-            'season_id': data.season_id,
-            'season_number': data.season.number if data.season else None,
+            "id": data.id,
+            "alliance_id": data.alliance_id,
+            "opponent_name": data.opponent_name,
+            "status": data.status,
+            "created_by_pseudo": data.created_by.game_pseudo,
+            "created_at": data.created_at,
+            "banned_champions": [ban.champion for ban in data.bans],
+            "season_id": data.season_id,
+            "season_number": data.season.number if data.season else None,
         }
 
 
@@ -81,39 +81,39 @@ class WarPlacementResponse(BaseModel):
     attacker_is_saga_attacker: Optional[bool] = None
     attacker_is_saga_defender: Optional[bool] = None
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     @classmethod
     def flatten_relations(cls, data: Any) -> Any:
         if isinstance(data, dict):
             return data
         attacker = data.attacker_champion_user
         return {
-            'id': data.id,
-            'war_id': data.war_id,
-            'battlegroup': data.battlegroup,
-            'node_number': data.node_number,
-            'champion_id': data.champion_id,
-            'champion_name': data.champion.name,
-            'champion_class': data.champion.champion_class,
-            'image_url': data.champion.image_url,
-            'rarity': f"{data.stars}r{data.rank}",
-            'ascension': data.ascension,
-            'placed_by_pseudo': data.placed_by.game_pseudo if data.placed_by else None,
-            'created_at': data.created_at,
-            'ko_count': data.ko_count,
-            'attacker_champion_user_id': data.attacker_champion_user_id,
-            'attacker_game_account_id': attacker.game_account_id if attacker else None,
-            'attacker_pseudo': attacker.game_account.game_pseudo if attacker else None,
-            'attacker_champion_name': attacker.champion.name if attacker else None,
-            'attacker_champion_class': attacker.champion.champion_class if attacker else None,
-            'attacker_image_url': attacker.champion.image_url if attacker else None,
-            'attacker_rarity': f"{attacker.stars}r{attacker.rank}" if attacker else None,
-            'attacker_is_preferred_attacker': attacker.is_preferred_attacker if attacker else None,
-            'is_saga_attacker': data.champion.is_saga_attacker,
-            'is_saga_defender': data.champion.is_saga_defender,
-            'attacker_ascension': attacker.ascension if attacker else None,
-            'attacker_is_saga_attacker': attacker.champion.is_saga_attacker if attacker else None,
-            'attacker_is_saga_defender': attacker.champion.is_saga_defender if attacker else None,
+            "id": data.id,
+            "war_id": data.war_id,
+            "battlegroup": data.battlegroup,
+            "node_number": data.node_number,
+            "champion_id": data.champion_id,
+            "champion_name": data.champion.name,
+            "champion_class": data.champion.champion_class,
+            "image_url": data.champion.image_url,
+            "rarity": f"{data.stars}r{data.rank}",
+            "ascension": data.ascension,
+            "placed_by_pseudo": data.placed_by.game_pseudo if data.placed_by else None,
+            "created_at": data.created_at,
+            "ko_count": data.ko_count,
+            "attacker_champion_user_id": data.attacker_champion_user_id,
+            "attacker_game_account_id": attacker.game_account_id if attacker else None,
+            "attacker_pseudo": attacker.game_account.game_pseudo if attacker else None,
+            "attacker_champion_name": attacker.champion.name if attacker else None,
+            "attacker_champion_class": attacker.champion.champion_class if attacker else None,
+            "attacker_image_url": attacker.champion.image_url if attacker else None,
+            "attacker_rarity": f"{attacker.stars}r{attacker.rank}" if attacker else None,
+            "attacker_is_preferred_attacker": attacker.is_preferred_attacker if attacker else None,
+            "is_saga_attacker": data.champion.is_saga_attacker,
+            "is_saga_defender": data.champion.is_saga_defender,
+            "attacker_ascension": attacker.ascension if attacker else None,
+            "attacker_is_saga_attacker": attacker.champion.is_saga_attacker if attacker else None,
+            "attacker_is_saga_defender": attacker.champion.is_saga_defender if attacker else None,
         }
 
 
@@ -190,7 +190,7 @@ class WarSynergyResponse(BaseModel):
     game_pseudo: str
     created_at: datetime
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     @classmethod
     def flatten_relations(cls, data: Any) -> Any:
         if isinstance(data, dict):
@@ -198,22 +198,22 @@ class WarSynergyResponse(BaseModel):
         cu = data.champion_user
         target = data.target_champion_user
         return {
-            'id': data.id,
-            'war_id': data.war_id,
-            'battlegroup': data.battlegroup,
-            'game_account_id': data.game_account_id,
-            'champion_user_id': data.champion_user_id,
-            'target_champion_user_id': data.target_champion_user_id,
-            'champion_name': cu.champion.name,
-            'champion_class': cu.champion.champion_class,
-            'image_url': cu.champion.image_url,
-            'rarity': cu.rarity,
-            'ascension': cu.ascension,
-            'is_saga_attacker': cu.champion.is_saga_attacker,
-            'is_saga_defender': cu.champion.is_saga_defender,
-            'target_champion_name': target.champion.name,
-            'game_pseudo': data.game_account.game_pseudo,
-            'created_at': data.created_at,
+            "id": data.id,
+            "war_id": data.war_id,
+            "battlegroup": data.battlegroup,
+            "game_account_id": data.game_account_id,
+            "champion_user_id": data.champion_user_id,
+            "target_champion_user_id": data.target_champion_user_id,
+            "champion_name": cu.champion.name,
+            "champion_class": cu.champion.champion_class,
+            "image_url": cu.champion.image_url,
+            "rarity": cu.rarity,
+            "ascension": cu.ascension,
+            "is_saga_attacker": cu.champion.is_saga_attacker,
+            "is_saga_defender": cu.champion.is_saga_defender,
+            "target_champion_name": target.champion.name,
+            "game_pseudo": data.game_account.game_pseudo,
+            "created_at": data.created_at,
         }
 
 
@@ -241,26 +241,26 @@ class WarPrefightResponse(BaseModel):
     game_pseudo: str
     created_at: datetime
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     @classmethod
     def flatten_relations(cls, data: Any) -> Any:
         if isinstance(data, dict):
             return data
         cu = data.champion_user
         return {
-            'id': data.id,
-            'war_id': data.war_id,
-            'battlegroup': data.battlegroup,
-            'game_account_id': data.game_account_id,
-            'champion_user_id': data.champion_user_id,
-            'target_node_number': data.target_node_number,
-            'champion_name': cu.champion.name,
-            'champion_class': cu.champion.champion_class,
-            'image_url': cu.champion.image_url,
-            'rarity': cu.rarity,
-            'ascension': cu.ascension,
-            'is_saga_attacker': cu.champion.is_saga_attacker,
-            'is_saga_defender': cu.champion.is_saga_defender,
-            'game_pseudo': data.game_account.game_pseudo,
-            'created_at': data.created_at,
+            "id": data.id,
+            "war_id": data.war_id,
+            "battlegroup": data.battlegroup,
+            "game_account_id": data.game_account_id,
+            "champion_user_id": data.champion_user_id,
+            "target_node_number": data.target_node_number,
+            "champion_name": cu.champion.name,
+            "champion_class": cu.champion.champion_class,
+            "image_url": cu.champion.image_url,
+            "rarity": cu.rarity,
+            "ascension": cu.ascension,
+            "is_saga_attacker": cu.champion.is_saga_attacker,
+            "is_saga_defender": cu.champion.is_saga_defender,
+            "game_pseudo": data.game_account.game_pseudo,
+            "created_at": data.created_at,
         }

@@ -22,7 +22,6 @@ VALID_RARITIES = {r.value for r in ChampionRarity}
 
 
 class UpgradeRequestService:
-
     @classmethod
     async def create_upgrade_request(
         cls,
@@ -112,9 +111,7 @@ class UpgradeRequestService:
         return list(result.all())
 
     @classmethod
-    async def cancel_upgrade_request(
-        cls, session: SessionDep, request_id: uuid.UUID
-    ) -> None:
+    async def cancel_upgrade_request(cls, session: SessionDep, request_id: uuid.UUID) -> None:
         """Delete an upgrade request."""
         upgrade_request = await session.get(RequestedUpgrade, request_id)
         if upgrade_request is None:

@@ -76,9 +76,7 @@ class DiscordAuthService:
         return response.json()
 
     @classmethod
-    async def get_user_by_discord_id(
-        cls, session: SessionDep, discord_id: str
-    ) -> Optional[User]:
+    async def get_user_by_discord_id(cls, session: SessionDep, discord_id: str) -> Optional[User]:
         """Recherche un utilisateur par son identifiant Discord."""
         sql = select(User).where(User.discord_id == discord_id)
         result = await session.exec(sql)
@@ -100,9 +98,7 @@ class DiscordAuthService:
         return normalized[:15]
 
     @classmethod
-    async def _generate_unique_login(
-        cls, session: SessionDep, discord_username: str
-    ) -> str:
+    async def _generate_unique_login(cls, session: SessionDep, discord_username: str) -> str:
         """Génère un login unique à partir du username Discord.
 
         Si le login normalisé est déjà pris, ajoute un suffixe numérique aléatoire.
@@ -144,7 +140,11 @@ class DiscordAuthService:
         """
         discord_id = str(discord_profile["id"])
         email = discord_profile.get("email") or f"{discord_id}@discord.placeholder"
-        username = discord_profile.get("username") or discord_profile.get("global_name") or f"discord_{discord_id}"
+        username = (
+            discord_profile.get("username")
+            or discord_profile.get("global_name")
+            or f"discord_{discord_id}"
+        )
         avatar_hash = discord_profile.get("avatar")
         avatar_url = (
             f"https://cdn.discordapp.com/avatars/{discord_id}/{avatar_hash}.png"
@@ -177,9 +177,7 @@ class DiscordAuthService:
             raise EMAIL_CONFLICT_EXCEPTION
 
         # 3. Creer un nouveau compte Discord
-        unique_login = await cls._generate_unique_login(
-            session, username
-        )
+        unique_login = await cls._generate_unique_login(session, username)
 
         new_user = User(
             login=unique_login,

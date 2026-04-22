@@ -1,4 +1,5 @@
 """Setup helpers to create game accounts, alliances, officers and members for integration tests."""
+
 import uuid
 from typing import Optional
 
@@ -22,6 +23,7 @@ from tests.utils.utils_db import load_objects
 # Game Accounts
 # ---------------------------------------------------------------------------
 
+
 def get_game_account(
     user_id: uuid.UUID = USER_ID,
     game_pseudo: str = GAME_PSEUDO,
@@ -43,6 +45,7 @@ def get_game_account(
 # ---------------------------------------------------------------------------
 # Alliances
 # ---------------------------------------------------------------------------
+
 
 def get_alliance(
     owner_id: uuid.UUID,
@@ -72,6 +75,7 @@ def get_officer(
 # ---------------------------------------------------------------------------
 # Composite setup helpers
 # ---------------------------------------------------------------------------
+
 
 async def push_game_account(
     user_id: uuid.UUID = USER_ID,
@@ -139,6 +143,7 @@ async def push_officer(
 # ---------------------------------------------------------------------------
 # Champions
 # ---------------------------------------------------------------------------
+
 
 def get_champion(
     name: str = "Spider-Man",

@@ -1,4 +1,5 @@
 """Integration tests for /game-accounts endpoints."""
+
 import uuid
 import pytest
 
@@ -14,7 +15,7 @@ from tests.utils.utils_client import (
     execute_get_request,
     execute_post_request,
     execute_put_request,
-    execute_delete_request
+    execute_delete_request,
 )
 from tests.utils.utils_constant import (
     USER_ID,
@@ -33,6 +34,7 @@ ENDPOINT = "/game-accounts"
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 async def _setup_1_user():
     """Insert the standard test user."""
@@ -89,7 +91,9 @@ class TestCreateGameAccount:
     async def test_create_invalid_payload(self, session, payload):
         await _setup_1_user()
         response = await execute_post_request(
-            ENDPOINT, payload, headers=HEADERS,
+            ENDPOINT,
+            payload,
+            headers=HEADERS,
         )
         assert response.status_code == 422
 
@@ -188,9 +192,7 @@ class TestGetMyGameAccounts:
     async def test_list_includes_alliance_tag(self):
         """Accounts that are in an alliance should return alliance_tag and alliance_name."""
         await _setup_1_user()
-        await push_alliance_with_owner(
-            user_id=USER_ID, game_pseudo=GAME_PSEUDO
-        )
+        await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         # Also add a free account
         await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO_2)
 
@@ -229,9 +231,7 @@ class TestGetSingleGameAccount:
         await _setup_1_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
 
-        response = await execute_get_request(
-            f"/game-accounts/{acc.id}", headers=HEADERS
-        )
+        response = await execute_get_request(f"/game-accounts/{acc.id}", headers=HEADERS)
         assert response.status_code == 200
         assert response.json()["game_pseudo"] == GAME_PSEUDO
 
@@ -241,26 +241,20 @@ class TestGetSingleGameAccount:
         await push_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo="Other")
 
-        response = await execute_get_request(
-            f"/game-accounts/{acc.id}", headers=HEADERS
-        )
+        response = await execute_get_request(f"/game-accounts/{acc.id}", headers=HEADERS)
         assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_get_nonexistent_returns_404(self):
         await _setup_1_user()
-        response = await execute_get_request(
-            f"/game-accounts/{uuid.uuid4()}", headers=HEADERS
-        )
+        response = await execute_get_request(f"/game-accounts/{uuid.uuid4()}", headers=HEADERS)
         assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_invalid_uuid_returns_422(self):
         """A non-UUID path param should be rejected by FastAPI validation."""
         await _setup_1_user()
-        response = await execute_get_request(
-            "/game-accounts/not-a-uuid", headers=HEADERS
-        )
+        response = await execute_get_request("/game-accounts/not-a-uuid", headers=HEADERS)
         assert response.status_code == 422
 
 
@@ -359,9 +353,7 @@ class TestDeleteGameAccount:
         await _setup_1_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
 
-        response = await execute_delete_request(
-            f"/game-accounts/{acc.id}", headers=HEADERS
-        )
+        response = await execute_delete_request(f"/game-accounts/{acc.id}", headers=HEADERS)
         assert response.status_code == 204
 
     @pytest.mark.asyncio
@@ -370,32 +362,24 @@ class TestDeleteGameAccount:
         await push_user2()
         acc = await push_game_account(user_id=USER2_ID, game_pseudo="Other")
 
-        response = await execute_delete_request(
-            f"/game-accounts/{acc.id}", headers=HEADERS
-        )
+        response = await execute_delete_request(f"/game-accounts/{acc.id}", headers=HEADERS)
         assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_delete_nonexistent_returns_404(self):
         await _setup_1_user()
-        response = await execute_delete_request(
-            f"/game-accounts/{uuid.uuid4()}", headers=HEADERS
-        )
+        response = await execute_delete_request(f"/game-accounts/{uuid.uuid4()}", headers=HEADERS)
         assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_delete_invalid_uuid_returns_422(self):
         await _setup_1_user()
-        response = await execute_delete_request(
-            "/game-accounts/not-valid", headers=HEADERS
-        )
+        response = await execute_delete_request("/game-accounts/not-valid", headers=HEADERS)
         assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_delete_without_auth_returns_401(self):
-        response = await execute_delete_request(
-            f"/game-accounts/{uuid.uuid4()}"
-        )
+        response = await execute_delete_request(f"/game-accounts/{uuid.uuid4()}")
         assert response.status_code == 401
 
     @pytest.mark.asyncio
@@ -409,14 +393,14 @@ class TestDeleteGameAccount:
         assert r2.status_code == 404
 
     @pytest.mark.asyncio
-    @pytest.mark.xfail(reason="BUG: deleting an alliance-owner game account returns 500 (FK constraint)")
+    @pytest.mark.xfail(
+        reason="BUG: deleting an alliance-owner game account returns 500 (FK constraint)"
+    )
     async def test_delete_account_in_alliance(self):
         """Deleting a game account that's in an alliance should work or fail cleanly."""
         await _setup_1_user()
         alliance, owner_acc = await push_alliance_with_owner(
             user_id=USER_ID, game_pseudo=GAME_PSEUDO
         )
-        response = await execute_delete_request(
-            f"/game-accounts/{owner_acc.id}", headers=HEADERS
-        )
+        response = await execute_delete_request(f"/game-accounts/{owner_acc.id}", headers=HEADERS)
         assert response.status_code in (204, 400, 409)

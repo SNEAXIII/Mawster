@@ -22,9 +22,7 @@ class DefensePlacement(SQLModel, table=True):
     node_number: int = Field(ge=1, le=55)
     champion_user_id: uuid.UUID = Field(foreign_key="champion_user.id")
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
-    placed_by_id: Optional[uuid.UUID] = Field(
-        default=None, foreign_key="game_account.id"
-    )
+    placed_by_id: Optional[uuid.UUID] = Field(default=None, foreign_key="game_account.id")
     created_at: datetime = Field(default_factory=datetime.now)
 
     # Relations

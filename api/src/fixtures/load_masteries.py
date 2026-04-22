@@ -61,9 +61,7 @@ def _process_mastery_item(session: Session, item: dict) -> str:
     if not name or max_value == 0 or order is None:
         return "skipped"
 
-    existing: Mastery | None = session.exec(
-        select(Mastery).where(Mastery.name == name)
-    ).first()
+    existing: Mastery | None = session.exec(select(Mastery).where(Mastery.name == name)).first()
 
     if existing:
         return (
@@ -116,9 +114,7 @@ def load_masteries(json_path: Path = DEFAULT_JSON_PATH):
 
             session.commit()
 
-        print(
-            f"✅ masteries loaded: {added} added, {updated} updated, {skipped} unchanged"
-        )
+        print(f"✅ masteries loaded: {added} added, {updated} updated, {skipped} unchanged")
 
     except json.JSONDecodeError as e:
         print(f"❌ Invalid JSON: {e}")

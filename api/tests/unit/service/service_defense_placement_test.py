@@ -1,4 +1,5 @@
 """Unit tests for DefensePlacementService – export / import logic."""
+
 import uuid
 
 import pytest
@@ -79,13 +80,9 @@ class TestExportDefense:
     async def test_export_empty(self, mocker):
         """Export with no placements returns []."""
         session = mocker.AsyncMock()
-        mocker.patch.object(
-            DefensePlacementService, "get_defense", return_value=[]
-        )
+        mocker.patch.object(DefensePlacementService, "get_defense", return_value=[])
 
-        result = await DefensePlacementService.export_defense(
-            session, ALLIANCE_ID, BG
-        )
+        result = await DefensePlacementService.export_defense(session, ALLIANCE_ID, BG)
 
         assert result == []
 
@@ -97,13 +94,9 @@ class TestExportDefense:
             _fake_placement(10, CHAMP_WOLVERINE, MEMBER_GA_ID, "MemberPseudo", stars=6, rank=5),
         ]
         session = mocker.AsyncMock()
-        mocker.patch.object(
-            DefensePlacementService, "get_defense", return_value=placements
-        )
+        mocker.patch.object(DefensePlacementService, "get_defense", return_value=placements)
 
-        result = await DefensePlacementService.export_defense(
-            session, ALLIANCE_ID, BG
-        )
+        result = await DefensePlacementService.export_defense(session, ALLIANCE_ID, BG)
 
         assert len(result) == 2
         assert all(isinstance(i, DefenseExportItem) for i in result)
@@ -136,13 +129,9 @@ class TestReportSnapshot:
             _fake_placement(5, CHAMP_SPIDER, OWNER_GA_ID, "OwnerPseudo"),
         ]
         session = mocker.AsyncMock()
-        mocker.patch.object(
-            DefensePlacementService, "get_defense", return_value=placements
-        )
+        mocker.patch.object(DefensePlacementService, "get_defense", return_value=placements)
 
-        result = await DefensePlacementService._report_snapshot(
-            session, ALLIANCE_ID, BG
-        )
+        result = await DefensePlacementService._report_snapshot(session, ALLIANCE_ID, BG)
 
         assert len(result) == 1
         item = result[0]
@@ -162,8 +151,12 @@ class TestReportSnapshot:
 
 def _make_pseudo_map():
     """Return pseudo_map for a fake BG with owner + member."""
-    owner = GameAccount(id=OWNER_GA_ID, user_id=uuid.uuid4(), game_pseudo="OwnerPseudo", is_primary=True)
-    member = GameAccount(id=MEMBER_GA_ID, user_id=uuid.uuid4(), game_pseudo="MemberPseudo", is_primary=True)
+    owner = GameAccount(
+        id=OWNER_GA_ID, user_id=uuid.uuid4(), game_pseudo="OwnerPseudo", is_primary=True
+    )
+    member = GameAccount(
+        id=MEMBER_GA_ID, user_id=uuid.uuid4(), game_pseudo="MemberPseudo", is_primary=True
+    )
     return {g.game_pseudo.lower(): g for g in [owner, member]}
 
 
@@ -187,7 +180,9 @@ class TestImportOne:
     @pytest.mark.asyncio
     async def test_unknown_champion(self, mocker):
         session = mocker.AsyncMock()
-        item = DefenseExportItem(champion_name="FakeChamp", rarity="7r3", node_number=1, owner_name="OwnerPseudo")
+        item = DefenseExportItem(
+            champion_name="FakeChamp", rarity="7r3", node_number=1, owner_name="OwnerPseudo"
+        )
         reason = await DefensePlacementService._import_one(
             session, ALLIANCE_ID, BG, item, _make_pseudo_map(), _make_champ_map(), None
         )
@@ -197,7 +192,9 @@ class TestImportOne:
     @pytest.mark.asyncio
     async def test_unknown_player(self, mocker):
         session = mocker.AsyncMock()
-        item = DefenseExportItem(champion_name="Spider-Man", rarity="7r3", node_number=1, owner_name="GhostPlayer")
+        item = DefenseExportItem(
+            champion_name="Spider-Man", rarity="7r3", node_number=1, owner_name="GhostPlayer"
+        )
         reason = await DefensePlacementService._import_one(
             session, ALLIANCE_ID, BG, item, _make_pseudo_map(), _make_champ_map(), None
         )
@@ -207,7 +204,9 @@ class TestImportOne:
     @pytest.mark.asyncio
     async def test_invalid_rarity_format(self, mocker):
         session = mocker.AsyncMock()
-        item = DefenseExportItem(champion_name="Spider-Man", rarity="bad", node_number=1, owner_name="OwnerPseudo")
+        item = DefenseExportItem(
+            champion_name="Spider-Man", rarity="bad", node_number=1, owner_name="OwnerPseudo"
+        )
         reason = await DefensePlacementService._import_one(
             session, ALLIANCE_ID, BG, item, _make_pseudo_map(), _make_champ_map(), None
         )
@@ -225,7 +224,9 @@ class TestImportOne:
         mock_result_2.first.return_value = None
         session.exec = mocker.AsyncMock(side_effect=[mock_result_1, mock_result_2])
 
-        item = DefenseExportItem(champion_name="Spider-Man", rarity="7r3", node_number=1, owner_name="OwnerPseudo")
+        item = DefenseExportItem(
+            champion_name="Spider-Man", rarity="7r3", node_number=1, owner_name="OwnerPseudo"
+        )
         reason = await DefensePlacementService._import_one(
             session, ALLIANCE_ID, BG, item, _make_pseudo_map(), _make_champ_map(), None
         )
@@ -251,7 +252,9 @@ class TestImportOne:
         mock_result_2.first.return_value = fallback_cu
         session.exec = mocker.AsyncMock(side_effect=[mock_result_1, mock_result_2])
 
-        item = DefenseExportItem(champion_name="Spider-Man", rarity="7r3", node_number=1, owner_name="OwnerPseudo")
+        item = DefenseExportItem(
+            champion_name="Spider-Man", rarity="7r3", node_number=1, owner_name="OwnerPseudo"
+        )
         reason = await DefensePlacementService._import_one(
             session, ALLIANCE_ID, BG, item, _make_pseudo_map(), _make_champ_map(), None
         )
@@ -278,7 +281,9 @@ class TestImportOne:
         mock_node.first.return_value = object()  # truthy = occupied
         session.exec = mocker.AsyncMock(side_effect=[mock_exact, mock_node])
 
-        item = DefenseExportItem(champion_name="Spider-Man", rarity="7r3", node_number=1, owner_name="OwnerPseudo")
+        item = DefenseExportItem(
+            champion_name="Spider-Man", rarity="7r3", node_number=1, owner_name="OwnerPseudo"
+        )
         reason = await DefensePlacementService._import_one(
             session, ALLIANCE_ID, BG, item, _make_pseudo_map(), _make_champ_map(), None
         )
@@ -307,7 +312,9 @@ class TestImportOne:
         mock_dup.first.return_value = object()  # truthy = dup
         session.exec = mocker.AsyncMock(side_effect=[mock_exact, mock_node, mock_dup])
 
-        item = DefenseExportItem(champion_name="Spider-Man", rarity="7r3", node_number=1, owner_name="OwnerPseudo")
+        item = DefenseExportItem(
+            champion_name="Spider-Man", rarity="7r3", node_number=1, owner_name="OwnerPseudo"
+        )
         reason = await DefensePlacementService._import_one(
             session, ALLIANCE_ID, BG, item, _make_pseudo_map(), _make_champ_map(), None
         )
@@ -335,7 +342,9 @@ class TestImportOne:
         mock_count.all.return_value = [object()] * MAX_DEFENDERS_PER_PLAYER  # at max
         session.exec = mocker.AsyncMock(side_effect=[mock_exact, mock_node, mock_dup, mock_count])
 
-        item = DefenseExportItem(champion_name="Spider-Man", rarity="7r3", node_number=1, owner_name="OwnerPseudo")
+        item = DefenseExportItem(
+            champion_name="Spider-Man", rarity="7r3", node_number=1, owner_name="OwnerPseudo"
+        )
         reason = await DefensePlacementService._import_one(
             session, ALLIANCE_ID, BG, item, _make_pseudo_map(), _make_champ_map(), None
         )
@@ -364,7 +373,9 @@ class TestImportOne:
         mock_count.all.return_value = []  # no existing defenders
         session.exec = mocker.AsyncMock(side_effect=[mock_exact, mock_node, mock_dup, mock_count])
 
-        item = DefenseExportItem(champion_name="Spider-Man", rarity="7r3", node_number=1, owner_name="OwnerPseudo")
+        item = DefenseExportItem(
+            champion_name="Spider-Man", rarity="7r3", node_number=1, owner_name="OwnerPseudo"
+        )
         reason = await DefensePlacementService._import_one(
             session, ALLIANCE_ID, BG, item, _make_pseudo_map(), _make_champ_map(), None
         )

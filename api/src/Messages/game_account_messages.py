@@ -4,4 +4,4 @@ NOT_YOUR_GAME_ACCOUNT = "Not your game account"
 
 
 def max_game_accounts_reached(max_accounts: int) -> str:
-	return f"Maximum {max_accounts} game accounts allowed per user"
+    return f"Maximum {max_accounts} game accounts allowed per user"

@@ -1,4 +1,5 @@
 """Unit tests for AllianceInvitationService."""
+
 import uuid
 
 import pytest
@@ -8,13 +9,17 @@ from src.enums.InvitationStatus import InvitationStatus
 from src.models.Alliance import Alliance
 from src.models.AllianceInvitation import AllianceInvitation
 from src.models.GameAccount import GameAccount
-from src.services.AllianceInvitationService import AllianceInvitationService, MAX_MEMBERS_PER_ALLIANCE
+from src.services.AllianceInvitationService import (
+    AllianceInvitationService,
+    MAX_MEMBERS_PER_ALLIANCE,
+)
 from tests.utils.utils_constant import USER_ID, GAME_PSEUDO, ALLIANCE_NAME, ALLIANCE_TAG
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _mock_session(mocker):
     session = mocker.AsyncMock()
@@ -65,12 +70,12 @@ class TestCreateInvitation:
     @pytest.mark.parametrize(
         "account_exists, already_in_alliance, member_count, has_pending, inviter_in_alliance, expected_status",
         [
-            (True,  False, 0,                        False, True,  None),
-            (False, False, 0,                        False, True,  404),
-            (True,  True,  0,                        False, True,  409),
-            (True,  False, MAX_MEMBERS_PER_ALLIANCE, False, True,  409),
-            (True,  False, 0,                        True,  True,  409),
-            (True,  False, 0,                        False, False, 403),
+            (True, False, 0, False, True, None),
+            (False, False, 0, False, True, 404),
+            (True, True, 0, False, True, 409),
+            (True, False, MAX_MEMBERS_PER_ALLIANCE, False, True, 409),
+            (True, False, 0, True, True, 409),
+            (True, False, 0, False, False, 403),
         ],
         ids=[
             "success",
@@ -205,9 +210,7 @@ class TestGetInvitationsForAlliance:
         invitations_mock.all.return_value = []
         session.exec.return_value = invitations_mock
 
-        result = await AllianceInvitationService.get_invitations_for_alliance(
-            session, uuid.uuid4()
-        )
+        result = await AllianceInvitationService.get_invitations_for_alliance(session, uuid.uuid4())
         assert result == []
 
 
@@ -221,12 +224,12 @@ class TestAcceptInvitation:
     @pytest.mark.parametrize(
         "inv_found, inv_pending, belongs_to_user, already_in_alliance, member_count, expected_status",
         [
-            (True,  True,  True,  False, 0,                        None),
-            (False, True,  True,  False, 0,                        404),
-            (True,  False, True,  False, 0,                        400),
-            (True,  True,  False, False, 0,                        403),
-            (True,  True,  True,  True,  0,                        409),
-            (True,  True,  True,  False, MAX_MEMBERS_PER_ALLIANCE, 409),
+            (True, True, True, False, 0, None),
+            (False, True, True, False, 0, 404),
+            (True, False, True, False, 0, 400),
+            (True, True, False, False, 0, 403),
+            (True, True, True, True, 0, 409),
+            (True, True, True, False, MAX_MEMBERS_PER_ALLIANCE, 409),
         ],
         ids=[
             "success",
@@ -282,9 +285,7 @@ class TestAcceptInvitation:
         other_pending_mock = mocker.MagicMock()
         other_pending_mock.all.return_value = []
 
-        session.exec = mocker.AsyncMock(
-            side_effect=[accounts_mock, count_mock, other_pending_mock]
-        )
+        session.exec = mocker.AsyncMock(side_effect=[accounts_mock, count_mock, other_pending_mock])
 
         if expected_status is not None:
             with pytest.raises(HTTPException) as exc:
@@ -306,10 +307,10 @@ class TestDeclineInvitation:
     @pytest.mark.parametrize(
         "inv_found, inv_pending, belongs_to_user, expected_status",
         [
-            (True,  True,  True,  None),
-            (False, True,  True,  404),
-            (True,  False, True,  400),
-            (True,  True,  False, 403),
+            (True, True, True, None),
+            (False, True, True, 404),
+            (True, False, True, 400),
+            (True, True, False, 403),
         ],
         ids=["success", "not_found", "not_pending", "not_users_account"],
     )
@@ -357,10 +358,10 @@ class TestCancelInvitation:
     @pytest.mark.parametrize(
         "inv_found, inv_pending, same_alliance, expected_status",
         [
-            (True,  True,  True,  None),
-            (False, True,  True,  404),
-            (True,  False, True,  400),
-            (True,  True,  False, 403),
+            (True, True, True, None),
+            (False, True, True, 404),
+            (True, False, True, 400),
+            (True, True, False, 403),
         ],
         ids=["success", "not_found", "not_pending", "different_alliance"],
     )

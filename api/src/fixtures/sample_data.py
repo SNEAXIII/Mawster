@@ -119,9 +119,7 @@ def _pick_champions(user_index: int, all_names: list, count: int) -> list:
     return picks
 
 
-def _build_roster(
-    game_account_id, user_index: int, champions_db: dict, has_7r5: bool
-) -> list:
+def _build_roster(game_account_id, user_index: int, champions_db: dict, has_7r5: bool) -> list:
     """Return a list of ChampionUser objects for the given game account."""
     all_names = sorted(champions_db.keys())
     count = 21 if has_7r5 else 20
@@ -165,9 +163,7 @@ def load_sample_data():
             champions_list = session.exec(select(Champion)).all()
             champions_db: dict = {c.name: c for c in champions_list}
             if not champions_db:
-                print(
-                    "⚠️  No champions in DB — run `make load-champions` first, then retry."
-                )
+                print("⚠️  No champions in DB — run `make load-champions` first, then retry.")
                 return
             print(f"📚 Loaded {len(champions_db)} champions from DB")
 
@@ -196,9 +192,7 @@ def load_sample_data():
             game_accounts.append(super_admin_game)
 
             # Roster — no 7r5 for the super admin
-            for entry in _build_roster(
-                super_admin_game.id, 0, champions_db, has_7r5=False
-            ):
+            for entry in _build_roster(super_admin_game.id, 0, champions_db, has_7r5=False):
                 session.add(entry)
 
             # ── Index 1 — Simple admin ───────────────────────────────────────────
@@ -224,9 +218,7 @@ def load_sample_data():
             game_accounts.append(simple_admin_game)
 
             # Roster — no 7r5 for the simple admin either
-            for entry in _build_roster(
-                simple_admin_game.id, 1, champions_db, has_7r5=False
-            ):
+            for entry in _build_roster(simple_admin_game.id, 1, champions_db, has_7r5=False):
                 session.add(entry)
 
             # ── Indices 2-29 — 28 regular users ──────────────────────────────────
@@ -244,9 +236,7 @@ def load_sample_data():
                     discord_id=discord_id,
                     role=Roles.USER,
                     created_at=fake.date_time_between(start_date="-1y", end_date=NOW),
-                    last_login_date=fake.date_time_between(
-                        start_date="-30d", end_date=NOW
-                    ),
+                    last_login_date=fake.date_time_between(start_date="-30d", end_date=NOW),
                 )
                 session.add(user)
                 session.flush()
@@ -270,9 +260,7 @@ def load_sample_data():
                 session.add(
                     LoginLog(
                         id_user=user.id,
-                        date_connexion=fake.date_time_between(
-                            start_date="-30d", end_date=NOW
-                        ),
+                        date_connexion=fake.date_time_between(start_date="-30d", end_date=NOW),
                     )
                 )
 
@@ -298,15 +286,9 @@ def load_sample_data():
             # ── Summary ──────────────────────────────────────────────────────────
             total = len(game_accounts)
             with_7r5 = sum(1 for ui in range(2, 30) if ui % 4 == 2)
-            print(
-                f"✅ {total} users created (1 super admin + 1 admin + {total - 2} regular users)"
-            )
-            print(
-                f"✅ {total} game accounts, all in alliance '{alliance_name}' [{alliance_tag}]"
-            )
-            print(
-                "✅ Each user: 10×7r3 + 10×7r4, sig ∈ {{0, 20, 200}} — fully deterministic"
-            )
+            print(f"✅ {total} users created (1 super admin + 1 admin + {total - 2} regular users)")
+            print(f"✅ {total} game accounts, all in alliance '{alliance_name}' [{alliance_tag}]")
+            print("✅ Each user: 10×7r3 + 10×7r4, sig ∈ {{0, 20, 200}} — fully deterministic")
             print(f"✅ {with_7r5} regular users also have 1×7r5 champion")
             print("✅ Super admin : login=misterbalise  | game=Mr DrBalise")
             print("✅ Simple admin: login=misterbalise2 | game=B DrBalise")

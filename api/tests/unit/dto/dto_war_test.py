@@ -1,4 +1,5 @@
 """Unit tests for WarResponse DTO – model_validate / flatten_relations."""
+
 import uuid
 from datetime import datetime
 from types import SimpleNamespace
@@ -91,6 +92,7 @@ def _make_attacker(**overrides):
 
 # ─── WarResponse ──────────────────────────────────────────
 
+
 class TestWarResponseDTO:
     def test_active_war_serializes(self):
         war = _make_war()
@@ -109,18 +111,34 @@ class TestWarResponseDTO:
         assert dto.status == "ended"
 
     def test_war_with_banned_champions(self):
-        ban1 = _ns(champion=_ns(
-            id=uuid.uuid4(), name="Doom", champion_class="Mystic",
-            image_url="/img/doom.png", is_7_star=True, is_ascendable=True,
-            has_prefight=False, is_saga_attacker=True, is_saga_defender=False,
-            alias=None,
-        ))
-        ban2 = _ns(champion=_ns(
-            id=uuid.uuid4(), name="Quake", champion_class="Science",
-            image_url=None, is_7_star=False, is_ascendable=False,
-            has_prefight=True, is_saga_attacker=False, is_saga_defender=True,
-            alias="shaker",
-        ))
+        ban1 = _ns(
+            champion=_ns(
+                id=uuid.uuid4(),
+                name="Doom",
+                champion_class="Mystic",
+                image_url="/img/doom.png",
+                is_7_star=True,
+                is_ascendable=True,
+                has_prefight=False,
+                is_saga_attacker=True,
+                is_saga_defender=False,
+                alias=None,
+            )
+        )
+        ban2 = _ns(
+            champion=_ns(
+                id=uuid.uuid4(),
+                name="Quake",
+                champion_class="Science",
+                image_url=None,
+                is_7_star=False,
+                is_ascendable=False,
+                has_prefight=True,
+                is_saga_attacker=False,
+                is_saga_defender=True,
+                alias="shaker",
+            )
+        )
         war = _make_war(bans=[ban1, ban2])
         dto = WarResponse.model_validate(war)
 
@@ -148,6 +166,7 @@ class TestWarResponseDTO:
 
 
 # ─── WarPlacementResponse ─────────────────────────────────
+
 
 class TestWarPlacementResponseDTO:
     def test_placement_serializes(self):
@@ -332,6 +351,7 @@ class TestWarPrefightResponseDTO:
 
 
 # ─── WarSynergyResponse ───────────────────────────────────
+
 
 class TestWarSynergyResponseDTO:
     def test_synergy_serializes(self):

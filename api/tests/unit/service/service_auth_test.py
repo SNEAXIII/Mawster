@@ -1,4 +1,3 @@
-
 import pytest
 
 from src.Messages.jwt_messages import (

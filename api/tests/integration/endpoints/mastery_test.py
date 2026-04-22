@@ -1,11 +1,16 @@
 """Integration tests for mastery endpoints."""
+
 import pytest
 
 from main import app
 from src.enums.Roles import Roles
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2
-from tests.integration.endpoints.setup.game_setup import push_game_account, push_alliance_with_owner, push_member
+from tests.integration.endpoints.setup.game_setup import (
+    push_game_account,
+    push_alliance_with_owner,
+    push_member,
+)
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
@@ -33,6 +38,7 @@ async def _push_mastery(name: str = "ASSASSIN", max_value: int = 5, order: int =
 # =========================================================================
 # Game account mastery GET / PUT
 # =========================================================================
+
 
 class TestGameAccountMasteries:
     @pytest.mark.asyncio

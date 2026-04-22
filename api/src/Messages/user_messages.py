@@ -20,16 +20,12 @@ class UserAdminError(HTTPException):
 
 USER_IS_DISABLED = UserLoginError("Ce compte est désactivé")
 USER_IS_DELETED = UserLoginError("Ce compte est supprimé")
-USER_DOESNT_EXISTS = UserLoginError(
-    "Ce compte n'existe pas"
-)
+USER_DOESNT_EXISTS = UserLoginError("Ce compte n'existe pas")
 
 NOT_STR = "Ce champ doit être une chaine de caractère"
 EMAIL_INVALID = "L'email saisi est invalide"
 LOGIN_WRONG_SIZE = "Le nom d'utilisateur doit faire entre %d et %d caractères"
-LOGIN_NON_ALPHANUM = (
-    "Le nom d'utilisateur ne doit contenir que des chiffres et des lettres"
-)
+LOGIN_NON_ALPHANUM = "Le nom d'utilisateur ne doit contenir que des chiffres et des lettres"
 TARGET_USER_DISABLED_SUCCESSFULLY = "Le compte cible a bien été désactivé"
 TARGET_USER_ENABLED_SUCCESSFULLY = "Le compte cible a bien été activé"
 TARGET_USER_DELETED_SUCCESSFULLY = "Le compte cible a bien été supprimé"

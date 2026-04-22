@@ -1,4 +1,5 @@
 """Unit tests for DiscordAuthService."""
+
 from unittest.mock import MagicMock, AsyncMock
 
 import httpx
@@ -16,6 +17,7 @@ from tests.utils.utils_constant import USER_ID, DISCORD_ID, USER_LOGIN, USER_EMA
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _mock_session(mocker):
     session = mocker.AsyncMock()
@@ -176,9 +178,7 @@ class TestGetOrCreateDiscordUser:
             DiscordAuthService, "get_user_by_discord_id", return_value=existing_user
         )
 
-        result = await DiscordAuthService.get_or_create_discord_user(
-            session, _DISCORD_PROFILE
-        )
+        result = await DiscordAuthService.get_or_create_discord_user(session, _DISCORD_PROFILE)
 
         assert result is existing_user
         session.add.assert_called()
@@ -188,21 +188,15 @@ class TestGetOrCreateDiscordUser:
     async def test_new_user_is_created_when_discord_id_unknown(self, mocker):
         session = _mock_session(mocker)
 
-        mocker.patch.object(
-            DiscordAuthService, "get_user_by_discord_id", return_value=None
-        )
-        mocker.patch.object(
-            DiscordAuthService, "_generate_unique_login", return_value="newlogin"
-        )
+        mocker.patch.object(DiscordAuthService, "get_user_by_discord_id", return_value=None)
+        mocker.patch.object(DiscordAuthService, "_generate_unique_login", return_value="newlogin")
 
         # No email hash conflict
         no_conflict_mock = mocker.MagicMock()
         no_conflict_mock.first.return_value = None
         session.exec.return_value = no_conflict_mock
 
-        result = await DiscordAuthService.get_or_create_discord_user(
-            session, _DISCORD_PROFILE
-        )
+        result = await DiscordAuthService.get_or_create_discord_user(session, _DISCORD_PROFILE)
 
         assert result is not None
         assert result.discord_id == str(_DISCORD_PROFILE["id"])
@@ -214,9 +208,7 @@ class TestGetOrCreateDiscordUser:
         session = _mock_session(mocker)
         conflicting_user = _make_user(discord_id="other_discord_id", login="otherlogin")
 
-        mocker.patch.object(
-            DiscordAuthService, "get_user_by_discord_id", return_value=None
-        )
+        mocker.patch.object(DiscordAuthService, "get_user_by_discord_id", return_value=None)
 
         conflict_mock = mocker.MagicMock()
         conflict_mock.first.return_value = conflicting_user

@@ -6,19 +6,29 @@ WAR_NOT_FOUND = "War not found"
 CHAMPION_NOT_FOUND = "Champion not found"
 CHAMPION_USER_NOT_FOUND = "Champion user not found"
 TARGET_CHAMPION_USER_NOT_FOUND = "Target champion user not found"
-CHAMPION_ALREADY_PLACED_IN_BG = "This champion is already placed on another node in this battlegroup"
+CHAMPION_ALREADY_PLACED_IN_BG = (
+    "This champion is already placed on another node in this battlegroup"
+)
 NO_DEFENDER_ON_NODE = "No defender on this node"
 NODE_HAS_NO_DEFENDER_PLACE_FIRST = "This node has no defender — place a defender first"
-CHAMPION_NOT_IN_ALLIANCE_BG = "This champion does not belong to a member of this alliance battlegroup"
+CHAMPION_NOT_IN_ALLIANCE_BG = (
+    "This champion does not belong to a member of this alliance battlegroup"
+)
 CHAMPION_BANNED_FOR_WAR = "This champion is banned for this war"
 CHAMPION_ALREADY_IN_ALLIANCE_DEFENSE = "This champion is already placed in the alliance defense"
 MEMBER_ALREADY_HAS_3_ATTACKERS = "This member already has 3 attackers assigned in this battlegroup"
 NO_ATTACKER_ASSIGNED_ON_NODE = "No attacker assigned to this node"
 KO_COUNT_NO_ATTACKER_ASSIGNED = "Cannot update KO count: no attacker assigned to this node"
 ONLY_OWN_CHAMPIONS_SYNERGY = "You can only add your own champions as synergy providers"
-TARGET_NOT_ASSIGNED_AS_NODE_ATTACKER = "Target champion is not assigned as a node attacker in this war+BG"
-SYNERGY_PROVIDER_CANNOT_BE_TARGET = "Synergy provider cannot be the same champion as the target attacker"
-SYNERGY_PROVIDER_MUST_MATCH_TARGET_ACCOUNT = "Synergy provider must belong to the same game account as the target attacker"
+TARGET_NOT_ASSIGNED_AS_NODE_ATTACKER = (
+    "Target champion is not assigned as a node attacker in this war+BG"
+)
+SYNERGY_PROVIDER_CANNOT_BE_TARGET = (
+    "Synergy provider cannot be the same champion as the target attacker"
+)
+SYNERGY_PROVIDER_MUST_MATCH_TARGET_ACCOUNT = (
+    "Synergy provider must belong to the same game account as the target attacker"
+)
 CHAMPION_ALREADY_SYNERGY_PROVIDER = "This champion is already a synergy provider in this war+BG"
 SYNERGY_ATTACKER_NOT_FOUND = "Synergy attacker not found"
 CHAMPION_NO_PREFIGHT_ABILITY = "This champion does not have a pre-fight ability"

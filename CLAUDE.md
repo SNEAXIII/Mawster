@@ -15,6 +15,7 @@ Mawster — MCOC (Marvel Contest of Champions) alliance management tool.
 
 Single test file: `uv run pytest tests/unit/dto/dto_from_model_test.py -v`
 Lint: `uvx ruff check` (run at end of every backend session)
+Format: `uvx ruff format`
 
 **Frontend** (`front/`): `npm run dev` / `npm run build` (run build to catch TS errors)
 

@@ -145,9 +145,9 @@ def _parse_champion_row(cells, seen_names, champions, row_idx):
         return
 
     if len(champions) < 3:
-        print(f"  [DEBUG] Row {row_idx}: name=\'{name}\', cells={len(cells)}")
+        print(f"  [DEBUG] Row {row_idx}: name='{name}', cells={len(cells)}")
         for ci, c in enumerate(cells):
-            print(f"    cell[{ci}] text=\'{c.get_text(strip=True)[:50]}\'")
+            print(f"    cell[{ci}] text='{c.get_text(strip=True)[:50]}'")
 
     champion_class = _resolve_champion_class(cells)
     if champion_class is None:
@@ -290,7 +290,7 @@ def action_resize():
             continue
 
         filename = Path(image_url).name  # "groot.png"
-        stem = Path(image_url).stem      # "groot"
+        stem = Path(image_url).stem  # "groot"
 
         # Source is always the original .png
         source_path = OUTPUT_DIR / filename
@@ -318,7 +318,9 @@ def action_resize():
             print(f"  [ERROR] Failed to resize {source_path.name}: {e}")
             error_count += 1
 
-    print(f"\nDone! Resized: {resized_count}, Skipped (already exist): {skipped_count}, Errors: {error_count}")
+    print(
+        f"\nDone! Resized: {resized_count}, Skipped (already exist): {skipped_count}, Errors: {error_count}"
+    )
     print(f"Output directory: {OUTPUT_DIR}")
     print(f"Format: <name>_{size}x{size}.png")
 

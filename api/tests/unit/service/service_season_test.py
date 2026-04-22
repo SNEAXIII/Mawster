@@ -1,5 +1,6 @@
 # api/tests/unit/service/service_season_test.py
 """Unit tests for season DTO validation."""
+
 import pytest
 
 from src.dto.dto_season import SeasonCreateRequest

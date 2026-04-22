@@ -1,4 +1,5 @@
 """Unit tests for ChampionUserService using mocked sessions."""
+
 import uuid
 
 import pytest
@@ -20,6 +21,7 @@ GAME_ACCOUNT_ID = uuid.uuid4()
 
 
 MOCK_GET_CHAMPION_BY_NAME = "src.services.ChampionUserService.ChampionService.get_champion_by_name"
+
 
 def _mock_session(mocker):
     """Return an AsyncMock pretending to be an async DB session."""
@@ -210,9 +212,7 @@ class TestBulkAddChampions:
             {"champion_name": "Spider-Man", "rarity": "7r3", "signature": 200},
         ]
 
-        results = await ChampionUserService.bulk_add_champions(
-            session, GAME_ACCOUNT_ID, champions
-        )
+        results = await ChampionUserService.bulk_add_champions(session, GAME_ACCOUNT_ID, champions)
 
         assert len(results) == 2
         assert results[0].rarity == "6r4"
@@ -242,9 +242,7 @@ class TestBulkAddChampions:
             {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 200},  # duplicate
         ]
 
-        results = await ChampionUserService.bulk_add_champions(
-            session, GAME_ACCOUNT_ID, champions
-        )
+        results = await ChampionUserService.bulk_add_champions(session, GAME_ACCOUNT_ID, champions)
 
         assert len(results) == 1
         assert results[0].signature == 100  # first occurrence wins
@@ -273,9 +271,7 @@ class TestBulkAddChampions:
             {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 200},
         ]
 
-        results = await ChampionUserService.bulk_add_champions(
-            session, GAME_ACCOUNT_ID, champions
-        )
+        results = await ChampionUserService.bulk_add_champions(session, GAME_ACCOUNT_ID, champions)
 
         assert len(results) == 1
         assert results[0].signature == 200
@@ -332,9 +328,7 @@ class TestGetRosterByGameAccount:
         result_mock.all.return_value = entries
         session.exec.return_value = result_mock
 
-        result = await ChampionUserService.get_roster_by_game_account(
-            session, GAME_ACCOUNT_ID
-        )
+        result = await ChampionUserService.get_roster_by_game_account(session, GAME_ACCOUNT_ID)
 
         assert len(result) == 2
 
@@ -345,9 +339,7 @@ class TestGetRosterByGameAccount:
         result_mock.all.return_value = []
         session.exec.return_value = result_mock
 
-        result = await ChampionUserService.get_roster_by_game_account(
-            session, GAME_ACCOUNT_ID
-        )
+        result = await ChampionUserService.get_roster_by_game_account(session, GAME_ACCOUNT_ID)
 
         assert result == []
 
@@ -406,9 +398,7 @@ class TestUpdateChampionUser:
         entry = _make_champion_user()
 
         with pytest.raises(HTTPException) as exc:
-            await ChampionUserService.update_champion_user(
-                session, entry, "invalid", signature=0
-            )
+            await ChampionUserService.update_champion_user(session, entry, "invalid", signature=0)
         assert exc.value.status_code == 400
 
 

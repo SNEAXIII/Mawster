@@ -1,4 +1,5 @@
 """Unit tests for ChampionService using mocked sessions."""
+
 import uuid
 
 import pytest
@@ -120,9 +121,7 @@ class TestGetTotalChampions:
         result_mock.one.return_value = 10
         session.exec.return_value = result_mock
 
-        total = await ChampionService.get_total_champions(
-            session, champion_class="Science"
-        )
+        total = await ChampionService.get_total_champions(session, champion_class="Science")
         assert total == 10
 
     @pytest.mark.asyncio
@@ -189,17 +188,11 @@ class TestGetChampionsWithPagination:
         champs = [_make_champion(), _make_champion(name=CHAMPION_NAME_2, champion_class="Mutant")]
 
         # Mock get_total_champions
-        mocker.patch.object(
-            ChampionService, "get_total_champions", return_value=2
-        )
+        mocker.patch.object(ChampionService, "get_total_champions", return_value=2)
         # Mock get_champions_paginated
-        mocker.patch.object(
-            ChampionService, "get_champions_paginated", return_value=champs
-        )
+        mocker.patch.object(ChampionService, "get_champions_paginated", return_value=champs)
 
-        result = await ChampionService.get_champions_with_pagination(
-            session, page=1, size=10
-        )
+        result = await ChampionService.get_champions_with_pagination(session, page=1, size=10)
         assert result.total_champions == 2
         assert result.total_pages == 1
         assert result.current_page == 1
@@ -210,13 +203,9 @@ class TestGetChampionsWithPagination:
         session = _mock_session(mocker)
 
         mocker.patch.object(ChampionService, "get_total_champions", return_value=25)
-        mocker.patch.object(
-            ChampionService, "get_champions_paginated", return_value=[]
-        )
+        mocker.patch.object(ChampionService, "get_champions_paginated", return_value=[])
 
-        result = await ChampionService.get_champions_with_pagination(
-            session, page=1, size=10
-        )
+        result = await ChampionService.get_champions_with_pagination(session, page=1, size=10)
         assert result.total_pages == 3  # ceil(25/10)
 
     @pytest.mark.asyncio
@@ -224,13 +213,9 @@ class TestGetChampionsWithPagination:
         session = _mock_session(mocker)
 
         mocker.patch.object(ChampionService, "get_total_champions", return_value=0)
-        mocker.patch.object(
-            ChampionService, "get_champions_paginated", return_value=[]
-        )
+        mocker.patch.object(ChampionService, "get_champions_paginated", return_value=[])
 
-        result = await ChampionService.get_champions_with_pagination(
-            session, page=1, size=10
-        )
+        result = await ChampionService.get_champions_with_pagination(session, page=1, size=10)
         assert result.total_champions == 0
         assert result.total_pages == 0
         assert len(result.champions) == 0
@@ -246,13 +231,9 @@ class TestUpdateAlias:
     async def test_update_ok(self, mocker):
         session = _mock_session(mocker)
         champ = _make_champion()
-        mocker.patch.object(
-            ChampionService, "get_champion_by_id", return_value=champ
-        )
+        mocker.patch.object(ChampionService, "get_champion_by_id", return_value=champ)
 
-        result = await ChampionService.update_alias(
-            session, champ.id, CHAMPION_ALIAS
-        )
+        result = await ChampionService.update_alias(session, champ.id, CHAMPION_ALIAS)
         assert result.alias == CHAMPION_ALIAS
         session.add.assert_called_once()
         session.commit.assert_awaited_once()
@@ -262,9 +243,7 @@ class TestUpdateAlias:
     async def test_update_alias_to_none(self, mocker):
         session = _mock_session(mocker)
         champ = _make_champion(alias=CHAMPION_ALIAS)
-        mocker.patch.object(
-            ChampionService, "get_champion_by_id", return_value=champ
-        )
+        mocker.patch.object(ChampionService, "get_champion_by_id", return_value=champ)
 
         result = await ChampionService.update_alias(session, champ.id, None)
         assert result.alias is None
@@ -292,9 +271,7 @@ class TestLoadChampions:
     @pytest.mark.asyncio
     async def test_create_new_champions(self, mocker):
         session = _mock_session(mocker)
-        mocker.patch.object(
-            ChampionService, "get_champion_by_name", return_value=None
-        )
+        mocker.patch.object(ChampionService, "get_champion_by_name", return_value=None)
 
         data = [
             ChampionLoadRequest(
@@ -315,9 +292,7 @@ class TestLoadChampions:
     async def test_update_existing_champion(self, mocker):
         session = _mock_session(mocker)
         existing = _make_champion()
-        mocker.patch.object(
-            ChampionService, "get_champion_by_name", return_value=existing
-        )
+        mocker.patch.object(ChampionService, "get_champion_by_name", return_value=existing)
 
         data = [
             ChampionLoadRequest(
@@ -355,9 +330,7 @@ class TestLoadChampions:
                 return existing
             return None
 
-        mocker.patch.object(
-            ChampionService, "get_champion_by_name", side_effect=mock_get_by_name
-        )
+        mocker.patch.object(ChampionService, "get_champion_by_name", side_effect=mock_get_by_name)
 
         data = [
             ChampionLoadRequest(name="NewChamp", champion_class="Cosmic", image_url="new.png"),
@@ -373,14 +346,10 @@ class TestLoadChampions:
     @pytest.mark.asyncio
     async def test_load_without_image(self, mocker):
         session = _mock_session(mocker)
-        mocker.patch.object(
-            ChampionService, "get_champion_by_name", return_value=None
-        )
+        mocker.patch.object(ChampionService, "get_champion_by_name", return_value=None)
 
         data = [
-            ChampionLoadRequest(
-                name="NoImageChamp", champion_class="Tech", image_url=None
-            ),
+            ChampionLoadRequest(name="NoImageChamp", champion_class="Tech", image_url=None),
         ]
 
         result = await ChampionService.load_champions(session, data)
@@ -389,13 +358,13 @@ class TestLoadChampions:
     @pytest.mark.asyncio
     async def test_load_with_is_ascendable(self, mocker):
         session = _mock_session(mocker)
-        mocker.patch.object(
-            ChampionService, "get_champion_by_name", return_value=None
-        )
+        mocker.patch.object(ChampionService, "get_champion_by_name", return_value=None)
 
         data = [
             ChampionLoadRequest(
-                name="Hercules", champion_class="Cosmic", image_url="herc.png",
+                name="Hercules",
+                champion_class="Cosmic",
+                image_url="herc.png",
                 is_ascendable=True,
             ),
         ]
@@ -408,13 +377,13 @@ class TestLoadChampions:
         session = _mock_session(mocker)
         existing = _make_champion(name="Hercules", champion_class="Cosmic")
         existing.is_ascendable = False
-        mocker.patch.object(
-            ChampionService, "get_champion_by_name", return_value=existing
-        )
+        mocker.patch.object(ChampionService, "get_champion_by_name", return_value=existing)
 
         data = [
             ChampionLoadRequest(
-                name="Hercules", champion_class="Cosmic", image_url="herc.png",
+                name="Hercules",
+                champion_class="Cosmic",
+                image_url="herc.png",
                 is_ascendable=True,
             ),
         ]
@@ -434,9 +403,7 @@ class TestDeleteChampion:
     async def test_delete_ok(self, mocker):
         session = _mock_session(mocker)
         champ = _make_champion()
-        mocker.patch.object(
-            ChampionService, "get_champion_by_id", return_value=champ
-        )
+        mocker.patch.object(ChampionService, "get_champion_by_id", return_value=champ)
 
         await ChampionService.delete_champion(session, champ.id)
         session.delete.assert_awaited_once_with(champ)

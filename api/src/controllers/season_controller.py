@@ -52,7 +52,9 @@ async def activate_season(
 ):
     """Activate a season (auto-deactivates any currently active season). Admin only."""
     result = await SeasonService.activate_season(session, season_id)
-    audit_log("admin.activate_season", user_id=str(current_user.id), detail=f"season_id={season_id}")
+    audit_log(
+        "admin.activate_season", user_id=str(current_user.id), detail=f"season_id={season_id}"
+    )
     return result
 
 
@@ -64,7 +66,9 @@ async def deactivate_season(
 ):
     """Deactivate a season (moves to off-season). Admin only."""
     result = await SeasonService.deactivate_season(session, season_id)
-    audit_log("admin.deactivate_season", user_id=str(current_user.id), detail=f"season_id={season_id}")
+    audit_log(
+        "admin.deactivate_season", user_id=str(current_user.id), detail=f"season_id={season_id}"
+    )
     return result
 
 

@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -68,7 +68,11 @@ async def create_champion_user(
         is_preferred_attacker=body.is_preferred_attacker,
         ascension=body.ascension,
     )
-    audit_log("roster.add_champion", user_id=str(current_user.id), detail=f"game_account_id={body.game_account_id} champion_id={body.champion_id}")
+    audit_log(
+        "roster.add_champion",
+        user_id=str(current_user.id),
+        detail=f"game_account_id={body.game_account_id} champion_id={body.champion_id}",
+    )
     return ChampionUserResponse.model_validate(result)
 
 
@@ -108,11 +112,12 @@ async def bulk_add_champions(
         game_account_id=body.game_account_id,
         champions=champions_data,
     )
-    audit_log("roster.bulk_import", user_id=str(current_user.id), detail=f"game_account_id={body.game_account_id} count={len(entries)}")
-    return [
-        ChampionUserDetailResponse.model_validate(e)
-        for e in entries
-    ]
+    audit_log(
+        "roster.bulk_import",
+        user_id=str(current_user.id),
+        detail=f"game_account_id={body.game_account_id} count={len(entries)}",
+    )
+    return [ChampionUserDetailResponse.model_validate(e) for e in entries]
 
 
 @champion_user_controller.get(
@@ -139,10 +144,7 @@ async def get_roster_by_game_account(
                 detail="You can only view your own roster or rosters of alliance members",
             )
     entries = await ChampionUserService.get_roster_by_game_account(session, game_account_id)
-    return [
-        ChampionUserDetailResponse.model_validate(e)
-        for e in entries
-    ]
+    return [ChampionUserDetailResponse.model_validate(e) for e in entries]
 
 
 @champion_user_controller.patch(
@@ -216,7 +218,11 @@ async def delete_champion_user(
     """Delete a champion from a roster."""
     champion_user = await _get_own_champion_user(session, champion_user_id, current_user.id)
     await ChampionUserService.delete_champion_user(session, champion_user)
-    audit_log("roster.delete_champion", user_id=str(current_user.id), detail=f"champion_user_id={champion_user_id}")
+    audit_log(
+        "roster.delete_champion",
+        user_id=str(current_user.id),
+        detail=f"champion_user_id={champion_user_id}",
+    )
 
 
 @champion_user_controller.patch(
@@ -231,7 +237,11 @@ async def upgrade_champion_rank(
     """Upgrade a champion to the next rank (e.g. 7r2 â†’ 7r3)."""
     champion_user = await _get_own_champion_user(session, champion_user_id, current_user.id)
     upgraded = await ChampionUserService.upgrade_champion_rank(session, champion_user)
-    audit_log("roster.upgrade_rank", user_id=str(current_user.id), detail=f"champion_user_id={champion_user_id}")
+    audit_log(
+        "roster.upgrade_rank",
+        user_id=str(current_user.id),
+        detail=f"champion_user_id={champion_user_id}",
+    )
     return ChampionUserResponse.model_validate(upgraded)
 
 
@@ -247,7 +257,11 @@ async def ascend_champion(
     """Ascend a champion to the next ascension level (0 â†’ 1 â†’ 2)."""
     champion_user = await _get_own_champion_user(session, champion_user_id, current_user.id)
     ascended = await ChampionUserService.ascend_champion(session, champion_user)
-    audit_log("roster.ascend_champion", user_id=str(current_user.id), detail=f"champion_user_id={champion_user_id}")
+    audit_log(
+        "roster.ascend_champion",
+        user_id=str(current_user.id),
+        detail=f"champion_user_id={champion_user_id}",
+    )
     return ChampionUserResponse.model_validate(ascended)
 
 
@@ -276,11 +290,14 @@ async def _assert_alliance_officer(session, game_account, current_user_id):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Target is not in an alliance",
         )
-    await AllianceService.assert_officer_or_owner_by_id(session, game_account.alliance_id, current_user_id)
+    await AllianceService.assert_officer_or_owner_by_id(
+        session, game_account.alliance_id, current_user_id
+    )
 
 
 def _pick_requester_account(
-    user_accounts, target_alliance_id,
+    user_accounts,
+    target_alliance_id,
 ):
     """Pick the best requester game account (prefer same alliance, fallback to first)."""
     if target_alliance_id:
@@ -291,6 +308,7 @@ def _pick_requester_account(
 
 
 # --- Upgrade Request Endpoints ---
+
 
 @champion_user_controller.post(
     "/upgrade-requests",
@@ -393,17 +411,30 @@ async def cancel_upgrade_request(
     Only an officer or owner of the alliance can cancel."""
     upgrade_request = await session.get(RequestedUpgrade, request_id)
     if upgrade_request is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upgrade request not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Upgrade request not found"
+        )
 
     # Find the champion user to locate the alliance
-    champion_user = await ChampionUserService.get_champion_user(session, upgrade_request.champion_user_id)
+    champion_user = await ChampionUserService.get_champion_user(
+        session, upgrade_request.champion_user_id
+    )
     if champion_user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)
 
-    target_account = await GameAccountService.get_game_account(session, champion_user.game_account_id)
+    target_account = await GameAccountService.get_game_account(
+        session, champion_user.game_account_id
+    )
     if target_account is None or target_account.alliance_id is None:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to cancel this upgrade request")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to cancel this upgrade request",
+        )
 
-    await AllianceService.assert_officer_or_owner_by_id(session, target_account.alliance_id, current_user.id)
+    await AllianceService.assert_officer_or_owner_by_id(
+        session, target_account.alliance_id, current_user.id
+    )
     await UpgradeRequestService.cancel_upgrade_request(session, request_id)
-    audit_log("upgrade_request.cancel", user_id=str(current_user.id), detail=f"request_id={request_id}")
+    audit_log(
+        "upgrade_request.cancel", user_id=str(current_user.id), detail=f"request_id={request_id}"
+    )

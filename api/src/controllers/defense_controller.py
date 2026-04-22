@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -28,7 +28,6 @@ defense_controller = APIRouter(
         Depends(AuthService.get_current_user_in_jwt),
     ],
 )
-
 
 
 def _to_placement_response(p) -> DefensePlacementResponse:
@@ -76,7 +75,9 @@ async def place_defender(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Place a defender on a node. Owner/officer can place for any BG member."""
-    my_account = await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    my_account = await AllianceService.get_user_account_in_alliance(
+        session, current_user.id, alliance_id
+    )
 
     # Check if user is owner/officer (can place for others) or placing for themselves
     is_manager = False
@@ -171,9 +172,7 @@ async def get_available_champions(
     """Get all champions available for placement (not already placed, from BG members)."""
     await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
 
-    return await DefensePlacementService.get_available_champions(
-        session, alliance_id, battlegroup
-    )
+    return await DefensePlacementService.get_available_champions(session, alliance_id, battlegroup)
 
 
 @defense_controller.get(
@@ -233,10 +232,18 @@ async def import_defense(
 ):
     """Import a defense layout from JSON. Clears existing defense first.
     Officers/owners only. Returns a before/after comparison + errors."""
-    my_account = await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    my_account = await AllianceService.get_user_account_in_alliance(
+        session, current_user.id, alliance_id
+    )
     await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
 
-    before, after, errors, success_count, error_count = await DefensePlacementService.import_defense(
+    (
+        before,
+        after,
+        errors,
+        success_count,
+        error_count,
+    ) = await DefensePlacementService.import_defense(
         session=session,
         alliance_id=alliance_id,
         battlegroup=battlegroup,

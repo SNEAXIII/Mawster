@@ -1,4 +1,5 @@
 """Unit tests for GameAccountService using mocked sessions."""
+
 import uuid
 
 import pytest
@@ -12,6 +13,7 @@ from tests.utils.utils_constant import USER_ID, GAME_PSEUDO, GAME_PSEUDO_2
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _mock_session(mocker):
     """Return an AsyncMock pretending to be an async DB session."""
@@ -50,9 +52,7 @@ class TestCreateGameAccount:
         session.exec.return_value = result_mock
 
         # Act
-        account = await GameAccountService.create_game_account(
-            session, USER_ID, GAME_PSEUDO, True
-        )
+        account = await GameAccountService.create_game_account(session, USER_ID, GAME_PSEUDO, True)
 
         # Assert
         assert account.user_id == USER_ID
@@ -77,9 +77,7 @@ class TestCreateGameAccount:
 
         # Act / Assert
         with pytest.raises(HTTPException) as exc:
-            await GameAccountService.create_game_account(
-                session, USER_ID, GAME_PSEUDO
-            )
+            await GameAccountService.create_game_account(session, USER_ID, GAME_PSEUDO)
         assert exc.value.status_code == 400
         assert str(MAX_GAME_ACCOUNTS_PER_USER) in exc.value.detail
 
@@ -157,9 +155,7 @@ class TestUpdateGameAccount:
         mock_result.all.return_value = []
         session.exec.return_value = mock_result
 
-        result = await GameAccountService.update_game_account(
-            session, account, GAME_PSEUDO_2, True
-        )
+        result = await GameAccountService.update_game_account(session, account, GAME_PSEUDO_2, True)
 
         assert result.game_pseudo == GAME_PSEUDO_2
         assert result.is_primary is True

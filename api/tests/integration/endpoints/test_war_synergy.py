@@ -1,4 +1,5 @@
 """Integration tests for war synergy endpoints."""
+
 import uuid
 
 import pytest
@@ -34,6 +35,7 @@ OPPONENT = "Enemy Alliance"
 
 
 # ─── Helpers ──────────────────────────────────────────────
+
 
 async def _setup_synergy_scenario():
     """
@@ -81,7 +83,13 @@ async def _setup_synergy_scenario():
     defender_champ = await push_champion(name="Spider-Man", champion_class="Science")
     await execute_post_request(
         f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
-        payload={"node_number": 10, "champion_id": str(defender_champ.id), "stars": 7, "rank": 3, "ascension": 0},
+        payload={
+            "node_number": 10,
+            "champion_id": str(defender_champ.id),
+            "stars": 7,
+            "rank": 3,
+            "ascension": 0,
+        },
         headers=headers_owner,
     )
 
@@ -115,6 +123,7 @@ def _synergy_url(alliance_id, war_id, bg=1):
 
 
 # ─── TestAddSynergy ───────────────────────────────────────
+
 
 class TestAddSynergy:
     @pytest.mark.asyncio
@@ -224,15 +233,17 @@ class TestAddSynergy:
         # Place synergy champion in regular alliance defense
         defense_champ = await push_champion(name="Captain America", champion_class="Science")
         defense_cu = await push_champion_user(data["member"], defense_champ, stars=7, rank=3)
-        await load_objects([
-            DefensePlacement(
-                alliance_id=data["alliance"].id,
-                battlegroup=1,
-                node_number=5,
-                game_account_id=data["member"].id,
-                champion_user_id=defense_cu.id,
-            )
-        ])
+        await load_objects(
+            [
+                DefensePlacement(
+                    alliance_id=data["alliance"].id,
+                    battlegroup=1,
+                    node_number=5,
+                    game_account_id=data["member"].id,
+                    champion_user_id=defense_cu.id,
+                )
+            ]
+        )
 
         response = await execute_post_request(
             _synergy_url(data["alliance"].id, data["war"].id),
@@ -255,12 +266,20 @@ class TestAddSynergy:
         headers_owner = data["headers_owner"]
 
         # Place defenders on nodes 11, 12 and assign 2 more node attackers (total 3)
-        for i, (name, cls) in enumerate([("Black Panther", "Cosmic"), ("Captain Marvel", "Cosmic")]):
+        for i, (name, cls) in enumerate(
+            [("Black Panther", "Cosmic"), ("Captain Marvel", "Cosmic")]
+        ):
             champ = await push_champion(name=name, champion_class=cls)
             cu = await push_champion_user(member, champ, stars=7, rank=3)
             await execute_post_request(
                 f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
-                payload={"node_number": 11 + i, "champion_id": str(champ.id), "stars": 7, "rank": 3, "ascension": 0},
+                payload={
+                    "node_number": 11 + i,
+                    "champion_id": str(champ.id),
+                    "stars": 7,
+                    "rank": 3,
+                    "ascension": 0,
+                },
                 headers=headers_owner,
             )
             await execute_post_request(
@@ -297,7 +316,13 @@ class TestAddSynergy:
         extra_champ = await push_champion(name="Thor", champion_class="Cosmic")
         await execute_post_request(
             f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
-            payload={"node_number": 11, "champion_id": str(extra_champ.id), "stars": 7, "rank": 3, "ascension": 0},
+            payload={
+                "node_number": 11,
+                "champion_id": str(extra_champ.id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
             headers=headers_owner,
         )
 
@@ -324,6 +349,7 @@ class TestAddSynergy:
 
 
 # ─── TestRemoveSynergy ────────────────────────────────────
+
 
 class TestRemoveSynergy:
     @pytest.mark.asyncio
@@ -356,7 +382,13 @@ class TestRemoveSynergy:
         second_def = await push_champion(name="Thor", champion_class="Cosmic")
         await execute_post_request(
             f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
-            payload={"node_number": 11, "champion_id": str(second_def.id), "stars": 7, "rank": 3, "ascension": 0},
+            payload={
+                "node_number": 11,
+                "champion_id": str(second_def.id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
             headers=headers_owner,
         )
         await execute_post_request(
@@ -374,7 +406,9 @@ class TestRemoveSynergy:
             },
             headers=headers_member,
         )
-        get_resp = await execute_get_request(_synergy_url(alliance.id, war.id), headers=headers_member)
+        get_resp = await execute_get_request(
+            _synergy_url(alliance.id, war.id), headers=headers_member
+        )
         assert len(get_resp.json()) == 1
 
         # Remove synergy_cu from their only node (node 11) — this is their last fight
@@ -384,7 +418,9 @@ class TestRemoveSynergy:
         )
 
         # Synergy provider entry should be auto-removed
-        get_resp2 = await execute_get_request(_synergy_url(alliance.id, war.id), headers=headers_member)
+        get_resp2 = await execute_get_request(
+            _synergy_url(alliance.id, war.id), headers=headers_member
+        )
         assert get_resp2.json() == []
 
     @pytest.mark.asyncio
@@ -398,6 +434,7 @@ class TestRemoveSynergy:
 
 
 # ─── TestGetSynergy ───────────────────────────────────────
+
 
 class TestGetSynergy:
     @pytest.mark.asyncio
@@ -434,6 +471,7 @@ class TestGetSynergy:
 
 # ─── TestSynergyBans ──────────────────────────────────────
 
+
 class TestSynergyBans:
     @pytest.mark.asyncio
     async def test_add_synergy_banned_champion_rejected(self):
@@ -465,7 +503,13 @@ class TestSynergyBans:
         # Place defender on node 10 and assign attacker_cu
         await execute_post_request(
             f"/alliances/{alliance.id}/wars/{new_war_id}/bg/1/place",
-            payload={"node_number": 10, "champion_id": str(data["attacker_cu"].champion_id), "stars": 7, "rank": 3, "ascension": 0},
+            payload={
+                "node_number": 10,
+                "champion_id": str(data["attacker_cu"].champion_id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
             headers=headers_owner,
         )
         await execute_post_request(

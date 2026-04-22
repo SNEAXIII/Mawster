@@ -1,4 +1,5 @@
 """Integration tests for war pre-fight endpoints."""
+
 import uuid
 
 import pytest
@@ -85,7 +86,13 @@ async def _setup_prefight_scenario():
     defender_champ = await push_champion(name="Iron Man", champion_class="Tech")
     await execute_post_request(
         f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
-        payload={"node_number": 5, "champion_id": str(defender_champ.id), "stars": 7, "rank": 3, "ascension": 0},
+        payload={
+            "node_number": 5,
+            "champion_id": str(defender_champ.id),
+            "stars": 7,
+            "rank": 3,
+            "ascension": 0,
+        },
         headers=headers_owner,
     )
 
@@ -186,7 +193,13 @@ class TestAddPrefight:
         extra_champ = await push_champion(name="Hulk", champion_class="Science")
         await execute_post_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/place",
-            payload={"node_number": 10, "champion_id": str(extra_champ.id), "stars": 7, "rank": 3, "ascension": 0},
+            payload={
+                "node_number": 10,
+                "champion_id": str(extra_champ.id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
             headers=data["headers_owner"],
         )
         response = await execute_post_request(
@@ -235,17 +248,21 @@ class TestAddPrefight:
     async def test_add_prefight_defense_conflict_rejected(self):
         """Champion already in alliance defense cannot be pre-fight provider."""
         data = await _setup_prefight_scenario()
-        defense_champ = await push_champion(name="Captain America", champion_class="Science", has_prefight=True)
+        defense_champ = await push_champion(
+            name="Captain America", champion_class="Science", has_prefight=True
+        )
         defense_cu = await push_champion_user(data["member"], defense_champ, stars=7, rank=3)
-        await load_objects([
-            DefensePlacement(
-                alliance_id=data["alliance"].id,
-                battlegroup=1,
-                node_number=3,
-                game_account_id=data["member"].id,
-                champion_user_id=defense_cu.id,
-            )
-        ])
+        await load_objects(
+            [
+                DefensePlacement(
+                    alliance_id=data["alliance"].id,
+                    battlegroup=1,
+                    node_number=3,
+                    game_account_id=data["member"].id,
+                    champion_user_id=defense_cu.id,
+                )
+            ]
+        )
         response = await execute_post_request(
             _prefight_url(data["alliance"].id, data["war"].id),
             payload={
@@ -268,12 +285,20 @@ class TestAddPrefight:
 
         # member already has 1 node attacker (attacker_cu on node 5)
         # add 2 more node attackers for member (total 3)
-        for i, (name, cls) in enumerate([("Black Panther", "Cosmic"), ("Captain Marvel", "Cosmic")]):
+        for i, (name, cls) in enumerate(
+            [("Black Panther", "Cosmic"), ("Captain Marvel", "Cosmic")]
+        ):
             champ = await push_champion(name=name, champion_class=cls)
             cu = await push_champion_user(member, champ, stars=7, rank=3)
             await execute_post_request(
                 f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
-                payload={"node_number": 6 + i, "champion_id": str(champ.id), "stars": 7, "rank": 3, "ascension": 0},
+                payload={
+                    "node_number": 6 + i,
+                    "champion_id": str(champ.id),
+                    "stars": 7,
+                    "rank": 3,
+                    "ascension": 0,
+                },
                 headers=headers_owner,
             )
             await execute_post_request(
@@ -283,7 +308,9 @@ class TestAddPrefight:
             )
 
         # Now member has 3 node attackers → adding pre-fight must fail
-        extra_champ = await push_champion(name="Black Widow", champion_class="Skill", has_prefight=True)
+        extra_champ = await push_champion(
+            name="Black Widow", champion_class="Skill", has_prefight=True
+        )
         extra_cu = await push_champion_user(member, extra_champ, stars=7, rank=3)
         response = await execute_post_request(
             _prefight_url(alliance.id, war.id),
@@ -342,7 +369,13 @@ class TestPrefightMultiNode:
         # Place defender on node 6
         await execute_post_request(
             f"/alliances/{alliance_id}/wars/{war_id}/bg/1/place",
-            payload={"node_number": 6, "champion_id": str(second_champ.id), "stars": 7, "rank": 3, "ascension": 0},
+            payload={
+                "node_number": 6,
+                "champion_id": str(second_champ.id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
             headers=data["headers_owner"],
         )
         # Assign attacker to node 6

@@ -32,7 +32,6 @@ _RARITY_RE = re.compile(r"^(\d+)r(\d+)$")
 
 
 class ChampionUserService:
-
     @classmethod
     def _validate_rarity(cls, rarity: str) -> None:
         """Validate that the rarity value is one of the allowed values."""
@@ -279,9 +278,7 @@ class ChampionUserService:
         return champion_user
 
     @classmethod
-    async def delete_champion_user(
-        cls, session: SessionDep, champion_user: ChampionUser
-    ) -> None:
+    async def delete_champion_user(cls, session: SessionDep, champion_user: ChampionUser) -> None:
         await session.delete(champion_user)
         await session.commit()
 
@@ -348,13 +345,9 @@ class ChampionUserService:
         return champion_user
 
     @classmethod
-    async def delete_roster(
-        cls, session: SessionDep, game_account_id: uuid.UUID
-    ) -> int:
+    async def delete_roster(cls, session: SessionDep, game_account_id: uuid.UUID) -> int:
         """Delete all roster entries for a game account. Returns count deleted."""
-        sql = select(ChampionUser).where(
-            ChampionUser.game_account_id == game_account_id
-        )
+        sql = select(ChampionUser).where(ChampionUser.game_account_id == game_account_id)
         result = await session.exec(sql)
         entries = result.all()
         count = len(entries)

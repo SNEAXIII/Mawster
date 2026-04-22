@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -34,7 +34,6 @@ def _to_response(account: GameAccount) -> GameAccountResponse:
     return GameAccountResponse.model_validate(account)
 
 
-
 @game_account_controller.post(
     "",
     response_model=GameAccountResponse,
@@ -53,7 +52,9 @@ async def create_game_account(
         game_pseudo=body.game_pseudo,
         is_primary=body.is_primary,
     )
-    audit_log("game_account.create", user_id=str(current_user.id), detail=f"game_account_id={result.id}")
+    audit_log(
+        "game_account.create", user_id=str(current_user.id), detail=f"game_account_id={result.id}"
+    )
     return result
 
 
@@ -114,7 +115,11 @@ async def update_game_account(
         game_pseudo=body.game_pseudo,
         is_primary=body.is_primary,
     )
-    audit_log("game_account.update", user_id=str(current_user.id), detail=f"game_account_id={game_account_id}")
+    audit_log(
+        "game_account.update",
+        user_id=str(current_user.id),
+        detail=f"game_account_id={game_account_id}",
+    )
     return result
 
 
@@ -134,7 +139,11 @@ async def delete_game_account(
     if game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_GAME_ACCOUNT)
     await GameAccountService.delete_game_account(session, game_account)
-    audit_log("game_account.delete", user_id=str(current_user.id), detail=f"game_account_id={game_account_id}")
+    audit_log(
+        "game_account.delete",
+        user_id=str(current_user.id),
+        detail=f"game_account_id={game_account_id}",
+    )
 
 
 @game_account_controller.get(
@@ -153,7 +162,9 @@ async def get_game_account_masteries(
     if game_account.user_id != current_user.id:
         if game_account.alliance_id is None:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_GAME_ACCOUNT)
-        await AllianceService.get_user_account_in_alliance(session, current_user.id, game_account.alliance_id)
+        await AllianceService.get_user_account_in_alliance(
+            session, current_user.id, game_account.alliance_id
+        )
     return await MasteryService.get_for_account(session, game_account_id)
 
 

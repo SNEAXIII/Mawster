@@ -21,20 +21,15 @@ VALID_CLASSES = {c.value for c in ChampionClass}
 
 
 class ChampionService:
-
     @classmethod
-    async def get_champion_by_id(
-        cls, session: SessionDep, champion_id: uuid.UUID
-    ) -> Champion:
+    async def get_champion_by_id(cls, session: SessionDep, champion_id: uuid.UUID) -> Champion:
         champion = await session.get(Champion, champion_id)
         if champion is None:
             raise CHAMPION_NOT_FOUND
         return champion
 
     @classmethod
-    async def get_champion_by_name(
-        cls, session: SessionDep, name: str
-    ) -> Optional[Champion]:
+    async def get_champion_by_name(cls, session: SessionDep, name: str) -> Optional[Champion]:
         sql = select(Champion).where(Champion.name == name)
         result = await session.exec(sql)
         return result.first()
@@ -95,9 +90,7 @@ class ChampionService:
         search: Optional[str] = None,
     ) -> ChampionPaginatedResponse:
         total = await cls.get_total_champions(session, champion_class, search)
-        champions = await cls.get_champions_paginated(
-            session, page, size, champion_class, search
-        )
+        champions = await cls.get_champions_paginated(session, page, size, champion_class, search)
         total_pages = (total + size - 1) // size
         mapped = [ChampionResponse.model_validate(c) for c in champions]
         return ChampionPaginatedResponse(
@@ -119,9 +112,7 @@ class ChampionService:
         return champion
 
     @classmethod
-    async def toggle_ascendable(
-        cls, session: SessionDep, champion_id: uuid.UUID
-    ) -> Champion:
+    async def toggle_ascendable(cls, session: SessionDep, champion_id: uuid.UUID) -> Champion:
         champion = await cls.get_champion_by_id(session, champion_id)
         champion.is_ascendable = not champion.is_ascendable
         session.add(champion)
@@ -130,9 +121,7 @@ class ChampionService:
         return champion
 
     @classmethod
-    async def toggle_prefight(
-        cls, session: SessionDep, champion_id: uuid.UUID
-    ) -> Champion:
+    async def toggle_prefight(cls, session: SessionDep, champion_id: uuid.UUID) -> Champion:
         champion = await cls.get_champion_by_id(session, champion_id)
         champion.has_prefight = not champion.has_prefight
         session.add(champion)
@@ -141,9 +130,7 @@ class ChampionService:
         return champion
 
     @classmethod
-    async def toggle_saga_attacker(
-        cls, session: SessionDep, champion_id: uuid.UUID
-    ) -> Champion:
+    async def toggle_saga_attacker(cls, session: SessionDep, champion_id: uuid.UUID) -> Champion:
         champion = await cls.get_champion_by_id(session, champion_id)
         champion.is_saga_attacker = not champion.is_saga_attacker
         session.add(champion)
@@ -152,9 +139,7 @@ class ChampionService:
         return champion
 
     @classmethod
-    async def toggle_saga_defender(
-        cls, session: SessionDep, champion_id: uuid.UUID
-    ) -> Champion:
+    async def toggle_saga_defender(cls, session: SessionDep, champion_id: uuid.UUID) -> Champion:
         champion = await cls.get_champion_by_id(session, champion_id)
         champion.is_saga_defender = not champion.is_saga_defender
         session.add(champion)
@@ -209,9 +194,7 @@ class ChampionService:
         return {"created": created, "updated": updated, "skipped": skipped}
 
     @classmethod
-    async def delete_champion(
-        cls, session: SessionDep, champion_id: uuid.UUID
-    ) -> None:
+    async def delete_champion(cls, session: SessionDep, champion_id: uuid.UUID) -> None:
         champion = await cls.get_champion_by_id(session, champion_id)
         await session.delete(champion)
         await session.commit()

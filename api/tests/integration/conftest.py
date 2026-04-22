@@ -8,7 +8,6 @@ from tests.utils.utils_db import reset_test_db, delete_db, Session, get_test_ses
 from httpx import AsyncClient, ASGITransport
 
 
-
 @pytest.fixture(autouse=True, scope="function")
 def reset_db() -> Iterator:
     # Setup
@@ -47,6 +46,7 @@ async def test_client_fixture():
     ) as client:
         # Import inside fixture to avoid import cycles at module import time
         import tests.utils.utils_client as utils_client
+
         utils_client._SHARED_CLIENT = client
 
         # Patch DiscordAuthService.verify_discord_token to avoid real network calls

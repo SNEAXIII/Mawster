@@ -1,4 +1,5 @@
 """Integration tests for /alliances endpoints — CRUD, members, officers, groups, access control."""
+
 import uuid
 
 import pytest
@@ -45,6 +46,7 @@ USER3_EMAIL = "user3@gmail.com"
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 async def _setup_2_users():
     """Insert two standard test users."""
@@ -119,6 +121,8 @@ class TestCreateAlliance:
             headers=HEADERS_USER1,
         )
         assert response.status_code == 404
+
+
 # =========================================================================
 # GET /alliances, /alliances/mine, /alliances/{id}
 # =========================================================================
@@ -140,7 +144,10 @@ class TestGetAlliances:
         await push_alliance_with_owner(user_id=USER_ID)
         # user2 creates another alliance — user1 should NOT see it in /mine
         await push_alliance_with_owner(
-            user_id=USER2_ID, game_pseudo="U2Player", alliance_name="OtherAlliance", alliance_tag="OTH"
+            user_id=USER2_ID,
+            game_pseudo="U2Player",
+            alliance_name="OtherAlliance",
+            alliance_tag="OTH",
         )
 
         response = await execute_get_request(f"{ENDPOINT}/mine", headers=HEADERS_USER1)
@@ -154,18 +161,14 @@ class TestGetAlliances:
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
-        response = await execute_get_request(
-            f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1
-        )
+        response = await execute_get_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1)
         assert response.status_code == 200
         assert response.json()["id"] == str(alliance.id)
 
     @pytest.mark.asyncio
     async def test_get_by_id_not_found(self):
         await _setup_2_users()
-        response = await execute_get_request(
-            f"{ENDPOINT}/{uuid.uuid4()}", headers=HEADERS_USER1
-        )
+        response = await execute_get_request(f"{ENDPOINT}/{uuid.uuid4()}", headers=HEADERS_USER1)
         assert response.status_code == 404
 
 
@@ -212,9 +215,7 @@ class TestDeleteAlliance:
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
-        response = await execute_delete_request(
-            f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1
-        )
+        response = await execute_delete_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1)
         assert response.status_code == 204
 
     @pytest.mark.asyncio
@@ -222,9 +223,7 @@ class TestDeleteAlliance:
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
-        response = await execute_delete_request(
-            f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER2
-        )
+        response = await execute_delete_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER2)
         assert response.status_code == 403
 
 
@@ -277,9 +276,7 @@ class TestInviteMember:
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
-        free_acc = await push_game_account(
-            user_id=uuid.uuid4(), game_pseudo=GAME_PSEUDO_3
-        )
+        free_acc = await push_game_account(user_id=uuid.uuid4(), game_pseudo=GAME_PSEUDO_3)
         response = await execute_post_request(
             f"{ENDPOINT}/{alliance.id}/invitations",
             {"game_account_id": str(free_acc.id)},
@@ -869,9 +866,7 @@ class TestEligibility:
         await _setup_2_users()
         await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
 
-        response = await execute_get_request(
-            f"{ENDPOINT}/eligible-owners", headers=HEADERS_USER1
-        )
+        response = await execute_get_request(f"{ENDPOINT}/eligible-owners", headers=HEADERS_USER1)
         assert response.status_code == 200
         assert len(response.json()) == 1
 
@@ -880,9 +875,7 @@ class TestEligibility:
         await _setup_2_users()
         await push_alliance_with_owner(user_id=USER_ID)
 
-        response = await execute_get_request(
-            f"{ENDPOINT}/eligible-owners", headers=HEADERS_USER1
-        )
+        response = await execute_get_request(f"{ENDPOINT}/eligible-owners", headers=HEADERS_USER1)
         assert response.status_code == 200
         assert len(response.json()) == 0
 
@@ -891,9 +884,7 @@ class TestEligibility:
         await _setup_2_users()
         await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
-        response = await execute_get_request(
-            f"{ENDPOINT}/eligible-members", headers=HEADERS_USER1
-        )
+        response = await execute_get_request(f"{ENDPOINT}/eligible-members", headers=HEADERS_USER1)
         assert response.status_code == 200
         assert len(response.json()) >= 1
 

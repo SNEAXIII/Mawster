@@ -1,4 +1,5 @@
 """Dev-only controller — all routes are disabled when MODE=prod."""
+
 import importlib.util
 import logging
 import os
@@ -38,15 +39,20 @@ dev_controller = APIRouter(
 
 class DevLoginRequest(BaseModel):
     """Select a user by ID for dev login (no Discord needed)."""
+
     user_id: uuid.UUID
+
 
 class DevJoinAllianceRequest(BaseModel):
     """Request body for joining an alliance as a dev user."""
+
     game_account_id: uuid.UUID
     alliance_id: uuid.UUID
 
+
 class DevUser(BaseModel):
     """Minimal user info for the dev user picker."""
+
     id: uuid.UUID
     login: str
     email_hash: str | None
@@ -85,6 +91,7 @@ class SetupUserResult(BaseModel):
 class BatchSetupResponse(BaseModel):
     users: dict[str, SetupUserResult]
 
+
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 
@@ -106,8 +113,7 @@ async def dev_list_users(session: SessionDep):
     result = await session.exec(select(User))
     users = result.all()
     return [
-        DevUser(id=str(u.id), login=u.login, email_hash=u.email_hash, role=u.role)
-        for u in users
+        DevUser(id=str(u.id), login=u.login, email_hash=u.email_hash, role=u.role) for u in users
     ]
 
 
@@ -168,14 +174,16 @@ async def force_join_alliance(body: DevJoinAllianceRequest, session: SessionDep)
     game_account = await session.get(GameAccount, body.game_account_id)
     if not game_account:
         raise HTTPException(
-            status_code=http_status.HTTP_404_NOT_FOUND,
-            detail="Game account not found"
+            status_code=http_status.HTTP_404_NOT_FOUND, detail="Game account not found"
         )
     game_account.alliance_id = body.alliance_id
     session.add(game_account)
     await session.commit()
     await session.refresh(game_account)
-    return {"message": f"Game account {game_account.game_pseudo} forced to join alliance {body.alliance_id}", "game_account_id": str(game_account.id)}
+    return {
+        "message": f"Game account {game_account.game_pseudo} forced to join alliance {body.alliance_id}",
+        "game_account_id": str(game_account.id),
+    }
 
 
 @dev_controller.post("/promote", status_code=200)
@@ -183,10 +191,7 @@ async def promote_user(body: PromoteRequest, session: SessionDep):
     """Promote a user to a given role. For testing purposes only."""
     user = await UserService.get_user(session, body.user_id)
     if not user:
-        raise HTTPException(
-            status_code=http_status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="User not found")
     user.role = body.role
     session.add(user)
     await session.commit()
@@ -270,6 +275,7 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
 
 class EnvInfo(BaseModel):
     """Non-sensitive environment info for debugging."""
+
     mode: str
     api_port: int
     db_host: str
@@ -304,12 +310,17 @@ async def dev_create_mastery(body: DevCreateMasteryRequest, session: SessionDep)
     session.add(mastery)
     await session.commit()
     await session.refresh(mastery)
-    return {"id": str(mastery.id), "name": mastery.name, "max_value": mastery.max_value, "order": mastery.order}
+    return {
+        "id": str(mastery.id),
+        "name": mastery.name,
+        "max_value": mastery.max_value,
+        "order": mastery.order,
+    }
 
 
 class LogMarkerRequest(BaseModel):
     event: Literal["start", "end"]
-    title: str          # full test title, e.g. "war > place defender > node 1"
+    title: str  # full test title, e.g. "war > place defender > node 1"
     passed: bool | None = None  # None for start, True/False for end
 
 

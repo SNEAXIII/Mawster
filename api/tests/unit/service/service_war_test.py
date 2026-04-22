@@ -1,4 +1,5 @@
 """Unit tests for WarService – business rules without DB."""
+
 import uuid
 
 import pytest
@@ -7,6 +8,7 @@ from src.dto.dto_war import WarPlacementCreateRequest, WarSynergyCreateRequest
 
 
 # ─── WarPlacementCreateRequest validation ─────────────────
+
 
 class TestWarPlacementCreateRequest:
     def test_valid_7r3(self):
@@ -134,6 +136,7 @@ class TestWarPlacementCreateRequest:
 
 # ─── WarSynergyCreateRequest validation ───────────────────
 
+
 class TestWarSynergyCreateRequest:
     def test_valid_request(self):
         req = WarSynergyCreateRequest(
@@ -153,6 +156,7 @@ class TestWarSynergyCreateRequest:
 
 
 # ─── Slot counting logic (pure set union) ─────────────────
+
 
 def _count_slots(node_ids: set, synergy_ids: set, new_id=None) -> int:
     """Mirrors the service's slot-counting union logic."""

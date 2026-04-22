@@ -41,9 +41,7 @@ class AllianceService:
     @staticmethod
     async def _get_user_accounts(session: SessionDep, user_id: uuid.UUID) -> list[GameAccount]:
         """Get all game accounts belonging to a user."""
-        result = await session.exec(
-            select(GameAccount).where(GameAccount.user_id == user_id)
-        )
+        result = await session.exec(select(GameAccount).where(GameAccount.user_id == user_id))
         return result.all()
 
     @classmethod
@@ -171,7 +169,11 @@ class AllianceService:
 
     @classmethod
     async def _assert_can_remove_member(
-        cls, session: SessionDep, alliance: Alliance, current_user_id: uuid.UUID, target_game_account_id: uuid.UUID
+        cls,
+        session: SessionDep,
+        alliance: Alliance,
+        current_user_id: uuid.UUID,
+        target_game_account_id: uuid.UUID,
     ) -> None:
         """Check that the current user can remove the target member.
         - The owner can remove anyone (except themselves, handled elsewhere).
@@ -237,30 +239,21 @@ class AllianceService:
         return await cls._load_alliance_with_relations(session, alliance.id)
 
     @classmethod
-    async def get_alliance(
-        cls, session: SessionDep, alliance_id: uuid.UUID
-    ) -> Optional[Alliance]:
+    async def get_alliance(cls, session: SessionDep, alliance_id: uuid.UUID) -> Optional[Alliance]:
         return await cls._load_alliance_with_relations(session, alliance_id)
 
     @classmethod
-    async def get_all_alliances(
-        cls, session: SessionDep
-    ) -> list[Alliance]:
-        sql = (
-            select(Alliance)
-            .options(
-                selectinload(Alliance.owner),  # type: ignore[arg-type]
-                selectinload(Alliance.members),  # type: ignore[arg-type]
-                selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
-            )
+    async def get_all_alliances(cls, session: SessionDep) -> list[Alliance]:
+        sql = select(Alliance).options(
+            selectinload(Alliance.owner),  # type: ignore[arg-type]
+            selectinload(Alliance.members),  # type: ignore[arg-type]
+            selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
         )
         result = await session.exec(sql)
         return result.all()
 
     @classmethod
-    async def get_my_alliances(
-        cls, session: SessionDep, user_id: uuid.UUID
-    ) -> list[Alliance]:
+    async def get_my_alliances(cls, session: SessionDep, user_id: uuid.UUID) -> list[Alliance]:
         """Return only alliances where the user has at least one game account as member."""
         user_accounts = await session.exec(
             select(GameAccount.alliance_id)
@@ -283,9 +276,7 @@ class AllianceService:
         return result.all()
 
     @classmethod
-    async def get_my_roles(
-        cls, session: SessionDep, user_id: uuid.UUID
-    ) -> dict:
+    async def get_my_roles(cls, session: SessionDep, user_id: uuid.UUID) -> dict:
         """Return alliance role information for the current user.
 
         Returns a dict with:
@@ -293,9 +284,7 @@ class AllianceService:
           - my_account_ids: [ str(account_id), ... ]
         """
         # 1. Get all game accounts for this user
-        accs_result = await session.exec(
-            select(GameAccount).where(GameAccount.user_id == user_id)
-        )
+        accs_result = await session.exec(select(GameAccount).where(GameAccount.user_id == user_id))
         user_accounts = accs_result.all()
         user_account_ids = {acc.id for acc in user_accounts}
         my_account_ids = [str(aid) for aid in user_account_ids]
@@ -346,9 +335,7 @@ class AllianceService:
         return await cls._load_alliance_with_relations(session, alliance.id)
 
     @classmethod
-    async def delete_alliance(
-        cls, session: SessionDep, alliance: Alliance
-    ) -> None:
+    async def delete_alliance(cls, session: SessionDep, alliance: Alliance) -> None:
         # Remove all members from the alliance first
         members_result = await session.exec(
             select(GameAccount).where(GameAccount.alliance_id == alliance.id)
@@ -389,9 +376,7 @@ class AllianceService:
         cls._assert_not_in_alliance(game_account)
         # Enforce member limit
         count_result = await session.exec(
-            select(func.count(GameAccount.id)).where(
-                GameAccount.alliance_id == alliance_id
-            )
+            select(func.count(GameAccount.id)).where(GameAccount.alliance_id == alliance_id)
         )
         current_count = count_result.one()
         if current_count >= MAX_MEMBERS_PER_ALLIANCE:
@@ -574,14 +559,11 @@ class AllianceService:
             )
         officer_ids = {off.game_account_id for off in alliance.officers}
         return [
-            m for m in alliance.members
-            if m.id != alliance.owner_id and m.id not in officer_ids
+            m for m in alliance.members if m.id != alliance.owner_id and m.id not in officer_ids
         ]
 
     @classmethod
-    async def get_eligible_members(
-        cls, session: SessionDep
-    ) -> list[GameAccount]:
+    async def get_eligible_members(cls, session: SessionDep) -> list[GameAccount]:
         """Get all game accounts that are NOT in any alliance and do NOT have a pending invitation."""
         # Get IDs of game accounts with pending invitations
         pending_ids_result = await session.exec(

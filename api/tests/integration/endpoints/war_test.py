@@ -1,4 +1,5 @@
 """Integration tests for war endpoints."""
+
 import uuid
 
 import pytest
@@ -40,6 +41,7 @@ OPPONENT = "Enemy Alliance"
 
 
 # ─── Helpers ──────────────────────────────────────────────
+
 
 async def _setup_alliance(
     owner_user_id=USER_ID,
@@ -88,6 +90,7 @@ async def _setup_war(
 
 
 # ─── TestCreateWar ────────────────────────────────────────
+
 
 class TestCreateWar:
     @pytest.mark.asyncio
@@ -167,6 +170,7 @@ class TestCreateWar:
 
 # ─── TestListWars ─────────────────────────────────────────
 
+
 class TestListWars:
     @pytest.mark.asyncio
     async def test_list_wars_member_success(self):
@@ -206,6 +210,7 @@ class TestListWars:
 
 
 # ─── TestPlaceWarDefender ─────────────────────────────────
+
 
 class TestPlaceWarDefender:
     @pytest.mark.asyncio
@@ -340,6 +345,7 @@ class TestPlaceWarDefender:
 
 # ─── TestRemoveWarDefender ────────────────────────────────
 
+
 class TestRemoveWarDefender:
     @pytest.mark.asyncio
     async def test_remove_defender_success(self):
@@ -388,6 +394,7 @@ class TestRemoveWarDefender:
 
 # ─── TestCreateWarStatus ──────────────────────────────────
 
+
 class TestCreateWarStatus:
     @pytest.mark.asyncio
     async def test_new_war_has_active_status(self):
@@ -419,6 +426,7 @@ class TestCreateWarStatus:
 
 
 # ─── TestEndWar ───────────────────────────────────────────
+
 
 class TestEndWar:
     @pytest.mark.asyncio
@@ -535,6 +543,7 @@ class TestEndWar:
 
 # ─── Attacker helpers ─────────────────────────────────────
 
+
 async def _setup_attacker_scenario():
     """
     Create alliance + owner (officer, BG1) + member (BG1) + champion + war + defender on node 10.
@@ -571,7 +580,13 @@ async def _setup_attacker_scenario():
     # Place defender on node 10
     await execute_post_request(
         f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
-        payload={"node_number": 10, "champion_id": str(champ.id), "stars": 7, "rank": 3, "ascension": 0},
+        payload={
+            "node_number": 10,
+            "champion_id": str(champ.id),
+            "stars": 7,
+            "rank": 3,
+            "ascension": 0,
+        },
         headers=headers_owner,
     )
 
@@ -588,6 +603,7 @@ async def _setup_attacker_scenario():
 
 
 # ─── TestAvailableAttackers ───────────────────────────────
+
 
 class TestAvailableAttackers:
     @pytest.mark.asyncio
@@ -670,6 +686,7 @@ class TestAvailableAttackers:
 
 # ─── TestAssignAttacker ───────────────────────────────────
 
+
 class TestAssignAttacker:
     @pytest.mark.asyncio
     async def test_assign_attacker_success(self):
@@ -709,16 +726,35 @@ class TestAssignAttacker:
         headers_member = create_auth_headers(user_id=str(USER2_ID))
 
         # Place 4 defenders on nodes 11, 12, 13, 14 (different champions from attackers)
-        for i, (name, cls) in enumerate([("Thor", "Cosmic"), ("Iron Man", "Tech"), ("Hulk", "Science"), ("Black Widow", "Skill")]):
+        for i, (name, cls) in enumerate(
+            [
+                ("Thor", "Cosmic"),
+                ("Iron Man", "Tech"),
+                ("Hulk", "Science"),
+                ("Black Widow", "Skill"),
+            ]
+        ):
             c = await push_champion(name=name, champion_class=cls)
             await execute_post_request(
                 f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
-                payload={"node_number": 11 + i, "champion_id": str(c.id), "stars": 7, "rank": 3, "ascension": 0},
+                payload={
+                    "node_number": 11 + i,
+                    "champion_id": str(c.id),
+                    "stars": 7,
+                    "rank": 3,
+                    "ascension": 0,
+                },
                 headers=headers_officer,
             )
 
         # Add DIFFERENT champions to member's roster and assign 3 attackers
-        for i, (name, cls) in enumerate([("Black Panther", "Cosmic"), ("Captain Marvel", "Cosmic"), ("Doctor Strange", "Mystic")]):
+        for i, (name, cls) in enumerate(
+            [
+                ("Black Panther", "Cosmic"),
+                ("Captain Marvel", "Cosmic"),
+                ("Doctor Strange", "Mystic"),
+            ]
+        ):
             ac = await push_champion(name=name, champion_class=cls)
             cu = await push_champion_user(member, ac, stars=7, rank=3)
             resp = await execute_post_request(
@@ -826,13 +862,25 @@ class TestAssignAttacker:
             c = await push_champion(name=name, champion_class=cls)
             await execute_post_request(
                 f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
-                payload={"node_number": 11 + i, "champion_id": str(c.id), "stars": 7, "rank": 3, "ascension": 0},
+                payload={
+                    "node_number": 11 + i,
+                    "champion_id": str(c.id),
+                    "stars": 7,
+                    "rank": 3,
+                    "ascension": 0,
+                },
                 headers=headers_officer,
             )
 
         # Assign 3 different champions from member's roster to nodes 11, 12, 13
         attacker_champs_cu = []
-        for i, (name, cls) in enumerate([("Black Panther", "Cosmic"), ("Captain Marvel", "Cosmic"), ("Doctor Strange", "Mystic")]):
+        for i, (name, cls) in enumerate(
+            [
+                ("Black Panther", "Cosmic"),
+                ("Captain Marvel", "Cosmic"),
+                ("Doctor Strange", "Mystic"),
+            ]
+        ):
             ac = await push_champion(name=name, champion_class=cls)
             cu = await push_champion_user(member, ac, stars=7, rank=3)
             attacker_champs_cu.append(cu)
@@ -877,6 +925,7 @@ class TestAssignAttacker:
 
 # ─── TestRemoveAttacker ───────────────────────────────────
 
+
 class TestRemoveAttacker:
     @pytest.mark.asyncio
     async def test_remove_attacker_success(self):
@@ -917,6 +966,7 @@ class TestRemoveAttacker:
 
 
 # ─── TestUpdateKo ─────────────────────────────────────────
+
 
 class TestUpdateKo:
     @pytest.mark.asyncio
@@ -978,6 +1028,7 @@ class TestUpdateKo:
 
 
 # ─── TestGetCurrentWar ────────────────────────────────────
+
 
 class TestGetCurrentWar:
     """GET /alliances/{alliance_id}/wars/current"""
@@ -1056,6 +1107,7 @@ class TestGetCurrentWar:
 
 # ─── TestWarBans ──────────────────────────────────────────
 
+
 class TestWarBans:
     @pytest.mark.asyncio
     async def test_create_war_with_bans_returns_banned_champions(self):
@@ -1099,7 +1151,16 @@ class TestWarBans:
         data = await _setup_alliance()
         headers = create_auth_headers(user_id=str(USER_ID))
         extra_champs = []
-        for i, (name, cls) in enumerate([("Thor", "Cosmic"), ("Iron Man", "Tech"), ("Hulk", "Science"), ("Black Widow", "Skill"), ("Vision", "Tech"), ("Wolverine", "Mutant")]):
+        for i, (name, cls) in enumerate(
+            [
+                ("Thor", "Cosmic"),
+                ("Iron Man", "Tech"),
+                ("Hulk", "Science"),
+                ("Black Widow", "Skill"),
+                ("Vision", "Tech"),
+                ("Wolverine", "Mutant"),
+            ]
+        ):
             extra_champs.append(await push_champion(name=name, champion_class=cls))
 
         response = await execute_post_request(
@@ -1202,7 +1263,13 @@ class TestWarBans:
         # Place a defender on node 10 in the new war
         await execute_post_request(
             f"/alliances/{data['alliance'].id}/wars/{new_war_id}/bg/1/place",
-            payload={"node_number": 10, "champion_id": str(data["champ"].id), "stars": 7, "rank": 3, "ascension": 0},
+            payload={
+                "node_number": 10,
+                "champion_id": str(data["champ"].id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
             headers=headers_officer,
         )
 
@@ -1216,6 +1283,7 @@ class TestWarBans:
 
 
 # ─── TestWarSeasonLink ────────────────────────────────────
+
 
 class TestWarSeasonLink:
     @pytest.mark.asyncio

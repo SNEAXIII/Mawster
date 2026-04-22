@@ -1,4 +1,5 @@
 """Unit tests for UpgradeRequestService using mocked sessions."""
+
 import uuid
 from datetime import datetime
 
@@ -193,9 +194,7 @@ class TestGetPendingByGameAccount:
         mock_result.all.return_value = [req1, req2]
         session.exec.return_value = mock_result
 
-        result = await UpgradeRequestService.get_pending_by_game_account(
-            session, GAME_ACCOUNT_ID
-        )
+        result = await UpgradeRequestService.get_pending_by_game_account(session, GAME_ACCOUNT_ID)
         assert len(result) == 2
 
     @pytest.mark.asyncio
@@ -206,9 +205,7 @@ class TestGetPendingByGameAccount:
         mock_result.all.return_value = []
         session.exec.return_value = mock_result
 
-        result = await UpgradeRequestService.get_pending_by_game_account(
-            session, GAME_ACCOUNT_ID
-        )
+        result = await UpgradeRequestService.get_pending_by_game_account(session, GAME_ACCOUNT_ID)
         assert len(result) == 0
 
 
@@ -224,9 +221,7 @@ class TestCancelUpgradeRequest:
         session.get.return_value = None
 
         with pytest.raises(HTTPException) as exc:
-            await UpgradeRequestService.cancel_upgrade_request(
-                session, uuid.uuid4()
-            )
+            await UpgradeRequestService.cancel_upgrade_request(session, uuid.uuid4())
         assert exc.value.status_code == 404
 
     @pytest.mark.asyncio

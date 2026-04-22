@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from datetime import datetime
 
 from fastapi import HTTPException
@@ -31,9 +31,7 @@ class AllianceInvitationService:
     @staticmethod
     async def _get_user_account_ids(session: SessionDep, user_id: uuid.UUID) -> set[uuid.UUID]:
         """Get the set of game account IDs belonging to a user."""
-        result = await session.exec(
-            select(GameAccount).where(GameAccount.user_id == user_id)
-        )
+        result = await session.exec(select(GameAccount).where(GameAccount.user_id == user_id))
         return {acc.id for acc in result.all()}
 
     @classmethod
@@ -61,9 +59,7 @@ class AllianceInvitationService:
             )
         # Enforce member limit
         count_result = await session.exec(
-            select(func.count(GameAccount.id)).where(
-                GameAccount.alliance_id == alliance_id
-            )
+            select(func.count(GameAccount.id)).where(GameAccount.alliance_id == alliance_id)
         )
         current_count = count_result.one()
         if current_count >= MAX_MEMBERS_PER_ALLIANCE:

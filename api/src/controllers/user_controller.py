@@ -28,6 +28,7 @@ CONFIRMATION_TEXT = "SUPPRIMER"
 class DeleteAccountRequest(BaseModel):
     """DTO pour la suppression de compte.
     L'utilisateur doit envoyer le texte de confirmation exact."""
+
     confirmation: str = Field(..., examples=[CONFIRMATION_TEXT])
 
 

@@ -19,9 +19,7 @@ class AuthService:
     ) -> User:
         data = JWTService.decode_jwt(token)
         user_id = data.get("user_id")
-        user = await UserService.get_user_by_id_with_validity_check(
-            session, user_id
-        )
+        user = await UserService.get_user_by_id_with_validity_check(session, user_id)
         return user
 
     @classmethod

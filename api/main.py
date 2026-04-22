@@ -70,6 +70,7 @@ app.include_router(season_public_controller)
 
 if not IS_PROD:
     from src.controllers.dev_controller import dev_controller
+
     app.include_router(dev_controller)
     logger.info("Dev controller enabled (MODE != prod)")
 
@@ -81,7 +82,7 @@ if IS_TESTING:
         if not access_token:
             raise DISCORD_TOKEN_INVALID_EXCEPTION
         token_hash = hashlib.sha256(access_token.encode()).hexdigest()[:16]
-        random =token_hash[:8]
+        random = token_hash[:8]
         return {
             "id": token_hash,
             "username": f"test_{random}",

@@ -10,9 +10,7 @@ if TYPE_CHECKING:
 
 class WarBan(SQLModel, table=True):
     __tablename__ = "war_ban"
-    __table_args__ = (
-        sa.UniqueConstraint("war_id", "champion_id", name="uq_war_ban_champion"),
-    )
+    __table_args__ = (sa.UniqueConstraint("war_id", "champion_id", name="uq_war_ban_champion"),)
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     war_id: uuid.UUID = Field(foreign_key="war.id", index=True)

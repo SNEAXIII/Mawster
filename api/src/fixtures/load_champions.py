@@ -70,9 +70,7 @@ def _process_champion_item(session: Session, item: dict) -> str:
     if existing:
         return (
             "updated"
-            if _update_existing_champion(
-                session, existing, image_url, alias, champion_class
-            )
+            if _update_existing_champion(session, existing, image_url, alias, champion_class)
             else "skipped"
         )
 
@@ -121,9 +119,7 @@ def load_champions(json_path: Path = DEFAULT_JSON_PATH):
 
             session.commit()
 
-        print(
-            f"✅ Champions loaded: {added} added, {updated} updated, {skipped} unchanged"
-        )
+        print(f"✅ Champions loaded: {added} added, {updated} updated, {skipped} unchanged")
 
     except json.JSONDecodeError as e:
         print(f"❌ Invalid JSON: {e}")

@@ -17,7 +17,6 @@ from src.utils.db import SessionDep
 
 
 class MasteryService:
-
     # ─── Game account ─────────────────────────────────────────────
 
     @classmethod
@@ -26,26 +25,30 @@ class MasteryService:
     ) -> list[GameAccountMasteryResponse]:
         all_masteries = list((await session.exec(select(Mastery))).all())
         saved_rows = list(
-            (await session.exec(
-                select(GameAccountMastery).where(
-                    GameAccountMastery.game_account_id == game_account_id
+            (
+                await session.exec(
+                    select(GameAccountMastery).where(
+                        GameAccountMastery.game_account_id == game_account_id
+                    )
                 )
-            )).all()
+            ).all()
         )
         saved_map = {row.mastery_id: row for row in saved_rows}
         result = []
         for mastery in sorted(all_masteries, key=lambda m: m.order):
             row = saved_map.get(mastery.id)
-            result.append(GameAccountMasteryResponse(
-                id=row.id if row else None,
-                mastery_id=mastery.id,
-                mastery_name=mastery.name,
-                mastery_max_value=mastery.max_value,
-                mastery_order=mastery.order,
-                unlocked=row.unlocked if row else 0,
-                attack=row.attack if row else 0,
-                defense=row.defense if row else 0,
-            ))
+            result.append(
+                GameAccountMasteryResponse(
+                    id=row.id if row else None,
+                    mastery_id=mastery.id,
+                    mastery_name=mastery.name,
+                    mastery_max_value=mastery.max_value,
+                    mastery_order=mastery.order,
+                    unlocked=row.unlocked if row else 0,
+                    attack=row.attack if row else 0,
+                    defense=row.defense if row else 0,
+                )
+            )
         return result
 
     @classmethod

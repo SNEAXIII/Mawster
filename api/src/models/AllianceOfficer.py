@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 class AllianceOfficer(SQLModel, table=True):
     """Association table: a game account designated as officer (deputy) of an alliance."""
+
     __tablename__ = "alliance_officer"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)

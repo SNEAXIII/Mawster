@@ -36,9 +36,7 @@ class TestChampionSagaDefenderEndpoint:
         assert response.status_code == 200
         assert response.json()["is_saga_defender"] is False
 
-        get_resp = await execute_get_request(
-            f"/champions/{champ.id}", headers=ADMIN_HEADERS
-        )
+        get_resp = await execute_get_request(f"/champions/{champ.id}", headers=ADMIN_HEADERS)
         assert get_resp.json()["is_saga_defender"] is False
 
     @pytest.mark.asyncio
@@ -55,9 +53,7 @@ class TestChampionSagaDefenderEndpoint:
         assert response.status_code == 200
         assert response.json()["is_saga_defender"] is True
 
-        get_resp = await execute_get_request(
-            f"/champions/{champ.id}", headers=ADMIN_HEADERS
-        )
+        get_resp = await execute_get_request(f"/champions/{champ.id}", headers=ADMIN_HEADERS)
         assert get_resp.json()["is_saga_defender"] is True
 
     @pytest.mark.asyncio

@@ -51,11 +51,17 @@ def _warn_if_weak_defaults() -> None:
     }
     for name, (default, current) in weak.items():
         if current == default:
-            _log.warning("⚠️  %s utilise la valeur par défaut faible '%s' — ne jamais déployer en production", name, default)
+            _log.warning(
+                "⚠️  %s utilise la valeur par défaut faible '%s' — ne jamais déployer en production",
+                name,
+                default,
+            )
 
 
 _warn_if_weak_defaults()
 
 if not IS_PROD:
     print(f"Selected mode {IS_PROD = }, {IS_TESTING = }")
-    print(f"Secret settings loaded: MARIADB_DATABASE={SECRET.MARIADB_DATABASE}, MARIADB_USER={SECRET.MARIADB_USER}, MARIADB_HOST={SECRET.MARIADB_HOST}, MARIADB_PORT={SECRET.MARIADB_PORT}")
+    print(
+        f"Secret settings loaded: MARIADB_DATABASE={SECRET.MARIADB_DATABASE}, MARIADB_USER={SECRET.MARIADB_USER}, MARIADB_HOST={SECRET.MARIADB_HOST}, MARIADB_PORT={SECRET.MARIADB_PORT}"
+    )

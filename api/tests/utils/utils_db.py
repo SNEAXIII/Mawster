@@ -20,10 +20,12 @@ _worker = os.environ.get("PYTEST_XDIST_WORKER", "")
 DB_NAME = f"temp/test_{_worker}.db" if _worker else "temp/test.db"
 
 sqlite_sync_engine = create_engine(
-    f"sqlite:///{DB_NAME}", echo=IS_ECHO,
+    f"sqlite:///{DB_NAME}",
+    echo=IS_ECHO,
 )
 sqlite_async_engine = create_async_engine(
-    url=f"sqlite+aiosqlite:///{DB_NAME}", echo=IS_ECHO_ASYNC,
+    url=f"sqlite+aiosqlite:///{DB_NAME}",
+    echo=IS_ECHO_ASYNC,
 )
 
 Session = sessionmaker(
@@ -84,7 +86,6 @@ def reset_test_db():
     """
     ensure_schema()
     _truncate_all()
-
 
 
 async def get_test_session() -> AsyncSession:

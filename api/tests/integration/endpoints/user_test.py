@@ -1,4 +1,5 @@
 """Integration tests for /user endpoints — self-delete with confirmation."""
+
 import pytest
 
 from main import app

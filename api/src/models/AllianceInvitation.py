@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 class AllianceInvitation(SQLModel, table=True):
     """An invitation for a game account to join an alliance."""
+
     __tablename__ = "alliance_invitation"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)

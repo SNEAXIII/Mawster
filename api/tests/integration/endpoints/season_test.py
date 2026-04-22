@@ -1,4 +1,5 @@
 """Integration tests for season endpoints."""
+
 import pytest
 
 from main import app
@@ -59,7 +60,9 @@ class TestActivateSeason:
     async def test_activate_sets_is_active_true(self, admin_in_db):
         create = await execute_post_request(SEASONS_URL, {"number": 70}, ADMIN_HEADERS)
         season_id = create.json()["id"]
-        response = await execute_patch_request(f"{SEASONS_URL}/{season_id}/activate", {}, ADMIN_HEADERS)
+        response = await execute_patch_request(
+            f"{SEASONS_URL}/{season_id}/activate", {}, ADMIN_HEADERS
+        )
         assert response.status_code == 200
         assert response.json()["is_active"] is True
 
@@ -86,7 +89,9 @@ class TestDeactivateSeason:
     async def test_deactivate_sets_is_active_false(self, admin_in_db):
         s = (await execute_post_request(SEASONS_URL, {"number": 80}, ADMIN_HEADERS)).json()
         await execute_patch_request(f"{SEASONS_URL}/{s['id']}/activate", {}, ADMIN_HEADERS)
-        response = await execute_patch_request(f"{SEASONS_URL}/{s['id']}/deactivate", {}, ADMIN_HEADERS)
+        response = await execute_patch_request(
+            f"{SEASONS_URL}/{s['id']}/deactivate", {}, ADMIN_HEADERS
+        )
         assert response.status_code == 200
         assert response.json()["is_active"] is False
 

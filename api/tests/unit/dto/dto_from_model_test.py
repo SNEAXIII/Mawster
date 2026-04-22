@@ -254,7 +254,9 @@ class TestDefensePlacementResponseModelValidate:
     def test_maps_all_fields(self):
         now = datetime.now()
         champ = _make_champion(name="Corvus", champion_class="Cosmic", alias="glaive")
-        cu = _make_champion_user(champion=champ, stars=6, rank=4, ascension=0, signature=150, is_preferred_attacker=True)
+        cu = _make_champion_user(
+            champion=champ, stars=6, rank=4, ascension=0, signature=150, is_preferred_attacker=True
+        )
         placed_by = _ns(game_pseudo="Officer1")
         placement = _ns(
             id=uuid.uuid4(),

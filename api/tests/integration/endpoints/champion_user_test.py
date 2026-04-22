@@ -102,10 +102,7 @@ class TestChampionUserAccessControl:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "method, url, payload",
-        [
-            (action, route, payload)
-            for action, route, payload, _ in _CHAMPION_USER_ROUTES_NO_AUTH
-        ],
+        [(action, route, payload) for action, route, payload, _ in _CHAMPION_USER_ROUTES_NO_AUTH],
         ids=[name for _, _, _, name in _CHAMPION_USER_ROUTES_NO_AUTH],
     )
     async def test_no_auth_returns_401(self, session, method, url, payload):
@@ -698,9 +695,7 @@ class TestGetChampionUser:
         champ = await push_champion()
         entry = await _push_champion_user(acc.id, champ.id, "7r3", signature=200)
 
-        response = await execute_get_request(
-            f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS
-        )
+        response = await execute_get_request(f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS)
         assert response.status_code == 200
         body = response.json()
         assert body["rarity"] == "7r3"
@@ -722,17 +717,13 @@ class TestGetChampionUser:
         champ = await push_champion()
         entry = await _push_champion_user(acc.id, champ.id, "6r4")
 
-        response = await execute_get_request(
-            f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS
-        )
+        response = await execute_get_request(f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS)
         assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_get_invalid_uuid_returns_422(self):
         await push_one_user()
-        response = await execute_get_request(
-            f"{CHAMPION_USERS_ROUTE}/not-a-uuid", headers=HEADERS
-        )
+        response = await execute_get_request(f"{CHAMPION_USERS_ROUTE}/not-a-uuid", headers=HEADERS)
         assert response.status_code == 422
 
 
@@ -900,13 +891,9 @@ class TestDeleteChampionUser:
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         champ = await push_champion()
         entry = await _push_champion_user(acc.id, champ.id)
-        r1 = await execute_delete_request(
-            f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS
-        )
+        r1 = await execute_delete_request(f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS)
         assert r1.status_code == 204
-        r2 = await execute_delete_request(
-            f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS
-        )
+        r2 = await execute_delete_request(f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS)
         assert r2.status_code == 404
 
     @pytest.mark.asyncio
@@ -924,9 +911,7 @@ class TestDeleteChampionUser:
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         champ = await push_champion()
         entry = await _push_champion_user(acc.id, champ.id)
-        await execute_delete_request(
-            f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS
-        )
+        await execute_delete_request(f"{CHAMPION_USERS_ROUTE}/{entry.id}", headers=HEADERS)
         roster_resp = await execute_get_request(
             f"{CHAMPION_USERS_ROUTE}/by-account/{acc.id}", headers=HEADERS
         )
@@ -1287,9 +1272,7 @@ class TestAllianceMemberRosterView:
         await push_one_user()
         await push_user2()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
-        member_acc = await push_member(
-            alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
-        )
+        member_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
         champ = await push_champion()
         await _push_champion_user(member_acc.id, champ.id, "7r3")
 
@@ -1355,9 +1338,7 @@ class TestCreateUpgradeRequest:
         await push_user2()
         alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
         await push_officer(alliance, owner_acc)
-        member_acc = await push_member(
-            alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
-        )
+        member_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
         champ = await push_champion()
         entry = await _push_champion_user(member_acc.id, champ.id, "6r4")
 
@@ -1446,9 +1427,7 @@ class TestGetUpgradeRequestsByAccount:
         await push_one_user()
         await push_user2()
         alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
-        member_acc = await push_member(
-            alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
-        )
+        member_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
         champ = await push_champion()
         entry = await _push_champion_user(member_acc.id, champ.id, "6r4")
 
@@ -1475,9 +1454,7 @@ class TestGetUpgradeRequestsByAccount:
         """A user NOT in the same alliance cannot view upgrade requests."""
         await push_one_user()
         await push_user2()
-        _, _owner = await push_alliance_with_owner(
-            user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
-        )
+        _, _owner = await push_alliance_with_owner(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
         # USER_ID is not in this alliance at all
         await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
 
@@ -1506,9 +1483,7 @@ class TestCancelUpgradeRequest:
         await push_user2()
         alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
         await push_officer(alliance, owner_acc)
-        member_acc = await push_member(
-            alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
-        )
+        member_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
         champ = await push_champion()
         entry = await _push_champion_user(member_acc.id, champ.id, "6r4")
 
@@ -1540,9 +1515,7 @@ class TestCancelUpgradeRequest:
             user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
         )
         await push_officer(alliance, owner_acc)
-        member_acc = await push_member(
-            alliance, user_id=USER_ID, game_pseudo=GAME_PSEUDO
-        )
+        member_acc = await push_member(alliance, user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         champ = await push_champion()
         entry = await _push_champion_user(member_acc.id, champ.id, "6r4")
 

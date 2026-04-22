@@ -38,15 +38,11 @@ def create_auth_headers(
 
     The JWT is slim: only user_id, role, and type=access.
     """
-    token = JWTService.create_token(
-        {"user_id": user_id, "role": role, "type": "access"}
-    )
+    token = JWTService.create_token({"user_id": user_id, "role": role, "type": "access"})
     return {"Authorization": f"Bearer {token}"}
 
 
-async def execute_get_request(
-    route: str, headers: Optional[dict[str, str]] = None
-) -> Response:
+async def execute_get_request(route: str, headers: Optional[dict[str, str]] = None) -> Response:
     async with get_test_client() as client:
         return await client.get(route, headers=headers)
 
@@ -91,7 +87,10 @@ async def execute_delete_request(
 
 
 async def execute_request(
-    method: str, url: str, payload=None, headers=None,
+    method: str,
+    url: str,
+    payload=None,
+    headers=None,
 ) -> Response:
     """Generic request dispatcher for parametrized access-control tests."""
     method = method.upper()

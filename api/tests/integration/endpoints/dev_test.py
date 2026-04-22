@@ -1,4 +1,5 @@
 """Integration tests for /dev endpoints — development utilities."""
+
 import uuid
 
 import pytest
@@ -78,9 +79,7 @@ class TestDevLogin:
 
     @pytest.mark.asyncio
     async def test_unknown_user_returns_error(self, session):
-        response = await execute_post_request(
-            "/dev/login", {"user_id": str(uuid.uuid4())}
-        )
+        response = await execute_post_request("/dev/login", {"user_id": str(uuid.uuid4())})
         assert response.status_code >= 400
 
     @pytest.mark.asyncio
@@ -98,9 +97,7 @@ class TestDevForceJoinAlliance:
     @pytest.mark.asyncio
     async def test_force_join_assigns_alliance(self):
         alliance, _ = await push_alliance_with_owner()
-        member_acc = await push_game_account(
-            user_id=USER2_ID, game_pseudo="NewPlayer"
-        )
+        member_acc = await push_game_account(user_id=USER2_ID, game_pseudo="NewPlayer")
 
         response = await execute_post_request(
             "/dev/force-join-alliance",

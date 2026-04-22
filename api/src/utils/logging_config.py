@@ -156,5 +156,3 @@ def audit_log(event: str, *, user_id: str = "anonymous", detail: str = "") -> No
     if detail:
         parts.append(f"detail={detail}")
     _audit.info(" | ".join(parts))
-
-

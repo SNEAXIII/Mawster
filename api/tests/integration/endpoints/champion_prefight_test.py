@@ -36,9 +36,7 @@ class TestChampionPrefightEndpoint:
         assert response.status_code == 200
         assert response.json()["has_prefight"] is True
 
-        get_resp = await execute_get_request(
-            f"/champions/{champ.id}", headers=ADMIN_HEADERS
-        )
+        get_resp = await execute_get_request(f"/champions/{champ.id}", headers=ADMIN_HEADERS)
         assert get_resp.json()["has_prefight"] is True
 
     @pytest.mark.asyncio
@@ -55,9 +53,7 @@ class TestChampionPrefightEndpoint:
         assert response.status_code == 200
         assert response.json()["has_prefight"] is False
 
-        get_resp = await execute_get_request(
-            f"/champions/{champ.id}", headers=ADMIN_HEADERS
-        )
+        get_resp = await execute_get_request(f"/champions/{champ.id}", headers=ADMIN_HEADERS)
         assert get_resp.json()["has_prefight"] is False
 
     @pytest.mark.asyncio

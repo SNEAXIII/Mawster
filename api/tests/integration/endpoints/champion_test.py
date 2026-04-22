@@ -3,6 +3,7 @@
 /champions (GET) — accessible to any authenticated user.
 /admin/champions (PATCH, POST, DELETE) — admin only.
 """
+
 import uuid
 
 import pytest
@@ -27,12 +28,8 @@ from tests.utils.utils_db import get_test_session, load_objects
 
 app.dependency_overrides[get_session] = get_test_session
 
-ADMIN_HEADERS = create_auth_headers(
-    user_id=str(USER_ID), role=Roles.ADMIN
-)
-USER_HEADERS = create_auth_headers(
-    user_id=str(USER_ID), role=Roles.USER
-)
+ADMIN_HEADERS = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
+USER_HEADERS = create_auth_headers(user_id=str(USER_ID), role=Roles.USER)
 
 CHAMPIONS_LIST_URL = "/champions?page=1&size=10"
 LOAD_CHAMPIONS_URL = "/admin/champions/load"
@@ -127,9 +124,7 @@ class TestGetChampions:
     )
     async def test_pagination_validation(self, session, params, expected_status):
         await push_one_user()
-        response = await execute_get_request(
-            f"/champions{params}", headers=USER_HEADERS
-        )
+        response = await execute_get_request(f"/champions{params}", headers=USER_HEADERS)
         assert response.status_code == expected_status
 
     @pytest.mark.asyncio
@@ -141,9 +136,7 @@ class TestGetChampions:
         ]
         await load_objects(champs)
 
-        response = await execute_get_request(
-            CHAMPIONS_LIST_URL, headers=USER_HEADERS
-        )
+        response = await execute_get_request(CHAMPIONS_LIST_URL, headers=USER_HEADERS)
         assert response.status_code == 200
         body = response.json()
         assert body["total_champions"] == 2
@@ -208,9 +201,7 @@ class TestGetChampions:
     @pytest.mark.asyncio
     async def test_empty_list(self):
         await push_one_user()
-        response = await execute_get_request(
-            CHAMPIONS_LIST_URL, headers=USER_HEADERS
-        )
+        response = await execute_get_request(CHAMPIONS_LIST_URL, headers=USER_HEADERS)
         assert response.status_code == 200
         body = response.json()
         assert body["total_champions"] == 0
@@ -220,15 +211,12 @@ class TestGetChampions:
     async def test_pagination_pages(self):
         await push_one_user()
         champs = [
-            get_champion(name=f"Champion_{i:03d}", champion_class="Science")
-            for i in range(15)
+            get_champion(name=f"Champion_{i:03d}", champion_class="Science") for i in range(15)
         ]
         await load_objects(champs)
 
         # Page 1
-        response = await execute_get_request(
-            CHAMPIONS_LIST_URL, headers=USER_HEADERS
-        )
+        response = await execute_get_request(CHAMPIONS_LIST_URL, headers=USER_HEADERS)
         assert response.status_code == 200
         body = response.json()
         assert body["total_champions"] == 15
@@ -236,9 +224,7 @@ class TestGetChampions:
         assert len(body["champions"]) == 10
 
         # Page 2
-        response = await execute_get_request(
-            "/champions?page=2&size=10", headers=USER_HEADERS
-        )
+        response = await execute_get_request("/champions?page=2&size=10", headers=USER_HEADERS)
         assert response.status_code == 200
         body = response.json()
         assert len(body["champions"]) == 5
@@ -256,9 +242,7 @@ class TestGetChampionById:
         champ = get_champion()
         await load_objects([champ])
 
-        response = await execute_get_request(
-            f"/champions/{champ.id}", headers=USER_HEADERS
-        )
+        response = await execute_get_request(f"/champions/{champ.id}", headers=USER_HEADERS)
         assert response.status_code == 200
         body = response.json()
         assert body["name"] == "Spider-Man"
@@ -267,29 +251,31 @@ class TestGetChampionById:
     @pytest.mark.asyncio
     async def test_get_nonexistent(self):
         await push_one_user()
-        response = await execute_get_request(
-            f"/champions/{uuid.uuid4()}", headers=USER_HEADERS
-        )
+        response = await execute_get_request(f"/champions/{uuid.uuid4()}", headers=USER_HEADERS)
         assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_invalid_uuid_returns_422(self):
         await push_one_user()
-        response = await execute_get_request(
-            "/champions/not-a-uuid", headers=USER_HEADERS
-        )
+        response = await execute_get_request("/champions/not-a-uuid", headers=USER_HEADERS)
         assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_response_body_structure(self):
         await push_one_user()
         champ = await push_champion("Hulk", "Science")
-        response = await execute_get_request(
-            f"/champions/{champ.id}", headers=USER_HEADERS
-        )
+        response = await execute_get_request(f"/champions/{champ.id}", headers=USER_HEADERS)
         assert response.status_code == 200
         body = response.json()
-        expected = {"id", "name", "champion_class", "image_url", "is_7_star", "is_ascendable", "alias"}
+        expected = {
+            "id",
+            "name",
+            "champion_class",
+            "image_url",
+            "is_7_star",
+            "is_ascendable",
+            "alias",
+        }
         assert expected.issubset(body.keys())
         assert body["name"] == "Hulk"
         assert body["champion_class"] == "Science"
@@ -314,9 +300,7 @@ class TestUpdateAlias:
         )
         assert response.status_code == 200
 
-        get_resp = await execute_get_request(
-            f"/champions/{champ.id}", headers=ADMIN_HEADERS
-        )
+        get_resp = await execute_get_request(f"/champions/{champ.id}", headers=ADMIN_HEADERS)
         assert get_resp.json()["alias"] == SPIDEY_ALIAS
 
     @pytest.mark.asyncio
@@ -332,9 +316,7 @@ class TestUpdateAlias:
         )
         assert response.status_code == 200
 
-        get_resp = await execute_get_request(
-            f"/champions/{champ.id}", headers=ADMIN_HEADERS
-        )
+        get_resp = await execute_get_request(f"/champions/{champ.id}", headers=ADMIN_HEADERS)
         assert get_resp.json()["alias"] is None
 
     @pytest.mark.asyncio
@@ -421,9 +403,7 @@ class TestLoadChampions:
     @pytest.mark.asyncio
     async def test_load_empty_list(self):
         await push_one_admin()
-        response = await execute_post_request(
-            LOAD_CHAMPIONS_URL, payload=[], headers=ADMIN_HEADERS
-        )
+        response = await execute_post_request(LOAD_CHAMPIONS_URL, payload=[], headers=ADMIN_HEADERS)
         assert response.status_code == 200
         body = response.json()
         assert body["created"] == 0
@@ -434,7 +414,12 @@ class TestLoadChampions:
         await push_one_admin()
 
         payload = [
-            {"name": "Hercules", "champion_class": "Cosmic", "image_url": "herc.png", "is_ascendable": True},
+            {
+                "name": "Hercules",
+                "champion_class": "Cosmic",
+                "image_url": "herc.png",
+                "is_ascendable": True,
+            },
         ]
 
         response = await execute_post_request(
@@ -472,9 +457,7 @@ class TestDeleteChampion:
         )
         assert response.status_code == 200
 
-        get_resp = await execute_get_request(
-            f"/champions/{champ.id}", headers=ADMIN_HEADERS
-        )
+        get_resp = await execute_get_request(f"/champions/{champ.id}", headers=ADMIN_HEADERS)
         assert get_resp.status_code == 404
 
     @pytest.mark.asyncio
@@ -498,11 +481,7 @@ class TestDeleteChampion:
         """Deleting the same champion twice -> 404."""
         await push_one_admin()
         champ = await push_champion()
-        r1 = await execute_delete_request(
-            f"/admin/champions/{champ.id}", headers=ADMIN_HEADERS
-        )
+        r1 = await execute_delete_request(f"/admin/champions/{champ.id}", headers=ADMIN_HEADERS)
         assert r1.status_code == 200
-        r2 = await execute_delete_request(
-            f"/admin/champions/{champ.id}", headers=ADMIN_HEADERS
-        )
+        r2 = await execute_delete_request(f"/admin/champions/{champ.id}", headers=ADMIN_HEADERS)
         assert r2.status_code == 404

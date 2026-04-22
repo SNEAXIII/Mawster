@@ -50,8 +50,6 @@ async def _get_war(
 WarDep = Annotated[War, Depends(_get_war)]
 
 
-
-
 @war_controller.post(
     "",
     response_model=WarResponse,
@@ -64,8 +62,12 @@ async def create_war(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Declare a new war against an opponent. Officers/owner only."""
-    account = await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
-    return await WarService.create_war(session, alliance_id, body.opponent_name, account.id, body.banned_champion_ids)
+    account = await AllianceService.assert_officer_or_owner_by_id(
+        session, alliance_id, current_user.id
+    )
+    return await WarService.create_war(
+        session, alliance_id, body.opponent_name, account.id, body.banned_champion_ids
+    )
 
 
 @war_controller.get(
@@ -128,7 +130,9 @@ async def place_war_defender(
     war: WarDep,
 ):
     """Place a champion on a war defense node. Officers/owner only."""
-    account = await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    account = await AllianceService.assert_officer_or_owner_by_id(
+        session, alliance_id, current_user.id
+    )
     return await WarService.place_defender(session, war_id, battlegroup, body, account.id)
 
 
@@ -198,7 +202,10 @@ async def get_available_attackers(
 ):
     """List available attackers (BG roster minus defenders). Pass attacker_id to filter to a single member."""
     await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
-    return await WarService.get_available_attackers(session, alliance_id, battlegroup, attacker_id, war, node_number)
+    return await WarService.get_available_attackers(
+        session, alliance_id, battlegroup, attacker_id, war, node_number
+    )
+
 
 @war_controller.get(
     "/{war_id}/bg/{battlegroup}/available-prefight-attackers",
@@ -309,7 +316,13 @@ async def add_war_synergy(
     """Add a synergy champion for a battlegroup. All members can add."""
     await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
     return await WarService.add_synergy_attacker(
-        session, war_id, alliance_id, battlegroup, body.champion_user_id, body.target_champion_user_id, current_user.id
+        session,
+        war_id,
+        alliance_id,
+        battlegroup,
+        body.champion_user_id,
+        body.target_champion_user_id,
+        current_user.id,
     )
 
 

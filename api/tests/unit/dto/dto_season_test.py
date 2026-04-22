@@ -1,4 +1,5 @@
 """Unit tests for SeasonCreateRequest DTO validation."""
+
 import pytest
 from pydantic import ValidationError
 

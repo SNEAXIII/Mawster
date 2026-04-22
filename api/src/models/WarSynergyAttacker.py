@@ -15,7 +15,9 @@ class WarSynergyAttacker(SQLModel, table=True):
     __tablename__ = "war_synergy_attacker"
     __table_args__ = (
         sa.UniqueConstraint(
-            "war_id", "battlegroup", "champion_user_id",
+            "war_id",
+            "battlegroup",
+            "champion_user_id",
             name="uq_war_synergy_champion",
         ),
     )

@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -44,6 +44,7 @@ def _to_response(alliance: Alliance) -> AllianceResponse:
 
 # ---- Eligibility endpoints ----
 
+
 @alliance_controller.get(
     "/eligible-owners",
     response_model=list[GameAccountResponse],
@@ -81,6 +82,7 @@ async def get_eligible_members(
 
 
 # ---- CRUD ----
+
 
 @alliance_controller.post(
     "",
@@ -166,11 +168,17 @@ async def accept_invitation(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Accept a pending invitation â€” the game account joins the alliance."""
-    invitation = await AllianceInvitationService.accept_invitation(session, invitation_id, current_user.id)
+    invitation = await AllianceInvitationService.accept_invitation(
+        session, invitation_id, current_user.id
+    )
     # Reload the invitation with its relations
     reloaded = await session.get(AllianceInvitation, invitation.id)
     await session.refresh(reloaded, ["alliance", "game_account", "invited_by"])
-    audit_log("alliance.accept_invitation", user_id=str(current_user.id), detail=f"invitation_id={invitation_id}")
+    audit_log(
+        "alliance.accept_invitation",
+        user_id=str(current_user.id),
+        detail=f"invitation_id={invitation_id}",
+    )
     return _invitation_to_response(reloaded)
 
 
@@ -184,10 +192,16 @@ async def decline_invitation(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Decline a pending invitation."""
-    invitation = await AllianceInvitationService.decline_invitation(session, invitation_id, current_user.id)
+    invitation = await AllianceInvitationService.decline_invitation(
+        session, invitation_id, current_user.id
+    )
     reloaded = await session.get(AllianceInvitation, invitation.id)
     await session.refresh(reloaded, ["alliance", "game_account", "invited_by"])
-    audit_log("alliance.decline_invitation", user_id=str(current_user.id), detail=f"invitation_id={invitation_id}")
+    audit_log(
+        "alliance.decline_invitation",
+        user_id=str(current_user.id),
+        detail=f"invitation_id={invitation_id}",
+    )
     return _invitation_to_response(reloaded)
 
 
@@ -251,6 +265,7 @@ async def delete_alliance(
 
 # ---- Member management (invitations) ----
 
+
 def _invitation_to_response(inv: AllianceInvitation) -> AllianceInvitationResponse:
     return AllianceInvitationResponse.model_validate(inv)
 
@@ -282,7 +297,11 @@ async def invite_member(
     # Reload with relations
     loaded = await AllianceInvitationService.get_invitations_for_alliance(session, alliance_id)
     inv = next((i for i in loaded if i.id == invitation.id), invitation)
-    audit_log("alliance.invite_member", user_id=str(current_user.id), detail=f"alliance_id={alliance_id} game_account_id={body.game_account_id}")
+    audit_log(
+        "alliance.invite_member",
+        user_id=str(current_user.id),
+        detail=f"alliance_id={alliance_id} game_account_id={body.game_account_id}",
+    )
     return _invitation_to_response(inv)
 
 
@@ -317,8 +336,14 @@ async def cancel_invitation(
     if alliance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
-    await AllianceInvitationService.cancel_invitation(session, invitation_id, current_user.id, alliance)
-    audit_log("alliance.cancel_invitation", user_id=str(current_user.id), detail=f"invitation_id={invitation_id}")
+    await AllianceInvitationService.cancel_invitation(
+        session, invitation_id, current_user.id, alliance
+    )
+    audit_log(
+        "alliance.cancel_invitation",
+        user_id=str(current_user.id),
+        detail=f"invitation_id={invitation_id}",
+    )
     return {"message": "Invitation cancelled"}
 
 
@@ -338,17 +363,24 @@ async def remove_member(
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
-    await AllianceService._assert_can_remove_member(session, alliance, current_user.id, game_account_id)
+    await AllianceService._assert_can_remove_member(
+        session, alliance, current_user.id, game_account_id
+    )
     updated = await AllianceService.remove_member(
         session=session,
         alliance_id=alliance_id,
         game_account_id=game_account_id,
     )
-    audit_log("alliance.remove_member", user_id=str(current_user.id), detail=f"alliance_id={alliance_id} game_account_id={game_account_id}")
+    audit_log(
+        "alliance.remove_member",
+        user_id=str(current_user.id),
+        detail=f"alliance_id={alliance_id} game_account_id={game_account_id}",
+    )
     return _to_response(updated)
 
 
 # ---- Officer management ----
+
 
 @alliance_controller.post(
     "/{alliance_id}/officers",
@@ -372,7 +404,11 @@ async def add_officer(
         alliance_id=alliance_id,
         game_account_id=body.game_account_id,
     )
-    audit_log("alliance.add_officer", user_id=str(current_user.id), detail=f"alliance_id={alliance_id} game_account_id={body.game_account_id}")
+    audit_log(
+        "alliance.add_officer",
+        user_id=str(current_user.id),
+        detail=f"alliance_id={alliance_id} game_account_id={body.game_account_id}",
+    )
     return _to_response(updated)
 
 
@@ -396,11 +432,16 @@ async def remove_officer(
         alliance_id=alliance_id,
         game_account_id=body.game_account_id,
     )
-    audit_log("alliance.remove_officer", user_id=str(current_user.id), detail=f"alliance_id={alliance_id} game_account_id={body.game_account_id}")
+    audit_log(
+        "alliance.remove_officer",
+        user_id=str(current_user.id),
+        detail=f"alliance_id={alliance_id} game_account_id={body.game_account_id}",
+    )
     return _to_response(updated)
 
 
 # ---- Group management ----
+
 
 @alliance_controller.patch(
     "/{alliance_id}/members/{game_account_id}/group",
@@ -422,5 +463,9 @@ async def set_member_group(
         game_account_id=game_account_id,
         group=body.group,
     )
-    audit_log("alliance.set_group", user_id=str(current_user.id), detail=f"alliance_id={alliance_id} game_account_id={game_account_id} group={body.group}")
+    audit_log(
+        "alliance.set_group",
+        user_id=str(current_user.id),
+        detail=f"alliance_id={alliance_id} game_account_id={game_account_id} group={body.group}",
+    )
     return _to_response(updated)

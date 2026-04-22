@@ -39,9 +39,7 @@ class JWTService:
             expires_delta = timedelta(minutes=SECRET.ACCESS_TOKEN_EXPIRE_MINUTES)
         expire = datetime.now(tz=timezone.utc) + expires_delta
         to_encode.update({"exp": expire})
-        encoded_jwt = jwt.encode(
-            to_encode, SECRET.SECRET_KEY, algorithm=SECRET.ALGORITHM
-        )
+        encoded_jwt = jwt.encode(to_encode, SECRET.SECRET_KEY, algorithm=SECRET.ALGORITHM)
         return encoded_jwt
 
     @classmethod
@@ -88,7 +86,7 @@ class JWTService:
             raise CANT_FIND_USER_TOKEN_EXCEPTION
         # Only validate role for access tokens (refresh tokens don't carry role)
         token_type = data.get("type", "access")
-        if data.get("type") not in  Token.__members__.values():
+        if data.get("type") not in Token.__members__.values():
             raise INVALID_TOKEN_EXCEPTION
         if token_type == Token.ACCESS:
             if data.get("role") not in Roles.__members__.values():

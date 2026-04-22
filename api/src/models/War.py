@@ -9,6 +9,7 @@ class WarStatus(str, Enum):
     active = "active"
     ended = "ended"
 
+
 if TYPE_CHECKING:
     from src.models.Alliance import Alliance
     from src.models.GameAccount import GameAccount

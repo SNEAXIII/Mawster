@@ -8,6 +8,7 @@ from alembic import context
 
 try:
     from src.security.secrets import SECRET
+
     _mariadb_user = SECRET.MARIADB_USER
     _mariadb_password = SECRET.MARIADB_PASSWORD
     _mariadb_host = SECRET.MARIADB_HOST
@@ -22,6 +23,7 @@ except ImportError:
 
 try:
     from src.models import SQLModel
+
     target_metadata = SQLModel.metadata
 except ImportError:
     target_metadata = None

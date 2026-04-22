@@ -60,7 +60,6 @@ from src.utils.db import SessionDep
 
 
 class WarService:
-
     @classmethod
     async def create_war(
         cls,
@@ -207,8 +206,12 @@ class WarService:
             .options(
                 selectinload(WarDefensePlacement.champion),  # type: ignore[arg-type]
                 selectinload(WarDefensePlacement.placed_by),  # type: ignore[arg-type]
-                selectinload(WarDefensePlacement.attacker_champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
-                selectinload(WarDefensePlacement.attacker_champion_user).selectinload(ChampionUser.game_account),  # type: ignore[arg-type]
+                selectinload(WarDefensePlacement.attacker_champion_user).selectinload(
+                    ChampionUser.champion
+                ),  # type: ignore[arg-type]
+                selectinload(WarDefensePlacement.attacker_champion_user).selectinload(
+                    ChampionUser.game_account
+                ),  # type: ignore[arg-type]
             )
         )
         result = await session.exec(stmt)
@@ -224,8 +227,12 @@ class WarService:
             .options(
                 selectinload(WarDefensePlacement.champion),  # type: ignore[arg-type]
                 selectinload(WarDefensePlacement.placed_by),  # type: ignore[arg-type]
-                selectinload(WarDefensePlacement.attacker_champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
-                selectinload(WarDefensePlacement.attacker_champion_user).selectinload(ChampionUser.game_account),  # type: ignore[arg-type]
+                selectinload(WarDefensePlacement.attacker_champion_user).selectinload(
+                    ChampionUser.champion
+                ),  # type: ignore[arg-type]
+                selectinload(WarDefensePlacement.attacker_champion_user).selectinload(
+                    ChampionUser.game_account
+                ),  # type: ignore[arg-type]
             )
         )
         result = await session.exec(stmt)
@@ -310,9 +317,7 @@ class WarService:
         await session.commit()
         await session.refresh(placement)
 
-        return WarPlacementResponse.model_validate(
-            await cls._load_placement(session, placement.id)
-        )
+        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement.id))
 
     @classmethod
     async def remove_defender(
@@ -411,20 +416,26 @@ class WarService:
         )
         if attacker_id is not None:
             defense_conditions = and_(DefensePlacement.game_account_id == attacker_id)
-        request_sql = select(
-            DefensePlacement.champion_user_id).join(
-                GameAccount, DefensePlacement.game_account_id == GameAccount.id
-            ).where(defense_conditions)
+        request_sql = (
+            select(DefensePlacement.champion_user_id)
+            .join(GameAccount, DefensePlacement.game_account_id == GameAccount.id)
+            .where(defense_conditions)
+        )
         defense_result = await session.exec(request_sql)
         defense_champion_user_ids = set(defense_result.all())
-        banned_champion_ids: set[uuid.UUID] = {ban.champion_id for ban in war.bans} if war else set()
+        banned_champion_ids: set[uuid.UUID] = (
+            {ban.champion_id for ban in war.bans} if war else set()
+        )
         result: list[AvailableAttackerResponse] = []
         for game_account in members:
             all_attackers_ids: set[uuid.UUID] = set()
             if war:
                 node_result = await session.exec(
                     select(WarDefensePlacement)
-                    .join(ChampionUser, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
+                    .join(
+                        ChampionUser,
+                        WarDefensePlacement.attacker_champion_user_id == ChampionUser.id,
+                    )
                     .where(
                         and_(
                             WarDefensePlacement.war_id == war.id,
@@ -461,7 +472,11 @@ class WarService:
             ids_for_limit = all_attackers_ids
             if war and node_number is not None:
                 replacing_id = next(
-                    (p.attacker_champion_user_id for p in node_placements if p.node_number == node_number),
+                    (
+                        p.attacker_champion_user_id
+                        for p in node_placements
+                        if p.node_number == node_number
+                    ),
                     None,
                 )
                 if replacing_id is not None:
@@ -473,22 +488,24 @@ class WarService:
                     continue
                 if war and len(ids_for_limit) >= 3 and champion_user.id not in all_attackers_ids:
                     continue
-                result.append(AvailableAttackerResponse(
-                    champion_user_id=champion_user.id,
-                    game_account_id=game_account.id,
-                    game_pseudo=game_account.game_pseudo,
-                    champion_id=champion_user.champion_id,
-                    champion_name=champion_user.champion.name,
-                    champion_alias=champion_user.champion.alias,
-                    champion_class=champion_user.champion.champion_class,
-                    image_url=champion_user.champion.image_url,
-                    rarity=champion_user.rarity,
-                    ascension=champion_user.ascension,
-                    signature=champion_user.signature,
-                    is_preferred_attacker=champion_user.is_preferred_attacker,
-                    is_saga_attacker=champion_user.champion.is_saga_attacker,
-                    is_saga_defender=champion_user.champion.is_saga_defender,
-                ))
+                result.append(
+                    AvailableAttackerResponse(
+                        champion_user_id=champion_user.id,
+                        game_account_id=game_account.id,
+                        game_pseudo=game_account.game_pseudo,
+                        champion_id=champion_user.champion_id,
+                        champion_name=champion_user.champion.name,
+                        champion_alias=champion_user.champion.alias,
+                        champion_class=champion_user.champion.champion_class,
+                        image_url=champion_user.champion.image_url,
+                        rarity=champion_user.rarity,
+                        ascension=champion_user.ascension,
+                        signature=champion_user.signature,
+                        is_preferred_attacker=champion_user.is_preferred_attacker,
+                        is_saga_attacker=champion_user.champion.is_saga_attacker,
+                        is_saga_defender=champion_user.champion.is_saga_defender,
+                    )
+                )
         return result
 
     @classmethod
@@ -503,10 +520,12 @@ class WarService:
         defense_subq = (
             select(DefensePlacement.champion_user_id)
             .join(GameAccount, DefensePlacement.game_account_id == GameAccount.id)
-            .where(and_(
-                DefensePlacement.alliance_id == alliance_id,
-                GameAccount.alliance_group == battlegroup,
-            ))
+            .where(
+                and_(
+                    DefensePlacement.alliance_id == alliance_id,
+                    GameAccount.alliance_group == battlegroup,
+                )
+            )
             .scalar_subquery()
         )
 
@@ -571,7 +590,9 @@ class WarService:
         )
         champion_user = (await session.exec(champion_user_stmt)).first()
         if champion_user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND
+            )
 
         game_account = champion_user.game_account
         # 3. Validate member belongs to this alliance + battlegroup
@@ -623,7 +644,9 @@ class WarService:
             )
         )
         all_attackers = attacker_count_result.all()
-        all_attackers_ids = {a.attacker_champion_user_id for a in all_attackers if a.node_number != node_number}  # exclude the current node since we're replacing any existing attacker there
+        all_attackers_ids = {
+            a.attacker_champion_user_id for a in all_attackers if a.node_number != node_number
+        }  # exclude the current node since we're replacing any existing attacker there
         all_attackers_ids.add(champion_user_id)  # include the new one we're trying to add
         # Union with synergy attackers (couteau suisse deduplicates automatically)
         synergy_result = await session.exec(
@@ -661,9 +684,7 @@ class WarService:
         await session.commit()
         session.expire(placement)
 
-        return WarPlacementResponse.model_validate(
-            await cls._load_placement(session, placement_id)
-        )
+        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement_id))
 
     @classmethod
     async def remove_attacker(
@@ -677,7 +698,9 @@ class WarService:
         if placement is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=NO_DEFENDER_ON_NODE)
         if placement.attacker_champion_user_id is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=NO_ATTACKER_ASSIGNED_ON_NODE)
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=NO_ATTACKER_ASSIGNED_ON_NODE
+            )
 
         removed_champion_user_id = placement.attacker_champion_user_id
         placement.attacker_champion_user_id = None
@@ -742,9 +765,7 @@ class WarService:
         if prefights_to_delete:
             await session.commit()
 
-        return WarPlacementResponse.model_validate(
-            await cls._load_placement(session, placement.id)
-        )
+        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement.id))
 
     @classmethod
     async def update_ko(
@@ -760,15 +781,15 @@ class WarService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=NO_DEFENDER_ON_NODE)
 
         if placement.attacker_champion_user_id is None:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=KO_COUNT_NO_ATTACKER_ASSIGNED)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=KO_COUNT_NO_ATTACKER_ASSIGNED
+            )
 
         placement.ko_count = ko_count
         session.add(placement)
         await session.commit()
 
-        return WarPlacementResponse.model_validate(
-            await cls._load_placement(session, placement.id)
-        )
+        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement.id))
 
     # ─── Synergy endpoints ────────────────────────────────────────────────────
 
@@ -780,7 +801,9 @@ class WarService:
             .options(
                 selectinload(WarSynergyAttacker.game_account),  # type: ignore[arg-type]
                 selectinload(WarSynergyAttacker.champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
-                selectinload(WarSynergyAttacker.target_champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+                selectinload(WarSynergyAttacker.target_champion_user).selectinload(
+                    ChampionUser.champion
+                ),  # type: ignore[arg-type]
             )
         )
         result = await session.exec(stmt)
@@ -804,7 +827,9 @@ class WarService:
             .options(
                 selectinload(WarSynergyAttacker.game_account),  # type: ignore[arg-type]
                 selectinload(WarSynergyAttacker.champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
-                selectinload(WarSynergyAttacker.target_champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+                selectinload(WarSynergyAttacker.target_champion_user).selectinload(
+                    ChampionUser.champion
+                ),  # type: ignore[arg-type]
             )
         )
         result = await session.exec(stmt)
@@ -832,10 +857,12 @@ class WarService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail=SYNERGY_PROVIDER_CANNOT_BE_TARGET,
             )
-        
+
         champion_user = (await session.exec(cu_stmt)).first()
         if champion_user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND
+            )
         tcu_stmt = (
             select(ChampionUser)
             .where(ChampionUser.id == target_champion_user_id)
@@ -843,7 +870,9 @@ class WarService:
         )
         target_champion_user = (await session.exec(tcu_stmt)).first()
         if target_champion_user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=TARGET_CHAMPION_USER_NOT_FOUND)
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=TARGET_CHAMPION_USER_NOT_FOUND
+            )
 
         game_account = champion_user.game_account
         if game_account.user_id != target_champion_user.game_account.user_id:
@@ -874,9 +903,11 @@ class WarService:
             )
 
         # 2b. Synergy provider must belong to the same game account as the target attacker
-        target_cu = (await session.exec(
-            select(ChampionUser).where(ChampionUser.id == target_champion_user_id)
-        )).first()
+        target_cu = (
+            await session.exec(
+                select(ChampionUser).where(ChampionUser.id == target_champion_user_id)
+            )
+        ).first()
         if target_cu is None or target_cu.game_account_id != game_account.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -972,9 +1003,7 @@ class WarService:
                 detail=CHAMPION_ALREADY_SYNERGY_PROVIDER,
             )
 
-        return WarSynergyResponse.model_validate(
-            await cls._load_synergy(session, synergy.id)
-        )
+        return WarSynergyResponse.model_validate(await cls._load_synergy(session, synergy.id))
 
     @classmethod
     async def remove_synergy_attacker(
@@ -995,14 +1024,18 @@ class WarService:
         )
         synergy = result.first()
         if synergy is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=SYNERGY_ATTACKER_NOT_FOUND)
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=SYNERGY_ATTACKER_NOT_FOUND
+            )
         await session.delete(synergy)
         await session.commit()
 
     # ─── Prefight endpoints ───────────────────────────────────────────────────
 
     @classmethod
-    async def _load_prefight(cls, session: SessionDep, prefight_id: uuid.UUID) -> WarPrefightAttacker:
+    async def _load_prefight(
+        cls, session: SessionDep, prefight_id: uuid.UUID
+    ) -> WarPrefightAttacker:
         stmt = (
             select(WarPrefightAttacker)
             .where(WarPrefightAttacker.id == prefight_id)
@@ -1057,7 +1090,9 @@ class WarService:
         )
         champion_user = (await session.exec(champion_user_stmt)).first()
         if champion_user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND)
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND
+            )
 
         # 1c. Champion must have has_prefight capability
         if not champion_user.champion.has_prefight:
@@ -1075,7 +1110,9 @@ class WarService:
             )
 
         # 2. Target node must have a defender placed in this war+BG
-        target_placement = await cls._get_placement_by_node(session, war_id, battlegroup, target_node_number)
+        target_placement = await cls._get_placement_by_node(
+            session, war_id, battlegroup, target_node_number
+        )
         if target_placement is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -1178,9 +1215,7 @@ class WarService:
                 detail=CHAMPION_ALREADY_PREFIGHT_ON_NODE,
             )
 
-        return WarPrefightResponse.model_validate(
-            await cls._load_prefight(session, prefight.id)
-        )
+        return WarPrefightResponse.model_validate(await cls._load_prefight(session, prefight.id))
 
     @classmethod
     async def remove_prefight_attacker(
@@ -1201,6 +1236,8 @@ class WarService:
         )
         prefight = result.first()
         if prefight is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=PREFIGHT_ENTRY_NOT_FOUND)
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=PREFIGHT_ENTRY_NOT_FOUND
+            )
         await session.delete(prefight)
         await session.commit()

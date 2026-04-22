@@ -10,9 +10,7 @@ class ChampionError(HTTPException):
         return self.detail
 
 
-CHAMPION_NOT_FOUND = ChampionError(
-    "Champion introuvable", status_code=status.HTTP_404_NOT_FOUND
-)
+CHAMPION_NOT_FOUND = ChampionError("Champion introuvable", status_code=status.HTTP_404_NOT_FOUND)
 CHAMPION_LOAD_SUCCESS = "Champions chargés avec succès"
 CHAMPION_ALIAS_UPDATED = "Alias du champion mis à jour avec succès"
 CHAMPION_ASCENDABLE_UPDATED = "Statut d'ascension du champion mis à jour avec succès"

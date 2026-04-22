@@ -5,10 +5,10 @@ import uuid
 USER_ID = uuid.uuid4()
 LOGIN = "login"
 EMAIL = f"{LOGIN}@gmail.com"
-USER_LOGIN  = "user"
+USER_LOGIN = "user"
 USER_EMAIL = f"{USER_LOGIN}@gmail.com"
-ADMIN_LOGIN  = "admin"
-ADMIN_EMAIL  = f"{ADMIN_LOGIN}@gmail.com"
+ADMIN_LOGIN = "admin"
+ADMIN_EMAIL = f"{ADMIN_LOGIN}@gmail.com"
 
 # Second user (for multi-user tests)
 USER2_ID = uuid.uuid4()

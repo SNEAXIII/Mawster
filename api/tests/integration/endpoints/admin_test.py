@@ -1,4 +1,5 @@
 """Integration tests for /admin endpoints — user management with parametrized access control."""
+
 import uuid
 from datetime import datetime
 
@@ -7,7 +8,11 @@ import pytest
 from main import app
 from src.enums.Roles import Roles
 from src.utils.db import get_session
-from tests.integration.endpoints.setup.user_setup import get_generic_user, push_one_admin, push_one_super_admin
+from tests.integration.endpoints.setup.user_setup import (
+    get_generic_user,
+    push_one_admin,
+    push_one_super_admin,
+)
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
@@ -38,6 +43,7 @@ ADMIN2_EMAIL = "admin2@gmail.com"
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 async def _setup_user(
     user_id=USER2_ID,
     login=USER2_LOGIN,
@@ -47,7 +53,9 @@ async def _setup_user(
     deleted_at=None,
     role=Roles.USER,
 ):
-    user = get_generic_user(login=login, email=email, role=role, disabled_at=disabled_at, deleted_at=deleted_at)
+    user = get_generic_user(
+        login=login, email=email, role=role, disabled_at=disabled_at, deleted_at=deleted_at
+    )
     user.id = user_id
     user.discord_id = discord_id
     await load_objects([user])
@@ -178,8 +186,11 @@ class TestDisableUser:
             target_id = user.id
         elif scenario == "is_admin":
             user = await _setup_user(
-                user_id=uuid.uuid4(), login="admin2", email=ADMIN2_EMAIL,
-                discord_id="discord_admin2", role=Roles.ADMIN,
+                user_id=uuid.uuid4(),
+                login="admin2",
+                email=ADMIN2_EMAIL,
+                discord_id="discord_admin2",
+                role=Roles.ADMIN,
             )
             target_id = user.id
         else:
@@ -277,8 +288,11 @@ class TestAdminDeleteUser:
             target_id = user.id
         elif scenario == "is_admin":
             user = await _setup_user(
-                user_id=uuid.uuid4(), login="admin2", email=ADMIN2_EMAIL,
-                discord_id="discord_admin2", role=Roles.ADMIN,
+                user_id=uuid.uuid4(),
+                login="admin2",
+                email=ADMIN2_EMAIL,
+                discord_id="discord_admin2",
+                role=Roles.ADMIN,
             )
             target_id = user.id
         else:
@@ -333,8 +347,11 @@ class TestPromoteUser:
 
         if scenario == "already_admin":
             user = await _setup_user(
-                user_id=uuid.uuid4(), login="admin2", email=ADMIN2_EMAIL,
-                discord_id="discord_admin2", role=Roles.ADMIN,
+                user_id=uuid.uuid4(),
+                login="admin2",
+                email=ADMIN2_EMAIL,
+                discord_id="discord_admin2",
+                role=Roles.ADMIN,
             )
             target_id = user.id
         elif scenario == "deleted":
@@ -375,8 +392,11 @@ class TestSuperAdminAccess:
         """Targeting a super_admin user for disable should fail."""
         await push_one_super_admin()
         target = await _setup_user(
-            user_id=uuid.uuid4(), login="superadmin2", email="sa2@gmail.com",
-            discord_id="discord_sa2", role=Roles.SUPER_ADMIN,
+            user_id=uuid.uuid4(),
+            login="superadmin2",
+            email="sa2@gmail.com",
+            discord_id="discord_sa2",
+            role=Roles.SUPER_ADMIN,
         )
         response = await execute_patch_request(
             f"/admin/users/disable/{target.id}", {}, headers=SUPER_ADMIN_HEADERS
@@ -388,8 +408,11 @@ class TestSuperAdminAccess:
         """Targeting a super_admin user for deletion should fail."""
         await push_one_super_admin()
         target = await _setup_user(
-            user_id=uuid.uuid4(), login="superadmin2", email="sa2@gmail.com",
-            discord_id="discord_sa2", role=Roles.SUPER_ADMIN,
+            user_id=uuid.uuid4(),
+            login="superadmin2",
+            email="sa2@gmail.com",
+            discord_id="discord_sa2",
+            role=Roles.SUPER_ADMIN,
         )
         response = await execute_delete_request(
             f"/admin/users/delete/{target.id}", headers=SUPER_ADMIN_HEADERS

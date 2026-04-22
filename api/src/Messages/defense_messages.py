@@ -9,4 +9,4 @@ NO_DEFENDER_ON_NODE = "No defender on this node"
 
 
 def player_max_defenders_reached(max_defenders: int) -> str:
-	return f"Player already has {max_defenders} defenders placed"
+    return f"Player already has {max_defenders} defenders placed"

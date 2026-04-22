@@ -11,7 +11,7 @@ class LoginLog(SQLModel, table=True):
     __tablename__ = "login_log"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    date_connexion:datetime = Field(default_factory=datetime.now)
+    date_connexion: datetime = Field(default_factory=datetime.now)
     id_user: uuid.UUID = Field(foreign_key="user.id")
 
     # Relations

@@ -39,9 +39,7 @@ class GameAccountService:
         is_primary: bool = False,
     ) -> GameAccount:
         # Enforce max accounts limit
-        existing = await session.exec(
-            select(GameAccount).where(GameAccount.user_id == user_id)
-        )
+        existing = await session.exec(select(GameAccount).where(GameAccount.user_id == user_id))
         existing_accounts = existing.all()
         if len(existing_accounts) >= MAX_GAME_ACCOUNTS_PER_USER:
             raise HTTPException(
@@ -101,8 +99,6 @@ class GameAccountService:
         return game_account
 
     @classmethod
-    async def delete_game_account(
-        cls, session: SessionDep, game_account: GameAccount
-    ) -> None:
+    async def delete_game_account(cls, session: SessionDep, game_account: GameAccount) -> None:
         await session.delete(game_account)
         await session.commit()
