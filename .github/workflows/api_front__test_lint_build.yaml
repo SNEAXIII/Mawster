@@ -137,7 +137,7 @@ jobs:
           enable-cache: true
       - name: Install API dependencies
         working-directory: ./api
-        run: uv sync
+        run: uv sync --all-groups
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
