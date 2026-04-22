@@ -1,33 +1,45 @@
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from src.models import SQLModel
 
 from alembic import context
 
-from src.security.secrets import SECRET
+try:
+    from src.security.secrets import SECRET
+    _mariadb_user = SECRET.MARIADB_USER
+    _mariadb_password = SECRET.MARIADB_PASSWORD
+    _mariadb_host = SECRET.MARIADB_HOST
+    _mariadb_port = str(SECRET.MARIADB_PORT)
+    _mariadb_database = SECRET.MARIADB_DATABASE
+except ImportError:
+    _mariadb_user = os.environ["MARIADB_USER"]
+    _mariadb_password = os.environ["MARIADB_PASSWORD"]
+    _mariadb_host = os.environ.get("MARIADB_HOST", "mariadb")
+    _mariadb_port = os.environ.get("MARIADB_PORT", "3306")
+    _mariadb_database = os.environ["MARIADB_DATABASE"]
+
+try:
+    from src.models import SQLModel
+    target_metadata = SQLModel.metadata
+except ImportError:
+    target_metadata = None
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 section = config.config_ini_section
-config.set_section_option(section, "MARIADB_USER", SECRET.MARIADB_USER)
-config.set_section_option(section, "MARIADB_PASSWORD", SECRET.MARIADB_PASSWORD)
-config.set_section_option(section, "MARIADB_HOST", SECRET.MARIADB_HOST)
-config.set_section_option(section, "MARIADB_PORT", str(SECRET.MARIADB_PORT))
-config.set_section_option(section, "MARIADB_DATABASE", SECRET.MARIADB_DATABASE)
+config.set_section_option(section, "MARIADB_USER", _mariadb_user)
+config.set_section_option(section, "MARIADB_PASSWORD", _mariadb_password)
+config.set_section_option(section, "MARIADB_HOST", _mariadb_host)
+config.set_section_option(section, "MARIADB_PORT", _mariadb_port)
+config.set_section_option(section, "MARIADB_DATABASE", _mariadb_database)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
-
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-target_metadata = SQLModel.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

@@ -10,8 +10,6 @@ dependencies = [
     "pydantic-settings",
     "sqlmodel",
     "aiomysql",
-    "pymysql",
-    "alembic",
     "bleach",
     "sentry-sdk",
     "slowapi",
@@ -53,6 +51,11 @@ omit = ["tests/*", "migrations/*", "scripts/*"]
 concurrency = ["greenlet", "thread"]
 
 [dependency-groups]
+migrate = [
+    "alembic",
+    "pymysql",
+    "sqlmodel",
+]
 dev = [
     "aiosqlite>=0.22.1",
     "anyio>=4.12.1",

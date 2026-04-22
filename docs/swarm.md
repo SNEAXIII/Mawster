@@ -34,31 +34,11 @@ docker service ps mawster_api --filter desired-state=shutdown
 
 ## Logs
 
-```bash
-# Logs temps réel d'un service (tous les réplicas)
-docker service logs -f mawster_api
-docker service logs -f mawster_front
-docker service logs -f mawster_mariadb
-
-# Dernières N lignes
-docker service logs --tail 100 mawster_api
-
-# Logs avec timestamps
-docker service logs -f --timestamps mawster_api
-```
+Voir [`docs/logs.md`](logs.md).
 
 ## Migration de base de données
 
-```bash
-# Lancer la migration en one-shot (avant chaque deploy si schéma modifié)
-docker service create --name mawster-migrate --network internal --secret mawster_db_password --secret mawster_db_root_password -e MARIADB_USER=mawster -e MARIADB_PORT=3306 -e MARIADB_DATABASE=mawster -e MODE=prod --restart-condition none sneaxiii/mawster-api:latest sh migrate.sh
-
-# Attendre la fin de la migration
-timeout 120 bash -c 'until [ "$(docker service ls --filter name=mawster-migrate --format "{{.Replicas}}")" = "0/1" ]; do sleep 2; done'
-
-# Nettoyer le service de migration
-docker service rm mawster-migrate
-```
+Voir [`docs/migration.md`](migration.md).
 
 ## Rollback
 
@@ -70,45 +50,11 @@ docker service rollback mawster_front
 
 ## Secrets
 
-```bash
-# Lister les secrets
-docker secret ls
-
-# Créer un secret depuis stdin
-echo "ma_valeur_secrete" | docker secret create nom_du_secret -
-
-# Créer depuis un fichier
-docker secret create mawster_rclone_conf ~/.config/rclone/rclone.conf
-
-# Supprimer un secret (impossible si utilisé par un service actif)
-docker secret rm nom_du_secret
-
-# Rotation d'un secret (les secrets sont immuables) :
-# 1. Créer la nouvelle version
-echo "nouvelle_valeur" | docker secret create mawster_secret_key_v2 -
-# 2. Mettre à jour stack-app.yaml pour référencer mawster_secret_key_v2
-# 3. docker stack deploy → rolling update avec le nouveau secret
-# 4. docker secret rm mawster_secret_key (ancienne version)
-```
+Voir [`docs/secrets.md`](secrets.md).
 
 ## Tunnels SSH
 
-Les ports internes Swarm ne sont pas exposés à l'hôte. Utiliser un tunnel SSH depuis votre machine locale (`-N` = pas de shell, tunnel uniquement).
-
-### Base de données
-
-```bash
-ssh -L 3306:mariadb:3306 root@mawster.app -N
-# Puis connecter avec n'importe quel client MariaDB sur localhost:3306
-mysql -h 127.0.0.1 -P 3306 -u mawster -p mawster
-```
-
-### Grafana
-
-```bash
-ssh -L 3000:127.0.0.1:3000 root@mawster.app -N
-# Ouvrir http://localhost:3000
-```
+Voir [`docs/local-access.md`](local-access.md).
 
 ## Réseau
 
@@ -151,29 +97,8 @@ docker stack rm mawster-obs
 
 ## Backup
 
-```bash
-# Forcer un backup immediatement
-make backup-now
+Voir [`docs/backup.md`](backup.md).
 
-# Voir les logs du backup
-docker service logs -f mawster_backup
+## Rebuild et push des images
 
-# Lister les backups locaux
-make backup-list
-```
-
-## Rebuild et push des images (depuis la machine de dev)
-
-```bash
-# API
-docker build -t sneaxiii/mawster-api:latest -f api/api.Dockerfile ./api
-docker push sneaxiii/mawster-api:latest
-
-# Front
-docker build -t sneaxiii/mawster-front:latest --build-arg NEXT_PUBLIC_API_CLIENT_HOST=https://www.mawster.app -f front/front.Dockerfile ./front
-docker push sneaxiii/mawster-front:latest
-
-# Backup
-docker build -t sneaxiii/mawster-backup:latest -f backup/Dockerfile ./backup
-docker push sneaxiii/mawster-backup:latest
-```
+Voir [`docs/images.md`](images.md).

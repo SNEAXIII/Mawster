@@ -135,12 +135,12 @@ backup-list:
 backup-restore:
 	@test -n "$(FILE)" || (echo "Usage: make backup-restore FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
 	docker exec -e MARIADB_ROOT_PASSWORD="$$(grep MARIADB_ROOT_PASSWORD db.env | cut -d= -f2)" \
-		backup /usr/local/bin/restore.sh $(FILE)
+		$$(docker ps -q -f name=mawster_backup) /usr/local/bin/restore.sh $(FILE)
 
 backup-restore-remote:
 	@test -n "$(FILE)" || (echo "Usage: make backup-restore-remote FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
 	docker exec -e MARIADB_ROOT_PASSWORD="$$(grep MARIADB_ROOT_PASSWORD db.env | cut -d= -f2)" \
-		backup /usr/local/bin/restore.sh --remote $(FILE)
+		$$(docker ps -q -f name=mawster_backup) /usr/local/bin/restore.sh --remote $(FILE)
 
 endif
 

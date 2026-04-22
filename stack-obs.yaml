@@ -14,7 +14,7 @@ services:
       - traefik-public
       - internal
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./obs/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -32,7 +32,7 @@ services:
     networks:
       - obs
     volumes:
-      - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - ./obs/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
       - loki_data:/loki
     command: -config.file=/etc/loki/loki-config.yaml
     deploy:
@@ -47,7 +47,7 @@ services:
     networks:
       - obs
     volumes:
-      - ./promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - ./obs/promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     command: -config.file=/etc/promtail/promtail-config.yaml
@@ -64,7 +64,7 @@ services:
       - "127.0.0.1:3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./obs/grafana/provisioning:/etc/grafana/provisioning:ro
     environment:
       GF_SERVER_HTTP_PORT: "3000"
       GF_AUTH_ANONYMOUS_ENABLED: "false"

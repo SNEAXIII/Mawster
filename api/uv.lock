@@ -841,13 +841,11 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "aiomysql" },
-    { name = "alembic" },
     { name = "bleach" },
     { name = "fastapi", extra = ["standard"] },
     { name = "prometheus-fastapi-instrumentator" },
     { name = "pydantic-settings" },
     { name = "pyjwt" },
-    { name = "pymysql" },
     { name = "python-multipart" },
     { name = "sentry-sdk" },
     { name = "slowapi" },
@@ -880,12 +878,16 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "vulture" },
 ]
+migrate = [
+    { name = "alembic" },
+    { name = "pymysql" },
+    { name = "sqlmodel" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "aiomysql" },
     { name = "aiosqlite", marker = "extra == 'dev'" },
-    { name = "alembic" },
     { name = "beautifulsoup4", marker = "extra == 'dev'" },
     { name = "bleach" },
     { name = "curl-cffi", marker = "extra == 'dev'" },
@@ -897,7 +899,6 @@ requires-dist = [
     { name = "prometheus-fastapi-instrumentator" },
     { name = "pydantic-settings" },
     { name = "pyjwt" },
-    { name = "pymysql" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "pytest-asyncio", marker = "extra == 'dev'" },
     { name = "pytest-cov", marker = "extra == 'dev'" },
@@ -919,6 +920,11 @@ dev = [
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-asyncio", specifier = ">=1.3.0" },
     { name = "vulture", specifier = ">=2.16" },
+]
+migrate = [
+    { name = "alembic" },
+    { name = "pymysql" },
+    { name = "sqlmodel" },
 ]
 
 [[package]]
