@@ -323,12 +323,13 @@ jobs:
 
             docker service create \
               --name mawster-migrate \
-              --network mawster_internal \
+              --network internal \
               --secret mawster_db_password \
               --secret mawster_db_root_password \
               -e MARIADB_USER=mawster \
               -e MARIADB_PORT=3306 \
               -e MARIADB_DATABASE=mawster \
+              -e MODE=prod \
               --restart-condition none \
               sneaxiii/mawster-api:latest \
               sh migrate.sh

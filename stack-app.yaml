@@ -66,6 +66,8 @@ services:
     image: mariadb:11.4
     networks:
       - internal
+    ports:
+      - "127.0.0.1:3306:3306"
     environment:
       MARIADB_USER: mawster
       MARIADB_DATABASE: mawster
@@ -209,7 +211,9 @@ services:
       - mawster_db_root_password
       - mawster_rclone_conf
     volumes:
-      - backups:/backups
+      - type: bind
+        source: /root/Mawster/backups
+        target: /backups
     deploy:
       replicas: 1
       placement:
@@ -227,4 +231,3 @@ volumes:
   data_db:
   traefik_data:
   api_logs:
-  backups:

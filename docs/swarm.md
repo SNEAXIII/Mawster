@@ -51,7 +51,7 @@ docker service logs -f --timestamps mawster_api
 
 ```bash
 # Lancer la migration en one-shot (avant chaque deploy si schéma modifié)
-docker service create  --name mawster-migrate  --network mawster_internal  --secret mawster_db_password  --secret mawster_db_root_password  -e MARIADB_USER=mawster  -e MARIADB_PORT=3306  -e MARIADB_DATABASE=mawster  --restart-condition none  sneaxiii/mawster-api:latest  sh migrate.sh
+docker service create --name mawster-migrate --network internal --secret mawster_db_password --secret mawster_db_root_password -e MARIADB_USER=mawster -e MARIADB_PORT=3306 -e MARIADB_DATABASE=mawster -e MODE=prod --restart-condition none sneaxiii/mawster-api:latest sh migrate.sh
 
 # Attendre la fin de la migration
 timeout 120 bash -c 'until [ "$(docker service ls --filter name=mawster-migrate --format "{{.Replicas}}")" = "0/1" ]; do sleep 2; done'
@@ -91,36 +91,40 @@ echo "nouvelle_valeur" | docker secret create mawster_secret_key_v2 -
 # 4. docker secret rm mawster_secret_key (ancienne version)
 ```
 
-## Accès à la base de données en local
+## Tunnels SSH
 
-Les ports internes Swarm ne sont pas exposés à l'hôte. Utiliser un tunnel SSH :
+Les ports internes Swarm ne sont pas exposés à l'hôte. Utiliser un tunnel SSH depuis votre machine locale (`-N` = pas de shell, tunnel uniquement).
+
+### Base de données
 
 ```bash
-# Ouvrir le tunnel (depuis votre machine locale)
 ssh -L 3306:mariadb:3306 root@mawster.app -N
-
 # Puis connecter avec n'importe quel client MariaDB sur localhost:3306
 mysql -h 127.0.0.1 -P 3306 -u mawster -p mawster
 ```
 
-## Accès à Grafana
-
-Grafana n'est pas exposé publiquement. Tunnel SSH :
+### Grafana
 
 ```bash
-ssh -L 3000:grafana:3000 root@mawster.app -N
+ssh -L 3000:127.0.0.1:3000 root@mawster.app -N
 # Ouvrir http://localhost:3000
 ```
 
 ## Réseau
 
+Les réseaux sont déclarés `external: true` dans `stack-app.yaml` — ils doivent être créés manuellement **avant** le premier `docker stack deploy`. Ils n'ont donc pas de préfixe de stack.
+
 ```bash
+# Créer les réseaux (une seule fois, à l'initialisation du cluster)
+docker network create --driver overlay --attachable internal
+docker network create --driver overlay --attachable traefik-public
+
 # Lister les réseaux overlay
 docker network ls --filter driver=overlay
 
 # Inspecter un réseau (voir quels services y sont attachés)
-docker network inspect mawster_internal
-docker network inspect mawster_traefik-public
+docker network inspect internal
+docker network inspect traefik-public
 ```
 
 ## Nœuds Swarm
@@ -145,6 +149,19 @@ docker stack rm mawster
 docker stack rm mawster-obs
 ```
 
+## Backup
+
+```bash
+# Forcer un backup immediatement
+make backup-now
+
+# Voir les logs du backup
+docker service logs -f mawster_backup
+
+# Lister les backups locaux
+make backup-list
+```
+
 ## Rebuild et push des images (depuis la machine de dev)
 
 ```bash
@@ -153,7 +170,7 @@ docker build -t sneaxiii/mawster-api:latest -f api/api.Dockerfile ./api
 docker push sneaxiii/mawster-api:latest
 
 # Front
-docker build -t sneaxiii/mawster-front:latest  --build-arg NEXT_PUBLIC_API_CLIENT_HOST=https://www.mawster.app  -f front/front.Dockerfile ./front
+docker build -t sneaxiii/mawster-front:latest --build-arg NEXT_PUBLIC_API_CLIENT_HOST=https://www.mawster.app -f front/front.Dockerfile ./front
 docker push sneaxiii/mawster-front:latest
 
 # Backup

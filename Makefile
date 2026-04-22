@@ -153,19 +153,24 @@ e2e-db:
 backup-deploy:
 	docker compose -f compose-prod.yaml up -d --build backup
 
-## Trigger a backup immediately (runs backup.sh inside the container)
+## Trigger a backup immediately (runs backup.sh inside the swarm container)
 backup-now:
-	docker exec backup /usr/local/bin/backup.sh
+	docker exec $$(docker ps -q -f name=mawster_backup) /usr/local/bin/backup.sh
 
 ## Tail the backup container logs
 backup-logs:
 	docker compose -f compose-prod.yaml logs -f backup
 
 deploy:
-	docker compose -f compose-prod.yaml pull
-	docker compose -f compose-prod.yaml build
-	docker compose -f compose-prod.yaml -f compose-db-access.yaml up -d
-	docker compose -f compose-prod.yaml logs -f
+	docker pull sneaxiii/mawster-api:latest
+	docker pull sneaxiii/mawster-front:latest
+	docker pull sneaxiii/mawster-backup:latest
+	docker stack deploy --with-registry-auth --resolve-image always -c stack-obs.yaml mawster-obs
+	docker stack deploy --with-registry-auth --resolve-image always -c stack-app.yaml mawster
+
+panic:
+	docker stack rm mawster
+	docker stack rm mawster-obs
 
 db-access:
 	docker compose -f compose-prod.yaml -f compose-prod.yaml -f compose-db-access.yaml up mariadb backup -d
