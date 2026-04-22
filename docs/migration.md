@@ -19,14 +19,14 @@ docker service create \
 
 ## Suivre et vérifier
 
+`docker service logs -f` bloque jusqu'à la fin du job, puis vérifier le statut :
+
 ```bash
-# Logs en temps réel
 docker service logs -f mawster-migrate
 
-# Résultat : Complete = succès, Failed = échec
+# Complete = succès, Failed = échec
 docker service ps mawster-migrate --format "{{.CurrentState}}"
 
-# Nettoyer
 docker service rm mawster-migrate
 ```
 

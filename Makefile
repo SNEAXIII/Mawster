@@ -1,6 +1,7 @@
 # Root Makefile — E2E test orchestration + backup operations
 .PHONY: help e2e e2e-open e2e-parallel e2e-parallel-quiet e2e-db e2e-stop \
-        backup-deploy backup-now backup-list backup-logs backup-restore backup-restore-remote deploy db
+        backup-deploy backup-now backup-list backup-logs backup-restore backup-restore-remote deploy db \
+        migrate
 
 NEXTAUTH_SECRET ?= e2e-local-nextauth-secret
 NEXTAUTH_URL    ?= http://localhost:3000
@@ -24,6 +25,9 @@ help:
 	@echo "e2e-stop             --> arreter l'API et le frontend de test"
 	@echo "Logs      : .e2e-api.log  .e2e-front.log"
 	@echo "Variables : N=4  SPEC=war/war-management.cy.ts  Q=1  NEXTAUTH_SECRET=..."
+	@echo ""
+	@echo "=== Migrate ==="
+	@echo "migrate              --> lancer les migrations Alembic via Docker Swarm"
 	@echo ""
 	@echo "=== Backup ==="
 	@echo "backup-deploy        --> builder l'image et (re)demarrer le container backup"
@@ -83,6 +87,9 @@ help:
 	@echo "e2e-stop              --> arreter l'API et le frontend de test"
 	@echo "Logs      : .e2e-api.log  .e2e-front.log"
 	@echo "Variables : N=4  SPEC=war/war-management.cy.ts  Q=1  NEXTAUTH_SECRET=..."
+	@echo ""
+	@echo "=== Migrate ==="
+	@echo "migrate               --> lancer les migrations Alembic via Docker Swarm"
 	@echo ""
 	@echo "=== Backup ==="
 	@echo "backup-deploy         --> builder l'image et (re)demarrer le container backup"
@@ -160,6 +167,22 @@ backup-now:
 ## Tail the backup container logs
 backup-logs:
 	docker compose -f compose-prod.yaml logs -f backup
+
+migrate:
+	docker service rm mawster-migrate 2>/dev/null || true
+	docker service create \
+		--name mawster-migrate \
+		--network internal \
+		--secret mawster_db_password \
+		--secret mawster_db_root_password \
+		-e MARIADB_USER=mawster \
+		-e MARIADB_PORT=3306 \
+		-e MARIADB_DATABASE=mawster \
+		--mode replicated-job \
+		sneaxiii/mawster-migrate:latest sh migrate.sh
+	docker service logs -f mawster-migrate
+	@docker service ps mawster-migrate --format "{{.CurrentState}}" | grep -q "^Failed" && \
+		(docker service rm mawster-migrate; exit 1) || docker service rm mawster-migrate
 
 deploy:
 	docker pull sneaxiii/mawster-api:latest
