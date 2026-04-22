@@ -33,7 +33,7 @@ jobs:
           enable-cache: true
       - name: Install dev dependencies
         working-directory: ${{ env.WORKDIR }}
-        run: uv sync --extra dev
+        run: uv sync --all-groups
       - name: Run Ruff linter
         working-directory: ${{ env.WORKDIR }}
         run: uvx ruff check .
