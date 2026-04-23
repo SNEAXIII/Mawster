@@ -67,7 +67,10 @@ services:
     networks:
       - internal
     ports:
-      - '127.0.0.1:3306:3306'
+      - target: 3306
+        published: 3306
+        protocol: tcp
+        mode: host
     environment:
       MARIADB_USER: mawster
       MARIADB_DATABASE: mawster

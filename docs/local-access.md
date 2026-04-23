@@ -13,6 +13,6 @@ mysql -h 127.0.0.1 -P 3306 -u mawster -p mawster
 ## Grafana
 
 ```bash
-ssh -L 3000:127.0.0.1:3000 root@mawster.app -N
-# Ouvrir http://localhost:3000
+ssh -L 4500:127.0.0.1:4500 root@mawster.app -N
+# Ouvrir http://localhost:4500
 ```
