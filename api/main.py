@@ -1,5 +1,6 @@
 from time import perf_counter
 from pathlib import Path
+import asyncio
 import logging
 
 from fastapi import FastAPI, HTTPException
@@ -9,24 +10,16 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import _StreamingResponse
 from src.Messages.validators_messages import VALIDATION_ERROR
-from src.controllers.admin_controller import admin_controller
-from src.controllers.auth_controller import auth_controller
-from src.controllers.user_controller import user_controller
-from src.controllers.game_account_controller import game_account_controller
-from src.controllers.alliance_controller import alliance_controller
-from src.controllers.champion_user_controller import champion_user_controller
-from src.controllers.champion_controller import champion_controller, champion_read_controller
-from src.controllers.defense_controller import defense_controller
-from src.controllers.war_controller import war_controller
-from src.controllers.season_controller import season_admin_controller, season_public_controller
+from src.controllers import routers
 from src.security import IS_PROD, IS_TESTING
 from starlette import status
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
 from src.security.secrets import SECRET
 from src.utils.logging_config import setup_logging
@@ -40,7 +33,7 @@ if not IS_PROD:
     logger.info("Starting Mawster API — database: %s", SECRET.MARIADB_DATABASE)
 
 app = FastAPI(title="Mawster", version="1.0.0")
-Instrumentator().instrument(app).expose(app)
+Instrumentator().instrument(app)
 
 # Rate limiter (utilise l'IP du client — X-Forwarded-For si disponible, sinon connexion directe)
 app.state.limiter = limiter
@@ -55,18 +48,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(admin_controller)
-app.include_router(auth_controller)
-app.include_router(user_controller)
-app.include_router(game_account_controller)
-app.include_router(alliance_controller)
-app.include_router(champion_user_controller)
-app.include_router(champion_controller)
-app.include_router(champion_read_controller)
-app.include_router(defense_controller)
-app.include_router(war_controller)
-app.include_router(season_admin_controller)
-app.include_router(season_public_controller)
+for router in routers:
+    app.include_router(router)
 
 if not IS_PROD:
     from src.controllers.dev_controller import dev_controller
@@ -96,6 +79,12 @@ if IS_TESTING:
 static_dir = Path(__file__).resolve().parent / "static"
 # static_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+
+@app.get("/metrics", include_in_schema=False)
+async def metrics():
+    data = await asyncio.get_event_loop().run_in_executor(None, generate_latest)
+    return Response(content=data, media_type=CONTENT_TYPE_LATEST)
 
 
 def custom_openapi():

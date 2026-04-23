@@ -132,4 +132,5 @@ Tools: `ctx_batch_execute` (research) → `ctx_search` (follow-up) → `ctx_exec
 ## Docker
 
 - Dev: `docker compose -f compose-dev.yaml up -d` (MariaDB + phpMyAdmin 3306/8080)
-- Prod: `docker compose -f compose-prod.yaml up -d` (Caddy TLS 80/443); Watchtower auto-deploys every 300s
+- Prod: Docker Swarm + Traefik (TLS 80/443), 2 API replicas; Watchtower auto-deploys every 300s
+- `compose-prod.yaml` existe mais est obsolète (ancienne stack Caddy)
