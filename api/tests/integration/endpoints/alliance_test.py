@@ -899,3 +899,111 @@ class TestEligibility:
         )
         assert response.status_code == 200
         assert len(response.json()) == 1
+
+
+# =========================================================================
+# PATCH /alliances/{id}/elo  and  PATCH /alliances/{id}/tier
+# =========================================================================
+
+
+class TestAllianceEloTier:
+    @pytest.mark.asyncio
+    async def test_alliance_defaults_elo_zero_tier_twenty(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(
+            user_id=USER_ID,
+            game_pseudo=GAME_PSEUDO,
+            alliance_name=ALLIANCE_NAME,
+            alliance_tag=ALLIANCE_TAG,
+        )
+        resp = await execute_get_request(f"{ENDPOINT}/mine", headers=HEADERS_USER1)
+        a = next(x for x in resp.json() if x["id"] == str(alliance.id))
+        assert a["elo"] == 0
+        assert a["tier"] == 20
+
+    @pytest.mark.asyncio
+    async def test_patch_elo_officer_success(self):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(
+            user_id=USER_ID,
+            game_pseudo=GAME_PSEUDO,
+            alliance_name=ALLIANCE_NAME,
+            alliance_tag=ALLIANCE_TAG,
+        )
+        await push_officer(alliance, owner)
+        resp = await execute_patch_request(
+            f"{ENDPOINT}/{alliance.id}/elo",
+            payload={"elo": 2000},
+            headers=HEADERS_USER1,
+        )
+        assert resp.status_code == 200
+        assert resp.json()["elo"] == 2000
+
+    @pytest.mark.asyncio
+    async def test_patch_tier_officer_success(self):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(
+            user_id=USER_ID,
+            game_pseudo=GAME_PSEUDO,
+            alliance_name=ALLIANCE_NAME,
+            alliance_tag=ALLIANCE_TAG,
+        )
+        await push_officer(alliance, owner)
+        resp = await execute_patch_request(
+            f"{ENDPOINT}/{alliance.id}/tier",
+            payload={"tier": 5},
+            headers=HEADERS_USER1,
+        )
+        assert resp.status_code == 200
+        assert resp.json()["tier"] == 5
+
+    @pytest.mark.asyncio
+    async def test_patch_elo_non_officer_forbidden(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(
+            user_id=USER_ID,
+            game_pseudo=GAME_PSEUDO,
+            alliance_name=ALLIANCE_NAME,
+            alliance_tag=ALLIANCE_TAG,
+        )
+        await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        resp = await execute_patch_request(
+            f"{ENDPOINT}/{alliance.id}/elo",
+            payload={"elo": 100},
+            headers=HEADERS_USER2,
+        )
+        assert resp.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_patch_elo_out_of_range_rejected(self):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(
+            user_id=USER_ID,
+            game_pseudo=GAME_PSEUDO,
+            alliance_name=ALLIANCE_NAME,
+            alliance_tag=ALLIANCE_TAG,
+        )
+        await push_officer(alliance, owner)
+        resp = await execute_patch_request(
+            f"{ENDPOINT}/{alliance.id}/elo",
+            payload={"elo": 9999},
+            headers=HEADERS_USER1,
+        )
+        assert resp.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_patch_tier_out_of_range_rejected(self):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(
+            user_id=USER_ID,
+            game_pseudo=GAME_PSEUDO,
+            alliance_name=ALLIANCE_NAME,
+            alliance_tag=ALLIANCE_TAG,
+        )
+        await push_officer(alliance, owner)
+        resp = await execute_patch_request(
+            f"{ENDPOINT}/{alliance.id}/tier",
+            payload={"tier": 0},
+            headers=HEADERS_USER1,
+        )
+        assert resp.status_code == 422
