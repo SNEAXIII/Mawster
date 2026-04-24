@@ -56,9 +56,7 @@ async def discord_login(
     user = await DiscordAuthService.get_or_create_discord_user(session, discord_profile)
     access_token = JWTService.create_access_token(user)
     refresh_token = JWTService.create_refresh_token(user)
-
     audit_log("auth.login", user_id=str(user.id), detail="method=discord")
-
     return LoginResponse(
         token_type="bearer",
         access_token=access_token,
@@ -77,9 +75,7 @@ async def refresh_access_token(
     user = await UserService.get_user_by_id_with_validity_check(session, user_id)
     new_access_token = JWTService.create_access_token(user)
     new_refresh_token = JWTService.create_refresh_token(user)
-
     audit_log("auth.refresh", user_id=str(user.id), detail="method=refresh_token")
-
     return LoginResponse(
         token_type="bearer",
         access_token=new_access_token,

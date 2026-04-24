@@ -24,7 +24,6 @@ from src.services.AllianceService import AllianceService
 from src.services.JWTService import JWTService
 from src.services.UserService import UserService
 from src.utils.db import SessionDep
-from src.utils.logging_config import audit_log
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +123,6 @@ async def dev_login(body: DevLoginRequest, session: SessionDep) -> LoginResponse
     access_token = JWTService.create_access_token(user)
     refresh_token = JWTService.create_refresh_token(user)
 
-    audit_log("auth.dev_login", user_id=str(user.id), detail="method=dev")
     logger.warning("DEV LOGIN — user: %s", user.login)
 
     return LoginResponse(

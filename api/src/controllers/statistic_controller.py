@@ -27,7 +27,6 @@ from src.services.AuthService import AuthService
 from src.services.AllianceService import AllianceService
 from src.services.AllianceInvitationService import AllianceInvitationService
 from src.utils.db import SessionDep
-from src.utils.logging_config import audit_log
 
 statistics_controller = APIRouter(
     prefix="/statistics",

@@ -17,7 +17,6 @@ from src.services.AllianceService import AllianceService
 from src.services.AuthService import AuthService
 from src.services.DefensePlacementService import DefensePlacementService
 from src.utils.db import SessionDep
-from src.utils.logging_config import audit_log
 from src.utils.path_params import BattlegroupPath
 
 defense_controller = APIRouter(
@@ -104,11 +103,6 @@ async def place_defender(
         placed_by_id=my_account.id,
     )
 
-    audit_log(
-        "defense.place",
-        user_id=str(current_user.id),
-        detail=f"alliance_id={alliance_id} bg={battlegroup} node={body.node_number}",
-    )
 
     return _to_placement_response(placement)
 
@@ -130,11 +124,6 @@ async def remove_defender(
 
     await DefensePlacementService.remove_defender(session, alliance_id, battlegroup, node_number)
 
-    audit_log(
-        "defense.remove",
-        user_id=str(current_user.id),
-        detail=f"alliance_id={alliance_id} bg={battlegroup} node={node_number}",
-    )
 
 
 @defense_controller.delete(
@@ -153,11 +142,6 @@ async def clear_defense(
 
     count = await DefensePlacementService.clear_defense(session, alliance_id, battlegroup)
 
-    audit_log(
-        "defense.clear",
-        user_id=str(current_user.id),
-        detail=f"alliance_id={alliance_id} bg={battlegroup} cleared={count}",
-    )
 
 
 @defense_controller.get(
@@ -211,11 +195,6 @@ async def export_defense(
 
     items = await DefensePlacementService.export_defense(session, alliance_id, battlegroup)
 
-    audit_log(
-        "defense.export",
-        user_id=str(current_user.id),
-        detail=f"alliance_id={alliance_id} bg={battlegroup} count={len(items)}",
-    )
     return items
 
 
@@ -251,11 +230,6 @@ async def import_defense(
         placed_by_id=my_account.id,
     )
 
-    audit_log(
-        "defense.import",
-        user_id=str(current_user.id),
-        detail=f"alliance_id={alliance_id} bg={battlegroup} ok={success_count} err={error_count}",
-    )
 
     return DefenseImportReport(
         before=before,
