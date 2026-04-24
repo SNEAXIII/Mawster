@@ -1,4 +1,4 @@
-"""init
+"""add_mastery
 
 Revision ID: 6366528b2ae2
 Revises: 87f64bfcb771
