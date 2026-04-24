@@ -292,9 +292,9 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     try {
       await patchAllianceElo(selectedAllianceId, elo);
       await refresh();
-      toast.success('ELO updated');
+      toast.success(t.game.war.eloUpdateSuccess);
     } catch (err: unknown) {
-      toast.error((err as Error).message || 'Failed to update ELO');
+      toast.error((err as Error).message || t.game.war.eloUpdateError);
     }
   };
 
@@ -302,9 +302,9 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     try {
       await patchAllianceTier(selectedAllianceId, tier);
       await refresh();
-      toast.success('Tier updated');
+      toast.success(t.game.war.tierUpdateSuccess);
     } catch (err: unknown) {
-      toast.error((err as Error).message || 'Failed to update tier');
+      toast.error((err as Error).message || t.game.war.tierUpdateError);
     }
   };
 
