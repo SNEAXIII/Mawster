@@ -25,3 +25,21 @@ prio:
 
 criTIQUE
     meilleure affiche pour la def (déja placé etc)
+
+now:
+    stats des joueur
+        podium
+        tableau simple ***1***
+            filtre par
+                ratio
+                ko
+                groupe
+    historique des war
+        list season
+            list war
+
+***1***
+game account | bg | kills total | kills mb | nb ko | ratio total | ratio mb | classsement ***2***
+
+***2***
+trouver une formule de calcul pour déterminer le classement de maniere a mettre en avant les gens qui ont fait beaucoup de combats surtout ceux qui font des mb
