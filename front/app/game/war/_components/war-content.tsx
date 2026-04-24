@@ -11,6 +11,7 @@ import WarTab from './war-tab';
 import WarManagementBar from './war-management-bar';
 import CreateWarDialog from './create-war-dialog';
 import AttackerEntryRow from './attacker-entry-row';
+import EndWarDialog from './end-war-dialog';
 
 const WarDefenderSelector = dynamic(() => import('./war-defender-selector'), {
   loading: () => <FullPageSpinner />,
@@ -107,18 +108,14 @@ function WarLayout() {
         onConfirm={handleCreateWar}
       />
 
-      {/* End war confirm */}
-      <ConfirmationDialog
+      {/* End war dialog */}
+      <EndWarDialog
         open={showEndConfirm}
         onOpenChange={setShowEndConfirm}
-        onConfirm={async () => {
-          setShowEndConfirm(false);
-          await handleEndWar();
+        hasSeason={!!currentWar?.season_id}
+        onConfirm={async (win, eloChange) => {
+          await handleEndWar(win, eloChange);
         }}
-        title={t.game.war.endWarConfirmTitle}
-        description={t.game.war.endWarConfirmDesc}
-        variant='destructive'
-        requireConfirmText='confirm'
       />
 
       {/* Defender champion selector */}
