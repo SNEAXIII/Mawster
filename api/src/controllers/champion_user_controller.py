@@ -330,7 +330,6 @@ async def create_upgrade_request(
     result = await session.exec(stmt)
     loaded = result.one()
 
-
     return UpgradeRequestResponse.model_validate(loaded)
 
 

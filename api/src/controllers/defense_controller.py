@@ -103,7 +103,6 @@ async def place_defender(
         placed_by_id=my_account.id,
     )
 
-
     return _to_placement_response(placement)
 
 
@@ -125,7 +124,6 @@ async def remove_defender(
     await DefensePlacementService.remove_defender(session, alliance_id, battlegroup, node_number)
 
 
-
 @defense_controller.delete(
     "/bg/{battlegroup}/clear",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -140,8 +138,7 @@ async def clear_defense(
     await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
     await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
 
-    count = await DefensePlacementService.clear_defense(session, alliance_id, battlegroup)
-
+    await DefensePlacementService.clear_defense(session, alliance_id, battlegroup)
 
 
 @defense_controller.get(
@@ -229,7 +226,6 @@ async def import_defense(
         items=body.placements,
         placed_by_id=my_account.id,
     )
-
 
     return DefenseImportReport(
         before=before,

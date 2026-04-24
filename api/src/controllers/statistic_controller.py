@@ -1,31 +1,11 @@
-import uuid
 from typing import Annotated
 from src.models import GameAccount
 from sqlmodel import select
 
-from fastapi import APIRouter, Depends, HTTPException
-from starlette import status
+from fastapi import APIRouter, Depends
 
-from src.dto.dto_alliance import (
-    AllianceAddOfficerRequest,
-    AllianceMyRolesResponse,
-    AllianceCreateRequest,
-    AllianceRemoveOfficerRequest,
-    AllianceResponse,
-    AllianceSetGroupRequest,
-)
-from src.dto.dto_invitation import (
-    AllianceInvitationCreateRequest,
-    AllianceInvitationResponse,
-)
-from src.dto.dto_game_account import GameAccountResponse
-from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.models import User
-from src.models.Alliance import Alliance
-from src.models.AllianceInvitation import AllianceInvitation
 from src.services.AuthService import AuthService
-from src.services.AllianceService import AllianceService
-from src.services.AllianceInvitationService import AllianceInvitationService
 from src.utils.db import SessionDep
 
 statistics_controller = APIRouter(
