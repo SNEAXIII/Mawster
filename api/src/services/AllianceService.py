@@ -335,6 +335,30 @@ class AllianceService:
         return await cls._load_alliance_with_relations(session, alliance.id)
 
     @classmethod
+    async def update_elo(
+        cls,
+        session: SessionDep,
+        alliance: Alliance,
+        elo: int,
+    ) -> Alliance:
+        alliance.elo = elo
+        session.add(alliance)
+        await session.commit()
+        return await cls._load_alliance_with_relations(session, alliance.id)
+
+    @classmethod
+    async def update_tier(
+        cls,
+        session: SessionDep,
+        alliance: Alliance,
+        tier: int,
+    ) -> Alliance:
+        alliance.tier = tier
+        session.add(alliance)
+        await session.commit()
+        return await cls._load_alliance_with_relations(session, alliance.id)
+
+    @classmethod
     async def delete_alliance(cls, session: SessionDep, alliance: Alliance) -> None:
         # Remove all members from the alliance first
         members_result = await session.exec(
