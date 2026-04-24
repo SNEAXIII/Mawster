@@ -25,7 +25,6 @@ from src.services.AuthService import AuthService
 from src.services.AllianceService import AllianceService
 from src.services.AllianceInvitationService import AllianceInvitationService
 from src.utils.db import SessionDep
-from src.utils.logging_config import audit_log
 
 alliance_controller = APIRouter(
     prefix="/alliances",
@@ -103,7 +102,6 @@ async def create_alliance(
         owner_id=body.owner_id,
         current_user_id=current_user.id,
     )
-    audit_log("alliance.create", user_id=str(current_user.id), detail=f"alliance_id={alliance.id}")
     return _to_response(alliance)
 
 
@@ -174,11 +172,6 @@ async def accept_invitation(
     # Reload the invitation with its relations
     reloaded = await session.get(AllianceInvitation, invitation.id)
     await session.refresh(reloaded, ["alliance", "game_account", "invited_by"])
-    audit_log(
-        "alliance.accept_invitation",
-        user_id=str(current_user.id),
-        detail=f"invitation_id={invitation_id}",
-    )
     return _invitation_to_response(reloaded)
 
 
@@ -197,11 +190,6 @@ async def decline_invitation(
     )
     reloaded = await session.get(AllianceInvitation, invitation.id)
     await session.refresh(reloaded, ["alliance", "game_account", "invited_by"])
-    audit_log(
-        "alliance.decline_invitation",
-        user_id=str(current_user.id),
-        detail=f"invitation_id={invitation_id}",
-    )
     return _invitation_to_response(reloaded)
 
 
@@ -241,7 +229,6 @@ async def update_alliance(
         name=body.name,
         tag=body.tag,
     )
-    audit_log("alliance.update", user_id=str(current_user.id), detail=f"alliance_id={alliance_id}")
     return _to_response(updated)
 
 
@@ -260,7 +247,6 @@ async def delete_alliance(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     await AllianceService._assert_is_owner(session, alliance, current_user.id)
     await AllianceService.delete_alliance(session, alliance)
-    audit_log("alliance.delete", user_id=str(current_user.id), detail=f"alliance_id={alliance_id}")
 
 
 # ---- Member management (invitations) ----
@@ -297,11 +283,6 @@ async def invite_member(
     # Reload with relations
     loaded = await AllianceInvitationService.get_invitations_for_alliance(session, alliance_id)
     inv = next((i for i in loaded if i.id == invitation.id), invitation)
-    audit_log(
-        "alliance.invite_member",
-        user_id=str(current_user.id),
-        detail=f"alliance_id={alliance_id} game_account_id={body.game_account_id}",
-    )
     return _invitation_to_response(inv)
 
 
@@ -339,11 +320,6 @@ async def cancel_invitation(
     await AllianceInvitationService.cancel_invitation(
         session, invitation_id, current_user.id, alliance
     )
-    audit_log(
-        "alliance.cancel_invitation",
-        user_id=str(current_user.id),
-        detail=f"invitation_id={invitation_id}",
-    )
     return {"message": "Invitation cancelled"}
 
 
@@ -370,11 +346,6 @@ async def remove_member(
         session=session,
         alliance_id=alliance_id,
         game_account_id=game_account_id,
-    )
-    audit_log(
-        "alliance.remove_member",
-        user_id=str(current_user.id),
-        detail=f"alliance_id={alliance_id} game_account_id={game_account_id}",
     )
     return _to_response(updated)
 
@@ -404,11 +375,6 @@ async def add_officer(
         alliance_id=alliance_id,
         game_account_id=body.game_account_id,
     )
-    audit_log(
-        "alliance.add_officer",
-        user_id=str(current_user.id),
-        detail=f"alliance_id={alliance_id} game_account_id={body.game_account_id}",
-    )
     return _to_response(updated)
 
 
@@ -431,11 +397,6 @@ async def remove_officer(
         session=session,
         alliance_id=alliance_id,
         game_account_id=body.game_account_id,
-    )
-    audit_log(
-        "alliance.remove_officer",
-        user_id=str(current_user.id),
-        detail=f"alliance_id={alliance_id} game_account_id={body.game_account_id}",
     )
     return _to_response(updated)
 
@@ -462,10 +423,5 @@ async def set_member_group(
         alliance_id=alliance_id,
         game_account_id=game_account_id,
         group=body.group,
-    )
-    audit_log(
-        "alliance.set_group",
-        user_id=str(current_user.id),
-        detail=f"alliance_id={alliance_id} game_account_id={game_account_id} group={body.group}",
     )
     return _to_response(updated)

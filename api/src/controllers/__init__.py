@@ -8,6 +8,7 @@ from src.controllers.champion_controller import champion_controller, champion_re
 from src.controllers.defense_controller import defense_controller
 from src.controllers.war_controller import war_controller
 from src.controllers.season_controller import season_admin_controller, season_public_controller
+from src.controllers.statistic_controller import statistics_controller
 
 routers = [
     admin_controller,
@@ -22,4 +23,5 @@ routers = [
     war_controller,
     season_admin_controller,
     season_public_controller,
+    statistics_controller,
 ]

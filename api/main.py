@@ -3,6 +3,8 @@ from pathlib import Path
 import asyncio
 import logging
 
+import jwt
+
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,7 +24,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
 from src.security.secrets import SECRET
-from src.utils.logging_config import setup_logging
+from src.utils.logging_config import setup_logging, audit_log
 from src.utils.rate_limiter import limiter
 
 # Initialize logging before anything else
@@ -118,6 +120,21 @@ async def check_user_role(
     if not uri.startswith("/static"):
         logger.debug("%s %s", method, uri)
         logger.info("%s %s → %s (%.3fs)", method, uri, response.status_code, process_time)
+    if method != "GET" and not uri.startswith("/static"):
+        user_id = "anonymous"
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            try:
+                payload = jwt.decode(
+                    auth.removeprefix("Bearer "),
+                    SECRET.SECRET_KEY,
+                    algorithms=[SECRET.ALGORITHM],
+                    options={"verify_exp": False},
+                )
+                user_id = payload.get("user_id", "anonymous")
+            except Exception:
+                pass
+        audit_log(f"{method} {uri}", user_id=user_id, detail=f"status={response.status_code}")
     return response
 
 

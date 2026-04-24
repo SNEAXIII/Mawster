@@ -17,7 +17,6 @@ from src.services.AuthService import AuthService
 from src.services.GameAccountService import GameAccountService
 from src.services.MasteryService import MasteryService
 from src.utils.db import SessionDep
-from src.utils.logging_config import audit_log
 
 game_account_controller = APIRouter(
     prefix="/game-accounts",
@@ -51,9 +50,6 @@ async def create_game_account(
         user_id=current_user.id,
         game_pseudo=body.game_pseudo,
         is_primary=body.is_primary,
-    )
-    audit_log(
-        "game_account.create", user_id=str(current_user.id), detail=f"game_account_id={result.id}"
     )
     return result
 
@@ -115,11 +111,6 @@ async def update_game_account(
         game_pseudo=body.game_pseudo,
         is_primary=body.is_primary,
     )
-    audit_log(
-        "game_account.update",
-        user_id=str(current_user.id),
-        detail=f"game_account_id={game_account_id}",
-    )
     return result
 
 
@@ -139,11 +130,6 @@ async def delete_game_account(
     if game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_GAME_ACCOUNT)
     await GameAccountService.delete_game_account(session, game_account)
-    audit_log(
-        "game_account.delete",
-        user_id=str(current_user.id),
-        detail=f"game_account_id={game_account_id}",
-    )
 
 
 @game_account_controller.get(

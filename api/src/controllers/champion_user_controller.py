@@ -27,7 +27,6 @@ from src.services.GameAccountService import GameAccountService
 from src.services.ChampionUserService import ChampionUserService
 from src.services.UpgradeRequestService import UpgradeRequestService
 from src.utils.db import SessionDep
-from src.utils.logging_config import audit_log
 
 champion_user_controller = APIRouter(
     prefix="/champion-users",
@@ -68,11 +67,6 @@ async def create_champion_user(
         is_preferred_attacker=body.is_preferred_attacker,
         ascension=body.ascension,
     )
-    audit_log(
-        "roster.add_champion",
-        user_id=str(current_user.id),
-        detail=f"game_account_id={body.game_account_id} champion_id={body.champion_id}",
-    )
     return ChampionUserResponse.model_validate(result)
 
 
@@ -111,11 +105,6 @@ async def bulk_add_champions(
         session=session,
         game_account_id=body.game_account_id,
         champions=champions_data,
-    )
-    audit_log(
-        "roster.bulk_import",
-        user_id=str(current_user.id),
-        detail=f"game_account_id={body.game_account_id} count={len(entries)}",
     )
     return [ChampionUserDetailResponse.model_validate(e) for e in entries]
 
@@ -163,11 +152,6 @@ async def toggle_preferred_attacker(
     session.add(champion_user)
     await session.commit()
     await session.refresh(champion_user)
-    audit_log(
-        "roster.toggle_preferred_attacker",
-        user_id=str(current_user.id),
-        detail=f"champion_user_id={champion_user_id} is_preferred_attacker={champion_user.is_preferred_attacker}",
-    )
     return ChampionUserResponse.model_validate(champion_user)
 
 
@@ -218,11 +202,6 @@ async def delete_champion_user(
     """Delete a champion from a roster."""
     champion_user = await _get_own_champion_user(session, champion_user_id, current_user.id)
     await ChampionUserService.delete_champion_user(session, champion_user)
-    audit_log(
-        "roster.delete_champion",
-        user_id=str(current_user.id),
-        detail=f"champion_user_id={champion_user_id}",
-    )
 
 
 @champion_user_controller.patch(
@@ -237,11 +216,6 @@ async def upgrade_champion_rank(
     """Upgrade a champion to the next rank (e.g. 7r2 â†’ 7r3)."""
     champion_user = await _get_own_champion_user(session, champion_user_id, current_user.id)
     upgraded = await ChampionUserService.upgrade_champion_rank(session, champion_user)
-    audit_log(
-        "roster.upgrade_rank",
-        user_id=str(current_user.id),
-        detail=f"champion_user_id={champion_user_id}",
-    )
     return ChampionUserResponse.model_validate(upgraded)
 
 
@@ -257,11 +231,6 @@ async def ascend_champion(
     """Ascend a champion to the next ascension level (0 â†’ 1 â†’ 2)."""
     champion_user = await _get_own_champion_user(session, champion_user_id, current_user.id)
     ascended = await ChampionUserService.ascend_champion(session, champion_user)
-    audit_log(
-        "roster.ascend_champion",
-        user_id=str(current_user.id),
-        detail=f"champion_user_id={champion_user_id}",
-    )
     return ChampionUserResponse.model_validate(ascended)
 
 
@@ -361,12 +330,6 @@ async def create_upgrade_request(
     result = await session.exec(stmt)
     loaded = result.one()
 
-    audit_log(
-        "upgrade_request.create",
-        user_id=str(current_user.id),
-        detail=f"request_id={loaded.id} champion_user_id={body.champion_user_id} requested_rarity={body.requested_rarity}",
-    )
-
     return UpgradeRequestResponse.model_validate(loaded)
 
 
@@ -435,6 +398,3 @@ async def cancel_upgrade_request(
         session, target_account.alliance_id, current_user.id
     )
     await UpgradeRequestService.cancel_upgrade_request(session, request_id)
-    audit_log(
-        "upgrade_request.cancel", user_id=str(current_user.id), detail=f"request_id={request_id}"
-    )
