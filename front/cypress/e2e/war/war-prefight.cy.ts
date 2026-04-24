@@ -163,12 +163,7 @@ describe('War Prefight', () => {
           const stormChampionId = stormEntry.champion_id;
 
           // End current war
-          cy.request({
-            method: 'POST',
-            url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/end`,
-            headers: { Authorization: `Bearer ${ownerData.access_token}` },
-            body: {},
-          });
+          cy.apiEndWar(ownerData.access_token, allianceId, warId, true, 10);
 
           // Create new war banning Storm
           cy.request({
