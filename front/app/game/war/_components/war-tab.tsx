@@ -1,9 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Shield, Swords, Trash2, NotebookPen } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Shield, Swords, Trash2, NotebookPen, Pencil, Check, X } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import { useI18n } from '@/app/i18n';
 import { FullPageSpinner } from '@/components/full-page-spinner';
@@ -58,7 +59,44 @@ export default function WarTab() {
     handleRemoveDefender,
     setShowClearConfirm,
     setShowEndConfirm,
+    alliances,
+    selectedAllianceId,
+    handleUpdateAllianceElo,
+    handleUpdateAllianceTier,
   } = useWar();
+
+  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId) ?? null;
+
+  const [editingElo, setEditingElo] = useState(false);
+  const [editingTier, setEditingTier] = useState(false);
+  const [eloDraft, setEloDraft] = useState('');
+  const [tierDraft, setTierDraft] = useState('');
+
+  function startEditElo() {
+    setEloDraft(String(selectedAlliance?.elo ?? 0));
+    setEditingElo(true);
+  }
+
+  async function saveElo() {
+    const val = Number(eloDraft);
+    if (!isNaN(val) && val >= 0 && val <= 4500) {
+      await handleUpdateAllianceElo(val);
+    }
+    setEditingElo(false);
+  }
+
+  function startEditTier() {
+    setTierDraft(String(selectedAlliance?.tier ?? 20));
+    setEditingTier(true);
+  }
+
+  async function saveTier() {
+    const val = Number(tierDraft);
+    if (!isNaN(val) && val >= 1 && val <= 20) {
+      await handleUpdateAllianceTier(val);
+    }
+    setEditingTier(false);
+  }
   return (
     <div className='space-y-4'>
       {/* Controls row: opponent name + BG picker + mode toggle + clear */}
@@ -72,6 +110,91 @@ export default function WarTab() {
             : undefined
         }
       />
+
+        {/* ELO badge */}
+        {selectedAlliance && (
+          <div className='flex items-center gap-1.5' data-cy='war-elo-badge'>
+            {editingElo ? (
+              <div className='flex items-center gap-1'>
+                <Input
+                  type='number'
+                  className='h-7 w-24 text-xs'
+                  value={eloDraft}
+                  onChange={(e) => setEloDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void saveElo();
+                    if (e.key === 'Escape') setEditingElo(false);
+                  }}
+                  autoFocus
+                  data-cy='war-elo-input'
+                />
+                <button onClick={() => void saveElo()} className='text-green-600 hover:text-green-700' data-cy='war-elo-save'>
+                  <Check className='w-3.5 h-3.5' />
+                </button>
+                <button onClick={() => setEditingElo(false)} className='text-muted-foreground hover:text-foreground'>
+                  <X className='w-3.5 h-3.5' />
+                </button>
+              </div>
+            ) : (
+              <div className='flex items-center gap-1'>
+                <span className='text-xs font-medium text-muted-foreground'>{t.game.war.elo}:</span>
+                <span className='text-xs font-bold' data-cy='war-elo-value'>{selectedAlliance.elo}</span>
+                {canManageWar && (
+                  <button
+                    onClick={startEditElo}
+                    className='text-muted-foreground hover:text-foreground'
+                    data-cy='war-elo-edit'
+                  >
+                    <Pencil className='w-3 h-3' />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tier badge */}
+        {selectedAlliance && (
+          <div className='flex items-center gap-1.5' data-cy='war-tier-badge'>
+            {editingTier ? (
+              <div className='flex items-center gap-1'>
+                <Input
+                  type='number'
+                  className='h-7 w-20 text-xs'
+                  value={tierDraft}
+                  onChange={(e) => setTierDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void saveTier();
+                    if (e.key === 'Escape') setEditingTier(false);
+                  }}
+                  autoFocus
+                  data-cy='war-tier-input'
+                />
+                <button onClick={() => void saveTier()} className='text-green-600 hover:text-green-700' data-cy='war-tier-save'>
+                  <Check className='w-3.5 h-3.5' />
+                </button>
+                <button onClick={() => setEditingTier(false)} className='text-muted-foreground hover:text-foreground'>
+                  <X className='w-3.5 h-3.5' />
+                </button>
+              </div>
+            ) : (
+              <div className='flex items-center gap-1'>
+                <span className='text-xs font-medium text-muted-foreground'>{t.game.war.tier}:</span>
+                <span className='text-xs font-bold' data-cy='war-tier-value'>{selectedAlliance.tier}</span>
+                {canManageWar && (
+                  <button
+                    onClick={startEditTier}
+                    className='text-muted-foreground hover:text-foreground'
+                    data-cy='war-tier-edit'
+                  >
+                    <Pencil className='w-3 h-3' />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Opponent name */}
         {currentWar && (
           <div className='flex items-center gap-2'>
