@@ -113,7 +113,7 @@ describe('War – Attackers mode (advanced)', () => {
 
         goToAttackersMode(ownerData.user_id);
         cy.getByCy('remove-attacker-node-10').click();
-
+        cy.getByCy('confirmation-dialog-confirm').click();
         cy.request({
           method: 'GET',
           url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/prefight`,
