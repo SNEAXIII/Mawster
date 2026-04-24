@@ -24,6 +24,9 @@ class WarResponse(BaseModel):
     banned_champions: List[ChampionResponse] = []
     season_id: Optional[uuid.UUID] = None
     season_number: Optional[int] = None
+    win: Optional[bool] = None
+    elo_change: Optional[int] = None
+    tier: Optional[int] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -40,6 +43,9 @@ class WarResponse(BaseModel):
             "banned_champions": [ban.champion for ban in data.bans],
             "season_id": data.season_id,
             "season_number": data.season.number if data.season else None,
+            "win": data.win,
+            "elo_change": data.elo_change,
+            "tier": data.tier,
         }
 
 
@@ -215,6 +221,11 @@ class WarSynergyResponse(BaseModel):
             "game_pseudo": data.game_account.game_pseudo,
             "created_at": data.created_at,
         }
+
+
+class WarEndRequest(BaseModel):
+    win: bool
+    elo_change: Optional[int] = None
 
 
 class WarPrefightCreateRequest(BaseModel):
