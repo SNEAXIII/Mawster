@@ -3,9 +3,8 @@ from src.models import ChampionUser, Season, War, WarDefensePlacement, GameAccou
 from sqlalchemy import and_, func, cast, Integer, case
 from sqlmodel import select
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from src.services.AuthService import AuthService
 from src.utils.db import SessionDep
 
 statistics_controller = APIRouter(
@@ -57,7 +56,7 @@ async def get_current_season_statistics(
         .join(ChampionUser, ChampionUser.game_account_id == GameAccount.id)
         .join(WarDefensePlacement, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
         .join(War, WarDefensePlacement.war_id == War.id)
-        .join(Season, and_(War.season_id == Season.id, Season.is_active == True))
+        .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
         .where(
             GameAccount.alliance_id == uuid.UUID("7e7b2e7c-7a51-4b14-95b8-fe21558a0146"),
             # GameAccount.alliance_id == current_user.alliance_id,
