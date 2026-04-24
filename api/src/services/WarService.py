@@ -351,9 +351,42 @@ class WarService:
         session: SessionDep,
         war_id: uuid.UUID,
         alliance_id: uuid.UUID,
+        win: bool,
+        elo_change: Optional[int],
     ) -> WarResponse:
+        from src.models.Alliance import Alliance
+
         war = await cls.get_war(session, war_id, alliance_id)
+        alliance = await session.get(Alliance, alliance_id)
+        if alliance is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=WAR_NOT_FOUND,
+            )
+
+        if war.season_id is not None:
+            if elo_change is None:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="elo_change is required during an active season",
+                )
+            if win and elo_change < 0:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="elo_change must be positive on a win",
+                )
+            if not win and elo_change > 0:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="elo_change must be negative on a loss",
+                )
+            war.elo_change = elo_change
+            alliance.elo = max(0, min(4500, alliance.elo + elo_change))
+            session.add(alliance)
+
         war.status = WarStatus.ended
+        war.win = win
+        war.tier = alliance.tier
         session.add(war)
         await session.commit()
         await session.refresh(war)
