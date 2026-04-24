@@ -18,7 +18,7 @@ interface AlliancesTabProps {
   onOpenInviteMember: (allianceId: string) => void;
   onCloseInviteMember: () => void;
   onInviteMember: (allianceId: string) => Promise<void>;
-  onRefresh: () => void;
+  onRefresh: () => Promise<void>;
   onViewRoster: (gameAccountId: string, pseudo: string, canReq: boolean) => void;
   onCancelInvitation: (allianceId: string, invitationId: string) => Promise<void>;
 }

@@ -38,7 +38,6 @@ import {
   addWarPrefight,
   removeWarPrefight,
 } from '@/app/services/war';
-import { patchAllianceElo, patchAllianceTier } from '@/app/services/game';
 import { WarMode } from '@/app/game/war/_components/war-types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -85,8 +84,6 @@ interface WarContextValue {
   handleNodeClick: (node: number) => void;
   handleCreateWar: (opponentName: string, bannedChampionIds: string[]) => Promise<void>;
   handleEndWar: (win: boolean, eloChange: number | null) => Promise<void>;
-  handleUpdateAllianceElo: (elo: number) => Promise<void>;
-  handleUpdateAllianceTier: (tier: number) => Promise<void>;
   refreshAlliances: () => Promise<void>;
   handlePlaceDefender: (
     championId: string,
@@ -285,26 +282,6 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       setCurrentWar(null);
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.endWarError);
-    }
-  };
-
-  const handleUpdateAllianceElo = async (elo: number) => {
-    try {
-      await patchAllianceElo(selectedAllianceId, elo);
-      await refresh();
-      toast.success(t.game.war.eloUpdateSuccess);
-    } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.war.eloUpdateError);
-    }
-  };
-
-  const handleUpdateAllianceTier = async (tier: number) => {
-    try {
-      await patchAllianceTier(selectedAllianceId, tier);
-      await refresh();
-      toast.success(t.game.war.tierUpdateSuccess);
-    } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.war.tierUpdateError);
     }
   };
 
@@ -578,8 +555,6 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       handleNodeClick,
       handleCreateWar,
       handleEndWar,
-      handleUpdateAllianceElo,
-      handleUpdateAllianceTier,
       refreshAlliances: refresh,
       handlePlaceDefender,
       handleRemoveDefender,
