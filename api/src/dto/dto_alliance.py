@@ -61,6 +61,8 @@ class AllianceResponse(BaseModel):
     owner_id: uuid.UUID
     owner_pseudo: str
     created_at: datetime
+    elo: int = 0
+    tier: int = 20
     officers: list[AllianceOfficerResponse] = []
     members: list[AllianceMemberResponse] = []
     member_count: int = 0
@@ -79,6 +81,8 @@ class AllianceResponse(BaseModel):
             "owner_id": data.owner_id,
             "owner_pseudo": data.owner.game_pseudo,
             "created_at": data.created_at,
+            "elo": data.elo,
+            "tier": data.tier,
             "officers": [AllianceOfficerResponse.model_validate(adj) for adj in data.officers],
             "members": [
                 {
@@ -132,3 +136,11 @@ class AllianceMyRolesResponse(BaseModel):
 
     roles: dict[str, AllianceRoleEntry] = {}
     my_account_ids: list[str] = []
+
+
+class AllianceUpdateEloRequest(BaseModel):
+    elo: int = Field(..., ge=0, le=4500)
+
+
+class AllianceUpdateTierRequest(BaseModel):
+    tier: int = Field(..., ge=1, le=20)
