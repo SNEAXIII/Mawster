@@ -38,6 +38,7 @@ import {
   addWarPrefight,
   removeWarPrefight,
 } from '@/app/services/war';
+import { patchAllianceElo, patchAllianceTier } from '@/app/services/game';
 import { WarMode } from '@/app/game/war/_components/war-types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -83,7 +84,10 @@ interface WarContextValue {
   // Actions
   handleNodeClick: (node: number) => void;
   handleCreateWar: (opponentName: string, bannedChampionIds: string[]) => Promise<void>;
-  handleEndWar: () => Promise<void>;
+  handleEndWar: (win: boolean, eloChange: number | null) => Promise<void>;
+  handleUpdateAllianceElo: (elo: number) => Promise<void>;
+  handleUpdateAllianceTier: (tier: number) => Promise<void>;
+  refreshAlliances: () => Promise<void>;
   handlePlaceDefender: (
     championId: string,
     championName: string,
@@ -132,6 +136,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     selectedBg,
     setSelectedBg,
     loading,
+    refresh,
   } = useAllianceSelector();
 
   // ─── War state ─────────────────────────────────────────────────────────────
@@ -271,14 +276,35 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
   };
 
-  const handleEndWar = async () => {
+  const handleEndWar = async (win: boolean, eloChange: number | null) => {
     if (!currentWar) return;
     try {
-      await endWar(selectedAllianceId, currentWar.id);
+      await endWar(selectedAllianceId, currentWar.id, win, eloChange);
+      await refresh();
       toast.success(t.game.war.endWarSuccess);
       setCurrentWar(null);
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.endWarError);
+    }
+  };
+
+  const handleUpdateAllianceElo = async (elo: number) => {
+    try {
+      await patchAllianceElo(selectedAllianceId, elo);
+      await refresh();
+      toast.success('ELO updated');
+    } catch (err: unknown) {
+      toast.error((err as Error).message || 'Failed to update ELO');
+    }
+  };
+
+  const handleUpdateAllianceTier = async (tier: number) => {
+    try {
+      await patchAllianceTier(selectedAllianceId, tier);
+      await refresh();
+      toast.success('Tier updated');
+    } catch (err: unknown) {
+      toast.error((err as Error).message || 'Failed to update tier');
     }
   };
 
@@ -552,6 +578,9 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       handleNodeClick,
       handleCreateWar,
       handleEndWar,
+      handleUpdateAllianceElo,
+      handleUpdateAllianceTier,
+      refreshAlliances: refresh,
       handlePlaceDefender,
       handleRemoveDefender,
       handleConfirmRemoveDefender,
