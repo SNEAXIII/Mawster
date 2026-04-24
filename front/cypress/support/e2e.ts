@@ -791,12 +791,12 @@ Cypress.Commands.add(
   },
 );
 
-Cypress.Commands.add('apiEndWar', (token: string, allianceId: string, warId: string) => {
+Cypress.Commands.add('apiEndWar', (token: string, allianceId: string, warId: string, win = true, eloChange = 10) => {
   cy.request({
     method: 'POST',
     url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/end`,
     headers: { Authorization: `Bearer ${token}` },
-    body: {},
+    body: { win, elo_change: eloChange },
   }).then((res) => {
     expect(res.status).to.eq(200);
     return res.body;
