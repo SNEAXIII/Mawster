@@ -99,6 +99,17 @@ export default function AllianceCard({
                 {formatDateMedium(alliance.created_at, locale)}
               </span>
             </div>
+            <div className='flex items-center gap-2 mt-1'>
+              <span className='text-xs text-muted-foreground' data-cy='alliance-elo'>
+                {t.game.alliances.elo}:{' '}
+                <span className='font-semibold text-foreground'>{alliance.elo}</span>
+              </span>
+              <span className='text-xs text-muted-foreground'>·</span>
+              <span className='text-xs text-muted-foreground' data-cy='alliance-tier'>
+                {t.game.alliances.tier}:{' '}
+                <span className='font-semibold text-foreground'>{alliance.tier}</span>
+              </span>
+            </div>
           </div>
         </div>
 
