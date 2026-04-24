@@ -6,6 +6,7 @@ from starlette import status
 
 from src.dto.dto_war import (
     WarCreateRequest,
+    WarEndRequest,
     WarResponse,
     WarPlacementCreateRequest,
     WarPlacementResponse,
@@ -161,12 +162,13 @@ async def remove_war_defender(
 async def end_war(
     alliance_id: uuid.UUID,
     war_id: uuid.UUID,
+    body: WarEndRequest,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Mark a war as ended. Officers/owner only."""
+    """Mark a war as ended with result. Officers/owner only."""
     await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
-    return await WarService.end_war(session, war_id, alliance_id)
+    return await WarService.end_war(session, war_id, alliance_id, body.win, body.elo_change)
 
 
 @war_controller.delete(
