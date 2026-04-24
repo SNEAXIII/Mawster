@@ -117,23 +117,24 @@ async def check_user_role(
     process_time = perf_counter() - start_time
     if not IS_PROD:
         response.headers["X-Process-Time"] = str(process_time)
-    if not uri.startswith("/static"):
-        logger.debug("%s %s", method, uri)
-        logger.info("%s %s → %s (%.3fs)", method, uri, response.status_code, process_time)
-    if method != "GET" and not uri.startswith("/static"):
+    if uri.startswith("/static"):
+        return response
+    logger.info("%s %s → %s (%.3fs)", method, uri, response.status_code, process_time)
+    if method != "GET":
         user_id = "anonymous"
         auth = request.headers.get("Authorization", "")
-        if auth.startswith("Bearer "):
-            try:
-                payload = jwt.decode(
-                    auth.removeprefix("Bearer "),
-                    SECRET.SECRET_KEY,
-                    algorithms=[SECRET.ALGORITHM],
-                    options={"verify_exp": False},
-                )
-                user_id = payload.get("user_id", "anonymous")
-            except Exception:
-                pass
+        if not auth.startswith("Bearer "):
+            return response
+        try:
+            payload = jwt.decode(
+                auth.removeprefix("Bearer "),
+                SECRET.SECRET_KEY,
+                algorithms=[SECRET.ALGORITHM],
+                options={"verify_exp": False},
+            )
+            user_id = payload.get("user_id", "anonymous")
+        except Exception:
+            pass
         audit_log(f"{method} {uri}", user_id=user_id, detail=f"status={response.status_code}")
     return response
 
