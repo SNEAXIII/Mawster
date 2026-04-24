@@ -282,6 +282,8 @@ const en = {
       searchPlayer: 'Search player...',
       assignAttacker: 'Assign Attacker',
       removeAttacker: 'Remove Attacker',
+      removeAttackerConfirmTitle: 'Remove Attacker',
+      removeAttackerConfirmDesc: 'Are you sure you want to remove this attacker from the fight?',
       koCount: 'KO',
       assignSuccess: '{name} assigned to node #{node}',
       assignError: 'Failed to assign attacker',
