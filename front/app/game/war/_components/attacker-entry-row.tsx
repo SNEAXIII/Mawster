@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
 import { X, Minus, Plus, Swords, CircleQuestionMark } from 'lucide-react';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '@/app/contexts/war-context';
+import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import PrefightPopover from './prefight-popover';
 
 interface AttackerEntryRowProps {
@@ -19,6 +21,7 @@ interface AttackerEntryRowProps {
 export default function AttackerEntryRow({ placement, mode = 'compact', readonly = false }: Readonly<AttackerEntryRowProps>) {
   const { t } = useI18n();
   const { handleRemoveAttacker, handleUpdateKo, prefights } = useWar();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const nodePrefights = prefights.filter((p) => p.target_node_number === placement.node_number);
 
   const isFull = mode === 'full';
@@ -155,12 +158,20 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
               'rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center flex-shrink-0',
               btnSize
             )}
-            onClick={() => handleRemoveAttacker(placement.node_number)}
+            onClick={() => setConfirmOpen(true)}
             title={t.game.war.removeAttacker}
             data-cy={`remove-attacker-node-${placement.node_number}`}
           >
             <X className={cn(iconSize)} />
           </button>
+          <ConfirmationDialog
+            open={confirmOpen}
+            onOpenChange={setConfirmOpen}
+            title={t.game.war.removeAttackerConfirmTitle}
+            description={t.game.war.removeAttackerConfirmDesc}
+            onConfirm={() => handleRemoveAttacker(placement.node_number)}
+            variant='destructive'
+          />
         </>
       )}
     </div>

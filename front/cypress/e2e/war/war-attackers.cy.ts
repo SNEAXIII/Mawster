@@ -56,6 +56,7 @@ describe('War – Attackers mode', () => {
 
       cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
       cy.getByCy('remove-attacker-node-10').click();
+      cy.getByCy('confirmation-dialog-confirm').click();
       cy.getByCy('attacker-entry-node-10').should('not.exist');
     });
   });
@@ -71,6 +72,7 @@ describe('War – Attackers mode', () => {
       cy.getByCy('ko-value-node-10').should('have.text', '2');
 
       cy.getByCy('remove-attacker-node-10').click();
+      cy.getByCy('confirmation-dialog-confirm').click();
       cy.getByCy('attacker-entry-node-10').should('not.exist');
 
       // Re-assign and verify KO is reset
@@ -170,7 +172,6 @@ describe('War – Attackers mode', () => {
     });
   });
 
-
   // ── Member sees their own assigned attacks ────────────────────────────────
 
   it('member can see their own assigned attacks in the attacker panel', () => {
@@ -184,5 +185,4 @@ describe('War – Attackers mode', () => {
       cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
     });
   });
-
 });

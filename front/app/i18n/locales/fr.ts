@@ -287,6 +287,8 @@ const fr: Translations = {
       searchPlayer: 'Rechercher joueur...',
       assignAttacker: 'Assigner Attaquant',
       removeAttacker: 'Retirer Attaquant',
+      removeAttackerConfirmTitle: "Retirer l'attaquant",
+      removeAttackerConfirmDesc: 'Êtes-vous sûr de vouloir retirer cet attaquant du combat ?',
       koCount: 'KO',
       assignSuccess: '{name} assigné au nœud #{node}',
       assignError: "Erreur lors de l'assignation de l'attaquant",
