@@ -31,7 +31,11 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
 
   return (
     <div className='px-3 py-4 sm:p-6'>
-      <TabBar tabs={tabs} value={vm.activeTab} onChange={vm.setActiveTab} />
+      <TabBar
+        tabs={tabs}
+        value={vm.activeTab}
+        onChange={vm.setActiveTab}
+      />
       {vm.activeTab === AdminTab.Users && <UsersPanel currentUserRole={vm.session?.user?.role} />}
       {vm.activeTab === AdminTab.Champions && <ChampionsPanel />}
       {vm.activeTab === AdminTab.Seasons && <SeasonsPanel />}

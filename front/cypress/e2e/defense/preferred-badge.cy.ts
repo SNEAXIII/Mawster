@@ -18,9 +18,7 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
         cy.navTo('defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
-        cy.getByCy('champion-card-Spider-Man')
-          .find('[data-cy="preferred-badge"]')
-          .should('exist');
+        cy.getByCy('champion-card-Spider-Man').find('[data-cy="preferred-badge"]').should('exist');
       },
     );
   });
@@ -38,9 +36,7 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
         cy.navTo('defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
-        cy.getByCy('champion-card-Wolverine')
-          .find('[data-cy="preferred-badge"]')
-          .should('not.exist');
+        cy.getByCy('champion-card-Wolverine').find('[data-cy="preferred-badge"]').should('not.exist');
       },
     );
   });
@@ -62,9 +58,7 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
         cy.navTo('defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
-        cy.getByCy('champion-card-Spider-Man')
-          .find('[data-cy="preferred-badge"]')
-          .should('not.exist');
+        cy.getByCy('champion-card-Spider-Man').find('[data-cy="preferred-badge"]').should('not.exist');
       },
     );
   });
@@ -85,9 +79,7 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
         cy.navTo('defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
-        cy.getByCy('champion-card-Spider-Man')
-          .find('[data-cy="preferred-badge"]')
-          .should('exist');
+        cy.getByCy('champion-card-Spider-Man').find('[data-cy="preferred-badge"]').should('exist');
       },
     );
   });

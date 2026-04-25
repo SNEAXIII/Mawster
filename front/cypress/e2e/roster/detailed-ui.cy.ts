@@ -45,9 +45,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
           .find('[data-cy="preferred-attacker-name"]')
           .should('exist')
           .and('have.class', 'text-yellow-400');
-        cy.getByCy('champion-card-Omega')
-          .find('[data-cy="preferred-badge"]')
-          .should('exist');
+        cy.getByCy('champion-card-Omega').find('[data-cy="preferred-badge"]').should('exist');
 
         // Signature 200
         cy.getByCy('champion-card-Omega').find('[data-cy="champion-sig"]').should('exist').and('contain', 'sig 200');

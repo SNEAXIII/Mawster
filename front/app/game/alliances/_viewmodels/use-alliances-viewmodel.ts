@@ -22,11 +22,13 @@ import {
 } from '@/app/services/game';
 import { useRequiredSession } from '@/hooks/use-required-session';
 import { useAllianceContext } from '@/app/contexts/alliance-context';
+import { getCurrentSeasonStatistics, type PlayerSeasonStats } from '@/app/services/statistics';
 
 export enum AllianceTab {
   Create = 'create',
   Alliances = 'alliances',
   Defense = 'defense',
+  Statistics = 'statistics',
 }
 
 export function useAlliancesViewModel() {
@@ -42,6 +44,10 @@ export function useAlliancesViewModel() {
   const [hasAnyAccounts, setHasAnyAccounts] = useState(true);
   const [creating, setCreating] = useState(false);
   const [roleRefreshKey, setRoleRefreshKey] = useState(0);
+  const [statsAllianceId, setStatsAllianceId] = useState('');
+  const [seasonStats, setSeasonStats] = useState<PlayerSeasonStats[]>([]);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState('');
 
   const initialTab = (searchParams.get('tab') as AllianceTab) || AllianceTab.Alliances;
   const [activeTab, setActiveTab] = useState<AllianceTab>(
@@ -61,7 +67,10 @@ export function useAlliancesViewModel() {
 
   const isFirstRender = useRef(true);
   useEffect(() => {
-    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', activeTab);
     if (activeTab !== AllianceTab.Defense) {
@@ -73,7 +82,9 @@ export function useAlliancesViewModel() {
   }, [activeTab]);
 
   const [myInvitations, setMyInvitations] = useState<AllianceInvitation[]>([]);
-  const [pendingInvitations, setPendingInvitations] = useState<Record<string, AllianceInvitation[]>>({});
+  const [pendingInvitations, setPendingInvitations] = useState<
+    Record<string, AllianceInvitation[]>
+  >({});
 
   const [name, setName] = useState('');
   const [tag, setTag] = useState('');
@@ -93,24 +104,34 @@ export function useAlliancesViewModel() {
       const data = await getEligibleOwners();
       setEligibleOwners(data);
       if (data.length > 0 && !ownerId) setOwnerId(data[0].id);
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const fetchEligibleMembers = async () => {
-    try { setEligibleMembers(await getEligibleMembers()); }
-    catch (err) { console.error(err); }
+    try {
+      setEligibleMembers(await getEligibleMembers());
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const fetchMyAccounts = async () => {
     try {
       const data = await getMyGameAccounts();
       setHasAnyAccounts(data.length > 0);
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const fetchMyInvitations = async () => {
-    try { setMyInvitations(await getMyInvitations()); }
-    catch (err) { console.error(err); }
+    try {
+      setMyInvitations(await getMyInvitations());
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const fetchPendingInvitations = async (allianceList: Alliance[]) => {
@@ -123,19 +144,52 @@ export function useAlliancesViewModel() {
           try {
             const invitations = await getAllianceInvitations(alliance.id);
             if (invitations.length > 0) results[alliance.id] = invitations;
-          } catch { /* ignore per-alliance fetch failure */ }
+          } catch {
+            /* ignore per-alliance fetch failure */
+          }
         })
       );
-    } catch { /* ignore role fetch failure */ }
+    } catch {
+      /* ignore role fetch failure */
+    }
     setPendingInvitations(results);
   };
 
+  const loadSeasonStats = useCallback(
+    async (allianceId: string) => {
+      setStatsLoading(true);
+      setStatsError('');
+      try {
+        const stats = await getCurrentSeasonStatistics(allianceId);
+        setSeasonStats(stats);
+      } catch (err: unknown) {
+        console.error(err);
+        setSeasonStats([]);
+        setStatsError((err as Error).message || t.game.alliances.statistics.loadError);
+      } finally {
+        setStatsLoading(false);
+      }
+    },
+    [t.game.alliances.statistics.loadError]
+  );
+
   const refreshMembership = () =>
-    Promise.all([refreshAlliances(), fetchEligibleOwners(), fetchEligibleMembers(), fetchMyAccounts(), fetchMyInvitations()]);
+    Promise.all([
+      refreshAlliances(),
+      fetchEligibleOwners(),
+      fetchEligibleMembers(),
+      fetchMyAccounts(),
+      fetchMyInvitations(),
+    ]);
 
   useEffect(() => {
     if (status === 'authenticated') {
-      Promise.all([refreshAlliances(), fetchEligibleOwners(), fetchMyAccounts(), fetchMyInvitations()]);
+      Promise.all([
+        refreshAlliances(),
+        fetchEligibleOwners(),
+        fetchMyAccounts(),
+        fetchMyInvitations(),
+      ]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
@@ -151,6 +205,34 @@ export function useAlliancesViewModel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, activeTab, eligibleOwners]);
 
+  useEffect(() => {
+    if (activeTab !== AllianceTab.Statistics) return;
+    if (alliances.length === 0) {
+      setStatsAllianceId('');
+      setSeasonStats([]);
+      return;
+    }
+
+    const allianceExists = alliances.some((alliance) => alliance.id === statsAllianceId);
+    const targetAllianceId = allianceExists ? statsAllianceId : alliances[0].id;
+
+    if (statsAllianceId !== targetAllianceId) {
+      setStatsAllianceId(targetAllianceId);
+      return;
+    }
+
+    void loadSeasonStats(targetAllianceId);
+  }, [activeTab, alliances, statsAllianceId, loadSeasonStats]);
+
+  const handleStatsAllianceChange = (allianceId: string) => {
+    setStatsAllianceId(allianceId);
+  };
+
+  const handleRefreshStatistics = async () => {
+    if (!statsAllianceId) return;
+    await loadSeasonStats(statsAllianceId);
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !tag.trim() || !ownerId) return;
@@ -158,14 +240,18 @@ export function useAlliancesViewModel() {
     try {
       await createAlliance(name.trim(), tag.trim(), ownerId);
       toast.success(t.game.alliances.createSuccess);
-      setName(''); setTag(''); setOwnerId('');
+      setName('');
+      setTag('');
+      setOwnerId('');
       setActiveTab(AllianceTab.Alliances);
       bumpRoleKey();
       await refreshMembership();
     } catch (err: unknown) {
       console.error(err);
       toast.error((err as Error).message || t.game.alliances.createError);
-    } finally { setCreating(false); }
+    } finally {
+      setCreating(false);
+    }
   };
 
   const handleOpenInviteMember = (allianceId: string) => {
@@ -174,15 +260,23 @@ export function useAlliancesViewModel() {
     fetchEligibleMembers();
   };
 
-  const handleCloseInviteMember = () => { setMemberAllianceId(null); setMemberAccountId(''); };
+  const handleCloseInviteMember = () => {
+    setMemberAllianceId(null);
+    setMemberAccountId('');
+  };
 
   const handleInviteMember = async (allianceId: string) => {
     if (!memberAccountId) return;
     try {
       await inviteMember(allianceId, memberAccountId);
       toast.success(t.game.alliances.inviteSuccess);
-      setMemberAllianceId(null); setMemberAccountId('');
-      await Promise.all([fetchEligibleMembers(), fetchPendingInvitations(alliances), fetchMyInvitations()]);
+      setMemberAllianceId(null);
+      setMemberAccountId('');
+      await Promise.all([
+        fetchEligibleMembers(),
+        fetchPendingInvitations(alliances),
+        fetchMyInvitations(),
+      ]);
     } catch (err: unknown) {
       console.error(err);
       toast.error((err as Error).message || t.game.alliances.inviteError);
@@ -255,6 +349,10 @@ export function useAlliancesViewModel() {
     memberAllianceId,
     memberAccountId,
     rosterTarget,
+    statsAllianceId,
+    seasonStats,
+    statsLoading,
+    statsError,
     searchParams,
     setActiveTab,
     setName,
@@ -271,5 +369,7 @@ export function useAlliancesViewModel() {
     handleDeclineInvitation,
     handleCancelInvitation,
     handleDefenseStateChange,
+    handleStatsAllianceChange,
+    handleRefreshStatistics,
   };
 }

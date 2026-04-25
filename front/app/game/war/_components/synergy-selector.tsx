@@ -32,7 +32,10 @@ export default function SynergySelectorDialog({
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
   useEffect(() => {
-    if (!open) { setQuery(''); return; }
+    if (!open) {
+      setQuery('');
+      return;
+    }
     if (!selectedAllianceId || !activeWarId) return;
     setLoading(true);
     getAvailableAttackers(selectedAllianceId, activeWarId, selectedBg, targetGameAccountId)
@@ -43,16 +46,16 @@ export default function SynergySelectorDialog({
 
   const usedSynergyIds = new Set(synergies.map((s) => s.champion_user_id));
   const available = attackers.filter(
-    (a) =>
-      !usedSynergyIds.has(a.champion_user_id)
-      && a.champion_user_id !== targetChampionUserId
+    (a) => !usedSynergyIds.has(a.champion_user_id) && a.champion_user_id !== targetChampionUserId
   );
   const filtered = query
     ? available.filter((a) => {
-      const q = query.toLowerCase();
-      return a.champion_name.toLowerCase().includes(q)
-        || (a.champion_alias ?? '').toLowerCase().includes(q);
-    })
+        const q = query.toLowerCase();
+        return (
+          a.champion_name.toLowerCase().includes(q) ||
+          (a.champion_alias ?? '').toLowerCase().includes(q)
+        );
+      })
     : available;
 
   return (
@@ -109,7 +112,9 @@ export default function SynergySelectorDialog({
                   <span className='text-[10px] text-center truncate w-full leading-tight'>
                     {a.champion_name}
                   </span>
-                  <span className={cn('text-[9px] font-mono leading-none', rarityBadgeClass(a.rarity))}>
+                  <span
+                    className={cn('text-[9px] font-mono leading-none', rarityBadgeClass(a.rarity))}
+                  >
                     {rarityLabel(a.rarity, a.signature, a.ascension)}
                   </span>
                 </button>

@@ -31,7 +31,11 @@ export default function PrefightEntryRow({
 
   return (
     <div
-      className={cn('flex items-center gap-2 rounded-md bg-card', boxPaddingSize, !isFull && 'border')}
+      className={cn(
+        'flex items-center gap-2 rounded-md bg-card',
+        boxPaddingSize,
+        !isFull && 'border'
+      )}
       data-cy={`prefight-entry-node-${prefight.target_node_number}`}
     >
       <div className='flex items-center gap-1 shrink-0'>

@@ -8,7 +8,7 @@ describe('War – Ended war status', () => {
   it('shows no-war message after war ends', () => {
     setupWarOwner('war-status-ended', 'StatusOfficer', 'StatusAlliance', 'ST').then(({ ownerData, allianceId }) => {
       cy.apiCreateWar(ownerData.access_token, allianceId, 'StatusEnemy').then((war) => {
-        cy.apiEndWar(ownerData.access_token, allianceId, war.id);
+        cy.apiEndWar(ownerData.access_token, allianceId, war.id, true, 10);
 
         cy.apiLogin(ownerData.user_id);
         cy.navTo('war');

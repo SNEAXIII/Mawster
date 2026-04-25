@@ -17,7 +17,12 @@ import {
   togglePreferredAttacker,
   ascendChampion,
 } from '@/app/services/roster';
-import { getMasteries, saveMasteries, MasteryEntry, MasteryUpsertItem } from '@/app/services/masteries';
+import {
+  getMasteries,
+  saveMasteries,
+  MasteryEntry,
+  MasteryUpsertItem,
+} from '@/app/services/masteries';
 
 export enum RosterTab {
   Roster = 'roster',
@@ -43,7 +48,10 @@ export function useRosterViewModel() {
 
   const isFirstRender = useRef(true);
   useEffect(() => {
-    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', activeTab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
@@ -94,7 +102,10 @@ export function useRosterViewModel() {
   }, [activeTab]);
 
   useEffect(() => {
-    if (!selectedAccountId) { setRoster([]); return; }
+    if (!selectedAccountId) {
+      setRoster([]);
+      return;
+    }
     setLoadingRoster(true);
     getRoster(selectedAccountId)
       .then(setRoster)
@@ -103,31 +114,34 @@ export function useRosterViewModel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAccountId]);
 
-  const updateMasteryField = useCallback((
-    masteryId: string,
-    field: 'unlocked' | 'attack' | 'defense',
-    value: number,
-    masteryMaxValue: number,
-  ) => {
-    if (value < 0) return;
-    setMasteryForm((prev) => {
-      const current = prev.find((item) => item.mastery_id === masteryId);
-      const maxValue = field === 'unlocked' ? masteryMaxValue : (current?.unlocked ?? 0);
-      const clamped = Math.min(value, maxValue);
-      return prev.map((item) => {
-        if (item.mastery_id !== masteryId) return item;
-        if (field === 'unlocked') {
-          return {
-            ...item,
-            unlocked: clamped,
-            attack: Math.min(item.attack, clamped),
-            defense: Math.min(item.defense, clamped),
-          };
-        }
-        return { ...item, [field]: clamped };
+  const updateMasteryField = useCallback(
+    (
+      masteryId: string,
+      field: 'unlocked' | 'attack' | 'defense',
+      value: number,
+      masteryMaxValue: number
+    ) => {
+      if (value < 0) return;
+      setMasteryForm((prev) => {
+        const current = prev.find((item) => item.mastery_id === masteryId);
+        const maxValue = field === 'unlocked' ? masteryMaxValue : (current?.unlocked ?? 0);
+        const clamped = Math.min(value, maxValue);
+        return prev.map((item) => {
+          if (item.mastery_id !== masteryId) return item;
+          if (field === 'unlocked') {
+            return {
+              ...item,
+              unlocked: clamped,
+              attack: Math.min(item.attack, clamped),
+              defense: Math.min(item.defense, clamped),
+            };
+          }
+          return { ...item, [field]: clamped };
+        });
       });
-    });
-  }, []);
+    },
+    []
+  );
 
   const fetchMasteries = useCallback(async (accountId: string) => {
     setLoadingMasteries(true);
@@ -213,15 +227,18 @@ export function useRosterViewModel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [upgradeTarget, selectedAccountId]);
 
-  const handleTogglePreferredAttacker = useCallback(async (entry: RosterEntry) => {
-    try {
-      await togglePreferredAttacker(entry.id);
-      if (selectedAccountId) setRoster(await getRoster(selectedAccountId));
-    } catch (e: unknown) {
-      toast.error((e as Error).message || t.roster.preferredAttackerToggle);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAccountId]);
+  const handleTogglePreferredAttacker = useCallback(
+    async (entry: RosterEntry) => {
+      try {
+        await togglePreferredAttacker(entry.id);
+        if (selectedAccountId) setRoster(await getRoster(selectedAccountId));
+      } catch (e: unknown) {
+        toast.error((e as Error).message || t.roster.preferredAttackerToggle);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [selectedAccountId]
+  );
 
   const confirmAscend = useCallback(async () => {
     if (!ascendTarget || !selectedAccountId) return;

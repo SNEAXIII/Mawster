@@ -9,6 +9,7 @@ import CreateAllianceForm from './create-alliance-form';
 import AllianceRosterDialog from './alliance-roster-dialog';
 import InvitationsSection from './invitations-section';
 import AlliancesTab from './alliances-tab';
+import AllianceStatisticsTab from './alliance-statistics-tab';
 import { useAlliancesViewModel, AllianceTab } from '../_viewmodels/use-alliances-viewmodel';
 
 const DefensePageContent = dynamic(() => import('../../defense/_components/defense-content'), {
@@ -26,6 +27,11 @@ export default function AllianceContent() {
       ? [{ value: AllianceTab.Create, label: t.game.alliances.createTitle, cy: 'tab-create' }]
       : []),
     { value: AllianceTab.Alliances, label: t.game.alliances.title, cy: 'tab-alliances' },
+    {
+      value: AllianceTab.Statistics,
+      label: t.game.alliances.statistics.tabLabel,
+      cy: 'tab-statistics',
+    },
     { value: AllianceTab.Defense, label: t.nav.defense, cy: 'tab-defense' },
   ];
 
@@ -40,7 +46,11 @@ export default function AllianceContent() {
           />
         )}
 
-        <TabBar tabs={tabs} value={vm.activeTab} onChange={vm.setActiveTab} />
+        <TabBar
+          tabs={tabs}
+          value={vm.activeTab}
+          onChange={vm.setActiveTab}
+        />
 
         {vm.activeTab === AllianceTab.Create && vm.eligibleOwners.length > 0 && (
           <CreateAllianceForm
@@ -85,9 +95,23 @@ export default function AllianceContent() {
           />
         )}
 
+        {vm.activeTab === AllianceTab.Statistics && (
+          <AllianceStatisticsTab
+            alliances={vm.alliances}
+            selectedAllianceId={vm.statsAllianceId}
+            onAllianceChange={vm.handleStatsAllianceChange}
+            seasonStats={vm.seasonStats}
+            statsLoading={vm.statsLoading}
+            statsError={vm.statsError}
+            onRetry={vm.handleRefreshStatistics}
+          />
+        )}
+
         <AllianceRosterDialog
           open={!!vm.rosterTarget}
-          onOpenChange={(open) => { if (!open) vm.setRosterTarget(null); }}
+          onOpenChange={(open) => {
+            if (!open) vm.setRosterTarget(null);
+          }}
           gameAccountId={vm.rosterTarget?.gameAccountId ?? null}
           gamePseudo={vm.rosterTarget?.pseudo ?? ''}
           canRequestUpgrade={vm.rosterTarget?.canRequestUpgrade ?? false}

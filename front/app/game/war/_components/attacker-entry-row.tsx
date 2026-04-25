@@ -18,7 +18,11 @@ interface AttackerEntryRowProps {
   readonly?: boolean;
 }
 
-export default function AttackerEntryRow({ placement, mode = 'compact', readonly = false }: Readonly<AttackerEntryRowProps>) {
+export default function AttackerEntryRow({
+  placement,
+  mode = 'compact',
+  readonly = false,
+}: Readonly<AttackerEntryRowProps>) {
   const { t } = useI18n();
   const { handleRemoveAttacker, handleUpdateKo, prefights } = useWar();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -33,7 +37,11 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
 
   return (
     <div
-      className={cn('flex items-center gap-2 rounded-md bg-card', boxPaddingSize, !isFull && 'border')}
+      className={cn(
+        'flex items-center gap-2 rounded-md bg-card',
+        boxPaddingSize,
+        !isFull && 'border'
+      )}
       data-cy={`attacker-entry-node-${placement.node_number}`}
       data-attacker={placement.attacker_champion_name ?? ''}
     >
@@ -66,7 +74,7 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
         ) : (
           <div
             className='rounded shrink-0 bg-muted border border-dashed border-muted-foreground/40 flex items-center justify-center text-muted-foreground/60'
-            style={{ width: portraitSize-8, height: portraitSize-8 }}
+            style={{ width: portraitSize - 8, height: portraitSize - 8 }}
           >
             <CircleQuestionMark className={swordsSize} />
           </div>
@@ -83,7 +91,11 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
           sagaMode='defender'
         />
         {nodePrefights.map((p) => (
-          <div key={p.champion_user_id} className='relative' title={t.game.war.prefight.tooltip}>
+          <div
+            key={p.champion_user_id}
+            className='relative'
+            title={t.game.war.prefight.tooltip}
+          >
             <ChampionPortrait
               imageUrl={p.image_url}
               name={p.champion_name}
@@ -107,7 +119,9 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
       </div>
 
       {placement.attacker_champion_user_id && readonly && (
-        <span className={cn('font-mono text-sm text-muted-foreground', isFull ? 'text-sm' : 'text-xs')}>
+        <span
+          className={cn('font-mono text-sm text-muted-foreground', isFull ? 'text-sm' : 'text-xs')}
+        >
           {placement.ko_count} KO
         </span>
       )}
@@ -126,7 +140,8 @@ export default function AttackerEntryRow({ placement, mode = 'compact', readonly
                 placement.ko_count <= 0 && 'opacity-40 cursor-not-allowed'
               )}
               onClick={() =>
-                placement.ko_count > 0 && handleUpdateKo(placement.node_number, placement.ko_count - 1)
+                placement.ko_count > 0 &&
+                handleUpdateKo(placement.node_number, placement.ko_count - 1)
               }
               disabled={placement.ko_count <= 0}
               data-cy={`ko-dec-node-${placement.node_number}`}

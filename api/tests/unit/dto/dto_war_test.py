@@ -3,6 +3,7 @@
 import uuid
 from datetime import datetime
 from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 from src.dto.dto_war import (
     WarResponse,
@@ -39,6 +40,9 @@ def _make_war(**overrides):
         "bans": [],
         "season_id": None,
         "season": None,
+        "win": None,
+        "elo_change": None,
+        "tier": None,
     }
     defaults.update(overrides)
     return _ns(**defaults)
@@ -398,3 +402,23 @@ class TestWarSynergyResponseDTO:
         dto = WarSynergyResponse.model_validate(data)
         assert dto.champion_name == "Nick Fury"
         assert dto.target_champion_name == "Quake"
+
+
+def test_war_response_includes_win_elo_change_tier():
+    war = MagicMock()
+    war.id = uuid.uuid4()
+    war.alliance_id = uuid.uuid4()
+    war.opponent_name = "Enemy"
+    war.status = "ended"
+    war.created_by = MagicMock(game_pseudo="player")
+    war.created_at = datetime.now()
+    war.bans = []
+    war.season_id = None
+    war.season = None
+    war.win = True
+    war.elo_change = 50
+    war.tier = 8
+    resp = WarResponse.model_validate(war)
+    assert resp.win is True
+    assert resp.elo_change == 50
+    assert resp.tier == 8

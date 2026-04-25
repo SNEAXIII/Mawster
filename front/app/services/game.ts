@@ -30,6 +30,8 @@ export interface Alliance {
   officers: AllianceOfficer[];
   members: AllianceMember[];
   member_count: number;
+  elo: number;
+  tier: number;
 }
 
 export interface AllianceOfficer {
@@ -285,6 +287,27 @@ export async function removeOfficer(allianceId: string, gameAccountId: string): 
     body: JSON.stringify({ game_account_id: gameAccountId }),
   });
   await throwOnError(response, "Erreur lors du retrait de l'officer");
+  return response.json();
+}
+
+// ─── ELO / Tier ──────────────────────────────────────────
+export async function patchAllianceElo(allianceId: string, elo: number): Promise<Alliance> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/elo`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+    body: JSON.stringify({ elo }),
+  });
+  if (!response.ok) throw new Error('Failed to update ELO');
+  return response.json();
+}
+
+export async function patchAllianceTier(allianceId: string, tier: number): Promise<Alliance> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/tier`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+    body: JSON.stringify({ tier }),
+  });
+  if (!response.ok) throw new Error('Failed to update Tier');
   return response.json();
 }
 

@@ -132,5 +132,4 @@ describe('Roster – Basic', () => {
       cy.contains('HulkDel removed from roster').should('be.visible');
     });
   });
-
 });

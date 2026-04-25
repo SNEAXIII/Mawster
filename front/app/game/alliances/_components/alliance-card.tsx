@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Shield, UserPlus, Users, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Shield, UserPlus, Users, X, Pencil, Check } from 'lucide-react';
 import InviteMemberCombo from './alliance-invite-member-combo';
 import { type Alliance, type GameAccount, type AllianceInvitation } from '@/app/services/game';
 import { formatDateMedium } from '@/app/lib/utils';
@@ -12,6 +13,8 @@ import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { CollapsibleSection } from '@/components/collapsible-section';
 import AllianceMemberRow from './alliance-member-row';
 import UsernameEnriched from '@/components/username-enriched';
+import { patchAllianceElo, patchAllianceTier } from '@/app/services/game';
+import { toast } from 'sonner';
 
 interface AllianceCardProps {
   alliance: Alliance;
@@ -24,7 +27,7 @@ interface AllianceCardProps {
   onOpenInviteMember: (allianceId: string) => void;
   onCloseInviteMember: () => void;
   onInviteMember: (allianceId: string) => void;
-  onRefresh: () => void;
+  onRefresh: () => Promise<void>;
   onViewRoster: (gameAccountId: string, pseudo: string, canRequestUpgrade: boolean) => void;
   pendingInvitations?: AllianceInvitation[];
   onCancelInvitation?: (allianceId: string, invitationId: string) => void;
@@ -49,6 +52,48 @@ export default function AllianceCard({
   const { canManage } = useAllianceRole();
   const userCanManage = canManage(alliance);
   const officerCount = alliance.officers.length;
+  const [editingElo, setEditingElo] = useState(false);
+  const [editingTier, setEditingTier] = useState(false);
+  const [eloDraft, setEloDraft] = useState('');
+  const [tierDraft, setTierDraft] = useState('');
+
+  function startEditElo() {
+    setEloDraft(String(alliance.elo));
+    setEditingElo(true);
+  }
+
+  async function saveElo() {
+    const val = Number(eloDraft);
+    if (!Number.isNaN(val) && val >= 0 && val <= 4500) {
+      try {
+        await patchAllianceElo(alliance.id, val);
+        await onRefresh();
+        toast.success(t.game.war.eloUpdateSuccess);
+      } catch (err: unknown) {
+        toast.error((err as Error).message || t.game.war.eloUpdateError);
+      }
+    }
+    setEditingElo(false);
+  }
+
+  function startEditTier() {
+    setTierDraft(String(alliance.tier));
+    setEditingTier(true);
+  }
+
+  async function saveTier() {
+    const val = Number(tierDraft);
+    if (!Number.isNaN(val) && val >= 1 && val <= 20) {
+      try {
+        await patchAllianceTier(alliance.id, val);
+        await onRefresh();
+        toast.success(t.game.war.tierUpdateSuccess);
+      } catch (err: unknown) {
+        toast.error((err as Error).message || t.game.war.tierUpdateError);
+      }
+    }
+    setEditingTier(false);
+  }
 
   const GROUPS = [1, 2, 3, null] as const;
   const membersByGroup = GROUPS.map((group) => ({
@@ -56,7 +101,11 @@ export default function AllianceCard({
     members: [...alliance.members]
       .filter((m) => m.alliance_group === group)
       .sort((a, b) => {
-        const rank = (m: typeof a) => (m.is_owner ? 0 : m.is_officer ? 1 : 2);
+        const rank = (m: typeof a) => {
+          if (m.is_owner) return 0;
+          if (m.is_officer) return 1;
+          return 2;
+        };
         return rank(a) - rank(b);
       }),
   }));
@@ -97,6 +146,107 @@ export default function AllianceCard({
               <span className='text-xs text-muted-foreground'>·</span>
               <span className='text-xs text-muted-foreground'>
                 {formatDateMedium(alliance.created_at, locale)}
+              </span>
+            </div>
+            <div className='flex items-center gap-2 mt-1 flex-wrap'>
+              <span
+                className='text-xs text-muted-foreground'
+                data-cy='alliance-elo'
+              >
+                {editingElo ? (
+                  <span className='inline-flex items-center gap-1'>
+                    <span>{t.game.alliances.elo}:</span>
+                    <Input
+                      type='number'
+                      className='h-7 w-24 text-xs'
+                      value={eloDraft}
+                      onChange={(e) => setEloDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') void saveElo();
+                        if (e.key === 'Escape') setEditingElo(false);
+                      }}
+                      autoFocus
+                      data-cy='alliance-elo-input'
+                    />
+                    <button
+                      onClick={() => void saveElo()}
+                      className='text-green-600 hover:text-green-700'
+                      data-cy='alliance-elo-save'
+                    >
+                      <Check className='w-3.5 h-3.5' />
+                    </button>
+                    <button
+                      onClick={() => setEditingElo(false)}
+                      className='text-muted-foreground hover:text-foreground'
+                    >
+                      <X className='w-3.5 h-3.5' />
+                    </button>
+                  </span>
+                ) : (
+                  <span className='inline-flex items-center gap-1'>
+                    <span>{t.game.alliances.elo}:</span>
+                    <span className='font-semibold text-foreground'>{alliance.elo}</span>
+                    {userCanManage && (
+                      <button
+                        onClick={startEditElo}
+                        className='text-muted-foreground hover:text-foreground'
+                        data-cy='alliance-elo-edit'
+                      >
+                        <Pencil className='w-3 h-3' />
+                      </button>
+                    )}
+                  </span>
+                )}
+              </span>
+              <span className='text-xs text-muted-foreground'>·</span>
+              <span
+                className='text-xs text-muted-foreground'
+                data-cy='alliance-tier'
+              >
+                {editingTier ? (
+                  <span className='inline-flex items-center gap-1'>
+                    <span>{t.game.alliances.tier}:</span>
+                    <Input
+                      type='number'
+                      className='h-7 w-20 text-xs'
+                      value={tierDraft}
+                      onChange={(e) => setTierDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') void saveTier();
+                        if (e.key === 'Escape') setEditingTier(false);
+                      }}
+                      autoFocus
+                      data-cy='alliance-tier-input'
+                    />
+                    <button
+                      onClick={() => void saveTier()}
+                      className='text-green-600 hover:text-green-700'
+                      data-cy='alliance-tier-save'
+                    >
+                      <Check className='w-3.5 h-3.5' />
+                    </button>
+                    <button
+                      onClick={() => setEditingTier(false)}
+                      className='text-muted-foreground hover:text-foreground'
+                    >
+                      <X className='w-3.5 h-3.5' />
+                    </button>
+                  </span>
+                ) : (
+                  <span className='inline-flex items-center gap-1'>
+                    <span>{t.game.alliances.tier}:</span>
+                    <span className='font-semibold text-foreground'>{alliance.tier}</span>
+                    {userCanManage && (
+                      <button
+                        onClick={startEditTier}
+                        className='text-muted-foreground hover:text-foreground'
+                        data-cy='alliance-tier-edit'
+                      >
+                        <Pencil className='w-3 h-3' />
+                      </button>
+                    )}
+                  </span>
+                )}
               </span>
             </div>
           </div>
@@ -199,9 +349,9 @@ export default function AllianceCard({
                   data-cy={`group-col-${group ?? 'unassigned'}`}
                 >
                   <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-1 mb-1 border-b'>
-                    {group !== null
-                      ? `${t.game.alliances.group} ${group}`
-                      : t.game.alliances.noGroup}
+                    {group === null
+                      ? t.game.alliances.noGroup
+                      : `${t.game.alliances.group} ${group}`}
                     {members.length > 0 && (
                       <span className='ml-1 font-normal'>({members.length})</span>
                     )}

@@ -1,12 +1,13 @@
+import uuid
 from typing import Annotated
-from src.models import GameAccount
-from sqlmodel import select
 
 from fastapi import APIRouter, Depends
 
+from src.dto.dto_statistic import PlayerSeasonStatsResponse
 from src.models import User
-from src.services.AuthService import AuthService
 from src.utils.db import SessionDep
+from src.services.StatisticService import StatisticService
+from src.services.AuthService import AuthService
 
 statistics_controller = APIRouter(
     prefix="/statistics",
@@ -19,17 +20,13 @@ statistics_controller = APIRouter(
 
 
 @statistics_controller.get(
-    "/current_season",
-    # response_model=None,
+    "/current_season/{alliance_id}",
+    response_model=list[PlayerSeasonStatsResponse],
 )
 async def get_current_season_statistics(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    alliance_id: uuid.UUID,
 ):
     """Get the current season statistics."""
-    sql = select(GameAccount.id, GameAccount.game_pseudo, GameAccount.alliance_group).where(
-        GameAccount.alliance_id == current_user.alliance_id
-    )
-    session_result = (await session.exec(sql)).all()
-    print(session_result)
-    print(5)
+    return await StatisticService.get_active_season_statistics(session, current_user, alliance_id)

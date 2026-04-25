@@ -14,8 +14,7 @@ export default function AscensionBadge({
       )}
       data-cy={`ascension-badge-${level}`}
     >
-      {/* TODO ADD le vrai */}
-      A{level}
+      {/* TODO ADD le vrai */}A{level}
     </div>
   );
 }

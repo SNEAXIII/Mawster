@@ -24,6 +24,8 @@ class Alliance(SQLModel, table=True):
         )
     )
     created_at: datetime = Field(default_factory=datetime.now)
+    elo: int = Field(default=0)
+    tier: int = Field(default=20)
 
     # Relations
     owner: "GameAccount" = Relationship(

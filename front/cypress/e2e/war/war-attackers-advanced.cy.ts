@@ -72,9 +72,11 @@ describe('War – Attackers mode (advanced)', () => {
           const attackerNames = ['Thor', 'Captain Marvel', 'Doctor Strange', 'Vision'];
           const cuIds: string[] = [];
           attackerNames.forEach((name) => {
-            cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champMap[name].id, '7r3').then((cu: any) => {
-              cuIds.push(cu.id);
-            });
+            cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champMap[name].id, '7r3').then(
+              (cu: any) => {
+                cuIds.push(cu.id);
+              },
+            );
           });
 
           cy.then(() => {
@@ -142,17 +144,19 @@ describe('War – Attackers mode (advanced)', () => {
   });
 
   it('preferred attacker badge shows in panel after assigning', () => {
-    setupAttackerScenario('atk-pref-panel').then(({ adminToken, memberData, memberAccId, ownerData, allianceId, warId }) => {
-      cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
-          is_preferred_attacker: true,
-        }).then((cu) => {
-          cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, cu.id);
-          goToAttackersMode(ownerData.user_id);
-          cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
-          cy.getByCy('attacker-entry-node-10').find('[data-cy="preferred-badge"]').should('exist');
+    setupAttackerScenario('atk-pref-panel').then(
+      ({ adminToken, memberData, memberAccId, ownerData, allianceId, warId }) => {
+        cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
+            is_preferred_attacker: true,
+          }).then((cu) => {
+            cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, cu.id);
+            goToAttackersMode(ownerData.user_id);
+            cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
+            cy.getByCy('attacker-entry-node-10').find('[data-cy="preferred-badge"]').should('exist');
+          });
         });
-      });
-    });
+      },
+    );
   });
 });

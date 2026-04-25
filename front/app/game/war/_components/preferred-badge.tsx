@@ -3,7 +3,9 @@
 import { cn } from '@/app/lib/utils';
 import { Swords } from 'lucide-react';
 
-export default function PreferredBadge({ additionalClasses = '' }: Readonly<{ additionalClasses?: string }>) {
+export default function PreferredBadge({
+  additionalClasses = '',
+}: Readonly<{ additionalClasses?: string }>) {
   return (
     <div
       className={cn(

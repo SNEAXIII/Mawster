@@ -15,9 +15,14 @@ describe('War – Management (declare and end)', () => {
       cy.getByCy('war-opponent-name').should('contain', 'TargetEnemy');
       cy.getByCy('end-war-btn').should('be.visible').click();
 
-      // Confirm dialog — must type "confirm" to unlock the button
+      // End-war dialog: ELO required if season active, confirm input always required.
+      cy.get('body').then(($body) => {
+        if ($body.find('[data-cy="end-war-elo-input"]').length > 0) {
+          cy.getByCy('end-war-elo-input').type('10');
+        }
+      });
       cy.getByCy('confirmation-dialog-confirm').should('be.disabled');
-      cy.getByCy('confirm-text-input').type('confirm');
+      cy.getByCy('end-war-confirm-input').type('confirm');
       cy.getByCy('confirmation-dialog-confirm').should('not.be.disabled').click();
 
       // After ending: declare button visible, map gone

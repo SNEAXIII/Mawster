@@ -499,6 +499,8 @@ class TestAllianceResponseModelValidate:
             owner_id=owner_id,
             owner=_ns(game_pseudo="TheOwner"),
             created_at=now,
+            elo=0,
+            tier=20,
             officers=[officer],
             members=[owner_member, officer_member],
         )
@@ -527,6 +529,8 @@ class TestAllianceResponseModelValidate:
             owner_id=uuid.uuid4(),
             owner=_ns(game_pseudo="Solo"),
             created_at=now,
+            elo=0,
+            tier=20,
             officers=[],
             members=[],
         )

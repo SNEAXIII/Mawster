@@ -43,7 +43,11 @@ export default function RosterContent() {
   return (
     <AllianceRoleProvider>
       <div className='px-3 py-4 sm:p-6 max-w-6xl mx-auto'>
-        <TabBar tabs={tabs} value={vm.activeTab} onChange={vm.setActiveTab} />
+        <TabBar
+          tabs={tabs}
+          value={vm.activeTab}
+          onChange={vm.setActiveTab}
+        />
 
         {vm.activeTab === RosterTab.Roster && (
           <>
@@ -54,18 +58,27 @@ export default function RosterContent() {
                 <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2'>
                   {vm.accounts.length > 1 && (
                     <div className='mb-6'>
-                      <label className='block text-sm font-medium mb-2'>{t.roster.selectAccount}</label>
+                      <label className='block text-sm font-medium mb-2'>
+                        {t.roster.selectAccount}
+                      </label>
                       <Select
                         value={vm.selectedAccountId || ''}
                         onValueChange={(val) => vm.setSelectedAccountId(val || null)}
                       >
-                        <SelectTrigger className='w-full max-w-xs' data-cy='roster-account-select'>
+                        <SelectTrigger
+                          className='w-full max-w-xs'
+                          data-cy='roster-account-select'
+                        >
                           <SelectValue placeholder={t.roster.chooseAccount} />
                         </SelectTrigger>
                         <SelectContent>
                           {vm.accounts.map((acc) => (
-                            <SelectItem key={acc.id} value={acc.id}>
-                              {acc.game_pseudo}{acc.is_primary ? ` (${t.game.accounts.primary})` : ''}
+                            <SelectItem
+                              key={acc.id}
+                              value={acc.id}
+                            >
+                              {acc.game_pseudo}
+                              {acc.is_primary ? ` (${t.game.accounts.primary})` : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -76,14 +89,20 @@ export default function RosterContent() {
                     <RosterImportExport
                       roster={vm.roster}
                       selectedAccountId={vm.selectedAccountId}
-                      selectedAccountName={vm.accounts.find((a) => a.id === vm.selectedAccountId)?.game_pseudo ?? ''}
+                      selectedAccountName={
+                        vm.accounts.find((a) => a.id === vm.selectedAccountId)?.game_pseudo ?? ''
+                      }
                       onRosterUpdated={(updated) => vm.handleFormSuccess(updated)}
                     />
                   )}
                 </div>
 
                 {vm.error && (
-                  <ErrorBanner message={vm.error} onDismiss={vm.clearError} className='mb-4' />
+                  <ErrorBanner
+                    message={vm.error}
+                    onDismiss={vm.clearError}
+                    className='mb-4'
+                  />
                 )}
 
                 {vm.selectedAccountId && (
@@ -98,7 +117,9 @@ export default function RosterContent() {
                     />
                     <RosterUpgradeSection
                       selectedAccountId={vm.selectedAccountId}
-                      allianceId={vm.accounts.find((a) => a.id === vm.selectedAccountId)?.alliance_id ?? null}
+                      allianceId={
+                        vm.accounts.find((a) => a.id === vm.selectedAccountId)?.alliance_id ?? null
+                      }
                       refreshKey={vm.upgradeRefreshKey}
                     />
                     {vm.loadingRoster ? (

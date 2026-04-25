@@ -34,7 +34,9 @@ export default function CreateWarDialog({ open, onClose, onConfirm }: CreateWarD
 
   useEffect(() => {
     if (!open) return;
-    getChampions(1, 9999).then((res) => setChampions(res.champions)).catch(() => {});
+    getChampions(1, 9999)
+      .then((res) => setChampions(res.champions))
+      .catch(() => {});
   }, [open]);
 
   const filtered = search.trim()
@@ -169,7 +171,9 @@ export default function CreateWarDialog({ open, onClose, onConfirm }: CreateWarD
                           size={40}
                         />
                         <span className={selected ? 'font-medium' : ''}>{c.name}</span>
-                        <span className='text-muted-foreground text-xs ml-auto'>{c.champion_class}</span>
+                        <span className='text-muted-foreground text-xs ml-auto'>
+                          {c.champion_class}
+                        </span>
                       </button>
                     );
                   })}

@@ -32,7 +32,10 @@ export function useAdminViewModel({ defaultTab = AdminTab.Users }: UseAdminViewM
 
   const isFirstRender = useRef(true);
   useEffect(() => {
-    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', activeTab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });

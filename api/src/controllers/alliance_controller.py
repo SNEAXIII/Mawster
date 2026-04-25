@@ -11,6 +11,8 @@ from src.dto.dto_alliance import (
     AllianceRemoveOfficerRequest,
     AllianceResponse,
     AllianceSetGroupRequest,
+    AllianceUpdateEloRequest,
+    AllianceUpdateTierRequest,
 )
 from src.dto.dto_invitation import (
     AllianceInvitationCreateRequest,
@@ -229,6 +231,48 @@ async def update_alliance(
         name=body.name,
         tag=body.tag,
     )
+    return _to_response(updated)
+
+
+@alliance_controller.patch(
+    "/{alliance_id}/elo",
+    response_model=AllianceResponse,
+)
+async def update_alliance_elo(
+    alliance_id: uuid.UUID,
+    body: AllianceUpdateEloRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Update alliance ELO. Officers/owner only."""
+    from src.models.Alliance import Alliance
+
+    alliance = await session.get(Alliance, alliance_id)
+    if alliance is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    updated = await AllianceService.update_elo(session, alliance, body.elo)
+    return _to_response(updated)
+
+
+@alliance_controller.patch(
+    "/{alliance_id}/tier",
+    response_model=AllianceResponse,
+)
+async def update_alliance_tier(
+    alliance_id: uuid.UUID,
+    body: AllianceUpdateTierRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Update alliance Tier. Officers/owner only."""
+    from src.models.Alliance import Alliance
+
+    alliance = await session.get(Alliance, alliance_id)
+    if alliance is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    updated = await AllianceService.update_tier(session, alliance, body.tier)
     return _to_response(updated)
 
 

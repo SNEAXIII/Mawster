@@ -10,29 +10,27 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   // =========================================================================
 
   it('class filter shows only champions of the selected class', () => {
-    setupDefenseOwner('def-flt-cls', 'ClsFilterPlyr', 'ClassAll', 'CF').then(
-      ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
+    setupDefenseOwner('def-flt-cls', 'ClsFilterPlyr', 'ClassAll', 'CF').then(({ adminData, ownerData, ownerAccId }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+      });
+      cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+      });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id);
+      cy.navTo('defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
-        cy.getByCy('champion-card-Wolverine').should('be.visible');
+      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      cy.getByCy('champion-card-Spider-Man').should('be.visible');
+      cy.getByCy('champion-card-Wolverine').should('be.visible');
 
-        cy.getByCy('selector-class-filter').click();
-        cy.contains('[role="option"]', 'Cosmic').click();
+      cy.getByCy('selector-class-filter').click();
+      cy.contains('[role="option"]', 'Cosmic').click();
 
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
-        cy.getByCy('champion-card-Wolverine').should('not.exist');
-      },
-    );
+      cy.getByCy('champion-card-Spider-Man').should('be.visible');
+      cy.getByCy('champion-card-Wolverine').should('not.exist');
+    });
   });
 
   // =========================================================================
@@ -70,28 +68,26 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   // =========================================================================
 
   it('saga defender toggle shows only saga defenders', () => {
-    setupDefenseOwner('def-flt-saga', 'SagaFltPlyr', 'SagaAll', 'SF').then(
-      ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic', { is_saga_defender: true }).then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
+    setupDefenseOwner('def-flt-saga', 'SagaFltPlyr', 'SagaAll', 'SF').then(({ adminData, ownerData, ownerAccId }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic', { is_saga_defender: true }).then((champs) => {
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+      });
+      cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+      });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id);
+      cy.navTo('defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
-        cy.getByCy('champion-card-Wolverine').should('be.visible');
+      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      cy.getByCy('champion-card-Spider-Man').should('be.visible');
+      cy.getByCy('champion-card-Wolverine').should('be.visible');
 
-        cy.getByCy('selector-toggle-saga').click();
+      cy.getByCy('selector-toggle-saga').click();
 
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
-        cy.getByCy('champion-card-Wolverine').should('not.exist');
-      },
-    );
+      cy.getByCy('champion-card-Spider-Man').should('be.visible');
+      cy.getByCy('champion-card-Wolverine').should('not.exist');
+    });
   });
 
   // =========================================================================
@@ -160,9 +156,11 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   it('reset button clears all active filters and restores all champions', () => {
     setupDefenseOwner('def-flt-reset', 'ResetFltPlyr', 'ResetAll', 'RF').then(
       ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic', { is_saga_defender: true }).then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
+        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic', { is_saga_defender: true }).then(
+          (champs) => {
+            cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+          },
+        );
         cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
         });
@@ -190,35 +188,33 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   // =========================================================================
 
   it('class and saga filters combine to narrow results', () => {
-    setupDefenseOwner('def-flt-comb', 'CombFltPlyr', 'CombAll', 'CB').then(
-      ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic', { is_saga_defender: true }).then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
-        cy.apiLoadChampion(adminData.access_token, 'Iron Man', 'Tech', { is_saga_defender: true }).then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
+    setupDefenseOwner('def-flt-comb', 'CombFltPlyr', 'CombAll', 'CB').then(({ adminData, ownerData, ownerAccId }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic', { is_saga_defender: true }).then((champs) => {
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+      });
+      cy.apiLoadChampion(adminData.access_token, 'Iron Man', 'Tech', { is_saga_defender: true }).then((champs) => {
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+      });
+      cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+      });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id);
+      cy.navTo('defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
 
-        // Saga filter → Spider-Man + Iron Man visible
-        cy.getByCy('selector-toggle-saga').click();
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
-        cy.getByCy('champion-card-Iron-Man').should('be.visible');
-        cy.getByCy('champion-card-Wolverine').should('not.exist');
+      // Saga filter → Spider-Man + Iron Man visible
+      cy.getByCy('selector-toggle-saga').click();
+      cy.getByCy('champion-card-Spider-Man').should('be.visible');
+      cy.getByCy('champion-card-Iron-Man').should('be.visible');
+      cy.getByCy('champion-card-Wolverine').should('not.exist');
 
-        // Add class filter Cosmic → only Spider-Man
-        cy.getByCy('selector-class-filter').click();
-        cy.contains('[role="option"]', 'Cosmic').click();
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
-        cy.getByCy('champion-card-Iron-Man').should('not.exist');
-      },
-    );
+      // Add class filter Cosmic → only Spider-Man
+      cy.getByCy('selector-class-filter').click();
+      cy.contains('[role="option"]', 'Cosmic').click();
+      cy.getByCy('champion-card-Spider-Man').should('be.visible');
+      cy.getByCy('champion-card-Iron-Man').should('not.exist');
+    });
   });
 });

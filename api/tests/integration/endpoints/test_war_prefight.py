@@ -442,7 +442,7 @@ class TestGetAvailablePrefightAttackers:
         # End current war and create a new one banning the prefight champion (Quake)
         await execute_post_request(
             f"/alliances/{alliance.id}/wars/{war.id}/end",
-            payload={},
+            payload={"win": True},
             headers=data["headers_owner"],
         )
         new_war_resp = await execute_post_request(

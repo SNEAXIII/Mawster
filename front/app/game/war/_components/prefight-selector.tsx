@@ -57,7 +57,9 @@ export default function PrefightSelectorDialog({
 
   // Only exclude champions already prefighting THIS specific node (same champion can prefight other nodes)
   const usedPrefightIds = new Set(
-    prefights.filter((p) => p.target_node_number === targetNodeNumber).map((p) => p.champion_user_id)
+    prefights
+      .filter((p) => p.target_node_number === targetNodeNumber)
+      .map((p) => p.champion_user_id)
   );
 
   const filtered = available
@@ -67,13 +69,16 @@ export default function PrefightSelectorDialog({
         !playerSearch || a.game_pseudo.toLowerCase().includes(playerSearch.toLowerCase());
       const alias = (a.champion_alias ?? '').toLowerCase();
       const matchChampion =
-        !championSearch
-        || a.champion_name.toLowerCase().includes(championSearch.toLowerCase())
-        || alias.includes(championSearch.toLowerCase());
+        !championSearch ||
+        a.champion_name.toLowerCase().includes(championSearch.toLowerCase()) ||
+        alias.includes(championSearch.toLowerCase());
       return matchPlayer && matchChampion;
     });
 
-  const groupMap = new Map<string, { pseudo: string; gameAccountId: string; attackers: AvailableAttacker[] }>();
+  const groupMap = new Map<
+    string,
+    { pseudo: string; gameAccountId: string; attackers: AvailableAttacker[] }
+  >();
   for (const a of filtered) {
     let group = groupMap.get(a.game_account_id);
     if (!group) {
@@ -136,7 +141,9 @@ export default function PrefightSelectorDialog({
                 <span className='text-[10px] text-center truncate w-full leading-tight'>
                   {shortenChampionName(a.champion_name)}
                 </span>
-                <span className={cn('text-[9px] font-mono leading-none', rarityBadgeClass(a.rarity))}>
+                <span
+                  className={cn('text-[9px] font-mono leading-none', rarityBadgeClass(a.rarity))}
+                >
                   {rarityLabel(a.rarity, a.signature, a.ascension)}
                 </span>
                 <span className={cn('text-[9px] font-medium', classColors.label)}>
@@ -151,14 +158,18 @@ export default function PrefightSelectorDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => !v && onClose()}
+    >
       <DialogContent
         className='max-w-2xl max-h-[90vh] overflow-hidden flex flex-col gap-0 p-0'
         data-cy='prefight-selector'
       >
         <DialogHeader className='px-6 py-4'>
           <DialogTitle>
-            {t.game.war.prefight.add} — {t.game.war.prefight.for.replace('#{node}', String(targetNodeNumber))}
+            {t.game.war.prefight.add} —{' '}
+            {t.game.war.prefight.for.replace('#{node}', String(targetNodeNumber))}
           </DialogTitle>
         </DialogHeader>
         <Separator />

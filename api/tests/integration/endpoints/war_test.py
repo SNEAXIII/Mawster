@@ -144,7 +144,7 @@ class TestCreateWar:
         # End the existing war
         await execute_post_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={},
+            payload={"win": True},
             headers=headers,
         )
 
@@ -436,7 +436,7 @@ class TestEndWar:
 
         response = await execute_post_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={},
+            payload={"win": True},
             headers=headers,
         )
         assert response.status_code == 200
@@ -452,7 +452,7 @@ class TestEndWar:
 
         response = await execute_post_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={},
+            payload={"win": True},
             headers=headers,
         )
         assert response.status_code == 403
@@ -463,7 +463,7 @@ class TestEndWar:
 
         response = await execute_post_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={},
+            payload={"win": True},
         )
         assert response.status_code == 401
 
@@ -475,7 +475,7 @@ class TestEndWar:
 
         response = await execute_post_request(
             f"/alliances/{wrong_alliance_id}/wars/{data['war'].id}/end",
-            payload={},
+            payload={"win": True},
             headers=headers,
         )
         assert response.status_code in (403, 404)
@@ -502,7 +502,7 @@ class TestEndWar:
         # End the war
         end_response = await execute_post_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={},
+            payload={"win": True},
             headers=headers,
         )
         assert end_response.status_code == 200
@@ -534,11 +534,96 @@ class TestEndWar:
         headers = create_auth_headers(user_id=str(USER_ID))
         url = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end"
 
-        await execute_post_request(url, payload={}, headers=headers)
-        response = await execute_post_request(url, payload={}, headers=headers)
+        await execute_post_request(url, payload={"win": True}, headers=headers)
+        response = await execute_post_request(url, payload={"win": True}, headers=headers)
 
         assert response.status_code == 200
         assert response.json()["status"] == "ended"
+
+    @pytest.mark.asyncio
+    async def test_end_war_captures_win_and_tier_no_season(self):
+        data = await _setup_war()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True},
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["win"] is True
+        assert body["elo_change"] is None
+        assert body["tier"] == 20  # default
+
+    @pytest.mark.asyncio
+    async def test_end_war_during_season_applies_elo_gain(self):
+        data = await _setup_alliance()
+        season = Season(number=64, is_active=True)
+        await load_objects([season])
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        declare = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={"opponent_name": "Season Foe", "banned_champion_ids": []},
+            headers=headers,
+        )
+        assert declare.status_code == 201
+        war_id = declare.json()["id"]
+
+        end = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{war_id}/end",
+            payload={"win": True, "elo_change": 50},
+            headers=headers,
+        )
+        assert end.status_code == 200
+        assert end.json()["elo_change"] == 50
+
+        alliances = (await execute_get_request("/alliances/mine", headers=headers)).json()
+        updated = next(a for a in alliances if a["id"] == str(data["alliance"].id))
+        assert updated["elo"] == 50
+
+    @pytest.mark.asyncio
+    async def test_end_war_during_season_win_negative_elo_rejected(self):
+        data = await _setup_alliance()
+        season = Season(number=65, is_active=True)
+        await load_objects([season])
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        declare = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={"opponent_name": "S Foe2", "banned_champion_ids": []},
+            headers=headers,
+        )
+        war_id = declare.json()["id"]
+
+        end = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{war_id}/end",
+            payload={"win": True, "elo_change": -30},
+            headers=headers,
+        )
+        assert end.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_end_war_during_season_missing_elo_change_rejected(self):
+        data = await _setup_alliance()
+        season = Season(number=66, is_active=True)
+        await load_objects([season])
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        declare = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={"opponent_name": "S Foe3", "banned_champion_ids": []},
+            headers=headers,
+        )
+        war_id = declare.json()["id"]
+
+        end = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{war_id}/end",
+            payload={"win": False},
+            headers=headers,
+        )
+        assert end.status_code == 422
 
 
 # ─── Attacker helpers ─────────────────────────────────────
@@ -1072,7 +1157,7 @@ class TestGetCurrentWar:
         # End the war first
         await execute_post_request(
             f"/alliances/{alliance.id}/wars/{war.id}/end",
-            payload={},
+            payload={"win": True},
             headers=headers,
         )
 
@@ -1215,7 +1300,7 @@ class TestWarBans:
         # End current war, create a new one banning Wolverine (champ2 = data["champ2"])
         await execute_post_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={},
+            payload={"win": True},
             headers=headers_officer,
         )
         new_war_resp = await execute_post_request(
@@ -1247,7 +1332,7 @@ class TestWarBans:
         # End current war, create a new one banning Wolverine
         await execute_post_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={},
+            payload={"win": True},
             headers=headers_officer,
         )
         new_war_resp = await execute_post_request(

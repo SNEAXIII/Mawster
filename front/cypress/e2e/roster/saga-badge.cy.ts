@@ -15,9 +15,7 @@ describe('Roster – Saga Badge (sagaMode all)', () => {
         cy.apiLogin(userData.user_id);
         cy.navTo('roster');
 
-        cy.getByCy('champion-card-SagaAttacker')
-          .find('[data-cy="saga-badge"]')
-          .should('exist');
+        cy.getByCy('champion-card-SagaAttacker').find('[data-cy="saga-badge"]').should('exist');
       });
     });
   });
@@ -32,9 +30,7 @@ describe('Roster – Saga Badge (sagaMode all)', () => {
         cy.apiLogin(userData.user_id);
         cy.navTo('roster');
 
-        cy.getByCy('champion-card-SagaDefender')
-          .find('[data-cy="saga-badge"]')
-          .should('exist');
+        cy.getByCy('champion-card-SagaDefender').find('[data-cy="saga-badge"]').should('exist');
       });
     });
   });
@@ -47,9 +43,7 @@ describe('Roster – Saga Badge (sagaMode all)', () => {
         cy.apiLogin(userData.user_id);
         cy.navTo('roster');
 
-        cy.getByCy('champion-card-PlainHero')
-          .find('[data-cy="saga-badge"]')
-          .should('not.exist');
+        cy.getByCy('champion-card-PlainHero').find('[data-cy="saga-badge"]').should('not.exist');
       });
     });
   });
@@ -66,9 +60,7 @@ describe('Roster – Saga Badge (sagaMode all)', () => {
         cy.apiLogin(userData.user_id);
         cy.navTo('roster');
 
-        cy.getByCy('champion-card-AscBadgeHero')
-          .find('[data-cy="ascension-badge-1"]')
-          .should('exist');
+        cy.getByCy('champion-card-AscBadgeHero').find('[data-cy="ascension-badge-1"]').should('exist');
       });
     });
   });

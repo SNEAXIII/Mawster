@@ -21,6 +21,9 @@ export interface War {
   banned_champions: BannedChampion[];
   season_id: string | null;
   season_number: number | null;
+  win: boolean | null;
+  elo_change: number | null;
+  tier: number | null;
 }
 
 export interface WarPlacement {
@@ -215,10 +218,16 @@ export async function removeWarDefender(
   await throwOnError(response, 'Failed to remove defender');
 }
 
-export async function endWar(allianceId: string, warId: string): Promise<War> {
+export async function endWar(
+  allianceId: string,
+  warId: string,
+  win: boolean,
+  eloChange: number | null
+): Promise<War> {
   const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/${warId}/end`, {
     method: 'POST',
     headers: jsonHeaders,
+    body: JSON.stringify({ win, elo_change: eloChange }),
   });
   await throwOnError(response, 'Failed to end war');
   return response.json();

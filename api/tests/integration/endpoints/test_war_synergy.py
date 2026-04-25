@@ -485,7 +485,7 @@ class TestSynergyBans:
         # End current war, create a new one banning Deadpool (synergy_cu's champion)
         await execute_post_request(
             f"/alliances/{alliance.id}/wars/{war.id}/end",
-            payload={},
+            payload={"win": True},
             headers=headers_owner,
         )
         deadpool_champ_id = data["synergy_cu"].champion_id

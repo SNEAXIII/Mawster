@@ -83,7 +83,8 @@ interface WarContextValue {
   // Actions
   handleNodeClick: (node: number) => void;
   handleCreateWar: (opponentName: string, bannedChampionIds: string[]) => Promise<void>;
-  handleEndWar: () => Promise<void>;
+  handleEndWar: (win: boolean, eloChange: number | null) => Promise<void>;
+  refreshAlliances: () => Promise<void>;
   handlePlaceDefender: (
     championId: string,
     championName: string,
@@ -132,6 +133,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     selectedBg,
     setSelectedBg,
     loading,
+    refresh,
   } = useAllianceSelector();
 
   // ─── War state ─────────────────────────────────────────────────────────────
@@ -271,10 +273,11 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
   };
 
-  const handleEndWar = async () => {
+  const handleEndWar = async (win: boolean, eloChange: number | null) => {
     if (!currentWar) return;
     try {
-      await endWar(selectedAllianceId, currentWar.id);
+      await endWar(selectedAllianceId, currentWar.id, win, eloChange);
+      await refresh();
       toast.success(t.game.war.endWarSuccess);
       setCurrentWar(null);
     } catch (err: unknown) {
@@ -552,6 +555,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       handleNodeClick,
       handleCreateWar,
       handleEndWar,
+      refreshAlliances: refresh,
       handlePlaceDefender,
       handleRemoveDefender,
       handleConfirmRemoveDefender,
