@@ -3,7 +3,9 @@
 import { cn } from '@/app/lib/utils';
 import { Flame } from 'lucide-react';
 
-export default function PrefightBadge({ additionalClasses = '' }: Readonly<{ additionalClasses?: string }>) {
+export default function PrefightBadge({
+  additionalClasses = '',
+}: Readonly<{ additionalClasses?: string }>) {
   return (
     <div
       className={cn(

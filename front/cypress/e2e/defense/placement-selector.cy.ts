@@ -295,9 +295,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
       // Reopen node 1 — should show Spider-Man as current placement
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
-      cy.getByCy('defense-current-placement')
-        .should('contain', 'Spider-Man')
-        .and('contain', 'EntryFilledPlyr');
+      cy.getByCy('defense-current-placement').should('contain', 'Spider-Man').and('contain', 'EntryFilledPlyr');
     });
   });
 

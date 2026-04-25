@@ -62,40 +62,49 @@ export default function SeasonsPanel() {
   };
 
   return (
-    <div className="mt-6 space-y-4" data-cy="seasons-panel">
-      <h2 className="text-lg font-semibold">{t.game.season.admin.title}</h2>
+    <div
+      className='mt-6 space-y-4'
+      data-cy='seasons-panel'
+    >
+      <h2 className='text-lg font-semibold'>{t.game.season.admin.title}</h2>
 
-      <div className="flex gap-2 items-center">
+      <div className='flex gap-2 items-center'>
         <Input
-          type="text"
-          inputMode="numeric"
+          type='text'
+          inputMode='numeric'
           placeholder={t.game.season.admin.numberPlaceholder}
           value={newNumber}
           onKeyDown={(e) => {
-            if (!/^\d$/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+            if (
+              !/^\d$/.test(e.key) &&
+              !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)
+            ) {
               e.preventDefault();
             }
           }}
           onChange={(e) => setNewNumber(e.target.value.replace(/\D/g, ''))}
-          className="w-32"
-          data-cy="season-number-input"
+          className='w-32'
+          data-cy='season-number-input'
         />
-        <Button onClick={handleCreate} data-cy="create-season-btn">
+        <Button
+          onClick={handleCreate}
+          data-cy='create-season-btn'
+        >
           {t.game.season.admin.createButton}
         </Button>
       </div>
 
-      {error && <p className="text-destructive text-sm">{error}</p>}
+      {error && <p className='text-destructive text-sm'>{error}</p>}
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         {seasons.map((s) => (
           <div
             key={s.id}
-            className="flex items-center justify-between rounded-md border px-4 py-2"
+            className='flex items-center justify-between rounded-md border px-4 py-2'
             data-cy={`season-row-${s.number}`}
           >
-            <div className="flex items-center gap-3">
-              <span className="font-medium">Season {s.number}</span>
+            <div className='flex items-center gap-3'>
+              <span className='font-medium'>Season {s.number}</span>
               <Badge
                 variant={s.is_active ? 'default' : 'secondary'}
                 className={s.is_active ? 'bg-green-600 text-white hover:bg-green-600' : ''}
@@ -104,10 +113,10 @@ export default function SeasonsPanel() {
                 {s.is_active ? t.game.season.admin.active : t.game.season.admin.inactive}
               </Badge>
             </div>
-            <div className="flex gap-2">
+            <div className='flex gap-2'>
               {!s.is_active && (
                 <Button
-                  size="sm"
+                  size='sm'
                   onClick={() => handleActivate(s.id)}
                   data-cy={`activate-season-${s.number}`}
                 >
@@ -116,8 +125,8 @@ export default function SeasonsPanel() {
               )}
               {s.is_active && (
                 <Button
-                  size="sm"
-                  variant="outline"
+                  size='sm'
+                  variant='outline'
                   onClick={() => handleDeactivate(s.id)}
                   data-cy={`deactivate-season-${s.number}`}
                 >

@@ -13,13 +13,22 @@ export default function SeasonBanner({ season }: Readonly<Props>) {
   if (season === undefined) return null;
 
   return (
-    <div className="flex items-center gap-2" data-cy="season-banner">
+    <div
+      className='flex items-center gap-2'
+      data-cy='season-banner'
+    >
       {season ? (
-        <Badge className="bg-green-600 text-white hover:bg-green-600" data-cy="season-active-badge">
+        <Badge
+          className='bg-green-600 text-white hover:bg-green-600'
+          data-cy='season-active-badge'
+        >
           {t.game.season.current.replace('{number}', String(season.number))}
         </Badge>
       ) : (
-        <Badge variant="secondary" data-cy="season-off-season-badge">
+        <Badge
+          variant='secondary'
+          data-cy='season-off-season-badge'
+        >
           {t.game.season.offSeason}
         </Badge>
       )}

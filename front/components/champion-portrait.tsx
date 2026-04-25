@@ -57,9 +57,11 @@ export default function ChampionPortrait({
   dataCy,
 }: Readonly<ChampionPortraitProps>) {
   const showSaga =
-    sagaMode === 'attacker' ? is_saga_attacker
-    : sagaMode === 'defender' ? is_saga_defender
-    : is_saga_attacker || is_saga_defender;
+    sagaMode === 'attacker'
+      ? is_saga_attacker
+      : sagaMode === 'defender'
+        ? is_saga_defender
+        : is_saga_attacker || is_saga_defender;
   const frameUrl = getStarFrameUrl(rarity);
   const imgSize = 60; // pre-resized thumbnails
   const baseClass = 'absolute inset-1.5 pb-0.75 w-[calc(100%-12px)] h-[calc(100%-12px)]';
@@ -81,19 +83,32 @@ export default function ChampionPortrait({
         <img
           src={getChampionImageUrl(imageUrl, imgSize) ?? ''}
           alt={name}
-          className={cn(baseClass,'object-cover z-10')}
+          className={cn(baseClass, 'object-cover z-10')}
         />
       ) : (
-        <div className={cn(baseClass, 'bg-gray-700 flex items-center justify-center text-gray-400 text-xs z-10')}>
+        <div
+          className={cn(
+            baseClass,
+            'bg-gray-700 flex items-center justify-center text-gray-400 text-xs z-10'
+          )}
+        >
           ?
         </div>
       )}
       {mode === 'synergy' && <SynergyBadge additionalClasses='z-30' />}
       {mode === 'prefight' && <PrefightBadge additionalClasses='z-30' />}
       {isPreferred && <PreferredBadge additionalClasses='z-30' />}
-      {showSaga && <SagaBadge additionalClasses='z-30' size={Number(size/2.5)}/>}
+      {showSaga && (
+        <SagaBadge
+          additionalClasses='z-30'
+          size={Number(size / 2.5)}
+        />
+      )}
       {(ascension === 1 || ascension === 2) && (
-        <AscensionBadge level={ascension} additionalClasses='z-30' />
+        <AscensionBadge
+          level={ascension}
+          additionalClasses='z-30'
+        />
       )}
     </div>
   );

@@ -35,7 +35,10 @@ export default function MasteryDialog({
   }, [open, gameAccountId]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+    >
       <DialogContent className='max-w-sm'>
         <DialogHeader>
           <DialogTitle className='text-sm'>
@@ -45,7 +48,10 @@ export default function MasteryDialog({
         {loading ? (
           <p className='text-sm text-muted-foreground'>{t.common.loading}</p>
         ) : (
-          <MasteryMiniView masteries={masteries} defaultMode={defaultMode} />
+          <MasteryMiniView
+            masteries={masteries}
+            defaultMode={defaultMode}
+          />
         )}
       </DialogContent>
     </Dialog>

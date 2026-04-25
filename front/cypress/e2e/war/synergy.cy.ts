@@ -14,30 +14,28 @@ describe('War Synergy', () => {
         // Load a synergy champion
         cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
           const synChamp = champs[0];
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, synChamp.id, '7r3').then(
-            (synCu) => {
-              // Visit war page
-              cy.apiLogin(memberData.user_id);
-              cy.visit('/game/war');
-              cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, synChamp.id, '7r3').then((synCu) => {
+            // Visit war page
+            cy.apiLogin(memberData.user_id);
+            cy.visit('/game/war');
+            cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
-              // Click the attacker portrait to open synergy popover
-              cy.getByCy('synergy-trigger-Wolverine').click();
+            // Click the attacker portrait to open synergy popover
+            cy.getByCy('synergy-trigger-Wolverine').click();
 
-              // Add synergy
-              cy.getByCy('synergy-add-Wolverine').click();
+            // Add synergy
+            cy.getByCy('synergy-add-Wolverine').click();
 
-              // Pick Deadpool in selector
-              cy.getByCy('synergy-selector').should('be.visible');;
-              cy.getByCy('synergy-pick-Deadpool').click();
+            // Pick Deadpool in selector
+            cy.getByCy('synergy-selector').should('be.visible');
+            cy.getByCy('synergy-pick-Deadpool').click();
 
-              cy.getByCy('champion-portrait-Deadpool-synergy').scrollIntoView().should('be.visible');;
+            cy.getByCy('champion-portrait-Deadpool-synergy').scrollIntoView().should('be.visible');
 
-              // Synergy provider should now appear in the popover trigger
-              cy.getByCy('synergy-trigger-Wolverine').click();
-              cy.getByCy('synergy-provider-Deadpool').should('be.visible');;
-            },
-          );
+            // Synergy provider should now appear in the popover trigger
+            cy.getByCy('synergy-trigger-Wolverine').click();
+            cy.getByCy('synergy-provider-Deadpool').should('be.visible');
+          });
         });
       },
     );
@@ -50,33 +48,24 @@ describe('War Synergy', () => {
 
         cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
           const synChamp = champs[0];
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, synChamp.id, '7r3').then(
-            (synCu) => {
-              cy.apiAddWarSynergy(
-                memberData.access_token,
-                allianceId,
-                warId,
-                1,
-                synCu.id,
-                championUserId,
-              );
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, synChamp.id, '7r3').then((synCu) => {
+            cy.apiAddWarSynergy(memberData.access_token, allianceId, warId, 1, synCu.id, championUserId);
 
-              cy.apiLogin(memberData.user_id);
-              cy.visit('/game/war');
-              cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');;
+            cy.apiLogin(memberData.user_id);
+            cy.visit('/game/war');
+            cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
-              // Open popover on the node attacker
-              cy.getByCy('synergy-trigger-Wolverine').click();
+            // Open popover on the node attacker
+            cy.getByCy('synergy-trigger-Wolverine').click();
 
-              // Revoke
-              cy.getByCy('synergy-revoke-Deadpool').click();
+            // Revoke
+            cy.getByCy('synergy-revoke-Deadpool').click();
 
-              // Badge should be gone
-              cy.getByCy('synergy-trigger-Wolverine').click();
-              cy.getByCy('synergy-provider-Deadpool').should('not.exist');
-              cy.getByCy('champion-portrait-Deadpool-synergy').should('not.exist');
-            },
-          );
+            // Badge should be gone
+            cy.getByCy('synergy-trigger-Wolverine').click();
+            cy.getByCy('synergy-provider-Deadpool').should('not.exist');
+            cy.getByCy('champion-portrait-Deadpool-synergy').should('not.exist');
+          });
         });
       },
     );
@@ -118,54 +107,59 @@ describe('War Synergy', () => {
   });
 
   it('duplicate synergy provider rejected', () => {
-    setupAttackerScenario('syn5').then(
-      ({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
-        const synergyUrl = `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
+    setupAttackerScenario('syn5').then(({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
+      const synergyUrl = `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
 
-        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-        cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3').then((synCu) => {
-            const payload = { champion_user_id: synCu.id, target_champion_user_id: championUserId };
+      cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3').then((synCu) => {
+          const payload = { champion_user_id: synCu.id, target_champion_user_id: championUserId };
 
-            cy.request({ method: 'POST', url: synergyUrl, headers: { Authorization: `Bearer ${memberData.access_token}` }, body: payload })
-              .then((res) => expect(res.status).to.eq(201));
+          cy.request({
+            method: 'POST',
+            url: synergyUrl,
+            headers: { Authorization: `Bearer ${memberData.access_token}` },
+            body: payload,
+          }).then((res) => expect(res.status).to.eq(201));
 
-            cy.request({ method: 'POST', url: synergyUrl, headers: { Authorization: `Bearer ${memberData.access_token}` }, body: payload, failOnStatusCode: false })
-              .then((res) => expect(res.status).to.eq(409));
-          });
+          cy.request({
+            method: 'POST',
+            url: synergyUrl,
+            headers: { Authorization: `Bearer ${memberData.access_token}` },
+            body: payload,
+            failOnStatusCode: false,
+          }).then((res) => expect(res.status).to.eq(409));
         });
-      },
-    );
+      });
+    });
   });
 
   it('target must be an assigned node attacker', () => {
-    setupAttackerScenario('syn6').then(
-      ({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
-        const synergyUrl = `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
+    setupAttackerScenario('syn6').then(({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
+      const synergyUrl = `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
 
-        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-        // Deadpool added to roster but NOT assigned to any node
-        cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3').then((nonAttackerCu) => {
-            cy.apiLoadChampion(adminToken, 'Thor', 'Cosmic').then((champs2) => {
-              cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs2[0].id, '7r3').then((providerCu) => {
-                cy.request({
-                  method: 'POST',
-                  url: synergyUrl,
-                  headers: { Authorization: `Bearer ${memberData.access_token}` },
-                  body: { champion_user_id: providerCu.id, target_champion_user_id: nonAttackerCu.id },
-                  failOnStatusCode: false,
-                }).then((res) => {
-                  expect(res.status).to.eq(422);
-                });
+      // Deadpool added to roster but NOT assigned to any node
+      cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3').then((nonAttackerCu) => {
+          cy.apiLoadChampion(adminToken, 'Thor', 'Cosmic').then((champs2) => {
+            cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs2[0].id, '7r3').then((providerCu) => {
+              cy.request({
+                method: 'POST',
+                url: synergyUrl,
+                headers: { Authorization: `Bearer ${memberData.access_token}` },
+                body: { champion_user_id: providerCu.id, target_champion_user_id: nonAttackerCu.id },
+                failOnStatusCode: false,
+              }).then((res) => {
+                expect(res.status).to.eq(422);
               });
             });
           });
         });
-      },
-    );
+      });
+    });
   });
 
   it('enforces 3-slot limit when combining node attackers and synergy', () => {
@@ -177,44 +171,35 @@ describe('War Synergy', () => {
         cy.apiLoadChampion(adminToken, 'Black Panther', 'Cosmic').then((champs1) => {
           // Place defender on node 11 and assign second attacker
           cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 1, 11, champs1[0].id, 7, 3, 0);
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs1[0].id, '7r3').then(
-            (cu2) => {
-              cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 11, cu2.id);
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs1[0].id, '7r3').then((cu2) => {
+            cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 11, cu2.id);
 
-              cy.apiLoadChampion(adminToken, 'Captain Marvel', 'Cosmic').then((champs2) => {
-                // Place defender on node 12 and assign third attacker
-                cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 1, 12, champs2[0].id, 7, 3, 0);
-                cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs2[0].id, '7r3').then(
-                  (cu3) => {
-                    cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 12, cu3.id);
+            cy.apiLoadChampion(adminToken, 'Captain Marvel', 'Cosmic').then((champs2) => {
+              // Place defender on node 12 and assign third attacker
+              cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 1, 12, champs2[0].id, 7, 3, 0);
+              cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs2[0].id, '7r3').then((cu3) => {
+                cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 12, cu3.id);
 
-                    // Now try to add a 4th via synergy → backend should 409
-                    cy.apiLoadChampion(adminToken, 'Thor', 'Cosmic').then((champs3) => {
-                      cy.apiAddChampionToRoster(
-                        memberData.access_token,
-                        memberAccId,
-                        champs3[0].id,
-                        '7r3',
-                      ).then((cu4) => {
-                        cy.request({
-                          method: 'POST',
-                          url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`,
-                          headers: { Authorization: `Bearer ${memberData.access_token}` },
-                          body: {
-                            champion_user_id: cu4.id,
-                            target_champion_user_id: championUserId,
-                          },
-                          failOnStatusCode: false,
-                        }).then((res) => {
-                          expect(res.status).to.eq(409);
-                        });
-                      });
+                // Now try to add a 4th via synergy → backend should 409
+                cy.apiLoadChampion(adminToken, 'Thor', 'Cosmic').then((champs3) => {
+                  cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs3[0].id, '7r3').then((cu4) => {
+                    cy.request({
+                      method: 'POST',
+                      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`,
+                      headers: { Authorization: `Bearer ${memberData.access_token}` },
+                      body: {
+                        champion_user_id: cu4.id,
+                        target_champion_user_id: championUserId,
+                      },
+                      failOnStatusCode: false,
+                    }).then((res) => {
+                      expect(res.status).to.eq(409);
                     });
-                  },
-                );
+                  });
+                });
               });
-            },
-          );
+            });
+          });
         });
       },
     );
@@ -252,88 +237,82 @@ describe('War Synergy', () => {
   });
 
   it('search input filters synergy candidates by name', () => {
-    setupAttackerScenario('syn7').then(
-      ({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
-        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+    setupAttackerScenario('syn7').then(({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-        // Load two different champions as potential synergy providers
-        cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs1) => {
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs1[0].id, '7r3').then(() => {
-            cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs2) => {
-              cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs2[0].id, '7r3').then(() => {
-                cy.apiLogin(memberData.user_id);
-                cy.visit('/game/war');
-                cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');;
+      // Load two different champions as potential synergy providers
+      cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs1) => {
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs1[0].id, '7r3').then(() => {
+          cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs2) => {
+            cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs2[0].id, '7r3').then(() => {
+              cy.apiLogin(memberData.user_id);
+              cy.visit('/game/war');
+              cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
-                // Open synergy selector
-                cy.getByCy('synergy-trigger-Wolverine').click();
-                cy.getByCy('synergy-add-Wolverine').click();
-                cy.getByCy('synergy-selector').should('be.visible');;
+              // Open synergy selector
+              cy.getByCy('synergy-trigger-Wolverine').click();
+              cy.getByCy('synergy-add-Wolverine').click();
+              cy.getByCy('synergy-selector').should('be.visible');
 
-                // Both champions visible before filtering
-                cy.getByCy('synergy-pick-Deadpool').should('be.visible');;
-                cy.getByCy('synergy-pick-Storm').should('be.visible');;
+              // Both champions visible before filtering
+              cy.getByCy('synergy-pick-Deadpool').should('be.visible');
+              cy.getByCy('synergy-pick-Storm').should('be.visible');
 
-                // Type in search — only Deadpool should remain
-                cy.getByCy('synergy-search').type('dead');
-                cy.getByCy('synergy-pick-Deadpool').should('be.visible');;
-                cy.getByCy('synergy-pick-Storm').should('not.exist');
-              });
+              // Type in search — only Deadpool should remain
+              cy.getByCy('synergy-search').type('dead');
+              cy.getByCy('synergy-pick-Deadpool').should('be.visible');
+              cy.getByCy('synergy-pick-Storm').should('not.exist');
             });
           });
         });
-      },
-    );
+      });
+    });
   });
 
   it('does not allow selecting the same champion as synergy provider', () => {
-    setupAttackerScenario('syn8').then(
-      ({ memberData, allianceId, warId, championUserId }) => {
-        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+    setupAttackerScenario('syn8').then(({ memberData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-        cy.apiLogin(memberData.user_id);
-        cy.visit('/game/war');
-        cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+      cy.apiLogin(memberData.user_id);
+      cy.visit('/game/war');
+      cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
-        cy.getByCy('synergy-trigger-Wolverine').click();
-        cy.getByCy('synergy-add-Wolverine').click();
-        cy.getByCy('synergy-selector').should('be.visible');
+      cy.getByCy('synergy-trigger-Wolverine').click();
+      cy.getByCy('synergy-add-Wolverine').click();
+      cy.getByCy('synergy-selector').should('be.visible');
 
-        cy.getByCy('synergy-pick-Wolverine').should('not.exist');
-      },
-    );
+      cy.getByCy('synergy-pick-Wolverine').should('not.exist');
+    });
   });
 
   it('clearing the search restores the full synergy candidate list', () => {
-    setupAttackerScenario('syn8').then(
-      ({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
-        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+    setupAttackerScenario('syn8').then(({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-        cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs1) => {
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs1[0].id, '7r3').then(() => {
-            cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs2) => {
-              cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs2[0].id, '7r3').then(() => {
-                cy.apiLogin(memberData.user_id);
-                cy.visit('/game/war');
-                cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');;
+      cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs1) => {
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs1[0].id, '7r3').then(() => {
+          cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs2) => {
+            cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs2[0].id, '7r3').then(() => {
+              cy.apiLogin(memberData.user_id);
+              cy.visit('/game/war');
+              cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
-                cy.getByCy('synergy-trigger-Wolverine').click();
-                cy.getByCy('synergy-add-Wolverine').click();
-                cy.getByCy('synergy-selector').should('be.visible');;
+              cy.getByCy('synergy-trigger-Wolverine').click();
+              cy.getByCy('synergy-add-Wolverine').click();
+              cy.getByCy('synergy-selector').should('be.visible');
 
-                // Filter then clear
-                cy.getByCy('synergy-search').type('dead');
-                cy.getByCy('synergy-pick-Storm').should('not.exist');
-                cy.getByCy('synergy-search').clear();
+              // Filter then clear
+              cy.getByCy('synergy-search').type('dead');
+              cy.getByCy('synergy-pick-Storm').should('not.exist');
+              cy.getByCy('synergy-search').clear();
 
-                // Both champions back
-                cy.getByCy('synergy-pick-Deadpool').should('be.visible');;
-                cy.getByCy('synergy-pick-Storm').should('be.visible');;
-              });
+              // Both champions back
+              cy.getByCy('synergy-pick-Deadpool').should('be.visible');
+              cy.getByCy('synergy-pick-Storm').should('be.visible');
             });
           });
         });
-      },
-    );
+      });
+    });
   });
 });

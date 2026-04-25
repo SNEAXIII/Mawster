@@ -34,7 +34,13 @@ interface AllianceStatisticsTabProps {
   onRetry: () => Promise<void>;
 }
 
-type SortField = 'total_fights' | 'total_kos' | 'total_miniboss' | 'total_boss' | 'ratio' | 'ratio_mb';
+type SortField =
+  | 'total_fights'
+  | 'total_kos'
+  | 'total_miniboss'
+  | 'total_boss'
+  | 'ratio'
+  | 'ratio_mb';
 type SortDir = 'asc' | 'desc';
 
 const RATIO_OPTIONS = [0, 50, 60, 70, 80, 90];
@@ -108,7 +114,9 @@ export default function AllianceStatisticsTab({
     const mult = sortDir === 'asc' ? 1 : -1;
     return seasonStats
       .filter((row) => row.ratio >= ratioMin)
-      .filter((row) => selectedGroup === 'all' || toGroupValue(row.alliance_group) === selectedGroup)
+      .filter(
+        (row) => selectedGroup === 'all' || toGroupValue(row.alliance_group) === selectedGroup
+      )
       .sort((a, b) => {
         const diff = a[sortField] - b[sortField];
         return diff !== 0 ? diff * mult : a.game_pseudo.localeCompare(b.game_pseudo);
@@ -117,22 +125,40 @@ export default function AllianceStatisticsTab({
 
   const colRanks = useMemo(() => {
     const top3 = (values: number[], descending: boolean): Map<number, number> => {
-      const sorted = [...new Set(values)].sort((a, b) => descending ? b - a : a - b);
+      const sorted = [...new Set(values)].sort((a, b) => (descending ? b - a : a - b));
       return new Map(sorted.slice(0, 3).map((v, i) => [v, i]));
     };
     const f = filteredStats;
     return {
-      total_fights:  top3(f.map((r) => r.total_fights),  true),
-      total_kos:     top3(f.map((r) => r.total_kos),     true),
-      total_miniboss:top3(f.map((r) => r.total_miniboss),true),
-      total_boss:    top3(f.map((r) => r.total_boss),    true),
-      ratio:         top3(f.map((r) => r.ratio),         true),
-      ratio_mb:      top3(f.map((r) => r.ratio_mb),      true),
+      total_fights: top3(
+        f.map((r) => r.total_fights),
+        true
+      ),
+      total_kos: top3(
+        f.map((r) => r.total_kos),
+        true
+      ),
+      total_miniboss: top3(
+        f.map((r) => r.total_miniboss),
+        true
+      ),
+      total_boss: top3(
+        f.map((r) => r.total_boss),
+        true
+      ),
+      ratio: top3(
+        f.map((r) => r.ratio),
+        true
+      ),
+      ratio_mb: top3(
+        f.map((r) => r.ratio_mb),
+        true
+      ),
     };
   }, [filteredStats]);
 
   const GREEN = ['text-emerald-400 font-semibold', 'text-emerald-400/60', 'text-emerald-400/35'];
-  const RED   = ['text-red-400 font-semibold',     'text-red-400/60',     'text-red-400/35'];
+  const RED = ['text-red-400 font-semibold', 'text-red-400/60', 'text-red-400/35'];
 
   const cellClass = (field: keyof typeof colRanks, value: number, invert = false) => {
     if (value === 0) return '';
@@ -152,13 +178,22 @@ export default function AllianceStatisticsTab({
         <div className='flex flex-wrap items-center justify-between gap-3'>
           <CardTitle>{t.game.alliances.statistics.title}</CardTitle>
           {alliances.length > 1 && (
-            <Select value={selectedAllianceId || undefined} onValueChange={onAllianceChange}>
-              <SelectTrigger className='w-56' data-cy='statistics-alliance-select'>
+            <Select
+              value={selectedAllianceId || undefined}
+              onValueChange={onAllianceChange}
+            >
+              <SelectTrigger
+                className='w-56'
+                data-cy='statistics-alliance-select'
+              >
                 <SelectValue placeholder={t.game.alliances.statistics.alliance} />
               </SelectTrigger>
               <SelectContent>
                 {alliances.map((alliance) => (
-                  <SelectItem key={alliance.id} value={alliance.id}>
+                  <SelectItem
+                    key={alliance.id}
+                    value={alliance.id}
+                  >
                     [{alliance.tag}] {alliance.name}
                   </SelectItem>
                 ))}
@@ -174,7 +209,10 @@ export default function AllianceStatisticsTab({
         )}
 
         {!statsLoading && statsError && (
-          <div className='rounded-lg border border-destructive/40 p-3' data-cy='statistics-error'>
+          <div
+            className='rounded-lg border border-destructive/40 p-3'
+            data-cy='statistics-error'
+          >
             <p className='text-sm text-destructive'>{statsError}</p>
             <Button
               type='button'
@@ -189,7 +227,10 @@ export default function AllianceStatisticsTab({
         )}
 
         {!statsLoading && !statsError && seasonStats.length === 0 && (
-          <p className='text-sm text-muted-foreground' data-cy='statistics-empty'>
+          <p
+            className='text-sm text-muted-foreground'
+            data-cy='statistics-empty'
+          >
             {t.game.alliances.statistics.empty}
           </p>
         )}
@@ -201,24 +242,39 @@ export default function AllianceStatisticsTab({
                 value={String(ratioMin)}
                 onValueChange={(v) => setRatioMin(Number(v))}
               >
-                <SelectTrigger className='w-44' data-cy='statistics-ratio-filter'>
+                <SelectTrigger
+                  className='w-44'
+                  data-cy='statistics-ratio-filter'
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {RATIO_OPTIONS.map((value) => (
-                    <SelectItem key={value} value={String(value)} data-cy={`statistics-ratio-option-${value}`}>
+                    <SelectItem
+                      key={value}
+                      value={String(value)}
+                      data-cy={`statistics-ratio-option-${value}`}
+                    >
                       {t.game.alliances.statistics.ratioMin} ≥ {value}%
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
-              {(selectedGroup !== 'all' || ratioMin !== 0 || sortField !== 'ratio' || sortDir !== 'desc') && (
+              {(selectedGroup !== 'all' ||
+                ratioMin !== 0 ||
+                sortField !== 'ratio' ||
+                sortDir !== 'desc') && (
                 <Button
                   type='button'
                   variant='ghost'
                   size='sm'
-                  onClick={() => { setRatioMin(0); setSelectedGroup('all'); setSortField('ratio'); setSortDir('desc'); }}
+                  onClick={() => {
+                    setRatioMin(0);
+                    setSelectedGroup('all');
+                    setSortField('ratio');
+                    setSortDir('desc');
+                  }}
                   data-cy='statistics-reset-filters'
                 >
                   {t.game.alliances.statistics.resetFilters}
@@ -227,60 +283,123 @@ export default function AllianceStatisticsTab({
             </div>
 
             {filteredStats.length === 0 ? (
-              <p className='text-sm text-muted-foreground' data-cy='statistics-empty-filtered'>
+              <p
+                className='text-sm text-muted-foreground'
+                data-cy='statistics-empty-filtered'
+              >
                 {t.game.alliances.statistics.noFilteredResults}
               </p>
             ) : (
               <Table data-cy='statistics-table'>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className='w-40'>{t.game.alliances.statistics.columns.player}</TableHead>
+                    <TableHead className='w-40'>
+                      {t.game.alliances.statistics.columns.player}
+                    </TableHead>
                     <TableHead>
                       <Select
                         value={selectedGroup}
                         onValueChange={setSelectedGroup}
                       >
-                        <SelectTrigger className='h-auto border-none bg-transparent p-0 shadow-none gap-1 font-medium text-muted-foreground hover:text-foreground focus:ring-0 focus-visible:ring-0 w-auto [&>svg:last-child]:hidden' data-cy='statistics-group-filter'>
+                        <SelectTrigger
+                          className='h-auto border-none bg-transparent p-0 shadow-none gap-1 font-medium text-muted-foreground hover:text-foreground focus:ring-0 focus-visible:ring-0 w-auto [&>svg:last-child]:hidden'
+                          data-cy='statistics-group-filter'
+                        >
                           <span>
                             {selectedGroup === 'all'
                               ? t.game.alliances.statistics.columns.group
                               : selectedGroup === 'none'
-                              ? t.game.alliances.statistics.noGroup
-                              : `G${selectedGroup}`}
+                                ? t.game.alliances.statistics.noGroup
+                                : `G${selectedGroup}`}
                           </span>
                           <ChevronDown className='h-3.5 w-3.5 opacity-70 shrink-0' />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value='all'>{t.game.alliances.statistics.allGroups}</SelectItem>
+                          <SelectItem value='all'>
+                            {t.game.alliances.statistics.allGroups}
+                          </SelectItem>
                           {availableGroups.map((groupValue) => (
-                            <SelectItem key={groupValue} value={groupValue} data-cy={`statistics-group-option-${groupValue}`}>
-                              {groupValue === 'none' ? t.game.alliances.statistics.noGroup : `G${groupValue}`}
+                            <SelectItem
+                              key={groupValue}
+                              value={groupValue}
+                              data-cy={`statistics-group-option-${groupValue}`}
+                            >
+                              {groupValue === 'none'
+                                ? t.game.alliances.statistics.noGroup
+                                : `G${groupValue}`}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </TableHead>
-                    <SortableHead label={t.game.alliances.statistics.columns.fights} field='total_fights' {...sortHeadProps} />
-                    <SortableHead label={t.game.alliances.statistics.columns.kos} field='total_kos' {...sortHeadProps} />
-                    <SortableHead label={t.game.alliances.statistics.columns.miniboss} field='total_miniboss' {...sortHeadProps} />
-                    <SortableHead label={t.game.alliances.statistics.columns.boss} field='total_boss' {...sortHeadProps} />
-                    <SortableHead label={t.game.alliances.statistics.columns.ratio} field='ratio' {...sortHeadProps} />
-                    <SortableHead label={t.game.alliances.statistics.columns.ratioMb} field='ratio_mb' {...sortHeadProps} />
+                    <SortableHead
+                      label={t.game.alliances.statistics.columns.fights}
+                      field='total_fights'
+                      {...sortHeadProps}
+                    />
+                    <SortableHead
+                      label={t.game.alliances.statistics.columns.kos}
+                      field='total_kos'
+                      {...sortHeadProps}
+                    />
+                    <SortableHead
+                      label={t.game.alliances.statistics.columns.miniboss}
+                      field='total_miniboss'
+                      {...sortHeadProps}
+                    />
+                    <SortableHead
+                      label={t.game.alliances.statistics.columns.boss}
+                      field='total_boss'
+                      {...sortHeadProps}
+                    />
+                    <SortableHead
+                      label={t.game.alliances.statistics.columns.ratio}
+                      field='ratio'
+                      {...sortHeadProps}
+                    />
+                    <SortableHead
+                      label={t.game.alliances.statistics.columns.ratioMb}
+                      field='ratio_mb'
+                      {...sortHeadProps}
+                    />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredStats.map((row) => (
-                    <TableRow key={row.id} data-cy={`statistics-row-${row.id}`}>
+                    <TableRow
+                      key={row.id}
+                      data-cy={`statistics-row-${row.id}`}
+                    >
                       <TableCell className='font-medium'>{row.game_pseudo}</TableCell>
                       <TableCell>
                         <Badge variant='outline'>{getGroupLabel(row.alliance_group)}</Badge>
                       </TableCell>
-                      <TableCell className={`text-right ${cellClass('total_fights',   row.total_fights)}`}>{row.total_fights}</TableCell>
-                      <TableCell className={`text-right ${cellClass('total_kos',      row.total_kos, true)}`}>{row.total_kos}</TableCell>
-                      <TableCell className={`text-right ${cellClass('total_miniboss', row.total_miniboss)}`}>{row.total_miniboss}</TableCell>
-                      <TableCell className={`text-right ${cellClass('total_boss',     row.total_boss)}`}>{row.total_boss}</TableCell>
-                      <TableCell className={`text-right ${cellClass('ratio',          row.ratio)}`}>{row.ratio}%</TableCell>
-                      <TableCell className={`text-right ${cellClass('ratio_mb',       row.ratio_mb)}`}>{row.ratio_mb}%</TableCell>
+                      <TableCell
+                        className={`text-right ${cellClass('total_fights', row.total_fights)}`}
+                      >
+                        {row.total_fights}
+                      </TableCell>
+                      <TableCell
+                        className={`text-right ${cellClass('total_kos', row.total_kos, true)}`}
+                      >
+                        {row.total_kos}
+                      </TableCell>
+                      <TableCell
+                        className={`text-right ${cellClass('total_miniboss', row.total_miniboss)}`}
+                      >
+                        {row.total_miniboss}
+                      </TableCell>
+                      <TableCell
+                        className={`text-right ${cellClass('total_boss', row.total_boss)}`}
+                      >
+                        {row.total_boss}
+                      </TableCell>
+                      <TableCell className={`text-right ${cellClass('ratio', row.ratio)}`}>
+                        {row.ratio}%
+                      </TableCell>
+                      <TableCell className={`text-right ${cellClass('ratio_mb', row.ratio_mb)}`}>
+                        {row.ratio_mb}%
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

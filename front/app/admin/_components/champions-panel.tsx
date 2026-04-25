@@ -144,7 +144,9 @@ export default function ChampionsPanel() {
     try {
       const result = await toggleChampionSagaAttacker(champion.id);
       setChampions((prev) =>
-        prev.map((c) => (c.id === champion.id ? { ...c, is_saga_attacker: result.is_saga_attacker } : c))
+        prev.map((c) =>
+          c.id === champion.id ? { ...c, is_saga_attacker: result.is_saga_attacker } : c
+        )
       );
     } catch {
       // ignore
@@ -155,7 +157,9 @@ export default function ChampionsPanel() {
     try {
       const result = await toggleChampionSagaDefender(champion.id);
       setChampions((prev) =>
-        prev.map((c) => (c.id === champion.id ? { ...c, is_saga_defender: result.is_saga_defender } : c))
+        prev.map((c) =>
+          c.id === champion.id ? { ...c, is_saga_defender: result.is_saga_defender } : c
+        )
       );
     } catch {
       // ignore

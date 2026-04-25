@@ -42,7 +42,10 @@ export default function PrefightPopover({
 
   return (
     <>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={setOpen}
+      >
         <PopoverTrigger asChild>
           <button
             className='relative focus:outline-none'
@@ -61,13 +64,21 @@ export default function PrefightPopover({
             />
           </button>
         </PopoverTrigger>
-        <PopoverContent className='w-52 p-3 space-y-2' side='top'>
-          <p className='text-[11px] font-semibold truncate'>#{nodeNumber} — {championName}</p>
+        <PopoverContent
+          className='w-52 p-3 space-y-2'
+          side='top'
+        >
+          <p className='text-[11px] font-semibold truncate'>
+            #{nodeNumber} — {championName}
+          </p>
           {boundPrefights.length > 0 && (
             <div className='space-y-1'>
               <p className='text-[10px] text-muted-foreground'>{t.game.war.prefight.label}</p>
               {boundPrefights.map((p) => (
-                <div key={p.champion_user_id} className='flex items-center gap-2'>
+                <div
+                  key={p.champion_user_id}
+                  className='flex items-center gap-2'
+                >
                   <ChampionPortrait
                     imageUrl={p.image_url}
                     name={p.champion_name}
@@ -80,7 +91,9 @@ export default function PrefightPopover({
                   />
                   <div className='flex flex-col flex-1 min-w-0'>
                     <span className='text-xs font-medium truncate'>{p.champion_name}</span>
-                    <span className='text-[10px] text-muted-foreground truncate'>{p.game_pseudo}</span>
+                    <span className='text-[10px] text-muted-foreground truncate'>
+                      {p.game_pseudo}
+                    </span>
                   </div>
                   <button
                     className='shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors'
@@ -99,7 +112,10 @@ export default function PrefightPopover({
           <button
             className='w-full text-xs py-1 px-2 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors'
             data-cy={`prefight-add-node-${nodeNumber}`}
-            onClick={() => { setOpen(false); setSelectorOpen(true); }}
+            onClick={() => {
+              setOpen(false);
+              setSelectorOpen(true);
+            }}
           >
             {t.game.war.prefight.add}
           </button>

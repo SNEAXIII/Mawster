@@ -265,4 +265,3 @@ declare namespace Cypress {
     ): Chainable<unknown>;
   }
 }
-

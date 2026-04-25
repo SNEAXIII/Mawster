@@ -12,7 +12,6 @@ import { WarMode } from './war-types';
 import { useWar } from '@/app/contexts/war-context';
 import SeasonBanner from './season-banner';
 
-
 type ToggleButtonProps = {
   active: boolean;
   onClick: () => void;
@@ -67,29 +66,45 @@ export default function WarTab() {
     <div className='space-y-4'>
       {/* Controls row: opponent name + BG picker + mode toggle + clear */}
       <div className='flex flex-wrap items-center gap-3'>
-                    <SeasonBanner
-        season={
-          currentWar
-            ? currentWar.season_number !== null
-              ? { number: currentWar.season_number }
-              : null
-            : undefined
-        }
-      />
+        <SeasonBanner
+          season={
+            currentWar
+              ? currentWar.season_number !== null
+                ? { number: currentWar.season_number }
+                : null
+              : undefined
+          }
+        />
 
         {/* ELO badge — read-only, edit from the alliances page */}
         {selectedAlliance && (
-          <div className='flex items-center gap-1' data-cy='war-elo-badge'>
+          <div
+            className='flex items-center gap-1'
+            data-cy='war-elo-badge'
+          >
             <span className='text-xs font-medium text-muted-foreground'>{t.game.war.elo}:</span>
-            <span className='text-xs font-bold' data-cy='war-elo-value'>{selectedAlliance.elo}</span>
+            <span
+              className='text-xs font-bold'
+              data-cy='war-elo-value'
+            >
+              {selectedAlliance.elo}
+            </span>
           </div>
         )}
 
         {/* Tier badge — read-only, edit from the alliances page */}
         {selectedAlliance && (
-          <div className='flex items-center gap-1' data-cy='war-tier-badge'>
+          <div
+            className='flex items-center gap-1'
+            data-cy='war-tier-badge'
+          >
             <span className='text-xs font-medium text-muted-foreground'>{t.game.war.tier}:</span>
-            <span className='text-xs font-bold' data-cy='war-tier-value'>{selectedAlliance.tier}</span>
+            <span
+              className='text-xs font-bold'
+              data-cy='war-tier-value'
+            >
+              {selectedAlliance.tier}
+            </span>
           </div>
         )}
 

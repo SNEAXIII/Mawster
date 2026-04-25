@@ -80,5 +80,4 @@ describe('Game Accounts – Edge Cases', () => {
       });
     });
   });
-
 });

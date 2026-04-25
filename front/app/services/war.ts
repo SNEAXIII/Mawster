@@ -222,7 +222,7 @@ export async function endWar(
   allianceId: string,
   warId: string,
   win: boolean,
-  eloChange: number | null,
+  eloChange: number | null
 ): Promise<War> {
   const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/${warId}/end`, {
     method: 'POST',

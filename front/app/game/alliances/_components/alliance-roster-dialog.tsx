@@ -62,7 +62,11 @@ export default function AllianceRosterDialog({
     if (!open || !gameAccountId) return;
     setLoading(true);
     setError('');
-    Promise.all([getRoster(gameAccountId), fetchUpgradeRequests(gameAccountId), getMasteries(gameAccountId)])
+    Promise.all([
+      getRoster(gameAccountId),
+      fetchUpgradeRequests(gameAccountId),
+      getMasteries(gameAccountId),
+    ])
       .then(([rosterData, , masteryData]) => {
         setRoster(rosterData);
         setMasteries(masteryData);
@@ -128,7 +132,10 @@ export default function AllianceRosterDialog({
 
           {!loading && masteries.length > 0 && (
             <div className='mt-4 border-t pt-4 flex justify-center'>
-              <MasteryMiniView masteries={masteries} defaultMode='all' />
+              <MasteryMiniView
+                masteries={masteries}
+                defaultMode='all'
+              />
             </div>
           )}
 

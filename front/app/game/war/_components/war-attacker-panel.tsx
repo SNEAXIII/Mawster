@@ -20,7 +20,10 @@ interface MemberGroup {
 export default function WarAttackerPanel() {
   const { t } = useI18n();
   const { placements, warMode, synergies, prefights } = useWar();
-  const [masteryTarget, setMasteryTarget] = useState<{ gameAccountId: string; pseudo: string } | null>(null);
+  const [masteryTarget, setMasteryTarget] = useState<{
+    gameAccountId: string;
+    pseudo: string;
+  } | null>(null);
 
   const assigned = placements.filter((p) => p.attacker_champion_user_id !== null);
 
@@ -69,12 +72,14 @@ export default function WarAttackerPanel() {
             );
 
             const memberPrefights = prefights.filter((p) => p.game_pseudo === memberGroup.pseudo);
-          
-            const prefightOnlyProviders = [...new Map(
-              memberPrefights
-                .filter((p) => !nodeAttackerIds.has(p.champion_user_id))
-                .map((p) => [p.champion_user_id, p])
-            ).values()];
+
+            const prefightOnlyProviders = [
+              ...new Map(
+                memberPrefights
+                  .filter((p) => !nodeAttackerIds.has(p.champion_user_id))
+                  .map((p) => [p.champion_user_id, p])
+              ).values(),
+            ];
             const totalSlots = new Set([
               ...nodeAttackerIds,
               ...memberSynergies.map((s) => s.champion_user_id),
@@ -84,13 +89,18 @@ export default function WarAttackerPanel() {
             // Deduplicated node attacker portraits (unique by champion_user_id)
             const nodePortraits = memberGroup.entries.filter(
               (p, i, arr) =>
-                arr.findIndex((q) => q.attacker_champion_user_id === p.attacker_champion_user_id) === i
+                arr.findIndex(
+                  (q) => q.attacker_champion_user_id === p.attacker_champion_user_id
+                ) === i
             );
 
             return (
               <div key={memberGroup.pseudo}>
                 {/* Member header: pseudo + slot count + portrait row */}
-                <div className='flex items-center gap-1.5 mb-1.5 px-1' data-cy={`attacker-member-${memberGroup.pseudo}`}>
+                <div
+                  className='flex items-center gap-1.5 mb-1.5 px-1'
+                  data-cy={`attacker-member-${memberGroup.pseudo}`}
+                >
                   <span className='text-xs font-semibold text-muted-foreground uppercase tracking-wide'>
                     {memberGroup.pseudo}
                   </span>
@@ -99,7 +109,12 @@ export default function WarAttackerPanel() {
                   </span>
                   {memberGroup.entries[0]?.attacker_game_account_id && (
                     <button
-                      onClick={() => setMasteryTarget({ gameAccountId: memberGroup.entries[0].attacker_game_account_id!, pseudo: memberGroup.pseudo })}
+                      onClick={() =>
+                        setMasteryTarget({
+                          gameAccountId: memberGroup.entries[0].attacker_game_account_id!,
+                          pseudo: memberGroup.pseudo,
+                        })
+                      }
                       className='text-muted-foreground hover:text-foreground transition-colors ml-auto'
                       title={t.mastery.title}
                     >
@@ -109,7 +124,7 @@ export default function WarAttackerPanel() {
 
                   {/* 3-slot portrait row: node attackers (clickable for synergy) + synergy-only */}
                   <div className='flex items-center gap-0.5 ml-1'>
-                    {nodePortraits.map((placement) => (
+                    {nodePortraits.map((placement) =>
                       warMode === WarMode.Attackers ? (
                         <SynergyPopover
                           key={placement.attacker_champion_user_id}
@@ -138,7 +153,7 @@ export default function WarAttackerPanel() {
                           sagaMode='attacker'
                         />
                       )
-                    ))}
+                    )}
 
                     {/* Synergy-only champions (not on any node) */}
                     {synergyOnlyProviders.map((s) => (
@@ -190,7 +205,9 @@ export default function WarAttackerPanel() {
                     <PrefightEntryRow
                       key={pf.id}
                       prefight={pf}
-                      targetPlacement={placements.find((p) => p.node_number === pf.target_node_number)}
+                      targetPlacement={placements.find(
+                        (p) => p.node_number === pf.target_node_number
+                      )}
                       readonly={warMode !== WarMode.Attackers}
                     />
                   ))}
@@ -204,7 +221,9 @@ export default function WarAttackerPanel() {
       {masteryTarget && (
         <MasteryDialog
           open={!!masteryTarget}
-          onOpenChange={(open) => { if (!open) setMasteryTarget(null); }}
+          onOpenChange={(open) => {
+            if (!open) setMasteryTarget(null);
+          }}
           gameAccountId={masteryTarget.gameAccountId}
           pseudo={masteryTarget.pseudo}
           defaultMode='offense'

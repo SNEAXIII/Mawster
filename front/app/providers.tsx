@@ -25,7 +25,10 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
       defaultTheme='dark'
       disableTransitionOnChange
     >
-      <SessionProvider refetchInterval={45 * 60} refetchOnWindowFocus={true}>
+      <SessionProvider
+        refetchInterval={45 * 60}
+        refetchOnWindowFocus={true}
+      >
         <SessionWatcher />
         <I18nProvider>
           <AllianceProvider>{children}</AllianceProvider>

@@ -59,7 +59,13 @@ export default function WarAttackerSelector({
     setLoading(true);
     setError(false);
     try {
-      const data = await getAvailableAttackers(allianceId, warId, battlegroup, undefined, nodeNumber);
+      const data = await getAvailableAttackers(
+        allianceId,
+        warId,
+        battlegroup,
+        undefined,
+        nodeNumber
+      );
       setAvailable(data);
     } catch {
       setError(true);
@@ -98,7 +104,11 @@ export default function WarAttackerSelector({
   );
 
   const canReset =
-    playerFilter !== '' || championSearch !== '' || classFilter !== '' || sagaFilter || preferredFilter;
+    playerFilter !== '' ||
+    championSearch !== '' ||
+    classFilter !== '' ||
+    sagaFilter ||
+    preferredFilter;
 
   const handleReset = () => {
     setPlayerFilter('');
@@ -147,7 +157,9 @@ export default function WarAttackerSelector({
     );
   } else if (groups.length === 0) {
     content = (
-      <div className='text-center text-muted-foreground py-8'>{t.game.war.noAvailableAttackers}</div>
+      <div className='text-center text-muted-foreground py-8'>
+        {t.game.war.noAvailableAttackers}
+      </div>
     );
   } else {
     content = groups.map((group) => (
@@ -188,7 +200,9 @@ export default function WarAttackerSelector({
                 <span className='text-[10px] text-center truncate w-full leading-tight'>
                   {shortenChampionName(a.champion_name)}
                 </span>
-                <span className={cn('text-[9px] font-mono leading-none', rarityBadgeClass(a.rarity))}>
+                <span
+                  className={cn('text-[9px] font-mono leading-none', rarityBadgeClass(a.rarity))}
+                >
                   {rarityLabel(a.rarity, a.signature, a.ascension)}
                 </span>
                 <span className={cn('text-[9px] font-medium', classColors.label)}>

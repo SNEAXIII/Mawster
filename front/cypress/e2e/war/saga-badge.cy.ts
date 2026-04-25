@@ -34,19 +34,13 @@ describe('War – Saga & Ascension Badges (sagaMode attacker)', () => {
   it('shows saga badge when attacker is_saga_attacker (attacker mode)', () => {
     assignSagaAttacker('war-saga-atk', 'SagaWarAtk', 'Mutant', { is_saga_attacker: true });
 
-    cy.getByCy('attacker-entry-node-10')
-      .scrollIntoView()
-      .find('[data-cy="saga-badge"]')
-      .should('exist');
+    cy.getByCy('attacker-entry-node-10').scrollIntoView().find('[data-cy="saga-badge"]').should('exist');
   });
 
   it('does not show saga badge when attacker is only is_saga_defender (attacker mode)', () => {
     assignSagaAttacker('war-saga-def-only', 'SagaDefOnly', 'Cosmic', { is_saga_defender: true });
 
-    cy.getByCy('attacker-entry-node-10')
-      .scrollIntoView()
-      .find('[data-cy="saga-badge"]')
-      .should('not.exist');
+    cy.getByCy('attacker-entry-node-10').scrollIntoView().find('[data-cy="saga-badge"]').should('not.exist');
   });
 
   it('shows saga badge for both flags (attacker mode)', () => {
@@ -55,39 +49,25 @@ describe('War – Saga & Ascension Badges (sagaMode attacker)', () => {
       is_saga_defender: true,
     });
 
-    cy.getByCy('attacker-entry-node-10')
-      .scrollIntoView()
-      .find('[data-cy="saga-badge"]')
-      .should('exist');
+    cy.getByCy('attacker-entry-node-10').scrollIntoView().find('[data-cy="saga-badge"]').should('exist');
   });
 
   it('shows ascension badge A1 on assigned attacker', () => {
     assignSagaAttacker('war-asc-a1', 'AscWarHero', 'Science', {}, 1);
 
-    cy.getByCy('attacker-entry-node-10')
-      .scrollIntoView()
-      .find('[data-cy="ascension-badge-1"]')
-      .should('exist');
+    cy.getByCy('attacker-entry-node-10').scrollIntoView().find('[data-cy="ascension-badge-1"]').should('exist');
   });
 
   it('shows ascension badge A2 on assigned attacker', () => {
     assignSagaAttacker('war-asc-a2', 'AscWarHeroMax', 'Mystic', {}, 2);
 
-    cy.getByCy('attacker-entry-node-10')
-      .scrollIntoView()
-      .find('[data-cy="ascension-badge-2"]')
-      .should('exist');
+    cy.getByCy('attacker-entry-node-10').scrollIntoView().find('[data-cy="ascension-badge-2"]').should('exist');
   });
 
   it('does not show ascension badge when ascension is 0', () => {
     assignSagaAttacker('war-asc-none', 'PlainWarHero', 'Skill', {}, 0);
 
-    cy.getByCy('attacker-entry-node-10')
-      .scrollIntoView()
-      .find('[data-cy="ascension-badge-1"]')
-      .should('not.exist');
-    cy.getByCy('attacker-entry-node-10')
-      .find('[data-cy="ascension-badge-2"]')
-      .should('not.exist');
+    cy.getByCy('attacker-entry-node-10').scrollIntoView().find('[data-cy="ascension-badge-1"]').should('not.exist');
+    cy.getByCy('attacker-entry-node-10').find('[data-cy="ascension-badge-2"]').should('not.exist');
   });
 });

@@ -52,7 +52,10 @@ export default function EndWarDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+    >
       <DialogContent data-cy='end-war-dialog'>
         <DialogHeader>
           <DialogTitle>{t.game.war.endWarConfirmTitle}</DialogTitle>
@@ -60,7 +63,10 @@ export default function EndWarDialog({
         </DialogHeader>
 
         <div className='space-y-4 py-2'>
-          <div className='flex items-center gap-3' data-cy='end-war-win-toggle'>
+          <div
+            className='flex items-center gap-3'
+            data-cy='end-war-win-toggle'
+          >
             <Label>{t.game.war.result}</Label>
             <div className='flex items-center gap-2'>
               <span
@@ -100,7 +106,10 @@ export default function EndWarDialog({
                 data-cy='end-war-elo-input'
               />
               {eloInput !== '' && !eloValid && (
-                <p className='text-xs text-red-500' data-cy='end-war-elo-error'>
+                <p
+                  className='text-xs text-red-500'
+                  data-cy='end-war-elo-error'
+                >
                   {win ? t.game.war.eloMustBePositive : t.game.war.eloMustBeNegative}
                 </p>
               )}

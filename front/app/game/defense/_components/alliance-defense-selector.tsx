@@ -61,7 +61,8 @@ export default function AllianceDefenseSelector({
     return availableChampions
       .map((champ) => {
         const owners = champ.owners.filter((owner) => {
-          const matchPlayer = !playerFilter || owner.game_pseudo.toLowerCase().includes(playerFilter.toLowerCase());
+          const matchPlayer =
+            !playerFilter || owner.game_pseudo.toLowerCase().includes(playerFilter.toLowerCase());
           const matchNotPreferred = !notPreferredFilter || !owner.is_preferred_attacker;
           return matchPlayer && matchNotPreferred;
         });

@@ -50,13 +50,19 @@ export default function SelectorFilterBar({
           value={playerFilter || 'all'}
           onValueChange={(val) => onPlayerChange(val === 'all' ? '' : val)}
         >
-          <SelectTrigger className='h-8 w-26 text-xs' data-cy='selector-player-filter'>
+          <SelectTrigger
+            className='h-8 w-26 text-xs'
+            data-cy='selector-player-filter'
+          >
             <SelectValue placeholder={t.game.defense.playerFilter} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value='all'>{t.game.defense.playerFilter}</SelectItem>
             {players.map((p) => (
-              <SelectItem key={p} value={p}>
+              <SelectItem
+                key={p}
+                value={p}
+              >
                 {p}
               </SelectItem>
             ))}
@@ -69,13 +75,19 @@ export default function SelectorFilterBar({
           value={classFilter || 'all'}
           onValueChange={(val) => onClassChange(val === 'all' ? '' : val)}
         >
-          <SelectTrigger className='h-8 w-26 text-xs' data-cy='selector-class-filter'>
+          <SelectTrigger
+            className='h-8 w-26 text-xs'
+            data-cy='selector-class-filter'
+          >
             <SelectValue placeholder={t.roster.selectClass} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value='all'>{t.roster.classFilter}</SelectItem>
             {classes.map((c) => (
-              <SelectItem key={c} value={c}>
+              <SelectItem
+                key={c}
+                value={c}
+              >
                 {c}
               </SelectItem>
             ))}

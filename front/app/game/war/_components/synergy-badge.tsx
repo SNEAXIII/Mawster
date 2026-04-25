@@ -3,7 +3,9 @@
 import { cn } from '@/app/lib/utils';
 import { Zap } from 'lucide-react';
 
-export default function SynergyBadge({additionalClasses = ''}: Readonly<{additionalClasses?: string}>) {
+export default function SynergyBadge({
+  additionalClasses = '',
+}: Readonly<{ additionalClasses?: string }>) {
   return (
     <div
       className={cn(

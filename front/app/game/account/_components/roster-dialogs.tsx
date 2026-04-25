@@ -35,7 +35,10 @@ export function RosterDialogs({
         open={deleteTarget !== null}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
         title={t.roster.deleteConfirmTitle}
-        description={t.roster.deleteConfirmDesc.replace('{name}', deleteTarget?.champion_name ?? '')}
+        description={t.roster.deleteConfirmDesc.replace(
+          '{name}',
+          deleteTarget?.champion_name ?? ''
+        )}
         confirmText={t.common.delete}
         cancelText={t.common.cancel}
         onConfirm={confirmDelete}

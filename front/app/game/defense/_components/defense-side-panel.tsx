@@ -29,7 +29,10 @@ export default function DefenseSidePanel({
 }: DefenseSidePanelProps) {
   const { t } = useI18n();
   const { isMine } = useAllianceRole();
-  const [masteryTarget, setMasteryTarget] = useState<{ gameAccountId: string; pseudo: string } | null>(null);
+  const [masteryTarget, setMasteryTarget] = useState<{
+    gameAccountId: string;
+    pseudo: string;
+  } | null>(null);
 
   // Sort members: owner → officers → members, then alphabetical
   const sortedMembers = [...members].sort((a, b) => {
@@ -78,22 +81,27 @@ export default function DefenseSidePanel({
                     isMine={isMine(member.game_account_id)}
                   />
                   <div className='flex items-center gap-2'>
-                  <span
-                    onClick={() => setMasteryTarget({ gameAccountId: member.game_account_id, pseudo: member.game_pseudo })}
-                    className='cursor-pointer text-muted-foreground hover:text-foreground transition-colors'
-                    title={t.mastery.title}
-                  >
-                    <Shield size={13} />
-                  </span>
-                  <span
-                    data-cy={`defender-count-${member.game_pseudo}`}
-                    className={cn(
-                      'text-xs font-mono',
-                      isFull ? 'text-red-400' : 'text-muted-foreground'
-                    )}
-                  >
-                    {member.defender_count}/{member.max_defenders}
-                  </span>
+                    <span
+                      onClick={() =>
+                        setMasteryTarget({
+                          gameAccountId: member.game_account_id,
+                          pseudo: member.game_pseudo,
+                        })
+                      }
+                      className='cursor-pointer text-muted-foreground hover:text-foreground transition-colors'
+                      title={t.mastery.title}
+                    >
+                      <Shield size={13} />
+                    </span>
+                    <span
+                      data-cy={`defender-count-${member.game_pseudo}`}
+                      className={cn(
+                        'text-xs font-mono',
+                        isFull ? 'text-red-400' : 'text-muted-foreground'
+                      )}
+                    >
+                      {member.defender_count}/{member.max_defenders}
+                    </span>
                   </div>
                 </div>
                 {playerPlacements.length > 0 ? (
@@ -159,7 +167,9 @@ export default function DefenseSidePanel({
       {masteryTarget && (
         <MasteryDialog
           open={!!masteryTarget}
-          onOpenChange={(open) => { if (!open) setMasteryTarget(null); }}
+          onOpenChange={(open) => {
+            if (!open) setMasteryTarget(null);
+          }}
           gameAccountId={masteryTarget.gameAccountId}
           pseudo={masteryTarget.pseudo}
           defaultMode='defense'

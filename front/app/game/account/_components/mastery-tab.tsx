@@ -12,7 +12,12 @@ interface MasteryTabProps {
   loading: boolean;
   saving: boolean;
   isOwner: boolean;
-  onFieldChange: (masteryId: string, field: 'unlocked' | 'attack' | 'defense', value: number, masteryMaxValue: number) => void;
+  onFieldChange: (
+    masteryId: string,
+    field: 'unlocked' | 'attack' | 'defense',
+    value: number,
+    masteryMaxValue: number
+  ) => void;
   onSave: () => void;
 }
 
@@ -61,7 +66,8 @@ export default function MasteryTab({
         {masteries.map((mastery) => {
           const formItem = masteryForm.find((f) => f.mastery_id === mastery.mastery_id);
           if (!formItem) return null;
-          const isMaxed = formItem.unlocked >= mastery.mastery_max_value && mastery.mastery_max_value > 0;
+          const isMaxed =
+            formItem.unlocked >= mastery.mastery_max_value && mastery.mastery_max_value > 0;
           return (
             <Card
               key={mastery.mastery_id}
@@ -69,8 +75,11 @@ export default function MasteryTab({
               className={getCardStyle(formItem.unlocked, mastery.mastery_max_value)}
             >
               <CardHeader className='pb-2'>
-                <CardTitle className={`text-sm uppercase tracking-wide flex items-center gap-2 ${getTitleStyle(formItem.unlocked, mastery.mastery_max_value)}`}>
-                  {t.mastery.names[mastery.mastery_order as keyof typeof t.mastery.names] ?? mastery.mastery_name}
+                <CardTitle
+                  className={`text-sm uppercase tracking-wide flex items-center gap-2 ${getTitleStyle(formItem.unlocked, mastery.mastery_max_value)}`}
+                >
+                  {t.mastery.names[mastery.mastery_order as keyof typeof t.mastery.names] ??
+                    mastery.mastery_name}
                   {isMaxed && (
                     <span className='text-[10px] font-bold bg-amber-400/20 text-amber-400 px-1.5 py-0.5 rounded normal-case tracking-normal'>
                       MAX
@@ -84,7 +93,10 @@ export default function MasteryTab({
                     const displayMax =
                       field === 'unlocked' ? mastery.mastery_max_value : formItem.unlocked;
                     return (
-                      <div key={field} className='text-center'>
+                      <div
+                        key={field}
+                        className='text-center'
+                      >
                         <p className='text-xs text-muted-foreground mb-1'>{t.mastery[field]}</p>
                         <div className='flex items-center justify-center w-fit mx-auto'>
                           <Input
@@ -98,7 +110,7 @@ export default function MasteryTab({
                                 mastery.mastery_id,
                                 field,
                                 val,
-                                mastery.mastery_max_value,
+                                mastery.mastery_max_value
                               );
                             }}
                             disabled={!isOwner}
@@ -120,7 +132,11 @@ export default function MasteryTab({
       </div>
 
       {isOwner && (
-        <Button onClick={onSave} disabled={saving} data-cy='mastery-save-button'>
+        <Button
+          onClick={onSave}
+          disabled={saving}
+          data-cy='mastery-save-button'
+        >
           {saving ? t.common.loading : t.mastery.save}
         </Button>
       )}

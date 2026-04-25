@@ -149,7 +149,10 @@ export default function AllianceCard({
               </span>
             </div>
             <div className='flex items-center gap-2 mt-1 flex-wrap'>
-              <span className='text-xs text-muted-foreground' data-cy='alliance-elo'>
+              <span
+                className='text-xs text-muted-foreground'
+                data-cy='alliance-elo'
+              >
                 {editingElo ? (
                   <span className='inline-flex items-center gap-1'>
                     <span>{t.game.alliances.elo}:</span>
@@ -196,7 +199,10 @@ export default function AllianceCard({
                 )}
               </span>
               <span className='text-xs text-muted-foreground'>·</span>
-              <span className='text-xs text-muted-foreground' data-cy='alliance-tier'>
+              <span
+                className='text-xs text-muted-foreground'
+                data-cy='alliance-tier'
+              >
                 {editingTier ? (
                   <span className='inline-flex items-center gap-1'>
                     <span>{t.game.alliances.tier}:</span>
