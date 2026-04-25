@@ -540,7 +540,6 @@ class TestEndWar:
         assert response.status_code == 200
         assert response.json()["status"] == "ended"
 
-
     @pytest.mark.asyncio
     async def test_end_war_captures_win_and_tier_no_season(self):
         data = await _setup_war()

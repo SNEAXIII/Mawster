@@ -91,7 +91,7 @@ export default function EndWarDialog({
               <Input
                 id='elo-change'
                 type='number'
-                placeholder={win ? '+50' : '-50'}
+                placeholder={win ? '+30' : '-30'}
                 value={eloInput}
                 onChange={(e) => setEloInput(e.target.value)}
                 data-cy='end-war-elo-input'

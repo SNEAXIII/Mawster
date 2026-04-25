@@ -246,6 +246,7 @@ async def update_alliance_elo(
 ):
     """Update alliance ELO. Officers/owner only."""
     from src.models.Alliance import Alliance
+
     alliance = await session.get(Alliance, alliance_id)
     if alliance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
@@ -266,6 +267,7 @@ async def update_alliance_tier(
 ):
     """Update alliance Tier. Officers/owner only."""
     from src.models.Alliance import Alliance
+
     alliance = await session.get(Alliance, alliance_id)
     if alliance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)

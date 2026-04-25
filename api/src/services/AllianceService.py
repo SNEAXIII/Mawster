@@ -8,6 +8,7 @@ from sqlalchemy import func
 from starlette import status
 
 from src.models.GameAccount import GameAccount
+from src.models.User import User
 from src.models.Alliance import Alliance
 from src.models.AllianceInvitation import AllianceInvitation
 from src.models.AllianceOfficer import AllianceOfficer
@@ -104,11 +105,15 @@ class AllianceService:
             )
 
     @staticmethod
-    def _assert_is_alliance_member(
-        game_account: Optional[GameAccount], alliance_id: uuid.UUID
+    async def assert_is_alliance_member(
+        session: SessionDep, account: Optional[GameAccount | User], alliance_id: uuid.UUID
     ) -> None:
-        """Raise 404 if the game account is None or not a member of the given alliance."""
-        if game_account is None or game_account.alliance_id != alliance_id:
+        """Raise 404 if the account is None or not a member of the given alliance."""
+        if isinstance(account, User):
+            account = (
+                await session.exec(select(GameAccount).where(GameAccount.user_id == account.id))
+            ).first()
+        if account is None or account.alliance_id != alliance_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=GAME_ACCOUNT_NOT_MEMBER_OF_ALLIANCE,
@@ -433,7 +438,7 @@ class AllianceService:
                 detail=CANNOT_REMOVE_OWNER,
             )
         game_account = await session.get(GameAccount, game_account_id)
-        cls._assert_is_alliance_member(game_account, alliance_id)
+        await cls.assert_is_alliance_member(session, game_account, alliance_id)
         # Also remove officer status if applicable
         officer_result = await session.exec(
             select(AllianceOfficer).where(
@@ -530,7 +535,7 @@ class AllianceService:
     ) -> Alliance:
         """Set the group (1, 2, 3 or None) for a member. Max 10 members per group."""
         game_account = await session.get(GameAccount, game_account_id)
-        cls._assert_is_alliance_member(game_account, alliance_id)
+        await cls.assert_is_alliance_member(session, game_account, alliance_id)
         if group is not None:
             if group not in (1, 2, 3):
                 raise HTTPException(

@@ -1,4 +1,5 @@
 """Unit tests for alliance DTOs."""
+
 import uuid
 from datetime import datetime
 from unittest.mock import MagicMock
