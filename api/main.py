@@ -98,6 +98,20 @@ def custom_openapi():
         description="Documentation for Mawster api backend",
         routes=app.routes,
     )
+    openapi_schema.setdefault("components", {})
+    if not IS_PROD:
+        openapi_schema["components"]["securitySchemes"] = {
+            "DevLogin": {
+                "type": "oauth2",
+                "flows": {"password": {"tokenUrl": "/dev/token", "scopes": {}}},
+            }
+        }
+        openapi_schema["security"] = [{"DevLogin": []}]
+    else:
+        openapi_schema["components"]["securitySchemes"] = {
+            "Bearer": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}
+        }
+        openapi_schema["security"] = [{"Bearer": []}]
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 

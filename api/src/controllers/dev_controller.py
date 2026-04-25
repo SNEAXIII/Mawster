@@ -6,7 +6,8 @@ import os
 import uuid
 from pathlib import Path
 from typing import Literal
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, Form, HTTPException
+from typing import Annotated
 from pydantic import BaseModel
 from sqlalchemy import text
 from sqlmodel import select, SQLModel
@@ -40,6 +41,12 @@ class DevLoginRequest(BaseModel):
     """Select a user by ID for dev login (no Discord needed)."""
 
     user_id: uuid.UUID
+
+
+class DevLoginByPseudoRequest(BaseModel):
+    """Select a user by game pseudo for dev login (no Discord needed)."""
+
+    game_pseudo: str
 
 
 class DevJoinAllianceRequest(BaseModel):
@@ -130,6 +137,40 @@ async def dev_login(body: DevLoginRequest, session: SessionDep) -> LoginResponse
         access_token=access_token,
         refresh_token=refresh_token,
     )
+
+
+@dev_controller.post("/token", status_code=200)
+async def dev_token(
+    username: Annotated[str, Form()], session: SessionDep
+) -> LoginResponse:
+    """OAuth2 password flow for Swagger UI — username = game_pseudo."""
+    game_account = (
+        await session.exec(select(GameAccount).where(GameAccount.game_pseudo == username))
+    ).first()
+    if not game_account:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Game account not found")
+    user = await UserService.get_user_by_id_with_validity_check(session, str(game_account.user_id))
+    logger.warning("DEV TOKEN — pseudo: %s / user: %s", username, user.login)
+    return LoginResponse(
+        token_type="bearer",
+        access_token=JWTService.create_access_token(user),
+        refresh_token=JWTService.create_refresh_token(user),
+    )
+
+
+@dev_controller.post("/login-by-pseudo", status_code=200)
+async def dev_login_by_pseudo(body: DevLoginByPseudoRequest, session: SessionDep) -> LoginResponse:
+    """Authenticate as any user by game pseudo without Discord."""
+    game_account = (
+        await session.exec(select(GameAccount).where(GameAccount.game_pseudo == body.game_pseudo))
+    ).first()
+    if not game_account:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Game account not found")
+    user = await UserService.get_user_by_id_with_validity_check(session, str(game_account.user_id))
+    access_token = JWTService.create_access_token(user)
+    refresh_token = JWTService.create_refresh_token(user)
+    logger.warning("DEV LOGIN BY PSEUDO — pseudo: %s / user: %s", body.game_pseudo, user.login)
+    return LoginResponse(token_type="bearer", access_token=access_token, refresh_token=refresh_token)
 
 
 @dev_controller.post("/truncate", status_code=200)
