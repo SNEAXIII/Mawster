@@ -2,6 +2,7 @@ import uuid
 
 from src.models import User
 from src.models import ChampionUser, Season, War, WarDefensePlacement, GameAccount
+from src.models.War import WarStatus
 from sqlalchemy import and_, func, cast, Integer, case
 from sqlmodel import select
 
@@ -46,6 +47,7 @@ class StatisticService:
             .join(War, WarDefensePlacement.war_id == War.id)
             .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
             .where(GameAccount.alliance_id == alliance_id)
+            .where(War.status == WarStatus.ended)
             .group_by(GameAccount.id, GameAccount.game_pseudo, GameAccount.alliance_group)
         )
         rows = (await session.exec(sql)).all()

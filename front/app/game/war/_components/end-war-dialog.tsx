@@ -31,6 +31,7 @@ export default function EndWarDialog({
   const { t } = useI18n();
   const [win, setWin] = useState(true);
   const [eloInput, setEloInput] = useState('');
+  const [confirmInput, setConfirmInput] = useState('');
 
   const parsedElo = eloInput === '' ? null : Number(eloInput);
   const eloValid =
@@ -39,12 +40,14 @@ export default function EndWarDialog({
       !isNaN(parsedElo) &&
       parsedElo !== 0 &&
       (win ? parsedElo > 0 : parsedElo < 0));
+  const confirmed = confirmInput.trim().toLowerCase() === 'confirm';
 
   function handleConfirm() {
-    if (!eloValid) return;
+    if (!eloValid || !confirmed) return;
     onConfirm(win, hasSeason ? parsedElo : null);
     onOpenChange(false);
     setEloInput('');
+    setConfirmInput('');
     setWin(true);
   }
 
@@ -53,7 +56,7 @@ export default function EndWarDialog({
       <DialogContent data-cy='end-war-dialog'>
         <DialogHeader>
           <DialogTitle>{t.game.war.endWarConfirmTitle}</DialogTitle>
-          <DialogDescription>{t.game.war.endWarResultDesc}</DialogDescription>
+          <DialogDescription>{t.game.war.endWarConfirmDesc}</DialogDescription>
         </DialogHeader>
 
         <div className='space-y-4 py-2'>
@@ -103,6 +106,13 @@ export default function EndWarDialog({
               )}
             </div>
           )}
+
+          <Input
+            placeholder='confirm'
+            value={confirmInput}
+            onChange={(e) => setConfirmInput(e.target.value)}
+            data-cy='end-war-confirm-input'
+          />
         </div>
 
         <DialogFooter>
@@ -115,7 +125,7 @@ export default function EndWarDialog({
           </Button>
           <Button
             variant='destructive'
-            disabled={!eloValid}
+            disabled={!eloValid || !confirmed}
             onClick={handleConfirm}
             data-cy='confirmation-dialog-confirm'
           >

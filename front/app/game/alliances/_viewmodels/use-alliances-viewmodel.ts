@@ -22,11 +22,13 @@ import {
 } from '@/app/services/game';
 import { useRequiredSession } from '@/hooks/use-required-session';
 import { useAllianceContext } from '@/app/contexts/alliance-context';
+import { getCurrentSeasonStatistics, type PlayerSeasonStats } from '@/app/services/statistics';
 
 export enum AllianceTab {
   Create = 'create',
   Alliances = 'alliances',
   Defense = 'defense',
+  Statistics = 'statistics',
 }
 
 export function useAlliancesViewModel() {
@@ -42,6 +44,10 @@ export function useAlliancesViewModel() {
   const [hasAnyAccounts, setHasAnyAccounts] = useState(true);
   const [creating, setCreating] = useState(false);
   const [roleRefreshKey, setRoleRefreshKey] = useState(0);
+  const [statsAllianceId, setStatsAllianceId] = useState('');
+  const [seasonStats, setSeasonStats] = useState<PlayerSeasonStats[]>([]);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState('');
 
   const initialTab = (searchParams.get('tab') as AllianceTab) || AllianceTab.Alliances;
   const [activeTab, setActiveTab] = useState<AllianceTab>(
@@ -130,6 +136,24 @@ export function useAlliancesViewModel() {
     setPendingInvitations(results);
   };
 
+  const loadSeasonStats = useCallback(
+    async (allianceId: string) => {
+      setStatsLoading(true);
+      setStatsError('');
+      try {
+        const stats = await getCurrentSeasonStatistics(allianceId);
+        setSeasonStats(stats);
+      } catch (err: unknown) {
+        console.error(err);
+        setSeasonStats([]);
+        setStatsError((err as Error).message || t.game.alliances.statistics.loadError);
+      } finally {
+        setStatsLoading(false);
+      }
+    },
+    [t.game.alliances.statistics.loadError]
+  );
+
   const refreshMembership = () =>
     Promise.all([refreshAlliances(), fetchEligibleOwners(), fetchEligibleMembers(), fetchMyAccounts(), fetchMyInvitations()]);
 
@@ -150,6 +174,34 @@ export function useAlliancesViewModel() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, activeTab, eligibleOwners]);
+
+  useEffect(() => {
+    if (activeTab !== AllianceTab.Statistics) return;
+    if (alliances.length === 0) {
+      setStatsAllianceId('');
+      setSeasonStats([]);
+      return;
+    }
+
+    const allianceExists = alliances.some((alliance) => alliance.id === statsAllianceId);
+    const targetAllianceId = allianceExists ? statsAllianceId : alliances[0].id;
+
+    if (statsAllianceId !== targetAllianceId) {
+      setStatsAllianceId(targetAllianceId);
+      return;
+    }
+
+    void loadSeasonStats(targetAllianceId);
+  }, [activeTab, alliances, statsAllianceId, loadSeasonStats]);
+
+  const handleStatsAllianceChange = (allianceId: string) => {
+    setStatsAllianceId(allianceId);
+  };
+
+  const handleRefreshStatistics = async () => {
+    if (!statsAllianceId) return;
+    await loadSeasonStats(statsAllianceId);
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -255,6 +307,10 @@ export function useAlliancesViewModel() {
     memberAllianceId,
     memberAccountId,
     rosterTarget,
+    statsAllianceId,
+    seasonStats,
+    statsLoading,
+    statsError,
     searchParams,
     setActiveTab,
     setName,
@@ -271,5 +327,7 @@ export function useAlliancesViewModel() {
     handleDeclineInvitation,
     handleCancelInvitation,
     handleDefenseStateChange,
+    handleStatsAllianceChange,
+    handleRefreshStatistics,
   };
 }
