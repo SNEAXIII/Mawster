@@ -1,4 +1,4 @@
-import { setupWarOwner, BACKEND } from '../../support/e2e';
+import { setupWarOwner, BACKEND, type UserSetupData } from '../../support/e2e';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -23,7 +23,7 @@ function activateSeason(adminToken: string, number = 64) {
 
 interface StatScenario {
   adminToken: string;
-  ownerData: ReturnType<typeof setupWarOwner> extends Cypress.Chainable<infer T> ? T['ownerData'] : never;
+  ownerData: UserSetupData;
   allianceId: string;
   ownerAccId: string;
   warId: string;
