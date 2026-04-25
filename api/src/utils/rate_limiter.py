@@ -12,4 +12,5 @@ def _get_real_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-limiter = Limiter(key_func=_get_real_ip, enabled=IS_PROD)
+# TODO: fix rate limiting — disabled until X-Forwarded-For handling is validated
+limiter = Limiter(key_func=_get_real_ip, enabled=False)
