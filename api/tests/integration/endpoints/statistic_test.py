@@ -16,7 +16,6 @@ from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
     push_champion_user,
-    push_member,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 
@@ -55,7 +54,9 @@ async def _setup_with_active_season():
     return {**data, "season": season, "war": war, "cu": cu}
 
 
-async def _add_placement(war_id, champion_user_id, champion_id, node_number, battlegroup=1, ko_count=0):
+async def _add_placement(
+    war_id, champion_user_id, champion_id, node_number, battlegroup=1, ko_count=0
+):
     placement = WarDefensePlacement(
         war_id=war_id,
         battlegroup=battlegroup,
@@ -100,8 +101,22 @@ class TestGetCurrentSeasonStatistics:
     @pytest.mark.anyio
     async def test_returns_stats_for_player_with_fights(self):
         data = await _setup_with_active_season()
-        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=10, battlegroup=1, ko_count=1)
-        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=11, battlegroup=2, ko_count=0)
+        await _add_placement(
+            data["war"].id,
+            data["cu"].id,
+            data["champ"].id,
+            node_number=10,
+            battlegroup=1,
+            ko_count=1,
+        )
+        await _add_placement(
+            data["war"].id,
+            data["cu"].id,
+            data["champ"].id,
+            node_number=11,
+            battlegroup=2,
+            ko_count=0,
+        )
 
         response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
         assert response.status_code == 200
@@ -117,9 +132,15 @@ class TestGetCurrentSeasonStatistics:
     async def test_miniboss_and_boss_counted_separately(self):
         data = await _setup_with_active_season()
         # node 40 = miniboss (37-49), node 50 = boss, node 10 = regular
-        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=40, battlegroup=1)
-        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=50, battlegroup=2)
-        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=10, battlegroup=3)
+        await _add_placement(
+            data["war"].id, data["cu"].id, data["champ"].id, node_number=40, battlegroup=1
+        )
+        await _add_placement(
+            data["war"].id, data["cu"].id, data["champ"].id, node_number=50, battlegroup=2
+        )
+        await _add_placement(
+            data["war"].id, data["cu"].id, data["champ"].id, node_number=10, battlegroup=3
+        )
 
         response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
         assert response.status_code == 200
@@ -131,7 +152,9 @@ class TestGetCurrentSeasonStatistics:
     @pytest.mark.anyio
     async def test_ratio_mb_zero_when_no_miniboss_fights(self):
         data = await _setup_with_active_season()
-        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=10, ko_count=1)
+        await _add_placement(
+            data["war"].id, data["cu"].id, data["champ"].id, node_number=10, ko_count=1
+        )
 
         response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
         p = response.json()[0]

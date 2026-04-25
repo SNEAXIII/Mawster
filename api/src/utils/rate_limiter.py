@@ -1,7 +1,6 @@
 from slowapi import Limiter
 from starlette.requests import Request
 
-from src.security import IS_PROD
 
 
 def _get_real_ip(request: Request) -> str:

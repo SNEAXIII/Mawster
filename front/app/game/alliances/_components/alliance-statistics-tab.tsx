@@ -115,6 +115,38 @@ export default function AllianceStatisticsTab({
       });
   }, [seasonStats, ratioMin, selectedGroup, sortField, sortDir]);
 
+  const rankMap = useMemo(() => {
+    const hasFilter = selectedGroup !== 'all' || ratioMin !== 0;
+    if (!hasFilter) return new Map<string, number>();
+    const map = new Map<string, number>();
+    let rank = 0;
+    let countAtRank = 0;
+    let prevValue: number | null = null;
+    for (const row of filteredStats) {
+      const value = row[sortField];
+      if (prevValue !== null && value !== prevValue) {
+        rank += countAtRank;
+        countAtRank = 0;
+      }
+      if (rank < 3) map.set(String(row.id), rank);
+      prevValue = value;
+      countAtRank++;
+    }
+    return map;
+  }, [filteredStats, selectedGroup, ratioMin, sortField]);
+
+  const RANK_ROW: Record<number, string> = {
+    0: 'bg-yellow-500/10 hover:bg-yellow-500/15',
+    1: 'bg-slate-400/10 hover:bg-slate-400/15',
+    2: 'bg-orange-600/10 hover:bg-orange-600/15',
+  };
+  const RANK_TEXT: Record<number, string> = {
+    0: 'text-yellow-500',
+    1: 'text-slate-400',
+    2: 'text-orange-600',
+  };
+  const RANK_MEDAL: Record<number, string> = { 0: '🥇 ', 1: '🥈 ', 2: '🥉 ' };
+
   const getGroupLabel = (group: number | null) =>
     group === null ? t.game.alliances.statistics.noGroup : `G${group}`;
 
@@ -240,26 +272,18 @@ export default function AllianceStatisticsTab({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredStats.map((row, i) => (
+                  {filteredStats.map((row) => {
+                    const rank = rankMap.get(String(row.id));
+                    return (
                     <TableRow
                       key={row.id}
                       data-cy={`statistics-row-${row.id}`}
-                      className={
-                        i === 0 ? 'bg-yellow-500/10 hover:bg-yellow-500/15' :
-                        i === 1 ? 'bg-slate-400/10 hover:bg-slate-400/15' :
-                        i === 2 ? 'bg-orange-600/10 hover:bg-orange-600/15' :
-                        undefined
-                      }
+                      className={rank !== undefined ? RANK_ROW[rank] : undefined}
                     >
                       <TableCell className='font-medium'>
-                        <span className={
-                          i === 0 ? 'text-yellow-500' :
-                          i === 1 ? 'text-slate-400' :
-                          i === 2 ? 'text-orange-600' :
-                          undefined
-                        }>
-                          {i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : ''}
-                        </span>
+                        {rank !== undefined && (
+                          <span className={RANK_TEXT[rank]}>{RANK_MEDAL[rank]}</span>
+                        )}
                         {row.game_pseudo}
                       </TableCell>
                       <TableCell>
@@ -272,7 +296,8 @@ export default function AllianceStatisticsTab({
                       <TableCell className='text-right'>{row.ratio}%</TableCell>
                       <TableCell className='text-right'>{row.ratio_mb}%</TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
