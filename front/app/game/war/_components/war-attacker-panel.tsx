@@ -63,7 +63,12 @@ export default function WarAttackerPanel({
       data-cy='war-attacker-panel'
     >
       <div className='flex items-center justify-between gap-2 px-1 shrink-0'>
-        <span className='text-xs font-semibold text-muted-foreground uppercase tracking-wide'>
+        <span
+          data-cy='attackers-count'
+          className={`text-xs font-semibold uppercase tracking-wide ${
+            assigned.length >= 50 ? 'text-yellow-400' : 'text-red-400'
+          }`}
+        >
           {t.game.war.attackersPanelTitle.replace('{assigned}', String(assigned.length))}
         </span>
         <PlayerFilterSelect

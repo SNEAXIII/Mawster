@@ -67,7 +67,9 @@ export default function WarTab() {
 
   const dimmedNodes = playerFilter
     ? new Set(
-        placements.filter((p) => p.attacker_pseudo !== playerFilter).map((p) => p.node_number)
+        placements
+          .filter((p) => p.attacker_pseudo !== null && p.attacker_pseudo !== playerFilter)
+          .map((p) => p.node_number)
       )
     : undefined;
 
