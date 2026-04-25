@@ -200,9 +200,8 @@ export default function AllianceStatisticsTab({
               <Select
                 value={String(ratioMin)}
                 onValueChange={(v) => setRatioMin(Number(v))}
-                data-cy='statistics-ratio-filter'
               >
-                <SelectTrigger className='w-44'>
+                <SelectTrigger className='w-44' data-cy='statistics-ratio-filter'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -240,9 +239,8 @@ export default function AllianceStatisticsTab({
                       <Select
                         value={selectedGroup}
                         onValueChange={setSelectedGroup}
-                        data-cy='statistics-group-filter'
                       >
-                        <SelectTrigger className='h-auto border-none bg-transparent p-0 shadow-none gap-1 font-medium text-muted-foreground hover:text-foreground focus:ring-0 focus-visible:ring-0 w-auto [&>svg:last-child]:hidden'>
+                        <SelectTrigger className='h-auto border-none bg-transparent p-0 shadow-none gap-1 font-medium text-muted-foreground hover:text-foreground focus:ring-0 focus-visible:ring-0 w-auto [&>svg:last-child]:hidden' data-cy='statistics-group-filter'>
                           <span>
                             {selectedGroup === 'all'
                               ? t.game.alliances.statistics.columns.group
