@@ -68,7 +68,7 @@ describe('Roster – Upgrade Requests', () => {
 
         // Select 7r3 in the rarity dropdown
         cy.getByCy('upgrade-rarity-select').click();
-        cy.contains("[role='option']", '7★R3').click();
+        cy.contains("[role='option']", '7R3').click();
 
         // Confirm
         cy.getByCy('request-upgrade-btn').click();

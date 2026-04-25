@@ -219,8 +219,6 @@ const fr: Translations = {
       },
     },
     defense: {
-      title: 'Placement Défense',
-      description: "Placez les défenseurs sur la carte de guerre d'alliance.",
       alliance: 'Alliance',
       battlegroup: 'Groupe de combat',
       selectChampion: 'Choisir un champion',
@@ -249,6 +247,7 @@ const fr: Translations = {
       sagaDefenderFilter: 'Saga Défenseur',
       notPreferredFilter: 'Non préféré',
       playerFilter: 'Joueur',
+      allFilter: 'Tous',
       importExport: {
         exportBtn: 'Exporter',
         importBtn: 'Importer',

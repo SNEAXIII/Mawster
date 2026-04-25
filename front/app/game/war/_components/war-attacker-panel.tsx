@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import ChampionPortrait from '@/components/champion-portrait';
+import PlayerFilterSelect from '@/app/game/_components/player-filter-select';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '@/app/contexts/war-context';
 import PrefightEntryRow from './prefight-entry-row';
@@ -17,7 +18,15 @@ interface MemberGroup {
   entries: WarPlacement[];
 }
 
-export default function WarAttackerPanel() {
+interface WarAttackerPanelProps {
+  playerFilter: string;
+  onPlayerChange: (v: string) => void;
+}
+
+export default function WarAttackerPanel({
+  playerFilter,
+  onPlayerChange,
+}: Readonly<WarAttackerPanelProps>) {
   const { t } = useI18n();
   const { placements, warMode, synergies, prefights } = useWar();
   const [masteryTarget, setMasteryTarget] = useState<{
@@ -26,6 +35,10 @@ export default function WarAttackerPanel() {
   } | null>(null);
 
   const assigned = placements.filter((p) => p.attacker_champion_user_id !== null);
+
+  const players = [
+    ...new Set(placements.map((p) => p.attacker_pseudo).filter(Boolean) as string[]),
+  ].sort();
 
   // Group by attacker member (node attackers)
   const groupMap = new Map<string, MemberGroup>();
@@ -49,8 +62,16 @@ export default function WarAttackerPanel() {
       className='flex flex-col gap-3 min-h-0 flex-1'
       data-cy='war-attacker-panel'
     >
-      <div className='text-sm font-semibold text-muted-foreground uppercase tracking-wide px-1 shrink-0'>
-        {t.game.war.attackersPanelTitle.replace('{assigned}', String(assigned.length))}
+      <div className='flex items-center justify-between gap-2 px-1 shrink-0'>
+        <span className='text-xs font-semibold text-muted-foreground uppercase tracking-wide'>
+          {t.game.war.attackersPanelTitle.replace('{assigned}', String(assigned.length))}
+        </span>
+        <PlayerFilterSelect
+          players={players}
+          value={playerFilter}
+          onChange={onPlayerChange}
+          dataCy='war-player-filter'
+        />
       </div>
 
       {assigned.length === 0 ? (
@@ -93,6 +114,8 @@ export default function WarAttackerPanel() {
                   (q) => q.attacker_champion_user_id === p.attacker_champion_user_id
                 ) === i
             );
+
+            if (playerFilter && memberGroup.pseudo !== playerFilter) return null;
 
             return (
               <div key={memberGroup.pseudo}>

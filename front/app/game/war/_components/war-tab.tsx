@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Shield, Swords, Trash2, NotebookPen } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
@@ -62,6 +62,15 @@ export default function WarTab() {
   } = useWar();
 
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId) ?? null;
+
+  const [playerFilter, setPlayerFilter] = useState('');
+
+  const dimmedNodes = playerFilter
+    ? new Set(
+        placements.filter((p) => p.attacker_pseudo !== playerFilter).map((p) => p.node_number)
+      )
+    : undefined;
+
   return (
     <div className='space-y-4'>
       {/* Controls row: opponent name + BG picker + mode toggle + clear */}
@@ -231,11 +240,15 @@ export default function WarTab() {
                 onNodeClick={handleNodeClick}
                 onRemove={handleRemoveDefender}
                 canManage={canManageWar && warMode === WarMode.Defenders}
+                dimmedNodes={dimmedNodes}
               />
             </div>
           </div>
           <div className='w-84 shrink-0 self-start sticky top-0 flex flex-col max-h-[calc(100vh-2rem)]'>
-            <WarAttackerPanel />
+            <WarAttackerPanel
+              playerFilter={playerFilter}
+              onPlayerChange={setPlayerFilter}
+            />
           </div>
         </div>
       )}

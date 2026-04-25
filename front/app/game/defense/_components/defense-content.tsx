@@ -31,7 +31,6 @@ export default function DefensePageContent({
     return (
       <div className='flex flex-col items-center justify-center py-20 text-center'>
         <Shield className='w-16 h-16 text-muted-foreground mb-4' />
-        <h2 className='text-xl font-bold mb-2'>{t.game.defense.title}</h2>
         <p className='text-muted-foreground'>{t.game.defense.noAlliance}</p>
       </div>
     );
@@ -41,7 +40,6 @@ export default function DefensePageContent({
 
   return (
     <div className='space-y-4'>
-      <h2 className='text-xl font-bold'>{t.game.defense.title}</h2>
       <DefenseActionsProvider value={defenseActions}>
         <DefenseHeader
           alliances={vm.alliances}

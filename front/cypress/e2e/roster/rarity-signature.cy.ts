@@ -21,7 +21,7 @@ describe('Roster – Rarity & Signature', () => {
         cy.getByCy('champion-search').type('Medusa');
         cy.getByCy('champion-selected-preview').should('contain', 'Medusa');
 
-        // Select 7★R3 rarity
+        // Select 7R3 rarity
         cy.getByCy('rarity-7r3').click();
         cy.getByCy('champion-submit').click();
         cy.contains('Medusa added / updated').scrollIntoView().should('be.visible');

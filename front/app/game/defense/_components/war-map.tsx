@@ -15,6 +15,7 @@ interface WarMapNodeProps {
   canManage: boolean;
   hidePseudo?: boolean;
   hideSig?: boolean;
+  dimmed?: boolean;
 }
 
 function getNodeColor(nodeNumber: number): string {
@@ -42,6 +43,7 @@ export function WarMapNode({
   canManage,
   hidePseudo = false,
   hideSig = false,
+  dimmed = false,
 }: Readonly<WarMapNodeProps>) {
   const { t } = useI18n();
   const colorClasses = getNodeColor(nodeNumber);
@@ -54,7 +56,9 @@ export function WarMapNode({
         'w-15 h-18 sm:w-17 sm:h-20.5 md:w-18.5 md:h-22',
         colorClasses,
         hoverClasses,
-        placement ? 'ring-1 ring-white/30' : 'opacity-80'
+        !dimmed && placement && 'ring-1 ring-white/30',
+        !dimmed && !placement && 'opacity-80',
+        dimmed && 'opacity-25'
       )}
       onClick={() => onNodeClick(nodeNumber)}
       title={
@@ -104,7 +108,7 @@ export function WarMapNode({
             {hideSig
               ? (() => {
                   const { stars, rank } = parseRarity(placement.rarity);
-                  const parts = [`${stars}★R${rank}`];
+                  const parts = [`${stars}R${rank}`];
                   if (placement.ascension > 0) parts.push(`A${placement.ascension}`);
                   return parts.join('·');
                 })()
@@ -132,6 +136,7 @@ interface WarMapProps {
   canManage: boolean;
   hidePseudo?: boolean;
   hideSig?: boolean;
+  dimmedNodes?: Set<number>;
 }
 
 // Map layout: rows of nodes from top (boss) to bottom (start)
@@ -179,6 +184,7 @@ export default function WarMap({
   canManage,
   hidePseudo = false,
   hideSig = false,
+  dimmedNodes,
 }: Readonly<WarMapProps>) {
   const placementMap = new Map<number, DefensePlacement>();
   for (const p of placements) {
@@ -218,6 +224,7 @@ export default function WarMap({
                     canManage={canManage}
                     hidePseudo={hidePseudo}
                     hideSig={hideSig}
+                    dimmed={dimmedNodes?.has(nodeNumber) ?? false}
                   />
                 )
               )}

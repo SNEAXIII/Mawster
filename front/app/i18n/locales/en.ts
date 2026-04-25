@@ -216,8 +216,6 @@ const en = {
       },
     },
     defense: {
-      title: 'Defense Placement',
-      description: 'Place defenders on the Alliance War map.',
       alliance: 'Alliance',
       battlegroup: 'Battlegroup',
       selectChampion: 'Select Champion',
@@ -245,6 +243,7 @@ const en = {
       sagaDefenderFilter: 'Saga Defender',
       notPreferredFilter: 'Not Preferred',
       playerFilter: 'Player',
+      allFilter: 'All',
       importExport: {
         exportBtn: 'Export',
         importBtn: 'Import',

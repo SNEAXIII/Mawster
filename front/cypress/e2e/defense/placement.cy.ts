@@ -40,7 +40,7 @@ describe('Defense – Placement via UI', () => {
         pseudo: 'LabelPlyr',
         tag: 'LB',
         node: 1,
-        expected: '7★R3·200',
+        expected: '7R3·200',
         champ: { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3', options: { signature: 200 } },
       },
       {
@@ -48,7 +48,7 @@ describe('Defense – Placement via UI', () => {
         pseudo: 'AscPlyr',
         tag: 'AS',
         node: 10,
-        expected: '7★R5·A1·200',
+        expected: '7R5·A1·200',
         champ: {
           name: 'Doctor Doom',
           cls: 'Mystic',
@@ -61,7 +61,7 @@ describe('Defense – Placement via UI', () => {
         pseudo: 'Asc2Plyr',
         tag: 'A2',
         node: 5,
-        expected: '7★R5·A2·200',
+        expected: '7R5·A2·200',
         champ: {
           name: 'Blade',
           cls: 'Skill',
@@ -74,7 +74,7 @@ describe('Defense – Placement via UI', () => {
         pseudo: 'ZSigPlyr',
         tag: 'ZS',
         node: 3,
-        expected: '7★R4·0',
+        expected: '7R4·0',
         champ: { name: 'Wolverine', cls: 'Mutant', rarity: '7r4', options: { signature: 0 } },
       },
       {
@@ -82,7 +82,7 @@ describe('Defense – Placement via UI', () => {
         pseudo: 'SixPlyr',
         tag: '6S',
         node: 7,
-        expected: '6★R5·20',
+        expected: '6R5·20',
         champ: { name: 'Hulk', cls: 'Science', rarity: '6r5', options: { signature: 20 } },
       },
     ] as const
@@ -116,7 +116,7 @@ describe('Defense – Placement via UI', () => {
       cy.getByCy('war-node-20').scrollIntoView().click({ force: true });
       cy.getByCy('champion-card-Iron-Man').click();
       cy.getByCy('war-node-20').find('[data-cy="preferred-badge"]').should('exist');
-      cy.getByCy('war-node-20').should('contain', '7★R5·200');
+      cy.getByCy('war-node-20').should('contain', '7R5·200');
       cy.getByCy('defender-card-20').find('[data-cy="preferred-badge"]').should('exist');
 
       cy.getByCy('war-node-15').scrollIntoView().click({ force: true });
@@ -180,16 +180,16 @@ describe('Defense – Placement via UI', () => {
       cy.getByCy('defender-count-SeqPlyr').should('contain', '3/5');
 
       cy.getByCy('war-node-50').find('[data-cy="preferred-badge"]').should('exist');
-      cy.getByCy('war-node-50').should('contain', '7★R5·A1·200').and('contain', 'SeqPlyr');
+      cy.getByCy('war-node-50').should('contain', '7R5·A1·200').and('contain', 'SeqPlyr');
       cy.getByCy('war-node-40').find('[data-cy="preferred-badge"]').should('not.exist');
-      cy.getByCy('war-node-40').should('contain', '7★R4·100').and('contain', 'SeqPlyr');
+      cy.getByCy('war-node-40').should('contain', '7R4·100').and('contain', 'SeqPlyr');
       cy.getByCy('war-node-1').find('[data-cy="preferred-badge"]').should('not.exist');
-      cy.getByCy('war-node-1').should('contain', '7★R3·20').and('contain', 'SeqPlyr');
+      cy.getByCy('war-node-1').should('contain', '7R3·20').and('contain', 'SeqPlyr');
 
-      cy.getByCy('defender-card-50').should('contain', '7★R5·A1·200');
+      cy.getByCy('defender-card-50').should('contain', '7R5·A1·200');
       cy.getByCy('defender-card-50').find('[data-cy="preferred-badge"]').should('exist');
-      cy.getByCy('defender-card-40').should('contain', '7★R4·100');
-      cy.getByCy('defender-card-1').should('contain', '7★R3·20');
+      cy.getByCy('defender-card-40').should('contain', '7R4·100');
+      cy.getByCy('defender-card-1').should('contain', '7R3·20');
 
       cy.getByCy('defender-card-50').should('contain', '#50');
       cy.getByCy('defender-card-40').should('contain', '#40');
@@ -233,11 +233,11 @@ describe('Defense – Placement via UI', () => {
       cy.getByCy('champion-card-Blade').click();
       cy.getByCy('defender-count-FivePlyr').should('contain', '5/5');
 
-      cy.getByCy('war-node-1').should('contain', '7★R5·200');
-      cy.getByCy('war-node-2').should('contain', '7★R4·100');
-      cy.getByCy('war-node-3').should('contain', '7★R3·20');
-      cy.getByCy('war-node-4').should('contain', '7★R5·A2·200');
-      cy.getByCy('war-node-5').should('contain', '7★R3·0');
+      cy.getByCy('war-node-1').should('contain', '7R5·200');
+      cy.getByCy('war-node-2').should('contain', '7R4·100');
+      cy.getByCy('war-node-3').should('contain', '7R3·20');
+      cy.getByCy('war-node-4').should('contain', '7R5·A2·200');
+      cy.getByCy('war-node-5').should('contain', '7R3·0');
     });
   });
 });
