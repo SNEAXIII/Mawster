@@ -6,7 +6,7 @@ import pytest
 from main import app
 from src.enums.Roles import Roles
 from src.models.Season import Season
-from src.models.War import War
+from src.models.War import War, WarStatus
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.utils.db import get_session
 from tests.utils.utils_client import create_auth_headers, execute_get_request
@@ -48,6 +48,7 @@ async def _setup_with_active_season():
         opponent_name="Enemy",
         created_by_id=data["owner"].id,
         season_id=season.id,
+        status=WarStatus.ended,
     )
     await load_objects([season, war])
     cu = await push_champion_user(data["owner"], data["champ"])
@@ -159,6 +160,59 @@ class TestGetCurrentSeasonStatistics:
         response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
         p = response.json()[0]
         assert p["ratio_mb"] == 0
+
+    @pytest.mark.anyio
+    async def test_active_war_excluded(self):
+        data = await _base_setup()
+        season = Season(number=64, is_active=True)
+        active_war = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name="Enemy",
+            created_by_id=data["owner"].id,
+            season_id=season.id,
+            status=WarStatus.active,
+        )
+        await load_objects([season, active_war])
+        cu = await push_champion_user(data["owner"], data["champ"])
+        await _add_placement(active_war.id, cu.id, data["champ"].id, node_number=10)
+
+        response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
+        assert response.status_code == 200
+        assert response.json() == []
+
+    @pytest.mark.anyio
+    async def test_only_ended_wars_counted_when_mixed(self):
+        """Ended war placements are counted; active war placements are excluded."""
+        data = await _base_setup()
+        season = Season(number=64, is_active=True)
+        ended_war = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name="Ended",
+            created_by_id=data["owner"].id,
+            season_id=season.id,
+            status=WarStatus.ended,
+        )
+        active_war = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name="Active",
+            created_by_id=data["owner"].id,
+            season_id=season.id,
+            status=WarStatus.active,
+        )
+        await load_objects([season, ended_war, active_war])
+        cu = await push_champion_user(data["owner"], data["champ"])
+        await _add_placement(ended_war.id, cu.id, data["champ"].id, node_number=10, ko_count=0)
+        await _add_placement(active_war.id, cu.id, data["champ"].id, node_number=11, ko_count=1)
+
+        response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
+        assert response.status_code == 200
+        row = response.json()[0]
+        assert row["total_fights"] == 1
+        assert row["total_kos"] == 0
+        assert row["ratio"] == 100
 
     @pytest.mark.anyio
     async def test_non_member_gets_404(self):

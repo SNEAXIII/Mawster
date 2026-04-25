@@ -192,7 +192,6 @@ const en = {
       statistics: {
         tabLabel: 'Statistics',
         title: 'Season Statistics',
-        description: 'Current season performance for the selected alliance.',
         alliance: 'Alliance',
         ratioMin: 'Minimum ratio (%)',
         groups: 'Groups',

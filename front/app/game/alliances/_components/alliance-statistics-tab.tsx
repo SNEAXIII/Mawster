@@ -115,37 +115,31 @@ export default function AllianceStatisticsTab({
       });
   }, [seasonStats, ratioMin, selectedGroup, sortField, sortDir]);
 
-  const rankMap = useMemo(() => {
-    const hasFilter = selectedGroup !== 'all' || ratioMin !== 0;
-    if (!hasFilter) return new Map<string, number>();
-    const map = new Map<string, number>();
-    let rank = 0;
-    let countAtRank = 0;
-    let prevValue: number | null = null;
-    for (const row of filteredStats) {
-      const value = row[sortField];
-      if (prevValue !== null && value !== prevValue) {
-        rank += countAtRank;
-        countAtRank = 0;
-      }
-      if (rank < 3) map.set(String(row.id), rank);
-      prevValue = value;
-      countAtRank++;
-    }
-    return map;
-  }, [filteredStats, selectedGroup, ratioMin, sortField]);
+  const colRanks = useMemo(() => {
+    const top3 = (values: number[], descending: boolean): Map<number, number> => {
+      const sorted = [...new Set(values)].sort((a, b) => descending ? b - a : a - b);
+      return new Map(sorted.slice(0, 3).map((v, i) => [v, i]));
+    };
+    const f = filteredStats;
+    return {
+      total_fights:  top3(f.map((r) => r.total_fights),  true),
+      total_kos:     top3(f.map((r) => r.total_kos),     true),
+      total_miniboss:top3(f.map((r) => r.total_miniboss),true),
+      total_boss:    top3(f.map((r) => r.total_boss),    true),
+      ratio:         top3(f.map((r) => r.ratio),         true),
+      ratio_mb:      top3(f.map((r) => r.ratio_mb),      true),
+    };
+  }, [filteredStats]);
 
-  const RANK_ROW: Record<number, string> = {
-    0: 'bg-yellow-500/10 hover:bg-yellow-500/15',
-    1: 'bg-slate-400/10 hover:bg-slate-400/15',
-    2: 'bg-orange-600/10 hover:bg-orange-600/15',
+  const GREEN = ['text-emerald-400 font-semibold', 'text-emerald-400/60', 'text-emerald-400/35'];
+  const RED   = ['text-red-400 font-semibold',     'text-red-400/60',     'text-red-400/35'];
+
+  const cellClass = (field: keyof typeof colRanks, value: number, invert = false) => {
+    if (value === 0) return '';
+    const rank = colRanks[field].get(value);
+    if (rank === undefined) return '';
+    return (invert ? RED : GREEN)[rank];
   };
-  const RANK_TEXT: Record<number, string> = {
-    0: 'text-yellow-500',
-    1: 'text-slate-400',
-    2: 'text-orange-600',
-  };
-  const RANK_MEDAL: Record<number, string> = { 0: '🥇 ', 1: '🥈 ', 2: '🥉 ' };
 
   const getGroupLabel = (group: number | null) =>
     group === null ? t.game.alliances.statistics.noGroup : `G${group}`;
@@ -172,7 +166,6 @@ export default function AllianceStatisticsTab({
             </Select>
           )}
         </div>
-        <CardDescription>{t.game.alliances.statistics.description}</CardDescription>
       </CardHeader>
 
       <CardContent className='space-y-4'>
@@ -242,7 +235,7 @@ export default function AllianceStatisticsTab({
               <Table data-cy='statistics-table'>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t.game.alliances.statistics.columns.player}</TableHead>
+                    <TableHead className='w-40'>{t.game.alliances.statistics.columns.player}</TableHead>
                     <TableHead>
                       <Select
                         value={selectedGroup}
@@ -250,7 +243,13 @@ export default function AllianceStatisticsTab({
                         data-cy='statistics-group-filter'
                       >
                         <SelectTrigger className='h-auto border-none bg-transparent p-0 shadow-none gap-1 font-medium text-muted-foreground hover:text-foreground focus:ring-0 focus-visible:ring-0 w-auto [&>svg:last-child]:hidden'>
-                          <SelectValue />
+                          <span>
+                            {selectedGroup === 'all'
+                              ? t.game.alliances.statistics.columns.group
+                              : selectedGroup === 'none'
+                              ? t.game.alliances.statistics.noGroup
+                              : `G${selectedGroup}`}
+                          </span>
                           <ChevronDown className='h-3.5 w-3.5 opacity-70 shrink-0' />
                         </SelectTrigger>
                         <SelectContent>
@@ -272,32 +271,20 @@ export default function AllianceStatisticsTab({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredStats.map((row) => {
-                    const rank = rankMap.get(String(row.id));
-                    return (
-                    <TableRow
-                      key={row.id}
-                      data-cy={`statistics-row-${row.id}`}
-                      className={rank !== undefined ? RANK_ROW[rank] : undefined}
-                    >
-                      <TableCell className='font-medium'>
-                        {rank !== undefined && (
-                          <span className={RANK_TEXT[rank]}>{RANK_MEDAL[rank]}</span>
-                        )}
-                        {row.game_pseudo}
-                      </TableCell>
+                  {filteredStats.map((row) => (
+                    <TableRow key={row.id} data-cy={`statistics-row-${row.id}`}>
+                      <TableCell className='font-medium'>{row.game_pseudo}</TableCell>
                       <TableCell>
                         <Badge variant='outline'>{getGroupLabel(row.alliance_group)}</Badge>
                       </TableCell>
-                      <TableCell className='text-right'>{row.total_fights}</TableCell>
-                      <TableCell className='text-right'>{row.total_kos}</TableCell>
-                      <TableCell className='text-right'>{row.total_miniboss}</TableCell>
-                      <TableCell className='text-right'>{row.total_boss}</TableCell>
-                      <TableCell className='text-right'>{row.ratio}%</TableCell>
-                      <TableCell className='text-right'>{row.ratio_mb}%</TableCell>
+                      <TableCell className={`text-right ${cellClass('total_fights',   row.total_fights)}`}>{row.total_fights}</TableCell>
+                      <TableCell className={`text-right ${cellClass('total_kos',      row.total_kos, true)}`}>{row.total_kos}</TableCell>
+                      <TableCell className={`text-right ${cellClass('total_miniboss', row.total_miniboss)}`}>{row.total_miniboss}</TableCell>
+                      <TableCell className={`text-right ${cellClass('total_boss',     row.total_boss)}`}>{row.total_boss}</TableCell>
+                      <TableCell className={`text-right ${cellClass('ratio',          row.ratio)}`}>{row.ratio}%</TableCell>
+                      <TableCell className={`text-right ${cellClass('ratio_mb',       row.ratio_mb)}`}>{row.ratio_mb}%</TableCell>
                     </TableRow>
-                    );
-                  })}
+                  ))}
                 </TableBody>
               </Table>
             )}

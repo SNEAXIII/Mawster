@@ -195,7 +195,6 @@ const fr: Translations = {
       statistics: {
         tabLabel: 'Statistiques',
         title: 'Statistiques de saison',
-        description: 'Performance de la saison en cours pour l\'alliance sélectionnée.',
         alliance: 'Alliance',
         ratioMin: 'Ratio minimum (%)',
         groups: 'Groupes',
