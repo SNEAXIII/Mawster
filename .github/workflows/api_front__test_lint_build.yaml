@@ -230,8 +230,8 @@ jobs:
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-api:latest
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-api:${{ env.TAG }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-api:buildcache
+          cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-api:buildcache,mode=max
 
   docker-front:
     if: needs.changes.outputs.front == 'true'
@@ -264,8 +264,8 @@ jobs:
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:latest
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:${{ env.TAG }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-front:buildcache
+          cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-front:buildcache,mode=max
 
   docker-migrate:
     if: needs.changes.outputs.api == 'true'
@@ -296,8 +296,8 @@ jobs:
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:latest
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:${{ env.TAG }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:buildcache
+          cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:buildcache,mode=max
 
   docker-backup:
     if: needs.changes.outputs.backup == 'true'
@@ -328,8 +328,8 @@ jobs:
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:latest
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:${{ env.TAG }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:buildcache
+          cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:buildcache,mode=max
 
   docker-static:
     if: needs.changes.outputs.static == 'true'
@@ -360,8 +360,8 @@ jobs:
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-static:latest
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-static:${{ env.TAG }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-static:buildcache
+          cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-static:buildcache,mode=max
 
   deploy:
     name: Deploy to production
