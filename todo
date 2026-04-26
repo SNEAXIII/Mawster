@@ -13,33 +13,13 @@ medium:
     fixer les multi appel api auth me
     fixer la nav bar qui met 3 ans a render
     ne pas tout display quand on veut placer un def
-    faire un selecteur de joueur pour display son path
     bloquer les lignes si le boug peut pas aller a un endroit
     backup db auto google
 
 
 prio:
     permettre de marquer un combat terminé
-    afficheer un attaquant préf seletion attaque + case a cocher pour filter
-    mettre en couleur les combat d'un boug
-
-criTIQUE
     meilleure affiche pour la def (déja placé etc)
 
-now:
-    stats des joueur
-        podium
-        tableau simple ***1***
-            filtre par
-                ratio
-                ko
-                groupe
-    historique des war
-        list season
-            list war
-
-***1***
-game account | bg | kills total | kills mb | nb ko | ratio total | ratio mb | classsement ***2***
-
-***2***
-trouver une formule de calcul pour déterminer le classement de maniere a mettre en avant les gens qui ont fait beaucoup de combats surtout ceux qui font des mb
+criTIQUE
+    ajouter un display des prefight dans le path choisis
