@@ -8,15 +8,14 @@ describe('War – attacker panel player filter', () => {
   it('player filter hides other member groups and dims their nodes on the map', () => {
     setupAttackerScenario('war-pflt').then(
       ({ adminToken, ownerData, memberData, allianceId, ownerAccId, warId, championUserId }) => {
-        cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs) => {
-          const ironManId = champs[0].id;
-          // Place defenders on nodes 1 and 2 first
-          cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 1, 1, ironManId, 7, 3, 0);
-          cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 1, 2, ironManId, 7, 3, 0);
-          // Add Iron Man to owner roster and assign as attacker on node 1
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, ironManId, '7r3').then((cu) => {
+        cy.apiLoadChampions(adminToken, [
+          { name: 'Iron Man', cls: 'Tech' },
+          { name: 'Wolverine', cls: 'Mutant' },
+        ]).then((champMap) => {
+          cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 1, 1, champMap['Iron Man'].id, 7, 3, 0);
+          cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 1, 2, champMap['Wolverine'].id, 7, 3, 0);
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Iron Man'].id, '7r3').then((cu) => {
             cy.apiAssignWarAttacker(ownerData.access_token, allianceId, warId, 1, 1, cu.id);
-            // Assign Wolverine (member's champion) as attacker on node 2
             cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 2, championUserId);
           });
         });
@@ -42,11 +41,13 @@ describe('War – attacker panel player filter', () => {
   it('player filter restores all member groups when reset to All', () => {
     setupAttackerScenario('war-pflt-r').then(
       ({ adminToken, ownerData, memberData, allianceId, ownerAccId, warId, championUserId }) => {
-        cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs) => {
-          const ironManId = champs[0].id;
-          cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 1, 1, ironManId, 7, 3, 0);
-          cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 1, 2, ironManId, 7, 3, 0);
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, ironManId, '7r3').then((cu) => {
+        cy.apiLoadChampions(adminToken, [
+          { name: 'Iron Man', cls: 'Tech' },
+          { name: 'Wolverine', cls: 'Mutant' },
+        ]).then((champMap) => {
+          cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 1, 1, champMap['Iron Man'].id, 7, 3, 0);
+          cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 1, 2, champMap['Wolverine'].id, 7, 3, 0);
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap['Iron Man'].id, '7r3').then((cu) => {
             cy.apiAssignWarAttacker(ownerData.access_token, allianceId, warId, 1, 1, cu.id);
             cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 2, championUserId);
           });
