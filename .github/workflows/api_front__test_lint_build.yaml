@@ -386,6 +386,8 @@ jobs:
           script: |
             cd /root/Mawster
 
+            make backup-now
+
             docker pull sneaxiii/mawster-api:latest
             docker pull sneaxiii/mawster-migrate:latest
             docker pull sneaxiii/mawster-front:latest

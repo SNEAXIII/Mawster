@@ -24,6 +24,7 @@ RUN addgroup --system --gid 1001 python && \
     adduser --system --uid 1001 fastapi
 
 COPY --from=builder /app/.venv ./.venv
+COPY --from=builder /app/src ./src
 
 COPY --chown=root:root --chmod=555 main.py run.sh wait-for-it.sh ./
 RUN find . -type f -name "*.sh" -exec sed -i 's/\r$//' {} \;
