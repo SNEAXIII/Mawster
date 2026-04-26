@@ -5,6 +5,18 @@ import TestModeBanner from '@/components/test-mode-banner';
 import { Providers } from './providers';
 import { Toaster } from '@/components/ui/sonner';
 import { DevInspector } from './_components/dev-inspector';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  icons: {
+    icon: [
+      { url: '/logos/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/logos/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+  },
+};
+
 interface RootLayoutProps {
   readonly children: React.ReactNode;
 }
