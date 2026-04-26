@@ -55,7 +55,7 @@ Cypress.Commands.add('getByCy', (selector: string) => {
 // ── Truncate DB (direct backend call) ────────────────────────────────────────
 
 Cypress.Commands.add('truncateDb', () => {
-  cy.request('POST', `${BACKEND}/dev/truncate`).then((res) => {
+  cy.request({ method: 'POST', url: `${BACKEND}/dev/truncate`, timeout: 20000 }).then((res) => {
     expect(res.status).to.eq(200);
   });
 });
