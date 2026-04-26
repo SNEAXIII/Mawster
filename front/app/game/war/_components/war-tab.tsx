@@ -234,7 +234,7 @@ export default function WarTab() {
       {warLoading ? (
         <FullPageSpinner />
       ) : (
-        <div className='flex gap-4 flex-col lg:flex-row'>
+        <div className='flex gap-4 flex-col lg:flex-row items-center lg:items-stretch'>
           <div className='overflow-x-auto flex-1 min-w-0 rounded-xl border bg-card shadow-sm order-last lg:order-first'>
             <div className='p-2 sm:p-3 w-max mx-auto'>
               <WarDefenseMap
@@ -246,7 +246,7 @@ export default function WarTab() {
               />
             </div>
           </div>
-          <div className='w-84 shrink-0 self-start sticky top-0 flex flex-col max-h-[calc(100vh-2rem)] order-first lg:order-last'>
+          <div className='w-84 shrink-0 lg:self-start order-first lg:order-last lg:sticky lg:top-0 flex flex-col lg:max-h-[calc(100vh-2rem)]'>
             <WarAttackerPanel
               playerFilter={playerFilter}
               onPlayerChange={setPlayerFilter}
