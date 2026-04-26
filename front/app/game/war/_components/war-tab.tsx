@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Shield, Swords, Trash2, NotebookPen } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
@@ -65,10 +65,13 @@ export default function WarTab() {
 
   const [playerFilter, setPlayerFilter] = useState('');
 
+  useEffect(() => {
+    setPlayerFilter('');
+  }, [selectedBg]);
   const dimmedNodes = playerFilter
     ? new Set(
         placements
-          .filter((p) => p.attacker_pseudo !== null && p.attacker_pseudo !== playerFilter)
+          .filter((p) => p.attacker_pseudo !== playerFilter)
           .map((p) => p.node_number)
       )
     : undefined;
@@ -234,8 +237,8 @@ export default function WarTab() {
       {warLoading ? (
         <FullPageSpinner />
       ) : (
-        <div className='flex gap-4 flex-col lg:flex-row items-center lg:items-stretch'>
-          <div className='overflow-x-auto flex-1 min-w-0 rounded-xl border bg-card shadow-sm order-last lg:order-first'>
+        <div className='flex flex-col-reverse lg:flex-row gap-4'>
+          <div className='overflow-x-auto flex-1 min-w-0 rounded-xl border bg-card shadow-sm'>
             <div className='p-2 sm:p-3 w-max mx-auto'>
               <WarDefenseMap
                 placements={placements}
@@ -246,7 +249,7 @@ export default function WarTab() {
               />
             </div>
           </div>
-          <div className='w-84 shrink-0 lg:self-start order-first lg:order-last lg:sticky lg:top-0 flex flex-col lg:max-h-[calc(100vh-2rem)]'>
+          <div className='w-84 shrink-0 lg:self-start lg:sticky lg:top-0 flex flex-col lg:max-h-[calc(100vh-2rem)]'>
             <WarAttackerPanel
               playerFilter={playerFilter}
               onPlayerChange={setPlayerFilter}

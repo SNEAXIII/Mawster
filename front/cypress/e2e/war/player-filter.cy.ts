@@ -64,8 +64,8 @@ describe('War – attacker panel player filter', () => {
         cy.getByCy('war-player-filter').click();
         cy.contains('[role="option"]', 'All').click();
 
-        cy.getByCy('attacker-member-war-pflt-rOwner').should('be.visible');
-        cy.getByCy('attacker-member-war-pflt-rMember').should('be.visible');
+        cy.getByCy('attacker-member-war-pflt-rOwner').scrollIntoView().should('be.visible');
+        cy.getByCy('attacker-member-war-pflt-rMember').scrollIntoView().should('be.visible');
       },
     );
   });
