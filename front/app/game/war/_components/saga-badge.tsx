@@ -16,12 +16,12 @@ export default function SagaBadge({
       style={{ left: -Math.round(size / 2.5) }}
       data-cy='saga-badge'
     >
-      <Image
+      <img
         src='/static/frame/current_saga_mini.png'
         alt=''
         width={size}
         height={size}
-      ></Image>
+      ></img>
     </div>
   );
 }
