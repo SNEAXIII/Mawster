@@ -16,8 +16,6 @@ RUN pip install uv && uv sync --no-dev --frozen --no-install-project
 COPY --chown=root:root --chmod=555 migrations ./migrations
 COPY --chown=root:root --chmod=555 alembic.ini main.py run.sh migrate.sh wait-for-it.sh Makefile ./
 COPY --chown=root:root --chmod=555 src ./src
-COPY --chown=root:root --chmod=555 scripts ./scripts
-COPY --chown=root:root --chmod=555 static ./static
 
 RUN uv sync --no-dev --frozen
 RUN find . -type f -name "*.sh" -exec sed -i 's/\r$//' {} \;
