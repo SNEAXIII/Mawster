@@ -46,7 +46,7 @@ export default function DefenseHeader({
       <CardContent className='p-4'>
         <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center'>
           {/* Alliance selector */}
-          {alliances.length >= 1 && (
+          {alliances.length > 1 && (
             <div className='flex items-center gap-2'>
               <label className='text-sm font-medium whitespace-nowrap'>
                 {t.game.defense.alliance}:

@@ -11,12 +11,15 @@ import { useAllianceRole } from '@/hooks/use-alliance-role';
 import { X, Shield } from 'lucide-react';
 import { rarityBadgeClass, rarityLabel, memberRoleOrder } from './defense-utils';
 import MasteryDialog from '@/app/game/account/_components/mastery-dialog';
+import PlayerFilterSelect from '@/app/game/_components/player-filter-select';
 
 interface DefenseSidePanelProps {
   members: BgMember[];
   placements: DefensePlacement[];
   onRemoveDefender: (nodeNumber: number) => void;
   canManage: boolean;
+  playerFilter: string;
+  onPlayerChange: (v: string) => void;
 }
 
 // (rarity + role helpers imported from ./defense-utils)
@@ -26,6 +29,8 @@ export default function DefenseSidePanel({
   placements,
   onRemoveDefender,
   canManage,
+  playerFilter,
+  onPlayerChange,
 }: DefenseSidePanelProps) {
   const { t } = useI18n();
   const { isMine } = useAllianceRole();
@@ -34,12 +39,15 @@ export default function DefenseSidePanel({
     pseudo: string;
   } | null>(null);
 
-  // Sort members: owner → officers → members, then alphabetical
   const sortedMembers = [...members].sort((a, b) => {
     const rDiff = memberRoleOrder(a) - memberRoleOrder(b);
     if (rDiff !== 0) return rDiff;
     return a.game_pseudo.localeCompare(b.game_pseudo);
   });
+
+  const visibleMembers = playerFilter
+    ? sortedMembers.filter((m) => m.game_pseudo === playerFilter)
+    : sortedMembers;
 
   // Group placements by game_account_id
   const placementsByPlayer = new Map<string, DefensePlacement[]>();
@@ -58,13 +66,21 @@ export default function DefenseSidePanel({
 
   return (
     <div className='space-y-3'>
-      <h3 className='text-sm font-bold uppercase tracking-wider text-muted-foreground'>
-        {t.game.defense.membersTitle}
-      </h3>
-      {sortedMembers.length === 0 ? (
+      <div className='flex items-center justify-between gap-2'>
+        <h3 className='text-sm font-bold uppercase tracking-wider text-muted-foreground'>
+          {t.game.defense.membersTitle}
+        </h3>
+        <PlayerFilterSelect
+          players={sortedMembers.map((m) => m.game_pseudo)}
+          value={playerFilter}
+          onChange={onPlayerChange}
+          dataCy='defense-player-filter'
+        />
+      </div>
+      {visibleMembers.length === 0 ? (
         <p className='text-sm text-muted-foreground'>{t.game.defense.noMembers}</p>
       ) : (
-        sortedMembers.map((member) => {
+        visibleMembers.map((member) => {
           const playerPlacements = placementsByPlayer.get(member.game_account_id) ?? [];
           const isFull = member.defender_count >= member.max_defenders;
           return (

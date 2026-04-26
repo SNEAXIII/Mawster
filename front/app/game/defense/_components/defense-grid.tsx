@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,6 +29,7 @@ interface DefenseGridProps {
 
 export default function DefenseGrid({ onNodeClick, canManage }: Readonly<DefenseGridProps>) {
   const { t } = useI18n();
+  const [playerFilter, setPlayerFilter] = useState('');
   const {
     defenseSummary,
     availableChampions,
@@ -47,6 +49,14 @@ export default function DefenseGrid({ onNodeClick, canManage }: Readonly<Defense
     handleClearDefense,
   } = useDefenseActionsContext();
 
+  const dimmedNodes = playerFilter
+    ? new Set(
+        (defenseSummary?.placements ?? [])
+          .filter((p) => p.game_pseudo !== playerFilter)
+          .map((p) => p.node_number)
+      )
+    : undefined;
+
   if (defenseLoading) return <FullPageSpinner />;
 
   return (
@@ -60,6 +70,7 @@ export default function DefenseGrid({ onNodeClick, canManage }: Readonly<Defense
               onNodeClick={onNodeClick}
               onRemove={handleRemoveDefender}
               canManage={canManage}
+              dimmedNodes={dimmedNodes}
             />
           </div>
         </div>
@@ -73,6 +84,8 @@ export default function DefenseGrid({ onNodeClick, canManage }: Readonly<Defense
                 placements={defenseSummary?.placements ?? []}
                 onRemoveDefender={handleRemoveDefender}
                 canManage={canManage}
+                playerFilter={playerFilter}
+                onPlayerChange={setPlayerFilter}
               />
             </CardContent>
           </Card>

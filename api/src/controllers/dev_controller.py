@@ -17,6 +17,9 @@ from src.dto.dto_token import LoginResponse, TokenBody
 from src.dto.dto_utilisateurs import UserProfile
 from src.enums.Roles import Roles
 from src.models import User, GameAccount
+from src.models.Champion import Champion
+from src.models.ChampionUser import ChampionUser
+from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.Mastery import Mastery
 from src.security.secrets import SECRET
 from src.services.DiscordAuthService import DiscordAuthService
@@ -359,6 +362,64 @@ async def dev_create_mastery(body: DevCreateMasteryRequest, session: SessionDep)
         "max_value": mastery.max_value,
         "order": mastery.order,
     }
+
+
+class BulkFillWarAttackersRequest(BaseModel):
+    war_id: uuid.UUID
+    battlegroup: int
+    game_account_id: uuid.UUID
+    count: int
+
+
+@dev_controller.post("/bulk-fill-war-attackers", status_code=200)
+async def bulk_fill_war_attackers(body: BulkFillWarAttackersRequest, session: SessionDep):
+    """Create N WarDefensePlacement rows with a dummy attacker assigned to the given account.
+
+    Bypasses all war service validations. Testing only.
+    """
+    champion = (await session.exec(select(Champion).limit(1))).first()
+    if not champion:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="No champion found")
+
+    created = 0
+    for node in range(1, body.count + 1):
+        existing = (
+            await session.exec(
+                select(WarDefensePlacement).where(
+                    WarDefensePlacement.war_id == body.war_id,
+                    WarDefensePlacement.battlegroup == body.battlegroup,
+                    WarDefensePlacement.node_number == node,
+                )
+            )
+        ).first()
+
+        cu = ChampionUser(
+            game_account_id=body.game_account_id,
+            champion_id=champion.id,
+            stars=7,
+            rank=3,
+        )
+        session.add(cu)
+        await session.flush()
+
+        if existing:
+            existing.attacker_champion_user_id = cu.id
+            session.add(existing)
+        else:
+            placement = WarDefensePlacement(
+                war_id=body.war_id,
+                battlegroup=body.battlegroup,
+                node_number=node,
+                champion_id=champion.id,
+                stars=7,
+                rank=3,
+                attacker_champion_user_id=cu.id,
+            )
+            session.add(placement)
+        created += 1
+
+    await session.commit()
+    return {"assigned": created}
 
 
 class LogMarkerRequest(BaseModel):

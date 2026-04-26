@@ -31,13 +31,13 @@ interface SelectedRarity {
 }
 
 const WAR_RARITIES: { label: string; stars: number; rank: number }[] = [
-  { label: '6★R4', stars: 6, rank: 4 },
-  { label: '6★R5', stars: 6, rank: 5 },
-  { label: '7★R1', stars: 7, rank: 1 },
-  { label: '7★R2', stars: 7, rank: 2 },
-  { label: '7★R3', stars: 7, rank: 3 },
-  { label: '7★R4', stars: 7, rank: 4 },
-  { label: '7★R5', stars: 7, rank: 5 },
+  { label: '6R4', stars: 6, rank: 4 },
+  { label: '6R5', stars: 6, rank: 5 },
+  { label: '7R1', stars: 7, rank: 1 },
+  { label: '7R2', stars: 7, rank: 2 },
+  { label: '7R3', stars: 7, rank: 3 },
+  { label: '7R4', stars: 7, rank: 4 },
+  { label: '7R5', stars: 7, rank: 5 },
 ];
 
 interface WarDefenderSelectorProps {
@@ -155,7 +155,7 @@ export default function WarDefenderSelector({
               <div>
                 <div className='text-sm font-semibold'>{selected.name}</div>
                 <div className='text-xs text-muted-foreground'>
-                  {selectedRarity.stars}★R{selectedRarity.rank}
+                  {selectedRarity.stars}R{selectedRarity.rank}
                   {ascension > 0 && <span className='text-purple-400'> · A{ascension}</span>}
                 </div>
               </div>
@@ -315,7 +315,7 @@ export default function WarDefenderSelector({
                           : 'bg-muted hover:bg-accent border-border'
                       )}
                       onClick={() => setSelectedRarity({ stars: r.stars, rank: r.rank })}
-                      data-cy={`rarity-${r.label.replace('★', 's')}`}
+                      data-cy={`rarity-${r.label.replace('', 's')}`}
                     >
                       {r.label}
                     </button>

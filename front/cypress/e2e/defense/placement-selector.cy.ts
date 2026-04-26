@@ -85,8 +85,8 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
 
-      cy.getByCy('champion-card-Spider-Man').should('contain', '7★R5').and('contain', 'A1');
-      cy.getByCy('champion-card-Wolverine').should('contain', '7★R3').and('not.contain', '· A');
+      cy.getByCy('champion-card-Spider-Man').should('contain', '7R5').and('contain', 'A1');
+      cy.getByCy('champion-card-Wolverine').should('contain', '7R3').and('not.contain', '· A');
     });
   });
 
@@ -127,13 +127,13 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.getByCy('champion-card-Spider-Man').click();
-      cy.getByCy('war-node-1').should('contain', '7★R3·200');
+      cy.getByCy('war-node-1').should('contain', '7R3·200');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.contains('Select Champion').should('be.visible');
       cy.getByCy('champion-card-Wolverine').click();
 
-      cy.getByCy('war-node-1').should('contain', '7★R4·100');
+      cy.getByCy('war-node-1').should('contain', '7R4·100');
       cy.getByCy('defender-count-ReplPlyr').should('contain', '1/5');
     });
   });
@@ -159,12 +159,12 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
         cy.getByCy('owner-row-MultiOwn')
           .should('be.visible')
-          .and('contain', '7★R5')
+          .and('contain', '7R5')
           .and('contain', 'sig 200')
           .and('contain', '0/5');
         cy.getByCy('owner-row-MultiMem')
           .should('be.visible')
-          .and('contain', '7★R3')
+          .and('contain', '7R3')
           .and('contain', 'sig 100')
           .and('contain', '0/5');
 
@@ -175,7 +175,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
     );
   });
 
-  it('owner picker shows preferred attacker ⚔ flag and 7★ badge', () => {
+  it('owner picker shows preferred attacker ⚔ flag and 7 badge', () => {
     setupDefenseOwnerAndMember('def-pl-opref', 'OPrefOwn', 'OPrefMem', 'OPrefAll', 'OP').then(
       ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
@@ -197,7 +197,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
         cy.contains('Select Player').should('be.visible');
 
         cy.getByCy('owner-row-OPrefOwn').find('[data-cy="preferred-badge"]').should('exist');
-        cy.getByCy('owner-row-OPrefOwn').should('contain', '7★');
+        cy.getByCy('owner-row-OPrefOwn').should('contain', '7');
         cy.getByCy('owner-row-OPrefMem').find('[data-cy="preferred-badge"]').should('not.exist');
       },
     );

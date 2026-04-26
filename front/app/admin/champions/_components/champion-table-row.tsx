@@ -3,7 +3,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Check, Flame, Pencil, Trash2, X } from 'lucide-react';
+import { Check, Pencil, Trash2, X } from 'lucide-react';
 import { ClassBadge } from '@/components/class-badge';
 import { ActionIconButton } from '@/components/action-icon-button';
 import { Champion, getChampionImageUrl } from '@/app/services/champions';
@@ -39,7 +39,7 @@ export default function ChampionTableRow({
   onTogglePrefight,
   onToggleSagaAttacker,
   onToggleSagaDefender,
-}: ChampionTableRowProps) {
+}: Readonly<ChampionTableRowProps>) {
   const { t } = useI18n();
   return (
     <tr className='border-b hover:bg-accent/50'>

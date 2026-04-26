@@ -254,7 +254,7 @@ class DefensePlacementService:
     ) -> list[dict]:
         """Get all champions from BG members that are NOT already placed.
         Groups by champion, showing which players own it and at what rarity.
-        Prefers 7★ over 6★."""
+        Prefers 7 over 6."""
         # Get all members in this BG
         members_result = await session.exec(
             select(GameAccount).where(
@@ -335,7 +335,7 @@ class DefensePlacementService:
                 }
             )
 
-        # Sort owners: prefer 7★ over 6★, then higher rank, then fewer defenders already placed
+        # Sort owners: prefer 7 over 6, then higher rank, then fewer defenders already placed
         for group in champion_groups.values():
             group["owners"].sort(key=lambda o: (-o["stars"], -o["rank"], o["defender_count"]))
 

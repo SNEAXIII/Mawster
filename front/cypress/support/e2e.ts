@@ -90,6 +90,20 @@ Cypress.Commands.add('apiBatchSetup', (specs: BatchSetupUserSpec[]) => {
   }).then((res) => res.body.users as Record<string, BatchSetupUserResult>);
 });
 
+Cypress.Commands.add(
+  'apiBulkFillWarAttackers',
+  (warId: string, battlegroup: number, gameAccountId: string, count: number) => {
+    cy.request({
+      method: 'POST',
+      url: `${BACKEND}/dev/bulk-fill-war-attackers`,
+      body: { war_id: warId, battlegroup, game_account_id: gameAccountId, count },
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      return res.body;
+    });
+  },
+);
+
 // ── Register user via Discord mock (direct backend call) ─────────────────────
 
 Cypress.Commands.add('registerUser', (accessToken = 'cypress-test-token') => {

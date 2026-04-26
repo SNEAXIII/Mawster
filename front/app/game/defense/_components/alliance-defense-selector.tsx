@@ -326,7 +326,7 @@ export default function AllianceDefenseSelector({
                     </span>
                   </div>
                   {owner.stars === 7 && (
-                    <span className='ml-auto text-xs font-bold text-yellow-400'>7★</span>
+                    <span className='ml-auto text-xs font-bold text-yellow-400'>7</span>
                   )}
                 </button>
               ))}

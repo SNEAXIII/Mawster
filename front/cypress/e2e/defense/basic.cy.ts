@@ -18,8 +18,6 @@ describe('Defense – Basic page rendering', () => {
       cy.apiLogin(userData.user_id);
       cy.navTo('defense');
 
-      cy.contains('Defense Placement').should('be.visible');
-      cy.contains('Alliance:').should('be.visible');
       cy.contains('Battlegroup:').should('be.visible');
       cy.getByCy('defense-bg-1').should('be.visible');
       cy.getByCy('defense-bg-2').should('be.visible');

@@ -157,7 +157,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
           cy.getByCy('already-in-roster').should('be.visible');
           cy.getByCy('already-in-roster').should('contain', 'Already in roster:');
           // Should show the existing rarity and signature
-          cy.getByCy('already-in-roster').should('contain', '7★R3');
+          cy.getByCy('already-in-roster').should('contain', '7R3');
           cy.getByCy('already-in-roster').should('contain', 'sig 200');
         });
       });

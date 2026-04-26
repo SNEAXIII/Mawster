@@ -184,6 +184,67 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   });
 
   // =========================================================================
+  // Defense map player filter (member panel + node dimming)
+  // =========================================================================
+
+  it('defense-player-filter hides other member cards and dims their nodes on the map', () => {
+    setupDefenseOwnerAndMember('def-mpflt', 'MPFltOwner', 'MPFltMember', 'MPFltAll', 'MPF').then(
+      ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
+        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3').then((cu) => {
+            cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId);
+          });
+        });
+        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3').then((cu) => {
+            cy.apiPlaceDefender(memberData.access_token, allianceId, 1, 2, cu.id, memberAccId);
+          });
+        });
+
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('defense');
+
+        cy.getByCy('member-section-MPFltOwner').should('be.visible');
+        cy.getByCy('member-section-MPFltMember').should('be.visible');
+
+        cy.getByCy('defense-player-filter').click();
+        cy.contains('[role="option"]', 'MPFltOwner').click();
+
+        cy.getByCy('member-section-MPFltOwner').should('be.visible');
+        cy.getByCy('member-section-MPFltMember').should('not.exist');
+
+        cy.getByCy('war-node-1').should('not.have.class', 'opacity-25');
+        cy.getByCy('war-node-2').should('have.class', 'opacity-25');
+      },
+    );
+  });
+
+  it('defense-player-filter restores all members when reset to All', () => {
+    setupDefenseOwnerAndMember('def-mpflt-r', 'MPFROwner', 'MPFRMember', 'MPFRAll', 'MFR').then(
+      ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
+        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3').then((cu) => {
+            cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId);
+          });
+        });
+
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('defense');
+
+        cy.getByCy('defense-player-filter').click();
+        cy.contains('[role="option"]', 'MPFROwner').click();
+        cy.getByCy('member-section-MPFRMember').should('not.exist');
+
+        cy.getByCy('defense-player-filter').click();
+        cy.contains('[role="option"]', 'All').click();
+
+        cy.getByCy('member-section-MPFROwner').should('be.visible');
+        cy.getByCy('member-section-MPFRMember').should('be.visible');
+      },
+    );
+  });
+
+  // =========================================================================
   // Filters combine
   // =========================================================================
 

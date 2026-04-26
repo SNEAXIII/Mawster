@@ -509,7 +509,7 @@ class TestAvailableChampions:
         # Should have 3 champions: Spider-Man (2 owners), Wolverine (1 owner), Iron Man (1 owner)
         assert len(body) == 3
 
-        # Find Spider-Man — should have 2 owners, 7★ first
+        # Find Spider-Man — should have 2 owners, 7 first
         spidey = next(c for c in body if c["champion_name"] == "Spider-Man")
         assert len(spidey["owners"]) == 2
         assert spidey["owners"][0]["stars"] == 7

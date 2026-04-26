@@ -192,6 +192,14 @@ declare namespace Cypress {
       championUserId: string,
     ): Chainable<any>;
 
+    /** Fill N war nodes with dummy attackers for a given account (dev endpoint, bypasses validations). */
+    apiBulkFillWarAttackers(
+      warId: string,
+      battlegroup: number,
+      gameAccountId: string,
+      count: number,
+    ): Chainable<any>;
+
     /** Remove attacker from a war node (direct backend call). */
     apiRemoveWarAttacker(
       token: string,
