@@ -16,6 +16,7 @@ interface WarMapNodeProps {
   hidePseudo?: boolean;
   hideSig?: boolean;
   dimmed?: boolean;
+  hasPrefight?: boolean;
 }
 
 function getNodeColor(nodeNumber: number): string {
@@ -44,6 +45,7 @@ export function WarMapNode({
   hidePseudo = false,
   hideSig = false,
   dimmed = false,
+  hasPrefight = false,
 }: Readonly<WarMapNodeProps>) {
   const { t } = useI18n();
   const colorClasses = getNodeColor(nodeNumber);
@@ -56,7 +58,8 @@ export function WarMapNode({
         'w-15 h-18 sm:w-17 sm:h-20.5 md:w-18.5 md:h-22',
         colorClasses,
         hoverClasses,
-        !dimmed && placement && 'ring-1 ring-white/30',
+        hasPrefight && 'ring-2 ring-cyan-400',
+        !hasPrefight && !dimmed && placement && 'ring-1 ring-white/30',
         !dimmed && !placement && 'opacity-80',
         dimmed && 'opacity-25'
       )}
@@ -137,6 +140,7 @@ interface WarMapProps {
   hidePseudo?: boolean;
   hideSig?: boolean;
   dimmedNodes?: Set<number>;
+  prefightNodes?: Set<number>;
 }
 
 // Map layout: rows of nodes from top (boss) to bottom (start)
@@ -185,6 +189,7 @@ export default function WarMap({
   hidePseudo = false,
   hideSig = false,
   dimmedNodes,
+  prefightNodes,
 }: Readonly<WarMapProps>) {
   const placementMap = new Map<number, DefensePlacement>();
   for (const p of placements) {
@@ -225,6 +230,7 @@ export default function WarMap({
                     hidePseudo={hidePseudo}
                     hideSig={hideSig}
                     dimmed={dimmedNodes?.has(nodeNumber) ?? false}
+                    hasPrefight={prefightNodes?.has(nodeNumber) ?? false}
                   />
                 )
               )}

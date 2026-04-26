@@ -15,6 +15,7 @@ interface WarDefenseMapProps {
   onRemove: (nodeNumber: number) => void;
   canManage: boolean;
   dimmedNodes?: Set<number>;
+  prefightNodes?: Set<number>;
 }
 
 function toDefensePlacement(p: WarPlacement): DefensePlacement {
@@ -48,6 +49,7 @@ export default function WarDefenseMap({
   onRemove,
   canManage,
   dimmedNodes,
+  prefightNodes,
 }: Readonly<WarDefenseMapProps>) {
   const adapted = placements.map(toDefensePlacement);
   return (
@@ -59,6 +61,7 @@ export default function WarDefenseMap({
       hidePseudo={false}
       hideSig={true}
       dimmedNodes={dimmedNodes}
+      prefightNodes={prefightNodes}
     />
   );
 }
