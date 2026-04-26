@@ -106,8 +106,9 @@ export default function ChampionPortrait({
       )}
       {(ascension === 1 || ascension === 2) && (
         <AscensionBadge
-          level={ascension}
           additionalClasses='z-30'
+          size={Number(size / 2.3)}
+          level={ascension}
         />
       )}
     </div>
