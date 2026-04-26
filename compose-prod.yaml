@@ -94,6 +94,22 @@ services:
         max-size: '10m'
         max-file: '5'
 
+  static:
+    image: sneaxiii/mawster-static:latest
+    container_name: static
+    restart: unless-stopped
+    networks:
+      - internal
+    environment:
+      - API_HOST=api:8000
+    depends_on:
+      - api
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '5'
+
   caddy:
     image: caddy:2.10
     container_name: caddy
