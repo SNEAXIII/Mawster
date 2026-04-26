@@ -22,7 +22,7 @@ sync_engine = create_engine(
     f"mysql+pymysql://{SECRET.MARIADB_USER}:{SECRET.MARIADB_PASSWORD}@{SECRET.MARIADB_HOST}:{SECRET.MARIADB_PORT}/{SECRET.MARIADB_DATABASE}",
 )
 
-DEFAULT_JSON_PATH = Path(__file__).parent.parent.parent / "scripts" / "masteries.json"
+DEFAULT_JSON_PATH = Path(__file__).parent.parent.parent / "src" / "fixtures" / "masteries.json"
 
 
 def _update_existing_mastery(
@@ -76,7 +76,7 @@ def load_masteries(json_path: Path = DEFAULT_JSON_PATH):
     """
     if not json_path.exists():
         print(f"❌ JSON file not found: {json_path}")
-        print("   Expected: scripts/masteries.json")
+        print("   Expected: fixtures/masteries.json")
         return
 
     added = 0

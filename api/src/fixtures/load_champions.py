@@ -33,7 +33,7 @@ sync_engine = create_engine(
     f"mysql+pymysql://{SECRET.MARIADB_USER}:{SECRET.MARIADB_PASSWORD}@{SECRET.MARIADB_HOST}:{SECRET.MARIADB_PORT}/{SECRET.MARIADB_DATABASE}",
 )
 
-DEFAULT_JSON_PATH = Path(__file__).parent.parent.parent / "scripts" / "champions.json"
+DEFAULT_JSON_PATH = Path(__file__).parent.parent.parent / "src" / "fixtures" / "champions.json"
 
 
 def _update_existing_champion(
