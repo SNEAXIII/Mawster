@@ -1,32 +1,35 @@
 """
 Scrape MCOC wiki for champion data and portrait images.
-Outputs a JSON file and downloads portrait images into a folder.
-
-Interactive mode:
-    1. Download images and data from the wiki
-    2. Resize all images to a custom size (e.g. 40x40)
+Downloads portraits and auto-resizes to sizes defined in pyproject.toml [tool.scraper].
 
 Usage:
-    cd api
-    python scripts/scrape_champions.py
-
-Requires: curl_cffi, beautifulsoup4, lxml, Pillow (for resize)
-    pip install curl_cffi beautifulsoup4 lxml Pillow
+    uvx run scrape-champions.py
 """
 
 import json
 import re
 import sys
 import time
+import tomllib
 from pathlib import Path
 
-# Add parent dir to sys.path so we can import src.enums
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# Add api/ to sys.path so we can import src.enums
+_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_ROOT / "api"))
 from src.enums.ChampionClass import ChampionClass  # noqa: E402
 
 WIKI_URL = "https://marvel-contestofchampions.fandom.com/wiki/List_of_Champions"
-OUTPUT_DIR = Path(__file__).resolve().parent.parent / "static" / "champions"
-JSON_OUTPUT = Path(__file__).resolve().parent.parent / "scripts" / "champions.json"
+OUTPUT_DIR = _ROOT / "static-assets" / "static" / "champions"
+JSON_OUTPUT = _ROOT / "api" / "src" / "fixtures" / "champions.json"
+
+_PYPROJECT = Path(__file__).resolve().parent / "pyproject.toml"
+
+
+def _load_resize_sizes() -> list[int]:
+    with open(_PYPROJECT, "rb") as f:
+        config = tomllib.load(f)
+    return config.get("tool", {}).get("scraper", {}).get("resize_sizes", [])
+
 
 VALID_CLASSES = {c.value for c in ChampionClass}
 
@@ -36,7 +39,7 @@ REVISION_LATEST = "/revision/latest"
 def clean_image_url(url: str) -> str:
     """Strip Fandom's thumbnail suffixes to get the original full-size image."""
     if REVISION_LATEST in url:
-        return url.split(REVISION_LATEST)[0] + REVISION_LATEST
+        return f"{url.split(REVISION_LATEST)[0]}{REVISION_LATEST}"
     return url
 
 
@@ -173,7 +176,7 @@ def _parse_champion_row(cells, seen_names, champions, row_idx):
     )
 
 
-def scrape_champions() -> list[dict]:
+def scrape_champions_list() -> list[dict]:
     """Scrape the wiki and return a list of champion dicts."""
     from curl_cffi import requests as cffi_requests
     from bs4 import BeautifulSoup
@@ -216,12 +219,9 @@ def scrape_champions() -> list[dict]:
     return champions
 
 
-def action_download():
+def download_champion_images(champions: list[dict]):
     """Download champion images and data from the wiki."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-    champions = scrape_champions()
-    print(f"\nFound {len(champions)} champions with single class and valid image.\n")
 
     final_data = []
     for i, champ in enumerate(champions, 1):
@@ -241,7 +241,7 @@ def action_download():
         final_data.append(entry)
 
         if i % 10 == 0:
-            time.sleep(0.5)
+            time.sleep(0.1)
 
     JSON_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     with open(JSON_OUTPUT, "w", encoding="utf-8") as f:
@@ -252,30 +252,8 @@ def action_download():
     print(f"Total champions: {len(final_data)}")
 
 
-def action_resize():
-    """Resize all champion images to a given size based on the JSON data."""
-    try:
-        from PIL import Image
-    except ImportError:
-        print("Pillow is required for resizing. Install it with: pip install Pillow")
-        return
-
-    size_input = input("Enter the desired size (e.g. 40 for 40x40): ").strip()
-    try:
-        size = int(size_input)
-        if size < 1:
-            raise ValueError
-    except ValueError:
-        print("Invalid size. Please enter a positive integer.")
-        return
-
-    if not JSON_OUTPUT.exists():
-        print(f"JSON file not found: {JSON_OUTPUT}")
-        print("Run the download action first.")
-        return
-
-    with open(JSON_OUTPUT, "r", encoding="utf-8") as f:
-        champions_data = json.load(f)
+def _resize_to_size(size: int, champions_data: list[dict]) -> None:
+    from PIL import Image
 
     resized_count = 0
     skipped_count = 0
@@ -289,14 +267,10 @@ def action_resize():
             skipped_count += 1
             continue
 
-        filename = Path(image_url).name  # "groot.png"
-        stem = Path(image_url).stem  # "groot"
-
-        # Source is always the original .png
+        filename = Path(image_url).name
+        stem = Path(image_url).stem
         source_path = OUTPUT_DIR / filename
-        # Output: <stem>_NxN.png
-        output_filename = f"{stem}_{size}x{size}.png"
-        output_path = OUTPUT_DIR / output_filename
+        output_path = OUTPUT_DIR / f"{stem}_{size}x{size}.png"
 
         if not source_path.exists():
             print(f"  [MISS] {source_path.name} not found, skipping")
@@ -319,28 +293,44 @@ def action_resize():
             error_count += 1
 
     print(
-        f"\nDone! Resized: {resized_count}, Skipped (already exist): {skipped_count}, Errors: {error_count}"
+        f"Done! Resized: {resized_count}, Skipped: {skipped_count}, Errors: {error_count}"
     )
-    print(f"Output directory: {OUTPUT_DIR}")
-    print(f"Format: <name>_{size}x{size}.png")
+
+
+def action_resize():
+    """Resize all champion images using sizes defined in pyproject.toml."""
+    try:
+        from PIL import Image  # noqa: F401
+    except ImportError:
+        print("Pillow is required for resizing. Install it with: pip install Pillow")
+        return
+
+    if not JSON_OUTPUT.exists():
+        print(f"JSON file not found: {JSON_OUTPUT}")
+        print("Run the download action first.")
+        return
+
+    sizes = _load_resize_sizes()
+    if not sizes:
+        print("No resize_sizes configured in [tool.scraper] of pyproject.toml.")
+        return
+
+    with open(JSON_OUTPUT, "r", encoding="utf-8") as f:
+        champions_data = json.load(f)
+
+    for size in sizes:
+        _resize_to_size(size, champions_data)
+
+    print(f"\nOutput directory: {OUTPUT_DIR}")
 
 
 def main():
     print("=== MCOC Champion Scraper ===")
-    print()
-    print("Choose an action:")
-    print("  1. Download images and data from the wiki")
-    print("  2. Resize all images to a custom size (e.g. 40x40)")
-    print()
-
-    choice = input("Enter your choice (1 or 2): ").strip()
-
-    if choice == "1":
-        action_download()
-    elif choice == "2":
-        action_resize()
-    else:
-        print("Invalid choice. Please enter 1 or 2.")
+    champions = scrape_champions_list()
+    print(f"\nFound {len(champions)} champions with single class and valid image.\n")
+    download_champion_images(champions)
+    print("\nStarting image resizing...")
+    action_resize()
 
 
 if __name__ == "__main__":
