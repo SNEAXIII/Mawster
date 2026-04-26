@@ -14,8 +14,8 @@ permissions:
 env:
   WORKDIR: ./api
   PYTHON_VERSION: ${{ vars.PYTHON_VERSION }}
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  E2E_RUNNERS: "8"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  E2E_RUNNERS: '8'
 
 jobs:
   lint-test-python:
@@ -83,10 +83,10 @@ jobs:
       - name: Build frontend (next build)
         working-directory: ./front
         env:
-          NEXT_PUBLIC_DEV_MODE: "true"
+          NEXT_PUBLIC_DEV_MODE: 'true'
           NEXT_DIST_DIR: .next-e2e
-          NEXT_E2E_BUILD: "true"
-          API_PORT: "8000"
+          NEXT_E2E_BUILD: 'true'
+          API_PORT: '8000'
           API_SERVER_HOST: localhost
         run: npx next build
       - name: Archive frontend build
@@ -181,6 +181,7 @@ jobs:
       api: ${{ steps.filter.outputs.api }}
       front: ${{ steps.filter.outputs.front }}
       backup: ${{ steps.filter.outputs.backup }}
+      static: ${{ steps.filter.outputs.static }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -194,9 +195,11 @@ jobs:
           API=$(git diff --name-only "${BEFORE}...${SHA}" -- api/ | wc -l | tr -d ' ')
           FRONT=$(git diff --name-only "${BEFORE}...${SHA}" -- front/ | wc -l | tr -d ' ')
           BACKUP=$(git diff --name-only "${BEFORE}...${SHA}" -- backup/ | wc -l | tr -d ' ')
+          STATIC=$(git diff --name-only "${BEFORE}...${SHA}" -- static-assets/ | wc -l | tr -d ' ')
           echo "api=$([ "$API" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
           echo "front=$([ "$FRONT" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
           echo "backup=$([ "$BACKUP" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "static=$([ "$STATIC" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
 
   docker-api:
     if: needs.changes.outputs.api == 'true'
@@ -328,18 +331,51 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  docker-static:
+    if: needs.changes.outputs.static == 'true'
+    environment: Api
+    name: Docker Build & Push (Static)
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+      - e2e
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Generate timestamp tag
+        run: echo "TAG=$(date +'${{ vars.TIME_TAG_FORMAT }}')" >> $GITHUB_ENV
+      - name: Build and push Docker image for static
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./static-assets/static.Dockerfile
+          push: true
+          tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-static:latest
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-static:${{ env.TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   deploy:
     name: Deploy to production
     runs-on: ubuntu-latest
     environment: Api
-    needs: [docker-api, docker-migrate, docker-front, docker-backup]
+    needs: [docker-api, docker-migrate, docker-front, docker-backup, docker-static]
     if: |
       always() &&
-      (needs.docker-api.result == 'success' || needs.docker-migrate.result == 'success' || needs.docker-front.result == 'success' || needs.docker-backup.result == 'success') &&
+      (needs.docker-api.result == 'success' || needs.docker-migrate.result == 'success' || needs.docker-front.result == 'success' || needs.docker-backup.result == 'success' || needs.docker-static.result == 'success') &&
       needs.docker-api.result != 'failure' &&
       needs.docker-migrate.result != 'failure' &&
       needs.docker-front.result != 'failure' &&
-      needs.docker-backup.result != 'failure'
+      needs.docker-backup.result != 'failure' &&
+      needs.docker-static.result != 'failure'
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
@@ -354,9 +390,10 @@ jobs:
             docker pull sneaxiii/mawster-migrate:latest
             docker pull sneaxiii/mawster-front:latest
             docker pull sneaxiii/mawster-backup:latest
+            docker pull sneaxiii/mawster-static:latest
 
             docker service rm mawster-migrate 2>/dev/null || true
-            
+
             docker service create \
               --name mawster-migrate \
               --network internal \
@@ -367,7 +404,7 @@ jobs:
               -e MARIADB_DATABASE=mawster \
               --mode replicated-job \
               sneaxiii/mawster-migrate:latest sh migrate.sh
-            
+
             docker service logs mawster-migrate
             if docker service ps mawster-migrate --format "{{.CurrentState}}" | grep -q "^Failed"; then
               docker service rm mawster-migrate; exit 1
