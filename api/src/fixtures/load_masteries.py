@@ -2,17 +2,6 @@
 mastery fixture script.
 Loads masteries from masteries.json into the database.
 
-JSON format expected (array of objects):
-    [
-      {
-        "name": "Spider-Man (Classic)",
-        "champion_class": "Science",
-        "image_url": "/static/masteries/spider-man_classic.png",
-        "alias": null
-      },
-      ...
-    ]
-
 Usage:
     make load-masteries
     # or
