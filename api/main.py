@@ -1,5 +1,4 @@
 from time import perf_counter
-from pathlib import Path
 import asyncio
 import logging
 
@@ -9,7 +8,6 @@ from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
-from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import _StreamingResponse
 from src.Messages.validators_messages import VALIDATION_ERROR
 from src.controllers import routers
@@ -77,11 +75,6 @@ if IS_TESTING:
     DiscordAuthService.verify_discord_token = classmethod(_fake_verify)
     logger.info("Testing mode: Discord verification is mocked")
 
-# Mount static files for champion images
-static_dir = Path(__file__).resolve().parent / "static"
-# static_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
-
 
 @app.get("/metrics", include_in_schema=False)
 async def metrics():
@@ -131,8 +124,6 @@ async def check_user_role(
     process_time = perf_counter() - start_time
     if not IS_PROD:
         response.headers["X-Process-Time"] = str(process_time)
-    if uri.startswith("/static"):
-        return response
     logger.info("%s %s → %s (%.3fs)", method, uri, response.status_code, process_time)
     if method != "GET":
         user_id = "anonymous"

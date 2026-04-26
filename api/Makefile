@@ -1,6 +1,6 @@
-MESSAGE := "init"
+MESSAGE ?=
 
-.PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions reset-db init-db cancel-last test test-cov
+.PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions reset-db init-db cancel-last test test-cov scrape-champions check fix format
 
 help:
 	@echo "run-dev      --> run the server in dev mode with auto reload"
@@ -17,6 +17,7 @@ help:
 	@echo "install-dev  --> install all dependencies (prod + dev + migrate groups)"
 	@echo "reset-db     --> reset the database"
 	@echo "repopulate-db --> reset the database and load champions + fixtures"
+	@echo "scrape-champions --> scrape MCOC wiki and download champion images"
 
 install:
 	uv sync --no-dev
@@ -31,6 +32,7 @@ run-testing:
 	uv run app_testing.py
 
 create-mig:
+	@test -n "$(MESSAGE)" || (echo "ERROR: MESSAGE is required: make create-mig MESSAGE=\"your_migration_name\"" && exit 1)
 	uv run alembic revision --autogenerate -m "$(MESSAGE)"
 
 migrate:
@@ -60,7 +62,20 @@ test:
 test-cov:
 	uv run pytest tests --cov --cov-report term-missing -v
 
+scrape-champions:
+	cd ../static-assets && uv run python scrape_champions.py
+
 repopulate-db:
 	make reset-db
 	make load-champions
+	make load-masteries
 	make fixtures
+
+check:
+	uvx ruff check
+
+fix:
+	uvx ruff check --fix
+
+format:
+	uvx ruff format

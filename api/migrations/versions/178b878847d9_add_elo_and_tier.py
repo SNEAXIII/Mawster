@@ -1,4 +1,4 @@
-"""init
+"""add_elo_and_tier
 
 Revision ID: 178b878847d9
 Revises: 6366528b2ae2

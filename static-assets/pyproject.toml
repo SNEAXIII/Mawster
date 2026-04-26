@@ -1,0 +1,14 @@
+[project]
+name = "static-assets"
+version = "0.1.0"
+description = "Mawster scrapper for static assets"
+requires-python = ">=3.12"
+dependencies = [
+    "bs4>=0.0.2",
+    "curl-cffi>=0.15.0",
+    "Pillow>=10.0.0",
+    "lxml>=5.0.0",
+]
+
+[tool.scraper]
+resize_sizes = [40, 60]

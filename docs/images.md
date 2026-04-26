@@ -30,6 +30,13 @@ docker build -t sneaxiii/mawster-backup:latest -f backup/Dockerfile ./backup
 docker push sneaxiii/mawster-backup:latest
 ```
 
+## Static
+
+```bash
+docker build -t sneaxiii/mawster-static:latest -f static-assets/static.Dockerfile .
+docker push sneaxiii/mawster-static:latest
+```
+
 ## Pull sur le serveur
 
 ```bash
@@ -37,4 +44,5 @@ docker pull sneaxiii/mawster-api:latest
 docker pull sneaxiii/mawster-front:latest
 docker pull sneaxiii/mawster-migrate:latest
 docker pull sneaxiii/mawster-backup:latest
+docker pull sneaxiii/mawster-static:latest
 ```

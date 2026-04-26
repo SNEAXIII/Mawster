@@ -1,0 +1,9 @@
+server {
+    listen 80;
+
+    location /static/ {
+        root /usr/share/nginx/html;
+        add_header Cache-Control "public, max-age=2592000";
+        expires 30d;
+    }
+}

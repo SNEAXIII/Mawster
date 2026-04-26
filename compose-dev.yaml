@@ -53,3 +53,16 @@ services:
       - PMA_PORT=3306
     depends_on:
       - mariadb-test
+  static:
+    build:
+      context: .
+      dockerfile: static-assets/static.Dockerfile
+    container_name: static-dev
+    ports:
+      - "8002:80"
+    networks:
+      - internal-dev
+    environment:
+      - API_HOST=host.docker.internal:8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

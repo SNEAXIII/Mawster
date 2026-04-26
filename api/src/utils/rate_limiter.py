@@ -2,7 +2,6 @@ from slowapi import Limiter
 from starlette.requests import Request
 
 
-
 def _get_real_ip(request: Request) -> str:
     # Traefik sets X-Forwarded-For; take the leftmost (original client IP)
     forwarded_for = request.headers.get("X-Forwarded-For")

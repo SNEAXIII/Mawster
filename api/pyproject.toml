@@ -69,9 +69,5 @@ dev = [
     "vulture>=2.16",
     "faker>=24.0.0",
     "time-machine>=2.0.0",
-    "icecream>=2.0.0",
-    "beautifulsoup4>=4.0.0",
-    "curl_cffi>=0.7.0",
-    "lxml>=5.0.0",
-    "Pillow>=10.0.0",
+    
 ]
