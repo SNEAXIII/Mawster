@@ -15,7 +15,7 @@ describe('War – prefight highlight on map', () => {
         cy.apiLogin(memberData.user_id);
         cy.navTo('war');
 
-        cy.getByCy('war-node-10').should('have.class', 'ring-cyan-400');
+        cy.getByCy('war-node-10').should('have.class', 'ring-foreground');
       },
     );
   });
