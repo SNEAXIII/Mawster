@@ -1,4 +1,4 @@
-MESSAGE := "init"
+MESSAGE ?=
 
 .PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions reset-db init-db cancel-last test test-cov scrape-champions check fix format
 
@@ -32,6 +32,7 @@ run-testing:
 	uv run app_testing.py
 
 create-mig:
+	@test -n "$(MESSAGE)" || (echo "ERROR: MESSAGE is required: make create-mig MESSAGE=\"your_migration_name\"" && exit 1)
 	uv run alembic revision --autogenerate -m "$(MESSAGE)"
 
 migrate:
@@ -67,6 +68,7 @@ scrape-champions:
 repopulate-db:
 	make reset-db
 	make load-champions
+	make load-masteries
 	make fixtures
 
 check:
