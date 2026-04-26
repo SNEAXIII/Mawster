@@ -52,13 +52,14 @@ export function WarMapNode({
   const hoverClasses = getNodeHoverColor(nodeNumber);
 
   return (
-    <div
+    <button
+      type='button'
       className={cn(
         'relative flex flex-col items-center justify-center rounded-lg border-2 cursor-pointer transition-all',
         'w-15 h-18 sm:w-17 sm:h-20.5 md:w-18.5 md:h-22',
         colorClasses,
         hoverClasses,
-        hasPrefight && 'ring-2 ring-cyan-400',
+        hasPrefight && 'ring-2 ring-foreground',
         !hasPrefight && !dimmed && placement && 'ring-1 ring-white/30',
         !dimmed && !placement && 'opacity-80',
         dimmed && 'opacity-25'
@@ -126,7 +127,7 @@ export function WarMapNode({
       ) : (
         <span className='text-white/40 text-xs'>+</span>
       )}
-    </div>
+    </button>
   );
 }
 
