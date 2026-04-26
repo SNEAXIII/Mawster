@@ -53,6 +53,7 @@ export default function WarTab() {
     setWarMode,
     warLoading,
     placements,
+    prefights,
     handleNodeClick,
     handleRemoveDefender,
     setShowClearConfirm,
@@ -68,10 +69,19 @@ export default function WarTab() {
   useEffect(() => {
     setPlayerFilter('');
   }, [selectedBg]);
+
+  const prefightNodes = new Set(prefights.map((pf) => pf.target_node_number));
+
   const dimmedNodes = playerFilter
     ? new Set(
         placements
-          .filter((p) => p.attacker_pseudo !== playerFilter)
+          .filter((p) => {
+            const isMyAttacker = p.attacker_pseudo === playerFilter;
+            const isMyPrefight = prefights.some(
+              (pf) => pf.target_node_number === p.node_number && pf.game_pseudo === playerFilter
+            );
+            return !isMyAttacker && !isMyPrefight;
+          })
           .map((p) => p.node_number)
       )
     : undefined;
@@ -246,6 +256,7 @@ export default function WarTab() {
                 onRemove={handleRemoveDefender}
                 canManage={canManageWar && warMode === WarMode.Defenders}
                 dimmedNodes={dimmedNodes}
+                prefightNodes={prefightNodes}
               />
             </div>
           </div>
