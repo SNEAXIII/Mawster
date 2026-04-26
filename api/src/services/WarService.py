@@ -367,17 +367,17 @@ class WarService:
         if war.season_id is not None:
             if elo_change is None:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail="elo_change is required during an active season",
                 )
             if win and elo_change < 0:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail="elo_change must be positive on a win",
                 )
             if not win and elo_change > 0:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail="elo_change must be negative on a loss",
                 )
             war.elo_change = elo_change
