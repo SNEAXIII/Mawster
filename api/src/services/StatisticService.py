@@ -10,7 +10,6 @@ from src.dto.dto_statistic import PlayerSeasonStatsResponse
 from src.services.AllianceService import AllianceService
 from src.utils.db import SessionDep
 
-
 _miniboss_case = case((WarDefensePlacement.node_number.between(37, 49), 1), else_=0)
 _boss_case = case((WarDefensePlacement.node_number == 50, 1), else_=0)
 _total_kos = func.sum(WarDefensePlacement.ko_count)
@@ -34,10 +33,6 @@ class StatisticService:
                 cast(func.sum(_miniboss_case), Integer).label("total_miniboss"),
                 cast(func.sum(_boss_case), Integer).label("total_boss"),
                 cast((1 - _total_kos / _total_fights) * 100, Integer).label("ratio"),
-                cast(
-                    func.ifnull(1 - _total_kos / func.nullif(func.sum(_miniboss_case), 0), 0) * 100,
-                    Integer,
-                ).label("ratio_mb"),
             )
             .join(ChampionUser, ChampionUser.game_account_id == GameAccount.id)
             .join(
@@ -50,5 +45,5 @@ class StatisticService:
             .where(War.status == WarStatus.ended)
             .group_by(GameAccount.id, GameAccount.game_pseudo, GameAccount.alliance_group)
         )
-        rows = (await session.exec(sql)).all()
+        rows = (await session.exec(sql)).mappings().all()
         return [PlayerSeasonStatsResponse.model_validate(row) for row in rows]
