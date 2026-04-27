@@ -160,6 +160,72 @@ describe('Alliance Statistics', () => {
     });
   });
 
+  // ── Score ────────────────────────────────────────────────────────────────
+
+  it('shows correct score for a player: 1 regular fight no ko → score = 2', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-sc-admin', role: 'admin' },
+      {
+        discord_token: 'stat-sc-owner',
+        game_pseudo: 'ScOwner',
+        create_alliance: { name: 'ScAlliance', tag: 'SC1' },
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-sc-admin'].access_token;
+      const ownerToken = users['stat-sc-owner'].access_token;
+      const allianceId = users['stat-sc-owner'].alliance_id!;
+      const ownerAccId = users['stat-sc-owner'].account_id!;
+
+      createAndActivateSeason(adminToken).then(() => {
+        cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs: { id: string }[]) => {
+          cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs[0].id, '7r3').then((cu: { id: string }) => {
+            cy.apiCreateWar(ownerToken, allianceId, 'Enemy').then((war: { id: string }) => {
+              addStatsForPlayer(ownerToken, allianceId, war.id, champs[0].id, cu.id, 10, 0);
+              cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
+              cy.apiLogin(users['stat-sc-owner'].user_id);
+              goToStatsTab();
+              // 1 regular fight, 0 kos → score = 0*(-10) + 1*2 = 2
+              cy.getByCy('statistics-table').find('tbody tr').first().contains('2').should('exist');
+            });
+          });
+        });
+      });
+    });
+  });
+
+  it('shows negative score when player has kos: 1 fight 1 ko → score = -8', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-scko-admin', role: 'admin' },
+      {
+        discord_token: 'stat-scko-owner',
+        game_pseudo: 'ScKoOwner',
+        create_alliance: { name: 'ScKoAlliance', tag: 'SKO' },
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-scko-admin'].access_token;
+      const ownerToken = users['stat-scko-owner'].access_token;
+      const allianceId = users['stat-scko-owner'].alliance_id!;
+      const ownerAccId = users['stat-scko-owner'].account_id!;
+
+      createAndActivateSeason(adminToken).then(() => {
+        cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs: { id: string }[]) => {
+          cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs[0].id, '7r3').then((cu: { id: string }) => {
+            cy.apiCreateWar(ownerToken, allianceId, 'Enemy').then((war: { id: string }) => {
+              addStatsForPlayer(ownerToken, allianceId, war.id, champs[0].id, cu.id, 10, 1);
+              cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
+              cy.apiLogin(users['stat-scko-owner'].user_id);
+              goToStatsTab();
+              // 1 fight, 1 ko → score = 1*(-10) + 1*2 = -8
+              cy.getByCy('statistics-table').find('tbody tr').first().contains('-8').should('exist');
+            });
+          });
+        });
+      });
+    });
+  });
+
   // ── Ratio filter ──────────────────────────────────────────────────────────
 
   it('hides players below ratio threshold and shows empty-filtered state', () => {

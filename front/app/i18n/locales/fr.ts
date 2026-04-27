@@ -214,7 +214,7 @@ const fr: Translations = {
           miniboss: 'MiniBoss',
           boss: 'Boss',
           ratio: 'Ratio',
-          ratioMb: 'Ratio MB',
+          score: 'Score',
         },
       },
     },

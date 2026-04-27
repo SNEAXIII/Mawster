@@ -40,7 +40,7 @@ type SortField =
   | 'total_miniboss'
   | 'total_boss'
   | 'ratio'
-  | 'ratio_mb';
+  | 'score';
 type SortDir = 'asc' | 'desc';
 
 const RATIO_OPTIONS = [0, 50, 60, 70, 80, 90];
@@ -150,8 +150,8 @@ export default function AllianceStatisticsTab({
         f.map((r) => r.ratio),
         true
       ),
-      ratio_mb: top3(
-        f.map((r) => r.ratio_mb),
+      score: top3(
+        f.map((r) => r.score),
         true
       ),
     };
@@ -358,8 +358,8 @@ export default function AllianceStatisticsTab({
                       {...sortHeadProps}
                     />
                     <SortableHead
-                      label={t.game.alliances.statistics.columns.ratioMb}
-                      field='ratio_mb'
+                      label={t.game.alliances.statistics.columns.score}
+                      field='score'
                       {...sortHeadProps}
                     />
                   </TableRow>
@@ -397,8 +397,8 @@ export default function AllianceStatisticsTab({
                       <TableCell className={`text-right ${cellClass('ratio', row.ratio)}`}>
                         {row.ratio}%
                       </TableCell>
-                      <TableCell className={`text-right ${cellClass('ratio_mb', row.ratio_mb)}`}>
-                        {row.ratio_mb}%
+                      <TableCell className={`text-right ${cellClass('score', row.score)}`}>
+                        {row.score}
                       </TableCell>
                     </TableRow>
                   ))}
