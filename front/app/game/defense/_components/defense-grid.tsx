@@ -8,7 +8,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useDefenseActionsContext } from '@/app/contexts/defense-actions-context';
 
-import DefenseImportReportDialog from './defense-import-report-dialog';
 
 const WarMap = dynamic(() => import('./war-map'), {
   loading: () => <FullPageSpinner />,
@@ -39,11 +38,6 @@ export default function DefenseGrid({ onNodeClick, canManage }: Readonly<Defense
     setSelectorNode,
     clearConfirmOpen,
     setClearConfirmOpen,
-    importReportOpen,
-    importReport,
-    setImportReportOpen,
-    fileInputRef,
-    handleImportFile,
     handlePlaceDefender,
     handleRemoveDefender,
     handleClearDefense,
@@ -115,21 +109,6 @@ export default function DefenseGrid({ onNodeClick, canManage }: Readonly<Defense
         variant='destructive'
       />
 
-      {/* Hidden file input for import */}
-      <input
-        ref={fileInputRef}
-        type='file'
-        accept='.json'
-        className='hidden'
-        onChange={handleImportFile}
-      />
-
-      {/* Import report dialog */}
-      <DefenseImportReportDialog
-        open={importReportOpen}
-        onClose={() => setImportReportOpen(false)}
-        report={importReport}
-      />
     </>
   );
 }

@@ -47,8 +47,6 @@ export default function DefensePageContent({
           onAllianceChange={vm.handleAllianceChange}
           selectedBg={vm.selectedBg}
           onBgChange={vm.handleBgChange}
-          onExport={defenseActions.handleExportDefense}
-          onImportClick={() => defenseActions.fileInputRef.current?.click()}
           onClearClick={() => defenseActions.setClearConfirmOpen(true)}
           canManage={vm.userCanManage}
           defenseSummary={defenseActions.defenseSummary}
