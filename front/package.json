@@ -66,7 +66,7 @@
     "prettier": "^3.8.1",
     "react-dev-inspector": "^2.0.1",
     "sass": "^1.99.0",
-    "typescript-eslint": "^8.58.0"
+    "typescript-eslint": "^8.59.1"
   },
   "overrides": {
     "diff": "^8.0.2",
