@@ -23,7 +23,7 @@ export interface PlayerSeasonStats {
   total_miniboss: number;
   total_boss: number;
   ratio: number;
-  ratio_mb: number;
+  score: number;
 }
 
 export async function getCurrentSeasonStatistics(allianceId: string): Promise<PlayerSeasonStats[]> {

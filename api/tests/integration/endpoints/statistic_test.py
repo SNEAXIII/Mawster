@@ -151,15 +151,47 @@ class TestGetCurrentSeasonStatistics:
         assert p["total_fights"] == 3
 
     @pytest.mark.anyio
-    async def test_ratio_mb_zero_when_no_miniboss_fights(self):
+    async def test_score_regular_fights_no_kos(self):
+        # 2 regular fights, 0 kos → score = 0*(-10) + 2*2 + 0*4 + 0*5 = 4
         data = await _setup_with_active_season()
-        await _add_placement(
-            data["war"].id, data["cu"].id, data["champ"].id, node_number=10, ko_count=1
-        )
+        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=10, ko_count=0)
+        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=11, battlegroup=2, ko_count=0)
+
+        response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
+        assert response.json()[0]["score"] == 4
+
+    @pytest.mark.anyio
+    async def test_score_penalized_by_kos(self):
+        # 2 regular fights, 1 ko → score = 1*(-10) + 2*2 = -6
+        data = await _setup_with_active_season()
+        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=10, ko_count=1)
+        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=11, battlegroup=2, ko_count=0)
+
+        response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
+        assert response.json()[0]["score"] == -6
+
+    @pytest.mark.anyio
+    async def test_score_with_miniboss_and_boss(self):
+        # 1 regular + 1 miniboss (node 40) + 1 boss (node 50), 0 kos
+        # score = 0*(-10) + 1*2 + 1*4 + 1*5 = 11
+        data = await _setup_with_active_season()
+        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=10, battlegroup=1)
+        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=40, battlegroup=2)
+        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=50, battlegroup=3)
 
         response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
         p = response.json()[0]
-        assert p["ratio_mb"] == 0
+        assert p["total_miniboss"] == 1
+        assert p["total_boss"] == 1
+        assert p["score"] == 11
+
+    @pytest.mark.anyio
+    async def test_score_not_in_response_when_no_fights(self):
+        # Player with no ended-war placements → not in response at all
+        data = await _setup_with_active_season()
+
+        response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
+        assert response.json() == []
 
     @pytest.mark.anyio
     async def test_active_war_excluded(self):

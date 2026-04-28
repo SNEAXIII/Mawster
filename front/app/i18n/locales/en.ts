@@ -211,7 +211,7 @@ const en = {
           miniboss: 'MiniBoss',
           boss: 'Boss',
           ratio: 'Ratio',
-          ratioMb: 'Ratio MB',
+          score: 'Score',
         },
       },
     },
