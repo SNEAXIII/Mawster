@@ -82,7 +82,7 @@ class DiscordAuthService(OAuthService):
         """
         discord_id = str(profile["id"])
         email = profile.get("email") or f"{discord_id}@discord.placeholder"
-        username = profile.get("username") or profile.get("global_name") or f"discord_{discord_id}"
+        username = cls._random_base_login()
         # 1. Recherche par discord_id
         existing_user = await cls._get_user_by_discord_id(session, discord_id)
         if existing_user:

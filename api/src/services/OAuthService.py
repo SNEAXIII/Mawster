@@ -2,6 +2,9 @@ import random
 import string
 from abc import ABC, abstractmethod
 
+_ADJECTIVES = ["cosmic", "mighty", "iron", "shadow", "storm", "silver", "golden", "dark", "thunder", "mystic"]
+_NOUNS = ["hero", "blade", "hunter", "striker", "guardian", "avenger", "champion", "seeker", "warrior", "knight"]
+
 from sqlmodel import select
 
 from src.models import User
@@ -16,6 +19,13 @@ class OAuthService(ABC):
     @classmethod
     @abstractmethod
     async def get_or_create_user(cls, session: SessionDep, profile: dict) -> User: ...
+
+    @classmethod
+    def _random_base_login(cls) -> str:
+        adj = random.choice(_ADJECTIVES)
+        noun = random.choice(_NOUNS)
+        digits = "".join(random.choices(string.digits, k=2))
+        return f"{adj}{noun}{digits}"
 
     @classmethod
     def _normalize_login(cls, username: str) -> str:

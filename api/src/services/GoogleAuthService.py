@@ -75,7 +75,7 @@ class GoogleAuthService(OAuthService):
         """
         google_id = str(profile["sub"])
         email = profile.get("email") or f"{google_id}@google.placeholder"
-        username = profile.get("name") or f"google_{google_id}"
+        username = cls._random_base_login()
         # 1. Recherche par google_id
         sql = select(User).where(User.google_id == google_id)
         result = await session.exec(sql)
