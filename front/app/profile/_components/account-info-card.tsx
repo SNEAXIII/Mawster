@@ -13,6 +13,9 @@ import { updateLogin } from '@/app/services/users';
 
 const LOGIN_REGEX = /^[a-zA-Z0-9]{3,30}$/;
 
+const iconBtn =
+  'inline-flex items-center justify-center rounded p-1 transition-colors disabled:opacity-50 cursor-pointer';
+
 export function AccountInfoCard({
   name,
   discordId,
@@ -26,11 +29,12 @@ export function AccountInfoCard({
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(name ?? '');
+  const [displayName, setDisplayName] = useState(name ?? '');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleEdit = () => {
-    setValue(name ?? '');
+    setValue(displayName);
     setError(null);
     setEditing(true);
   };
@@ -49,6 +53,7 @@ export function AccountInfoCard({
     setError(null);
     try {
       await updateLogin(value);
+      setDisplayName(value);
       setEditing(false);
       router.refresh();
     } catch (err) {
@@ -90,7 +95,7 @@ export function AccountInfoCard({
                   <button
                     onClick={handleSubmit}
                     disabled={loading}
-                    className='text-green-500 hover:text-green-600 disabled:opacity-50'
+                    className={`${iconBtn} text-green-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-950`}
                     data-cy='edit-username-confirm'
                   >
                     <FiCheck className='h-4 w-4' />
@@ -98,7 +103,7 @@ export function AccountInfoCard({
                   <button
                     onClick={handleCancel}
                     disabled={loading}
-                    className='text-muted-foreground hover:text-foreground disabled:opacity-50'
+                    className={`${iconBtn} text-muted-foreground hover:text-foreground hover:bg-muted`}
                     data-cy='edit-username-cancel'
                   >
                     <FiX className='h-4 w-4' />
@@ -107,13 +112,13 @@ export function AccountInfoCard({
                 {error && <p className='text-xs text-destructive'>{error}</p>}
               </div>
             ) : (
-              <div className='flex items-center gap-2 group'>
+              <div className='flex items-center gap-2'>
                 <span className='text-sm font-medium' data-cy='username-value'>
-                  {name ?? t.common.notAvailable}
+                  {displayName || t.common.notAvailable}
                 </span>
                 <button
                   onClick={handleEdit}
-                  className='text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-foreground transition-opacity'
+                  className={`${iconBtn} text-muted-foreground hover:text-foreground hover:bg-muted`}
                   title={t.profile.editUsernameTooltip}
                   data-cy='edit-username-btn'
                 >
