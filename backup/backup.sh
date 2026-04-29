@@ -3,7 +3,10 @@ set -euo pipefail
 
 # ── Secrets ──────────────────────────────────────────────────────────────────
 export MARIADB_ROOT_PASSWORD=$(cat /run/secrets/mawster_db_root_password)
-export RCLONE_CONFIG=/run/secrets/mawster_rclone_conf
+RCLONE_CONFIG_WRITABLE=/tmp/rclone.conf
+cp /run/secrets/mawster_rclone_conf "$RCLONE_CONFIG_WRITABLE"
+chmod 600 "$RCLONE_CONFIG_WRITABLE"
+export RCLONE_CONFIG="$RCLONE_CONFIG_WRITABLE"
 
 # ── Config ────────────────────────────────────────────────────────────────────
 BACKUP_DIR="/backups"
