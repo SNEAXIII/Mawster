@@ -17,6 +17,7 @@ from src.Messages.user_messages import (
     TARGET_USER_IS_NOT_ADMIN,
     TARGET_USER_IS_DELETED,
     TARGET_USER_IS_ALREADY_DELETED,
+    LOGIN_ALREADY_TAKEN,
 )
 from src.enums.Roles import Roles
 from src.models import User
@@ -103,6 +104,16 @@ class UserService:
             raise TARGET_USER_IS_ALREADY_ENABLED
         if require_disabled is False and user.disabled_at:
             raise TARGET_USER_IS_ALREADY_DISABLED
+
+    @classmethod
+    async def update_login(cls, session: SessionDep, user: User, new_login: str) -> User:
+        existing = await cls.get_user_by_login(session, new_login)
+        if existing is not None and existing.id != user.id:
+            raise LOGIN_ALREADY_TAKEN
+        user.login = new_login
+        await session.commit()
+        await session.refresh(user)
+        return user
 
     @classmethod
     async def admin_patch_disable_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> True:

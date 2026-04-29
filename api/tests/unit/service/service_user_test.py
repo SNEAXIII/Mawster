@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 import pytest
@@ -14,6 +15,7 @@ from src.Messages.user_messages import (
     USER_DOESNT_EXISTS,
     USER_IS_DELETED,
     USER_IS_DISABLED,
+    LOGIN_ALREADY_TAKEN,
     UserAdminError,
     UserLoginError,
 )
@@ -321,4 +323,51 @@ async def test_delete_user_error(mocker, fake_user, expected_error):
     # Assert
     assert error.value.detail == str(expected_error)
     mock_get_user.assert_called_once_with(mock_session, USER_ID)
+    mock_session.commit.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_update_login_success(mocker):
+    # Arrange
+    new_login = "NewLogin123"
+    current_user = User(id=USER_ID, login=LOGIN)
+    mock_session = session_mock(mocker)
+    get_user_by_login_mock(mocker, None)
+
+    # Act
+    result = await UserService.update_login(mock_session, current_user, new_login)
+
+    # Assert
+    assert result.login == new_login
+    mock_session.commit.assert_called_once()
+    mock_session.refresh.assert_called_once_with(current_user)
+
+
+@pytest.mark.asyncio
+async def test_update_login_same_user_allowed(mocker):
+    # Same user keeping their own login → no conflict
+    current_user = User(id=USER_ID, login=LOGIN)
+    mock_session = session_mock(mocker)
+    get_user_by_login_mock(mocker, current_user)
+
+    result = await UserService.update_login(mock_session, current_user, LOGIN)
+
+    assert result.login == LOGIN
+    mock_session.commit.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_update_login_already_taken(mocker):
+    # Arrange
+    other_user = User(id=uuid.uuid4(), login="OtherLogin")
+    current_user = User(id=USER_ID, login=LOGIN)
+    mock_session = session_mock(mocker)
+    get_user_by_login_mock(mocker, other_user)
+
+    # Act / Assert
+    with pytest.raises(Exception) as exc:
+        await UserService.update_login(mock_session, current_user, "OtherLogin")
+
+    assert exc.value.status_code == 409
+    assert exc.value.detail == LOGIN_ALREADY_TAKEN.detail
     mock_session.commit.assert_not_called()
