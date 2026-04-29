@@ -40,3 +40,7 @@ TARGET_USER_IS_ALREADY_DELETED = UserAdminError("Le compte cible est déjà supp
 TARGET_USER_IS_ALREADY_ADMIN = UserAdminError("Le compte cible est déjà administrateur")
 TARGET_USER_IS_NOT_ADMIN = UserAdminError("Le compte cible n'est pas administrateur")
 TARGET_USER_DEMOTED_SUCCESSFULLY = "Le compte cible a bien été rétrogradé"
+LOGIN_ALREADY_TAKEN = HTTPException(
+    status_code=status.HTTP_409_CONFLICT,
+    detail="Ce pseudo est déjà pris",
+)

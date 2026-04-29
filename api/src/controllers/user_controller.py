@@ -8,6 +8,7 @@ from src.Messages.user_messages import (
     TARGET_USER_DELETED_SUCCESSFULLY,
 )
 from src.models import User
+from src.dto.dto_utilisateurs import UpdateLoginRequest, UserProfile
 from src.services.AuthService import AuthService
 from src.services.UserService import UserService
 from src.utils.db import SessionDep
@@ -29,6 +30,16 @@ class DeleteAccountRequest(BaseModel):
     L'utilisateur doit envoyer le texte de confirmation exact."""
 
     confirmation: str = Field(..., examples=[CONFIRMATION_TEXT])
+
+
+@user_controller.patch("/login", status_code=200)
+async def update_login(
+    body: UpdateLoginRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+) -> UserProfile:
+    user = await UserService.update_login(session, current_user, body.login)
+    return UserProfile.model_validate(user.model_dump())
 
 
 @user_controller.delete("/delete", status_code=200)

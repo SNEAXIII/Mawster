@@ -37,6 +37,10 @@ class UserAdminViewAllUsers(BaseModel):
     current_page: int = Field(default=1)
 
 
+class UpdateLoginRequest(BaseModel):
+    login: str = Field(..., min_length=3, max_length=30, pattern=r"^[a-zA-Z0-9]+$", examples=["NewLogin"])
+
+
 class DiscordLoginRequest(BaseModel):
     """DTO pour la connexion via Discord OAuth2.
     Le frontend envoie le token d'acces Discord ; le backend le verifie

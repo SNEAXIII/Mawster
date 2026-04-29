@@ -86,6 +86,11 @@ const fr: Translations = {
       'Cette action est irréversible. Toutes vos données seront définitivement supprimées.',
     deleteConfirmation: 'SUPPRIMER',
     deleteError: 'Une erreur est survenue lors de la suppression du compte',
+    editUsernameTooltip: 'Modifier le pseudo',
+    editUsernamePlaceholder: '3 à 30 caractères alphanumériques',
+    editUsernameInvalid: "3 à 30 caractères, alphanumérique uniquement (pas d'espaces ni caractères spéciaux)",
+    editUsernameTaken: 'Ce pseudo est déjà pris',
+    editUsernameError: 'Une erreur est survenue lors de la mise à jour du pseudo',
   },
 
   // Game

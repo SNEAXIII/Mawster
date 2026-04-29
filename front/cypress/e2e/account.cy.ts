@@ -95,4 +95,74 @@ describe('Login & Profile – UI', () => {
       cy.getByCy('nav-administration').should('not.exist');
     });
   });
+
+  // =========================================================================
+  // Edit username
+  // =========================================================================
+
+  it('pencil button is always visible on profile page', () => {
+    setupUser('edit-btn-visible-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
+      cy.navTo('profile');
+      cy.getByCy('edit-username-btn').should('be.visible');
+    });
+  });
+
+  it('can edit username successfully', () => {
+    setupUser('edit-username-ok-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
+      cy.navTo('profile');
+      cy.getByCy('edit-username-btn').click();
+      cy.getByCy('edit-username-input').clear().type('NewLogin123');
+      cy.getByCy('edit-username-confirm').click();
+      cy.getByCy('username-value').should('contain', 'NewLogin123');
+    });
+  });
+
+  it('shows validation error for invalid login format', () => {
+    setupUser('edit-username-invalid-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
+      cy.navTo('profile');
+      cy.getByCy('edit-username-btn').click();
+      cy.getByCy('edit-username-input').clear().type('a!');
+      cy.getByCy('edit-username-confirm').click();
+      cy.contains('3 to 30').should('be.visible');
+      cy.getByCy('edit-username-input').should('be.visible');
+    });
+  });
+
+  it('cancel restores original login without saving', () => {
+    setupUser('edit-username-cancel-token').then(({ login, user_id }) => {
+      cy.apiLogin(user_id);
+      cy.navTo('profile');
+      cy.getByCy('edit-username-btn').click();
+      cy.getByCy('edit-username-input').clear().type('ChangedName');
+      cy.getByCy('edit-username-cancel').click();
+      cy.getByCy('username-value').should('contain', login);
+      cy.getByCy('edit-username-btn').should('be.visible');
+    });
+  });
+
+  it('Escape key cancels editing', () => {
+    setupUser('edit-username-escape-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
+      cy.navTo('profile');
+      cy.getByCy('edit-username-btn').click();
+      cy.getByCy('edit-username-input').should('be.visible').type('{esc}');
+      cy.getByCy('edit-username-btn').should('be.visible');
+    });
+  });
+
+  it('shows error when username already taken', () => {
+    setupUser('taken-user1-token').then(({ user_id }) => {
+      setupUser('taken-user2-token').then(({ login: login2 }) => {
+        cy.apiLogin(user_id);
+        cy.navTo('profile');
+        cy.getByCy('edit-username-btn').click();
+        cy.getByCy('edit-username-input').clear().type(login2);
+        cy.getByCy('edit-username-confirm').click();
+        cy.contains('already taken').should('be.visible');
+      });
+    });
+  });
 });
