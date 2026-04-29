@@ -83,6 +83,11 @@ const en = {
     deleteWarning: 'This action is irreversible. All your data will be permanently deleted.',
     deleteConfirmation: 'DELETE',
     deleteError: 'An error occurred while deleting the account',
+    editUsernameTooltip: 'Edit username',
+    editUsernamePlaceholder: '3-30 alphanumeric characters',
+    editUsernameInvalid: '3 to 30 characters, alphanumeric only (no spaces or special characters)',
+    editUsernameTaken: 'This username is already taken',
+    editUsernameError: 'An error occurred while updating username',
   },
 
   // Game
