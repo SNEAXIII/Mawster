@@ -7,21 +7,17 @@ import {
   type DefenseSummary,
   type AvailableChampion,
   type BgMember,
-  type DefenseImportReport,
   getDefense,
   placeDefender,
   removeDefender,
   clearDefense,
   getAvailableChampions,
   getBgMembers,
-  exportDefense,
-  importDefense,
 } from '@/app/services/defense';
 
 export function useDefenseActions(
   selectedAllianceId: string,
   selectedBg: number,
-  selectedAllianceTag?: string
 ) {
   const { t } = useI18n();
 
@@ -36,9 +32,6 @@ export function useDefenseActions(
   // Dialogs
   const [selectorNode, setSelectorNode] = useState<number | null>(null);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
-  const [importReport, setImportReport] = useState<DefenseImportReport | null>(null);
-  const [importReportOpen, setImportReportOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ─── Data fetching ─────────────────────────────────────
   const fetchDefense = useCallback(
@@ -142,56 +135,6 @@ export function useDefenseActions(
     setClearConfirmOpen(false);
   };
 
-  // ─── Import / Export ───────────────────────────────────
-  const handleExportDefense = async () => {
-    if (!selectedAllianceId) return;
-    try {
-      const items = await exportDefense(selectedAllianceId, selectedBg);
-      if (items.length === 0) {
-        toast.warning(t.game.defense.importExport.emptyExport);
-        return;
-      }
-      const json = JSON.stringify(items, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      const tag = selectedAllianceTag ?? 'defense';
-      a.download = `defense_${tag}_bg${selectedBg}_${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success(
-        t.game.defense.importExport.exportedCount.replace('{count}', String(items.length))
-      );
-    } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.defense.importExport.exportError);
-    }
-  };
-
-  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !selectedAllianceId) return;
-    e.target.value = '';
-
-    try {
-      const text = await file.text();
-      const placements = JSON.parse(text);
-      if (!Array.isArray(placements) || placements.length === 0) {
-        toast.error(t.game.defense.importExport.invalidFile);
-        return;
-      }
-      const report = await importDefense(selectedAllianceId, selectedBg, placements);
-      setImportReport(report);
-      setImportReportOpen(true);
-      await fetchDefense(true);
-      resetPollTimer();
-    } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.defense.importExport.importError);
-    }
-  };
-
   return {
     defenseSummary,
     availableChampions,
@@ -201,14 +144,8 @@ export function useDefenseActions(
     setSelectorNode,
     clearConfirmOpen,
     setClearConfirmOpen,
-    importReportOpen,
-    setImportReportOpen,
-    importReport,
-    fileInputRef,
     handlePlaceDefender,
     handleRemoveDefender,
     handleClearDefense,
-    handleExportDefense,
-    handleImportFile,
   };
 }

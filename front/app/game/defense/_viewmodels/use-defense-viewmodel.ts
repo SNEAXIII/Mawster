@@ -32,7 +32,7 @@ export function useDefenseViewModel({
     ? canManage(selectedAlliance) || isOwner(selectedAlliance)
     : false;
 
-  const defenseActions = useDefenseActions(selectedAllianceId, selectedBg, selectedAlliance?.tag);
+  const defenseActions = useDefenseActions(selectedAllianceId, selectedBg);
 
   useEffect(() => {
     if (alliances.length > 0 && !selectedAllianceId) {

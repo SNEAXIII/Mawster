@@ -8,9 +8,6 @@ from src.dto.dto_defense import (
     DefensePlacementCreateRequest,
     DefensePlacementResponse,
     DefenseSummaryResponse,
-    DefenseExportItem,
-    DefenseImportRequest,
-    DefenseImportReport,
 )
 from src.models import User
 from src.services.AllianceService import AllianceService
@@ -173,64 +170,3 @@ async def get_bg_members(
     )
 
 
-# =================== Export / Import ===================
-
-
-@defense_controller.get(
-    "/bg/{battlegroup}/export",
-    response_model=list[DefenseExportItem],
-)
-async def export_defense(
-    alliance_id: uuid.UUID,
-    battlegroup: BattlegroupPath,
-    session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
-):
-    """Export the current defense as portable JSON (no IDs). Officers/owners only."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
-    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
-
-    items = await DefensePlacementService.export_defense(session, alliance_id, battlegroup)
-
-    return items
-
-
-@defense_controller.post(
-    "/bg/{battlegroup}/import",
-    response_model=DefenseImportReport,
-)
-async def import_defense(
-    alliance_id: uuid.UUID,
-    battlegroup: BattlegroupPath,
-    body: DefenseImportRequest,
-    session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
-):
-    """Import a defense layout from JSON. Clears existing defense first.
-    Officers/owners only. Returns a before/after comparison + errors."""
-    my_account = await AllianceService.get_user_account_in_alliance(
-        session, current_user.id, alliance_id
-    )
-    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
-
-    (
-        before,
-        after,
-        errors,
-        success_count,
-        error_count,
-    ) = await DefensePlacementService.import_defense(
-        session=session,
-        alliance_id=alliance_id,
-        battlegroup=battlegroup,
-        items=body.placements,
-        placed_by_id=my_account.id,
-    )
-
-    return DefenseImportReport(
-        before=before,
-        after=after,
-        errors=errors,
-        success_count=success_count,
-        error_count=error_count,
-    )

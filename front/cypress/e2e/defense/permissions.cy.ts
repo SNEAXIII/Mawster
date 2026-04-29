@@ -6,43 +6,6 @@ describe('Defense – Permissions', () => {
   });
 
   // =========================================================================
-  // Export / Import button visibility
-  // =========================================================================
-
-  it('export and import buttons are visible to the alliance owner', () => {
-    setupUser('def-perm-owner-tok').then(({ user_id, access_token }) => {
-      cy.apiCreateGameAccount(access_token, 'PermOwner', true).then((acc) => {
-        cy.apiCreateAlliance(access_token, 'PermOwnerAll', 'PO', acc.id);
-      });
-      cy.apiLogin(user_id);
-      cy.navTo('defense');
-      cy.getByCy('defense-export').should('be.visible');
-      cy.getByCy('defense-import').should('be.visible');
-    });
-  });
-
-  it('export and import buttons are hidden from a regular member', () => {
-    setupOwnerMemberAlliance('def-perm-hid', 'PermHidOwn', 'PermHidMem', 'PermHidAll', 'PH').then(({ memberData }) => {
-      cy.apiLogin(memberData.user_id);
-      cy.navTo('defense');
-      cy.getByCy('defense-export').should('not.exist');
-      cy.getByCy('defense-import').should('not.exist');
-    });
-  });
-
-  it('export and import buttons are visible to an officer', () => {
-    setupOwnerMemberAlliance('def-perm-off', 'PermOffOwn', 'PermOfficer', 'PermOffAll', 'PF').then(
-      ({ ownerData, memberData, allianceId, memberAccId }) => {
-        cy.apiAddOfficer(ownerData.access_token, allianceId, memberAccId);
-        cy.apiLogin(memberData.user_id);
-        cy.navTo('defense');
-        cy.getByCy('defense-export').should('be.visible');
-        cy.getByCy('defense-import').should('be.visible');
-      },
-    );
-  });
-
-  // =========================================================================
   // Clear All button visibility
   // =========================================================================
 

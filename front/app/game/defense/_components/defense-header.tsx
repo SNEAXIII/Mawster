@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { type DefenseSummary } from '@/app/services/defense';
-import { Trash2, Download, Upload } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 interface DefenseHeaderProps {
   alliances: Alliance[];
@@ -20,8 +20,6 @@ interface DefenseHeaderProps {
   onAllianceChange: (id: string) => void;
   selectedBg: number;
   onBgChange: (bg: number) => void;
-  onExport: () => void;
-  onImportClick: () => void;
   onClearClick: () => void;
   canManage: boolean;
   defenseSummary: DefenseSummary | null;
@@ -33,8 +31,6 @@ export default function DefenseHeader({
   onAllianceChange,
   selectedBg,
   onBgChange,
-  onExport,
-  onImportClick,
   onClearClick,
   canManage,
   defenseSummary,
@@ -95,39 +91,17 @@ export default function DefenseHeader({
             </div>
           </div>
 
-          {/* Export / Import — managers only */}
-          {canManage && (
-            <div className='flex gap-1 ml-auto'>
-              {/* Clear button */}
-              {defenseSummary && defenseSummary.placements.length > 0 && (
-                <Button
-                  variant='destructive'
-                  size='sm'
-                  className='ml-auto'
-                  data-cy='defense-clear-all'
-                  onClick={onClearClick}
-                >
-                  <Trash2 className='w-4 h-4 mr-1' />
-                  {t.game.defense.clearAll}
-                </Button>
-              )}
+          {/* Clear — managers only */}
+          {canManage && defenseSummary && defenseSummary.placements.length > 0 && (
+            <div className='ml-auto'>
               <Button
-                variant='outline'
+                variant='destructive'
                 size='sm'
-                onClick={onExport}
-                data-cy='defense-export'
+                data-cy='defense-clear-all'
+                onClick={onClearClick}
               >
-                <Download className='w-4 h-4 mr-1' />
-                {t.game.defense.importExport.exportBtn}
-              </Button>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={onImportClick}
-                data-cy='defense-import'
-              >
-                <Upload className='w-4 h-4 mr-1' />
-                {t.game.defense.importExport.importBtn}
+                <Trash2 className='w-4 h-4 mr-1' />
+                {t.game.defense.clearAll}
               </Button>
             </div>
           )}
