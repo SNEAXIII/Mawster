@@ -72,7 +72,7 @@ if IS_TESTING:
             "email": f"{random}@test.com",
         }
 
-    DiscordAuthService.verify_discord_token = classmethod(_fake_verify)
+    DiscordAuthService.verify_token = classmethod(_fake_verify)
     logger.info("Testing mode: Discord verification is mocked")
 
 
