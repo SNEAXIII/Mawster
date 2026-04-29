@@ -1,5 +1,3 @@
-import random
-import string
 from datetime import datetime
 from typing import Optional
 
@@ -16,6 +14,7 @@ from src.Messages.discord_auth_messages import (
     EMAIL_CONFLICT,
 )
 from src.models import User, LoginLog
+from src.services.OAuthService import OAuthService
 from src.utils.db import SessionDep
 from src.utils.email_hash import hash_email
 
@@ -37,26 +36,17 @@ DISCORD_API_ERROR_EXCEPTION = HTTPException(
 )
 
 
-class DiscordAuthService:
-    """Service gerant l'authentification via Discord OAuth2.
-
-    Responsabilites :
-    - Verification du token d'acces Discord aupres de l'API Discord
-    - Recherche d'un utilisateur par son discord_id
-    - Creation automatique d'un compte si premier login Discord
-    - Gestion des conflits email
-    - Normalisation du username Discord en login compatible
-    """
+class DiscordAuthService(OAuthService):
 
     @classmethod
-    async def verify_discord_token(cls, access_token: str) -> dict:
-        """Verifie le token d'acces Discord en appelant l'API Discord /users/@me.
+    async def verify_token(cls, access_token: str) -> dict:
+        """Vérifie le token Discord en appelant l'API Discord /users/@me.
 
         Returns:
-            dict avec les cles : id, username, email, avatar (brutes depuis Discord)
+            dict avec id, username, email, avatar
 
         Raises:
-            HTTPException 401: Token invalide ou expire
+            HTTPException 401: Token invalide ou expiré
             HTTPException 502: Erreur de communication avec Discord
         """
         try:
@@ -76,89 +66,40 @@ class DiscordAuthService:
         return response.json()
 
     @classmethod
-    async def get_user_by_discord_id(cls, session: SessionDep, discord_id: str) -> Optional[User]:
-        """Recherche un utilisateur par son identifiant Discord."""
+    async def _get_user_by_discord_id(cls, session: SessionDep, discord_id: str) -> Optional[User]:
         sql = select(User).where(User.discord_id == discord_id)
         result = await session.exec(sql)
         return result.first()
 
     @classmethod
-    def _normalize_login(cls, discord_username: str) -> str:
-        """Normalise un username Discord pour respecter les contraintes du modèle.
+    async def get_or_create_user(cls, session: SessionDep, profile: dict) -> User:
+        """Trouve ou crée un utilisateur à partir du profil Discord vérifié.
 
-        Règles :
-        - Uniquement alphanumérique
-        - Entre 4 et 15 caractères
-        - Suffixe aléatoire si trop court après nettoyage
+        Flow:
+        1. Cherche par discord_id → si trouvé, retourne l'utilisateur existant
+        2. Vérifie que l'email n'est pas déjà utilisé
+        3. Si email libre → crée un nouveau compte Discord
+        4. Si email pris → 409 Conflict
         """
-        normalized = "".join(c for c in discord_username if c.isalnum())
-        if len(normalized) < 4:
-            suffix = "".join(random.choices(string.digits, k=4))
-            normalized = f"{normalized}{suffix}"
-        return normalized[:15]
-
-    @classmethod
-    async def _generate_unique_login(cls, session: SessionDep, discord_username: str) -> str:
-        """Génère un login unique à partir du username Discord.
-
-        Si le login normalisé est déjà pris, ajoute un suffixe numérique aléatoire.
-        """
-        base_login = cls._normalize_login(discord_username)
-        login = base_login
-
-        # Vérifier l'unicité, ajouter un suffixe si nécessaire
-        for _ in range(10):
-            sql = select(User).where(User.login == login)
-            result = await session.exec(sql)
-            if result.first() is None:
-                return login
-            suffix = "".join(random.choices(string.digits, k=3))
-            login = f"{base_login[:12]}{suffix}"
-
-        # Fallback avec un identifiant aléatoire complet
-        return f"user{''.join(random.choices(string.ascii_lowercase + string.digits, k=10))}"
-
-    @classmethod
-    async def get_or_create_discord_user(
-        cls,
-        session: SessionDep,
-        discord_profile: dict,
-    ) -> User:
-        """Trouve ou cree un utilisateur a partir du profil Discord verifie.
-
-        Args:
-            discord_profile: Profil brut retourne par Discord API /users/@me
-
-        Flow :
-        1. Cherche par discord_id -> si trouve, retourne l'utilisateur existant
-        2. Verifie que l'email n'est pas deja utilise
-        3. Si email libre -> cree un nouveau compte Discord
-        4. Si email pris -> retourne une erreur 409 Conflict
-
-        Raises:
-            HTTPException 409: Si l'email est deja utilise par un autre compte
-        """
-        discord_id = str(discord_profile["id"])
-        email = discord_profile.get("email") or f"{discord_id}@discord.placeholder"
+        discord_id = str(profile["id"])
+        email = profile.get("email") or f"{discord_id}@discord.placeholder"
         username = (
-            discord_profile.get("username")
-            or discord_profile.get("global_name")
+            profile.get("username")
+            or profile.get("global_name")
             or f"discord_{discord_id}"
         )
-        avatar_hash = discord_profile.get("avatar")
+        avatar_hash = profile.get("avatar")
         avatar_url = (
             f"https://cdn.discordapp.com/avatars/{discord_id}/{avatar_hash}.png"
             if avatar_hash
             else None
         )
 
-        # 1. Recherche par discord_id (utilisateur Discord connu)
-        existing_user = await cls.get_user_by_discord_id(session, discord_id)
+        # 1. Recherche par discord_id
+        existing_user = await cls._get_user_by_discord_id(session, discord_id)
         if existing_user:
-            # Mettre a jour les infos Discord (avatar, email eventuellement)
             existing_user.avatar_url = avatar_url
             existing_user.set_last_login_date(datetime.now())
-            # Re-hash si le pepper a change depuis la derniere connexion
             if existing_user.email_hash_version != SECRET.EMAIL_PEPPER_VERSION:
                 existing_user.email_hash = hash_email(email)
                 existing_user.email_hash_version = SECRET.EMAIL_PEPPER_VERSION
@@ -168,15 +109,14 @@ class DiscordAuthService:
             await session.refresh(existing_user)
             return existing_user
 
-        # 2. Verifier qu'il n'y a pas de conflit email
+        # 2. Vérifier conflit email
         email_hash = hash_email(email)
         sql = select(User).where(User.email_hash == email_hash)
         result = await session.exec(sql)
-        email_user = result.first()
-        if email_user:
+        if result.first():
             raise EMAIL_CONFLICT_EXCEPTION
 
-        # 3. Creer un nouveau compte Discord
+        # 3. Créer un nouveau compte Discord
         unique_login = await cls._generate_unique_login(session, username)
 
         new_user = User(
