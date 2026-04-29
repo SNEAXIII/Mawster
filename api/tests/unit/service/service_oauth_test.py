@@ -1,7 +1,5 @@
 """Unit tests for OAuthService shared logic."""
 
-import pytest
-
 from src.services.OAuthService import OAuthService
 
 

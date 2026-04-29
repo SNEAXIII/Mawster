@@ -9,7 +9,6 @@ from src.utils.db import SessionDep
 
 
 class OAuthService(ABC):
-
     @classmethod
     @abstractmethod
     async def verify_token(cls, access_token: str) -> dict: ...

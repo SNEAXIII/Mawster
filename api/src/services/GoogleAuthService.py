@@ -36,7 +36,6 @@ GOOGLE_API_ERROR_EXCEPTION = HTTPException(
 
 
 class GoogleAuthService(OAuthService):
-
     @classmethod
     async def verify_token(cls, access_token: str) -> dict:
         """Vérifie le token Google en appelant l'API userinfo.

@@ -37,7 +37,6 @@ DISCORD_API_ERROR_EXCEPTION = HTTPException(
 
 
 class DiscordAuthService(OAuthService):
-
     @classmethod
     async def verify_token(cls, access_token: str) -> dict:
         """Vérifie le token Discord en appelant l'API Discord /users/@me.
@@ -83,11 +82,7 @@ class DiscordAuthService(OAuthService):
         """
         discord_id = str(profile["id"])
         email = profile.get("email") or f"{discord_id}@discord.placeholder"
-        username = (
-            profile.get("username")
-            or profile.get("global_name")
-            or f"discord_{discord_id}"
-        )
+        username = profile.get("username") or profile.get("global_name") or f"discord_{discord_id}"
         avatar_hash = profile.get("avatar")
         avatar_url = (
             f"https://cdn.discordapp.com/avatars/{discord_id}/{avatar_hash}.png"
