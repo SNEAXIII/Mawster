@@ -76,15 +76,12 @@ class GoogleAuthService(OAuthService):
         google_id = str(profile["sub"])
         email = profile.get("email") or f"{google_id}@google.placeholder"
         username = profile.get("name") or f"google_{google_id}"
-        avatar_url = profile.get("picture")
-
         # 1. Recherche par google_id
         sql = select(User).where(User.google_id == google_id)
         result = await session.exec(sql)
         existing_user = result.first()
 
         if existing_user:
-            existing_user.avatar_url = avatar_url
             existing_user.set_last_login_date(datetime.now())
             if existing_user.email_hash_version != SECRET.EMAIL_PEPPER_VERSION:
                 existing_user.email_hash = hash_email(email)
@@ -109,7 +106,6 @@ class GoogleAuthService(OAuthService):
             login=unique_login,
             email_hash=email_hash,
             google_id=google_id,
-            avatar_url=avatar_url,
             role=Roles.USER,
         )
         new_user.set_last_login_date(datetime.now())

@@ -20,7 +20,6 @@ export default function ProfilePage() {
     <div className='max-w-3xl mx-auto px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
       <ProfileHeader
         name={user?.name}
-        avatarUrl={user?.avatar_url}
         role={user?.role}
       />
       <AccountInfoCard

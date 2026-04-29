@@ -135,7 +135,6 @@ _DISCORD_PROFILE = {
     "id": DISCORD_ID,
     "username": USER_LOGIN,
     "email": USER_EMAIL,
-    "avatar": None,
 }
 
 

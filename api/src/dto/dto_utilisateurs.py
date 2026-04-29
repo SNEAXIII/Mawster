@@ -20,7 +20,6 @@ class UserProfile(UserBaseResponse):
     created_at: datetime = Field()
     discord_id: Optional[str] = Field(default=None)
     google_id: Optional[str] = Field(default=None)
-    avatar_url: Optional[str] = Field(default=None)
 
 
 class UserAdminViewSingleUser(UserBaseResponse):

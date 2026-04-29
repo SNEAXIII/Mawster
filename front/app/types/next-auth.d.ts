@@ -9,7 +9,6 @@ declare module 'next-auth' {
       name: string;
       email: string;
       role: string;
-      avatar_url: string | null;
       discord_id: string | null;
       google_id: string | null;
       created_at: string | null;
@@ -39,7 +38,6 @@ declare module 'next-auth/jwt' {
     user_id?: string;
     sub?: string;
     role?: string;
-    avatar_url?: string | null;
     discord_id?: string;
     created_at?: string | null;
   }
