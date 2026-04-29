@@ -80,6 +80,15 @@ export const deleteAccount = async (confirmation?: string): Promise<true> => {
   return true;
 };
 
+export const updateLogin = async (login: string): Promise<void> => {
+  const response = await fetch(`${PROXY}/user/login`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+    body: JSON.stringify({ login }),
+  });
+  await throwOnError(response, 'Erreur lors de la mise à jour du pseudo');
+};
+
 export const disableUser = async (userId: string): Promise<true> => {
   const response = await fetch(`${PROXY}/admin/users/disable/${userId}`, {
     method: 'PATCH',
