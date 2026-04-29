@@ -168,5 +168,3 @@ async def get_bg_members(
     return await DefensePlacementService.get_bg_members_with_counts(
         session, alliance_id, battlegroup
     )
-
-

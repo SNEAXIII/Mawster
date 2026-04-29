@@ -154,8 +154,17 @@ class TestGetCurrentSeasonStatistics:
     async def test_score_regular_fights_no_kos(self):
         # 2 regular fights, 0 kos → score = 0*(-10) + 2*2 + 0*4 + 0*5 = 4
         data = await _setup_with_active_season()
-        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=10, ko_count=0)
-        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=11, battlegroup=2, ko_count=0)
+        await _add_placement(
+            data["war"].id, data["cu"].id, data["champ"].id, node_number=10, ko_count=0
+        )
+        await _add_placement(
+            data["war"].id,
+            data["cu"].id,
+            data["champ"].id,
+            node_number=11,
+            battlegroup=2,
+            ko_count=0,
+        )
 
         response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
         assert response.json()[0]["score"] == 4
@@ -164,8 +173,17 @@ class TestGetCurrentSeasonStatistics:
     async def test_score_penalized_by_kos(self):
         # 2 regular fights, 1 ko → score = 1*(-10) + 2*2 = -6
         data = await _setup_with_active_season()
-        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=10, ko_count=1)
-        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=11, battlegroup=2, ko_count=0)
+        await _add_placement(
+            data["war"].id, data["cu"].id, data["champ"].id, node_number=10, ko_count=1
+        )
+        await _add_placement(
+            data["war"].id,
+            data["cu"].id,
+            data["champ"].id,
+            node_number=11,
+            battlegroup=2,
+            ko_count=0,
+        )
 
         response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
         assert response.json()[0]["score"] == -6
@@ -175,9 +193,15 @@ class TestGetCurrentSeasonStatistics:
         # 1 regular + 1 miniboss (node 40) + 1 boss (node 50), 0 kos
         # score = 0*(-10) + 1*2 + 1*4 + 1*5 = 11
         data = await _setup_with_active_season()
-        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=10, battlegroup=1)
-        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=40, battlegroup=2)
-        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=50, battlegroup=3)
+        await _add_placement(
+            data["war"].id, data["cu"].id, data["champ"].id, node_number=10, battlegroup=1
+        )
+        await _add_placement(
+            data["war"].id, data["cu"].id, data["champ"].id, node_number=40, battlegroup=2
+        )
+        await _add_placement(
+            data["war"].id, data["cu"].id, data["champ"].id, node_number=50, battlegroup=3
+        )
 
         response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
         p = response.json()[0]

@@ -98,4 +98,3 @@ class DefenderAssignmentResponse(BaseModel):
     champion_image_url: Optional[str] = None
     game_account_id: uuid.UUID
     game_pseudo: str
-

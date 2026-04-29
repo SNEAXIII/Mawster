@@ -78,50 +78,118 @@ GAME_PSEUDOS = [
 ]  # exactly 28
 
 SIG_CYCLE = [
-    200, 20, 0, 200, 200, 20, 0, 200, 20, 0,   # slots  0-9  (7r3)
-    200, 20, 200, 0, 20, 200, 20, 0, 200, 20,   # slots 10-19 (7r4)
-    200,                                          # slot  20   (7r5)
+    200,
+    20,
+    0,
+    200,
+    200,
+    20,
+    0,
+    200,
+    20,
+    0,  # slots  0-9  (7r3)
+    200,
+    20,
+    200,
+    0,
+    20,
+    200,
+    20,
+    0,
+    200,
+    20,  # slots 10-19 (7r4)
+    200,  # slot  20   (7r5)
 ]
 
 # (battlegroup, node_number, stars, rank, ascension, ko_count)
 # Ended wars — dense layout with varied ko_count
 WAR_ENDED_NODE_LAYOUT = [
     # BG1
-    (1,  2, 7, 4, 0, 0), (1,  6, 7, 4, 0, 1), (1,  9, 7, 3, 0, 0),
-    (1, 13, 7, 4, 0, 2), (1, 17, 7, 4, 0, 0), (1, 21, 7, 4, 0, 1),
-    (1, 25, 7, 4, 0, 0), (1, 29, 7, 4, 0, 0), (1, 32, 7, 4, 0, 3),
-    (1, 38, 7, 4, 0, 1), (1, 41, 7, 3, 0, 0), (1, 44, 7, 4, 0, 2),
-    (1, 48, 7, 4, 0, 0), (1, 50, 7, 4, 0, 1), (1, 53, 7, 3, 0, 0),
+    (1, 2, 7, 4, 0, 0),
+    (1, 6, 7, 4, 0, 1),
+    (1, 9, 7, 3, 0, 0),
+    (1, 13, 7, 4, 0, 2),
+    (1, 17, 7, 4, 0, 0),
+    (1, 21, 7, 4, 0, 1),
+    (1, 25, 7, 4, 0, 0),
+    (1, 29, 7, 4, 0, 0),
+    (1, 32, 7, 4, 0, 3),
+    (1, 38, 7, 4, 0, 1),
+    (1, 41, 7, 3, 0, 0),
+    (1, 44, 7, 4, 0, 2),
+    (1, 48, 7, 4, 0, 0),
+    (1, 50, 7, 4, 0, 1),
+    (1, 53, 7, 3, 0, 0),
     # BG2
-    (2,  1, 7, 4, 0, 1), (2,  5, 7, 4, 0, 0), (2,  8, 7, 4, 0, 2),
-    (2, 11, 7, 4, 0, 0), (2, 15, 7, 3, 0, 1), (2, 20, 7, 4, 0, 0),
-    (2, 24, 7, 4, 0, 0), (2, 28, 7, 4, 0, 2), (2, 33, 7, 4, 0, 0),
-    (2, 36, 7, 4, 0, 1), (2, 40, 7, 4, 0, 0), (2, 43, 7, 3, 0, 3),
-    (2, 46, 7, 4, 0, 0), (2, 51, 7, 4, 0, 1), (2, 55, 7, 4, 0, 0),
+    (2, 1, 7, 4, 0, 1),
+    (2, 5, 7, 4, 0, 0),
+    (2, 8, 7, 4, 0, 2),
+    (2, 11, 7, 4, 0, 0),
+    (2, 15, 7, 3, 0, 1),
+    (2, 20, 7, 4, 0, 0),
+    (2, 24, 7, 4, 0, 0),
+    (2, 28, 7, 4, 0, 2),
+    (2, 33, 7, 4, 0, 0),
+    (2, 36, 7, 4, 0, 1),
+    (2, 40, 7, 4, 0, 0),
+    (2, 43, 7, 3, 0, 3),
+    (2, 46, 7, 4, 0, 0),
+    (2, 51, 7, 4, 0, 1),
+    (2, 55, 7, 4, 0, 0),
     # BG3
-    (3,  3, 7, 3, 0, 0), (3,  7, 7, 4, 0, 1), (3, 12, 7, 4, 0, 0),
-    (3, 16, 7, 4, 0, 2), (3, 19, 7, 3, 0, 0), (3, 23, 7, 4, 0, 1),
-    (3, 26, 7, 4, 0, 0), (3, 30, 7, 4, 0, 0), (3, 35, 7, 4, 0, 2),
-    (3, 39, 7, 4, 0, 1), (3, 42, 7, 4, 0, 0), (3, 45, 7, 3, 0, 3),
-    (3, 49, 7, 4, 0, 0), (3, 52, 7, 4, 0, 1), (3, 54, 7, 4, 0, 0),
+    (3, 3, 7, 3, 0, 0),
+    (3, 7, 7, 4, 0, 1),
+    (3, 12, 7, 4, 0, 0),
+    (3, 16, 7, 4, 0, 2),
+    (3, 19, 7, 3, 0, 0),
+    (3, 23, 7, 4, 0, 1),
+    (3, 26, 7, 4, 0, 0),
+    (3, 30, 7, 4, 0, 0),
+    (3, 35, 7, 4, 0, 2),
+    (3, 39, 7, 4, 0, 1),
+    (3, 42, 7, 4, 0, 0),
+    (3, 45, 7, 3, 0, 3),
+    (3, 49, 7, 4, 0, 0),
+    (3, 52, 7, 4, 0, 1),
+    (3, 54, 7, 4, 0, 0),
 ]
 
 # Active war — dense layout with varied ko_count for stats
 WAR_ACTIVE_NODE_LAYOUT = [
     # BG1
-    (1,  4, 7, 4, 0, 0), (1,  7, 7, 4, 0, 1), (1, 10, 7, 3, 0, 0),
-    (1, 17, 7, 4, 0, 2), (1, 21, 7, 4, 0, 0), (1, 25, 7, 4, 0, 1),
-    (1, 32, 7, 4, 0, 0), (1, 38, 7, 4, 0, 3), (1, 44, 7, 3, 0, 0),
-    (1, 50, 7, 4, 0, 1), (1, 53, 7, 4, 0, 0),
+    (1, 4, 7, 4, 0, 0),
+    (1, 7, 7, 4, 0, 1),
+    (1, 10, 7, 3, 0, 0),
+    (1, 17, 7, 4, 0, 2),
+    (1, 21, 7, 4, 0, 0),
+    (1, 25, 7, 4, 0, 1),
+    (1, 32, 7, 4, 0, 0),
+    (1, 38, 7, 4, 0, 3),
+    (1, 44, 7, 3, 0, 0),
+    (1, 50, 7, 4, 0, 1),
+    (1, 53, 7, 4, 0, 0),
     # BG2
-    (2,  2, 7, 4, 0, 0), (2,  5, 7, 4, 0, 2), (2,  9, 7, 3, 0, 0),
-    (2, 11, 7, 4, 0, 1), (2, 16, 7, 4, 0, 0), (2, 22, 7, 4, 0, 0),
-    (2, 30, 7, 4, 0, 1), (2, 36, 7, 4, 0, 0), (2, 46, 7, 4, 0, 2),
-    (2, 51, 7, 4, 0, 0), (2, 54, 7, 3, 0, 1),
+    (2, 2, 7, 4, 0, 0),
+    (2, 5, 7, 4, 0, 2),
+    (2, 9, 7, 3, 0, 0),
+    (2, 11, 7, 4, 0, 1),
+    (2, 16, 7, 4, 0, 0),
+    (2, 22, 7, 4, 0, 0),
+    (2, 30, 7, 4, 0, 1),
+    (2, 36, 7, 4, 0, 0),
+    (2, 46, 7, 4, 0, 2),
+    (2, 51, 7, 4, 0, 0),
+    (2, 54, 7, 3, 0, 1),
     # BG3
-    (3,  1, 7, 4, 0, 0), (3,  3, 7, 3, 0, 1), (3,  8, 7, 4, 0, 0),
-    (3, 14, 7, 4, 0, 2), (3, 19, 7, 4, 0, 0), (3, 26, 7, 4, 0, 1),
-    (3, 33, 7, 4, 0, 0), (3, 40, 7, 4, 0, 0), (3, 49, 7, 4, 0, 3),
+    (3, 1, 7, 4, 0, 0),
+    (3, 3, 7, 3, 0, 1),
+    (3, 8, 7, 4, 0, 0),
+    (3, 14, 7, 4, 0, 2),
+    (3, 19, 7, 4, 0, 0),
+    (3, 26, 7, 4, 0, 1),
+    (3, 33, 7, 4, 0, 0),
+    (3, 40, 7, 4, 0, 0),
+    (3, 49, 7, 4, 0, 3),
     (3, 52, 7, 3, 0, 0),
 ]
 
@@ -209,7 +277,9 @@ def load_sample_data():
             session.add(super_admin)
             session.flush()
 
-            super_admin_game = GameAccount(user_id=super_admin.id, game_pseudo="Mr DrBalise", is_primary=True)
+            super_admin_game = GameAccount(
+                user_id=super_admin.id, game_pseudo="Mr DrBalise", is_primary=True
+            )
             session.add(super_admin_game)
             session.flush()
             game_accounts.append(super_admin_game)
@@ -233,7 +303,9 @@ def load_sample_data():
             session.add(simple_admin)
             session.flush()
 
-            simple_admin_game = GameAccount(user_id=simple_admin.id, game_pseudo="B DrBalise", is_primary=True)
+            simple_admin_game = GameAccount(
+                user_id=simple_admin.id, game_pseudo="B DrBalise", is_primary=True
+            )
             session.add(simple_admin_game)
             session.flush()
             game_accounts.append(simple_admin_game)
@@ -272,10 +344,12 @@ def load_sample_data():
                 session.flush()
                 all_rosters[ga.id] = roster
 
-                session.add(LoginLog(
-                    id_user=user.id,
-                    date_connexion=fake.date_time_between(start_date="-30d", end_date=NOW),
-                ))
+                session.add(
+                    LoginLog(
+                        id_user=user.id,
+                        date_connexion=fake.date_time_between(start_date="-30d", end_date=NOW),
+                    )
+                )
 
             # ── Alliance ─────────────────────────────────────────────────────────
             print("🚀 Creating alliance 'WE ARE AM6' [WAM6]...")
@@ -299,29 +373,35 @@ def load_sample_data():
             # ── Officers (5 members) ──────────────────────────────────────────────
             print("🚀 Creating alliance officers...")
             for idx in range(2, 7):
-                session.add(AllianceOfficer(
-                    alliance_id=alliance.id,
-                    game_account_id=game_accounts[idx].id,
-                    assigned_at=fake.date_time_between(start_date="-30d", end_date=NOW),
-                ))
+                session.add(
+                    AllianceOfficer(
+                        alliance_id=alliance.id,
+                        game_account_id=game_accounts[idx].id,
+                        assigned_at=fake.date_time_between(start_date="-30d", end_date=NOW),
+                    )
+                )
 
             # ── Alliance invitation (pending, to a non-existent outsider) ─────────
             # Invite game_accounts[10] by game_accounts[2] as an example
-            session.add(AllianceInvitation(
-                alliance_id=alliance.id,
-                game_account_id=game_accounts[10].id,
-                invited_by_game_account_id=game_accounts[2].id,
-                status=InvitationStatus.PENDING,
-                created_at=NOW - timedelta(hours=2),
-            ))
-            session.add(AllianceInvitation(
-                alliance_id=alliance.id,
-                game_account_id=game_accounts[11].id,
-                invited_by_game_account_id=game_accounts[2].id,
-                status=InvitationStatus.ACCEPTED,
-                created_at=NOW - timedelta(days=5),
-                responded_at=NOW - timedelta(days=4, hours=22),
-            ))
+            session.add(
+                AllianceInvitation(
+                    alliance_id=alliance.id,
+                    game_account_id=game_accounts[10].id,
+                    invited_by_game_account_id=game_accounts[2].id,
+                    status=InvitationStatus.PENDING,
+                    created_at=NOW - timedelta(hours=2),
+                )
+            )
+            session.add(
+                AllianceInvitation(
+                    alliance_id=alliance.id,
+                    game_account_id=game_accounts[11].id,
+                    invited_by_game_account_id=game_accounts[2].id,
+                    status=InvitationStatus.ACCEPTED,
+                    created_at=NOW - timedelta(days=5),
+                    responded_at=NOW - timedelta(days=4, hours=22),
+                )
+            )
 
             # ── Season ───────────────────────────────────────────────────────────
             print("🚀 Creating season 66...")
@@ -380,13 +460,17 @@ def load_sample_data():
             for idx, ga in enumerate(game_accounts):
                 ga_by_bg[idx % 3 + 1].append(ga)
 
-            for war_offset, (war, layout) in enumerate([
-                (war_ended_1, WAR_ENDED_NODE_LAYOUT),
-                (war_ended_2, WAR_ENDED_NODE_LAYOUT),
-                (war_active,  WAR_ACTIVE_NODE_LAYOUT),
-            ]):
+            for war_offset, (war, layout) in enumerate(
+                [
+                    (war_ended_1, WAR_ENDED_NODE_LAYOUT),
+                    (war_ended_2, WAR_ENDED_NODE_LAYOUT),
+                    (war_active, WAR_ACTIVE_NODE_LAYOUT),
+                ]
+            ):
                 for k, (bg, node, stars, rank, asc, ko) in enumerate(layout):
-                    champ = champions_sorted[(war_offset * len(layout) + k + 20) % len(champions_sorted)]
+                    champ = champions_sorted[
+                        (war_offset * len(layout) + k + 20) % len(champions_sorted)
+                    ]
                     placer = game_accounts[(k + 2) % len(game_accounts)]
 
                     # Stats query joins on attacker_champion_user_id — only set for ended wars
@@ -398,19 +482,21 @@ def load_sample_data():
                         if attacker_roster:
                             attacker_cu_id = attacker_roster[(k + 5) % len(attacker_roster)].id
 
-                    session.add(WarDefensePlacement(
-                        war_id=war.id,
-                        battlegroup=bg,
-                        node_number=node,
-                        champion_id=champ.id,
-                        stars=stars,
-                        rank=rank,
-                        ascension=asc,
-                        placed_by_id=placer.id,
-                        created_at=fake.date_time_between(start_date="-5d", end_date=NOW),
-                        ko_count=ko,
-                        attacker_champion_user_id=attacker_cu_id,
-                    ))
+                    session.add(
+                        WarDefensePlacement(
+                            war_id=war.id,
+                            battlegroup=bg,
+                            node_number=node,
+                            champion_id=champ.id,
+                            stars=stars,
+                            rank=rank,
+                            ascension=asc,
+                            placed_by_id=placer.id,
+                            created_at=fake.date_time_between(start_date="-5d", end_date=NOW),
+                            ko_count=ko,
+                            attacker_champion_user_id=attacker_cu_id,
+                        )
+                    )
 
             # ── Full combats GA (game_accounts[3] = Circle, BG1) ─────────────────
             # 5 prefights + 5 synergies on all 5 BG1 nodes → simulates a fully active attacker
@@ -422,26 +508,30 @@ def load_sample_data():
             used_synergy: set = set()
             for slot, node in enumerate(BG1_NODES):
                 cu = full_roster[slot % len(full_roster)]
-                session.add(WarPrefightAttacker(
-                    war_id=war_active.id,
-                    battlegroup=1,
-                    game_account_id=full_ga.id,
-                    champion_user_id=cu.id,
-                    target_node_number=node,
-                    created_at=fake.date_time_between(start_date="-12h", end_date=NOW),
-                ))
-                cu_target = synergy_target_roster[(slot + 5) % len(synergy_target_roster)]
-                key = (war_active.id, 1, cu.id)
-                if key not in used_synergy:
-                    used_synergy.add(key)
-                    session.add(WarSynergyAttacker(
+                session.add(
+                    WarPrefightAttacker(
                         war_id=war_active.id,
                         battlegroup=1,
                         game_account_id=full_ga.id,
                         champion_user_id=cu.id,
-                        target_champion_user_id=cu_target.id,
+                        target_node_number=node,
                         created_at=fake.date_time_between(start_date="-12h", end_date=NOW),
-                    ))
+                    )
+                )
+                cu_target = synergy_target_roster[(slot + 5) % len(synergy_target_roster)]
+                key = (war_active.id, 1, cu.id)
+                if key not in used_synergy:
+                    used_synergy.add(key)
+                    session.add(
+                        WarSynergyAttacker(
+                            war_id=war_active.id,
+                            battlegroup=1,
+                            game_account_id=full_ga.id,
+                            champion_user_id=cu.id,
+                            target_champion_user_id=cu_target.id,
+                            created_at=fake.date_time_between(start_date="-12h", end_date=NOW),
+                        )
+                    )
 
             # ── Persistent defense placements ─────────────────────────────────────
             # Rule: ga.alliance_group must match battlegroup (DefensePlacementService)
@@ -461,21 +551,27 @@ def load_sample_data():
                 if not roster:
                     continue
                 cu = roster[cu_slot % len(roster)]
-                session.add(DefensePlacement(
-                    alliance_id=alliance.id,
-                    battlegroup=bg,
-                    node_number=node,
-                    champion_user_id=cu.id,
-                    game_account_id=ga.id,
-                    placed_by_id=super_admin_game.id,
-                    created_at=fake.date_time_between(start_date="-14d", end_date=NOW),
-                ))
+                session.add(
+                    DefensePlacement(
+                        alliance_id=alliance.id,
+                        battlegroup=bg,
+                        node_number=node,
+                        champion_user_id=cu.id,
+                        game_account_id=ga.id,
+                        placed_by_id=super_admin_game.id,
+                        created_at=fake.date_time_between(start_date="-14d", end_date=NOW),
+                    )
+                )
 
             # ── Game account masteries ────────────────────────────────────────────
             if masteries_db:
                 print("🚀 Creating game account masteries...")
                 mastery_presets = [
-                    {"MYSTIC DISPERSION": (5, 5, 5), "STAND YOUR GROUND": (5, 5, 5), "ASSASSIN": (5, 3, 3)},
+                    {
+                        "MYSTIC DISPERSION": (5, 5, 5),
+                        "STAND YOUR GROUND": (5, 5, 5),
+                        "ASSASSIN": (5, 3, 3),
+                    },
                     {"RECOIL": (3, 0, 3), "DOUBLE EDGE": (3, 0, 3), "LIMBER": (5, 3, 0)},
                     {"DESPAIR": (3, 3, 3), "COLLAR TECH": (5, 5, 0), "LIQUID COURAGE": (3, 0, 0)},
                 ]
@@ -484,25 +580,27 @@ def load_sample_data():
                     for name, (unlocked, attack, defense) in preset.items():
                         mastery = masteries_db.get(name)
                         if mastery:
-                            session.add(GameAccountMastery(
-                                game_account_id=ga.id,
-                                mastery_id=mastery.id,
-                                unlocked=unlocked,
-                                attack=attack,
-                                defense=defense,
-                            ))
+                            session.add(
+                                GameAccountMastery(
+                                    game_account_id=ga.id,
+                                    mastery_id=mastery.id,
+                                    unlocked=unlocked,
+                                    attack=attack,
+                                    defense=defense,
+                                )
+                            )
 
             # ── Requested upgrades ────────────────────────────────────────────────
             print("🚀 Creating requested upgrades...")
             # (roster_ga_offset, cu_slot, rarity, days_ago_created, days_ago_done or None)
             upgrade_specs = [
-                (0, 0, "7r4", 9,  1),
+                (0, 0, "7r4", 9, 1),
                 (1, 1, "7r5", 19, 9),
                 (2, 0, "7r4", 11, None),
-                (3, 2, "7r4", 8,  None),
-                (4, 3, "7r4", 5,  4),
-                (5, 1, "7r4", 9,  None),
-                (2, 4, "7r4", 8,  7),
+                (3, 2, "7r4", 8, None),
+                (4, 3, "7r4", 5, 4),
+                (5, 1, "7r4", 9, None),
+                (2, 4, "7r4", 8, 7),
             ]
             for ga_off, cu_slot, rarity, days_created, days_done in upgrade_specs:
                 ga = game_accounts[(ga_off + 2) % len(game_accounts)]
@@ -511,13 +609,15 @@ def load_sample_data():
                 if not roster:
                     continue
                 cu = roster[cu_slot % len(roster)]
-                session.add(RequestedUpgrade(
-                    champion_user_id=cu.id,
-                    requester_game_account_id=requester.id,
-                    requested_rarity=rarity,
-                    created_at=NOW - timedelta(days=days_created),
-                    done_at=NOW - timedelta(days=days_done) if days_done is not None else None,
-                ))
+                session.add(
+                    RequestedUpgrade(
+                        champion_user_id=cu.id,
+                        requester_game_account_id=requester.id,
+                        requested_rarity=rarity,
+                        created_at=NOW - timedelta(days=days_created),
+                        done_at=NOW - timedelta(days=days_done) if days_done is not None else None,
+                    )
+                )
 
             session.commit()
 
