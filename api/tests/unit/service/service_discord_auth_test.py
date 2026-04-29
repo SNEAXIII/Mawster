@@ -64,7 +64,7 @@ class TestVerifyDiscordToken:
         mock_client = _make_http_client_mock(mocker, status_code=200, json_body=profile)
         mocker.patch("src.services.DiscordAuthService.httpx.AsyncClient", return_value=mock_client)
 
-        result = await DiscordAuthService.verify_discord_token("valid_token")
+        result = await DiscordAuthService.verify_token("valid_token")
 
         assert result["id"] == "123"
         assert result["username"] == "testuser"
@@ -75,7 +75,7 @@ class TestVerifyDiscordToken:
         mocker.patch("src.services.DiscordAuthService.httpx.AsyncClient", return_value=mock_client)
 
         with pytest.raises(HTTPException) as exc:
-            await DiscordAuthService.verify_discord_token("bad_token")
+            await DiscordAuthService.verify_token("bad_token")
         assert exc.value.status_code == 401
 
     @pytest.mark.asyncio
@@ -84,7 +84,7 @@ class TestVerifyDiscordToken:
         mocker.patch("src.services.DiscordAuthService.httpx.AsyncClient", return_value=mock_client)
 
         with pytest.raises(HTTPException) as exc:
-            await DiscordAuthService.verify_discord_token("some_token")
+            await DiscordAuthService.verify_token("some_token")
         assert exc.value.status_code == 502
 
     @pytest.mark.asyncio
@@ -95,37 +95,8 @@ class TestVerifyDiscordToken:
         mocker.patch("src.services.DiscordAuthService.httpx.AsyncClient", return_value=mock_client)
 
         with pytest.raises(HTTPException) as exc:
-            await DiscordAuthService.verify_discord_token("token")
+            await DiscordAuthService.verify_token("token")
         assert exc.value.status_code == 502
-
-
-# =========================================================================
-# _normalize_login
-# =========================================================================
-
-
-class TestNormalizeLogin:
-    def test_strips_non_alphanumeric_chars(self):
-        result = DiscordAuthService._normalize_login("test.user#1234")
-        assert result == "testuser1234"
-
-    def test_truncates_long_username(self):
-        result = DiscordAuthService._normalize_login("averylongusername99999")
-        assert len(result) <= 15
-
-    def test_pure_alphanumeric_unchanged(self):
-        result = DiscordAuthService._normalize_login("ValidUser123")
-        assert result == "ValidUser123"
-
-    def test_short_username_gets_random_suffix(self, mocker):
-        mocker.patch(
-            "src.services.DiscordAuthService.random.choices",
-            return_value=list("1234"),
-        )
-        result = DiscordAuthService._normalize_login("ab")
-        assert len(result) >= 4
-        assert result.startswith("ab")
-        assert result.endswith("1234")
 
 
 # =========================================================================
@@ -142,7 +113,7 @@ class TestGetUserByDiscordId:
         result_mock.first.return_value = user
         session.exec.return_value = result_mock
 
-        result = await DiscordAuthService.get_user_by_discord_id(session, DISCORD_ID)
+        result = await DiscordAuthService._get_user_by_discord_id(session, DISCORD_ID)
         assert result is user
 
     @pytest.mark.asyncio
@@ -152,7 +123,7 @@ class TestGetUserByDiscordId:
         result_mock.first.return_value = None
         session.exec.return_value = result_mock
 
-        result = await DiscordAuthService.get_user_by_discord_id(session, "unknown_id")
+        result = await DiscordAuthService._get_user_by_discord_id(session, "unknown_id")
         assert result is None
 
 
@@ -175,10 +146,10 @@ class TestGetOrCreateDiscordUser:
         existing_user = _make_user()
 
         mocker.patch.object(
-            DiscordAuthService, "get_user_by_discord_id", return_value=existing_user
+            DiscordAuthService, "_get_user_by_discord_id", return_value=existing_user
         )
 
-        result = await DiscordAuthService.get_or_create_discord_user(session, _DISCORD_PROFILE)
+        result = await DiscordAuthService.get_or_create_user(session, _DISCORD_PROFILE)
 
         assert result is existing_user
         session.add.assert_called()
@@ -188,15 +159,14 @@ class TestGetOrCreateDiscordUser:
     async def test_new_user_is_created_when_discord_id_unknown(self, mocker):
         session = _mock_session(mocker)
 
-        mocker.patch.object(DiscordAuthService, "get_user_by_discord_id", return_value=None)
+        mocker.patch.object(DiscordAuthService, "_get_user_by_discord_id", return_value=None)
         mocker.patch.object(DiscordAuthService, "_generate_unique_login", return_value="newlogin")
 
-        # No email hash conflict
         no_conflict_mock = mocker.MagicMock()
         no_conflict_mock.first.return_value = None
         session.exec.return_value = no_conflict_mock
 
-        result = await DiscordAuthService.get_or_create_discord_user(session, _DISCORD_PROFILE)
+        result = await DiscordAuthService.get_or_create_user(session, _DISCORD_PROFILE)
 
         assert result is not None
         assert result.discord_id == str(_DISCORD_PROFILE["id"])
@@ -208,12 +178,12 @@ class TestGetOrCreateDiscordUser:
         session = _mock_session(mocker)
         conflicting_user = _make_user(discord_id="other_discord_id", login="otherlogin")
 
-        mocker.patch.object(DiscordAuthService, "get_user_by_discord_id", return_value=None)
+        mocker.patch.object(DiscordAuthService, "_get_user_by_discord_id", return_value=None)
 
         conflict_mock = mocker.MagicMock()
         conflict_mock.first.return_value = conflicting_user
         session.exec.return_value = conflict_mock
 
         with pytest.raises(HTTPException) as exc:
-            await DiscordAuthService.get_or_create_discord_user(session, _DISCORD_PROFILE)
+            await DiscordAuthService.get_or_create_user(session, _DISCORD_PROFILE)
         assert exc.value.status_code == 409

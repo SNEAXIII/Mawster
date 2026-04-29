@@ -1,5 +1,6 @@
 import NextAuth from 'next-auth';
 import Discord from 'next-auth/providers/discord';
+import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 import jwt from 'jsonwebtoken';
 import { getServerApiUrl } from '@/app/lib/serverApiUrl';
@@ -26,6 +27,15 @@ export const {
       authorization: {
         params: {
           scope: 'identify email',
+        },
+      },
+    }),
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      authorization: {
+        params: {
+          scope: 'openid email profile',
         },
       },
     }),
@@ -78,6 +88,45 @@ export const {
           expired: false,
           backendAuthenticated: true,
         };
+      }
+
+      // Login initial via Google OAuth
+      if (account?.provider === 'google' && account.access_token) {
+        try {
+          const res = await fetch(`${getServerApiUrl()}/auth/google`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ access_token: account.access_token }),
+          });
+
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            console.error('Erreur backend Google auth:', res.status, errorData);
+            return { ...token, expired: true, backendAuthenticated: false };
+          }
+
+          const data = await res.json();
+          const decoded = jwt.decode(data.access_token) as JwtPayload | null;
+
+          if (!decoded) {
+            console.error('Impossible de décoder le JWT backend (Google)');
+            return { ...token, expired: true, backendAuthenticated: false };
+          }
+
+          return {
+            ...token,
+            id: decoded.user_id,
+            role: decoded.role,
+            accessToken: data.access_token,
+            backendRefreshToken: data.refresh_token,
+            accessTokenExpires: Date.now() + 60 * 60 * 1000,
+            expired: false,
+            backendAuthenticated: true,
+          };
+        } catch (error) {
+          console.error("Erreur lors de l'auth Google:", error);
+          return { ...token, expired: true, backendAuthenticated: false };
+        }
       }
 
       // Login initial via Discord OAuth
@@ -159,7 +208,8 @@ export const {
                 email: userProfile.email ?? token.email,
                 role: userProfile.role ?? token.role,
                 avatar_url: userProfile.avatar_url ?? token.avatar_url,
-                discord_id: userProfile.discord_id ?? token.discord_id,
+                discord_id: userProfile.discord_id ?? null,
+                google_id: userProfile.google_id ?? null,
                 created_at: userProfile.created_at ?? token.created_at,
               },
             };
@@ -213,7 +263,8 @@ declare module 'next-auth' {
       email: string;
       role: string;
       avatar_url: string | null;
-      discord_id: string;
+      discord_id: string | null;
+      google_id: string | null;
       created_at: string | null;
     };
     error?: string;

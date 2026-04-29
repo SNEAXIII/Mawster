@@ -24,7 +24,8 @@ class User(SQLModel, table=True):
     role: Roles = Field(default=Roles.USER)
 
     # OAuth fields
-    discord_id: str = Field(unique=True, index=True)
+    discord_id: Optional[str] = Field(default=None, unique=True, index=True)
+    google_id: Optional[str] = Field(default=None, unique=True, index=True)
     avatar_url: Optional[str] = Field(default=None)
 
     # Relations

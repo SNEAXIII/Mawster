@@ -565,7 +565,6 @@ class TestBgMembers:
             assert m["max_defenders"] == 5
 
 
-
 class TestDefenseAlias:
     """Alias is exposed in defense responses (available champions + placements)."""
 

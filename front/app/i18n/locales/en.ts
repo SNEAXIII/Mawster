@@ -53,6 +53,7 @@ const en = {
     title: 'Sign In',
     subtitle: 'Sign in with your Discord account',
     discordButton: 'Sign in with Discord',
+    googleButton: 'Sign in with Google',
     signingIn: 'Signing in...',
     errorGeneric: 'An error occurred during sign in',
     devModeTitle: 'Dev Mode — Pick a user',

@@ -382,4 +382,3 @@ class DefensePlacementService:
             }
             for m in members
         ]
-

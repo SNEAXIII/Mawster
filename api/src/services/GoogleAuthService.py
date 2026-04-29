@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 import httpx
 from fastapi import HTTPException
@@ -8,9 +7,9 @@ from starlette import status
 
 from src.security.secrets import SECRET
 from src.enums.Roles import Roles
-from src.Messages.discord_auth_messages import (
-    DISCORD_API_ERROR,
-    DISCORD_TOKEN_INVALID,
+from src.Messages.google_auth_messages import (
+    GOOGLE_API_ERROR,
+    GOOGLE_TOKEN_INVALID,
     EMAIL_CONFLICT,
 )
 from src.models import User, LoginLog
@@ -18,80 +17,72 @@ from src.services.OAuthService import OAuthService
 from src.utils.db import SessionDep
 from src.utils.email_hash import hash_email
 
-DISCORD_API_URL = "https://discord.com/api/v10"
+GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
 
 EMAIL_CONFLICT_EXCEPTION = HTTPException(
     status_code=status.HTTP_409_CONFLICT,
     detail=EMAIL_CONFLICT,
 )
 
-DISCORD_TOKEN_INVALID_EXCEPTION = HTTPException(
+GOOGLE_TOKEN_INVALID_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail=DISCORD_TOKEN_INVALID,
+    detail=GOOGLE_TOKEN_INVALID,
 )
 
-DISCORD_API_ERROR_EXCEPTION = HTTPException(
+GOOGLE_API_ERROR_EXCEPTION = HTTPException(
     status_code=status.HTTP_502_BAD_GATEWAY,
-    detail=DISCORD_API_ERROR,
+    detail=GOOGLE_API_ERROR,
 )
 
 
-class DiscordAuthService(OAuthService):
+class GoogleAuthService(OAuthService):
     @classmethod
     async def verify_token(cls, access_token: str) -> dict:
-        """Vérifie le token Discord en appelant l'API Discord /users/@me.
+        """Vérifie le token Google en appelant l'API userinfo.
 
         Returns:
-            dict avec id, username, email, avatar
+            dict avec sub, email, name, picture
 
         Raises:
             HTTPException 401: Token invalide ou expiré
-            HTTPException 502: Erreur de communication avec Discord
+            HTTPException 502: Erreur de communication avec Google
         """
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(
-                    f"{DISCORD_API_URL}/users/@me",
+                    GOOGLE_USERINFO_URL,
                     headers={"Authorization": f"Bearer {access_token}"},
                 )
         except httpx.RequestError:
-            raise DISCORD_API_ERROR_EXCEPTION
+            raise GOOGLE_API_ERROR_EXCEPTION
 
         if response.status_code == 401:
-            raise DISCORD_TOKEN_INVALID_EXCEPTION
+            raise GOOGLE_TOKEN_INVALID_EXCEPTION
         if response.status_code != 200:
-            raise DISCORD_API_ERROR_EXCEPTION
+            raise GOOGLE_API_ERROR_EXCEPTION
 
         return response.json()
 
     @classmethod
-    async def _get_user_by_discord_id(cls, session: SessionDep, discord_id: str) -> Optional[User]:
-        sql = select(User).where(User.discord_id == discord_id)
-        result = await session.exec(sql)
-        return result.first()
-
-    @classmethod
     async def get_or_create_user(cls, session: SessionDep, profile: dict) -> User:
-        """Trouve ou crée un utilisateur à partir du profil Discord vérifié.
+        """Trouve ou crée un utilisateur à partir du profil Google vérifié.
 
         Flow:
-        1. Cherche par discord_id → si trouvé, retourne l'utilisateur existant
+        1. Cherche par google_id (sub) → si trouvé, retourne l'utilisateur existant
         2. Vérifie que l'email n'est pas déjà utilisé
-        3. Si email libre → crée un nouveau compte Discord
+        3. Si email libre → crée un nouveau compte Google
         4. Si email pris → 409 Conflict
         """
-        discord_id = str(profile["id"])
-        email = profile.get("email") or f"{discord_id}@discord.placeholder"
-        username = profile.get("username") or profile.get("global_name") or f"discord_{discord_id}"
-        avatar_hash = profile.get("avatar")
-        avatar_url = (
-            f"https://cdn.discordapp.com/avatars/{discord_id}/{avatar_hash}.png"
-            if avatar_hash
-            else None
-        )
+        google_id = str(profile["sub"])
+        email = profile.get("email") or f"{google_id}@google.placeholder"
+        username = profile.get("name") or f"google_{google_id}"
+        avatar_url = profile.get("picture")
 
-        # 1. Recherche par discord_id
-        existing_user = await cls._get_user_by_discord_id(session, discord_id)
+        # 1. Recherche par google_id
+        sql = select(User).where(User.google_id == google_id)
+        result = await session.exec(sql)
+        existing_user = result.first()
+
         if existing_user:
             existing_user.avatar_url = avatar_url
             existing_user.set_last_login_date(datetime.now())
@@ -111,13 +102,13 @@ class DiscordAuthService(OAuthService):
         if result.first():
             raise EMAIL_CONFLICT_EXCEPTION
 
-        # 3. Créer un nouveau compte Discord
+        # 3. Créer un nouveau compte Google
         unique_login = await cls._generate_unique_login(session, username)
 
         new_user = User(
             login=unique_login,
             email_hash=email_hash,
-            discord_id=discord_id,
+            google_id=google_id,
             avatar_url=avatar_url,
             role=Roles.USER,
         )

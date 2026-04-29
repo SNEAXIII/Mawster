@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Request
 from src.dto.dto_token import LoginResponse, RefreshTokenRequest
 from src.dto.dto_utilisateurs import (
     DiscordLoginRequest,
+    GoogleLoginRequest,
     UserProfile,
 )
 from src.models import User
@@ -14,6 +15,7 @@ from src.services.AuthService import (
     AuthService,
 )
 from src.services.DiscordAuthService import DiscordAuthService
+from src.services.GoogleAuthService import GoogleAuthService
 from src.services.UserService import UserService
 
 from src.utils.db import SessionDep
@@ -50,13 +52,34 @@ async def discord_login(
     Returns:
         LoginResponse: JWT backend signe pour les appels API subsequents
     """
-    # Verification du token aupres de Discord
-    discord_profile = await DiscordAuthService.verify_discord_token(discord_data.access_token)
-
-    user = await DiscordAuthService.get_or_create_discord_user(session, discord_profile)
+    discord_profile = await DiscordAuthService.verify_token(discord_data.access_token)
+    user = await DiscordAuthService.get_or_create_user(session, discord_profile)
     access_token = JWTService.create_access_token(user)
     refresh_token = JWTService.create_refresh_token(user)
     audit_log("auth.login", user_id=str(user.id), detail="method=discord")
+    return LoginResponse(
+        token_type="bearer",
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
+
+
+@auth_controller.post("/google", status_code=200)
+@limiter.limit("5/minute")
+async def google_login(
+    request: Request, google_data: GoogleLoginRequest, session: SessionDep
+) -> LoginResponse:
+    """Authentification via Google OAuth2.
+
+    Appele par le serveur NextAuth apres un flow OAuth Google reussi.
+    Verifie le token d'acces Google aupres de l'API Google avant de
+    creer/retrouver l'utilisateur.
+    """
+    google_profile = await GoogleAuthService.verify_token(google_data.access_token)
+    user = await GoogleAuthService.get_or_create_user(session, google_profile)
+    access_token = JWTService.create_access_token(user)
+    refresh_token = JWTService.create_refresh_token(user)
+    audit_log("auth.login", user_id=str(user.id), detail="method=google")
     return LoginResponse(
         token_type="bearer",
         access_token=access_token,

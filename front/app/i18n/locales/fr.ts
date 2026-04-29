@@ -55,6 +55,7 @@ const fr: Translations = {
     title: 'Connexion',
     subtitle: 'Connectez-vous avec votre compte Discord',
     discordButton: 'Se connecter avec Discord',
+    googleButton: 'Se connecter avec Google',
     signingIn: 'Connexion en cours...',
     errorGeneric: 'Une erreur est survenue lors de la connexion',
     devModeTitle: 'Mode Dev — Choisir un utilisateur',

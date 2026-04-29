@@ -32,7 +32,6 @@ run-testing:
 	uv run app_testing.py
 
 create-mig:
-	@test -n "$(MESSAGE)" || (echo "ERROR: MESSAGE is required: make create-mig MESSAGE=\"your_migration_name\"" && exit 1)
 	uv run alembic revision --autogenerate -m "$(MESSAGE)"
 
 migrate:

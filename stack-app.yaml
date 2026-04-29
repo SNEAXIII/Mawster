@@ -20,6 +20,10 @@ secrets:
     external: true
   mawster_discord_client_secret:
     external: true
+  mawster_google_client_id:
+    external: true
+  mawster_google_client_secret:
+    external: true
   mawster_rclone_conf:
     external: true
 
@@ -156,6 +160,8 @@ services:
       - mawster_nextauth_secret
       - mawster_discord_client_id
       - mawster_discord_client_secret
+      - mawster_google_client_id
+      - mawster_google_client_secret
     command: ['sh', 'run.sh']
     deploy:
       replicas: 2

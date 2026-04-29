@@ -10,7 +10,8 @@ declare module 'next-auth' {
       email: string;
       role: string;
       avatar_url: string | null;
-      discord_id: string;
+      discord_id: string | null;
+      google_id: string | null;
       created_at: string | null;
     };
     error?: string;
