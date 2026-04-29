@@ -107,7 +107,6 @@ _GOOGLE_PROFILE = {
     "sub": GOOGLE_ID,
     "email": USER_EMAIL,
     "name": USER_LOGIN,
-    "picture": "https://example.com/avatar.jpg",
 }
 
 
@@ -125,7 +124,6 @@ class TestGetOrCreateUser:
         result = await GoogleAuthService.get_or_create_user(session, _GOOGLE_PROFILE)
 
         assert result is existing_user
-        assert result.avatar_url == _GOOGLE_PROFILE["picture"]
         session.add.assert_called()
         session.commit.assert_awaited()
 

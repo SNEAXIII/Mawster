@@ -42,7 +42,7 @@ class DiscordAuthService(OAuthService):
         """Vérifie le token Discord en appelant l'API Discord /users/@me.
 
         Returns:
-            dict avec id, username, email, avatar
+            dict avec id, username, email
 
         Raises:
             HTTPException 401: Token invalide ou expiré
@@ -83,17 +83,9 @@ class DiscordAuthService(OAuthService):
         discord_id = str(profile["id"])
         email = profile.get("email") or f"{discord_id}@discord.placeholder"
         username = profile.get("username") or profile.get("global_name") or f"discord_{discord_id}"
-        avatar_hash = profile.get("avatar")
-        avatar_url = (
-            f"https://cdn.discordapp.com/avatars/{discord_id}/{avatar_hash}.png"
-            if avatar_hash
-            else None
-        )
-
         # 1. Recherche par discord_id
         existing_user = await cls._get_user_by_discord_id(session, discord_id)
         if existing_user:
-            existing_user.avatar_url = avatar_url
             existing_user.set_last_login_date(datetime.now())
             if existing_user.email_hash_version != SECRET.EMAIL_PEPPER_VERSION:
                 existing_user.email_hash = hash_email(email)
@@ -118,7 +110,6 @@ class DiscordAuthService(OAuthService):
             login=unique_login,
             email_hash=email_hash,
             discord_id=discord_id,
-            avatar_url=avatar_url,
             role=Roles.USER,
         )
         new_user.set_last_login_date(datetime.now())

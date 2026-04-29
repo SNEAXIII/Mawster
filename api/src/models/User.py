@@ -26,8 +26,6 @@ class User(SQLModel, table=True):
     # OAuth fields
     discord_id: Optional[str] = Field(default=None, unique=True, index=True)
     google_id: Optional[str] = Field(default=None, unique=True, index=True)
-    avatar_url: Optional[str] = Field(default=None)
-
     # Relations
     connexions: List["LoginLog"] = Relationship(back_populates="user")
     game_accounts: List["GameAccount"] = Relationship(back_populates="user")

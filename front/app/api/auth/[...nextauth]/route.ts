@@ -207,7 +207,6 @@ export const {
                 name: userProfile.login ?? token.name,
                 email: userProfile.email ?? token.email,
                 role: userProfile.role ?? token.role,
-                avatar_url: userProfile.avatar_url ?? token.avatar_url,
                 discord_id: userProfile.discord_id ?? null,
                 google_id: userProfile.google_id ?? null,
                 created_at: userProfile.created_at ?? token.created_at,
@@ -262,7 +261,6 @@ declare module 'next-auth' {
       name: string;
       email: string;
       role: string;
-      avatar_url: string | null;
       discord_id: string | null;
       google_id: string | null;
       created_at: string | null;
