@@ -18,7 +18,8 @@ class UserBaseResponse(BaseModel):
 class UserProfile(UserBaseResponse):
     last_login_date: Optional[datetime] = Field(default=None)
     created_at: datetime = Field()
-    discord_id: str = Field()
+    discord_id: Optional[str] = Field(default=None)
+    google_id: Optional[str] = Field(default=None)
     avatar_url: Optional[str] = Field(default=None)
 
 
@@ -41,5 +42,13 @@ class DiscordLoginRequest(BaseModel):
     """DTO pour la connexion via Discord OAuth2.
     Le frontend envoie le token d'acces Discord ; le backend le verifie
     directement aupres de l'API Discord pour garantir l'authenticite."""
+
+    access_token: str = Field(..., examples=["ya29.a0AfH6SM..."])
+
+
+class GoogleLoginRequest(BaseModel):
+    """DTO pour la connexion via Google OAuth2.
+    Le frontend envoie le token d'acces Google ; le backend le verifie
+    directement aupres de l'API Google pour garantir l'authenticite."""
 
     access_token: str = Field(..., examples=["ya29.a0AfH6SM..."])
