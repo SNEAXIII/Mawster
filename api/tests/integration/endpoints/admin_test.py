@@ -8,6 +8,7 @@ import pytest
 from main import app
 from src.enums.Roles import Roles
 from src.utils.db import get_session
+from src.utils.hashing import hash_provider_id
 from tests.integration.endpoints.setup.user_setup import (
     get_generic_user,
     push_one_admin,
@@ -57,7 +58,7 @@ async def _setup_user(
         login=login, email=email, role=role, disabled_at=disabled_at, deleted_at=deleted_at
     )
     user.id = user_id
-    user.discord_id = discord_id
+    user.discord_id = hash_provider_id(discord_id)
     await load_objects([user])
     return user
 

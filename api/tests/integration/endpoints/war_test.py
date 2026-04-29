@@ -27,6 +27,7 @@ from tests.integration.endpoints.setup.game_setup import (
     push_champion_user,
     get_game_account,
 )
+from src.utils.hashing import hash_provider_id
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 from tests.utils.utils_db import load_objects
 from src.models import User
@@ -196,7 +197,7 @@ class TestListWars:
             login="user3",
             email="user3@test.com",
             role=Roles.USER,
-            discord_id="discord_user3",
+            discord_id=hash_provider_id("discord_user3"),
         )
         acc3 = get_game_account(user_id=USER3_ID, game_pseudo="OutsidePlayer")
         await load_objects([user3, acc3])
@@ -717,7 +718,7 @@ class TestAvailableAttackers:
             login="user3",
             email="user3@test.com",
             role=Roles.USER,
-            discord_id="discord_user3_atk",
+            discord_id=hash_provider_id("discord_user3_atk"),
         )
         acc3 = get_game_account(user_id=USER3_ID, game_pseudo="OutsiderAtk")
         await load_objects([user3, acc3])
@@ -757,7 +758,7 @@ class TestAvailableAttackers:
             login="user3b",
             email="user3b@test.com",
             role=Roles.USER,
-            discord_id="discord_user3_atk_filtered",
+            discord_id=hash_provider_id("discord_user3_atk_filtered"),
         )
         acc3 = get_game_account(user_id=USER3_ID, game_pseudo="OutsiderAtkF")
         await load_objects([user3, acc3])
@@ -996,7 +997,7 @@ class TestAssignAttacker:
             login="user3-atk2",
             email="user3atk2@test.com",
             role=Roles.USER,
-            discord_id="discord_user3_atk2",
+            discord_id=hash_provider_id("discord_user3_atk2"),
         )
         await load_objects([user3])
 
@@ -1177,7 +1178,7 @@ class TestGetCurrentWar:
             login="user3",
             email="user3@test.com",
             role=Roles.USER,
-            discord_id="discord_user3",
+            discord_id=hash_provider_id("discord_user3"),
         )
         acc3 = get_game_account(user_id=USER3_ID, game_pseudo="OutsidePlayer")
         await load_objects([user3, acc3])

@@ -18,8 +18,8 @@ class UserBaseResponse(BaseModel):
 class UserProfile(UserBaseResponse):
     last_login_date: Optional[datetime] = Field(default=None)
     created_at: datetime = Field()
-    discord_id: Optional[str] = Field(default=None)
-    google_id: Optional[str] = Field(default=None)
+    has_discord: bool = Field(default=False)
+    has_google: bool = Field(default=False)
 
 
 class UserAdminViewSingleUser(UserBaseResponse):

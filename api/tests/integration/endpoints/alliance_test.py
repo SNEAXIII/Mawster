@@ -6,6 +6,7 @@ import pytest
 
 from main import app
 from src.utils.db import get_session
+from src.utils.hashing import hash_provider_id
 from tests.integration.endpoints.setup.user_setup import get_generic_user
 from tests.integration.endpoints.setup.game_setup import (
     push_game_account,
@@ -53,7 +54,7 @@ async def _setup_2_users():
     u1 = get_generic_user(is_base_id=True)
     u2 = get_generic_user(login=USER2_LOGIN, email=USER2_EMAIL)
     u2.id = USER2_ID
-    u2.discord_id = DISCORD_ID_2
+    u2.discord_id = hash_provider_id(DISCORD_ID_2)
     await load_objects([u1, u2])
 
 
@@ -259,7 +260,7 @@ class TestInviteMember:
         u3_id = uuid.uuid4()
         u3 = get_generic_user(login="user3", email=USER3_EMAIL)
         u3.id = u3_id
-        u3.discord_id = "discord_789"
+        u3.discord_id = hash_provider_id("discord_789")
         await load_objects([u3])
         free_acc = await push_game_account(user_id=u3_id, game_pseudo=GAME_PSEUDO_3)
 
@@ -508,7 +509,7 @@ class TestCancelInvitation:
         u3_id = uuid.uuid4()
         u3 = get_generic_user(login="user3", email=USER3_EMAIL)
         u3.id = u3_id
-        u3.discord_id = "discord_789"
+        u3.discord_id = hash_provider_id("discord_789")
         await load_objects([u3])
         free_acc = await push_game_account(user_id=u3_id, game_pseudo=GAME_PSEUDO_3)
 
@@ -605,7 +606,7 @@ class TestRemoveMember:
         u3_id = uuid.uuid4()
         u3 = get_generic_user(login="user3", email=USER3_EMAIL)
         u3.id = u3_id
-        u3.discord_id = "discord_789"
+        u3.discord_id = hash_provider_id("discord_789")
         await load_objects([u3])
         regular = await push_member(alliance, user_id=u3_id, game_pseudo=GAME_PSEUDO_3)
 
@@ -627,7 +628,7 @@ class TestRemoveMember:
         u3_id = uuid.uuid4()
         u3 = get_generic_user(login="user3", email=USER3_EMAIL)
         u3.id = u3_id
-        u3.discord_id = "discord_789"
+        u3.discord_id = hash_provider_id("discord_789")
         await load_objects([u3])
         officer2_acc = await push_member(alliance, user_id=u3_id, game_pseudo=GAME_PSEUDO_3)
         await push_officer(alliance, officer2_acc)
@@ -648,7 +649,7 @@ class TestRemoveMember:
         u3_id = uuid.uuid4()
         u3 = get_generic_user(login="user3", email=USER3_EMAIL)
         u3.id = u3_id
-        u3.discord_id = "discord_789"
+        u3.discord_id = hash_provider_id("discord_789")
         await load_objects([u3])
         target = await push_member(alliance, user_id=u3_id, game_pseudo=GAME_PSEUDO_3)
 
@@ -699,7 +700,7 @@ class TestAddOfficer:
         u3_id = uuid.uuid4()
         u3 = get_generic_user(login="user3", email=USER3_EMAIL)
         u3.id = u3_id
-        u3.discord_id = "discord_789"
+        u3.discord_id = hash_provider_id("discord_789")
         await load_objects([u3])
         regular = await push_member(alliance, user_id=u3_id, game_pseudo=GAME_PSEUDO_3)
 

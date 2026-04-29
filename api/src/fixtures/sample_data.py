@@ -24,7 +24,7 @@ from sqlmodel import Session, select
 from src.enums.InvitationStatus import InvitationStatus
 from src.enums.Roles import Roles
 from src.models import User, LoginLog
-from src.utils.email_hash import hash_email
+from src.utils.hashing import hash_email, hash_provider_id
 from src.models.GameAccount import GameAccount
 from src.models.Alliance import Alliance
 from src.models.AllianceOfficer import AllianceOfficer
@@ -269,7 +269,7 @@ def load_sample_data():
             super_admin = User(
                 email_hash=hash_email("misterbalise2@gmail.com"),
                 login="misterbalise2",
-                discord_id="403941390586871808",
+                discord_id=hash_provider_id("403941390586871808"),
                 role=Roles.SUPER_ADMIN,
                 created_at=fake.date_time_between(start_date="-1y", end_date=NOW),
                 last_login_date=NOW,
@@ -295,7 +295,7 @@ def load_sample_data():
             simple_admin = User(
                 email_hash=hash_email("misterbalise@gmail.com"),
                 login="misterbalise",
-                discord_id="1274730290698256406",
+                discord_id=hash_provider_id("1274730290698256406"),
                 role=Roles.ADMIN,
                 created_at=fake.date_time_between(start_date="-1y", end_date=NOW),
                 last_login_date=fake.date_time_between(start_date="-7d", end_date=NOW),
@@ -324,7 +324,7 @@ def load_sample_data():
                 user = User(
                     login=f"{slug}_{user_index:02d}",
                     email_hash=hash_email(f"{slug}_{user_index:02d}@gmail.com"),
-                    discord_id=f"discord_{slug}_{user_index}",
+                    discord_id=hash_provider_id(f"discord_{slug}_{user_index}"),
                     role=Roles.USER,
                     created_at=fake.date_time_between(start_date="-1y", end_date=NOW),
                     last_login_date=fake.date_time_between(start_date="-30d", end_date=NOW),

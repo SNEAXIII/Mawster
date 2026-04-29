@@ -23,9 +23,17 @@ class User(SQLModel, table=True):
     last_login_date: Optional[datetime] = Field(default=None)
     role: Roles = Field(default=Roles.USER)
 
-    # OAuth fields
+    # OAuth fields (stored as PBKDF2 hash — never stored in plaintext)
     discord_id: Optional[str] = Field(default=None, unique=True, index=True)
     google_id: Optional[str] = Field(default=None, unique=True, index=True)
+
+    @property
+    def has_discord(self) -> bool:
+        return self.discord_id is not None
+
+    @property
+    def has_google(self) -> bool:
+        return self.google_id is not None
     # Relations
     connexions: List["LoginLog"] = Relationship(back_populates="user")
     game_accounts: List["GameAccount"] = Relationship(back_populates="user")

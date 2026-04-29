@@ -24,7 +24,7 @@ from tests.utils.utils_constant import (
 @pytest.mark.asyncio
 async def test_get_current_user_in_jwt_success(mocker):
     # Arrange
-    user = User(login=LOGIN, email=EMAIL, discord_id=DISCORD_ID)
+    user = User(login=LOGIN, email=EMAIL)
     mock_decode = decode_service_mock(mocker, {"user_id": str(USER_ID)})
     mock_get_user = get_user_with_validity_check_mock(mocker, user)
     mock_session = session_mock(mocker)

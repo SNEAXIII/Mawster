@@ -10,7 +10,7 @@ from src.security.secrets import SECRET
 from src.services.DiscordAuthService import DiscordAuthService
 from src.enums.Roles import Roles
 from src.models import User
-from src.utils.email_hash import hash_email
+from src.utils.hashing import hash_email, hash_provider_id
 from tests.utils.utils_constant import USER_ID, DISCORD_ID, USER_LOGIN, USER_EMAIL
 
 
@@ -29,7 +29,7 @@ def _make_user(discord_id=DISCORD_ID, login=USER_LOGIN):
     return User(
         id=USER_ID,
         login=login,
-        discord_id=discord_id,
+        discord_id=hash_provider_id(discord_id),
         email_hash=hash_email(USER_EMAIL),
         email_hash_version=SECRET.EMAIL_PEPPER_VERSION,
         role=Roles.USER,
@@ -168,7 +168,7 @@ class TestGetOrCreateDiscordUser:
         result = await DiscordAuthService.get_or_create_user(session, _DISCORD_PROFILE)
 
         assert result is not None
-        assert result.discord_id == str(_DISCORD_PROFILE["id"])
+        assert result.discord_id == hash_provider_id(str(_DISCORD_PROFILE["id"]))
         assert result.login == "newlogin"
         session.commit.assert_awaited()
 

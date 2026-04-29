@@ -24,6 +24,7 @@ from tests.integration.endpoints.setup.game_setup import (
     push_officer,
     push_champion,
 )
+from src.utils.hashing import hash_provider_id
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 from tests.utils.utils_db import load_objects
 from src.models import User
@@ -143,7 +144,7 @@ class TestGetDefense:
             id=other_user_id,
             login=other_login,
             email=other_email,
-            discord_id="outsider_discord",
+            discord_id=hash_provider_id("outsider_discord"),
             role="user",
         )
         await load_objects([other_user])
