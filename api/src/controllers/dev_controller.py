@@ -256,8 +256,8 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
 
     for spec in specs:
         # 1. Register / get user via mock Discord auth
-        discord_profile = await DiscordAuthService.verify_discord_token(spec.discord_token)
-        user = await DiscordAuthService.get_or_create_discord_user(session, discord_profile)
+        discord_profile = await DiscordAuthService.verify_token(spec.discord_token)
+        user = await DiscordAuthService.get_or_create_user(session, discord_profile)
 
         # 2. Set role if it differs
         if spec.role != user.role:

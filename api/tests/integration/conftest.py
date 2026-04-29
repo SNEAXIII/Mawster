@@ -55,7 +55,7 @@ async def test_client_fixture():
             DISCORD_TOKEN_INVALID_EXCEPTION,
         )
 
-        original_verify = DiscordAuthService.verify_discord_token
+        original_verify = DiscordAuthService.verify_token
 
         async def _fake_verify(cls, access_token: str):
             # Fast deterministic behavior: empty token -> invalid, else return fake profile
@@ -63,11 +63,11 @@ async def test_client_fixture():
                 raise DISCORD_TOKEN_INVALID_EXCEPTION
             return {"id": 1, "username": "testuser", "email": "test@example.com"}
 
-        DiscordAuthService.verify_discord_token = classmethod(_fake_verify)
+        DiscordAuthService.verify_token = classmethod(_fake_verify)
 
         try:
             yield
         finally:
             # Restore original method and shared client
-            DiscordAuthService.verify_discord_token = original_verify
+            DiscordAuthService.verify_token = original_verify
             utils_client._SHARED_CLIENT = None
