@@ -271,23 +271,6 @@ class WarService:
         if champion is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_NOT_FOUND)
 
-        # Check champion not already placed as defender in this BG
-        existing_champ = await session.exec(
-            select(WarDefensePlacement).where(
-                and_(
-                    WarDefensePlacement.war_id == war_id,
-                    WarDefensePlacement.battlegroup == battlegroup,
-                    WarDefensePlacement.champion_id == placement_request.champion_id,
-                    WarDefensePlacement.node_number != placement_request.node_number,
-                )
-            )
-        )
-        if existing_champ.first():
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=CHAMPION_ALREADY_PLACED_IN_BG,
-            )
-
         # Replace if node already occupied
         existing_node = await session.exec(
             select(WarDefensePlacement).where(
