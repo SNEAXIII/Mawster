@@ -265,7 +265,7 @@ class TestPlaceWarDefender:
             },
             headers=headers,
         )
-        assert response.status_code == 200
+        assert response.status_code == 201
 
     @pytest.mark.asyncio
     async def test_place_defender_replaces_node(self):
