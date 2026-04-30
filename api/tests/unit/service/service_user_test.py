@@ -30,7 +30,6 @@ from tests.unit.service.mocks.users_mock import (
 )
 
 from tests.utils.utils_constant import (
-    DISCORD_ID,
     LOGIN,
     ROLE,
     USER_ID,

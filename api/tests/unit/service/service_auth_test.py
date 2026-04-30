@@ -14,7 +14,6 @@ from tests.unit.service.mocks.users_mock import get_user_with_validity_check_moc
 from tests.utils.utils_constant import (
     UNKNOWN_ROLE,
     FAKE_TOKEN,
-    DISCORD_ID,
     LOGIN,
     EMAIL,
     USER_ID,
