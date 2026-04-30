@@ -123,8 +123,7 @@ function WarLayout() {
         open={selectorNode !== null}
         onClose={() => setSelectorNode(null)}
         nodeNumber={selectorNode ?? 0}
-        placedChampionIds={new Set(placements.map((p) => p.champion_id))}
-        currentPlacement={placements.find((p) => p.node_number === selectorNode)}
+currentPlacement={placements.find((p) => p.node_number === selectorNode)}
         onSelect={handlePlaceDefender}
       />
 

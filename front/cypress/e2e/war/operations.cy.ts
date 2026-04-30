@@ -42,38 +42,6 @@ describe('War – Operations (declare, place, remove)', () => {
     });
   });
 
-  // ── Placed champion disappears from selector ──────────────────────────────
-
-  it('placed champion no longer appears in the selector list', () => {
-    setupWarOwner('war-op-placed-hidden', 'PlacedHiddenOp', 'PlacedHiddenAlliance', 'PH').then(
-      ({ adminData, ownerData, allianceId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Iron Man', 'Tech');
-        cy.apiLoadChampion(adminData.access_token, 'Thor', 'Cosmic');
-
-        cy.apiCreateWar(ownerData.access_token, allianceId, 'HiddenEnemy').then(() => {
-          cy.apiLogin(ownerData.user_id);
-          cy.navTo('war');
-          cy.getByCy('war-mode-defenders').click();
-
-          // Place Iron Man on node 1
-          cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
-          cy.getByCy('war-champion-search').type('Iron Man');
-          cy.getByCy('war-champion-card-Iron-Man').click();
-          cy.getByCy('war-confirm-place').click();
-          cy.contains('placed on node #1').should('be.visible');
-
-          // Open selector on node 2 — Iron Man should be gone, Thor should remain
-          cy.getByCy('war-node-2').scrollIntoView().click({ force: true });
-          cy.getByCy('war-champion-search').type('Iron Man');
-          cy.getByCy('war-champion-card-Iron-Man').should('not.exist');
-
-          cy.getByCy('war-champion-search').clear().type('Thor');
-          cy.getByCy('war-champion-card-Thor').should('be.visible');
-        });
-      },
-    );
-  });
-
   // ── Remove defender via war map X ─────────────────────────────────────────
 
   it('officer can remove a defender from the war map', () => {

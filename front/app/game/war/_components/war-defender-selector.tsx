@@ -44,7 +44,6 @@ interface WarDefenderSelectorProps {
   open: boolean;
   onClose: () => void;
   nodeNumber: number;
-  placedChampionIds: Set<string>;
   currentPlacement?: WarPlacement;
   onSelect: (
     championId: string,
@@ -59,7 +58,6 @@ export default function WarDefenderSelector({
   open,
   onClose,
   nodeNumber,
-  placedChampionIds,
   currentPlacement,
   onSelect,
 }: Readonly<WarDefenderSelectorProps>) {
@@ -227,7 +225,6 @@ export default function WarDefenderSelector({
                   <>
                     <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2'>
                       {champions
-                        .filter((c) => !placedChampionIds.has(c.id))
                         .map((champ) => {
                           const classColors = getClassColors(champ.champion_class);
                           return (
