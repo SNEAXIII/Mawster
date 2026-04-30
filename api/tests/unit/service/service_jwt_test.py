@@ -20,11 +20,11 @@ from tests.unit.service.mocks.jwt_mock import (
     encode_mock,
     create_token_mock,
 )
-from tests.utils.utils_constant import FAKE_TOKEN, DISCORD_ID, LOGIN, EMAIL
+from tests.utils.utils_constant import FAKE_TOKEN, LOGIN, EMAIL
 
 
 def get_user():
-    return User(login=LOGIN, email=EMAIL, discord_id=DISCORD_ID)
+    return User(login=LOGIN, email=EMAIL)
 
 
 @pytest.mark.parametrize("role", Roles.__members__.values())

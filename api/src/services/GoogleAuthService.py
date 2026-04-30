@@ -15,7 +15,7 @@ from src.Messages.google_auth_messages import (
 from src.models import User, LoginLog
 from src.services.OAuthService import OAuthService
 from src.utils.db import SessionDep
-from src.utils.email_hash import hash_email
+from src.utils.hashing import hash_email, hash_provider_id
 
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
 
@@ -77,7 +77,7 @@ class GoogleAuthService(OAuthService):
         email = profile.get("email") or f"{google_id}@google.placeholder"
         username = cls._random_base_login()
         # 1. Recherche par google_id
-        sql = select(User).where(User.google_id == google_id)
+        sql = select(User).where(User.google_id == hash_provider_id(google_id))
         result = await session.exec(sql)
         existing_user = result.first()
 
@@ -105,7 +105,7 @@ class GoogleAuthService(OAuthService):
         new_user = User(
             login=unique_login,
             email_hash=email_hash,
-            google_id=google_id,
+            google_id=hash_provider_id(google_id),
             role=Roles.USER,
         )
         new_user.set_last_login_date(datetime.now())

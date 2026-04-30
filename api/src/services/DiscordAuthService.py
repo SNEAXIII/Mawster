@@ -16,7 +16,7 @@ from src.Messages.discord_auth_messages import (
 from src.models import User, LoginLog
 from src.services.OAuthService import OAuthService
 from src.utils.db import SessionDep
-from src.utils.email_hash import hash_email
+from src.utils.hashing import hash_email, hash_provider_id
 
 DISCORD_API_URL = "https://discord.com/api/v10"
 
@@ -66,7 +66,7 @@ class DiscordAuthService(OAuthService):
 
     @classmethod
     async def _get_user_by_discord_id(cls, session: SessionDep, discord_id: str) -> Optional[User]:
-        sql = select(User).where(User.discord_id == discord_id)
+        sql = select(User).where(User.discord_id == hash_provider_id(discord_id))
         result = await session.exec(sql)
         return result.first()
 
@@ -109,7 +109,7 @@ class DiscordAuthService(OAuthService):
         new_user = User(
             login=unique_login,
             email_hash=email_hash,
-            discord_id=discord_id,
+            discord_id=hash_provider_id(discord_id),
             role=Roles.USER,
         )
         new_user.set_last_login_date(datetime.now())

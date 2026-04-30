@@ -30,7 +30,6 @@ from tests.unit.service.mocks.users_mock import (
 )
 
 from tests.utils.utils_constant import (
-    DISCORD_ID,
     LOGIN,
     ROLE,
     USER_ID,
@@ -96,7 +95,7 @@ async def test_get_total_users(mocker):
 async def test_get_users_with_pagination_role_search(mocker):
     # Arrange
     total_user_result = 45
-    user_list_for_mock = [User(id=USER_ID, login=LOGIN, discord_id=DISCORD_ID) for _ in range(10)]
+    user_list_for_mock = [User(id=USER_ID, login=LOGIN) for _ in range(10)]
     expected_list_result = [
         UserAdminViewSingleUser.model_validate(user.model_dump()) for user in user_list_for_mock
     ]
@@ -207,7 +206,7 @@ async def test_patch_disable_user_error(mocker, fake_user, expected_error):
 async def test_self_delete_success(mocker, use_time_machine):
     # Arrange
     current_time = datetime.now()
-    current_user = User(id=USER_ID, login=LOGIN, email=EMAIL, discord_id=DISCORD_ID)
+    current_user = User(id=USER_ID, login=LOGIN, email=EMAIL)
     mock_session = session_mock(mocker)
 
     # Act
@@ -227,7 +226,6 @@ async def test_self_delete_already_deleted(mocker):
         id=USER_ID,
         login=LOGIN,
         email=EMAIL,
-        discord_id=DISCORD_ID,
         deleted_at=deleted_at,
     )
     mock_session = session_mock(mocker)

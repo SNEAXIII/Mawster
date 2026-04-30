@@ -92,7 +92,6 @@ class SetupUserResult(BaseModel):
     refresh_token: str
     user_id: str
     login: str
-    discord_id: str
     account_id: str | None = None
     alliance_id: str | None = None
 
@@ -311,7 +310,6 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
             refresh_token=refresh_token,
             user_id=str(user.id),
             login=user.login,
-            discord_id=user.discord_id,
             account_id=account_id,
             alliance_id=alliance_id,
         )

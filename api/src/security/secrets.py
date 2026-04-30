@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     API_PORT: int = Field(... if IS_PROD else 8000)
     EMAIL_PEPPER: str = Field(... if IS_PROD else "dev-email-pepper")
     EMAIL_PEPPER_VERSION: int = Field(default=1)
+    PROVIDER_ID_PEPPER: str = Field(... if IS_PROD else "dev-provider-id-pepper")
+    PROVIDER_ID_PEPPER_VERSION: int = Field(default=1)
     model_config = SettingsConfigDict(env_file=api_file)
 
 

@@ -10,7 +10,7 @@ from src.security.secrets import SECRET
 from src.services.GoogleAuthService import GoogleAuthService
 from src.enums.Roles import Roles
 from src.models import User
-from src.utils.email_hash import hash_email
+from src.utils.hashing import hash_email, hash_provider_id
 from tests.utils.utils_constant import USER_ID, USER_LOGIN, USER_EMAIL
 
 GOOGLE_ID = "google_123456"
@@ -30,7 +30,7 @@ def _make_user(google_id=GOOGLE_ID, login=USER_LOGIN):
     return User(
         id=USER_ID,
         login=login,
-        google_id=google_id,
+        google_id=hash_provider_id(google_id),
         email_hash=hash_email(USER_EMAIL),
         email_hash_version=SECRET.EMAIL_PEPPER_VERSION,
         role=Roles.USER,
@@ -140,7 +140,7 @@ class TestGetOrCreateUser:
         result = await GoogleAuthService.get_or_create_user(session, _GOOGLE_PROFILE)
 
         assert result is not None
-        assert result.google_id == GOOGLE_ID
+        assert result.google_id == hash_provider_id(GOOGLE_ID)
         assert result.login == "newlogin"
         session.commit.assert_awaited()
 
@@ -174,6 +174,6 @@ class TestGetOrCreateUser:
 
         result = await GoogleAuthService.get_or_create_user(session, profile_no_email)
 
-        assert result.google_id == GOOGLE_ID
+        assert result.google_id == hash_provider_id(GOOGLE_ID)
         # email_hash computed from placeholder, not None
         assert result.email_hash is not None

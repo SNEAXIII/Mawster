@@ -11,3 +11,13 @@ def hash_email(email: str) -> str:
         SECRET.EMAIL_PEPPER.encode(),
         200_000,
     ).hex()
+
+
+def hash_provider_id(provider_id: str) -> str:
+    """Hash an OAuth provider ID (discord_id, google_id) with PBKDF2-HMAC-SHA256 + pepper."""
+    return hashlib.pbkdf2_hmac(
+        "sha256",
+        provider_id.strip().encode(),
+        SECRET.PROVIDER_ID_PEPPER.encode(),
+        200_000,
+    ).hex()

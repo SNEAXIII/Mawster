@@ -22,7 +22,7 @@ from tests.integration.endpoints.setup.user_setup import (
     push_one_user,
     get_generic_user,
 )
-from src.utils.email_hash import hash_email
+from src.utils.hashing import hash_email, hash_provider_id
 from src.models import User
 from tests.utils.utils_client import (
     execute_get_request,
@@ -216,7 +216,7 @@ class TestDiscordLogin:
         existing = User(
             login="otheruser",
             email_hash=hash_email("test@example.com"),
-            discord_id="other_discord_999",
+            discord_id=hash_provider_id("other_discord_999"),
             role=Roles.USER,
         )
         await load_objects([existing])

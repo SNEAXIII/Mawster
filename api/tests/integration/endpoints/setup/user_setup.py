@@ -4,7 +4,7 @@ from typing import Optional
 
 from src.enums.Roles import Roles
 from src.models import User
-from src.utils.email_hash import hash_email
+from src.utils.hashing import hash_email, hash_provider_id
 from tests.utils.utils_db import load_objects
 
 
@@ -31,7 +31,7 @@ def get_generic_user(
         id=USER_ID if is_base_id else uuid.uuid4(),
         login=login or USER_LOGIN,
         email_hash=hash_email(raw_email),
-        discord_id=DISCORD_ID,
+        discord_id=hash_provider_id(DISCORD_ID),
         role=role or Roles.USER,
         disabled_at=disabled_at,
         deleted_at=deleted_at,
@@ -75,7 +75,7 @@ async def push_user2():
         login=USER2_LOGIN, email=USER2_EMAIL, role=Roles.USER
     )  # email param hashed internally
     user2.id = USER2_ID
-    user2.discord_id = DISCORD_ID_2
+    user2.discord_id = hash_provider_id(DISCORD_ID_2)
     await load_objects([user2])
 
 
