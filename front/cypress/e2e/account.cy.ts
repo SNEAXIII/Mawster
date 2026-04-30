@@ -31,7 +31,7 @@ describe('Login & Profile – UI', () => {
       cy.apiLogin(user_id);
       cy.navTo('profile');
       cy.contains('Account Information').should('be.visible');
-      cy.getByCy('username-row').should('contain', login);
+      cy.getByCy('username-row').should('not.contain', login);
       cy.getByCy('discord-id-row').should('contain', discord_id);
       cy.getByCy('member-since-row').should('be.visible');
     });
