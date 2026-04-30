@@ -36,6 +36,7 @@ TARGET_NODE_NO_DEFENDER_IN_WAR_BG = "Target node has no defender placed in this 
 TARGET_NODE_NO_ATTACKER_ASSIGNED = "Target node has no attacker assigned"
 CHAMPION_ALREADY_PREFIGHT_ON_NODE = "This champion is already assigned as pre-fight on this node"
 PREFIGHT_ENTRY_NOT_FOUND = "Pre-fight entry not found"
+COMBAT_COMPLETED_LOCKED = "Combat is locked — mark it as not done first to modify it"
 
 
 def champion_with_id_not_found(champion_id) -> str:

@@ -31,6 +31,7 @@ class WarDefensePlacement(SQLModel, table=True):
         default=None, foreign_key="champion_user.id"
     )
     ko_count: int = Field(default=0, ge=0)
+    is_combat_completed: bool = Field(default=False)
 
     # Relations
     war: "War" = Relationship(back_populates="placements")

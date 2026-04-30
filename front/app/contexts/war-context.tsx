@@ -37,6 +37,7 @@ import {
   getWarPrefights,
   addWarPrefight,
   removeWarPrefight,
+  toggleCombatCompleted,
 } from '@/app/services/war';
 import { WarMode } from '@/app/game/war/_components/war-types';
 
@@ -108,6 +109,9 @@ interface WarContextValue {
   prefights: WarPrefight[];
   handleAddPrefight: (championUserId: string, targetNodeNumber: number) => Promise<void>;
   handleRemovePrefight: (championUserId: string) => Promise<void>;
+
+  // Combat completion
+  handleToggleCombatCompleted: (nodeNumber: number) => Promise<void>;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -521,6 +525,30 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
   };
 
+  const handleToggleCombatCompleted = async (nodeNumber: number) => {
+    if (!selectedAllianceId || !activeWarId) return;
+    try {
+      const updated = await toggleCombatCompleted(
+        selectedAllianceId,
+        activeWarId,
+        selectedBg,
+        nodeNumber
+      );
+      setWarSummary((prev) =>
+        prev
+          ? {
+              ...prev,
+              placements: prev.placements.map((p) =>
+                p.node_number === updated.node_number ? updated : p
+              ),
+            }
+          : prev
+      );
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.markCombatError);
+    }
+  };
+
   // ─── Context value ─────────────────────────────────────────────────────────
 
   const value = useMemo<WarContextValue>(
@@ -569,6 +597,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       prefights,
       handleAddPrefight,
       handleRemovePrefight,
+      handleToggleCombatCompleted,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [

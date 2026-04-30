@@ -284,6 +284,24 @@ async def update_war_ko(
     return await WarService.update_ko(session, war_id, battlegroup, node_number, body.ko_count)
 
 
+@war_controller.patch(
+    "/{war_id}/bg/{battlegroup}/node/{node_number}/complete",
+    response_model=WarPlacementResponse,
+)
+async def toggle_combat_completed(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    node_number: int,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """Toggle combat completion for a war node. All members can toggle."""
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    return await WarService.toggle_combat_completed(session, war_id, battlegroup, node_number)
+
+
 @war_controller.get(
     "/{war_id}/bg/{battlegroup}/synergy",
     response_model=list[WarSynergyResponse],

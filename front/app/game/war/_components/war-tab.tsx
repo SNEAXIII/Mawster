@@ -65,9 +65,11 @@ export default function WarTab() {
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId) ?? null;
 
   const [playerFilter, setPlayerFilter] = useState('');
+  const [combatFilter, setCombatFilter] = useState<'all' | 'done' | 'todo'>('all');
 
   useEffect(() => {
     setPlayerFilter('');
+    setCombatFilter('all');
   }, [selectedBg]);
 
   const prefightNodes = new Set(prefights.map((pf) => pf.target_node_number));
@@ -264,6 +266,8 @@ export default function WarTab() {
             <WarAttackerPanel
               playerFilter={playerFilter}
               onPlayerChange={setPlayerFilter}
+              combatFilter={combatFilter}
+              onCombatFilterChange={setCombatFilter}
             />
           </div>
         </div>

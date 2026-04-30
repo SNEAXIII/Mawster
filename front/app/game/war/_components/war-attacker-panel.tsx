@@ -4,6 +4,13 @@ import { useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import ChampionPortrait from '@/components/champion-portrait';
 import PlayerFilterSelect from '@/app/game/_components/player-filter-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '@/app/contexts/war-context';
 import PrefightEntryRow from './prefight-entry-row';
@@ -21,11 +28,15 @@ interface MemberGroup {
 interface WarAttackerPanelProps {
   playerFilter: string;
   onPlayerChange: (v: string) => void;
+  combatFilter: 'all' | 'done' | 'todo';
+  onCombatFilterChange: (v: 'all' | 'done' | 'todo') => void;
 }
 
 export default function WarAttackerPanel({
   playerFilter,
   onPlayerChange,
+  combatFilter,
+  onCombatFilterChange,
 }: Readonly<WarAttackerPanelProps>) {
   const { t } = useI18n();
   const { placements, warMode, synergies, prefights } = useWar();
@@ -71,12 +82,30 @@ export default function WarAttackerPanel({
         >
           {t.game.war.attackersPanelTitle.replace('{assigned}', String(assigned.length))}
         </span>
-        <PlayerFilterSelect
-          players={players}
-          value={playerFilter}
-          onChange={onPlayerChange}
-          dataCy='war-player-filter'
-        />
+        <div className='flex items-center gap-1'>
+          <Select
+            value={combatFilter}
+            onValueChange={(v) => onCombatFilterChange(v as 'all' | 'done' | 'todo')}
+          >
+            <SelectTrigger
+              className='h-7 w-20 text-xs'
+              data-cy='war-combat-filter'
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='all'>{t.game.war.combatFilterAll}</SelectItem>
+              <SelectItem value='done'>{t.game.war.combatFilterDone}</SelectItem>
+              <SelectItem value='todo'>{t.game.war.combatFilterTodo}</SelectItem>
+            </SelectContent>
+          </Select>
+          <PlayerFilterSelect
+            players={players}
+            value={playerFilter}
+            onChange={onPlayerChange}
+            dataCy='war-player-filter'
+          />
+        </div>
       </div>
 
       {assigned.length === 0 ? (
@@ -121,6 +150,14 @@ export default function WarAttackerPanel({
             );
 
             if (playerFilter && memberGroup.pseudo !== playerFilter) return null;
+
+            // Combat filter: check if this member has at least one node matching the filter
+            if (combatFilter !== 'all') {
+              const hasDone = memberGroup.entries.some((e) => e.is_combat_completed);
+              const hasTodo = memberGroup.entries.some((e) => !e.is_combat_completed);
+              if (combatFilter === 'done' && !hasDone) return null;
+              if (combatFilter === 'todo' && !hasTodo) return null;
+            }
 
             return (
               <div key={memberGroup.pseudo}>

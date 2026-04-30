@@ -73,6 +73,7 @@ class WarPlacementResponse(BaseModel):
     placed_by_pseudo: Optional[str] = None
     created_at: datetime
     ko_count: int = 0
+    is_combat_completed: bool = False
     attacker_champion_user_id: Optional[uuid.UUID] = None
     attacker_game_account_id: Optional[uuid.UUID] = None
     attacker_pseudo: Optional[str] = None
@@ -107,6 +108,7 @@ class WarPlacementResponse(BaseModel):
             "placed_by_pseudo": data.placed_by.game_pseudo if data.placed_by else None,
             "created_at": data.created_at,
             "ko_count": data.ko_count,
+            "is_combat_completed": data.is_combat_completed,
             "attacker_champion_user_id": data.attacker_champion_user_id,
             "attacker_game_account_id": attacker.game_account_id if attacker else None,
             "attacker_pseudo": attacker.game_account.game_pseudo if attacker else None,
