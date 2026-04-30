@@ -237,7 +237,7 @@ class TestPlaceWarDefender:
         assert body["ascension"] == 0
 
     @pytest.mark.asyncio
-    async def test_place_defender_duplicate_champion_conflict(self):
+    async def test_place_defender_same_champion_multiple_nodes(self):
         data = await _setup_war()
         headers = create_auth_headers(user_id=str(USER_ID))
         url = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/place"
@@ -253,7 +253,7 @@ class TestPlaceWarDefender:
             },
             headers=headers,
         )
-        # Same champion on a different node → 409
+        # Same champion on a different node → allowed
         response = await execute_post_request(
             url,
             payload={
@@ -265,7 +265,7 @@ class TestPlaceWarDefender:
             },
             headers=headers,
         )
-        assert response.status_code == 409
+        assert response.status_code == 201
 
     @pytest.mark.asyncio
     async def test_place_defender_replaces_node(self):

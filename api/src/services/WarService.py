@@ -29,7 +29,6 @@ from src.Messages.war_messages import (
     ACTIVE_WAR_ALREADY_EXISTS,
     BANNED_CHAMPION_LIST_DUPLICATES,
     CHAMPION_ALREADY_IN_ALLIANCE_DEFENSE,
-    CHAMPION_ALREADY_PLACED_IN_BG,
     CHAMPION_ALREADY_PREFIGHT_ON_NODE,
     CHAMPION_ALREADY_SYNERGY_PROVIDER,
     CHAMPION_BANNED_FOR_WAR,
@@ -270,23 +269,6 @@ class WarService:
         champion = await session.get(Champion, placement_request.champion_id)
         if champion is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_NOT_FOUND)
-
-        # Check champion not already placed as defender in this BG
-        existing_champ = await session.exec(
-            select(WarDefensePlacement).where(
-                and_(
-                    WarDefensePlacement.war_id == war_id,
-                    WarDefensePlacement.battlegroup == battlegroup,
-                    WarDefensePlacement.champion_id == placement_request.champion_id,
-                    WarDefensePlacement.node_number != placement_request.node_number,
-                )
-            )
-        )
-        if existing_champ.first():
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=CHAMPION_ALREADY_PLACED_IN_BG,
-            )
 
         # Replace if node already occupied
         existing_node = await session.exec(
