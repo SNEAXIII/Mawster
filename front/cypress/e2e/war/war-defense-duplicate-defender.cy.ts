@@ -16,14 +16,17 @@ describe('War – Duplicate defender placement', () => {
 
         cy.apiLogin(ownerData.user_id);
         cy.navTo('war');
+        cy.getByCy('war-mode-defenders').click();
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
-        cy.getByCy('champion-card-Spider-Man').click();
+        cy.getByCy('war-champion-card-Spider-Man').click();
+        cy.getByCy('war-confirm-place').click();
         cy.contains('Spider-Man placed on node #1').should('be.visible');
 
         cy.getByCy('war-node-2').scrollIntoView().click({ force: true });
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
-        cy.getByCy('champion-card-Spider-Man').click();
+        cy.getByCy('war-champion-card-Spider-Man').should('be.visible');
+        cy.getByCy('war-champion-card-Spider-Man').click();
+        cy.getByCy('war-confirm-place').click();
         cy.contains('Spider-Man placed on node #2').should('be.visible');
 
         cy.getByCy('war-node-1').should('have.attr', 'title').and('include', 'Spider-Man');
@@ -47,14 +50,16 @@ describe('War – Duplicate defender placement', () => {
 
         cy.apiLogin(ownerData.user_id);
         cy.navTo('war');
+        cy.getByCy('war-mode-defenders').click();
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
-        cy.getByCy('champion-card-Spider-Man').click();
+        cy.getByCy('war-champion-card-Spider-Man').click();
+        cy.getByCy('war-confirm-place').click();
         cy.contains('Spider-Man placed on node #1').should('be.visible');
 
         cy.getByCy('war-node-2').scrollIntoView().click({ force: true });
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
-        cy.getByCy('champion-card-Wolverine').should('be.visible');
+        cy.getByCy('war-champion-card-Spider-Man').should('be.visible');
+        cy.getByCy('war-champion-card-Wolverine').should('be.visible');
       },
     );
   });
