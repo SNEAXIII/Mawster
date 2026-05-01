@@ -19,6 +19,8 @@ import AttackerEntryRow from './attacker-entry-row';
 import SynergyPopover from './synergy-popover';
 import MasteryDialog from '@/app/game/account/_components/mastery-dialog';
 import { Swords } from 'lucide-react';
+import { cn } from '@/app/lib/utils';
+import { fightStateFilter } from './war-tab';
 
 interface MemberGroup {
   pseudo: string;
@@ -28,8 +30,8 @@ interface MemberGroup {
 interface WarAttackerPanelProps {
   playerFilter: string;
   onPlayerChange: (v: string) => void;
-  combatFilter: 'all' | 'done' | 'todo';
-  onCombatFilterChange: (v: 'all' | 'done' | 'todo') => void;
+  combatFilter: fightStateFilter;
+  onCombatFilterChange: (v: fightStateFilter) => void;
 }
 
 export default function WarAttackerPanel({
@@ -85,7 +87,7 @@ export default function WarAttackerPanel({
         <div className='flex items-center gap-1'>
           <Select
             value={combatFilter}
-            onValueChange={(v) => onCombatFilterChange(v as 'all' | 'done' | 'todo')}
+            onValueChange={(v) => onCombatFilterChange(v as fightStateFilter)}
           >
             <SelectTrigger
               className='h-7 w-20 text-xs'
@@ -94,9 +96,9 @@ export default function WarAttackerPanel({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value='all'>{t.game.war.combatFilterAll}</SelectItem>
-              <SelectItem value='done'>{t.game.war.combatFilterDone}</SelectItem>
               <SelectItem value='todo'>{t.game.war.combatFilterTodo}</SelectItem>
+              <SelectItem value='done'>{t.game.war.combatFilterDone}</SelectItem>
+              <SelectItem value='all'>{t.game.war.combatFilterAll}</SelectItem>
             </SelectContent>
           </Select>
           <PlayerFilterSelect
@@ -150,14 +152,6 @@ export default function WarAttackerPanel({
             );
 
             if (playerFilter && memberGroup.pseudo !== playerFilter) return null;
-
-            // Combat filter: check if this member has at least one node matching the filter
-            if (combatFilter !== 'all') {
-              const hasDone = memberGroup.entries.some((e) => e.is_combat_completed);
-              const hasTodo = memberGroup.entries.some((e) => !e.is_combat_completed);
-              if (combatFilter === 'done' && !hasDone) return null;
-              if (combatFilter === 'todo' && !hasTodo) return null;
-            }
 
             return (
               <div key={memberGroup.pseudo}>
@@ -257,18 +251,20 @@ export default function WarAttackerPanel({
                 {/* Per-node entries */}
                 <div className='space-y-1.5'>
                   {[...memberGroup.entries]
-                    .filter((e) =>
-                      combatFilter === 'all' ? true :
-                      combatFilter === 'done' ? e.is_combat_completed :
-                      !e.is_combat_completed
-                    )
                     .sort((a, b) => a.node_number - b.node_number)
                     .map((placement) => (
-                      <AttackerEntryRow
+                      <div
                         key={placement.id}
-                        placement={placement}
-                        readonly={warMode !== WarMode.Attackers}
-                      />
+                        className={cn(
+                          combatFilter === 'todo' && placement.is_combat_completed && 'opacity-40',
+                          combatFilter === 'done' && !placement.is_combat_completed && 'opacity-40'
+                        )}
+                      >
+                        <AttackerEntryRow
+                          placement={placement}
+                          readonly={warMode !== WarMode.Attackers}
+                        />
+                      </div>
                     ))}
                   {/* Prefight entries for this member */}
                   {memberPrefights.map((pf) => (
