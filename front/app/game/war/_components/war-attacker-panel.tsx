@@ -257,6 +257,11 @@ export default function WarAttackerPanel({
                 {/* Per-node entries */}
                 <div className='space-y-1.5'>
                   {[...memberGroup.entries]
+                    .filter((e) =>
+                      combatFilter === 'all' ? true :
+                      combatFilter === 'done' ? e.is_combat_completed :
+                      !e.is_combat_completed
+                    )
                     .sort((a, b) => a.node_number - b.node_number)
                     .map((placement) => (
                       <AttackerEntryRow
