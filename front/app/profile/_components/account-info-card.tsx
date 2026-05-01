@@ -18,11 +18,9 @@ const iconBtn =
 
 export function AccountInfoCard({
   name,
-  discordId,
   createdAt,
 }: Readonly<{
   name?: string | null;
-  discordId?: string | null;
   createdAt?: string | null;
 }>) {
   const { locale, t } = useI18n();
@@ -128,13 +126,6 @@ export function AccountInfoCard({
             )}
           </div>
 
-          <InfoRow
-            icon={<FaDiscord className='h-4 w-4' />}
-            label={t.profile.discordId}
-            value={discordId}
-            fallback={t.common.notAvailable}
-            dataCy='discord-id-row'
-          />
           <InfoRow
             icon={<Calendar className='h-4 w-4' />}
             label={t.profile.memberSince}

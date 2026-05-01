@@ -23,7 +23,7 @@ export default function SideNavBar() {
       <div className='hidden md:flex mb-2 items-center gap-2'>
         <Link
           href='/'
-          className='flex h-20 flex-1 items-center rounded-md bg-primary p-4 transition hover:bg-primary/90'
+          className='flex h-15 flex-1 items-center rounded-md bg-primary p-2 transition hover:bg-primary/90'
           aria-label={t.nav.home}
         >
           <div className='w-full'>

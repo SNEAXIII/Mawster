@@ -92,7 +92,7 @@ jobs:
       - name: Archive frontend build
         run: tar -czf /tmp/next-e2e-build.tar.gz -C front .next-e2e
       - name: Upload frontend build
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: next-e2e-build
           path: /tmp/next-e2e-build.tar.gz
@@ -155,7 +155,7 @@ jobs:
         working-directory: ./front
         run: npm ci
       - name: Download frontend build
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: next-e2e-build
           path: /tmp
@@ -167,7 +167,7 @@ jobs:
         run: python3 scripts/e2e_parallel.py --workers 1 --spec "${{ matrix.specs }}" --skip-build --quiet
       - name: Upload Cypress results
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: cypress-results-runner-${{ matrix.runner }}
           path: front/cypress/results

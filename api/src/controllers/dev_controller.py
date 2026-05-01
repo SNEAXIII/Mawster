@@ -144,16 +144,19 @@ async def dev_login(body: DevLoginRequest, session: SessionDep) -> LoginResponse
 
 @dev_controller.post("/token", status_code=200)
 async def dev_token(username: Annotated[str, Form()], session: SessionDep) -> LoginResponse:
-    """OAuth2 password flow for Swagger UI — username = game_pseudo."""
+    """OAuth2 password flow for Swagger UI — username = game_pseudo or Discord login."""
     game_account = (
         await session.exec(select(GameAccount).where(GameAccount.game_pseudo == username))
     ).first()
-    if not game_account:
-        raise HTTPException(
-            status_code=http_status.HTTP_404_NOT_FOUND, detail="Game account not found"
-        )
-    user = await UserService.get_user_by_id_with_validity_check(session, str(game_account.user_id))
-    logger.warning("DEV TOKEN — pseudo: %s / user: %s", username, user.login)
+    if game_account:
+        user = await UserService.get_user_by_id_with_validity_check(session, str(game_account.user_id))
+    else:
+        user = (await session.exec(select(User).where(User.login == username))).first()
+        if not user:
+            raise HTTPException(
+                status_code=http_status.HTTP_404_NOT_FOUND, detail="No game account or user found"
+            )
+    logger.warning("DEV TOKEN — username: %s / user: %s", username, user.login)
     return LoginResponse(
         token_type="bearer",
         access_token=JWTService.create_access_token(user),
