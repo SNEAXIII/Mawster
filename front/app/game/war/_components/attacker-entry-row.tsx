@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
-import { X, Minus, Plus, Swords, CircleQuestionMark } from 'lucide-react';
+import { X, Minus, Plus, Swords, CircleQuestionMark, CheckCircle } from 'lucide-react';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '@/app/contexts/war-context';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
@@ -24,7 +24,7 @@ export default function AttackerEntryRow({
   readonly = false,
 }: Readonly<AttackerEntryRowProps>) {
   const { t } = useI18n();
-  const { handleRemoveAttacker, handleUpdateKo, prefights } = useWar();
+  const { handleRemoveAttacker, handleUpdateKo, handleToggleCombatCompleted, prefights } = useWar();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const nodePrefights = prefights.filter((p) => p.target_node_number === placement.node_number);
 
@@ -38,7 +38,8 @@ export default function AttackerEntryRow({
   return (
     <div
       className={cn(
-        'flex items-center gap-2 rounded-md bg-card',
+        'flex items-center gap-2 rounded-md',
+        placement.is_combat_completed ? 'bg-green-950/40 border-green-800/40' : 'bg-card',
         boxPaddingSize,
         !isFull && 'border'
       )}
@@ -127,66 +128,102 @@ export default function AttackerEntryRow({
       )}
       {placement.attacker_champion_user_id && !readonly && (
         <>
-          <div
-            className='flex items-center gap-1'
-            data-cy={`ko-counter-node-${placement.node_number}`}
+        
+          <button
+            type='button'
+            className={cn(
+              'rounded-full flex items-center justify-center flex-shrink-0 transition-colors',
+              placement.is_combat_completed
+                ? 'bg-red-700/80 hover:bg-red-700 text-white'
+                : 'bg-green-700 text-muted-foreground hover:text-white',
+              btnSize
+            )}
+            onClick={() => handleToggleCombatCompleted(placement.node_number)}
+            title={placement.is_combat_completed ? t.game.war.markCombatUndone : t.game.war.markCombatDone}
+            data-cy={`combat-complete-node-${placement.node_number}`}
           >
-            <button
-              type='button'
-              className={cn(
-                'rounded flex items-center justify-center text-xs',
-                'bg-muted hover:bg-accent transition-colors',
-                btnSize,
-                placement.ko_count <= 0 && 'opacity-40 cursor-not-allowed'
-              )}
-              onClick={() =>
-                placement.ko_count > 0 &&
-                handleUpdateKo(placement.node_number, placement.ko_count - 1)
-              }
-              disabled={placement.ko_count <= 0}
-              data-cy={`ko-dec-node-${placement.node_number}`}
+            {placement.is_combat_completed ? (
+              <X className={cn(iconSize)} />
+            ) : (
+              <CheckCircle className={cn(iconSize)} />
+            )}
+          </button>
+
+          {!placement.is_combat_completed && (
+            <div
+              className='flex items-center gap-1'
+              data-cy={`ko-counter-node-${placement.node_number}`}
             >
-              <Minus className={cn(iconSize)} />
-            </button>
+              <button
+                type='button'
+                className={cn(
+                  'rounded flex items-center justify-center text-xs',
+                  'bg-muted hover:bg-accent transition-colors',
+                  btnSize,
+                  placement.ko_count <= 0 && 'opacity-40 cursor-not-allowed'
+                )}
+                onClick={() =>
+                  placement.ko_count > 0 &&
+                  handleUpdateKo(placement.node_number, placement.ko_count - 1)
+                }
+                disabled={placement.ko_count <= 0}
+                data-cy={`ko-dec-node-${placement.node_number}`}
+              >
+                <Minus className={cn(iconSize)} />
+              </button>
+              <span
+                className={cn('font-mono text-center', isFull ? 'text-sm w-5' : 'text-xs w-4')}
+                data-cy={`ko-value-node-${placement.node_number}`}
+              >
+                {placement.ko_count}
+              </span>
+              <button
+                type='button'
+                className={cn(
+                  'rounded flex items-center justify-center text-xs bg-muted hover:bg-accent transition-colors',
+                  btnSize
+                )}
+                onClick={() => handleUpdateKo(placement.node_number, placement.ko_count + 1)}
+                data-cy={`ko-inc-node-${placement.node_number}`}
+              >
+                <Plus className={cn(iconSize)} />
+              </button>
+            </div>
+          )}
+
+          {placement.is_combat_completed && (
             <span
-              className={cn('font-mono text-center', isFull ? 'text-sm w-5' : 'text-xs w-4')}
+              className={cn('font-mono text-center text-green-400', isFull ? 'text-sm w-5' : 'text-xs w-4')}
               data-cy={`ko-value-node-${placement.node_number}`}
             >
               {placement.ko_count}
             </span>
-            <button
-              type='button'
-              className={cn(
-                'rounded flex items-center justify-center text-xs bg-muted hover:bg-accent transition-colors',
-                btnSize
-              )}
-              onClick={() => handleUpdateKo(placement.node_number, placement.ko_count + 1)}
-              data-cy={`ko-inc-node-${placement.node_number}`}
-            >
-              <Plus className={cn(iconSize)} />
-            </button>
-          </div>
+          )}
 
-          <button
-            type='button'
-            className={cn(
-              'rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center flex-shrink-0',
-              btnSize
-            )}
-            onClick={() => setConfirmOpen(true)}
-            title={t.game.war.removeAttacker}
-            data-cy={`remove-attacker-node-${placement.node_number}`}
-          >
-            <X className={cn(iconSize)} />
-          </button>
-          <ConfirmationDialog
-            open={confirmOpen}
-            onOpenChange={setConfirmOpen}
-            title={t.game.war.removeAttackerConfirmTitle}
-            description={t.game.war.removeAttackerConfirmDesc}
-            onConfirm={() => handleRemoveAttacker(placement.node_number)}
-            variant='destructive'
-          />
+          {!placement.is_combat_completed && (
+            <>
+              <button
+                type='button'
+                className={cn(
+                  'rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center flex-shrink-0',
+                  btnSize
+                )}
+                onClick={() => setConfirmOpen(true)}
+                title={t.game.war.removeAttacker}
+                data-cy={`remove-attacker-node-${placement.node_number}`}
+              >
+                <X className={cn(iconSize)} />
+              </button>
+              <ConfirmationDialog
+                open={confirmOpen}
+                onOpenChange={setConfirmOpen}
+                title={t.game.war.removeAttackerConfirmTitle}
+                description={t.game.war.removeAttackerConfirmDesc}
+                onConfirm={() => handleRemoveAttacker(placement.node_number)}
+                variant='destructive'
+              />
+            </>
+          )}
         </>
       )}
     </div>

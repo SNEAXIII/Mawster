@@ -36,6 +36,7 @@ from src.Messages.war_messages import (
     CHAMPION_NOT_IN_ALLIANCE_BG,
     CHAMPION_NO_PREFIGHT_ABILITY,
     CHAMPION_USER_NOT_FOUND,
+    COMBAT_COMPLETED_LOCKED,
     KO_COUNT_NO_ATTACKER_ASSIGNED,
     MEMBER_ALREADY_HAS_3_ATTACKERS,
     NODE_HAS_NO_DEFENDER_PLACE_FIRST,
@@ -597,6 +598,12 @@ class WarService:
                 detail=NODE_HAS_NO_DEFENDER_PLACE_FIRST,
             )
 
+        if placement.is_combat_completed:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=COMBAT_COMPLETED_LOCKED,
+            )
+
         # 2. Load the champion user
         champion_user_stmt = (
             select(ChampionUser)
@@ -716,6 +723,11 @@ class WarService:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=NO_ATTACKER_ASSIGNED_ON_NODE
             )
+        if placement.is_combat_completed:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=COMBAT_COMPLETED_LOCKED,
+            )
 
         removed_champion_user_id = placement.attacker_champion_user_id
         placement.attacker_champion_user_id = None
@@ -799,8 +811,36 @@ class WarService:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail=KO_COUNT_NO_ATTACKER_ASSIGNED
             )
+        if placement.is_combat_completed:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=COMBAT_COMPLETED_LOCKED,
+            )
 
         placement.ko_count = ko_count
+        session.add(placement)
+        await session.commit()
+
+        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement.id))
+
+    @classmethod
+    async def toggle_combat_completed(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        battlegroup: int,
+        node_number: int,
+    ) -> WarPlacementResponse:
+        placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
+        if placement is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=NO_DEFENDER_ON_NODE)
+        if placement.attacker_champion_user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=NO_ATTACKER_ASSIGNED_ON_NODE,
+            )
+
+        placement.is_combat_completed = not placement.is_combat_completed
         session.add(placement)
         await session.commit()
 

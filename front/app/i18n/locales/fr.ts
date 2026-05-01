@@ -312,6 +312,12 @@ const fr: Translations = {
       assignError: "Erreur lors de l'assignation de l'attaquant",
       removeAttackerSuccess: 'Attaquant retiré',
       removeAttackerError: "Erreur lors du retrait de l'attaquant",
+      markCombatDone: 'Marquer comme fait',
+      markCombatUndone: 'Annuler',
+      markCombatError: 'Erreur lors de la mise à jour du statut du combat',
+      combatFilterAll: 'Tous',
+      combatFilterDone: 'Faits',
+      combatFilterTodo: 'À faire',
       replaceDefenderWithAttackerTitle: 'Remplacer le défenseur',
       replaceDefenderWithAttackerDesc:
         "Un attaquant est déjà assigné à ce nœud. Remplacer le défenseur supprimera également l'attaquant. Continuer ?",

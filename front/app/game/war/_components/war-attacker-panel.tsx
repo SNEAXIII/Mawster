@@ -4,6 +4,13 @@ import { useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import ChampionPortrait from '@/components/champion-portrait';
 import PlayerFilterSelect from '@/app/game/_components/player-filter-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '@/app/contexts/war-context';
 import PrefightEntryRow from './prefight-entry-row';
@@ -12,6 +19,8 @@ import AttackerEntryRow from './attacker-entry-row';
 import SynergyPopover from './synergy-popover';
 import MasteryDialog from '@/app/game/account/_components/mastery-dialog';
 import { Swords } from 'lucide-react';
+import { cn } from '@/app/lib/utils';
+import { fightStateFilter } from './war-tab';
 
 interface MemberGroup {
   pseudo: string;
@@ -21,11 +30,15 @@ interface MemberGroup {
 interface WarAttackerPanelProps {
   playerFilter: string;
   onPlayerChange: (v: string) => void;
+  combatFilter: fightStateFilter;
+  onCombatFilterChange: (v: fightStateFilter) => void;
 }
 
 export default function WarAttackerPanel({
   playerFilter,
   onPlayerChange,
+  combatFilter,
+  onCombatFilterChange,
 }: Readonly<WarAttackerPanelProps>) {
   const { t } = useI18n();
   const { placements, warMode, synergies, prefights } = useWar();
@@ -71,12 +84,30 @@ export default function WarAttackerPanel({
         >
           {t.game.war.attackersPanelTitle.replace('{assigned}', String(assigned.length))}
         </span>
-        <PlayerFilterSelect
-          players={players}
-          value={playerFilter}
-          onChange={onPlayerChange}
-          dataCy='war-player-filter'
-        />
+        <div className='flex items-center gap-1'>
+          <Select
+            value={combatFilter}
+            onValueChange={(v) => onCombatFilterChange(v as fightStateFilter)}
+          >
+            <SelectTrigger
+              className='h-7 w-20 text-xs'
+              data-cy='war-combat-filter'
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='todo'>{t.game.war.combatFilterTodo}</SelectItem>
+              <SelectItem value='done'>{t.game.war.combatFilterDone}</SelectItem>
+              <SelectItem value='all'>{t.game.war.combatFilterAll}</SelectItem>
+            </SelectContent>
+          </Select>
+          <PlayerFilterSelect
+            players={players}
+            value={playerFilter}
+            onChange={onPlayerChange}
+            dataCy='war-player-filter'
+          />
+        </div>
       </div>
 
       {assigned.length === 0 ? (
@@ -222,11 +253,18 @@ export default function WarAttackerPanel({
                   {[...memberGroup.entries]
                     .sort((a, b) => a.node_number - b.node_number)
                     .map((placement) => (
-                      <AttackerEntryRow
+                      <div
                         key={placement.id}
-                        placement={placement}
-                        readonly={warMode !== WarMode.Attackers}
-                      />
+                        className={cn(
+                          combatFilter === 'todo' && placement.is_combat_completed && 'opacity-40',
+                          combatFilter === 'done' && !placement.is_combat_completed && 'opacity-40'
+                        )}
+                      >
+                        <AttackerEntryRow
+                          placement={placement}
+                          readonly={warMode !== WarMode.Attackers}
+                        />
+                      </div>
                     ))}
                   {/* Prefight entries for this member */}
                   {memberPrefights.map((pf) => (

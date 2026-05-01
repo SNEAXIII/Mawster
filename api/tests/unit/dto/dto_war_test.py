@@ -63,6 +63,7 @@ def _make_placement(champion=None, attacker=None, **overrides):
         "placed_by": _ns(game_pseudo="OfficerPlayer"),
         "created_at": datetime(2025, 1, 1, 12, 0, 0),
         "ko_count": 0,
+        "is_combat_completed": False,
         "attacker_champion_user_id": attacker.id if attacker else None,
         "attacker_champion_user": attacker,
     }
