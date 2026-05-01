@@ -17,6 +17,7 @@ describe('War – Combat completion', () => {
     setupAttackerScenario('cc-no-attacker').then(({ ownerData }) => {
       goToAttackersMode(ownerData.user_id);
 
+      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
       cy.getByCy('attacker-entry-node-10').should('be.visible');
       cy.getByCy('combat-complete-node-10').should('not.exist');
     });
