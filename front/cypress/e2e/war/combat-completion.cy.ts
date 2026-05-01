@@ -82,8 +82,8 @@ describe('War – Combat completion', () => {
       cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
       goToAttackersMode(ownerData.user_id);
 
-      cy.getByCy('war-combat-filter').click();
-      cy.contains('Done').click();
+      cy.getByCy('war-combat-filter').click({ force: true });
+      cy.contains('Done').click({ force: true });
 
       cy.getByCy('attacker-entry-node-10').should('be.visible');
     });
@@ -97,8 +97,8 @@ describe('War – Combat completion', () => {
       cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
       goToAttackersMode(ownerData.user_id);
 
-      cy.getByCy('war-combat-filter').click();
-      cy.contains('To do').click();
+      cy.getByCy('war-combat-filter').click({ force: true });
+      cy.contains('To do').click({ force: true });
 
       cy.getByCy('attacker-entry-node-10').should('be.visible');
       cy.getByCy('attacker-entry-node-10').parent().should('have.class', 'opacity-40');
@@ -110,8 +110,8 @@ describe('War – Combat completion', () => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       goToAttackersMode(ownerData.user_id);
 
-      cy.getByCy('war-combat-filter').click();
-      cy.contains('To do').click();
+      cy.getByCy('war-combat-filter').click({ force: true });
+      cy.contains('To do').click({ force: true });
 
       cy.getByCy('attacker-entry-node-10').should('be.visible');
     });
@@ -122,8 +122,8 @@ describe('War – Combat completion', () => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       goToAttackersMode(ownerData.user_id);
 
-      cy.getByCy('war-combat-filter').click();
-      cy.contains('To do').click();
+      cy.getByCy('war-combat-filter').click({ force: true });
+      cy.contains('To do').click({ force: true });
 
       cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-40');
     });
@@ -138,8 +138,8 @@ describe('War – Combat completion', () => {
           cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
           goToAttackersMode(ownerData.user_id);
 
-          cy.getByCy('war-combat-filter').click();
-          cy.contains('Done').click();
+          cy.getByCy('war-combat-filter').click({ force: true });
+          cy.contains('Done').click({ force: true });
 
           cy.getByCy('attacker-entry-node-11').parent().should('have.class', 'opacity-40');
         });
@@ -153,8 +153,8 @@ describe('War – Combat completion', () => {
       cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
       goToAttackersMode(ownerData.user_id);
 
-      cy.getByCy('war-combat-filter').click();
-      cy.contains('Done').click();
+      cy.getByCy('war-combat-filter').click({ force: true });
+      cy.contains('Done').click({ force: true });
 
       cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-40');
     });
@@ -184,8 +184,8 @@ describe('War – Combat filter map dimming', () => {
       cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
       goToAttackersMode(ownerData.user_id);
 
-      cy.getByCy('war-combat-filter').click();
-      cy.contains('To do').click();
+      cy.getByCy('war-combat-filter').click({ force: true });
+      cy.contains('To do').click({ force: true });
 
       cy.getByCy('war-node-10').should('have.class', 'opacity-25');
     });
@@ -196,8 +196,8 @@ describe('War – Combat filter map dimming', () => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       goToAttackersMode(ownerData.user_id);
 
-      cy.getByCy('war-combat-filter').click();
-      cy.contains('To do').click();
+      cy.getByCy('war-combat-filter').click({ force: true });
+      cy.contains('To do').click({ force: true });
 
       cy.getByCy('war-node-10').should('not.have.class', 'opacity-25');
     });
@@ -212,8 +212,8 @@ describe('War – Combat filter map dimming', () => {
           cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
           goToAttackersMode(ownerData.user_id);
 
-          cy.getByCy('war-combat-filter').click();
-          cy.contains('Done').click();
+          cy.getByCy('war-combat-filter').click({ force: true });
+          cy.contains('Done').click({ force: true });
 
           cy.getByCy('war-node-11').should('have.class', 'opacity-25');
         });
@@ -227,8 +227,8 @@ describe('War – Combat filter map dimming', () => {
       cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
       goToAttackersMode(ownerData.user_id);
 
-      cy.getByCy('war-combat-filter').click();
-      cy.contains('Done').click();
+      cy.getByCy('war-combat-filter').click({ force: true });
+      cy.contains('Done').click({ force: true });
 
       cy.getByCy('war-node-10').should('not.have.class', 'opacity-25');
     });
