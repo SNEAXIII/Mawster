@@ -100,6 +100,9 @@ def custom_openapi():
             }
         }
         openapi_schema["security"] = [{"DevLogin": []}]
+        for path in openapi_schema.get("paths", {}).values():
+            for operation in path.values():
+                operation.pop("security", None)
     else:
         openapi_schema["components"]["securitySchemes"] = {
             "Bearer": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}
