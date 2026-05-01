@@ -160,6 +160,9 @@ describe('War – Combat completion', () => {
       cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
       goToAttackersMode(ownerData.user_id);
 
+      cy.getByCy('war-combat-filter').click({ force: true });
+      cy.contains('All').click({ force: true });
+
       cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-40');
     });
   });
@@ -227,6 +230,9 @@ describe('War – Combat filter map dimming', () => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
       goToAttackersMode(ownerData.user_id);
+
+      cy.getByCy('war-combat-filter').click({ force: true });
+      cy.contains('All').click({ force: true });
 
       cy.getByCy('war-node-10').should('not.have.class', 'opacity-25');
     });
