@@ -133,7 +133,7 @@ describe('War – Combat completion', () => {
     setupAttackerScenario('cc-done-dim-todo').then(({ adminToken, memberData, ownerData, allianceId, memberAccId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.apiLoadChampion(adminToken, 'Spider-Man', 'Science').then((champs: { id: string }[]) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, 'Rare').then((cu: { id: string }) => {
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '6r4').then((cu: { id: string }) => {
           cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 11, cu.id);
           cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
           goToAttackersMode(ownerData.user_id);
@@ -207,7 +207,7 @@ describe('War – Combat filter map dimming', () => {
     setupAttackerScenario('map-done-dim-todo').then(({ adminToken, memberData, ownerData, allianceId, memberAccId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.apiLoadChampion(adminToken, 'Spider-Man', 'Science').then((champs: { id: string }[]) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, 'Rare').then((cu: { id: string }) => {
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '6r4').then((cu: { id: string }) => {
           cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 11, cu.id);
           cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
           goToAttackersMode(ownerData.user_id);
