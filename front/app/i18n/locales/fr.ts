@@ -53,7 +53,7 @@ const fr: Translations = {
   // Login page
   login: {
     title: 'Connexion',
-    subtitle: 'Connectez-vous avec votre compte Discord',
+    subtitle: 'Connectez-vous avec votre compte Discord ou Google',
     discordButton: 'Se connecter avec Discord',
     googleButton: 'Se connecter avec Google',
     signingIn: 'Connexion en cours...',

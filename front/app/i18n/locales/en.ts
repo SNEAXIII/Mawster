@@ -51,7 +51,7 @@ const en = {
   // Login page
   login: {
     title: 'Sign In',
-    subtitle: 'Sign in with your Discord account',
+    subtitle: 'Sign in with your Discord or Google account',
     discordButton: 'Sign in with Discord',
     googleButton: 'Sign in with Google',
     signingIn: 'Signing in...',
