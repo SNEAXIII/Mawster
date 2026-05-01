@@ -7,8 +7,6 @@ from datetime import datetime
 
 from src.enums.Roles import Roles
 
-EXAMPLE_EMAIL = "user@gmail.com"
-
 
 class UserBaseResponse(BaseModel):
     login: str = Field(examples=["User"])
@@ -18,8 +16,6 @@ class UserBaseResponse(BaseModel):
 class UserProfile(UserBaseResponse):
     last_login_date: Optional[datetime] = Field(default=None)
     created_at: datetime = Field()
-    discord_id: Optional[str] = Field(default=None)
-    google_id: Optional[str] = Field(default=None)
 
 
 class UserAdminViewSingleUser(UserBaseResponse):
@@ -38,7 +34,9 @@ class UserAdminViewAllUsers(BaseModel):
 
 
 class UpdateLoginRequest(BaseModel):
-    login: str = Field(..., min_length=3, max_length=30, pattern=r"^[a-zA-Z0-9]+$", examples=["NewLogin"])
+    login: str = Field(
+        ..., min_length=3, max_length=30, pattern=r"^[a-zA-Z0-9]+$", examples=["NewLogin"]
+    )
 
 
 class DiscordLoginRequest(BaseModel):

@@ -24,7 +24,6 @@ export default function ProfilePage() {
       />
       <AccountInfoCard
         name={user?.name}
-        discordId={user?.discord_id}
         createdAt={user?.created_at}
       />
       <GameAccountsSection />

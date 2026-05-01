@@ -73,7 +73,6 @@ const en = {
     user: 'User',
     accountInfo: 'Account Information',
     username: 'Username',
-    discordId: 'Discord ID',
     memberSince: 'Member since',
     discordConnection: 'Discord Connection',
     discordConnected: 'Discord account connected',

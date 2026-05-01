@@ -75,7 +75,6 @@ const fr: Translations = {
     user: 'Utilisateur',
     accountInfo: 'Informations du compte',
     username: "Nom d'utilisateur",
-    discordId: 'Discord ID',
     memberSince: 'Membre depuis',
     discordConnection: 'Connexion Discord',
     discordConnected: 'Compte Discord connecté',
