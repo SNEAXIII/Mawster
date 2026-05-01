@@ -76,7 +76,7 @@ describe('War – Combat completion', () => {
 
   // ── Combat filter: done ──────────────────────────────────────────────────
 
-  it('filter "done" shows only completed entries and hides todo ones', () => {
+  it('filter "done" shows completed entries and dims todo ones', () => {
     setupAttackerScenario('cc-filter-done').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
@@ -91,7 +91,7 @@ describe('War – Combat completion', () => {
 
   // ── Combat filter: todo ──────────────────────────────────────────────────
 
-  it('filter "todo" hides completed entries', () => {
+  it('filter "todo" dims completed entries instead of hiding them', () => {
     setupAttackerScenario('cc-filter-todo').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
@@ -100,7 +100,8 @@ describe('War – Combat completion', () => {
       cy.getByCy('war-combat-filter').click();
       cy.contains('To do').click();
 
-      cy.getByCy('attacker-entry-node-10').should('not.exist');
+      cy.getByCy('attacker-entry-node-10').should('be.visible');
+      cy.getByCy('attacker-entry-node-10').parent().should('have.class', 'opacity-40');
     });
   });
 
@@ -113,6 +114,133 @@ describe('War – Combat completion', () => {
       cy.contains('To do').click();
 
       cy.getByCy('attacker-entry-node-10').should('be.visible');
+    });
+  });
+
+  it('filter "todo" does not dim todo entries', () => {
+    setupAttackerScenario('cc-todo-no-dim').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      goToAttackersMode(ownerData.user_id);
+
+      cy.getByCy('war-combat-filter').click();
+      cy.contains('To do').click();
+
+      cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-40');
+    });
+  });
+
+  it('filter "done" dims todo entries', () => {
+    setupAttackerScenario('cc-done-dim-todo').then(({ adminToken, memberData, ownerData, allianceId, memberAccId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      cy.apiLoadChampion(adminToken, 'Spider-Man', 'Science').then((champs: { id: string }[]) => {
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, 'Rare').then((cu: { id: string }) => {
+          cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 11, cu.id);
+          cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
+          goToAttackersMode(ownerData.user_id);
+
+          cy.getByCy('war-combat-filter').click();
+          cy.contains('Done').click();
+
+          cy.getByCy('attacker-entry-node-11').parent().should('have.class', 'opacity-40');
+        });
+      });
+    });
+  });
+
+  it('filter "done" does not dim completed entries', () => {
+    setupAttackerScenario('cc-done-no-dim').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
+      goToAttackersMode(ownerData.user_id);
+
+      cy.getByCy('war-combat-filter').click();
+      cy.contains('Done').click();
+
+      cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-40');
+    });
+  });
+
+  it('filter "all" does not dim any entries', () => {
+    setupAttackerScenario('cc-all-no-dim').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
+      goToAttackersMode(ownerData.user_id);
+
+      cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-40');
+    });
+  });
+});
+
+// ── Map dimming ────────────────────────────────────────────────────────────────
+
+describe('War – Combat filter map dimming', () => {
+  beforeEach(() => {
+    cy.truncateDb();
+  });
+
+  it('filter "todo" dims done node on map', () => {
+    setupAttackerScenario('map-todo-dim-done').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
+      goToAttackersMode(ownerData.user_id);
+
+      cy.getByCy('war-combat-filter').click();
+      cy.contains('To do').click();
+
+      cy.getByCy('war-node-10').should('have.class', 'opacity-25');
+    });
+  });
+
+  it('filter "todo" does not dim todo node on map', () => {
+    setupAttackerScenario('map-todo-no-dim-todo').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      goToAttackersMode(ownerData.user_id);
+
+      cy.getByCy('war-combat-filter').click();
+      cy.contains('To do').click();
+
+      cy.getByCy('war-node-10').should('not.have.class', 'opacity-25');
+    });
+  });
+
+  it('filter "done" dims todo node on map', () => {
+    setupAttackerScenario('map-done-dim-todo').then(({ adminToken, memberData, ownerData, allianceId, memberAccId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      cy.apiLoadChampion(adminToken, 'Spider-Man', 'Science').then((champs: { id: string }[]) => {
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, 'Rare').then((cu: { id: string }) => {
+          cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 11, cu.id);
+          cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
+          goToAttackersMode(ownerData.user_id);
+
+          cy.getByCy('war-combat-filter').click();
+          cy.contains('Done').click();
+
+          cy.getByCy('war-node-11').should('have.class', 'opacity-25');
+        });
+      });
+    });
+  });
+
+  it('filter "done" does not dim done node on map', () => {
+    setupAttackerScenario('map-done-no-dim-done').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
+      goToAttackersMode(ownerData.user_id);
+
+      cy.getByCy('war-combat-filter').click();
+      cy.contains('Done').click();
+
+      cy.getByCy('war-node-10').should('not.have.class', 'opacity-25');
+    });
+  });
+
+  it('filter "all" does not dim any node on map', () => {
+    setupAttackerScenario('map-all-no-dim').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
+      goToAttackersMode(ownerData.user_id);
+
+      cy.getByCy('war-node-10').should('not.have.class', 'opacity-25');
     });
   });
 });
