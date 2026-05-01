@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
-import { X, Minus, Plus, Swords, CircleQuestionMark, CheckCircle, RotateCcw } from 'lucide-react';
+import { X, Minus, Plus, Swords, CircleQuestionMark, CheckCircle } from 'lucide-react';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '@/app/contexts/war-context';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
@@ -128,6 +128,27 @@ export default function AttackerEntryRow({
       )}
       {placement.attacker_champion_user_id && !readonly && (
         <>
+        
+          <button
+            type='button'
+            className={cn(
+              'rounded-full flex items-center justify-center flex-shrink-0 transition-colors',
+              placement.is_combat_completed
+                ? 'bg-red-700/80 hover:bg-red-700 text-white'
+                : 'bg-green-700 text-muted-foreground hover:text-white',
+              btnSize
+            )}
+            onClick={() => handleToggleCombatCompleted(placement.node_number)}
+            title={placement.is_combat_completed ? t.game.war.markCombatUndone : t.game.war.markCombatDone}
+            data-cy={`combat-complete-node-${placement.node_number}`}
+          >
+            {placement.is_combat_completed ? (
+              <X className={cn(iconSize)} />
+            ) : (
+              <CheckCircle className={cn(iconSize)} />
+            )}
+          </button>
+
           {!placement.is_combat_completed && (
             <div
               className='flex items-center gap-1'
@@ -178,26 +199,6 @@ export default function AttackerEntryRow({
               {placement.ko_count}
             </span>
           )}
-
-          <button
-            type='button'
-            className={cn(
-              'rounded-full flex items-center justify-center flex-shrink-0 transition-colors',
-              placement.is_combat_completed
-                ? 'bg-green-700/80 hover:bg-green-700 text-white'
-                : 'bg-muted hover:bg-green-700/60 text-muted-foreground hover:text-white',
-              btnSize
-            )}
-            onClick={() => handleToggleCombatCompleted(placement.node_number)}
-            title={placement.is_combat_completed ? t.game.war.markCombatUndone : t.game.war.markCombatDone}
-            data-cy={`combat-complete-node-${placement.node_number}`}
-          >
-            {placement.is_combat_completed ? (
-              <RotateCcw className={cn(iconSize)} />
-            ) : (
-              <CheckCircle className={cn(iconSize)} />
-            )}
-          </button>
 
           {!placement.is_combat_completed && (
             <>
