@@ -219,6 +219,15 @@ declare namespace Cypress {
       koCount: number,
     ): Chainable<any>;
 
+    /** Toggle combat completion for a war node (direct backend call). */
+    apiToggleCombatCompleted(
+      token: string,
+      allianceId: string,
+      warId: string,
+      battlegroup: number,
+      nodeNumber: number,
+    ): Chainable<any>;
+
     /** Add a synergy champion for a war battlegroup (direct backend call). */
     apiAddWarSynergy(
       token: string,
