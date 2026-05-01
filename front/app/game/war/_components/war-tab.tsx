@@ -19,6 +19,8 @@ type ToggleButtonProps = {
   children: ReactNode;
 };
 
+export type fightStateFilter = 'all' | 'done' | 'todo';
+
 function ToggleButton({ active, onClick, dataCy, children }: Readonly<ToggleButtonProps>) {
   return (
     <button
@@ -65,26 +67,34 @@ export default function WarTab() {
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId) ?? null;
 
   const [playerFilter, setPlayerFilter] = useState('');
+  const [combatFilter, setCombatFilter] = useState<fightStateFilter>('todo');
 
   useEffect(() => {
     setPlayerFilter('');
+    setCombatFilter('todo');
   }, [selectedBg]);
 
   const prefightNodes = new Set(prefights.map((pf) => pf.target_node_number));
 
-  const dimmedNodes = playerFilter
-    ? new Set(
-        placements
-          .filter((p) => {
-            const isMyAttacker = p.attacker_pseudo === playerFilter;
-            const isMyPrefight = prefights.some(
-              (pf) => pf.target_node_number === p.node_number && pf.game_pseudo === playerFilter
-            );
-            return !isMyAttacker && !isMyPrefight;
-          })
-          .map((p) => p.node_number)
-      )
-    : undefined;
+  const dimmedNodes = (() => {
+    const dimmed = new Set<number>();
+    for (const p of placements) {
+      let shouldDim = false;
+      if (playerFilter) {
+        const isMyAttacker = p.attacker_pseudo === playerFilter;
+        const isMyPrefight = prefights.some(
+          (pf) => pf.target_node_number === p.node_number && pf.game_pseudo === playerFilter
+        );
+        if (!isMyAttacker && !isMyPrefight) shouldDim = true;
+      }
+      if (!shouldDim && combatFilter !== 'all' && p.attacker_champion_user_id) {
+        if (combatFilter === 'todo' && p.is_combat_completed) shouldDim = true;
+        if (combatFilter === 'done' && !p.is_combat_completed) shouldDim = true;
+      }
+      if (shouldDim) dimmed.add(p.node_number);
+    }
+    return dimmed.size > 0 ? dimmed : undefined;
+  })();
 
   return (
     <div className='space-y-4'>
@@ -264,6 +274,8 @@ export default function WarTab() {
             <WarAttackerPanel
               playerFilter={playerFilter}
               onPlayerChange={setPlayerFilter}
+              combatFilter={combatFilter}
+              onCombatFilterChange={setCombatFilter}
             />
           </div>
         </div>

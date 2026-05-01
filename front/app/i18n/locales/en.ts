@@ -307,6 +307,12 @@ const en = {
       assignError: 'Failed to assign attacker',
       removeAttackerSuccess: 'Attacker removed',
       removeAttackerError: 'Failed to remove attacker',
+      markCombatDone: 'Mark as done',
+      markCombatUndone: 'Undo',
+      markCombatError: 'Failed to update combat status',
+      combatFilterAll: 'All',
+      combatFilterDone: 'Done',
+      combatFilterTodo: 'To do',
       replaceDefenderWithAttackerTitle: 'Replace Defender',
       replaceDefenderWithAttackerDesc:
         'An attacker is already assigned to this node. Replacing the defender will also clear the attacker. Continue?',

@@ -40,6 +40,7 @@ export interface WarPlacement {
   placed_by_pseudo: string | null;
   created_at: string;
   ko_count: number;
+  is_combat_completed: boolean;
   attacker_champion_user_id: string | null;
   attacker_game_account_id: string | null;
   attacker_pseudo: string | null;
@@ -315,6 +316,20 @@ export async function updateWarKo(
     }
   );
   await throwOnError(response, 'Failed to update KO count');
+  return response.json();
+}
+
+export async function toggleCombatCompleted(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  nodeNumber: number
+): Promise<WarPlacement> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/complete`,
+    { method: 'PATCH', headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to toggle combat completion');
   return response.json();
 }
 

@@ -1404,3 +1404,147 @@ class TestWarSeasonLink:
         body = response.json()
         assert body["season_id"] is None
         assert body["season_number"] is None
+
+
+# ─── TestToggleCombatCompleted ────────────────────────────────────────────────
+
+
+class TestToggleCombatCompleted:
+    """PATCH /alliances/{id}/wars/{id}/bg/{bg}/node/{node}/complete"""
+
+    @pytest.mark.asyncio
+    async def test_toggle_marks_combat_completed(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers,
+        )
+
+        response = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/complete",
+            payload={},
+            headers=headers,
+        )
+        assert response.status_code == 200
+        assert response.json()["is_combat_completed"] is True
+
+    @pytest.mark.asyncio
+    async def test_toggle_twice_marks_combat_not_completed(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers,
+        )
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/complete",
+            payload={},
+            headers=headers,
+        )
+        response = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/complete",
+            payload={},
+            headers=headers,
+        )
+        assert response.status_code == 200
+        assert response.json()["is_combat_completed"] is False
+
+    @pytest.mark.asyncio
+    async def test_toggle_no_defender_returns_404(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/20/complete",
+            payload={},
+            headers=headers,
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_toggle_no_attacker_returns_422(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/complete",
+            payload={},
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_assign_attacker_blocked_when_completed(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers,
+        )
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/complete",
+            payload={},
+            headers=headers,
+        )
+
+        champ2 = await push_champion(name="Thor", champion_class="Cosmic")
+        cu2 = await push_champion_user(data["member"], champ2, stars=7, rank=3)
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(cu2.id)},
+            headers=headers,
+        )
+        assert response.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_remove_attacker_blocked_when_completed(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers,
+        )
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/complete",
+            payload={},
+            headers=headers,
+        )
+
+        response = await execute_delete_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            headers=headers,
+        )
+        assert response.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_update_ko_blocked_when_completed(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers,
+        )
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/complete",
+            payload={},
+            headers=headers,
+        )
+
+        response = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/ko",
+            payload={"ko_count": 2},
+            headers=headers,
+        )
+        assert response.status_code == 409
