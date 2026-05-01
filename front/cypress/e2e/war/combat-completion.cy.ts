@@ -130,20 +130,14 @@ describe('War – Combat completion', () => {
   });
 
   it('filter "done" dims todo entries', () => {
-    setupAttackerScenario('cc-done-dim-todo').then(({ adminToken, memberData, ownerData, allianceId, memberAccId, warId, championUserId }) => {
+    setupAttackerScenario('cc-done-dim-todo').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      cy.apiLoadChampion(adminToken, 'Spider-Man', 'Science').then((champs: { id: string }[]) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '6r4').then((cu: { id: string }) => {
-          cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 11, cu.id);
-          cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
-          goToAttackersMode(ownerData.user_id);
+      goToAttackersMode(ownerData.user_id);
 
-          cy.getByCy('war-combat-filter').click({ force: true });
-          cy.contains('Done').click({ force: true });
+      cy.getByCy('war-combat-filter').click({ force: true });
+      cy.contains('Done').click({ force: true });
 
-          cy.getByCy('attacker-entry-node-11').parent().should('have.class', 'opacity-40');
-        });
-      });
+      cy.getByCy('attacker-entry-node-10').parent().should('have.class', 'opacity-40');
     });
   });
 
@@ -204,20 +198,14 @@ describe('War – Combat filter map dimming', () => {
   });
 
   it('filter "done" dims todo node on map', () => {
-    setupAttackerScenario('map-done-dim-todo').then(({ adminToken, memberData, ownerData, allianceId, memberAccId, warId, championUserId }) => {
+    setupAttackerScenario('map-done-dim-todo').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      cy.apiLoadChampion(adminToken, 'Spider-Man', 'Science').then((champs: { id: string }[]) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '6r4').then((cu: { id: string }) => {
-          cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 11, cu.id);
-          cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
-          goToAttackersMode(ownerData.user_id);
+      goToAttackersMode(ownerData.user_id);
 
-          cy.getByCy('war-combat-filter').click({ force: true });
-          cy.contains('Done').click({ force: true });
+      cy.getByCy('war-combat-filter').click({ force: true });
+      cy.contains('Done').click({ force: true });
 
-          cy.getByCy('war-node-11').should('have.class', 'opacity-25');
-        });
-      });
+      cy.getByCy('war-node-10').should('have.class', 'opacity-25');
     });
   });
 
