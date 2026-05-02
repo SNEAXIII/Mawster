@@ -46,6 +46,7 @@ def test_fight_record_response_flattens_all():
     record.id = uuid.uuid4()
     record.war_id = uuid.uuid4()
     record.alliance_id = uuid.uuid4()
+    record.alliance.name = "Alliance X"
     record.season_id = None
     record.game_account.game_pseudo = "PlayerOne"
     record.battlegroup = 1
