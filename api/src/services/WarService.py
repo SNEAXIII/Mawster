@@ -373,6 +373,8 @@ class WarService:
         session.add(war)
         await session.commit()
         await session.refresh(war)
+        from src.services.FightRecordService import FightRecordService
+        await FightRecordService.snapshot_war(session, war)
         return WarResponse.model_validate(await cls._load_war(session, war.id))
 
     @classmethod
