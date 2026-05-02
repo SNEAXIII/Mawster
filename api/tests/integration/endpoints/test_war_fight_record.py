@@ -133,6 +133,35 @@ class TestWarFightRecordSnapshot:
         assert len(records) == 0
 
 
+    @pytest.mark.asyncio
+    async def test_end_war_idempotent_snapshot(self, session):
+        """Calling end_war twice must not create duplicate fight records."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response1 = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 50},
+            headers=headers,
+        )
+        assert response1.status_code == 200
+
+        response2 = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 50},
+            headers=headers,
+        )
+        assert response2.status_code == 200
+
+        records = (await session.exec(
+            select(WarFightRecord).where(WarFightRecord.war_id == data["war"].id)
+        )).all()
+        assert len(records) == 1
+
+        war = await session.get(War, data["war"].id)
+        assert war.snapshotted_at is not None
+
+
 class TestListFightRecords:
     @pytest.mark.asyncio
     async def test_list_fight_records_returns_snapshot(self):
