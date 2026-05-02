@@ -3,10 +3,10 @@
 import uuid
 import pytest
 
-from tests.utils.utils_client import create_auth_headers, execute_post_request, execute_patch_request
+from tests.utils.utils_client import create_auth_headers, execute_post_request, execute_patch_request, execute_get_request
 from tests.utils.utils_constant import USER_ID, USER2_ID, GAME_PSEUDO, GAME_PSEUDO_2, ALLIANCE_NAME, ALLIANCE_TAG
 from tests.integration.endpoints.setup.game_setup import (
-    push_alliance_with_owner, push_member, push_officer, push_champion, push_champion_user,
+    push_alliance_with_owner, push_member, push_officer, push_champion,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 from tests.utils.utils_db import load_objects
@@ -131,3 +131,63 @@ class TestWarFightRecordSnapshot:
             select(WarFightRecord).where(WarFightRecord.war_id == war.id)
         )).all()
         assert len(records) == 0
+
+
+class TestListFightRecords:
+    @pytest.mark.asyncio
+    async def test_list_fight_records_returns_snapshot(self):
+        data = await _setup_war_with_fight()
+        headers_owner = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 50},
+            headers=headers_owner,
+        )
+
+        response = await execute_get_request("/fight-records", headers=headers_owner)
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) == 1
+        record = body[0]
+        assert record["node_number"] == 10
+        assert record["battlegroup"] == 1
+        assert record["champion_id"] == str(data["attacker_champ"].id)
+        assert record["stars"] == 7
+        assert record["rank"] == 4
+        assert record["is_saga_attacker"] is True
+        assert record["defender_champion_id"] == str(data["defender_champ"].id)
+        assert record["ko_count"] == 1
+
+    @pytest.mark.asyncio
+    async def test_list_fight_records_filtered_by_champion(self):
+        data = await _setup_war_with_fight()
+        headers_owner = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 50},
+            headers=headers_owner,
+        )
+
+        response = await execute_get_request(
+            f"/fight-records?champion_id={data['attacker_champ'].id}",
+            headers=headers_owner,
+        )
+        assert response.status_code == 200
+        assert len(response.json()) == 1
+
+        response_no_match = await execute_get_request(
+            f"/fight-records?champion_id={uuid.uuid4()}",
+            headers=headers_owner,
+        )
+        assert response_no_match.status_code == 200
+        assert len(response_no_match.json()) == 0
+
+    @pytest.mark.asyncio
+    async def test_list_fight_records_requires_alliance_membership(self):
+        """User without a game account (no alliance) must get 403."""
+        await load_objects([get_generic_user(is_base_id=True)])
+        headers = create_auth_headers(user_id=str(USER_ID))
+        response = await execute_get_request("/fight-records", headers=headers)
+        assert response.status_code == 403
