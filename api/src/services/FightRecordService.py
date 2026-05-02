@@ -1,12 +1,16 @@
+import math
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from fastapi import HTTPException
 from sqlalchemy import func
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import aliased, selectinload
 from sqlmodel import and_, select
 from starlette import status
+
+if TYPE_CHECKING:
+    from src.dto.dto_fight_record import PaginatedFightRecordsResponse
 
 from src.models.Alliance import Alliance
 from src.models.Champion import Champion
@@ -155,31 +159,94 @@ class FightRecordService:
         season_id: Optional[uuid.UUID] = None,
         alliance_id: Optional[uuid.UUID] = None,
         battlegroup: Optional[int] = None,
-    ) -> list[WarFightRecord]:
+        page: int = 1,
+        size: int = 20,
+        sort_by: str = "created_at",
+        sort_order: str = "desc",
+    ) -> "PaginatedFightRecordsResponse":
+        from src.dto.dto_fight_record import PaginatedFightRecordsResponse, WarFightRecordResponse
+
+        # Build conditions list for reuse in count query
+        conditions = []
+        if champion_id is not None:
+            conditions.append(WarFightRecord.champion_id == champion_id)
+        if defender_champion_id is not None:
+            conditions.append(WarFightRecord.defender_champion_id == defender_champion_id)
+        if node_number is not None:
+            conditions.append(WarFightRecord.node_number == node_number)
+        if tier is not None:
+            conditions.append(WarFightRecord.tier == tier)
+        if season_id is not None:
+            conditions.append(WarFightRecord.season_id == season_id)
+        if alliance_id is not None:
+            conditions.append(WarFightRecord.alliance_id == alliance_id)
+        if battlegroup is not None:
+            conditions.append(WarFightRecord.battlegroup == battlegroup)
+
+        # Count query
+        count_stmt = select(func.count()).select_from(WarFightRecord)
+        if conditions:
+            count_stmt = count_stmt.where(and_(*conditions))
+        total = (await session.exec(count_stmt)).one()
+
+        # Build sort column
+        AttackerChampion = aliased(Champion)
+        DefenderChampion = aliased(Champion)
+
+        sort_col_map = {
+            "ko_count": WarFightRecord.ko_count,
+            "tier": WarFightRecord.tier,
+            "node_number": WarFightRecord.node_number,
+            "battlegroup": WarFightRecord.battlegroup,
+            "created_at": WarFightRecord.created_at,
+        }
+
+        needs_attacker_join = sort_by == "champion_name"
+        needs_defender_join = sort_by == "defender_champion_name"
+        needs_alliance_join = sort_by == "alliance_name"
+
+        # Main query
         stmt = select(WarFightRecord).options(
+            selectinload(WarFightRecord.alliance),
             selectinload(WarFightRecord.champion),
             selectinload(WarFightRecord.defender_champion),
             selectinload(WarFightRecord.game_account),
             selectinload(WarFightRecord.synergies).selectinload(WarFightSynergy.champion),
             selectinload(WarFightRecord.prefights).selectinload(WarFightPrefight.champion),
         )
-        if champion_id is not None:
-            stmt = stmt.where(WarFightRecord.champion_id == champion_id)
-        if defender_champion_id is not None:
-            stmt = stmt.where(WarFightRecord.defender_champion_id == defender_champion_id)
-        if node_number is not None:
-            stmt = stmt.where(WarFightRecord.node_number == node_number)
-        if tier is not None:
-            stmt = stmt.where(WarFightRecord.tier == tier)
-        if season_id is not None:
-            stmt = stmt.where(WarFightRecord.season_id == season_id)
-        if alliance_id is not None:
-            stmt = stmt.where(WarFightRecord.alliance_id == alliance_id)
-        if battlegroup is not None:
-            stmt = stmt.where(WarFightRecord.battlegroup == battlegroup)
+        if conditions:
+            stmt = stmt.where(and_(*conditions))
+
+        if needs_attacker_join:
+            stmt = stmt.join(
+                AttackerChampion, WarFightRecord.champion_id == AttackerChampion.id
+            )
+            raw_col = AttackerChampion.name
+        elif needs_defender_join:
+            stmt = stmt.join(
+                DefenderChampion, WarFightRecord.defender_champion_id == DefenderChampion.id
+            )
+            raw_col = DefenderChampion.name
+        elif needs_alliance_join:
+            stmt = stmt.join(Alliance, WarFightRecord.alliance_id == Alliance.id)
+            raw_col = Alliance.name
+        else:
+            raw_col = sort_col_map.get(sort_by, WarFightRecord.created_at)
+
+        sort_col = raw_col.desc() if sort_order == "desc" else raw_col.asc()
+        stmt = stmt.order_by(sort_col).offset((page - 1) * size).limit(size)
 
         result = await session.exec(stmt)
-        return result.all()
+        records = result.all()
+
+        items = [WarFightRecordResponse.model_validate(r) for r in records]
+        return PaginatedFightRecordsResponse(
+            items=items,
+            total=total,
+            page=page,
+            size=size,
+            pages=max(1, math.ceil(total / size)),
+        )
 
     @classmethod
     async def force_snapshot_all(cls, session: SessionDep) -> dict:
