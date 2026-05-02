@@ -51,10 +51,16 @@ class WarFightRecord(SQLModel, table=True):
         sa_relationship_kwargs={"foreign_keys": "[WarFightRecord.game_account_id]"}
     )
     champion: "Champion" = Relationship(
-        sa_relationship_kwargs={"foreign_keys": "[WarFightRecord.champion_id]"}
+        sa_relationship_kwargs={
+            "foreign_keys": "[WarFightRecord.champion_id]",
+            "overlaps": "defender_champion",
+        }
     )
     defender_champion: "Champion" = Relationship(
-        sa_relationship_kwargs={"foreign_keys": "[WarFightRecord.defender_champion_id]"}
+        sa_relationship_kwargs={
+            "foreign_keys": "[WarFightRecord.defender_champion_id]",
+            "overlaps": "champion",
+        }
     )
     synergies: List["WarFightSynergy"] = Relationship(back_populates="fight_record")
     prefights: List["WarFightPrefight"] = Relationship(back_populates="fight_record")
