@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from unittest.mock import MagicMock
 from src.dto.dto_fight_record import (
     WarFightRecordResponse,
@@ -65,7 +66,6 @@ def test_fight_record_response_flattens_all():
     record.ko_count = 2
     record.synergies = []
     record.prefights = []
-    from datetime import datetime
     record.created_at = datetime.now()
 
     result = WarFightRecordResponse.model_validate(record)
