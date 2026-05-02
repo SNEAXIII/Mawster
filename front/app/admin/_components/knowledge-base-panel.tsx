@@ -17,6 +17,7 @@ export default function KnowledgeBasePanel() {
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
+    setError(null);
     try {
       setStats(await getSnapshotStats());
     } catch {
