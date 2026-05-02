@@ -38,9 +38,7 @@ class WarFightRecord(SQLModel, table=True):
     ko_count: int = Field(default=0)
     created_at: datetime = Field(default_factory=datetime.now)
 
-    war: "War" = Relationship(
-        sa_relationship_kwargs={"foreign_keys": "[WarFightRecord.war_id]"}
-    )
+    war: "War" = Relationship(sa_relationship_kwargs={"foreign_keys": "[WarFightRecord.war_id]"})
     alliance: "Alliance" = Relationship(
         sa_relationship_kwargs={"foreign_keys": "[WarFightRecord.alliance_id]"}
     )

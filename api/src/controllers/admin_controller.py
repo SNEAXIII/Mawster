@@ -102,13 +102,17 @@ async def patch_demote_user(
     return {"message": TARGET_USER_DEMOTED_SUCCESSFULLY}
 
 
-@admin_controller.post("/wars/force-snapshot", status_code=200, response_model=ForceSnapshotResponse)
+@admin_controller.post(
+    "/wars/force-snapshot", status_code=200, response_model=ForceSnapshotResponse
+)
 async def force_snapshot_wars(session: SessionDep):
     result = await FightRecordService.force_snapshot_all(session)
     return result
 
 
-@admin_controller.get("/wars/snapshot-stats", status_code=200, response_model=list[AllianceSnapshotStatResponse])
+@admin_controller.get(
+    "/wars/snapshot-stats", status_code=200, response_model=list[AllianceSnapshotStatResponse]
+)
 async def get_snapshot_stats(session: SessionDep):
     result = await FightRecordService.get_snapshot_stats(session)
     return result

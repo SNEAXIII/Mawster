@@ -23,7 +23,6 @@ from src.utils.db import SessionDep
 
 
 class FightRecordService:
-
     @classmethod
     async def snapshot_war(cls, session: SessionDep, war: War) -> None:
         if war.snapshotted_at is not None:
@@ -84,19 +83,19 @@ class FightRecordService:
                         WarPrefightAttacker.target_node_number == placement.node_number,
                     )
                 )
-                .options(
-                    selectinload(WarPrefightAttacker.champion_user)
-                )
+                .options(selectinload(WarPrefightAttacker.champion_user))
             )
             pf_result = await session.exec(pf_stmt)
             for pf in pf_result.all():
                 pf_cu: ChampionUser = pf.champion_user
-                session.add(WarFightPrefight(
-                    war_fight_record_id=record.id,
-                    champion_id=pf_cu.champion_id,
-                    stars=pf_cu.stars,
-                    ascension=pf_cu.ascension,
-                ))
+                session.add(
+                    WarFightPrefight(
+                        war_fight_record_id=record.id,
+                        champion_id=pf_cu.champion_id,
+                        stars=pf_cu.stars,
+                        ascension=pf_cu.ascension,
+                    )
+                )
 
             syn_stmt = (
                 select(WarSynergyAttacker)
@@ -108,19 +107,19 @@ class FightRecordService:
                         == placement.attacker_champion_user_id,
                     )
                 )
-                .options(
-                    selectinload(WarSynergyAttacker.champion_user)
-                )
+                .options(selectinload(WarSynergyAttacker.champion_user))
             )
             syn_result = await session.exec(syn_stmt)
             for syn in syn_result.all():
                 syn_cu: ChampionUser = syn.champion_user
-                session.add(WarFightSynergy(
-                    war_fight_record_id=record.id,
-                    champion_id=syn_cu.champion_id,
-                    stars=syn_cu.stars,
-                    ascension=syn_cu.ascension,
-                ))
+                session.add(
+                    WarFightSynergy(
+                        war_fight_record_id=record.id,
+                        champion_id=syn_cu.champion_id,
+                        stars=syn_cu.stars,
+                        ascension=syn_cu.ascension,
+                    )
+                )
 
         await session.commit()
 
@@ -157,15 +156,12 @@ class FightRecordService:
         alliance_id: Optional[uuid.UUID] = None,
         battlegroup: Optional[int] = None,
     ) -> list[WarFightRecord]:
-        stmt = (
-            select(WarFightRecord)
-            .options(
-                selectinload(WarFightRecord.champion),
-                selectinload(WarFightRecord.defender_champion),
-                selectinload(WarFightRecord.game_account),
-                selectinload(WarFightRecord.synergies).selectinload(WarFightSynergy.champion),
-                selectinload(WarFightRecord.prefights).selectinload(WarFightPrefight.champion),
-            )
+        stmt = select(WarFightRecord).options(
+            selectinload(WarFightRecord.champion),
+            selectinload(WarFightRecord.defender_champion),
+            selectinload(WarFightRecord.game_account),
+            selectinload(WarFightRecord.synergies).selectinload(WarFightSynergy.champion),
+            selectinload(WarFightRecord.prefights).selectinload(WarFightPrefight.champion),
         )
         if champion_id is not None:
             stmt = stmt.where(WarFightRecord.champion_id == champion_id)
@@ -219,6 +215,10 @@ class FightRecordService:
         result = await session.exec(stmt)
         rows = result.all()
         return [
-            {"alliance_id": row.alliance_id, "alliance_name": row.alliance_name, "war_count": row.war_count}
+            {
+                "alliance_id": row.alliance_id,
+                "alliance_name": row.alliance_name,
+                "war_count": row.war_count,
+            }
             for row in rows
         ]

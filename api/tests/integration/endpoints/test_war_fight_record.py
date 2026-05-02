@@ -3,11 +3,26 @@
 import uuid
 import pytest
 
-from tests.utils.utils_client import create_auth_headers, execute_post_request, execute_patch_request, execute_get_request
-from tests.utils.utils_constant import USER_ID, USER2_ID, GAME_PSEUDO, GAME_PSEUDO_2, ALLIANCE_NAME, ALLIANCE_TAG
+from tests.utils.utils_client import (
+    create_auth_headers,
+    execute_post_request,
+    execute_patch_request,
+    execute_get_request,
+)
+from tests.utils.utils_constant import (
+    USER_ID,
+    USER2_ID,
+    GAME_PSEUDO,
+    GAME_PSEUDO_2,
+    ALLIANCE_NAME,
+    ALLIANCE_TAG,
+)
 from src.enums.Roles import Roles
 from tests.integration.endpoints.setup.game_setup import (
-    push_alliance_with_owner, push_member, push_officer, push_champion,
+    push_alliance_with_owner,
+    push_member,
+    push_officer,
+    push_champion,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 from tests.utils.utils_db import load_objects
@@ -25,8 +40,10 @@ async def _setup_war_with_fight():
     await push_user2()
 
     alliance, owner = await push_alliance_with_owner(
-        user_id=USER_ID, game_pseudo=GAME_PSEUDO,
-        alliance_name=ALLIANCE_NAME, alliance_tag=ALLIANCE_TAG,
+        user_id=USER_ID,
+        game_pseudo=GAME_PSEUDO,
+        alliance_name=ALLIANCE_NAME,
+        alliance_tag=ALLIANCE_TAG,
     )
     await push_officer(alliance, owner)
     member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -35,39 +52,58 @@ async def _setup_war_with_fight():
 
     await execute_patch_request(
         f"/alliances/{alliance.id}/members/{owner.id}/group",
-        payload={"group": 1}, headers=headers_owner,
+        payload={"group": 1},
+        headers=headers_owner,
     )
     await execute_patch_request(
         f"/alliances/{alliance.id}/members/{member.id}/group",
-        payload={"group": 1}, headers=headers_owner,
+        payload={"group": 1},
+        headers=headers_owner,
     )
 
     from src.models.Champion import Champion
     from src.models.ChampionUser import ChampionUser
+
     defender_champ = Champion(name="Thanos", champion_class="Cosmic")
     attacker_champ = Champion(name="Spider-Man", champion_class="Science", is_saga_attacker=True)
     attacker_cu = ChampionUser(
-        game_account_id=member.id, champion_id=attacker_champ.id,
-        stars=7, rank=4, ascension=0,
+        game_account_id=member.id,
+        champion_id=attacker_champ.id,
+        stars=7,
+        rank=4,
+        ascension=0,
     )
     await load_objects([defender_champ, attacker_champ, attacker_cu])
 
     war = War(
-        id=uuid.uuid4(), alliance_id=alliance.id,
-        opponent_name=OPPONENT, created_by_id=owner.id,
+        id=uuid.uuid4(),
+        alliance_id=alliance.id,
+        opponent_name=OPPONENT,
+        created_by_id=owner.id,
     )
     placement = WarDefensePlacement(
-        war_id=war.id, battlegroup=1, node_number=10,
-        champion_id=defender_champ.id, stars=6, rank=3, ascension=0,
+        war_id=war.id,
+        battlegroup=1,
+        node_number=10,
+        champion_id=defender_champ.id,
+        stars=6,
+        rank=3,
+        ascension=0,
         attacker_champion_user_id=attacker_cu.id,
-        ko_count=1, is_combat_completed=False,
+        ko_count=1,
+        is_combat_completed=False,
     )
     await load_objects([war, placement])
 
     return {
-        "alliance": alliance, "owner": owner, "member": member,
-        "war": war, "placement": placement, "attacker_cu": attacker_cu,
-        "attacker_champ": attacker_champ, "defender_champ": defender_champ,
+        "alliance": alliance,
+        "owner": owner,
+        "member": member,
+        "war": war,
+        "placement": placement,
+        "attacker_cu": attacker_cu,
+        "attacker_champ": attacker_champ,
+        "defender_champ": defender_champ,
     }
 
 
@@ -84,9 +120,11 @@ class TestWarFightRecordSnapshot:
         )
         assert response.status_code == 200
 
-        records = (await session.exec(
-            select(WarFightRecord).where(WarFightRecord.war_id == data["war"].id)
-        )).all()
+        records = (
+            await session.exec(
+                select(WarFightRecord).where(WarFightRecord.war_id == data["war"].id)
+            )
+        ).all()
         assert len(records) == 1
         r = records[0]
         assert r.node_number == 10
@@ -105,18 +143,27 @@ class TestWarFightRecordSnapshot:
         """Nodes without an attacker assigned must not produce a fight record."""
         await load_objects([get_generic_user(is_base_id=True)])
         alliance, owner = await push_alliance_with_owner(
-            user_id=USER_ID, game_pseudo=GAME_PSEUDO,
-            alliance_name=ALLIANCE_NAME, alliance_tag=ALLIANCE_TAG,
+            user_id=USER_ID,
+            game_pseudo=GAME_PSEUDO,
+            alliance_name=ALLIANCE_NAME,
+            alliance_tag=ALLIANCE_TAG,
         )
         await push_officer(alliance, owner)
         defender_champ = await push_champion(name="Hulk", champion_class="Science")
         war = War(
-            id=uuid.uuid4(), alliance_id=alliance.id,
-            opponent_name=OPPONENT, created_by_id=owner.id,
+            id=uuid.uuid4(),
+            alliance_id=alliance.id,
+            opponent_name=OPPONENT,
+            created_by_id=owner.id,
         )
         placement = WarDefensePlacement(
-            war_id=war.id, battlegroup=1, node_number=5,
-            champion_id=defender_champ.id, stars=6, rank=3, ascension=0,
+            war_id=war.id,
+            battlegroup=1,
+            node_number=5,
+            champion_id=defender_champ.id,
+            stars=6,
+            rank=3,
+            ascension=0,
         )
         await load_objects([war, placement])
 
@@ -128,11 +175,10 @@ class TestWarFightRecordSnapshot:
         )
         assert response.status_code == 200
 
-        records = (await session.exec(
-            select(WarFightRecord).where(WarFightRecord.war_id == war.id)
-        )).all()
+        records = (
+            await session.exec(select(WarFightRecord).where(WarFightRecord.war_id == war.id))
+        ).all()
         assert len(records) == 0
-
 
     @pytest.mark.asyncio
     async def test_end_war_idempotent_snapshot(self, session):
@@ -154,9 +200,11 @@ class TestWarFightRecordSnapshot:
         )
         assert response2.status_code == 200
 
-        records = (await session.exec(
-            select(WarFightRecord).where(WarFightRecord.war_id == data["war"].id)
-        )).all()
+        records = (
+            await session.exec(
+                select(WarFightRecord).where(WarFightRecord.war_id == data["war"].id)
+            )
+        ).all()
         assert len(records) == 1
 
         war = await session.get(War, data["war"].id)
@@ -231,6 +279,7 @@ class TestAdminSnapshotEndpoints:
         # End the war via the API so it has status=ended but snapshotted_at is set by end_war.
         # Instead, directly set war status to ended without calling snapshot_war.
         from src.models.War import WarStatus
+
         war = await session.get(War, data["war"].id)
         war.status = WarStatus.ended
         war.tier = 1
