@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import Optional
 
 from fastapi import HTTPException
@@ -23,6 +24,9 @@ class FightRecordService:
 
     @classmethod
     async def snapshot_war(cls, session: SessionDep, war: War) -> None:
+        if war.snapshotted_at is not None:
+            return
+
         stmt = (
             select(WarDefensePlacement)
             .where(
@@ -116,6 +120,11 @@ class FightRecordService:
                     ascension=syn_cu.ascension,
                 ))
 
+        await session.commit()
+
+        await session.refresh(war)
+        war.snapshotted_at = datetime.now()
+        session.add(war)
         await session.commit()
 
     @classmethod
