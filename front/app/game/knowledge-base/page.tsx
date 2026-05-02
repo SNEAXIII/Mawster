@@ -17,6 +17,7 @@ export default function KnowledgeBasePage() {
         onChange={vm.handleFilterChange}
         onClear={vm.handleClearFilters}
       />
+      {vm.error && <p className="text-destructive text-sm">{t.game.knowledgeBase.noData}</p>}
       <KnowledgeBaseTable
         records={vm.data?.items ?? []}
         loading={vm.loading}

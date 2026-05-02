@@ -70,9 +70,9 @@ export default function KnowledgeBaseFilters({ filters, onChange, onClear }: Pro
         </SelectTrigger>
         <SelectContent>
           <SelectItem value='__all__'>{t.game.knowledgeBase.allChampions}</SelectItem>
-          <SelectItem value='1'>BG 1</SelectItem>
-          <SelectItem value='2'>BG 2</SelectItem>
-          <SelectItem value='3'>BG 3</SelectItem>
+          <SelectItem value='1'>{kb.filterBg} 1</SelectItem>
+          <SelectItem value='2'>{kb.filterBg} 2</SelectItem>
+          <SelectItem value='3'>{kb.filterBg} 3</SelectItem>
         </SelectContent>
       </Select>
       <Button variant='outline' onClick={onClear} data-cy='filter-clear'>
