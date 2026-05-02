@@ -66,6 +66,7 @@ class WarFightRecordResponse(BaseModel):
     battlegroup: int
     node_number: int
     tier: int
+    alliance_name: str
     champion_id: uuid.UUID
     champion_name: str
     champion_class: str
@@ -96,6 +97,7 @@ class WarFightRecordResponse(BaseModel):
             "id": data.id,
             "war_id": data.war_id,
             "alliance_id": data.alliance_id,
+            "alliance_name": data.alliance.name,
             "season_id": data.season_id,
             "game_account_pseudo": data.game_account.game_pseudo,
             "battlegroup": data.battlegroup,
@@ -122,6 +124,14 @@ class WarFightRecordResponse(BaseModel):
             "prefights": data.prefights,
             "created_at": data.created_at,
         }
+
+
+class PaginatedFightRecordsResponse(BaseModel):
+    items: list[WarFightRecordResponse]
+    total: int
+    page: int
+    size: int
+    pages: int
 
 
 class ForceSnapshotResponse(BaseModel):
