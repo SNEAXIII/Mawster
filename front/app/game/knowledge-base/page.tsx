@@ -12,19 +12,6 @@ export default function KnowledgeBasePage() {
   return (
     <div className='px-3 py-4 sm:p-6 space-y-4'>
       <h1 className='text-2xl font-bold'>{t.game.knowledgeBase.title}</h1>
-      <KnowledgeBaseFilters
-        filters={vm.filters}
-        onChange={vm.handleFilterChange}
-        onClear={vm.handleClearFilters}
-      />
-      {vm.error && <p className="text-destructive text-sm">{t.game.knowledgeBase.noData}</p>}
-      <KnowledgeBaseTable
-        records={vm.data?.items ?? []}
-        loading={vm.loading}
-        sortBy={vm.sortBy}
-        sortOrder={vm.sortOrder}
-        onSort={vm.handleSort}
-      />
       {vm.data && (
         <PaginationControls
           currentPage={vm.page}
@@ -45,6 +32,22 @@ export default function KnowledgeBasePage() {
           }}
         />
       )}
+      <KnowledgeBaseFilters
+        filters={vm.filters}
+        onChange={vm.handleFilterChange}
+        onClear={vm.handleClearFilters}
+      />
+
+      {vm.data && (
+        <KnowledgeBaseTable
+          records={vm.data.items}
+          loading={vm.loading}
+          sortBy={vm.sortBy}
+          sortOrder={vm.sortOrder}
+          onSort={vm.handleSort}
+        />
+      )}
+      {vm.error && <p className='text-destructive text-sm'>{t.game.knowledgeBase.noData}</p>}
     </div>
   );
 }

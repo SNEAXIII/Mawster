@@ -16,7 +16,6 @@ interface Filters {
   defender_champion_id: string | null;
   node_number: string;
   tier: string;
-  battlegroup: string;
 }
 
 interface Props {
@@ -61,20 +60,6 @@ export default function KnowledgeBaseFilters({ filters, onChange, onClear }: Pro
         onChange={(e) => onChange('tier', e.target.value || null)}
         data-cy='filter-tier'
       />
-      <Select
-        value={filters.battlegroup || '__all__'}
-        onValueChange={(v) => onChange('battlegroup', v === '__all__' ? null : v)}
-      >
-        <SelectTrigger className='w-24' data-cy='filter-bg'>
-          <SelectValue placeholder={kb.filterBg} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value='__all__'>{t.game.knowledgeBase.allChampions}</SelectItem>
-          <SelectItem value='1'>{kb.filterBg} 1</SelectItem>
-          <SelectItem value='2'>{kb.filterBg} 2</SelectItem>
-          <SelectItem value='3'>{kb.filterBg} 3</SelectItem>
-        </SelectContent>
-      </Select>
       <Button variant='outline' onClick={onClear} data-cy='filter-clear'>
         {kb.clearFilters}
       </Button>

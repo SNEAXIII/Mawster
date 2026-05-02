@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { getChampions, getChampionImageUrl, type Champion } from '@/app/services/champions';
 import { useI18n } from '@/app/i18n';
-import { ChevronsUpDown } from 'lucide-react';
+import { ChevronsUpDown, X } from 'lucide-react';
 
 interface ChampionFilterSelectProps {
   value: string | null;
@@ -27,7 +27,7 @@ export default function ChampionFilterSelect({
   onChange,
   placeholder,
   'data-cy': dataCy,
-}: ChampionFilterSelectProps) {
+}: Readonly<ChampionFilterSelectProps>) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [champions, setChampions] = useState<Champion[]>([]);
@@ -65,7 +65,18 @@ export default function ChampionFilterSelect({
           data-cy={dataCy}
         >
           <span className="truncate">{displayLabel}</span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          {value ? (
+            <span
+              role="button"
+              data-cy={dataCy ? `${dataCy}-clear` : undefined}
+              onClick={(e) => { e.stopPropagation(); onChange(null); }}
+              className="ml-1 rounded-sm p-0.5 hover:bg-muted"
+            >
+              <X className="h-3 w-3" />
+            </span>
+          ) : (
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-0">

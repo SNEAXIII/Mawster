@@ -40,7 +40,6 @@ export interface FightRecord {
   alliance_name: string;
   season_id: string | null;
   game_account_pseudo: string;
-  battlegroup: number;
   node_number: number;
   tier: number;
   champion_id: string;
@@ -80,7 +79,6 @@ export interface FightRecordFilters {
   tier?: number;
   season_id?: string;
   alliance_id?: string;
-  battlegroup?: number;
   page?: number;
   size?: number;
   sort_by?: string;
@@ -112,7 +110,8 @@ export async function getFightRecords(filters?: FightRecordFilters): Promise<Pag
     }
   }
   const query = qs.toString();
-  const res = await fetch(`${PROXY}/fight-records${query ? `?${query}` : ''}`, {
+  const params = query ? `?${query}` : '';
+  const res = await fetch(`${PROXY}/fight-records${params}`, {
     headers: jsonHeaders,
   });
   if (!res.ok) throw new Error('Failed to load fight records');

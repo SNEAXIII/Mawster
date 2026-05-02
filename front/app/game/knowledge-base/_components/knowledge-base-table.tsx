@@ -3,23 +3,38 @@ import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 import { getChampionImageUrl } from '@/app/services/champions';
 import type { FightRecord, SynergyRecord } from '@/app/services/fight-records';
+import { cn } from '@/app/lib/utils';
 
 interface Props {
-  records: FightRecord[];
-  loading: boolean;
-  sortBy: string;
-  sortOrder: 'asc' | 'desc';
-  onSort: (col: string) => void;
+  readonly records: ReadonlyArray<FightRecord>;
+  readonly loading: boolean;
+  readonly sortBy: string;
+  readonly sortOrder: 'asc' | 'desc';
+  readonly onSort: (col: string) => void;
 }
 
-function SortIcon({ col, sortBy, sortOrder }: { col: string; sortBy: string; sortOrder: 'asc' | 'desc' }) {
+type SortIconProps = Readonly<{
+  col: string;
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+}>;
+
+function SortIcon({ col, sortBy, sortOrder }: SortIconProps) {
   if (sortBy !== col) return <ArrowUpDown className='ml-1 h-3 w-3 inline opacity-40' />;
   return sortOrder === 'asc'
     ? <ArrowUp className='ml-1 h-3 w-3 inline' />
     : <ArrowDown className='ml-1 h-3 w-3 inline' />;
 }
 
-function SortableTh({ col, label, sortBy, sortOrder, onSort }: { col: string; label: string; sortBy: string; sortOrder: 'asc' | 'desc'; onSort: (c: string) => void }) {
+type SortableThProps = Readonly<{
+  col: string;
+  label: string;
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+  onSort: (c: string) => void;
+}>;
+
+function SortableTh({ col, label, sortBy, sortOrder, onSort }: SortableThProps) {
   return (
     <th
       className='px-3 py-2 text-left text-xs font-semibold text-muted-foreground cursor-pointer whitespace-nowrap select-none hover:text-foreground'
@@ -31,7 +46,14 @@ function SortableTh({ col, label, sortBy, sortOrder, onSort }: { col: string; la
   );
 }
 
-function ChampionCell({ name, imageUrl, stars, rank }: { name: string; imageUrl: string | null; stars: number; rank: number }) {
+type ChampionCellProps = Readonly<{
+  name: string;
+  imageUrl: string | null;
+  stars: number;
+  rank: number;
+}>;
+
+function ChampionCell({ name, imageUrl, stars, rank }: ChampionCellProps) {
   const src = getChampionImageUrl(imageUrl, 40);
   return (
     <td className='px-3 py-2'>
@@ -46,21 +68,22 @@ function ChampionCell({ name, imageUrl, stars, rank }: { name: string; imageUrl:
   );
 }
 
-function SynergiesCell({ synergies }: { synergies: SynergyRecord[] }) {
-  const shown = synergies.slice(0, 4);
-  const extra = synergies.length - shown.length;
+type SynergiesCellProps = Readonly<{
+  synergies: ReadonlyArray<SynergyRecord>;
+}>;
+
+function SynergiesCell({ synergies }: SynergiesCellProps) {
   return (
     <td className='px-3 py-2'>
       <div className='flex items-center gap-1 flex-wrap'>
-        {shown.map((s) => {
-          const src = getChampionImageUrl(s.image_url, 28);
+        {synergies.map((s) => {
+          const src = getChampionImageUrl(s.image_url, 40);
           return src ? (
-            <img key={s.champion_id} src={src} alt={s.champion_name} title={s.champion_name} className='w-7 h-7 object-contain rounded' />
+            <img key={s.champion_id} src={src} alt={s.champion_name} title={s.champion_name} className='object-contain rounded' />
           ) : (
             <span key={s.champion_id} className='text-xs text-muted-foreground'>{s.champion_name}</span>
           );
         })}
-        {extra > 0 && <span className='text-xs text-muted-foreground'>+{extra}</span>}
       </div>
     </td>
   );
@@ -75,7 +98,6 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
     { col: 'defender_champion_name', label: kb.defender },
     { col: null, label: kb.synergies },
     { col: 'node_number', label: kb.node },
-    { col: 'battlegroup', label: kb.battlegroup },
     { col: 'tier', label: kb.tier },
     { col: 'ko_count', label: kb.ko },
     { col: 'alliance_name', label: kb.alliance },
@@ -113,9 +135,8 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
               <ChampionCell name={r.defender_champion_name} imageUrl={r.defender_image_url} stars={r.defender_stars} rank={r.defender_rank} />
               <SynergiesCell synergies={r.synergies} />
               <td className='px-3 py-2'>{r.node_number}</td>
-              <td className='px-3 py-2'>{r.battlegroup}</td>
               <td className='px-3 py-2'>{r.tier}</td>
-              <td className='px-3 py-2'>{r.ko_count}</td>
+              <td className={cn('px-3 py-2',r.ko_count ? 'text-red-500' : 'text-green-500' )}>{r.ko_count}</td>
               <td className='px-3 py-2'>{r.alliance_name}</td>
               <td className='px-3 py-2 whitespace-nowrap'>{new Date(r.created_at).toLocaleDateString()}</td>
             </tr>
