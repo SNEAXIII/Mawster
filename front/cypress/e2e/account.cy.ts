@@ -8,8 +8,9 @@ describe('Login & Profile – UI', () => {
   it('shows the login page with Sign In title and Discord button', () => {
     cy.visit('/login');
     cy.contains('Sign In').should('be.visible');
-    cy.contains('Sign in with your Discord account').should('be.visible');
+    cy.contains('Sign in with your Discord or Google account').should('be.visible');
     cy.contains('Sign in with Discord').should('be.visible');
+    cy.contains('Sign in with Google').should('be.visible');
   });
 
   it('shows registered users in the dev-mode picker', () => {
@@ -27,12 +28,11 @@ describe('Login & Profile – UI', () => {
   });
 
   it('displays profile info after login', () => {
-    setupUser('profile-token').then(({ login, discord_id, user_id }) => {
+    setupUser('profile-token').then(({ login, user_id }) => {
       cy.apiLogin(user_id);
       cy.navTo('profile');
       cy.contains('Account Information').should('be.visible');
       cy.getByCy('username-row').should('contain', login);
-      cy.getByCy('discord-id-row').should('contain', discord_id);
       cy.getByCy('member-since-row').should('be.visible');
     });
   });
