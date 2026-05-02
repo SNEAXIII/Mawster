@@ -187,20 +187,21 @@ class FightRecordService:
 
     @classmethod
     async def force_snapshot_all(cls, session: SessionDep) -> dict:
-        """Snapshot all ended wars with snapshotted_at=None."""
-        stmt = select(War).where(
-            and_(
-                War.status == WarStatus.ended,
-                War.snapshotted_at == None,  # noqa: E711
-            )
-        )
+        """Snapshot all ended wars, counting already-snapshotted ones as skipped."""
+        stmt = select(War).where(War.status == WarStatus.ended)
         result = await session.exec(stmt)
         wars = result.all()
 
+        snapshotted = 0
+        skipped = 0
         for war in wars:
-            await cls.snapshot_war(session, war)
+            if war.snapshotted_at is not None:
+                skipped += 1
+            else:
+                await cls.snapshot_war(session, war)
+                snapshotted += 1
 
-        return {"snapshotted": len(wars), "skipped": 0}
+        return {"snapshotted": snapshotted, "skipped": skipped}
 
     @classmethod
     async def get_snapshot_stats(cls, session: SessionDep) -> list:

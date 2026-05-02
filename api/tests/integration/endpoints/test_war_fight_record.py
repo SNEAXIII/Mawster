@@ -272,6 +272,7 @@ class TestAdminSnapshotEndpoints:
         assert response.status_code == 200
         body = response.json()
         assert body["snapshotted"] == 0
+        assert body["skipped"] == 1
 
     @pytest.mark.asyncio
     async def test_get_snapshot_stats_returns_counts(self, session):
