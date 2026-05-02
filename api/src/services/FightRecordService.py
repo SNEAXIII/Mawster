@@ -3,14 +3,16 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import selectinload
 from sqlmodel import and_, select
 from starlette import status
 
+from src.models.Alliance import Alliance
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
-from src.models.War import War
+from src.models.War import War, WarStatus
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightPrefight import WarFightPrefight
 from src.models.WarFightRecord import WarFightRecord
@@ -182,3 +184,40 @@ class FightRecordService:
 
         result = await session.exec(stmt)
         return result.all()
+
+    @classmethod
+    async def force_snapshot_all(cls, session: SessionDep) -> dict:
+        """Snapshot all ended wars with snapshotted_at=None."""
+        stmt = select(War).where(
+            and_(
+                War.status == WarStatus.ended,
+                War.snapshotted_at == None,  # noqa: E711
+            )
+        )
+        result = await session.exec(stmt)
+        wars = result.all()
+
+        for war in wars:
+            await cls.snapshot_war(session, war)
+
+        return {"snapshotted": len(wars), "skipped": 0}
+
+    @classmethod
+    async def get_snapshot_stats(cls, session: SessionDep) -> list:
+        """Returns per-alliance count of snapshotted wars."""
+        stmt = (
+            select(
+                Alliance.id.label("alliance_id"),
+                Alliance.name.label("alliance_name"),
+                func.count(War.id).label("war_count"),
+            )
+            .join(War, War.alliance_id == Alliance.id)
+            .where(War.snapshotted_at.isnot(None))
+            .group_by(Alliance.id, Alliance.name)
+        )
+        result = await session.exec(stmt)
+        rows = result.all()
+        return [
+            {"alliance_id": row.alliance_id, "alliance_name": row.alliance_name, "war_count": row.war_count}
+            for row in rows
+        ]

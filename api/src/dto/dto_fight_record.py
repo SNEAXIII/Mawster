@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Any, List, Optional
 
 from pydantic import BaseModel, ConfigDict, model_validator
+from sqlmodel import SQLModel
 
 
 class WarFightSynergyResponse(BaseModel):
@@ -122,3 +123,14 @@ class WarFightRecordResponse(BaseModel):
             "prefights": data.prefights,
             "created_at": data.created_at,
         }
+
+
+class ForceSnapshotResponse(SQLModel):
+    snapshotted: int
+    skipped: int
+
+
+class AllianceSnapshotStatResponse(SQLModel):
+    alliance_id: uuid.UUID
+    alliance_name: str
+    war_count: int

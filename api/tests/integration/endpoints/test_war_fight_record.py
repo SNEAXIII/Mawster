@@ -5,6 +5,7 @@ import pytest
 
 from tests.utils.utils_client import create_auth_headers, execute_post_request, execute_patch_request, execute_get_request
 from tests.utils.utils_constant import USER_ID, USER2_ID, GAME_PSEUDO, GAME_PSEUDO_2, ALLIANCE_NAME, ALLIANCE_TAG
+from src.enums.Roles import Roles
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner, push_member, push_officer, push_champion,
 )
@@ -220,3 +221,74 @@ class TestListFightRecords:
         headers = create_auth_headers(user_id=str(USER_ID))
         response = await execute_get_request("/fight-records", headers=headers)
         assert response.status_code == 403
+
+
+class TestAdminSnapshotEndpoints:
+    @pytest.mark.asyncio
+    async def test_force_snapshot_snapshots_unsnapshotted_wars(self, session):
+        """Ended war with no snapshotted_at must be snapshotted by force-snapshot."""
+        data = await _setup_war_with_fight()
+        # End the war via the API so it has status=ended but snapshotted_at is set by end_war.
+        # Instead, directly set war status to ended without calling snapshot_war.
+        from src.models.War import WarStatus
+        war = await session.get(War, data["war"].id)
+        war.status = WarStatus.ended
+        war.tier = 1
+        session.add(war)
+        await session.commit()
+
+        admin_headers = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
+        response = await execute_post_request(
+            "/admin/wars/force-snapshot",
+            payload={},
+            headers=admin_headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["snapshotted"] == 1
+        assert body["skipped"] == 0
+
+        await session.refresh(war)
+        assert war.snapshotted_at is not None
+
+    @pytest.mark.asyncio
+    async def test_force_snapshot_skips_already_snapshotted(self, session):
+        """Wars that are already snapshotted must not be re-processed."""
+        data = await _setup_war_with_fight()
+        # End the war normally (triggers auto-snapshot via end_war endpoint).
+        owner_headers = create_auth_headers(user_id=str(USER_ID))
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 50},
+            headers=owner_headers,
+        )
+
+        admin_headers = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
+        response = await execute_post_request(
+            "/admin/wars/force-snapshot",
+            payload={},
+            headers=admin_headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["snapshotted"] == 0
+
+    @pytest.mark.asyncio
+    async def test_get_snapshot_stats_returns_counts(self, session):
+        """After ending a war, snapshot-stats must show alliance with war_count=1."""
+        data = await _setup_war_with_fight()
+        owner_headers = create_auth_headers(user_id=str(USER_ID))
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 50},
+            headers=owner_headers,
+        )
+
+        admin_headers = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
+        response = await execute_get_request("/admin/wars/snapshot-stats", headers=admin_headers)
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) == 1
+        stat = body[0]
+        assert stat["alliance_id"] == str(data["alliance"].id)
+        assert stat["war_count"] == 1
