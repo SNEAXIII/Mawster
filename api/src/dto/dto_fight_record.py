@@ -1,9 +1,8 @@
 import uuid
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, model_validator
-from sqlmodel import SQLModel
 
 
 class WarFightSynergyResponse(BaseModel):
@@ -84,8 +83,8 @@ class WarFightRecordResponse(BaseModel):
     defender_ascension: int
     defender_is_saga_defender: bool
     ko_count: int
-    synergies: List[WarFightSynergyResponse] = []
-    prefights: List[WarFightPrefightResponse] = []
+    synergies: list[WarFightSynergyResponse] = []
+    prefights: list[WarFightPrefightResponse] = []
     created_at: datetime
 
     @model_validator(mode="before")
@@ -125,12 +124,12 @@ class WarFightRecordResponse(BaseModel):
         }
 
 
-class ForceSnapshotResponse(SQLModel):
+class ForceSnapshotResponse(BaseModel):
     snapshotted: int
     skipped: int
 
 
-class AllianceSnapshotStatResponse(SQLModel):
+class AllianceSnapshotStatResponse(BaseModel):
     alliance_id: uuid.UUID
     alliance_name: str
     war_count: int

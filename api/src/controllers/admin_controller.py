@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated, List, Optional
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Query
 
@@ -108,7 +108,7 @@ async def force_snapshot_wars(session: SessionDep):
     return result
 
 
-@admin_controller.get("/wars/snapshot-stats", status_code=200, response_model=List[AllianceSnapshotStatResponse])
+@admin_controller.get("/wars/snapshot-stats", status_code=200, response_model=list[AllianceSnapshotStatResponse])
 async def get_snapshot_stats(session: SessionDep):
     result = await FightRecordService.get_snapshot_stats(session)
     return result
