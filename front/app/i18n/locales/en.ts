@@ -399,6 +399,21 @@ const en = {
     },
   },
 
+  // Admin
+  admin: {
+    knowledgeBase: {
+      tab: 'Knowledge Base',
+      refreshButton: 'Refresh Wars',
+      refreshing: 'Refreshing...',
+      refreshResult: '{{count}} war(s) snapshotted, {{skipped}} skipped',
+      allianceColumn: 'Alliance',
+      warsColumn: 'Recorded Wars',
+      noData: 'No data yet.',
+      loadError: 'Failed to load stats.',
+      refreshError: 'Failed to refresh.',
+    },
+  },
+
   // Dashboard / Admin
   dashboard: {
     tableHeaders: {

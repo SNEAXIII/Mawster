@@ -404,6 +404,21 @@ const fr: Translations = {
     },
   },
 
+  // Admin
+  admin: {
+    knowledgeBase: {
+      tab: 'Base de connaissances',
+      refreshButton: 'Synchroniser les guerres',
+      refreshing: 'Synchronisation...',
+      refreshResult: '{{count}} guerre(s) enregistrée(s), {{skipped}} ignorée(s)',
+      allianceColumn: 'Alliance',
+      warsColumn: 'Guerres enregistrées',
+      noData: 'Aucune donnée.',
+      loadError: 'Erreur de chargement.',
+      refreshError: 'Erreur lors de la synchronisation.',
+    },
+  },
+
   // Dashboard / Admin
   dashboard: {
     tableHeaders: {
