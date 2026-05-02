@@ -402,6 +402,11 @@ const fr: Translations = {
         deactivateError: 'Échec de la désactivation',
       },
     },
+    knowledgeBase: {
+      searchChampion: 'Rechercher un champion...',
+      allChampions: 'Tous',
+      noChampionFound: 'Aucun champion trouvé.',
+    },
   },
 
   // Admin

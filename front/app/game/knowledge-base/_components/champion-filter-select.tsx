@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
 import { getChampions, getChampionImageUrl, type Champion } from '@/app/services/champions';
+import { useI18n } from '@/app/i18n';
 import { ChevronsUpDown } from 'lucide-react';
 
 interface ChampionFilterSelectProps {
@@ -27,16 +28,21 @@ export default function ChampionFilterSelect({
   placeholder,
   'data-cy': dataCy,
 }: ChampionFilterSelectProps) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [champions, setChampions] = useState<Champion[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (open && !loaded) {
-      getChampions(1, 500).then((res) => {
-        setChampions(res.champions);
-        setLoaded(true);
-      });
+      getChampions(1, 500)
+        .then((res) => {
+          setChampions(res.champions);
+          setLoaded(true);
+        })
+        .catch(() => {
+          // loaded stays false → popover re-open will retry
+        });
     }
   }, [open, loaded]);
 
@@ -64,16 +70,16 @@ export default function ChampionFilterSelect({
       </PopoverTrigger>
       <PopoverContent className="w-64 p-0">
         <Command>
-          <CommandInput placeholder="Search champion..." />
+          <CommandInput placeholder={t.game.knowledgeBase.searchChampion} />
           <CommandList>
-            <CommandEmpty>No champion found.</CommandEmpty>
+            <CommandEmpty>{t.game.knowledgeBase.noChampionFound}</CommandEmpty>
             <CommandGroup>
               <CommandItem
                 value="__all__"
                 onSelect={() => handleSelect(null)}
                 data-cy={dataCy ? `${dataCy}-all` : undefined}
               >
-                <span className="text-muted-foreground">All</span>
+                <span className="text-muted-foreground">{t.game.knowledgeBase.allChampions}</span>
               </CommandItem>
               {champions.map((champ) => (
                 <CommandItem

@@ -397,6 +397,11 @@ const en = {
         deactivateError: 'Failed to deactivate season',
       },
     },
+    knowledgeBase: {
+      searchChampion: 'Search champion...',
+      allChampions: 'All',
+      noChampionFound: 'No champion found.',
+    },
   },
 
   // Admin
