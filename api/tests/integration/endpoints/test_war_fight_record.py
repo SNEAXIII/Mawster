@@ -226,8 +226,9 @@ class TestListFightRecords:
         response = await execute_get_request("/fight-records", headers=headers_owner)
         assert response.status_code == 200
         body = response.json()
-        assert len(body) == 1
-        record = body[0]
+        assert body["total"] == 1
+        assert len(body["items"]) == 1
+        record = body["items"][0]
         assert record["node_number"] == 10
         assert record["battlegroup"] == 1
         assert record["champion_id"] == str(data["attacker_champ"].id)
@@ -236,6 +237,7 @@ class TestListFightRecords:
         assert record["is_saga_attacker"] is True
         assert record["defender_champion_id"] == str(data["defender_champ"].id)
         assert record["ko_count"] == 1
+        assert record["alliance_name"] is not None
 
     @pytest.mark.asyncio
     async def test_list_fight_records_filtered_by_champion(self):
@@ -253,14 +255,14 @@ class TestListFightRecords:
             headers=headers_owner,
         )
         assert response.status_code == 200
-        assert len(response.json()) == 1
+        assert len(response.json()["items"]) == 1
 
         response_no_match = await execute_get_request(
             f"/fight-records?champion_id={uuid.uuid4()}",
             headers=headers_owner,
         )
         assert response_no_match.status_code == 200
-        assert len(response_no_match.json()) == 0
+        assert len(response_no_match.json()["items"]) == 0
 
     @pytest.mark.asyncio
     async def test_list_fight_records_requires_alliance_membership(self):
@@ -269,6 +271,144 @@ class TestListFightRecords:
         headers = create_auth_headers(user_id=str(USER_ID))
         response = await execute_get_request("/fight-records", headers=headers)
         assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_list_fight_records_pagination(self):
+        """Three fight records paged by size=2 must return correct total/pages/items."""
+        data = await _setup_war_with_fight()
+        headers_owner = create_auth_headers(user_id=str(USER_ID))
+
+        # End war 1
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers_owner,
+        )
+
+        # War 2
+        war2 = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name=OPPONENT,
+            created_by_id=data["owner"].id,
+        )
+        placement2 = WarDefensePlacement(
+            war_id=war2.id,
+            battlegroup=1,
+            node_number=10,
+            champion_id=data["defender_champ"].id,
+            stars=6,
+            rank=3,
+            ascension=0,
+            attacker_champion_user_id=data["attacker_cu"].id,
+            ko_count=1,
+            is_combat_completed=False,
+        )
+        await load_objects([war2, placement2])
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{war2.id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers_owner,
+        )
+
+        # War 3
+        war3 = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name=OPPONENT,
+            created_by_id=data["owner"].id,
+        )
+        placement3 = WarDefensePlacement(
+            war_id=war3.id,
+            battlegroup=1,
+            node_number=10,
+            champion_id=data["defender_champ"].id,
+            stars=6,
+            rank=3,
+            ascension=0,
+            attacker_champion_user_id=data["attacker_cu"].id,
+            ko_count=1,
+            is_combat_completed=False,
+        )
+        await load_objects([war3, placement3])
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{war3.id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers_owner,
+        )
+
+        # Page 1: size=2
+        resp1 = await execute_get_request("/fight-records?page=1&size=2", headers=headers_owner)
+        assert resp1.status_code == 200
+        body1 = resp1.json()
+        assert body1["total"] == 3
+        assert len(body1["items"]) == 2
+        assert body1["pages"] == 2
+
+        # Page 2: size=2
+        resp2 = await execute_get_request("/fight-records?page=2&size=2", headers=headers_owner)
+        assert resp2.status_code == 200
+        body2 = resp2.json()
+        assert len(body2["items"]) == 1
+
+    @pytest.mark.asyncio
+    async def test_list_fight_records_sort_by_ko_count(self):
+        """sort_by=ko_count asc/desc must order items correctly."""
+        data = await _setup_war_with_fight()
+        headers_owner = create_auth_headers(user_id=str(USER_ID))
+
+        # End war 1 (ko_count=1 set in placement by _setup_war_with_fight)
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers_owner,
+        )
+
+        # War 2 with ko_count=3
+        war2 = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name=OPPONENT,
+            created_by_id=data["owner"].id,
+        )
+        placement2 = WarDefensePlacement(
+            war_id=war2.id,
+            battlegroup=1,
+            node_number=10,
+            champion_id=data["defender_champ"].id,
+            stars=6,
+            rank=3,
+            ascension=0,
+            attacker_champion_user_id=data["attacker_cu"].id,
+            ko_count=3,
+            is_combat_completed=False,
+        )
+        await load_objects([war2, placement2])
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{war2.id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers_owner,
+        )
+
+        # ASC: first item should have lower ko_count
+        resp_asc = await execute_get_request(
+            "/fight-records?sort_by=ko_count&sort_order=asc",
+            headers=headers_owner,
+        )
+        assert resp_asc.status_code == 200
+        items_asc = resp_asc.json()["items"]
+        assert len(items_asc) == 2
+        assert items_asc[0]["ko_count"] <= items_asc[1]["ko_count"]
+
+        # DESC: first item should have higher ko_count
+        resp_desc = await execute_get_request(
+            "/fight-records?sort_by=ko_count&sort_order=desc",
+            headers=headers_owner,
+        )
+        assert resp_desc.status_code == 200
+        items_desc = resp_desc.json()["items"]
+        assert len(items_desc) == 2
+        assert items_desc[0]["ko_count"] >= items_desc[1]["ko_count"]
 
 
 class TestAdminSnapshotEndpoints:
