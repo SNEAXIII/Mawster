@@ -40,9 +40,8 @@ export function useKnowledgeBaseViewModel() {
       const apiFilters: FightRecordFilters = {
         champion_id: filters.champion_id ?? undefined,
         defender_champion_id: filters.defender_champion_id ?? undefined,
-        node_number: filters.node_number ? parseInt(filters.node_number) : undefined,
-        tier: filters.tier ? parseInt(filters.tier) : undefined,
-        battlegroup: filters.battlegroup ? parseInt(filters.battlegroup) : undefined,
+        node_number: filters.node_number ? Number.parseInt(filters.node_number) : undefined,
+        tier: filters.tier ? Number.parseInt(filters.tier) : undefined,
         page,
         size,
         sort_by: sortBy,
