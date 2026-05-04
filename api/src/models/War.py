@@ -31,6 +31,7 @@ class War(SQLModel, table=True):
     win: Optional[bool] = Field(default=None)
     elo_change: Optional[int] = Field(default=None)
     tier: Optional[int] = Field(default=None)
+    snapshotted_at: Optional[datetime] = Field(default=None)
 
     # Relations
     alliance: "Alliance" = Relationship(

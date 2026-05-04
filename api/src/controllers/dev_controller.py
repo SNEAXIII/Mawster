@@ -149,7 +149,9 @@ async def dev_token(username: Annotated[str, Form()], session: SessionDep) -> Lo
         await session.exec(select(GameAccount).where(GameAccount.game_pseudo == username))
     ).first()
     if game_account:
-        user = await UserService.get_user_by_id_with_validity_check(session, str(game_account.user_id))
+        user = await UserService.get_user_by_id_with_validity_check(
+            session, str(game_account.user_id)
+        )
     else:
         user = (await session.exec(select(User).where(User.login == username))).first()
         if not user:

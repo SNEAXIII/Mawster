@@ -5,10 +5,31 @@ from sqlmodel import select
 
 from src.models import User
 from src.utils.db import SessionDep
-_ADJECTIVES = ["cosmic", "mighty", "iron", "shadow", "storm", "silver", "golden", "dark", "thunder", "mystic"]
-_NOUNS = ["hero", "blade", "hunter", "striker", "guardian", "avenger", "champion", "seeker", "warrior", "knight"]
 
-
+_ADJECTIVES = [
+    "cosmic",
+    "mighty",
+    "iron",
+    "shadow",
+    "storm",
+    "silver",
+    "golden",
+    "dark",
+    "thunder",
+    "mystic",
+]
+_NOUNS = [
+    "hero",
+    "blade",
+    "hunter",
+    "striker",
+    "guardian",
+    "avenger",
+    "champion",
+    "seeker",
+    "warrior",
+    "knight",
+]
 
 
 class OAuthService(ABC):

@@ -3,6 +3,7 @@ from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Query
 
+from src.dto.dto_fight_record import AllianceSnapshotStatResponse, ForceSnapshotResponse
 from src.dto.dto_utilisateurs import UserAdminViewAllUsers
 from src.enums.Roles import Roles
 from src.Messages.user_messages import (
@@ -14,6 +15,7 @@ from src.Messages.user_messages import (
 )
 from src.models import User
 from src.services.AuthService import AuthService
+from src.services.FightRecordService import FightRecordService
 from src.services.UserService import UserService
 from src.utils.db import SessionDep
 
@@ -98,3 +100,19 @@ async def patch_demote_user(
 ):
     await UserService.admin_patch_demote_user(session, user_uuid_to_demote)
     return {"message": TARGET_USER_DEMOTED_SUCCESSFULLY}
+
+
+@admin_controller.post(
+    "/wars/force-snapshot", status_code=200, response_model=ForceSnapshotResponse
+)
+async def force_snapshot_wars(session: SessionDep):
+    result = await FightRecordService.force_snapshot_all(session)
+    return result
+
+
+@admin_controller.get(
+    "/wars/snapshot-stats", status_code=200, response_model=list[AllianceSnapshotStatResponse]
+)
+async def get_snapshot_stats(session: SessionDep):
+    result = await FightRecordService.get_snapshot_stats(session)
+    return result
