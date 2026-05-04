@@ -13,6 +13,7 @@ interface Filters {
   node_number: string;
   tier: string;
   battlegroup: string;
+  game_account_pseudo: string;
 }
 
 const DEFAULT_FILTERS: Filters = {
@@ -21,6 +22,7 @@ const DEFAULT_FILTERS: Filters = {
   node_number: '',
   tier: '',
   battlegroup: '',
+  game_account_pseudo: '',
 };
 
 export function useKnowledgeBaseViewModel() {
@@ -42,6 +44,7 @@ export function useKnowledgeBaseViewModel() {
         defender_champion_id: filters.defender_champion_id ?? undefined,
         node_number: filters.node_number ? Number.parseInt(filters.node_number) : undefined,
         tier: filters.tier ? Number.parseInt(filters.tier) : undefined,
+        game_account_pseudo: filters.game_account_pseudo || undefined,
         page,
         size,
         sort_by: sortBy,

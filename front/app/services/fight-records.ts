@@ -79,6 +79,7 @@ export interface FightRecordFilters {
   tier?: number;
   season_id?: string;
   alliance_id?: string;
+  game_account_pseudo?: string;
   page?: number;
   size?: number;
   sort_by?: string;

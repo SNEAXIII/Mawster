@@ -94,6 +94,7 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
   const kb = t.game.knowledgeBase;
 
   const cols = [
+    { col: null, label: kb.player },
     { col: 'champion_name', label: kb.attacker },
     { col: 'defender_champion_name', label: kb.defender },
     { col: null, label: kb.synergies },
@@ -131,6 +132,7 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
           )}
           {!loading && records.map((r) => (
             <tr key={r.id} className='border-t border-border hover:bg-muted/30 transition-colors'>
+              <td className='px-3 py-2 whitespace-nowrap'>{r.game_account_pseudo}</td>
               <ChampionCell name={r.champion_name} imageUrl={r.image_url} stars={r.stars} rank={r.rank} />
               <ChampionCell name={r.defender_champion_name} imageUrl={r.defender_image_url} stars={r.defender_stars} rank={r.defender_rank} />
               <SynergiesCell synergies={r.synergies} />

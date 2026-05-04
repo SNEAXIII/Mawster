@@ -419,6 +419,7 @@ const en = {
       filterNode: 'Node',
       filterBg: 'BG',
       filterTier: 'Tier',
+      filterPlayer: 'Player',
       player: 'Player',
     },
   },

@@ -16,6 +16,7 @@ interface Filters {
   defender_champion_id: string | null;
   node_number: string;
   tier: string;
+  game_account_pseudo: string;
 }
 
 interface Props {
@@ -59,6 +60,14 @@ export default function KnowledgeBaseFilters({ filters, onChange, onClear }: Pro
         value={filters.tier}
         onChange={(e) => onChange('tier', e.target.value || null)}
         data-cy='filter-tier'
+      />
+      <Input
+        className='w-36'
+        type='text'
+        placeholder={kb.filterPlayer}
+        value={filters.game_account_pseudo}
+        onChange={(e) => onChange('game_account_pseudo', e.target.value || null)}
+        data-cy='filter-player'
       />
       <Button variant='outline' onClick={onClear} data-cy='filter-clear'>
         {kb.clearFilters}

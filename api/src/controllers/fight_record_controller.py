@@ -30,6 +30,7 @@ async def list_fight_records(
     season_id: Optional[uuid.UUID] = Query(default=None),
     alliance_id: Optional[uuid.UUID] = Query(default=None),
     battlegroup: Optional[int] = Query(default=None, ge=1, le=3),
+    game_account_pseudo: Optional[str] = Query(default=None),
     page: int = Query(default=1, ge=1),
     size: int = Query(default=20, ge=1, le=100),
     sort_by: Literal[
@@ -48,6 +49,7 @@ async def list_fight_records(
         season_id=season_id,
         alliance_id=alliance_id,
         battlegroup=battlegroup,
+        game_account_pseudo=game_account_pseudo,
         page=page,
         size=size,
         sort_by=sort_by,

@@ -159,6 +159,7 @@ class FightRecordService:
         season_id: Optional[uuid.UUID] = None,
         alliance_id: Optional[uuid.UUID] = None,
         battlegroup: Optional[int] = None,
+        game_account_pseudo: Optional[str] = None,
         page: int = 1,
         size: int = 20,
         sort_by: str = "created_at",
@@ -182,9 +183,13 @@ class FightRecordService:
             conditions.append(WarFightRecord.alliance_id == alliance_id)
         if battlegroup is not None:
             conditions.append(WarFightRecord.battlegroup == battlegroup)
+        if game_account_pseudo is not None:
+            conditions.append(GameAccount.game_pseudo.ilike(f"%{game_account_pseudo}%"))
 
         # Count query
         count_stmt = select(func.count()).select_from(WarFightRecord)
+        if game_account_pseudo is not None:
+            count_stmt = count_stmt.join(GameAccount, WarFightRecord.game_account_id == GameAccount.id)
         if conditions:
             count_stmt = count_stmt.where(and_(*conditions))
         total = (await session.exec(count_stmt)).one()
@@ -214,6 +219,8 @@ class FightRecordService:
             selectinload(WarFightRecord.synergies).selectinload(WarFightSynergy.champion),
             selectinload(WarFightRecord.prefights).selectinload(WarFightPrefight.champion),
         )
+        if game_account_pseudo is not None:
+            stmt = stmt.join(GameAccount, WarFightRecord.game_account_id == GameAccount.id)
         if conditions:
             stmt = stmt.where(and_(*conditions))
 

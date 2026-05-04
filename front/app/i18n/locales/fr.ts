@@ -424,6 +424,7 @@ const fr: Translations = {
       filterNode: 'Node',
       filterBg: 'BG',
       filterTier: 'Tier',
+      filterPlayer: 'Joueur',
       player: 'Joueur',
     },
   },
