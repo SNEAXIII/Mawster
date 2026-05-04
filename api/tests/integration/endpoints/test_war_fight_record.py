@@ -352,6 +352,42 @@ class TestListFightRecords:
         assert len(body2["items"]) == 1
 
     @pytest.mark.asyncio
+    async def test_list_fight_records_filtered_by_game_account_pseudo(self):
+        data = await _setup_war_with_fight()
+        headers_owner = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 50},
+            headers=headers_owner,
+        )
+
+        # Exact match
+        resp = await execute_get_request(
+            f"/fight-records?game_account_pseudo={GAME_PSEUDO_2}",
+            headers=headers_owner,
+        )
+        assert resp.status_code == 200
+        assert len(resp.json()["items"]) == 1
+        assert resp.json()["items"][0]["game_account_pseudo"] == GAME_PSEUDO_2
+
+        # Case-insensitive partial match
+        resp_partial = await execute_get_request(
+            "/fight-records?game_account_pseudo=testplayer",
+            headers=headers_owner,
+        )
+        assert resp_partial.status_code == 200
+        assert len(resp_partial.json()["items"]) == 1
+
+        # No match
+        resp_no_match = await execute_get_request(
+            "/fight-records?game_account_pseudo=unknownplayer",
+            headers=headers_owner,
+        )
+        assert resp_no_match.status_code == 200
+        assert len(resp_no_match.json()["items"]) == 0
+
+    @pytest.mark.asyncio
     async def test_list_fight_records_sort_by_ko_count(self):
         """sort_by=ko_count asc/desc must order items correctly."""
         data = await _setup_war_with_fight()
