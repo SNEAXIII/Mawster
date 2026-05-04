@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import {
   getFightRecords,
   type FightRecord,
@@ -12,7 +13,6 @@ interface Filters {
   defender_champion_id: string | null;
   node_number: string;
   tier: string;
-  battlegroup: string;
   game_account_pseudo: string;
 }
 
@@ -21,17 +21,30 @@ const DEFAULT_FILTERS: Filters = {
   defender_champion_id: null,
   node_number: '',
   tier: '',
-  battlegroup: '',
   game_account_pseudo: '',
 };
 
+function filtersFromParams(params: URLSearchParams): Filters {
+  return {
+    champion_id: params.get('champion_id'),
+    defender_champion_id: params.get('defender_champion_id'),
+    node_number: params.get('node_number') ?? '',
+    tier: params.get('tier') ?? '',
+    game_account_pseudo: params.get('game_account_pseudo') ?? '',
+  };
+}
+
 export function useKnowledgeBaseViewModel() {
-  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
-  const [debouncedPseudo, setDebouncedPseudo] = useState('');
-  const [page, setPage] = useState(1);
-  const [size, setSize] = useState(20);
-  const [sortBy, setSortBy] = useState('created_at');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const [filters, setFilters] = useState<Filters>(() => filtersFromParams(searchParams));
+  const [debouncedPseudo, setDebouncedPseudo] = useState(() => searchParams.get('game_account_pseudo') ?? '');
+  const [page, setPage] = useState(() => Number(searchParams.get('page') ?? '1'));
+  const [size, setSize] = useState(() => Number(searchParams.get('size') ?? '20'));
+  const [sortBy, setSortBy] = useState(() => searchParams.get('sort_by') ?? 'created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(() => (searchParams.get('sort_order') as 'asc' | 'desc') ?? 'desc');
   const [data, setData] = useState<PaginatedFightRecords | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +53,21 @@ export function useKnowledgeBaseViewModel() {
     const timer = setTimeout(() => setDebouncedPseudo(filters.game_account_pseudo), 300);
     return () => clearTimeout(timer);
   }, [filters.game_account_pseudo]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filters.champion_id) params.set('champion_id', filters.champion_id);
+    if (filters.defender_champion_id) params.set('defender_champion_id', filters.defender_champion_id);
+    if (filters.node_number) params.set('node_number', filters.node_number);
+    if (filters.tier) params.set('tier', filters.tier);
+    if (filters.game_account_pseudo) params.set('game_account_pseudo', filters.game_account_pseudo);
+    if (page !== 1) params.set('page', String(page));
+    if (size !== 20) params.set('size', String(size));
+    if (sortBy !== 'created_at') params.set('sort_by', sortBy);
+    if (sortOrder !== 'desc') params.set('sort_order', sortOrder);
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [filters, page, size, sortBy, sortOrder, pathname, router]);
 
   const load = useCallback(async () => {
     setLoading(true);

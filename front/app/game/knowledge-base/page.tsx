@@ -1,11 +1,12 @@
 'use client';
+import { Suspense } from 'react';
 import { useI18n } from '@/app/i18n';
 import { useKnowledgeBaseViewModel } from './_viewmodels/use-knowledge-base-viewmodel';
 import KnowledgeBaseFilters from './_components/knowledge-base-filters';
 import KnowledgeBaseTable from './_components/knowledge-base-table';
 import PaginationControls from '@/components/dashboard/pagination/pagination-controls';
 
-export default function KnowledgeBasePage() {
+function KnowledgeBaseContent() {
   const { t } = useI18n();
   const vm = useKnowledgeBaseViewModel();
 
@@ -49,5 +50,13 @@ export default function KnowledgeBasePage() {
       )}
       {vm.error && <p className='text-destructive text-sm'>{t.game.knowledgeBase.noData}</p>}
     </div>
+  );
+}
+
+export default function KnowledgeBasePage() {
+  return (
+    <Suspense>
+      <KnowledgeBaseContent />
+    </Suspense>
   );
 }
