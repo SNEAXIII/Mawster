@@ -212,6 +212,7 @@ class FightRecordService:
 
         # Main query
         stmt = select(WarFightRecord).options(
+            selectinload(WarFightRecord.war),
             selectinload(WarFightRecord.alliance),
             selectinload(WarFightRecord.champion),
             selectinload(WarFightRecord.defender_champion),

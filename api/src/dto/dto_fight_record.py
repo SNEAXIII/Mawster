@@ -122,7 +122,7 @@ class WarFightRecordResponse(BaseModel):
             "ko_count": data.ko_count,
             "synergies": data.synergies,
             "prefights": data.prefights,
-            "created_at": data.created_at,
+            "created_at": data.war.created_at,
         }
 
 
