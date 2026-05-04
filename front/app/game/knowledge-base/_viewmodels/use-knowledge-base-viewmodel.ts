@@ -27,6 +27,7 @@ const DEFAULT_FILTERS: Filters = {
 
 export function useKnowledgeBaseViewModel() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [debouncedPseudo, setDebouncedPseudo] = useState('');
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(20);
   const [sortBy, setSortBy] = useState('created_at');
@@ -34,6 +35,11 @@ export function useKnowledgeBaseViewModel() {
   const [data, setData] = useState<PaginatedFightRecords | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedPseudo(filters.game_account_pseudo), 300);
+    return () => clearTimeout(timer);
+  }, [filters.game_account_pseudo]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,7 +50,7 @@ export function useKnowledgeBaseViewModel() {
         defender_champion_id: filters.defender_champion_id ?? undefined,
         node_number: filters.node_number ? Number.parseInt(filters.node_number) : undefined,
         tier: filters.tier ? Number.parseInt(filters.tier) : undefined,
-        game_account_pseudo: filters.game_account_pseudo || undefined,
+        game_account_pseudo: debouncedPseudo || undefined,
         page,
         size,
         sort_by: sortBy,
@@ -56,7 +62,7 @@ export function useKnowledgeBaseViewModel() {
     } finally {
       setLoading(false);
     }
-  }, [filters, page, size, sortBy, sortOrder]);
+  }, [filters.champion_id, filters.defender_champion_id, filters.node_number, filters.tier, debouncedPseudo, page, size, sortBy, sortOrder]);
 
   useEffect(() => {
     load();
@@ -79,6 +85,7 @@ export function useKnowledgeBaseViewModel() {
 
   const handleClearFilters = () => {
     setFilters(DEFAULT_FILTERS);
+    setDebouncedPseudo('');
     setPage(1);
   };
 

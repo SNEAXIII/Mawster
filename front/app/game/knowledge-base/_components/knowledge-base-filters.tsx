@@ -66,7 +66,7 @@ export default function KnowledgeBaseFilters({ filters, onChange, onClear }: Pro
         type='text'
         placeholder={kb.filterPlayer}
         value={filters.game_account_pseudo}
-        onChange={(e) => onChange('game_account_pseudo', e.target.value || null)}
+        onChange={(e) => onChange('game_account_pseudo', e.target.value)}
         data-cy='filter-player'
       />
       <Button variant='outline' onClick={onClear} data-cy='filter-clear'>
