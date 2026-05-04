@@ -415,11 +415,13 @@ export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
         discord_token: defenderToken,
         game_pseudo: `${prefix}Def`.slice(0, 16),
         create_alliance: { name: `${prefix}Alliance`, tag: prefix.slice(0, 3).toUpperCase() },
+        battlegroup: 1,
       },
       {
         discord_token: attackerToken,
         game_pseudo: `${prefix}Atk`.slice(0, 16),
         join_alliance_token: defenderToken,
+        battlegroup: 1,
       },
     ])
     .then((users) => {
