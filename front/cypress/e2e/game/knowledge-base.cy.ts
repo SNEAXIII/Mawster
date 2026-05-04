@@ -1,28 +1,43 @@
 import { setupKnowledgeBase } from '../../support/e2e';
 
+// Column indices (0-based):
+// 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: Tier | 7: KO | 8: Alliance | 9: Date
+
+function getColText($rows: JQuery<HTMLElement>, rowIdx: number, colIdx: number): string {
+  return $rows.eq(rowIdx).find('td').eq(colIdx).text().trim();
+}
+
 describe('Knowledge Base', () => {
   beforeEach(() => {
     cy.truncateDb();
   });
 
   describe('Display', () => {
-    it('renders fight records with all expected column headers', () => {
+    it('renders all expected column headers', () => {
       setupKnowledgeBase('kb-cols').then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
 
         cy.getByCy('fight-records-table').should('be.visible');
-        cy.getByCy('fight-records-table').find('tbody tr').should('have.length.greaterThan', 0);
-
         cy.getByCy('fight-records-table').within(() => {
           cy.contains('th', 'Player').should('exist');
           cy.contains('th', 'Attacker').should('exist');
           cy.contains('th', 'Defender').should('exist');
+          cy.contains('th', 'Synergies').should('exist');
+          cy.contains('th', 'Prefights').should('exist');
           cy.contains('th', 'Node').should('exist');
           cy.contains('th', 'KO').should('exist');
           cy.contains('th', 'Alliance').should('exist');
           cy.contains('th', 'Date').should('exist');
         });
+      });
+    });
+
+    it('renders 2 fight records from one completed war', () => {
+      setupKnowledgeBase('kb-count').then(({ userData }) => {
+        cy.apiLogin(userData.user_id);
+        cy.visit('/game/knowledge-base');
+        cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
       });
     });
 
@@ -41,6 +56,63 @@ describe('Knowledge Base', () => {
       });
     });
 
+    it('shows synergy images for node 1 (Iron Man synergizes Captain America)', () => {
+      setupKnowledgeBase('kb-syn').then(({ userData }) => {
+        cy.apiLogin(userData.user_id);
+        cy.visit('/game/knowledge-base');
+
+        // Sort by node asc to reliably get node 1 first
+        cy.contains('th', 'Node').click();
+        cy.contains('th', 'Node').click();
+
+        cy.getByCy('fight-records-table')
+          .find('tbody tr')
+          .first()
+          .find('td')
+          .eq(3) // Synergies column
+          .find('img, span')
+          .should('have.length.greaterThan', 0);
+      });
+    });
+
+    it('shows prefight images for node 1 (Iron Man prefights node 1)', () => {
+      setupKnowledgeBase('kb-pf').then(({ userData }) => {
+        cy.apiLogin(userData.user_id);
+        cy.visit('/game/knowledge-base');
+
+        // Sort by node asc to reliably get node 1 first
+        cy.contains('th', 'Node').click();
+        cy.contains('th', 'Node').click();
+
+        cy.getByCy('fight-records-table')
+          .find('tbody tr')
+          .first()
+          .find('td')
+          .eq(4) // Prefights column
+          .find('img, span')
+          .should('have.length.greaterThan', 0);
+      });
+    });
+
+    it('node 2 has no synergies and no prefights', () => {
+      setupKnowledgeBase('kb-nopf').then(({ userData }) => {
+        cy.apiLogin(userData.user_id);
+        cy.visit('/game/knowledge-base');
+
+        // Sort by node asc — node 1 first, node 2 last
+        cy.contains('th', 'Node').click();
+        cy.contains('th', 'Node').click();
+
+        cy.getByCy('fight-records-table')
+          .find('tbody tr')
+          .last()
+          .within(() => {
+            cy.get('td').eq(3).find('img, span').should('have.length', 0);
+            cy.get('td').eq(4).find('img, span').should('have.length', 0);
+          });
+      });
+    });
+
     it('shows empty state when alliance has no ended wars', () => {
       cy.apiBatchSetup([
         {
@@ -55,15 +127,7 @@ describe('Knowledge Base', () => {
       });
     });
 
-    it('renders 2 fight records from one completed war', () => {
-      setupKnowledgeBase('kb-count').then(({ userData }) => {
-        cy.apiLogin(userData.user_id);
-        cy.visit('/game/knowledge-base');
-        cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
-      });
-    });
-
-    it('shows pagination controls disabled when results fit on one page', () => {
+    it('shows pagination controls disabled on single page', () => {
       setupKnowledgeBase('kb-pag').then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
@@ -78,7 +142,7 @@ describe('Knowledge Base', () => {
   });
 
   describe('Filters', () => {
-    it('filters by player name — exact, partial, case-insensitive, no match, and clear', () => {
+    it('filters by player name — exact, partial lowercase, no match, clear', () => {
       const prefix = 'kb-fp';
       setupKnowledgeBase(prefix).then(({ userData }) => {
         cy.apiLogin(userData.user_id);
@@ -86,22 +150,18 @@ describe('Knowledge Base', () => {
 
         const pseudo = `${prefix}Atk`.slice(0, 16);
 
-        // Exact match
         cy.getByCy('filter-player').clear().type(pseudo);
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
         cy.getByCy('fight-records-table')
           .find('tbody tr')
           .each(($tr) => cy.wrap($tr).find('td').eq(0).should('have.text', pseudo));
 
-        // Partial lowercase
         cy.getByCy('filter-player').clear().type(pseudo.toLowerCase().slice(0, 4));
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
 
-        // No match
         cy.getByCy('filter-player').clear().type('zzznomatch');
         cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
 
-        // Clear restores all
         cy.getByCy('filter-clear').click();
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
       });
@@ -169,7 +229,6 @@ describe('Knowledge Base', () => {
         cy.getByCy('filter-node').clear().type('1');
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
 
-        // Player matches but node doesn't
         cy.getByCy('filter-node').clear().type('50');
         cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
 
@@ -178,7 +237,7 @@ describe('Knowledge Base', () => {
       });
     });
 
-    it('shows empty state when no record matches the filter', () => {
+    it('shows empty state and resets with clear when filter matches nothing', () => {
       setupKnowledgeBase('kb-fempty').then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
@@ -204,7 +263,7 @@ describe('Knowledge Base', () => {
         cy.contains('th', 'KO').click();
         cy.getByCy('fight-records-table').find('tbody tr').then(($rows) => {
           const kos = [...$rows].map((r) =>
-            Number(r.querySelectorAll('td')[6]?.textContent?.trim() ?? '0'),
+            Number(r.querySelectorAll('td')[7]?.textContent?.trim() ?? '0'),
           );
           expect(kos[0]).to.be.at.least(kos[1]);
         });
@@ -212,14 +271,14 @@ describe('Knowledge Base', () => {
         cy.contains('th', 'KO').click();
         cy.getByCy('fight-records-table').find('tbody tr').then(($rows) => {
           const kos = [...$rows].map((r) =>
-            Number(r.querySelectorAll('td')[6]?.textContent?.trim() ?? '0'),
+            Number(r.querySelectorAll('td')[7]?.textContent?.trim() ?? '0'),
           );
           expect(kos[0]).to.be.at.most(kos[1]);
         });
       });
     });
 
-    it('sorts by node number', () => {
+    it('sorts by node number descending then ascending', () => {
       setupKnowledgeBase('kb-sortnode').then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
@@ -227,7 +286,7 @@ describe('Knowledge Base', () => {
         cy.contains('th', 'Node').click();
         cy.getByCy('fight-records-table').find('tbody tr').then(($rows) => {
           const nodes = [...$rows].map((r) =>
-            Number(r.querySelectorAll('td')[4]?.textContent?.trim() ?? '0'),
+            Number(r.querySelectorAll('td')[5]?.textContent?.trim() ?? '0'),
           );
           expect(nodes[0]).to.be.at.least(nodes[1]);
         });
@@ -235,7 +294,7 @@ describe('Knowledge Base', () => {
         cy.contains('th', 'Node').click();
         cy.getByCy('fight-records-table').find('tbody tr').then(($rows) => {
           const nodes = [...$rows].map((r) =>
-            Number(r.querySelectorAll('td')[4]?.textContent?.trim() ?? '0'),
+            Number(r.querySelectorAll('td')[5]?.textContent?.trim() ?? '0'),
           );
           expect(nodes[0]).to.be.at.most(nodes[1]);
         });

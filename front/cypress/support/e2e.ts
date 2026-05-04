@@ -400,6 +400,7 @@ Cypress.Commands.add('runFixtures', () => {
 export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
   adminToken: string;
   userData: UserSetupData;
+  attackerData: UserSetupData;
   accountId: string;
   allianceId: string;
 }> {
@@ -442,16 +443,16 @@ export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
           // Add champions to attacker roster
           cy
             .apiAddChampionToRoster(attackerData.access_token, attackerAccId, champMap['Iron Man'].id, '7r3')
-            .then(() =>
+            .then((cuIronMan) =>
               cy
-                .apiAddChampionToRoster(attackerData.access_token, attackerAccId, champMap['Captain America'].id, '6r2')
+                .apiAddChampionToRoster(attackerData.access_token, attackerAccId, champMap['Captain America'].id, '7r2')
                 .then((cu1) =>
                   cy
-                    .apiAddChampionToRoster(attackerData.access_token, attackerAccId, champMap['Spider-Man'].id, '6r2')
-                    .then((cu2) => ({ cu1, cu2, champMap })),
+                    .apiAddChampionToRoster(attackerData.access_token, attackerAccId, champMap['Spider-Man'].id, '7r2')
+                    .then((cu2) => ({ cuIronMan, cu1, cu2, champMap })),
                 ),
             )
-            .then(({ cu1, cu2, champMap }) =>
+            .then(({ cuIronMan, cu1, cu2, champMap }) =>
               // Create war and place defenders
               cy.apiCreateWar(defenderData.access_token, allianceId, 'OpponentA').then((war) => {
                 cy.apiPlaceWarDefender(
@@ -490,6 +491,10 @@ export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
                 // Assign attackers to nodes
                 cy.apiAssignWarAttacker(attackerData.access_token, allianceId, war.id, 1, 1, cu1.id);
                 cy.apiAssignWarAttacker(attackerData.access_token, allianceId, war.id, 1, 2, cu2.id);
+                // Iron Man synergizes Captain America on node 1
+                cy.apiAddWarSynergy(attackerData.access_token, allianceId, war.id, 1, cuIronMan.id, cu1.id);
+                // Iron Man prefights node 1
+                cy.apiAddWarPrefight(attackerData.access_token, allianceId, war.id, 1, cuIronMan.id, 1);
                 // Update KO counts to create fight records
                 cy.apiUpdateWarKo(defenderData.access_token, allianceId, war.id, 1, 1, 2);
                 cy.apiUpdateWarKo(defenderData.access_token, allianceId, war.id, 1, 2, 1);
@@ -500,6 +505,7 @@ export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
                   .then(() => ({
                     adminToken: adminAT,
                     userData: defenderData,
+                    attackerData,
                     accountId: defenderAccId,
                     allianceId,
                   }));
