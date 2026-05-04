@@ -395,6 +395,120 @@ Cypress.Commands.add('runFixtures', () => {
   cy.request('POST', `${BACKEND}/dev/fixtures`);
 });
 
+// ── Setup knowledge base scenario (light, no truncate) ──────────────────────────
+
+export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
+  adminToken: string;
+  userData: UserSetupData;
+  accountId: string;
+  allianceId: string;
+}> {
+  const adminToken = `${prefix}-admin`;
+  const defenderToken = `${prefix}-defender`;
+  const attackerToken = `${prefix}-attacker`;
+
+  return cy
+    .apiBatchSetup([
+      { discord_token: adminToken, role: 'admin' },
+      {
+        discord_token: defenderToken,
+        game_pseudo: `${prefix}Def`.slice(0, 16),
+        create_alliance: { name: `${prefix}Alliance`, tag: prefix.slice(0, 3).toUpperCase() },
+      },
+      {
+        discord_token: attackerToken,
+        game_pseudo: `${prefix}Atk`.slice(0, 16),
+        join_alliance_token: defenderToken,
+      },
+    ])
+    .then((users) => {
+      const adminAT = users[adminToken].access_token;
+      const defenderData = toUserSetupData(users[defenderToken]);
+      const attackerData = toUserSetupData(users[attackerToken]);
+      const defenderAccId = users[defenderToken].account_id!;
+      const attackerAccId = users[attackerToken].account_id!;
+      const allianceId = users[defenderToken].alliance_id!;
+
+      // Load champions for both defender and attacker
+      return cy
+        .apiLoadChampions(adminAT, [
+          { name: 'Iron Man', cls: 'Tech' },
+          { name: 'Captain America', cls: 'Cosmic' },
+          { name: 'Spider-Man', cls: 'Science' },
+          { name: 'Wolverine', cls: 'Mutant' },
+          { name: 'Black Widow', cls: 'Skill' },
+        ])
+        .then((champMap) =>
+          // Add champions to attacker roster
+          cy
+            .apiAddChampionToRoster(attackerData.access_token, attackerAccId, champMap['Iron Man'].id, '7r3')
+            .then(() =>
+              cy
+                .apiAddChampionToRoster(attackerData.access_token, attackerAccId, champMap['Captain America'].id, '6r2')
+                .then((cu1) =>
+                  cy
+                    .apiAddChampionToRoster(attackerData.access_token, attackerAccId, champMap['Spider-Man'].id, '6r2')
+                    .then((cu2) => ({ cu1, cu2, champMap })),
+                ),
+            )
+            .then(({ cu1, cu2, champMap }) =>
+              // Create war and place defenders
+              cy.apiCreateWar(defenderData.access_token, allianceId, 'OpponentA').then((war) => {
+                cy.apiPlaceWarDefender(
+                  defenderData.access_token,
+                  allianceId,
+                  war.id,
+                  1,
+                  1,
+                  champMap['Iron Man'].id,
+                  7,
+                  3,
+                  0,
+                );
+                cy.apiPlaceWarDefender(
+                  defenderData.access_token,
+                  allianceId,
+                  war.id,
+                  1,
+                  2,
+                  champMap['Captain America'].id,
+                  6,
+                  2,
+                  0,
+                );
+                cy.apiPlaceWarDefender(
+                  defenderData.access_token,
+                  allianceId,
+                  war.id,
+                  1,
+                  3,
+                  champMap['Spider-Man'].id,
+                  6,
+                  2,
+                  0,
+                );
+                // Assign attackers to nodes
+                cy.apiAssignWarAttacker(attackerData.access_token, allianceId, war.id, 1, 1, cu1.id);
+                cy.apiAssignWarAttacker(attackerData.access_token, allianceId, war.id, 1, 2, cu2.id);
+                // Update KO counts to create fight records
+                cy.apiUpdateWarKo(defenderData.access_token, allianceId, war.id, 1, 1, 2);
+                cy.apiUpdateWarKo(defenderData.access_token, allianceId, war.id, 1, 2, 1);
+                cy.apiUpdateWarKo(defenderData.access_token, allianceId, war.id, 1, 3, 3);
+                // End the war (snapshots fight records)
+                return cy
+                  .apiEndWar(defenderData.access_token, allianceId, war.id, true, 10)
+                  .then(() => ({
+                    adminToken: adminAT,
+                    userData: defenderData,
+                    accountId: defenderAccId,
+                    allianceId,
+                  }));
+              }),
+            ),
+        );
+    });
+}
+
 // ── Mastery commands ──────────────────────────────────────────────────────────
 
 Cypress.Commands.add('apiCreateMastery', (_adminToken: string, name: string, maxValue: number, order: number) => {
