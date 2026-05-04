@@ -411,6 +411,7 @@ const en = {
       ko: 'KO',
       alliance: 'Alliance',
       synergies: 'Synergies',
+      prefights: 'Prefights',
       date: 'Date',
       noData: 'No fight records found.',
       filterAttacker: 'Select attacker',

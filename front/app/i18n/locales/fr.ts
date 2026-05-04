@@ -416,6 +416,7 @@ const fr: Translations = {
       ko: 'KO',
       alliance: 'Alliance',
       synergies: 'Synergies',
+      prefights: 'Préfights',
       date: 'Date',
       noData: 'Aucun combat enregistré.',
       filterAttacker: 'Sélectionner attaquant',

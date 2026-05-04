@@ -2,7 +2,8 @@
 import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 import { getChampionImageUrl } from '@/app/services/champions';
-import type { FightRecord, SynergyRecord } from '@/app/services/fight-records';
+import { shortenChampionName } from '@/app/services/roster';
+import type { FightRecord, SynergyRecord, PrefightRecord } from '@/app/services/fight-records';
 import { cn } from '@/app/lib/utils';
 
 interface Props {
@@ -60,7 +61,7 @@ function ChampionCell({ name, imageUrl, stars, rank }: ChampionCellProps) {
       <div className='flex items-center gap-2'>
         {src && <img src={src} alt={name} className='w-10 h-10 object-contain rounded' />}
         <div>
-          <p className='text-sm font-medium whitespace-nowrap'>{name}</p>
+          <p className='text-sm font-medium whitespace-nowrap'>{shortenChampionName(name)}</p>
           <p className='text-xs text-muted-foreground'>{stars}★ R{rank}</p>
         </div>
       </div>
@@ -89,6 +90,27 @@ function SynergiesCell({ synergies }: SynergiesCellProps) {
   );
 }
 
+type PrefightsCellProps = Readonly<{
+  prefights: ReadonlyArray<PrefightRecord>;
+}>;
+
+function PrefightsCell({ prefights }: PrefightsCellProps) {
+  return (
+    <td className='px-3 py-2'>
+      <div className='flex items-center gap-1 flex-wrap'>
+        {prefights.map((p) => {
+          const src = getChampionImageUrl(p.image_url, 40);
+          return src ? (
+            <img key={p.champion_id} src={src} alt={p.champion_name} title={p.champion_name} className='object-contain rounded' />
+          ) : (
+            <span key={p.champion_id} className='text-xs text-muted-foreground'>{p.champion_name}</span>
+          );
+        })}
+      </div>
+    </td>
+  );
+}
+
 export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder, onSort }: Props) {
   const { t } = useI18n();
   const kb = t.game.knowledgeBase;
@@ -98,6 +120,7 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
     { col: 'champion_name', label: kb.attacker },
     { col: 'defender_champion_name', label: kb.defender },
     { col: null, label: kb.synergies },
+    { col: null, label: kb.prefights },
     { col: 'node_number', label: kb.node },
     { col: 'tier', label: kb.tier },
     { col: 'ko_count', label: kb.ko },
@@ -122,12 +145,12 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
         <tbody>
           {loading && (
             <tr>
-              <td colSpan={9} className='px-3 py-8 text-center text-muted-foreground'>{t.common.loading}</td>
+              <td colSpan={10} className='px-3 py-8 text-center text-muted-foreground'>{t.common.loading}</td>
             </tr>
           )}
           {!loading && records.length === 0 && (
             <tr>
-              <td colSpan={9} className='px-3 py-8 text-center text-muted-foreground'>{kb.noData}</td>
+              <td colSpan={10} className='px-3 py-8 text-center text-muted-foreground'>{kb.noData}</td>
             </tr>
           )}
           {!loading && records.map((r) => (
@@ -136,6 +159,7 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
               <ChampionCell name={r.champion_name} imageUrl={r.image_url} stars={r.stars} rank={r.rank} />
               <ChampionCell name={r.defender_champion_name} imageUrl={r.defender_image_url} stars={r.defender_stars} rank={r.defender_rank} />
               <SynergiesCell synergies={r.synergies} />
+              <PrefightsCell prefights={r.prefights} />
               <td className='px-3 py-2'>{r.node_number}</td>
               <td className='px-3 py-2'>{r.tier}</td>
               <td className={cn('px-3 py-2',r.ko_count ? 'text-red-500' : 'text-green-500' )}>{r.ko_count}</td>
