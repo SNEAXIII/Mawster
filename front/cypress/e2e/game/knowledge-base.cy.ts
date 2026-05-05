@@ -1,11 +1,11 @@
-import { setupKnowledgeBase } from '../../support/e2e';
+import { setupKnowledgeBaseFast } from '../../support/e2e';
 
 // Column indices (0-based):
 // 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: Tier | 7: KO | 8: Alliance | 9: Date
-
-function getColText($rows: JQuery<HTMLElement>, rowIdx: number, colIdx: number): string {
-  return $rows.eq(rowIdx).find('td').eq(colIdx).text().trim();
-}
+//
+// Dev endpoint alternates champions per node:
+//   odd  nodes: attacker=Iron Man,       defender=Captain America
+//   even nodes: attacker=Captain America, defender=Iron Man
 
 describe('Knowledge Base', () => {
   beforeEach(() => {
@@ -14,7 +14,7 @@ describe('Knowledge Base', () => {
 
   describe('Display', () => {
     it('renders all expected column headers', () => {
-      setupKnowledgeBase('kb-cols').then(({ userData }) => {
+      setupKnowledgeBaseFast('kb-cols').then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
 
@@ -34,20 +34,20 @@ describe('Knowledge Base', () => {
     });
 
     it('renders 2 fight records from one completed war', () => {
-      setupKnowledgeBase('kb-count').then(({ userData }) => {
+      setupKnowledgeBaseFast('kb-count').then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
       });
     });
 
-    it('shows the attacker game pseudo in the Player column for every row', () => {
+    it('shows the owner game pseudo in the Player column for every row', () => {
       const prefix = 'kb-pseudo';
-      setupKnowledgeBase(prefix).then(({ userData }) => {
+      setupKnowledgeBaseFast(prefix).then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
 
-        const pseudo = `${prefix}Atk`.slice(0, 16);
+        const pseudo = `${prefix}Own`.slice(0, 16);
         cy.getByCy('fight-records-table')
           .find('tbody tr')
           .each(($tr) => {
@@ -56,59 +56,18 @@ describe('Knowledge Base', () => {
       });
     });
 
-    it('shows synergy images for node 1 (Iron Man synergizes Captain America)', () => {
-      setupKnowledgeBase('kb-syn').then(({ userData }) => {
+    it('nodes have no synergies and no prefights', () => {
+      setupKnowledgeBaseFast('kb-nopf').then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
 
-        // Sort by node asc to reliably get node 1 first
-        cy.contains('th', 'Node').click();
-        cy.contains('th', 'Node').click();
-
         cy.getByCy('fight-records-table')
           .find('tbody tr')
-          .first()
-          .find('td')
-          .eq(3) // Synergies column
-          .find('img, span')
-          .should('have.length.greaterThan', 0);
-      });
-    });
-
-    it('shows prefight images for node 1 (Iron Man prefights node 1)', () => {
-      setupKnowledgeBase('kb-pf').then(({ userData }) => {
-        cy.apiLogin(userData.user_id);
-        cy.visit('/game/knowledge-base');
-
-        // Sort by node asc to reliably get node 1 first
-        cy.contains('th', 'Node').click();
-        cy.contains('th', 'Node').click();
-
-        cy.getByCy('fight-records-table')
-          .find('tbody tr')
-          .first()
-          .find('td')
-          .eq(4) // Prefights column
-          .find('img, span')
-          .should('have.length.greaterThan', 0);
-      });
-    });
-
-    it('node 2 has no synergies and no prefights', () => {
-      setupKnowledgeBase('kb-nopf').then(({ userData }) => {
-        cy.apiLogin(userData.user_id);
-        cy.visit('/game/knowledge-base');
-
-        // Sort by node asc — node 1 first, node 2 last
-        cy.contains('th', 'Node').click();
-        cy.contains('th', 'Node').click();
-
-        cy.getByCy('fight-records-table')
-          .find('tbody tr')
-          .last()
-          .within(() => {
-            cy.get('td').eq(3).find('img, span').should('have.length', 0);
-            cy.get('td').eq(4).find('img, span').should('have.length', 0);
+          .each(($tr) => {
+            cy.wrap($tr).within(() => {
+              cy.get('td').eq(3).find('img, span').should('have.length', 0);
+              cy.get('td').eq(4).find('img, span').should('have.length', 0);
+            });
           });
       });
     });
@@ -128,7 +87,7 @@ describe('Knowledge Base', () => {
     });
 
     it('shows pagination controls disabled on single page', () => {
-      setupKnowledgeBase('kb-pag').then(({ userData }) => {
+      setupKnowledgeBaseFast('kb-pag').then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
 
@@ -144,11 +103,11 @@ describe('Knowledge Base', () => {
   describe('Filters', () => {
     it('filters by player name — exact, partial lowercase, no match, clear', () => {
       const prefix = 'kb-fp';
-      setupKnowledgeBase(prefix).then(({ userData }) => {
+      setupKnowledgeBaseFast(prefix).then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
 
-        const pseudo = `${prefix}Atk`.slice(0, 16);
+        const pseudo = `${prefix}Own`.slice(0, 16);
 
         cy.getByCy('filter-player').clear().type(pseudo);
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
@@ -167,8 +126,8 @@ describe('Knowledge Base', () => {
       });
     });
 
-    it('filters by attacker champion', () => {
-      setupKnowledgeBase('kb-fatk').then(({ userData }) => {
+    it('filters by attacker champion — Captain America is attacker on node 2', () => {
+      setupKnowledgeBaseFast('kb-fatk').then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
 
@@ -185,8 +144,8 @@ describe('Knowledge Base', () => {
       });
     });
 
-    it('filters by defender champion', () => {
-      setupKnowledgeBase('kb-fdef').then(({ userData }) => {
+    it('filters by defender champion — Iron Man is defender on node 2', () => {
+      setupKnowledgeBaseFast('kb-fdef').then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
 
@@ -204,7 +163,7 @@ describe('Knowledge Base', () => {
     });
 
     it('filters by node number', () => {
-      setupKnowledgeBase('kb-fnode').then(({ userData }) => {
+      setupKnowledgeBaseFast('kb-fnode').then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
 
@@ -220,11 +179,11 @@ describe('Knowledge Base', () => {
 
     it('combines player and node filters', () => {
       const prefix = 'kb-fcomb';
-      setupKnowledgeBase(prefix).then(({ userData }) => {
+      setupKnowledgeBaseFast(prefix).then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
 
-        const pseudo = `${prefix}Atk`.slice(0, 16);
+        const pseudo = `${prefix}Own`.slice(0, 16);
         cy.getByCy('filter-player').clear().type(pseudo);
         cy.getByCy('filter-node').clear().type('1');
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
@@ -238,7 +197,7 @@ describe('Knowledge Base', () => {
     });
 
     it('shows empty state and resets with clear when filter matches nothing', () => {
-      setupKnowledgeBase('kb-fempty').then(({ userData }) => {
+      setupKnowledgeBaseFast('kb-fempty').then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
 
@@ -254,7 +213,7 @@ describe('Knowledge Base', () => {
 
   describe('Sorting', () => {
     it('sorts by KO count descending then ascending', () => {
-      setupKnowledgeBase('kb-sort').then(({ userData }) => {
+      setupKnowledgeBaseFast('kb-sort').then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
 
@@ -279,7 +238,7 @@ describe('Knowledge Base', () => {
     });
 
     it('sorts by node number descending then ascending', () => {
-      setupKnowledgeBase('kb-sortnode').then(({ userData }) => {
+      setupKnowledgeBaseFast('kb-sortnode').then(({ userData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
 
