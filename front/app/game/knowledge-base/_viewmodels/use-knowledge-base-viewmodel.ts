@@ -72,6 +72,7 @@ export function useKnowledgeBaseViewModel() {
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setData(null);
     try {
       const apiFilters: FightRecordFilters = {
         champion_id: filters.champion_id ?? undefined,
