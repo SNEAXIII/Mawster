@@ -129,7 +129,7 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
   ];
 
   return (
-    <div className='overflow-x-auto rounded-md border border-border'>
+    <div className={cn('overflow-x-auto rounded-md border border-border', loading && 'opacity-50')}>
       <table className='w-full text-sm' data-cy='fight-records-table'>
         <thead className='bg-muted/50'>
           <tr>
@@ -143,11 +143,6 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
           </tr>
         </thead>
         <tbody>
-          {loading && (
-            <tr>
-              <td colSpan={10} className='px-3 py-8 text-center text-muted-foreground'>{t.common.loading}</td>
-            </tr>
-          )}
           {!loading && records.length === 0 && (
             <tr>
               <td colSpan={10} className='px-3 py-8 text-center text-muted-foreground'>{kb.noData}</td>
