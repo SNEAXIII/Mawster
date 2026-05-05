@@ -91,6 +91,20 @@ Cypress.Commands.add('apiBatchSetup', (specs: BatchSetupUserSpec[]) => {
 });
 
 Cypress.Commands.add(
+  'apiDevBulkCreateFightRecords',
+  (warId: string, allianceId: string, gameAccountId: string, count: number) => {
+    cy.request({
+      method: 'POST',
+      url: `${BACKEND}/dev/bulk-create-fight-records`,
+      body: { war_id: warId, alliance_id: allianceId, game_account_id: gameAccountId, count },
+    }).then((res) => {
+      expect(res.status).to.eq(201);
+      return res.body;
+    });
+  },
+);
+
+Cypress.Commands.add(
   'apiBulkFillWarAttackers',
   (warId: string, battlegroup: number, gameAccountId: string, count: number) => {
     cy.request({
@@ -519,6 +533,54 @@ export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
                   }));
               }),
             ),
+        );
+    });
+}
+
+// ── Fast knowledge-base setup (dev endpoint, no placement chain) ─────────────
+
+export function setupKnowledgeBaseFast(
+  prefix: string,
+  count = 2,
+): Cypress.Chainable<{
+  adminToken: string;
+  userData: UserSetupData;
+  accountId: string;
+  allianceId: string;
+}> {
+  const adminToken = `${prefix}-admin`;
+  const ownerToken = `${prefix}-owner`;
+
+  return cy
+    .apiBatchSetup([
+      { discord_token: adminToken, role: 'admin' },
+      {
+        discord_token: ownerToken,
+        game_pseudo: `${prefix}Own`.slice(0, 16),
+        create_alliance: { name: `${prefix}Alliance`, tag: prefix.slice(0, 3).toUpperCase() },
+        battlegroup: 1,
+      },
+    ])
+    .then((users) => {
+      const adminAT = users[adminToken].access_token;
+      const ownerData = toUserSetupData(users[ownerToken]);
+      const ownerAccId = users[ownerToken].account_id!;
+      const allianceId = users[ownerToken].alliance_id!;
+
+      return cy
+        .apiLoadChampions(adminAT, [
+          { name: 'Iron Man', cls: 'Tech' },
+          { name: 'Captain America', cls: 'Cosmic' },
+        ])
+        .then(() =>
+          cy.apiCreateWar(ownerData.access_token, allianceId, 'OpponentFast').then((war) =>
+            cy
+              .apiEndWar(ownerData.access_token, allianceId, war.id, true, 10)
+              .then(() => {
+                cy.apiDevBulkCreateFightRecords(war.id, allianceId, ownerAccId, count);
+                return { adminToken: adminAT, userData: ownerData, accountId: ownerAccId, allianceId };
+              }),
+          ),
         );
     });
 }

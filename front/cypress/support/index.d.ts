@@ -192,6 +192,14 @@ declare namespace Cypress {
       championUserId: string,
     ): Chainable<any>;
 
+    /** Insert N WarFightRecord rows directly (dev endpoint, bypasses placement flow). */
+    apiDevBulkCreateFightRecords(
+      warId: string,
+      allianceId: string,
+      gameAccountId: string,
+      count: number,
+    ): Chainable<any>;
+
     /** Fill N war nodes with dummy attackers for a given account (dev endpoint, bypasses validations). */
     apiBulkFillWarAttackers(
       warId: string,
