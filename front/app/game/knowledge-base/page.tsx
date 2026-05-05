@@ -18,7 +18,7 @@ function KnowledgeBaseContent() {
           currentPage={vm.page}
           totalPage={vm.data.pages}
           usersPerPage={vm.size}
-          canReset={vm.page !== 1}
+          canReset={vm.page !== 1 || vm.hasActiveFilters}
           onUserPerPageChange={(v) => {
             vm.setSize(Number(v));
             vm.setPage(1);

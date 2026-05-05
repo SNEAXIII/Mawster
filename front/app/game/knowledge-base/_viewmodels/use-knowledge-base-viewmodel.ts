@@ -117,6 +117,11 @@ export function useKnowledgeBaseViewModel() {
     setPage(1);
   };
 
+  const hasActiveFilters = Boolean(
+    filters.champion_id || filters.defender_champion_id ||
+    filters.node_number || filters.tier || filters.game_account_pseudo
+  );
+
   return {
     filters,
     data,
@@ -126,6 +131,7 @@ export function useKnowledgeBaseViewModel() {
     size,
     sortBy,
     sortOrder,
+    hasActiveFilters,
     handleFilterChange,
     handleSort,
     handleClearFilters,

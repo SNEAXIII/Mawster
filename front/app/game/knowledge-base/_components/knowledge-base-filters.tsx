@@ -49,7 +49,7 @@ export default function KnowledgeBaseFilters({ filters, onChange, onClear }: Pro
         min={1}
         placeholder={kb.filterNode}
         value={filters.node_number}
-        onChange={(e) => onChange('node_number', e.target.value || null)}
+        onChange={(e) => onChange('node_number', e.target.value)}
         data-cy='filter-node'
       />
       <Input
@@ -58,7 +58,7 @@ export default function KnowledgeBaseFilters({ filters, onChange, onClear }: Pro
         min={1}
         placeholder={kb.filterTier}
         value={filters.tier}
-        onChange={(e) => onChange('tier', e.target.value || null)}
+        onChange={(e) => onChange('tier', e.target.value)}
         data-cy='filter-tier'
       />
       <Input
