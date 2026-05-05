@@ -65,8 +65,8 @@ declare namespace Cypress {
      */
     apiLoadChampions(
       adminToken: string,
-      champions: Array<{ name: string; cls: string; is_ascendable?: boolean }>,
-    ): Chainable<Record<string, { id: string; name: string }>>;
+      champions: Array<{ name: string; cls: string; is_ascendable?: boolean; has_prefight?: boolean }>,
+    ): Chainable<Record<string, { id: string; name: string ; has_prefight?: boolean }>>;
 
     /**
      * Create an alliance via backend API.

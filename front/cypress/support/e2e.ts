@@ -193,7 +193,7 @@ Cypress.Commands.add(
 
 Cypress.Commands.add(
   'apiLoadChampions',
-  (adminToken: string, champions: Array<{ name: string; cls: string; is_ascendable?: boolean }>) => {
+  (adminToken: string, champions: Array<{ name: string; cls: string; is_ascendable?: boolean; has_prefight?: boolean }>) => {
     cy.request({
       method: 'POST',
       url: `${BACKEND}/admin/champions/load`,
@@ -202,6 +202,7 @@ Cypress.Commands.add(
         name: c.name,
         champion_class: c.cls,
         is_ascendable: c.is_ascendable ?? false,
+        has_prefight: c.has_prefight ?? false,
       })),
     }).then(() =>
       cy
@@ -440,6 +441,7 @@ export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
           { name: 'Spider-Man', cls: 'Science' },
           { name: 'Wolverine', cls: 'Mutant' },
           { name: 'Black Widow', cls: 'Skill' },
+          { name: 'Absorbing Man', cls: 'Mystic', has_prefight: true },
         ])
         .then((champMap) =>
           // Add champions to attacker roster
@@ -451,10 +453,14 @@ export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
                 .then((cu1) =>
                   cy
                     .apiAddChampionToRoster(attackerData.access_token, attackerAccId, champMap['Spider-Man'].id, '7r2')
-                    .then((cu2) => ({ cuIronMan, cu1, cu2, champMap })),
+                    .then((cu2) =>
+                      cy
+                        .apiAddChampionToRoster(attackerData.access_token, attackerAccId, champMap['Absorbing Man'].id, '6r4')
+                        .then((cuPrefight) => ({ cuIronMan, cu1, cu2, cuPrefight, champMap })),
+                    ),
                 ),
             )
-            .then(({ cuIronMan, cu1, cu2, champMap }) =>
+            .then(({ cuIronMan, cu1, cu2, cuPrefight, champMap }) =>
               // Create war and place defenders
               cy.apiCreateWar(defenderData.access_token, allianceId, 'OpponentA').then((war) => {
                 cy.apiPlaceWarDefender(
@@ -495,8 +501,8 @@ export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
                 cy.apiAssignWarAttacker(attackerData.access_token, allianceId, war.id, 1, 2, cu2.id);
                 // Iron Man synergizes Captain America on node 1
                 cy.apiAddWarSynergy(attackerData.access_token, allianceId, war.id, 1, cuIronMan.id, cu1.id);
-                // Iron Man prefights node 1
-                cy.apiAddWarPrefight(attackerData.access_token, allianceId, war.id, 1, cuIronMan.id, 1);
+                // Absorbing Man prefights node 1 (has_prefight=true)
+                cy.apiAddWarPrefight(attackerData.access_token, allianceId, war.id, 1, cuPrefight.id, 1);
                 // Update KO counts to create fight records
                 cy.apiUpdateWarKo(defenderData.access_token, allianceId, war.id, 1, 1, 2);
                 cy.apiUpdateWarKo(defenderData.access_token, allianceId, war.id, 1, 2, 1);
