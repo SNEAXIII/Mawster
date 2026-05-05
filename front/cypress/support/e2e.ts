@@ -576,10 +576,13 @@ export function setupKnowledgeBaseFast(
           cy.apiCreateWar(ownerData.access_token, allianceId, 'OpponentFast').then((war) =>
             cy
               .apiEndWar(ownerData.access_token, allianceId, war.id, true, 10)
-              .then(() => {
-                cy.apiDevBulkCreateFightRecords(war.id, allianceId, ownerAccId, count);
-                return { adminToken: adminAT, userData: ownerData, accountId: ownerAccId, allianceId };
-              }),
+              .then(() =>
+                cy
+                  .apiDevBulkCreateFightRecords(war.id, allianceId, ownerAccId, count)
+                  .then(() =>
+                    cy.wrap({ adminToken: adminAT, userData: ownerData, accountId: ownerAccId, allianceId }),
+                  ),
+              ),
           ),
         );
     });
