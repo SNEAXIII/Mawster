@@ -200,31 +200,6 @@ export default function AttackerEntryRow({
             </span>
           )}
 
-          {!placement.is_combat_completed && (
-            <>
-              <button
-                type='button'
-                className={cn(
-                  'rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center flex-shrink-0',
-                  btnSize
-                )}
-                onClick={() => setConfirmOpen(true)}
-                title={t.game.war.removeAttacker}
-                data-cy={`remove-attacker-node-${placement.node_number}`}
-              >
-                <X className={cn(iconSize)} />
-              </button>
-              <ConfirmationDialog
-                open={confirmOpen}
-                onOpenChange={setConfirmOpen}
-                title={t.game.war.removeAttackerConfirmTitle}
-                description={t.game.war.removeAttackerConfirmDesc}
-                onConfirm={() => handleRemoveAttacker(placement.node_number)}
-                variant='destructive'
-              />
-            </>
-          )}
-
           {canManageWar && !placement.is_combat_completed && (
             <button
               type='button'
@@ -261,6 +236,31 @@ export default function AttackerEntryRow({
             >
               <AlertTriangle className={cn(iconSize)} />
             </button>
+          )}
+
+          {!placement.is_combat_completed && (
+            <>
+              <button
+                type='button'
+                className={cn(
+                  'rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center flex-shrink-0',
+                  btnSize
+                )}
+                onClick={() => setConfirmOpen(true)}
+                title={t.game.war.removeAttacker}
+                data-cy={`remove-attacker-node-${placement.node_number}`}
+              >
+                <X className={cn(iconSize)} />
+              </button>
+              <ConfirmationDialog
+                open={confirmOpen}
+                onOpenChange={setConfirmOpen}
+                title={t.game.war.removeAttackerConfirmTitle}
+                description={t.game.war.removeAttackerConfirmDesc}
+                onConfirm={() => handleRemoveAttacker(placement.node_number)}
+                variant='destructive'
+              />
+            </>
           )}
         </>
       )}
