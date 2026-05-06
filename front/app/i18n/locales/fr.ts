@@ -203,6 +203,7 @@ const fr: Translations = {
         title: 'Statistiques de saison',
         alliance: 'Alliance',
         ratioMin: 'Ratio minimum (%)',
+        ratioAll: 'Tous les ratios',
         groups: 'Groupes',
         allGroups: 'Tous les groupes',
         resetFilters: 'Réinitialiser les filtres',

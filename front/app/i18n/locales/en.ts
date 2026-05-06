@@ -200,6 +200,7 @@ const en = {
         title: 'Season Statistics',
         alliance: 'Alliance',
         ratioMin: 'Minimum ratio (%)',
+        ratioAll: 'All ratios',
         groups: 'Groups',
         allGroups: 'All groups',
         resetFilters: 'Reset filters',
