@@ -41,6 +41,8 @@ export interface WarPlacement {
   created_at: string;
   ko_count: number;
   is_combat_completed: boolean;
+  is_fight_not_done: boolean;
+  is_planning_error: boolean;
   attacker_champion_user_id: string | null;
   attacker_game_account_id: string | null;
   attacker_pseudo: string | null;
@@ -330,6 +332,34 @@ export async function toggleCombatCompleted(
     { method: 'PATCH', headers: jsonHeaders }
   );
   await throwOnError(response, 'Failed to toggle combat completion');
+  return response.json();
+}
+
+export async function toggleFightNotDone(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  nodeNumber: number
+): Promise<WarPlacement> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/fight-not-done`,
+    { method: 'PATCH', headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to toggle fight not done');
+  return response.json();
+}
+
+export async function togglePlanningError(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  nodeNumber: number
+): Promise<WarPlacement> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/planning-error`,
+    { method: 'PATCH', headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to toggle planning error');
   return response.json();
 }
 
