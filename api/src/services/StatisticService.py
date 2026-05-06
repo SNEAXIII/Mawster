@@ -10,10 +10,23 @@ from src.dto.dto_statistic import PlayerSeasonStatsResponse
 from src.services.AllianceService import AllianceService
 from src.utils.db import SessionDep
 
-_miniboss_case = case((WarDefensePlacement.node_number.between(37, 49), 1), else_=0)
-_boss_case = case((WarDefensePlacement.node_number == 50, 1), else_=0)
-_total_kos = func.sum(WarDefensePlacement.ko_count)
-_total_fights = func.count()
+_is_normal = and_(
+    WarDefensePlacement.is_fight_not_done == False,  # noqa: E712
+    WarDefensePlacement.is_planning_error == False,  # noqa: E712
+)
+_is_not_done = and_(
+    WarDefensePlacement.is_fight_not_done == True,  # noqa: E712
+    WarDefensePlacement.is_planning_error == False,  # noqa: E712
+)
+_miniboss_case = case(
+    (and_(_is_normal, WarDefensePlacement.node_number.between(37, 49)), 1), else_=0
+)
+_boss_case = case(
+    (and_(_is_normal, WarDefensePlacement.node_number == 50), 1), else_=0
+)
+_total_kos = func.sum(case((_is_normal, WarDefensePlacement.ko_count), else_=0))
+_total_fights = func.sum(case((_is_normal, 1), else_=0))
+_total_not_fought = func.sum(case((_is_not_done, 1), else_=0))
 
 
 class StatisticService:
@@ -29,9 +42,10 @@ class StatisticService:
                 GameAccount.game_pseudo,
                 GameAccount.alliance_group,
                 cast(_total_kos, Integer).label("total_kos"),
-                _total_fights.label("total_fights"),
+                cast(_total_fights, Integer).label("total_fights"),
                 cast(func.sum(_miniboss_case), Integer).label("total_miniboss"),
                 cast(func.sum(_boss_case), Integer).label("total_boss"),
+                cast(_total_not_fought, Integer).label("total_not_fought"),
                 cast((1 - _total_kos / _total_fights) * 100, Integer).label("ratio"),
             )
             .join(ChampionUser, ChampionUser.game_account_id == GameAccount.id)

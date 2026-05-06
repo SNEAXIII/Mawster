@@ -38,6 +38,7 @@ class FightRecordService:
                 and_(
                     WarDefensePlacement.war_id == war.id,
                     WarDefensePlacement.attacker_champion_user_id.isnot(None),
+                    WarDefensePlacement.is_fight_not_done == False,  # noqa: E712
                 )
             )
             .options(
@@ -74,6 +75,7 @@ class FightRecordService:
                 defender_ascension=placement.ascension,
                 defender_is_saga_defender=defender_champ.is_saga_defender,
                 ko_count=placement.ko_count,
+                is_planning_error=placement.is_planning_error,
             )
             session.add(record)
             await session.flush()
@@ -160,6 +162,7 @@ class FightRecordService:
         alliance_id: Optional[uuid.UUID] = None,
         battlegroup: Optional[int] = None,
         game_account_pseudo: Optional[str] = None,
+        planning_error_only: Optional[bool] = None,
         page: int = 1,
         size: int = 20,
         sort_by: str = "created_at",
@@ -185,6 +188,8 @@ class FightRecordService:
             conditions.append(WarFightRecord.battlegroup == battlegroup)
         if game_account_pseudo is not None:
             conditions.append(GameAccount.game_pseudo.ilike(f"%{game_account_pseudo}%"))
+        if planning_error_only is not None:
+            conditions.append(WarFightRecord.is_planning_error == planning_error_only)
 
         # Count query
         count_stmt = select(func.count()).select_from(WarFightRecord)
