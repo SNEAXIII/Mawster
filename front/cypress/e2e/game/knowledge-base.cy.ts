@@ -109,16 +109,16 @@ describe('Knowledge Base', () => {
 
         const pseudo = `${prefix}Own`.slice(0, 16);
 
-        cy.getByCy('filter-player').clear().type(pseudo);
+        cy.getByCy('filter-player').should('be.visible').clear().type(pseudo);
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
         cy.getByCy('fight-records-table')
           .find('tbody tr')
           .each(($tr) => cy.wrap($tr).find('td').eq(0).should('have.text', pseudo));
 
-        cy.getByCy('filter-player').clear().type(pseudo.toLowerCase().slice(0, 4));
+        cy.getByCy('filter-player').should('be.visible').clear().type(pseudo.toLowerCase().slice(0, 4));
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
 
-        cy.getByCy('filter-player').clear().type('zzznomatch');
+        cy.getByCy('filter-player').should('be.visible').clear().type('zzznomatch');
         cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
 
         cy.getByCy('filter-clear').click();
@@ -169,7 +169,7 @@ describe('Knowledge Base', () => {
 
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
 
-        cy.getByCy('filter-node').clear().type('1');
+        cy.getByCy('filter-node').should('be.visible').clear().type('1');
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
 
         cy.getByCy('filter-clear').click();
@@ -184,11 +184,11 @@ describe('Knowledge Base', () => {
         cy.visit('/game/knowledge-base');
 
         const pseudo = `${prefix}Own`.slice(0, 16);
-        cy.getByCy('filter-player').clear().type(pseudo);
-        cy.getByCy('filter-node').clear().type('1');
+        cy.getByCy('filter-player').should('be.visible').clear().type(pseudo);
+        cy.getByCy('filter-node').should('be.visible').clear().type('1');
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
 
-        cy.getByCy('filter-node').clear().type('50');
+        cy.getByCy('filter-node').should('be.visible').clear().type('50');
         cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
 
         cy.getByCy('filter-clear').click();
@@ -201,7 +201,7 @@ describe('Knowledge Base', () => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
 
-        cy.getByCy('filter-node').clear().type('50');
+        cy.getByCy('filter-node').should('be.visible').clear().type('50');
         cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
         cy.getByCy('pagination-reset').should('not.be.disabled');
 
