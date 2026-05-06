@@ -1,4 +1,5 @@
 'use client';
+import { AlertTriangle } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,11 +22,13 @@ interface Filters {
 
 interface Props {
   filters: Filters;
+  planningErrorOnly: boolean | null;
   onChange: (key: keyof Filters, value: string | null) => void;
+  onTogglePlanningError: () => void;
   onClear: () => void;
 }
 
-export default function KnowledgeBaseFilters({ filters, onChange, onClear }: Props) {
+export default function KnowledgeBaseFilters({ filters, planningErrorOnly, onChange, onTogglePlanningError, onClear }: Props) {
   const { t } = useI18n();
   const kb = t.game.knowledgeBase;
 
@@ -69,6 +72,15 @@ export default function KnowledgeBaseFilters({ filters, onChange, onClear }: Pro
         onChange={(e) => onChange('game_account_pseudo', e.target.value)}
         data-cy='filter-player'
       />
+      <Button
+        variant={planningErrorOnly ? 'default' : 'outline'}
+        onClick={onTogglePlanningError}
+        data-cy='filter-planning-error'
+        className='flex items-center gap-1'
+      >
+        <AlertTriangle className='h-3.5 w-3.5' />
+        {kb.filterPlanningError}
+      </Button>
       <Button variant='outline' onClick={onClear} data-cy='filter-clear'>
         {kb.clearFilters}
       </Button>

@@ -59,6 +59,7 @@ export interface FightRecord {
   defender_ascension: number;
   defender_is_saga_defender: boolean;
   ko_count: number;
+  is_planning_error: boolean;
   synergies: SynergyRecord[];
   prefights: PrefightRecord[];
   created_at: string;
@@ -80,6 +81,7 @@ export interface FightRecordFilters {
   season_id?: string;
   alliance_id?: string;
   game_account_pseudo?: string;
+  planning_error_only?: boolean;
   page?: number;
   size?: number;
   sort_by?: string;

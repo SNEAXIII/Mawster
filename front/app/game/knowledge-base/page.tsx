@@ -35,7 +35,9 @@ function KnowledgeBaseContent() {
       )}
       <KnowledgeBaseFilters
         filters={vm.filters}
+        planningErrorOnly={vm.planningErrorOnly}
         onChange={vm.handleFilterChange}
+        onTogglePlanningError={vm.handleTogglePlanningError}
         onClear={vm.handleClearFilters}
       />
 

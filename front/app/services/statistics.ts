@@ -22,6 +22,7 @@ export interface PlayerSeasonStats {
   total_fights: number;
   total_miniboss: number;
   total_boss: number;
+  total_not_fought: number;
   ratio: number;
   score: number;
 }

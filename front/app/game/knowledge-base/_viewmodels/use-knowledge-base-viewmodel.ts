@@ -40,6 +40,10 @@ export function useKnowledgeBaseViewModel() {
   const pathname = usePathname();
 
   const [filters, setFilters] = useState<Filters>(() => filtersFromParams(searchParams));
+  const [planningErrorOnly, setPlanningErrorOnly] = useState<boolean | null>(() => {
+    const v = searchParams.get('planning_error_only');
+    return v === 'true' ? true : null;
+  });
   const [debouncedPseudo, setDebouncedPseudo] = useState(() => searchParams.get('game_account_pseudo') ?? '');
   const [page, setPage] = useState(() => Number(searchParams.get('page') ?? '1'));
   const [size, setSize] = useState(() => Number(searchParams.get('size') ?? '20'));
@@ -61,13 +65,14 @@ export function useKnowledgeBaseViewModel() {
     if (filters.node_number) params.set('node_number', filters.node_number);
     if (filters.tier) params.set('tier', filters.tier);
     if (filters.game_account_pseudo) params.set('game_account_pseudo', filters.game_account_pseudo);
+    if (planningErrorOnly !== null) params.set('planning_error_only', String(planningErrorOnly));
     if (page !== 1) params.set('page', String(page));
     if (size !== 20) params.set('size', String(size));
     if (sortBy !== 'created_at') params.set('sort_by', sortBy);
     if (sortOrder !== 'desc') params.set('sort_order', sortOrder);
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  }, [filters, page, size, sortBy, sortOrder, pathname, router]);
+  }, [filters, planningErrorOnly, page, size, sortBy, sortOrder, pathname, router]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -79,6 +84,7 @@ export function useKnowledgeBaseViewModel() {
         node_number: filters.node_number ? Number.parseInt(filters.node_number) : undefined,
         tier: filters.tier ? Number.parseInt(filters.tier) : undefined,
         game_account_pseudo: debouncedPseudo || undefined,
+        planning_error_only: planningErrorOnly ?? undefined,
         page,
         size,
         sort_by: sortBy,
@@ -90,7 +96,7 @@ export function useKnowledgeBaseViewModel() {
     } finally {
       setLoading(false);
     }
-  }, [filters.champion_id, filters.defender_champion_id, filters.node_number, filters.tier, debouncedPseudo, page, size, sortBy, sortOrder]);
+  }, [filters.champion_id, filters.defender_champion_id, filters.node_number, filters.tier, debouncedPseudo, planningErrorOnly, page, size, sortBy, sortOrder]);
 
   useEffect(() => {
     load();
@@ -114,12 +120,19 @@ export function useKnowledgeBaseViewModel() {
   const handleClearFilters = () => {
     setFilters(DEFAULT_FILTERS);
     setDebouncedPseudo('');
+    setPlanningErrorOnly(null);
+    setPage(1);
+  };
+
+  const handleTogglePlanningError = () => {
+    setPlanningErrorOnly((prev) => (prev === true ? null : true));
     setPage(1);
   };
 
   const hasActiveFilters = Boolean(
     filters.champion_id || filters.defender_champion_id ||
-    filters.node_number || filters.tier || filters.game_account_pseudo
+    filters.node_number || filters.tier || filters.game_account_pseudo ||
+    planningErrorOnly !== null
   );
 
   return {
@@ -131,8 +144,10 @@ export function useKnowledgeBaseViewModel() {
     size,
     sortBy,
     sortOrder,
+    planningErrorOnly,
     hasActiveFilters,
     handleFilterChange,
+    handleTogglePlanningError,
     handleSort,
     handleClearFilters,
     setPage,

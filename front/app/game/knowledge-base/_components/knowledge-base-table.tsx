@@ -1,5 +1,5 @@
 'use client';
-import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, AlertTriangle } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 import { getChampionImageUrl } from '@/app/services/champions';
 import { shortenChampionName } from '@/app/services/roster';
@@ -150,7 +150,16 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
           )}
           {!loading && records.map((r) => (
             <tr key={r.id} className='border-t border-border hover:bg-muted/30 transition-colors'>
-              <td className='px-3 py-2 whitespace-nowrap'>{r.game_account_pseudo}</td>
+              <td className='px-3 py-2 whitespace-nowrap'>
+                <div className='flex items-center gap-1'>
+                  {r.game_account_pseudo}
+                  {r.is_planning_error && (
+                    <span title={kb.planningErrorBadge}>
+                      <AlertTriangle className='h-3.5 w-3.5 text-amber-500 shrink-0' />
+                    </span>
+                  )}
+                </div>
+              </td>
               <ChampionCell name={r.champion_name} imageUrl={r.image_url} stars={r.stars} rank={r.rank} />
               <ChampionCell name={r.defender_champion_name} imageUrl={r.defender_image_url} stars={r.defender_stars} rank={r.defender_rank} />
               <SynergiesCell synergies={r.synergies} />

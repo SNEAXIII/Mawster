@@ -39,6 +39,7 @@ type SortField =
   | 'total_kos'
   | 'total_miniboss'
   | 'total_boss'
+  | 'total_not_fought'
   | 'ratio'
   | 'score';
 type SortDir = 'asc' | 'desc';
@@ -144,6 +145,10 @@ export default function AllianceStatisticsTab({
       ),
       total_boss: top3(
         f.map((r) => r.total_boss),
+        true
+      ),
+      total_not_fought: top3(
+        f.map((r) => r.total_not_fought),
         true
       ),
       ratio: top3(
@@ -353,6 +358,11 @@ export default function AllianceStatisticsTab({
                       {...sortHeadProps}
                     />
                     <SortableHead
+                      label={t.game.alliances.statistics.columns.notFought}
+                      field='total_not_fought'
+                      {...sortHeadProps}
+                    />
+                    <SortableHead
                       label={t.game.alliances.statistics.columns.ratio}
                       field='ratio'
                       {...sortHeadProps}
@@ -393,6 +403,11 @@ export default function AllianceStatisticsTab({
                         className={`text-right ${cellClass('total_boss', row.total_boss)}`}
                       >
                         {row.total_boss}
+                      </TableCell>
+                      <TableCell
+                        className={`text-right ${cellClass('total_not_fought', row.total_not_fought, true)}`}
+                      >
+                        {row.total_not_fought}
                       </TableCell>
                       <TableCell className={`text-right ${cellClass('ratio', row.ratio)}`}>
                         {row.ratio}%
