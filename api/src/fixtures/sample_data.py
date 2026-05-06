@@ -31,16 +31,9 @@ from src.models.AllianceOfficer import AllianceOfficer
 from src.models.AllianceInvitation import AllianceInvitation
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
-from src.models.DefensePlacement import DefensePlacement
 from src.models.GameAccountMastery import GameAccountMastery
 from src.models.Mastery import Mastery
 from src.models.RequestedUpgrade import RequestedUpgrade
-from src.models.Season import Season
-from src.models.War import War, WarStatus
-from src.models.WarBan import WarBan
-from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.WarPrefightAttacker import WarPrefightAttacker
-from src.models.WarSynergyAttacker import WarSynergyAttacker
 from src.fixtures import sync_engine
 
 fake = Faker(locale="en")
@@ -255,7 +248,6 @@ def load_sample_data():
                 print("⚠️  No champions in DB — run `make load-champions` first, then retry.")
                 return
             print(f"📚 Loaded {len(champions_db)} champions from DB")
-            champions_sorted = sorted(champions_db.values(), key=lambda c: c.name)
 
             masteries_list = session.exec(select(Mastery)).all()
             masteries_db: dict = {m.name: m for m in masteries_list}
@@ -402,166 +394,6 @@ def load_sample_data():
                     responded_at=NOW - timedelta(days=4, hours=22),
                 )
             )
-
-            # # ── Season ───────────────────────────────────────────────────────────
-            # print("🚀 Creating season 66...")
-            # season = Season(number=66, is_active=True)
-            # session.add(season)
-            # session.flush()
-
-            # # ── Wars ─────────────────────────────────────────────────────────────
-            # print("🚀 Creating wars...")
-            # war_ended_1 = War(
-            #     alliance_id=alliance.id,
-            #     opponent_name="ABI58",
-            #     status=WarStatus.ended,
-            #     created_by_id=super_admin_game.id,
-            #     created_at=NOW - timedelta(days=2, hours=1),
-            #     season_id=season.id,
-            #     win=True,
-            #     elo_change=33,
-            #     tier=3,
-            # )
-            # war_ended_2 = War(
-            #     alliance_id=alliance.id,
-            #     opponent_name="XMN.M",
-            #     status=WarStatus.ended,
-            #     created_by_id=super_admin_game.id,
-            #     created_at=NOW - timedelta(days=4, hours=1),
-            #     season_id=season.id,
-            #     win=True,
-            #     elo_change=32,
-            #     tier=4,
-            # )
-            # war_active = War(
-            #     alliance_id=alliance.id,
-            #     opponent_name="U.KR",
-            #     status=WarStatus.active,
-            #     created_by_id=super_admin_game.id,
-            #     created_at=NOW - timedelta(hours=1),
-            #     season_id=season.id,
-            # )
-            # session.add(war_ended_1)
-            # session.add(war_ended_2)
-            # session.add(war_active)
-            # session.flush()
-
-            # # ── War bans (4 unique champions per war) ────────────────────────────
-            # print("🚀 Creating war bans...")
-            # for offset, war in enumerate([war_ended_1, war_ended_2, war_active]):
-            #     for j in range(4):
-            #         champ = champions_sorted[(offset * 4 + j) % len(champions_sorted)]
-            #         session.add(WarBan(war_id=war.id, champion_id=champ.id))
-
-            # # ── War defense placements ────────────────────────────────────────────
-            # print("🚀 Creating war defense placements...")
-            # # Group alliance members by BG for attacker assignment
-            # ga_by_bg: dict[int, list] = {1: [], 2: [], 3: []}
-            # for idx, ga in enumerate(game_accounts):
-            #     ga_by_bg[idx % 3 + 1].append(ga)
-
-            # for war_offset, (war, layout) in enumerate(
-            #     [
-            #         (war_ended_1, WAR_ENDED_NODE_LAYOUT),
-            #         (war_ended_2, WAR_ENDED_NODE_LAYOUT),
-            #         (war_active, WAR_ACTIVE_NODE_LAYOUT),
-            #     ]
-            # ):
-            #     for k, (bg, node, stars, rank, asc, ko) in enumerate(layout):
-            #         champ = champions_sorted[
-            #             (war_offset * len(layout) + k + 20) % len(champions_sorted)
-            #         ]
-            #         placer = game_accounts[(k + 2) % len(game_accounts)]
-
-            #         # Stats query joins on attacker_champion_user_id — only set for ended wars
-            #         attacker_cu_id = None
-            #         if war.status == WarStatus.ended:
-            #             pool = ga_by_bg[bg]
-            #             attacker_ga = pool[k % len(pool)]
-            #             attacker_roster = all_rosters.get(attacker_ga.id, [])
-            #             if attacker_roster:
-            #                 attacker_cu_id = attacker_roster[(k + 5) % len(attacker_roster)].id
-
-            #         session.add(
-            #             WarDefensePlacement(
-            #                 war_id=war.id,
-            #                 battlegroup=bg,
-            #                 node_number=node,
-            #                 champion_id=champ.id,
-            #                 stars=stars,
-            #                 rank=rank,
-            #                 ascension=asc,
-            #                 placed_by_id=placer.id,
-            #                 created_at=fake.date_time_between(start_date="-5d", end_date=NOW),
-            #                 ko_count=ko,
-            #                 attacker_champion_user_id=attacker_cu_id,
-            #             )
-            #         )
-
-            # # ── Full combats GA (game_accounts[3] = Circle, BG1) ─────────────────
-            # # 5 prefights + 5 synergies on all 5 BG1 nodes → simulates a fully active attacker
-            # print("🚀 Creating full-combats attacker (Circle, BG1)...")
-            # full_ga = game_accounts[3]  # BG1 (3 % 3 + 1 = 1)
-            # full_roster = all_rosters[full_ga.id]
-            # synergy_target_ga = game_accounts[6]  # another BG1 member (6 % 3 + 1 = 1)
-            # synergy_target_roster = all_rosters[synergy_target_ga.id]
-            # used_synergy: set = set()
-            # for slot, node in enumerate(BG1_NODES):
-            #     cu = full_roster[slot % len(full_roster)]
-            #     session.add(
-            #         WarPrefightAttacker(
-            #             war_id=war_active.id,
-            #             battlegroup=1,
-            #             game_account_id=full_ga.id,
-            #             champion_user_id=cu.id,
-            #             target_node_number=node,
-            #             created_at=fake.date_time_between(start_date="-12h", end_date=NOW),
-            #         )
-            #     )
-            #     cu_target = synergy_target_roster[(slot + 5) % len(synergy_target_roster)]
-            #     key = (war_active.id, 1, cu.id)
-            #     if key not in used_synergy:
-            #         used_synergy.add(key)
-            #         session.add(
-            #             WarSynergyAttacker(
-            #                 war_id=war_active.id,
-            #                 battlegroup=1,
-            #                 game_account_id=full_ga.id,
-            #                 champion_user_id=cu.id,
-            #                 target_champion_user_id=cu_target.id,
-            #                 created_at=fake.date_time_between(start_date="-12h", end_date=NOW),
-            #             )
-            #         )
-
-            # # ── Persistent defense placements ─────────────────────────────────────
-            # # Rule: ga.alliance_group must match battlegroup (DefensePlacementService)
-            # print("🚀 Creating persistent defense placements...")
-            # bg_accounts: dict[int, list[GameAccount]] = {1: [], 2: [], 3: []}
-            # for idx, ga in enumerate(game_accounts):
-            #     group = idx % 3 + 1
-            #     bg_accounts[group].append(ga)
-
-            # defense_nodes = [(1, 32), (2, 22), (3, 17), (3, 10), (2, 46)]
-            # bg_counters: dict[int, int] = {1: 0, 2: 0, 3: 0}
-            # for cu_slot, (bg, node) in enumerate(defense_nodes):
-            #     pool = bg_accounts[bg]
-            #     ga = pool[bg_counters[bg] % len(pool)]
-            #     bg_counters[bg] += 1
-            #     roster = all_rosters.get(ga.id, [])
-            #     if not roster:
-            #         continue
-            #     cu = roster[cu_slot % len(roster)]
-            #     session.add(
-            #         DefensePlacement(
-            #             alliance_id=alliance.id,
-            #             battlegroup=bg,
-            #             node_number=node,
-            #             champion_user_id=cu.id,
-            #             game_account_id=ga.id,
-            #             placed_by_id=super_admin_game.id,
-            #             created_at=fake.date_time_between(start_date="-14d", end_date=NOW),
-            #         )
-            #     )
 
             # ── Game account masteries ────────────────────────────────────────────
             if masteries_db:
