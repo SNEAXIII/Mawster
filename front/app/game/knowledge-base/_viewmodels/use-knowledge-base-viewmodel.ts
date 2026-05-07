@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   getFightRecords,
   type FightRecord,
@@ -34,21 +34,25 @@ function filtersFromParams(params: URLSearchParams): Filters {
   };
 }
 
+function getInitialParams(): URLSearchParams {
+  if (typeof window === 'undefined') return new URLSearchParams();
+  return new URLSearchParams(window.location.search);
+}
+
 export function useKnowledgeBaseViewModel() {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
-  const [filters, setFilters] = useState<Filters>(() => filtersFromParams(searchParams));
+  const [filters, setFilters] = useState<Filters>(() => filtersFromParams(getInitialParams()));
   const [planningErrorOnly, setPlanningErrorOnly] = useState<boolean | null>(() => {
-    const v = searchParams.get('planning_error_only');
+    const v = getInitialParams().get('planning_error_only');
     return v === 'true' ? true : null;
   });
-  const [debouncedPseudo, setDebouncedPseudo] = useState(() => searchParams.get('game_account_pseudo') ?? '');
-  const [page, setPage] = useState(() => Number(searchParams.get('page') ?? '1'));
-  const [size, setSize] = useState(() => Number(searchParams.get('size') ?? '20'));
-  const [sortBy, setSortBy] = useState(() => searchParams.get('sort_by') ?? 'created_at');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(() => (searchParams.get('sort_order') as 'asc' | 'desc') ?? 'desc');
+  const [debouncedPseudo, setDebouncedPseudo] = useState(() => getInitialParams().get('game_account_pseudo') ?? '');
+  const [page, setPage] = useState(() => Number(getInitialParams().get('page') ?? '1'));
+  const [size, setSize] = useState(() => Number(getInitialParams().get('size') ?? '20'));
+  const [sortBy, setSortBy] = useState(() => getInitialParams().get('sort_by') ?? 'created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(() => (getInitialParams().get('sort_order') as 'asc' | 'desc') ?? 'desc');
   const [data, setData] = useState<PaginatedFightRecords | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

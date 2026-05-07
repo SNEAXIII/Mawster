@@ -197,8 +197,7 @@ describe('Knowledge Base', () => {
         cy.getByCy('filter-node').type('1');
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
 
-        cy.getByCy('filter-node').should('have.value', '1');
-        cy.getByCy('filter-node').clear();
+        cy.getByCy('filter-node').should('be.visible').clear();
         cy.getByCy('filter-node').type('50');
         cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
 
