@@ -1548,3 +1548,197 @@ class TestToggleCombatCompleted:
             headers=headers,
         )
         assert response.status_code == 409
+
+
+class TestWarFightFlags:
+    """PATCH fight-not-done and planning-error flags — officers only."""
+
+    @pytest.mark.asyncio
+    async def test_toggle_fight_not_done_officer_ok(self):
+        data = await _setup_attacker_scenario()
+        headers_member = create_auth_headers(user_id=str(USER2_ID))
+        headers_officer = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers_member,
+        )
+
+        resp = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/fight-not-done",
+            payload={},
+            headers=headers_officer,
+        )
+        assert resp.status_code == 200
+        assert resp.json()["is_fight_not_done"] is True
+
+    @pytest.mark.asyncio
+    async def test_toggle_fight_not_done_requires_officer(self):
+        data = await _setup_attacker_scenario()
+        headers_member = create_auth_headers(user_id=str(USER2_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers_member,
+        )
+
+        resp = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/fight-not-done",
+            payload={},
+            headers=headers_member,
+        )
+        assert resp.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_toggle_fight_not_done_no_attacker_returns_422(self):
+        data = await _setup_attacker_scenario()
+        headers_officer = create_auth_headers(user_id=str(USER_ID))
+
+        resp = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/fight-not-done",
+            payload={},
+            headers=headers_officer,
+        )
+        assert resp.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_toggle_fight_not_done_blocked_when_combat_completed(self):
+        data = await _setup_attacker_scenario()
+        headers_member = create_auth_headers(user_id=str(USER2_ID))
+        headers_officer = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers_member,
+        )
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/complete",
+            payload={},
+            headers=headers_member,
+        )
+
+        resp = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/fight-not-done",
+            payload={},
+            headers=headers_officer,
+        )
+        assert resp.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_toggle_fight_not_done_blocked_when_planning_error_set(self):
+        data = await _setup_attacker_scenario()
+        headers_member = create_auth_headers(user_id=str(USER2_ID))
+        headers_officer = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers_member,
+        )
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/planning-error",
+            payload={},
+            headers=headers_officer,
+        )
+
+        resp = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/fight-not-done",
+            payload={},
+            headers=headers_officer,
+        )
+        assert resp.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_toggle_fight_not_done_is_idempotent(self):
+        data = await _setup_attacker_scenario()
+        headers_member = create_auth_headers(user_id=str(USER2_ID))
+        headers_officer = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers_member,
+        )
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/fight-not-done",
+            payload={},
+            headers=headers_officer,
+        )
+
+        resp = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/fight-not-done",
+            payload={},
+            headers=headers_officer,
+        )
+        assert resp.status_code == 200
+        assert resp.json()["is_fight_not_done"] is False
+
+    @pytest.mark.asyncio
+    async def test_toggle_planning_error_officer_ok(self):
+        data = await _setup_attacker_scenario()
+        headers_officer = create_auth_headers(user_id=str(USER_ID))
+
+        resp = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/planning-error",
+            payload={},
+            headers=headers_officer,
+        )
+        assert resp.status_code == 200
+        assert resp.json()["is_planning_error"] is True
+
+    @pytest.mark.asyncio
+    async def test_toggle_planning_error_requires_officer(self):
+        data = await _setup_attacker_scenario()
+        headers_member = create_auth_headers(user_id=str(USER2_ID))
+
+        resp = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/planning-error",
+            payload={},
+            headers=headers_member,
+        )
+        assert resp.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_toggle_planning_error_blocked_when_fight_not_done_set(self):
+        data = await _setup_attacker_scenario()
+        headers_member = create_auth_headers(user_id=str(USER2_ID))
+        headers_officer = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers_member,
+        )
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/fight-not-done",
+            payload={},
+            headers=headers_officer,
+        )
+
+        resp = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/planning-error",
+            payload={},
+            headers=headers_officer,
+        )
+        assert resp.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_toggle_planning_error_is_idempotent(self):
+        data = await _setup_attacker_scenario()
+        headers_officer = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/planning-error",
+            payload={},
+            headers=headers_officer,
+        )
+        resp = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/planning-error",
+            payload={},
+            headers=headers_officer,
+        )
+        assert resp.status_code == 200
+        assert resp.json()["is_planning_error"] is False

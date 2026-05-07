@@ -37,6 +37,9 @@ from src.Messages.war_messages import (
     CHAMPION_NO_PREFIGHT_ABILITY,
     CHAMPION_USER_NOT_FOUND,
     COMBAT_COMPLETED_LOCKED,
+    FIGHT_NOT_DONE_CONFLICT,
+    PLANNING_ERROR_CONFLICT,
+    NO_ATTACKER_ASSIGNED_FOR_FLAG,
     KO_COUNT_NO_ATTACKER_ASSIGNED,
     MEMBER_ALREADY_HAS_3_ATTACKERS,
     NODE_HAS_NO_DEFENDER_PLACE_FIRST,
@@ -373,6 +376,9 @@ class WarService:
         session.add(war)
         await session.commit()
         await session.refresh(war)
+        from src.services.FightRecordService import FightRecordService
+
+        await FightRecordService.snapshot_war(session, war)
         return WarResponse.model_validate(await cls._load_war(session, war.id))
 
     @classmethod
@@ -844,6 +850,58 @@ class WarService:
         session.add(placement)
         await session.commit()
 
+        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement.id))
+
+    @classmethod
+    async def toggle_fight_not_done(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        battlegroup: int,
+        node_number: int,
+    ) -> WarPlacementResponse:
+        placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
+        if placement is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=NO_DEFENDER_ON_NODE)
+        if placement.attacker_champion_user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=NO_ATTACKER_ASSIGNED_FOR_FLAG,
+            )
+        if placement.is_combat_completed:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=COMBAT_COMPLETED_LOCKED,
+            )
+        if not placement.is_fight_not_done and placement.is_planning_error:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=PLANNING_ERROR_CONFLICT,
+            )
+        placement.is_fight_not_done = not placement.is_fight_not_done
+        session.add(placement)
+        await session.commit()
+        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement.id))
+
+    @classmethod
+    async def toggle_planning_error(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        battlegroup: int,
+        node_number: int,
+    ) -> WarPlacementResponse:
+        placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
+        if placement is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=NO_DEFENDER_ON_NODE)
+        if not placement.is_planning_error and placement.is_fight_not_done:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=FIGHT_NOT_DONE_CONFLICT,
+            )
+        placement.is_planning_error = not placement.is_planning_error
+        session.add(placement)
+        await session.commit()
         return WarPlacementResponse.model_validate(await cls._load_placement(session, placement.id))
 
     # ─── Synergy endpoints ────────────────────────────────────────────────────

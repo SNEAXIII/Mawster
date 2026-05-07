@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
-import { X, Minus, Plus, Swords, CircleQuestionMark, CheckCircle } from 'lucide-react';
+import { X, Minus, Plus, Swords, CircleQuestionMark, CheckCircle, Ban, AlertTriangle } from 'lucide-react';
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '@/app/contexts/war-context';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
@@ -24,7 +24,7 @@ export default function AttackerEntryRow({
   readonly = false,
 }: Readonly<AttackerEntryRowProps>) {
   const { t } = useI18n();
-  const { handleRemoveAttacker, handleUpdateKo, handleToggleCombatCompleted, prefights } = useWar();
+  const { handleRemoveAttacker, handleUpdateKo, handleToggleCombatCompleted, handleToggleFightNotDone, handleTogglePlanningError, canManageWar, prefights } = useWar();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const nodePrefights = prefights.filter((p) => p.target_node_number === placement.node_number);
 
@@ -198,6 +198,44 @@ export default function AttackerEntryRow({
             >
               {placement.ko_count}
             </span>
+          )}
+
+          {canManageWar && !placement.is_combat_completed && (
+            <button
+              type='button'
+              className={cn(
+                'rounded-full flex items-center justify-center flex-shrink-0 transition-colors',
+                placement.is_fight_not_done
+                  ? 'bg-amber-500 text-white hover:bg-amber-600'
+                  : 'bg-muted text-muted-foreground hover:text-amber-400',
+                btnSize,
+                placement.is_planning_error && 'opacity-40 cursor-not-allowed'
+              )}
+              onClick={() => !placement.is_planning_error && handleToggleFightNotDone(placement.node_number)}
+              title={placement.is_fight_not_done ? t.game.war.unmarkFightNotDone : t.game.war.markFightNotDone}
+              data-cy={`fight-not-done-node-${placement.node_number}`}
+            >
+              <Ban className={cn(iconSize)} />
+            </button>
+          )}
+
+          {canManageWar && (
+            <button
+              type='button'
+              className={cn(
+                'rounded-full flex items-center justify-center flex-shrink-0 transition-colors',
+                placement.is_planning_error
+                  ? 'bg-amber-500 text-white hover:bg-amber-600'
+                  : 'bg-muted text-muted-foreground hover:text-amber-400',
+                btnSize,
+                placement.is_fight_not_done && 'opacity-40 cursor-not-allowed'
+              )}
+              onClick={() => !placement.is_fight_not_done && handleTogglePlanningError(placement.node_number)}
+              title={placement.is_planning_error ? t.game.war.unmarkPlanningError : t.game.war.markPlanningError}
+              data-cy={`planning-error-node-${placement.node_number}`}
+            >
+              <AlertTriangle className={cn(iconSize)} />
+            </button>
           )}
 
           {!placement.is_combat_completed && (

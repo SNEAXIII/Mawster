@@ -1,5 +1,5 @@
 'use client';
-import { Home, User, Sword, Shield, Swords, UserStar } from 'lucide-react';
+import { Home, User, Sword, Shield, Swords, UserStar, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useI18n } from '@/app/i18n';
@@ -43,6 +43,14 @@ export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksPro
       icon: Swords,
       role: Role.user,
       cy: 'nav-war',
+      requiresAlliance: true,
+    },
+    {
+      name: t.nav.knowledgeBase,
+      href: '/game/knowledge-base',
+      icon: BookOpen,
+      role: Role.user,
+      cy: 'nav-knowledge-base',
       requiresAlliance: true,
     },
     {

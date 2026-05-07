@@ -74,6 +74,8 @@ class WarPlacementResponse(BaseModel):
     created_at: datetime
     ko_count: int = 0
     is_combat_completed: bool = False
+    is_fight_not_done: bool = False
+    is_planning_error: bool = False
     attacker_champion_user_id: Optional[uuid.UUID] = None
     attacker_game_account_id: Optional[uuid.UUID] = None
     attacker_pseudo: Optional[str] = None
@@ -109,6 +111,8 @@ class WarPlacementResponse(BaseModel):
             "created_at": data.created_at,
             "ko_count": data.ko_count,
             "is_combat_completed": data.is_combat_completed,
+            "is_fight_not_done": data.is_fight_not_done,
+            "is_planning_error": data.is_planning_error,
             "attacker_champion_user_id": data.attacker_champion_user_id,
             "attacker_game_account_id": attacker.game_account_id if attacker else None,
             "attacker_pseudo": attacker.game_account.game_pseudo if attacker else None,

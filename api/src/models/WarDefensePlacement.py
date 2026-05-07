@@ -32,6 +32,8 @@ class WarDefensePlacement(SQLModel, table=True):
     )
     ko_count: int = Field(default=0, ge=0)
     is_combat_completed: bool = Field(default=False)
+    is_fight_not_done: bool = Field(default=False)
+    is_planning_error: bool = Field(default=False)
 
     # Relations
     war: "War" = Relationship(back_populates="placements")

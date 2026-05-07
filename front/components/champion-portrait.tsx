@@ -3,11 +3,11 @@
 import React from 'react';
 import { getChampionImageUrl } from '@/app/services/champions';
 import { getStarFrameUrl } from '@/app/services/roster';
-import SynergyBadge from '@/app/game/war/_components/synergy-badge';
-import PrefightBadge from '@/app/game/war/_components/prefight-badge';
-import PreferredBadge from '@/app/game/war/_components/preferred-badge';
-import SagaBadge from '@/app/game/war/_components/saga-badge';
-import AscensionBadge from '@/app/game/war/_components/ascension-badge';
+import SynergyBadge from '@/components/synergy-badge';
+import PrefightBadge from '@/components/prefight-badge';
+import PreferredBadge from '@/components/preferred-badge';
+import SagaBadge from '@/components/saga-badge';
+import AscensionBadge from '@/components/ascension-badge';
 import { cn } from '@/app/lib/utils';
 
 type mode = 'normal' | 'synergy' | 'prefight';

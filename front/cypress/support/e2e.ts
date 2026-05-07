@@ -91,6 +91,20 @@ Cypress.Commands.add('apiBatchSetup', (specs: BatchSetupUserSpec[]) => {
 });
 
 Cypress.Commands.add(
+  'apiDevBulkCreateFightRecords',
+  (warId: string, allianceId: string, gameAccountId: string, count: number) => {
+    cy.request({
+      method: 'POST',
+      url: `${BACKEND}/dev/bulk-create-fight-records`,
+      body: { war_id: warId, alliance_id: allianceId, game_account_id: gameAccountId, count },
+    }).then((res) => {
+      expect(res.status).to.eq(201);
+      return res.body;
+    });
+  },
+);
+
+Cypress.Commands.add(
   'apiBulkFillWarAttackers',
   (warId: string, battlegroup: number, gameAccountId: string, count: number) => {
     cy.request({
@@ -193,7 +207,7 @@ Cypress.Commands.add(
 
 Cypress.Commands.add(
   'apiLoadChampions',
-  (adminToken: string, champions: Array<{ name: string; cls: string; is_ascendable?: boolean }>) => {
+  (adminToken: string, champions: Array<{ name: string; cls: string; is_ascendable?: boolean; has_prefight?: boolean }>) => {
     cy.request({
       method: 'POST',
       url: `${BACKEND}/admin/champions/load`,
@@ -202,6 +216,7 @@ Cypress.Commands.add(
         name: c.name,
         champion_class: c.cls,
         is_ascendable: c.is_ascendable ?? false,
+        has_prefight: c.has_prefight ?? false,
       })),
     }).then(() =>
       cy
@@ -394,6 +409,184 @@ Cypress.Commands.add('apiAddOfficer', (token: string, allianceId: string, gameAc
 Cypress.Commands.add('runFixtures', () => {
   cy.request('POST', `${BACKEND}/dev/fixtures`);
 });
+
+// ── Setup knowledge base scenario (light, no truncate) ──────────────────────────
+
+export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
+  adminToken: string;
+  userData: UserSetupData;
+  attackerData: UserSetupData;
+  accountId: string;
+  allianceId: string;
+}> {
+  const adminToken = `${prefix}-admin`;
+  const defenderToken = `${prefix}-defender`;
+  const attackerToken = `${prefix}-attacker`;
+
+  return cy
+    .apiBatchSetup([
+      { discord_token: adminToken, role: 'admin' },
+      {
+        discord_token: defenderToken,
+        game_pseudo: `${prefix}Def`.slice(0, 16),
+        create_alliance: { name: `${prefix}Alliance`, tag: prefix.slice(0, 3).toUpperCase() },
+        battlegroup: 1,
+      },
+      {
+        discord_token: attackerToken,
+        game_pseudo: `${prefix}Atk`.slice(0, 16),
+        join_alliance_token: defenderToken,
+        battlegroup: 1,
+      },
+    ])
+    .then((users) => {
+      const adminAT = users[adminToken].access_token;
+      const defenderData = toUserSetupData(users[defenderToken]);
+      const attackerData = toUserSetupData(users[attackerToken]);
+      const defenderAccId = users[defenderToken].account_id!;
+      const attackerAccId = users[attackerToken].account_id!;
+      const allianceId = users[defenderToken].alliance_id!;
+
+      // Load champions for both defender and attacker
+      return cy
+        .apiLoadChampions(adminAT, [
+          { name: 'Iron Man', cls: 'Tech' },
+          { name: 'Captain America', cls: 'Cosmic' },
+          { name: 'Spider-Man', cls: 'Science' },
+          { name: 'Wolverine', cls: 'Mutant' },
+          { name: 'Black Widow', cls: 'Skill' },
+          { name: 'Absorbing Man', cls: 'Mystic', has_prefight: true },
+        ])
+        .then((champMap) =>
+          // Add champions to attacker roster
+          cy
+            .apiAddChampionToRoster(attackerData.access_token, attackerAccId, champMap['Iron Man'].id, '7r3')
+            .then((cuIronMan) =>
+              cy
+                .apiAddChampionToRoster(attackerData.access_token, attackerAccId, champMap['Captain America'].id, '7r2')
+                .then((cu1) =>
+                  cy
+                    .apiAddChampionToRoster(attackerData.access_token, attackerAccId, champMap['Spider-Man'].id, '7r2')
+                    .then((cu2) =>
+                      cy
+                        .apiAddChampionToRoster(attackerData.access_token, attackerAccId, champMap['Absorbing Man'].id, '6r4')
+                        .then((cuPrefight) => ({ cuIronMan, cu1, cu2, cuPrefight, champMap })),
+                    ),
+                ),
+            )
+            .then(({ cuIronMan, cu1, cu2, cuPrefight, champMap }) =>
+              // Create war and place defenders
+              cy.apiCreateWar(defenderData.access_token, allianceId, 'OpponentA').then((war) => {
+                cy.apiPlaceWarDefender(
+                  defenderData.access_token,
+                  allianceId,
+                  war.id,
+                  1,
+                  1,
+                  champMap['Iron Man'].id,
+                  7,
+                  3,
+                  0,
+                );
+                cy.apiPlaceWarDefender(
+                  defenderData.access_token,
+                  allianceId,
+                  war.id,
+                  1,
+                  2,
+                  champMap['Captain America'].id,
+                  6,
+                  2,
+                  0,
+                );
+                cy.apiPlaceWarDefender(
+                  defenderData.access_token,
+                  allianceId,
+                  war.id,
+                  1,
+                  3,
+                  champMap['Spider-Man'].id,
+                  6,
+                  2,
+                  0,
+                );
+                // Assign attackers to nodes
+                cy.apiAssignWarAttacker(attackerData.access_token, allianceId, war.id, 1, 1, cu1.id);
+                cy.apiAssignWarAttacker(attackerData.access_token, allianceId, war.id, 1, 2, cu2.id);
+                // Iron Man synergizes Captain America on node 1
+                cy.apiAddWarSynergy(attackerData.access_token, allianceId, war.id, 1, cuIronMan.id, cu1.id);
+                // Absorbing Man prefights node 1 (has_prefight=true)
+                cy.apiAddWarPrefight(attackerData.access_token, allianceId, war.id, 1, cuPrefight.id, 1);
+                // Update KO counts to create fight records
+                cy.apiUpdateWarKo(defenderData.access_token, allianceId, war.id, 1, 1, 2);
+                cy.apiUpdateWarKo(defenderData.access_token, allianceId, war.id, 1, 2, 1);
+                cy.apiUpdateWarKo(defenderData.access_token, allianceId, war.id, 1, 3, 3);
+                // End the war (snapshots fight records)
+                return cy
+                  .apiEndWar(defenderData.access_token, allianceId, war.id, true, 10)
+                  .then(() => ({
+                    adminToken: adminAT,
+                    userData: defenderData,
+                    attackerData,
+                    accountId: defenderAccId,
+                    allianceId,
+                  }));
+              }),
+            ),
+        );
+    });
+}
+
+// ── Fast knowledge-base setup (dev endpoint, no placement chain) ─────────────
+
+export function setupKnowledgeBaseFast(
+  prefix: string,
+  count = 2,
+): Cypress.Chainable<{
+  adminToken: string;
+  userData: UserSetupData;
+  accountId: string;
+  allianceId: string;
+}> {
+  const adminToken = `${prefix}-admin`;
+  const ownerToken = `${prefix}-owner`;
+
+  return cy
+    .apiBatchSetup([
+      { discord_token: adminToken, role: 'admin' },
+      {
+        discord_token: ownerToken,
+        game_pseudo: `${prefix}Own`.slice(0, 16),
+        create_alliance: { name: `${prefix}Alliance`, tag: prefix.slice(0, 3).toUpperCase() },
+        battlegroup: 1,
+      },
+    ])
+    .then((users) => {
+      const adminAT = users[adminToken].access_token;
+      const ownerData = toUserSetupData(users[ownerToken]);
+      const ownerAccId = users[ownerToken].account_id!;
+      const allianceId = users[ownerToken].alliance_id!;
+
+      return cy
+        .apiLoadChampions(adminAT, [
+          { name: 'Iron Man', cls: 'Tech' },
+          { name: 'Captain America', cls: 'Cosmic' },
+        ])
+        .then(() =>
+          cy.apiCreateWar(ownerData.access_token, allianceId, 'OpponentFast').then((war) =>
+            cy
+              .apiEndWar(ownerData.access_token, allianceId, war.id, true, 10)
+              .then(() =>
+                cy
+                  .apiDevBulkCreateFightRecords(war.id, allianceId, ownerAccId, count)
+                  .then(() =>
+                    cy.wrap({ adminToken: adminAT, userData: ownerData, accountId: ownerAccId, allianceId }),
+                  ),
+              ),
+          ),
+        );
+    });
+}
 
 // ── Mastery commands ──────────────────────────────────────────────────────────
 
@@ -821,6 +1014,36 @@ Cypress.Commands.add(
     cy.request({
       method: 'PATCH',
       url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/complete`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: {},
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      return res.body;
+    });
+  },
+);
+
+Cypress.Commands.add(
+  'apiToggleFightNotDone',
+  (token: string, allianceId: string, warId: string, battlegroup: number, nodeNumber: number) => {
+    cy.request({
+      method: 'PATCH',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/fight-not-done`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: {},
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      return res.body;
+    });
+  },
+);
+
+Cypress.Commands.add(
+  'apiTogglePlanningError',
+  (token: string, allianceId: string, warId: string, battlegroup: number, nodeNumber: number) => {
+    cy.request({
+      method: 'PATCH',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/planning-error`,
       headers: { Authorization: `Bearer ${token}` },
       body: {},
     }).then((res) => {

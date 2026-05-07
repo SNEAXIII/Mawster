@@ -65,8 +65,8 @@ declare namespace Cypress {
      */
     apiLoadChampions(
       adminToken: string,
-      champions: Array<{ name: string; cls: string; is_ascendable?: boolean }>,
-    ): Chainable<Record<string, { id: string; name: string }>>;
+      champions: Array<{ name: string; cls: string; is_ascendable?: boolean; has_prefight?: boolean }>,
+    ): Chainable<Record<string, { id: string; name: string ; has_prefight?: boolean }>>;
 
     /**
      * Create an alliance via backend API.
@@ -192,6 +192,14 @@ declare namespace Cypress {
       championUserId: string,
     ): Chainable<any>;
 
+    /** Insert N WarFightRecord rows directly (dev endpoint, bypasses placement flow). */
+    apiDevBulkCreateFightRecords(
+      warId: string,
+      allianceId: string,
+      gameAccountId: string,
+      count: number,
+    ): Chainable<any>;
+
     /** Fill N war nodes with dummy attackers for a given account (dev endpoint, bypasses validations). */
     apiBulkFillWarAttackers(
       warId: string,
@@ -221,6 +229,24 @@ declare namespace Cypress {
 
     /** Toggle combat completion for a war node (direct backend call). */
     apiToggleCombatCompleted(
+      token: string,
+      allianceId: string,
+      warId: string,
+      battlegroup: number,
+      nodeNumber: number,
+    ): Chainable<any>;
+
+    /** Toggle fight-not-done flag for a war node. Officers/owner only. */
+    apiToggleFightNotDone(
+      token: string,
+      allianceId: string,
+      warId: string,
+      battlegroup: number,
+      nodeNumber: number,
+    ): Chainable<any>;
+
+    /** Toggle planning-error flag for a war node. Officers/owner only. */
+    apiTogglePlanningError(
       token: string,
       allianceId: string,
       warId: string,
