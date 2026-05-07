@@ -48,7 +48,7 @@ export default function RosterChampionCard({
     >
       {/* Action buttons — always visible on touch, hover on desktop */}
       {!readOnly && (
-        <div className='absolute top-1 right-1 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20'>
+        <div className='absolute top-1 right-1 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-40'>
           {onTogglePreferredAttacker && (
             <button
               className={cn(

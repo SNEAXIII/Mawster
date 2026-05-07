@@ -38,6 +38,8 @@ import {
   addWarPrefight,
   removeWarPrefight,
   toggleCombatCompleted,
+  toggleFightNotDone,
+  togglePlanningError,
 } from '@/app/services/war';
 import { WarMode } from '@/app/game/war/_components/war-types';
 
@@ -112,6 +114,8 @@ interface WarContextValue {
 
   // Combat completion
   handleToggleCombatCompleted: (nodeNumber: number) => Promise<void>;
+  handleToggleFightNotDone: (nodeNumber: number) => Promise<void>;
+  handleTogglePlanningError: (nodeNumber: number) => Promise<void>;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -549,6 +553,44 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
   };
 
+  const handleToggleFightNotDone = async (nodeNumber: number) => {
+    if (!selectedAllianceId || !activeWarId) return;
+    try {
+      const updated = await toggleFightNotDone(
+        selectedAllianceId,
+        activeWarId,
+        selectedBg,
+        nodeNumber
+      );
+      setWarSummary((prev) =>
+        prev
+          ? { ...prev, placements: prev.placements.map((p) => p.node_number === updated.node_number ? updated : p) }
+          : prev
+      );
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.markCombatError);
+    }
+  };
+
+  const handleTogglePlanningError = async (nodeNumber: number) => {
+    if (!selectedAllianceId || !activeWarId) return;
+    try {
+      const updated = await togglePlanningError(
+        selectedAllianceId,
+        activeWarId,
+        selectedBg,
+        nodeNumber
+      );
+      setWarSummary((prev) =>
+        prev
+          ? { ...prev, placements: prev.placements.map((p) => p.node_number === updated.node_number ? updated : p) }
+          : prev
+      );
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.markCombatError);
+    }
+  };
+
   // ─── Context value ─────────────────────────────────────────────────────────
 
   const value = useMemo<WarContextValue>(
@@ -598,6 +640,8 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       handleAddPrefight,
       handleRemovePrefight,
       handleToggleCombatCompleted,
+      handleToggleFightNotDone,
+      handleTogglePlanningError,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [

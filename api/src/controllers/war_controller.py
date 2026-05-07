@@ -302,6 +302,42 @@ async def toggle_combat_completed(
     return await WarService.toggle_combat_completed(session, war_id, battlegroup, node_number)
 
 
+@war_controller.patch(
+    "/{war_id}/bg/{battlegroup}/node/{node_number}/fight-not-done",
+    response_model=WarPlacementResponse,
+)
+async def toggle_fight_not_done(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    node_number: int,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """Mark a node's fight as not done. Officers/owner only."""
+    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    return await WarService.toggle_fight_not_done(session, war_id, battlegroup, node_number)
+
+
+@war_controller.patch(
+    "/{war_id}/bg/{battlegroup}/node/{node_number}/planning-error",
+    response_model=WarPlacementResponse,
+)
+async def toggle_planning_error(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    node_number: int,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """Mark a node as a planning error. Officers/owner only."""
+    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    return await WarService.toggle_planning_error(session, war_id, battlegroup, node_number)
+
+
 @war_controller.get(
     "/{war_id}/bg/{battlegroup}/synergy",
     response_model=list[WarSynergyResponse],

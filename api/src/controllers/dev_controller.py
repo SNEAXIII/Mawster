@@ -20,6 +20,7 @@ from src.models import User, GameAccount
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.WarDefensePlacement import WarDefensePlacement
+from src.models.WarFightRecord import WarFightRecord
 from src.models.Mastery import Mastery
 from src.security.secrets import SECRET
 from src.services.DiscordAuthService import DiscordAuthService
@@ -149,7 +150,9 @@ async def dev_token(username: Annotated[str, Form()], session: SessionDep) -> Lo
         await session.exec(select(GameAccount).where(GameAccount.game_pseudo == username))
     ).first()
     if game_account:
-        user = await UserService.get_user_by_id_with_validity_check(session, str(game_account.user_id))
+        user = await UserService.get_user_by_id_with_validity_check(
+            session, str(game_account.user_id)
+        )
     else:
         user = (await session.exec(select(User).where(User.login == username))).first()
         if not user:
@@ -423,6 +426,55 @@ async def bulk_fill_war_attackers(body: BulkFillWarAttackersRequest, session: Se
 
     await session.commit()
     return {"assigned": created}
+
+
+class BulkCreateFightRecordsRequest(BaseModel):
+    war_id: uuid.UUID
+    alliance_id: uuid.UUID
+    game_account_id: uuid.UUID
+    count: int
+    tier: int = 1
+
+
+@dev_controller.post("/bulk-create-fight-records", status_code=201)
+async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session: SessionDep):
+    """Insert N WarFightRecord rows directly, bypassing the war placement flow. Testing only."""
+    champions = (await session.exec(select(Champion).limit(2))).all()
+    if len(champions) < 2:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Need at least 2 champions")
+
+    attacker_champ = champions[0]
+    defender_champ = champions[1]
+
+    for node in range(1, body.count + 1):
+        # Alternate attacker/defender so champion filters return subsets
+        if node % 2 == 1:
+            atk, dfn = attacker_champ, defender_champ
+        else:
+            atk, dfn = defender_champ, attacker_champ
+        record = WarFightRecord(
+            war_id=body.war_id,
+            alliance_id=body.alliance_id,
+            game_account_id=body.game_account_id,
+            battlegroup=1,
+            node_number=((node - 1) % 50) + 1,
+            tier=body.tier,
+            champion_id=atk.id,
+            stars=7,
+            rank=3,
+            ascension=0,
+            is_saga_attacker=atk.is_saga_attacker,
+            defender_champion_id=dfn.id,
+            defender_stars=7,
+            defender_rank=3,
+            defender_ascension=0,
+            defender_is_saga_defender=dfn.is_saga_defender,
+            ko_count=node,
+        )
+        session.add(record)
+
+    await session.commit()
+    return {"created": body.count}
 
 
 class LogMarkerRequest(BaseModel):

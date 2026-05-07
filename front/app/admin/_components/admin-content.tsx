@@ -5,6 +5,7 @@ import TabBar, { type TabItem } from '@/components/tab-bar';
 import UsersPanel from './users-panel';
 import ChampionsPanel from './champions-panel';
 import SeasonsPanel from './seasons-panel';
+import KnowledgeBasePanel from './knowledge-base-panel';
 import { useAdminViewModel, AdminTab } from '../_viewmodels/use-admin-viewmodel';
 
 interface AdminContentProps {
@@ -19,6 +20,7 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
     { value: AdminTab.Users, label: t.nav.users },
     { value: AdminTab.Champions, label: t.nav.champions },
     { value: AdminTab.Seasons, label: t.nav.seasons },
+    { value: AdminTab.KnowledgeBase, label: t.admin.knowledgeBase.tab },
   ];
 
   if (vm.status === 'loading') {
@@ -39,6 +41,7 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
       {vm.activeTab === AdminTab.Users && <UsersPanel currentUserRole={vm.session?.user?.role} />}
       {vm.activeTab === AdminTab.Champions && <ChampionsPanel />}
       {vm.activeTab === AdminTab.Seasons && <SeasonsPanel />}
+      {vm.activeTab === AdminTab.KnowledgeBase && <KnowledgeBasePanel />}
     </div>
   );
 }

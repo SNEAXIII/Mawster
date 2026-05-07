@@ -49,7 +49,7 @@ Pages: `game/roster/`, `game/defense/`, `game/alliances/`, `admin/`, `profile/`,
 
 Auth: NextAuth Discord OAuth2 → backend `POST /auth/discord` → JWT stored in session, attached as `Authorization: Bearer`.
 
-DB: MariaDB (prod), SQLite in-memory (integration tests). Migrations via Alembic — always `make reset-db` before `make create-mig` / `make migrate`.
+DB: MariaDB (prod), SQLite in-memory (integration tests). Migrations via Alembic — always `make reset-db` before `make create-mig` / `make migrate`. Migration message required: `make create-mig MESSAGE="your_migration_name"`.
 
 ---
 
