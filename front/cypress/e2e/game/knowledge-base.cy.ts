@@ -192,6 +192,7 @@ describe('Knowledge Base', () => {
         const pseudo = `${prefix}Own`.slice(0, 16);
         cy.getByCy('filter-player').should('be.visible').clear();
         cy.getByCy('filter-player').type(pseudo);
+        cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
         cy.getByCy('filter-node').should('be.visible').clear();
         cy.getByCy('filter-node').type('1');
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
