@@ -236,6 +236,24 @@ declare namespace Cypress {
       nodeNumber: number,
     ): Chainable<any>;
 
+    /** Toggle fight-not-done flag for a war node. Officers/owner only. */
+    apiToggleFightNotDone(
+      token: string,
+      allianceId: string,
+      warId: string,
+      battlegroup: number,
+      nodeNumber: number,
+    ): Chainable<any>;
+
+    /** Toggle planning-error flag for a war node. Officers/owner only. */
+    apiTogglePlanningError(
+      token: string,
+      allianceId: string,
+      warId: string,
+      battlegroup: number,
+      nodeNumber: number,
+    ): Chainable<any>;
+
     /** Add a synergy champion for a war battlegroup (direct backend call). */
     apiAddWarSynergy(
       token: string,

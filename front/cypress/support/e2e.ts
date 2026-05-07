@@ -1023,6 +1023,36 @@ Cypress.Commands.add(
   },
 );
 
+Cypress.Commands.add(
+  'apiToggleFightNotDone',
+  (token: string, allianceId: string, warId: string, battlegroup: number, nodeNumber: number) => {
+    cy.request({
+      method: 'PATCH',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/fight-not-done`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: {},
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      return res.body;
+    });
+  },
+);
+
+Cypress.Commands.add(
+  'apiTogglePlanningError',
+  (token: string, allianceId: string, warId: string, battlegroup: number, nodeNumber: number) => {
+    cy.request({
+      method: 'PATCH',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/planning-error`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: {},
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      return res.body;
+    });
+  },
+);
+
 Cypress.Commands.add('apiEndWar', (token: string, allianceId: string, warId: string, win = true, eloChange = 10) => {
   cy.request({
     method: 'POST',
