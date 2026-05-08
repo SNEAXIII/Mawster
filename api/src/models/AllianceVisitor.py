@@ -16,7 +16,7 @@ class AllianceVisitor(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
-    visited_since: datetime = Field(default_factory=datetime.now)
+    visited_at: datetime = Field(default_factory=datetime.now)
 
     # Relations
     alliance: "Alliance" = Relationship(back_populates="visitors")

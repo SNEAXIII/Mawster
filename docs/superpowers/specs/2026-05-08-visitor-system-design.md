@@ -42,7 +42,7 @@ Mirrors `AllianceOfficer`. Created on acceptance of a VISITOR invitation, delete
 | `id` | UUID | PK |
 | `alliance_id` | UUID | FK → alliance |
 | `game_account_id` | UUID | FK → game_account |
-| `visited_since` | datetime | default now() |
+| `visited_at` | datetime | default now() |
 
 Relations:
 - `Alliance.visitors` ↔ `GameAccount.visited_alliances`

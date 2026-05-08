@@ -86,7 +86,7 @@ class AllianceVisitor(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
-    visited_since: datetime = Field(default_factory=datetime.now)
+    visited_at: datetime = Field(default_factory=datetime.now)
 
     # Relations
     alliance: "Alliance" = Relationship(back_populates="visitors")
@@ -302,7 +302,7 @@ cd api && uv run alembic revision --autogenerate -m "add_alliance_visitor_and_in
 
 Open the new file under `migrations/versions/`. Confirm it contains:
 - `op.add_column('alliance_invitation', sa.Column('type', sa.String(), nullable=False, server_default='member'))`
-- `op.create_table('alliance_visitor', ...)` with columns: `id`, `alliance_id`, `game_account_id`, `visited_since`
+- `op.create_table('alliance_visitor', ...)` with columns: `id`, `alliance_id`, `game_account_id`, `visited_at`
 
 If `server_default` is missing on the `type` column, add it manually so existing rows default to `'member'`.
 
@@ -814,7 +814,7 @@ class AllianceVisitorResponse(BaseModel):
     alliance_id: uuid.UUID
     game_account_id: uuid.UUID
     game_pseudo: str
-    visited_since: datetime
+    visited_at: datetime
 
     @model_validator(mode="before")
     @classmethod
@@ -826,7 +826,7 @@ class AllianceVisitorResponse(BaseModel):
             "alliance_id": data.alliance_id,
             "game_account_id": data.game_account_id,
             "game_pseudo": data.game_account.game_pseudo,
-            "visited_since": data.visited_since,
+            "visited_at": data.visited_at,
         }
 ```
 
@@ -1375,7 +1375,7 @@ export interface AllianceVisitor {
   alliance_id: string;
   game_account_id: string;
   game_pseudo: string;
-  visited_since: string;
+  visited_at: string;
 }
 
 export interface AllianceInvitation {
