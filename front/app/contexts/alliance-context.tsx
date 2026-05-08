@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { type Alliance, getMyAlliances } from '@/app/services/game';
+import { type Alliance, getMyAlliances, getMyVisitedAlliances } from '@/app/services/game';
 
 const CACHE_KEY = 'alliance_cache';
 
@@ -55,9 +55,13 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
     }
     setLoading(true);
     try {
-      const data = await getMyAlliances();
-      setAlliances(data);
-      writeCache(data);
+      const [member, visited] = await Promise.all([getMyAlliances(), getMyVisitedAlliances()]);
+      const merged = [
+        ...member,
+        ...visited.filter((v) => !member.some((m) => m.id === v.id)),
+      ];
+      setAlliances(merged);
+      writeCache(merged);
     } catch {
       setAlliances([]);
     } finally {
