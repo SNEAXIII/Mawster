@@ -1,7 +1,11 @@
 import uuid
 
+from fastapi import HTTPException
+from starlette import status
+
 from src.models import User
 from src.models import ChampionUser, Season, War, WarDefensePlacement, GameAccount
+from src.models.Alliance import Alliance
 from src.models.War import WarStatus
 from sqlalchemy import and_, func, cast, Integer, case
 from sqlmodel import select
@@ -32,7 +36,11 @@ class StatisticService:
     async def get_active_season_statistics(
         cls, session: SessionDep, current_user: User, alliance_id: uuid.UUID
     ) -> list[PlayerSeasonStatsResponse]:
-        await AllianceService.require_visitor(session, alliance_id, current_user.id)
+        alliance = await session.get(Alliance, alliance_id)
+        if alliance is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
 
         sql = (
             select(

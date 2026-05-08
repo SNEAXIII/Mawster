@@ -20,7 +20,6 @@ defense_controller = APIRouter(
     prefix="/alliances/{alliance_id}/defense",
     tags=["Defense"],
     dependencies=[
-        Depends(AuthService.is_logged_as_user),
         Depends(AuthService.get_current_user_in_jwt),
     ],
 )

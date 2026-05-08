@@ -13,7 +13,6 @@ fight_record_controller = APIRouter(
     prefix="/fight-records",
     tags=["Fight Records"],
     dependencies=[
-        Depends(AuthService.is_logged_as_user),
         Depends(AuthService.get_current_user_in_jwt),
     ],
 )

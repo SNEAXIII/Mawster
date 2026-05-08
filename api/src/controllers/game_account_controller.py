@@ -22,7 +22,6 @@ game_account_controller = APIRouter(
     prefix="/game-accounts",
     tags=["Game Accounts"],
     dependencies=[
-        Depends(AuthService.is_logged_as_user),
         Depends(AuthService.get_current_user_in_jwt),
     ],
 )

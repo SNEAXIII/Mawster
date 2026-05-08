@@ -32,7 +32,6 @@ champion_user_controller = APIRouter(
     prefix="/champion-users",
     tags=["Champion Users"],
     dependencies=[
-        Depends(AuthService.is_logged_as_user),
         Depends(AuthService.get_current_user_in_jwt),
     ],
 )
