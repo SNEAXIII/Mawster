@@ -607,7 +607,9 @@ class AllianceService:
         )
 
     @classmethod
-    async def get_my_visited_alliances(cls, session: SessionDep, user_id: uuid.UUID) -> list[Alliance]:
+    async def get_my_visited_alliances(
+        cls, session: SessionDep, user_id: uuid.UUID
+    ) -> list[Alliance]:
         """Return alliances where the user has a game account currently visiting (as visitor)."""
         from src.services.AllianceVisitorService import AllianceVisitorService
 

@@ -42,10 +42,15 @@ class AllianceInvitationService:
         game_account_id: uuid.UUID,
     ) -> None:
         """Raise 409 if the game account is already a visitor or the alliance is full."""
-        from src.services.AllianceVisitorService import AllianceVisitorService, MAX_VISITORS_PER_ALLIANCE
+        from src.services.AllianceVisitorService import (
+            AllianceVisitorService,
+            MAX_VISITORS_PER_ALLIANCE,
+        )
         from src.Messages.visitor_messages import alliance_max_visitors_reached, ALREADY_A_VISITOR
 
-        already_visitor = await AllianceVisitorService.is_visitor(session, alliance_id, game_account_id)
+        already_visitor = await AllianceVisitorService.is_visitor(
+            session, alliance_id, game_account_id
+        )
         if already_visitor:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ALREADY_A_VISITOR)
         visitor_count = await AllianceVisitorService.count_visitors(session, alliance_id)
@@ -235,7 +240,10 @@ class AllianceInvitationService:
             )
         # Clean up any visitor record for this game account in this alliance
         from src.services.AllianceVisitorService import AllianceVisitorService
-        await AllianceVisitorService.remove_if_visitor(session, invitation.alliance_id, invitation.game_account_id)
+
+        await AllianceVisitorService.remove_if_visitor(
+            session, invitation.alliance_id, invitation.game_account_id
+        )
         # Join alliance
         game_account.alliance_id = invitation.alliance_id
         session.add(game_account)

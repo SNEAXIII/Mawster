@@ -441,7 +441,9 @@ async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session
     """Insert N WarFightRecord rows directly, bypassing the war placement flow. Testing only."""
     champions = (await session.exec(select(Champion).limit(2))).all()
     if len(champions) < 2:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Need at least 2 champions")
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail="Need at least 2 champions"
+        )
 
     attacker_champ = champions[0]
     defender_champ = champions[1]

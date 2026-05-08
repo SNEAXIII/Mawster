@@ -37,8 +37,12 @@ TARGET_NODE_NO_ATTACKER_ASSIGNED = "Target node has no attacker assigned"
 CHAMPION_ALREADY_PREFIGHT_ON_NODE = "This champion is already assigned as pre-fight on this node"
 PREFIGHT_ENTRY_NOT_FOUND = "Pre-fight entry not found"
 COMBAT_COMPLETED_LOCKED = "Combat is locked — mark it as not done first to modify it"
-FIGHT_NOT_DONE_CONFLICT = "Cannot mark as planning error: fight is already marked as not done — untoggle it first"
-PLANNING_ERROR_CONFLICT = "Cannot mark as fight not done: fight is already marked as planning error — untoggle it first"
+FIGHT_NOT_DONE_CONFLICT = (
+    "Cannot mark as planning error: fight is already marked as not done — untoggle it first"
+)
+PLANNING_ERROR_CONFLICT = (
+    "Cannot mark as fight not done: fight is already marked as planning error — untoggle it first"
+)
 NO_ATTACKER_ASSIGNED_FOR_FLAG = "Cannot flag this node: no attacker assigned"
 
 

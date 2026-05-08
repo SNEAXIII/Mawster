@@ -194,7 +194,9 @@ class FightRecordService:
         # Count query
         count_stmt = select(func.count()).select_from(WarFightRecord)
         if game_account_pseudo is not None:
-            count_stmt = count_stmt.join(GameAccount, WarFightRecord.game_account_id == GameAccount.id)
+            count_stmt = count_stmt.join(
+                GameAccount, WarFightRecord.game_account_id == GameAccount.id
+            )
         if conditions:
             count_stmt = count_stmt.where(and_(*conditions))
         total = (await session.exec(count_stmt)).one()
@@ -231,9 +233,7 @@ class FightRecordService:
             stmt = stmt.where(and_(*conditions))
 
         if needs_attacker_join:
-            stmt = stmt.join(
-                AttackerChampion, WarFightRecord.champion_id == AttackerChampion.id
-            )
+            stmt = stmt.join(AttackerChampion, WarFightRecord.champion_id == AttackerChampion.id)
             raw_col = AttackerChampion.name
         elif needs_defender_join:
             stmt = stmt.join(

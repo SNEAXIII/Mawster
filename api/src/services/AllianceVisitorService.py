@@ -22,9 +22,7 @@ class AllianceVisitorService:
     @staticmethod
     async def count_visitors(session: SessionDep, alliance_id: uuid.UUID) -> int:
         result = await session.exec(
-            select(func.count(AllianceVisitor.id)).where(
-                AllianceVisitor.alliance_id == alliance_id
-            )
+            select(func.count(AllianceVisitor.id)).where(AllianceVisitor.alliance_id == alliance_id)
         )
         return result.one()
 

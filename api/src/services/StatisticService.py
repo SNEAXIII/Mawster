@@ -21,9 +21,7 @@ _is_not_done = and_(
 _miniboss_case = case(
     (and_(_is_normal, WarDefensePlacement.node_number.between(37, 49)), 1), else_=0
 )
-_boss_case = case(
-    (and_(_is_normal, WarDefensePlacement.node_number == 50), 1), else_=0
-)
+_boss_case = case((and_(_is_normal, WarDefensePlacement.node_number == 50), 1), else_=0)
 _total_kos = func.sum(case((_is_normal, WarDefensePlacement.ko_count), else_=0))
 _total_fights = func.sum(case((_is_normal, 1), else_=0))
 _total_not_fought = func.sum(case((_is_not_done, 1), else_=0))

@@ -35,8 +35,14 @@ async def list_fight_records(
     page: int = Query(default=1, ge=1),
     size: int = Query(default=20, ge=1, le=100),
     sort_by: Literal[
-        "created_at", "ko_count", "tier", "node_number", "battlegroup",
-        "champion_name", "defender_champion_name", "alliance_name"
+        "created_at",
+        "ko_count",
+        "tier",
+        "node_number",
+        "battlegroup",
+        "champion_name",
+        "defender_champion_name",
+        "alliance_name",
     ] = Query(default="created_at"),
     sort_order: str = Query(default="desc", pattern="^(asc|desc)$"),
 ):
