@@ -41,7 +41,7 @@ async def get_defense(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get the full defense layout for a battlegroup."""
-    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
+    await AllianceService.require_visitor(session, alliance_id, current_user.id)
 
     placements = await DefensePlacementService.get_defense(session, alliance_id, battlegroup)
 
@@ -76,13 +76,7 @@ async def place_defender(
     )
 
     # Check if user is owner/officer (can place for others) or placing for themselves
-    is_manager = False
-    try:
-        await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
-        is_manager = True
-    except HTTPException as exc:
-        if exc.status_code != status.HTTP_403_FORBIDDEN:
-            raise
+    is_manager = await AllianceService.is_officer(session, current_user.id, alliance_id)
 
     if not is_manager and body.game_account_id != my_account.id:
         raise HTTPException(
@@ -115,8 +109,7 @@ async def remove_defender(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Remove a defender from a node. Officers/owners only."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
-    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    await AllianceService.require_officer(session, alliance_id, current_user.id)
 
     await DefensePlacementService.remove_defender(session, alliance_id, battlegroup, node_number)
 
@@ -132,8 +125,7 @@ async def clear_defense(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Clear all defense placements for a battlegroup. Officers/owners only."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
-    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    await AllianceService.require_officer(session, alliance_id, current_user.id)
 
     await DefensePlacementService.clear_defense(session, alliance_id, battlegroup)
 
@@ -148,7 +140,7 @@ async def get_available_champions(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get all champions available for placement (not already placed, from BG members)."""
-    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
+    await AllianceService.require_visitor(session, alliance_id, current_user.id)
 
     return await DefensePlacementService.get_available_champions(session, alliance_id, battlegroup)
 
@@ -163,7 +155,7 @@ async def get_bg_members(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get all members in a battlegroup with their defender counts."""
-    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
+    await AllianceService.require_visitor(session, alliance_id, current_user.id)
 
     return await DefensePlacementService.get_bg_members_with_counts(
         session, alliance_id, battlegroup

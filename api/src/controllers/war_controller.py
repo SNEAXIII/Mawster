@@ -81,7 +81,7 @@ async def list_wars(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """List all wars for an alliance. All members can view."""
-    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
+    await AllianceService.require_visitor(session, alliance_id, current_user.id)
     return await WarService.get_wars(session, alliance_id)
 
 
@@ -95,7 +95,7 @@ async def get_current_war(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get the currently active war for an alliance. All members can view."""
-    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
+    await AllianceService.require_visitor(session, alliance_id, current_user.id)
     return await WarService.get_current_war(session, alliance_id)
 
 
@@ -112,7 +112,7 @@ async def get_war_defense(
     war: WarDep,
 ):
     """Get defense placements for a war battlegroup. All members can view."""
-    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
+    await AllianceService.require_visitor(session, alliance_id, current_user.id)
     return await WarService.get_war_defense(session, war_id, battlegroup)
 
 
@@ -151,7 +151,7 @@ async def remove_war_defender(
     war: WarDep,
 ):
     """Remove a defender from a war node. Officers/owner only."""
-    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    await AllianceService.require_officer(session, alliance_id, current_user.id)
     await WarService.remove_defender(session, war_id, battlegroup, node_number)
 
 
@@ -167,7 +167,7 @@ async def end_war(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Mark a war as ended with result. Officers/owner only."""
-    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    await AllianceService.require_officer(session, alliance_id, current_user.id)
     return await WarService.end_war(session, war_id, alliance_id, body.win, body.elo_change)
 
 
@@ -184,7 +184,7 @@ async def clear_war_bg(
     war: WarDep,
 ):
     """Clear all defenders in a war battlegroup. Officers/owner only."""
-    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    await AllianceService.require_officer(session, alliance_id, current_user.id)
     count = await WarService.clear_bg(session, war_id, battlegroup)
     return {"deleted": count}
 
@@ -203,7 +203,7 @@ async def get_available_attackers(
     node_number: int | None = None,
 ):
     """List available attackers (BG roster minus defenders). Pass attacker_id to filter to a single member."""
-    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
+    await AllianceService.require_visitor(session, alliance_id, current_user.id)
     return await WarService.get_available_attackers(
         session, alliance_id, battlegroup, attacker_id, war, node_number
     )
@@ -222,7 +222,7 @@ async def get_available_prefight_attackers(
     war: WarDep,
 ):
     """List available pre-fight champions (has_prefight=True) for the BG."""
-    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
+    await AllianceService.require_visitor(session, alliance_id, current_user.id)
     return await WarService.get_available_prefight_attackers(session, alliance_id, battlegroup, war)
 
 
@@ -241,7 +241,7 @@ async def assign_war_attacker(
     war: WarDep,
 ):
     """Assign an attacker to a war node. All members can assign."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await AllianceService.require_member(session, alliance_id, current_user.id)
     return await WarService.assign_attacker(
         session, war_id, alliance_id, battlegroup, node_number, body.champion_user_id
     )
@@ -261,7 +261,7 @@ async def remove_war_attacker(
     war: WarDep,
 ):
     """Remove the attacker from a war node. All members can remove."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await AllianceService.require_member(session, alliance_id, current_user.id)
     return await WarService.remove_attacker(session, war_id, battlegroup, node_number)
 
 
@@ -280,7 +280,7 @@ async def update_war_ko(
     war: WarDep,
 ):
     """Update the KO count for a war node. All members can update."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await AllianceService.require_member(session, alliance_id, current_user.id)
     return await WarService.update_ko(session, war_id, battlegroup, node_number, body.ko_count)
 
 
@@ -298,7 +298,7 @@ async def toggle_combat_completed(
     war: WarDep,
 ):
     """Toggle combat completion for a war node. All members can toggle."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await AllianceService.require_member(session, alliance_id, current_user.id)
     return await WarService.toggle_combat_completed(session, war_id, battlegroup, node_number)
 
 
@@ -316,7 +316,7 @@ async def toggle_fight_not_done(
     war: WarDep,
 ):
     """Mark a node's fight as not done. Officers/owner only."""
-    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    await AllianceService.require_officer(session, alliance_id, current_user.id)
     return await WarService.toggle_fight_not_done(session, war_id, battlegroup, node_number)
 
 
@@ -334,7 +334,7 @@ async def toggle_planning_error(
     war: WarDep,
 ):
     """Mark a node as a planning error. Officers/owner only."""
-    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    await AllianceService.require_officer(session, alliance_id, current_user.id)
     return await WarService.toggle_planning_error(session, war_id, battlegroup, node_number)
 
 
@@ -351,7 +351,7 @@ async def get_war_synergy(
     war: WarDep,
 ):
     """List synergy champions for a battlegroup. All members can view."""
-    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
+    await AllianceService.require_visitor(session, alliance_id, current_user.id)
     return await WarService.get_synergy_attackers(session, war_id, battlegroup)
 
 
@@ -370,7 +370,7 @@ async def add_war_synergy(
     war: WarDep,
 ):
     """Add a synergy champion for a battlegroup. All members can add."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await AllianceService.require_member(session, alliance_id, current_user.id)
     return await WarService.add_synergy_attacker(
         session,
         war_id,
@@ -396,7 +396,7 @@ async def remove_war_synergy(
     war: WarDep,
 ):
     """Remove a synergy champion from a battlegroup. All members can remove."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await AllianceService.require_member(session, alliance_id, current_user.id)
     await WarService.remove_synergy_attacker(session, war_id, battlegroup, champion_user_id)
 
 
@@ -413,7 +413,7 @@ async def get_war_prefight(
     war: WarDep,
 ):
     """List pre-fight champions for a battlegroup. All members can view."""
-    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
+    await AllianceService.require_visitor(session, alliance_id, current_user.id)
     return await WarService.get_prefight_attackers(session, war_id, battlegroup)
 
 
@@ -432,7 +432,7 @@ async def add_war_prefight(
     war: WarDep,
 ):
     """Add a pre-fight champion for a battlegroup. All members can add."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await AllianceService.require_member(session, alliance_id, current_user.id)
     return await WarService.add_prefight_attacker(
         session,
         war_id,
@@ -457,5 +457,5 @@ async def remove_war_prefight(
     war: WarDep,
 ):
     """Remove a pre-fight champion. Any alliance member can remove."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await AllianceService.require_member(session, alliance_id, current_user.id)
     await WarService.remove_prefight_attacker(session, war_id, battlegroup, champion_user_id)

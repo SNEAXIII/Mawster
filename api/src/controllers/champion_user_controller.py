@@ -257,9 +257,7 @@ async def _assert_alliance_officer(session, game_account, current_user_id):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Target is not in an alliance",
         )
-    await AllianceService.assert_officer_or_owner_by_id(
-        session, game_account.alliance_id, current_user_id
-    )
+    await AllianceService.require_officer(session, game_account.alliance_id, current_user_id)
 
 
 def _pick_requester_account(
@@ -390,7 +388,5 @@ async def cancel_upgrade_request(
             detail="Not authorized to cancel this upgrade request",
         )
 
-    await AllianceService.assert_officer_or_owner_by_id(
-        session, target_account.alliance_id, current_user.id
-    )
+    await AllianceService.require_officer(session, target_account.alliance_id, current_user.id)
     await UpgradeRequestService.cancel_upgrade_request(session, request_id)
