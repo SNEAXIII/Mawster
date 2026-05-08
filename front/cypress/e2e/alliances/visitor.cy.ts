@@ -53,6 +53,35 @@ describe('Visitor system', () => {
     });
   });
 
+  describe('Officer — invite visitor via toggle', () => {
+    it('can send a visitor invitation via the type toggle', () => {
+      cy.apiBatchSetup([
+        {
+          discord_token: 'vis-inv-owner',
+          game_pseudo: 'visInvOwner',
+          create_alliance: { name: 'visInvAlliance', tag: 'VIA' },
+        },
+        {
+          discord_token: 'vis-inv-eligible',
+          game_pseudo: 'visInvElig',
+        },
+      ]).then((users) => {
+        const ownerData = users['vis-inv-owner'];
+
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('alliances');
+
+        cy.getByCy('invite-member-toggle').click();
+        cy.getByCy('invite-type-visitor').click();
+        cy.getByCy('invite-member-select').click();
+        cy.contains('visInvElig').click();
+        cy.getByCy('invite-member-submit').click();
+
+        cy.getByCy('pending-invitation-0').should('be.visible');
+      });
+    });
+  });
+
   describe('Visitor — alliance page', () => {
     it('sees visitors section but no manage buttons', () => {
       setupVisitorScenario('vis-readonly').then(({ visitorData, visitorAccId }) => {

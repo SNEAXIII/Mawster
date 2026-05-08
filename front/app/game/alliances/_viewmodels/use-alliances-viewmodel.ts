@@ -13,6 +13,7 @@ import {
   getEligibleMembers,
   createAlliance,
   inviteMember,
+  inviteVisitor,
   getMyInvitations,
   acceptInvitation,
   declineInvitation,
@@ -91,6 +92,7 @@ export function useAlliancesViewModel() {
   const [ownerId, setOwnerId] = useState('');
   const [memberAllianceId, setMemberAllianceId] = useState<string | null>(null);
   const [memberAccountId, setMemberAccountId] = useState('');
+  const [inviteType, setInviteType] = useState<'member' | 'visitor'>('member');
   const [rosterTarget, setRosterTarget] = useState<{
     gameAccountId: string;
     pseudo: string;
@@ -257,18 +259,24 @@ export function useAlliancesViewModel() {
   const handleOpenInviteMember = (allianceId: string) => {
     setMemberAllianceId(allianceId);
     setMemberAccountId('');
+    setInviteType('member');
     fetchEligibleMembers();
   };
 
   const handleCloseInviteMember = () => {
     setMemberAllianceId(null);
     setMemberAccountId('');
+    setInviteType('member');
   };
 
   const handleInviteMember = async (allianceId: string) => {
     if (!memberAccountId) return;
     try {
-      await inviteMember(allianceId, memberAccountId);
+      if (inviteType === 'visitor') {
+        await inviteVisitor(allianceId, memberAccountId);
+      } else {
+        await inviteMember(allianceId, memberAccountId);
+      }
       toast.success(t.game.alliances.inviteSuccess);
       setMemberAllianceId(null);
       setMemberAccountId('');
@@ -348,6 +356,7 @@ export function useAlliancesViewModel() {
     ownerId,
     memberAllianceId,
     memberAccountId,
+    inviteType,
     rosterTarget,
     statsAllianceId,
     seasonStats,
@@ -359,6 +368,7 @@ export function useAlliancesViewModel() {
     setTag,
     setOwnerId,
     setMemberAccountId,
+    setInviteType,
     setRosterTarget,
     handleCreate,
     handleOpenInviteMember,

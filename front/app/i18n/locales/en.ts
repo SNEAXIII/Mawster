@@ -135,6 +135,8 @@ const en = {
       membersTitle: 'Members',
       inviteMember: 'Invite member',
       inviteMemberButton: 'Invite',
+      inviteTypeMember: 'Member',
+      inviteTypeVisitor: 'Visitor',
       selectMember: 'Select an account',
       inviteSuccess: 'Invitation sent successfully!',
       inviteError: 'Failed to send invitation',

@@ -24,6 +24,8 @@ interface AllianceCardProps {
   memberAllianceId: string | null;
   memberAccountId: string;
   eligibleMembers: GameAccount[];
+  inviteType: 'member' | 'visitor';
+  onInviteTypeChange: (type: 'member' | 'visitor') => void;
   onMemberAccountChange: (value: string) => void;
   onOpenInviteMember: (allianceId: string) => void;
   onCloseInviteMember: () => void;
@@ -40,6 +42,8 @@ export default function AllianceCard({
   memberAllianceId,
   memberAccountId,
   eligibleMembers,
+  inviteType,
+  onInviteTypeChange,
   onMemberAccountChange,
   onOpenInviteMember,
   onCloseInviteMember,
@@ -307,6 +311,22 @@ export default function AllianceCard({
             {userCanManage &&
               (memberAllianceId === alliance.id ? (
                 <div className='flex flex-wrap items-center gap-2'>
+                  <div className='flex rounded-md border overflow-hidden text-xs'>
+                    <button
+                      className={`px-2 py-1 ${inviteType === 'member' ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:bg-muted'}`}
+                      data-cy='invite-type-member'
+                      onClick={() => onInviteTypeChange('member')}
+                    >
+                      {t.game.alliances.inviteTypeMember}
+                    </button>
+                    <button
+                      className={`px-2 py-1 ${inviteType === 'visitor' ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:bg-muted'}`}
+                      data-cy='invite-type-visitor'
+                      onClick={() => onInviteTypeChange('visitor')}
+                    >
+                      {t.game.alliances.inviteTypeVisitor}
+                    </button>
+                  </div>
                   <InviteMemberCombo
                     eligibleMembers={eligibleMembers}
                     memberAccountId={memberAccountId}

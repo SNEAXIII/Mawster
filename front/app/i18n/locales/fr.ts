@@ -138,6 +138,8 @@ const fr: Translations = {
       membersTitle: 'Membres',
       inviteMember: 'Inviter un membre',
       inviteMemberButton: 'Inviter',
+      inviteTypeMember: 'Membre',
+      inviteTypeVisitor: 'Visiteur',
       selectMember: 'Sélectionner un compte',
       inviteSuccess: 'Invitation envoyée avec succès !',
       inviteError: "Erreur lors de l'envoi de l'invitation",
