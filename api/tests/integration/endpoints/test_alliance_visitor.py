@@ -8,7 +8,6 @@ from tests.integration.endpoints.setup.user_setup import get_generic_user
 from tests.integration.endpoints.setup.game_setup import (
     push_game_account,
     push_alliance_with_owner,
-    push_officer,
     push_visitor,
 )
 from tests.utils.utils_client import (
@@ -25,8 +24,6 @@ from tests.utils.utils_constant import (
     DISCORD_ID_2,
     GAME_PSEUDO,
     GAME_PSEUDO_2,
-    ALLIANCE_NAME,
-    ALLIANCE_TAG,
 )
 from tests.utils.utils_db import get_test_session, load_objects
 
@@ -98,7 +95,7 @@ class TestInviteVisitor:
         await _setup_users()
         alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         visitor_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
-        outsider_acc = await push_game_account(user_id=USER3_ID, game_pseudo="outsider")
+        await push_game_account(user_id=USER3_ID, game_pseudo="outsider")
 
         response = await execute_post_request(
             f"{ENDPOINT}/{alliance.id}/invitations",
@@ -165,7 +162,7 @@ class TestVisitorPermissions:
     async def test_visitor_cannot_access_visitor_list(self):
         await _setup_users()
         alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        visitor_acc = await push_visitor(alliance=alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        await push_visitor(alliance=alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_get_request(
             f"{ENDPOINT}/{alliance.id}/visitors",
@@ -177,7 +174,7 @@ class TestVisitorPermissions:
     async def test_visitor_cannot_invite_members(self):
         await _setup_users()
         alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        visitor_acc = await push_visitor(alliance=alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        await push_visitor(alliance=alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
         outsider_acc = await push_game_account(user_id=USER3_ID, game_pseudo="outsider")
 
         response = await execute_post_request(
@@ -208,7 +205,7 @@ class TestKickVisitor:
     async def test_visitor_can_leave(self):
         await _setup_users()
         alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        visitor_acc = await push_visitor(alliance=alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        await push_visitor(alliance=alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_delete_request(
             f"{ENDPOINT}/{alliance.id}/visitors/me",

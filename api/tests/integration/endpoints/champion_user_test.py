@@ -4,6 +4,8 @@ import uuid
 import pytest
 
 from main import app
+from src.enums.Roles import Roles
+from src.models.AllianceVisitor import AllianceVisitor
 from src.models.ChampionUser import ChampionUser
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2
@@ -34,6 +36,7 @@ from tests.utils.utils_db import get_test_session, load_objects
 app.dependency_overrides[get_session] = get_test_session
 
 HEADERS = create_auth_headers()
+USER2_HEADERS = create_auth_headers(user_id=str(USER2_ID), role=Roles.USER)
 
 CHAMPION_USERS_ROUTE = "/champion-users"
 
@@ -1297,6 +1300,38 @@ class TestAllianceMemberRosterView:
             f"{CHAMPION_USERS_ROUTE}/by-account/{_owner.id}", headers=HEADERS
         )
         assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_member_can_view_visitor_roster(self):
+        """A member of an alliance can view a visitor's roster."""
+        await push_one_user()
+        await push_user2()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        visitor_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        await load_objects([AllianceVisitor(alliance_id=alliance.id, game_account_id=visitor_acc.id)])
+        champ = await push_champion()
+        await _push_champion_user(visitor_acc.id, champ.id, "6r4")
+
+        response = await execute_get_request(
+            f"{CHAMPION_USERS_ROUTE}/by-account/{visitor_acc.id}", headers=HEADERS
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_visitor_can_view_member_roster(self):
+        """A visitor to an alliance can view a member's roster."""
+        await push_one_user()
+        await push_user2()
+        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
+        visitor_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        await load_objects([AllianceVisitor(alliance_id=alliance.id, game_account_id=visitor_acc.id)])
+        champ = await push_champion()
+        await _push_champion_user(owner_acc.id, champ.id, "6r4")
+
+        response = await execute_get_request(
+            f"{CHAMPION_USERS_ROUTE}/by-account/{owner_acc.id}", headers=USER2_HEADERS
+        )
+        assert response.status_code == 200
 
 
 # =========================================================================

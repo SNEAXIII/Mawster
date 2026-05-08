@@ -145,11 +145,8 @@ async def get_game_account_masteries(
     if game_account is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
     if game_account.user_id != current_user.id:
-        if game_account.alliance_id is None:
+        if not await AllianceService.can_view_roster(session, current_user.id, game_account):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_GAME_ACCOUNT)
-        await AllianceService.get_user_account_in_alliance(
-            session, current_user.id, game_account.alliance_id
-        )
     return await MasteryService.get_for_account(session, game_account_id)
 
 

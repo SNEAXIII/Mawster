@@ -91,7 +91,7 @@ async def get_member_or_visitor(alliance_id, current_account, session):
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | `POST` | `/alliances/{id}/invitations` | officer | Already exists — now accepts `type: VISITOR` |
-| `GET` | `/alliances/{id}/visitors` | member/officer only (not visitor) | List current visitors |
+| `GET` | `/alliances/{id}/visitors` | member/officer/visitor (read-only) | List current visitors |
 | `DELETE` | `/alliances/{id}/visitors/{visitor_id}` | officer | Kick a visitor |
 | `DELETE` | `/alliances/{id}/visitors/me` | visitor | Leave voluntarily |
 
@@ -100,7 +100,7 @@ async def get_member_or_visitor(alliance_id, current_account, session):
 - **Max 10 visitors:** enforced at invitation send time (not acceptance) in the service layer.
 - **Conversion to member:** when a visitor accepts a `type=MEMBER` invitation, the service deletes their `AllianceVisitor` record and sets `GameAccount.alliance_id`.
 - **Upgrade requests:** visitors cannot create upgrade requests on alliance members' accounts.
-- **Visitor cannot see visitor list:** `GET /alliances/{id}/visitors` requires member/officer — visitors are excluded.
+- **Visitor can see visitor list:** `GET /alliances/{id}/visitors` is readable by member/officer/visitor. Only officers can kick visitors.
 
 ---
 
