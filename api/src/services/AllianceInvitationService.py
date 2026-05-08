@@ -8,6 +8,7 @@ from sqlalchemy import func
 from starlette import status
 
 from src.enums.InvitationStatus import InvitationStatus
+from src.enums.InvitationType import InvitationType
 from src.Messages.invitation_messages import (
     GAME_ACCOUNT_ALREADY_IN_ALLIANCE,
     GAME_ACCOUNT_NOT_FOUND,
@@ -42,8 +43,12 @@ class AllianceInvitationService:
         game_account_id: uuid.UUID,
         invited_by_user_id: uuid.UUID,
         alliance: Alliance,
+        invitation_type: InvitationType = InvitationType.MEMBER,
     ) -> AllianceInvitation:
-        """Create an invitation for a game account to join an alliance."""
+        """Create an invitation for a game account to join (MEMBER) or visit (VISITOR) an alliance."""
+        from src.services.AllianceVisitorService import AllianceVisitorService, MAX_VISITORS_PER_ALLIANCE
+        from src.Messages.visitor_messages import ALLIANCE_MAX_VISITORS_REACHED, ALREADY_A_VISITOR
+
         # Check the game account exists
         game_account = await session.get(GameAccount, game_account_id)
         if game_account is None:
@@ -51,28 +56,38 @@ class AllianceInvitationService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=GAME_ACCOUNT_NOT_FOUND,
             )
-        # Must not already be in an alliance
-        if game_account.alliance_id is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=GAME_ACCOUNT_ALREADY_IN_ALLIANCE,
+
+        if invitation_type == InvitationType.MEMBER:
+            # Must not already be in an alliance
+            if game_account.alliance_id is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=GAME_ACCOUNT_ALREADY_IN_ALLIANCE,
+                )
+            # Enforce member limit
+            count_result = await session.exec(
+                select(func.count(GameAccount.id)).where(GameAccount.alliance_id == alliance_id)
             )
-        # Enforce member limit
-        count_result = await session.exec(
-            select(func.count(GameAccount.id)).where(GameAccount.alliance_id == alliance_id)
-        )
-        current_count = count_result.one()
-        if current_count >= MAX_MEMBERS_PER_ALLIANCE:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=alliance_max_members_reached(MAX_MEMBERS_PER_ALLIANCE),
-            )
-        # Check no pending invitation already exists for this game account + alliance
+            if count_result.one() >= MAX_MEMBERS_PER_ALLIANCE:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=alliance_max_members_reached(MAX_MEMBERS_PER_ALLIANCE),
+                )
+        else:
+            already_visitor = await AllianceVisitorService.is_visitor(session, alliance_id, game_account_id)
+            if already_visitor:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ALREADY_A_VISITOR)
+            visitor_count = await AllianceVisitorService.count_visitors(session, alliance_id)
+            if visitor_count >= MAX_VISITORS_PER_ALLIANCE:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ALLIANCE_MAX_VISITORS_REACHED)
+
+        # Check no pending invitation already exists for this game account + alliance + type
         existing = await session.exec(
             select(AllianceInvitation).where(
                 AllianceInvitation.alliance_id == alliance_id,
                 AllianceInvitation.game_account_id == game_account_id,
                 AllianceInvitation.status == InvitationStatus.PENDING,
+                AllianceInvitation.type == invitation_type,
             )
         )
         if existing.first() is not None:
@@ -98,6 +113,7 @@ class AllianceInvitationService:
             alliance_id=alliance_id,
             game_account_id=game_account_id,
             invited_by_game_account_id=inviter_ga_id,
+            type=invitation_type,
         )
         session.add(invitation)
         await session.commit()
@@ -149,7 +165,11 @@ class AllianceInvitationService:
     async def accept_invitation(
         cls, session: SessionDep, invitation_id: uuid.UUID, user_id: uuid.UUID
     ) -> AllianceInvitation:
-        """Accept a pending invitation â€” the game account joins the alliance."""
+        """Accept a pending invitation. MEMBER: join alliance. VISITOR: create AllianceVisitor record."""
+        from src.services.AllianceVisitorService import AllianceVisitorService, MAX_VISITORS_PER_ALLIANCE
+        from src.models.AllianceVisitor import AllianceVisitor as AV
+        from src.Messages.visitor_messages import ALLIANCE_MAX_VISITORS_REACHED, ALREADY_A_VISITOR
+
         invitation = await session.get(AllianceInvitation, invitation_id)
         if invitation is None:
             raise HTTPException(
@@ -168,6 +188,29 @@ class AllianceInvitationService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=INVITATION_NOT_FOR_YOUR_GAME_ACCOUNT,
             )
+
+        if invitation.type == InvitationType.VISITOR:
+            already_visitor = await AllianceVisitorService.is_visitor(
+                session, invitation.alliance_id, invitation.game_account_id
+            )
+            if already_visitor:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ALREADY_A_VISITOR)
+            visitor_count = await AllianceVisitorService.count_visitors(session, invitation.alliance_id)
+            if visitor_count >= MAX_VISITORS_PER_ALLIANCE:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ALLIANCE_MAX_VISITORS_REACHED)
+            visitor = AV(
+                alliance_id=invitation.alliance_id,
+                game_account_id=invitation.game_account_id,
+            )
+            session.add(visitor)
+            invitation.status = InvitationStatus.ACCEPTED
+            invitation.responded_at = datetime.now()
+            session.add(invitation)
+            await session.commit()
+            await session.refresh(invitation)
+            return invitation
+
+        # MEMBER flow
         game_account = await session.get(GameAccount, invitation.game_account_id)
         if game_account.alliance_id is not None:
             raise HTTPException(
@@ -180,24 +223,26 @@ class AllianceInvitationService:
                 GameAccount.alliance_id == invitation.alliance_id
             )
         )
-        current_count = count_result.one()
-        if current_count >= MAX_MEMBERS_PER_ALLIANCE:
+        if count_result.one() >= MAX_MEMBERS_PER_ALLIANCE:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=alliance_max_members_reached(MAX_MEMBERS_PER_ALLIANCE),
             )
+        # Clean up any visitor record for this game account in this alliance
+        await AllianceVisitorService.remove_if_visitor(session, invitation.alliance_id, invitation.game_account_id)
         # Join alliance
         game_account.alliance_id = invitation.alliance_id
         session.add(game_account)
         invitation.status = InvitationStatus.ACCEPTED
         invitation.responded_at = datetime.now()
         session.add(invitation)
-        # Cancel all other pending invitations for this game account
+        # Cancel other pending MEMBER invitations for this game account
         other_pending = await session.exec(
             select(AllianceInvitation).where(
                 AllianceInvitation.game_account_id == invitation.game_account_id,
                 AllianceInvitation.status == InvitationStatus.PENDING,
                 AllianceInvitation.id != invitation.id,
+                AllianceInvitation.type == InvitationType.MEMBER,
             )
         )
         for other in other_pending.all():
