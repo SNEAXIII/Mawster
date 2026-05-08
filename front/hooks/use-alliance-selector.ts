@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { type Alliance, getMyAlliances } from '@/app/services/game';
+import { type Alliance, getMyAlliances, getMyVisitedAlliances } from '@/app/services/game';
+
+export interface AllianceWithVisitorFlag extends Alliance {
+  isVisitor: boolean;
+}
 
 export interface UseAllianceSelectorOptions {
   initialAllianceId?: string;
@@ -7,7 +11,7 @@ export interface UseAllianceSelectorOptions {
 }
 
 export interface UseAllianceSelectorReturn {
-  alliances: Alliance[];
+  alliances: AllianceWithVisitorFlag[];
   selectedAllianceId: string;
   setSelectedAllianceId: (id: string) => void;
   selectedBg: number;
@@ -21,7 +25,7 @@ export function useAllianceSelector(
 ): UseAllianceSelectorReturn {
   const { initialAllianceId = '', initialBg = 1 } = options;
 
-  const [alliances, setAlliances] = useState<Alliance[]>([]);
+  const [alliances, setAlliances] = useState<AllianceWithVisitorFlag[]>([]);
   const [selectedAllianceId, setSelectedAllianceId] = useState<string>(initialAllianceId);
   const [selectedBg, setSelectedBg] = useState<number>(initialBg);
   const [loading, setLoading] = useState(true);
@@ -29,8 +33,15 @@ export function useAllianceSelector(
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getMyAlliances();
-      setAlliances(data);
+      const [member, visited] = await Promise.all([getMyAlliances(), getMyVisitedAlliances()]);
+      const memberWithFlag: AllianceWithVisitorFlag[] = member.map((a) => ({
+        ...a,
+        isVisitor: false,
+      }));
+      const visitedWithFlag: AllianceWithVisitorFlag[] = visited
+        .filter((a) => !member.some((m) => m.id === a.id))
+        .map((a) => ({ ...a, isVisitor: true }));
+      setAlliances([...memberWithFlag, ...visitedWithFlag]);
     } finally {
       setLoading(false);
     }
