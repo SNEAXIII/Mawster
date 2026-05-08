@@ -4,7 +4,7 @@ import { type AllianceInvitation } from '@/app/services/game';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/app/i18n';
-import { Mail, Check, X } from 'lucide-react';
+import { Mail, Check, X, Eye } from 'lucide-react';
 
 interface InvitationsSectionProps {
   invitations: AllianceInvitation[];
@@ -36,10 +36,21 @@ export default function InvitationsSection({
               className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-md bg-accent/50 border border-border'
             >
               <div className='space-y-0.5'>
-                <p className='text-sm font-medium text-foreground'>
-                  {inv.alliance_name}{' '}
-                  <span className='text-xs text-purple-700 font-bold'>[{inv.alliance_tag}]</span>
-                </p>
+                <div className='flex items-center gap-2'>
+                  <p className='text-sm font-medium text-foreground'>
+                    {inv.alliance_name}{' '}
+                    <span className='text-xs text-purple-700 font-bold'>[{inv.alliance_tag}]</span>
+                  </p>
+                  {inv.type === 'visitor' && (
+                    <span
+                      className='flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full'
+                      data-cy={`visitor-badge-${inv.id}`}
+                    >
+                      <Eye className='w-3 h-3' />
+                      {t.game.alliances.visitorBadge}
+                    </span>
+                  )}
+                </div>
                 <p className='text-xs text-muted-foreground'>
                   {t.game.alliances.invitedBy} {inv.invited_by_pseudo} · {inv.game_account_pseudo}
                 </p>
