@@ -561,6 +561,72 @@ class AllianceService:
         await session.commit()
         return await cls._load_alliance_with_relations(session, alliance_id)
 
+    # ---- Visitor access ----
+
+    @classmethod
+    async def get_member_or_visitor_account(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> None:
+        """Raise 403 if the user has no game account that is a member or visitor of this alliance."""
+        from src.services.AllianceVisitorService import AllianceVisitorService
+
+        user_accounts = await cls._get_user_accounts(session, user_id)
+        # Check member
+        for acc in user_accounts:
+            if acc.alliance_id == alliance_id:
+                return
+        # Check visitor
+        for acc in user_accounts:
+            if await AllianceVisitorService.is_visitor(session, alliance_id, acc.id):
+                return
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=NOT_ALLIANCE_MEMBER,
+        )
+
+    @classmethod
+    async def get_user_visitor_account(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> "GameAccount":
+        """Return the user's game account that is a visitor of this alliance. Raises 403 if not found."""
+        from src.services.AllianceVisitorService import AllianceVisitorService
+
+        user_accounts = await cls._get_user_accounts(session, user_id)
+        for acc in user_accounts:
+            if await AllianceVisitorService.is_visitor(session, alliance_id, acc.id):
+                return acc
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=NOT_ALLIANCE_MEMBER,
+        )
+
+    @classmethod
+    async def get_my_visited_alliances(cls, session: SessionDep, user_id: uuid.UUID) -> list[Alliance]:
+        """Return alliances where the user has a game account currently visiting (as visitor)."""
+        from src.services.AllianceVisitorService import AllianceVisitorService
+
+        visits = await AllianceVisitorService.get_visited_alliances(session, user_id)
+        if not visits:
+            return []
+        alliance_ids = {v.alliance_id for v in visits}
+        sql = (
+            select(Alliance)
+            .where(Alliance.id.in_(alliance_ids))  # type: ignore[union-attr]
+            .options(
+                selectinload(Alliance.owner),  # type: ignore[arg-type]
+                selectinload(Alliance.members),  # type: ignore[arg-type]
+                selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
+            )
+        )
+        result = await session.exec(sql)
+        return result.all()
+
     # ---- Eligibility queries ----
 
     @classmethod
