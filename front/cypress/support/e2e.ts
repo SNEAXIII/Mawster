@@ -1227,6 +1227,54 @@ export function setupAttackerScenario(prefix: string): Cypress.Chainable<{
     });
 }
 
+export function setupVisitorScenario(prefix: string): Cypress.Chainable<{
+  ownerData: UserSetupData;
+  visitorData: UserSetupData;
+  ownerAccId: string;
+  visitorAccId: string;
+  allianceId: string;
+}> {
+  const ownerToken = `${prefix}-owner`;
+  const visitorToken = `${prefix}-visitor`;
+  return cy
+    .apiBatchSetup([
+      {
+        discord_token: ownerToken,
+        game_pseudo: `${prefix}Owner`.slice(0, 16),
+        create_alliance: { name: `${prefix}Alliance`, tag: prefix.slice(0, 3).toUpperCase() },
+      },
+      {
+        discord_token: visitorToken,
+        game_pseudo: `${prefix}Visitor`.slice(0, 16),
+      },
+    ])
+    .then((users) => {
+      const ownerData = toUserSetupData(users[ownerToken]);
+      const visitorData = toUserSetupData(users[visitorToken]);
+      const ownerAccId = users[ownerToken].account_id!;
+      const visitorAccId = users[visitorToken].account_id!;
+      const allianceId = users[ownerToken].alliance_id!;
+      return cy
+        .request({
+          method: 'POST',
+          url: `${BACKEND}/alliances/${allianceId}/invitations`,
+          headers: { Authorization: `Bearer ${ownerData.access_token}` },
+          body: { game_account_id: visitorAccId, type: 'visitor' },
+        })
+        .then((invResp) => {
+          const invId = (invResp.body as { id: string }).id;
+          return cy
+            .request({
+              method: 'POST',
+              url: `${BACKEND}/alliances/invitations/${invId}/accept`,
+              headers: { Authorization: `Bearer ${visitorData.access_token}` },
+              body: {},
+            })
+            .then(() => ({ ownerData, visitorData, ownerAccId, visitorAccId, allianceId }));
+        });
+    });
+}
+
 export function setupPrefightScenario(prefix: string): Cypress.Chainable<{
   adminToken: string;
   ownerData: UserSetupData;
