@@ -19,6 +19,7 @@ from src.dto.dto_invitation import (
     AllianceInvitationResponse,
 )
 from src.dto.dto_game_account import GameAccountResponse
+from src.dto.dto_visitor import AllianceVisitorResponse
 from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.models import User
 from src.models.Alliance import Alliance
@@ -26,6 +27,7 @@ from src.models.AllianceInvitation import AllianceInvitation
 from src.services.AuthService import AuthService
 from src.services.AllianceService import AllianceService
 from src.services.AllianceInvitationService import AllianceInvitationService
+from src.services.AllianceVisitorService import AllianceVisitorService
 from src.utils.db import SessionDep
 
 alliance_controller = APIRouter(
@@ -129,6 +131,19 @@ async def get_my_alliances(
 ):
     """Get only alliances where the current user has a game account as a member."""
     alliances = await AllianceService.get_my_alliances(session, current_user.id)
+    return [_to_response(a) for a in alliances]
+
+
+@alliance_controller.get(
+    "/my-visited",
+    response_model=list[AllianceResponse],
+)
+async def get_my_visited_alliances(
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Get alliances where the current user's game account is currently a visitor."""
+    alliances = await AllianceService.get_my_visited_alliances(session, current_user.id)
     return [_to_response(a) for a in alliances]
 
 
@@ -323,6 +338,7 @@ async def invite_member(
         game_account_id=body.game_account_id,
         invited_by_user_id=current_user.id,
         alliance=alliance,
+        invitation_type=body.type,
     )
     # Reload with relations
     loaded = await AllianceInvitationService.get_invitations_for_alliance(session, alliance_id)
@@ -443,6 +459,58 @@ async def remove_officer(
         game_account_id=body.game_account_id,
     )
     return _to_response(updated)
+
+
+# ---- Visitor management ----
+
+
+@alliance_controller.get(
+    "/{alliance_id}/visitors",
+    response_model=list[AllianceVisitorResponse],
+)
+async def get_alliance_visitors(
+    alliance_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Get all current visitors of an alliance. Only members/officers can view this list."""
+    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    visitors = await AllianceVisitorService.get_visitors(session, alliance_id)
+    return [AllianceVisitorResponse.model_validate(v) for v in visitors]
+
+
+@alliance_controller.delete(
+    "/{alliance_id}/visitors/me",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def leave_as_visitor(
+    alliance_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Leave a visited alliance. The current user must be a visitor of it."""
+    visitor_account = await AllianceService.get_user_visitor_account(
+        session, alliance_id, current_user.id
+    )
+    await AllianceVisitorService.remove_visitor(session, alliance_id, visitor_account.id)
+
+
+@alliance_controller.delete(
+    "/{alliance_id}/visitors/{game_account_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def kick_visitor(
+    alliance_id: uuid.UUID,
+    game_account_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Remove a visitor from the alliance. Only the owner or an officer can kick."""
+    alliance = await AllianceService.get_alliance(session, alliance_id)
+    if alliance is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+    await AllianceService._assert_is_owner_or_officer(session, alliance, current_user.id)
+    await AllianceVisitorService.remove_visitor(session, alliance_id, game_account_id)
 
 
 # ---- Group management ----
