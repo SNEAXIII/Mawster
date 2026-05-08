@@ -1,4 +1,4 @@
-import { setupKnowledgeBaseFast } from '../../support/e2e';
+import { setupKnowledgeBaseFast, setupKnowledgeBase } from '../../support/e2e';
 
 // Column indices (0-based):
 // 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: Tier | 7: KO | 8: Alliance | 9: Date
@@ -185,14 +185,17 @@ describe('Knowledge Base', () => {
 
     it('combines player and node filters', () => {
       const prefix = 'kb-fcomb';
-      setupKnowledgeBaseFast(prefix).then(({ userData }) => {
+      // setupKnowledgeBase places attackers deterministically on nodes 1 and 2,
+      // avoiding the substring-match flakiness of the bulk endpoint
+      setupKnowledgeBase(prefix).then(({ userData, attackerData }) => {
         cy.apiLogin(userData.user_id);
         cy.visit('/game/knowledge-base');
 
-        const pseudo = `${prefix}Own`.slice(0, 16);
+        const attackerPseudo = `${prefix}Atk`.slice(0, 16);
         cy.getByCy('filter-player').should('be.visible').clear();
-        cy.getByCy('filter-player').type(pseudo);
+        cy.getByCy('filter-player').type(attackerPseudo);
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
+
         cy.getByCy('filter-node').should('be.visible').clear();
         cy.getByCy('filter-node').type('1');
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
