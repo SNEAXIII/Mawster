@@ -15,6 +15,7 @@ import AllianceMemberRow from './alliance-member-row';
 import UsernameEnriched from '@/components/username-enriched';
 import { patchAllianceElo, patchAllianceTier } from '@/app/services/game';
 import { toast } from 'sonner';
+import AllianceVisitorsSection from './alliance-visitors-section';
 
 interface AllianceCardProps {
   alliance: Alliance;
@@ -378,6 +379,13 @@ export default function AllianceCard({
             </div>
           )}
         </div>
+
+        <AllianceVisitorsSection
+          allianceId={alliance.id}
+          canManage={userCanManage}
+          onViewRoster={(gameAccountId, pseudo) => onViewRoster(gameAccountId, pseudo, userCanManage)}
+          onRefresh={onRefresh}
+        />
       </CardContent>
     </Card>
   );
