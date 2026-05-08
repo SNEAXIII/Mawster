@@ -140,6 +140,20 @@ async def push_officer(
     return officer
 
 
+async def push_visitor(
+    alliance: Alliance,
+    user_id: uuid.UUID,
+    game_pseudo: str = "VisitorPseudo",
+) -> GameAccount:
+    """Create a game account and add it as a visitor of the alliance."""
+    from src.models.AllianceVisitor import AllianceVisitor
+
+    acc = get_game_account(user_id=user_id, game_pseudo=game_pseudo)
+    visitor = AllianceVisitor(alliance_id=alliance.id, game_account_id=acc.id)
+    await load_objects([acc, visitor])
+    return acc
+
+
 # ---------------------------------------------------------------------------
 # Champions
 # ---------------------------------------------------------------------------
