@@ -11,7 +11,7 @@ from src.models.AllianceVisitor import AllianceVisitor
 from src.Messages.visitor_messages import (
     ALREADY_A_VISITOR,
     NOT_A_VISITOR,
-    ALLIANCE_MAX_VISITORS_REACHED,
+    alliance_max_visitors_reached,
 )
 from src.utils.db import SessionDep
 
@@ -64,7 +64,7 @@ class AllianceVisitorService:
         if count >= MAX_VISITORS_PER_ALLIANCE:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=ALLIANCE_MAX_VISITORS_REACHED,
+                detail=alliance_max_visitors_reached(MAX_VISITORS_PER_ALLIANCE),
             )
         visitor = AllianceVisitor(
             alliance_id=alliance_id,
