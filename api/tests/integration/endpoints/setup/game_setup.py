@@ -5,6 +5,7 @@ from typing import Optional
 
 from src.models.Alliance import Alliance
 from src.models.AllianceOfficer import AllianceOfficer
+from src.models.AllianceVisitor import AllianceVisitor
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
@@ -146,8 +147,6 @@ async def push_visitor(
     game_pseudo: str = "VisitorPseudo",
 ) -> GameAccount:
     """Create a game account and add it as a visitor of the alliance."""
-    from src.models.AllianceVisitor import AllianceVisitor
-
     acc = get_game_account(user_id=user_id, game_pseudo=game_pseudo)
     visitor = AllianceVisitor(alliance_id=alliance.id, game_account_id=acc.id)
     await load_objects([acc, visitor])
