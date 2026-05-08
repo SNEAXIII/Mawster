@@ -120,14 +120,14 @@ export default function AttackerEntryRow({
         <div className='text-[10px] text-muted-foreground'>#{placement.node_number}</div>
       </div>
 
-      {placement.attacker_champion_user_id && readonly && (
+      {placement.attacker_champion_user_id && (readonly || isVisitor) && (
         <span
-          className={cn('font-mono text-sm text-muted-foreground', isFull ? 'text-sm' : 'text-xs')}
+          className={cn('font-mono text-muted-foreground', isFull ? 'text-sm' : 'text-xs')}
         >
           {placement.ko_count} KO
         </span>
       )}
-      {placement.attacker_champion_user_id && !readonly && canManageWar && (
+      {placement.attacker_champion_user_id && !readonly && !isVisitor && (
         <>
         
           <button

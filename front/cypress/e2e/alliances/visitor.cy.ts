@@ -176,13 +176,14 @@ describe('Visitor — war interactive elements', () => {
     cy.truncateDb();
   });
 
-  it('ko-inc and ko-dec buttons are not visible', () => {
+  it('ko-inc and ko-dec buttons are not visible but ko count is shown', () => {
     setupVisitorWarScene('vis-ko').then(({ visitorUserId }) => {
       cy.apiLogin(visitorUserId);
       cy.navTo('war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('ko-inc-node-10').should('not.exist');
       cy.getByCy('ko-dec-node-10').should('not.exist');
+      cy.getByCy('attacker-entry-node-10').should('contain', 'KO');
     });
   });
 
