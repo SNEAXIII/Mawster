@@ -194,6 +194,7 @@ async def clear_war_bg(
 )
 async def get_available_attackers(
     alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
     battlegroup: BattlegroupPath,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
