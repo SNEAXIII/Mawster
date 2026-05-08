@@ -32,7 +32,7 @@ class StatisticService:
     async def get_active_season_statistics(
         cls, session: SessionDep, current_user: User, alliance_id: uuid.UUID
     ) -> list[PlayerSeasonStatsResponse]:
-        await AllianceService.assert_is_alliance_member(session, current_user, alliance_id)
+        await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
 
         sql = (
             select(

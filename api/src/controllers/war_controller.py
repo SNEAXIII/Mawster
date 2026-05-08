@@ -81,7 +81,7 @@ async def list_wars(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """List all wars for an alliance. All members can view."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
     return await WarService.get_wars(session, alliance_id)
 
 
@@ -95,7 +95,7 @@ async def get_current_war(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get the currently active war for an alliance. All members can view."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
     return await WarService.get_current_war(session, alliance_id)
 
 
@@ -112,7 +112,7 @@ async def get_war_defense(
     war: WarDep,
 ):
     """Get defense placements for a war battlegroup. All members can view."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
     return await WarService.get_war_defense(session, war_id, battlegroup)
 
 
@@ -203,7 +203,7 @@ async def get_available_attackers(
     node_number: int | None = None,
 ):
     """List available attackers (BG roster minus defenders). Pass attacker_id to filter to a single member."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
     return await WarService.get_available_attackers(
         session, alliance_id, battlegroup, attacker_id, war, node_number
     )
@@ -222,7 +222,7 @@ async def get_available_prefight_attackers(
     war: WarDep,
 ):
     """List available pre-fight champions (has_prefight=True) for the BG."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
     return await WarService.get_available_prefight_attackers(session, alliance_id, battlegroup, war)
 
 
@@ -351,7 +351,7 @@ async def get_war_synergy(
     war: WarDep,
 ):
     """List synergy champions for a battlegroup. All members can view."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
     return await WarService.get_synergy_attackers(session, war_id, battlegroup)
 
 
@@ -413,7 +413,7 @@ async def get_war_prefight(
     war: WarDep,
 ):
     """List pre-fight champions for a battlegroup. All members can view."""
-    await AllianceService.get_user_account_in_alliance(session, current_user.id, alliance_id)
+    await AllianceService.get_member_or_visitor_account(session, alliance_id, current_user.id)
     return await WarService.get_prefight_attackers(session, war_id, battlegroup)
 
 

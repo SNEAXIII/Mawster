@@ -125,9 +125,7 @@ async def get_roster_by_game_account(
     if game_account is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
     if game_account.user_id != current_user.id:
-        if game_account.alliance_id is None or not await AllianceService.is_alliance_member(
-            session, current_user.id, game_account.alliance_id
-        ):
+        if not await AllianceService.can_view_roster(session, current_user.id, game_account):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only view your own roster or rosters of alliance members",
@@ -349,9 +347,7 @@ async def get_upgrade_requests_by_account(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
 
     if game_account.user_id != current_user.id:
-        if game_account.alliance_id is None or not await AllianceService.is_alliance_member(
-            session, current_user.id, game_account.alliance_id
-        ):
+        if not await AllianceService.can_view_roster(session, current_user.id, game_account):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not authorized to view these upgrade requests",

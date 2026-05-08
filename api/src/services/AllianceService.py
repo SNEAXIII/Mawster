@@ -677,3 +677,37 @@ class AllianceService:
             sql = sql.where(GameAccount.id.notin_(pending_ids))  # type: ignore[union-attr]
         result = await session.exec(sql)
         return result.all()
+
+    @classmethod
+    async def can_view_roster(
+        cls,
+        session: SessionDep,
+        viewer_user_id: uuid.UUID,
+        target_game_account: GameAccount,
+    ) -> bool:
+        """True if viewer shares an alliance context (member or visitor) with target."""
+        from src.services.AllianceVisitorService import AllianceVisitorService
+        from src.models.AllianceVisitor import AllianceVisitor
+
+        viewer_accounts = await cls._get_user_accounts(session, viewer_user_id)
+        viewer_alliance_ids: set[uuid.UUID] = set()
+        for acc in viewer_accounts:
+            if acc.alliance_id:
+                viewer_alliance_ids.add(acc.alliance_id)
+        visits = await AllianceVisitorService.get_visited_alliances(session, viewer_user_id)
+        for v in visits:
+            viewer_alliance_ids.add(v.alliance_id)
+
+        if not viewer_alliance_ids:
+            return False
+
+        if target_game_account.alliance_id and target_game_account.alliance_id in viewer_alliance_ids:
+            return True
+
+        result = await session.exec(
+            select(AllianceVisitor).where(
+                AllianceVisitor.game_account_id == target_game_account.id,
+                AllianceVisitor.alliance_id.in_(viewer_alliance_ids),  # type: ignore[union-attr]
+            )
+        )
+        return result.first() is not None
