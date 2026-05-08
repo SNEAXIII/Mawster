@@ -16,6 +16,7 @@ from src.dto.dto_alliance import (
 )
 from src.dto.dto_invitation import AllianceInvitationResponse
 from src.enums.InvitationStatus import InvitationStatus
+from src.enums.InvitationType import InvitationType
 
 
 # ---------------------------------------------------------------------------
@@ -558,6 +559,7 @@ class TestAllianceInvitationResponseModelValidate:
             invited_by_game_account_id=uuid.uuid4(),
             invited_by=_ns(game_pseudo="Inviter"),
             status=InvitationStatus.PENDING,
+            type=InvitationType.MEMBER,
             created_at=now,
             responded_at=None,
         )
@@ -568,6 +570,7 @@ class TestAllianceInvitationResponseModelValidate:
         assert dto.game_account_pseudo == "Invitee"
         assert dto.invited_by_pseudo == "Inviter"
         assert dto.status == InvitationStatus.PENDING
+        assert dto.type == InvitationType.MEMBER
         assert dto.responded_at is None
 
     def test_accepted_invitation(self):
@@ -581,9 +584,11 @@ class TestAllianceInvitationResponseModelValidate:
             invited_by_game_account_id=uuid.uuid4(),
             invited_by=_ns(game_pseudo="Q"),
             status=InvitationStatus.ACCEPTED,
+            type=InvitationType.MEMBER,
             created_at=now,
             responded_at=now,
         )
         dto = AllianceInvitationResponse.model_validate(inv)
         assert dto.status == InvitationStatus.ACCEPTED
+        assert dto.type == InvitationType.MEMBER
         assert dto.responded_at == now
