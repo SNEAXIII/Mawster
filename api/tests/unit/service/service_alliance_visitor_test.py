@@ -105,9 +105,14 @@ class TestCreateVisitor:
         alliance_id = uuid.uuid4()
         game_account_id = uuid.uuid4()
 
-        result_mock = mocker.MagicMock()
-        result_mock.first.return_value = None
-        session.exec.return_value = result_mock
+        # Mock for find_visitor (returns None) and count_visitors (returns 0)
+        find_result_mock = mocker.MagicMock()
+        find_result_mock.first.return_value = None
+
+        count_result_mock = mocker.MagicMock()
+        count_result_mock.one.return_value = 0
+
+        session.exec = mocker.AsyncMock(side_effect=[find_result_mock, count_result_mock])
 
         result = await AllianceVisitorService.create_visitor(session, alliance_id, game_account_id)
 
@@ -115,6 +120,23 @@ class TestCreateVisitor:
         session.commit.assert_called_once()
         assert result.alliance_id == alliance_id
         assert result.game_account_id == game_account_id
+
+    @pytest.mark.asyncio
+    async def test_raises_409_when_visitor_cap_reached(self, mocker):
+        session = _mock_session(mocker)
+
+        # Mock for find_visitor (returns None) and count_visitors (returns MAX=10)
+        find_result_mock = mocker.MagicMock()
+        find_result_mock.first.return_value = None
+
+        count_result_mock = mocker.MagicMock()
+        count_result_mock.one.return_value = 10
+
+        session.exec = mocker.AsyncMock(side_effect=[find_result_mock, count_result_mock])
+
+        with pytest.raises(HTTPException) as exc:
+            await AllianceVisitorService.create_visitor(session, uuid.uuid4(), uuid.uuid4())
+        assert exc.value.status_code == 409
 
 
 # =========================================================================
@@ -174,6 +196,7 @@ class TestRemoveIfVisitor:
 
         await AllianceVisitorService.remove_if_visitor(session, uuid.uuid4(), uuid.uuid4())
         session.delete.assert_called_once_with(visitor)
+        session.commit.assert_called_once()
 
 
 # =========================================================================

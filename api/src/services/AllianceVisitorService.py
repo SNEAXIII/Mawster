@@ -11,6 +11,7 @@ from src.models.AllianceVisitor import AllianceVisitor
 from src.Messages.visitor_messages import (
     ALREADY_A_VISITOR,
     NOT_A_VISITOR,
+    ALLIANCE_MAX_VISITORS_REACHED,
 )
 from src.utils.db import SessionDep
 
@@ -43,13 +44,8 @@ class AllianceVisitorService:
     async def is_visitor(
         session: SessionDep, alliance_id: uuid.UUID, game_account_id: uuid.UUID
     ) -> bool:
-        result = await session.exec(
-            select(AllianceVisitor).where(
-                AllianceVisitor.alliance_id == alliance_id,
-                AllianceVisitor.game_account_id == game_account_id,
-            )
-        )
-        return result.first() is not None
+        visitor = await AllianceVisitorService.find_visitor(session, alliance_id, game_account_id)
+        return visitor is not None
 
     @classmethod
     async def create_visitor(
@@ -63,6 +59,12 @@ class AllianceVisitorService:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=ALREADY_A_VISITOR,
+            )
+        count = await cls.count_visitors(session, alliance_id)
+        if count >= MAX_VISITORS_PER_ALLIANCE:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=ALLIANCE_MAX_VISITORS_REACHED,
             )
         visitor = AllianceVisitor(
             alliance_id=alliance_id,
@@ -100,6 +102,7 @@ class AllianceVisitorService:
         visitor = await cls.find_visitor(session, alliance_id, game_account_id)
         if visitor is not None:
             await session.delete(visitor)
+            await session.commit()
 
     @classmethod
     async def get_visitors(
