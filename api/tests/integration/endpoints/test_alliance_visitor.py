@@ -159,16 +159,16 @@ class TestAcceptVisitorInvitation:
 
 class TestVisitorPermissions:
     @pytest.mark.asyncio
-    async def test_visitor_cannot_access_visitor_list(self):
+    async def test_visitor_can_access_visitor_list(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         await push_visitor(alliance=alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_get_request(
             f"{ENDPOINT}/{alliance.id}/visitors",
             headers=HEADERS_USER2,
         )
-        assert response.status_code == 403
+        assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_visitor_cannot_invite_members(self):
