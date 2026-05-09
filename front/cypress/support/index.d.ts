@@ -1,7 +1,8 @@
 /// <reference types="cypress" />
 
-declare namespace Cypress {
-  interface Chainable {
+declare global {
+  namespace Cypress {
+    interface Chainable {
     /**
      * Truncate all database tables via the dev endpoint (direct backend call).
      */
@@ -301,6 +302,7 @@ declare namespace Cypress {
       accountId: string,
       items: { mastery_id: string; unlocked: number; attack: number; defense: number }[],
     ): Chainable<unknown>;
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-import { setupAllianceWithMember, setupWarOwner } from '../../support/e2e';
+import { setupOwnerMemberAlliance, setupWarOwner } from '../../support/e2e';
 
 describe('War – Management (declare and end)', () => {
   beforeEach(() => {
@@ -32,7 +32,7 @@ describe('War – Management (declare and end)', () => {
   });
 
   it('member cannot end a war', () => {
-    setupAllianceWithMember('war-mgmt-end-member', 'Owner', 'MemberUser', 'EndWarAlliance', 'EWA').then(
+    setupOwnerMemberAlliance('war-mgmt-end-member', 'Owner', 'MemberUser', 'EndWarAlliance', 'EWA').then(
       ({ ownerData, memberData, allianceId }) => {
         cy.apiCreateWar(ownerData.access_token, allianceId, 'TargetEnemy');
         cy.apiLogin(memberData.user_id);
