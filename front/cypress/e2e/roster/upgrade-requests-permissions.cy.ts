@@ -8,7 +8,7 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
   // ── 6. Regular member: no cancel button in another member's roster preview ─
 
   it("regular member cannot cancel upgrade requests in another member's roster preview", () => {
-    setupAdmin('ur-t6-admin').then((admin) => {
+    setupAdmin('admin').then((admin) => {
       let ownerData: UserSetupData;
       let member1UserId: string;
       let allianceId: string;
@@ -63,7 +63,7 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
   // ── 7. Regular member: no cancel button on own roster page ────────────────
 
   it('regular member cannot cancel upgrade requests on their own roster', () => {
-    setupAdmin('ur-t7-admin').then((admin) => {
+    setupAdmin('admin').then((admin) => {
       setupAllianceWithMember(admin.access_token, 'Deadpool', 'Mutant').then(
         ({ ownerData, memberData, championUserId }) => {
           cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
@@ -85,7 +85,7 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
   // ── 8. Multiple upgrade requests show correct count ────────────────────────
 
   it('shows correct count for multiple upgrade requests', () => {
-    setupAdmin('ur-t8-admin').then((admin) => {
+    setupAdmin('admin').then((admin) => {
       let ownerData: UserSetupData;
       let memberData: UserSetupData;
       let allianceId: string;
@@ -140,7 +140,7 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
   // ── 9. Cancel on champion card cancels the pending request ─────────────────
 
   it('cancel button on champion card cancels the pending request (alliance dialog)', () => {
-    setupAdmin('ur-t9-admin').then((admin) => {
+    setupAdmin('admin').then((admin) => {
       setupAllianceWithMember(admin.access_token, 'SentryCard', 'Science').then(({ ownerData, championUserId }) => {
         cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 

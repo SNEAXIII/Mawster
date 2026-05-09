@@ -12,6 +12,12 @@ Cypress.Commands.overwrite<'type', 'element'>('type', (originalFn, subject, text
 
 export const BACKEND: string = (Cypress.env('backendUrl') as string | undefined) ?? 'http://localhost:8001';
 
+// Return a short alphanumeric prefix safe to use in generated names/tags.
+function safePrefix(raw: string | undefined | null): string {
+  const s = (raw ?? '').toString();
+  const cleaned = s.replace(/[^A-Za-z0-9]/g, '');
+  return (cleaned || s).slice(0, 8) || 'TST';
+}
 // ── E2E log markers — correlate backend logs with test boundaries ─────────
 
 beforeEach(() => {
@@ -432,7 +438,7 @@ export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
       {
         discord_token: defenderToken,
         game_pseudo: `${prefix}Def`.slice(0, 16),
-        create_alliance: { name: `${prefix}Alliance`, tag: prefix.slice(0, 3).toUpperCase() },
+        create_alliance: { name: `${safePrefix(prefix)}Alliance`, tag: safePrefix(prefix).slice(0, 3).toUpperCase() },
         battlegroup: 1,
       },
       {
@@ -492,7 +498,7 @@ export function setupKnowledgeBaseFast(
       {
         discord_token: ownerToken,
         game_pseudo: `${prefix}Own`.slice(0, 16),
-        create_alliance: { name: `${prefix}Alliance`, tag: prefix.slice(0, 3).toUpperCase() },
+        create_alliance: { name: `${safePrefix(prefix)}Alliance`, tag: safePrefix(prefix).slice(0, 3).toUpperCase() },
         battlegroup: 1,
       },
     ])
@@ -910,7 +916,7 @@ export function setupAllianceWithMember(
       {
         discord_token: ownerToken,
         game_pseudo: `${tokenPrefix}Owner`.slice(0, 16),
-        create_alliance: { name: `${tokenPrefix}Alliance`, tag: tokenPrefix.slice(0, 3).toUpperCase() },
+        create_alliance: { name: `${safePrefix(tokenPrefix)}Alliance`, tag: safePrefix(tokenPrefix).slice(0, 3).toUpperCase() },
       },
       {
         discord_token: memberToken,
@@ -1226,7 +1232,7 @@ export function setupAttackerScenario(prefix: string): Cypress.Chainable<{
       {
         discord_token: ownerToken,
         game_pseudo: `${prefix}Owner`.slice(0, 16),
-        create_alliance: { name: `${prefix}Alliance`, tag: prefix.slice(0, 3).toUpperCase() },
+        create_alliance: { name: `${safePrefix(prefix)}Alliance`, tag: safePrefix(prefix).slice(0, 3).toUpperCase() },
         battlegroup: 1,
       },
       {
@@ -1283,7 +1289,7 @@ export function setupVisitorScenario(prefix: string): Cypress.Chainable<{
       {
         discord_token: ownerToken,
         game_pseudo: `${prefix}Owner`.slice(0, 16),
-        create_alliance: { name: `${prefix}Alliance`, tag: prefix.slice(0, 3).toUpperCase() },
+        create_alliance: { name: `${safePrefix(prefix)}Alliance`, tag: safePrefix(prefix).slice(0, 3).toUpperCase() },
       },
       {
         discord_token: visitorToken,
