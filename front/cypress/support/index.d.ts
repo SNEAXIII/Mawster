@@ -66,7 +66,7 @@ declare namespace Cypress {
     apiLoadChampions(
       adminToken: string,
       champions: Array<{ name: string; cls: string; is_ascendable?: boolean; has_prefight?: boolean }>,
-    ): Chainable<Record<string, { id: string; name: string ; has_prefight?: boolean }>>;
+    ): Chainable<Record<string, { id: string; name: string; has_prefight?: boolean }>>;
 
     /**
      * Create an alliance via backend API.
@@ -201,12 +201,7 @@ declare namespace Cypress {
     ): Chainable<any>;
 
     /** Fill N war nodes with dummy attackers for a given account (dev endpoint, bypasses validations). */
-    apiBulkFillWarAttackers(
-      warId: string,
-      battlegroup: number,
-      gameAccountId: string,
-      count: number,
-    ): Chainable<any>;
+    apiBulkFillWarAttackers(warId: string, battlegroup: number, gameAccountId: string, count: number): Chainable<any>;
 
     /** Remove attacker from a war node (direct backend call). */
     apiRemoveWarAttacker(
@@ -308,3 +303,27 @@ declare namespace Cypress {
     ): Chainable<unknown>;
   }
 }
+
+// ── Setup helper exports ──────────────────────────────────────────────────────
+
+export interface UserSetupData {
+  access_token: string;
+  refresh_token: string;
+  user_id: string;
+  login: string;
+  email: string;
+  discord_id: string;
+}
+
+export function setupAllianceWithMember(
+  tokenPrefix: string,
+  championName: string,
+  championClass: string,
+): Cypress.Chainable<{
+  ownerData: UserSetupData;
+  memberData: UserSetupData;
+  allianceId: string;
+  memberAccId: string;
+  champId: string;
+  championUserId: string;
+}>;

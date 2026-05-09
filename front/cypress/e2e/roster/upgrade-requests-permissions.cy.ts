@@ -1,54 +1,9 @@
-import { setupUser, setupAdmin, type UserSetupData } from '../../support/e2e';
+import { setupAllianceWithMember, setupUser, setupAdmin, type UserSetupData } from '../../support/e2e';
 
 describe('Roster – Upgrade Requests (Permissions)', () => {
   beforeEach(() => {
     cy.truncateDb();
   });
-
-  /**
-   * Helper: create an alliance with an owner and a member using force-join.
-   * Also loads a champion and adds it to the member's roster at 7r1.
-   */
-  function setupAllianceWithMember(adminToken: string, championName: string, championClass: string) {
-    let ownerData: UserSetupData;
-    let memberData: UserSetupData;
-    let allianceId: string;
-    let memberAccId: string;
-    let champId: string;
-
-    return setupUser('ur-owner-token')
-      .then((owner) => {
-        ownerData = owner;
-        return cy.apiCreateGameAccount(owner.access_token, 'UROwner', true);
-      })
-      .then((ownerAcc) => {
-        return cy.apiCreateAlliance(ownerData.access_token, 'URAlliance', 'UR', ownerAcc.id);
-      })
-      .then((alliance) => {
-        allianceId = alliance.id;
-        return setupUser('ur-member-token');
-      })
-      .then((member) => {
-        memberData = member;
-        return cy.apiCreateGameAccount(member.access_token, 'URMember', true);
-      })
-      .then((memberAcc) => {
-        memberAccId = memberAcc.id;
-        cy.apiForceJoinAlliance(memberAccId, allianceId);
-        return cy.apiLoadChampion(adminToken, championName, championClass);
-      })
-      .then((champs) => {
-        champId = champs[0].id;
-        return cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champId, '7r1').then((cu) => ({
-          ownerData,
-          memberData,
-          allianceId,
-          memberAccId,
-          champId,
-          championUserId: cu.id as string,
-        }));
-      });
-  }
 
   // ── 6. Regular member: no cancel button in another member's roster preview ─
 

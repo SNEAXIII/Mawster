@@ -207,7 +207,10 @@ Cypress.Commands.add(
 
 Cypress.Commands.add(
   'apiLoadChampions',
-  (adminToken: string, champions: Array<{ name: string; cls: string; is_ascendable?: boolean; has_prefight?: boolean }>) => {
+  (
+    adminToken: string,
+    champions: Array<{ name: string; cls: string; is_ascendable?: boolean; has_prefight?: boolean }>,
+  ) => {
     cy.request({
       method: 'POST',
       url: `${BACKEND}/admin/champions/load`,
@@ -415,7 +418,7 @@ Cypress.Commands.add('runFixtures', () => {
 export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
   adminToken: string;
   userData: UserSetupData;
-  attackerData: UserSetupData;
+  atkData: UserSetupData;
   accountId: string;
   allianceId: string;
 }> {
@@ -441,8 +444,8 @@ export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
     ])
     .then((users) => {
       const adminAT = users[adminToken].access_token;
-      const defenderData = toUserSetupData(users[defenderToken]);
-      const attackerData = toUserSetupData(users[attackerToken]);
+      const defData = toUserSetupData(users[defenderToken]);
+      const atkData = toUserSetupData(users[attackerToken]);
       const defenderAccId = users[defenderToken].account_id!;
       const attackerAccId = users[attackerToken].account_id!;
       const allianceId = users[defenderToken].alliance_id!;
@@ -458,11 +461,13 @@ export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
           { name: 'Absorbing Man', cls: 'Mystic', has_prefight: true },
         ])
         .then((champMap) =>
-          addIronManToRoster(attackerData.access_token, attackerAccId, champMap)
-            .then((cuIronMan) => addCaptainAmericaToRoster(attackerData.access_token, attackerAccId, champMap, cuIronMan))
-            .then((data) => addSpiderManToRoster(attackerData.access_token, attackerAccId, champMap, data))
-            .then((data) => addAbsorbingManToRoster(attackerData.access_token, attackerAccId, champMap, data))
-            .then((data) => setupKnowledgeBaseWar(adminAT, defenderData, attackerData, defenderAccId, allianceId, champMap, data)),
+          addIronManToRoster(atkData.access_token, attackerAccId, champMap)
+            .then((cuIronMan) => addCaptainAmericaToRoster(atkData.access_token, attackerAccId, champMap, cuIronMan))
+            .then((data) => addSpiderManToRoster(atkData.access_token, attackerAccId, champMap, data))
+            .then((data) => addAbsorbingManToRoster(atkData.access_token, attackerAccId, champMap, data))
+            .then((data) =>
+              setupKnowledgeBaseWar(adminAT, defData, atkData, defenderAccId, allianceId, champMap, data),
+            ),
         );
     });
 }
@@ -503,17 +508,19 @@ export function setupKnowledgeBaseFast(
           { name: 'Captain America', cls: 'Cosmic' },
         ])
         .then(() =>
-          cy.apiCreateWar(ownerData.access_token, allianceId, 'OpponentFast').then((war) =>
-            cy
-              .apiEndWar(ownerData.access_token, allianceId, war.id, true, 10)
-              .then(() =>
-                cy
-                  .apiDevBulkCreateFightRecords(war.id, allianceId, ownerAccId, count)
-                  .then(() =>
-                    cy.wrap({ adminToken: adminAT, userData: ownerData, accountId: ownerAccId, allianceId }),
-                  ),
-              ),
-          ),
+          cy
+            .apiCreateWar(ownerData.access_token, allianceId, 'OpponentFast')
+            .then((war) =>
+              cy
+                .apiEndWar(ownerData.access_token, allianceId, war.id, true, 10)
+                .then(() =>
+                  cy
+                    .apiDevBulkCreateFightRecords(war.id, allianceId, ownerAccId, count)
+                    .then(() =>
+                      cy.wrap({ adminToken: adminAT, userData: ownerData, accountId: ownerAccId, allianceId }),
+                    ),
+                ),
+            ),
         );
     });
 }
@@ -561,38 +568,40 @@ function addAbsorbingManToRoster(
   champMap: KnowledgeBaseChampMap,
   data: { cuIronMan: { id: string }; cu1: { id: string }; cu2: { id: string } },
 ) {
-  return cy.apiAddChampionToRoster(attackerToken, attackerAccId, champMap['Absorbing Man'].id, '6r4').then((cuPrefight) => ({
-    ...data,
-    cuPrefight,
-  }));
+  return cy
+    .apiAddChampionToRoster(attackerToken, attackerAccId, champMap['Absorbing Man'].id, '6r4')
+    .then((cuPrefight) => ({
+      ...data,
+      cuPrefight,
+    }));
 }
 
 function setupKnowledgeBaseWar(
   adminToken: string,
-  defenderData: UserSetupData,
-  attackerData: UserSetupData,
+  defData: UserSetupData,
+  atkData: UserSetupData,
   defenderAccId: string,
   allianceId: string,
   champMap: KnowledgeBaseChampMap,
   data: KnowledgeBaseRoster,
 ) {
-  return cy.apiCreateWar(defenderData.access_token, allianceId, 'OpponentA').then((war) => {
-    cy.apiPlaceWarDefender(defenderData.access_token, allianceId, war.id, 1, 1, champMap['Iron Man'].id, 7, 3, 0);
-    cy.apiPlaceWarDefender(defenderData.access_token, allianceId, war.id, 1, 2, champMap['Captain America'].id, 6, 2, 0);
-    cy.apiPlaceWarDefender(defenderData.access_token, allianceId, war.id, 1, 3, champMap['Spider-Man'].id, 6, 2, 0);
+  return cy.apiCreateWar(defData.access_token, allianceId, 'OpponentA').then((war) => {
+    cy.apiPlaceWarDefender(defData.access_token, allianceId, war.id, 1, 1, champMap['Iron Man'].id, 7, 3, 0);
+    cy.apiPlaceWarDefender(defData.access_token, allianceId, war.id, 1, 2, champMap['Captain America'].id, 6, 2, 0);
+    cy.apiPlaceWarDefender(defData.access_token, allianceId, war.id, 1, 3, champMap['Spider-Man'].id, 6, 2, 0);
     console.log('Defenders placed, now assigning attackers');
-    cy.apiAssignWarAttacker(attackerData.access_token, allianceId, war.id, 1, 1, data.cu1.id);
+    cy.apiAssignWarAttacker(atkData.access_token, allianceId, war.id, 1, 1, data.cu1.id);
     console.log('Assigned Captain America to node 1');
-    cy.apiAssignWarAttacker(attackerData.access_token, allianceId, war.id, 1, 2, data.cu2.id);
+    cy.apiAssignWarAttacker(atkData.access_token, allianceId, war.id, 1, 2, data.cu2.id);
     console.log('Assigned Spider Man to node 2');
-    cy.apiAddWarSynergy(attackerData.access_token, allianceId, war.id, 1, data.cuIronMan.id, data.cu1.id);  
+    cy.apiAddWarSynergy(atkData.access_token, allianceId, war.id, 1, data.cuIronMan.id, data.cu1.id);
     console.log('Added synergy between Iron Man and Captain America');
-    cy.apiUpdateWarKo(defenderData.access_token, allianceId, war.id, 1, 1, 2);
-    cy.apiUpdateWarKo(defenderData.access_token, allianceId, war.id, 1, 2, 1);
-    return cy.apiEndWar(defenderData.access_token, allianceId, war.id, true, 10).then(() => ({
+    cy.apiUpdateWarKo(defData.access_token, allianceId, war.id, 1, 1, 2);
+    cy.apiUpdateWarKo(defData.access_token, allianceId, war.id, 1, 2, 1);
+    return cy.apiEndWar(defData.access_token, allianceId, war.id, true, 10).then(() => ({
       adminToken,
-      userData: defenderData,
-      attackerData,
+      userData: defData,
+      atkData,
       accountId: defenderAccId,
       allianceId,
     }));
@@ -678,7 +687,23 @@ export function setupAdmin(discordToken = 'cypress-admin-token'): Cypress.Chaina
 export function setupUser(discordToken = 'cypress-test-token'): Cypress.Chainable<UserSetupData> {
   return cy.apiBatchSetup([{ discord_token: discordToken }]).then((users) => toUserSetupData(users[discordToken]));
 }
-
+export function setupRosterUser(
+  tokenPrefix: string,
+  pseudo: string,
+): Cypress.Chainable<{ adminData: UserSetupData; userData: UserSetupData; accountId: string }> {
+  const adminToken = `${tokenPrefix}-admin`;
+  const userToken = `${tokenPrefix}-user`;
+  return cy
+    .apiBatchSetup([
+      { discord_token: adminToken, role: 'admin' },
+      { discord_token: userToken, game_pseudo: pseudo },
+    ])
+    .then((users) => ({
+      adminData: toUserSetupData(users[adminToken]),
+      userData: toUserSetupData(users[userToken]),
+      accountId: users[userToken].account_id!,
+    }));
+}
 export function setupAllianceOwner(
   tokenPrefix: string,
   pseudo: string,
@@ -857,6 +882,66 @@ export function setupOwnerMemberAlliance(
       ownerAccId: users[ownerToken].account_id!,
       memberAccId: users[memberToken].account_id!,
     }));
+}
+
+/**
+ * Helper: create an alliance with an owner and a member using force-join.
+ * Also loads a champion and adds it to the member's roster at 7r1.
+ */
+export function setupAllianceWithMember(
+  tokenPrefix: string,
+  championName: string,
+  championClass: string,
+): Cypress.Chainable<{
+  ownerData: UserSetupData;
+  memberData: UserSetupData;
+  allianceId: string;
+  memberAccId: string;
+  champId: string;
+  championUserId: string;
+}> {
+  const adminToken = `${tokenPrefix}-admin`;
+  const ownerToken = `${tokenPrefix}-owner`;
+  const memberToken = `${tokenPrefix}-member`;
+
+  return cy
+    .apiBatchSetup([
+      { discord_token: adminToken, role: 'admin' },
+      {
+        discord_token: ownerToken,
+        game_pseudo: `${tokenPrefix}Owner`.slice(0, 16),
+        create_alliance: { name: `${tokenPrefix}Alliance`, tag: tokenPrefix.slice(0, 3).toUpperCase() },
+      },
+      {
+        discord_token: memberToken,
+        game_pseudo: `${tokenPrefix}Member`.slice(0, 16),
+      },
+    ])
+    .then((users) => {
+      const adminAT = users[adminToken].access_token;
+      const ownerData = toUserSetupData(users[ownerToken]);
+      const memberData = toUserSetupData(users[memberToken]);
+      const allianceId = users[ownerToken].alliance_id!;
+      const memberAccId = users[memberToken].account_id!;
+
+      // Force-join member to alliance
+      cy.apiForceJoinAlliance(memberAccId, allianceId);
+
+      // Load the champion
+      return cy.apiLoadChampion(adminAT, championName, championClass).then((champs) => {
+        const champId = champs[0].id;
+
+        // Add champion to member's roster at 7r1
+        return cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champId, '7r1').then((cu) => ({
+          ownerData,
+          memberData,
+          allianceId,
+          memberAccId,
+          champId,
+          championUserId: cu.id as string,
+        }));
+      });
+    });
 }
 
 // ── War API commands ──────────────────────────────────────────────────────────
