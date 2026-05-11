@@ -202,6 +202,7 @@ const en = {
       kickVisitor: 'Remove visitor',
       kickVisitorConfirm: 'Are you sure you want to remove this visitor from the alliance?',
       visitorBadge: 'Visitor',
+      memberBadge: 'Member',
       invitationTypeVisitor: 'Visitor invitation',
       statistics: {
         tabLabel: 'Statistics',

@@ -83,6 +83,18 @@ async def get_eligible_members(
     return await AllianceService.get_eligible_members(session)
 
 
+@alliance_controller.get(
+    "/{alliance_id}/eligible-visitors",
+    response_model=list[GameAccountResponse],
+)
+async def get_eligible_visitors(
+    alliance_id: uuid.UUID,
+    session: SessionDep,
+):
+    """Get all game accounts that can be invited as visitors (excludes members, existing visitors, pending visitor invites)."""
+    return await AllianceService.get_eligible_visitors(session, alliance_id)
+
+
 # ---- CRUD ----
 
 

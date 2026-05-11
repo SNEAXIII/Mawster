@@ -205,6 +205,7 @@ const fr: Translations = {
       kickVisitor: 'Retirer le visiteur',
       kickVisitorConfirm: "Êtes-vous sûr de vouloir retirer ce visiteur de l'alliance ?",
       visitorBadge: 'Visiteur',
+      memberBadge: 'Membre',
       invitationTypeVisitor: 'Invitation visiteur',
       statistics: {
         tabLabel: 'Statistiques',

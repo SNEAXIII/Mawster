@@ -15,6 +15,7 @@ from src.models.Alliance import Alliance
 from src.models.AllianceInvitation import AllianceInvitation
 from src.models.AllianceOfficer import AllianceOfficer
 from src.enums.InvitationStatus import InvitationStatus
+from src.enums.InvitationType import InvitationType
 from src.Messages.alliance_messages import (
     ALLIANCE_NOT_FOUND,
     CANNOT_REMOVE_OWNER,
@@ -798,6 +799,39 @@ class AllianceService:
         )
         if pending_ids:
             sql = sql.where(GameAccount.id.notin_(pending_ids))  # type: ignore[union-attr]
+        result = await session.exec(sql)
+        return result.all()
+
+    @classmethod
+    async def get_eligible_visitors(
+        cls, session: SessionDep, alliance_id: uuid.UUID
+    ) -> list[GameAccount]:
+        """Get all game accounts that can be invited as visitors to this alliance.
+        Excludes current members, existing visitors, and accounts with a pending visitor invitation."""
+        member_ids_result = await session.exec(
+            select(GameAccount.id).where(GameAccount.alliance_id == alliance_id)
+        )
+        excluded_ids = set(member_ids_result.all())
+
+        visitor_ids_result = await session.exec(
+            select(AllianceVisitor.game_account_id).where(
+                AllianceVisitor.alliance_id == alliance_id
+            )
+        )
+        excluded_ids |= set(visitor_ids_result.all())
+
+        pending_ids_result = await session.exec(
+            select(AllianceInvitation.game_account_id).where(
+                AllianceInvitation.alliance_id == alliance_id,
+                AllianceInvitation.status == InvitationStatus.PENDING,
+                AllianceInvitation.type == InvitationType.VISITOR,
+            )
+        )
+        excluded_ids |= set(pending_ids_result.all())
+
+        sql = select(GameAccount)
+        if excluded_ids:
+            sql = sql.where(GameAccount.id.notin_(excluded_ids))  # type: ignore[union-attr]
         result = await session.exec(sql)
         return result.all()
 

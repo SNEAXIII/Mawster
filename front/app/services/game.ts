@@ -237,6 +237,14 @@ export async function getEligibleMembers(): Promise<GameAccount[]> {
   return response.json();
 }
 
+export async function getEligibleVisitors(allianceId: string): Promise<GameAccount[]> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/eligible-visitors`, {
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, 'Erreur lors de la récupération des visiteurs éligibles');
+  return response.json();
+}
+
 // ─── Invitations ─────────────────────────────────────────
 export interface AllianceInvitation {
   id: string;

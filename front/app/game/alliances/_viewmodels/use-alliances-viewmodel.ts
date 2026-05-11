@@ -11,6 +11,7 @@ import {
   getMyGameAccounts,
   getEligibleOwners,
   getEligibleMembers,
+  getEligibleVisitors,
   createAlliance,
   inviteMember,
   inviteVisitor,
@@ -42,6 +43,7 @@ export function useAlliancesViewModel() {
 
   const [eligibleOwners, setEligibleOwners] = useState<GameAccount[]>([]);
   const [eligibleMembers, setEligibleMembers] = useState<GameAccount[]>([]);
+  const [eligibleVisitors, setEligibleVisitors] = useState<GameAccount[]>([]);
   const [hasAnyAccounts, setHasAnyAccounts] = useState(true);
   const [creating, setCreating] = useState(false);
   const [roleRefreshKey, setRoleRefreshKey] = useState(0);
@@ -114,6 +116,14 @@ export function useAlliancesViewModel() {
   const fetchEligibleMembers = async () => {
     try {
       setEligibleMembers(await getEligibleMembers());
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchEligibleVisitors = async (allianceId: string) => {
+    try {
+      setEligibleVisitors(await getEligibleVisitors(allianceId));
     } catch (err) {
       console.error(err);
     }
@@ -260,7 +270,12 @@ export function useAlliancesViewModel() {
     setMemberAllianceId(allianceId);
     setMemberAccountId('');
     setInviteType('member');
-    fetchEligibleMembers();
+    void Promise.all([fetchEligibleMembers(), fetchEligibleVisitors(allianceId)]);
+  };
+
+  const handleInviteTypeChange = (type: 'member' | 'visitor') => {
+    setInviteType(type);
+    setMemberAccountId('');
   };
 
   const handleCloseInviteMember = () => {
@@ -345,6 +360,7 @@ export function useAlliancesViewModel() {
     loading,
     eligibleOwners,
     eligibleMembers,
+    eligibleVisitors,
     hasAnyAccounts,
     creating,
     roleRefreshKey,
@@ -370,6 +386,7 @@ export function useAlliancesViewModel() {
     setMemberAccountId,
     setInviteType,
     setRosterTarget,
+    handleInviteTypeChange,
     handleCreate,
     handleOpenInviteMember,
     handleCloseInviteMember,

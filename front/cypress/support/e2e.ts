@@ -312,12 +312,12 @@ Cypress.Commands.add('navTo', (page: string) => {
 
 // ── Invite member to alliance (direct backend call) ─────────────────────────
 
-Cypress.Commands.add('apiInviteMember', (token: string, allianceId: string, gameAccountId: string) => {
+Cypress.Commands.add('apiInviteMember', (token: string, allianceId: string, gameAccountId: string, type: 'member' | 'visitor' = 'member') => {
   cy.request({
     method: 'POST',
     url: `${BACKEND}/alliances/${allianceId}/invitations`,
     headers: { Authorization: `Bearer ${token}` },
-    body: { game_account_id: gameAccountId },
+    body: { game_account_id: gameAccountId, type },
   }).then((res) => {
     expect(res.status).to.eq(201);
     return res.body;

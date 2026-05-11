@@ -105,7 +105,7 @@ declare global {
       /**
        * Invite a game account to an alliance via backend API.
        */
-      apiInviteMember(token: string, allianceId: string, gameAccountId: string): Chainable<any>;
+      apiInviteMember(token: string, allianceId: string, gameAccountId: string, type?: 'member' | 'visitor'): Chainable<any>;
 
       /**
        * Force a user to join an alliance via dev endpoint (bypasses invitations).

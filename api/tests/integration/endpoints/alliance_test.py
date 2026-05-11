@@ -12,6 +12,7 @@ from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_member,
     push_officer,
+    push_visitor,
 )
 from tests.utils.utils_client import (
     create_auth_headers,
@@ -899,6 +900,94 @@ class TestEligibility:
         )
         assert response.status_code == 200
         assert len(response.json()) == 1
+
+    @pytest.mark.asyncio
+    async def test_eligible_visitors_includes_free_account(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        free_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        response = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/eligible-visitors", headers=HEADERS_USER1
+        )
+        assert response.status_code == 200
+        ids = [a["id"] for a in response.json()]
+        assert str(free_acc.id) in ids
+
+    @pytest.mark.asyncio
+    async def test_eligible_visitors_includes_account_already_in_another_alliance(self):
+        """Regression: accounts in another alliance must appear in eligible-visitors."""
+        await _setup_2_users()
+        alliance1, _ = await push_alliance_with_owner(user_id=USER_ID)
+        _, owner_acc2 = await push_alliance_with_owner(
+            user_id=USER2_ID,
+            game_pseudo=GAME_PSEUDO_2,
+            alliance_name="OtherAlliance",
+            alliance_tag="OTA",
+        )
+
+        response = await execute_get_request(
+            f"{ENDPOINT}/{alliance1.id}/eligible-visitors", headers=HEADERS_USER1
+        )
+        assert response.status_code == 200
+        ids = [a["id"] for a in response.json()]
+        assert str(owner_acc2.id) in ids
+
+    @pytest.mark.asyncio
+    async def test_eligible_visitors_excludes_own_members(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        response = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/eligible-visitors", headers=HEADERS_USER1
+        )
+        assert response.status_code == 200
+        ids = [a["id"] for a in response.json()]
+        assert str(member.id) not in ids
+
+    @pytest.mark.asyncio
+    async def test_eligible_visitors_excludes_existing_visitors(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        visitor_acc = await push_visitor(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        response = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/eligible-visitors", headers=HEADERS_USER1
+        )
+        assert response.status_code == 200
+        ids = [a["id"] for a in response.json()]
+        assert str(visitor_acc.id) not in ids
+
+    @pytest.mark.asyncio
+    async def test_eligible_visitors_excludes_pending_visitor_invite(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        candidate = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/invitations",
+            {"game_account_id": str(candidate.id), "type": "visitor"},
+            headers=HEADERS_USER1,
+        )
+
+        response = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/eligible-visitors", headers=HEADERS_USER1
+        )
+        assert response.status_code == 200
+        ids = [a["id"] for a in response.json()]
+        assert str(candidate.id) not in ids
+
+    @pytest.mark.asyncio
+    async def test_eligible_visitors_empty_when_no_candidates(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+
+        response = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/eligible-visitors", headers=HEADERS_USER1
+        )
+        assert response.status_code == 200
+        assert response.json() == []
 
 
 # =========================================================================
