@@ -13,6 +13,7 @@ interface AlliancesTabProps {
   memberAllianceId: string | null;
   memberAccountId: string;
   eligibleMembers: GameAccount[];
+  eligibleVisitors: GameAccount[];
   pendingInvitations: Record<string, AllianceInvitation[]>;
   inviteType: 'member' | 'visitor';
   onInviteTypeChange: (type: 'member' | 'visitor') => void;
@@ -31,6 +32,7 @@ export default function AlliancesTab({
   memberAllianceId,
   memberAccountId,
   eligibleMembers,
+  eligibleVisitors,
   pendingInvitations,
   inviteType,
   onInviteTypeChange,
@@ -66,6 +68,7 @@ export default function AlliancesTab({
           memberAllianceId={memberAllianceId}
           memberAccountId={memberAccountId}
           eligibleMembers={eligibleMembers}
+          eligibleVisitors={eligibleVisitors}
           inviteType={inviteType}
           onInviteTypeChange={onInviteTypeChange}
           onMemberAccountChange={onMemberAccountChange}

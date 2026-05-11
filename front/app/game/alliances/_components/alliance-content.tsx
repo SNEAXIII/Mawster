@@ -74,9 +74,10 @@ export default function AllianceContent() {
             memberAllianceId={vm.memberAllianceId}
             memberAccountId={vm.memberAccountId}
             eligibleMembers={vm.eligibleMembers}
+            eligibleVisitors={vm.eligibleVisitors}
             pendingInvitations={vm.pendingInvitations}
             inviteType={vm.inviteType}
-            onInviteTypeChange={vm.setInviteType}
+            onInviteTypeChange={vm.handleInviteTypeChange}
             onMemberAccountChange={vm.setMemberAccountId}
             onOpenInviteMember={vm.handleOpenInviteMember}
             onCloseInviteMember={vm.handleCloseInviteMember}

@@ -24,6 +24,7 @@ interface AllianceCardProps {
   memberAllianceId: string | null;
   memberAccountId: string;
   eligibleMembers: GameAccount[];
+  eligibleVisitors: GameAccount[];
   inviteType: 'member' | 'visitor';
   onInviteTypeChange: (type: 'member' | 'visitor') => void;
   onMemberAccountChange: (value: string) => void;
@@ -42,6 +43,7 @@ export default function AllianceCard({
   memberAllianceId,
   memberAccountId,
   eligibleMembers,
+  eligibleVisitors,
   inviteType,
   onInviteTypeChange,
   onMemberAccountChange,
@@ -328,7 +330,7 @@ export default function AllianceCard({
                     </button>
                   </div>
                   <InviteMemberCombo
-                    eligibleMembers={eligibleMembers}
+                    eligibleMembers={inviteType === 'visitor' ? eligibleVisitors : eligibleMembers}
                     memberAccountId={memberAccountId}
                     onMemberAccountChange={onMemberAccountChange}
                   />
