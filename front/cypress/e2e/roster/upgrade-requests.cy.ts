@@ -1,4 +1,4 @@
-import { setupAllianceWithMember, setupUser, setupAdmin, type UserSetupData } from '../../support/e2e';
+import { setupAllianceWithMember, setupAllianceOwner, setupAdmin } from '../../support/e2e';
 
 describe('Roster – Upgrade Requests', () => {
   beforeEach(() => {
@@ -33,7 +33,6 @@ describe('Roster – Upgrade Requests', () => {
         cy.getByCy('upgrade-request-item').should('have.length', 1);
       });
     });
-  });
 
   // ── 2. Member can see their own pending requests ───────────────────────────
 
@@ -151,42 +150,24 @@ describe('Roster – Upgrade Requests', () => {
 
   it('officer can cancel an upgrade request on their own roster', () => {
     setupAdmin('admin').then((admin) => {
-      let ownerData: UserSetupData;
-      let ownerAccId: string;
+      setupAllianceOwner('UR', 'T5Owner', 'T5Alliance', 'T5').then(({ userData: ownerData, accountId: ownerAccId }) => {
+        cy.apiLoadChampion(admin.access_token, 'Captain America', 'Science')
+          .then((champs) => cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r1'))
+          .then((cu) => {
+            cy.apiCreateUpgradeRequest(ownerData.access_token, cu.id, '7r3');
 
-      setupUser('ur-t5-owner')
-        .then((owner) => {
-          ownerData = owner;
-          return cy.apiCreateGameAccount(owner.access_token, 'T5Owner', true);
-        })
-        .then((ownerAcc) => {
-          ownerAccId = ownerAcc.id;
-          return cy.apiCreateAlliance(ownerData.access_token, 'T5Alliance', 'T5', ownerAccId);
-        })
-        .then(() => {
-          return cy.apiLoadChampion(admin.access_token, 'Captain America', 'Science');
-        })
-        .then((champs) => {
-          return cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r1');
-        })
-        .then((cu) => {
-          // Owner creates a request on their own champion
-          cy.apiCreateUpgradeRequest(ownerData.access_token, cu.id, '7r3');
+            cy.apiLogin(ownerData.user_id);
+            cy.navTo('roster');
 
-          cy.apiLogin(ownerData.user_id);
-          cy.navTo('roster');
+            cy.getByCy('upgrade-requests-section').should('be.visible');
+            cy.getByCy('upgrade-requests-section').click();
+            cy.getByCy('cancel-upgrade-request').should('be.visible');
+            cy.getByCy('cancel-upgrade-request').first().click();
+            cy.get('[role="alertdialog"]').contains('button', 'Cancel request').click();
 
-          cy.getByCy('upgrade-requests-section').should('be.visible');
-          // Expand the collapsible
-          cy.getByCy('upgrade-requests-section').click();
-          // The cancel button must be visible (owner has can_manage = true)
-          cy.getByCy('cancel-upgrade-request').should('be.visible');
-          cy.getByCy('cancel-upgrade-request').first().click();
-
-          // Confirm in the dialog ("Cancel request" is the action button)
-          cy.get('[role="alertdialog"]').contains('button', 'Cancel request').click();
-
-          cy.getByCy('upgrade-requests-section').should('not.exist');
-        });
+            cy.getByCy('upgrade-requests-section').should('not.exist');
+          });
+      });
     });
   });
+});
