@@ -78,6 +78,84 @@ describe('Visitor system', () => {
         cy.getByCy('invite-member-submit').click();
 
         cy.getByCy('pending-invitation-0').should('be.visible');
+        cy.getByCy('pending-invitation-visitor-badge-0').should('be.visible');
+      });
+    });
+
+    it('pending member invitation shows member badge', () => {
+      cy.apiBatchSetup([
+        {
+          discord_token: 'vis-mbr-owner',
+          game_pseudo: 'visMbrOwner',
+          create_alliance: { name: 'visMbrAlliance', tag: 'VMB' },
+        },
+        {
+          discord_token: 'vis-mbr-eligible',
+          game_pseudo: 'visMbrElig',
+        },
+      ]).then((users) => {
+        const ownerData = users['vis-mbr-owner'];
+
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('alliances');
+
+        cy.getByCy('invite-member-toggle').click();
+        cy.getByCy('invite-member-select').click();
+        cy.contains('visMbrElig').click();
+        cy.getByCy('invite-member-submit').click();
+
+        cy.getByCy('pending-invitation-0').should('be.visible');
+        cy.getByCy('pending-invitation-member-badge-0').should('be.visible');
+      });
+    });
+  });
+
+  describe('User — invitation type badge', () => {
+    it('visitor invitation shows visitor badge', () => {
+      cy.apiBatchSetup([
+        {
+          discord_token: 'badge-vis-owner',
+          game_pseudo: 'badgeVisOwner',
+          create_alliance: { name: 'badgeVisAlliance', tag: 'BVA' },
+        },
+        {
+          discord_token: 'badge-vis-user',
+          game_pseudo: 'badgeVisUser',
+        },
+      ]).then((users) => {
+        const ownerData = users['badge-vis-owner'];
+        const userData = users['badge-vis-user'];
+
+        cy.apiInviteMember(ownerData.access_token, ownerData.alliance_id!, userData.account_id!, 'visitor').then(() => {
+          cy.apiLogin(userData.user_id);
+          cy.navTo('alliances');
+
+          cy.get('[data-cy^="visitor-badge-"]').should('be.visible');
+        });
+      });
+    });
+
+    it('member invitation shows member badge', () => {
+      cy.apiBatchSetup([
+        {
+          discord_token: 'badge-mbr-owner',
+          game_pseudo: 'badgeMbrOwner',
+          create_alliance: { name: 'badgeMbrAlliance', tag: 'BMA' },
+        },
+        {
+          discord_token: 'badge-mbr-user',
+          game_pseudo: 'badgeMbrUser',
+        },
+      ]).then((users) => {
+        const ownerData = users['badge-mbr-owner'];
+        const userData = users['badge-mbr-user'];
+
+        cy.apiInviteMember(ownerData.access_token, ownerData.alliance_id!, userData.account_id!, 'member').then(() => {
+          cy.apiLogin(userData.user_id);
+          cy.navTo('alliances');
+
+          cy.get('[data-cy^="member-badge-"]').should('be.visible');
+        });
       });
     });
   });
