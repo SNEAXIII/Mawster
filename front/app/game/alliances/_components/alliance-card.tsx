@@ -5,7 +5,7 @@ import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Shield, UserPlus, Users, X, Pencil, Check } from 'lucide-react';
+import { Shield, UserPlus, Users, X, Pencil, Check, Eye } from 'lucide-react';
 import InviteMemberCombo from './alliance-invite-member-combo';
 import { type Alliance, type GameAccount, type AllianceInvitation } from '@/app/services/game';
 import { formatDateMedium } from '@/app/lib/utils';
@@ -24,6 +24,7 @@ interface AllianceCardProps {
   memberAllianceId: string | null;
   memberAccountId: string;
   eligibleMembers: GameAccount[];
+  eligibleVisitors: GameAccount[];
   inviteType: 'member' | 'visitor';
   onInviteTypeChange: (type: 'member' | 'visitor') => void;
   onMemberAccountChange: (value: string) => void;
@@ -42,6 +43,7 @@ export default function AllianceCard({
   memberAllianceId,
   memberAccountId,
   eligibleMembers,
+  eligibleVisitors,
   inviteType,
   onInviteTypeChange,
   onMemberAccountChange,
@@ -272,7 +274,26 @@ export default function AllianceCard({
                   className='flex items-center justify-between gap-2 p-2 rounded-md bg-amber-50 border border-amber-200'
                 >
                   <div className='space-y-0.5'>
-                    <p className='text-sm text-black'>{inv.game_account_pseudo}</p>
+                    <div className='flex items-center gap-2'>
+                      <p className='text-sm text-black'>{inv.game_account_pseudo}</p>
+                      {inv.type === 'visitor' ? (
+                        <span
+                          className='flex items-center gap-1 text-xs text-black/60 bg-black/10 px-2 py-0.5 rounded-full'
+                          data-cy={`pending-invitation-visitor-badge-${index}`}
+                        >
+                          <Eye className='w-3 h-3' />
+                          {t.game.alliances.visitorBadge}
+                        </span>
+                      ) : (
+                        <span
+                          className='flex items-center gap-1 text-xs text-black/60 bg-black/10 px-2 py-0.5 rounded-full'
+                          data-cy={`pending-invitation-member-badge-${index}`}
+                        >
+                          <Users className='w-3 h-3' />
+                          {t.game.alliances.memberBadge}
+                        </span>
+                      )}
+                    </div>
                     <p className='text-xs text-black/60'>
                       {t.game.alliances.invitedBy} {inv.invited_by_pseudo}
                     </p>
@@ -328,7 +349,7 @@ export default function AllianceCard({
                     </button>
                   </div>
                   <InviteMemberCombo
-                    eligibleMembers={eligibleMembers}
+                    eligibleMembers={inviteType === 'visitor' ? eligibleVisitors : eligibleMembers}
                     memberAccountId={memberAccountId}
                     onMemberAccountChange={onMemberAccountChange}
                   />
