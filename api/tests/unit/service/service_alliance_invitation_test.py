@@ -282,10 +282,15 @@ class TestAcceptInvitation:
         count_mock = mocker.MagicMock()
         count_mock.one.return_value = member_count
 
+        visitor_mock = mocker.MagicMock()
+        visitor_mock.first.return_value = None
+
         other_pending_mock = mocker.MagicMock()
         other_pending_mock.all.return_value = []
 
-        session.exec = mocker.AsyncMock(side_effect=[accounts_mock, count_mock, other_pending_mock])
+        session.exec = mocker.AsyncMock(
+            side_effect=[accounts_mock, count_mock, visitor_mock, other_pending_mock]
+        )
 
         if expected_status is not None:
             with pytest.raises(HTTPException) as exc:

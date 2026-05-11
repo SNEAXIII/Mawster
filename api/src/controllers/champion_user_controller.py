@@ -32,7 +32,6 @@ champion_user_controller = APIRouter(
     prefix="/champion-users",
     tags=["Champion Users"],
     dependencies=[
-        Depends(AuthService.is_logged_as_user),
         Depends(AuthService.get_current_user_in_jwt),
     ],
 )
@@ -125,9 +124,7 @@ async def get_roster_by_game_account(
     if game_account is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
     if game_account.user_id != current_user.id:
-        if game_account.alliance_id is None or not await AllianceService.is_alliance_member(
-            session, current_user.id, game_account.alliance_id
-        ):
+        if not await AllianceService.can_view_roster(session, current_user.id, game_account):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only view your own roster or rosters of alliance members",
@@ -259,9 +256,7 @@ async def _assert_alliance_officer(session, game_account, current_user_id):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Target is not in an alliance",
         )
-    await AllianceService.assert_officer_or_owner_by_id(
-        session, game_account.alliance_id, current_user_id
-    )
+    await AllianceService.require_officer(session, game_account.alliance_id, current_user_id)
 
 
 def _pick_requester_account(
@@ -349,9 +344,7 @@ async def get_upgrade_requests_by_account(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
 
     if game_account.user_id != current_user.id:
-        if game_account.alliance_id is None or not await AllianceService.is_alliance_member(
-            session, current_user.id, game_account.alliance_id
-        ):
+        if not await AllianceService.can_view_roster(session, current_user.id, game_account):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not authorized to view these upgrade requests",
@@ -394,7 +387,5 @@ async def cancel_upgrade_request(
             detail="Not authorized to cancel this upgrade request",
         )
 
-    await AllianceService.assert_officer_or_owner_by_id(
-        session, target_account.alliance_id, current_user.id
-    )
+    await AllianceService.require_officer(session, target_account.alliance_id, current_user.id)
     await UpgradeRequestService.cancel_upgrade_request(session, request_id)

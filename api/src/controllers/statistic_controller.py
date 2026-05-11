@@ -13,7 +13,6 @@ statistics_controller = APIRouter(
     prefix="/statistics",
     tags=["Statistics"],
     dependencies=[
-        Depends(AuthService.is_logged_as_user),
         Depends(AuthService.get_current_user_in_jwt),
     ],
 )

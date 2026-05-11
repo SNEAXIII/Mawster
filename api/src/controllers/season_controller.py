@@ -14,7 +14,7 @@ season_admin_controller = APIRouter(
     prefix="/admin/seasons",
     tags=["Season"],
     dependencies=[
-        Depends(AuthService.is_logged_as_admin),
+        Depends(AuthService.require_admin),
     ],
 )
 
@@ -22,7 +22,7 @@ season_public_controller = APIRouter(
     prefix="/seasons",
     tags=["Season"],
     dependencies=[
-        Depends(AuthService.is_logged_as_user),
+        Depends(AuthService.get_current_user_in_jwt),
     ],
 )
 

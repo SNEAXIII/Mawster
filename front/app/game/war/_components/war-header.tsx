@@ -7,11 +7,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Eye } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
-import type { Alliance } from '@/app/services/game';
+import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector';
 
 interface WarHeaderProps {
-  alliances: Alliance[];
+  alliances: AllianceWithVisitorFlag[];
   selectedAllianceId: string;
   onAllianceChange: (id: string) => void;
 }
@@ -42,7 +43,12 @@ export default function WarHeader({
             key={a.id}
             value={a.id}
           >
-            [{a.tag}] {a.name}
+            <span className="flex items-center gap-1.5">
+              {a.isVisitor && (
+                <Eye className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-label={t.game.war.viewOnly} data-cy="visitor-eye-icon" />
+              )}
+              [{a.tag}] {a.name}
+            </span>
           </SelectItem>
         ))}
       </SelectContent>

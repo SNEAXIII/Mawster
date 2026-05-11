@@ -56,6 +56,7 @@ interface WarContextValue {
   setSelectedBg: (bg: number) => void;
   loading: boolean;
   canManageWar: boolean;
+  isVisitor: boolean;
   isMine: (gameAccountId: string) => boolean;
 
   // War
@@ -174,6 +175,10 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
   const placements = useMemo<WarPlacement[]>(() => warSummary?.placements ?? [], [warSummary]);
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
   const canManageWar = selectedAlliance ? canManage(selectedAlliance) : false;
+  const isVisitor = useMemo(
+    () => alliances.find((a) => a.id === selectedAllianceId)?.isVisitor ?? false,
+    [alliances, selectedAllianceId]
+  );
 
   // ─── Auto-select first alliance ────────────────────────────────────────────
   useEffect(() => {
@@ -602,6 +607,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       setSelectedBg,
       loading,
       canManageWar,
+      isVisitor,
       isMine,
       currentWar,
       activeWarId,
@@ -650,6 +656,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       selectedBg,
       loading,
       canManageWar,
+      isVisitor,
       currentWar,
       activeWarId,
       managementLoading,

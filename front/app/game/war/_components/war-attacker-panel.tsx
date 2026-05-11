@@ -41,7 +41,7 @@ export default function WarAttackerPanel({
   onCombatFilterChange,
 }: Readonly<WarAttackerPanelProps>) {
   const { t } = useI18n();
-  const { placements, warMode, synergies, prefights } = useWar();
+  const { placements, warMode, synergies, prefights, canManageWar, isVisitor } = useWar();
   const [masteryTarget, setMasteryTarget] = useState<{
     gameAccountId: string;
     pseudo: string;
@@ -197,6 +197,7 @@ export default function WarAttackerPanel({
                           ascension={placement.attacker_ascension ?? 0}
                           is_saga_attacker={placement.attacker_is_saga_attacker ?? false}
                           is_saga_defender={placement.attacker_is_saga_defender ?? false}
+                          canManage={!isVisitor}
                         />
                       ) : (
                         <ChampionPortrait

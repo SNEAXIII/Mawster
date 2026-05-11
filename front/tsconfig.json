@@ -46,5 +46,5 @@
     ".next-3001/types/**/*.ts",
     ".next-3001/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "cypress"]
 }

@@ -7,6 +7,8 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy import func
 from starlette import status
 
+from src.services.AllianceVisitorService import AllianceVisitorService
+from src.models.AllianceVisitor import AllianceVisitor
 from src.models.GameAccount import GameAccount
 from src.models.User import User
 from src.models.Alliance import Alliance
@@ -135,6 +137,130 @@ class AllianceService:
         )
         result = await session.exec(sql)
         return result.first()
+
+    # ---- Boolean permission checks (hierarchical) ----
+
+    @staticmethod
+    async def is_member(
+        session: SessionDep,
+        user_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+    ) -> bool:
+        """True if the user has any game account in the given alliance (member, officer, or owner)."""
+        result = await session.exec(
+            select(GameAccount).where(
+                GameAccount.user_id == user_id,
+                GameAccount.alliance_id == alliance_id,
+            )
+        )
+        return result.first() is not None
+
+    @classmethod
+    async def is_officer(
+        cls,
+        session: SessionDep,
+        user_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+    ) -> bool:
+        """True if the user is an officer OR owner of the alliance."""
+        alliance = await cls._load_alliance_with_relations(session, alliance_id)
+        if alliance is None:
+            return False
+        user_account_ids = await cls._get_user_account_ids(session, user_id)
+        if alliance.owner_id in user_account_ids:
+            return True
+        officer_ids = {off.game_account_id for off in alliance.officers}
+        return bool(user_account_ids & officer_ids)
+
+    @classmethod
+    async def is_owner(
+        cls,
+        session: SessionDep,
+        user_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+    ) -> bool:
+        """True if the user owns a game account that is the alliance owner."""
+        alliance = await cls._load_alliance_with_relations(session, alliance_id)
+        if alliance is None:
+            return False
+        user_account_ids = await cls._get_user_account_ids(session, user_id)
+        return alliance.owner_id in user_account_ids
+
+    @classmethod
+    async def is_visitor(
+        cls,
+        session: SessionDep,
+        user_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+    ) -> bool:
+        """True if the user is a member, officer, owner, OR has a visitor account in the alliance."""
+        if await cls.is_member(session, user_id, alliance_id):
+            return True
+        from src.services.AllianceVisitorService import AllianceVisitorService
+
+        user_accounts = await cls._get_user_accounts(session, user_id)
+        for acc in user_accounts:
+            if await AllianceVisitorService.is_visitor(session, alliance_id, acc.id):
+                return True
+        return False
+
+    # ---- Require methods (raise HTTPException on failure) ----
+
+    @classmethod
+    async def require_owner(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> None:
+        """Raise 403 if user is not the alliance owner."""
+        if not await cls.is_owner(session, user_id, alliance_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=OWNER_REQUIRED,
+            )
+
+    @classmethod
+    async def require_officer(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> None:
+        """Raise 403 if user is not an officer or owner of the alliance."""
+        if not await cls.is_officer(session, user_id, alliance_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=OWNER_OR_OFFICER_REQUIRED,
+            )
+
+    @classmethod
+    async def require_member(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> None:
+        """Raise 403 if user has no game account in the alliance."""
+        if not await cls.is_member(session, user_id, alliance_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=NOT_ALLIANCE_MEMBER,
+            )
+
+    @classmethod
+    async def require_visitor(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> None:
+        """Raise 403 if user is neither a member nor a visitor of the alliance."""
+        if not await cls.is_visitor(session, user_id, alliance_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=NOT_ALLIANCE_MEMBER,
+            )
 
     @classmethod
     async def _assert_is_owner_or_officer(
@@ -561,6 +687,71 @@ class AllianceService:
         await session.commit()
         return await cls._load_alliance_with_relations(session, alliance_id)
 
+    # ---- Visitor access ----
+
+    @classmethod
+    async def get_member_or_visitor_account(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> None:
+        """Raise 403 if the user has no game account that is a member or visitor of this alliance."""
+
+        user_accounts = await cls._get_user_accounts(session, user_id)
+        # Check member
+        for acc in user_accounts:
+            if acc.alliance_id == alliance_id:
+                return
+        # Check visitor
+        for acc in user_accounts:
+            if await AllianceVisitorService.is_visitor(session, alliance_id, acc.id):
+                return
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=NOT_ALLIANCE_MEMBER,
+        )
+
+    @classmethod
+    async def get_user_visitor_account(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> "GameAccount":
+        """Return the user's game account that is a visitor of this alliance. Raises 403 if not found."""
+
+        user_accounts = await cls._get_user_accounts(session, user_id)
+        for acc in user_accounts:
+            if await AllianceVisitorService.is_visitor(session, alliance_id, acc.id):
+                return acc
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=NOT_ALLIANCE_MEMBER,
+        )
+
+    @classmethod
+    async def get_my_visited_alliances(
+        cls, session: SessionDep, user_id: uuid.UUID
+    ) -> list[Alliance]:
+        """Return alliances where the user has a game account currently visiting (as visitor)."""
+
+        visits = await AllianceVisitorService.get_visited_alliances(session, user_id)
+        if not visits:
+            return []
+        alliance_ids = {v.alliance_id for v in visits}
+        sql = (
+            select(Alliance)
+            .where(Alliance.id.in_(alliance_ids))  # type: ignore[union-attr]
+            .options(
+                selectinload(Alliance.owner),  # type: ignore[arg-type]
+                selectinload(Alliance.members),  # type: ignore[arg-type]
+                selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
+            )
+        )
+        result = await session.exec(sql)
+        return result.all()
+
     # ---- Eligibility queries ----
 
     @classmethod
@@ -609,3 +800,38 @@ class AllianceService:
             sql = sql.where(GameAccount.id.notin_(pending_ids))  # type: ignore[union-attr]
         result = await session.exec(sql)
         return result.all()
+
+    @classmethod
+    async def can_view_roster(
+        cls,
+        session: SessionDep,
+        viewer_user_id: uuid.UUID,
+        target_game_account: GameAccount,
+    ) -> bool:
+        """True if viewer shares an alliance context (member or visitor) with target."""
+
+        viewer_accounts = await cls._get_user_accounts(session, viewer_user_id)
+        viewer_alliance_ids: set[uuid.UUID] = set()
+        for acc in viewer_accounts:
+            if acc.alliance_id:
+                viewer_alliance_ids.add(acc.alliance_id)
+        visits = await AllianceVisitorService.get_visited_alliances(session, viewer_user_id)
+        for v in visits:
+            viewer_alliance_ids.add(v.alliance_id)
+
+        if not viewer_alliance_ids:
+            return False
+
+        if (
+            target_game_account.alliance_id
+            and target_game_account.alliance_id in viewer_alliance_ids
+        ):
+            return True
+
+        result = await session.exec(
+            select(AllianceVisitor).where(
+                AllianceVisitor.game_account_id == target_game_account.id,
+                AllianceVisitor.alliance_id.in_(viewer_alliance_ids),  # type: ignore[union-attr]
+            )
+        )
+        return result.first() is not None

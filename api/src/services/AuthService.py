@@ -18,22 +18,14 @@ class AuthService:
         token: Annotated[str, Depends(oauth2_scheme)],
     ) -> User:
         data = JWTService.decode_jwt(token)
+        if data.get("role") not in Roles.__members__.values():
+            raise INSUFFISANT_ROLE_EXCEPTION
         user_id = data.get("user_id")
         user = await UserService.get_user_by_id_with_validity_check(session, user_id)
         return user
 
     @classmethod
-    async def is_logged_as_user(
-        cls,
-        token: Annotated[str, Depends(oauth2_scheme)],
-    ) -> True:
-        role = JWTService.decode_jwt(token)["role"]
-        if role not in Roles.__members__.values():
-            raise INSUFFISANT_ROLE_EXCEPTION
-        return True
-
-    @classmethod
-    async def is_logged_as_admin(
+    async def require_admin(
         cls,
         token: Annotated[str, Depends(oauth2_scheme)],
     ) -> True:
@@ -43,7 +35,7 @@ class AuthService:
         return True
 
     @classmethod
-    async def is_logged_as_super_admin(
+    async def require_super_admin(
         cls,
         token: Annotated[str, Depends(oauth2_scheme)],
     ) -> True:

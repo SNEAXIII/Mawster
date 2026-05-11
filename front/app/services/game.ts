@@ -41,6 +41,14 @@ export interface AllianceOfficer {
   assigned_at: string;
 }
 
+export interface AllianceVisitor {
+  id: string;
+  alliance_id: string;
+  game_account_id: string;
+  game_pseudo: string;
+  visited_at: string;
+}
+
 // ─── Helpers ─────────────────────────────────────────────
 const PROXY = '/api/back';
 import { IS_DEV } from '@/app/lib/dev-mode';
@@ -124,6 +132,49 @@ export async function getMyAlliances(): Promise<Alliance[]> {
   return response.json();
 }
 
+export async function getMyVisitedAlliances(): Promise<Alliance[]> {
+  const response = await debugFetch(`${PROXY}/alliances/my-visited`, { headers: jsonHeaders });
+  await throwOnError(response, 'Erreur lors de la récupération des alliances visitées');
+  return response.json();
+}
+
+export async function getAllianceVisitors(allianceId: string): Promise<AllianceVisitor[]> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/visitors`, {
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, 'Erreur lors de la récupération des visiteurs');
+  return response.json();
+}
+
+export async function kickVisitor(allianceId: string, gameAccountId: string): Promise<void> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/visitors/${gameAccountId}`, {
+    method: 'DELETE',
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, 'Erreur lors de la suppression du visiteur');
+}
+
+export async function leaveAsVisitor(allianceId: string): Promise<void> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/visitors/me`, {
+    method: 'DELETE',
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, "Erreur lors de la sortie de l'alliance visitée");
+}
+
+export async function inviteVisitor(
+  allianceId: string,
+  gameAccountId: string
+): Promise<AllianceInvitation> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/invitations`, {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify({ game_account_id: gameAccountId, type: 'visitor' }),
+  });
+  await throwOnError(response, "Erreur lors de l'invitation du visiteur");
+  return response.json();
+}
+
 export interface AllianceRoleEntry {
   is_owner: boolean;
   is_officer: boolean;
@@ -196,6 +247,7 @@ export interface AllianceInvitation {
   game_account_pseudo: string;
   invited_by_game_account_id: string;
   invited_by_pseudo: string;
+  type: 'member' | 'visitor';
   status: 'pending' | 'accepted' | 'declined';
   created_at: string;
   responded_at: string | null;
@@ -208,7 +260,7 @@ export async function inviteMember(
   const response = await debugFetch(`${PROXY}/alliances/${allianceId}/invitations`, {
     method: 'POST',
     headers: jsonHeaders,
-    body: JSON.stringify({ game_account_id: gameAccountId }),
+    body: JSON.stringify({ game_account_id: gameAccountId, type: 'member' }),
   });
   await throwOnError(response, "Erreur lors de l'envoi de l'invitation");
   return response.json();
