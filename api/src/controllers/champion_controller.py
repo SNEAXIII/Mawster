@@ -27,7 +27,6 @@ champion_read_controller = APIRouter(
     prefix="/champions",
     tags=["Champions"],
     dependencies=[
-        Depends(AuthService.is_logged_as_user),
         Depends(AuthService.get_current_user_in_jwt),
     ],
 )
@@ -37,7 +36,7 @@ champion_controller = APIRouter(
     prefix="/admin/champions",
     tags=["Champions (Admin)"],
     dependencies=[
-        Depends(AuthService.is_logged_as_admin),
+        Depends(AuthService.require_admin),
         Depends(AuthService.get_current_user_in_jwt),
     ],
 )

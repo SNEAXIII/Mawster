@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from src.models.GameAccount import GameAccount
     from src.models.AllianceOfficer import AllianceOfficer
     from src.models.AllianceInvitation import AllianceInvitation
+    from src.models.AllianceVisitor import AllianceVisitor
 
 
 class Alliance(SQLModel, table=True):
@@ -41,3 +42,4 @@ class Alliance(SQLModel, table=True):
         back_populates="alliance",
         sa_relationship_kwargs={"foreign_keys": "[AllianceInvitation.alliance_id]"},
     )
+    visitors: List["AllianceVisitor"] = Relationship(back_populates="alliance")

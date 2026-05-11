@@ -24,7 +24,7 @@ export default function AttackerEntryRow({
   readonly = false,
 }: Readonly<AttackerEntryRowProps>) {
   const { t } = useI18n();
-  const { handleRemoveAttacker, handleUpdateKo, handleToggleCombatCompleted, handleToggleFightNotDone, handleTogglePlanningError, canManageWar, prefights } = useWar();
+  const { handleRemoveAttacker, handleUpdateKo, handleToggleCombatCompleted, handleToggleFightNotDone, handleTogglePlanningError, canManageWar, isVisitor, prefights } = useWar();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const nodePrefights = prefights.filter((p) => p.target_node_number === placement.node_number);
 
@@ -59,6 +59,7 @@ export default function AttackerEntryRow({
             ascension={placement.attacker_ascension ?? 0}
             is_saga_attacker={placement.attacker_is_saga_attacker ?? false}
             is_saga_defender={placement.attacker_is_saga_defender ?? false}
+            canManage={!isVisitor}
           />
         ) : placement.attacker_image_url ? (
           <ChampionPortrait
@@ -119,14 +120,14 @@ export default function AttackerEntryRow({
         <div className='text-[10px] text-muted-foreground'>#{placement.node_number}</div>
       </div>
 
-      {placement.attacker_champion_user_id && readonly && (
+      {placement.attacker_champion_user_id && (readonly || isVisitor) && (
         <span
-          className={cn('font-mono text-sm text-muted-foreground', isFull ? 'text-sm' : 'text-xs')}
+          className={cn('font-mono text-muted-foreground', isFull ? 'text-sm' : 'text-xs')}
         >
           {placement.ko_count} KO
         </span>
       )}
-      {placement.attacker_champion_user_id && !readonly && (
+      {placement.attacker_champion_user_id && !readonly && !isVisitor && (
         <>
         
           <button

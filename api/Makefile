@@ -4,6 +4,7 @@ MESSAGE ?=
 
 help:
 	@echo "run-dev      --> run the server in dev mode with auto reload"
+	@echo "run-testing  --> run the testing environment (with test database)"
 	@echo "create-mig   --> create fresh new migration, add a message with MESSAGE=\"your message\""
 	@echo "migrate      --> execute pending migrations"
 	@echo "fixtures     --> load all fixtures for dev purposes"

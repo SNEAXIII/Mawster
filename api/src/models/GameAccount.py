@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from src.models.ChampionUser import ChampionUser
     from src.models.AllianceOfficer import AllianceOfficer
     from src.models.AllianceInvitation import AllianceInvitation
+    from src.models.AllianceVisitor import AllianceVisitor
     from src.models.RequestedUpgrade import RequestedUpgrade
 
 
@@ -43,6 +44,7 @@ class GameAccount(SQLModel, table=True):
         back_populates="invited_by",
         sa_relationship_kwargs={"foreign_keys": "[AllianceInvitation.invited_by_game_account_id]"},
     )
+    visited_alliances: List["AllianceVisitor"] = Relationship(back_populates="game_account")
     requested_upgrades: List["RequestedUpgrade"] = Relationship(
         back_populates="requester",
         sa_relationship_kwargs={"foreign_keys": "[RequestedUpgrade.requester_game_account_id]"},

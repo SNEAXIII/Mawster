@@ -23,7 +23,7 @@ admin_controller = APIRouter(
     prefix="/admin",
     tags=["Admin"],
     dependencies=[
-        Depends(AuthService.is_logged_as_admin),
+        Depends(AuthService.require_admin),
         Depends(AuthService.get_current_user_in_jwt),
     ],
 )
@@ -77,7 +77,7 @@ async def delete_user(
 @admin_controller.patch(
     "/users/promote/{user_uuid_to_promote}",
     status_code=200,
-    dependencies=[Depends(AuthService.is_logged_as_super_admin)],
+    dependencies=[Depends(AuthService.require_super_admin)],
 )
 async def patch_promote_user(
     session: SessionDep,
@@ -91,7 +91,7 @@ async def patch_promote_user(
 @admin_controller.patch(
     "/users/demote/{user_uuid_to_demote}",
     status_code=200,
-    dependencies=[Depends(AuthService.is_logged_as_super_admin)],
+    dependencies=[Depends(AuthService.require_super_admin)],
 )
 async def patch_demote_user(
     session: SessionDep,

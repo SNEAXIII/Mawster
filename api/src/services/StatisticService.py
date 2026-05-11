@@ -1,7 +1,11 @@
 import uuid
 
+from fastapi import HTTPException
+from starlette import status
+
 from src.models import User
 from src.models import ChampionUser, Season, War, WarDefensePlacement, GameAccount
+from src.models.Alliance import Alliance
 from src.models.War import WarStatus
 from sqlalchemy import and_, func, cast, Integer, case
 from sqlmodel import select
@@ -21,9 +25,7 @@ _is_not_done = and_(
 _miniboss_case = case(
     (and_(_is_normal, WarDefensePlacement.node_number.between(37, 49)), 1), else_=0
 )
-_boss_case = case(
-    (and_(_is_normal, WarDefensePlacement.node_number == 50), 1), else_=0
-)
+_boss_case = case((and_(_is_normal, WarDefensePlacement.node_number == 50), 1), else_=0)
 _total_kos = func.sum(case((_is_normal, WarDefensePlacement.ko_count), else_=0))
 _total_fights = func.sum(case((_is_normal, 1), else_=0))
 _total_not_fought = func.sum(case((_is_not_done, 1), else_=0))
@@ -34,7 +36,11 @@ class StatisticService:
     async def get_active_season_statistics(
         cls, session: SessionDep, current_user: User, alliance_id: uuid.UUID
     ) -> list[PlayerSeasonStatsResponse]:
-        await AllianceService.assert_is_alliance_member(session, current_user, alliance_id)
+        alliance = await session.get(Alliance, alliance_id)
+        if alliance is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
 
         sql = (
             select(

@@ -4,6 +4,7 @@ from typing import Optional, TYPE_CHECKING
 from sqlmodel import Field, Relationship, SQLModel
 
 from src.enums.InvitationStatus import InvitationStatus
+from src.enums.InvitationType import InvitationType
 
 if TYPE_CHECKING:
     from src.models.Alliance import Alliance
@@ -11,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class AllianceInvitation(SQLModel, table=True):
-    """An invitation for a game account to join an alliance."""
+    """An invitation for a game account to join or visit an alliance."""
 
     __tablename__ = "alliance_invitation"
 
@@ -20,6 +21,7 @@ class AllianceInvitation(SQLModel, table=True):
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     invited_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     status: InvitationStatus = Field(default=InvitationStatus.PENDING)
+    type: InvitationType = Field(default=InvitationType.MEMBER)
     created_at: datetime = Field(default_factory=datetime.now)
     responded_at: Optional[datetime] = Field(default=None)
 

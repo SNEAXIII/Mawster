@@ -13,7 +13,7 @@ from tests.utils.utils_client import (
 )
 from tests.utils.utils_constant import USER_ID
 from tests.utils.utils_db import get_test_session, load_objects, reset_test_db
-from tests.integration.endpoints.setup.user_setup import get_admin
+from tests.integration.endpoints.setup.user_setup import get_admin, get_generic_user
 
 app.dependency_overrides[get_session] = get_test_session
 
@@ -97,8 +97,12 @@ class TestDeactivateSeason:
 
 
 class TestGetCurrentSeason:
+    @pytest.fixture()
+    async def user_in_db(self, clean_db):
+        await load_objects([get_generic_user(is_base_id=True)])
+
     @pytest.mark.anyio
-    async def test_returns_null_when_no_active_season(self):
+    async def test_returns_null_when_no_active_season(self, user_in_db):
         response = await execute_get_request(CURRENT_URL, USER_HEADERS)
         assert response.status_code == 200
         assert response.json() is None

@@ -5,12 +5,14 @@ from typing import Any, Optional
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.enums.InvitationStatus import InvitationStatus
+from src.enums.InvitationType import InvitationType
 
 
 class AllianceInvitationCreateRequest(BaseModel):
-    """DTO to invite a game account to an alliance."""
+    """DTO to invite a game account to an alliance (as member or visitor)."""
 
     game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
+    type: InvitationType = Field(default=InvitationType.MEMBER)
 
 
 class AllianceInvitationResponse(BaseModel):
@@ -27,6 +29,7 @@ class AllianceInvitationResponse(BaseModel):
     invited_by_game_account_id: uuid.UUID
     invited_by_pseudo: str
     status: InvitationStatus
+    type: InvitationType
     created_at: datetime
     responded_at: Optional[datetime] = None
 
@@ -46,6 +49,7 @@ class AllianceInvitationResponse(BaseModel):
             "invited_by_game_account_id": data.invited_by_game_account_id,
             "invited_by_pseudo": data.invited_by.game_pseudo,
             "status": data.status,
+            "type": data.type,
             "created_at": data.created_at,
             "responded_at": data.responded_at,
         }

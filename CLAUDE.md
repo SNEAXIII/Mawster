@@ -101,7 +101,7 @@ Keep raw output out of context. Rules:
 
 - **Read** only when about to `Edit` immediately after — use `ctx_execute_file` for everything else
 - **No Explore agents** — use `ctx_batch_execute(commands, queries)` instead
-- Bash only for: git, mkdir, rm, mv, short commands
+- Bash only for: git, mkdir, rm, mv, short commands (**NEVER** for grep/search/read — use `Grep` tool or `ctx_batch_execute` instead)
 - No WebFetch / curl / wget — use `ctx_fetch_and_index`
 - Responses ≤500 words; write artifacts to files
 

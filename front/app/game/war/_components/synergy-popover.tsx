@@ -19,6 +19,7 @@ interface SynergyPopoverProps {
   ascension?: number;
   is_saga_attacker?: boolean;
   is_saga_defender?: boolean;
+  canManage?: boolean;
 }
 
 export default function SynergyPopover({
@@ -32,6 +33,7 @@ export default function SynergyPopover({
   ascension = 0,
   is_saga_attacker = false,
   is_saga_defender = false,
+  canManage = true,
 }: Readonly<SynergyPopoverProps>) {
   const { t } = useI18n();
   const { synergies, handleRemoveSynergy } = useWar();
@@ -94,8 +96,9 @@ export default function SynergyPopover({
                     {s.champion_name}
                   </span>
                   <button
-                    className='shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors'
+                    className='shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed'
                     data-cy={`synergy-revoke-${s.champion_name.replaceAll(/\s+/g, '-')}`}
+                    disabled={!canManage}
                     onClick={async () => {
                       setOpen(false);
                       await handleRemoveSynergy(s.champion_user_id);
@@ -108,8 +111,9 @@ export default function SynergyPopover({
             </div>
           )}
           <button
-            className='w-full text-xs py-1 px-2 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors'
+            className='w-full text-xs py-1 px-2 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed'
             data-cy={`synergy-add-${championName.replaceAll(/\s+/g, '-')}`}
+            disabled={!canManage}
             onClick={() => {
               setOpen(false);
               setSelectorOpen(true);
