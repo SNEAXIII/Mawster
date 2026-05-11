@@ -8,7 +8,7 @@ describe('Roster – Upgrade Requests', () => {
   // ── 1. Officer creates upgrade request via roster preview ──────────────────
 
   it('officer can request an upgrade for a member in the roster preview', () => {
-    setupAllianceWithMember('ur-t1', 'Spider-Man', 'Science').then(({ ownerData }) => {
+    setupAllianceWithMember('UR','Spider-Man', 'Science').then(({ ownerData }) => {
         cy.apiLogin(ownerData.user_id);
         cy.navTo('alliances');
 
@@ -38,7 +38,7 @@ describe('Roster – Upgrade Requests', () => {
   // ── 2. Member can see their own pending requests ───────────────────────────
 
   it('member can see their pending upgrade requests on their roster page', () => {
-    setupAllianceWithMember('ur-t2', 'Wolverine', 'Mutant').then(
+    setupAllianceWithMember('UR','Wolverine', 'Mutant').then(
         ({ ownerData, memberData, championUserId }) => {
           cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 
@@ -57,7 +57,7 @@ describe('Roster – Upgrade Requests', () => {
   // ── 3. Request auto-completes when champion reaches target rarity ──────────
 
   it('upgrade request disappears when champion reaches the target rarity', () => {
-    setupAllianceWithMember('ur-t3', 'Iron Man', 'Tech').then(
+    setupAllianceWithMember('UR','Iron Man', 'Tech').then(
         ({ ownerData, memberData, championUserId }) => {
           cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 
@@ -80,7 +80,7 @@ describe('Roster – Upgrade Requests', () => {
   // ── 3b. Request stays when champion is upgraded but not to target ──────────
 
   it('upgrade request stays when champion is upgraded but not to the target rarity', () => {
-    setupAllianceWithMember('ur-t3b', 'Magneto', 'Mutant').then(
+    setupAllianceWithMember('UR','Magneto', 'Mutant').then(
         ({ ownerData, memberData, championUserId }) => {
           // Request 7r4 but champion is at 7r1
           cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r4');
@@ -102,7 +102,7 @@ describe('Roster – Upgrade Requests', () => {
   // ── 3c. Request completes when champion is upgraded past target rarity ────
 
   it('upgrade request completes when champion is upgraded past the target rarity', () => {
-    setupAllianceWithMember('ur-t3c', 'Cyclops', 'Mutant').then(
+    setupAllianceWithMember('UR','Cyclops', 'Mutant').then(
         ({ ownerData, memberData, championUserId }) => {
           // Request 7r2 but champion is at 7r1
           cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r2');
@@ -125,7 +125,7 @@ describe('Roster – Upgrade Requests', () => {
   // ── 4. Officer can cancel a member's upgrade request ──────────────────────
 
   it("officer can cancel a member's upgrade request in the roster preview", () => {
-    setupAllianceWithMember('ur-t4', 'Thor', 'Cosmic').then(({ ownerData, championUserId }) => {
+    setupAllianceWithMember('UR','Thor', 'Cosmic').then(({ ownerData, championUserId }) => {
         cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 
         cy.apiLogin(ownerData.user_id);

@@ -63,22 +63,15 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
   // ── 7. Regular member: no cancel button on own roster page ────────────────
 
   it('regular member cannot cancel upgrade requests on their own roster', () => {
-    setupAdmin('admin').then((admin) => {
-      setupAllianceWithMember(admin.access_token, 'Deadpool', 'Mutant').then(
-        ({ ownerData, memberData, championUserId }) => {
-          cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
+    setupAllianceWithMember('ur-t7', 'Deadpool', 'Mutant').then(({ ownerData, memberData, championUserId }) => {
+      cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 
-          cy.apiLogin(memberData.user_id);
-          cy.navTo('roster');
+      cy.apiLogin(memberData.user_id);
+      cy.navTo('roster');
 
-          // The section IS visible (member can see their requests)
-          cy.getByCy('upgrade-requests-section').should('be.visible');
-          // Expand the collapsible
-          cy.getByCy('upgrade-requests-section').click();
-          // But the cancel button is NOT shown (member has can_manage = false)
-          cy.getByCy('cancel-upgrade-request').should('not.exist');
-        },
-      );
+      cy.getByCy('upgrade-requests-section').should('be.visible');
+      cy.getByCy('upgrade-requests-section').click();
+      cy.getByCy('cancel-upgrade-request').should('not.exist');
     });
   });
 
@@ -140,29 +133,22 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
   // ── 9. Cancel on champion card cancels the pending request ─────────────────
 
   it('cancel button on champion card cancels the pending request (alliance dialog)', () => {
-    setupAdmin('admin').then((admin) => {
-      setupAllianceWithMember(admin.access_token, 'SentryCard', 'Science').then(({ ownerData, championUserId }) => {
-        cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
+    setupAllianceWithMember('UR', 'SentryCard', 'Science').then(({ ownerData, championUserId }) => {
+      cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+      cy.apiLogin(ownerData.user_id);
+      cy.navTo('alliances');
 
-        // Wait for alliance roles to load
-        cy.getByCy('invite-member-toggle').should('be.visible');
-        cy.getByCy('view-roster-URMember').click();
+      cy.getByCy('invite-member-toggle').should('be.visible');
+      cy.getByCy('view-roster-URMember').click();
 
-        // The cancel-pending-request button is on the champion card in the dialog
-        cy.getByCy('cancel-pending-request').should('exist');
-        cy.getByCy('cancel-pending-request').first().click({ force: true });
+      cy.getByCy('cancel-pending-request').should('exist');
+      cy.getByCy('cancel-pending-request').first().click({ force: true });
 
-        // Confirm in the cancel confirmation dialog
-        cy.get('[role="alertdialog"]').contains('button', 'Cancel request').click();
+      cy.get('[role="alertdialog"]').contains('button', 'Cancel request').click();
 
-        // After cancelling the only request, the upgrade-requests-section should disappear
-        // and the pending request button should be gone
-        cy.getByCy('cancel-pending-request').should('not.exist');
-        cy.getByCy('upgrade-requests-section').should('not.exist');
-      });
+      cy.getByCy('cancel-pending-request').should('not.exist');
+      cy.getByCy('upgrade-requests-section').should('not.exist');
     });
   });
 });
