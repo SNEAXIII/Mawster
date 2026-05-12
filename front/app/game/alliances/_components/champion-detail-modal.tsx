@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from '@/components/ui/dialog';
 import {
   Table,
@@ -79,6 +80,7 @@ export function ChampionDetailModal({
       <DialogContent className='max-w-lg flex flex-col max-h-[80vh]' data-cy='champion-detail-modal'>
         <DialogHeader>
           <DialogTitle>{playerName ?? stat.allianceView}</DialogTitle>
+          <DialogClose data-cy='champion-detail-close' />
         </DialogHeader>
         <div className='overflow-y-auto'>
           <Table>

@@ -265,7 +265,7 @@ export default function AllianceStatisticsTab({
       )}
 
       {seasonStats.length === 0 ? (
-        <p className='text-sm text-muted-foreground py-6 text-center'>{stat.empty}</p>
+        <p className='text-sm text-muted-foreground py-6 text-center' data-cy='statistics-empty'>{stat.empty}</p>
       ) : (
         <>
           <div className='flex flex-wrap items-center gap-3'>
@@ -370,11 +370,11 @@ export default function AllianceStatisticsTab({
           <div className='flex flex-col lg:flex-row gap-6'>
             <div className='flex-1 min-w-0'>
               {filteredStats.length === 0 ? (
-                <p className='text-sm text-muted-foreground py-4 text-center'>
+                <p className='text-sm text-muted-foreground py-4 text-center' data-cy='statistics-empty-filtered'>
                   {stat.noFilteredResults}
                 </p>
               ) : (
-                <Table>
+                <Table data-cy='statistics-table'>
                   <TableHeader>
                     <TableRow>
                       <TableHead>{stat.columns.player}</TableHead>
