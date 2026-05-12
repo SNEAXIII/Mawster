@@ -217,7 +217,8 @@ export default function AllianceStatisticsTab({
     ratioMin !== -Infinity ||
     sortField !== 'ratio' ||
     sortDir !== 'desc' ||
-    selectedGameAccountId !== null;
+    selectedGameAccountId !== null ||
+    selectedWarId !== null;
 
   if (statsLoading) {
     return <p className='text-sm text-muted-foreground py-6 text-center'>{stat.loading}</p>;
@@ -264,7 +265,7 @@ export default function AllianceStatisticsTab({
       )}
 
       {seasonStats.length === 0 ? (
-        <p className='text-sm text-muted-foreground py-6 text-center' data-cy='statistics-empty'>{stat.empty}</p>
+        <p className='text-sm text-muted-foreground py-6 text-center'>{stat.empty}</p>
       ) : (
         <>
           <div className='flex flex-wrap items-center gap-3'>
@@ -314,6 +315,7 @@ export default function AllianceStatisticsTab({
                     <SelectItem
                       key={g}
                       value={g}
+                      data-cy={`statistics-group-option-${g}`}
                     >
                       {g === 'none' ? stat.noGroup : `G${g}`}
                     </SelectItem>
@@ -356,6 +358,7 @@ export default function AllianceStatisticsTab({
                   setSortField('ratio');
                   setSortDir('desc');
                   setSelectedGameAccountId(null);
+                  setSelectedWarId(null);
                 }}
                 data-cy='statistics-reset-filters'
               >
@@ -367,11 +370,11 @@ export default function AllianceStatisticsTab({
           <div className='flex flex-col lg:flex-row gap-6'>
             <div className='flex-1 min-w-0'>
               {filteredStats.length === 0 ? (
-                <p className='text-sm text-muted-foreground py-4 text-center' data-cy='statistics-empty-filtered'>
+                <p className='text-sm text-muted-foreground py-4 text-center'>
                   {stat.noFilteredResults}
                 </p>
               ) : (
-                <Table data-cy='statistics-table'>
+                <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>{stat.columns.player}</TableHead>
