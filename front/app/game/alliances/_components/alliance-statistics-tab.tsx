@@ -170,7 +170,7 @@ export default function AllianceStatisticsTab({
   );
 
   const hasFilters =
-    selectedGroup !== 'all' || ratioMin !== -Infinity || sortField !== 'ratio' || sortDir !== 'desc';
+    selectedGroup !== 'all' || ratioMin !== -Infinity || sortField !== 'ratio' || sortDir !== 'desc' || selectedGameAccountId !== null;
 
   if (statsLoading) {
     return <p className='text-sm text-muted-foreground py-6 text-center'>{stat.loading}</p>;
