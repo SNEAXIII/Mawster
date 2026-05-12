@@ -47,10 +47,12 @@ export async function getChampionUsage(
   allianceId: string,
   gameAccountId?: string,
   warId?: string,
+  allianceGroup?: number,
 ): Promise<ChampionUsageItem[]> {
   const params = new URLSearchParams();
   if (gameAccountId) params.set('game_account_id', gameAccountId);
   if (warId) params.set('war_id', warId);
+  if (allianceGroup !== undefined) params.set('alliance_group', String(allianceGroup));
   const query = params.toString() ? `?${params.toString()}` : '';
   const response = await fetch(`${PROXY}/statistics/champion-usage/${allianceId}${query}`, {
     headers: jsonHeaders,
