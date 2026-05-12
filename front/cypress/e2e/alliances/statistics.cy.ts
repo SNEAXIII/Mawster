@@ -582,7 +582,7 @@ describe('Alliance Statistics', () => {
               cy.getByCy('champion-detail-modal').contains('KOs').click();
               cy.getByCy('champion-detail-modal').contains('Iron Man').should('exist');
               // close modal
-              cy.getByCy('champion-detail-close').click();
+              cy.get('body').type('{esc}');
               cy.getByCy('champion-detail-modal').should('not.exist');
             });
           });
