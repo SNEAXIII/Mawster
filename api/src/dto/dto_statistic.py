@@ -43,3 +43,4 @@ class ChampionUsageResponse(BaseModel):
     champion_name: str
     fight_count: int
     total_kos: int
+    image_url: Optional[str] = None

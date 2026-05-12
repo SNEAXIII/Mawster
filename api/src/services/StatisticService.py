@@ -99,13 +99,14 @@ class StatisticService:
             select(
                 WarFightRecord.champion_id,
                 Champion.name.label("champion_name"),
+                Champion.image_url,
                 cast(func.count(WarFightRecord.id), Integer).label("fight_count"),
                 cast(func.sum(WarFightRecord.ko_count), Integer).label("total_kos"),
             )
             .join(Champion, Champion.id == WarFightRecord.champion_id)
             .join(Season, Season.id == WarFightRecord.season_id)
             .where(and_(*conditions))
-            .group_by(WarFightRecord.champion_id, Champion.name)
+            .group_by(WarFightRecord.champion_id, Champion.name, Champion.image_url)
             .order_by(func.count(WarFightRecord.id).desc())
         )
         rows = (await session.exec(stmt)).mappings().all()

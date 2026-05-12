@@ -40,6 +40,7 @@ export interface ChampionUsageItem {
   champion_name: string;
   fight_count: number;
   total_kos: number;
+  image_url: string | null;
 }
 
 export async function getChampionUsage(

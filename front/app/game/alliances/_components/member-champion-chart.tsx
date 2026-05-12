@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/app/i18n';
 import type { ChampionUsageItem } from '@/app/services/statistics';
+import { getChampionImageUrl } from '@/app/services/champions';
 
 const COLORS = ['#6366f1', '#22d3ee', '#f59e0b', '#10b981', '#f43f5e', '#94a3b8'];
 
@@ -74,19 +75,47 @@ export function MemberChampionChart({
       ) : chartData.length === 0 ? (
         <p className='text-sm text-muted-foreground text-center py-8'>{stat.empty}</p>
       ) : (
-        <ResponsiveContainer width='100%' height={260}>
-          <PieChart>
-            <Pie data={chartData} dataKey='value' nameKey='name' cx='50%' cy='50%' outerRadius={100}>
-              {chartData.map((_, i) => (
-                <Cell key={i} fill={COLORS[i % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip
-              formatter={(value, name) => [value, name]}
-              contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+        <>
+          <ResponsiveContainer width='100%' height={200}>
+            <PieChart>
+              <Pie data={chartData} dataKey='value' nameKey='name' cx='50%' cy='50%' outerRadius={85}>
+                {chartData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value, name) => [value, name]}
+                contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+          <ul className='flex flex-col gap-1'>
+            {top5.map((c, i) => {
+              const imgUrl = getChampionImageUrl(c.image_url, 48);
+              const value = metric === 'fights' ? c.fight_count : c.total_kos;
+              return (
+                <li key={c.champion_id} className='flex items-center gap-2 text-sm'>
+                  <span className='shrink-0 w-2.5 h-2.5 rounded-full' style={{ backgroundColor: COLORS[i] }} />
+                  {imgUrl ? (
+                    <img src={imgUrl} alt={c.champion_name} className='w-7 h-7 rounded object-cover shrink-0' />
+                  ) : (
+                    <span className='w-7 h-7 rounded bg-muted shrink-0' />
+                  )}
+                  <span className='truncate flex-1'>{c.champion_name}</span>
+                  <span className='text-muted-foreground shrink-0'>{value}</span>
+                </li>
+              );
+            })}
+            {othersValue > 0 && (
+              <li className='flex items-center gap-2 text-sm'>
+                <span className='shrink-0 w-2.5 h-2.5 rounded-full' style={{ backgroundColor: COLORS[5] }} />
+                <span className='w-7 h-7 rounded bg-muted shrink-0' />
+                <span className='truncate flex-1 text-muted-foreground'>{stat.others}</span>
+                <span className='text-muted-foreground shrink-0'>{othersValue}</span>
+              </li>
+            )}
+          </ul>
+        </>
       )}
 
       {data.length > 0 && (
