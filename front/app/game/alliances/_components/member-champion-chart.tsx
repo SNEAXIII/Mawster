@@ -21,6 +21,7 @@ interface MemberChampionChartProps {
   onViewDetail: () => void;
   loading: boolean;
   playerName: string | null;
+  topN?: number;
 }
 
 export function MemberChampionChart({
@@ -30,7 +31,8 @@ export function MemberChampionChart({
   onViewDetail,
   loading,
   playerName,
-}: MemberChampionChartProps) {
+  topN = 7,
+}: Readonly<MemberChampionChartProps>) {
   const { t } = useI18n();
   const stat = t.game.alliances.statistics;
 
@@ -42,9 +44,9 @@ export function MemberChampionChart({
     [data, metric],
   );
 
-  const top5 = sorted.slice(0, 7);
+  const top5 = sorted.slice(0, topN);
   const othersValue = sorted
-    .slice(7)
+    .slice(topN)
     .reduce((sum, c) => sum + (metric === 'fights' ? c.fight_count : c.total_kos), 0);
 
   const chartConfig = { value: { label: metric === 'fights' ? stat.chartByFights : stat.chartByKos } };
