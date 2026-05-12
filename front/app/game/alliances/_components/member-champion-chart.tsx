@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Pie, PieChart } from 'recharts';
+import { Pie, PieChart, Cell } from 'recharts';
 import { Button } from '@/components/ui/button';
 import {
   ChartContainer,
@@ -108,7 +108,11 @@ export function MemberChampionChart({
           >
             <PieChart>
               <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-              <Pie data={chartData} dataKey='value' nameKey='name' label />
+              <Pie data={chartData} dataKey='value' nameKey='name' label>
+                {chartData.map((entry, i) => (
+                  <Cell key={entry.key} fill={entry.fill} />
+                ))}
+              </Pie>
             </PieChart>
           </ChartContainer>
 
