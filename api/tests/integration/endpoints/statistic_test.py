@@ -5,6 +5,7 @@ import pytest
 
 from main import app
 from src.enums.Roles import Roles
+from src.models.GameAccount import GameAccount
 from src.models.Season import Season
 from src.models.War import War, WarStatus
 from src.models.WarDefensePlacement import WarDefensePlacement
@@ -357,7 +358,6 @@ class TestGetChampionUsage:
         other_champ = await push_champion(name="Iron Man", champion_class="Tech")
         defender = await push_champion(name="Wolverine", champion_class="Mutant")
         await push_user2()
-        from src.models.GameAccount import GameAccount
         ga2 = GameAccount(
             user_id=USER2_ID,
             game_pseudo="User2Acc",
