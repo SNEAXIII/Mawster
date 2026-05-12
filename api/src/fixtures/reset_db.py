@@ -10,6 +10,7 @@ from src.fixtures import sync_engine as engine
 
 alembic_cfg = Config("alembic.ini")
 
+
 def reset_attempt():
     with engine.connect() as conn:
         conn.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
@@ -25,6 +26,8 @@ def reset_attempt():
     print("🚀 Start migration")
     command.upgrade(alembic_cfg, "head")
     print("✅ Migration with success !")
+
+
 def reset(number_of_attempts=7):
     print("🚀 Resetting database")
     for attempt in range(number_of_attempts):
@@ -34,7 +37,9 @@ def reset(number_of_attempts=7):
         except Exception as e:
             print(f"❌ Attempt {attempt + 1} failed: {e}")
             sleep(attempt + 1)
-    raise pymysql.err.OperationalError(f"Failed to reset database after {number_of_attempts} attempts")
+    raise pymysql.err.OperationalError(
+        f"Failed to reset database after {number_of_attempts} attempts"
+    )
 
 
 if __name__ == "__main__":
