@@ -356,10 +356,10 @@ class TestGetChampionUsage:
         data = await _setup_with_active_season()
         other_champ = await push_champion(name="Iron Man", champion_class="Tech")
         defender = await push_champion(name="Wolverine", champion_class="Mutant")
-        user2_acc = await push_user2()
+        await push_user2()
         from src.models.GameAccount import GameAccount
         ga2 = GameAccount(
-            user_id=user2_acc.id,
+            user_id=USER2_ID,
             game_pseudo="User2Acc",
             alliance_id=data["alliance"].id,
         )

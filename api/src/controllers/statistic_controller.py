@@ -1,9 +1,9 @@
 import uuid
-from typing import Annotated
+from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
-from src.dto.dto_statistic import PlayerSeasonStatsResponse
+from src.dto.dto_statistic import ChampionUsageResponse, PlayerSeasonStatsResponse
 from src.models import User
 from src.utils.db import SessionDep
 from src.services.StatisticService import StatisticService
@@ -29,3 +29,20 @@ async def get_current_season_statistics(
 ):
     """Get the current season statistics."""
     return await StatisticService.get_active_season_statistics(session, current_user, alliance_id)
+
+
+@statistics_controller.get(
+    "/champion-usage/{alliance_id}",
+    response_model=list[ChampionUsageResponse],
+)
+async def get_champion_usage(
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    alliance_id: uuid.UUID,
+    game_account_id: Optional[uuid.UUID] = Query(default=None),
+    war_id: Optional[uuid.UUID] = Query(default=None),
+):
+    """Get champion usage aggregated for an alliance in the active season."""
+    return await StatisticService.get_champion_usage(
+        session, current_user, alliance_id, game_account_id, war_id
+    )
