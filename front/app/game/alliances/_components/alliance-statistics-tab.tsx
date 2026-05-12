@@ -90,6 +90,7 @@ export default function AllianceStatisticsTab({
 
   const {
     selectedGameAccountId,
+    setSelectedGameAccountId,
     selectedWarId,
     setSelectedWarId,
     championUsage,
@@ -242,7 +243,7 @@ export default function AllianceStatisticsTab({
 
             {availableGroups.length > 1 && (
               <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-                <SelectTrigger className='w-36' data-cy='statistics-group-filter'>
+                <SelectTrigger className='w-28' data-cy='statistics-group-filter'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -266,6 +267,7 @@ export default function AllianceStatisticsTab({
                   setSelectedGroup('all');
                   setSortField('ratio');
                   setSortDir('desc');
+                  setSelectedGameAccountId(null);
                 }}
                 data-cy='statistics-reset-filters'
               >

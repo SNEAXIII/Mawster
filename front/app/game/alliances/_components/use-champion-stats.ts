@@ -39,6 +39,7 @@ export function useChampionStats(allianceId: string) {
 
   return {
     selectedGameAccountId,
+    setSelectedGameAccountId,
     selectedWarId,
     setSelectedWarId,
     championUsage,
