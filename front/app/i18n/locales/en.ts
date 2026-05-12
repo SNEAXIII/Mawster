@@ -229,6 +229,7 @@ const en = {
           ratio: 'Ratio',
           score: 'Score',
         },
+        champion: 'Champion',
         warFilter: 'War',
         allWars: 'All wars',
         chartByFights: 'Fights',

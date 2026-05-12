@@ -232,6 +232,7 @@ const fr: Translations = {
           ratio: 'Ratio',
           score: 'Score',
         },
+        champion: 'Champion',
         warFilter: 'Guerre',
         allWars: 'Toutes les guerres',
         chartByFights: 'Combats',

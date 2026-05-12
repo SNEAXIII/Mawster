@@ -48,7 +48,7 @@ export function ChampionDetailModal({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{stat.columns.player}</TableHead>
+              <TableHead>{stat.champion}</TableHead>
               <TableHead className='text-right'>{stat.columns.fights}</TableHead>
               <TableHead className='text-right'>{stat.columns.kos}</TableHead>
             </TableRow>
