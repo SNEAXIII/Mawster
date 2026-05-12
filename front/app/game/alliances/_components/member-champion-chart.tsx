@@ -12,7 +12,7 @@ import { useI18n } from '@/app/i18n';
 import type { ChampionUsageItem } from '@/app/services/statistics';
 import { getChampionImageUrl } from '@/app/services/champions';
 
-const COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#a855f7', '#f97316', '#06b6d4', '#eab308'];
+const COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#a855f7', '#f97316', '#06b6d4', '#eab308', '#ec4899', '#84cc16', '#f43f5e'];
 const OTHERS_COLOR = '#64748b';
 
 interface MemberChampionChartProps {
@@ -32,7 +32,7 @@ export function MemberChampionChart({
   onViewDetail,
   loading,
   playerName,
-  topN = 7,
+  topN = 10,
 }: Readonly<MemberChampionChartProps>) {
   const { t } = useI18n();
   const stat = t.game.alliances.statistics;
