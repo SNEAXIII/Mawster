@@ -39,9 +39,11 @@ export function MemberChampionChart({
 
   const sorted = useMemo(
     () =>
-      [...data].sort((a, b) =>
-        metric === 'fights' ? b.fight_count - a.fight_count : b.total_kos - a.total_kos,
-      ),
+      [...data]
+        .filter((c) => metric === 'fights' || c.total_kos > 0)
+        .sort((a, b) =>
+          metric === 'fights' ? b.fight_count - a.fight_count : b.total_kos - a.total_kos,
+        ),
     [data, metric],
   );
 
