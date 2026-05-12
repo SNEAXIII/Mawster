@@ -12,7 +12,7 @@ import { useI18n } from '@/app/i18n';
 import type { ChampionUsageItem } from '@/app/services/statistics';
 import { getChampionImageUrl } from '@/app/services/champions';
 
-const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7'];
+const COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#a855f7', '#f97316', '#06b6d4', '#eab308'];
 const OTHERS_COLOR = '#64748b';
 
 interface MemberChampionChartProps {
