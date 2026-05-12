@@ -1,4 +1,5 @@
 """Unit tests for AllianceVisitorService."""
+
 import uuid
 
 import pytest

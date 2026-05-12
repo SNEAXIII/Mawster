@@ -335,12 +335,20 @@ class TestGetChampionUsage:
         data = await _setup_with_active_season()
         defender = await push_champion(name="Wolverine", champion_class="Mutant")
         await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id,
-            data["champ"], defender, ko_count=1,
+            data["war"],
+            data["alliance"].id,
+            data["owner"].id,
+            data["champ"],
+            defender,
+            ko_count=1,
         )
         await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id,
-            data["champ"], defender, ko_count=0,
+            data["war"],
+            data["alliance"].id,
+            data["owner"].id,
+            data["champ"],
+            defender,
+            ko_count=0,
         )
         response = await execute_get_request(
             f"{CHAMPION_USAGE_URL}/{data['alliance'].id}", USER_HEADERS
@@ -365,12 +373,18 @@ class TestGetChampionUsage:
         )
         await load_objects([ga2])
         await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id,
-            data["champ"], defender,
+            data["war"],
+            data["alliance"].id,
+            data["owner"].id,
+            data["champ"],
+            defender,
         )
         await _push_fight_record(
-            data["war"], data["alliance"].id, ga2.id,
-            other_champ, defender,
+            data["war"],
+            data["alliance"].id,
+            ga2.id,
+            other_champ,
+            defender,
         )
         response = await execute_get_request(
             f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?game_account_id={data['owner'].id}",
@@ -396,10 +410,18 @@ class TestGetChampionUsage:
         )
         await load_objects([war2])
         await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender,
+            data["war"],
+            data["alliance"].id,
+            data["owner"].id,
+            data["champ"],
+            defender,
         )
         await _push_fight_record(
-            war2, data["alliance"].id, data["owner"].id, other_champ, defender,
+            war2,
+            data["alliance"].id,
+            data["owner"].id,
+            other_champ,
+            defender,
         )
         response = await execute_get_request(
             f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?war_id={data['war'].id}",
@@ -426,7 +448,11 @@ class TestGetChampionUsage:
         await push_visitor(data["alliance"], USER2_ID, game_pseudo="Visitor1")
         defender = await push_champion(name="Wolverine", champion_class="Mutant")
         await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender,
+            data["war"],
+            data["alliance"].id,
+            data["owner"].id,
+            data["champ"],
+            defender,
         )
         response = await execute_get_request(
             f"{CHAMPION_USAGE_URL}/{data['alliance'].id}", USER2_HEADERS
