@@ -58,6 +58,10 @@ export function MemberChampionChart({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, metric]);
 
+  const othersEntry = othersValue > 0
+    ? [{ key: 'others', name: stat.others, value: othersValue, fill: 'var(--color-others)' }]
+    : [];
+
   const chartData = [
     ...top5.map((c, i) => ({
       key: `c${i}`,
@@ -65,9 +69,7 @@ export function MemberChampionChart({
       value: metric === 'fights' ? c.fight_count : c.total_kos,
       fill: `var(--color-c${i})`,
     })),
-    ...(othersValue > 0
-      ? [{ key: 'others', name: stat.others, value: othersValue, fill: 'var(--color-others)' }]
-      : []),
+    ...othersEntry,
   ];
 
   return (
@@ -104,7 +106,7 @@ export function MemberChampionChart({
         <>
           <ChartContainer
             config={chartConfig}
-            className='w-full h-[220px] [&_.recharts-pie-label-text]:fill-foreground'
+            className='w-full h-55 [&_.recharts-pie-label-text]:fill-foreground'
           >
             <PieChart>
               <ChartTooltip content={<ChartTooltipContent hideLabel />} />
