@@ -9,7 +9,7 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 
-const COLORS = ['#6366f1', '#22d3ee', '#f59e0b', '#10b981', '#f43f5e', '#94a3b8'];
+const COLORS = ['#6366f1', '#22d3ee', '#f59e0b', '#10b981', '#f43f5e', '#a78bfa', '#94a3b8'];
 import { useI18n } from '@/app/i18n';
 import type { ChampionUsageItem } from '@/app/services/statistics';
 import { getChampionImageUrl } from '@/app/services/champions';
@@ -42,9 +42,9 @@ export function MemberChampionChart({
     [data, metric],
   );
 
-  const top5 = sorted.slice(0, 5);
+  const top5 = sorted.slice(0, 7);
   const othersValue = sorted
-    .slice(5)
+    .slice(7)
     .reduce((sum, c) => sum + (metric === 'fights' ? c.fight_count : c.total_kos), 0);
 
   const chartConfig = { value: { label: metric === 'fights' ? stat.chartByFights : stat.chartByKos } };
