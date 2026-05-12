@@ -1,4 +1,5 @@
 """Integration tests for alliance visitor system."""
+
 import uuid
 import pytest
 
@@ -52,7 +53,9 @@ class TestInviteVisitor:
     @pytest.mark.asyncio
     async def test_officer_can_invite_visitor(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        alliance, owner_acc = await push_alliance_with_owner(
+            user_id=USER_ID, game_pseudo=GAME_PSEUDO
+        )
         visitor_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_post_request(
@@ -68,9 +71,12 @@ class TestInviteVisitor:
     @pytest.mark.asyncio
     async def test_cannot_invite_visitor_when_max_reached(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        alliance, owner_acc = await push_alliance_with_owner(
+            user_id=USER_ID, game_pseudo=GAME_PSEUDO
+        )
         from src.models.AllianceVisitor import AllianceVisitor
         from src.models.GameAccount import GameAccount
+
         visitors = []
         for i in range(10):
             uid = uuid.uuid4()
@@ -93,7 +99,9 @@ class TestInviteVisitor:
     @pytest.mark.asyncio
     async def test_random_user_cannot_invite_visitor(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        alliance, owner_acc = await push_alliance_with_owner(
+            user_id=USER_ID, game_pseudo=GAME_PSEUDO
+        )
         visitor_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
         await push_game_account(user_id=USER3_ID, game_pseudo="outsider")
 
@@ -109,7 +117,9 @@ class TestAcceptVisitorInvitation:
     @pytest.mark.asyncio
     async def test_accept_visitor_invitation_creates_visitor_record(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        alliance, owner_acc = await push_alliance_with_owner(
+            user_id=USER_ID, game_pseudo=GAME_PSEUDO
+        )
         visitor_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         invite_resp = await execute_post_request(
@@ -138,7 +148,9 @@ class TestAcceptVisitorInvitation:
     @pytest.mark.asyncio
     async def test_visitor_game_account_alliance_id_unchanged(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        alliance, owner_acc = await push_alliance_with_owner(
+            user_id=USER_ID, game_pseudo=GAME_PSEUDO
+        )
         visitor_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         invite_resp = await execute_post_request(
@@ -147,10 +159,13 @@ class TestAcceptVisitorInvitation:
             headers=HEADERS_USER1,
         )
         inv_id = invite_resp.json()["id"]
-        await execute_post_request(f"{ENDPOINT}/invitations/{inv_id}/accept", {}, headers=HEADERS_USER2)
+        await execute_post_request(
+            f"{ENDPOINT}/invitations/{inv_id}/accept", {}, headers=HEADERS_USER2
+        )
 
         from src.models.GameAccount import GameAccount as GA
         from sqlmodel import select
+
         async for session in get_test_session():
             result = await session.exec(select(GA).where(GA.id == visitor_acc.id))
             acc = result.first()
@@ -173,7 +188,9 @@ class TestVisitorPermissions:
     @pytest.mark.asyncio
     async def test_visitor_cannot_invite_members(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        alliance, owner_acc = await push_alliance_with_owner(
+            user_id=USER_ID, game_pseudo=GAME_PSEUDO
+        )
         await push_visitor(alliance=alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
         outsider_acc = await push_game_account(user_id=USER3_ID, game_pseudo="outsider")
 
@@ -189,8 +206,12 @@ class TestKickVisitor:
     @pytest.mark.asyncio
     async def test_officer_can_kick_visitor(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        visitor_acc = await push_visitor(alliance=alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        alliance, owner_acc = await push_alliance_with_owner(
+            user_id=USER_ID, game_pseudo=GAME_PSEUDO
+        )
+        visitor_acc = await push_visitor(
+            alliance=alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
+        )
 
         response = await execute_delete_request(
             f"{ENDPOINT}/{alliance.id}/visitors/{visitor_acc.id}",
@@ -198,13 +219,17 @@ class TestKickVisitor:
         )
         assert response.status_code == 204
 
-        visitors_resp = await execute_get_request(f"{ENDPOINT}/{alliance.id}/visitors", headers=HEADERS_USER1)
+        visitors_resp = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/visitors", headers=HEADERS_USER1
+        )
         assert visitors_resp.json() == []
 
     @pytest.mark.asyncio
     async def test_visitor_can_leave(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        alliance, owner_acc = await push_alliance_with_owner(
+            user_id=USER_ID, game_pseudo=GAME_PSEUDO
+        )
         await push_visitor(alliance=alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_delete_request(
@@ -218,8 +243,12 @@ class TestVisitorConvertToMember:
     @pytest.mark.asyncio
     async def test_accepting_member_invitation_removes_visitor_record(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        visitor_acc = await push_visitor(alliance=alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        alliance, owner_acc = await push_alliance_with_owner(
+            user_id=USER_ID, game_pseudo=GAME_PSEUDO
+        )
+        visitor_acc = await push_visitor(
+            alliance=alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2
+        )
 
         invite_resp = await execute_post_request(
             f"{ENDPOINT}/{alliance.id}/invitations",
@@ -236,6 +265,8 @@ class TestVisitorConvertToMember:
         )
         assert accept_resp.status_code == 200
 
-        visitors_resp = await execute_get_request(f"{ENDPOINT}/{alliance.id}/visitors", headers=HEADERS_USER1)
+        visitors_resp = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/visitors", headers=HEADERS_USER1
+        )
         visitor_ids = [v["game_account_id"] for v in visitors_resp.json()]
         assert str(visitor_acc.id) not in visitor_ids

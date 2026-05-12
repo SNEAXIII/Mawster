@@ -34,3 +34,13 @@ class PlayerSeasonStatsResponse(BaseModel):
             + self.total_boss * BOSS
             + self.total_not_fought * NOT_FOUGHT_KOS * KO
         )
+
+
+class ChampionUsageResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    champion_id: uuid.UUID
+    champion_name: str
+    fight_count: int
+    total_kos: int
+    image_url: Optional[str] = None

@@ -34,3 +34,27 @@ export async function getCurrentSeasonStatistics(allianceId: string): Promise<Pl
   await throwOnError(response, 'Failed to load season statistics');
   return response.json();
 }
+
+export interface ChampionUsageItem {
+  champion_id: string;
+  champion_name: string;
+  fight_count: number;
+  total_kos: number;
+  image_url: string | null;
+}
+
+export async function getChampionUsage(
+  allianceId: string,
+  gameAccountId?: string,
+  warId?: string,
+): Promise<ChampionUsageItem[]> {
+  const params = new URLSearchParams();
+  if (gameAccountId) params.set('game_account_id', gameAccountId);
+  if (warId) params.set('war_id', warId);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  const response = await fetch(`${PROXY}/statistics/champion-usage/${allianceId}${query}`, {
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, 'Failed to load champion usage');
+  return response.json();
+}

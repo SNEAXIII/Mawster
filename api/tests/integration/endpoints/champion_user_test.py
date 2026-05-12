@@ -1308,7 +1308,9 @@ class TestAllianceMemberRosterView:
         await push_user2()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         visitor_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
-        await load_objects([AllianceVisitor(alliance_id=alliance.id, game_account_id=visitor_acc.id)])
+        await load_objects(
+            [AllianceVisitor(alliance_id=alliance.id, game_account_id=visitor_acc.id)]
+        )
         champ = await push_champion()
         await _push_champion_user(visitor_acc.id, champ.id, "6r4")
 
@@ -1324,7 +1326,9 @@ class TestAllianceMemberRosterView:
         await push_user2()
         alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
         visitor_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
-        await load_objects([AllianceVisitor(alliance_id=alliance.id, game_account_id=visitor_acc.id)])
+        await load_objects(
+            [AllianceVisitor(alliance_id=alliance.id, game_account_id=visitor_acc.id)]
+        )
         champ = await push_champion()
         await _push_champion_user(owner_acc.id, champ.id, "6r4")
 

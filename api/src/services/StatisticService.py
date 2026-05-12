@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 
 from fastapi import HTTPException
 from starlette import status
@@ -6,11 +7,13 @@ from starlette import status
 from src.models import User
 from src.models import ChampionUser, Season, War, WarDefensePlacement, GameAccount
 from src.models.Alliance import Alliance
+from src.models.Champion import Champion
 from src.models.War import WarStatus
+from src.models.WarFightRecord import WarFightRecord
 from sqlalchemy import and_, func, cast, Integer, case
 from sqlmodel import select
 
-from src.dto.dto_statistic import PlayerSeasonStatsResponse
+from src.dto.dto_statistic import ChampionUsageResponse, PlayerSeasonStatsResponse
 from src.services.AllianceService import AllianceService
 from src.utils.db import SessionDep
 
@@ -67,3 +70,44 @@ class StatisticService:
         )
         rows = (await session.exec(sql)).mappings().all()
         return [PlayerSeasonStatsResponse.model_validate(row) for row in rows]
+
+    @classmethod
+    async def get_champion_usage(
+        cls,
+        session: SessionDep,
+        current_user: User,
+        alliance_id: uuid.UUID,
+        game_account_id: Optional[uuid.UUID] = None,
+        war_id: Optional[uuid.UUID] = None,
+    ) -> list[ChampionUsageResponse]:
+        alliance = await session.get(Alliance, alliance_id)
+        if alliance is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+
+        conditions = [
+            WarFightRecord.alliance_id == alliance_id,
+            Season.is_active == True,  # noqa: E712
+        ]
+        if game_account_id is not None:
+            conditions.append(WarFightRecord.game_account_id == game_account_id)
+        if war_id is not None:
+            conditions.append(WarFightRecord.war_id == war_id)
+
+        stmt = (
+            select(
+                WarFightRecord.champion_id,
+                Champion.name.label("champion_name"),
+                Champion.image_url,
+                cast(func.count(WarFightRecord.id), Integer).label("fight_count"),
+                cast(func.sum(WarFightRecord.ko_count), Integer).label("total_kos"),
+            )
+            .join(Champion, Champion.id == WarFightRecord.champion_id)
+            .join(Season, Season.id == WarFightRecord.season_id)
+            .where(and_(*conditions))
+            .group_by(WarFightRecord.champion_id, Champion.name, Champion.image_url)
+            .order_by(func.count(WarFightRecord.id).desc())
+        )
+        rows = (await session.exec(stmt)).mappings().all()
+        return [ChampionUsageResponse.model_validate(dict(row)) for row in rows]
