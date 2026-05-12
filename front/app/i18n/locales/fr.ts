@@ -210,7 +210,7 @@ const fr: Translations = {
         tabLabel: 'Statistiques',
         title: 'Statistiques de saison',
         alliance: 'Alliance',
-        ratioMin: 'Ratio minimum (%)',
+        ratioMin: 'Ratio minimum',
         ratioAll: 'Tous les ratios',
         groups: 'Groupes',
         allGroups: 'Tous les groupes',

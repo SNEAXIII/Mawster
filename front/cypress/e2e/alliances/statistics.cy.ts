@@ -253,7 +253,7 @@ describe('Alliance Statistics', () => {
               goToStatsTab();
               cy.getByCy('statistics-table').should('be.visible');
               cy.getByCy('statistics-ratio-filter').click();
-              cy.contains('Minimum ratio (%) ≥ 50%').click();
+              cy.contains('Minimum ratio ≥ 50%').click();
               cy.getByCy('statistics-empty-filtered').should('be.visible');
             });
           });
@@ -287,7 +287,7 @@ describe('Alliance Statistics', () => {
               goToStatsTab();
               cy.getByCy('statistics-reset-filters').should('not.exist');
               cy.getByCy('statistics-ratio-filter').click();
-              cy.contains('Minimum ratio (%) ≥ 50%').click();
+              cy.contains('Minimum ratio ≥ 50%').click();
               cy.getByCy('statistics-reset-filters').should('be.visible').click();
               cy.getByCy('statistics-table').should('be.visible');
               cy.getByCy('statistics-reset-filters').should('not.exist');

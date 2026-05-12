@@ -207,7 +207,7 @@ const en = {
         tabLabel: 'Statistics',
         title: 'Season Statistics',
         alliance: 'Alliance',
-        ratioMin: 'Minimum ratio (%)',
+        ratioMin: 'Minimum ratio',
         ratioAll: 'All ratios',
         groups: 'Groups',
         allGroups: 'All groups',
