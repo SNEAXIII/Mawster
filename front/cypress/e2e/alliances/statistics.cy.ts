@@ -298,6 +298,149 @@ describe('Alliance Statistics', () => {
     });
   });
 
+  // ── Champion chart ───────────────────────────────────────────────────────
+
+  it('clicking a row highlights the player and shows reset button', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-click-admin', role: 'admin' },
+      {
+        discord_token: 'stat-click-owner',
+        game_pseudo: 'ClickOwner',
+        create_alliance: { name: 'ClickAlliance', tag: 'CLK' },
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-click-admin'].access_token;
+      const ownerToken = users['stat-click-owner'].access_token;
+      const allianceId = users['stat-click-owner'].alliance_id!;
+      const ownerAccId = users['stat-click-owner'].account_id!;
+
+      createAndActivateSeason(adminToken).then(() => {
+        cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs: { id: string }[]) => {
+          cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs[0].id, '7r3').then((cu: { id: string }) => {
+            cy.apiCreateWar(ownerToken, allianceId, 'Enemy').then((war: { id: string }) => {
+              addStatsForPlayer(ownerToken, allianceId, war.id, champs[0].id, cu.id, 10);
+              cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
+              cy.apiLogin(users['stat-click-owner'].user_id);
+              goToStatsTab();
+              cy.getByCy('statistics-reset-filters').should('not.exist');
+              cy.getByCy(`statistics-row-${ownerAccId}`).click();
+              cy.getByCy(`statistics-row-${ownerAccId}`).should('have.class', 'bg-muted');
+              cy.getByCy('statistics-reset-filters').should('be.visible');
+              cy.getByCy('statistics-reset-filters').click();
+              cy.getByCy(`statistics-row-${ownerAccId}`).should('not.have.class', 'bg-muted');
+              cy.getByCy('statistics-reset-filters').should('not.exist');
+            });
+          });
+        });
+      });
+    });
+  });
+
+  it('war filter shows only ended wars and filters the chart', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-wf-admin', role: 'admin' },
+      {
+        discord_token: 'stat-wf-owner',
+        game_pseudo: 'WfOwner',
+        create_alliance: { name: 'WfAlliance', tag: 'WF1' },
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-wf-admin'].access_token;
+      const ownerToken = users['stat-wf-owner'].access_token;
+      const allianceId = users['stat-wf-owner'].alliance_id!;
+      const ownerAccId = users['stat-wf-owner'].account_id!;
+
+      createAndActivateSeason(adminToken).then(() => {
+        cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs: { id: string }[]) => {
+          cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs[0].id, '7r3').then((cu: { id: string }) => {
+            cy.apiCreateWar(ownerToken, allianceId, 'Ended Enemy').then((war: { id: string }) => {
+              addStatsForPlayer(ownerToken, allianceId, war.id, champs[0].id, cu.id, 10);
+              cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
+              cy.apiCreateWar(ownerToken, allianceId, 'Active Enemy');
+              // active war — not ended, should NOT appear in war filter
+              cy.apiLogin(users['stat-wf-owner'].user_id);
+              goToStatsTab();
+              cy.getByCy('statistics-war-filter').click();
+              cy.contains('Ended Enemy').should('be.visible');
+              cy.contains('Active Enemy').should('not.exist');
+            });
+          });
+        });
+      });
+    });
+  });
+
+  it('chart metric toggle switches between fights and kos', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-cm-admin', role: 'admin' },
+      {
+        discord_token: 'stat-cm-owner',
+        game_pseudo: 'CmOwner',
+        create_alliance: { name: 'CmAlliance', tag: 'CM1' },
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-cm-admin'].access_token;
+      const ownerToken = users['stat-cm-owner'].access_token;
+      const allianceId = users['stat-cm-owner'].alliance_id!;
+      const ownerAccId = users['stat-cm-owner'].account_id!;
+
+      createAndActivateSeason(adminToken).then(() => {
+        cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs: { id: string }[]) => {
+          cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs[0].id, '7r3').then((cu: { id: string }) => {
+            cy.apiCreateWar(ownerToken, allianceId, 'Enemy').then((war: { id: string }) => {
+              addStatsForPlayer(ownerToken, allianceId, war.id, champs[0].id, cu.id, 10, 1);
+              cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
+              cy.apiLogin(users['stat-cm-owner'].user_id);
+              goToStatsTab();
+              cy.getByCy('chart-metric-fights').should('not.have.attr', 'data-variant', 'outline');
+              cy.getByCy('chart-metric-kos').click();
+              cy.getByCy('chart-metric-kos').should('not.have.attr', 'data-variant', 'outline');
+              cy.getByCy('chart-metric-fights').click();
+              cy.getByCy('chart-metric-fights').should('not.have.attr', 'data-variant', 'outline');
+            });
+          });
+        });
+      });
+    });
+  });
+
+  it('see detail button opens the champion detail modal', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-modal-admin', role: 'admin' },
+      {
+        discord_token: 'stat-modal-owner',
+        game_pseudo: 'ModalOwner',
+        create_alliance: { name: 'ModalAlliance', tag: 'MDL' },
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-modal-admin'].access_token;
+      const ownerToken = users['stat-modal-owner'].access_token;
+      const allianceId = users['stat-modal-owner'].alliance_id!;
+      const ownerAccId = users['stat-modal-owner'].account_id!;
+
+      createAndActivateSeason(adminToken).then(() => {
+        cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs: { id: string }[]) => {
+          cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs[0].id, '7r3').then((cu: { id: string }) => {
+            cy.apiCreateWar(ownerToken, allianceId, 'Enemy').then((war: { id: string }) => {
+              addStatsForPlayer(ownerToken, allianceId, war.id, champs[0].id, cu.id, 10);
+              cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
+              cy.apiLogin(users['stat-modal-owner'].user_id);
+              goToStatsTab();
+              cy.getByCy('champion-detail-modal').should('not.exist');
+              cy.getByCy('chart-see-detail').click();
+              cy.getByCy('champion-detail-modal').should('be.visible');
+              cy.getByCy('champion-detail-modal').contains('Iron Man').should('exist');
+            });
+          });
+        });
+      });
+    });
+  });
+
   // ── Group filter ──────────────────────────────────────────────────────────
 
   it('filters by group — shows G1 player and G2 player in their respective filters', () => {
