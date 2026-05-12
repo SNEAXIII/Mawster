@@ -6,8 +6,21 @@ import { useI18n } from '@/app/i18n';
 import type { Alliance } from '@/app/services/game';
 import type { PlayerSeasonStats } from '@/app/services/statistics';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MemberChampionChart } from './member-champion-chart';
 import { ChampionDetailModal } from './champion-detail-modal';
@@ -47,10 +60,19 @@ interface SortableHeadProps {
   onSort: (f: SortField) => void;
 }
 
-function StatCell({ value, suffix, className }: { value: number; suffix?: string; className?: string }) {
+function StatCell({
+  value,
+  suffix,
+  className,
+}: {
+  value: number;
+  suffix?: string;
+  className?: string;
+}) {
   return (
     <TableCell className={`py-1.5 text-right ${className ?? ''}`}>
-      {value}{suffix}
+      {value}
+      {suffix}
     </TableCell>
   );
 }
@@ -119,9 +141,9 @@ export default function AllianceStatisticsTab({
           if (a === 'none') return 1;
           if (b === 'none') return -1;
           return Number(a) - Number(b);
-        },
+        }
       ),
-    [seasonStats],
+    [seasonStats]
   );
 
   const filteredStats = useMemo(() => {
@@ -144,13 +166,34 @@ export default function AllianceStatisticsTab({
     };
     const f = filteredStats;
     return {
-      total_fights: top3(f.map((r) => r.total_fights), true),
-      total_kos: top3(f.map((r) => r.total_kos), true),
-      total_miniboss: top3(f.map((r) => r.total_miniboss), true),
-      total_boss: top3(f.map((r) => r.total_boss), true),
-      total_not_fought: top3(f.map((r) => r.total_not_fought), true),
-      ratio: top3(f.map((r) => r.ratio), true),
-      score: top3(f.map((r) => r.score), true),
+      total_fights: top3(
+        f.map((r) => r.total_fights),
+        true
+      ),
+      total_kos: top3(
+        f.map((r) => r.total_kos),
+        true
+      ),
+      total_miniboss: top3(
+        f.map((r) => r.total_miniboss),
+        true
+      ),
+      total_boss: top3(
+        f.map((r) => r.total_boss),
+        true
+      ),
+      total_not_fought: top3(
+        f.map((r) => r.total_not_fought),
+        true
+      ),
+      ratio: top3(
+        f.map((r) => r.ratio),
+        true
+      ),
+      score: top3(
+        f.map((r) => r.score),
+        true
+      ),
     };
   }, [filteredStats]);
 
@@ -166,11 +209,15 @@ export default function AllianceStatisticsTab({
 
   const selectedPlayer = useMemo(
     () => seasonStats.find((s) => s.id === selectedGameAccountId) ?? null,
-    [seasonStats, selectedGameAccountId],
+    [seasonStats, selectedGameAccountId]
   );
 
   const hasFilters =
-    selectedGroup !== 'all' || ratioMin !== -Infinity || sortField !== 'ratio' || sortDir !== 'desc' || selectedGameAccountId !== null;
+    selectedGroup !== 'all' ||
+    ratioMin !== -Infinity ||
+    sortField !== 'ratio' ||
+    sortDir !== 'desc' ||
+    selectedGameAccountId !== null;
 
   if (statsLoading) {
     return <p className='text-sm text-muted-foreground py-6 text-center'>{stat.loading}</p>;
@@ -179,7 +226,13 @@ export default function AllianceStatisticsTab({
     return (
       <div className='flex flex-col items-center gap-2 py-6'>
         <p className='text-sm text-destructive'>{statsError}</p>
-        <Button size='sm' variant='outline' onClick={onRetry}>{stat.retry}</Button>
+        <Button
+          size='sm'
+          variant='outline'
+          onClick={onRetry}
+        >
+          {stat.retry}
+        </Button>
       </div>
     );
   }
@@ -187,13 +240,24 @@ export default function AllianceStatisticsTab({
   return (
     <div className='flex flex-col gap-4'>
       {alliances.length > 1 && (
-        <Select value={selectedAllianceId} onValueChange={onAllianceChange}>
-          <SelectTrigger className='w-52' data-cy='statistics-alliance-select'>
+        <Select
+          value={selectedAllianceId}
+          onValueChange={onAllianceChange}
+        >
+          <SelectTrigger
+            className='w-52'
+            data-cy='statistics-alliance-select'
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {alliances.map((a) => (
-              <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+              <SelectItem
+                key={a.id}
+                value={a.id}
+              >
+                {a.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -208,24 +272,64 @@ export default function AllianceStatisticsTab({
               value={selectedWarId ?? 'all'}
               onValueChange={(v) => setSelectedWarId(v === 'all' ? null : v)}
             >
-              <SelectTrigger className='w-44' data-cy='statistics-war-filter'>
+              <SelectTrigger
+                className='w-44'
+                data-cy='statistics-war-filter'
+              >
                 <SelectValue placeholder={stat.allWars} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='all' data-cy='statistics-war-all'>{stat.allWars}</SelectItem>
+                <SelectItem
+                  value='all'
+                  data-cy='statistics-war-all'
+                >
+                  {stat.allWars}
+                </SelectItem>
                 {wars.map((w) => (
-                  <SelectItem key={w.id} value={w.id} data-cy={`statistics-war-${w.id}`}>
+                  <SelectItem
+                    key={w.id}
+                    value={w.id}
+                    data-cy={`statistics-war-${w.id}`}
+                  >
                     {w.opponent_name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
+            {availableGroups.length > 1 && (
+              <Select
+                value={selectedGroup}
+                onValueChange={setSelectedGroup}
+              >
+                <SelectTrigger
+                  className='w-28'
+                  data-cy='statistics-group-filter'
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='all'>{stat.allGroups}</SelectItem>
+                  {availableGroups.map((g) => (
+                    <SelectItem
+                      key={g}
+                      value={g}
+                    >
+                      {g === 'none' ? stat.noGroup : `G${g}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
             <Select
               value={String(ratioMin)}
               onValueChange={(v) => setRatioMin(Number(v))}
             >
-              <SelectTrigger className='w-44' data-cy='statistics-ratio-filter'>
+              <SelectTrigger
+                className='w-44'
+                data-cy='statistics-ratio-filter'
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -240,22 +344,6 @@ export default function AllianceStatisticsTab({
                 ))}
               </SelectContent>
             </Select>
-
-            {availableGroups.length > 1 && (
-              <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-                <SelectTrigger className='w-28' data-cy='statistics-group-filter'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>{stat.allGroups}</SelectItem>
-                  {availableGroups.map((g) => (
-                    <SelectItem key={g} value={g}>
-                      {g === 'none' ? stat.noGroup : `G${g}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
 
             {hasFilters && (
               <Button
@@ -288,13 +376,55 @@ export default function AllianceStatisticsTab({
                     <TableRow>
                       <TableHead>{stat.columns.player}</TableHead>
                       <TableHead className='text-right'>{stat.columns.group}</TableHead>
-                      <SortableHead label={stat.columns.fights} field='total_fights' sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
-                      <SortableHead label={stat.columns.kos} field='total_kos' sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
-                      <SortableHead label={stat.columns.miniboss} field='total_miniboss' sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
-                      <SortableHead label={stat.columns.boss} field='total_boss' sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
-                      <SortableHead label={stat.columns.notFought} field='total_not_fought' sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
-                      <SortableHead label={stat.columns.ratio} field='ratio' sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
-                      <SortableHead label={stat.columns.score} field='score' sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
+                      <SortableHead
+                        label={stat.columns.fights}
+                        field='total_fights'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
+                        label={stat.columns.kos}
+                        field='total_kos'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
+                        label={stat.columns.miniboss}
+                        field='total_miniboss'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
+                        label={stat.columns.boss}
+                        field='total_boss'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
+                        label={stat.columns.notFought}
+                        field='total_not_fought'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
+                        label={stat.columns.ratio}
+                        field='ratio'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
+                        label={stat.columns.score}
+                        field='score'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -311,13 +441,35 @@ export default function AllianceStatisticsTab({
                           <TableCell className='py-1.5 text-right text-muted-foreground'>
                             {row.alliance_group ?? '—'}
                           </TableCell>
-                          <StatCell value={row.total_fights} className={cellClass('total_fights', row.total_fights)} />
-                          <StatCell value={row.total_kos} className={cellClass('total_kos', row.total_kos, true)} />
-                          <StatCell value={row.total_miniboss} className={cellClass('total_miniboss', row.total_miniboss)} />
-                          <StatCell value={row.total_boss} className={cellClass('total_boss', row.total_boss)} />
-                          <StatCell value={row.total_not_fought} className={cellClass('total_not_fought', row.total_not_fought, true)} />
-                          <StatCell value={row.ratio} suffix='%' className={cellClass('ratio', row.ratio)} />
-                          <StatCell value={row.score} className={cellClass('score', row.score)} />
+                          <StatCell
+                            value={row.total_fights}
+                            className={cellClass('total_fights', row.total_fights)}
+                          />
+                          <StatCell
+                            value={row.total_kos}
+                            className={cellClass('total_kos', row.total_kos, true)}
+                          />
+                          <StatCell
+                            value={row.total_miniboss}
+                            className={cellClass('total_miniboss', row.total_miniboss)}
+                          />
+                          <StatCell
+                            value={row.total_boss}
+                            className={cellClass('total_boss', row.total_boss)}
+                          />
+                          <StatCell
+                            value={row.total_not_fought}
+                            className={cellClass('total_not_fought', row.total_not_fought, true)}
+                          />
+                          <StatCell
+                            value={row.ratio}
+                            suffix='%'
+                            className={cellClass('ratio', row.ratio)}
+                          />
+                          <StatCell
+                            value={row.score}
+                            className={cellClass('score', row.score)}
+                          />
                         </TableRow>
                       );
                     })}
