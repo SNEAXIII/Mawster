@@ -41,10 +41,11 @@ export function ChampionDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className='max-w-lg' data-cy='champion-detail-modal'>
+      <DialogContent className='max-w-lg flex flex-col max-h-[80vh]' data-cy='champion-detail-modal'>
         <DialogHeader>
           <DialogTitle>{playerName ?? stat.allianceView}</DialogTitle>
         </DialogHeader>
+        <div className='overflow-y-auto'>
         <Table>
           <TableHeader>
             <TableRow>
@@ -63,6 +64,7 @@ export function ChampionDetailModal({
             ))}
           </TableBody>
         </Table>
+        </div>
       </DialogContent>
     </Dialog>
   );
