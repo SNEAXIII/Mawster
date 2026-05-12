@@ -104,7 +104,7 @@ export function MemberChampionChart({
         <>
           <ChartContainer
             config={chartConfig}
-            className='mx-auto aspect-square max-h-[220px] [&_.recharts-pie-label-text]:fill-foreground'
+            className='w-full h-[220px] [&_.recharts-pie-label-text]:fill-foreground'
           >
             <PieChart>
               <ChartTooltip content={<ChartTooltipContent hideLabel />} />
