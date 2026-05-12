@@ -7,8 +7,9 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from '@/components/ui/chart';
+
+const COLORS = ['#6366f1', '#22d3ee', '#f59e0b', '#10b981', '#f43f5e', '#94a3b8'];
 import { useI18n } from '@/app/i18n';
 import type { ChampionUsageItem } from '@/app/services/statistics';
 import { getChampionImageUrl } from '@/app/services/champions';
@@ -46,20 +47,10 @@ export function MemberChampionChart({
     .slice(5)
     .reduce((sum, c) => sum + (metric === 'fights' ? c.fight_count : c.total_kos), 0);
 
-  const chartConfig = useMemo<ChartConfig>(() => {
-    const cfg: ChartConfig = { value: { label: metric === 'fights' ? stat.chartByFights : stat.chartByKos } };
-    top5.forEach((c, i) => {
-      cfg[`c${i}`] = { label: c.champion_name, color: `var(--chart-${i + 1})` };
-    });
-    if (othersValue > 0) {
-      cfg['others'] = { label: stat.others, color: `var(--chart-6)` };
-    }
-    return cfg;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, metric]);
+  const chartConfig = { value: { label: metric === 'fights' ? stat.chartByFights : stat.chartByKos } };
 
   const othersEntry = othersValue > 0
-    ? [{ key: 'others', name: stat.others, value: othersValue, fill: 'var(--color-others)' }]
+    ? [{ key: 'others', name: stat.others, value: othersValue }]
     : [];
 
   const chartData = [
@@ -67,7 +58,6 @@ export function MemberChampionChart({
       key: `c${i}`,
       name: c.champion_name,
       value: metric === 'fights' ? c.fight_count : c.total_kos,
-      fill: `var(--color-c${i})`,
     })),
     ...othersEntry,
   ];
@@ -112,7 +102,7 @@ export function MemberChampionChart({
               <ChartTooltip content={<ChartTooltipContent hideLabel />} />
               <Pie data={chartData} dataKey='value' nameKey='name' label>
                 {chartData.map((entry, i) => (
-                  <Cell key={entry.key} fill={entry.fill} />
+                  <Cell key={entry.key} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
             </PieChart>
@@ -124,7 +114,7 @@ export function MemberChampionChart({
               const value = metric === 'fights' ? c.fight_count : c.total_kos;
               return (
                 <li key={c.champion_id} className='flex items-center gap-2 text-sm'>
-                  <span className='shrink-0 w-2.5 h-2.5 rounded-full' style={{ backgroundColor: `var(--chart-${i + 1})` }} />
+                  <span className='shrink-0 w-2.5 h-2.5 rounded-full' style={{ backgroundColor: COLORS[i] }} />
                   {imgUrl ? (
                     <img src={imgUrl} alt={c.champion_name} className='w-7 h-7 rounded object-cover shrink-0' />
                   ) : (
@@ -137,7 +127,7 @@ export function MemberChampionChart({
             })}
             {othersValue > 0 && (
               <li className='flex items-center gap-2 text-sm'>
-                <span className='shrink-0 w-2.5 h-2.5 rounded-full' style={{ backgroundColor: 'var(--chart-6)' }} />
+                <span className='shrink-0 w-2.5 h-2.5 rounded-full' style={{ backgroundColor: COLORS[5] }} />
                 <span className='truncate flex-1 text-muted-foreground'>{stat.others}</span>
                 <span className='text-muted-foreground shrink-0'>{othersValue}</span>
               </li>
