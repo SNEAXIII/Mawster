@@ -500,7 +500,7 @@ describe('Alliance Statistics', () => {
               cy.apiLogin(users['stat-wfr-owner'].user_id);
               goToStatsTab();
               cy.getByCy('statistics-war-filter').click();
-              cy.contains('War1').click();
+              cy.getByCy(`statistics-war-${war.id}`).click();
               cy.getByCy('statistics-reset-filters').should('be.visible').click();
               cy.getByCy('statistics-war-filter').should('contain', 'All wars');
             });
@@ -634,13 +634,13 @@ describe('Alliance Statistics', () => {
 
                     // filter to G1 → only owner visible
                     cy.getByCy('statistics-group-filter').click();
-                    cy.getByCy('statistics-group-option-1').click();
+                    cy.contains('G1').click();
                     cy.getByCy('statistics-table').find('tbody tr').should('have.length', 1);
                     cy.contains('GrpOwner').should('exist');
 
                     // filter to G2 → only member visible
                     cy.getByCy('statistics-group-filter').click();
-                    cy.getByCy('statistics-group-option-2').click();
+                    cy.contains('G2').click();
                     cy.getByCy('statistics-table').find('tbody tr').should('have.length', 1);
                     cy.contains('GrpMember').should('exist');
                   });
