@@ -47,6 +47,14 @@ interface SortableHeadProps {
   onSort: (f: SortField) => void;
 }
 
+function StatCell({ value, suffix, className }: { value: number; suffix?: string; className?: string }) {
+  return (
+    <TableCell className={`py-1.5 text-right ${className ?? ''}`}>
+      {value}{suffix}
+    </TableCell>
+  );
+}
+
 function SortableHead({ label, field, sortField, sortDir, onSort }: Readonly<SortableHeadProps>) {
   const active = sortField === field;
   const Icon = active ? (sortDir === 'asc' ? ChevronUp : ChevronDown) : ChevronsUpDown;
@@ -301,13 +309,13 @@ export default function AllianceStatisticsTab({
                           <TableCell className='py-1.5 text-right text-muted-foreground'>
                             {row.alliance_group ?? '—'}
                           </TableCell>
-                          <TableCell className={`py-1.5 text-right ${cellClass('total_fights', row.total_fights)}`}>{row.total_fights}</TableCell>
-                          <TableCell className={`py-1.5 text-right ${cellClass('total_kos', row.total_kos, true)}`}>{row.total_kos}</TableCell>
-                          <TableCell className={`py-1.5 text-right ${cellClass('total_miniboss', row.total_miniboss)}`}>{row.total_miniboss}</TableCell>
-                          <TableCell className={`py-1.5 text-right ${cellClass('total_boss', row.total_boss)}`}>{row.total_boss}</TableCell>
-                          <TableCell className={`py-1.5 text-right ${cellClass('total_not_fought', row.total_not_fought, true)}`}>{row.total_not_fought}</TableCell>
-                          <TableCell className={`py-1.5 text-right ${cellClass('ratio', row.ratio)}`}>{row.ratio}%</TableCell>
-                          <TableCell className={`py-1.5 text-right ${cellClass('score', row.score)}`}>{row.score}</TableCell>
+                          <StatCell value={row.total_fights} className={cellClass('total_fights', row.total_fights)} />
+                          <StatCell value={row.total_kos} className={cellClass('total_kos', row.total_kos, true)} />
+                          <StatCell value={row.total_miniboss} className={cellClass('total_miniboss', row.total_miniboss)} />
+                          <StatCell value={row.total_boss} className={cellClass('total_boss', row.total_boss)} />
+                          <StatCell value={row.total_not_fought} className={cellClass('total_not_fought', row.total_not_fought, true)} />
+                          <StatCell value={row.ratio} suffix='%' className={cellClass('ratio', row.ratio)} />
+                          <StatCell value={row.score} className={cellClass('score', row.score)} />
                         </TableRow>
                       );
                     })}
