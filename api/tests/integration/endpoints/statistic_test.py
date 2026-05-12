@@ -8,6 +8,7 @@ from src.enums.Roles import Roles
 from src.models.Season import Season
 from src.models.War import War, WarStatus
 from src.models.WarDefensePlacement import WarDefensePlacement
+from src.models.WarFightRecord import WarFightRecord
 from src.utils.db import get_session
 from tests.utils.utils_client import create_auth_headers, execute_get_request
 from tests.utils.utils_constant import USER_ID, USER2_ID
@@ -16,6 +17,7 @@ from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
     push_champion_user,
+    push_visitor,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 
@@ -25,6 +27,7 @@ USER_HEADERS = create_auth_headers(user_id=str(USER_ID), role=Roles.USER)
 USER2_HEADERS = create_auth_headers(user_id=str(USER2_ID), role=Roles.USER)
 
 STATS_URL = "/statistics/current_season"
+CHAMPION_USAGE_URL = "/statistics/champion-usage"
 
 
 @pytest.fixture(autouse=True)
@@ -282,3 +285,151 @@ class TestGetCurrentSeasonStatistics:
         await load_objects([get_generic_user(is_base_id=True)])
         response = await execute_get_request(f"{STATS_URL}/{uuid.uuid4()}", USER_HEADERS)
         assert response.status_code == 404
+
+
+async def _push_fight_record(
+    war: War,
+    alliance_id,
+    game_account_id,
+    champion,
+    defender_champion,
+    ko_count: int = 0,
+) -> WarFightRecord:
+    record = WarFightRecord(
+        war_id=war.id,
+        alliance_id=alliance_id,
+        season_id=war.season_id,
+        game_account_id=game_account_id,
+        battlegroup=1,
+        node_number=1,
+        tier=7,
+        champion_id=champion.id,
+        stars=7,
+        rank=3,
+        ascension=0,
+        is_saga_attacker=False,
+        defender_champion_id=defender_champion.id,
+        defender_stars=7,
+        defender_rank=3,
+        defender_ascension=0,
+        defender_is_saga_defender=False,
+        ko_count=ko_count,
+    )
+    await load_objects([record])
+    return record
+
+
+class TestGetChampionUsage:
+    @pytest.mark.anyio
+    async def test_returns_empty_when_no_records(self):
+        data = await _base_setup()
+        response = await execute_get_request(
+            f"{CHAMPION_USAGE_URL}/{data['alliance'].id}", USER_HEADERS
+        )
+        assert response.status_code == 200
+        assert response.json() == []
+
+    @pytest.mark.anyio
+    async def test_returns_aggregated_champion_usage(self):
+        data = await _setup_with_active_season()
+        defender = await push_champion(name="Wolverine", champion_class="Mutant")
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id,
+            data["champ"], defender, ko_count=1,
+        )
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id,
+            data["champ"], defender, ko_count=0,
+        )
+        response = await execute_get_request(
+            f"{CHAMPION_USAGE_URL}/{data['alliance'].id}", USER_HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) == 1
+        assert body[0]["champion_name"] == "Spider-Man"
+        assert body[0]["fight_count"] == 2
+        assert body[0]["total_kos"] == 1
+
+    @pytest.mark.anyio
+    async def test_filters_by_game_account_id(self):
+        data = await _setup_with_active_season()
+        other_champ = await push_champion(name="Iron Man", champion_class="Tech")
+        defender = await push_champion(name="Wolverine", champion_class="Mutant")
+        user2_acc = await push_user2()
+        from src.models.GameAccount import GameAccount
+        ga2 = GameAccount(
+            user_id=user2_acc.id,
+            game_pseudo="User2Acc",
+            alliance_id=data["alliance"].id,
+        )
+        await load_objects([ga2])
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id,
+            data["champ"], defender,
+        )
+        await _push_fight_record(
+            data["war"], data["alliance"].id, ga2.id,
+            other_champ, defender,
+        )
+        response = await execute_get_request(
+            f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?game_account_id={data['owner'].id}",
+            USER_HEADERS,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) == 1
+        assert body[0]["champion_name"] == "Spider-Man"
+
+    @pytest.mark.anyio
+    async def test_filters_by_war_id(self):
+        data = await _setup_with_active_season()
+        defender = await push_champion(name="Wolverine", champion_class="Mutant")
+        other_champ = await push_champion(name="Iron Man", champion_class="Tech")
+        war2 = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name="Enemy2",
+            created_by_id=data["owner"].id,
+            season_id=data["season"].id,
+            status=WarStatus.ended,
+        )
+        await load_objects([war2])
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender,
+        )
+        await _push_fight_record(
+            war2, data["alliance"].id, data["owner"].id, other_champ, defender,
+        )
+        response = await execute_get_request(
+            f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?war_id={data['war'].id}",
+            USER_HEADERS,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) == 1
+        assert body[0]["champion_name"] == "Spider-Man"
+
+    @pytest.mark.anyio
+    async def test_stranger_gets_403(self):
+        data = await _base_setup()
+        await push_user2()
+        response = await execute_get_request(
+            f"{CHAMPION_USAGE_URL}/{data['alliance'].id}", USER2_HEADERS
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.anyio
+    async def test_visitor_can_access(self):
+        data = await _setup_with_active_season()
+        await push_user2()
+        await push_visitor(data["alliance"], USER2_ID, game_pseudo="Visitor1")
+        defender = await push_champion(name="Wolverine", champion_class="Mutant")
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender,
+        )
+        response = await execute_get_request(
+            f"{CHAMPION_USAGE_URL}/{data['alliance'].id}", USER2_HEADERS
+        )
+        assert response.status_code == 200
+        assert len(response.json()) == 1
