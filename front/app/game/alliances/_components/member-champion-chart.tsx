@@ -91,7 +91,7 @@ export function MemberChampionChart({
           </ResponsiveContainer>
           <ul className='flex flex-col gap-1'>
             {top5.map((c, i) => {
-              const imgUrl = getChampionImageUrl(c.image_url, 48);
+              const imgUrl = getChampionImageUrl(c.image_url, 40);
               const value = metric === 'fights' ? c.fight_count : c.total_kos;
               return (
                 <li key={c.champion_id} className='flex items-center gap-2 text-sm'>
