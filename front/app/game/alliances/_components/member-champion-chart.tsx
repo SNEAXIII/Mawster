@@ -100,7 +100,7 @@ export function MemberChampionChart({
           >
             <PieChart>
               <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-              <Pie data={chartData} dataKey='value' nameKey='name' label>
+              <Pie data={chartData} dataKey='value' nameKey='name' outerRadius={72} label>
                 {chartData.map((entry, i) => (
                   <Cell key={entry.key} fill={COLORS[i % COLORS.length]} />
                 ))}
