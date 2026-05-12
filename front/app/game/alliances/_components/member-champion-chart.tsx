@@ -8,11 +8,12 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-
-const COLORS = ['#6366f1', '#22d3ee', '#f59e0b', '#10b981', '#f43f5e', '#a78bfa', '#94a3b8'];
 import { useI18n } from '@/app/i18n';
 import type { ChampionUsageItem } from '@/app/services/statistics';
 import { getChampionImageUrl } from '@/app/services/champions';
+
+const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7'];
+const OTHERS_COLOR = '#64748b';
 
 interface MemberChampionChartProps {
   data: ChampionUsageItem[];
@@ -104,7 +105,7 @@ export function MemberChampionChart({
               <ChartTooltip content={<ChartTooltipContent hideLabel />} />
               <Pie data={chartData} dataKey='value' nameKey='name' outerRadius={72} label>
                 {chartData.map((entry, i) => (
-                  <Cell key={entry.key} fill={COLORS[i % COLORS.length]} />
+                  <Cell key={entry.key} fill={entry.key === 'others' ? OTHERS_COLOR : COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
             </PieChart>
@@ -129,7 +130,7 @@ export function MemberChampionChart({
             })}
             {othersValue > 0 && (
               <li className='flex items-center gap-2 text-sm'>
-                <span className='shrink-0 w-2.5 h-2.5 rounded-full' style={{ backgroundColor: COLORS[5] }} />
+                <span className='shrink-0 w-2.5 h-2.5 rounded-full' style={{ backgroundColor: OTHERS_COLOR }} />
                 <span className='truncate flex-1 text-muted-foreground'>{stat.others}</span>
                 <span className='text-muted-foreground shrink-0'>{othersValue}</span>
               </li>
