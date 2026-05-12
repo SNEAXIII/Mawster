@@ -47,7 +47,7 @@ interface SortableHeadProps {
   onSort: (f: SortField) => void;
 }
 
-function SortableHead({ label, field, sortField, sortDir, onSort }: SortableHeadProps) {
+function SortableHead({ label, field, sortField, sortDir, onSort }: Readonly<SortableHeadProps>) {
   const active = sortField === field;
   const Icon = active ? (sortDir === 'asc' ? ChevronUp : ChevronDown) : ChevronsUpDown;
   return (
@@ -72,7 +72,7 @@ export default function AllianceStatisticsTab({
   statsLoading,
   statsError,
   onRetry,
-}: AllianceStatisticsTabProps) {
+}: Readonly<AllianceStatisticsTabProps>) {
   const { t } = useI18n();
   const stat = t.game.alliances.statistics;
   const [ratioMin, setRatioMin] = useState(-Infinity);
@@ -127,6 +127,33 @@ export default function AllianceStatisticsTab({
       return sortDir === 'asc' ? av - bv : bv - av;
     });
   }, [seasonStats, ratioMin, selectedGroup, sortField, sortDir]);
+
+  const colRanks = useMemo(() => {
+    const top3 = (values: number[], descending: boolean): Map<number, number> => {
+      const sorted = [...new Set(values)].sort((a, b) => (descending ? b - a : a - b));
+      return new Map(sorted.slice(0, 3).map((v, i) => [v, i]));
+    };
+    const f = filteredStats;
+    return {
+      total_fights: top3(f.map((r) => r.total_fights), true),
+      total_kos: top3(f.map((r) => r.total_kos), true),
+      total_miniboss: top3(f.map((r) => r.total_miniboss), true),
+      total_boss: top3(f.map((r) => r.total_boss), true),
+      total_not_fought: top3(f.map((r) => r.total_not_fought), true),
+      ratio: top3(f.map((r) => r.ratio), true),
+      score: top3(f.map((r) => r.score), true),
+    };
+  }, [filteredStats]);
+
+  const GREEN = ['text-emerald-400 font-semibold', 'text-emerald-400/60', 'text-emerald-400/35'];
+  const RED = ['text-red-400 font-semibold', 'text-red-400/60', 'text-red-400/35'];
+
+  const cellClass = (field: keyof typeof colRanks, value: number, invert = false) => {
+    if (value === 0) return '';
+    const rank = colRanks[field].get(value);
+    if (rank === undefined) return '';
+    return (invert ? RED : GREEN)[rank];
+  };
 
   const selectedPlayer = useMemo(
     () => seasonStats.find((s) => s.id === selectedGameAccountId) ?? null,
@@ -274,13 +301,13 @@ export default function AllianceStatisticsTab({
                           <TableCell className='py-1.5 text-right text-muted-foreground'>
                             {row.alliance_group ?? '—'}
                           </TableCell>
-                          <TableCell className='py-1.5 text-right'>{row.total_fights}</TableCell>
-                          <TableCell className='py-1.5 text-right'>{row.total_kos}</TableCell>
-                          <TableCell className='py-1.5 text-right'>{row.total_miniboss}</TableCell>
-                          <TableCell className='py-1.5 text-right'>{row.total_boss}</TableCell>
-                          <TableCell className='py-1.5 text-right'>{row.total_not_fought}</TableCell>
-                          <TableCell className='py-1.5 text-right'>{row.ratio}%</TableCell>
-                          <TableCell className='py-1.5 text-right'>{row.score}</TableCell>
+                          <TableCell className={`py-1.5 text-right ${cellClass('total_fights', row.total_fights)}`}>{row.total_fights}</TableCell>
+                          <TableCell className={`py-1.5 text-right ${cellClass('total_kos', row.total_kos, true)}`}>{row.total_kos}</TableCell>
+                          <TableCell className={`py-1.5 text-right ${cellClass('total_miniboss', row.total_miniboss)}`}>{row.total_miniboss}</TableCell>
+                          <TableCell className={`py-1.5 text-right ${cellClass('total_boss', row.total_boss)}`}>{row.total_boss}</TableCell>
+                          <TableCell className={`py-1.5 text-right ${cellClass('total_not_fought', row.total_not_fought, true)}`}>{row.total_not_fought}</TableCell>
+                          <TableCell className={`py-1.5 text-right ${cellClass('ratio', row.ratio)}`}>{row.ratio}%</TableCell>
+                          <TableCell className={`py-1.5 text-right ${cellClass('score', row.score)}`}>{row.score}</TableCell>
                         </TableRow>
                       );
                     })}
