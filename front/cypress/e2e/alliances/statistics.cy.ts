@@ -502,7 +502,7 @@ describe('Alliance Statistics', () => {
               cy.getByCy('statistics-war-filter').click();
               cy.contains('War1').click();
               cy.getByCy('statistics-reset-filters').should('be.visible').click();
-              cy.getByCy('statistics-war-filter').should('not.contain', 'War1');
+              cy.getByCy('statistics-war-filter').should('contain', 'All wars');
             });
           });
         });
@@ -581,8 +581,8 @@ describe('Alliance Statistics', () => {
               // sort by KOs column
               cy.getByCy('champion-detail-modal').contains('KOs').click();
               cy.getByCy('champion-detail-modal').contains('Iron Man').should('exist');
-              // close modal with Escape
-              cy.get('body').type('{esc}');
+              // close modal
+              cy.get('[data-cy="champion-detail-modal"] button[data-slot="dialog-close"]').click();
               cy.getByCy('champion-detail-modal').should('not.exist');
             });
           });
