@@ -459,3 +459,40 @@ class TestGetChampionUsage:
         )
         assert response.status_code == 200
         assert len(response.json()) == 1
+
+    @pytest.mark.anyio
+    async def test_filters_by_alliance_group(self):
+        data = await _setup_with_active_season()
+        other_champ = await push_champion(name="Iron Man", champion_class="Tech")
+        defender = await push_champion(name="Wolverine", champion_class="Mutant")
+
+        data["owner"].alliance_group = 1
+        await load_objects([data["owner"]])
+
+        await push_user2()
+        ga2 = GameAccount(
+            user_id=USER2_ID,
+            game_pseudo="G2Player",
+            alliance_id=data["alliance"].id,
+            alliance_group=2,
+        )
+        await load_objects([ga2])
+
+        await _push_fight_record(data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender)
+        await _push_fight_record(data["war"], data["alliance"].id, ga2.id, other_champ, defender)
+
+        response_g1 = await execute_get_request(
+            f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?alliance_group=1", USER_HEADERS
+        )
+        assert response_g1.status_code == 200
+        g1_body = response_g1.json()
+        assert len(g1_body) == 1
+        assert g1_body[0]["champion_name"] == "Spider-Man"
+
+        response_g2 = await execute_get_request(
+            f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?alliance_group=2", USER_HEADERS
+        )
+        assert response_g2.status_code == 200
+        g2_body = response_g2.json()
+        assert len(g2_body) == 1
+        assert g2_body[0]["champion_name"] == "Iron Man"
