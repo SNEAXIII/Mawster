@@ -109,7 +109,6 @@ export function MemberChampionChart({
             {othersValue > 0 && (
               <li className='flex items-center gap-2 text-sm'>
                 <span className='shrink-0 w-2.5 h-2.5 rounded-full' style={{ backgroundColor: COLORS[5] }} />
-                <span className='w-7 h-7 rounded bg-muted shrink-0' />
                 <span className='truncate flex-1 text-muted-foreground'>{stat.others}</span>
                 <span className='text-muted-foreground shrink-0'>{othersValue}</span>
               </li>

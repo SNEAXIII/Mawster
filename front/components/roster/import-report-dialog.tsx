@@ -39,7 +39,7 @@ export default function ImportReportDialog({
   open,
   onOpenChange,
   results,
-}: ImportReportDialogProps) {
+}: Readonly<ImportReportDialogProps>) {
   const { t } = useI18n();
 
   const addedCount = results.filter((r) => r.success && r.isNew).length;
