@@ -239,6 +239,8 @@ const fr: Translations = {
         chartByAll: 'Tous',
         chartByKos: 'KOs',
         chartByDeathless: 'Deathless',
+        chartAttacker: 'Attaquant',
+        chartDefender: 'Défenseur',
         seeDetail: 'Voir le détail',
         others: 'Autres',
         allianceView: 'Alliance entière',

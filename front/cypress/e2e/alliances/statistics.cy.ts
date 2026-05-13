@@ -767,4 +767,51 @@ describe('Alliance Statistics', () => {
       });
     });
   });
+
+  // ── Perspective filter ────────────────────────────────────────────────────
+
+  it('defender perspective shows the attacked champion instead of the attacker', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-pv-admin', role: 'admin' },
+      {
+        discord_token: 'stat-pv-owner',
+        game_pseudo: 'PvOwner',
+        create_alliance: { name: 'PvAlliance', tag: 'PV1' },
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-pv-admin'].access_token;
+      const ownerToken = users['stat-pv-owner'].access_token;
+      const allianceId = users['stat-pv-owner'].alliance_id!;
+      const ownerAccId = users['stat-pv-owner'].account_id!;
+
+      createAndActivateSeason(adminToken).then(() => {
+        // attacker = Iron Man, defender = Wolverine
+        cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs1: { id: string }[]) => {
+          cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then((champs2: { id: string }[]) => {
+            cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs1[0].id, '7r3').then((cu: { id: string }) => {
+              cy.apiCreateWar(ownerToken, allianceId, 'Enemy').then((war: { id: string }) => {
+                // Iron Man attacks Wolverine (deathless)
+                cy.apiPlaceWarDefender(ownerToken, allianceId, war.id, 1, 10, champs2[0].id, 7, 3, 0);
+                cy.apiAssignWarAttacker(ownerToken, allianceId, war.id, 1, 10, cu.id);
+                cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
+
+                cy.apiLogin(users['stat-pv-owner'].user_id);
+                goToStatsTab();
+
+                // default attacker perspective → Iron Man visible
+                cy.contains('Iron Man').should('exist');
+                cy.contains('Wolverine').should('not.exist');
+
+                // switch to defender perspective → Wolverine visible
+                cy.getByCy('chart-perspective-defender').click();
+                cy.contains('Wolverine').should('exist');
+                cy.contains('Iron Man').should('not.exist');
+              });
+            });
+          });
+        });
+      });
+    });
+  });
 });

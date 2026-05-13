@@ -236,6 +236,8 @@ const en = {
         chartByAll: 'All',
         chartByKos: 'KOs',
         chartByDeathless: 'Deathless',
+        chartAttacker: 'Attacker',
+        chartDefender: 'Defender',
         seeDetail: 'See details',
         others: 'Others',
         allianceView: 'Whole alliance',

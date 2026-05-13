@@ -9,6 +9,7 @@ export function useChampionStats(allianceId: string, selectedGroup = 'all') {
   const [selectedWarId, setSelectedWarId] = useState<string | null>(null);
   const [championUsage, setChampionUsage] = useState<ChampionUsageItem[]>([]);
   const [chartMetric, setChartMetric] = useState<'all' | 'kos' | 'deathless'>('deathless');
+  const [chartPerspective, setChartPerspective] = useState<'attacker' | 'defender'>('attacker');
   const [detailOpen, setDetailOpen] = useState(false);
   const [wars, setWars] = useState<War[]>([]);
   const [chartLoading, setChartLoading] = useState(false);
@@ -30,11 +31,12 @@ export function useChampionStats(allianceId: string, selectedGroup = 'all') {
       selectedWarId ?? undefined,
       groupNum,
       chartMetric === 'deathless',
+      chartPerspective,
     )
       .then(setChampionUsage)
       .catch(console.error)
       .finally(() => setChartLoading(false));
-  }, [allianceId, selectedGameAccountId, selectedWarId, selectedGroup, chartMetric]);
+  }, [allianceId, selectedGameAccountId, selectedWarId, selectedGroup, chartMetric, chartPerspective]);
 
   const handleRowClick = (gameAccountId: string) => {
     setSelectedGameAccountId((prev) => (prev === gameAccountId ? null : gameAccountId));
@@ -48,6 +50,8 @@ export function useChampionStats(allianceId: string, selectedGroup = 'all') {
     championUsage,
     chartMetric,
     setChartMetric,
+    chartPerspective,
+    setChartPerspective,
     detailOpen,
     setDetailOpen,
     wars,

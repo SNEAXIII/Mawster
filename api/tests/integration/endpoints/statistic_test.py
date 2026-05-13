@@ -538,6 +538,52 @@ class TestGetChampionUsage:
         assert response.json() == []
 
     @pytest.mark.anyio
+    async def test_defender_perspective_groups_by_defender_champion(self):
+        data = await _setup_with_active_season()
+        defender = await push_champion(name="Iron Man", champion_class="Tech")
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender
+        )
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender
+        )
+        response = await execute_get_request(
+            f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?perspective=defender", USER_HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) == 1
+        assert body[0]["champion_name"] == "Iron Man"
+        assert body[0]["fight_count"] == 2
+
+    @pytest.mark.anyio
+    async def test_defender_perspective_with_deathless_filter(self):
+        data = await _setup_with_active_season()
+        defender1 = await push_champion(name="Iron Man", champion_class="Tech")
+        defender2 = await push_champion(name="Wolverine", champion_class="Mutant")
+        # Iron Man defended twice: once deathless, once with KO
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender1, ko_count=0
+        )
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender1, ko_count=1
+        )
+        # Wolverine defended once with KO only
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender2, ko_count=2
+        )
+        response = await execute_get_request(
+            f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?perspective=defender&deathless=true",
+            USER_HEADERS,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) == 1
+        assert body[0]["champion_name"] == "Iron Man"
+        assert body[0]["fight_count"] == 1
+        assert body[0]["total_kos"] == 0
+
+    @pytest.mark.anyio
     async def test_deathless_aggregates_multiple_deathless_fights_per_champion(self):
         data = await _setup_with_active_season()
         defender = await push_champion(name="Wolverine", champion_class="Mutant")

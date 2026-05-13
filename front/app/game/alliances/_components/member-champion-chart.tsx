@@ -19,6 +19,8 @@ interface MemberChampionChartProps {
   data: ChampionUsageItem[];
   metric: 'all' | 'kos' | 'deathless';
   onMetricChange: (m: 'all' | 'kos' | 'deathless') => void;
+  perspective: 'attacker' | 'defender';
+  onPerspectiveChange: (p: 'attacker' | 'defender') => void;
   onViewDetail: () => void;
   loading: boolean;
   playerName: string | null;
@@ -29,10 +31,12 @@ export function MemberChampionChart({
   data,
   metric,
   onMetricChange,
+  perspective,
+  onPerspectiveChange,
   onViewDetail,
   loading,
   playerName,
-  topN = 10,
+  topN = 8,
 }: Readonly<MemberChampionChartProps>) {
   const { t } = useI18n();
   const stat = t.game.alliances.statistics;
@@ -70,13 +74,34 @@ export function MemberChampionChart({
 
   return (
     <div className='flex flex-col gap-3'>
-      <div className='flex items-center justify-between'>
+      <div className='flex flex-col gap-1.5'>
         <span className='text-sm font-medium text-muted-foreground'>
           {playerName ?? stat.allianceView}
         </span>
         <div className='flex gap-1'>
           <Button
             size='sm'
+            className='flex-1'
+            variant={perspective === 'attacker' ? 'default' : 'outline'}
+            onClick={() => onPerspectiveChange('attacker')}
+            data-cy='chart-perspective-attacker'
+          >
+            {stat.chartAttacker}
+          </Button>
+          <Button
+            size='sm'
+            className='flex-1'
+            variant={perspective === 'defender' ? 'default' : 'outline'}
+            onClick={() => onPerspectiveChange('defender')}
+            data-cy='chart-perspective-defender'
+          >
+            {stat.chartDefender}
+          </Button>
+        </div>
+        <div className='flex gap-1'>
+          <Button
+            size='sm'
+            className='flex-1'
             variant={metric === 'deathless' ? 'default' : 'outline'}
             onClick={() => onMetricChange('deathless')}
             data-cy='chart-metric-deathless'
@@ -85,6 +110,7 @@ export function MemberChampionChart({
           </Button>
           <Button
             size='sm'
+            className='flex-1'
             variant={metric === 'all' ? 'default' : 'outline'}
             onClick={() => onMetricChange('all')}
             data-cy='chart-metric-all'
@@ -93,6 +119,7 @@ export function MemberChampionChart({
           </Button>
           <Button
             size='sm'
+            className='flex-1'
             variant={metric === 'kos' ? 'default' : 'outline'}
             onClick={() => onMetricChange('kos')}
             data-cy='chart-metric-kos'

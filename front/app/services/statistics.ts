@@ -49,12 +49,14 @@ export async function getChampionUsage(
   warId?: string,
   allianceGroup?: number,
   deathless?: boolean,
+  perspective?: 'attacker' | 'defender',
 ): Promise<ChampionUsageItem[]> {
   const params = new URLSearchParams();
   if (gameAccountId) params.set('game_account_id', gameAccountId);
   if (warId) params.set('war_id', warId);
   if (allianceGroup !== undefined) params.set('alliance_group', String(allianceGroup));
   if (deathless) params.set('deathless', 'true');
+  if (perspective === 'defender') params.set('perspective', 'defender');
   const query = params.toString() ? `?${params.toString()}` : '';
   const response = await fetch(`${PROXY}/statistics/champion-usage/${allianceId}${query}`, {
     headers: jsonHeaders,
