@@ -372,7 +372,7 @@ describe('Alliance Statistics', () => {
     });
   });
 
-  it('chart metric toggle switches between fights and kos', () => {
+  it('chart metric toggle switches between deathless, all and kos', () => {
     cy.apiBatchSetup([
       { discord_token: 'stat-cm-admin', role: 'admin' },
       {
@@ -395,11 +395,11 @@ describe('Alliance Statistics', () => {
               cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
               cy.apiLogin(users['stat-cm-owner'].user_id);
               goToStatsTab();
-              cy.getByCy('chart-metric-fights').should('not.have.attr', 'data-variant', 'outline');
+              cy.getByCy('chart-metric-deathless').should('not.have.attr', 'data-variant', 'outline');
               cy.getByCy('chart-metric-kos').click();
               cy.getByCy('chart-metric-kos').should('not.have.attr', 'data-variant', 'outline');
-              cy.getByCy('chart-metric-fights').click();
-              cy.getByCy('chart-metric-fights').should('not.have.attr', 'data-variant', 'outline');
+              cy.getByCy('chart-metric-all').click();
+              cy.getByCy('chart-metric-all').should('not.have.attr', 'data-variant', 'outline');
             });
           });
         });
@@ -578,6 +578,7 @@ describe('Alliance Statistics', () => {
               cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
               cy.apiLogin(users['stat-mds-owner'].user_id);
               goToStatsTab();
+              cy.getByCy('chart-metric-all').click();
               cy.getByCy('chart-see-detail').click();
               cy.getByCy('champion-detail-modal').should('be.visible');
               // sort by KOs column
