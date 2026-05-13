@@ -130,7 +130,18 @@ export function MemberChampionChart({
       </div>
 
       {loading ? (
-        <p className='text-sm text-muted-foreground text-center py-8'>{stat.loadingChart}</p>
+        <div className='flex flex-col items-center gap-3 animate-pulse'>
+          <div className='w-36 h-36 rounded-full bg-muted' />
+          <div className='w-full flex flex-col gap-2'>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className='flex items-center gap-2'>
+                <span className='w-2.5 h-2.5 rounded-full bg-muted shrink-0' />
+                <div className='h-3 rounded bg-muted flex-1' />
+                <div className='h-3 w-5 rounded bg-muted shrink-0' />
+              </div>
+            ))}
+          </div>
+        </div>
       ) : chartData.length === 0 ? (
         <p className='text-sm text-muted-foreground text-center py-8'>{stat.empty}</p>
       ) : (
