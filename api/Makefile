@@ -57,7 +57,7 @@ cancel-last:
 	uv run alembic downgrade -1
 
 test:
-	uv run pytest tests -v --tb=short -n 6
+	uv run pytest tests -v --tb=short -n 10
 
 test-cov:
 	uv run pytest tests --cov --cov-report term-missing -v

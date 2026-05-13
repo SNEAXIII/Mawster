@@ -79,6 +79,9 @@ class StatisticService:
         alliance_id: uuid.UUID,
         game_account_id: Optional[uuid.UUID] = None,
         war_id: Optional[uuid.UUID] = None,
+        alliance_group: Optional[int] = None,
+        deathless: Optional[bool] = None,
+        perspective: str = "attacker",
     ) -> list[ChampionUsageResponse]:
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
@@ -94,19 +97,33 @@ class StatisticService:
             conditions.append(WarFightRecord.game_account_id == game_account_id)
         if war_id is not None:
             conditions.append(WarFightRecord.war_id == war_id)
+        if alliance_group is not None:
+            conditions.append(GameAccount.alliance_group == alliance_group)
+        if deathless is True:
+            conditions.append(WarFightRecord.ko_count == 0)
+
+        if perspective == "defender":
+            champion_id_col = WarFightRecord.defender_champion_id.label("champion_id")
+            champion_join = Champion.id == WarFightRecord.defender_champion_id
+            group_by_col = WarFightRecord.defender_champion_id
+        else:
+            champion_id_col = WarFightRecord.champion_id
+            champion_join = Champion.id == WarFightRecord.champion_id
+            group_by_col = WarFightRecord.champion_id
 
         stmt = (
             select(
-                WarFightRecord.champion_id,
+                champion_id_col,
                 Champion.name.label("champion_name"),
                 Champion.image_url,
                 cast(func.count(WarFightRecord.id), Integer).label("fight_count"),
                 cast(func.sum(WarFightRecord.ko_count), Integer).label("total_kos"),
             )
-            .join(Champion, Champion.id == WarFightRecord.champion_id)
+            .join(Champion, champion_join)
             .join(Season, Season.id == WarFightRecord.season_id)
+            .join(GameAccount, GameAccount.id == WarFightRecord.game_account_id)
             .where(and_(*conditions))
-            .group_by(WarFightRecord.champion_id, Champion.name, Champion.image_url)
+            .group_by(group_by_col, Champion.name, Champion.image_url)
             .order_by(func.count(WarFightRecord.id).desc())
         )
         rows = (await session.exec(stmt)).mappings().all()

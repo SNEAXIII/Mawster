@@ -235,7 +235,6 @@ export function useRosterViewModel() {
       } catch (e: unknown) {
         toast.error((e as Error).message || t.roster.preferredAttackerToggle);
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
     [selectedAccountId]
   );

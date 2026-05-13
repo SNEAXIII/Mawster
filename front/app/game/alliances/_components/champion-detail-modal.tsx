@@ -24,7 +24,7 @@ interface ChampionDetailModalProps {
   open: boolean;
   onClose: () => void;
   data: ChampionUsageItem[];
-  metric: 'fights' | 'kos';
+  metric: 'all' | 'kos' | 'deathless';
   playerName: string | null;
 }
 
@@ -39,7 +39,7 @@ export function ChampionDetailModal({
 }: ChampionDetailModalProps) {
   const { t } = useI18n();
   const stat = t.game.alliances.statistics;
-  const [sortField, setSortField] = useState<SortField>(metric);
+  const [sortField, setSortField] = useState<SortField>(metric === 'kos' ? 'kos' : 'fights');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const toggleSort = (field: SortField) => {

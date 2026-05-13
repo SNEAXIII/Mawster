@@ -118,12 +118,14 @@ export default function AllianceStatisticsTab({
     championUsage,
     chartMetric,
     setChartMetric,
+    chartPerspective,
+    setChartPerspective,
     detailOpen,
     setDetailOpen,
     wars,
     chartLoading,
     handleRowClick,
-  } = useChampionStats(selectedAllianceId);
+  } = useChampionStats(selectedAllianceId, selectedGroup);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -491,6 +493,8 @@ export default function AllianceStatisticsTab({
                     data={championUsage}
                     metric={chartMetric}
                     onMetricChange={setChartMetric}
+                    perspective={chartPerspective}
+                    onPerspectiveChange={setChartPerspective}
                     onViewDetail={() => setDetailOpen(true)}
                     loading={chartLoading}
                     playerName={selectedPlayer?.game_pseudo ?? null}
