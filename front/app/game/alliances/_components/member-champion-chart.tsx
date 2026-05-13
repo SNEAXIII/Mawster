@@ -17,8 +17,8 @@ const OTHERS_COLOR = '#64748b';
 
 interface MemberChampionChartProps {
   data: ChampionUsageItem[];
-  metric: 'fights' | 'kos';
-  onMetricChange: (m: 'fights' | 'kos') => void;
+  metric: 'all' | 'kos' | 'deathless';
+  onMetricChange: (m: 'all' | 'kos' | 'deathless') => void;
   onViewDetail: () => void;
   loading: boolean;
   playerName: string | null;
@@ -37,22 +37,23 @@ export function MemberChampionChart({
   const { t } = useI18n();
   const stat = t.game.alliances.statistics;
 
+  const isKos = metric === 'kos';
+
   const sorted = useMemo(
     () =>
       [...data]
-        .filter((c) => metric === 'fights' || c.total_kos > 0)
-        .sort((a, b) =>
-          metric === 'fights' ? b.fight_count - a.fight_count : b.total_kos - a.total_kos,
-        ),
-    [data, metric],
+        .filter((c) => !isKos || c.total_kos > 0)
+        .sort((a, b) => isKos ? b.total_kos - a.total_kos : b.fight_count - a.fight_count),
+    [data, isKos],
   );
 
-  const top5 = sorted.slice(0, topN);
-  const othersValue = sorted
-    .slice(topN)
-    .reduce((sum, c) => sum + (metric === 'fights' ? c.fight_count : c.total_kos), 0);
+  const getValue = (c: ChampionUsageItem) => isKos ? c.total_kos : c.fight_count;
 
-  const chartConfig = { value: { label: metric === 'fights' ? stat.chartByFights : stat.chartByKos } };
+  const top5 = sorted.slice(0, topN);
+  const othersValue = sorted.slice(topN).reduce((sum, c) => sum + getValue(c), 0);
+
+  const chartLabel = isKos ? stat.chartByKos : metric === 'deathless' ? stat.chartByDeathless : stat.chartByAll;
+  const chartConfig = { value: { label: chartLabel } };
 
   const othersEntry = othersValue > 0
     ? [{ key: 'others', name: stat.others, value: othersValue }]
@@ -62,7 +63,7 @@ export function MemberChampionChart({
     ...top5.map((c, i) => ({
       key: `c${i}`,
       name: c.champion_name,
-      value: metric === 'fights' ? c.fight_count : c.total_kos,
+      value: getValue(c),
     })),
     ...othersEntry,
   ];
@@ -76,11 +77,19 @@ export function MemberChampionChart({
         <div className='flex gap-1'>
           <Button
             size='sm'
-            variant={metric === 'fights' ? 'default' : 'outline'}
-            onClick={() => onMetricChange('fights')}
-            data-cy='chart-metric-fights'
+            variant={metric === 'deathless' ? 'default' : 'outline'}
+            onClick={() => onMetricChange('deathless')}
+            data-cy='chart-metric-deathless'
           >
-            {stat.chartByFights}
+            {stat.chartByDeathless}
+          </Button>
+          <Button
+            size='sm'
+            variant={metric === 'all' ? 'default' : 'outline'}
+            onClick={() => onMetricChange('all')}
+            data-cy='chart-metric-all'
+          >
+            {stat.chartByAll}
           </Button>
           <Button
             size='sm'
@@ -116,7 +125,7 @@ export function MemberChampionChart({
           <ul className='flex flex-col gap-1'>
             {top5.map((c, i) => {
               const imgUrl = getChampionImageUrl(c.image_url, 40);
-              const value = metric === 'fights' ? c.fight_count : c.total_kos;
+              const value = getValue(c);
               return (
                 <li key={c.champion_id} className='flex items-center gap-2 text-sm'>
                   <span className='shrink-0 w-2.5 h-2.5 rounded-full' style={{ backgroundColor: COLORS[i] }} />

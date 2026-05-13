@@ -79,6 +79,8 @@ class StatisticService:
         alliance_id: uuid.UUID,
         game_account_id: Optional[uuid.UUID] = None,
         war_id: Optional[uuid.UUID] = None,
+        alliance_group: Optional[int] = None,
+        deathless: Optional[bool] = None,
     ) -> list[ChampionUsageResponse]:
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
@@ -94,6 +96,10 @@ class StatisticService:
             conditions.append(WarFightRecord.game_account_id == game_account_id)
         if war_id is not None:
             conditions.append(WarFightRecord.war_id == war_id)
+        if alliance_group is not None:
+            conditions.append(GameAccount.alliance_group == alliance_group)
+        if deathless is True:
+            conditions.append(WarFightRecord.ko_count == 0)
 
         stmt = (
             select(
@@ -105,6 +111,7 @@ class StatisticService:
             )
             .join(Champion, Champion.id == WarFightRecord.champion_id)
             .join(Season, Season.id == WarFightRecord.season_id)
+            .join(GameAccount, GameAccount.id == WarFightRecord.game_account_id)
             .where(and_(*conditions))
             .group_by(WarFightRecord.champion_id, Champion.name, Champion.image_url)
             .order_by(func.count(WarFightRecord.id).desc())

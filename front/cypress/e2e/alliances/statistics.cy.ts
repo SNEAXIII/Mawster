@@ -372,7 +372,7 @@ describe('Alliance Statistics', () => {
     });
   });
 
-  it('chart metric toggle switches between fights and kos', () => {
+  it('chart metric toggle switches between deathless, all and kos', () => {
     cy.apiBatchSetup([
       { discord_token: 'stat-cm-admin', role: 'admin' },
       {
@@ -395,11 +395,11 @@ describe('Alliance Statistics', () => {
               cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
               cy.apiLogin(users['stat-cm-owner'].user_id);
               goToStatsTab();
-              cy.getByCy('chart-metric-fights').should('not.have.attr', 'data-variant', 'outline');
+              cy.getByCy('chart-metric-deathless').should('not.have.attr', 'data-variant', 'outline');
               cy.getByCy('chart-metric-kos').click();
               cy.getByCy('chart-metric-kos').should('not.have.attr', 'data-variant', 'outline');
-              cy.getByCy('chart-metric-fights').click();
-              cy.getByCy('chart-metric-fights').should('not.have.attr', 'data-variant', 'outline');
+              cy.getByCy('chart-metric-all').click();
+              cy.getByCy('chart-metric-all').should('not.have.attr', 'data-variant', 'outline');
             });
           });
         });
@@ -536,17 +536,19 @@ describe('Alliance Statistics', () => {
       createAndActivateSeason(adminToken).then(() => {
         cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs: { id: string }[]) => {
           cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs[0].id, '7r3').then((cuOwner: { id: string }) => {
-            cy.apiAddChampionToRoster(memberToken, memberAccId, champs[0].id, '7r3').then((cuMember: { id: string }) => {
-              cy.apiCreateWar(ownerToken, allianceId, 'Enemy').then((war: { id: string }) => {
-                addStatsForPlayer(ownerToken, allianceId, war.id, champs[0].id, cuOwner.id, 10);
-                addStatsForPlayer(ownerToken, allianceId, war.id, champs[0].id, cuMember.id, 20);
-                cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
-                cy.apiLogin(users['stat-pname-owner'].user_id);
-                goToStatsTab();
-                cy.getByCy(`statistics-row-${memberAccId}`).click();
-                cy.contains('PnameMember').should('be.visible');
-              });
-            });
+            cy.apiAddChampionToRoster(memberToken, memberAccId, champs[0].id, '7r3').then(
+              (cuMember: { id: string }) => {
+                cy.apiCreateWar(ownerToken, allianceId, 'Enemy').then((war: { id: string }) => {
+                  addStatsForPlayer(ownerToken, allianceId, war.id, champs[0].id, cuOwner.id, 10);
+                  addStatsForPlayer(ownerToken, allianceId, war.id, champs[0].id, cuMember.id, 20);
+                  cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
+                  cy.apiLogin(users['stat-pname-owner'].user_id);
+                  goToStatsTab();
+                  cy.getByCy(`statistics-row-${memberAccId}`).click();
+                  cy.contains('PnameMember').should('be.visible');
+                });
+              },
+            );
           });
         });
       });
@@ -576,6 +578,7 @@ describe('Alliance Statistics', () => {
               cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
               cy.apiLogin(users['stat-mds-owner'].user_id);
               goToStatsTab();
+              cy.getByCy('chart-metric-all').click();
               cy.getByCy('chart-see-detail').click();
               cy.getByCy('champion-detail-modal').should('be.visible');
               // sort by KOs column
@@ -592,6 +595,118 @@ describe('Alliance Statistics', () => {
   });
 
   // ── Group filter ──────────────────────────────────────────────────────────
+
+  it("group filter updates the champion chart to show only that group's champions", () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-grc-admin', role: 'admin' },
+      {
+        discord_token: 'stat-grc-owner',
+        game_pseudo: 'GrcOwner',
+        create_alliance: { name: 'GrcAlliance', tag: 'GRC' },
+        battlegroup: 1,
+      },
+      {
+        discord_token: 'stat-grc-member',
+        game_pseudo: 'GrcMember',
+        join_alliance_token: 'stat-grc-owner',
+        battlegroup: 2,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-grc-admin'].access_token;
+      const ownerToken = users['stat-grc-owner'].access_token;
+      const allianceId = users['stat-grc-owner'].alliance_id!;
+      const ownerAccId = users['stat-grc-owner'].account_id!;
+      const memberAccId = users['stat-grc-member'].account_id!;
+      const memberToken = users['stat-grc-member'].access_token;
+
+      createAndActivateSeason(adminToken).then(() => {
+        cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs1: { id: string }[]) => {
+          cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then((champs2: { id: string }[]) => {
+            cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs1[0].id, '7r3').then((cuOwner: { id: string }) => {
+              cy.apiAddChampionToRoster(memberToken, memberAccId, champs2[0].id, '7r3').then(
+                (cuMember: { id: string }) => {
+                  cy.apiCreateWar(ownerToken, allianceId, 'Enemy').then((war: { id: string }) => {
+                    addStatsForPlayer(ownerToken, allianceId, war.id, champs1[0].id, cuOwner.id, 10, 0, 1);
+                    addStatsForPlayer(ownerToken, allianceId, war.id, champs2[0].id, cuMember.id, 10, 0, 2);
+                    cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
+
+                    cy.apiLogin(users['stat-grc-owner'].user_id);
+                    goToStatsTab();
+
+                    // no group filter: both champions visible in chart legend
+                    cy.contains('Iron Man').should('exist');
+                    cy.contains('Wolverine').should('exist');
+
+                    // G1 → only Iron Man (owner) in chart
+                    cy.getByCy('statistics-group-filter').click();
+                    cy.contains('G1').click();
+                    cy.contains('Iron Man').should('exist');
+                    cy.contains('Wolverine').should('not.exist');
+
+                    // G2 → only Wolverine (member) in chart
+                    cy.getByCy('statistics-group-filter').click();
+                    cy.contains('G2').click();
+                    cy.contains('Wolverine').should('exist');
+                    cy.contains('Iron Man').should('not.exist');
+                  });
+                },
+              );
+            });
+          });
+        });
+      });
+    });
+  });
+
+  // ── Deathless filter ─────────────────────────────────────────────────────
+
+  it('deathless metric shows only ko_count=0 fights by default, all shows both', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-dl-admin', role: 'admin' },
+      {
+        discord_token: 'stat-dl-owner',
+        game_pseudo: 'DlOwner',
+        create_alliance: { name: 'DlAlliance', tag: 'DL1' },
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-dl-admin'].access_token;
+      const ownerToken = users['stat-dl-owner'].access_token;
+      const allianceId = users['stat-dl-owner'].alliance_id!;
+      const ownerAccId = users['stat-dl-owner'].account_id!;
+
+      createAndActivateSeason(adminToken).then(() => {
+        cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs1: { id: string }[]) => {
+          cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then((champs2: { id: string }[]) => {
+            cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs1[0].id, '7r3').then((cu1: { id: string }) => {
+              cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs2[0].id, '7r3').then((cu2: { id: string }) => {
+                cy.apiCreateWar(ownerToken, allianceId, 'Enemy').then((war: { id: string }) => {
+                  // Iron Man node 10: deathless (ko_count=0)
+                  addStatsForPlayer(ownerToken, allianceId, war.id, champs1[0].id, cu1.id, 10, 0);
+                  // Wolverine node 11: not deathless (ko_count=1)
+                  addStatsForPlayer(ownerToken, allianceId, war.id, champs2[0].id, cu2.id, 11, 1);
+                  cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
+
+                  cy.apiLogin(users['stat-dl-owner'].user_id);
+                  goToStatsTab();
+
+                  // default metric is deathless → only Iron Man visible
+                  cy.getByCy('chart-metric-deathless').should('be.visible');
+                  cy.contains('Iron Man').should('exist');
+                  cy.contains('Wolverine').should('not.exist');
+
+                  // switch to all → both champions visible
+                  cy.getByCy('chart-metric-all').click();
+                  cy.contains('Iron Man').should('exist');
+                  cy.contains('Wolverine').should('exist');
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
 
   it('filters by group — shows G1 player and G2 player in their respective filters', () => {
     cy.apiBatchSetup([

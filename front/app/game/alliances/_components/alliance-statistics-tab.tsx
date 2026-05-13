@@ -123,7 +123,7 @@ export default function AllianceStatisticsTab({
     wars,
     chartLoading,
     handleRowClick,
-  } = useChampionStats(selectedAllianceId);
+  } = useChampionStats(selectedAllianceId, selectedGroup);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
