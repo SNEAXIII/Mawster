@@ -496,3 +496,74 @@ class TestGetChampionUsage:
         g2_body = response_g2.json()
         assert len(g2_body) == 1
         assert g2_body[0]["champion_name"] == "Iron Man"
+
+    @pytest.mark.anyio
+    async def test_deathless_filters_out_fights_with_kos(self):
+        data = await _setup_with_active_season()
+        other_champ = await push_champion(name="Iron Man", champion_class="Tech")
+        defender = await push_champion(name="Wolverine", champion_class="Mutant")
+
+        # Spider-Man: 1 deathless fight (ko_count=0)
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender, ko_count=0
+        )
+        # Iron Man: 1 fight with a KO (ko_count=1)
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, other_champ, defender, ko_count=1
+        )
+
+        response = await execute_get_request(
+            f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?deathless=true", USER_HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) == 1
+        assert body[0]["champion_name"] == "Spider-Man"
+        assert body[0]["fight_count"] == 1
+        assert body[0]["total_kos"] == 0
+
+    @pytest.mark.anyio
+    async def test_deathless_returns_empty_when_all_fights_have_kos(self):
+        data = await _setup_with_active_season()
+        defender = await push_champion(name="Wolverine", champion_class="Mutant")
+
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender, ko_count=2
+        )
+
+        response = await execute_get_request(
+            f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?deathless=true", USER_HEADERS
+        )
+        assert response.status_code == 200
+        assert response.json() == []
+
+    @pytest.mark.anyio
+    async def test_deathless_aggregates_multiple_deathless_fights_per_champion(self):
+        data = await _setup_with_active_season()
+        defender = await push_champion(name="Wolverine", champion_class="Mutant")
+        other_champ = await push_champion(name="Iron Man", champion_class="Tech")
+
+        # Spider-Man: 2 deathless fights, 1 fight with KO → deathless=true returns 2
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender, ko_count=0
+        )
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender, ko_count=0
+        )
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender, ko_count=1
+        )
+        # Iron Man: only fights with KOs → excluded
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, other_champ, defender, ko_count=3
+        )
+
+        response = await execute_get_request(
+            f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?deathless=true", USER_HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) == 1
+        assert body[0]["champion_name"] == "Spider-Man"
+        assert body[0]["fight_count"] == 2
+        assert body[0]["total_kos"] == 0
