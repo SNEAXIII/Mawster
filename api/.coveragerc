@@ -5,8 +5,7 @@ omit =
     tests/*
     migrations/*
     scripts/*
-    fixtures/*
-    Messages/*
+    src/fixtures/*
 concurrency =
     greenlet
     thread
