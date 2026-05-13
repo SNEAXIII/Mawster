@@ -80,6 +80,7 @@ class StatisticService:
         game_account_id: Optional[uuid.UUID] = None,
         war_id: Optional[uuid.UUID] = None,
         alliance_group: Optional[int] = None,
+        deathless: Optional[bool] = None,
     ) -> list[ChampionUsageResponse]:
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
@@ -97,6 +98,8 @@ class StatisticService:
             conditions.append(WarFightRecord.war_id == war_id)
         if alliance_group is not None:
             conditions.append(GameAccount.alliance_group == alliance_group)
+        if deathless is True:
+            conditions.append(WarFightRecord.ko_count == 0)
 
         stmt = (
             select(
