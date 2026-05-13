@@ -1096,3 +1096,143 @@ class TestAllianceEloTier:
             headers=HEADERS_USER1,
         )
         assert resp.status_code == 422
+
+
+# =========================================================================
+# GET /alliances/my-visited
+# =========================================================================
+
+
+class TestGetMyVisitedAlliances:
+    @pytest.mark.asyncio
+    async def test_my_visited_empty(self):
+        await _setup_2_users()
+        await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+        resp = await execute_get_request(f"{ENDPOINT}/my-visited", headers=HEADERS_USER1)
+        assert resp.status_code == 200
+        assert resp.json() == []
+
+    @pytest.mark.asyncio
+    async def test_my_visited_returns_visited_alliance(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        await push_visitor(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        resp = await execute_get_request(f"{ENDPOINT}/my-visited", headers=HEADERS_USER2)
+        assert resp.status_code == 200
+        ids = [a["id"] for a in resp.json()]
+        assert str(alliance.id) in ids
+
+
+# =========================================================================
+# 404 paths — alliance not found
+# =========================================================================
+
+
+class TestAllianceNotFound:
+    FAKE_ID = uuid.uuid4()
+
+    @pytest.mark.asyncio
+    async def test_update_alliance_not_found(self):
+        await _setup_2_users()
+        resp = await execute_put_request(
+            f"{ENDPOINT}/{self.FAKE_ID}",
+            {"name": "X", "tag": "X", "owner_id": str(uuid.uuid4())},
+            headers=HEADERS_USER1,
+        )
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_delete_alliance_not_found(self):
+        await _setup_2_users()
+        resp = await execute_delete_request(
+            f"{ENDPOINT}/{self.FAKE_ID}", headers=HEADERS_USER1
+        )
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_invite_member_alliance_not_found(self):
+        await _setup_2_users()
+        resp = await execute_post_request(
+            f"{ENDPOINT}/{self.FAKE_ID}/invitations",
+            {"game_account_id": str(uuid.uuid4())},
+            headers=HEADERS_USER1,
+        )
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_list_invitations_alliance_not_found(self):
+        await _setup_2_users()
+        resp = await execute_get_request(
+            f"{ENDPOINT}/{self.FAKE_ID}/invitations", headers=HEADERS_USER1
+        )
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_cancel_invitation_alliance_not_found(self):
+        await _setup_2_users()
+        resp = await execute_delete_request(
+            f"{ENDPOINT}/{self.FAKE_ID}/invitations/{uuid.uuid4()}",
+            headers=HEADERS_USER1,
+        )
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_remove_member_alliance_not_found(self):
+        await _setup_2_users()
+        resp = await execute_delete_request(
+            f"{ENDPOINT}/{self.FAKE_ID}/members/{uuid.uuid4()}",
+            headers=HEADERS_USER1,
+        )
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_add_officer_alliance_not_found(self):
+        await _setup_2_users()
+        resp = await execute_post_request(
+            f"{ENDPOINT}/{self.FAKE_ID}/officers",
+            {"game_account_id": str(uuid.uuid4())},
+            headers=HEADERS_USER1,
+        )
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_remove_officer_alliance_not_found(self):
+        await _setup_2_users()
+        resp = await execute_delete_request(
+            f"{ENDPOINT}/{self.FAKE_ID}/officers",
+            headers=HEADERS_USER1,
+            payload={"game_account_id": str(uuid.uuid4())},
+        )
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_set_group_alliance_not_found(self):
+        await _setup_2_users()
+        resp = await execute_patch_request(
+            f"{ENDPOINT}/{self.FAKE_ID}/members/{uuid.uuid4()}/group",
+            {"group": 1},
+            headers=HEADERS_USER1,
+        )
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_patch_elo_alliance_not_found(self):
+        await _setup_2_users()
+        resp = await execute_patch_request(
+            f"{ENDPOINT}/{self.FAKE_ID}/elo",
+            {"elo": 100},
+            headers=HEADERS_USER1,
+        )
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_patch_tier_alliance_not_found(self):
+        await _setup_2_users()
+        resp = await execute_patch_request(
+            f"{ENDPOINT}/{self.FAKE_ID}/tier",
+            {"tier": 10},
+            headers=HEADERS_USER1,
+        )
+        assert resp.status_code == 404
