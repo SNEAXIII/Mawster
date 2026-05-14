@@ -522,3 +522,72 @@ class TestRemovePrefight:
             headers=data["headers_member"],
         )
         assert response.status_code == 404
+
+
+# ─── TestPrefightServiceCoverage ──────────────────────────
+
+
+class TestPrefightServiceCoverage:
+    """Targets uncovered WarService prefight lines: L1206, L1220, L1230, L1249."""
+
+    @pytest.mark.asyncio
+    async def test_add_prefight_unknown_champion_user_returns_404(self):  # L1206
+        data = await _setup_prefight_scenario()
+        resp = await execute_post_request(
+            _prefight_url(data["alliance"].id, data["war"].id),
+            payload={"champion_user_id": str(uuid.uuid4()), "target_node_number": 5},
+            headers=data["headers_member"],
+        )
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_add_prefight_champion_without_prefight_ability_returns_422(self):  # L1220
+        data = await _setup_prefight_scenario()
+        # Push a champion where has_prefight=False (the default)
+        no_prefight_champ = await push_champion(name="Gamora", champion_class="Cosmic")
+        no_prefight_cu = await push_champion_user(data["member"], no_prefight_champ)
+        resp = await execute_post_request(
+            _prefight_url(data["alliance"].id, data["war"].id),
+            payload={"champion_user_id": str(no_prefight_cu.id), "target_node_number": 5},
+            headers=data["headers_member"],
+        )
+        assert resp.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_add_prefight_provider_wrong_bg_returns_403(self):  # L1230
+        data = await _setup_prefight_scenario()
+        # Move member to BG2 — game_account.alliance_group becomes 2
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/members/{data['member'].id}/group",
+            payload={"group": 2},
+            headers=data["headers_owner"],
+        )
+        # Prefight_cu (now BG2) targeting BG1 node → 403
+        resp = await execute_post_request(
+            _prefight_url(data["alliance"].id, data["war"].id, battlegroup=1),
+            payload={"champion_user_id": str(data["prefight_cu"].id), "target_node_number": 5},
+            headers=data["headers_member"],
+        )
+        assert resp.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_add_prefight_target_node_without_attacker_returns_422(self):  # L1249
+        data = await _setup_prefight_scenario()
+        # Place defender on node 6 but do NOT assign an attacker
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/place",
+            payload={
+                "node_number": 6,
+                "champion_id": str(data["prefight_cu"].champion_id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
+            headers=data["headers_owner"],
+        )
+        resp = await execute_post_request(
+            _prefight_url(data["alliance"].id, data["war"].id),
+            payload={"champion_user_id": str(data["prefight_cu"].id), "target_node_number": 6},
+            headers=data["headers_member"],
+        )
+        assert resp.status_code == 422
