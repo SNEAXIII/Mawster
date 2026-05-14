@@ -43,7 +43,7 @@ SECRET = Settings()
 def _warn_if_weak_defaults() -> None:
     """Émet des avertissements si des valeurs par défaut faibles sont utilisées hors prod."""
     if IS_PROD:
-        return
+        return  # pragma: no cover
     weak = {
         "MARIADB_PASSWORD": ("password", SECRET.MARIADB_PASSWORD),
         "MARIADB_ROOT_PASSWORD": ("rootpassword", SECRET.MARIADB_ROOT_PASSWORD),

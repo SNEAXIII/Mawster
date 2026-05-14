@@ -6,6 +6,7 @@ omit =
     migrations/*
     scripts/*
     src/fixtures/*
+    src/utils/logging_config.py
 concurrency =
     greenlet
     thread
