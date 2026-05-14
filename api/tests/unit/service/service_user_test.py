@@ -8,10 +8,13 @@ from src.enums.Roles import Roles
 from src.Messages.user_messages import (
     TARGET_USER_DOESNT_EXISTS,
     TARGET_USER_IS_ADMIN,
+    TARGET_USER_IS_ALREADY_ADMIN,
     TARGET_USER_IS_ALREADY_DELETED,
     TARGET_USER_IS_ALREADY_DISABLED,
     TARGET_USER_IS_ALREADY_ENABLED,
     TARGET_USER_IS_DELETED,
+    TARGET_USER_IS_NOT_ADMIN,
+    TARGET_USER_IS_SUPER_ADMIN,
     USER_DOESNT_EXISTS,
     USER_IS_DELETED,
     USER_IS_DISABLED,
@@ -371,3 +374,293 @@ async def test_update_login_already_taken(mocker):
     assert exc.value.status_code == 409
     assert exc.value.detail == LOGIN_ALREADY_TAKEN.detail
     mock_session.commit.assert_not_called()
+
+
+# =========================================================================
+# get_user_by_id_with_validity_check — lines 68-69, 75-76
+# =========================================================================
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_id_with_validity_check_invalid_uuid(mocker):
+    """Invalid UUID string hits lines 68-69 (ValueError branch)."""
+    mock_session = session_mock(mocker)
+    with pytest.raises(UserLoginError) as exc:
+        await UserService.get_user_by_id_with_validity_check(mock_session, "not-a-uuid")
+    assert exc.value.detail == str(USER_DOESNT_EXISTS)
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_id_with_validity_check_empty_string(mocker):
+    """Empty string hits lines 68-69 (ValueError branch)."""
+    mock_session = session_mock(mocker)
+    with pytest.raises(UserLoginError) as exc:
+        await UserService.get_user_by_id_with_validity_check(mock_session, "")
+    assert exc.value.detail == str(USER_DOESNT_EXISTS)
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_id_with_validity_check_user_not_found(mocker):
+    """Valid UUID but no user in DB hits line 72."""
+    mock_session = session_mock(mocker)
+    get_user_mock(mocker, None)
+    with pytest.raises(UserLoginError) as exc:
+        await UserService.get_user_by_id_with_validity_check(mock_session, str(USER_ID))
+    assert exc.value.detail == str(USER_DOESNT_EXISTS)
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_id_with_validity_check_deleted(mocker):
+    """Deleted user hits line 74."""
+    mock_session = session_mock(mocker)
+    get_user_mock(mocker, User(login=LOGIN, deleted_at=datetime.now()))
+    with pytest.raises(UserLoginError) as exc:
+        await UserService.get_user_by_id_with_validity_check(mock_session, str(USER_ID))
+    assert exc.value.detail == str(USER_IS_DELETED)
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_id_with_validity_check_disabled(mocker):
+    """Disabled user hits lines 75-76."""
+    mock_session = session_mock(mocker)
+    fake_user = User(login=LOGIN, disabled_at=datetime.now())
+    get_user_mock(mocker, fake_user)
+    with pytest.raises(UserLoginError) as exc:
+        await UserService.get_user_by_id_with_validity_check(mock_session, str(USER_ID))
+    assert exc.value.detail == str(USER_IS_DISABLED)
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_id_with_validity_check_success(mocker):
+    """Valid, active user returns the user object."""
+    mock_session = session_mock(mocker)
+    fake_user = User(login=LOGIN)
+    get_user_mock(mocker, fake_user)
+    result = await UserService.get_user_by_id_with_validity_check(mock_session, str(USER_ID))
+    assert result == fake_user
+
+
+# =========================================================================
+# admin_patch_promote_user — line 173 (disabled_at cleared on promote)
+# =========================================================================
+
+
+@pytest.mark.asyncio
+async def test_promote_user_success(mocker):
+    """Promoting a user sets role=ADMIN and clears disabled_at (line 175)."""
+    fake_user = User(login=LOGIN, disabled_at=datetime.now())
+    mock_session = session_mock(mocker)
+    get_user_mock(mocker, fake_user)
+
+    result = await UserService.admin_patch_promote_user(mock_session, USER_ID)
+
+    assert result is True
+    assert fake_user.role == Roles.ADMIN
+    assert fake_user.disabled_at is None
+    mock_session.commit.assert_called_once_with()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fake_user,expected_error",
+    [
+        (None, TARGET_USER_DOESNT_EXISTS),
+        (User(login=LOGIN, deleted_at=datetime.now()), TARGET_USER_IS_DELETED),
+        (User(login=LOGIN, role=Roles.SUPER_ADMIN), TARGET_USER_IS_SUPER_ADMIN),
+        # forbid_admin=True in _validate_target_user_for_action raises TARGET_USER_IS_ADMIN
+        (User(login=LOGIN, role=Roles.ADMIN), TARGET_USER_IS_ADMIN),
+    ],
+    ids=["not_found", "deleted", "super_admin", "already_admin"],
+)
+async def test_promote_user_errors(mocker, fake_user, expected_error):
+    """Covers error branches in admin_patch_promote_user."""
+    mock_session = session_mock(mocker)
+    get_user_mock(mocker, fake_user)
+
+    with pytest.raises(UserAdminError) as exc:
+        await UserService.admin_patch_promote_user(mock_session, USER_ID)
+
+    assert exc.value.detail == str(expected_error)
+    mock_session.commit.assert_not_called()
+
+
+# =========================================================================
+# admin_patch_demote_user — lines 181-192
+# =========================================================================
+
+
+@pytest.mark.asyncio
+async def test_demote_user_success(mocker):
+    """Demoting an admin sets role=USER (lines 190-192)."""
+    fake_user = User(login=LOGIN, role=Roles.ADMIN)
+    mock_session = session_mock(mocker)
+    get_user_mock(mocker, fake_user)
+
+    result = await UserService.admin_patch_demote_user(mock_session, USER_ID)
+
+    assert result is True
+    assert fake_user.role == Roles.USER
+    mock_session.commit.assert_called_once_with()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "fake_user,expected_error",
+    [
+        (None, TARGET_USER_DOESNT_EXISTS),
+        (User(login=LOGIN, deleted_at=datetime.now()), TARGET_USER_IS_DELETED),
+        (User(login=LOGIN, role=Roles.SUPER_ADMIN), TARGET_USER_IS_SUPER_ADMIN),
+        (User(login=LOGIN, role=Roles.USER), TARGET_USER_IS_NOT_ADMIN),
+    ],
+    ids=["not_found", "deleted", "super_admin", "not_admin"],
+)
+async def test_demote_user_errors(mocker, fake_user, expected_error):
+    """Covers lines 182-189: all error branches in admin_patch_demote_user."""
+    mock_session = session_mock(mocker)
+    get_user_mock(mocker, fake_user)
+
+    with pytest.raises(UserAdminError) as exc:
+        await UserService.admin_patch_demote_user(mock_session, USER_ID)
+
+    assert exc.value.detail == str(expected_error)
+    mock_session.commit.assert_not_called()
+
+
+# =========================================================================
+# build_status_filter, build_role_filter, build_search_filter — lines 196-215
+# =========================================================================
+
+
+def test_build_status_filter_deleted():
+    """status='deleted' adds deleted_at != None filter (line 197)."""
+    from sqlmodel import select
+    from src.models import User
+
+    sql = select(User)
+    result = UserService.build_status_filter(sql, "deleted")
+    assert result is not sql  # query was modified
+
+
+def test_build_status_filter_disabled():
+    """status='disabled' adds deleted_at==None + disabled_at!=None (lines 198-199)."""
+    from sqlmodel import select
+
+    sql = select(User)
+    result = UserService.build_status_filter(sql, "disabled")
+    assert result is not sql
+
+
+def test_build_status_filter_enabled():
+    """status='enabled' adds both == None filters (lines 200-201)."""
+    from sqlmodel import select
+
+    sql = select(User)
+    result = UserService.build_status_filter(sql, "enabled")
+    assert result is not sql
+
+
+def test_build_status_filter_none():
+    """status=None returns the same query object unchanged."""
+    from sqlmodel import select
+
+    sql = select(User)
+    result = UserService.build_status_filter(sql, None)
+    assert result is sql
+
+
+def test_build_role_filter_valid_role():
+    """Known role adds a WHERE clause (line 207)."""
+    from sqlmodel import select
+
+    sql = select(User)
+    result = UserService.build_role_filter(sql, Roles.ADMIN)
+    assert result is not sql
+
+
+def test_build_role_filter_none():
+    """role=None skips the WHERE clause."""
+    from sqlmodel import select
+
+    sql = select(User)
+    result = UserService.build_role_filter(sql, None)
+    assert result is sql
+
+
+def test_build_search_filter_with_value():
+    """Non-empty search string adds ilike filter (lines 213-214)."""
+    from sqlmodel import select
+
+    sql = select(User)
+    result = UserService.build_search_filter(sql, "alice")
+    assert result is not sql
+
+
+def test_build_search_filter_whitespace_only():
+    """Whitespace-only search is ignored (line 212 short-circuits)."""
+    from sqlmodel import select
+
+    sql = select(User)
+    result = UserService.build_search_filter(sql, "   ")
+    assert result is sql
+
+
+def test_build_search_filter_none():
+    """None search is ignored."""
+    from sqlmodel import select
+
+    sql = select(User)
+    result = UserService.build_search_filter(sql, None)
+    assert result is sql
+
+
+# =========================================================================
+# get_users / get_total_users with filters — lines 229-234, 249-253
+# =========================================================================
+
+
+@pytest.mark.asyncio
+async def test_get_users_paginated_with_status(mocker):
+    """get_users branch: status provided hits line 230."""
+    mock_session = session_mock(mocker)
+    await UserService.get_users_paginated(mock_session, PAGE, SIZE, "enabled", None)
+    mock_session.exec.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_users_paginated_with_role(mocker):
+    """get_users branch: role provided hits line 232."""
+    mock_session = session_mock(mocker)
+    await UserService.get_users_paginated(mock_session, PAGE, SIZE, None, Roles.ADMIN)
+    mock_session.exec.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_users_paginated_with_search(mocker):
+    """get_users branch: search provided hits line 234."""
+    mock_session = session_mock(mocker)
+    await UserService.get_users_paginated(mock_session, PAGE, SIZE, None, None, "alice")
+    mock_session.exec.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_total_users_with_status(mocker):
+    """get_total_users branch: status hits line 249."""
+    mock_session = session_mock(mocker)
+    await UserService.get_total_users(mock_session, "disabled", None)
+    mock_session.exec.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_total_users_with_role(mocker):
+    """get_total_users branch: role hits line 251."""
+    mock_session = session_mock(mocker)
+    await UserService.get_total_users(mock_session, None, Roles.USER)
+    mock_session.exec.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_total_users_with_search(mocker):
+    """get_total_users branch: search hits line 253."""
+    mock_session = session_mock(mocker)
+    await UserService.get_total_users(mock_session, None, None, "bob")
+    mock_session.exec.assert_called_once()
