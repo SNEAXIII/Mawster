@@ -493,7 +493,7 @@ class TestListFightRecords:
         assert len(resp.json()["items"]) == 1
 
         resp_no_match = await execute_get_request(
-            "/fight-records?node_number=55", headers=headers
+            "/fight-records?node_number=49", headers=headers
         )
         assert resp_no_match.status_code == 200
         assert len(resp_no_match.json()["items"]) == 0
@@ -504,18 +504,25 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        # Assign a tier to the war before ending
-        async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
-            war = await session.get(War, data["war"].id)
-            war.tier = 5
-            session.add(war)
-            await session.commit()
-
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers,
+        record = WarFightRecord(
+            war_id=data["war"].id,
+            alliance_id=data["alliance"].id,
+            game_account_id=data["member"].id,
+            battlegroup=1,
+            node_number=10,
+            tier=5,
+            champion_id=data["attacker_champ"].id,
+            stars=7,
+            rank=4,
+            ascension=0,
+            is_saga_attacker=True,
+            defender_champion_id=data["defender_champ"].id,
+            defender_stars=6,
+            defender_rank=3,
+            defender_ascension=0,
+            defender_is_saga_defender=False,
         )
+        await load_objects([record])
 
         resp = await execute_get_request("/fight-records?tier=5", headers=headers)
         assert resp.status_code == 200
@@ -712,6 +719,7 @@ class TestSnapshotWithPrefightsAndSynergies:
         prefight = WarPrefightAttacker(
             war_id=data["war"].id,
             battlegroup=1,
+            game_account_id=data["member"].id,
             champion_user_id=prefight_cu.id,
             target_node_number=10,
         )
@@ -760,6 +768,7 @@ class TestSnapshotWithPrefightsAndSynergies:
         synergy = WarSynergyAttacker(
             war_id=data["war"].id,
             battlegroup=1,
+            game_account_id=data["member"].id,
             champion_user_id=synergy_cu.id,
             target_champion_user_id=data["attacker_cu"].id,
         )
