@@ -989,6 +989,25 @@ class TestEligibility:
         assert response.status_code == 200
         assert response.json() == []
 
+    @pytest.mark.asyncio
+    async def test_eligible_members_excludes_pending_invites(self):
+        """GET /eligible-members must exclude accounts that already have a pending invitation (line 801)."""
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        candidate = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        # Invite the candidate so it gets a pending invitation
+        await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/invitations",
+            {"game_account_id": str(candidate.id)},
+            headers=HEADERS_USER1,
+        )
+
+        response = await execute_get_request(f"{ENDPOINT}/eligible-members", headers=HEADERS_USER1)
+        assert response.status_code == 200
+        ids = [a["id"] for a in response.json()]
+        assert str(candidate.id) not in ids
+
 
 # =========================================================================
 # PATCH /alliances/{id}/elo  and  PATCH /alliances/{id}/tier
@@ -1218,3 +1237,158 @@ class TestAllianceNotFound:
             headers=HEADERS_USER1,
         )
         assert resp.status_code == 404
+
+
+# =========================================================================
+# require_visitor — 403 for total stranger (lines 93-99, 186, 252-264)
+# =========================================================================
+
+
+class TestRequireVisitor:
+    @pytest.mark.asyncio
+    async def test_non_member_non_visitor_forbidden_on_defense(self):
+        """
+        GET /alliances/{id}/defense/bg/1 calls require_visitor.
+        A user who is neither a member nor a visitor must get 403.
+        Covers: is_member (lines 93-99), is_owner (line 186), require_visitor (lines 702-711 via is_visitor).
+        """
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        # USER2 has no account in any alliance
+        await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        resp = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/defense/bg/1",
+            headers=HEADERS_USER2,
+        )
+        assert resp.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_visitor_allowed_on_defense(self):
+        """
+        A visitor account can access GET /alliances/{id}/defense/bg/1.
+        Covers: is_visitor returning True via AllianceVisitorService.
+        """
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        await push_visitor(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        resp = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/defense/bg/1",
+            headers=HEADERS_USER2,
+        )
+        assert resp.status_code == 200
+
+
+# =========================================================================
+# get_user_account_in_alliance — 403 when not a member (line 70)
+# =========================================================================
+
+
+class TestGetUserAccountInAlliance:
+    @pytest.mark.asyncio
+    async def test_non_member_cannot_place_defense(self):
+        """
+        POST /alliances/{id}/defense/bg/1/place calls get_user_account_in_alliance.
+        A user with no account in the alliance must get 403 (line 70).
+        """
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        # USER2 has a game account but NOT in this alliance
+        await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        resp = await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/defense/bg/1/place",
+            {
+                "game_account_id": str(uuid.uuid4()),
+                "champion_user_id": str(uuid.uuid4()),
+                "node_number": 1,
+            },
+            headers=HEADERS_USER2,
+        )
+        assert resp.status_code == 403
+
+
+# =========================================================================
+# delete_alliance with officers — covers loop at line 509
+# =========================================================================
+
+
+class TestDeleteAllianceWithOfficers:
+    @pytest.mark.asyncio
+    async def test_delete_alliance_that_has_officers(self):
+        """
+        DELETE /alliances/{id} when the alliance has officers must delete the officer rows too.
+        Covers the officer deletion loop at line 509.
+        """
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        await push_officer(alliance, member)
+
+        resp = await execute_delete_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1)
+        assert resp.status_code == 204
+
+        # Alliance must be gone
+        resp2 = await execute_get_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1)
+        assert resp2.status_code == 404
+
+
+# =========================================================================
+# get_my_alliances — returns [] when user has no alliance (line 397)
+# =========================================================================
+
+
+class TestGetMyAlliancesEmpty:
+    @pytest.mark.asyncio
+    async def test_get_mine_returns_empty_for_user_without_alliance(self):
+        """
+        GET /alliances/mine for a user with a game account but no alliance
+        must return an empty list (line 397 early-return path).
+        """
+        await _setup_2_users()
+        await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+        resp = await execute_get_request(f"{ENDPOINT}/mine", headers=HEADERS_USER1)
+        assert resp.status_code == 200
+        assert resp.json() == []
+
+
+# =========================================================================
+# get_user_visitor_account — 403 when not a visitor (line 729)
+# =========================================================================
+
+
+class TestLeaveAsVisitor:
+    @pytest.mark.asyncio
+    async def test_non_visitor_cannot_leave_as_visitor(self):
+        """
+        DELETE /alliances/{id}/visitors/me calls get_user_visitor_account.
+        A user who is not a visitor must get 403 (line 729).
+        """
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        # USER2 is a plain member, not a visitor
+        await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        resp = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/visitors/me",
+            headers=HEADERS_USER2,
+        )
+        assert resp.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_visitor_can_leave(self):
+        """
+        DELETE /alliances/{id}/visitors/me for an actual visitor returns 204.
+        Also covers the success path of get_user_visitor_account.
+        """
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        await push_visitor(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        resp = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/visitors/me",
+            headers=HEADERS_USER2,
+        )
+        assert resp.status_code == 204
