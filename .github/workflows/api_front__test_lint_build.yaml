@@ -182,6 +182,7 @@ jobs:
       front: ${{ steps.filter.outputs.front }}
       backup: ${{ steps.filter.outputs.backup }}
       static: ${{ steps.filter.outputs.static }}
+      migrate: ${{ steps.filter.outputs.migrate }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -196,10 +197,12 @@ jobs:
           FRONT=$(git diff --name-only "${BEFORE}...${SHA}" -- front/ | wc -l | tr -d ' ')
           BACKUP=$(git diff --name-only "${BEFORE}...${SHA}" -- backup/ | wc -l | tr -d ' ')
           STATIC=$(git diff --name-only "${BEFORE}...${SHA}" -- static-assets/ | wc -l | tr -d ' ')
+          MIGRATE=$(git diff --name-only "${BEFORE}...${SHA}" -- api/migrations/ api/migrate.Dockerfile api/migrate.sh api/pyproject.toml api/uv.lock | wc -l | tr -d ' ')
           echo "api=$([ "$API" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
           echo "front=$([ "$FRONT" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
           echo "backup=$([ "$BACKUP" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
           echo "static=$([ "$STATIC" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "migrate=$([ "$MIGRATE" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
 
   docker-api:
     if: needs.changes.outputs.api == 'true'
@@ -268,7 +271,7 @@ jobs:
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-front:buildcache,mode=max
 
   docker-migrate:
-    if: needs.changes.outputs.api == 'true'
+    if: needs.changes.outputs.migrate == 'true'
     environment: Api
     name: Docker Build & Push (Migrate)
     runs-on: ubuntu-latest
