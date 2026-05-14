@@ -1165,9 +1165,7 @@ class TestAllianceNotFound:
     @pytest.mark.asyncio
     async def test_delete_alliance_not_found(self):
         await _setup_2_users()
-        resp = await execute_delete_request(
-            f"{ENDPOINT}/{self.FAKE_ID}", headers=HEADERS_USER1
-        )
+        resp = await execute_delete_request(f"{ENDPOINT}/{self.FAKE_ID}", headers=HEADERS_USER1)
         assert resp.status_code == 404
 
     @pytest.mark.asyncio

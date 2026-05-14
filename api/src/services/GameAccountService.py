@@ -6,7 +6,10 @@ from sqlmodel import select
 from sqlalchemy.orm import selectinload
 from starlette import status
 
-from src.Messages.game_account_messages import max_game_accounts_reached, GAME_ACCOUNT_IS_ALLIANCE_OWNER
+from src.Messages.game_account_messages import (
+    max_game_accounts_reached,
+    GAME_ACCOUNT_IS_ALLIANCE_OWNER,
+)
 from src.models.Alliance import Alliance
 from src.models.GameAccount import GameAccount
 from src.utils.db import SessionDep

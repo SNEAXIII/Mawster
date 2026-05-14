@@ -396,8 +396,6 @@ class TestDeleteGameAccount:
     async def test_delete_account_in_alliance(self):
         """Deleting an alliance-owner game account returns 409."""
         await _setup_1_user()
-        _, owner_acc = await push_alliance_with_owner(
-            user_id=USER_ID, game_pseudo=GAME_PSEUDO
-        )
+        _, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         response = await execute_delete_request(f"/game-accounts/{owner_acc.id}", headers=HEADERS)
         assert response.status_code == 409

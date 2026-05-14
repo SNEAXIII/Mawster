@@ -8,7 +8,6 @@ from src.enums.Roles import Roles
 from src.Messages.user_messages import (
     TARGET_USER_DOESNT_EXISTS,
     TARGET_USER_IS_ADMIN,
-    TARGET_USER_IS_ALREADY_ADMIN,
     TARGET_USER_IS_ALREADY_DELETED,
     TARGET_USER_IS_ALREADY_DISABLED,
     TARGET_USER_IS_ALREADY_ENABLED,

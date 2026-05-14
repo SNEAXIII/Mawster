@@ -551,9 +551,7 @@ class TestListUsersFilters:
     async def test_list_users_with_role_filter(self):
         """GET /admin/users?role=user hits the role filter branch (line 232)."""
         await push_one_admin()
-        response = await execute_get_request(
-            f"{ADMIN_USERS_URL}?role=user", headers=ADMIN_HEADERS
-        )
+        response = await execute_get_request(f"{ADMIN_USERS_URL}?role=user", headers=ADMIN_HEADERS)
         assert response.status_code == 200
 
     @pytest.mark.asyncio

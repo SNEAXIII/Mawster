@@ -594,6 +594,7 @@ class TestPlaceDefenderEdgeCases:
         # ChampionUser that points to a non-existent game account.
         fake_ga_id = uuid.uuid4()
         from src.models.ChampionUser import ChampionUser as CU
+
         orphan_cu = CU(
             id=uuid.uuid4(),
             game_account_id=fake_ga_id,
@@ -620,9 +621,10 @@ class TestPlaceDefenderEdgeCases:
         headers = create_auth_headers(user_id=str(USER_ID))
 
         # Create a second alliance and an account in it
-        from tests.integration.endpoints.setup.user_setup import get_generic_user
+
         other_user_id = uuid.uuid4()
         from src.models import User
+
         other_user = User(
             id=other_user_id,
             login="other_login_88",
@@ -636,6 +638,7 @@ class TestPlaceDefenderEdgeCases:
             push_alliance_with_owner,
             push_champion_user,
         )
+
         other_alliance, other_owner = await push_alliance_with_owner(
             user_id=other_user_id,
             game_pseudo="OtherPseudo88",
@@ -688,6 +691,7 @@ class TestPlaceDefenderEdgeCases:
 
         # Create 3 more champions for the owner so we can place 5 total
         from tests.integration.endpoints.setup.game_setup import push_champion, push_champion_user
+
         champ_extra_1 = await push_champion(name="Thor", champion_class="Cosmic")
         champ_extra_2 = await push_champion(name="Captain America", champion_class="Science")
         champ_extra_3 = await push_champion(name="Black Widow", champion_class="Skill")
@@ -734,6 +738,7 @@ class TestAvailableChampionsEdgeCases:
         """Returns [] when no members are assigned to the battlegroup (line 267)."""
         await load_objects([get_generic_user(is_base_id=True)])
         from tests.integration.endpoints.setup.game_setup import push_alliance_with_owner
+
         alliance, owner = await push_alliance_with_owner(
             user_id=USER_ID,
             game_pseudo=GAME_PSEUDO,
@@ -761,6 +766,7 @@ class TestAvailableChampionsEdgeCases:
         headers = create_auth_headers(user_id=str(USER_ID))
 
         from tests.integration.endpoints.setup.game_setup import push_champion, push_champion_user
+
         champ_extra_1 = await push_champion(name="Thor", champion_class="Cosmic")
         champ_extra_2 = await push_champion(name="Captain America", champion_class="Science")
         champ_extra_3 = await push_champion(name="Black Widow", champion_class="Skill")
@@ -802,9 +808,9 @@ class TestAvailableChampionsEdgeCases:
         for entry in body:
             owners = entry["owners"]
             for owner_entry in owners:
-                assert owner_entry["game_account_id"] != str(data["owner"].id) or \
-                    entry["champion_name"] not in ["Spider-Man", "Wolverine", "Thor",
-                                                   "Captain America", "Black Widow"]
+                assert owner_entry["game_account_id"] != str(data["owner"].id) or entry[
+                    "champion_name"
+                ] not in ["Spider-Man", "Wolverine", "Thor", "Captain America", "Black Widow"]
 
 
 class TestDefenseAlias:

@@ -435,9 +435,7 @@ class TestGetChampionUsage:
     @pytest.mark.anyio
     async def test_unknown_alliance_gets_404(self):
         await load_objects([get_generic_user(is_base_id=True)])
-        response = await execute_get_request(
-            f"{CHAMPION_USAGE_URL}/{uuid.uuid4()}", USER_HEADERS
-        )
+        response = await execute_get_request(f"{CHAMPION_USAGE_URL}/{uuid.uuid4()}", USER_HEADERS)
         assert response.status_code == 404
 
     @pytest.mark.anyio
@@ -486,7 +484,9 @@ class TestGetChampionUsage:
         )
         await load_objects([ga2])
 
-        await _push_fight_record(data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender)
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender
+        )
         await _push_fight_record(data["war"], data["alliance"].id, ga2.id, other_champ, defender)
 
         response_g1 = await execute_get_request(

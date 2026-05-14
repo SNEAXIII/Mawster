@@ -47,5 +47,12 @@ async def get_champion_usage(
 ):
     """Get champion usage aggregated for an alliance in the active season."""
     return await StatisticService.get_champion_usage(
-        session, current_user, alliance_id, game_account_id, war_id, alliance_group, deathless, perspective
+        session,
+        current_user,
+        alliance_id,
+        game_account_id,
+        war_id,
+        alliance_group,
+        deathless,
+        perspective,
     )

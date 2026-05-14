@@ -1835,7 +1835,13 @@ class TestWarServiceCoverage:
             cu = await push_champion_user(data["member"], champ)
             await execute_post_request(
                 f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
-                payload={"node_number": node, "champion_id": str(champ.id), "stars": 7, "rank": 3, "ascension": 0},
+                payload={
+                    "node_number": node,
+                    "champion_id": str(champ.id),
+                    "stars": 7,
+                    "rank": 3,
+                    "ascension": 0,
+                },
                 headers=headers_owner,
             )
             await execute_post_request(
@@ -1907,7 +1913,9 @@ class TestWarServiceCoverage:
             headers=headers_member,
         )
         # Add a prefight champion and assign prefight targeting node 10
-        prefight_champ = await push_champion(name="Medusa", champion_class="Cosmic", has_prefight=True)
+        prefight_champ = await push_champion(
+            name="Medusa", champion_class="Cosmic", has_prefight=True
+        )
         prefight_cu = await push_champion_user(data["member"], prefight_champ)
         await execute_post_request(
             f"/alliances/{alliance.id}/wars/{war.id}/bg/1/prefight",

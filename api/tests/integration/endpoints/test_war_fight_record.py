@@ -492,9 +492,7 @@ class TestListFightRecords:
         assert resp.status_code == 200
         assert len(resp.json()["items"]) == 1
 
-        resp_no_match = await execute_get_request(
-            "/fight-records?node_number=49", headers=headers
-        )
+        resp_no_match = await execute_get_request("/fight-records?node_number=49", headers=headers)
         assert resp_no_match.status_code == 200
         assert len(resp_no_match.json()["items"]) == 0
 
@@ -603,9 +601,7 @@ class TestListFightRecords:
         assert resp.status_code == 200
         assert len(resp.json()["items"]) == 1
 
-        resp_no_match = await execute_get_request(
-            "/fight-records?battlegroup=3", headers=headers
-        )
+        resp_no_match = await execute_get_request("/fight-records?battlegroup=3", headers=headers)
         assert resp_no_match.status_code == 200
         assert len(resp_no_match.json()["items"]) == 0
 
@@ -789,9 +785,7 @@ class TestSnapshotWithPrefightsAndSynergies:
 
         synergies = (
             await session.exec(
-                select(WarFightSynergy).where(
-                    WarFightSynergy.war_fight_record_id == records[0].id
-                )
+                select(WarFightSynergy).where(WarFightSynergy.war_fight_record_id == records[0].id)
             )
         ).all()
         assert len(synergies) == 1
