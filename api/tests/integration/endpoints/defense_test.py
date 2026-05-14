@@ -565,6 +565,248 @@ class TestBgMembers:
             assert m["max_defenders"] == 5
 
 
+class TestPlaceDefenderEdgeCases:
+    """Error paths in DefensePlacementService.place_defender."""
+
+    @pytest.mark.asyncio
+    async def test_place_defender_champion_user_not_found(self):
+        """Returns 404 when champion_user_id does not exist in DB (line 70)."""
+        data = await _setup_alliance_with_bg()
+        headers = create_auth_headers(user_id=str(USER_ID))
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 1,
+                "champion_user_id": str(uuid.uuid4()),  # non-existent
+                "game_account_id": str(data["owner"].id),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_place_defender_game_account_not_found(self):
+        """Returns 404 when game_account_id does not exist in DB (line 83)."""
+        data = await _setup_alliance_with_bg()
+        headers = create_auth_headers(user_id=str(USER_ID))
+        # Use a champion_user whose game_account_id we will spoof
+        # We need champion_user.game_account_id == the fake id we pass, so craft a
+        # ChampionUser that points to a non-existent game account.
+        fake_ga_id = uuid.uuid4()
+        from src.models.ChampionUser import ChampionUser as CU
+        orphan_cu = CU(
+            id=uuid.uuid4(),
+            game_account_id=fake_ga_id,
+            champion_id=data["champ1"].id,
+            stars=6,
+            rank=3,
+        )
+        await load_objects([orphan_cu])
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 1,
+                "champion_user_id": str(orphan_cu.id),
+                "game_account_id": str(fake_ga_id),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_place_defender_player_not_in_alliance(self):
+        """Returns 400 when game_account belongs to a different alliance (line 88)."""
+        data = await _setup_alliance_with_bg()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        # Create a second alliance and an account in it
+        from tests.integration.endpoints.setup.user_setup import get_generic_user
+        other_user_id = uuid.uuid4()
+        from src.models import User
+        other_user = User(
+            id=other_user_id,
+            login="other_login_88",
+            email="other88@test.com",
+            discord_id="discord_88",
+            role="user",
+        )
+        await load_objects([other_user])
+
+        from tests.integration.endpoints.setup.game_setup import (
+            push_alliance_with_owner,
+            push_champion_user,
+        )
+        other_alliance, other_owner = await push_alliance_with_owner(
+            user_id=other_user_id,
+            game_pseudo="OtherPseudo88",
+            alliance_name="Other Alliance",
+            alliance_tag="OTH",
+        )
+        other_owner.alliance_group = 1
+        await load_objects([other_owner])
+
+        # ChampionUser pointing to other_owner (different alliance)
+        cu_other = await push_champion_user(other_owner, data["champ2"])
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 1,
+                "champion_user_id": str(cu_other.id),
+                "game_account_id": str(other_owner.id),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_place_defender_player_not_in_battlegroup(self):
+        """Returns 400 when game_account is in a different battlegroup (line 93)."""
+        data = await _setup_alliance_with_bg()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        # Move member to BG2 while we try to place for BG1
+        data["member"].alliance_group = 2
+        await load_objects([data["member"]])
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 5,
+                "champion_user_id": str(data["cu_member1"].id),
+                "game_account_id": str(data["member"].id),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_place_defender_max_defenders_reached(self):
+        """Returns 400 when a player already has 5 defenders placed (line 143)."""
+        data = await _setup_alliance_with_bg()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        # Create 3 more champions for the owner so we can place 5 total
+        from tests.integration.endpoints.setup.game_setup import push_champion, push_champion_user
+        champ_extra_1 = await push_champion(name="Thor", champion_class="Cosmic")
+        champ_extra_2 = await push_champion(name="Captain America", champion_class="Science")
+        champ_extra_3 = await push_champion(name="Black Widow", champion_class="Skill")
+
+        cu_extra_1 = await push_champion_user(data["owner"], champ_extra_1)
+        cu_extra_2 = await push_champion_user(data["owner"], champ_extra_2)
+        cu_extra_3 = await push_champion_user(data["owner"], champ_extra_3)
+
+        # Place 5 defenders for owner
+        for node, cu in enumerate(
+            [data["cu_owner1"], data["cu_owner2"], cu_extra_1, cu_extra_2, cu_extra_3], start=1
+        ):
+            resp = await execute_post_request(
+                f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+                payload={
+                    "node_number": node,
+                    "champion_user_id": str(cu.id),
+                    "game_account_id": str(data["owner"].id),
+                },
+                headers=headers,
+            )
+            assert resp.status_code == 201
+
+        # 6th placement must be rejected
+        champ_extra_4 = await push_champion(name="Hulk", champion_class="Science")
+        cu_extra_4 = await push_champion_user(data["owner"], champ_extra_4)
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 6,
+                "champion_user_id": str(cu_extra_4.id),
+                "game_account_id": str(data["owner"].id),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 400
+
+
+class TestAvailableChampionsEdgeCases:
+    """Edge cases in DefensePlacementService.get_available_champions."""
+
+    @pytest.mark.asyncio
+    async def test_available_champions_empty_battlegroup(self):
+        """Returns [] when no members are assigned to the battlegroup (line 267)."""
+        await load_objects([get_generic_user(is_base_id=True)])
+        from tests.integration.endpoints.setup.game_setup import push_alliance_with_owner
+        alliance, owner = await push_alliance_with_owner(
+            user_id=USER_ID,
+            game_pseudo=GAME_PSEUDO,
+            alliance_name=ALLIANCE_NAME,
+            alliance_tag=ALLIANCE_TAG,
+        )
+        # owner has no alliance_group set (None), so BG1 has zero members
+        headers = create_auth_headers(user_id=str(USER_ID))
+        # Force owner into alliance so the auth passes, but NOT in BG1
+        owner.alliance_group = None
+        await load_objects([owner])
+        await push_officer(alliance, owner)
+
+        response = await execute_get_request(
+            f"/alliances/{alliance.id}/defense/bg/1/available-champions",
+            headers=headers,
+        )
+        assert response.status_code == 200
+        assert response.json() == []
+
+    @pytest.mark.asyncio
+    async def test_available_champions_excludes_maxed_player(self):
+        """Champions of a player who reached 5 defenders are excluded (line 307)."""
+        data = await _setup_alliance_with_bg()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        from tests.integration.endpoints.setup.game_setup import push_champion, push_champion_user
+        champ_extra_1 = await push_champion(name="Thor", champion_class="Cosmic")
+        champ_extra_2 = await push_champion(name="Captain America", champion_class="Science")
+        champ_extra_3 = await push_champion(name="Black Widow", champion_class="Skill")
+
+        cu_extra_1 = await push_champion_user(data["owner"], champ_extra_1)
+        cu_extra_2 = await push_champion_user(data["owner"], champ_extra_2)
+        cu_extra_3 = await push_champion_user(data["owner"], champ_extra_3)
+
+        # Fill owner's 5 slots
+        for node, cu in enumerate(
+            [data["cu_owner1"], data["cu_owner2"], cu_extra_1, cu_extra_2, cu_extra_3], start=1
+        ):
+            await execute_post_request(
+                f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+                payload={
+                    "node_number": node,
+                    "champion_user_id": str(cu.id),
+                    "game_account_id": str(data["owner"].id),
+                },
+                headers=headers,
+            )
+
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/available-champions",
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+
+        # Owner's champions (Spider-Man, Wolverine, Thor, Cap, BW) are all placed or excluded.
+        # Member's Iron Man champion should still appear (member has 0 defenders).
+        champion_names = [c["champion_name"] for c in body]
+        # Iron Man owned only by member — should remain available
+        assert "Iron Man" in champion_names
+        # For champions owned by BOTH owner and member (Spider-Man): owner placed it,
+        # so champion_id is already in placed_champion_ids → excluded entirely.
+        # Owner-only champions that are placed are also excluded.
+        # Verify no owner-exclusive placed champion leaks through
+        for entry in body:
+            owners = entry["owners"]
+            for owner_entry in owners:
+                assert owner_entry["game_account_id"] != str(data["owner"].id) or \
+                    entry["champion_name"] not in ["Spider-Man", "Wolverine", "Thor",
+                                                   "Captain America", "Black Widow"]
+
+
 class TestDefenseAlias:
     """Alias is exposed in defense responses (available champions + placements)."""
 
