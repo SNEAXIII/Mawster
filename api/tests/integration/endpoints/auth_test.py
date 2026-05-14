@@ -40,6 +40,7 @@ TOKEN_TYPE = "bearer"
 ENDPOINT_SESSION = "/auth/session"
 ENDPOINT_DISCORD = "/auth/discord"
 ENDPOINT_REFRESH = "/auth/refresh"
+ENDPOINT_GOOGLE = "/auth/google"
 ENDPOINT_DEV_SESSION = "/dev/session"
 ENDPOINT_DEV_USERS = "/dev/users"
 ENDPOINT_DEV_LOGIN = "/dev/login"
@@ -209,6 +210,23 @@ class TestDiscordLogin:
         assert REGEX_BEARER.match(body["refresh_token"])
 
     @pytest.mark.asyncio
+    async def test_login_rehashes_email_when_pepper_version_outdated(self):
+        """Existing user with stale email_hash_version gets rehashed on login."""
+        existing = User(
+            login="oldpepperuser",
+            email_hash=hash_email("test@example.com"),
+            email_hash_version=0,
+            discord_id="1",
+            role=Roles.USER,
+        )
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
     async def test_duplicate_email_hash_returns_409(self):
         """A Discord login whose email is already used by another account returns 409."""
         # The mock always returns email="test@example.com" with discord_id=1.
@@ -225,6 +243,36 @@ class TestDiscordLogin:
             ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
         )
         assert response.status_code == 409
+
+
+# =========================================================================
+# POST /auth/google
+# =========================================================================
+
+
+class TestGoogleLogin:
+    @pytest.mark.asyncio
+    async def test_login_rehashes_email_when_pepper_version_outdated(self, monkeypatch):
+        from src.services.GoogleAuthService import GoogleAuthService
+
+        async def _fake_verify(cls, access_token):
+            return {"sub": "google_123", "email": "google@example.com"}
+
+        monkeypatch.setattr(GoogleAuthService, "verify_token", classmethod(_fake_verify))
+
+        existing = User(
+            login="googlepepperuser",
+            email_hash=hash_email("google@example.com"),
+            email_hash_version=0,
+            google_id="google_123",
+            role=Roles.USER,
+        )
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_GOOGLE, payload={"access_token": "any-google-token"}
+        )
+        assert response.status_code == 200
 
 
 # =========================================================================
