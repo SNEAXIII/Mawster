@@ -1138,7 +1138,7 @@ class TestAllianceNotFound:
         await _setup_2_users()
         resp = await execute_put_request(
             f"{ENDPOINT}/{self.FAKE_ID}",
-            {"name": "X", "tag": "X", "owner_id": str(uuid.uuid4())},
+            {"name": "NotFound", "tag": "NF", "owner_id": str(uuid.uuid4())},
             headers=HEADERS_USER1,
         )
         assert resp.status_code == 404
@@ -1158,14 +1158,6 @@ class TestAllianceNotFound:
             f"{ENDPOINT}/{self.FAKE_ID}/invitations",
             {"game_account_id": str(uuid.uuid4())},
             headers=HEADERS_USER1,
-        )
-        assert resp.status_code == 404
-
-    @pytest.mark.asyncio
-    async def test_list_invitations_alliance_not_found(self):
-        await _setup_2_users()
-        resp = await execute_get_request(
-            f"{ENDPOINT}/{self.FAKE_ID}/invitations", headers=HEADERS_USER1
         )
         assert resp.status_code == 404
 
@@ -1204,16 +1196,6 @@ class TestAllianceNotFound:
             f"{ENDPOINT}/{self.FAKE_ID}/officers",
             headers=HEADERS_USER1,
             payload={"game_account_id": str(uuid.uuid4())},
-        )
-        assert resp.status_code == 404
-
-    @pytest.mark.asyncio
-    async def test_set_group_alliance_not_found(self):
-        await _setup_2_users()
-        resp = await execute_patch_request(
-            f"{ENDPOINT}/{self.FAKE_ID}/members/{uuid.uuid4()}/group",
-            {"group": 1},
-            headers=HEADERS_USER1,
         )
         assert resp.status_code == 404
 

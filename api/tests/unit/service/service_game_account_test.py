@@ -174,6 +174,9 @@ class TestDeleteGameAccount:
     async def test_delete_ok(self, mocker):
         session = _mock_session(mocker)
         account = _make_account()
+        no_owned = mocker.MagicMock()
+        no_owned.first.return_value = None
+        session.exec = mocker.AsyncMock(return_value=no_owned)
 
         await GameAccountService.delete_game_account(session, account)
 

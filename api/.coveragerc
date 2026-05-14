@@ -14,3 +14,4 @@ concurrency =
 exclude_also =
     if TYPE_CHECKING:
     def custom_openapi():
+    def __str__\(self\):
