@@ -25,10 +25,17 @@ from tests.integration.endpoints.setup.game_setup import (
     push_champion,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
-from tests.utils.utils_db import load_objects
+from sqlmodel.ext.asyncio.session import AsyncSession
+from tests.utils.utils_db import load_objects, sqlite_async_engine
+from src.models.Champion import Champion
+from src.models.ChampionUser import ChampionUser
 from src.models.War import War
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightRecord import WarFightRecord
+from src.models.WarFightPrefight import WarFightPrefight
+from src.models.WarFightSynergy import WarFightSynergy
+from src.models.WarPrefightAttacker import WarPrefightAttacker
+from src.models.WarSynergyAttacker import WarSynergyAttacker
 from sqlmodel import select
 
 OPPONENT = "Enemy Alliance"
@@ -60,9 +67,6 @@ async def _setup_war_with_fight():
         payload={"group": 1},
         headers=headers_owner,
     )
-
-    from src.models.Champion import Champion
-    from src.models.ChampionUser import ChampionUser
 
     defender_champ = Champion(name="Thanos", champion_class="Cosmic")
     attacker_champ = Champion(name="Spider-Man", champion_class="Science", is_saga_attacker=True)
@@ -445,6 +449,344 @@ class TestListFightRecords:
         items_desc = resp_desc.json()["items"]
         assert len(items_desc) == 2
         assert items_desc[0]["ko_count"] >= items_desc[1]["ko_count"]
+
+    @pytest.mark.asyncio
+    async def test_filter_by_defender_champion_id(self):
+        """defender_champion_id filter must return only matching records (line 178)."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers,
+        )
+
+        resp = await execute_get_request(
+            f"/fight-records?defender_champion_id={data['defender_champ'].id}",
+            headers=headers,
+        )
+        assert resp.status_code == 200
+        assert len(resp.json()["items"]) == 1
+
+        resp_no_match = await execute_get_request(
+            f"/fight-records?defender_champion_id={uuid.uuid4()}",
+            headers=headers,
+        )
+        assert resp_no_match.status_code == 200
+        assert len(resp_no_match.json()["items"]) == 0
+
+    @pytest.mark.asyncio
+    async def test_filter_by_node_number(self):
+        """node_number filter must return only records on that node (line 180)."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers,
+        )
+
+        resp = await execute_get_request("/fight-records?node_number=10", headers=headers)
+        assert resp.status_code == 200
+        assert len(resp.json()["items"]) == 1
+
+        resp_no_match = await execute_get_request(
+            "/fight-records?node_number=55", headers=headers
+        )
+        assert resp_no_match.status_code == 200
+        assert len(resp_no_match.json()["items"]) == 0
+
+    @pytest.mark.asyncio
+    async def test_filter_by_tier(self):
+        """tier filter must return only records with matching tier (line 182)."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        # Assign a tier to the war before ending
+        async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
+            war = await session.get(War, data["war"].id)
+            war.tier = 5
+            session.add(war)
+            await session.commit()
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers,
+        )
+
+        resp = await execute_get_request("/fight-records?tier=5", headers=headers)
+        assert resp.status_code == 200
+        assert len(resp.json()["items"]) == 1
+
+        resp_no_match = await execute_get_request("/fight-records?tier=99", headers=headers)
+        assert resp_no_match.status_code == 200
+        assert len(resp_no_match.json()["items"]) == 0
+
+    @pytest.mark.asyncio
+    async def test_filter_by_season_id(self):
+        """season_id filter must return only records with matching season (line 184)."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        fake_season_id = uuid.uuid4()
+        async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
+            war = await session.get(War, data["war"].id)
+            war.season_id = fake_season_id
+            session.add(war)
+            await session.commit()
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers,
+        )
+
+        resp = await execute_get_request(
+            f"/fight-records?season_id={fake_season_id}", headers=headers
+        )
+        assert resp.status_code == 200
+        assert len(resp.json()["items"]) == 1
+
+        resp_no_match = await execute_get_request(
+            f"/fight-records?season_id={uuid.uuid4()}", headers=headers
+        )
+        assert resp_no_match.status_code == 200
+        assert len(resp_no_match.json()["items"]) == 0
+
+    @pytest.mark.asyncio
+    async def test_filter_by_alliance_id(self):
+        """alliance_id filter must return only records for that alliance (line 186)."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers,
+        )
+
+        resp = await execute_get_request(
+            f"/fight-records?alliance_id={data['alliance'].id}", headers=headers
+        )
+        assert resp.status_code == 200
+        assert len(resp.json()["items"]) == 1
+
+        resp_no_match = await execute_get_request(
+            f"/fight-records?alliance_id={uuid.uuid4()}", headers=headers
+        )
+        assert resp_no_match.status_code == 200
+        assert len(resp_no_match.json()["items"]) == 0
+
+    @pytest.mark.asyncio
+    async def test_filter_by_battlegroup(self):
+        """battlegroup filter must return only records in that battlegroup (line 188)."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers,
+        )
+
+        resp = await execute_get_request("/fight-records?battlegroup=1", headers=headers)
+        assert resp.status_code == 200
+        assert len(resp.json()["items"]) == 1
+
+        resp_no_match = await execute_get_request(
+            "/fight-records?battlegroup=3", headers=headers
+        )
+        assert resp_no_match.status_code == 200
+        assert len(resp_no_match.json()["items"]) == 0
+
+    @pytest.mark.asyncio
+    async def test_filter_by_planning_error(self):
+        """planning_error_only filter must return only matching records (line 192)."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        # Mark the placement as a planning error before snapshot
+        async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
+            placement = await session.get(WarDefensePlacement, data["placement"].id)
+            placement.is_planning_error = True
+            session.add(placement)
+            await session.commit()
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers,
+        )
+
+        resp_true = await execute_get_request(
+            "/fight-records?planning_error_only=true", headers=headers
+        )
+        assert resp_true.status_code == 200
+        assert len(resp_true.json()["items"]) == 1
+
+        resp_false = await execute_get_request(
+            "/fight-records?planning_error_only=false", headers=headers
+        )
+        assert resp_false.status_code == 200
+        assert len(resp_false.json()["items"]) == 0
+
+    @pytest.mark.asyncio
+    async def test_sort_by_champion_name(self):
+        """sort_by=champion_name must join AttackerChampion and order by name (lines 236-237)."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers,
+        )
+
+        resp = await execute_get_request(
+            "/fight-records?sort_by=champion_name&sort_order=asc", headers=headers
+        )
+        assert resp.status_code == 200
+        assert len(resp.json()["items"]) == 1
+        assert resp.json()["items"][0]["champion_name"] == "Spider-Man"
+
+    @pytest.mark.asyncio
+    async def test_sort_by_defender_champion_name(self):
+        """sort_by=defender_champion_name must join DefenderChampion and order by name (lines 239-242)."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers,
+        )
+
+        resp = await execute_get_request(
+            "/fight-records?sort_by=defender_champion_name&sort_order=desc", headers=headers
+        )
+        assert resp.status_code == 200
+        assert len(resp.json()["items"]) == 1
+        assert resp.json()["items"][0]["defender_champion_name"] == "Thanos"
+
+    @pytest.mark.asyncio
+    async def test_sort_by_alliance_name(self):
+        """sort_by=alliance_name must join Alliance and order by name (lines 244-245)."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers,
+        )
+
+        resp = await execute_get_request(
+            "/fight-records?sort_by=alliance_name&sort_order=asc", headers=headers
+        )
+        assert resp.status_code == 200
+        assert len(resp.json()["items"]) == 1
+        assert resp.json()["items"][0]["alliance_name"] == ALLIANCE_NAME
+
+
+class TestSnapshotWithPrefightsAndSynergies:
+    @pytest.mark.asyncio
+    async def test_snapshot_records_prefight_attackers(self, session):
+        """WarPrefightAttacker rows linked to the placement must be snapshotted as WarFightPrefight (lines 96-97)."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        # Add a prefight attacker for node 10 BG1
+        prefight_cu_champ = Champion(name="Iron Man", champion_class="Tech")
+        prefight_cu = ChampionUser(
+            game_account_id=data["member"].id,
+            champion_id=prefight_cu_champ.id,
+            stars=6,
+            rank=3,
+            ascension=0,
+        )
+        await load_objects([prefight_cu_champ, prefight_cu])
+
+        prefight = WarPrefightAttacker(
+            war_id=data["war"].id,
+            battlegroup=1,
+            champion_user_id=prefight_cu.id,
+            target_node_number=10,
+        )
+        await load_objects([prefight])
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers,
+        )
+
+        records = (
+            await session.exec(
+                select(WarFightRecord).where(WarFightRecord.war_id == data["war"].id)
+            )
+        ).all()
+        assert len(records) == 1
+
+        prefights = (
+            await session.exec(
+                select(WarFightPrefight).where(
+                    WarFightPrefight.war_fight_record_id == records[0].id
+                )
+            )
+        ).all()
+        assert len(prefights) == 1
+        assert prefights[0].champion_id == prefight_cu_champ.id
+
+    @pytest.mark.asyncio
+    async def test_snapshot_records_synergy_attackers(self, session):
+        """WarSynergyAttacker rows linked to the attacker must be snapshotted as WarFightSynergy (lines 120-121)."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        # Add a synergy attacker targeting the main attacker_cu
+        synergy_cu_champ = Champion(name="Thor", champion_class="Cosmic")
+        synergy_cu = ChampionUser(
+            game_account_id=data["member"].id,
+            champion_id=synergy_cu_champ.id,
+            stars=6,
+            rank=3,
+            ascension=0,
+        )
+        await load_objects([synergy_cu_champ, synergy_cu])
+
+        synergy = WarSynergyAttacker(
+            war_id=data["war"].id,
+            battlegroup=1,
+            champion_user_id=synergy_cu.id,
+            target_champion_user_id=data["attacker_cu"].id,
+        )
+        await load_objects([synergy])
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 10},
+            headers=headers,
+        )
+
+        records = (
+            await session.exec(
+                select(WarFightRecord).where(WarFightRecord.war_id == data["war"].id)
+            )
+        ).all()
+        assert len(records) == 1
+
+        synergies = (
+            await session.exec(
+                select(WarFightSynergy).where(
+                    WarFightSynergy.war_fight_record_id == records[0].id
+                )
+            )
+        ).all()
+        assert len(synergies) == 1
+        assert synergies[0].champion_id == synergy_cu_champ.id
 
 
 class TestAdminSnapshotEndpoints:
