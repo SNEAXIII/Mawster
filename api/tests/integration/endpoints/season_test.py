@@ -95,6 +95,13 @@ class TestDeactivateSeason:
         assert response.status_code == 200
         assert response.json()["is_active"] is False
 
+    @pytest.mark.anyio
+    async def test_deactivate_unknown_season_returns_404(self, admin_in_db):
+        response = await execute_patch_request(
+            f"{SEASONS_URL}/00000000-0000-0000-0000-000000000099/deactivate", {}, ADMIN_HEADERS
+        )
+        assert response.status_code == 404
+
 
 class TestGetCurrentSeason:
     @pytest.fixture()

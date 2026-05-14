@@ -13,7 +13,7 @@ help:
 	@echo "init-db      --> load one user and basic bdd"
 	@echo "cancel-last  --> cancel last executed migration"
 	@echo "test         --> run tests (xdist enabled by default, set XDIST=0 to disable)"
-	@echo "test-cov     --> run test coverage (single-threaded)"
+	@echo "test-cov     --> run test coverage (parallel, 10 workers)"
 	@echo "install      --> install prod dependencies only"
 	@echo "install-dev  --> install all dependencies (prod + dev + migrate groups)"
 	@echo "reset-db     --> reset the database"
@@ -60,7 +60,7 @@ test:
 	uv run pytest tests -v --tb=short -n 10
 
 test-cov:
-	uv run pytest tests --cov --cov-report term-missing -v
+	uv run pytest tests --cov --cov-report term-missing -v -n 10 --dist=loadscope
 
 scrape-champions:
 	cd ../static-assets && uv run python scrape_champions.py

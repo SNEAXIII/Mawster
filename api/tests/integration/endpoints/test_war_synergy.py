@@ -528,3 +528,59 @@ class TestSynergyBans:
             headers=headers_member,
         )
         assert response.status_code == 409
+
+
+# ─── TestSynergyServiceCoverage ───────────────────────────
+
+
+class TestSynergyServiceCoverage:
+    """Targets uncovered WarService synergy lines: L976, L997, L1025."""
+
+    @pytest.mark.asyncio
+    async def test_add_synergy_unknown_provider_returns_404(self):  # L976
+        data = await _setup_synergy_scenario()
+        resp = await execute_post_request(
+            _synergy_url(data["alliance"].id, data["war"].id),
+            payload={
+                "champion_user_id": str(uuid.uuid4()),
+                "target_champion_user_id": str(data["attacker_cu"].id),
+            },
+            headers=data["headers_member"],
+        )
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_add_synergy_cross_user_champion_returns_403(self):  # L997
+        data = await _setup_synergy_scenario()
+        # Owner's champion as provider for member's attacker — different user_id → 403
+        owner_champ = await push_champion(name="Black Widow", champion_class="Skill")
+        owner_cu = await push_champion_user(data["owner"], owner_champ)
+        resp = await execute_post_request(
+            _synergy_url(data["alliance"].id, data["war"].id),
+            payload={
+                "champion_user_id": str(owner_cu.id),
+                "target_champion_user_id": str(data["attacker_cu"].id),
+            },
+            headers=data["headers_owner"],
+        )
+        assert resp.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_add_synergy_provider_wrong_bg_returns_403(self):  # L1025
+        data = await _setup_synergy_scenario()
+        # Move member to BG2 — game_account.alliance_group becomes 2
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/members/{data['member'].id}/group",
+            payload={"group": 2},
+            headers=data["headers_owner"],
+        )
+        # Member's synergy_cu (now BG2) as provider to BG1 attacker → 403
+        resp = await execute_post_request(
+            _synergy_url(data["alliance"].id, data["war"].id, bg=1),
+            payload={
+                "champion_user_id": str(data["synergy_cu"].id),
+                "target_champion_user_id": str(data["attacker_cu"].id),
+            },
+            headers=data["headers_member"],
+        )
+        assert resp.status_code == 403

@@ -8,6 +8,7 @@ from src.Messages.jwt_messages import (
     EXPIRED_EXCEPTION,
     CANT_FIND_USER_TOKEN_EXCEPTION,
     INVALID_ROLE_EXCEPTION,
+    INVALID_TOKEN_EXCEPTION,
     JwtCredentialsError,
     CREDENTIALS_EXCEPTION,
 )
@@ -128,6 +129,22 @@ def test_create_access_token_no_user():
         JWTService.create_access_token(user)
 
     # Assert
+    assert error.value.detail == str(CREDENTIALS_EXCEPTION)
+
+
+def test_decode_jwt_invalid_token_type(mocker):
+    data = {"user_id": "some-uuid", "type": "invalid_type"}
+    decode_module_mock(mocker, data)
+
+    with pytest.raises(JwtError) as error:
+        JWTService.decode_jwt(FAKE_TOKEN)
+
+    assert error.value.detail == str(INVALID_TOKEN_EXCEPTION)
+
+
+def test_create_refresh_token_no_user():
+    with pytest.raises(JwtCredentialsError) as error:
+        JWTService.create_refresh_token(None)
     assert error.value.detail == str(CREDENTIALS_EXCEPTION)
 
 

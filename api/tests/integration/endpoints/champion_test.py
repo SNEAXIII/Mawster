@@ -401,6 +401,24 @@ class TestLoadChampions:
         assert body["created"] == 0
 
     @pytest.mark.asyncio
+    async def test_load_updates_alias_on_existing(self):
+        await push_one_admin()
+        existing = get_champion(name="Spider-Man", champion_class="Science")
+        await load_objects([existing])
+
+        payload = [
+            {"name": "Spider-Man", "champion_class": "Science", "alias": "spidey;peter"},
+        ]
+        response = await execute_post_request(
+            LOAD_CHAMPIONS_URL, payload=payload, headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+        assert response.json()["updated"] == 1
+
+        get_resp = await execute_get_request(f"/champions/{existing.id}", headers=USER_HEADERS)
+        assert get_resp.json()["alias"] == "spidey;peter"
+
+    @pytest.mark.asyncio
     async def test_load_empty_list(self):
         await push_one_admin()
         response = await execute_post_request(LOAD_CHAMPIONS_URL, payload=[], headers=ADMIN_HEADERS)

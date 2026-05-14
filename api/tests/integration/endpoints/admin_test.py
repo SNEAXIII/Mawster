@@ -418,3 +418,157 @@ class TestSuperAdminAccess:
             f"/admin/users/delete/{target.id}", headers=SUPER_ADMIN_HEADERS
         )
         assert response.status_code == 400
+
+
+# =========================================================================
+# PATCH /admin/users/promote/{uuid} — disabled user branch (line 173)
+# =========================================================================
+
+
+class TestPromoteUserDisabled:
+    @pytest.mark.asyncio
+    async def test_promote_disabled_user_ok(self):
+        """Promoting a disabled user succeeds and clears disabled_at (line 175)."""
+        await push_one_super_admin()
+        user = await _setup_user(disabled_at=datetime.now())
+
+        response = await execute_patch_request(
+            f"/admin/users/promote/{user.id}", {}, headers=SUPER_ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+
+
+# =========================================================================
+# PATCH /admin/users/demote/{uuid} — lines 181-192
+# =========================================================================
+
+
+class TestDemoteUser:
+    @pytest.mark.asyncio
+    async def test_super_admin_can_demote(self):
+        """Super admin can demote an admin to user role."""
+        await push_one_super_admin()
+        user = await _setup_user(
+            user_id=uuid.uuid4(),
+            login="admin_to_demote",
+            email="demote@gmail.com",
+            discord_id="discord_demote",
+            role=Roles.ADMIN,
+        )
+
+        response = await execute_patch_request(
+            f"/admin/users/demote/{user.id}", {}, headers=SUPER_ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_admin_cannot_demote(self):
+        """Non-super admin is forbidden from demoting users."""
+        await push_one_admin()
+        user = await _setup_user(
+            user_id=uuid.uuid4(),
+            login="admin_to_demote",
+            email="demote@gmail.com",
+            discord_id="discord_demote",
+            role=Roles.ADMIN,
+        )
+
+        response = await execute_patch_request(
+            f"/admin/users/demote/{user.id}", {}, headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "scenario, expected_status",
+        [
+            ("not_admin", 400),
+            ("deleted", 400),
+            ("not_found", 400),
+        ],
+        ids=["target_is_not_admin", "target_is_deleted", "not_found"],
+    )
+    async def test_demote_errors(self, session, scenario, expected_status):
+        await push_one_super_admin()
+
+        if scenario == "not_admin":
+            user = await _setup_user()
+            target_id = user.id
+        elif scenario == "deleted":
+            user = await _setup_user(deleted_at=datetime.now())
+            target_id = user.id
+        else:
+            target_id = uuid.uuid4()
+
+        response = await execute_patch_request(
+            f"/admin/users/demote/{target_id}", {}, headers=SUPER_ADMIN_HEADERS
+        )
+        assert response.status_code == expected_status
+
+    @pytest.mark.asyncio
+    async def test_demote_invalid_uuid_returns_422(self):
+        await push_one_super_admin()
+        response = await execute_patch_request(
+            "/admin/users/demote/not-a-uuid", {}, headers=SUPER_ADMIN_HEADERS
+        )
+        assert response.status_code == 422
+
+
+# =========================================================================
+# GET /admin/users — filter branches (lines 229-234, 249-253)
+# =========================================================================
+
+
+class TestListUsersFilters:
+    @pytest.mark.asyncio
+    async def test_list_users_with_status_filter(self):
+        """GET /admin/users?status=enabled hits the status filter branch (line 230)."""
+        await push_one_admin()
+        response = await execute_get_request(
+            f"{ADMIN_USERS_URL}?status=enabled", headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_list_users_with_disabled_status_filter(self):
+        """GET /admin/users?status=disabled — hits disabled branch (lines 198-199)."""
+        await push_one_admin()
+        response = await execute_get_request(
+            f"{ADMIN_USERS_URL}?status=disabled", headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_list_users_with_deleted_status_filter(self):
+        """GET /admin/users?status=deleted — hits deleted branch (line 197)."""
+        await push_one_admin()
+        response = await execute_get_request(
+            f"{ADMIN_USERS_URL}?status=deleted", headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_list_users_with_role_filter(self):
+        """GET /admin/users?role=user hits the role filter branch (line 232)."""
+        await push_one_admin()
+        response = await execute_get_request(f"{ADMIN_USERS_URL}?role=user", headers=ADMIN_HEADERS)
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_list_users_with_search_filter(self):
+        """GET /admin/users?search=admin hits the search filter branch (line 234)."""
+        await push_one_admin()
+        response = await execute_get_request(
+            f"{ADMIN_USERS_URL}?search=admin", headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_list_users_with_all_filters(self):
+        """All three filters applied together exercises all three branches."""
+        await push_one_admin()
+        response = await execute_get_request(
+            f"{ADMIN_USERS_URL}?status=enabled&role=user&search=test",
+            headers=ADMIN_HEADERS,
+        )
+        assert response.status_code == 200
