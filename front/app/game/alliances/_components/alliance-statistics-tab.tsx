@@ -507,7 +507,7 @@ export default function AllianceStatisticsTab({
                           <TableCell className='py-1.5 font-medium'>
                             <span className={`flex items-center gap-1 ${!row.is_current_member ? 'text-muted-foreground' : ''}`}>
                               {row.game_pseudo}
-                              {!row.is_current_member && <LogOut className='h-3.5 w-3.5 shrink-0' />}
+                              {!row.is_current_member && <LogOut data-cy={`former-badge-${row.id}`} className='h-3.5 w-3.5 shrink-0' />}
                             </span>
                           </TableCell>
                           <TableCell className='py-1.5 text-right text-muted-foreground'>
