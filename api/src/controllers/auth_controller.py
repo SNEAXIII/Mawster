@@ -10,13 +10,13 @@ from src.dto.dto_utilisateurs import (
     UserProfile,
 )
 from src.models import User
-from src.services.JWTService import JWTService
-from src.services.AuthService import (
+from src.services.auth.JWTService import JWTService
+from src.services.auth.AuthService import (
     AuthService,
 )
-from src.services.DiscordAuthService import DiscordAuthService
-from src.services.GoogleAuthService import GoogleAuthService
-from src.services.UserService import UserService
+from src.services.auth.DiscordAuthService import DiscordAuthService
+from src.services.auth.GoogleAuthService import GoogleAuthService
+from src.services.account.UserService import UserService
 
 from src.utils.db import SessionDep
 from src.utils.logging_config import audit_log

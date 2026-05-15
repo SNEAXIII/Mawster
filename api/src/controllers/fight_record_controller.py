@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, Query
 
 from src.dto.dto_fight_record import PaginatedFightRecordsResponse
 from src.models import User
-from src.services.AuthService import AuthService
-from src.services.FightRecordService import FightRecordService
+from src.services.auth.AuthService import AuthService
+from src.services.knowledge.FightRecordService import FightRecordService
 from src.utils.db import SessionDep
 
 fight_record_controller = APIRouter(

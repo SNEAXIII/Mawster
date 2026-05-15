@@ -23,11 +23,11 @@ from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightRecord import WarFightRecord
 from src.models.Mastery import Mastery
 from src.security.secrets import SECRET
-from src.services.DiscordAuthService import DiscordAuthService
-from src.services.GameAccountService import GameAccountService
-from src.services.AllianceService import AllianceService
-from src.services.JWTService import JWTService
-from src.services.UserService import UserService
+from src.services.auth.DiscordAuthService import DiscordAuthService
+from src.services.account.game.GameAccountService import GameAccountService
+from src.services.alliance.AllianceService import AllianceService
+from src.services.auth.JWTService import JWTService
+from src.services.account.UserService import UserService
 from src.utils.db import SessionDep
 
 logger = logging.getLogger(__name__)

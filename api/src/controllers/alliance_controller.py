@@ -24,10 +24,10 @@ from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.models import User
 from src.models.Alliance import Alliance
 from src.models.AllianceInvitation import AllianceInvitation
-from src.services.AuthService import AuthService
-from src.services.AllianceService import AllianceService
-from src.services.AllianceInvitationService import AllianceInvitationService
-from src.services.AllianceVisitorService import AllianceVisitorService
+from src.services.auth.AuthService import AuthService
+from src.services.alliance.AllianceService import AllianceService
+from src.services.alliance.AllianceInvitationService import AllianceInvitationService
+from src.services.alliance.AllianceVisitorService import AllianceVisitorService
 from src.utils.db import SessionDep
 
 alliance_controller = APIRouter(

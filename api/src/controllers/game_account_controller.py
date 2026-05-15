@@ -12,10 +12,10 @@ from src.dto.dto_mastery import GameAccountMasteryUpsertItem, GameAccountMastery
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND, NOT_YOUR_GAME_ACCOUNT
 from src.models import User
 from src.models.GameAccount import GameAccount
-from src.services.AllianceService import AllianceService
-from src.services.AuthService import AuthService
-from src.services.GameAccountService import GameAccountService
-from src.services.MasteryService import MasteryService
+from src.services.alliance.AllianceService import AllianceService
+from src.services.auth.AuthService import AuthService
+from src.services.account.game.GameAccountService import GameAccountService
+from src.services.account.MasteryService import MasteryService
 from src.utils.db import SessionDep
 
 game_account_controller = APIRouter(

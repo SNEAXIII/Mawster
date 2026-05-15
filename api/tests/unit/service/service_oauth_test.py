@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from src.services.OAuthService import OAuthService
+from src.services.auth.OAuthService import OAuthService
 
 
 class TestNormalizeLogin:
@@ -21,7 +21,7 @@ class TestNormalizeLogin:
 
     def test_short_username_gets_random_suffix(self, mocker):
         mocker.patch(
-            "src.services.OAuthService.random.choices",
+            "src.services.auth.OAuthService.random.choices",
             return_value=list("1234"),
         )
         result = OAuthService._normalize_login("ab")
@@ -51,7 +51,7 @@ class TestGenerateUniqueLogin:
 
     @pytest.mark.asyncio
     async def test_appends_suffix_on_first_collision(self, mocker):
-        mocker.patch("src.services.OAuthService.random.choices", return_value=list("999"))
+        mocker.patch("src.services.auth.OAuthService.random.choices", return_value=list("999"))
         session = self._make_session(1)
         result = await OAuthService._generate_unique_login(session, "cosmichero12")
         assert result == "cosmichero12999"
@@ -59,7 +59,7 @@ class TestGenerateUniqueLogin:
     @pytest.mark.asyncio
     async def test_fallback_login_when_all_10_collide(self, mocker):
         mocker.patch(
-            "src.services.OAuthService.random.choices",
+            "src.services.auth.OAuthService.random.choices",
             return_value=list("abcdefghij"),
         )
         session = AsyncMock()

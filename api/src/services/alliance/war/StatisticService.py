@@ -14,7 +14,7 @@ from sqlalchemy import and_, func, cast, Integer, case
 from sqlmodel import select
 
 from src.dto.dto_statistic import ChampionUsageResponse, PlayerSeasonStatsResponse
-from src.services.AllianceService import AllianceService
+from src.services.alliance.AllianceService import AllianceService
 from src.utils.db import SessionDep
 
 _is_normal = and_(

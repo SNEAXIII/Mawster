@@ -16,7 +16,7 @@ import pytest
 from main import app
 from src.enums.Roles import Roles
 from src.security.secrets import SECRET
-from src.services.JWTService import JWTService
+from src.services.auth.JWTService import JWTService
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.user_setup import (
     push_one_user,
@@ -253,7 +253,7 @@ class TestDiscordLogin:
 class TestGoogleLogin:
     @pytest.mark.asyncio
     async def test_login_rehashes_email_when_pepper_version_outdated(self, monkeypatch):
-        from src.services.GoogleAuthService import GoogleAuthService
+        from src.services.auth.GoogleAuthService import GoogleAuthService
 
         async def _fake_verify(cls, access_token):
             return {"sub": "google_123", "email": "google@example.com"}

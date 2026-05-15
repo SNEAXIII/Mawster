@@ -2,80 +2,32 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
+from sqlalchemy import func
 from sqlmodel import select
 
 from src.Messages.user_messages import (
-    USER_DOESNT_EXISTS,
-    USER_IS_DELETED,
-    USER_IS_DISABLED,
-    TARGET_USER_IS_ALREADY_DISABLED,
     TARGET_USER_DOESNT_EXISTS,
     TARGET_USER_IS_ADMIN,
-    TARGET_USER_IS_SUPER_ADMIN,
+    TARGET_USER_IS_ALREADY_DELETED,
+    TARGET_USER_IS_ALREADY_DISABLED,
     TARGET_USER_IS_ALREADY_ENABLED,
     TARGET_USER_IS_ALREADY_ADMIN,
-    TARGET_USER_IS_NOT_ADMIN,
     TARGET_USER_IS_DELETED,
-    TARGET_USER_IS_ALREADY_DELETED,
-    LOGIN_ALREADY_TAKEN,
+    TARGET_USER_IS_NOT_ADMIN,
+    TARGET_USER_IS_SUPER_ADMIN,
 )
 from src.enums.Roles import Roles
 from src.models import User
-from src.dto.dto_utilisateurs import (
-    UserAdminViewAllUsers,
-    UserAdminViewSingleUser,
-)
+from src.dto.dto_utilisateurs import UserAdminViewAllUsers, UserAdminViewSingleUser
+from src.services.account.UserService import UserService
 from src.utils.db import SessionDep
-from sqlalchemy import func
 
 DISABLED_STATUS = "disabled"
 DELETED_STATUS = "deleted"
 ENABLED_STATUS = "enabled"
 
 
-class UserService:
-    @classmethod
-    async def get_user(cls, session: SessionDep, user_id: uuid.UUID) -> Optional[User]:
-        result = await session.get(User, user_id)
-        return result
-
-    @classmethod
-    async def get_user_by_login(cls, session: SessionDep, login: str) -> Optional[User]:
-        sql = select(User).where(User.login == login)
-        result = await session.exec(sql)
-        return result.first()
-
-    @classmethod
-    async def get_user_by_login_with_validity_check(
-        cls, session: SessionDep, login: str
-    ) -> Optional[User]:
-        user = await UserService.get_user_by_login(session, login)
-        if user is None:
-            raise USER_DOESNT_EXISTS
-        if user.deleted_at:
-            raise USER_IS_DELETED
-        if user.disabled_at:
-            raise USER_IS_DISABLED
-        return user
-
-    @classmethod
-    async def get_user_by_id_with_validity_check(
-        cls, session: SessionDep, user_id: str
-    ) -> Optional[User]:
-        """Look up user by UUID string and validate account status."""
-        try:
-            uid = uuid.UUID(user_id)
-        except (ValueError, AttributeError):
-            raise USER_DOESNT_EXISTS
-        user = await UserService.get_user(session, uid)
-        if user is None:
-            raise USER_DOESNT_EXISTS
-        if user.deleted_at:
-            raise USER_IS_DELETED
-        if user.disabled_at:
-            raise USER_IS_DISABLED
-        return user
-
+class UserAdminService:
     @classmethod
     def _validate_target_user_for_action(
         cls,
@@ -83,15 +35,6 @@ class UserService:
         require_disabled: Optional[bool] = None,
         forbid_admin: bool = True,
     ) -> None:
-        """Validate a target user before performing admin operations.
-
-        Parameters:
-        - user: the User object or None
-        - require_disabled: if True, user must be disabled (otherwise raise ALREADY_ENABLED);
-                            if False, user must NOT be disabled (otherwise raise ALREADY_DISABLED);
-                            if None, no disabled-state check is performed.
-        - forbid_admin: if True, raise if target is an ADMIN or SUPER_ADMIN.
-        """
         if user is None:
             raise TARGET_USER_DOESNT_EXISTS
         if user.deleted_at:
@@ -106,22 +49,9 @@ class UserService:
             raise TARGET_USER_IS_ALREADY_DISABLED
 
     @classmethod
-    async def update_login(cls, session: SessionDep, user: User, new_login: str) -> User:
-        existing = await cls.get_user_by_login(session, new_login)
-        if existing is not None and existing.id != user.id:
-            raise LOGIN_ALREADY_TAKEN
-        user.login = new_login
-        await session.commit()
-        await session.refresh(user)
-        return user
-
-    @classmethod
     async def admin_patch_disable_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> True:
         user: Optional[User] = await UserService.get_user(session, user_uuid)
-        # user must exist, not be deleted, not be an admin and must not already be disabled
-        UserService._validate_target_user_for_action(
-            user, require_disabled=False, forbid_admin=True
-        )
+        cls._validate_target_user_for_action(user, require_disabled=False, forbid_admin=True)
         user.disabled_at = datetime.now()
         await session.commit()
         return True
@@ -129,10 +59,7 @@ class UserService:
     @classmethod
     async def admin_patch_enable_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> True:
         user: Optional[User] = await UserService.get_user(session, user_uuid)
-        # user must exist, not be deleted, and must currently be disabled
-        UserService._validate_target_user_for_action(
-            user, require_disabled=True, forbid_admin=False
-        )
+        cls._validate_target_user_for_action(user, require_disabled=True, forbid_admin=False)
         user.disabled_at = None
         await session.commit()
         return True
@@ -140,35 +67,19 @@ class UserService:
     @classmethod
     async def admin_delete_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> True:
         user: Optional[User] = await UserService.get_user(session, user_uuid)
-        # If user already deleted -> raise the specific 'already deleted' error (test expectation)
         if user is None:
             raise TARGET_USER_DOESNT_EXISTS
         if user.deleted_at:
             raise TARGET_USER_IS_ALREADY_DELETED
-        # user must exist, not be deleted and must not be admin
-        UserService._validate_target_user_for_action(user, require_disabled=None, forbid_admin=True)
+        cls._validate_target_user_for_action(user, require_disabled=None, forbid_admin=True)
         user.deleted_at = datetime.now()
-        await session.commit()
-        return True
-
-    @classmethod
-    async def self_delete(
-        cls,
-        session: SessionDep,
-        current_user: User,
-    ) -> True:
-        if current_user.deleted_at:
-            # If user already deleted, raise the specific 'already deleted' error
-            raise TARGET_USER_IS_ALREADY_DELETED
-        current_user.deleted_at = datetime.now()
         await session.commit()
         return True
 
     @classmethod
     async def admin_patch_promote_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> True:
         user: Optional[User] = await UserService.get_user(session, user_uuid)
-        # user must exist, not be deleted and must not already be admin
-        UserService._validate_target_user_for_action(user, require_disabled=None, forbid_admin=True)
+        cls._validate_target_user_for_action(user, require_disabled=None, forbid_admin=True)
         if user.role == Roles.ADMIN:
             raise TARGET_USER_IS_ALREADY_ADMIN
         user.role = Roles.ADMIN
@@ -227,11 +138,11 @@ class UserService:
         offset = (page - 1) * size
         sql = select(User)
         if status:
-            sql = UserService.build_status_filter(sql, status)
+            sql = UserAdminService.build_status_filter(sql, status)
         if role:
-            sql = UserService.build_role_filter(sql, role)
+            sql = UserAdminService.build_role_filter(sql, role)
         if search:
-            sql = UserService.build_search_filter(sql, search)
+            sql = UserAdminService.build_search_filter(sql, search)
         sql = sql.offset(offset).limit(size)
         result = await session.exec(sql)
         return result.all()
@@ -246,11 +157,11 @@ class UserService:
     ) -> int:
         sql = select(func.count(User.id))
         if status:
-            sql = UserService.build_status_filter(sql, status)
+            sql = UserAdminService.build_status_filter(sql, status)
         if role:
-            sql = UserService.build_role_filter(sql, role)
+            sql = UserAdminService.build_role_filter(sql, role)
         if search:
-            sql = UserService.build_search_filter(sql, search)
+            sql = UserAdminService.build_search_filter(sql, search)
         result = await session.exec(sql)
         return result.one()
 
@@ -264,8 +175,10 @@ class UserService:
         role: Optional[Roles] = None,
         search: Optional[str] = None,
     ) -> UserAdminViewAllUsers:
-        total_users = await UserService.get_total_users(session, status, role, search)
-        users = await UserService.get_users_paginated(session, page, size, status, role, search)
+        total_users = await UserAdminService.get_total_users(session, status, role, search)
+        users = await UserAdminService.get_users_paginated(
+            session, page, size, status, role, search
+        )
         total_pages = (total_users + size - 1) // size
         mapped_users = [UserAdminViewSingleUser.model_validate(user.model_dump()) for user in users]
         return UserAdminViewAllUsers(

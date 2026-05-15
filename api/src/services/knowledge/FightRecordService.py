@@ -16,7 +16,7 @@ from src.models.Alliance import Alliance
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
-from src.models.War import War, WarStatus
+from src.models.War import War
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightPrefight import WarFightPrefight
 from src.models.WarFightRecord import WarFightRecord
@@ -260,45 +260,3 @@ class FightRecordService:
             size=size,
             pages=max(1, math.ceil(total / size)),
         )
-
-    @classmethod
-    async def force_snapshot_all(cls, session: SessionDep) -> dict:
-        """Snapshot all ended wars, counting already-snapshotted ones as skipped."""
-        stmt = select(War).where(War.status == WarStatus.ended)
-        result = await session.exec(stmt)
-        wars = result.all()
-
-        snapshotted = 0
-        skipped = 0
-        for war in wars:
-            if war.snapshotted_at is not None:
-                skipped += 1
-            else:
-                await cls.snapshot_war(session, war)
-                snapshotted += 1
-
-        return {"snapshotted": snapshotted, "skipped": skipped}
-
-    @classmethod
-    async def get_snapshot_stats(cls, session: SessionDep) -> list:
-        """Returns per-alliance count of snapshotted wars."""
-        stmt = (
-            select(
-                Alliance.id.label("alliance_id"),
-                Alliance.name.label("alliance_name"),
-                func.count(War.id).label("war_count"),
-            )
-            .join(War, War.alliance_id == Alliance.id)
-            .where(War.snapshotted_at.isnot(None))
-            .group_by(Alliance.id, Alliance.name)
-        )
-        result = await session.exec(stmt)
-        rows = result.all()
-        return [
-            {
-                "alliance_id": row.alliance_id,
-                "alliance_name": row.alliance_name,
-                "war_count": row.war_count,
-            }
-            for row in rows
-        ]

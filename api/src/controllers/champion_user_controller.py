@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
 from starlette import status
-from src.services.AllianceService import AllianceService
+from src.services.alliance.AllianceService import AllianceService
 from sqlalchemy.orm import selectinload
 from src.models.RequestedUpgrade import RequestedUpgrade
 from src.models.ChampionUser import ChampionUser
@@ -22,10 +22,10 @@ from src.Messages.champion_user_messages import CHAMPION_USER_NOT_FOUND, NOT_YOU
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND
 from src.models import User
 from src.models.GameAccount import GameAccount
-from src.services.AuthService import AuthService
-from src.services.GameAccountService import GameAccountService
-from src.services.ChampionUserService import ChampionUserService
-from src.services.UpgradeRequestService import UpgradeRequestService
+from src.services.auth.AuthService import AuthService
+from src.services.account.game.GameAccountService import GameAccountService
+from src.services.account.game.ChampionUserService import ChampionUserService
+from src.services.alliance.UpgradeRequestService import UpgradeRequestService
 from src.utils.db import SessionDep
 
 champion_user_controller = APIRouter(

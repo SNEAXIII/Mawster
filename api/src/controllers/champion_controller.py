@@ -18,8 +18,8 @@ from src.Messages.champion_messages import (
     CHAMPION_DELETED,
     CHAMPION_LOAD_SUCCESS,
 )
-from src.services.AuthService import AuthService
-from src.services.ChampionService import ChampionService
+from src.services.auth.AuthService import AuthService
+from src.services.admin.ChampionService import ChampionService
 from src.utils.db import SessionDep
 
 # ── User-accessible read endpoints (/champions) ──────────

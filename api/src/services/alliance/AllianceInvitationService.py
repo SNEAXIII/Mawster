@@ -24,6 +24,11 @@ from src.models.GameAccount import GameAccount
 from src.models.Alliance import Alliance
 from src.models.AllianceInvitation import AllianceInvitation
 from src.utils.db import SessionDep
+from src.services.alliance.AllianceVisitorService import (
+    AllianceVisitorService,
+    MAX_VISITORS_PER_ALLIANCE,
+)
+from src.Messages.visitor_messages import alliance_max_visitors_reached, ALREADY_A_VISITOR
 
 MAX_MEMBERS_PER_ALLIANCE = 30
 
@@ -42,11 +47,6 @@ class AllianceInvitationService:
         game_account_id: uuid.UUID,
     ) -> None:
         """Raise 409 if the game account is already a visitor or the alliance is full."""
-        from src.services.AllianceVisitorService import (
-            AllianceVisitorService,
-            MAX_VISITORS_PER_ALLIANCE,
-        )
-        from src.Messages.visitor_messages import alliance_max_visitors_reached, ALREADY_A_VISITOR
 
         already_visitor = await AllianceVisitorService.is_visitor(
             session, alliance_id, game_account_id
@@ -239,7 +239,7 @@ class AllianceInvitationService:
                 detail=alliance_max_members_reached(MAX_MEMBERS_PER_ALLIANCE),
             )
         # Clean up any visitor record for this game account in this alliance
-        from src.services.AllianceVisitorService import AllianceVisitorService
+        from src.services.alliance.AllianceVisitorService import AllianceVisitorService
 
         await AllianceVisitorService.remove_if_visitor(
             session, invitation.alliance_id, invitation.game_account_id

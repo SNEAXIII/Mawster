@@ -5,7 +5,7 @@ from httpx import AsyncClient, ASGITransport, Response
 from main import app
 
 from src.enums.Roles import Roles
-from src.services.JWTService import JWTService
+from src.services.auth.JWTService import JWTService
 from tests.utils.utils_constant import USER_ID
 
 # Module-level shared client set by a fixture to avoid recreating AsyncClient per request

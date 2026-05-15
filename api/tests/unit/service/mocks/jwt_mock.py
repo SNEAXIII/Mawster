@@ -1,6 +1,6 @@
 import jwt
 from typing import Optional
-from src.services.JWTService import JWTService
+from src.services.auth.JWTService import JWTService
 
 
 def decode_module_mock(mocker, return_value: Optional[dict[str, str]]):

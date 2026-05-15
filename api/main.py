@@ -59,7 +59,10 @@ if not IS_PROD:
 
 if IS_TESTING:
     import hashlib
-    from src.services.DiscordAuthService import DiscordAuthService, DISCORD_TOKEN_INVALID_EXCEPTION
+    from src.services.auth.DiscordAuthService import (
+        DiscordAuthService,
+        DISCORD_TOKEN_INVALID_EXCEPTION,
+    )
 
     async def _fake_verify(cls, access_token: str) -> dict:
         if not access_token:

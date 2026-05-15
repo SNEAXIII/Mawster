@@ -7,8 +7,8 @@ from sqlmodel import select, and_
 from sqlalchemy.orm import selectinload
 from starlette import status
 
-from src.services.ChampionService import ChampionService
-from src.services.UpgradeRequestService import UpgradeRequestService
+from src.services.admin.ChampionService import ChampionService
+from src.services.alliance.UpgradeRequestService import UpgradeRequestService
 from src.enums.ChampionRarity import ChampionRarity
 from src.Messages.champion_user_messages import (
     CHAMPION_CANNOT_BE_ASCENDED,

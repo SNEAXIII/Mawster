@@ -58,7 +58,7 @@ from src.Messages.war_messages import (
     WAR_NOT_FOUND,
     champion_with_id_not_found,
 )
-from src.services.SeasonService import SeasonService
+from src.services.admin.SeasonService import SeasonService
 from src.utils.db import SessionDep
 
 
@@ -376,7 +376,7 @@ class WarService:
         session.add(war)
         await session.commit()
         await session.refresh(war)
-        from src.services.FightRecordService import FightRecordService
+        from src.services.knowledge.FightRecordService import FightRecordService
 
         await FightRecordService.snapshot_war(session, war)
         return WarResponse.model_validate(await cls._load_war(session, war.id))

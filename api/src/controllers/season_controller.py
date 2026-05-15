@@ -6,8 +6,8 @@ from starlette import status
 
 from src.dto.dto_season import SeasonCreateRequest, SeasonResponse
 from src.models import User
-from src.services.AuthService import AuthService
-from src.services.SeasonService import SeasonService
+from src.services.auth.AuthService import AuthService
+from src.services.admin.SeasonService import SeasonService
 from src.utils.db import SessionDep
 
 season_admin_controller = APIRouter(

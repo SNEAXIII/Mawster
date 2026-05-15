@@ -9,8 +9,8 @@ from src.Messages.user_messages import (
 )
 from src.models import User
 from src.dto.dto_utilisateurs import UpdateLoginRequest, UserProfile
-from src.services.AuthService import AuthService
-from src.services.UserService import UserService
+from src.services.auth.AuthService import AuthService
+from src.services.account.UserService import UserService
 from src.utils.db import SessionDep
 
 user_controller = APIRouter(

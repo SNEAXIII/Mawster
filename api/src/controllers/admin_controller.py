@@ -14,9 +14,9 @@ from src.Messages.user_messages import (
     TARGET_USER_PROMOTED_SUCCESSFULLY,
 )
 from src.models import User
-from src.services.AuthService import AuthService
-from src.services.FightRecordService import FightRecordService
-from src.services.UserService import UserService
+from src.services.auth.AuthService import AuthService
+from src.services.admin.FightRecordAdminService import FightRecordAdminService
+from src.services.admin.UserAdminService import UserAdminService
 from src.utils.db import SessionDep
 
 admin_controller = APIRouter(
@@ -38,7 +38,7 @@ async def get_users(
     role: Optional[Roles] = None,
     search: Optional[str] = None,
 ):
-    result = await UserService.get_users_with_pagination_role_search(
+    result = await UserAdminService.get_users_with_pagination_role_search(
         session, page, size, status, role, search
     )
     return result
@@ -50,7 +50,7 @@ async def patch_disable_user(
     user_uuid_to_disable: uuid.UUID,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    await UserService.admin_patch_disable_user(session, user_uuid_to_disable)
+    await UserAdminService.admin_patch_disable_user(session, user_uuid_to_disable)
     return {"message": TARGET_USER_DISABLED_SUCCESSFULLY}
 
 
@@ -60,7 +60,7 @@ async def patch_enable_user(
     user_uuid_to_enable: uuid.UUID,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    await UserService.admin_patch_enable_user(session, user_uuid_to_enable)
+    await UserAdminService.admin_patch_enable_user(session, user_uuid_to_enable)
     return {"message": TARGET_USER_ENABLED_SUCCESSFULLY}
 
 
@@ -70,7 +70,7 @@ async def delete_user(
     user_uuid_to_delete: uuid.UUID,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    await UserService.admin_delete_user(session, user_uuid_to_delete)
+    await UserAdminService.admin_delete_user(session, user_uuid_to_delete)
     return {"message": TARGET_USER_DELETED_SUCCESSFULLY}
 
 
@@ -84,7 +84,7 @@ async def patch_promote_user(
     user_uuid_to_promote: uuid.UUID,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    await UserService.admin_patch_promote_user(session, user_uuid_to_promote)
+    await UserAdminService.admin_patch_promote_user(session, user_uuid_to_promote)
     return {"message": TARGET_USER_PROMOTED_SUCCESSFULLY}
 
 
@@ -98,7 +98,7 @@ async def patch_demote_user(
     user_uuid_to_demote: uuid.UUID,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    await UserService.admin_patch_demote_user(session, user_uuid_to_demote)
+    await UserAdminService.admin_patch_demote_user(session, user_uuid_to_demote)
     return {"message": TARGET_USER_DEMOTED_SUCCESSFULLY}
 
 
@@ -106,7 +106,7 @@ async def patch_demote_user(
     "/wars/force-snapshot", status_code=200, response_model=ForceSnapshotResponse
 )
 async def force_snapshot_wars(session: SessionDep):
-    result = await FightRecordService.force_snapshot_all(session)
+    result = await FightRecordAdminService.force_snapshot_all(session)
     return result
 
 
@@ -114,5 +114,5 @@ async def force_snapshot_wars(session: SessionDep):
     "/wars/snapshot-stats", status_code=200, response_model=list[AllianceSnapshotStatResponse]
 )
 async def get_snapshot_stats(session: SessionDep):
-    result = await FightRecordService.get_snapshot_stats(session)
+    result = await FightRecordAdminService.get_snapshot_stats(session)
     return result

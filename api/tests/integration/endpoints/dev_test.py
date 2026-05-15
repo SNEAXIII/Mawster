@@ -6,7 +6,7 @@ import pytest
 
 from main import app
 from src.enums.Roles import Roles
-from src.services.JWTService import JWTService
+from src.services.auth.JWTService import JWTService
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,

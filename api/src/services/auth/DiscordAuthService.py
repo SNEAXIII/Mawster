@@ -14,7 +14,7 @@ from src.Messages.discord_auth_messages import (
     EMAIL_CONFLICT,
 )
 from src.models import User, LoginLog
-from src.services.OAuthService import OAuthService
+from src.services.auth.OAuthService import OAuthService
 from src.utils.db import SessionDep
 from src.utils.email_hash import hash_email
 

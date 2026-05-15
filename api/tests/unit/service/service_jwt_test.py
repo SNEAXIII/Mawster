@@ -15,7 +15,7 @@ from src.Messages.jwt_messages import (
 from src.enums.Roles import Roles
 from src.models import User
 from src.security.secrets import SECRET
-from src.services.JWTService import JWTService
+from src.services.auth.JWTService import JWTService
 from tests.unit.service.mocks.jwt_mock import (
     decode_module_mock,
     encode_mock,

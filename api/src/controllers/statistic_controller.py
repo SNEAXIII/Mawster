@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, Query
 from src.dto.dto_statistic import ChampionUsageResponse, PlayerSeasonStatsResponse
 from src.models import User
 from src.utils.db import SessionDep
-from src.services.StatisticService import StatisticService
-from src.services.AuthService import AuthService
+from src.services.alliance.war.StatisticService import StatisticService
+from src.services.auth.AuthService import AuthService
 
 statistics_controller = APIRouter(
     prefix="/statistics",

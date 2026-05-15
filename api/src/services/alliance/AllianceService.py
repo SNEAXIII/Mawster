@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy import func
 from starlette import status
 
-from src.services.AllianceVisitorService import AllianceVisitorService
+from src.services.alliance.AllianceVisitorService import AllianceVisitorService
 from src.models.AllianceVisitor import AllianceVisitor
 from src.models.GameAccount import GameAccount
 from src.models.User import User
@@ -197,7 +197,7 @@ class AllianceService:
         """True if the user is a member, officer, owner, OR has a visitor account in the alliance."""
         if await cls.is_member(session, user_id, alliance_id):
             return True
-        from src.services.AllianceVisitorService import AllianceVisitorService
+        from src.services.alliance.AllianceVisitorService import AllianceVisitorService
 
         user_accounts = await cls._get_user_accounts(session, user_id)
         for acc in user_accounts:

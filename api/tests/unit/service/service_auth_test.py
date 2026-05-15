@@ -6,7 +6,7 @@ from src.Messages.jwt_messages import (
 )
 from src.enums.Roles import Roles
 from src.models import User
-from src.services.AuthService import AuthService
+from src.services.auth.AuthService import AuthService
 from tests.unit.service.mocks.jwt_mock import decode_service_mock
 from tests.unit.service.mocks.session_mock import session_mock
 from tests.unit.service.mocks.users_mock import get_user_with_validity_check_mock
