@@ -540,6 +540,10 @@ const fr: Translations = {
     classFilter: 'Classe',
     selectClass: 'Filtrer par classe',
     searchPlaceholder: 'Rechercher par nom ou alias...',
+    ascendableFilter: 'Ascentionnable',
+    prefightFilter: 'Précombat',
+    sagaAttackerFilter: 'Attaquant Saga',
+    sagaDefenderFilter: 'Défenseur Saga',
     empty: 'Aucun champion trouvé.',
     tableHeaders: {
       image: 'Image',
