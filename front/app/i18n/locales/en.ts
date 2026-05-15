@@ -231,7 +231,7 @@ const en = {
           score: 'Score',
           warsParticipated: 'Wars',
           avgFights: 'Avg Fights',
-          avgBossMiniboss: 'Avg Boss',
+          avgBossMiniboss: 'Boss+MB',
         },
         memberFilter: {
           all: 'All members',
