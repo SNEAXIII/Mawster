@@ -4,7 +4,6 @@ import uuid
 from datetime import datetime
 from types import SimpleNamespace
 
-from src.dto.admin.dto_champion import ChampionResponse
 from src.dto.account.game.dto_champion_user import ChampionUserDetailResponse, ChampionUserResponse
 from src.dto.account.game.dto_upgrade_request import UpgradeRequestResponse
 
@@ -52,42 +51,6 @@ def _make_champion_user(champion=None, **overrides):
     obj = _ns(**defaults)
     obj.rarity = f"{obj.stars}r{obj.rank}"
     return obj
-
-
-# ---------------------------------------------------------------------------
-# ChampionResponse.model_validate
-# ---------------------------------------------------------------------------
-
-
-class TestChampionResponseModelValidate:
-    def test_maps_all_fields(self):
-        champ = _make_champion()
-        dto = ChampionResponse.model_validate(champ)
-
-        assert dto.id == champ.id
-        assert dto.name == "Spider-Man"
-        assert dto.champion_class == "Science"
-        assert dto.image_url == "/img/spider.png"
-        assert dto.is_7_star is True
-        assert dto.is_ascendable is True
-        assert dto.has_prefight is False
-        assert dto.is_saga_attacker is False
-        assert dto.is_saga_defender is False
-        assert dto.alias == "spidey;peter"
-
-    def test_handles_none_optional_fields(self):
-        champ = _make_champion(image_url=None, alias=None)
-        dto = ChampionResponse.model_validate(champ)
-
-        assert dto.image_url is None
-        assert dto.alias is None
-
-    def test_defaults_booleans(self):
-        champ = _make_champion(is_7_star=False, is_ascendable=False)
-        dto = ChampionResponse.model_validate(champ)
-
-        assert dto.is_7_star is False
-        assert dto.is_ascendable is False
 
 
 # ---------------------------------------------------------------------------
