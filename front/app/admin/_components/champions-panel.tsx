@@ -226,10 +226,10 @@ export default function ChampionsPanel() {
           champion_class: c.champion_class,
           image_url: c.image_url ?? null,
           alias: c.alias ?? null,
-          is_ascendable: c.is_ascendable ?? false,
-          has_prefight: c.has_prefight ?? false,
-          is_saga_attacker: c.is_saga_attacker ?? false,
-          is_saga_defender: c.is_saga_defender ?? false,
+          is_ascendable: c.is_ascendable,
+          has_prefight: c.has_prefight,
+          is_saga_attacker: c.is_saga_attacker,
+          is_saga_defender: c.is_saga_defender,
         }))
       );
       await loadChampionsList();
