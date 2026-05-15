@@ -22,9 +22,9 @@ from src.dto.dto_war import (
 )
 from src.models import User
 from src.models.War import War
-from src.services.AllianceService import AllianceService
-from src.services.AuthService import AuthService
-from src.services.WarService import WarService
+from src.services.alliance.AllianceService import AllianceService
+from src.services.auth.AuthService import AuthService
+from src.services.alliance.war.WarService import WarService
 from src.utils.db import SessionDep
 from src.utils.path_params import BattlegroupPath
 
