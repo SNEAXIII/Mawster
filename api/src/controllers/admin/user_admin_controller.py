@@ -1,0 +1,100 @@
+import uuid
+from typing import Annotated, Optional
+
+from fastapi import APIRouter, Depends, Query
+
+from src.dto.dto_utilisateurs import UserAdminViewAllUsers
+from src.enums.Roles import Roles
+from src.Messages.user_messages import (
+    TARGET_USER_DELETED_SUCCESSFULLY,
+    TARGET_USER_DEMOTED_SUCCESSFULLY,
+    TARGET_USER_DISABLED_SUCCESSFULLY,
+    TARGET_USER_ENABLED_SUCCESSFULLY,
+    TARGET_USER_PROMOTED_SUCCESSFULLY,
+)
+from src.models import User
+from src.services.auth.AuthService import AuthService
+from src.services.admin.UserAdminService import UserAdminService
+from src.utils.db import SessionDep
+
+user_admin_controller = APIRouter(
+    prefix="/admin",
+    tags=["Admin"],
+    dependencies=[
+        Depends(AuthService.require_admin),
+        Depends(AuthService.get_current_user_in_jwt),
+    ],
+)
+
+
+@user_admin_controller.get("/users", status_code=200, response_model=UserAdminViewAllUsers)
+async def get_users(
+    session: SessionDep,
+    page: Annotated[int, Query(ge=1)] = 1,
+    size: Annotated[int, Query(ge=1)] = 10,
+    status: Optional[str] = None,
+    role: Optional[Roles] = None,
+    search: Optional[str] = None,
+):
+    result = await UserAdminService.get_users_with_pagination_role_search(
+        session, page, size, status, role, search
+    )
+    return result
+
+
+@user_admin_controller.patch("/users/disable/{user_uuid_to_disable}", status_code=200)
+async def patch_disable_user(
+    session: SessionDep,
+    user_uuid_to_disable: uuid.UUID,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    await UserAdminService.admin_patch_disable_user(session, user_uuid_to_disable)
+    return {"message": TARGET_USER_DISABLED_SUCCESSFULLY}
+
+
+@user_admin_controller.patch("/users/enable/{user_uuid_to_enable}", status_code=200)
+async def patch_enable_user(
+    session: SessionDep,
+    user_uuid_to_enable: uuid.UUID,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    await UserAdminService.admin_patch_enable_user(session, user_uuid_to_enable)
+    return {"message": TARGET_USER_ENABLED_SUCCESSFULLY}
+
+
+@user_admin_controller.delete("/users/delete/{user_uuid_to_delete}", status_code=200)
+async def delete_user(
+    session: SessionDep,
+    user_uuid_to_delete: uuid.UUID,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    await UserAdminService.admin_delete_user(session, user_uuid_to_delete)
+    return {"message": TARGET_USER_DELETED_SUCCESSFULLY}
+
+
+@user_admin_controller.patch(
+    "/users/promote/{user_uuid_to_promote}",
+    status_code=200,
+    dependencies=[Depends(AuthService.require_super_admin)],
+)
+async def patch_promote_user(
+    session: SessionDep,
+    user_uuid_to_promote: uuid.UUID,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    await UserAdminService.admin_patch_promote_user(session, user_uuid_to_promote)
+    return {"message": TARGET_USER_PROMOTED_SUCCESSFULLY}
+
+
+@user_admin_controller.patch(
+    "/users/demote/{user_uuid_to_demote}",
+    status_code=200,
+    dependencies=[Depends(AuthService.require_super_admin)],
+)
+async def patch_demote_user(
+    session: SessionDep,
+    user_uuid_to_demote: uuid.UUID,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    await UserAdminService.admin_patch_demote_user(session, user_uuid_to_demote)
+    return {"message": TARGET_USER_DEMOTED_SUCCESSFULLY}
