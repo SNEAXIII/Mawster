@@ -20,6 +20,8 @@ interface DropdownRadioMenu {
   possibleValues: Record<string, string>[];
   selectedValue: string;
   setValue: (value: string) => void;
+  showSelected?: boolean;
+  'data-cy'?: string;
 }
 
 export default function DropdownRadioMenu({
@@ -28,12 +30,23 @@ export default function DropdownRadioMenu({
   possibleValues,
   selectedValue,
   setValue,
-}: DropdownRadioMenu) {
+  showSelected = false,
+  'data-cy': dataCy,
+}: Readonly<DropdownRadioMenu>) {
+  const selectedLabel = possibleValues.find((v) => v.value === selectedValue)?.label;
+  const isFiltered = showSelected && selectedLabel && selectedLabel !== possibleValues[0]?.label;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant='outline'>
-          {labelButton} <ChevronDown className='h-4 w-4' />
+        <Button
+          variant='outline'
+          className={isFiltered ? 'border-primary text-primary' : ''}
+          data-cy={dataCy}
+        >
+          {labelButton}
+          {isFiltered && <span className='ml-1 font-semibold'>: {selectedLabel}</span>}
+          <ChevronDown className='h-4 w-4' />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className='w-56'>

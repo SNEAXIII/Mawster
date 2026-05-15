@@ -9,8 +9,12 @@ export function RowUserLogin(props: { login: string }) {
   return <TableCell className={'lg:w-44'}>{truncateString(props.login, 15)}</TableCell>;
 }
 
-export function RowUserRole(props: { role: string }) {
-  return <TableCell>{props.role}</TableCell>;
+export function RowUserRole(props: { role: string; login: string }) {
+  return (
+    <TableCell>
+      <span data-cy={`role-badge-${props.login}`}>{props.role}</span>
+    </TableCell>
+  );
 }
 
 export function RowUserCreatedAt(props: { created_at: string }) {

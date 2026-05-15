@@ -42,7 +42,7 @@ export default function ChampionTableRow({
 }: Readonly<ChampionTableRowProps>) {
   const { t } = useI18n();
   return (
-    <tr className='border-b hover:bg-accent/50'>
+    <tr className='border-b hover:bg-accent/50' data-cy={`champion-row-${champion.name}`}>
       {/* Image */}
       <td className='p-3'>
         {champion.image_url ? (
@@ -79,12 +79,14 @@ export default function ChampionTableRow({
               placeholder='alias1;alias2;alias3'
               className='h-8 text-sm'
               disabled={savingAlias}
+              data-cy='alias-input'
             />
             <Button
               variant='ghost'
               size='sm'
               onClick={() => onSaveAlias(champion.id)}
               disabled={savingAlias}
+              data-cy='save-alias'
             >
               <Check className='text-green-600 h-4 w-4' />
             </Button>
@@ -93,6 +95,7 @@ export default function ChampionTableRow({
               size='sm'
               onClick={onCancelEdit}
               disabled={savingAlias}
+              data-cy='cancel-alias'
             >
               <X className='text-red-600 h-4 w-4' />
             </Button>
@@ -106,6 +109,7 @@ export default function ChampionTableRow({
       <td className='p-3'>
         <button
           onClick={() => onToggleAscendable(champion)}
+          data-cy={`toggle-ascendable-${champion.name}`}
           className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
             champion.is_ascendable
               ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
@@ -120,6 +124,7 @@ export default function ChampionTableRow({
       <td className='p-3'>
         <button
           onClick={() => onTogglePrefight(champion)}
+          data-cy={`toggle-prefight-${champion.name}`}
           className={`px-2 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1 ${
             champion.has_prefight
               ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
@@ -134,6 +139,7 @@ export default function ChampionTableRow({
       <td className='p-3'>
         <button
           onClick={() => onToggleSagaAttacker(champion)}
+          data-cy={`toggle-saga-attacker-${champion.name}`}
           className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
             champion.is_saga_attacker
               ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
@@ -148,6 +154,7 @@ export default function ChampionTableRow({
       <td className='p-3'>
         <button
           onClick={() => onToggleSagaDefender(champion)}
+          data-cy={`toggle-saga-defender-${champion.name}`}
           className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
             champion.is_saga_defender
               ? 'bg-green-100 text-green-700 hover:bg-green-200'
@@ -165,11 +172,13 @@ export default function ChampionTableRow({
             icon={<Pencil className='w-3.5 h-3.5' />}
             onClick={() => onStartEdit(champion)}
             title='Edit alias'
+            data-cy={`edit-alias-${champion.name}`}
           />
           <ActionIconButton
             icon={<Trash2 />}
             onClick={() => onDelete(champion)}
             variant='danger'
+            data-cy={`delete-champion-${champion.name}`}
           />
         </div>
       </td>
