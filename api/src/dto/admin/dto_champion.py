@@ -42,8 +42,8 @@ class ChampionLoadRequest(BaseModel):
     name: str = Field(..., max_length=100)
     champion_class: str = Field(..., max_length=20)
     image_url: Optional[str] = None
-    is_ascendable: bool = False
-    has_prefight: bool = False
-    is_saga_attacker: bool = False
-    is_saga_defender: bool = False
+    is_ascendable: Optional[bool] = None
+    has_prefight: Optional[bool] = None
+    is_saga_attacker: Optional[bool] = None
+    is_saga_defender: Optional[bool] = None
     alias: Optional[str] = Field(default=None, max_length=500)

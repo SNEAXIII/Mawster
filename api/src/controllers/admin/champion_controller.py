@@ -49,9 +49,21 @@ async def get_champions(
     size: Annotated[int, Query(ge=1)] = 20,
     champion_class: Optional[str] = None,
     search: Optional[str] = None,
+    is_ascendable: Optional[bool] = None,
+    has_prefight: Optional[bool] = None,
+    is_saga_attacker: Optional[bool] = None,
+    is_saga_defender: Optional[bool] = None,
 ):
     return await ChampionService.get_champions_with_pagination(
-        session, page, size, champion_class, search
+        session,
+        page,
+        size,
+        champion_class,
+        search,
+        is_ascendable,
+        has_prefight,
+        is_saga_attacker,
+        is_saga_defender,
     )
 
 

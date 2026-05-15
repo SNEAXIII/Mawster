@@ -459,6 +459,205 @@ class TestLoadChampions:
 
 
 # =========================================================================
+# GET /champions — bool flag filters
+# =========================================================================
+
+
+class TestFilterByBoolFlags:
+    @pytest.mark.asyncio
+    async def test_filter_has_prefight_true(self):
+        await push_one_user()
+        await load_objects(
+            [
+                get_champion(name="Spider-Man", champion_class="Science", has_prefight=True),
+                get_champion(name="Wolverine", champion_class="Mutant", has_prefight=False),
+            ]
+        )
+
+        response = await execute_get_request(
+            "/champions?page=1&size=10&has_prefight=true", headers=USER_HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["total_champions"] == 1
+        assert body["champions"][0]["name"] == "Spider-Man"
+
+    @pytest.mark.asyncio
+    async def test_filter_has_prefight_false(self):
+        await push_one_user()
+        await load_objects(
+            [
+                get_champion(name="Spider-Man", champion_class="Science", has_prefight=True),
+                get_champion(name="Wolverine", champion_class="Mutant", has_prefight=False),
+            ]
+        )
+
+        response = await execute_get_request(
+            "/champions?page=1&size=10&has_prefight=false", headers=USER_HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["total_champions"] == 1
+        assert body["champions"][0]["name"] == "Wolverine"
+
+    @pytest.mark.asyncio
+    async def test_filter_is_ascendable(self):
+        await push_one_user()
+        await load_objects(
+            [
+                get_champion(name="Hercules", champion_class="Cosmic", is_ascendable=True),
+                get_champion(name="Thor", champion_class="Cosmic", is_ascendable=False),
+            ]
+        )
+
+        response = await execute_get_request(
+            "/champions?page=1&size=10&is_ascendable=true", headers=USER_HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["total_champions"] == 1
+        assert body["champions"][0]["name"] == "Hercules"
+
+    @pytest.mark.asyncio
+    async def test_filter_is_saga_attacker(self):
+        await push_one_user()
+        await load_objects(
+            [
+                get_champion(name="Magik", champion_class="Mutant", is_saga_attacker=True),
+                get_champion(name="Cyclops", champion_class="Mutant", is_saga_attacker=False),
+            ]
+        )
+
+        response = await execute_get_request(
+            "/champions?page=1&size=10&is_saga_attacker=true", headers=USER_HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["total_champions"] == 1
+        assert body["champions"][0]["name"] == "Magik"
+
+    @pytest.mark.asyncio
+    async def test_filter_is_saga_defender(self):
+        await push_one_user()
+        await load_objects(
+            [
+                get_champion(name="Dormammu", champion_class="Mystic", is_saga_defender=True),
+                get_champion(name="Magik", champion_class="Mutant", is_saga_defender=False),
+            ]
+        )
+
+        response = await execute_get_request(
+            "/champions?page=1&size=10&is_saga_defender=true", headers=USER_HEADERS
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["total_champions"] == 1
+        assert body["champions"][0]["name"] == "Dormammu"
+
+    @pytest.mark.asyncio
+    async def test_filter_combined_bool_and_class(self):
+        await push_one_user()
+        await load_objects(
+            [
+                get_champion(name="Spider-Man", champion_class="Science", has_prefight=True),
+                get_champion(name="Hulk", champion_class="Science", has_prefight=False),
+                get_champion(name="Wolverine", champion_class="Mutant", has_prefight=True),
+            ]
+        )
+
+        response = await execute_get_request(
+            "/champions?page=1&size=10&champion_class=Science&has_prefight=true",
+            headers=USER_HEADERS,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["total_champions"] == 1
+        assert body["champions"][0]["name"] == "Spider-Man"
+
+    @pytest.mark.asyncio
+    async def test_no_bool_filter_returns_all(self):
+        await push_one_user()
+        await load_objects(
+            [
+                get_champion(name="Spider-Man", champion_class="Science", has_prefight=True),
+                get_champion(name="Wolverine", champion_class="Mutant", has_prefight=False),
+            ]
+        )
+
+        response = await execute_get_request(CHAMPIONS_LIST_URL, headers=USER_HEADERS)
+        assert response.status_code == 200
+        assert response.json()["total_champions"] == 2
+
+
+# =========================================================================
+# POST /admin/champions/load — bool flag preservation
+# =========================================================================
+
+
+class TestLoadChampionsPreservesFlags:
+    @pytest.mark.asyncio
+    async def test_preserves_has_prefight_when_not_provided(self):
+        await push_one_admin()
+        existing = get_champion(name="Spider-Man", champion_class="Science", has_prefight=True)
+        await load_objects([existing])
+
+        payload = [{"name": "Spider-Man", "champion_class": "Science", "image_url": "new.png"}]
+        response = await execute_post_request(
+            LOAD_CHAMPIONS_URL, payload=payload, headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+        assert response.json()["updated"] == 1
+
+        get_resp = await execute_get_request(f"/champions/{existing.id}", headers=ADMIN_HEADERS)
+        assert get_resp.json()["has_prefight"] is True
+
+    @pytest.mark.asyncio
+    async def test_preserves_is_saga_attacker_when_not_provided(self):
+        await push_one_admin()
+        existing = get_champion(name="Magik", champion_class="Mutant", is_saga_attacker=True)
+        await load_objects([existing])
+
+        payload = [{"name": "Magik", "champion_class": "Mutant"}]
+        response = await execute_post_request(
+            LOAD_CHAMPIONS_URL, payload=payload, headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+
+        get_resp = await execute_get_request(f"/champions/{existing.id}", headers=ADMIN_HEADERS)
+        assert get_resp.json()["is_saga_attacker"] is True
+
+    @pytest.mark.asyncio
+    async def test_preserves_is_saga_defender_when_not_provided(self):
+        await push_one_admin()
+        existing = get_champion(name="Dormammu", champion_class="Mystic", is_saga_defender=True)
+        await load_objects([existing])
+
+        payload = [{"name": "Dormammu", "champion_class": "Mystic"}]
+        response = await execute_post_request(
+            LOAD_CHAMPIONS_URL, payload=payload, headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+
+        get_resp = await execute_get_request(f"/champions/{existing.id}", headers=ADMIN_HEADERS)
+        assert get_resp.json()["is_saga_defender"] is True
+
+    @pytest.mark.asyncio
+    async def test_overwrites_flag_when_explicitly_provided(self):
+        await push_one_admin()
+        existing = get_champion(name="Thor", champion_class="Cosmic", has_prefight=True)
+        await load_objects([existing])
+
+        payload = [{"name": "Thor", "champion_class": "Cosmic", "has_prefight": False}]
+        response = await execute_post_request(
+            LOAD_CHAMPIONS_URL, payload=payload, headers=ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+
+        get_resp = await execute_get_request(f"/champions/{existing.id}", headers=ADMIN_HEADERS)
+        assert get_resp.json()["has_prefight"] is False
+
+
+# =========================================================================
 # DELETE /admin/champions/{champion_id}
 # =========================================================================
 
