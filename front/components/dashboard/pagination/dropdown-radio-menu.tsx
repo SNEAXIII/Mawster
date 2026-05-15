@@ -21,6 +21,7 @@ interface DropdownRadioMenu {
   selectedValue: string;
   setValue: (value: string) => void;
   showSelected?: boolean;
+  'data-cy'?: string;
 }
 
 export default function DropdownRadioMenu({
@@ -30,6 +31,7 @@ export default function DropdownRadioMenu({
   selectedValue,
   setValue,
   showSelected = false,
+  'data-cy': dataCy,
 }: Readonly<DropdownRadioMenu>) {
   const selectedLabel = possibleValues.find((v) => v.value === selectedValue)?.label;
   const isFiltered = showSelected && selectedLabel && selectedLabel !== possibleValues[0]?.label;
@@ -40,6 +42,7 @@ export default function DropdownRadioMenu({
         <Button
           variant='outline'
           className={isFiltered ? 'border-primary text-primary' : ''}
+          data-cy={dataCy}
         >
           {labelButton}
           {isFiltered && <span className='ml-1 font-semibold'>: {selectedLabel}</span>}
