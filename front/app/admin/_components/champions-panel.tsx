@@ -291,6 +291,7 @@ export default function ChampionsPanel() {
           labelDescription={t.champions.selectClass}
           possibleValues={championClasses.map((c) => ({ value: c.value, label: c.label }))}
           selectedValue={selectedClass}
+          showSelected
           setValue={(val) => {
             setSelectedClass(val);
             setCurrentPage(1);
@@ -301,6 +302,7 @@ export default function ChampionsPanel() {
           labelDescription={t.champions.ascendableFilter}
           possibleValues={boolFilterOptions}
           selectedValue={filterAscendable}
+          showSelected
           setValue={(val) => { setFilterAscendable(val); setCurrentPage(1); }}
         />
         <DropdownRadioMenu
@@ -308,6 +310,7 @@ export default function ChampionsPanel() {
           labelDescription={t.champions.prefightFilter}
           possibleValues={boolFilterOptions}
           selectedValue={filterPrefight}
+          showSelected
           setValue={(val) => { setFilterPrefight(val); setCurrentPage(1); }}
         />
         <DropdownRadioMenu
@@ -315,6 +318,7 @@ export default function ChampionsPanel() {
           labelDescription={t.champions.sagaAttackerFilter}
           possibleValues={boolFilterOptions}
           selectedValue={filterSagaAttacker}
+          showSelected
           setValue={(val) => { setFilterSagaAttacker(val); setCurrentPage(1); }}
         />
         <DropdownRadioMenu
@@ -322,6 +326,7 @@ export default function ChampionsPanel() {
           labelDescription={t.champions.sagaDefenderFilter}
           possibleValues={boolFilterOptions}
           selectedValue={filterSagaDefender}
+          showSelected
           setValue={(val) => { setFilterSagaDefender(val); setCurrentPage(1); }}
         />
         <SearchInput
