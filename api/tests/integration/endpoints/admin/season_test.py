@@ -54,6 +54,33 @@ class TestCreateSeason:
         response = await execute_post_request(SEASONS_URL, {"number": 66}, USER_HEADERS)
         assert response.status_code == 403
 
+    @pytest.mark.anyio
+    async def test_number_zero_returns_422(self):
+        response = await execute_post_request(SEASONS_URL, {"number": 0}, ADMIN_HEADERS)
+        assert response.status_code == 422
+
+    @pytest.mark.anyio
+    async def test_negative_number_returns_422(self):
+        response = await execute_post_request(SEASONS_URL, {"number": -1}, ADMIN_HEADERS)
+        assert response.status_code == 422
+
+    @pytest.mark.anyio
+    async def test_number_above_max_returns_422(self):
+        response = await execute_post_request(SEASONS_URL, {"number": 10000}, ADMIN_HEADERS)
+        assert response.status_code == 422
+
+    @pytest.mark.anyio
+    async def test_number_at_max_boundary_succeeds(self):
+        response = await execute_post_request(SEASONS_URL, {"number": 9999}, ADMIN_HEADERS)
+        assert response.status_code == 201
+        assert response.json()["number"] == 9999
+
+    @pytest.mark.anyio
+    async def test_number_at_min_boundary_succeeds(self):
+        response = await execute_post_request(SEASONS_URL, {"number": 1}, ADMIN_HEADERS)
+        assert response.status_code == 201
+        assert response.json()["number"] == 1
+
 
 class TestActivateSeason:
     @pytest.mark.anyio
