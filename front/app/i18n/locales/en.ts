@@ -533,6 +533,10 @@ const en = {
     classFilter: 'Class',
     selectClass: 'Filter by class',
     searchPlaceholder: 'Search by name or alias...',
+    ascendableFilter: 'Ascendable',
+    prefightFilter: 'Pre-fight',
+    sagaAttackerFilter: 'Saga Attacker',
+    sagaDefenderFilter: 'Saga Defender',
     empty: 'No champions found.',
     tableHeaders: {
       image: 'Image',

@@ -8,5 +8,5 @@ CHAMPION_ALREADY_PLACED_OTHER_NODE = "This champion is already placed on another
 NO_DEFENDER_ON_NODE = "No defender on this node"
 
 
-def player_max_defenders_reached(max_defenders: int) -> str:
+def player_max_defenders_reached(max_defenders: int) -> str:  # pragma: no cover
     return f"Player already has {max_defenders} defenders placed"

@@ -50,16 +50,25 @@ def sanitize_filename(name: str) -> str:
     return safe
 
 
-def download_image(url: str, filepath: Path) -> bool:
+def _save_clean_png(data: bytes, filepath: Path) -> None:
+    """Re-save PNG via PIL to strip non-deterministic metadata chunks."""
+    from PIL import Image
+    import io
+
+    with Image.open(io.BytesIO(data)) as img:
+        img.save(filepath, format="PNG", optimize=False)
+
+
+def download_image(url: str, filepath: Path, force: bool = False) -> bool:
     """Download an image. Returns True on success."""
     from curl_cffi import requests as cffi_requests
 
-    if filepath.exists():
+    if filepath.exists() and not force:
         return True
     try:
         resp = cffi_requests.get(url, impersonate="chrome", timeout=30)
         resp.raise_for_status()
-        filepath.write_bytes(resp.content)
+        _save_clean_png(resp.content, filepath)
         return True
     except Exception as e:
         print(f"  [WARN] Failed to download {url}: {e}")
@@ -219,7 +228,7 @@ def scrape_champions_list() -> list[dict]:
     return champions
 
 
-def download_champion_images(champions: list[dict]):
+def download_champion_images(champions: list[dict], force: bool = False):
     """Download champion images and data from the wiki."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -231,7 +240,7 @@ def download_champion_images(champions: list[dict]):
 
         print(f"  [{i}/{len(champions)}] {champ['name']} ({champ['champion_class']})")
 
-        success = download_image(champ["portrait_url"], filepath)
+        success = download_image(champ["portrait_url"], filepath, force=force)
 
         entry = {
             "name": champ["name"],
@@ -252,7 +261,7 @@ def download_champion_images(champions: list[dict]):
     print(f"Total champions: {len(final_data)}")
 
 
-def _resize_to_size(size: int, champions_data: list[dict]) -> None:
+def _resize_to_size(size: int, champions_data: list[dict], force: bool = False) -> None:
     from PIL import Image
 
     resized_count = 0
@@ -277,7 +286,7 @@ def _resize_to_size(size: int, champions_data: list[dict]) -> None:
             error_count += 1
             continue
 
-        if output_path.exists():
+        if output_path.exists() and not force:
             skipped_count += 1
             continue
 
@@ -297,7 +306,7 @@ def _resize_to_size(size: int, champions_data: list[dict]) -> None:
     )
 
 
-def action_resize():
+def action_resize(force: bool = False):
     """Resize all champion images using sizes defined in pyproject.toml."""
     try:
         from PIL import Image  # noqa: F401
@@ -319,18 +328,30 @@ def action_resize():
         champions_data = json.load(f)
 
     for size in sizes:
-        _resize_to_size(size, champions_data)
+        _resize_to_size(size, champions_data, force=force)
 
     print(f"\nOutput directory: {OUTPUT_DIR}")
 
 
 def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="MCOC Champion Scraper")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-download and re-resize images even if they already exist",
+    )
+    args = parser.parse_args()
+
     print("=== MCOC Champion Scraper ===")
+    if args.force:
+        print("  [INFO] Force mode: overwriting existing images")
     champions = scrape_champions_list()
     print(f"\nFound {len(champions)} champions with single class and valid image.\n")
-    download_champion_images(champions)
+    download_champion_images(champions, force=args.force)
     print("\nStarting image resizing...")
-    action_resize()
+    action_resize(force=args.force)
 
 
 if __name__ == "__main__":

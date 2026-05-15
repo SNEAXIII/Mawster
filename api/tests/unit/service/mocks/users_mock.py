@@ -1,12 +1,13 @@
 from typing import Optional
 
 from src.models import User
-from src.services.UserService import UserService
+from src.services.account.UserService import UserService
+from src.services.admin.UserAdminService import UserAdminService
 
 
 def get_users_paginated_mock(mocker, return_value: list[User]):
     return mocker.patch.object(
-        UserService,
+        UserAdminService,
         "get_users_paginated",
         return_value=return_value,
     )
@@ -14,7 +15,7 @@ def get_users_paginated_mock(mocker, return_value: list[User]):
 
 def get_total_users_mock(mocker, return_value: int):
     return mocker.patch.object(
-        UserService,
+        UserAdminService,
         "get_total_users",
         return_value=return_value,
     )

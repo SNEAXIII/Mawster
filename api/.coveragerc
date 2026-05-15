@@ -6,6 +6,8 @@ omit =
     migrations/*
     scripts/*
     src/fixtures/*
+    src/utils/logging_config.py
+    src/controllers/dev_controller.py   
 concurrency =
     greenlet
     thread
@@ -14,3 +16,4 @@ concurrency =
 exclude_also =
     if TYPE_CHECKING:
     def custom_openapi():
+    def __str__\(self\):

@@ -1613,5 +1613,10 @@
     "name": "Blade (Stellar-Forged)",
     "champion_class": "Mystic",
     "image_url": "/static/champions/blade_stellar-forged.png"
+  },
+  {
+    "name": "Wave",
+    "champion_class": "Science",
+    "image_url": "/static/champions/wave.png"
   }
 ]

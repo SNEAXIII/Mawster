@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 
-from src.dto.dto_war import WarPlacementCreateRequest, WarSynergyCreateRequest
+from src.dto.alliance.war.dto_war import WarPlacementCreateRequest, WarSynergyCreateRequest
 
 
 # ─── WarPlacementCreateRequest validation ─────────────────

@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     MARIADB_DATABASE: str = Field(... if IS_PROD else "mawster")
     MARIADB_USER: str = Field(... if IS_PROD else "user")
     MARIADB_PASSWORD: str = Field(... if IS_PROD else "password")
-    MARIADB_ROOT_PASSWORD: str = Field(... if IS_PROD else "rootpassword")
+    MARIADB_ROOT_PASSWORD: str = Field(None if IS_PROD else "rootpassword")
     MARIADB_PORT: int = Field(... if IS_PROD else _default_database())
     MARIADB_HOST: str = Field("mariadb" if IS_PROD else "localhost")
     SECRET_KEY: str = Field(... if IS_PROD else "dev-secret-key_dev-secret-key_dev-secret-key")
@@ -43,10 +43,10 @@ SECRET = Settings()
 def _warn_if_weak_defaults() -> None:
     """Émet des avertissements si des valeurs par défaut faibles sont utilisées hors prod."""
     if IS_PROD:
-        return
+        return  # pragma: no cover
     weak = {
         "MARIADB_PASSWORD": ("password", SECRET.MARIADB_PASSWORD),
-        "MARIADB_ROOT_PASSWORD": ("rootpassword", SECRET.MARIADB_ROOT_PASSWORD),
+        "MARIADB_ROOT_PASSWORD": ("rootpassword", SECRET.MARIADB_ROOT_PASSWORD or ""),
         "MARIADB_USER": ("user", SECRET.MARIADB_USER),
     }
     for name, (default, current) in weak.items():

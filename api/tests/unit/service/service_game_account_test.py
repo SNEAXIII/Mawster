@@ -6,7 +6,10 @@ import pytest
 from fastapi import HTTPException
 
 from src.models.GameAccount import GameAccount
-from src.services.GameAccountService import GameAccountService, MAX_GAME_ACCOUNTS_PER_USER
+from src.services.account.game.GameAccountService import (
+    GameAccountService,
+    MAX_GAME_ACCOUNTS_PER_USER,
+)
 from tests.utils.utils_constant import USER_ID, GAME_PSEUDO, GAME_PSEUDO_2
 
 
@@ -174,6 +177,9 @@ class TestDeleteGameAccount:
     async def test_delete_ok(self, mocker):
         session = _mock_session(mocker)
         account = _make_account()
+        no_owned = mocker.MagicMock()
+        no_owned.first.return_value = None
+        session.exec = mocker.AsyncMock(return_value=no_owned)
 
         await GameAccountService.delete_game_account(session, account)
 

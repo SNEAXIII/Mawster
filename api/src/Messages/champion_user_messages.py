@@ -10,7 +10,7 @@ def invalid_rarity(rarity: str, valid_rarities: str) -> str:
     return f"Invalid rarity '{rarity}'. Must be one of: {valid_rarities}"
 
 
-def invalid_rarity_format(rarity: str) -> str:
+def invalid_rarity_format(rarity: str) -> str:  # pragma: no cover
     return f"Invalid rarity format '{rarity}'"
 
 

@@ -50,7 +50,7 @@ async def test_client_fixture():
         utils_client._SHARED_CLIENT = client
 
         # Patch DiscordAuthService.verify_discord_token to avoid real network calls
-        from src.services.DiscordAuthService import (
+        from src.services.auth.DiscordAuthService import (
             DiscordAuthService,
             DISCORD_TOKEN_INVALID_EXCEPTION,
         )

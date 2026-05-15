@@ -58,15 +58,29 @@ export const championClasses = [
 ];
 
 // ─── API ─────────────────────────────────────────────────
+export const boolFilterOptions = [
+  { value: 'all', label: 'All' },
+  { value: 'true', label: 'Yes' },
+  { value: 'false', label: 'No' },
+];
+
 export const getChampions = async (
   page: number = 1,
   size: number = 20,
   championClass: string | null = null,
-  search: string | null = null
+  search: string | null = null,
+  isAscendable: string | null = null,
+  hasPrefight: string | null = null,
+  isSagaAttacker: string | null = null,
+  isSagaDefender: string | null = null,
 ): Promise<FetchChampionsResponse> => {
   const qs = new URLSearchParams({ page: String(page), size: String(size) });
   if (championClass && championClass !== 'all') qs.set('champion_class', championClass);
   if (search?.trim()) qs.set('search', search.trim());
+  if (isAscendable && isAscendable !== 'all') qs.set('is_ascendable', isAscendable);
+  if (hasPrefight && hasPrefight !== 'all') qs.set('has_prefight', hasPrefight);
+  if (isSagaAttacker && isSagaAttacker !== 'all') qs.set('is_saga_attacker', isSagaAttacker);
+  if (isSagaDefender && isSagaDefender !== 'all') qs.set('is_saga_defender', isSagaDefender);
 
   const response = await fetch(`${PROXY}/champions?${qs}`, { headers: jsonHeaders });
   await throwOnError(response, 'Erreur lors de la récupération des champions');

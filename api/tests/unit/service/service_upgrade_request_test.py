@@ -10,7 +10,7 @@ from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
 from src.models.RequestedUpgrade import RequestedUpgrade
-from src.services.UpgradeRequestService import UpgradeRequestService
+from src.services.alliance.UpgradeRequestService import UpgradeRequestService
 from tests.utils.utils_constant import USER_ID, GAME_PSEUDO_2
 
 

@@ -12,6 +12,7 @@ import {
   toggleChampionSagaDefender,
   Champion,
   championClasses,
+  boolFilterOptions,
 } from '@/app/services/champions';
 import PaginationControls from '@/components/dashboard/pagination/pagination-controls';
 import DropdownRadioMenu from '@/components/dashboard/pagination/dropdown-radio-menu';
@@ -26,6 +27,7 @@ import ChampionTableRow from '@/app/admin/champions/_components/champion-table-r
 const BASE_PAGE = 1;
 const BASE_SIZE = 10;
 const BASE_CLASS = 'all';
+const BASE_BOOL = 'all';
 
 export default function ChampionsPanel() {
   const { t } = useI18n();
@@ -37,6 +39,10 @@ export default function ChampionsPanel() {
   const [perPage, setPerPage] = useState(BASE_SIZE);
   const [selectedClass, setSelectedClass] = useState(BASE_CLASS);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterAscendable, setFilterAscendable] = useState(BASE_BOOL);
+  const [filterPrefight, setFilterPrefight] = useState(BASE_BOOL);
+  const [filterSagaAttacker, setFilterSagaAttacker] = useState(BASE_BOOL);
+  const [filterSagaDefender, setFilterSagaDefender] = useState(BASE_BOOL);
   const [error, setError] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [canReset, setCanReset] = useState(false);
@@ -58,7 +64,11 @@ export default function ChampionsPanel() {
         Math.max(currentPage, 1),
         perPage,
         selectedClass,
-        searchQuery || null
+        searchQuery || null,
+        filterAscendable,
+        filterPrefight,
+        filterSagaAttacker,
+        filterSagaDefender,
       );
       setChampions(data.champions);
       setCurrentPage(Math.min(currentPage, data.total_pages || 1));
@@ -71,10 +81,18 @@ export default function ChampionsPanel() {
       );
     } finally {
       setIsLoading(false);
-      setCanReset(!(perPage === BASE_SIZE && selectedClass === BASE_CLASS && searchQuery === ''));
+      setCanReset(!(
+        perPage === BASE_SIZE &&
+        selectedClass === BASE_CLASS &&
+        searchQuery === '' &&
+        filterAscendable === BASE_BOOL &&
+        filterPrefight === BASE_BOOL &&
+        filterSagaAttacker === BASE_BOOL &&
+        filterSagaDefender === BASE_BOOL
+      ));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, perPage, selectedClass, searchQuery]);
+  }, [currentPage, perPage, selectedClass, searchQuery, filterAscendable, filterPrefight, filterSagaAttacker, filterSagaDefender]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -91,6 +109,10 @@ export default function ChampionsPanel() {
     setPerPage(BASE_SIZE);
     setSelectedClass(BASE_CLASS);
     setSearchQuery('');
+    setFilterAscendable(BASE_BOOL);
+    setFilterPrefight(BASE_BOOL);
+    setFilterSagaAttacker(BASE_BOOL);
+    setFilterSagaDefender(BASE_BOOL);
     setCurrentPage(BASE_PAGE);
   }
 
@@ -204,10 +226,10 @@ export default function ChampionsPanel() {
           champion_class: c.champion_class,
           image_url: c.image_url ?? null,
           alias: c.alias ?? null,
-          is_ascendable: c.is_ascendable ?? false,
-          has_prefight: c.has_prefight ?? false,
-          is_saga_attacker: c.is_saga_attacker ?? false,
-          is_saga_defender: c.is_saga_defender ?? false,
+          is_ascendable: c.is_ascendable,
+          has_prefight: c.has_prefight,
+          is_saga_attacker: c.is_saga_attacker,
+          is_saga_defender: c.is_saga_defender,
         }))
       );
       await loadChampionsList();
@@ -263,7 +285,7 @@ export default function ChampionsPanel() {
         />
       </div>
 
-      <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center'>
+      <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap'>
         <DropdownRadioMenu
           labelButton={t.champions.classFilter}
           labelDescription={t.champions.selectClass}
@@ -273,6 +295,34 @@ export default function ChampionsPanel() {
             setSelectedClass(val);
             setCurrentPage(1);
           }}
+        />
+        <DropdownRadioMenu
+          labelButton={t.champions.ascendableFilter}
+          labelDescription={t.champions.ascendableFilter}
+          possibleValues={boolFilterOptions}
+          selectedValue={filterAscendable}
+          setValue={(val) => { setFilterAscendable(val); setCurrentPage(1); }}
+        />
+        <DropdownRadioMenu
+          labelButton={t.champions.prefightFilter}
+          labelDescription={t.champions.prefightFilter}
+          possibleValues={boolFilterOptions}
+          selectedValue={filterPrefight}
+          setValue={(val) => { setFilterPrefight(val); setCurrentPage(1); }}
+        />
+        <DropdownRadioMenu
+          labelButton={t.champions.sagaAttackerFilter}
+          labelDescription={t.champions.sagaAttackerFilter}
+          possibleValues={boolFilterOptions}
+          selectedValue={filterSagaAttacker}
+          setValue={(val) => { setFilterSagaAttacker(val); setCurrentPage(1); }}
+        />
+        <DropdownRadioMenu
+          labelButton={t.champions.sagaDefenderFilter}
+          labelDescription={t.champions.sagaDefenderFilter}
+          possibleValues={boolFilterOptions}
+          selectedValue={filterSagaDefender}
+          setValue={(val) => { setFilterSagaDefender(val); setCurrentPage(1); }}
         />
         <SearchInput
           placeholder={t.champions.searchPlaceholder}
