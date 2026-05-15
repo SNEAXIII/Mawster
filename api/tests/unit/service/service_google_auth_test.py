@@ -7,7 +7,7 @@ import pytest
 from fastapi import HTTPException
 
 from src.security.secrets import SECRET
-from src.services.GoogleAuthService import GoogleAuthService
+from src.services.auth.GoogleAuthService import GoogleAuthService
 from src.enums.Roles import Roles
 from src.models import User
 from src.utils.email_hash import hash_email
@@ -62,7 +62,9 @@ class TestVerifyToken:
     async def test_success_returns_profile(self, mocker):
         profile = {"sub": GOOGLE_ID, "email": USER_EMAIL, "name": USER_LOGIN, "picture": None}
         mock_client = _make_http_client_mock(mocker, status_code=200, json_body=profile)
-        mocker.patch("src.services.GoogleAuthService.httpx.AsyncClient", return_value=mock_client)
+        mocker.patch(
+            "src.services.auth.GoogleAuthService.httpx.AsyncClient", return_value=mock_client
+        )
 
         result = await GoogleAuthService.verify_token("valid_token")
 
@@ -72,7 +74,9 @@ class TestVerifyToken:
     @pytest.mark.asyncio
     async def test_google_returns_401_raises_http_401(self, mocker):
         mock_client = _make_http_client_mock(mocker, status_code=401)
-        mocker.patch("src.services.GoogleAuthService.httpx.AsyncClient", return_value=mock_client)
+        mocker.patch(
+            "src.services.auth.GoogleAuthService.httpx.AsyncClient", return_value=mock_client
+        )
 
         with pytest.raises(HTTPException) as exc:
             await GoogleAuthService.verify_token("bad_token")
@@ -81,7 +85,9 @@ class TestVerifyToken:
     @pytest.mark.asyncio
     async def test_google_returns_5xx_raises_http_502(self, mocker):
         mock_client = _make_http_client_mock(mocker, status_code=500)
-        mocker.patch("src.services.GoogleAuthService.httpx.AsyncClient", return_value=mock_client)
+        mocker.patch(
+            "src.services.auth.GoogleAuthService.httpx.AsyncClient", return_value=mock_client
+        )
 
         with pytest.raises(HTTPException) as exc:
             await GoogleAuthService.verify_token("some_token")
@@ -92,7 +98,9 @@ class TestVerifyToken:
         mock_client = _make_http_client_mock(
             mocker, raise_error=httpx.ConnectError("Connection refused")
         )
-        mocker.patch("src.services.GoogleAuthService.httpx.AsyncClient", return_value=mock_client)
+        mocker.patch(
+            "src.services.auth.GoogleAuthService.httpx.AsyncClient", return_value=mock_client
+        )
 
         with pytest.raises(HTTPException) as exc:
             await GoogleAuthService.verify_token("token")

@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from src.models.Alliance import Alliance
 from src.models.AllianceOfficer import AllianceOfficer
 from src.models.GameAccount import GameAccount
-from src.services.AllianceService import (
+from src.services.alliance.AllianceService import (
     AllianceService,
     MAX_MEMBERS_PER_GROUP,
     MAX_MEMBERS_PER_ALLIANCE,

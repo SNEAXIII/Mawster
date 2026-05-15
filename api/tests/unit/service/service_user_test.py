@@ -3,7 +3,7 @@ from datetime import datetime
 
 import pytest
 
-from src.dto.dto_utilisateurs import UserAdminViewSingleUser
+from src.dto.auth.dto_utilisateurs import UserAdminViewSingleUser
 from src.enums.Roles import Roles
 from src.Messages.user_messages import (
     TARGET_USER_DOESNT_EXISTS,
@@ -22,7 +22,8 @@ from src.Messages.user_messages import (
     UserLoginError,
 )
 from src.models import User
-from src.services.UserService import UserService
+from src.services.account.UserService import UserService
+from src.services.admin.UserAdminService import UserAdminService
 from tests.unit.service.mocks.session_mock import session_mock
 from tests.unit.service.mocks.users_mock import (
     get_user_by_login_mock,
@@ -74,7 +75,7 @@ async def test_get_users_paginated(mocker):
     mock_session = session_mock(mocker)
 
     # Act
-    await UserService.get_users_paginated(mock_session, PAGE, SIZE, STATUS, ROLE)
+    await UserAdminService.get_users_paginated(mock_session, PAGE, SIZE, STATUS, ROLE)
 
     # Assert
     mock_session.exec.assert_called_once()
@@ -87,7 +88,7 @@ async def test_get_total_users(mocker):
     mock_session = session_mock(mocker)
 
     # Act
-    await UserService.get_total_users(mock_session, STATUS, ROLE)
+    await UserAdminService.get_total_users(mock_session, STATUS, ROLE)
 
     # Assert
     mock_session.exec.assert_called_once()
@@ -110,7 +111,7 @@ async def test_get_users_with_pagination_role_search(mocker):
     SEARCH = "search"
 
     # Act
-    result = await UserService.get_users_with_pagination_role_search(
+    result = await UserAdminService.get_users_with_pagination_role_search(
         mock_session, PAGE, SIZE, STATUS, ROLE, SEARCH
     )
 
@@ -170,7 +171,7 @@ async def test_patch_disable_user_success(mocker, use_time_machine):
     mock_get_user = get_user_mock(mocker, fake_user)
 
     # Act
-    result = await UserService.admin_patch_disable_user(mock_session, USER_ID)
+    result = await UserAdminService.admin_patch_disable_user(mock_session, USER_ID)
 
     # Assert
     assert result is True
@@ -197,7 +198,7 @@ async def test_patch_disable_user_error(mocker, fake_user, expected_error):
 
     # Act
     with pytest.raises(UserAdminError) as error:
-        await UserService.admin_patch_disable_user(mock_session, USER_ID)
+        await UserAdminService.admin_patch_disable_user(mock_session, USER_ID)
 
     # Assert
     assert error.value.detail == str(expected_error)
@@ -252,7 +253,7 @@ async def test_patch_enable_user_success(mocker):
     mock_get_user = get_user_mock(mocker, fake_user)
 
     # Act
-    result = await UserService.admin_patch_enable_user(mock_session, USER_ID)
+    result = await UserAdminService.admin_patch_enable_user(mock_session, USER_ID)
 
     # Assert
     assert result is True
@@ -278,7 +279,7 @@ async def test_patch_enable_user_error(mocker, fake_user, expected_error):
 
     # Act
     with pytest.raises(UserAdminError) as error:
-        await UserService.admin_patch_enable_user(mock_session, USER_ID)
+        await UserAdminService.admin_patch_enable_user(mock_session, USER_ID)
 
     # Assert
     assert error.value.detail == str(expected_error)
@@ -294,7 +295,7 @@ async def test_delete_user_success(mocker, use_time_machine):
     mock_get_user = get_user_mock(mocker, fake_user)
 
     # Act
-    result = await UserService.admin_delete_user(mock_session, USER_ID)
+    result = await UserAdminService.admin_delete_user(mock_session, USER_ID)
 
     # Assert
     assert result is True
@@ -320,7 +321,7 @@ async def test_delete_user_error(mocker, fake_user, expected_error):
 
     # Act
     with pytest.raises(UserAdminError) as error:
-        await UserService.admin_delete_user(mock_session, USER_ID)
+        await UserAdminService.admin_delete_user(mock_session, USER_ID)
 
     # Assert
     assert error.value.detail == str(expected_error)
@@ -451,7 +452,7 @@ async def test_promote_user_success(mocker):
     mock_session = session_mock(mocker)
     get_user_mock(mocker, fake_user)
 
-    result = await UserService.admin_patch_promote_user(mock_session, USER_ID)
+    result = await UserAdminService.admin_patch_promote_user(mock_session, USER_ID)
 
     assert result is True
     assert fake_user.role == Roles.ADMIN
@@ -477,7 +478,7 @@ async def test_promote_user_errors(mocker, fake_user, expected_error):
     get_user_mock(mocker, fake_user)
 
     with pytest.raises(UserAdminError) as exc:
-        await UserService.admin_patch_promote_user(mock_session, USER_ID)
+        await UserAdminService.admin_patch_promote_user(mock_session, USER_ID)
 
     assert exc.value.detail == str(expected_error)
     mock_session.commit.assert_not_called()
@@ -495,7 +496,7 @@ async def test_demote_user_success(mocker):
     mock_session = session_mock(mocker)
     get_user_mock(mocker, fake_user)
 
-    result = await UserService.admin_patch_demote_user(mock_session, USER_ID)
+    result = await UserAdminService.admin_patch_demote_user(mock_session, USER_ID)
 
     assert result is True
     assert fake_user.role == Roles.USER
@@ -519,7 +520,7 @@ async def test_demote_user_errors(mocker, fake_user, expected_error):
     get_user_mock(mocker, fake_user)
 
     with pytest.raises(UserAdminError) as exc:
-        await UserService.admin_patch_demote_user(mock_session, USER_ID)
+        await UserAdminService.admin_patch_demote_user(mock_session, USER_ID)
 
     assert exc.value.detail == str(expected_error)
     mock_session.commit.assert_not_called()
@@ -536,7 +537,7 @@ def test_build_status_filter_deleted():
     from src.models import User
 
     sql = select(User)
-    result = UserService.build_status_filter(sql, "deleted")
+    result = UserAdminService.build_status_filter(sql, "deleted")
     assert result is not sql  # query was modified
 
 
@@ -545,7 +546,7 @@ def test_build_status_filter_disabled():
     from sqlmodel import select
 
     sql = select(User)
-    result = UserService.build_status_filter(sql, "disabled")
+    result = UserAdminService.build_status_filter(sql, "disabled")
     assert result is not sql
 
 
@@ -554,7 +555,7 @@ def test_build_status_filter_enabled():
     from sqlmodel import select
 
     sql = select(User)
-    result = UserService.build_status_filter(sql, "enabled")
+    result = UserAdminService.build_status_filter(sql, "enabled")
     assert result is not sql
 
 
@@ -563,7 +564,7 @@ def test_build_status_filter_none():
     from sqlmodel import select
 
     sql = select(User)
-    result = UserService.build_status_filter(sql, None)
+    result = UserAdminService.build_status_filter(sql, None)
     assert result is sql
 
 
@@ -572,7 +573,7 @@ def test_build_role_filter_valid_role():
     from sqlmodel import select
 
     sql = select(User)
-    result = UserService.build_role_filter(sql, Roles.ADMIN)
+    result = UserAdminService.build_role_filter(sql, Roles.ADMIN)
     assert result is not sql
 
 
@@ -581,7 +582,7 @@ def test_build_role_filter_none():
     from sqlmodel import select
 
     sql = select(User)
-    result = UserService.build_role_filter(sql, None)
+    result = UserAdminService.build_role_filter(sql, None)
     assert result is sql
 
 
@@ -590,7 +591,7 @@ def test_build_search_filter_with_value():
     from sqlmodel import select
 
     sql = select(User)
-    result = UserService.build_search_filter(sql, "alice")
+    result = UserAdminService.build_search_filter(sql, "alice")
     assert result is not sql
 
 
@@ -599,7 +600,7 @@ def test_build_search_filter_whitespace_only():
     from sqlmodel import select
 
     sql = select(User)
-    result = UserService.build_search_filter(sql, "   ")
+    result = UserAdminService.build_search_filter(sql, "   ")
     assert result is sql
 
 
@@ -608,7 +609,7 @@ def test_build_search_filter_none():
     from sqlmodel import select
 
     sql = select(User)
-    result = UserService.build_search_filter(sql, None)
+    result = UserAdminService.build_search_filter(sql, None)
     assert result is sql
 
 
@@ -621,7 +622,7 @@ def test_build_search_filter_none():
 async def test_get_users_paginated_with_status(mocker):
     """get_users branch: status provided hits line 230."""
     mock_session = session_mock(mocker)
-    await UserService.get_users_paginated(mock_session, PAGE, SIZE, "enabled", None)
+    await UserAdminService.get_users_paginated(mock_session, PAGE, SIZE, "enabled", None)
     mock_session.exec.assert_called_once()
 
 
@@ -629,7 +630,7 @@ async def test_get_users_paginated_with_status(mocker):
 async def test_get_users_paginated_with_role(mocker):
     """get_users branch: role provided hits line 232."""
     mock_session = session_mock(mocker)
-    await UserService.get_users_paginated(mock_session, PAGE, SIZE, None, Roles.ADMIN)
+    await UserAdminService.get_users_paginated(mock_session, PAGE, SIZE, None, Roles.ADMIN)
     mock_session.exec.assert_called_once()
 
 
@@ -637,7 +638,7 @@ async def test_get_users_paginated_with_role(mocker):
 async def test_get_users_paginated_with_search(mocker):
     """get_users branch: search provided hits line 234."""
     mock_session = session_mock(mocker)
-    await UserService.get_users_paginated(mock_session, PAGE, SIZE, None, None, "alice")
+    await UserAdminService.get_users_paginated(mock_session, PAGE, SIZE, None, None, "alice")
     mock_session.exec.assert_called_once()
 
 
@@ -645,7 +646,7 @@ async def test_get_users_paginated_with_search(mocker):
 async def test_get_total_users_with_status(mocker):
     """get_total_users branch: status hits line 249."""
     mock_session = session_mock(mocker)
-    await UserService.get_total_users(mock_session, "disabled", None)
+    await UserAdminService.get_total_users(mock_session, "disabled", None)
     mock_session.exec.assert_called_once()
 
 
@@ -653,7 +654,7 @@ async def test_get_total_users_with_status(mocker):
 async def test_get_total_users_with_role(mocker):
     """get_total_users branch: role hits line 251."""
     mock_session = session_mock(mocker)
-    await UserService.get_total_users(mock_session, None, Roles.USER)
+    await UserAdminService.get_total_users(mock_session, None, Roles.USER)
     mock_session.exec.assert_called_once()
 
 
@@ -661,5 +662,5 @@ async def test_get_total_users_with_role(mocker):
 async def test_get_total_users_with_search(mocker):
     """get_total_users branch: search hits line 253."""
     mock_session = session_mock(mocker)
-    await UserService.get_total_users(mock_session, None, None, "bob")
+    await UserAdminService.get_total_users(mock_session, None, None, "bob")
     mock_session.exec.assert_called_once()

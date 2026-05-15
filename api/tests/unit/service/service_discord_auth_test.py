@@ -7,7 +7,7 @@ import pytest
 from fastapi import HTTPException
 
 from src.security.secrets import SECRET
-from src.services.DiscordAuthService import DiscordAuthService
+from src.services.auth.DiscordAuthService import DiscordAuthService
 from src.enums.Roles import Roles
 from src.models import User
 from src.utils.email_hash import hash_email
@@ -36,8 +36,8 @@ def _make_user(discord_id=DISCORD_ID, login=USER_LOGIN):
     )
 
 
-def _make_http_client_mock(mocker, status_code=200, json_body=None, raise_error=None):
-    """Build a mock httpx.AsyncClient context manager."""
+def _patch_discord_http_client(mocker, status_code=200, json_body=None, raise_error=None):
+    """Build and patch httpx.AsyncClient for DiscordAuthService."""
     mock_response = MagicMock()
     mock_response.status_code = status_code
     mock_response.json.return_value = json_body or {}
@@ -49,6 +49,8 @@ def _make_http_client_mock(mocker, status_code=200, json_body=None, raise_error=
         mock_client.get.return_value = mock_response
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
+
+    mocker.patch("src.services.auth.DiscordAuthService.httpx.AsyncClient", return_value=mock_client)
     return mock_client
 
 
@@ -61,8 +63,7 @@ class TestVerifyDiscordToken:
     @pytest.mark.asyncio
     async def test_success_returns_profile(self, mocker):
         profile = {"id": "123", "username": "testuser", "email": "test@discord.com"}
-        mock_client = _make_http_client_mock(mocker, status_code=200, json_body=profile)
-        mocker.patch("src.services.DiscordAuthService.httpx.AsyncClient", return_value=mock_client)
+        _patch_discord_http_client(mocker, status_code=200, json_body=profile)
 
         result = await DiscordAuthService.verify_token("valid_token")
 
@@ -71,8 +72,7 @@ class TestVerifyDiscordToken:
 
     @pytest.mark.asyncio
     async def test_discord_returns_401_raises_http_401(self, mocker):
-        mock_client = _make_http_client_mock(mocker, status_code=401)
-        mocker.patch("src.services.DiscordAuthService.httpx.AsyncClient", return_value=mock_client)
+        _patch_discord_http_client(mocker, status_code=401)
 
         with pytest.raises(HTTPException) as exc:
             await DiscordAuthService.verify_token("bad_token")
@@ -80,8 +80,7 @@ class TestVerifyDiscordToken:
 
     @pytest.mark.asyncio
     async def test_discord_returns_5xx_raises_http_502(self, mocker):
-        mock_client = _make_http_client_mock(mocker, status_code=500)
-        mocker.patch("src.services.DiscordAuthService.httpx.AsyncClient", return_value=mock_client)
+        _patch_discord_http_client(mocker, status_code=500)
 
         with pytest.raises(HTTPException) as exc:
             await DiscordAuthService.verify_token("some_token")
@@ -89,10 +88,7 @@ class TestVerifyDiscordToken:
 
     @pytest.mark.asyncio
     async def test_network_error_raises_http_502(self, mocker):
-        mock_client = _make_http_client_mock(
-            mocker, raise_error=httpx.ConnectError("Connection refused")
-        )
-        mocker.patch("src.services.DiscordAuthService.httpx.AsyncClient", return_value=mock_client)
+        _patch_discord_http_client(mocker, raise_error=httpx.ConnectError("Connection refused"))
 
         with pytest.raises(HTTPException) as exc:
             await DiscordAuthService.verify_token("token")

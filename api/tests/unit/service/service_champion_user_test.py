@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from src.models.Champion import Champion
 from src.models.GameAccount import GameAccount
 from src.models.ChampionUser import ChampionUser
-from src.services.ChampionUserService import ChampionUserService, VALID_RARITIES
+from src.services.account.game.ChampionUserService import ChampionUserService, VALID_RARITIES
 from tests.utils.utils_constant import USER_ID, GAME_PSEUDO
 
 
@@ -20,7 +20,9 @@ CHAMPION_ID = uuid.uuid4()
 GAME_ACCOUNT_ID = uuid.uuid4()
 
 
-MOCK_GET_CHAMPION_BY_NAME = "src.services.ChampionUserService.ChampionService.get_champion_by_name"
+MOCK_GET_CHAMPION_BY_NAME = (
+    "src.services.account.game.ChampionUserService.ChampionService.get_champion_by_name"
+)
 
 
 def _mock_session(mocker):
@@ -29,7 +31,7 @@ def _mock_session(mocker):
     session.add = mocker.MagicMock()
     # Prevent UpgradeRequestService.auto_complete from interfering with unit tests
     mocker.patch(
-        "src.services.ChampionUserService.UpgradeRequestService.auto_complete_for_champion_user",
+        "src.services.account.game.ChampionUserService.UpgradeRequestService.auto_complete_for_champion_user",
         return_value=None,
     )
     return session
