@@ -3,7 +3,7 @@ from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Query
 
-from src.dto.dto_champion import (
+from src.dto.admin.dto_champion import (
     ChampionPaginatedResponse,
     ChampionResponse,
     ChampionUpdateAliasRequest,

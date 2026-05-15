@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from starlette import status
 
-from src.dto.dto_war import WarPrefightCreateRequest, WarPrefightResponse
+from src.dto.alliance.war.dto_war import WarPrefightCreateRequest, WarPrefightResponse
 from src.models import User
 from src.services.alliance.AllianceService import AllianceService
 from src.services.auth.AuthService import AuthService

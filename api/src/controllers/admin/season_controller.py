@@ -4,7 +4,7 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, Depends
 from starlette import status
 
-from src.dto.dto_season import SeasonCreateRequest, SeasonResponse
+from src.dto.admin.dto_season import SeasonCreateRequest, SeasonResponse
 from src.models import User
 from src.services.auth.AuthService import AuthService
 from src.services.admin.SeasonService import SeasonService

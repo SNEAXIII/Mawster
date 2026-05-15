@@ -3,7 +3,7 @@ from datetime import datetime
 
 import pytest
 
-from src.dto.dto_utilisateurs import UserAdminViewSingleUser
+from src.dto.auth.dto_utilisateurs import UserAdminViewSingleUser
 from src.enums.Roles import Roles
 from src.Messages.user_messages import (
     TARGET_USER_DOESNT_EXISTS,

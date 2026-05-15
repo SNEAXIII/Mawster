@@ -4,7 +4,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
-from src.dto.dto_invitation import AllianceInvitationCreateRequest, AllianceInvitationResponse
+from src.dto.alliance.dto_invitation import (
+    AllianceInvitationCreateRequest,
+    AllianceInvitationResponse,
+)
 from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.models import User
 from src.models.AllianceInvitation import AllianceInvitation

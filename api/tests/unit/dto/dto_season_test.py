@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from src.dto.dto_season import SeasonCreateRequest
+from src.dto.admin.dto_season import SeasonCreateRequest
 
 
 class TestSeasonCreateRequest:

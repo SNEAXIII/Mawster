@@ -8,7 +8,7 @@ from src.Messages.user_messages import (
     TARGET_USER_DELETED_SUCCESSFULLY,
 )
 from src.models import User
-from src.dto.dto_utilisateurs import UpdateLoginRequest, UserProfile
+from src.dto.auth.dto_utilisateurs import UpdateLoginRequest, UserProfile
 from src.services.auth.AuthService import AuthService
 from src.services.account.UserService import UserService
 from src.utils.db import SessionDep

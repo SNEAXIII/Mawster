@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from unittest.mock import MagicMock
 
-from src.dto.dto_alliance import AllianceResponse
+from src.dto.alliance.dto_alliance import AllianceResponse
 
 
 def _make_alliance(elo: int = 1500, tier: int = 8):

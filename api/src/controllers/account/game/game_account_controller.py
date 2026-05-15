@@ -4,11 +4,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
-from src.dto.dto_game_account import (
+from src.dto.account.game.dto_game_account import (
     GameAccountCreateRequest,
     GameAccountResponse,
 )
-from src.dto.dto_mastery import GameAccountMasteryUpsertItem, GameAccountMasteryResponse
+from src.dto.account.game.dto_mastery import (
+    GameAccountMasteryUpsertItem,
+    GameAccountMasteryResponse,
+)
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND, NOT_YOUR_GAME_ACCOUNT
 from src.models import User
 from src.models.GameAccount import GameAccount

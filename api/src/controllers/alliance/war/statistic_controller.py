@@ -3,7 +3,7 @@ from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Query
 
-from src.dto.dto_statistic import ChampionUsageResponse, PlayerSeasonStatsResponse
+from src.dto.alliance.war.dto_statistic import ChampionUsageResponse, PlayerSeasonStatsResponse
 from src.models import User
 from src.utils.db import SessionDep
 from src.services.alliance.war.StatisticService import StatisticService

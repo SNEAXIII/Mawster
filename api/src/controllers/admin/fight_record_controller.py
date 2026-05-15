@@ -3,7 +3,7 @@ from typing import Annotated, Literal, Optional
 
 from fastapi import APIRouter, Depends, Query
 
-from src.dto.dto_fight_record import PaginatedFightRecordsResponse
+from src.dto.admin.dto_fight_record import PaginatedFightRecordsResponse
 from src.models import User
 from src.services.auth.AuthService import AuthService
 from src.services.knowledge.FightRecordService import FightRecordService

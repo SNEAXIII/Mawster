@@ -15,7 +15,7 @@ from src.models.WarBan import WarBan
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarSynergyAttacker import WarSynergyAttacker
 from src.models.WarPrefightAttacker import WarPrefightAttacker
-from src.dto.dto_war import (
+from src.dto.alliance.war.dto_war import (
     WarResponse,
     WarPlacementCreateRequest,
     WarPlacementResponse,

@@ -5,7 +5,7 @@ from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from src.dto.dto_war import (
+from src.dto.alliance.war.dto_war import (
     WarResponse,
     WarPlacementResponse,
     WarPrefightResponse,

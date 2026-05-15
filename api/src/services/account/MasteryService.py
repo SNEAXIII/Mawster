@@ -12,7 +12,10 @@ from src.Messages.mastery_messages import (
     MASTERY_ATTACK_EXCEEDS_UNLOCKED,
     MASTERY_DEFENSE_EXCEEDS_UNLOCKED,
 )
-from src.dto.dto_mastery import GameAccountMasteryUpsertItem, GameAccountMasteryResponse
+from src.dto.account.game.dto_mastery import (
+    GameAccountMasteryUpsertItem,
+    GameAccountMasteryResponse,
+)
 from src.utils.db import SessionDep
 
 

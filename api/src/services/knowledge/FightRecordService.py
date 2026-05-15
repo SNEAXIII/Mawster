@@ -10,7 +10,7 @@ from sqlmodel import and_, select
 from starlette import status
 
 if TYPE_CHECKING:
-    from src.dto.dto_fight_record import PaginatedFightRecordsResponse
+    from src.dto.admin.dto_fight_record import PaginatedFightRecordsResponse
 
 from src.models.Alliance import Alliance
 from src.models.Champion import Champion
@@ -168,7 +168,10 @@ class FightRecordService:
         sort_by: str = "created_at",
         sort_order: str = "desc",
     ) -> "PaginatedFightRecordsResponse":
-        from src.dto.dto_fight_record import PaginatedFightRecordsResponse, WarFightRecordResponse
+        from src.dto.admin.dto_fight_record import (
+            PaginatedFightRecordsResponse,
+            WarFightRecordResponse,
+        )
 
         # Build conditions list for reuse in count query
         conditions = []

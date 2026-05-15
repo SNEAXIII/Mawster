@@ -1,7 +1,7 @@
 import pytest
 import uuid
 from pydantic import ValidationError
-from src.dto.dto_mastery import (
+from src.dto.account.game.dto_mastery import (
     MasteryCreateRequest,
     MasteryUpdateRequest,
     GameAccountMasteryUpsertItem,

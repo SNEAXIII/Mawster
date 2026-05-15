@@ -13,7 +13,7 @@ from src.models.WarFightRecord import WarFightRecord
 from sqlalchemy import and_, func, cast, Integer, case
 from sqlmodel import select
 
-from src.dto.dto_statistic import ChampionUsageResponse, PlayerSeasonStatsResponse
+from src.dto.alliance.war.dto_statistic import ChampionUsageResponse, PlayerSeasonStatsResponse
 from src.services.alliance.AllianceService import AllianceService
 from src.utils.db import SessionDep
 

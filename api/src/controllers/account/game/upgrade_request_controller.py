@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
 from starlette import status
 
-from src.dto.dto_upgrade_request import UpgradeRequestCreate, UpgradeRequestResponse
+from src.dto.account.game.dto_upgrade_request import UpgradeRequestCreate, UpgradeRequestResponse
 from src.Messages.champion_user_messages import CHAMPION_USER_NOT_FOUND
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND
 from src.models import User

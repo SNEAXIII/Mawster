@@ -4,17 +4,17 @@ import uuid
 from datetime import datetime
 from types import SimpleNamespace
 
-from src.dto.dto_champion import ChampionResponse
-from src.dto.dto_champion_user import ChampionUserDetailResponse, ChampionUserResponse
-from src.dto.dto_upgrade_request import UpgradeRequestResponse
-from src.dto.dto_defense import DefensePlacementResponse
-from src.dto.dto_game_account import GameAccountResponse
-from src.dto.dto_alliance import (
+from src.dto.admin.dto_champion import ChampionResponse
+from src.dto.account.game.dto_champion_user import ChampionUserDetailResponse, ChampionUserResponse
+from src.dto.account.game.dto_upgrade_request import UpgradeRequestResponse
+from src.dto.alliance.war.dto_defense import DefensePlacementResponse
+from src.dto.account.game.dto_game_account import GameAccountResponse
+from src.dto.alliance.dto_alliance import (
     AllianceMemberResponse,
     AllianceOfficerResponse,
     AllianceResponse,
 )
-from src.dto.dto_invitation import AllianceInvitationResponse
+from src.dto.alliance.dto_invitation import AllianceInvitationResponse
 from src.enums.InvitationStatus import InvitationStatus
 from src.enums.InvitationType import InvitationType
 

@@ -18,7 +18,7 @@ from src.Messages.user_messages import (
 )
 from src.enums.Roles import Roles
 from src.models import User
-from src.dto.dto_utilisateurs import UserAdminViewAllUsers, UserAdminViewSingleUser
+from src.dto.auth.dto_utilisateurs import UserAdminViewAllUsers, UserAdminViewSingleUser
 from src.services.account.UserService import UserService
 from src.utils.db import SessionDep
 

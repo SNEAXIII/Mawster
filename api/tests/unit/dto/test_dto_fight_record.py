@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from unittest.mock import MagicMock
-from src.dto.dto_fight_record import (
+from src.dto.admin.dto_fight_record import (
     WarFightRecordResponse,
     WarFightSynergyResponse,
     WarFightPrefightResponse,

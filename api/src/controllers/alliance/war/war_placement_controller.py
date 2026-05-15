@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from starlette import status
 
-from src.dto.dto_war import (
+from src.dto.alliance.war.dto_war import (
     WarDefenseSummaryResponse,
     WarPlacementCreateRequest,
     WarPlacementResponse,

@@ -4,14 +4,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
-from src.dto.dto_alliance import (
+from src.dto.alliance.dto_alliance import (
     AllianceCreateRequest,
     AllianceMyRolesResponse,
     AllianceResponse,
     AllianceUpdateEloRequest,
     AllianceUpdateTierRequest,
 )
-from src.dto.dto_game_account import GameAccountResponse
+from src.dto.account.game.dto_game_account import GameAccountResponse
 from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.models import User
 from src.models.Alliance import Alliance

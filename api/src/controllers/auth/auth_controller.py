@@ -3,8 +3,8 @@ import logging
 
 from fastapi import APIRouter, Depends, Request
 
-from src.dto.dto_token import LoginResponse, RefreshTokenRequest
-from src.dto.dto_utilisateurs import (
+from src.dto.auth.dto_token import LoginResponse, RefreshTokenRequest
+from src.dto.auth.dto_utilisateurs import (
     DiscordLoginRequest,
     GoogleLoginRequest,
     UserProfile,

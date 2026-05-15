@@ -3,7 +3,7 @@ from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Query
 
-from src.dto.dto_utilisateurs import UserAdminViewAllUsers
+from src.dto.auth.dto_utilisateurs import UserAdminViewAllUsers
 from src.enums.Roles import Roles
 from src.Messages.user_messages import (
     TARGET_USER_DELETED_SUCCESSFULLY,

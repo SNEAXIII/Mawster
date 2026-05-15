@@ -13,8 +13,8 @@ from sqlalchemy import text
 from sqlmodel import select, SQLModel
 from starlette import status as http_status
 
-from src.dto.dto_token import LoginResponse, TokenBody
-from src.dto.dto_utilisateurs import UserProfile
+from src.dto.auth.dto_token import LoginResponse, TokenBody
+from src.dto.auth.dto_utilisateurs import UserProfile
 from src.enums.Roles import Roles
 from src.models import User, GameAccount
 from src.models.Champion import Champion

@@ -7,7 +7,7 @@ from sqlmodel import select, or_
 from src.Messages.champion_messages import (
     CHAMPION_NOT_FOUND,
 )
-from src.dto.dto_champion import (
+from src.dto.admin.dto_champion import (
     ChampionPaginatedResponse,
     ChampionResponse,
     ChampionLoadRequest,

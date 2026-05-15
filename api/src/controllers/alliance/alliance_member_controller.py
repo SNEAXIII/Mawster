@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
-from src.dto.dto_alliance import (
+from src.dto.alliance.dto_alliance import (
     AllianceAddOfficerRequest,
     AllianceRemoveOfficerRequest,
     AllianceResponse,
