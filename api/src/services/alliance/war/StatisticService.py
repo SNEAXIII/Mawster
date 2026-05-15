@@ -10,7 +10,7 @@ from src.models.Alliance import Alliance
 from src.models.Champion import Champion
 from src.models.War import WarStatus
 from src.models.WarFightRecord import WarFightRecord
-from sqlalchemy import and_, func, cast, Integer, case
+from sqlalchemy import and_, func, cast, Integer, Float, case
 from sqlmodel import select
 
 from src.dto.alliance.war.dto_statistic import ChampionUsageResponse, PlayerSeasonStatsResponse
@@ -45,6 +45,7 @@ class StatisticService:
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
 
+        _wars_participated = func.count(func.distinct(War.id))
         sql = (
             select(
                 GameAccount.id,
@@ -56,6 +57,25 @@ class StatisticService:
                 cast(func.sum(_boss_case), Integer).label("total_boss"),
                 cast(_total_not_fought, Integer).label("total_not_fought"),
                 cast((1 - _total_kos / _total_fights) * 100, Integer).label("ratio"),
+                cast(_wars_participated, Integer).label("wars_participated"),
+                cast(
+                    func.coalesce(
+                        cast(_total_fights, Float) / func.nullif(_wars_participated, 0),
+                        0.0,
+                    ),
+                    Float,
+                ).label("avg_fights_per_war"),
+                cast(
+                    func.coalesce(
+                        cast(func.sum(_miniboss_case) + func.sum(_boss_case), Float)
+                        / func.nullif(_wars_participated, 0),
+                        0.0,
+                    ),
+                    Float,
+                ).label("avg_boss_miniboss_per_war"),
+                case((GameAccount.alliance_id == alliance_id, True), else_=False).label(
+                    "is_current_member"
+                ),
             )
             .join(ChampionUser, ChampionUser.game_account_id == GameAccount.id)
             .join(
@@ -64,7 +84,7 @@ class StatisticService:
             )
             .join(War, WarDefensePlacement.war_id == War.id)
             .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
-            .where(GameAccount.alliance_id == alliance_id)
+            .where(War.alliance_id == alliance_id)
             .where(War.status == WarStatus.ended)
             .group_by(GameAccount.id, GameAccount.game_pseudo, GameAccount.alliance_group)
         )
