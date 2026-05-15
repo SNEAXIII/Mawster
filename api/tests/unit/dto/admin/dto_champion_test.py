@@ -1,0 +1,58 @@
+"""Unit tests for ChampionResponse DTO model_validate."""
+
+import uuid
+from types import SimpleNamespace
+
+from src.dto.admin.dto_champion import ChampionResponse
+
+
+def _ns(**kwargs):
+    return SimpleNamespace(**kwargs)
+
+
+def _make_champion(**overrides):
+    defaults = {
+        "id": uuid.uuid4(),
+        "name": "Spider-Man",
+        "champion_class": "Science",
+        "image_url": "/img/spider.png",
+        "is_7_star": True,
+        "is_ascendable": True,
+        "has_prefight": False,
+        "is_saga_attacker": False,
+        "is_saga_defender": False,
+        "alias": "spidey;peter",
+    }
+    defaults.update(overrides)
+    return _ns(**defaults)
+
+
+class TestChampionResponseModelValidate:
+    def test_maps_all_fields(self):
+        champ = _make_champion()
+        dto = ChampionResponse.model_validate(champ)
+
+        assert dto.id == champ.id
+        assert dto.name == "Spider-Man"
+        assert dto.champion_class == "Science"
+        assert dto.image_url == "/img/spider.png"
+        assert dto.is_7_star is True
+        assert dto.is_ascendable is True
+        assert dto.has_prefight is False
+        assert dto.is_saga_attacker is False
+        assert dto.is_saga_defender is False
+        assert dto.alias == "spidey;peter"
+
+    def test_handles_none_optional_fields(self):
+        champ = _make_champion(image_url=None, alias=None)
+        dto = ChampionResponse.model_validate(champ)
+
+        assert dto.image_url is None
+        assert dto.alias is None
+
+    def test_defaults_booleans(self):
+        champ = _make_champion(is_7_star=False, is_ascendable=False)
+        dto = ChampionResponse.model_validate(champ)
+
+        assert dto.is_7_star is False
+        assert dto.is_ascendable is False

@@ -1,14 +1,10 @@
-"""Unit tests for DTO model_validate with from_attributes."""
+"""Unit tests for alliance-related DTO model_validate with from_attributes."""
 
 import uuid
 from datetime import datetime
 from types import SimpleNamespace
 
-from src.dto.admin.dto_champion import ChampionResponse
-from src.dto.account.game.dto_champion_user import ChampionUserDetailResponse, ChampionUserResponse
-from src.dto.account.game.dto_upgrade_request import UpgradeRequestResponse
 from src.dto.alliance.war.dto_defense import DefensePlacementResponse
-from src.dto.account.game.dto_game_account import GameAccountResponse
 from src.dto.alliance.dto_alliance import (
     AllianceMemberResponse,
     AllianceOfficerResponse,
@@ -62,188 +58,8 @@ def _make_champion_user(champion=None, **overrides):
     }
     defaults.update(overrides)
     obj = _ns(**defaults)
-    # Add the rarity property
     obj.rarity = f"{obj.stars}r{obj.rank}"
     return obj
-
-
-# ---------------------------------------------------------------------------
-# ChampionResponse.model_validate
-# ---------------------------------------------------------------------------
-
-
-class TestChampionResponseModelValidate:
-    def test_maps_all_fields(self):
-        champ = _make_champion()
-        dto = ChampionResponse.model_validate(champ)
-
-        assert dto.id == champ.id
-        assert dto.name == "Spider-Man"
-        assert dto.champion_class == "Science"
-        assert dto.image_url == "/img/spider.png"
-        assert dto.is_7_star is True
-        assert dto.is_ascendable is True
-        assert dto.has_prefight is False
-        assert dto.is_saga_attacker is False
-        assert dto.is_saga_defender is False
-        assert dto.alias == "spidey;peter"
-
-    def test_handles_none_optional_fields(self):
-        champ = _make_champion(image_url=None, alias=None)
-        dto = ChampionResponse.model_validate(champ)
-
-        assert dto.image_url is None
-        assert dto.alias is None
-
-    def test_defaults_booleans(self):
-        champ = _make_champion(is_7_star=False, is_ascendable=False)
-        dto = ChampionResponse.model_validate(champ)
-
-        assert dto.is_7_star is False
-        assert dto.is_ascendable is False
-
-
-# ---------------------------------------------------------------------------
-# ChampionUserResponse.model_validate
-# ---------------------------------------------------------------------------
-
-
-class TestChampionUserResponseModelValidate:
-    def test_maps_all_fields(self):
-        cu = _make_champion_user()
-        dto = ChampionUserResponse.model_validate(cu)
-
-        assert dto.id == cu.id
-        assert dto.game_account_id == cu.game_account_id
-        assert dto.champion_id == cu.champion_id
-        assert dto.rarity == "7r3"
-        assert dto.signature == 200
-        assert dto.is_preferred_attacker is True
-        assert dto.ascension == 1
-
-    def test_default_values(self):
-        cu = _make_champion_user(is_preferred_attacker=False, ascension=0)
-        dto = ChampionUserResponse.model_validate(cu)
-
-        assert dto.is_preferred_attacker is False
-        assert dto.ascension == 0
-
-
-# ---------------------------------------------------------------------------
-# ChampionUserDetailResponse.model_validate
-# ---------------------------------------------------------------------------
-
-
-class TestChampionUserDetailResponseModelValidate:
-    def test_maps_champion_user_and_champion_fields(self):
-        champ = _make_champion(
-            name="Doom",
-            champion_class="Mystic",
-            is_ascendable=True,
-            is_saga_attacker=True,
-        )
-        cu = _make_champion_user(champion=champ)
-        dto = ChampionUserDetailResponse.model_validate(cu)
-
-        # ChampionUser fields
-        assert dto.id == cu.id
-        assert dto.rarity == "7r3"
-        assert dto.signature == 200
-        assert dto.is_preferred_attacker is True
-        assert dto.ascension == 1
-
-        # Champion fields
-        assert dto.champion_name == "Doom"
-        assert dto.champion_class == "Mystic"
-        assert dto.is_ascendable is True
-        assert dto.is_saga_attacker is True
-        assert dto.is_saga_defender is False
-        assert dto.image_url == champ.image_url
-
-    def test_inherits_from_champion_user_response(self):
-        assert issubclass(ChampionUserDetailResponse, ChampionUserResponse)
-
-    def test_non_ascendable_champion(self):
-        champ = _make_champion(is_ascendable=False)
-        cu = _make_champion_user(champion=champ)
-        dto = ChampionUserDetailResponse.model_validate(cu)
-
-        assert dto.is_ascendable is False
-
-    def test_saga_champion(self):
-        champ = _make_champion(is_saga_attacker=True, is_saga_defender=True)
-        cu = _make_champion_user(champion=champ)
-        dto = ChampionUserDetailResponse.model_validate(cu)
-
-        assert dto.is_saga_attacker is True
-        assert dto.is_saga_defender is True
-
-    def test_from_dict_passthrough(self):
-        data = {
-            "id": uuid.uuid4(),
-            "game_account_id": uuid.uuid4(),
-            "champion_id": uuid.uuid4(),
-            "rarity": "7r3",
-            "signature": 200,
-            "is_preferred_attacker": True,
-            "ascension": 1,
-            "champion_name": "Doom",
-            "champion_class": "Mystic",
-        }
-        dto = ChampionUserDetailResponse.model_validate(data)
-        assert dto.champion_name == "Doom"
-        assert dto.rarity == "7r3"
-
-
-# ---------------------------------------------------------------------------
-# UpgradeRequestResponse.model_validate
-# ---------------------------------------------------------------------------
-
-
-class TestUpgradeRequestResponseModelValidate:
-    def test_maps_all_fields(self):
-        now = datetime.now()
-        champ = _make_champion(name="Hercules", champion_class="Cosmic")
-        cu = _make_champion_user(champion=champ, stars=7, rank=2)
-        requester = _ns(game_pseudo="DrBalise")
-        req = _ns(
-            id=uuid.uuid4(),
-            champion_user_id=cu.id,
-            requester_game_account_id=uuid.uuid4(),
-            requester=requester,
-            requested_rarity="7r3",
-            champion_user=cu,
-            created_at=now,
-            done_at=None,
-        )
-        dto = UpgradeRequestResponse.model_validate(req)
-
-        assert dto.id == req.id
-        assert dto.requester_pseudo == "DrBalise"
-        assert dto.requested_rarity == "7r3"
-        assert dto.current_rarity == "7r2"
-        assert dto.champion_name == "Hercules"
-        assert dto.champion_class == "Cosmic"
-        assert dto.image_url == champ.image_url
-        assert dto.created_at == now
-        assert dto.done_at is None
-
-    def test_done_request(self):
-        now = datetime.now()
-        champ = _make_champion()
-        cu = _make_champion_user(champion=champ)
-        req = _ns(
-            id=uuid.uuid4(),
-            champion_user_id=cu.id,
-            requester_game_account_id=uuid.uuid4(),
-            requester=_ns(game_pseudo="X"),
-            requested_rarity="7r4",
-            champion_user=cu,
-            created_at=now,
-            done_at=now,
-        )
-        dto = UpgradeRequestResponse.model_validate(req)
-        assert dto.done_at == now
 
 
 # ---------------------------------------------------------------------------
@@ -346,51 +162,6 @@ class TestDefensePlacementResponseModelValidate:
         dto = DefensePlacementResponse.model_validate(data)
         assert dto.champion_name == "Doom"
         assert dto.game_pseudo == "Player1"
-
-
-# ---------------------------------------------------------------------------
-# GameAccountResponse.model_validate
-# ---------------------------------------------------------------------------
-
-
-class TestGameAccountResponseModelValidate:
-    def test_with_alliance(self):
-        now = datetime.now()
-        alliance = _ns(tag="TST", name=TEST_ALLIANCE_NAME)
-        account = _ns(
-            id=uuid.uuid4(),
-            user_id=uuid.uuid4(),
-            alliance_id=uuid.uuid4(),
-            alliance_group=2,
-            alliance=alliance,
-            game_pseudo="DrBalise",
-            is_primary=True,
-            created_at=now,
-        )
-        dto = GameAccountResponse.model_validate(account)
-
-        assert dto.alliance_tag == "TST"
-        assert dto.alliance_name == TEST_ALLIANCE_NAME
-        assert dto.game_pseudo == "DrBalise"
-        assert dto.is_primary is True
-
-    def test_without_alliance(self):
-        now = datetime.now()
-        account = _ns(
-            id=uuid.uuid4(),
-            user_id=uuid.uuid4(),
-            alliance_id=None,
-            alliance_group=None,
-            game_pseudo="Solo",
-            is_primary=False,
-            created_at=now,
-        )
-        # No alliance attribute at all
-        dto = GameAccountResponse.model_validate(account)
-
-        assert dto.alliance_tag is None
-        assert dto.alliance_name is None
-        assert dto.alliance_id is None
 
 
 # ---------------------------------------------------------------------------
