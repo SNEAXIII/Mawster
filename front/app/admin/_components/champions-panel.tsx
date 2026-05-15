@@ -103,7 +103,7 @@ export default function ChampionsPanel() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, perPage, selectedClass, searchQuery]);
+  }, [currentPage, perPage, selectedClass, searchQuery, filterAscendable, filterPrefight, filterSagaAttacker, filterSagaDefender]);
 
   function resetPagination() {
     setPerPage(BASE_SIZE);
