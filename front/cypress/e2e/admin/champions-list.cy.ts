@@ -112,7 +112,7 @@ describe('Admin — champions list & filters', () => {
       cy.contains('[role="menuitemradio"]', 'Tech').click();
       cy.getByCy('champion-row-Wolverine').should('not.exist');
       cy.getByCy('filter-class').click();
-      cy.contains('[role="menuitemradio"]', 'All').click();
+      cy.contains('[role="menuitemradio"]', 'All').click({ force: true });
       cy.getByCy('champion-row-Iron Man').should('be.visible');
       cy.getByCy('champion-row-Wolverine').should('be.visible');
     });

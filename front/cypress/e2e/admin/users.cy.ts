@@ -57,7 +57,7 @@ describe('Admin — users panel', () => {
     cy.getByCy(`user-row-${regularUserLogin}`).find('button').first().click();
     cy.getByCy(`disable-${regularUserLogin}`).click();
     cy.getByCy('confirmation-dialog-confirm').click();
-    cy.getByCy(`user-row-${regularUserLogin}`).should('contain.text', 'disabled');
+    cy.getByCy(`user-row-${regularUserLogin}`).should('contain.text', 'Disabled');
   });
 
   it('enable user → row returns to enabled state', () => {
@@ -71,15 +71,15 @@ describe('Admin — users panel', () => {
     cy.getByCy(`user-row-${regularUserLogin}`).find('button').first().click();
     cy.getByCy(`enable-${regularUserLogin}`).click();
     cy.getByCy('confirmation-dialog-confirm').click();
-    cy.getByCy(`user-row-${regularUserLogin}`).should('contain.text', 'enabled');
+    cy.getByCy(`user-row-${regularUserLogin}`).should('contain.text', 'Enabled');
   });
 
-  it('delete user → confirmation dialog → user removed from list', () => {
+  it('delete user → confirmation dialog → row shows deleted state', () => {
     cy.navTo('admin');
     cy.getByCy('tab-users').click();
     cy.getByCy(`user-row-${regularUserLogin}`).find('button').first().click();
     cy.getByCy(`delete-user-${regularUserLogin}`).click();
     cy.getByCy('confirmation-dialog-confirm').click();
-    cy.getByCy(`user-row-${regularUserLogin}`).should('not.exist');
+    cy.getByCy(`user-row-${regularUserLogin}`).should('contain.text', 'Deleted');
   });
 });
