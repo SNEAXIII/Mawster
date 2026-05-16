@@ -71,7 +71,7 @@ export default function AllianceRankingChart({ points, seasonNumber }: Readonly<
 
   if (points.length === 0) {
     return (
-      <p className='text-xs text-muted-foreground italic py-2'>
+      <p className='text-xs text-muted-foreground italic py-2' data-cy='ranking-history-empty'>
         {t.game.alliances.noWarsThisSeason}
         {seasonNumber !== null && ` (${t.game.alliances.season} ${seasonNumber})`}
       </p>
@@ -79,7 +79,7 @@ export default function AllianceRankingChart({ points, seasonNumber }: Readonly<
   }
 
   return (
-    <div className='space-y-1'>
+    <div className='space-y-1' data-cy='ranking-history-chart'>
       {seasonNumber !== null && (
         <p className='text-xs text-muted-foreground'>
           {t.game.alliances.season} {seasonNumber}
