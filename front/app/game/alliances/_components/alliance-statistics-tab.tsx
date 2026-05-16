@@ -262,24 +262,6 @@ export default function AllianceStatisticsTab({
     selectedGameAccountId !== null ||
     selectedWarId !== null;
 
-  if (statsLoading) {
-    return <p className='text-sm text-muted-foreground py-6 text-center'>{stat.loading}</p>;
-  }
-  if (statsError) {
-    return (
-      <div className='flex flex-col items-center gap-2 py-6'>
-        <p className='text-sm text-destructive'>{statsError}</p>
-        <Button
-          size='sm'
-          variant='outline'
-          onClick={onRetry}
-        >
-          {stat.retry}
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div className='flex flex-col gap-4'>
       {alliances.length > 1 && (
@@ -306,11 +288,18 @@ export default function AllianceStatisticsTab({
         </Select>
       )}
 
-      <CollapsibleSection title={t.game.alliances.rankingHistory} defaultOpen={false}>
+      <CollapsibleSection title={t.game.alliances.rankingHistory} defaultOpen={true}>
         <AllianceRankingChart points={rankingPoints} seasonNumber={rankingSeasonNumber} />
       </CollapsibleSection>
 
-      {seasonStats.length === 0 ? (
+      {statsLoading ? (
+        <p className='text-sm text-muted-foreground py-6 text-center'>{stat.loading}</p>
+      ) : statsError ? (
+        <div className='flex flex-col items-center gap-2 py-6'>
+          <p className='text-sm text-destructive'>{statsError}</p>
+          <Button size='sm' variant='outline' onClick={onRetry}>{stat.retry}</Button>
+        </div>
+      ) : seasonStats.length === 0 ? (
         <p className='text-sm text-muted-foreground py-6 text-center' data-cy='statistics-empty'>{stat.empty}</p>
       ) : (
         <>
