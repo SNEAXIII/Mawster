@@ -175,6 +175,29 @@ export async function inviteVisitor(
   return response.json();
 }
 
+export interface RankingHistoryPoint {
+  war_number: number;
+  opponent_name: string;
+  tier: number | null;
+  elo_after: number;
+  win: boolean | null;
+}
+
+export interface RankingHistoryResponse {
+  season_number: number | null;
+  points: RankingHistoryPoint[];
+}
+
+export async function fetchAllianceRankingHistory(
+  allianceId: string
+): Promise<RankingHistoryResponse> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/ranking-history`, {
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, "Erreur lors de la récupération de l'historique de classement");
+  return response.json();
+}
+
 export interface AllianceRoleEntry {
   is_owner: boolean;
   is_officer: boolean;

@@ -42,12 +42,12 @@ all:
 	-taskkill /f /im node.exe
 	-taskkill /f /im python.exe
 	docker rm -f $$(docker ps -aq)
-	wt -d "$$(pwd)" powershell -Command "make db-dev"
 	wt -d "$$(pwd)" powershell -Command "make e2e-open"
 	wt -d "$$(pwd)/api" powershell -Command "make run-dev"
 	wt -d "$$(pwd)/api" powershell -Command "make run-testing"
 	wt -d "$$(pwd)/front" powershell -Command "npm run dev"
 	wt -d "$$(pwd)/front" powershell -Command "npm run testing"
+	wt -d "$$(pwd)" powershell -Command "make db-dev"
 
 e2e-stop:
 	if (Test-Path .e2e-api.pid) { Stop-Process -Id (Get-Content .e2e-api.pid) -Force -ErrorAction SilentlyContinue; Remove-Item .e2e-api.pid -Force -ErrorAction SilentlyContinue }
