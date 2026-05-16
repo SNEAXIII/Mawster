@@ -22,6 +22,10 @@ class PlayerSeasonStatsResponse(BaseModel):
     total_boss: int
     total_not_fought: int
     ratio: int
+    wars_participated: int
+    avg_fights_per_war: float
+    avg_boss_miniboss_per_war: float
+    is_current_member: bool
 
     @computed_field
     @property

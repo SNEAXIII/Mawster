@@ -25,6 +25,10 @@ export interface PlayerSeasonStats {
   total_not_fought: number;
   ratio: number;
   score: number;
+  wars_participated: number;
+  avg_fights_per_war: number;
+  avg_boss_miniboss_per_war: number;
+  is_current_member: boolean;
 }
 
 export async function getCurrentSeasonStatistics(allianceId: string): Promise<PlayerSeasonStats[]> {
