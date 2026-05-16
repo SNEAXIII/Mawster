@@ -288,7 +288,7 @@ export default function AllianceStatisticsTab({
         </Select>
       )}
 
-      <CollapsibleSection title={t.game.alliances.rankingHistory} defaultOpen={true}>
+      <CollapsibleSection title={t.game.alliances.rankingHistory} defaultOpen={false}>
         <AllianceRankingChart points={rankingPoints} seasonNumber={rankingSeasonNumber} />
       </CollapsibleSection>
 

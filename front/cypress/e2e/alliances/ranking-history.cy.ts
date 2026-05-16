@@ -37,6 +37,7 @@ describe('Alliance Statistics – Ranking History', () => {
         cy.apiLogin(ownerData.user_id);
         goToStatsTab();
         cy.getByCy('collapsible-ranking-history').should('be.visible');
+        openRankingHistory();
         cy.getByCy('ranking-history-empty').should('be.visible');
       });
     });
@@ -51,6 +52,7 @@ describe('Alliance Statistics – Ranking History', () => {
               cy.apiEndWar(ownerData.access_token, allianceId, war2.id, false, -30).then(() => {
                 cy.apiLogin(ownerData.user_id);
                 goToStatsTab();
+                openRankingHistory();
                 cy.getByCy('ranking-history-chart').should('be.visible');
               });
             });
@@ -65,11 +67,11 @@ describe('Alliance Statistics – Ranking History', () => {
       createAndActivateSeason(adminData.access_token).then(() => {
         cy.apiLogin(ownerData.user_id);
         goToStatsTab();
-        cy.getByCy('ranking-history-empty').should('be.visible');
-        openRankingHistory();
-        cy.getByCy('ranking-history-empty').should('not.be.visible');
+        cy.getByCy('collapsible-ranking-history').should('be.visible');
         openRankingHistory();
         cy.getByCy('ranking-history-empty').should('be.visible');
+        openRankingHistory();
+        cy.getByCy('ranking-history-empty').should('not.exist');
       });
     });
   });
