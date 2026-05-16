@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { ChevronUp, ChevronDown, ChevronsUpDown, LogOut } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
-import type { Alliance } from '@/app/services/game';
+import type { Alliance, RankingHistoryPoint } from '@/app/services/game';
+import { fetchAllianceRankingHistory } from '@/app/services/game';
+import AllianceRankingChart from './alliance-ranking-chart';
 import type { PlayerSeasonStats } from '@/app/services/statistics';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CollapsibleSection } from '@/components/collapsible-section';
 import { MemberChampionChart } from './member-champion-chart';
 import { ChampionDetailModal } from './champion-detail-modal';
 import { useChampionStats } from './use-champion-stats';
@@ -114,6 +117,20 @@ export default function AllianceStatisticsTab({
   const stat = t.game.alliances.statistics;
   const [ratioMin, setRatioMin] = useState(-Infinity);
   const [selectedGroup, setSelectedGroup] = useState('all');
+  const [rankingPoints, setRankingPoints] = useState<RankingHistoryPoint[]>([]);
+  const [rankingSeasonNumber, setRankingSeasonNumber] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!selectedAllianceId) return;
+    setRankingPoints([]);
+    setRankingSeasonNumber(null);
+    fetchAllianceRankingHistory(selectedAllianceId)
+      .then((data) => {
+        setRankingPoints(data.points);
+        setRankingSeasonNumber(data.season_number);
+      })
+      .catch(() => {});
+  }, [selectedAllianceId]);
   const [memberFilter, setMemberFilter] = useState<MemberFilter>('current');
   const [sortField, setSortField] = useState<SortField>('ratio');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
@@ -288,6 +305,10 @@ export default function AllianceStatisticsTab({
           </SelectContent>
         </Select>
       )}
+
+      <CollapsibleSection title={t.game.alliances.rankingHistory} defaultOpen={false}>
+        <AllianceRankingChart points={rankingPoints} seasonNumber={rankingSeasonNumber} />
+      </CollapsibleSection>
 
       {seasonStats.length === 0 ? (
         <p className='text-sm text-muted-foreground py-6 text-center' data-cy='statistics-empty'>{stat.empty}</p>
