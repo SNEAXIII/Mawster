@@ -423,8 +423,15 @@ export default function AllianceStatisticsTab({
                       <TableHead>{stat.columns.player}</TableHead>
                       <TableHead className='text-right'>{stat.columns.group}</TableHead>
                       <SortableHead
-                        label={stat.columns.fights}
-                        field='total_fights'
+                        label={stat.columns.ratio}
+                        field='ratio'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
+                        label={stat.columns.score}
+                        field='score'
                         sortField={sortField}
                         sortDir={sortDir}
                         onSort={toggleSort}
@@ -432,6 +439,27 @@ export default function AllianceStatisticsTab({
                       <SortableHead
                         label={stat.columns.kos}
                         field='total_kos'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
+                        label={stat.columns.avgFights}
+                        field='avg_fights_per_war'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
+                        label={stat.columns.avgBossMiniboss}
+                        field='avg_boss_miniboss_per_war'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
+                        label={stat.columns.fights}
+                        field='total_fights'
                         sortField={sortField}
                         sortDir={sortDir}
                         onSort={toggleSort}
@@ -451,27 +479,6 @@ export default function AllianceStatisticsTab({
                         onSort={toggleSort}
                       />
                       <SortableHead
-                        label={stat.columns.notFought}
-                        field='total_not_fought'
-                        sortField={sortField}
-                        sortDir={sortDir}
-                        onSort={toggleSort}
-                      />
-                      <SortableHead
-                        label={stat.columns.ratio}
-                        field='ratio'
-                        sortField={sortField}
-                        sortDir={sortDir}
-                        onSort={toggleSort}
-                      />
-                      <SortableHead
-                        label={stat.columns.score}
-                        field='score'
-                        sortField={sortField}
-                        sortDir={sortDir}
-                        onSort={toggleSort}
-                      />
-                      <SortableHead
                         label={stat.columns.warsParticipated}
                         field='wars_participated'
                         sortField={sortField}
@@ -479,15 +486,8 @@ export default function AllianceStatisticsTab({
                         onSort={toggleSort}
                       />
                       <SortableHead
-                        label={stat.columns.avgFights}
-                        field='avg_fights_per_war'
-                        sortField={sortField}
-                        sortDir={sortDir}
-                        onSort={toggleSort}
-                      />
-                      <SortableHead
-                        label={stat.columns.avgBossMiniboss}
-                        field='avg_boss_miniboss_per_war'
+                        label={stat.columns.notFought}
+                        field='total_not_fought'
                         sortField={sortField}
                         sortDir={sortDir}
                         onSort={toggleSort}
@@ -514,26 +514,6 @@ export default function AllianceStatisticsTab({
                             {row.alliance_group ?? '—'}
                           </TableCell>
                           <StatCell
-                            value={row.total_fights}
-                            className={cellClass('total_fights', row.total_fights)}
-                          />
-                          <StatCell
-                            value={row.total_kos}
-                            className={cellClass('total_kos', row.total_kos, true)}
-                          />
-                          <StatCell
-                            value={row.total_miniboss}
-                            className={cellClass('total_miniboss', row.total_miniboss)}
-                          />
-                          <StatCell
-                            value={row.total_boss}
-                            className={cellClass('total_boss', row.total_boss)}
-                          />
-                          <StatCell
-                            value={row.total_not_fought}
-                            className={cellClass('total_not_fought', row.total_not_fought, true)}
-                          />
-                          <StatCell
                             value={row.ratio}
                             suffix='%'
                             className={cellClass('ratio', row.ratio)}
@@ -543,8 +523,8 @@ export default function AllianceStatisticsTab({
                             className={cellClass('score', row.score)}
                           />
                           <StatCell
-                            value={row.wars_participated}
-                            className={cellClass('wars_participated', row.wars_participated)}
+                            value={row.total_kos}
+                            className={cellClass('total_kos', row.total_kos, true)}
                           />
                           <StatCell
                             value={row.avg_fights_per_war}
@@ -555,6 +535,26 @@ export default function AllianceStatisticsTab({
                             value={row.avg_boss_miniboss_per_war}
                             decimals={1}
                             className={cellClass('avg_boss_miniboss_per_war', row.avg_boss_miniboss_per_war)}
+                          />
+                          <StatCell
+                            value={row.total_fights}
+                            className={cellClass('total_fights', row.total_fights)}
+                          />
+                          <StatCell
+                            value={row.total_miniboss}
+                            className={cellClass('total_miniboss', row.total_miniboss)}
+                          />
+                          <StatCell
+                            value={row.total_boss}
+                            className={cellClass('total_boss', row.total_boss)}
+                          />
+                          <StatCell
+                            value={row.wars_participated}
+                            className={cellClass('wars_participated', row.wars_participated)}
+                          />
+                          <StatCell
+                            value={row.total_not_fought}
+                            className={cellClass('total_not_fought', row.total_not_fought, true)}
                           />
                         </TableRow>
                       );
