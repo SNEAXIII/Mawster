@@ -17,6 +17,7 @@ type ActionIconButtonProps = Readonly<{
   variant?: keyof typeof VARIANT_CLASSES;
   disabled?: boolean;
   className?: string;
+  'data-cy'?: string;
 }>;
 
 export function ActionIconButton({
@@ -26,6 +27,7 @@ export function ActionIconButton({
   variant = 'default',
   disabled = false,
   className = '',
+  'data-cy': dataCy,
 }: ActionIconButtonProps) {
   return (
     <Button
@@ -35,6 +37,7 @@ export function ActionIconButton({
       title={title}
       disabled={disabled}
       className={`${VARIANT_CLASSES[variant]} ${className}`}
+      data-cy={dataCy}
     >
       {icon}
     </Button>

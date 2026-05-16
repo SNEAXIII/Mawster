@@ -265,6 +265,7 @@ export default function ChampionsPanel() {
         <Button
           variant='outline'
           onClick={handleExport}
+          data-cy='export-champions-btn'
         >
           <Download className='mr-1 h-4 w-4' /> {t.champions.exportJson}
         </Button>
@@ -272,6 +273,7 @@ export default function ChampionsPanel() {
           variant='outline'
           onClick={() => fileInputRef.current?.click()}
           disabled={importing}
+          data-cy='import-champions-btn'
         >
           <Upload className='mr-1 h-4 w-4' />{' '}
           {importing ? t.common.loading : t.champions.importJson}
@@ -291,38 +293,48 @@ export default function ChampionsPanel() {
           labelDescription={t.champions.selectClass}
           possibleValues={championClasses.map((c) => ({ value: c.value, label: c.label }))}
           selectedValue={selectedClass}
+          showSelected
           setValue={(val) => {
             setSelectedClass(val);
             setCurrentPage(1);
           }}
+          data-cy='filter-class'
         />
         <DropdownRadioMenu
           labelButton={t.champions.ascendableFilter}
           labelDescription={t.champions.ascendableFilter}
           possibleValues={boolFilterOptions}
           selectedValue={filterAscendable}
+          showSelected
           setValue={(val) => { setFilterAscendable(val); setCurrentPage(1); }}
+          data-cy='filter-ascendable'
         />
         <DropdownRadioMenu
           labelButton={t.champions.prefightFilter}
           labelDescription={t.champions.prefightFilter}
           possibleValues={boolFilterOptions}
           selectedValue={filterPrefight}
+          showSelected
           setValue={(val) => { setFilterPrefight(val); setCurrentPage(1); }}
+          data-cy='filter-prefight'
         />
         <DropdownRadioMenu
           labelButton={t.champions.sagaAttackerFilter}
           labelDescription={t.champions.sagaAttackerFilter}
           possibleValues={boolFilterOptions}
           selectedValue={filterSagaAttacker}
+          showSelected
           setValue={(val) => { setFilterSagaAttacker(val); setCurrentPage(1); }}
+          data-cy='filter-saga-attacker'
         />
         <DropdownRadioMenu
           labelButton={t.champions.sagaDefenderFilter}
           labelDescription={t.champions.sagaDefenderFilter}
           possibleValues={boolFilterOptions}
           selectedValue={filterSagaDefender}
+          showSelected
           setValue={(val) => { setFilterSagaDefender(val); setCurrentPage(1); }}
+          data-cy='filter-saga-defender'
         />
         <SearchInput
           placeholder={t.champions.searchPlaceholder}
@@ -332,6 +344,7 @@ export default function ChampionsPanel() {
             setCurrentPage(1);
           }}
           className='w-64'
+          data-cy='champion-search'
         />
       </div>
 
@@ -347,7 +360,7 @@ export default function ChampionsPanel() {
       ) : champions.length === 0 ? (
         <div className='text-center py-8 text-muted-foreground'>{t.champions.empty}</div>
       ) : (
-        <div className='overflow-x-auto'>
+        <div className='overflow-x-auto' data-cy='champions-list'>
           <table className='w-full text-sm border-collapse'>
             <thead>
               <tr className='border-b bg-muted/50'>

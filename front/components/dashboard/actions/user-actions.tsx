@@ -33,6 +33,7 @@ type UserAction = (typeof UserAction)[keyof typeof UserAction];
 
 interface UserActionsProps {
   userId: string;
+  login: string;
   isAdmin: boolean;
   isTargetSuperAdmin?: boolean;
   isSuperAdmin?: boolean;
@@ -43,6 +44,7 @@ interface UserActionsProps {
 
 export const UserActions: React.FC<UserActionsProps> = ({
   userId,
+  login,
   isAdmin,
   isTargetSuperAdmin = false,
   isSuperAdmin = false,
@@ -153,6 +155,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
                     onClick={() => setIsPromoteToAdminDialogOpen(true)}
                     className='text-blue-600 flex items-center'
                     disabled={isLoading.promote}
+                    data-cy={`promote-${login}`}
                   >
                     <UserPlus className='mr-2 h-4 w-4' />
                     {t.dashboard.actions.promote}
@@ -163,6 +166,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
                     onClick={() => setIsDemoteDialogOpen(true)}
                     className='text-orange-600 flex items-center'
                     disabled={isLoading.demote}
+                    data-cy={`demote-${login}`}
                   >
                     <UserMinus className='mr-2 h-4 w-4' />
                     {t.dashboard.actions.demote}
@@ -175,6 +179,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
                         className='text-green-600 flex items-center'
                         onClick={() => setIsDisableDialogOpen(true)}
                         disabled={isLoading.enable}
+                        data-cy={`enable-${login}`}
                       >
                         <Power className='mr-2 h-4 w-4' />
                         {t.dashboard.actions.enable}
@@ -184,6 +189,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
                         className='text-orange-600 flex items-center'
                         onClick={() => setIsDisableDialogOpen(true)}
                         disabled={isLoading.disable}
+                        data-cy={`disable-${login}`}
                       >
                         <Power className='mr-2 h-4 w-4' />
                         {t.dashboard.actions.disable}
@@ -193,6 +199,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
                       onClick={() => setIsDeleteDialogOpen(true)}
                       className='text-red-600 flex items-center'
                       disabled={isLoading.delete}
+                      data-cy={`delete-user-${login}`}
                     >
                       <Trash className='mr-2 h-4 w-4' />
                       {t.dashboard.actions.delete}

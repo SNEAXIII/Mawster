@@ -17,9 +17,9 @@ interface UserRowProps {
 
 export function UserRow({ user, loadUsers, currentUserRole }: UserRowProps) {
   return (
-    <TableRow>
+    <TableRow data-cy={`user-row-${user.login}`}>
       <RowUserLogin login={user.login} />
-      <RowUserRole role={user.role} />
+      <RowUserRole role={user.role} login={user.login} />
       <RowUserCreatedAt created_at={user.created_at} />
       <RowUserLastLoginDate lastLoginDate={user.last_login_date} />
       <UserStatusBadge
@@ -28,6 +28,7 @@ export function UserRow({ user, loadUsers, currentUserRole }: UserRowProps) {
       />
       <UserActions
         userId={user.id}
+        login={user.login}
         isAdmin={user.role === 'admin'}
         isTargetSuperAdmin={user.role === 'super_admin'}
         isSuperAdmin={currentUserRole === 'super_admin'}

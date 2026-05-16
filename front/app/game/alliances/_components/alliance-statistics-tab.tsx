@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, LogOut } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 import type { Alliance } from '@/app/services/game';
 import type { PlayerSeasonStats } from '@/app/services/statistics';
@@ -43,7 +43,12 @@ type SortField =
   | 'total_boss'
   | 'total_not_fought'
   | 'ratio'
-  | 'score';
+  | 'score'
+  | 'wars_participated'
+  | 'avg_fights_per_war'
+  | 'avg_boss_miniboss_per_war';
+
+type MemberFilter = 'current' | 'all' | 'former';
 type SortDir = 'asc' | 'desc';
 
 const RATIO_OPTIONS = [-Infinity, 0, 50, 60, 70, 80, 90];
@@ -64,14 +69,16 @@ function StatCell({
   value,
   suffix,
   className,
+  decimals,
 }: {
   value: number;
   suffix?: string;
   className?: string;
+  decimals?: number;
 }) {
   return (
     <TableCell className={`py-1.5 text-right ${className ?? ''}`}>
-      {value}
+      {decimals !== undefined ? value.toFixed(decimals) : value}
       {suffix}
     </TableCell>
   );
@@ -107,6 +114,7 @@ export default function AllianceStatisticsTab({
   const stat = t.game.alliances.statistics;
   const [ratioMin, setRatioMin] = useState(-Infinity);
   const [selectedGroup, setSelectedGroup] = useState('all');
+  const [memberFilter, setMemberFilter] = useState<MemberFilter>('current');
   const [sortField, setSortField] = useState<SortField>('ratio');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
@@ -150,6 +158,8 @@ export default function AllianceStatisticsTab({
 
   const filteredStats = useMemo(() => {
     let rows = seasonStats;
+    if (memberFilter === 'current') rows = rows.filter((r) => r.is_current_member);
+    if (memberFilter === 'former') rows = rows.filter((r) => !r.is_current_member);
     if (ratioMin !== -Infinity) rows = rows.filter((r) => r.ratio >= ratioMin);
     if (selectedGroup !== 'all') {
       rows = rows.filter((r) => toGroupValue(r.alliance_group) === selectedGroup);
@@ -159,7 +169,7 @@ export default function AllianceStatisticsTab({
       const bv = b[sortField as keyof typeof b] as number;
       return sortDir === 'asc' ? av - bv : bv - av;
     });
-  }, [seasonStats, ratioMin, selectedGroup, sortField, sortDir]);
+  }, [seasonStats, memberFilter, ratioMin, selectedGroup, sortField, sortDir]);
 
   const colRanks = useMemo(() => {
     const top3 = (values: number[], descending: boolean): Map<number, number> => {
@@ -196,6 +206,18 @@ export default function AllianceStatisticsTab({
         f.map((r) => r.score),
         true
       ),
+      wars_participated: top3(
+        f.map((r) => r.wars_participated),
+        true
+      ),
+      avg_fights_per_war: top3(
+        f.map((r) => r.avg_fights_per_war),
+        true
+      ),
+      avg_boss_miniboss_per_war: top3(
+        f.map((r) => r.avg_boss_miniboss_per_war),
+        true
+      ),
     };
   }, [filteredStats]);
 
@@ -215,6 +237,7 @@ export default function AllianceStatisticsTab({
   );
 
   const hasFilters =
+    memberFilter !== 'current' ||
     selectedGroup !== 'all' ||
     ratioMin !== -Infinity ||
     sortField !== 'ratio' ||
@@ -271,6 +294,23 @@ export default function AllianceStatisticsTab({
       ) : (
         <>
           <div className='flex flex-wrap items-center gap-3'>
+            <Select
+              value={memberFilter}
+              onValueChange={(v) => setMemberFilter(v as MemberFilter)}
+            >
+              <SelectTrigger
+                className='w-44'
+                data-cy='statistics-member-filter'
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='current'>{stat.memberFilter.current}</SelectItem>
+                <SelectItem value='all'>{stat.memberFilter.all}</SelectItem>
+                <SelectItem value='former'>{stat.memberFilter.former}</SelectItem>
+              </SelectContent>
+            </Select>
+
             <Select
               value={selectedWarId ?? 'all'}
               onValueChange={(v) => setSelectedWarId(v === 'all' ? null : v)}
@@ -355,6 +395,7 @@ export default function AllianceStatisticsTab({
                 variant='ghost'
                 size='sm'
                 onClick={() => {
+                  setMemberFilter('current');
                   setRatioMin(-Infinity);
                   setSelectedGroup('all');
                   setSortField('ratio');
@@ -382,8 +423,15 @@ export default function AllianceStatisticsTab({
                       <TableHead>{stat.columns.player}</TableHead>
                       <TableHead className='text-right'>{stat.columns.group}</TableHead>
                       <SortableHead
-                        label={stat.columns.fights}
-                        field='total_fights'
+                        label={stat.columns.ratio}
+                        field='ratio'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
+                        label={stat.columns.score}
+                        field='score'
                         sortField={sortField}
                         sortDir={sortDir}
                         onSort={toggleSort}
@@ -391,6 +439,27 @@ export default function AllianceStatisticsTab({
                       <SortableHead
                         label={stat.columns.kos}
                         field='total_kos'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
+                        label={stat.columns.avgFights}
+                        field='avg_fights_per_war'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
+                        label={stat.columns.avgBossMiniboss}
+                        field='avg_boss_miniboss_per_war'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
+                        label={stat.columns.fights}
+                        field='total_fights'
                         sortField={sortField}
                         sortDir={sortDir}
                         onSort={toggleSort}
@@ -410,22 +479,15 @@ export default function AllianceStatisticsTab({
                         onSort={toggleSort}
                       />
                       <SortableHead
+                        label={stat.columns.warsParticipated}
+                        field='wars_participated'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
                         label={stat.columns.notFought}
                         field='total_not_fought'
-                        sortField={sortField}
-                        sortDir={sortDir}
-                        onSort={toggleSort}
-                      />
-                      <SortableHead
-                        label={stat.columns.ratio}
-                        field='ratio'
-                        sortField={sortField}
-                        sortDir={sortDir}
-                        onSort={toggleSort}
-                      />
-                      <SortableHead
-                        label={stat.columns.score}
-                        field='score'
                         sortField={sortField}
                         sortDir={sortDir}
                         onSort={toggleSort}
@@ -442,17 +504,41 @@ export default function AllianceStatisticsTab({
                           onClick={() => handleRowClick(row.id)}
                           data-cy={`statistics-row-${row.id}`}
                         >
-                          <TableCell className='py-1.5 font-medium'>{row.game_pseudo}</TableCell>
+                          <TableCell className='py-1.5 font-medium'>
+                            <span className={`flex items-center gap-1 ${!row.is_current_member ? 'text-muted-foreground' : ''}`}>
+                              {row.game_pseudo}
+                              {!row.is_current_member && <LogOut data-cy={`former-badge-${row.id}`} className='h-3.5 w-3.5 shrink-0' />}
+                            </span>
+                          </TableCell>
                           <TableCell className='py-1.5 text-right text-muted-foreground'>
                             {row.alliance_group ?? '—'}
                           </TableCell>
                           <StatCell
-                            value={row.total_fights}
-                            className={cellClass('total_fights', row.total_fights)}
+                            value={row.ratio}
+                            suffix='%'
+                            className={cellClass('ratio', row.ratio)}
+                          />
+                          <StatCell
+                            value={row.score}
+                            className={cellClass('score', row.score)}
                           />
                           <StatCell
                             value={row.total_kos}
                             className={cellClass('total_kos', row.total_kos, true)}
+                          />
+                          <StatCell
+                            value={row.avg_fights_per_war}
+                            decimals={1}
+                            className={cellClass('avg_fights_per_war', row.avg_fights_per_war)}
+                          />
+                          <StatCell
+                            value={row.avg_boss_miniboss_per_war}
+                            decimals={1}
+                            className={cellClass('avg_boss_miniboss_per_war', row.avg_boss_miniboss_per_war)}
+                          />
+                          <StatCell
+                            value={row.total_fights}
+                            className={cellClass('total_fights', row.total_fights)}
                           />
                           <StatCell
                             value={row.total_miniboss}
@@ -463,17 +549,12 @@ export default function AllianceStatisticsTab({
                             className={cellClass('total_boss', row.total_boss)}
                           />
                           <StatCell
+                            value={row.wars_participated}
+                            className={cellClass('wars_participated', row.wars_participated)}
+                          />
+                          <StatCell
                             value={row.total_not_fought}
                             className={cellClass('total_not_fought', row.total_not_fought, true)}
-                          />
-                          <StatCell
-                            value={row.ratio}
-                            suffix='%'
-                            className={cellClass('ratio', row.ratio)}
-                          />
-                          <StatCell
-                            value={row.score}
-                            className={cellClass('score', row.score)}
                           />
                         </TableRow>
                       );
