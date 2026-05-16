@@ -22,6 +22,7 @@ from src.controllers.alliance.war.war_placement_controller import war_placement_
 from src.controllers.alliance.war.war_attacker_controller import war_attacker_controller
 from src.controllers.alliance.war.war_synergy_controller import war_synergy_controller
 from src.controllers.alliance.war.war_prefight_controller import war_prefight_controller
+from src.controllers.alliance.war.ranking_history_controller import ranking_history_controller
 
 routers = [
     user_admin_controller,
@@ -47,4 +48,5 @@ routers = [
     season_public_controller,
     statistics_controller,
     fight_record_controller,
+    ranking_history_controller,
 ]
