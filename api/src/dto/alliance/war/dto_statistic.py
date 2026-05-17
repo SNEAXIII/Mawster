@@ -17,7 +17,8 @@ class PlayerSeasonStatsResponse(BaseModel):
     game_pseudo: str
     alliance_group: Optional[int] = None
     total_kos: int
-    total_fights: int
+    total_fights: float
+    total_assists: int = 0
     total_miniboss: int
     total_boss: int
     total_not_fought: int

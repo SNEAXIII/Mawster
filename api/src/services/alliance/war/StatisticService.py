@@ -29,8 +29,14 @@ _miniboss_case = case(
     (and_(_is_normal, WarDefensePlacement.node_number.between(37, 49)), 1), else_=0
 )
 _boss_case = case((and_(_is_normal, WarDefensePlacement.node_number == 50), 1), else_=0)
+_is_assisted = WarDefensePlacement.assist_champion_user_id.is_not(None)
+_fight_weight = case(
+    (and_(_is_normal, _is_assisted), 0.5),
+    (and_(_is_normal, ~_is_assisted), 1.0),
+    else_=0,
+)
 _total_kos = func.sum(case((_is_normal, WarDefensePlacement.ko_count), else_=0))
-_total_fights = func.sum(case((_is_normal, 1), else_=0))
+_total_fights = func.sum(_fight_weight)
 _total_not_fought = func.sum(case((_is_not_done, 1), else_=0))
 
 
@@ -45,22 +51,47 @@ class StatisticService:
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
 
+        assist_subquery = (
+            select(
+                ChampionUser.game_account_id.label("game_account_id"),
+                func.count(WarDefensePlacement.id).label("total_assists"),
+                (func.count(WarDefensePlacement.id) * 0.5).label("assist_fights"),
+            )
+            .join(
+                WarDefensePlacement, WarDefensePlacement.assist_champion_user_id == ChampionUser.id
+            )
+            .join(War, WarDefensePlacement.war_id == War.id)
+            .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
+            .where(War.alliance_id == alliance_id)
+            .where(War.status == WarStatus.ended)
+            .group_by(ChampionUser.game_account_id)
+            .subquery()
+        )
+
         _wars_participated = func.count(func.distinct(War.id))
+        _total_fights_with_assists = _total_fights + func.coalesce(
+            assist_subquery.c.assist_fights, 0
+        )
         sql = (
             select(
                 GameAccount.id,
                 GameAccount.game_pseudo,
                 GameAccount.alliance_group,
                 cast(_total_kos, Integer).label("total_kos"),
-                cast(_total_fights, Integer).label("total_fights"),
+                cast(_total_fights_with_assists, Float).label("total_fights"),
+                cast(func.coalesce(assist_subquery.c.total_assists, 0), Integer).label(
+                    "total_assists"
+                ),
                 cast(func.sum(_miniboss_case), Integer).label("total_miniboss"),
                 cast(func.sum(_boss_case), Integer).label("total_boss"),
                 cast(_total_not_fought, Integer).label("total_not_fought"),
-                cast((1 - _total_kos / _total_fights) * 100, Integer).label("ratio"),
+                cast(
+                    (1 - _total_kos / func.nullif(_total_fights_with_assists, 0)) * 100, Integer
+                ).label("ratio"),
                 cast(_wars_participated, Integer).label("wars_participated"),
                 cast(
                     func.coalesce(
-                        cast(_total_fights, Float) / func.nullif(_wars_participated, 0),
+                        _total_fights_with_assists / func.nullif(_wars_participated, 0),
                         0.0,
                     ),
                     Float,
@@ -84,6 +115,7 @@ class StatisticService:
             )
             .join(War, WarDefensePlacement.war_id == War.id)
             .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
+            .outerjoin(assist_subquery, assist_subquery.c.game_account_id == GameAccount.id)
             .where(War.alliance_id == alliance_id)
             .where(War.status == WarStatus.ended)
             .group_by(GameAccount.id, GameAccount.game_pseudo, GameAccount.alliance_group)
