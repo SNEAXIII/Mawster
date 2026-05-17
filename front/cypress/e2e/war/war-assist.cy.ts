@@ -26,7 +26,7 @@ describe('War Assist', () => {
       cy.visit('/game/war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
-      cy.getByCy('prefight-trigger-node-10').click();
+      cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('assist-add-node-10').click();
 
       cy.getByCy('assist-selector').should('be.visible');
@@ -53,7 +53,7 @@ describe('War Assist', () => {
         cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
         cy.getByCy('assisted-badge-node-10').should('be.visible');
 
-        cy.getByCy('prefight-trigger-node-10').click();
+        cy.getByCy('node-actions-trigger-node-10').click();
         cy.getByCy('assist-revoke-node-10').click();
 
         cy.getByCy('assisted-badge-node-10').should('not.exist');
@@ -69,7 +69,7 @@ describe('War Assist', () => {
       cy.visit('/game/war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
-      cy.getByCy('prefight-trigger-node-10').click();
+      cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('assist-add-node-10').click();
       cy.getByCy('assist-selector').should('be.visible');
 

@@ -8,7 +8,7 @@ import PrefightSelectorDialog from './prefight-selector';
 import AssistSelectorDialog from './assist-selector';
 import { useWar } from '@/app/contexts/war-context';
 
-interface PrefightPopoverProps {
+interface NodeActionsPopoverProps {
   nodeNumber: number;
   gameAccountId: string;
   championName: string;
@@ -22,7 +22,7 @@ interface PrefightPopoverProps {
   canManage?: boolean;
 }
 
-export default function PrefightPopover({
+export default function NodeActionsPopover({
   nodeNumber,
   gameAccountId,
   championName,
@@ -34,7 +34,7 @@ export default function PrefightPopover({
   is_saga_attacker = false,
   is_saga_defender = false,
   canManage = true,
-}: Readonly<PrefightPopoverProps>) {
+}: Readonly<NodeActionsPopoverProps>) {
   const { t } = useI18n();
   const { prefights, handleRemovePrefight, placements, handleRemoveAssist } = useWar();
   const [open, setOpen] = useState(false);
@@ -54,7 +54,7 @@ export default function PrefightPopover({
         <PopoverTrigger asChild>
           <button
             className='relative focus:outline-none'
-            data-cy={`prefight-trigger-node-${nodeNumber}`}
+            data-cy={`node-actions-trigger-node-${nodeNumber}`}
           >
             <ChampionPortrait
               imageUrl={imageUrl}

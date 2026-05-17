@@ -53,7 +53,7 @@ describe('War Prefight', () => {
       cy.visit('/game/war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
-      cy.getByCy('prefight-trigger-node-10').click();
+      cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('prefight-add-node-10').click();
 
       cy.getByCy('prefight-selector').should('be.visible');
@@ -61,7 +61,7 @@ describe('War Prefight', () => {
       cy.getByCy('prefight-selector').should('not.exist');
 
       // Re-open the popover to confirm Storm was assigned (revoke button visible)
-      cy.getByCy('prefight-trigger-node-10').click();
+      cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('prefight-revoke-Storm').should('exist');
     });
   });
@@ -75,10 +75,10 @@ describe('War Prefight', () => {
       cy.visit('/game/war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
-      cy.getByCy('prefight-trigger-node-10').click();
+      cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('prefight-revoke-Storm').click();
 
-      cy.getByCy('prefight-trigger-node-10').find('[title]').should('not.exist');
+      cy.getByCy('node-actions-trigger-node-10').find('[title]').should('not.exist');
     });
   });
 
@@ -229,7 +229,7 @@ describe('War Prefight', () => {
           cy.visit('/game/war');
           cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
-          cy.getByCy('prefight-trigger-node-10').click();
+          cy.getByCy('node-actions-trigger-node-10').click();
           cy.getByCy('prefight-add-node-10').click();
           cy.getByCy('prefight-selector').should('be.visible');
 

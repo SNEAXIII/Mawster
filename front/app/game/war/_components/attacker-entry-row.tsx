@@ -8,7 +8,7 @@ import { X, Minus, Plus, Swords, CircleQuestionMark, CheckCircle, Ban, AlertTria
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '@/app/contexts/war-context';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import PrefightPopover from './prefight-popover';
+import NodeActionsPopover from './node-actions-popover';
 
 interface AttackerEntryRowProps {
   placement: WarPlacement;
@@ -51,7 +51,7 @@ export default function AttackerEntryRow({
     >
       <div className='flex items-center gap-1 shrink-0'>
         {placement.attacker_champion_user_id && !readonly ? (
-          <PrefightPopover
+          <NodeActionsPopover
             nodeNumber={placement.node_number}
             gameAccountId={placement.attacker_game_account_id ?? ''}
             championName={placement.attacker_champion_name ?? ''}
