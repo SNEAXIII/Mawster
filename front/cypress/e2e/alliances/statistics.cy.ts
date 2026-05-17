@@ -1117,4 +1117,71 @@ describe('Alliance Statistics', () => {
       );
     });
   });
+
+  // ── Assist stats ──────────────────────────────────────────────────────────
+
+  it('shows total_assists = 1 for assistor and 0.5 fights for both after an assisted combat', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-ast-admin', role: 'admin' },
+      {
+        discord_token: 'stat-ast-owner',
+        game_pseudo: 'AstOwner',
+        create_alliance: { name: 'AstAlliance', tag: 'AST' },
+        battlegroup: 1,
+      },
+      {
+        discord_token: 'stat-ast-member',
+        game_pseudo: 'AstMember',
+        join_alliance_token: 'stat-ast-owner',
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-ast-admin'].access_token;
+      const ownerToken = users['stat-ast-owner'].access_token;
+      const memberToken = users['stat-ast-member'].access_token;
+      const allianceId = users['stat-ast-owner'].alliance_id!;
+      const ownerAccId = users['stat-ast-owner'].account_id!;
+      const memberAccId = users['stat-ast-member'].account_id!;
+
+      createAndActivateSeason(adminToken).then(() => {
+        cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs1: { id: string }[]) => {
+          cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then((champs2: { id: string }[]) => {
+            cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs1[0].id, '7r3').then((cuOwner: { id: string }) => {
+              cy.apiAddChampionToRoster(memberToken, memberAccId, champs2[0].id, '7r3').then(
+                (cuMember: { id: string }) => {
+                  cy.apiCreateWar(ownerToken, allianceId, 'AstEnemy').then((war: { id: string }) => {
+                    cy.apiPlaceWarDefender(ownerToken, allianceId, war.id, 1, 10, champs1[0].id, 7, 3, 0);
+                    cy.apiAssignWarAttacker(ownerToken, allianceId, war.id, 1, 10, cuOwner.id);
+                    cy.request({
+                      method: 'POST',
+                      url: `${BACKEND}/alliances/${allianceId}/wars/${war.id}/bg/1/node/10/assist`,
+                      headers: { Authorization: `Bearer ${memberToken}` },
+                      body: { champion_user_id: cuMember.id },
+                    });
+                    cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
+
+                    cy.apiLogin(users['stat-ast-owner'].user_id);
+                    goToStatsTab();
+                    cy.getByCy('statistics-member-filter').click();
+                    cy.contains('All members').click();
+
+                    // Assisted player (owner): fights = 0.5
+                    cy.getByCy(`statistics-row-${ownerAccId}`).within(() => {
+                      cy.contains('0.5').should('exist');
+                    });
+
+                    // Assistor (member): assists = 1, fights = 0.5
+                    cy.getByCy(`statistics-row-${memberAccId}`).within(() => {
+                      cy.contains('1').should('exist');
+                      cy.contains('0.5').should('exist');
+                    });
+                  });
+                },
+              );
+            });
+          });
+        });
+      });
+    });
+  });
 });
