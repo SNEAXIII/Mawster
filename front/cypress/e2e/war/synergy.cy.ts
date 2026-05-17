@@ -31,9 +31,9 @@ function setupThreeAttackers(
   cb: (cu4Id: string) => void,
 ) {
   cy.apiLoadChampions(adminToken, [
-    ['Black Panther', 'Cosmic'],
-    ['Captain Marvel', 'Cosmic'],
-    ['Thor', 'Cosmic'],
+    { name: 'Black Panther', cls: 'Cosmic' },
+    { name: 'Captain Marvel', cls: 'Cosmic' },
+    { name: 'Thor', cls: 'Cosmic' },
   ]).then((champMap: Record<string, { id: string }>) => {
     cy.apiPlaceWarDefender(ownerToken, allianceId, warId, 1, 11, champMap['Black Panther'].id, 7, 3, 0);
     cy.apiPlaceWarDefender(ownerToken, allianceId, warId, 1, 12, champMap['Captain Marvel'].id, 7, 3, 0);

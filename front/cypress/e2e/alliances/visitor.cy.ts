@@ -178,6 +178,24 @@ describe('Visitor system', () => {
 
 // ── Shared helper: alliance + war + assigned attacker + visitor ───────────────
 
+function setupWarForVisitor(
+  adminAT: string,
+  ownerAT: string,
+  ownerAccId: string,
+  allianceId: string,
+  visitorUserId: string,
+): Cypress.Chainable<{ visitorUserId: string; allianceId: string; warId: string }> {
+  return cy.apiLoadChampion(adminAT, 'Iron Man', 'Tech').then((champs: { id: string }[]) =>
+    cy.apiAddChampionToRoster(ownerAT, ownerAccId, champs[0].id, '7r3').then((cu) =>
+      cy.apiCreateWar(ownerAT, allianceId, 'VisitorEnemy').then((war: { id: string }) => {
+        cy.apiPlaceWarDefender(ownerAT, allianceId, war.id, 1, 10, champs[0].id, 7, 3, 0);
+        cy.apiAssignWarAttacker(ownerAT, allianceId, war.id, 1, 10, cu.id);
+        return cy.wrap({ visitorUserId, allianceId, warId: war.id });
+      }),
+    ),
+  );
+}
+
 function setupVisitorWarScene(prefix: string) {
   const adminTok = `${prefix}-admin`;
   const ownerTok = `${prefix}-owner`;
@@ -219,17 +237,7 @@ function setupVisitorWarScene(prefix: string) {
               headers: { Authorization: `Bearer ${visitorAT}` },
               body: {},
             })
-            .then(() =>
-              cy.apiLoadChampion(adminAT, 'Iron Man', 'Tech').then((champs) =>
-                cy.apiAddChampionToRoster(ownerAT, ownerAccId, champs[0].id, '7r3').then((cu) =>
-                  cy.apiCreateWar(ownerAT, allianceId, 'VisitorEnemy').then((war) => {
-                    cy.apiPlaceWarDefender(ownerAT, allianceId, war.id, 1, 10, champs[0].id, 7, 3, 0);
-                    cy.apiAssignWarAttacker(ownerAT, allianceId, war.id, 1, 10, cu.id);
-                    return cy.wrap({ visitorUserId, allianceId, warId: war.id });
-                  }),
-                ),
-              ),
-            );
+            .then(() => setupWarForVisitor(adminAT, ownerAT, ownerAccId, allianceId, visitorUserId));
         });
     });
 }
