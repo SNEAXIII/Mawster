@@ -233,7 +233,7 @@ export function useAlliancesViewModel() {
       return;
     }
 
-    void loadSeasonStats(targetAllianceId);
+    loadSeasonStats(targetAllianceId).catch(() => {});
   }, [activeTab, alliances, statsAllianceId, loadSeasonStats]);
 
   const handleStatsAllianceChange = (allianceId: string) => {

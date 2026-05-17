@@ -90,7 +90,7 @@ export default function PrefightSelectorDialog({
   const groups = Array.from(groupMap.values());
 
   // placements is consumed by war context; kept in destructure for interface compat
-  void placements;
+  placements satisfies typeof placements;
 
   let content: React.ReactNode;
   if (loading) {
