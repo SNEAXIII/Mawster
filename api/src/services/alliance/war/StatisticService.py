@@ -76,6 +76,9 @@ class StatisticService:
                 cast(func.sum(_miniboss_case), Integer).label("total_miniboss"),
                 cast(func.sum(_boss_case), Integer).label("total_boss"),
                 cast(_total_not_fought, Integer).label("total_not_fought"),
+                cast(func.sum(case((and_(_is_normal, _is_assisted), 1), else_=0)), Integer).label(
+                    "total_times_helped"
+                ),
             )
             .join(ChampionUser, ChampionUser.game_account_id == GameAccount.id)
             .join(
@@ -135,6 +138,9 @@ class StatisticService:
                 cast(_kos, Integer).label("total_kos"),
                 cast(_combined_fights, Float).label("total_fights"),
                 cast(func.coalesce(assist_sq.c.total_assists, 0), Integer).label("total_assists"),
+                cast(func.coalesce(attacker_sq.c.total_times_helped, 0), Integer).label(
+                    "total_times_helped"
+                ),
                 cast(func.coalesce(attacker_sq.c.total_miniboss, 0), Integer).label(
                     "total_miniboss"
                 ),

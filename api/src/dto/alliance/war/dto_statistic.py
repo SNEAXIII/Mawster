@@ -8,6 +8,8 @@ FIGHT = 2
 MINIBOSS = 4
 BOSS = 5
 NOT_FOUGHT_KOS = 3
+HELPED = -2
+ASSIST = 2
 
 
 class PlayerSeasonStatsResponse(BaseModel):
@@ -19,6 +21,7 @@ class PlayerSeasonStatsResponse(BaseModel):
     total_kos: int
     total_fights: float
     total_assists: int = 0
+    total_times_helped: int = 0
     total_miniboss: int
     total_boss: int
     total_not_fought: int
@@ -38,6 +41,8 @@ class PlayerSeasonStatsResponse(BaseModel):
             + self.total_miniboss * MINIBOSS
             + self.total_boss * BOSS
             + self.total_not_fought * NOT_FOUGHT_KOS * KO
+            + self.total_times_helped * HELPED
+            + self.total_assists * ASSIST
         )
 
 
