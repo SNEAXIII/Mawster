@@ -707,15 +707,15 @@ class TestAssistStatistics:
         assert attacker_row["total_times_helped"] == 1
 
     @pytest.mark.anyio
-    async def test_assisted_fight_counts_as_half_for_both(self):
+    async def test_assisted_fight_counts_full_for_attacker_zero_for_assistor(self):
         data = await _setup_with_assist()
         await _add_assisted_placement(
             data["war"].id, data["cu"].id, data["assistor_cu"].id, data["champ"].id, node_number=10
         )
         response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
         rows = {r["game_pseudo"]: r for r in response.json()}
-        assert rows[data["owner"].game_pseudo]["total_fights"] == 0.5
-        assert rows[data["member_acc"].game_pseudo]["total_fights"] == 0.5
+        assert rows[data["owner"].game_pseudo]["total_fights"] == 1.0
+        assert rows[data["member_acc"].game_pseudo]["total_fights"] == 0.0
 
     @pytest.mark.anyio
     async def test_wars_participated_counts_assist_only_war(self):
@@ -740,14 +740,14 @@ class TestAssistStatistics:
 
     @pytest.mark.anyio
     async def test_score_helped_penalty(self):
-        # Attacker received assist, 0 KOs: fights=0.5 → 0.5*2 + HELPED(-2) = -1
+        # Attacker received assist, 0 KOs: fights=1.0 → 1.0*2 + HELPED(-2) = 0
         data = await _setup_with_assist()
         await _add_assisted_placement(
             data["war"].id, data["cu"].id, data["assistor_cu"].id, data["champ"].id, node_number=10
         )
         response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
         rows = {r["game_pseudo"]: r for r in response.json()}
-        assert rows[data["owner"].game_pseudo]["score"] == -1
+        assert rows[data["owner"].game_pseudo]["score"] == 0
 
     @pytest.mark.anyio
     async def test_assist_only_player_excluded_from_other_alliances(self):

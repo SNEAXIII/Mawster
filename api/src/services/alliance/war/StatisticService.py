@@ -30,13 +30,15 @@ _miniboss_case = case(
 )
 _boss_case = case((and_(_is_normal, WarDefensePlacement.node_number == 50), 1), else_=0)
 _is_assisted = WarDefensePlacement.assist_champion_user_id.is_not(None)
-_fight_weight = case(
+_fight_weight = case((_is_normal, 1.0), else_=0)
+_weighted_fight_weight = case(
     (and_(_is_normal, _is_assisted), 0.5),
     (and_(_is_normal, ~_is_assisted), 1.0),
     else_=0,
 )
 _total_kos = func.sum(case((_is_normal, WarDefensePlacement.ko_count), else_=0))
 _total_fights = func.sum(_fight_weight)
+_total_weighted_fights = func.sum(_weighted_fight_weight)
 _total_not_fought = func.sum(case((_is_not_done, 1), else_=0))
 
 
@@ -73,6 +75,7 @@ class StatisticService:
                 GameAccount.id.label("game_account_id"),
                 cast(_total_kos, Integer).label("total_kos"),
                 cast(_total_fights, Float).label("attack_fights"),
+                cast(_total_weighted_fights, Float).label("attack_weighted_fights"),
                 cast(func.sum(_miniboss_case), Integer).label("total_miniboss"),
                 cast(func.sum(_boss_case), Integer).label("total_boss"),
                 cast(_total_not_fought, Integer).label("total_not_fought"),
@@ -124,9 +127,10 @@ class StatisticService:
             .subquery()
         )
 
-        _combined_fights = func.coalesce(attacker_sq.c.attack_fights, 0) + func.coalesce(
-            assist_sq.c.assist_fights, 0
-        )
+        _combined_fights = func.coalesce(attacker_sq.c.attack_fights, 0)
+        _combined_weighted_fights = func.coalesce(
+            attacker_sq.c.attack_weighted_fights, 0
+        ) + func.coalesce(assist_sq.c.assist_fights, 0)
         _kos = func.coalesce(attacker_sq.c.total_kos, 0)
         _wars = wars_sq.c.wars_participated
 
@@ -137,6 +141,7 @@ class StatisticService:
                 GameAccount.alliance_group,
                 cast(_kos, Integer).label("total_kos"),
                 cast(_combined_fights, Float).label("total_fights"),
+                cast(_combined_weighted_fights, Float).label("total_fights_weighted"),
                 cast(func.coalesce(assist_sq.c.total_assists, 0), Integer).label("total_assists"),
                 cast(func.coalesce(attacker_sq.c.total_times_helped, 0), Integer).label(
                     "total_times_helped"
@@ -148,7 +153,10 @@ class StatisticService:
                 cast(func.coalesce(attacker_sq.c.total_not_fought, 0), Integer).label(
                     "total_not_fought"
                 ),
-                cast((1 - _kos / func.nullif(_combined_fights, 0)) * 100, Integer).label("ratio"),
+                cast(
+                    func.coalesce((1 - _kos / func.nullif(_combined_fights, 0)) * 100, 100),
+                    Integer,
+                ).label("ratio"),
                 cast(_wars, Integer).label("wars_participated"),
                 cast(_combined_fights / func.nullif(_wars, 0), Float).label("avg_fights_per_war"),
                 cast(

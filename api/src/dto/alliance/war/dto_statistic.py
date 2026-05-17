@@ -20,6 +20,7 @@ class PlayerSeasonStatsResponse(BaseModel):
     alliance_group: Optional[int] = None
     total_kos: int
     total_fights: float
+    total_fights_weighted: float = 0.0
     total_assists: int = 0
     total_times_helped: int = 0
     total_miniboss: int
@@ -34,9 +35,7 @@ class PlayerSeasonStatsResponse(BaseModel):
     @computed_field
     @property
     def score(self) -> float:
-        fights = (
-            self.total_fights - self.total_miniboss - self.total_boss - self.total_assists * 0.5
-        )
+        fights = self.total_fights - self.total_miniboss - self.total_boss
         return (
             self.total_kos * KO
             + fights * FIGHT

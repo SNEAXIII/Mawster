@@ -44,33 +44,32 @@ class TestScoreFormula:
         assert s.score == -6
 
     def test_assist_given_earns_2_points(self):
-        # 1 assist → total_fights=0.5, total_assists=1
-        # fights = 0.5 - 0 - 0 - 1*0.5 = 0 → score = 0 + 1*2 = 2
-        s = _make(total_fights=0.5, total_assists=1)
+        # Assistor has no fights, 1 assist → score = ASSIST(2) = 2
+        s = _make(total_fights=0.0, total_assists=1)
         assert s.score == 2
 
     def test_two_assists_earn_4_points(self):
-        # fights = 1.0 - 2*0.5 = 0 → score = 2*2 = 4
-        s = _make(total_fights=1.0, total_assists=2)
+        # 2 assists, no fights → score = 2*ASSIST(2) = 4
+        s = _make(total_fights=0.0, total_assists=2)
         assert s.score == 4
 
     def test_assisted_fight_received_score(self):
-        # Attacker received assist: total_fights=0.5, total_times_helped=1
-        # fights = 0.5 → 0.5*2 + 1*(-2) = 1 - 2 = -1
-        s = _make(total_fights=0.5, total_times_helped=1)
-        assert s.score == -1
+        # Attacker received assist: full fight (1.0), total_times_helped=1
+        # fights=1.0 → 1.0*2 + HELPED(-2) = 2 - 2 = 0
+        s = _make(total_fights=1.0, total_times_helped=1)
+        assert s.score == 0
 
     def test_assisted_fight_with_ko(self):
-        # Attacker received assist, got KO: total_fights=0.5, total_times_helped=1, total_kos=1
-        # fights=0.5 → 1*(-10) + 0.5*2 + 1*(-2) = -10+1-2 = -11
-        s = _make(total_fights=0.5, total_kos=1, total_times_helped=1)
-        assert s.score == -11
+        # Attacker received assist, got KO: total_fights=1.0, total_times_helped=1, total_kos=1
+        # fights=1.0 → 1*(-10) + 1.0*2 + HELPED(-2) = -10+2-2 = -10
+        s = _make(total_fights=1.0, total_kos=1, total_times_helped=1)
+        assert s.score == -10
 
     def test_mixed_normal_and_assisted_fights(self):
-        # 1 normal + 1 assisted received: total_fights=1.5, total_times_helped=1, 0 KOs
-        # fights = 1.5 → 1.5*2 + 1*(-2) = 3 - 2 = 1
-        s = _make(total_fights=1.5, total_times_helped=1)
-        assert s.score == 1
+        # 2 fights (1 normal + 1 assisted received): total_fights=2.0, total_times_helped=1, 0 KOs
+        # fights=2.0 → 2.0*2 + HELPED(-2) = 4 - 2 = 2
+        s = _make(total_fights=2.0, total_times_helped=1)
+        assert s.score == 2
 
     def test_miniboss_and_boss_score(self):
         # 1 regular + 1 miniboss + 1 boss, 0 KOs
@@ -83,8 +82,8 @@ class TestScoreFormula:
         s = _make(total_not_fought=1)
         assert s.score == -30
 
-    def test_assist_given_does_not_double_count_fight_points(self):
-        # Give 2 assists + do 1 normal fight: total_fights=2.0, total_assists=2, 0 KOs
-        # fights = 2.0 - 0 - 0 - 1.0 = 1.0 → 1.0*2 + 2*2 = 2 + 4 = 6
-        s = _make(total_fights=2.0, total_assists=2)
+    def test_assist_and_fight_combined(self):
+        # 1 normal fight + 2 assists given: total_fights=1.0, total_assists=2
+        # fights=1.0 → 1.0*2 + 2*ASSIST(2) = 2 + 4 = 6
+        s = _make(total_fights=1.0, total_assists=2)
         assert s.score == 6

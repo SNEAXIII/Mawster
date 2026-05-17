@@ -40,7 +40,7 @@ interface AllianceStatisticsTabProps {
 }
 
 type SortField =
-  | 'total_fights'
+  | 'total_fights_weighted'
   | 'total_kos'
   | 'total_miniboss'
   | 'total_boss'
@@ -196,8 +196,8 @@ export default function AllianceStatisticsTab({
     };
     const f = filteredStats;
     return {
-      total_fights: top3(
-        f.map((r) => r.total_fights),
+      total_fights_weighted: top3(
+        f.map((r) => r.total_fights_weighted),
         true
       ),
       total_kos: top3(
@@ -474,7 +474,7 @@ export default function AllianceStatisticsTab({
                       />
                       <SortableHead
                         label={stat.columns.fights}
-                        field='total_fights'
+                        field='total_fights_weighted'
                         sortField={sortField}
                         sortDir={sortDir}
                         onSort={toggleSort}
@@ -559,9 +559,9 @@ export default function AllianceStatisticsTab({
                             className={cellClass('avg_boss_miniboss_per_war', row.avg_boss_miniboss_per_war)}
                           />
                           <StatCell
-                            value={row.total_fights}
+                            value={row.total_fights_weighted}
                             decimals={1}
-                            className={cellClass('total_fights', row.total_fights)}
+                            className={cellClass('total_fights_weighted', row.total_fights_weighted)}
                           />
                           <StatCell
                             value={row.total_assists}
