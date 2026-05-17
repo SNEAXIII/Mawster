@@ -18,6 +18,41 @@ function createAndActivateSeason(adminToken: string) {
     );
 }
 
+function setupEndedAssistWar(opts: {
+  adminToken: string;
+  ownerToken: string;
+  ownerAccId: string;
+  memberToken: string;
+  memberAccId: string;
+  allianceId: string;
+}) {
+  const { adminToken, ownerToken, ownerAccId, memberToken, memberAccId, allianceId } = opts;
+  createAndActivateSeason(adminToken);
+  return cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((ironManChamps: { id: string }[]) => {
+    return cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then((wolvChamps: { id: string }[]) => {
+      return cy
+        .apiAddChampionToRoster(ownerToken, ownerAccId, ironManChamps[0].id, '7r3')
+        .then((cuOwner: { id: string }) => {
+          return cy
+            .apiAddChampionToRoster(memberToken, memberAccId, wolvChamps[0].id, '7r3')
+            .then((cuMember: { id: string }) => {
+              return cy.apiCreateWar(ownerToken, allianceId, 'AstEnemy').then((war: { id: string }) => {
+                cy.apiPlaceWarDefender(ownerToken, allianceId, war.id, 1, 10, ironManChamps[0].id, 7, 3, 0);
+                cy.apiAssignWarAttacker(ownerToken, allianceId, war.id, 1, 10, cuOwner.id);
+                cy.request({
+                  method: 'POST',
+                  url: `${BACKEND}/alliances/${allianceId}/wars/${war.id}/bg/1/node/10/assist`,
+                  headers: { Authorization: `Bearer ${memberToken}` },
+                  body: { champion_user_id: cuMember.id },
+                });
+                cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
+              });
+            });
+        });
+    });
+  });
+}
+
 function addStatsForPlayer(
   token: string,
   allianceId: string,
@@ -1143,35 +1178,7 @@ describe('Alliance Statistics', () => {
       const ownerAccId = users['stat-ast-owner'].account_id!;
       const memberAccId = users['stat-ast-member'].account_id!;
 
-      createAndActivateSeason(adminToken);
-      cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').as('ironMan');
-      cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').as('wolverine');
-      cy.apiCreateWar(ownerToken, allianceId, 'AstEnemy').as('war');
-
-      cy.get<{ id: string }[]>('@ironMan').then((champs) => {
-        cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs[0].id, '7r3').as('cuOwner');
-      });
-      cy.get<{ id: string }[]>('@wolverine').then((champs) => {
-        cy.apiAddChampionToRoster(memberToken, memberAccId, champs[0].id, '7r3').as('cuMember');
-      });
-
-      cy.get<{ id: string }[]>('@ironMan').then((ironManChamps) => {
-        cy.get<{ id: string }>('@cuOwner').then((cuOwner) => {
-          cy.get<{ id: string }>('@cuMember').then((cuMember) => {
-            cy.get<{ id: string }>('@war').then((war) => {
-              cy.apiPlaceWarDefender(ownerToken, allianceId, war.id, 1, 10, ironManChamps[0].id, 7, 3, 0);
-              cy.apiAssignWarAttacker(ownerToken, allianceId, war.id, 1, 10, cuOwner.id);
-              cy.request({
-                method: 'POST',
-                url: `${BACKEND}/alliances/${allianceId}/wars/${war.id}/bg/1/node/10/assist`,
-                headers: { Authorization: `Bearer ${memberToken}` },
-                body: { champion_user_id: cuMember.id },
-              });
-              cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
-            });
-          });
-        });
-      });
+      setupEndedAssistWar({ adminToken, ownerToken, ownerAccId, memberToken, memberAccId, allianceId });
 
       cy.apiLogin(users['stat-ast-owner'].user_id);
       goToStatsTab();
