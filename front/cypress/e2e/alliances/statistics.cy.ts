@@ -1143,49 +1143,55 @@ describe('Alliance Statistics', () => {
       const ownerAccId = users['stat-ast-owner'].account_id!;
       const memberAccId = users['stat-ast-member'].account_id!;
 
-      createAndActivateSeason(adminToken).then(() => {
-        cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs1: { id: string }[]) => {
-          cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then((champs2: { id: string }[]) => {
-            cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs1[0].id, '7r3').then((cuOwner: { id: string }) => {
-              cy.apiAddChampionToRoster(memberToken, memberAccId, champs2[0].id, '7r3').then(
-                (cuMember: { id: string }) => {
-                  cy.apiCreateWar(ownerToken, allianceId, 'AstEnemy').then((war: { id: string }) => {
-                    cy.apiPlaceWarDefender(ownerToken, allianceId, war.id, 1, 10, champs1[0].id, 7, 3, 0);
-                    cy.apiAssignWarAttacker(ownerToken, allianceId, war.id, 1, 10, cuOwner.id);
-                    cy.request({
-                      method: 'POST',
-                      url: `${BACKEND}/alliances/${allianceId}/wars/${war.id}/bg/1/node/10/assist`,
-                      headers: { Authorization: `Bearer ${memberToken}` },
-                      body: { champion_user_id: cuMember.id },
-                    });
-                    cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
+      createAndActivateSeason(adminToken);
+      cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').as('ironMan');
+      cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').as('wolverine');
+      cy.apiCreateWar(ownerToken, allianceId, 'AstEnemy').as('war');
 
-                    cy.apiLogin(users['stat-ast-owner'].user_id);
-                    goToStatsTab();
-                    cy.getByCy('statistics-member-filter').click();
-                    cy.contains('All members').click();
+      cy.get<{ id: string }[]>('@ironMan').then((champs) => {
+        cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs[0].id, '7r3').as('cuOwner');
+      });
+      cy.get<{ id: string }[]>('@wolverine').then((champs) => {
+        cy.apiAddChampionToRoster(memberToken, memberAccId, champs[0].id, '7r3').as('cuMember');
+      });
 
-                    // Assisted player (owner): fights = 0.5
-                    cy.getByCy(`statistics-row-${ownerAccId}`).within(() => {
-                      cy.contains('0.5').should('exist');
-                    });
-
-                    // Assistor (member): assists = 1, fights = 0.5
-                    cy.getByCy(`statistics-row-${memberAccId}`).within(() => {
-                      cy.contains('1').should('exist');
-                      cy.contains('0.5').should('exist');
-                    });
-
-                    // Scores: owner (received assist, 0 KOs) = 0; member (gave assist) = 2
-                    cy.getByCy(`stat-score-${ownerAccId}`).should('have.text', '0');
-                    cy.getByCy(`stat-score-${memberAccId}`).should('have.text', '2');
-                  });
-                },
-              );
+      cy.get<{ id: string }[]>('@ironMan').then((ironManChamps) => {
+        cy.get<{ id: string }>('@cuOwner').then((cuOwner) => {
+          cy.get<{ id: string }>('@cuMember').then((cuMember) => {
+            cy.get<{ id: string }>('@war').then((war) => {
+              cy.apiPlaceWarDefender(ownerToken, allianceId, war.id, 1, 10, ironManChamps[0].id, 7, 3, 0);
+              cy.apiAssignWarAttacker(ownerToken, allianceId, war.id, 1, 10, cuOwner.id);
+              cy.request({
+                method: 'POST',
+                url: `${BACKEND}/alliances/${allianceId}/wars/${war.id}/bg/1/node/10/assist`,
+                headers: { Authorization: `Bearer ${memberToken}` },
+                body: { champion_user_id: cuMember.id },
+              });
+              cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
             });
           });
         });
       });
+
+      cy.apiLogin(users['stat-ast-owner'].user_id);
+      goToStatsTab();
+      cy.getByCy('statistics-member-filter').click();
+      cy.contains('All members').click();
+
+      // Assisted player (owner): fights = 0.5
+      cy.getByCy(`statistics-row-${ownerAccId}`).within(() => {
+        cy.contains('0.5').should('exist');
+      });
+
+      // Assistor (member): assists = 1, fights = 0.5
+      cy.getByCy(`statistics-row-${memberAccId}`).within(() => {
+        cy.contains('1').should('exist');
+        cy.contains('0.5').should('exist');
+      });
+
+      // Scores: owner (received assist, 0 KOs) = 0; member (gave assist) = 2
+      cy.getByCy(`stat-score-${ownerAccId}`).should('have.text', '0');
+      cy.getByCy(`stat-score-${memberAccId}`).should('have.text', '2');
     });
   });
 });

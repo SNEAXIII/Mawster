@@ -92,7 +92,7 @@ describe('War Assist', () => {
     });
   });
 
-  it('API — returns 422 when assistor is the same game account as the attacker', () => {
+  it('API — returns 409 when assistor is the same game account as the attacker', () => {
     setupAssistScenario('wa5').then(({ memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.request({
@@ -101,7 +101,7 @@ describe('War Assist', () => {
         headers: { Authorization: `Bearer ${memberData.access_token}` },
         body: { champion_user_id: championUserId },
         failOnStatusCode: false,
-      }).then((res) => expect(res.status).to.eq(422));
+      }).then((res) => expect(res.status).to.eq(409));
     });
   });
 });
