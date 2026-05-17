@@ -14,6 +14,7 @@ import {
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '@/app/contexts/war-context';
 import PrefightEntryRow from './prefight-entry-row';
+import AssistAssignmentRow from './assist-assignment-row';
 import { WarMode } from './war-types';
 import AttackerEntryRow from './attacker-entry-row';
 import SynergyPopover from './synergy-popover';
@@ -49,10 +50,6 @@ export default function WarAttackerPanel({
 
   const assigned = placements.filter((p) => p.attacker_champion_user_id !== null);
 
-  const players = [
-    ...new Set(placements.map((p) => p.attacker_pseudo).filter(Boolean) as string[]),
-  ].sort((a, b) => a.localeCompare(b));
-
   // Group by attacker member (node attackers)
   const groupMap = new Map<string, MemberGroup>();
   for (const p of assigned) {
@@ -68,6 +65,26 @@ export default function WarAttackerPanel({
       groupMap.set(pf.game_pseudo, { pseudo: pf.game_pseudo, entries: [] });
     }
   }
+  // Build assist assignments grouped by assistor pseudo
+  const assistsByPseudo = new Map<string, WarPlacement[]>();
+  for (const p of placements) {
+    if (p.is_assisted && p.assistor_pseudo) {
+      if (!assistsByPseudo.has(p.assistor_pseudo)) assistsByPseudo.set(p.assistor_pseudo, []);
+      assistsByPseudo.get(p.assistor_pseudo)!.push(p);
+    }
+  }
+  // Include assistor-only members in the group map
+  for (const [pseudo] of assistsByPseudo) {
+    if (!groupMap.has(pseudo)) groupMap.set(pseudo, { pseudo, entries: [] });
+  }
+
+  const players = [
+    ...new Set([
+      ...(placements.map((p) => p.attacker_pseudo).filter(Boolean) as string[]),
+      ...(placements.filter((p) => p.assistor_pseudo).map((p) => p.assistor_pseudo) as string[]),
+    ]),
+  ].sort((a, b) => a.localeCompare(b));
+
   const groups = Array.from(groupMap.values()).sort((a, b) => a.pseudo.localeCompare(b.pseudo));
 
   return (
@@ -129,6 +146,7 @@ export default function WarAttackerPanel({
             );
 
             const memberPrefights = prefights.filter((p) => p.game_pseudo === memberGroup.pseudo);
+            const memberAssists = assistsByPseudo.get(memberGroup.pseudo) ?? [];
 
             const prefightOnlyProviders = [
               ...new Map(
@@ -141,6 +159,7 @@ export default function WarAttackerPanel({
               ...nodeAttackerIds,
               ...memberSynergies.map((s) => s.champion_user_id),
               ...memberPrefights.map((p) => p.champion_user_id),
+              ...memberAssists.map((a) => a.assistor_champion_user_id).filter(Boolean),
             ]).size;
 
             // Deduplicated node attacker portraits (unique by champion_user_id)
@@ -275,6 +294,14 @@ export default function WarAttackerPanel({
                       targetPlacement={placements.find(
                         (p) => p.node_number === pf.target_node_number
                       )}
+                      readonly={warMode !== WarMode.Attackers}
+                    />
+                  ))}
+                  {/* Assist assignment entries for this member */}
+                  {memberAssists.map((p) => (
+                    <AssistAssignmentRow
+                      key={`assist-${p.node_number}`}
+                      placement={p}
                       readonly={warMode !== WarMode.Attackers}
                     />
                   ))}

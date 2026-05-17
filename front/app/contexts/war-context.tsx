@@ -40,6 +40,8 @@ import {
   toggleCombatCompleted,
   toggleFightNotDone,
   togglePlanningError,
+  assignWarAssist,
+  removeWarAssist,
 } from '@/app/services/war';
 import { WarMode } from '@/app/game/war/_components/war-types';
 
@@ -117,6 +119,10 @@ interface WarContextValue {
   handleToggleCombatCompleted: (nodeNumber: number) => Promise<void>;
   handleToggleFightNotDone: (nodeNumber: number) => Promise<void>;
   handleTogglePlanningError: (nodeNumber: number) => Promise<void>;
+
+  // Assist
+  handleAssignAssist: (nodeNumber: number, championUserId: string) => Promise<void>;
+  handleRemoveAssist: (nodeNumber: number) => Promise<void>;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -596,6 +602,42 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
   };
 
+  const handleAssignAssist = async (nodeNumber: number, championUserId: string) => {
+    if (!selectedAllianceId || !activeWarId) return;
+    try {
+      const updated = await assignWarAssist(
+        selectedAllianceId,
+        activeWarId,
+        selectedBg,
+        nodeNumber,
+        championUserId
+      );
+      toast.success(t.game.war.assist.addSuccess);
+      setWarSummary((prev) =>
+        prev
+          ? { ...prev, placements: prev.placements.map((p) => p.node_number === updated.node_number ? updated : p) }
+          : prev
+      );
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.assist.addError);
+    }
+  };
+
+  const handleRemoveAssist = async (nodeNumber: number) => {
+    if (!selectedAllianceId || !activeWarId) return;
+    try {
+      const updated = await removeWarAssist(selectedAllianceId, activeWarId, selectedBg, nodeNumber);
+      toast.success(t.game.war.assist.removeSuccess);
+      setWarSummary((prev) =>
+        prev
+          ? { ...prev, placements: prev.placements.map((p) => p.node_number === updated.node_number ? updated : p) }
+          : prev
+      );
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.assist.removeError);
+    }
+  };
+
   // ─── Context value ─────────────────────────────────────────────────────────
 
   const value = useMemo<WarContextValue>(
@@ -648,6 +690,8 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       handleToggleCombatCompleted,
       handleToggleFightNotDone,
       handleTogglePlanningError,
+      handleAssignAssist,
+      handleRemoveAssist,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [

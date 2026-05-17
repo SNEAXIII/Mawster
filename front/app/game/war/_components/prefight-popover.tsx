@@ -5,6 +5,7 @@ import { useI18n } from '@/app/i18n';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import ChampionPortrait from '@/components/champion-portrait';
 import PrefightSelectorDialog from './prefight-selector';
+import AssistSelectorDialog from './assist-selector';
 import { useWar } from '@/app/contexts/war-context';
 
 interface PrefightPopoverProps {
@@ -35,12 +36,14 @@ export default function PrefightPopover({
   canManage = true,
 }: Readonly<PrefightPopoverProps>) {
   const { t } = useI18n();
-  const { prefights, handleRemovePrefight } = useWar();
+  const { prefights, handleRemovePrefight, placements, handleRemoveAssist } = useWar();
   const [open, setOpen] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
+  const [assistSelectorOpen, setAssistSelectorOpen] = useState(false);
 
   // prefights targeting this specific node
   const boundPrefights = prefights.filter((p) => p.target_node_number === nodeNumber);
+  const placement = placements.find((p) => p.node_number === nodeNumber);
 
   return (
     <>
@@ -123,6 +126,53 @@ export default function PrefightPopover({
           >
             {t.game.war.prefight.add}
           </button>
+
+          <div className='border-t border-border/40 pt-2 space-y-1'>
+            <p className='text-[10px] text-muted-foreground'>{t.game.war.assist.label}</p>
+            {placement?.is_assisted && placement.assistor_champion_name ? (
+              <div className='flex items-center gap-2'>
+                <ChampionPortrait
+                  imageUrl={placement.assistor_image_url ?? null}
+                  name={placement.assistor_champion_name}
+                  rarity={placement.assistor_rarity ?? ''}
+                  size={32}
+                  ascension={placement.assistor_ascension ?? 0}
+                  is_saga_attacker={false}
+                  is_saga_defender={false}
+                  sagaMode='attacker'
+                />
+                <div className='flex flex-col flex-1 min-w-0'>
+                  <span className='text-xs font-medium truncate'>{placement.assistor_champion_name}</span>
+                  <span className='text-[10px] text-muted-foreground truncate'>
+                    {placement.assistor_pseudo}
+                  </span>
+                </div>
+                <button
+                  className='shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed'
+                  data-cy={`assist-revoke-node-${nodeNumber}`}
+                  disabled={!canManage}
+                  onClick={async () => {
+                    setOpen(false);
+                    await handleRemoveAssist(nodeNumber);
+                  }}
+                >
+                  {t.game.war.assist.revoke}
+                </button>
+              </div>
+            ) : (
+              <button
+                className='w-full text-xs py-1 px-2 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed'
+                data-cy={`assist-add-node-${nodeNumber}`}
+                disabled={!canManage}
+                onClick={() => {
+                  setOpen(false);
+                  setAssistSelectorOpen(true);
+                }}
+              >
+                {t.game.war.assist.add}
+              </button>
+            )}
+          </div>
         </PopoverContent>
       </Popover>
 
@@ -131,6 +181,12 @@ export default function PrefightPopover({
         onClose={() => setSelectorOpen(false)}
         targetNodeNumber={nodeNumber}
         targetGameAccountId={gameAccountId}
+      />
+      <AssistSelectorDialog
+        open={assistSelectorOpen}
+        onClose={() => setAssistSelectorOpen(false)}
+        nodeNumber={nodeNumber}
+        attackerGameAccountId={placement?.attacker_game_account_id ?? null}
       />
     </>
   );
