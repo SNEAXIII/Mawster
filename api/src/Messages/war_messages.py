@@ -44,6 +44,9 @@ PLANNING_ERROR_CONFLICT = (
     "Cannot mark as fight not done: fight is already marked as planning error — untoggle it first"
 )
 NO_ATTACKER_ASSIGNED_FOR_FLAG = "Cannot flag this node: no attacker assigned"
+ASSIST_NO_ATTACKER_ASSIGNED = "Cannot assign assist: no attacker assigned to this node"
+ASSIST_SAME_ACCOUNT = "Assistor must be a different player than the attacker"
+ASSIST_NOT_FOUND = "No assist assigned to this node"
 
 
 def champion_with_id_not_found(champion_id) -> str:

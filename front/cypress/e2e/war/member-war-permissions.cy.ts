@@ -53,7 +53,7 @@ describe('Member — war interactive elements', () => {
       cy.apiLogin(memberData.user_id);
       cy.navTo('war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
-      cy.getByCy('prefight-trigger-node-10').click();
+      cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('prefight-add-node-10').should('be.visible').and('not.be.disabled');
     });
   });

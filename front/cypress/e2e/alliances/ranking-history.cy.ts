@@ -26,6 +26,16 @@ function openRankingHistory() {
   cy.getByCy('collapsible-ranking-history').click();
 }
 
+function createAndEndTwoWars(ownerToken: string, allianceId: string, cb: () => void) {
+  cy.apiCreateWar(ownerToken, allianceId, 'Enemy1').then((war1: { id: string }) => {
+    cy.apiEndWar(ownerToken, allianceId, war1.id, true, 50).then(() => {
+      cy.apiCreateWar(ownerToken, allianceId, 'Enemy2').then((war2: { id: string }) => {
+        cy.apiEndWar(ownerToken, allianceId, war2.id, false, -30).then(cb);
+      });
+    });
+  });
+}
+
 describe('Alliance Statistics – Ranking History', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -46,17 +56,11 @@ describe('Alliance Statistics – Ranking History', () => {
   it('shows chart with data points after ended wars', () => {
     setupWarOwner('rh-wars', 'RhWarOwner', 'RhWarAlliance', 'RHW').then(({ adminData, ownerData, allianceId }) => {
       createAndActivateSeason(adminData.access_token).then(() => {
-        cy.apiCreateWar(ownerData.access_token, allianceId, 'Enemy1').then((war1: { id: string }) => {
-          cy.apiEndWar(ownerData.access_token, allianceId, war1.id, true, 50).then(() => {
-            cy.apiCreateWar(ownerData.access_token, allianceId, 'Enemy2').then((war2: { id: string }) => {
-              cy.apiEndWar(ownerData.access_token, allianceId, war2.id, false, -30).then(() => {
-                cy.apiLogin(ownerData.user_id);
-                goToStatsTab();
-                openRankingHistory();
-                cy.getByCy('ranking-history-chart').should('be.visible');
-              });
-            });
-          });
+        createAndEndTwoWars(ownerData.access_token, allianceId, () => {
+          cy.apiLogin(ownerData.user_id);
+          goToStatsTab();
+          openRankingHistory();
+          cy.getByCy('ranking-history-chart').should('be.visible');
         });
       });
     });

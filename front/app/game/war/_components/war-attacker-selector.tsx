@@ -94,12 +94,12 @@ export default function WarAttackerSelector({
   }
 
   const availableClasses = useMemo(
-    () => Array.from(new Set(available.map((a) => a.champion_class))).sort(),
+    () => Array.from(new Set(available.map((a) => a.champion_class))).sort((a, b) => a.localeCompare(b)),
     [available]
   );
 
   const availablePlayers = useMemo(
-    () => Array.from(new Set(available.map((a) => a.game_pseudo))).sort(),
+    () => Array.from(new Set(available.map((a) => a.game_pseudo))).sort((a, b) => a.localeCompare(b)),
     [available]
   );
 

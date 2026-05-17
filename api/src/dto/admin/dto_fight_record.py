@@ -85,6 +85,7 @@ class WarFightRecordResponse(BaseModel):
     defender_is_saga_defender: bool
     ko_count: int
     is_planning_error: bool = False
+    assisted: bool = False
     synergies: list[WarFightSynergyResponse] = []
     prefights: list[WarFightPrefightResponse] = []
     created_at: datetime
@@ -122,6 +123,7 @@ class WarFightRecordResponse(BaseModel):
             "defender_is_saga_defender": data.defender_is_saga_defender,
             "ko_count": data.ko_count,
             "is_planning_error": data.is_planning_error,
+            "assisted": data.assisted,
             "synergies": data.synergies,
             "prefights": data.prefights,
             "created_at": data.war.created_at,

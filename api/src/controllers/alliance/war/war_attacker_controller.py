@@ -173,3 +173,42 @@ async def toggle_planning_error(
     """Mark a node as a planning error. Officers/owner only."""
     await AllianceService.require_officer(session, alliance_id, current_user.id)
     return await WarService.toggle_planning_error(session, war_id, battlegroup, node_number)
+
+
+@war_attacker_controller.post(
+    "/{war_id}/bg/{battlegroup}/node/{node_number}/assist",
+    response_model=WarPlacementResponse,
+)
+async def assign_war_assist(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    node_number: int,
+    body: WarAttackerAssignRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """Assign an assistor to a war node. All members can assign."""
+    await AllianceService.require_member(session, alliance_id, current_user.id)
+    return await WarService.assign_assist(
+        session, war_id, alliance_id, battlegroup, node_number, body.champion_user_id
+    )
+
+
+@war_attacker_controller.delete(
+    "/{war_id}/bg/{battlegroup}/node/{node_number}/assist",
+    response_model=WarPlacementResponse,
+)
+async def remove_war_assist(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    node_number: int,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """Remove the assistor from a war node. All members can remove."""
+    await AllianceService.require_member(session, alliance_id, current_user.id)
+    return await WarService.remove_assist(session, war_id, battlegroup, node_number)

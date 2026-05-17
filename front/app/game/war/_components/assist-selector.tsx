@@ -9,24 +9,24 @@ import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
 import { getClassColors, shortenChampionName } from '@/app/services/roster';
 import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils';
-import { type AvailableAttacker, getAvailablePrefightAttackers } from '@/app/services/war';
+import { type AvailableAttacker, getAvailableAttackers } from '@/app/services/war';
 import { useWar } from '@/app/contexts/war-context';
 
-interface PrefightSelectorDialogProps {
+interface AssistSelectorDialogProps {
   open: boolean;
   onClose: () => void;
-  targetNodeNumber: number;
-  targetGameAccountId: string;
+  nodeNumber: number;
+  attackerGameAccountId: string | null;
 }
 
-export default function PrefightSelectorDialog({
+export default function AssistSelectorDialog({
   open,
   onClose,
-  targetNodeNumber,
-}: Readonly<PrefightSelectorDialogProps>) {
+  nodeNumber,
+  attackerGameAccountId,
+}: Readonly<AssistSelectorDialogProps>) {
   const { t } = useI18n();
-  const { selectedAllianceId, activeWarId, selectedBg, handleAddPrefight, prefights, placements } =
-    useWar();
+  const { selectedAllianceId, activeWarId, selectedBg, handleAssignAssist } = useWar();
   const [available, setAvailable] = useState<AvailableAttacker[]>([]);
   const [playerSearch, setPlayerSearch] = useState('');
   const [championSearch, setChampionSearch] = useState('');
@@ -38,7 +38,7 @@ export default function PrefightSelectorDialog({
     setLoading(true);
     setError(false);
     try {
-      const data = await getAvailablePrefightAttackers(selectedAllianceId, activeWarId, selectedBg);
+      const data = await getAvailableAttackers(selectedAllianceId, activeWarId, selectedBg);
       setAvailable(data);
     } catch {
       setError(true);
@@ -55,15 +55,8 @@ export default function PrefightSelectorDialog({
     }
   }, [open, fetchAvailable]);
 
-  // Only exclude champions already prefighting THIS specific node (same champion can prefight other nodes)
-  const usedPrefightIds = new Set(
-    prefights
-      .filter((p) => p.target_node_number === targetNodeNumber)
-      .map((p) => p.champion_user_id)
-  );
-
   const filtered = available
-    .filter((a) => !usedPrefightIds.has(a.champion_user_id))
+    .filter((a) => attackerGameAccountId === null || a.game_account_id !== attackerGameAccountId)
     .filter((a) => {
       const matchPlayer =
         !playerSearch || a.game_pseudo.toLowerCase().includes(playerSearch.toLowerCase());
@@ -89,9 +82,6 @@ export default function PrefightSelectorDialog({
   }
   const groups = Array.from(groupMap.values());
 
-  // placements is consumed by war context; kept in destructure for interface compat
-  placements satisfies typeof placements;
-
   let content: React.ReactNode;
   if (loading) {
     content = <div className='text-center text-muted-foreground py-8'>{t.common.loading}</div>;
@@ -102,7 +92,7 @@ export default function PrefightSelectorDialog({
   } else if (groups.length === 0) {
     content = (
       <div className='text-center text-muted-foreground py-8'>
-        {t.game.war.prefight.noneAvailable}
+        {t.game.war.assist.noneAvailable}
       </div>
     );
   } else {
@@ -122,10 +112,10 @@ export default function PrefightSelectorDialog({
                   'hover:ring-2 hover:ring-primary/60'
                 )}
                 onClick={() => {
-                  handleAddPrefight(a.champion_user_id, targetNodeNumber);
+                  void handleAssignAssist(nodeNumber, a.champion_user_id);
                   onClose();
                 }}
-                data-cy={`prefight-pick-${a.champion_name.replaceAll(/\s+/g, '-')}`}
+                data-cy={`assist-pick-${a.champion_name.replaceAll(/\s+/g, '-')}`}
               >
                 <ChampionPortrait
                   imageUrl={a.image_url}
@@ -164,12 +154,11 @@ export default function PrefightSelectorDialog({
     >
       <DialogContent
         className='max-w-2xl max-h-[90vh] overflow-hidden flex flex-col gap-0 p-0'
-        data-cy='prefight-selector'
+        data-cy='assist-selector'
       >
         <DialogHeader className='px-6 py-4'>
           <DialogTitle>
-            {t.game.war.prefight.add} —{' '}
-            {t.game.war.prefight.for.replace('#{node}', String(targetNodeNumber))}
+            {t.game.war.assist.add} — #{nodeNumber}
           </DialogTitle>
         </DialogHeader>
         <Separator />
@@ -178,13 +167,13 @@ export default function PrefightSelectorDialog({
             value={playerSearch}
             onChange={setPlayerSearch}
             placeholder={t.game.war.searchPlayer}
-            data-cy='prefight-search-player'
+            data-cy='assist-search-player'
           />
           <SearchInput
             value={championSearch}
             onChange={setChampionSearch}
             placeholder={t.game.war.searchChampion}
-            data-cy='prefight-search-champion'
+            data-cy='assist-search-champion'
           />
         </div>
         <Separator />

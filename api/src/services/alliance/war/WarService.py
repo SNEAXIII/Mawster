@@ -40,6 +40,9 @@ from src.Messages.war_messages import (
     FIGHT_NOT_DONE_CONFLICT,
     PLANNING_ERROR_CONFLICT,
     NO_ATTACKER_ASSIGNED_FOR_FLAG,
+    ASSIST_NO_ATTACKER_ASSIGNED,
+    ASSIST_SAME_ACCOUNT,
+    ASSIST_NOT_FOUND,
     KO_COUNT_NO_ATTACKER_ASSIGNED,
     MEMBER_ALREADY_HAS_3_ATTACKERS,
     NODE_HAS_NO_DEFENDER_PLACE_FIRST,
@@ -215,6 +218,12 @@ class WarService:
                 selectinload(WarDefensePlacement.attacker_champion_user).selectinload(
                     ChampionUser.game_account
                 ),  # type: ignore[arg-type]
+                selectinload(WarDefensePlacement.assist_champion_user).selectinload(
+                    ChampionUser.champion
+                ),  # type: ignore[arg-type]
+                selectinload(WarDefensePlacement.assist_champion_user).selectinload(
+                    ChampionUser.game_account
+                ),  # type: ignore[arg-type]
             )
         )
         result = await session.exec(stmt)
@@ -234,6 +243,12 @@ class WarService:
                     ChampionUser.champion
                 ),  # type: ignore[arg-type]
                 selectinload(WarDefensePlacement.attacker_champion_user).selectinload(
+                    ChampionUser.game_account
+                ),  # type: ignore[arg-type]
+                selectinload(WarDefensePlacement.assist_champion_user).selectinload(
+                    ChampionUser.champion
+                ),  # type: ignore[arg-type]
+                selectinload(WarDefensePlacement.assist_champion_user).selectinload(
                     ChampionUser.game_account
                 ),  # type: ignore[arg-type]
             )
@@ -903,6 +918,80 @@ class WarService:
         session.add(placement)
         await session.commit()
         return WarPlacementResponse.model_validate(await cls._load_placement(session, placement.id))
+
+    @classmethod
+    async def assign_assist(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+        battlegroup: int,
+        node_number: int,
+        champion_user_id: uuid.UUID,
+    ) -> WarPlacementResponse:
+        placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
+        if placement is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=NO_DEFENDER_ON_NODE)
+        if placement.attacker_champion_user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=ASSIST_NO_ATTACKER_ASSIGNED,
+            )
+
+        cu_stmt = (
+            select(ChampionUser)
+            .where(ChampionUser.id == champion_user_id)
+            .options(selectinload(ChampionUser.game_account))  # type: ignore[arg-type]
+        )
+        assistor = (await session.exec(cu_stmt)).first()
+        if assistor is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_USER_NOT_FOUND
+            )
+
+        if (
+            assistor.game_account.alliance_id != alliance_id
+            or assistor.game_account.alliance_group != battlegroup
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail=CHAMPION_NOT_IN_ALLIANCE_BG
+            )
+
+        attacker_cu = (
+            await session.exec(
+                select(ChampionUser).where(ChampionUser.id == placement.attacker_champion_user_id)
+            )
+        ).first()
+        if attacker_cu and attacker_cu.game_account_id == assistor.game_account_id:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=ASSIST_SAME_ACCOUNT)
+
+        placement_id = placement.id
+        placement.assist_champion_user_id = champion_user_id
+        session.add(placement)
+        await session.commit()
+        session.expire(placement)
+        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement_id))
+
+    @classmethod
+    async def remove_assist(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        battlegroup: int,
+        node_number: int,
+    ) -> WarPlacementResponse:
+        placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
+        if placement is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=NO_DEFENDER_ON_NODE)
+        if placement.assist_champion_user_id is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ASSIST_NOT_FOUND)
+
+        placement_id = placement.id
+        placement.assist_champion_user_id = None
+        session.add(placement)
+        await session.commit()
+        session.expire(placement)
+        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement_id))
 
     # ─── Synergy endpoints ────────────────────────────────────────────────────
 

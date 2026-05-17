@@ -44,14 +44,14 @@ export default function AllianceDefenseSelector({
 
   const availableClasses = useMemo(() => {
     const classes = new Set(availableChampions.map((c) => c.champion_class));
-    return Array.from(classes).sort();
+    return Array.from(classes).sort((a, b) => a.localeCompare(b));
   }, [availableChampions]);
 
   const availablePlayers = useMemo(() => {
     const players = new Set(
       availableChampions.flatMap((champ) => champ.owners.map((owner) => owner.game_pseudo))
     );
-    return Array.from(players).sort();
+    return Array.from(players).sort((a, b) => a.localeCompare(b));
   }, [availableChampions]);
 
   const canReset =

@@ -8,7 +8,7 @@ import { X, Minus, Plus, Swords, CircleQuestionMark, CheckCircle, Ban, AlertTria
 import { type WarPlacement } from '@/app/services/war';
 import { useWar } from '@/app/contexts/war-context';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import PrefightPopover from './prefight-popover';
+import NodeActionsPopover from './node-actions-popover';
 
 interface AttackerEntryRowProps {
   placement: WarPlacement;
@@ -24,7 +24,10 @@ export default function AttackerEntryRow({
   readonly = false,
 }: Readonly<AttackerEntryRowProps>) {
   const { t } = useI18n();
-  const { handleRemoveAttacker, handleUpdateKo, handleToggleCombatCompleted, handleToggleFightNotDone, handleTogglePlanningError, canManageWar, isVisitor, prefights } = useWar();
+  const { handleRemoveAttacker, handleUpdateKo, handleToggleCombatCompleted, handleToggleFightNotDone, handleTogglePlanningError, canManageWar, isVisitor, isMine, prefights } = useWar();
+  // When assisted, only the assistor (or an officer) can toggle combat complete
+  const assistorCanManage = placement.is_assisted && isMine(placement.assistor_game_account_id ?? '');
+  const canToggleComplete = !placement.is_assisted || canManageWar || assistorCanManage;
   const [confirmOpen, setConfirmOpen] = useState(false);
   const nodePrefights = prefights.filter((p) => p.target_node_number === placement.node_number);
 
@@ -48,7 +51,7 @@ export default function AttackerEntryRow({
     >
       <div className='flex items-center gap-1 shrink-0'>
         {placement.attacker_champion_user_id && !readonly ? (
-          <PrefightPopover
+          <NodeActionsPopover
             nodeNumber={placement.node_number}
             gameAccountId={placement.attacker_game_account_id ?? ''}
             championName={placement.attacker_champion_name ?? ''}
@@ -117,7 +120,17 @@ export default function AttackerEntryRow({
         {isFull && placement.attacker_pseudo && (
           <div className='text-[10px] font-semibold truncate'>{placement.attacker_pseudo}</div>
         )}
-        <div className='text-[10px] text-muted-foreground'>#{placement.node_number}</div>
+        <div className='flex items-center gap-1'>
+          <span className='text-[10px] text-muted-foreground'>#{placement.node_number}</span>
+          {placement.is_assisted && (
+            <span
+              className='text-[9px] font-semibold px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 shrink-0'
+              data-cy={`assisted-badge-node-${placement.node_number}`}
+            >
+              {t.game.war.assist.badge}
+            </span>
+          )}
+        </div>
       </div>
 
       {placement.attacker_champion_user_id && (readonly || isVisitor) && (
@@ -130,25 +143,27 @@ export default function AttackerEntryRow({
       {placement.attacker_champion_user_id && !readonly && !isVisitor && (
         <>
         
-          <button
-            type='button'
-            className={cn(
-              'rounded-full flex items-center justify-center flex-shrink-0 transition-colors',
-              placement.is_combat_completed
-                ? 'bg-red-700/80 hover:bg-red-700 text-white'
-                : 'bg-green-700 text-muted-foreground hover:text-white',
-              btnSize
-            )}
-            onClick={() => handleToggleCombatCompleted(placement.node_number)}
-            title={placement.is_combat_completed ? t.game.war.markCombatUndone : t.game.war.markCombatDone}
-            data-cy={`combat-complete-node-${placement.node_number}`}
-          >
-            {placement.is_combat_completed ? (
-              <X className={cn(iconSize)} />
-            ) : (
-              <CheckCircle className={cn(iconSize)} />
-            )}
-          </button>
+          {canToggleComplete && (
+            <button
+              type='button'
+              className={cn(
+                'rounded-full flex items-center justify-center flex-shrink-0 transition-colors',
+                placement.is_combat_completed
+                  ? 'bg-red-700/80 hover:bg-red-700 text-white'
+                  : 'bg-green-700 text-muted-foreground hover:text-white',
+                btnSize
+              )}
+              onClick={() => handleToggleCombatCompleted(placement.node_number)}
+              title={placement.is_combat_completed ? t.game.war.markCombatUndone : t.game.war.markCombatDone}
+              data-cy={`combat-complete-node-${placement.node_number}`}
+            >
+              {placement.is_combat_completed ? (
+                <X className={cn(iconSize)} />
+              ) : (
+                <CheckCircle className={cn(iconSize)} />
+              )}
+            </button>
+          )}
 
           {!placement.is_combat_completed && (
             <div

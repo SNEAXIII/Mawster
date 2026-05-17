@@ -312,17 +312,20 @@ Cypress.Commands.add('navTo', (page: string) => {
 
 // ── Invite member to alliance (direct backend call) ─────────────────────────
 
-Cypress.Commands.add('apiInviteMember', (token: string, allianceId: string, gameAccountId: string, type: 'member' | 'visitor' = 'member') => {
-  cy.request({
-    method: 'POST',
-    url: `${BACKEND}/alliances/${allianceId}/invitations`,
-    headers: { Authorization: `Bearer ${token}` },
-    body: { game_account_id: gameAccountId, type },
-  }).then((res) => {
-    expect(res.status).to.eq(201);
-    return res.body;
-  });
-});
+Cypress.Commands.add(
+  'apiInviteMember',
+  (token: string, allianceId: string, gameAccountId: string, type: 'member' | 'visitor' = 'member') => {
+    cy.request({
+      method: 'POST',
+      url: `${BACKEND}/alliances/${allianceId}/invitations`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { game_account_id: gameAccountId, type },
+    }).then((res) => {
+      expect(res.status).to.eq(201);
+      return res.body;
+    });
+  },
+);
 
 // ── Add champion to player roster (direct backend call) ─────────────────────
 
@@ -514,19 +517,11 @@ export function setupKnowledgeBaseFast(
           { name: 'Captain America', cls: 'Cosmic' },
         ])
         .then(() =>
-          cy
-            .apiCreateWar(ownerData.access_token, allianceId, 'OpponentFast')
-            .then((war) =>
-              cy
-                .apiEndWar(ownerData.access_token, allianceId, war.id, true, 10)
-                .then(() =>
-                  cy
-                    .apiDevBulkCreateFightRecords(war.id, allianceId, ownerAccId, count)
-                    .then(() =>
-                      cy.wrap({ adminToken: adminAT, userData: ownerData, accountId: ownerAccId, allianceId }),
-                    ),
-                ),
-            ),
+          cy.apiCreateWar(ownerData.access_token, allianceId, 'OpponentFast').then((war) => {
+            cy.apiEndWar(ownerData.access_token, allianceId, war.id, true, 10);
+            cy.apiDevBulkCreateFightRecords(war.id, allianceId, ownerAccId, count);
+            return cy.wrap({ adminToken: adminAT, userData: ownerData, accountId: ownerAccId, allianceId });
+          }),
         );
     });
 }
@@ -838,7 +833,7 @@ export function setupDefenseScenario(
           champDefs.map((d) => ({ name: d.name, cls: d.cls, is_ascendable: d.options?.is_ascendable })),
         )
         .then((champMap) => {
-          champDefs.forEach((def) => {
+          for (const def of champDefs) {
             cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champMap[def.name].id, def.rarity, {
               signature: def.options?.signature ?? 0,
               is_preferred_attacker: def.options?.is_preferred_attacker ?? false,
@@ -846,7 +841,7 @@ export function setupDefenseScenario(
             }).then((cu) => {
               championUsers.push({ name: def.name, cuId: cu.id });
             });
-          });
+          }
         })
         .then(() => ({ adminData, ownerData, allianceId, ownerAccId, championUsers }));
     },
@@ -916,7 +911,10 @@ export function setupAllianceWithMember(
       {
         discord_token: ownerToken,
         game_pseudo: `${tokenPrefix}Owner`.slice(0, 16),
-        create_alliance: { name: `${safePrefix(tokenPrefix)}Alliance`, tag: safePrefix(tokenPrefix).slice(0, 3).toUpperCase() },
+        create_alliance: {
+          name: `${safePrefix(tokenPrefix)}Alliance`,
+          tag: safePrefix(tokenPrefix).slice(0, 3).toUpperCase(),
+        },
       },
       {
         discord_token: memberToken,
@@ -1255,23 +1253,25 @@ export function setupAttackerScenario(prefix: string): Cypress.Chainable<{
           { name: 'Iron Man', cls: 'Tech' },
           { name: 'Wolverine', cls: 'Mutant' },
         ])
-        .then((champMap) =>
+        .then((champMap) => {
+          let savedWarId = '';
           cy.apiCreateWar(ownerData.access_token, allianceId, 'AttackerEnemy').then((war) => {
+            savedWarId = war.id;
             cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 1, 10, champMap['Iron Man'].id, 7, 3, 0);
-            return cy
-              .apiAddChampionToRoster(memberData.access_token, memberAccId, champMap['Wolverine'].id, '7r3')
-              .then((cu) => ({
-                adminToken: adminAT,
-                ownerData,
-                memberData,
-                allianceId,
-                ownerAccId,
-                memberAccId,
-                warId: war.id,
-                championUserId: cu.id,
-              }));
-          }),
-        );
+          });
+          return cy
+            .apiAddChampionToRoster(memberData.access_token, memberAccId, champMap['Wolverine'].id, '7r3')
+            .then((cu) => ({
+              adminToken: adminAT,
+              ownerData,
+              memberData,
+              allianceId,
+              ownerAccId,
+              memberAccId,
+              warId: savedWarId,
+              championUserId: cu.id,
+            }));
+        });
     });
 }
 
@@ -1337,34 +1337,29 @@ export function setupPrefightScenario(prefix: string): Cypress.Chainable<{
   return setupAttackerScenario(prefix).then((scenario) => {
     return cy.apiLoadChampion(scenario.adminToken, 'Storm', 'Mutant').then((champs: { id: string }[]) => {
       const stormId = champs[0].id;
+      cy.request({
+        method: 'PATCH',
+        url: `${BACKEND}/admin/champions/${stormId}/prefight`,
+        headers: { Authorization: `Bearer ${scenario.adminToken}` },
+      });
       return cy
         .request({
-          method: 'PATCH',
-          url: `${BACKEND}/admin/champions/${stormId}/prefight`,
-          headers: { Authorization: `Bearer ${scenario.adminToken}` },
+          method: 'POST',
+          url: `${BACKEND}/champion-users`,
+          headers: { Authorization: `Bearer ${scenario.memberData.access_token}` },
+          body: {
+            champion_id: stormId,
+            game_account_id: scenario.memberAccId,
+            stars: 6,
+            rank: 3,
+            ascension: 0,
+            rarity: '7r3',
+          },
         })
-        .then(() =>
-          cy
-            .request({
-              method: 'POST',
-              url: `${BACKEND}/champion-users`,
-              headers: { Authorization: `Bearer ${scenario.memberData.access_token}` },
-              body: {
-                champion_id: stormId,
-                game_account_id: scenario.memberAccId,
-                stars: 6,
-                rank: 3,
-                ascension: 0,
-                rarity: '7r3',
-              },
-            })
-            .then((resp: Cypress.Response<{ id: string }>) => {
-              return {
-                ...scenario,
-                prefightChampionUserId: resp.body.id,
-              };
-            }),
-        );
+        .then((resp: Cypress.Response<{ id: string }>) => ({
+          ...scenario,
+          prefightChampionUserId: resp.body.id,
+        }));
     });
   });
 }

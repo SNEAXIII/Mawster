@@ -30,6 +30,9 @@ class WarDefensePlacement(SQLModel, table=True):
     attacker_champion_user_id: Optional[uuid.UUID] = Field(
         default=None, foreign_key="champion_user.id"
     )
+    assist_champion_user_id: Optional[uuid.UUID] = Field(
+        default=None, foreign_key="champion_user.id"
+    )
     ko_count: int = Field(default=0, ge=0)
     is_combat_completed: bool = Field(default=False)
     is_fight_not_done: bool = Field(default=False)
@@ -45,4 +48,7 @@ class WarDefensePlacement(SQLModel, table=True):
     )
     attacker_champion_user: Optional["ChampionUser"] = Relationship(
         sa_relationship_kwargs={"foreign_keys": "[WarDefensePlacement.attacker_champion_user_id]"},
+    )
+    assist_champion_user: Optional["ChampionUser"] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[WarDefensePlacement.assist_champion_user_id]"},
     )
