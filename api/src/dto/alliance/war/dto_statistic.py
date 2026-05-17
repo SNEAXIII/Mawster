@@ -34,7 +34,9 @@ class PlayerSeasonStatsResponse(BaseModel):
     @computed_field
     @property
     def score(self) -> float:
-        fights = self.total_fights - self.total_miniboss - self.total_boss
+        fights = (
+            self.total_fights - self.total_miniboss - self.total_boss - self.total_assists * 0.5
+        )
         return (
             self.total_kos * KO
             + fights * FIGHT
