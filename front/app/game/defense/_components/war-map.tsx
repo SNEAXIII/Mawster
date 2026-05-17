@@ -52,8 +52,9 @@ export function WarMapNode({
   const hoverClasses = getNodeHoverColor(nodeNumber);
 
   return (
-    <button
-      type='button'
+    <div
+      role='button'
+      tabIndex={0}
       className={cn(
         'relative flex flex-col items-center justify-center rounded-lg border-2 cursor-pointer transition-all',
         'w-15 h-18 sm:w-17 sm:h-20.5 md:w-18.5 md:h-22',
@@ -65,6 +66,7 @@ export function WarMapNode({
         dimmed && 'opacity-25'
       )}
       onClick={() => onNodeClick(nodeNumber)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onNodeClick(nodeNumber); }}
       title={
         placement
           ? `#${nodeNumber} – ${placement.champion_name} (${placement.game_pseudo})`
@@ -127,7 +129,7 @@ export function WarMapNode({
       ) : (
         <span className='text-white/40 text-xs'>+</span>
       )}
-    </button>
+    </div>
   );
 }
 

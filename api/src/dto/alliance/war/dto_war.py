@@ -89,6 +89,15 @@ class WarPlacementResponse(BaseModel):
     attacker_ascension: Optional[int] = None
     attacker_is_saga_attacker: Optional[bool] = None
     attacker_is_saga_defender: Optional[bool] = None
+    is_assisted: bool = False
+    assistor_champion_user_id: Optional[uuid.UUID] = None
+    assistor_game_account_id: Optional[uuid.UUID] = None
+    assistor_pseudo: Optional[str] = None
+    assistor_champion_name: Optional[str] = None
+    assistor_champion_class: Optional[str] = None
+    assistor_image_url: Optional[str] = None
+    assistor_rarity: Optional[str] = None
+    assistor_ascension: Optional[int] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -96,6 +105,7 @@ class WarPlacementResponse(BaseModel):
         if isinstance(data, dict):
             return data
         attacker = data.attacker_champion_user
+        assistor = data.assist_champion_user
         return {
             "id": data.id,
             "war_id": data.war_id,
@@ -126,6 +136,15 @@ class WarPlacementResponse(BaseModel):
             "attacker_ascension": attacker.ascension if attacker else None,
             "attacker_is_saga_attacker": attacker.champion.is_saga_attacker if attacker else None,
             "attacker_is_saga_defender": attacker.champion.is_saga_defender if attacker else None,
+            "is_assisted": data.assist_champion_user_id is not None,
+            "assistor_champion_user_id": data.assist_champion_user_id,
+            "assistor_game_account_id": assistor.game_account_id if assistor else None,
+            "assistor_pseudo": assistor.game_account.game_pseudo if assistor else None,
+            "assistor_champion_name": assistor.champion.name if assistor else None,
+            "assistor_champion_class": assistor.champion.champion_class if assistor else None,
+            "assistor_image_url": assistor.champion.image_url if assistor else None,
+            "assistor_rarity": f"{assistor.stars}r{assistor.rank}" if assistor else None,
+            "assistor_ascension": assistor.ascension if assistor else None,
         }
 
 

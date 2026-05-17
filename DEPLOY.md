@@ -1,89 +1,71 @@
-# ──────────────────────────────────────────────
+# Deploy — Mawster
 
-# Production env files — copy and fill in values
+Production stack: **Docker Swarm + Traefik v3 + Let's Encrypt**.
 
-# ──────────────────────────────────────────────
+## Prerequisites
 
-# 1. db.env (already exists — update passwords)
+- Docker Swarm initialized (`docker swarm init`)
+- External networks created:
+  ```bash
+  docker network create --driver overlay --attachable traefik-public
+  docker network create --driver overlay --attachable internal
+  ```
+- DNS: `mawster.app` and `www.mawster.app` pointing to the server IP
 
-# MARIADB_USER=mawster
+## Secrets
 
-# MARIADB_PASSWORD=<STRONG_PASSWORD>
+All secrets are managed via Docker Swarm secrets. Create each one:
 
-# MARIADB_ROOT_PASSWORD=<STRONG_ROOT_PASSWORD>
+```bash
+echo "<value>" | docker secret create mawster_secret_key -
+echo "<value>" | docker secret create mawster_db_password -
+echo "<value>" | docker secret create mawster_db_root_password -
+echo "<value>" | docker secret create mawster_email_pepper -
+echo "<value>" | docker secret create mawster_nextauth_secret -
+echo "<value>" | docker secret create mawster_discord_client_id -
+echo "<value>" | docker secret create mawster_discord_client_secret -
+echo "<value>" | docker secret create mawster_google_client_id -
+echo "<value>" | docker secret create mawster_google_client_secret -
+cat rclone.conf | docker secret create mawster_rclone_conf -
+```
 
-# MARIADB_PORT=3306
+| Secret | How to generate |
+|---|---|
+| `mawster_secret_key` | `openssl rand -hex 64` |
+| `mawster_db_password` | strong random password |
+| `mawster_db_root_password` | strong random password |
+| `mawster_email_pepper` | `openssl rand -hex 32` |
+| `mawster_nextauth_secret` | `npx auth secret` |
+| `mawster_discord_client_id/secret` | Discord Developer Portal |
+| `mawster_google_client_id/secret` | Google Cloud Console |
+| `mawster_rclone_conf` | `rclone config` then copy `~/.config/rclone/rclone.conf` |
 
-# MARIADB_DATABASE=mawster
+## Deploy
 
-# 2. api.env
+```bash
+docker stack deploy -c stack-app.yaml mawster
+```
 
-# SECRET_KEY=<openssl rand -hex 64>
+Traefik requests Let's Encrypt certificates automatically once DNS is set.
 
-# MARIADB_USER=mawster
+## Observability (optional)
 
-# MARIADB_PASSWORD=<same as db.env>
+```bash
+docker stack deploy -c stack-obs.yaml mawster-obs
+```
 
-# MARIADB_ROOT_PASSWORD=<same as db.env>
+## Update
 
-# MARIADB_PORT=3306
+```bash
+docker pull sneaxiii/mawster-api:latest
+docker pull sneaxiii/mawster-front:latest
+docker pull sneaxiii/mawster-static:latest
+docker stack deploy -c stack-app.yaml mawster
+```
 
-# MARIADB_DATABASE=mawster
+Swarm rolling update: 1 replica at a time, 10s delay, rollback on failure.
 
-# ALGORITHM=HS256
+## Backups
 
-# ACCESS_TOKEN_EXPIRE_MINUTES=60
-
-# 3. front.env
-
-# NEXTAUTH_SECRET=<npx auth secret>
-
-# NEXTAUTH_URL=https://www.your-domain.com
-
-# NEXTAUTH_URL_INTERNAL=http://front:3000
-
-# DISCORD_CLIENT_ID=<from Discord Developer Portal>
-
-# DISCORD_CLIENT_SECRET=<from Discord Developer Portal>
-
-# ──────────────────────────────────────────────
-
-# Deploy
-
-# ──────────────────────────────────────────────
-
-# Domain DNS attendu:
-
-# - your-domain.com -> IP du serveur
-
-# - www.your-domain.com -> IP du serveur
-
-#
-
-# docker compose -f compose-prod.yaml up -d
-
-#
-
-# Caddy génère automatiquement les certificats Let's Encrypt
-
-# quand le domaine public pointe bien vers votre serveur.
-
-#
-
-# Le bloc Caddy recommandé:
-
-# - redirige l'apex vers https://www.your-domain.com
-
-# - sert l'application uniquement sur https://www.your-domain.com
-
-#
-
-# Les certificats sont stockés dans le volume Docker `caddy_data`
-
-# sous /data/caddy/certificates à l'intérieur du conteneur.
-
-#
-
-# For IP-only / no TLS (temporary):
-
-# utiliser un Caddyfile temporaire dédié, sans domaine public.
+The `backup` service runs automatically and syncs via rclone to the configured remote.
+Local dumps are stored in `/root/Mawster/backups` on the manager node.

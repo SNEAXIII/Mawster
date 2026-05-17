@@ -76,6 +76,7 @@ class FightRecordService:
                 defender_is_saga_defender=defender_champ.is_saga_defender,
                 ko_count=placement.ko_count,
                 is_planning_error=placement.is_planning_error,
+                assisted=placement.assist_champion_user_id is not None,
             )
             session.add(record)
             await session.flush()

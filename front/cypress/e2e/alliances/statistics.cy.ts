@@ -18,6 +18,41 @@ function createAndActivateSeason(adminToken: string) {
     );
 }
 
+function setupEndedAssistWar(opts: {
+  adminToken: string;
+  ownerToken: string;
+  ownerAccId: string;
+  memberToken: string;
+  memberAccId: string;
+  allianceId: string;
+}) {
+  const { adminToken, ownerToken, ownerAccId, memberToken, memberAccId, allianceId } = opts;
+  createAndActivateSeason(adminToken);
+  return cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((ironManChamps: { id: string }[]) => {
+    return cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then((wolvChamps: { id: string }[]) => {
+      return cy
+        .apiAddChampionToRoster(ownerToken, ownerAccId, ironManChamps[0].id, '7r3')
+        .then((cuOwner: { id: string }) => {
+          return cy
+            .apiAddChampionToRoster(memberToken, memberAccId, wolvChamps[0].id, '7r3')
+            .then((cuMember: { id: string }) => {
+              return cy.apiCreateWar(ownerToken, allianceId, 'AstEnemy').then((war: { id: string }) => {
+                cy.apiPlaceWarDefender(ownerToken, allianceId, war.id, 1, 10, ironManChamps[0].id, 7, 3, 0);
+                cy.apiAssignWarAttacker(ownerToken, allianceId, war.id, 1, 10, cuOwner.id);
+                cy.request({
+                  method: 'POST',
+                  url: `${BACKEND}/alliances/${allianceId}/wars/${war.id}/bg/1/node/10/assist`,
+                  headers: { Authorization: `Bearer ${memberToken}` },
+                  body: { champion_user_id: cuMember.id },
+                });
+                cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
+              });
+            });
+        });
+    });
+  });
+}
+
 function addStatsForPlayer(
   token: string,
   allianceId: string,
@@ -1115,6 +1150,55 @@ describe('Alliance Statistics', () => {
           cy.contains('Iron Man').should('not.exist');
         },
       );
+    });
+  });
+
+  // ── Assist stats ──────────────────────────────────────────────────────────
+
+  it('shows total_assists = 1 for assistor and 0.5 fights for both after an assisted combat', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-ast-admin', role: 'admin' },
+      {
+        discord_token: 'stat-ast-owner',
+        game_pseudo: 'AstOwner',
+        create_alliance: { name: 'AstAlliance', tag: 'AST' },
+        battlegroup: 1,
+      },
+      {
+        discord_token: 'stat-ast-member',
+        game_pseudo: 'AstMember',
+        join_alliance_token: 'stat-ast-owner',
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-ast-admin'].access_token;
+      const ownerToken = users['stat-ast-owner'].access_token;
+      const memberToken = users['stat-ast-member'].access_token;
+      const allianceId = users['stat-ast-owner'].alliance_id!;
+      const ownerAccId = users['stat-ast-owner'].account_id!;
+      const memberAccId = users['stat-ast-member'].account_id!;
+
+      setupEndedAssistWar({ adminToken, ownerToken, ownerAccId, memberToken, memberAccId, allianceId });
+
+      cy.apiLogin(users['stat-ast-owner'].user_id);
+      goToStatsTab();
+      cy.getByCy('statistics-member-filter').click();
+      cy.contains('All members').click();
+
+      // Assisted player (owner): fights = 0.5
+      cy.getByCy(`statistics-row-${ownerAccId}`).within(() => {
+        cy.contains('0.5').should('exist');
+      });
+
+      // Assistor (member): assists = 1, fights = 0.5
+      cy.getByCy(`statistics-row-${memberAccId}`).within(() => {
+        cy.contains('1').should('exist');
+        cy.contains('0.5').should('exist');
+      });
+
+      // Scores: owner (received assist, 0 KOs) = 0; member (gave assist) = 2
+      cy.getByCy(`stat-score-${ownerAccId}`).should('have.text', '0');
+      cy.getByCy(`stat-score-${memberAccId}`).should('have.text', '2');
     });
   });
 });

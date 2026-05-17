@@ -18,6 +18,7 @@ from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
     push_champion_user,
+    push_member,
     push_visitor,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
@@ -621,3 +622,140 @@ class TestGetChampionUsage:
         assert body[0]["champion_name"] == "Spider-Man"
         assert body[0]["fight_count"] == 2
         assert body[0]["total_kos"] == 0
+
+
+# ─── Assist helpers ───────────────────────────────────────────────────────────
+
+
+async def _setup_with_assist():
+    """Owner attacks, member assists. Returns both champion_users."""
+    data = await _setup_with_active_season()
+    champ2 = await push_champion(name="Wolverine", champion_class="Mutant")
+    await push_user2()
+    member_acc = await push_member(data["alliance"], USER2_ID)
+    assistor_cu = await push_champion_user(member_acc, champ2)
+    return {**data, "champ2": champ2, "member_acc": member_acc, "assistor_cu": assistor_cu}
+
+
+async def _add_assisted_placement(
+    war_id,
+    attacker_cu_id,
+    assistor_cu_id,
+    champion_id,
+    node_number,
+    battlegroup=1,
+    ko_count=0,
+):
+    placement = WarDefensePlacement(
+        war_id=war_id,
+        battlegroup=battlegroup,
+        node_number=node_number,
+        champion_id=champion_id,
+        stars=7,
+        rank=3,
+        attacker_champion_user_id=attacker_cu_id,
+        assist_champion_user_id=assistor_cu_id,
+        ko_count=ko_count,
+    )
+    await load_objects([placement])
+    return placement
+
+
+# ─── Assist integration tests ─────────────────────────────────────────────────
+
+
+class TestAssistStatistics:
+    @pytest.mark.anyio
+    async def test_assistor_appears_in_stats(self):
+        data = await _setup_with_assist()
+        await _add_assisted_placement(
+            data["war"].id, data["cu"].id, data["assistor_cu"].id, data["champ"].id, node_number=10
+        )
+        response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
+        assert response.status_code == 200
+        pseudos = {r["game_pseudo"] for r in response.json()}
+        assert "MemberPseudo" in pseudos or data["member_acc"].game_pseudo in pseudos
+
+    @pytest.mark.anyio
+    async def test_total_assists_counted(self):
+        data = await _setup_with_assist()
+        await _add_assisted_placement(
+            data["war"].id, data["cu"].id, data["assistor_cu"].id, data["champ"].id, node_number=10
+        )
+        await _add_assisted_placement(
+            data["war"].id,
+            data["cu"].id,
+            data["assistor_cu"].id,
+            data["champ"].id,
+            node_number=11,
+            battlegroup=2,
+        )
+        response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
+        rows = {r["game_pseudo"]: r for r in response.json()}
+        assistor_row = rows[data["member_acc"].game_pseudo]
+        assert assistor_row["total_assists"] == 2
+
+    @pytest.mark.anyio
+    async def test_total_times_helped_counted(self):
+        data = await _setup_with_assist()
+        await _add_assisted_placement(
+            data["war"].id, data["cu"].id, data["assistor_cu"].id, data["champ"].id, node_number=10
+        )
+        response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
+        rows = {r["game_pseudo"]: r for r in response.json()}
+        attacker_row = rows[data["owner"].game_pseudo]
+        assert attacker_row["total_times_helped"] == 1
+
+    @pytest.mark.anyio
+    async def test_assisted_fight_counts_full_for_attacker_zero_for_assistor(self):
+        data = await _setup_with_assist()
+        await _add_assisted_placement(
+            data["war"].id, data["cu"].id, data["assistor_cu"].id, data["champ"].id, node_number=10
+        )
+        response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
+        rows = {r["game_pseudo"]: r for r in response.json()}
+        assert rows[data["owner"].game_pseudo]["total_fights"] == 1.0
+        assert rows[data["member_acc"].game_pseudo]["total_fights"] == 0.0
+
+    @pytest.mark.anyio
+    async def test_wars_participated_counts_assist_only_war(self):
+        data = await _setup_with_assist()
+        await _add_assisted_placement(
+            data["war"].id, data["cu"].id, data["assistor_cu"].id, data["champ"].id, node_number=10
+        )
+        response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
+        rows = {r["game_pseudo"]: r for r in response.json()}
+        assert rows[data["member_acc"].game_pseudo]["wars_participated"] == 1
+
+    @pytest.mark.anyio
+    async def test_score_assist_earns_2_points(self):
+        # 1 assist, 0 KOs → fights = 0.5 - 0.5 = 0 → score = ASSIST(2) = 2
+        data = await _setup_with_assist()
+        await _add_assisted_placement(
+            data["war"].id, data["cu"].id, data["assistor_cu"].id, data["champ"].id, node_number=10
+        )
+        response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
+        rows = {r["game_pseudo"]: r for r in response.json()}
+        assert rows[data["member_acc"].game_pseudo]["score"] == 2
+
+    @pytest.mark.anyio
+    async def test_score_helped_penalty(self):
+        # Attacker received assist, 0 KOs: fights=1.0 → 1.0*2 + HELPED(-2) = 0
+        data = await _setup_with_assist()
+        await _add_assisted_placement(
+            data["war"].id, data["cu"].id, data["assistor_cu"].id, data["champ"].id, node_number=10
+        )
+        response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
+        rows = {r["game_pseudo"]: r for r in response.json()}
+        assert rows[data["owner"].game_pseudo]["score"] == 0
+
+    @pytest.mark.anyio
+    async def test_assist_only_player_excluded_from_other_alliances(self):
+        data = await _setup_with_assist()
+        await _add_assisted_placement(
+            data["war"].id, data["cu"].id, data["assistor_cu"].id, data["champ"].id, node_number=10
+        )
+        other_alliance, other_owner = await push_alliance_with_owner(user_id=USER_ID)
+        response = await execute_get_request(f"{STATS_URL}/{other_alliance.id}", USER_HEADERS)
+        assert response.status_code == 200
+        assert response.json() == []

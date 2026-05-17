@@ -56,6 +56,15 @@ export interface WarPlacement {
   attacker_ascension: number | null;
   attacker_is_saga_attacker: boolean | null;
   attacker_is_saga_defender: boolean | null;
+  is_assisted: boolean;
+  assistor_champion_user_id: string | null;
+  assistor_game_account_id: string | null;
+  assistor_pseudo: string | null;
+  assistor_champion_name: string | null;
+  assistor_champion_class: string | null;
+  assistor_image_url: string | null;
+  assistor_rarity: string | null;
+  assistor_ascension: number | null;
 }
 
 export interface WarDefenseSummary {
@@ -360,6 +369,41 @@ export async function togglePlanningError(
     { method: 'PATCH', headers: jsonHeaders }
   );
   await throwOnError(response, 'Failed to toggle planning error');
+  return response.json();
+}
+
+// ─── Assist API ───────────────────────────────────────────
+
+export async function assignWarAssist(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  nodeNumber: number,
+  championUserId: string
+): Promise<WarPlacement> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/assist`,
+    {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ champion_user_id: championUserId }),
+    }
+  );
+  await throwOnError(response, 'Failed to assign assist');
+  return response.json();
+}
+
+export async function removeWarAssist(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  nodeNumber: number
+): Promise<WarPlacement> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/assist`,
+    { method: 'DELETE', headers: jsonHeaders }
+  );
+  await throwOnError(response, 'Failed to remove assist');
   return response.json();
 }
 

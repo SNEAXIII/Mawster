@@ -68,6 +68,8 @@ def _make_placement(champion=None, attacker=None, **overrides):
         "is_planning_error": False,
         "attacker_champion_user_id": attacker.id if attacker else None,
         "attacker_champion_user": attacker,
+        "assist_champion_user_id": None,
+        "assist_champion_user": None,
     }
     defaults.update(overrides)
     return _ns(**defaults)

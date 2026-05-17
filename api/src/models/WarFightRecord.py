@@ -37,6 +37,7 @@ class WarFightRecord(SQLModel, table=True):
     defender_is_saga_defender: bool
     ko_count: int = Field(default=0)
     is_planning_error: bool = Field(default=False)
+    assisted: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.now)
 
     war: "War" = Relationship(sa_relationship_kwargs={"foreign_keys": "[WarFightRecord.war_id]"})
