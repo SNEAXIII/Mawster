@@ -90,9 +90,9 @@ class StatisticService:
             .subquery()
         )
 
-        # Union of all (game_account_id, war_id) pairs from attacks and assists —
-        # deduplicates so a player who attacked and assisted in the same war counts it once.
-        _attacker_war_pairs = (
+        # Distinct (game_account_id, war_id) pairs across attackers and assistors.
+        # UNION deduplicates shared wars. Used both as participant filter and wars_participated.
+        _war_pairs = union(
             select(GameAccount.id.label("game_account_id"), War.id.label("war_id"))
             .join(ChampionUser, ChampionUser.game_account_id == GameAccount.id)
             .join(
@@ -102,9 +102,7 @@ class StatisticService:
             .join(War, WarDefensePlacement.war_id == War.id)
             .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
             .where(War.alliance_id == alliance_id)
-            .where(War.status == WarStatus.ended)
-        )
-        _assist_war_pairs = (
+            .where(War.status == WarStatus.ended),
             select(ChampionUser.game_account_id.label("game_account_id"), War.id.label("war_id"))
             .join(
                 WarDefensePlacement, WarDefensePlacement.assist_champion_user_id == ChampionUser.id
@@ -112,28 +110,22 @@ class StatisticService:
             .join(War, WarDefensePlacement.war_id == War.id)
             .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
             .where(War.alliance_id == alliance_id)
-            .where(War.status == WarStatus.ended)
-        )
-        _all_war_pairs = union(_attacker_war_pairs, _assist_war_pairs).subquery()
-        wars_participated_sq = (
+            .where(War.status == WarStatus.ended),
+        ).subquery()
+        wars_sq = (
             select(
-                _all_war_pairs.c.game_account_id,
-                func.count(_all_war_pairs.c.war_id).label("wars_participated"),
+                _war_pairs.c.game_account_id,
+                func.count(_war_pairs.c.war_id).label("wars_participated"),
             )
-            .group_by(_all_war_pairs.c.game_account_id)
+            .group_by(_war_pairs.c.game_account_id)
             .subquery()
         )
 
-        participant_ids_sq = union(
-            select(attacker_sq.c.game_account_id),
-            select(assist_sq.c.game_account_id),
-        ).subquery()
-
-        _attack_fights = func.coalesce(attacker_sq.c.attack_fights, 0)
-        _assist_fights = func.coalesce(assist_sq.c.assist_fights, 0)
-        _combined_fights = _attack_fights + _assist_fights
+        _combined_fights = func.coalesce(attacker_sq.c.attack_fights, 0) + func.coalesce(
+            assist_sq.c.assist_fights, 0
+        )
         _kos = func.coalesce(attacker_sq.c.total_kos, 0)
-        _wars = func.coalesce(wars_participated_sq.c.wars_participated, 0)
+        _wars = wars_sq.c.wars_participated
 
         sql = (
             select(
@@ -152,33 +144,23 @@ class StatisticService:
                 ),
                 cast((1 - _kos / func.nullif(_combined_fights, 0)) * 100, Integer).label("ratio"),
                 cast(_wars, Integer).label("wars_participated"),
+                cast(_combined_fights / func.nullif(_wars, 0), Float).label("avg_fights_per_war"),
                 cast(
-                    func.coalesce(_combined_fights / func.nullif(_wars, 0), 0.0),
-                    Float,
-                ).label("avg_fights_per_war"),
-                cast(
-                    func.coalesce(
-                        cast(
-                            func.coalesce(attacker_sq.c.total_miniboss, 0)
-                            + func.coalesce(attacker_sq.c.total_boss, 0),
-                            Float,
-                        )
-                        / func.nullif(_wars, 0),
-                        0.0,
-                    ),
+                    cast(
+                        func.coalesce(attacker_sq.c.total_miniboss, 0)
+                        + func.coalesce(attacker_sq.c.total_boss, 0),
+                        Float,
+                    )
+                    / func.nullif(_wars, 0),
                     Float,
                 ).label("avg_boss_miniboss_per_war"),
                 case((GameAccount.alliance_id == alliance_id, True), else_=False).label(
                     "is_current_member"
                 ),
             )
-            .join(participant_ids_sq, participant_ids_sq.c.game_account_id == GameAccount.id)
+            .join(wars_sq, wars_sq.c.game_account_id == GameAccount.id)
             .outerjoin(attacker_sq, attacker_sq.c.game_account_id == GameAccount.id)
             .outerjoin(assist_sq, assist_sq.c.game_account_id == GameAccount.id)
-            .outerjoin(
-                wars_participated_sq,
-                wars_participated_sq.c.game_account_id == GameAccount.id,
-            )
         )
         rows = (await session.exec(sql)).mappings().all()
         return [PlayerSeasonStatsResponse.model_validate(row) for row in rows]
