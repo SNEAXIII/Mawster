@@ -74,14 +74,16 @@ function StatCell({
   suffix,
   className,
   decimals,
-}: {
+  dataCy,
+}: Readonly<{
   value: number;
   suffix?: string;
   className?: string;
   decimals?: number;
-}) {
+  dataCy?: string;
+}>) {
   return (
-    <TableCell className={`py-1.5 text-right ${className ?? ''}`}>
+    <TableCell className={`py-1.5 text-right ${className ?? ''}`} data-cy={dataCy}>
       {decimals !== undefined ? value.toFixed(decimals) : value}
       {suffix}
     </TableCell>
@@ -543,6 +545,7 @@ export default function AllianceStatisticsTab({
                           <StatCell
                             value={row.score}
                             className={cellClass('score', row.score)}
+                            dataCy={`stat-score-${row.id}`}
                           />
                           <StatCell
                             value={row.total_kos}
@@ -562,6 +565,7 @@ export default function AllianceStatisticsTab({
                             value={row.total_fights_weighted}
                             decimals={1}
                             className={cellClass('total_fights_weighted', row.total_fights_weighted)}
+                            dataCy={`stat-fights-weighted-${row.id}`}
                           />
                           <StatCell
                             value={row.total_assists}

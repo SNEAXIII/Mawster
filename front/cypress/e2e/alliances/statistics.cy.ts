@@ -1175,6 +1175,10 @@ describe('Alliance Statistics', () => {
                       cy.contains('1').should('exist');
                       cy.contains('0.5').should('exist');
                     });
+
+                    // Scores: owner (received assist, 0 KOs) = 0; member (gave assist) = 2
+                    cy.getByCy(`stat-score-${ownerAccId}`).should('have.text', '0');
+                    cy.getByCy(`stat-score-${memberAccId}`).should('have.text', '2');
                   });
                 },
               );
