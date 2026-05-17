@@ -51,7 +51,7 @@ export default function WarAttackerPanel({
 
   const players = [
     ...new Set(placements.map((p) => p.attacker_pseudo).filter(Boolean) as string[]),
-  ].sort();
+  ].sort((a, b) => a.localeCompare(b));
 
   // Group by attacker member (node attackers)
   const groupMap = new Map<string, MemberGroup>();

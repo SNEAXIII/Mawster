@@ -1,4 +1,25 @@
-import { setupOwnerMemberAlliance, setupUser } from '../../support/e2e';
+import { setupOwnerMemberAlliance } from '../../support/e2e';
+
+function createAndJoinMember(prefix: string, pseudo: string, allianceId: string) {
+  cy.registerUser(prefix).then((targetData) => {
+    cy.apiCreateGameAccount(targetData.access_token, pseudo, true).then((targetAcc) => {
+      cy.apiForceJoinAlliance(targetAcc.id, allianceId);
+    });
+  });
+}
+
+function fillGroupOneWith9Members(allianceId: string, ownerToken: string, prefix: string) {
+  Array.from({ length: 9 }, (_, i) => i).forEach((i) => {
+    cy.registerUser(`${prefix}${i}`).then((extraData) => {
+      cy.apiCreateGameAccount(extraData.access_token, `${prefix.slice(0, 9)}Ext${i}`.slice(0, 16), true).then(
+        (extraAcc) => {
+          cy.apiForceJoinAlliance(extraAcc.id, allianceId);
+          cy.apiSetMemberGroup(ownerToken, allianceId, extraAcc.id, 1);
+        },
+      );
+    });
+  });
+}
 
 describe('Alliances – Member Groups', () => {
   beforeEach(() => {
@@ -93,78 +114,57 @@ describe('Alliances – Member Groups', () => {
   });
 
   it('group picker hides a group that is full (10 members)', () => {
-    setupUser('grp-full-owner').then((ownerData) => {
-      cy.apiCreateGameAccount(ownerData.access_token, 'FullOwner', true).then((ownerAcc) => {
-        cy.apiCreateAlliance(ownerData.access_token, 'FullAlliance', 'FL', ownerAcc.id).then((alliance) => {
-          const allianceId = alliance.id;
+    cy.apiBatchSetup([
+      {
+        discord_token: 'grp-full-owner',
+        game_pseudo: 'FullOwner',
+        create_alliance: { name: 'FullAlliance', tag: 'FL' },
+      },
+    ]).then((users) => {
+      const ownerData = users['grp-full-owner'];
+      const allianceId = ownerData.alliance_id!;
+      const ownerAccId = ownerData.account_id!;
 
-          // Owner assigned to group 1 (1/10)
-          cy.apiSetMemberGroup(ownerData.access_token, allianceId, ownerAcc.id, 1);
+      cy.apiSetMemberGroup(ownerData.access_token, allianceId, ownerAccId, 1);
+      createAndJoinMember('grp-full-target', 'FullTarget', allianceId);
+      fillGroupOneWith9Members(allianceId, ownerData.access_token, 'grp-full-extra');
 
-          // Create the target member (will be unassigned, used to check picker)
-          cy.registerUser('grp-full-target').then((targetData) => {
-            cy.apiCreateGameAccount(targetData.access_token, 'FullTarget', true).then((targetAcc) => {
-              cy.apiForceJoinAlliance(targetAcc.id, allianceId);
-            });
-          });
+      cy.apiLogin(ownerData.user_id);
+      cy.navTo('alliances');
 
-          // Create 9 extra members and fill group 1 (total: 10)
-          Array.from({ length: 9 }, (_, i) => i).forEach((i) => {
-            cy.registerUser(`grp-full-extra${i}`).then((extraData) => {
-              cy.apiCreateGameAccount(extraData.access_token, `FullExtra${i}`, true).then((extraAcc) => {
-                cy.apiForceJoinAlliance(extraAcc.id, allianceId);
-                cy.apiSetMemberGroup(ownerData.access_token, allianceId, extraAcc.id, 1);
-              });
-            });
-          });
-
-          cy.apiLogin(ownerData.user_id);
-          cy.navTo('alliances');
-
-          cy.getByCy('alliance-card-FullAlliance').within(() => {
-            cy.getByCy('member-row-FullTarget').find('[data-cy="member-group-select"]').click();
-          });
-
-          // G1 is full — option must not appear
-          cy.get('[role="option"]').contains('G1').should('not.exist');
-          // G2 and 3 are still available
-          cy.get('[role="option"]').contains('G2').should('exist');
-          cy.get('[role="option"]').contains('G3').should('exist');
-        });
+      cy.getByCy('alliance-card-FullAlliance').within(() => {
+        cy.getByCy('member-row-FullTarget').find('[data-cy="member-group-select"]').click();
       });
+
+      cy.get('[role="option"]').contains('G1').should('not.exist');
+      cy.get('[role="option"]').contains('G2').should('exist');
+      cy.get('[role="option"]').contains('G3').should('exist');
     });
   });
 
   it('group picker keeps current group visible even if it is full', () => {
-    setupUser('grp-keep-owner').then((ownerData) => {
-      cy.apiCreateGameAccount(ownerData.access_token, 'KeepOwner', true).then((ownerAcc) => {
-        cy.apiCreateAlliance(ownerData.access_token, 'KeepAlliance', 'KP', ownerAcc.id).then((alliance) => {
-          const allianceId = alliance.id;
+    cy.apiBatchSetup([
+      {
+        discord_token: 'grp-keep-owner',
+        game_pseudo: 'KeepOwner',
+        create_alliance: { name: 'KeepAlliance', tag: 'KP' },
+      },
+    ]).then((users) => {
+      const ownerData = users['grp-keep-owner'];
+      const allianceId = ownerData.alliance_id!;
+      const ownerAccId = ownerData.account_id!;
 
-          // Owner assigned to group 1
-          cy.apiSetMemberGroup(ownerData.access_token, allianceId, ownerAcc.id, 1);
+      cy.apiSetMemberGroup(ownerData.access_token, allianceId, ownerAccId, 1);
+      fillGroupOneWith9Members(allianceId, ownerData.access_token, 'grp-keep-extra');
 
-          // Create 9 extra members to fill group 1 (total: 10 with owner)
-          Array.from({ length: 9 }, (_, i) => i).forEach((i) => {
-            cy.registerUser(`grp-keep-extra${i}`).then((extraData) => {
-              cy.apiCreateGameAccount(extraData.access_token, `KeepExtra${i}`, true).then((extraAcc) => {
-                cy.apiForceJoinAlliance(extraAcc.id, allianceId);
-                cy.apiSetMemberGroup(ownerData.access_token, allianceId, extraAcc.id, 1);
-              });
-            });
-          });
+      cy.apiLogin(ownerData.user_id);
+      cy.navTo('alliances');
 
-          cy.apiLogin(ownerData.user_id);
-          cy.navTo('alliances');
-
-          // Owner is already in group 1 — picker should still show G1
-          cy.getByCy('alliance-card-KeepAlliance').within(() => {
-            cy.getByCy('member-row-KeepOwner').find('[data-cy="member-group-select"]').click();
-          });
-
-          cy.get('[role="option"]').contains('G1').should('exist');
-        });
+      cy.getByCy('alliance-card-KeepAlliance').within(() => {
+        cy.getByCy('member-row-KeepOwner').find('[data-cy="member-group-select"]').click();
       });
+
+      cy.get('[role="option"]').contains('G1').should('exist');
     });
   });
 });

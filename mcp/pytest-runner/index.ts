@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { XMLParser } from 'fast-xml-parser';
@@ -105,19 +105,13 @@ function runPytest(paths?: string[], keyword?: string, verbose = false): TestRes
   fs.mkdirSync(RESULTS_DIR, { recursive: true });
   if (fs.existsSync(JUNIT_XML)) fs.unlinkSync(JUNIT_XML);
 
-  const parts: string[] = ['uv run pytest'];
-  if (paths && paths.length > 0) parts.push(paths.join(' '));
-  if (keyword) parts.push(`-k "${keyword}"`);
-  parts.push('--junit-xml=test-results/junit.xml');
-  parts.push(verbose ? '-v' : '-q');
+  const args: string[] = ['run', 'pytest'];
+  if (paths && paths.length > 0) args.push(...paths);
+  if (keyword) args.push('-k', keyword);
+  args.push('--junit-xml=test-results/junit.xml');
+  args.push(verbose ? '-v' : '-q');
 
-  const cmd = parts.join(' ');
-
-  try {
-    execSync(cmd, { cwd: API_DIR, stdio: 'pipe', timeout: 300_000 });
-  } catch {
-    // pytest exits with code 1 when tests fail — not a real error
-  }
+  spawnSync('uv', args, { cwd: API_DIR, stdio: 'pipe', timeout: 300_000 });
 
   return parseXmlResults();
 }

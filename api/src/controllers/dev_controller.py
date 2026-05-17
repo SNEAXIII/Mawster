@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Literal
 from fastapi import APIRouter, Form, HTTPException
 from typing import Annotated
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import text
 from sqlmodel import select, SQLModel
 from starlette import status as http_status
@@ -374,7 +374,7 @@ class BulkFillWarAttackersRequest(BaseModel):
     war_id: uuid.UUID
     battlegroup: int
     game_account_id: uuid.UUID
-    count: int
+    count: int = Field(ge=1, le=50)
 
 
 @dev_controller.post("/bulk-fill-war-attackers", status_code=200)
@@ -432,7 +432,7 @@ class BulkCreateFightRecordsRequest(BaseModel):
     war_id: uuid.UUID
     alliance_id: uuid.UUID
     game_account_id: uuid.UUID
-    count: int
+    count: int = Field(ge=1, le=50)
     tier: int = 1
 
 

@@ -106,7 +106,7 @@ export function getRankLabel(rarity: string): string {
 /** Shorten a champion name for card display.
  *  Removes parenthesized suffixes: "Spider-Woman (Jessica Drew)" → "Spider-Woman" */
 export function shortenChampionName(name: string): string {
-  return name.replace(/\s*\(.*\)\s*$/, '').trim();
+  return name.replace(/\s*\([^)]*\)\s*$/, '').trim();
 }
 
 /** Numeric sort value for a rarity string (higher = better). Used for descending sort. */

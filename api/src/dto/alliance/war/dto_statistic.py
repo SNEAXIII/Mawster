@@ -15,7 +15,7 @@ class PlayerSeasonStatsResponse(BaseModel):
 
     id: uuid.UUID
     game_pseudo: str
-    alliance_group: Optional[int]
+    alliance_group: Optional[int] = None
     total_kos: int
     total_fights: int
     total_miniboss: int
