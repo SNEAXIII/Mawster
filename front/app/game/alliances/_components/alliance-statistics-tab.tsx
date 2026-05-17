@@ -49,7 +49,8 @@ type SortField =
   | 'score'
   | 'wars_participated'
   | 'avg_fights_per_war'
-  | 'avg_boss_miniboss_per_war';
+  | 'avg_boss_miniboss_per_war'
+  | 'total_assists';
 
 type MemberFilter = 'current' | 'all' | 'former';
 type SortDir = 'asc' | 'desc';
@@ -233,6 +234,10 @@ export default function AllianceStatisticsTab({
       ),
       avg_boss_miniboss_per_war: top3(
         f.map((r) => r.avg_boss_miniboss_per_war),
+        true
+      ),
+      total_assists: top3(
+        f.map((r) => r.total_assists),
         true
       ),
     };
@@ -475,6 +480,13 @@ export default function AllianceStatisticsTab({
                         onSort={toggleSort}
                       />
                       <SortableHead
+                        label={stat.columns.assists}
+                        field='total_assists'
+                        sortField={sortField}
+                        sortDir={sortDir}
+                        onSort={toggleSort}
+                      />
+                      <SortableHead
                         label={stat.columns.miniboss}
                         field='total_miniboss'
                         sortField={sortField}
@@ -548,7 +560,12 @@ export default function AllianceStatisticsTab({
                           />
                           <StatCell
                             value={row.total_fights}
+                            decimals={1}
                             className={cellClass('total_fights', row.total_fights)}
+                          />
+                          <StatCell
+                            value={row.total_assists}
+                            className={cellClass('total_assists', row.total_assists)}
                           />
                           <StatCell
                             value={row.total_miniboss}

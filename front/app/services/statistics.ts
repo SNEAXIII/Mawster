@@ -20,6 +20,7 @@ export interface PlayerSeasonStats {
   alliance_group: number | null;
   total_kos: number;
   total_fights: number;
+  total_assists: number;
   total_miniboss: number;
   total_boss: number;
   total_not_fought: number;
