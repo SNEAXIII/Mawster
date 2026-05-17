@@ -76,7 +76,6 @@ class StatisticService:
                 cast(func.sum(_miniboss_case), Integer).label("total_miniboss"),
                 cast(func.sum(_boss_case), Integer).label("total_boss"),
                 cast(_total_not_fought, Integer).label("total_not_fought"),
-                cast(func.count(func.distinct(War.id)), Integer).label("wars_participated"),
             )
             .join(ChampionUser, ChampionUser.game_account_id == GameAccount.id)
             .join(
@@ -91,6 +90,40 @@ class StatisticService:
             .subquery()
         )
 
+        # Union of all (game_account_id, war_id) pairs from attacks and assists —
+        # deduplicates so a player who attacked and assisted in the same war counts it once.
+        _attacker_war_pairs = (
+            select(GameAccount.id.label("game_account_id"), War.id.label("war_id"))
+            .join(ChampionUser, ChampionUser.game_account_id == GameAccount.id)
+            .join(
+                WarDefensePlacement,
+                WarDefensePlacement.attacker_champion_user_id == ChampionUser.id,
+            )
+            .join(War, WarDefensePlacement.war_id == War.id)
+            .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
+            .where(War.alliance_id == alliance_id)
+            .where(War.status == WarStatus.ended)
+        )
+        _assist_war_pairs = (
+            select(ChampionUser.game_account_id.label("game_account_id"), War.id.label("war_id"))
+            .join(
+                WarDefensePlacement, WarDefensePlacement.assist_champion_user_id == ChampionUser.id
+            )
+            .join(War, WarDefensePlacement.war_id == War.id)
+            .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
+            .where(War.alliance_id == alliance_id)
+            .where(War.status == WarStatus.ended)
+        )
+        _all_war_pairs = union(_attacker_war_pairs, _assist_war_pairs).subquery()
+        wars_participated_sq = (
+            select(
+                _all_war_pairs.c.game_account_id,
+                func.count(_all_war_pairs.c.war_id).label("wars_participated"),
+            )
+            .group_by(_all_war_pairs.c.game_account_id)
+            .subquery()
+        )
+
         participant_ids_sq = union(
             select(attacker_sq.c.game_account_id),
             select(assist_sq.c.game_account_id),
@@ -100,7 +133,7 @@ class StatisticService:
         _assist_fights = func.coalesce(assist_sq.c.assist_fights, 0)
         _combined_fights = _attack_fights + _assist_fights
         _kos = func.coalesce(attacker_sq.c.total_kos, 0)
-        _wars = func.coalesce(attacker_sq.c.wars_participated, 0)
+        _wars = func.coalesce(wars_participated_sq.c.wars_participated, 0)
 
         sql = (
             select(
@@ -142,6 +175,10 @@ class StatisticService:
             .join(participant_ids_sq, participant_ids_sq.c.game_account_id == GameAccount.id)
             .outerjoin(attacker_sq, attacker_sq.c.game_account_id == GameAccount.id)
             .outerjoin(assist_sq, assist_sq.c.game_account_id == GameAccount.id)
+            .outerjoin(
+                wars_participated_sq,
+                wars_participated_sq.c.game_account_id == GameAccount.id,
+            )
         )
         rows = (await session.exec(sql)).mappings().all()
         return [PlayerSeasonStatsResponse.model_validate(row) for row in rows]
