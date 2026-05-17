@@ -60,6 +60,7 @@ export interface FightRecord {
   defender_is_saga_defender: boolean;
   ko_count: number;
   is_planning_error: boolean;
+  assisted: boolean;
   synergies: SynergyRecord[];
   prefights: PrefightRecord[];
   created_at: string;

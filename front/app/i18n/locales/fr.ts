@@ -480,6 +480,7 @@ const fr: Translations = {
       filterPlayer: 'Joueur',
       filterPlanningError: 'Erreurs de planning uniquement',
       planningErrorBadge: 'Erreur de planning',
+      assistedBadge: 'Assisté',
       player: 'Joueur',
     },
   },

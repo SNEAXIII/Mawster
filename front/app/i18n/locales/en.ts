@@ -475,6 +475,7 @@ const en = {
       filterPlayer: 'Player',
       filterPlanningError: 'Planning errors only',
       planningErrorBadge: 'Planning error',
+      assistedBadge: 'Assisted',
       player: 'Player',
     },
   },

@@ -1,5 +1,5 @@
 'use client';
-import { ArrowUp, ArrowDown, ArrowUpDown, AlertTriangle } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowUpDown, AlertTriangle, Users } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 import { getChampionImageUrl } from '@/app/services/champions';
 import { shortenChampionName } from '@/app/services/roster';
@@ -156,6 +156,11 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
                   {r.is_planning_error && (
                     <span title={kb.planningErrorBadge}>
                       <AlertTriangle className='h-3.5 w-3.5 text-amber-500 shrink-0' />
+                    </span>
+                  )}
+                  {r.assisted && (
+                    <span title={kb.assistedBadge}>
+                      <Users className='h-3.5 w-3.5 text-blue-400 shrink-0' />
                     </span>
                   )}
                 </div>
