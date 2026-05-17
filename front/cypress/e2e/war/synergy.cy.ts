@@ -55,6 +55,28 @@ function setupThreeAttackers(
   });
 }
 
+function openSynergyWithDeadpoolAndStorm(
+  adminToken: string,
+  memberToken: string,
+  memberUserId: string,
+  memberAccId: string,
+  allianceId: string,
+  warId: string,
+  championUserId: string,
+  cb: () => void,
+) {
+  cy.apiAssignWarAttacker(memberToken, allianceId, warId, 1, 10, championUserId);
+  loadTwoChampsAddToRoster(adminToken, memberToken, memberAccId, 'Deadpool', 'Mutant', 'Storm', 'Mutant', () => {
+    cy.apiLogin(memberUserId);
+    cy.visit('/game/war');
+    cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+    cy.getByCy('synergy-trigger-Wolverine').click();
+    cy.getByCy('synergy-add-Wolverine').click();
+    cy.getByCy('synergy-selector').should('be.visible');
+    cb();
+  });
+}
+
 describe('War Synergy', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -283,25 +305,15 @@ describe('War Synergy', () => {
 
   it('search input filters synergy candidates by name', () => {
     setupAttackerScenario('syn7').then(({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-
-      loadTwoChampsAddToRoster(
+      openSynergyWithDeadpoolAndStorm(
         adminToken,
         memberData.access_token,
+        memberData.user_id,
         memberAccId,
-        'Deadpool',
-        'Mutant',
-        'Storm',
-        'Mutant',
+        allianceId,
+        warId,
+        championUserId,
         () => {
-          cy.apiLogin(memberData.user_id);
-          cy.visit('/game/war');
-          cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
-
-          cy.getByCy('synergy-trigger-Wolverine').click();
-          cy.getByCy('synergy-add-Wolverine').click();
-          cy.getByCy('synergy-selector').should('be.visible');
-
           cy.getByCy('synergy-pick-Deadpool').should('be.visible');
           cy.getByCy('synergy-pick-Storm').should('be.visible');
 
@@ -331,25 +343,15 @@ describe('War Synergy', () => {
 
   it('clearing the search restores the full synergy candidate list', () => {
     setupAttackerScenario('syn8').then(({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-
-      loadTwoChampsAddToRoster(
+      openSynergyWithDeadpoolAndStorm(
         adminToken,
         memberData.access_token,
+        memberData.user_id,
         memberAccId,
-        'Deadpool',
-        'Mutant',
-        'Storm',
-        'Mutant',
+        allianceId,
+        warId,
+        championUserId,
         () => {
-          cy.apiLogin(memberData.user_id);
-          cy.visit('/game/war');
-          cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
-
-          cy.getByCy('synergy-trigger-Wolverine').click();
-          cy.getByCy('synergy-add-Wolverine').click();
-          cy.getByCy('synergy-selector').should('be.visible');
-
           cy.getByCy('synergy-search').type('dead');
           cy.getByCy('synergy-pick-Storm').should('not.exist');
           cy.getByCy('synergy-search').clear();
