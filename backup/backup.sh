@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+trap 'echo "[backup] FATAL: backup failed at line $LINENO (exit $?)" >&2; exit 1' ERR
+
 # ── Secrets ──────────────────────────────────────────────────────────────────
 export MARIADB_ROOT_PASSWORD=$(cat /run/secrets/mawster_db_root_password)
 RCLONE_CONFIG_WRITABLE=/tmp/rclone.conf
