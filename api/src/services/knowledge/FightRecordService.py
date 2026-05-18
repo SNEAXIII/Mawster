@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from src.dto.admin.dto_fight_record import PaginatedFightRecordsResponse
 
 from src.models.Alliance import Alliance
+from src.models.AllianceVisitor import AllianceVisitor
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
@@ -137,7 +138,7 @@ class FightRecordService:
 
     @classmethod
     async def assert_user_in_alliance(cls, session: SessionDep, user_id: uuid.UUID) -> None:
-        result = await session.exec(
+        member_result = await session.exec(
             select(GameAccount).where(
                 and_(
                     GameAccount.user_id == user_id,
@@ -145,10 +146,18 @@ class FightRecordService:
                 )
             )
         )
-        if result.first() is None:
+        if member_result.first() is not None:
+            return
+
+        visitor_result = await session.exec(
+            select(AllianceVisitor)
+            .join(GameAccount, AllianceVisitor.game_account_id == GameAccount.id)
+            .where(GameAccount.user_id == user_id)
+        )
+        if visitor_result.first() is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="User must belong to an alliance",
+                detail="User must belong to or visit an alliance",
             )
 
     @classmethod
