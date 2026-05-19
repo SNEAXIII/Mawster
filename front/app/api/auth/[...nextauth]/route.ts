@@ -100,6 +100,7 @@ export const {
     async jwt({ token, user, account, profile: _profile }) {
       // Dev login via CredentialsProvider (no Discord)
       if (account?.provider === 'dev-login' && user) {
+        const profile = await fetchUserProfile(user.accessToken as string);
         return {
           ...token,
           id: user.id,
@@ -109,6 +110,10 @@ export const {
           accessTokenExpires: Date.now() + 60 * 60 * 1000,
           expired: false,
           backendAuthenticated: true,
+          cachedLogin: profile?.login ?? null,
+          cachedDiscordId: profile?.discord_id ?? null,
+          cachedGoogleId: profile?.google_id ?? null,
+          cachedCreatedAt: profile?.created_at ?? null,
         };
       }
 
