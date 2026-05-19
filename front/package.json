@@ -60,7 +60,7 @@
     "cross-env": "^10.1.0",
     "cypress": "^15.14.2",
     "cypress-multi-reporters": "^2.0.5",
-    "eslint": "^10.3.0",
+    "eslint": "^10.4.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.0.1",
     "mocha-junit-reporter": "^2.2.1",
