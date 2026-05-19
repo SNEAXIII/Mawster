@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Pie, PieChart, Cell } from 'recharts';
 import { Button } from '@/components/ui/button';
 import {
@@ -130,14 +131,14 @@ export function MemberChampionChart({
       </div>
 
       {loading ? (
-        <div className='flex flex-col items-center gap-3 animate-pulse'>
-          <div className='w-36 h-36 rounded-full bg-muted' />
+        <div className='flex flex-col items-center gap-3'>
+          <Skeleton className='size-36 rounded-full' />
           <div className='w-full flex flex-col gap-2'>
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className='flex items-center gap-2'>
-                <span className='w-2.5 h-2.5 rounded-full bg-muted shrink-0' />
-                <div className='h-3 rounded bg-muted flex-1' />
-                <div className='h-3 w-5 rounded bg-muted shrink-0' />
+                <Skeleton className='size-2.5 rounded-full shrink-0' />
+                <Skeleton className='h-3 rounded flex-1' />
+                <Skeleton className='h-3 w-5 rounded shrink-0' />
               </div>
             ))}
           </div>
@@ -166,11 +167,11 @@ export function MemberChampionChart({
               const value = getValue(c);
               return (
                 <li key={c.champion_id} className='flex items-center gap-2 text-sm'>
-                  <span className='shrink-0 w-2.5 h-2.5 rounded-full' style={{ backgroundColor: COLORS[i] }} />
+                  <span className='shrink-0 size-2.5 rounded-full' style={{ backgroundColor: COLORS[i] }} />
                   {imgUrl ? (
-                    <img src={imgUrl} alt={c.champion_name} className='w-7 h-7 rounded object-cover shrink-0' />
+                    <img src={imgUrl} alt={c.champion_name} className='size-7 rounded object-cover shrink-0' />
                   ) : (
-                    <span className='w-7 h-7 rounded bg-muted shrink-0' />
+                    <span className='size-7 rounded bg-muted shrink-0' />
                   )}
                   <span className='truncate flex-1'>{c.champion_name}</span>
                   <span className='text-muted-foreground shrink-0'>{value}</span>
@@ -179,7 +180,7 @@ export function MemberChampionChart({
             })}
             {othersValue > 0 && (
               <li className='flex items-center gap-2 text-sm'>
-                <span className='shrink-0 w-2.5 h-2.5 rounded-full' style={{ backgroundColor: OTHERS_COLOR }} />
+                <span className='shrink-0 size-2.5 rounded-full' style={{ backgroundColor: OTHERS_COLOR }} />
                 <span className='truncate flex-1 text-muted-foreground'>{stat.others}</span>
                 <span className='text-muted-foreground shrink-0'>{othersValue}</span>
               </li>

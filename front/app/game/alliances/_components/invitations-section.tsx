@@ -21,21 +21,21 @@ export default function InvitationsSection({
 
   return (
     <Card data-cy='my-invitations-section'>
-      <CardContent className='py-3 sm:py-4 px-3 sm:px-6 space-y-3'>
+      <CardContent className='py-3 sm:py-4 px-3 sm:px-6 flex flex-col gap-3'>
         <div className='flex items-center gap-2'>
-          <Mail className='h-5 w-5 text-blue-500' />
+          <Mail className='size-5 text-primary' />
           <h2 className='text-sm font-medium text-muted-foreground'>
             {t.game.alliances.myInvitations} ({invitations.length})
           </h2>
         </div>
-        <div className='space-y-2'>
+        <div className='flex flex-col gap-2'>
           {invitations.map((inv) => (
             <div
               key={inv.id}
               data-cy={`my-invitation-${inv.alliance_name}`}
               className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-md bg-accent/50 border border-border'
             >
-              <div className='space-y-0.5'>
+              <div className='flex flex-col gap-0.5'>
                 <div className='flex items-center gap-2'>
                   <p className='text-sm font-medium text-foreground'>
                     {inv.alliance_name}{' '}
@@ -46,7 +46,7 @@ export default function InvitationsSection({
                       className='flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full'
                       data-cy={`visitor-badge-${inv.id}`}
                     >
-                      <Eye className='w-3 h-3' />
+                      <Eye className='size-3' />
                       {t.game.alliances.visitorBadge}
                     </span>
                   ) : (
@@ -54,7 +54,7 @@ export default function InvitationsSection({
                       className='flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full'
                       data-cy={`member-badge-${inv.id}`}
                     >
-                      <Users className='w-3 h-3' />
+                      <Users className='size-3' />
                       {t.game.alliances.memberBadge}
                     </span>
                   )}
@@ -70,7 +70,7 @@ export default function InvitationsSection({
                   data-cy='accept-invitation'
                   onClick={() => onAccept(inv.id)}
                 >
-                  <Check className='h-3 w-3 mr-1' />
+                  <Check className='size-3 mr-1' />
                   {t.game.alliances.acceptInvitation}
                 </Button>
                 <Button
@@ -79,7 +79,7 @@ export default function InvitationsSection({
                   data-cy='decline-invitation'
                   onClick={() => onDecline(inv.id)}
                 >
-                  <X className='h-3 w-3 mr-1' />
+                  <X className='size-3 mr-1' />
                   {t.game.alliances.declineInvitation}
                 </Button>
               </div>

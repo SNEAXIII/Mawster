@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { toast } from 'sonner';
 import { CollapsibleSection } from '@/components/collapsible-section';
@@ -90,14 +90,14 @@ export default function UpgradeRequestsSection({
         {loading ? (
           <p className='text-sm text-muted-foreground'>...</p>
         ) : (
-          <div className='space-y-2'>
+          <div className='flex flex-col gap-2'>
             {requests.map((req) => {
               const classColors = getClassColors(req.champion_class);
               return (
                 <div
                   key={req.id}
                   data-cy='upgrade-request-item'
-                  className={`flex items-center gap-3 p-2 rounded-md bg-gray-900 ${classColors.border} border`}
+                  className={`flex items-center gap-3 p-2 rounded-md bg-card ${classColors.border} border`}
                 >
                   <ChampionPortrait
                     imageUrl={req.image_url}
@@ -108,7 +108,7 @@ export default function UpgradeRequestsSection({
                   <div className='flex-1 min-w-0'>
                     <p className='text-sm font-semibold text-white truncate'>{req.champion_name}</p>
                     <div className='flex items-center gap-2 text-xs'>
-                      <span className='text-gray-400'>
+                      <span className='text-muted-foreground'>
                         {t.roster.upgradeRequests.currentRarity.replace(
                           '{rarity}',
                           RARITY_LABELS[req.current_rarity] ?? req.current_rarity
@@ -128,13 +128,13 @@ export default function UpgradeRequestsSection({
                   {canCancel && (
                     <button
                       data-cy='cancel-upgrade-request'
-                      className='text-red-400 hover:text-red-300 bg-black/40 rounded-full p-1 shrink-0'
+                      className='text-destructive hover:text-destructive/80 bg-black/40 rounded-full p-1 shrink-0'
                       onClick={() =>
                         onInitiateCancel ? onInitiateCancel(req.id) : setCancelTarget(req)
                       }
                       title={t.roster.upgradeRequests.cancel}
                     >
-                      <X className='h-3.5 w-3.5' />
+                      <X className='size-3.5' />
                     </button>
                   )}
                 </div>

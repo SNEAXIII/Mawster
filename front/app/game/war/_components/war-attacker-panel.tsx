@@ -96,7 +96,7 @@ export default function WarAttackerPanel({
         <span
           data-cy='attackers-count'
           className={`text-xs font-semibold uppercase tracking-wide ${
-            assigned.length >= 50 ? 'text-yellow-400' : 'text-red-400'
+            assigned.length >= 50 ? 'text-yellow-400' : 'text-destructive'
           }`}
         >
           {t.game.war.attackersPanelTitle.replace('{assigned}', String(assigned.length))}
@@ -130,7 +130,7 @@ export default function WarAttackerPanel({
       {assigned.length === 0 ? (
         <div className='text-sm text-muted-foreground px-1'>{t.game.war.noAvailableAttackers}</div>
       ) : (
-        <div className='space-y-4 overflow-y-auto min-h-0'>
+        <div className='flex flex-col gap-4 overflow-y-auto min-h-0'>
           {groups.map((memberGroup) => {
             // Node attacker unique champion_user_ids for this member
             const nodeAttackerIds = new Set(
@@ -269,7 +269,7 @@ export default function WarAttackerPanel({
                 </div>
 
                 {/* Per-node entries */}
-                <div className='space-y-1.5'>
+                <div className='flex flex-col gap-1.5'>
                   {[...memberGroup.entries]
                     .sort((a, b) => a.node_number - b.node_number)
                     .map((placement) => (

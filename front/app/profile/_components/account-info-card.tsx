@@ -67,11 +67,11 @@ export function AccountInfoCard({
       <CardHeader>
         <CardTitle className='text-lg'>{t.profile.accountInfo}</CardTitle>
       </CardHeader>
-      <CardContent className='space-y-4'>
+      <CardContent className='flex flex-col gap-4'>
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
           <div className='flex flex-col gap-1' data-cy='username-row'>
             <div className='flex items-center gap-2'>
-              <User className='h-4 w-4 text-muted-foreground' />
+              <User className='size-4 text-muted-foreground' />
               <span className='text-xs text-muted-foreground'>{t.profile.username}</span>
             </div>
             {editing ? (
@@ -93,10 +93,10 @@ export function AccountInfoCard({
                   <button
                     onClick={handleSubmit}
                     disabled={loading}
-                    className={`${iconBtn} text-green-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-950`}
+                    className={`${iconBtn} text-primary hover:text-primary/80 hover:bg-primary/10`}
                     data-cy='edit-username-confirm'
                   >
-                    <FiCheck className='h-4 w-4' />
+                    <FiCheck className='size-4' />
                   </button>
                   <button
                     onClick={handleCancel}
@@ -104,7 +104,7 @@ export function AccountInfoCard({
                     className={`${iconBtn} text-muted-foreground hover:text-foreground hover:bg-muted`}
                     data-cy='edit-username-cancel'
                   >
-                    <FiX className='h-4 w-4' />
+                    <FiX className='size-4' />
                   </button>
                 </div>
                 {error && <p className='text-xs text-destructive'>{error}</p>}
@@ -120,14 +120,14 @@ export function AccountInfoCard({
                   title={t.profile.editUsernameTooltip}
                   data-cy='edit-username-btn'
                 >
-                  <FiEdit2 className='h-3 w-3' />
+                  <FiEdit2 className='size-3' />
                 </button>
               </div>
             )}
           </div>
 
           <InfoRow
-            icon={<Calendar className='h-4 w-4' />}
+            icon={<Calendar className='size-4' />}
             label={t.profile.memberSince}
             value={createdAt ? formatDateLong(createdAt, locale) : t.common.notAvailable}
             fallback={t.common.notAvailable}

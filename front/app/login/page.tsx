@@ -83,7 +83,7 @@ function LoginPageContent() {
     if (devLoading) {
       return (
         <div className='flex justify-center py-2'>
-          <Loader className='w-5 h-5 animate-spin text-muted-foreground' />
+          <Loader className='size-5 animate-spin text-muted-foreground' />
         </div>
       );
     }
@@ -92,7 +92,7 @@ function LoginPageContent() {
     }
     return (
       <div
-        className='max-h-60 overflow-y-auto space-y-1'
+        className='max-h-60 overflow-y-auto flex flex-col gap-1'
         data-cy='dev-user-list'
       >
         {devUsers.map((u) => (
@@ -120,7 +120,7 @@ function LoginPageContent() {
   return (
     <div className='min-h-full flex items-center justify-center bg-gradient-to-br from-background to-muted p-4 sm:p-6'>
       <Card className='w-full max-w-md mx-auto shadow-lg transition-all duration-300 hover:shadow-xl'>
-        <CardHeader className='space-y-1'>
+        <CardHeader className='flex flex-col gap-1'>
           <div className='flex mx-auto'>
             <MawsterLogo />
           </div>
@@ -128,7 +128,7 @@ function LoginPageContent() {
           <p className='text-sm text-center text-muted-foreground'>{t.login.subtitle}</p>
         </CardHeader>
         <CardContent className='px-4 sm:px-6 py-4'>
-          <div className='space-y-4'>
+          <div className='flex flex-col gap-4'>
             {error && (
               <Alert variant='destructive'>
                 <AlertCircle size={16} />
@@ -145,10 +145,10 @@ function LoginPageContent() {
               data-cy='discord-login-btn'
             >
               {isLoading ? (
-                <Loader className='w-5 h-5 mr-2 animate-spin' />
+                <Loader className='size-5 mr-2 animate-spin' />
               ) : (
                 <>
-                  <FaDiscord className='w-5 h-5 text-[#5865F2]' />
+                  <FaDiscord className='size-5 text-[#5865F2]' />
                   {t.login.discordButton}
                 </>
               )}
@@ -163,10 +163,10 @@ function LoginPageContent() {
               data-cy='google-login-btn'
             >
               {isLoading ? (
-                <Loader className='w-5 h-5 mr-2 animate-spin' />
+                <Loader className='size-5 mr-2 animate-spin' />
               ) : (
                 <>
-                  <FcGoogle className='w-5 h-5' />
+                  <FcGoogle className='size-5' />
                   {t.login.googleButton}
                 </>
               )}

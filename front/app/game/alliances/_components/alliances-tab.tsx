@@ -49,8 +49,8 @@ export default function AlliancesTab({
   if (alliances.length === 0) {
     return (
       <Card data-cy='alliance-empty-state'>
-        <CardContent className='py-12 text-center text-gray-500'>
-          <Shield className='h-12 w-12 mx-auto mb-3 text-muted-foreground' />
+        <CardContent className='py-12 text-center text-muted-foreground'>
+          <Shield className='size-12 mx-auto mb-3 text-muted-foreground' />
           <p className='mb-2 text-muted-foreground'>{t.game.alliances.description}</p>
           <p data-cy='alliance-empty-text'>{t.game.alliances.empty}</p>
         </CardContent>
@@ -59,7 +59,7 @@ export default function AlliancesTab({
   }
 
   return (
-    <div className='space-y-4'>
+    <div className='flex flex-col gap-4'>
       {alliances.map((alliance) => (
         <AllianceCard
           key={alliance.id}

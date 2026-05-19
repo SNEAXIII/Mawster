@@ -70,14 +70,14 @@ export default function NodeActionsPopover({
           </button>
         </PopoverTrigger>
         <PopoverContent
-          className='w-52 p-3 space-y-2'
+          className='w-52 p-3 flex flex-col gap-2'
           side='top'
         >
           <p className='text-[11px] font-semibold truncate'>
             #{nodeNumber} — {championName}
           </p>
           {boundPrefights.length > 0 && (
-            <div className='space-y-1'>
+            <div className='flex flex-col gap-1'>
               <p className='text-[10px] text-muted-foreground'>{t.game.war.prefight.label}</p>
               {boundPrefights.map((p) => (
                 <div
@@ -127,7 +127,7 @@ export default function NodeActionsPopover({
             {t.game.war.prefight.add}
           </button>
 
-          <div className='border-t border-border/40 pt-2 space-y-1'>
+          <div className='border-t border-border/40 pt-2 flex flex-col gap-1'>
             <p className='text-[10px] text-muted-foreground'>{t.game.war.assist.label}</p>
             {placement?.is_assisted && placement.assistor_champion_name ? (
               <div className='flex items-center gap-2'>

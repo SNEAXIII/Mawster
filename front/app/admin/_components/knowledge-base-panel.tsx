@@ -49,7 +49,7 @@ export default function KnowledgeBasePanel() {
 
   return (
     <div
-      className='mt-6 space-y-4'
+      className='mt-6 flex flex-col gap-4'
       data-cy='knowledge-base-panel'
     >
       <div className='flex items-center gap-4'>

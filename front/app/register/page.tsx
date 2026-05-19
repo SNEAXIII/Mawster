@@ -16,10 +16,10 @@ function RegisterPageContent() {
   return (
     <div className='h-full flex items-center justify-center bg-gradient-to-br from-background to-muted p-4 sm:p-6'>
       <Card className='w-full max-w-md mx-auto shadow-lg transition-all duration-300 hover:shadow-xl'>
-        <CardHeader className='space-y-1'>
+        <CardHeader className='flex flex-col gap-1'>
           <div className='flex justify-center mb-2'>
-            <div className='w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center'>
-              <UserPlus className='w-8 h-8 text-primary' />
+            <div className='size-16 bg-primary/10 rounded-full flex items-center justify-center'>
+              <UserPlus className='size-8 text-primary' />
             </div>
           </div>
           <CardTitle className='text-2xl font-bold text-center'>{t.register.title}</CardTitle>
@@ -32,7 +32,7 @@ function RegisterPageContent() {
             onClick={() => signIn('discord', { callbackUrl })}
           >
             <svg
-              className='w-5 h-5'
+              className='size-5'
               viewBox='0 0 24 24'
               fill='currentColor'
             >

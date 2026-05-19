@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -286,7 +286,7 @@ export default function AllianceDefenseSelector({
             >
               ← {t.common.back}
             </Button>
-            <div className='space-y-2'>
+            <div className='flex flex-col gap-2'>
               {selectedChampion.owners.map((owner) => (
                 <button
                   key={owner.champion_user_id}
