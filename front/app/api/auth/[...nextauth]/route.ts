@@ -16,6 +16,28 @@ interface JwtPayload {
   type: string;
 }
 
+interface UserProfile {
+  id: string;
+  login: string;
+  email: string;
+  role: string;
+  discord_id: string | null;
+  google_id: string | null;
+  created_at: string;
+}
+
+async function fetchUserProfile(accessToken: string): Promise<UserProfile | null> {
+  try {
+    const res = await fetch(`${getServerApiUrl()}/auth/session`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    return res.ok ? ((await res.json()) as UserProfile) : null;
+  } catch {
+    return null;
+  }
+}
+
 export const {
   handlers: { GET, POST },
   auth,
@@ -113,6 +135,7 @@ export const {
             return { ...token, expired: true, backendAuthenticated: false };
           }
 
+          const profile = await fetchUserProfile(data.access_token);
           return {
             ...token,
             id: decoded.user_id,
@@ -122,6 +145,10 @@ export const {
             accessTokenExpires: Date.now() + 60 * 60 * 1000,
             expired: false,
             backendAuthenticated: true,
+            cachedLogin: profile?.login ?? null,
+            cachedDiscordId: profile?.discord_id ?? null,
+            cachedGoogleId: profile?.google_id ?? null,
+            cachedCreatedAt: profile?.created_at ?? null,
           };
         } catch (error) {
           console.error("Erreur lors de l'auth Google:", error);
@@ -152,6 +179,7 @@ export const {
             return { ...token, expired: true, backendAuthenticated: false };
           }
 
+          const profile = await fetchUserProfile(data.access_token);
           return {
             ...token,
             id: decoded.user_id,
@@ -162,6 +190,10 @@ export const {
             discordRefreshToken: account.refresh_token,
             expired: false,
             backendAuthenticated: true,
+            cachedLogin: profile?.login ?? null,
+            cachedDiscordId: profile?.discord_id ?? null,
+            cachedGoogleId: profile?.google_id ?? null,
+            cachedCreatedAt: profile?.created_at ?? null,
           };
         } catch (error) {
           console.error("Erreur lors de l'auth Discord:", error);
@@ -186,45 +218,18 @@ export const {
         };
       }
 
-      // Fetch full user profile from backend /auth/session
-      try {
-        if (token.accessToken) {
-          const res = await fetch(`${getServerApiUrl()}/auth/session`, {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${token.accessToken}`,
-            },
-          });
-
-          if (res.ok) {
-            const userProfile = await res.json();
-            return {
-              ...session,
-              accessToken: token.accessToken as string,
-              user: {
-                ...session.user,
-                id: userProfile.id ?? token.id,
-                name: userProfile.login ?? token.name,
-                email: userProfile.email ?? token.email,
-                role: userProfile.role ?? token.role,
-                discord_id: userProfile.discord_id ?? null,
-                google_id: userProfile.google_id ?? null,
-                created_at: userProfile.created_at ?? token.created_at,
-              },
-            };
-          }
-        }
-      } catch (e) {
-        console.error('Erreur en synchronisant la session avec /auth/session :', e);
-      }
-
       return {
         ...session,
         accessToken: token.accessToken as string,
         user: {
           ...session.user,
-          id: token.id,
+          id: (token.id as string) ?? '',
+          name: (token.cachedLogin ?? token.name) as string,
+          email: token.email as string,
           role: token.role,
+          discord_id: (token.cachedDiscordId ?? null) as string | null,
+          google_id: (token.cachedGoogleId ?? null) as string | null,
+          created_at: (token.cachedCreatedAt ?? null) as string | null,
         },
       };
     },
