@@ -2,18 +2,6 @@ import jwt from 'jsonwebtoken';
 import type { JWT } from 'next-auth/jwt';
 import { getServerApiUrl } from '@/app/lib/serverApiUrl';
 
-async function fetchUserProfile(accessToken: string) {
-  try {
-    const res = await fetch(`${getServerApiUrl()}/auth/session`, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    return res.ok ? await res.json() : null;
-  } catch {
-    return null;
-  }
-}
-
 interface JwtPayload {
   user_id: string;
   role: string;
@@ -40,7 +28,6 @@ export async function refreshBackendToken(token: JWT): Promise<JWT> {
         const decoded = jwt.decode(data.access_token) as JwtPayload | null;
 
         if (decoded) {
-          const profile = await fetchUserProfile(data.access_token);
           return {
             ...token,
             id: decoded.user_id,
@@ -50,10 +37,6 @@ export async function refreshBackendToken(token: JWT): Promise<JWT> {
             accessTokenExpires: Date.now() + 60 * 60 * 1000,
             expired: false,
             backendAuthenticated: true,
-            cachedLogin: profile?.login ?? token.cachedLogin,
-            cachedDiscordId: profile?.discord_id ?? token.cachedDiscordId,
-            cachedGoogleId: profile?.google_id ?? token.cachedGoogleId,
-            cachedCreatedAt: profile?.created_at ?? token.cachedCreatedAt,
           };
         }
       }
@@ -100,7 +83,6 @@ export async function refreshBackendToken(token: JWT): Promise<JWT> {
         return { ...token, expired: true, backendAuthenticated: false };
       }
 
-      const profile = await fetchUserProfile(data.access_token);
       return {
         ...token,
         id: decoded.user_id,
@@ -111,11 +93,6 @@ export async function refreshBackendToken(token: JWT): Promise<JWT> {
         discordRefreshToken: discordTokens.refresh_token ?? token.discordRefreshToken,
         expired: false,
         backendAuthenticated: true,
-        cachedLogin: profile?.login ?? token.cachedLogin,
-        cachedEmail: profile?.email ?? token.cachedEmail,
-        cachedDiscordId: profile?.discord_id ?? token.cachedDiscordId,
-        cachedGoogleId: profile?.google_id ?? token.cachedGoogleId,
-        cachedCreatedAt: profile?.created_at ?? token.cachedCreatedAt,
       };
     }
 
