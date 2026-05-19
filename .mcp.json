@@ -31,6 +31,12 @@
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
+    },
+    "mcpServers": {
+      "next-devtools": {
+        "command": "npx",
+        "args": ["-y", "next-devtools-mcp@latest"]
+      }
     }
   }
 }
