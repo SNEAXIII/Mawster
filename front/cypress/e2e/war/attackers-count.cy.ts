@@ -10,7 +10,7 @@ describe('War – attackers count badge color', () => {
       cy.apiLogin(ownerData.user_id);
       cy.navTo('war');
 
-      cy.getByCy('attackers-count').should('have.class', 'text-red-400');
+      cy.getByCy('attackers-count').should('have.class', 'text-destructive');
       cy.getByCy('attackers-count').should('not.have.class', 'text-yellow-400');
     });
   });
@@ -23,7 +23,7 @@ describe('War – attackers count badge color', () => {
       cy.navTo('war');
 
       cy.getByCy('attackers-count').should('have.class', 'text-yellow-400');
-      cy.getByCy('attackers-count').should('not.have.class', 'text-red-400');
+      cy.getByCy('attackers-count').should('not.have.class', 'text-destructive');
     });
   });
 });
