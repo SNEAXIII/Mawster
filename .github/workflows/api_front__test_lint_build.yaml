@@ -392,6 +392,8 @@ jobs:
           script: |
             cd /home/mawster/Mawster
 
+            git pull origin release
+
             make backup-now
 
             docker pull sneaxiii/mawster-api:latest
