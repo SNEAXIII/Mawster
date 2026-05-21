@@ -74,11 +74,18 @@ export interface PaginatedFightRecords {
   pages: number;
 }
 
+export interface Season {
+  id: string;
+  number: number;
+  is_active: boolean;
+}
+
 export interface FightRecordFilters {
   champion_id?: string;
   defender_champion_id?: string;
   node_number?: number;
   tier?: number;
+  season_selector?: string;
   season_id?: string;
   alliance_id?: string;
   game_account_pseudo?: string;
@@ -87,6 +94,12 @@ export interface FightRecordFilters {
   size?: number;
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
+}
+
+export async function getSeasons(): Promise<Season[]> {
+  const res = await fetch(`${PROXY}/seasons`, { headers: jsonHeaders });
+  if (!res.ok) throw new Error('Failed to load seasons');
+  return res.json();
 }
 
 export async function getSnapshotStats(): Promise<AllianceSnapshotStat[]> {

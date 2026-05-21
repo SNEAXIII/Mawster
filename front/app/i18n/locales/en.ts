@@ -477,6 +477,13 @@ const en = {
       planningErrorBadge: 'Planning error',
       assistedBadge: 'Assisted',
       player: 'Player',
+      filterSeason: 'Season',
+      seasonSelectorAll: 'All',
+      seasonSelectorAllSeasons: 'All Seasons',
+      seasonSelectorCurrent: 'Current Season',
+      seasonSelectorOffSeason: 'Off-Season',
+      seasonSelectorSpecific: 'Specific Season',
+      seasonLabel: 'Season {number}',
     },
   },
 
