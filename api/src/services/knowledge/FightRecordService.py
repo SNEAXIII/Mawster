@@ -12,11 +12,13 @@ from starlette import status
 if TYPE_CHECKING:
     from src.dto.admin.dto_fight_record import PaginatedFightRecordsResponse
 
+from src.enums.SeasonSelectorType import SeasonSelectorType
 from src.models.Alliance import Alliance
 from src.models.AllianceVisitor import AllianceVisitor
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
+from src.models.Season import Season
 from src.models.War import War
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightPrefight import WarFightPrefight
@@ -168,6 +170,7 @@ class FightRecordService:
         defender_champion_id: Optional[uuid.UUID] = None,
         node_number: Optional[int] = None,
         tier: Optional[int] = None,
+        season_selector: Optional[SeasonSelectorType] = None,
         season_id: Optional[uuid.UUID] = None,
         alliance_id: Optional[uuid.UUID] = None,
         battlegroup: Optional[int] = None,
@@ -193,7 +196,14 @@ class FightRecordService:
             conditions.append(WarFightRecord.node_number == node_number)
         if tier is not None:
             conditions.append(WarFightRecord.tier == tier)
-        if season_id is not None:
+        if season_selector == SeasonSelectorType.AllSeasons:
+            conditions.append(WarFightRecord.season_id.isnot(None))
+        elif season_selector == SeasonSelectorType.OffSeason:
+            conditions.append(WarFightRecord.season_id.is_(None))
+        elif season_selector == SeasonSelectorType.Current:
+            active_subq = select(Season.id).where(Season.is_active == True)  # noqa: E712
+            conditions.append(WarFightRecord.season_id.in_(active_subq))
+        elif season_selector == SeasonSelectorType.Specific and season_id is not None:
             conditions.append(WarFightRecord.season_id == season_id)
         if alliance_id is not None:
             conditions.append(WarFightRecord.alliance_id == alliance_id)
