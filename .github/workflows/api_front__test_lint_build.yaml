@@ -390,7 +390,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /root/Mawster
+            cd /home/mawster/Mawster
 
             make backup-now
 

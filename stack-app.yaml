@@ -237,7 +237,7 @@ services:
       - mawster_rclone_conf
     volumes:
       - type: bind
-        source: /root/Mawster/backups
+        source: /home/mawster/Mawster/backups
         target: /backups
     deploy:
       replicas: 1
