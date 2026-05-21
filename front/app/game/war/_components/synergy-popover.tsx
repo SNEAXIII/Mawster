@@ -67,12 +67,12 @@ export default function SynergyPopover({
           </button>
         </PopoverTrigger>
         <PopoverContent
-          className='w-52 p-3 space-y-2'
+          className='w-52 p-3 flex flex-col gap-2'
           side='top'
         >
           <p className='text-[11px] font-semibold truncate'>{championName}</p>
           {boundSynergies.length > 0 && (
-            <div className='space-y-1'>
+            <div className='flex flex-col gap-1'>
               <p className='text-[10px] text-muted-foreground'>{t.game.war.synergy.label}</p>
               {boundSynergies.map((s) => (
                 <div

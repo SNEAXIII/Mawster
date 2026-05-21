@@ -8,6 +8,7 @@ from src.dto.admin.dto_season import SeasonCreateRequest, SeasonResponse
 from src.models import User
 from src.services.auth.AuthService import AuthService
 from src.services.admin.SeasonService import SeasonService
+from src.services.knowledge.FightRecordService import FightRecordService
 from src.utils.db import SessionDep
 
 season_admin_controller = APIRouter(
@@ -63,6 +64,16 @@ async def deactivate_season(
     """Deactivate a season (moves to off-season). Admin only."""
     result = await SeasonService.deactivate_season(session, season_id)
     return result
+
+
+@season_public_controller.get("", response_model=list[SeasonResponse])
+async def list_seasons_public(
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """List all seasons ordered by number desc. Requires alliance membership or visitor status."""
+    await FightRecordService.assert_user_in_alliance(session, current_user.id)
+    return await SeasonService.get_all_seasons(session)
 
 
 @season_public_controller.get("/current", response_model=Optional[SeasonResponse])

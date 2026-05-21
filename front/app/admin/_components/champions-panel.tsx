@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { type ChangeEvent, useEffect, useState, useCallback, useRef } from 'react';
 import {
   getChampions,
   updateChampionAlias,
@@ -203,7 +203,7 @@ export default function ChampionsPanel() {
     }
   }
 
-  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImport(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setImporting(true);
@@ -242,7 +242,7 @@ export default function ChampionsPanel() {
   }
 
   return (
-    <div className='space-y-4'>
+    <div className='flex flex-col gap-4'>
       <div className='flex flex-col lg:flex-row gap-3'>
         <PaginationControls
           currentPage={currentPage}
@@ -267,7 +267,7 @@ export default function ChampionsPanel() {
           onClick={handleExport}
           data-cy='export-champions-btn'
         >
-          <Download className='mr-1 h-4 w-4' /> {t.champions.exportJson}
+          <Download className='mr-1 size-4' /> {t.champions.exportJson}
         </Button>
         <Button
           variant='outline'
@@ -275,7 +275,7 @@ export default function ChampionsPanel() {
           disabled={importing}
           data-cy='import-champions-btn'
         >
-          <Upload className='mr-1 h-4 w-4' />{' '}
+          <Upload className='mr-1 size-4' />{' '}
           {importing ? t.common.loading : t.champions.importJson}
         </Button>
         <input

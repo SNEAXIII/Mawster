@@ -86,8 +86,8 @@ describe('Defense – Overflow & Error Cases', () => {
             cy.apiLogin(ownerData.user_id);
             cy.navTo('defense');
 
-            // Counter should be red (text-red-400 CSS class)
-            cy.getByCy('defender-count-RedCntPlyr').should('contain', '5/5').and('have.class', 'text-red-400');
+            // Counter should be red (text-destructive CSS class)
+            cy.getByCy('defender-count-RedCntPlyr').should('contain', '5/5').and('have.class', 'text-destructive');
           });
       },
     );

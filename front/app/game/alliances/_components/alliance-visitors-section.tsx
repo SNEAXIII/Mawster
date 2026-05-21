@@ -48,14 +48,14 @@ export default function AllianceVisitorsSection({
   if (visitors.length === 0) return null;
 
   return (
-    <div className='border-t pt-3 space-y-2'>
+    <div className='border-t pt-3 flex flex-col gap-2'>
       <div className='flex items-center gap-2'>
-        <Eye className='w-4 h-4 text-muted-foreground' />
+        <Eye className='size-4 text-muted-foreground' />
         <span className='text-sm font-medium text-muted-foreground'>
           {t.game.alliances.visitors} ({visitors.length}/10)
         </span>
       </div>
-      <div className='space-y-1'>
+      <div className='flex flex-col gap-1'>
         {visitors.map((v) => (
           <div
             key={v.id}
@@ -74,12 +74,12 @@ export default function AllianceVisitorsSection({
                 <Button
                   variant='ghost'
                   size='icon'
-                  className='h-7 w-7'
+                  className='size-7'
                   onClick={() => handleInviteAsMember(v)}
                   data-cy={`invite-visitor-as-member-${v.game_account_id}`}
                   title={t.game.alliances.inviteAsMember}
                 >
-                  <UserPlus className='w-3.5 h-3.5' />
+                  <UserPlus className='size-3.5' />
                 </Button>
                 <Button
                   variant='ghost'
@@ -89,7 +89,7 @@ export default function AllianceVisitorsSection({
                   data-cy={`kick-visitor-${v.game_account_id}`}
                   title={t.game.alliances.kickVisitor}
                 >
-                  <X className='w-3.5 h-3.5' />
+                  <X className='size-3.5' />
                 </Button>
               </div>
             )}

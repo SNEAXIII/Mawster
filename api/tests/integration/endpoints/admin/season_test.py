@@ -11,8 +11,9 @@ from tests.utils.utils_client import (
     execute_post_request,
     execute_patch_request,
 )
-from tests.utils.utils_constant import USER_ID
-from tests.utils.utils_db import get_test_session, load_objects, reset_test_db
+from tests.utils.utils_constant import USER_ID, GAME_PSEUDO, ALLIANCE_NAME, ALLIANCE_TAG
+from tests.utils.utils_db import get_test_session, load_objects
+from tests.integration.endpoints.setup.game_setup import push_alliance_with_owner
 from tests.integration.endpoints.setup.user_setup import get_admin, get_generic_user
 
 app.dependency_overrides[get_session] = get_test_session
@@ -24,13 +25,8 @@ SEASONS_URL = "/admin/seasons"
 CURRENT_URL = "/seasons/current"
 
 
-@pytest.fixture(autouse=True)
-def clean_db():
-    reset_test_db()
-
-
 @pytest.fixture()
-async def admin_in_db(clean_db):
+async def admin_in_db():
     await load_objects([get_admin()])
 
 
@@ -132,7 +128,7 @@ class TestDeactivateSeason:
 
 class TestGetCurrentSeason:
     @pytest.fixture()
-    async def user_in_db(self, clean_db):
+    async def user_in_db(self):
         await load_objects([get_generic_user(is_base_id=True)])
 
     @pytest.mark.anyio
@@ -149,3 +145,40 @@ class TestGetCurrentSeason:
         assert response.status_code == 200
         assert response.json()["number"] == 90
         assert response.json()["is_active"] is True
+
+
+class TestListSeasonsPublic:
+    @pytest.fixture()
+    async def user_in_db(self):
+        await load_objects([get_generic_user(is_base_id=True)])
+
+    @pytest.fixture()
+    async def member_in_alliance(self):
+        await load_objects([get_generic_user(is_base_id=True)])
+        await push_alliance_with_owner(
+            user_id=USER_ID,
+            game_pseudo=GAME_PSEUDO,
+            alliance_name=ALLIANCE_NAME,
+            alliance_tag=ALLIANCE_TAG,
+        )
+
+    @pytest.mark.anyio
+    async def test_member_can_list_seasons(self, member_in_alliance):
+        await execute_post_request(SEASONS_URL, {"number": 10}, ADMIN_HEADERS)
+        await execute_post_request(SEASONS_URL, {"number": 11}, ADMIN_HEADERS)
+
+        response = await execute_get_request("/seasons", USER_HEADERS)
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 2
+        assert data[0]["number"] == 11
+
+    @pytest.mark.anyio
+    async def test_non_member_gets_403(self, user_in_db):
+        response = await execute_get_request("/seasons", USER_HEADERS)
+        assert response.status_code == 403
+
+    @pytest.mark.anyio
+    async def test_unauthenticated_gets_401(self):
+        response = await execute_get_request("/seasons", {})
+        assert response.status_code == 401

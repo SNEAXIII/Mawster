@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import type React from 'react';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,7 +26,7 @@ interface CreateAllianceFormProps {
   onNameChange: (value: string) => void;
   onTagChange: (value: string) => void;
   onOwnerChange: (value: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => void;
 }
 
 export default function CreateAllianceForm({
@@ -48,10 +48,10 @@ export default function CreateAllianceForm({
       <CardContent className='pt-6'>
         <form
           onSubmit={onSubmit}
-          className='space-y-4'
+          className='flex flex-col gap-4'
         >
           <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
-            <div className='space-y-2'>
+            <div className='flex flex-col gap-2'>
               <Label htmlFor='name'>{t.game.alliances.name}</Label>
               <Input
                 id='name'
@@ -65,7 +65,7 @@ export default function CreateAllianceForm({
                 disabled={creating}
               />
             </div>
-            <div className='space-y-2'>
+            <div className='flex flex-col gap-2'>
               <Label htmlFor='tag'>{t.game.alliances.tag}</Label>
               <Input
                 id='tag'
@@ -78,7 +78,7 @@ export default function CreateAllianceForm({
                 disabled={creating}
               />
             </div>
-            <div className='space-y-2'>
+            <div className='flex flex-col gap-2'>
               <Label>{t.game.alliances.owner}</Label>
               <Select
                 value={ownerId}
@@ -108,7 +108,7 @@ export default function CreateAllianceForm({
           >
             {creating ? (
               <>
-                <Loader className='w-4 h-4 mr-2 animate-spin' />
+                <Loader className='size-4 mr-2 animate-spin' />
                 {t.game.alliances.creating}
               </>
             ) : (

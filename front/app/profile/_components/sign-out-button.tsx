@@ -20,7 +20,7 @@ export function SignOutButton() {
         data-cy='sign-out-btn'
         onClick={handleSignOut}
       >
-        <LogOut className='mr-2 h-4 w-4 hover:bg-destructive/30 hover:text-destructive' />
+        <LogOut className='mr-2 size-4' />
         {t.profile.signOut}
       </Button>
     </>

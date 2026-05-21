@@ -62,7 +62,7 @@ export default function EndWarDialog({
           <DialogDescription>{t.game.war.endWarConfirmDesc}</DialogDescription>
         </DialogHeader>
 
-        <div className='space-y-4 py-2'>
+        <div className='flex flex-col gap-4 py-2'>
           <div
             className='flex items-center gap-3'
             data-cy='end-war-win-toggle'
@@ -71,7 +71,7 @@ export default function EndWarDialog({
             <div className='flex items-center gap-2'>
               <span
                 className={
-                  win ? 'text-sm font-semibold text-green-600' : 'text-sm text-muted-foreground'
+                  win ? 'text-sm font-semibold text-primary' : 'text-sm text-muted-foreground'
                 }
               >
                 {t.game.war.win}
@@ -86,7 +86,7 @@ export default function EndWarDialog({
               />
               <span
                 className={
-                  !win ? 'text-sm font-semibold text-red-500' : 'text-sm text-muted-foreground'
+                  !win ? 'text-sm font-semibold text-destructive' : 'text-sm text-muted-foreground'
                 }
               >
                 {t.game.war.lose}
@@ -95,7 +95,7 @@ export default function EndWarDialog({
           </div>
 
           {hasSeason && (
-            <div className='space-y-1'>
+            <div className='flex flex-col gap-1'>
               <Label htmlFor='elo-change'>{win ? t.game.war.eloGained : t.game.war.eloLost}</Label>
               <Input
                 id='elo-change'
@@ -107,7 +107,7 @@ export default function EndWarDialog({
               />
               {eloInput !== '' && !eloValid && (
                 <p
-                  className='text-xs text-red-500'
+                  className='text-xs text-destructive'
                   data-cy='end-war-elo-error'
                 >
                   {win ? t.game.war.eloMustBePositive : t.game.war.eloMustBeNegative}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -119,10 +119,10 @@ export default function AllianceCard({
 
   return (
     <Card data-cy={`alliance-card-${alliance.name}`}>
-      <CardContent className='py-3 sm:py-4 px-3 sm:px-6 space-y-3 sm:space-y-4'>
+      <CardContent className='py-3 sm:py-4 px-3 sm:px-6 flex flex-col gap-3 sm:gap-4'>
         {/* Alliance header */}
         <div className='flex items-center gap-3'>
-          <Shield className='h-5 w-5 text-purple-500' />
+          <Shield className='size-5 text-primary' />
           <div>
             <div className='flex items-center gap-2 flex-wrap'>
               <p
@@ -132,7 +132,7 @@ export default function AllianceCard({
                 {alliance.name}
               </p>
               <span
-                className='inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800'
+                className='inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary'
                 data-cy='alliance-tag'
               >
                 [{alliance.tag}]
@@ -177,16 +177,16 @@ export default function AllianceCard({
                     />
                     <button
                       onClick={() => void saveElo()}
-                      className='text-green-600 hover:text-green-700'
+                      className='text-primary hover:text-primary/80'
                       data-cy='alliance-elo-save'
                     >
-                      <Check className='w-3.5 h-3.5' />
+                      <Check className='size-3.5' />
                     </button>
                     <button
                       onClick={() => setEditingElo(false)}
                       className='text-muted-foreground hover:text-foreground'
                     >
-                      <X className='w-3.5 h-3.5' />
+                      <X className='size-3.5' />
                     </button>
                   </span>
                 ) : (
@@ -199,7 +199,7 @@ export default function AllianceCard({
                         className='text-muted-foreground hover:text-foreground'
                         data-cy='alliance-elo-edit'
                       >
-                        <Pencil className='w-3 h-3' />
+                        <Pencil className='size-3' />
                       </button>
                     )}
                   </span>
@@ -227,16 +227,16 @@ export default function AllianceCard({
                     />
                     <button
                       onClick={() => void saveTier()}
-                      className='text-green-600 hover:text-green-700'
+                      className='text-primary hover:text-primary/80'
                       data-cy='alliance-tier-save'
                     >
-                      <Check className='w-3.5 h-3.5' />
+                      <Check className='size-3.5' />
                     </button>
                     <button
                       onClick={() => setEditingTier(false)}
                       className='text-muted-foreground hover:text-foreground'
                     >
-                      <X className='w-3.5 h-3.5' />
+                      <X className='size-3.5' />
                     </button>
                   </span>
                 ) : (
@@ -249,7 +249,7 @@ export default function AllianceCard({
                         className='text-muted-foreground hover:text-foreground'
                         data-cy='alliance-tier-edit'
                       >
-                        <Pencil className='w-3 h-3' />
+                        <Pencil className='size-3' />
                       </button>
                     )}
                   </span>
@@ -266,35 +266,35 @@ export default function AllianceCard({
             defaultOpen={true}
             className='border-amber-200'
           >
-            <div className='space-y-1'>
+            <div className='flex flex-col gap-1'>
               {pendingInvitations.map((inv, index) => (
                 <div
                   key={inv.id}
                   data-cy={`pending-invitation-${index}`}
                   className='flex items-center justify-between gap-2 p-2 rounded-md bg-amber-50 border border-amber-200'
                 >
-                  <div className='space-y-0.5'>
+                  <div className='flex flex-col gap-0.5'>
                     <div className='flex items-center gap-2'>
                       <p className='text-sm text-black'>{inv.game_account_pseudo}</p>
                       {inv.type === 'visitor' ? (
                         <span
-                          className='flex items-center gap-1 text-xs text-black/60 bg-black/10 px-2 py-0.5 rounded-full'
+                          className='flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full'
                           data-cy={`pending-invitation-visitor-badge-${index}`}
                         >
-                          <Eye className='w-3 h-3' />
+                          <Eye className='size-3' />
                           {t.game.alliances.visitorBadge}
                         </span>
                       ) : (
                         <span
-                          className='flex items-center gap-1 text-xs text-black/60 bg-black/10 px-2 py-0.5 rounded-full'
+                          className='flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full'
                           data-cy={`pending-invitation-member-badge-${index}`}
                         >
-                          <Users className='w-3 h-3' />
+                          <Users className='size-3' />
                           {t.game.alliances.memberBadge}
                         </span>
                       )}
                     </div>
-                    <p className='text-xs text-black/60'>
+                    <p className='text-xs text-muted-foreground'>
                       {t.game.alliances.invitedBy} {inv.invited_by_pseudo}
                     </p>
                   </div>
@@ -302,10 +302,10 @@ export default function AllianceCard({
                     <Button
                       size='sm'
                       variant='ghost'
-                      className='text-red-500 hover:text-red-700 hover:bg-red-50'
+                      className='text-destructive hover:text-destructive/80 hover:bg-destructive/10'
                       onClick={() => onCancelInvitation(alliance.id, inv.id)}
                     >
-                      <X className='h-3 w-3 mr-1' />
+                      <X className='size-3 mr-1' />
                       {t.game.alliances.cancelInvitation}
                     </Button>
                   )}
@@ -319,7 +319,7 @@ export default function AllianceCard({
         <div className='border-t pt-3'>
           <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2'>
             <div className='flex items-center gap-2'>
-              <Users className='h-4 w-4 text-green-500' />
+              <Users className='size-4 text-primary' />
               <span
                 data-cy='alliance-member-count'
                 className='text-sm font-medium text-muted-foreground'
@@ -377,7 +377,7 @@ export default function AllianceCard({
                   data-cy='invite-member-toggle'
                   onClick={() => onOpenInviteMember(alliance.id)}
                 >
-                  <UserPlus className='h-3 w-3 mr-1' />
+                  <UserPlus className='size-3 mr-1' />
                   {t.game.alliances.inviteMember}
                 </Button>
               ))}
@@ -401,7 +401,7 @@ export default function AllianceCard({
                   {members.length === 0 ? (
                     <p className='text-xs text-muted-foreground italic py-1'>—</p>
                   ) : (
-                    <div className='space-y-0.5'>
+                    <div className='flex flex-col gap-0.5'>
                       {members.map((member) => (
                         <AllianceMemberRow
                           key={member.id}

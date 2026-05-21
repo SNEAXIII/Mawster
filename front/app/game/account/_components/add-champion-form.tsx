@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -114,7 +114,7 @@ export default function AddChampionForm({
                     <img
                       src={getChampionImageUrl(c.image_url, 40) ?? ''}
                       alt={c.name}
-                      className='w-8 h-8 rounded object-cover'
+                      className='size-8 rounded object-cover'
                     />
                   )}
                   <span>{c.name}</span>
@@ -130,34 +130,34 @@ export default function AddChampionForm({
               className='mt-1'
               data-cy='champion-selected-preview'
             >
-              <div className='flex items-center gap-2 text-sm text-green-700'>
+              <div className='flex items-center gap-2 text-sm text-primary'>
                 {selectedChampion.image_url && (
                   <img
                     src={getChampionImageUrl(selectedChampion.image_url, 40) ?? ''}
                     alt={selectedChampion.name}
-                    className='w-6 h-6 rounded'
+                    className='size-6 rounded'
                   />
                 )}
                 <span className='font-medium'>{selectedChampion.name}</span>
-                <span className='text-gray-400'>({selectedChampion.champion_class})</span>
+                <span className='text-muted-foreground'>({selectedChampion.champion_class})</span>
               </div>
               {existingEntries.length > 0 && (
                 <div
-                  className='mt-1.5 ml-8 space-y-0.5'
+                  className='mt-1.5 ml-8 flex flex-col gap-0.5'
                   data-cy='already-in-roster'
                 >
-                  <span className='text-xs text-amber-600 dark:text-amber-400 font-medium'>
+                  <span className='text-xs text-amber-500 font-medium'>
                     {t.roster.alreadyInRoster}
                   </span>
                   {existingEntries.map((entry) => (
                     <div
                       key={entry.id}
-                      className='text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1'
+                      className='text-xs text-amber-500 flex items-center gap-1'
                     >
-                      <span className='font-semibold text-amber-600 dark:text-amber-400'>
+                      <span className='font-semibold text-amber-500'>
                         {RARITY_LABELS[entry.rarity] ?? entry.rarity}
                       </span>
-                      <span className='text-amber-600 dark:text-amber-400'>
+                      <span className='text-amber-500'>
                         · sig {entry.signature}
                       </span>
                     </div>

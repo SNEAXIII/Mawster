@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Card, CardContent } from '@/components/ui/card';
 import { type DefensePlacement, type BgMember } from '@/app/services/defense';
@@ -65,7 +65,7 @@ export default function DefenseSidePanel({
   }
 
   return (
-    <div className='space-y-3'>
+    <div className='flex flex-col gap-3'>
       <div className='flex items-center justify-between gap-2'>
         <h3 className='text-sm font-bold uppercase tracking-wider text-muted-foreground'>
           {t.game.defense.membersTitle}
@@ -113,7 +113,7 @@ export default function DefenseSidePanel({
                       data-cy={`defender-count-${member.game_pseudo}`}
                       className={cn(
                         'text-xs font-mono',
-                        isFull ? 'text-red-400' : 'text-muted-foreground'
+                        isFull ? 'text-destructive' : 'text-muted-foreground'
                       )}
                     >
                       {member.defender_count}/{member.max_defenders}
@@ -160,11 +160,11 @@ export default function DefenseSidePanel({
                         </span>
                         {canManage && (
                           <button
-                            className='absolute -top-1 -right-1 z-10 hidden group-hover:flex bg-red-600 hover:bg-red-700 text-white rounded-full w-4 h-4 items-center justify-center'
+                            className='absolute -top-1 -right-1 z-10 hidden group-hover:flex bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full size-4 items-center justify-center'
                             onClick={() => onRemoveDefender(p.node_number)}
                             title={t.game.defense.removeDefender}
                           >
-                            <X className='w-2.5 h-2.5' />
+                            <X className='size-2.5' />
                           </button>
                         )}
                       </div>

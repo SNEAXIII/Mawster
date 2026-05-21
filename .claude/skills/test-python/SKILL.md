@@ -84,8 +84,8 @@ class TestFeatureName:
 ### Mandatory conventions
 
 - **`pytest.mark.anyio`** — always, never `asyncio`
-- **`autouse clean_db`** fixture calling `reset_test_db()` — every file
-- **`app.dependency_overrides[get_session] = get_test_session`** — at module level
+- **No `clean_db` needed per file** — the conftest `reset_db` fixture is `autouse=True, scope="function"` and resets the DB + overrides `get_session` before every test automatically. Do NOT add a redundant `clean_db` fixture. Do NOT pass `clean_db` as a fixture dependency.
+- **`app.dependency_overrides[get_session] = get_test_session`** — handled by conftest, not needed at module level
 - **Insert user first** — `get_generic_user(is_base_id=True)` must be loaded before any game account
 - **Insert FK parents before children** — alliance before game_account, season before war, etc.
 - **`load_objects([obj1, obj2])`** — for direct DB insertion (not via HTTP)

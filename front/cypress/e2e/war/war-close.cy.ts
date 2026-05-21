@@ -35,7 +35,7 @@ describe('War close', () => {
 
           cy.apiEndWar(ownerAT, allianceId, war.id, true, 10).then(() => {
             cy.apiLogin(ownerUserId);
-            cy.visit('/game/knowledge-base');
+            cy.visit('/game/knowledge-base?season_selector=all');
             cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 3);
           });
         }),

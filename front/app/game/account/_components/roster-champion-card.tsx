@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { useI18n } from '@/app/i18n';
 import { cn } from '@/app/lib/utils';
 import ChampionPortrait from '@/components/champion-portrait';
@@ -43,7 +42,7 @@ export default function RosterChampionCard({
 
   return (
     <div
-      className={`rounded-md bg-gray-900 ${classColors.border} border-[3px] shadow hover:shadow-lg transition-shadow relative group`}
+      className={`rounded-md bg-card ${classColors.border} border-[3px] shadow hover:shadow-lg transition-shadow relative group`}
       data-cy={`champion-card-${entry.champion_name}`}
     >
       {/* Action buttons — always visible on touch, hover on desktop */}
@@ -70,7 +69,7 @@ export default function RosterChampionCard({
               onClick={() => onAscend(entry)}
               title='Ascension'
             >
-              <Star className='h-3.5 w-3.5' />
+              <Star className='size-3.5' />
             </button>
           )}
           {pendingRequestId && onCancelRequest && (
@@ -80,7 +79,7 @@ export default function RosterChampionCard({
               onClick={() => onCancelRequest(pendingRequestId)}
               title={t.roster.upgradeRequests.cancel}
             >
-              <X className='h-3.5 w-3.5' />
+              <X className='size-3.5' />
             </button>
           )}
           {!pendingRequestId && nextRarity && onUpgrade && (
@@ -90,7 +89,7 @@ export default function RosterChampionCard({
               onClick={() => onUpgrade(entry)}
               title={t.roster.upgrade}
             >
-              <ArrowUp className='h-3.5 w-3.5' />
+              <ArrowUp className='size-3.5' />
             </button>
           )}
           {onEdit && (
@@ -100,7 +99,7 @@ export default function RosterChampionCard({
               title='Edit'
               data-cy='champion-edit'
             >
-              <Pencil className='h-3.5 w-3.5' />
+              <Pencil className='size-3.5' />
             </button>
           )}
           {onDelete && (
@@ -110,7 +109,7 @@ export default function RosterChampionCard({
               title={t.common.delete}
               data-cy='champion-delete'
             >
-              <Trash2 className='h-3.5 w-3.5' />
+              <Trash2 className='size-3.5' />
             </button>
           )}
         </div>

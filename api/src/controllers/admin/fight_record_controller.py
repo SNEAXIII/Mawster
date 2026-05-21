@@ -4,6 +4,7 @@ from typing import Annotated, Literal, Optional
 from fastapi import APIRouter, Depends, Query
 
 from src.dto.admin.dto_fight_record import PaginatedFightRecordsResponse
+from src.enums.SeasonSelectorType import SeasonSelectorType
 from src.models import User
 from src.services.auth.AuthService import AuthService
 from src.services.knowledge.FightRecordService import FightRecordService
@@ -26,6 +27,7 @@ async def list_fight_records(
     defender_champion_id: Optional[uuid.UUID] = Query(default=None),
     node_number: Optional[int] = Query(default=None, ge=1, le=50),
     tier: Optional[int] = Query(default=None),
+    season_selector: Optional[SeasonSelectorType] = Query(default=None),
     season_id: Optional[uuid.UUID] = Query(default=None),
     alliance_id: Optional[uuid.UUID] = Query(default=None),
     battlegroup: Optional[int] = Query(default=None, ge=1, le=3),
@@ -52,6 +54,7 @@ async def list_fight_records(
         defender_champion_id=defender_champion_id,
         node_number=node_number,
         tier=tier,
+        season_selector=season_selector,
         season_id=season_id,
         alliance_id=alliance_id,
         battlegroup=battlegroup,

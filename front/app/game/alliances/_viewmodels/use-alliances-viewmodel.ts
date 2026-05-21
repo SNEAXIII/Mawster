@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 import {
   type Alliance,
   type GameAccount,
-  type AllianceInvitation,
   getMyGameAccounts,
   getEligibleOwners,
   getEligibleMembers,
@@ -15,12 +14,9 @@ import {
   createAlliance,
   inviteMember,
   inviteVisitor,
-  getMyInvitations,
   acceptInvitation,
   declineInvitation,
-  getAllianceInvitations,
   cancelInvitation,
-  getMyAllianceRoles,
 } from '@/app/services/game';
 import { useRequiredSession } from '@/hooks/use-required-session';
 import { useAllianceContext } from '@/app/contexts/alliance-context';
@@ -36,7 +32,13 @@ export enum AllianceTab {
 export function useAlliancesViewModel() {
   const { locale, t } = useI18n();
   const { status } = useRequiredSession();
-  const { alliances, loading, refresh: refreshAlliances } = useAllianceContext();
+  const {
+    alliances,
+    loading,
+    myInvitations,
+    pendingInvitations,
+    refresh: refreshAlliances,
+  } = useAllianceContext();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -46,7 +48,6 @@ export function useAlliancesViewModel() {
   const [eligibleVisitors, setEligibleVisitors] = useState<GameAccount[]>([]);
   const [hasAnyAccounts, setHasAnyAccounts] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [roleRefreshKey, setRoleRefreshKey] = useState(0);
   const [statsAllianceId, setStatsAllianceId] = useState('');
   const [seasonStats, setSeasonStats] = useState<PlayerSeasonStats[]>([]);
   const [statsLoading, setStatsLoading] = useState(false);
@@ -84,11 +85,6 @@ export function useAlliancesViewModel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  const [myInvitations, setMyInvitations] = useState<AllianceInvitation[]>([]);
-  const [pendingInvitations, setPendingInvitations] = useState<
-    Record<string, AllianceInvitation[]>
-  >({});
-
   const [name, setName] = useState('');
   const [tag, setTag] = useState('');
   const [ownerId, setOwnerId] = useState('');
@@ -100,8 +96,6 @@ export function useAlliancesViewModel() {
     pseudo: string;
     canRequestUpgrade: boolean;
   } | null>(null);
-
-  const bumpRoleKey = () => setRoleRefreshKey((k) => k + 1);
 
   const fetchEligibleOwners = async () => {
     try {
@@ -138,35 +132,6 @@ export function useAlliancesViewModel() {
     }
   };
 
-  const fetchMyInvitations = async () => {
-    try {
-      setMyInvitations(await getMyInvitations());
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchPendingInvitations = async (allianceList: Alliance[]) => {
-    const results: Record<string, AllianceInvitation[]> = {};
-    try {
-      const { roles } = await getMyAllianceRoles();
-      const manageable = allianceList.filter((a) => roles[a.id]?.can_manage);
-      await Promise.all(
-        manageable.map(async (alliance) => {
-          try {
-            const invitations = await getAllianceInvitations(alliance.id);
-            if (invitations.length > 0) results[alliance.id] = invitations;
-          } catch {
-            /* ignore per-alliance fetch failure */
-          }
-        })
-      );
-    } catch {
-      /* ignore role fetch failure */
-    }
-    setPendingInvitations(results);
-  };
-
   const loadSeasonStats = useCallback(
     async (allianceId: string) => {
       setStatsLoading(true);
@@ -186,29 +151,14 @@ export function useAlliancesViewModel() {
   );
 
   const refreshMembership = () =>
-    Promise.all([
-      refreshAlliances(),
-      fetchEligibleOwners(),
-      fetchEligibleMembers(),
-      fetchMyAccounts(),
-      fetchMyInvitations(),
-    ]);
+    Promise.all([refreshAlliances(), fetchEligibleOwners(), fetchEligibleMembers(), fetchMyAccounts()]);
 
   useEffect(() => {
     if (status === 'authenticated') {
-      Promise.all([
-        refreshAlliances(),
-        fetchEligibleOwners(),
-        fetchMyAccounts(),
-        fetchMyInvitations(),
-      ]);
+      Promise.all([fetchEligibleOwners(), fetchMyAccounts()]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
-
-  useEffect(() => {
-    if (alliances.length > 0) fetchPendingInvitations(alliances);
-  }, [alliances]);
 
   useEffect(() => {
     if (!loading && activeTab === AllianceTab.Create && eligibleOwners.length === 0) {
@@ -256,7 +206,6 @@ export function useAlliancesViewModel() {
       setTag('');
       setOwnerId('');
       setActiveTab(AllianceTab.Alliances);
-      bumpRoleKey();
       await refreshMembership();
     } catch (err: unknown) {
       console.error(err);
@@ -295,11 +244,7 @@ export function useAlliancesViewModel() {
       toast.success(t.game.alliances.inviteSuccess);
       setMemberAllianceId(null);
       setMemberAccountId('');
-      await Promise.all([
-        fetchEligibleMembers(),
-        fetchPendingInvitations(alliances),
-        fetchMyInvitations(),
-      ]);
+      await Promise.all([fetchEligibleMembers(), refreshAlliances()]);
     } catch (err: unknown) {
       console.error(err);
       toast.error((err as Error).message || t.game.alliances.inviteError);
@@ -307,7 +252,6 @@ export function useAlliancesViewModel() {
   };
 
   const handleMemberRefresh = async () => {
-    bumpRoleKey();
     await Promise.all([refreshAlliances(), fetchEligibleMembers(), fetchMyAccounts()]);
   };
 
@@ -315,7 +259,6 @@ export function useAlliancesViewModel() {
     try {
       await acceptInvitation(invitationId);
       toast.success(t.game.alliances.acceptInvitationSuccess);
-      bumpRoleKey();
       await refreshMembership();
     } catch (err: unknown) {
       console.error(err);
@@ -327,7 +270,7 @@ export function useAlliancesViewModel() {
     try {
       await declineInvitation(invitationId);
       toast.success(t.game.alliances.declineInvitationSuccess);
-      await fetchMyInvitations();
+      await refreshAlliances();
     } catch (err: unknown) {
       console.error(err);
       toast.error((err as Error).message || t.game.alliances.declineInvitationError);
@@ -338,15 +281,7 @@ export function useAlliancesViewModel() {
     try {
       await cancelInvitation(allianceId, invitationId);
       toast.success(t.game.alliances.cancelInvitationSuccess);
-      setPendingInvitations((prev) => {
-        const updated = { ...prev };
-        if (updated[allianceId]) {
-          updated[allianceId] = updated[allianceId].filter((inv) => inv.id !== invitationId);
-          if (updated[allianceId].length === 0) delete updated[allianceId];
-        }
-        return updated;
-      });
-      await fetchEligibleMembers();
+      await Promise.all([fetchEligibleMembers(), refreshAlliances()]);
     } catch (err: unknown) {
       console.error(err);
       toast.error((err as Error).message || t.game.alliances.cancelInvitationError);
@@ -363,7 +298,6 @@ export function useAlliancesViewModel() {
     eligibleVisitors,
     hasAnyAccounts,
     creating,
-    roleRefreshKey,
     activeTab,
     myInvitations,
     pendingInvitations,

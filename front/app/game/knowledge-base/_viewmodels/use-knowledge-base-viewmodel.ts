@@ -3,9 +3,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   getFightRecords,
+  getSeasons,
   type FightRecord,
   type PaginatedFightRecords,
   type FightRecordFilters,
+  type Season,
 } from '@/app/services/fight-records';
 
 interface Filters {
@@ -53,6 +55,9 @@ export function useKnowledgeBaseViewModel() {
   const [size, setSize] = useState(() => Number(getInitialParams().get('size') ?? '20'));
   const [sortBy, setSortBy] = useState(() => getInitialParams().get('sort_by') ?? 'created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(() => (getInitialParams().get('sort_order') as 'asc' | 'desc') ?? 'desc');
+  const [seasonSelector, setSeasonSelector] = useState<string>(() => getInitialParams().get('season_selector') ?? 'all_seasons');
+  const [seasonId, setSeasonId] = useState<string | null>(() => getInitialParams().get('season_id'));
+  const [seasons, setSeasons] = useState<Season[]>([]);
   const [data, setData] = useState<PaginatedFightRecords | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +68,10 @@ export function useKnowledgeBaseViewModel() {
   }, [filters.game_account_pseudo]);
 
   useEffect(() => {
+    getSeasons().then(setSeasons).catch(() => setSeasons([]));
+  }, []);
+
+  useEffect(() => {
     const params = new URLSearchParams();
     if (filters.champion_id) params.set('champion_id', filters.champion_id);
     if (filters.defender_champion_id) params.set('defender_champion_id', filters.defender_champion_id);
@@ -70,13 +79,15 @@ export function useKnowledgeBaseViewModel() {
     if (filters.tier) params.set('tier', filters.tier);
     if (filters.game_account_pseudo) params.set('game_account_pseudo', filters.game_account_pseudo);
     if (planningErrorOnly !== null) params.set('planning_error_only', String(planningErrorOnly));
+    if (seasonSelector !== 'all_seasons') params.set('season_selector', seasonSelector);
+    if (seasonId) params.set('season_id', seasonId);
     if (page !== 1) params.set('page', String(page));
     if (size !== 20) params.set('size', String(size));
     if (sortBy !== 'created_at') params.set('sort_by', sortBy);
     if (sortOrder !== 'desc') params.set('sort_order', sortOrder);
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  }, [filters, planningErrorOnly, page, size, sortBy, sortOrder, pathname, router]);
+  }, [filters, planningErrorOnly, seasonSelector, seasonId, page, size, sortBy, sortOrder, pathname, router]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -89,6 +100,8 @@ export function useKnowledgeBaseViewModel() {
         tier: filters.tier ? Number.parseInt(filters.tier) : undefined,
         game_account_pseudo: debouncedPseudo || undefined,
         planning_error_only: planningErrorOnly ?? undefined,
+        season_selector: seasonSelector,
+        season_id: seasonId ?? undefined,
         page,
         size,
         sort_by: sortBy,
@@ -100,7 +113,7 @@ export function useKnowledgeBaseViewModel() {
     } finally {
       setLoading(false);
     }
-  }, [filters.champion_id, filters.defender_champion_id, filters.node_number, filters.tier, debouncedPseudo, planningErrorOnly, page, size, sortBy, sortOrder]);
+  }, [filters.champion_id, filters.defender_champion_id, filters.node_number, filters.tier, debouncedPseudo, planningErrorOnly, seasonSelector, seasonId, page, size, sortBy, sortOrder]);
 
   useEffect(() => {
     load();
@@ -125,6 +138,23 @@ export function useKnowledgeBaseViewModel() {
     setFilters(DEFAULT_FILTERS);
     setDebouncedPseudo('');
     setPlanningErrorOnly(null);
+    setSeasonSelector('all_seasons');
+    setSeasonId(null);
+    setPage(1);
+  };
+
+  const handleSeasonSelectorChange = (value: string) => {
+    setSeasonSelector(value);
+    if (value === 'specific') {
+      setSeasonId(seasons[0]?.id ?? null);
+    } else {
+      setSeasonId(null);
+    }
+    setPage(1);
+  };
+
+  const handleSeasonIdChange = (value: string | null) => {
+    setSeasonId(value);
     setPage(1);
   };
 
@@ -136,7 +166,7 @@ export function useKnowledgeBaseViewModel() {
   const hasActiveFilters = Boolean(
     filters.champion_id || filters.defender_champion_id ||
     filters.node_number || filters.tier || filters.game_account_pseudo ||
-    planningErrorOnly !== null
+    planningErrorOnly !== null || seasonSelector !== 'all_seasons'
   );
 
   return {
@@ -149,9 +179,14 @@ export function useKnowledgeBaseViewModel() {
     sortBy,
     sortOrder,
     planningErrorOnly,
+    seasonSelector,
+    seasonId,
+    seasons,
     hasActiveFilters,
     handleFilterChange,
     handleTogglePlanningError,
+    handleSeasonSelectorChange,
+    handleSeasonIdChange,
     handleSort,
     handleClearFilters,
     setPage,

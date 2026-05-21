@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/app/i18n';
 import { War } from '@/app/services/war';
 
@@ -17,7 +18,7 @@ export default function WarManagementBar({
   const { t } = useI18n();
 
   if (loading) {
-    return <div className='h-9 w-48 bg-muted animate-pulse rounded' />;
+    return <Skeleton className='h-9 w-48 rounded' />;
   }
 
   return (
