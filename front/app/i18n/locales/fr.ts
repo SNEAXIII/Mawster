@@ -482,6 +482,13 @@ const fr: Translations = {
       planningErrorBadge: 'Erreur de planning',
       assistedBadge: 'Assisté',
       player: 'Joueur',
+      filterSeason: 'Saison',
+      seasonSelectorAll: 'Toutes',
+      seasonSelectorAllSeasons: 'Toutes les saisons',
+      seasonSelectorCurrent: 'Saison en cours',
+      seasonSelectorOffSeason: 'Hors-saison',
+      seasonSelectorSpecific: 'Saison spécifique',
+      seasonLabel: 'Saison {number}',
     },
   },
 

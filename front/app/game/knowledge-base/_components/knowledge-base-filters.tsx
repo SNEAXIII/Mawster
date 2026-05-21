@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import ChampionFilterSelect from './champion-filter-select';
+import type { Season } from '@/app/services/fight-records';
 
 interface Filters {
   champion_id: string | null;
@@ -23,12 +24,20 @@ interface Filters {
 interface Props {
   filters: Filters;
   planningErrorOnly: boolean | null;
+  seasonSelector: string;
+  seasonId: string | null;
+  seasons: Season[];
   onChange: (key: keyof Filters, value: string | null) => void;
   onTogglePlanningError: () => void;
+  onSeasonSelectorChange: (value: string) => void;
+  onSeasonIdChange: (value: string | null) => void;
   onClear: () => void;
 }
 
-export default function KnowledgeBaseFilters({ filters, planningErrorOnly, onChange, onTogglePlanningError, onClear }: Props) {
+export default function KnowledgeBaseFilters({
+  filters, planningErrorOnly, seasonSelector, seasonId, seasons,
+  onChange, onTogglePlanningError, onSeasonSelectorChange, onSeasonIdChange, onClear,
+}: Props) {
   const { t } = useI18n();
   const kb = t.game.knowledgeBase;
 
@@ -72,6 +81,43 @@ export default function KnowledgeBaseFilters({ filters, planningErrorOnly, onCha
         onChange={(e) => onChange('game_account_pseudo', e.target.value)}
         data-cy='filter-player'
       />
+
+      <Select
+        value={seasonSelector}
+        onValueChange={onSeasonSelectorChange}
+        data-cy='filter-season-selector'
+      >
+        <SelectTrigger className='w-44' data-cy='filter-season-selector-trigger'>
+          <SelectValue placeholder={kb.filterSeason} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value='all'>{kb.seasonSelectorAll}</SelectItem>
+          <SelectItem value='all_seasons'>{kb.seasonSelectorAllSeasons}</SelectItem>
+          <SelectItem value='current'>{kb.seasonSelectorCurrent}</SelectItem>
+          <SelectItem value='off_season'>{kb.seasonSelectorOffSeason}</SelectItem>
+          <SelectItem value='specific'>{kb.seasonSelectorSpecific}</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {seasonSelector === 'specific' && seasons.length > 0 && (
+        <Select
+          value={seasonId ?? ''}
+          onValueChange={(v) => onSeasonIdChange(v || null)}
+          data-cy='filter-season-id'
+        >
+          <SelectTrigger className='w-36' data-cy='filter-season-id-trigger'>
+            <SelectValue placeholder={kb.filterSeason} />
+          </SelectTrigger>
+          <SelectContent>
+            {seasons.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {kb.seasonLabel.replace('{number}', String(s.number))}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
       <Button
         variant={planningErrorOnly ? 'default' : 'outline'}
         onClick={onTogglePlanningError}

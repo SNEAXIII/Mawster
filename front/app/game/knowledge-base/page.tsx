@@ -36,8 +36,13 @@ function KnowledgeBaseContent() {
       <KnowledgeBaseFilters
         filters={vm.filters}
         planningErrorOnly={vm.planningErrorOnly}
+        seasonSelector={vm.seasonSelector}
+        seasonId={vm.seasonId}
+        seasons={vm.seasons}
         onChange={vm.handleFilterChange}
         onTogglePlanningError={vm.handleTogglePlanningError}
+        onSeasonSelectorChange={vm.handleSeasonSelectorChange}
+        onSeasonIdChange={vm.handleSeasonIdChange}
         onClear={vm.handleClearFilters}
       />
 
