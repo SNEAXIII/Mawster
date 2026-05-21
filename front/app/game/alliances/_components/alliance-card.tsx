@@ -275,7 +275,7 @@ export default function AllianceCard({
                 >
                   <div className='flex flex-col gap-0.5'>
                     <div className='flex items-center gap-2'>
-                      <p className='text-sm text-foreground'>{inv.game_account_pseudo}</p>
+                      <p className='text-sm text-black'>{inv.game_account_pseudo}</p>
                       {inv.type === 'visitor' ? (
                         <span
                           className='flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full'
