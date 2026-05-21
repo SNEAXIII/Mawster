@@ -34,6 +34,7 @@ from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightRecord import WarFightRecord
 from src.models.WarFightPrefight import WarFightPrefight
 from src.models.WarFightSynergy import WarFightSynergy
+from src.models.Season import Season
 from src.models.WarPrefightAttacker import WarPrefightAttacker
 from src.models.WarSynergyAttacker import WarSynergyAttacker
 from sqlmodel import select
@@ -531,15 +532,17 @@ class TestListFightRecords:
         assert len(resp_no_match.json()["items"]) == 0
 
     @pytest.mark.asyncio
-    async def test_filter_by_season_id(self):
-        """season_id filter must return only records with matching season (line 184)."""
+    async def test_filter_by_season_selector_specific(self):
+        """season_selector=specific with season_id must return only records with matching season."""
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        fake_season_id = uuid.uuid4()
+        season = Season(number=64, is_active=False)
+        await load_objects([season])
+
         async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
             war = await session.get(War, data["war"].id)
-            war.season_id = fake_season_id
+            war.season_id = season.id
             session.add(war)
             await session.commit()
 
@@ -550,13 +553,13 @@ class TestListFightRecords:
         )
 
         resp = await execute_get_request(
-            f"/fight-records?season_id={fake_season_id}", headers=headers
+            f"/fight-records?season_selector=specific&season_id={season.id}", headers=headers
         )
         assert resp.status_code == 200
         assert len(resp.json()["items"]) == 1
 
         resp_no_match = await execute_get_request(
-            f"/fight-records?season_id={uuid.uuid4()}", headers=headers
+            f"/fight-records?season_selector=specific&season_id={uuid.uuid4()}", headers=headers
         )
         assert resp_no_match.status_code == 200
         assert len(resp_no_match.json()["items"]) == 0
@@ -673,6 +676,228 @@ class TestListFightRecords:
         assert resp.status_code == 200
         assert len(resp.json()["items"]) == 1
         assert resp.json()["items"][0]["defender_champion_name"] == "Thanos"
+
+    @pytest.mark.asyncio
+    async def test_filter_by_season_selector_all_seasons(self):
+        """season_selector=all_seasons must exclude off-season records (season_id IS NULL)."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        season = Season(number=65, is_active=False)
+        await load_objects([season])
+
+        # Record with season
+        record_with_season = WarFightRecord(
+            war_id=data["war"].id,
+            alliance_id=data["alliance"].id,
+            game_account_id=data["member"].id,
+            battlegroup=1,
+            node_number=10,
+            tier=1,
+            season_id=season.id,
+            champion_id=data["attacker_champ"].id,
+            stars=7,
+            rank=4,
+            ascension=0,
+            is_saga_attacker=True,
+            defender_champion_id=data["defender_champ"].id,
+            defender_stars=6,
+            defender_rank=3,
+            defender_ascension=0,
+            defender_is_saga_defender=False,
+        )
+        # Record without season (off-season)
+        record_off_season = WarFightRecord(
+            war_id=data["war"].id,
+            alliance_id=data["alliance"].id,
+            game_account_id=data["member"].id,
+            battlegroup=1,
+            node_number=11,
+            tier=1,
+            season_id=None,
+            champion_id=data["attacker_champ"].id,
+            stars=7,
+            rank=4,
+            ascension=0,
+            is_saga_attacker=True,
+            defender_champion_id=data["defender_champ"].id,
+            defender_stars=6,
+            defender_rank=3,
+            defender_ascension=0,
+            defender_is_saga_defender=False,
+        )
+        await load_objects([record_with_season, record_off_season])
+
+        resp = await execute_get_request(
+            "/fight-records?season_selector=all_seasons", headers=headers
+        )
+        assert resp.status_code == 200
+        assert resp.json()["total"] == 1
+        assert resp.json()["items"][0]["node_number"] == 10
+
+    @pytest.mark.asyncio
+    async def test_filter_by_season_selector_off_season(self):
+        """season_selector=off_season must return only records where season_id IS NULL."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        season = Season(number=66, is_active=False)
+        await load_objects([season])
+
+        record_with_season = WarFightRecord(
+            war_id=data["war"].id,
+            alliance_id=data["alliance"].id,
+            game_account_id=data["member"].id,
+            battlegroup=1,
+            node_number=10,
+            tier=1,
+            season_id=season.id,
+            champion_id=data["attacker_champ"].id,
+            stars=7,
+            rank=4,
+            ascension=0,
+            is_saga_attacker=True,
+            defender_champion_id=data["defender_champ"].id,
+            defender_stars=6,
+            defender_rank=3,
+            defender_ascension=0,
+            defender_is_saga_defender=False,
+        )
+        record_off_season = WarFightRecord(
+            war_id=data["war"].id,
+            alliance_id=data["alliance"].id,
+            game_account_id=data["member"].id,
+            battlegroup=1,
+            node_number=11,
+            tier=1,
+            season_id=None,
+            champion_id=data["attacker_champ"].id,
+            stars=7,
+            rank=4,
+            ascension=0,
+            is_saga_attacker=True,
+            defender_champion_id=data["defender_champ"].id,
+            defender_stars=6,
+            defender_rank=3,
+            defender_ascension=0,
+            defender_is_saga_defender=False,
+        )
+        await load_objects([record_with_season, record_off_season])
+
+        resp = await execute_get_request(
+            "/fight-records?season_selector=off_season", headers=headers
+        )
+        assert resp.status_code == 200
+        assert resp.json()["total"] == 1
+        assert resp.json()["items"][0]["node_number"] == 11
+
+    @pytest.mark.asyncio
+    async def test_filter_by_season_selector_current(self):
+        """season_selector=current must return only records linked to the active season."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        active_season = Season(number=67, is_active=True)
+        old_season = Season(number=66, is_active=False)
+        await load_objects([active_season, old_season])
+
+        record_current = WarFightRecord(
+            war_id=data["war"].id,
+            alliance_id=data["alliance"].id,
+            game_account_id=data["member"].id,
+            battlegroup=1,
+            node_number=10,
+            tier=1,
+            season_id=active_season.id,
+            champion_id=data["attacker_champ"].id,
+            stars=7,
+            rank=4,
+            ascension=0,
+            is_saga_attacker=True,
+            defender_champion_id=data["defender_champ"].id,
+            defender_stars=6,
+            defender_rank=3,
+            defender_ascension=0,
+            defender_is_saga_defender=False,
+        )
+        record_old = WarFightRecord(
+            war_id=data["war"].id,
+            alliance_id=data["alliance"].id,
+            game_account_id=data["member"].id,
+            battlegroup=1,
+            node_number=11,
+            tier=1,
+            season_id=old_season.id,
+            champion_id=data["attacker_champ"].id,
+            stars=7,
+            rank=4,
+            ascension=0,
+            is_saga_attacker=True,
+            defender_champion_id=data["defender_champ"].id,
+            defender_stars=6,
+            defender_rank=3,
+            defender_ascension=0,
+            defender_is_saga_defender=False,
+        )
+        await load_objects([record_current, record_old])
+
+        resp = await execute_get_request("/fight-records?season_selector=current", headers=headers)
+        assert resp.status_code == 200
+        assert resp.json()["total"] == 1
+        assert resp.json()["items"][0]["node_number"] == 10
+
+    @pytest.mark.asyncio
+    async def test_filter_by_season_selector_specific_without_id_returns_all(self):
+        """season_selector=specific without season_id must apply no filter."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        season = Season(number=68, is_active=False)
+        await load_objects([season])
+
+        record1 = WarFightRecord(
+            war_id=data["war"].id,
+            alliance_id=data["alliance"].id,
+            game_account_id=data["member"].id,
+            battlegroup=1,
+            node_number=10,
+            tier=1,
+            season_id=season.id,
+            champion_id=data["attacker_champ"].id,
+            stars=7,
+            rank=4,
+            ascension=0,
+            is_saga_attacker=True,
+            defender_champion_id=data["defender_champ"].id,
+            defender_stars=6,
+            defender_rank=3,
+            defender_ascension=0,
+            defender_is_saga_defender=False,
+        )
+        record2 = WarFightRecord(
+            war_id=data["war"].id,
+            alliance_id=data["alliance"].id,
+            game_account_id=data["member"].id,
+            battlegroup=1,
+            node_number=11,
+            tier=1,
+            season_id=None,
+            champion_id=data["attacker_champ"].id,
+            stars=7,
+            rank=4,
+            ascension=0,
+            is_saga_attacker=True,
+            defender_champion_id=data["defender_champ"].id,
+            defender_stars=6,
+            defender_rank=3,
+            defender_ascension=0,
+            defender_is_saga_defender=False,
+        )
+        await load_objects([record1, record2])
+
+        resp = await execute_get_request("/fight-records?season_selector=specific", headers=headers)
+        assert resp.status_code == 200
+        assert resp.json()["total"] == 2
 
     @pytest.mark.asyncio
     async def test_sort_by_alliance_name(self):
