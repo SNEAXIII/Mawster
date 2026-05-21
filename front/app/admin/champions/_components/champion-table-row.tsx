@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, Pencil, Trash2, X } from 'lucide-react';
@@ -49,13 +48,13 @@ export default function ChampionTableRow({
           <img
             src={getChampionImageUrl(champion.image_url, 40) ?? ''}
             alt={champion.name}
-            className='w-10 h-10 rounded object-cover'
+            className='size-10 rounded object-cover'
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
             }}
           />
         ) : (
-          <div className='w-10 h-10 rounded bg-muted flex items-center justify-center text-xs text-muted-foreground'>
+          <div className='size-10 rounded bg-muted flex items-center justify-center text-xs text-muted-foreground'>
             ?
           </div>
         )}
@@ -88,7 +87,7 @@ export default function ChampionTableRow({
               disabled={savingAlias}
               data-cy='save-alias'
             >
-              <Check className='text-green-600 h-4 w-4' />
+              <Check className='text-primary size-4' />
             </Button>
             <Button
               variant='ghost'
@@ -97,7 +96,7 @@ export default function ChampionTableRow({
               disabled={savingAlias}
               data-cy='cancel-alias'
             >
-              <X className='text-red-600 h-4 w-4' />
+              <X className='text-destructive size-4' />
             </Button>
           </div>
         ) : (
@@ -112,8 +111,8 @@ export default function ChampionTableRow({
           data-cy={`toggle-ascendable-${champion.name}`}
           className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
             champion.is_ascendable
-              ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-              : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+              ? 'bg-primary/10 text-primary hover:bg-primary/20'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80'
           }`}
         >
           {champion.is_ascendable ? t.common.yes : t.common.no}
@@ -127,8 +126,8 @@ export default function ChampionTableRow({
           data-cy={`toggle-prefight-${champion.name}`}
           className={`px-2 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1 ${
             champion.has_prefight
-              ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-              : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+              ? 'bg-primary/10 text-primary hover:bg-primary/20'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80'
           }`}
         >
           {champion.has_prefight ? t.common.yes : t.common.no}
@@ -142,8 +141,8 @@ export default function ChampionTableRow({
           data-cy={`toggle-saga-attacker-${champion.name}`}
           className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
             champion.is_saga_attacker
-              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-              : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+              ? 'bg-primary/10 text-primary hover:bg-primary/20'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80'
           }`}
         >
           {champion.is_saga_attacker ? t.common.yes : t.common.no}
@@ -157,8 +156,8 @@ export default function ChampionTableRow({
           data-cy={`toggle-saga-defender-${champion.name}`}
           className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
             champion.is_saga_defender
-              ? 'bg-green-100 text-green-700 hover:bg-green-200'
-              : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+              ? 'bg-primary/10 text-primary hover:bg-primary/20'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80'
           }`}
         >
           {champion.is_saga_defender ? t.common.yes : t.common.no}
@@ -169,7 +168,7 @@ export default function ChampionTableRow({
       <td className='p-3'>
         <div className='flex items-center gap-1'>
           <ActionIconButton
-            icon={<Pencil className='w-3.5 h-3.5' />}
+            icon={<Pencil className='size-3.5' />}
             onClick={() => onStartEdit(champion)}
             title='Edit alias'
             data-cy={`edit-alias-${champion.name}`}

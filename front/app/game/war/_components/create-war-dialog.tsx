@@ -90,7 +90,7 @@ export default function CreateWarDialog({ open, onClose, onConfirm }: CreateWarD
           <DialogTitle>{t.game.war.declareWar}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className='space-y-4 py-4'>
+          <div className='flex flex-col gap-4 py-4'>
             <div>
               <Label htmlFor='opponent-name'>{t.game.war.opponentName}</Label>
               <Input
@@ -131,7 +131,7 @@ export default function CreateWarDialog({ open, onClose, onConfirm }: CreateWarD
                         size={50}
                       />
                       <div className='absolute inset-0 rounded bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none'>
-                        <FiX className='text-white w-4 h-4' />
+                        <FiX className='text-white size-4' />
                       </div>
                     </button>
                   ))}

@@ -63,7 +63,7 @@ export default function SeasonsPanel() {
 
   return (
     <div
-      className='mt-6 space-y-4'
+      className='mt-6 flex flex-col gap-4'
       data-cy='seasons-panel'
     >
       <h2 className='text-lg font-semibold'>{t.game.season.admin.title}</h2>
@@ -96,7 +96,7 @@ export default function SeasonsPanel() {
 
       {error && <p className='text-destructive text-sm'>{error}</p>}
 
-      <div className='space-y-2'>
+      <div className='flex flex-col gap-2'>
         {seasons.map((s) => (
           <div
             key={s.id}
@@ -107,7 +107,7 @@ export default function SeasonsPanel() {
               <span className='font-medium'>Season {s.number}</span>
               <Badge
                 variant={s.is_active ? 'default' : 'secondary'}
-                className={s.is_active ? 'bg-green-600 text-white hover:bg-green-600' : ''}
+                className={s.is_active ? 'bg-primary text-primary-foreground hover:bg-primary' : ''}
                 data-cy={s.is_active ? 'season-active-indicator' : 'season-inactive-indicator'}
               >
                 {s.is_active ? t.game.season.admin.active : t.game.season.admin.inactive}

@@ -36,8 +36,8 @@ export default function AllianceContent() {
   ];
 
   return (
-    <AllianceRoleProvider refreshKey={vm.roleRefreshKey}>
-      <div className='w-full px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
+    <AllianceRoleProvider>
+      <div className='w-full px-3 py-4 sm:p-6 flex flex-col gap-4 sm:gap-6'>
         {vm.myInvitations.length > 0 && (
           <InvitationsSection
             invitations={vm.myInvitations}

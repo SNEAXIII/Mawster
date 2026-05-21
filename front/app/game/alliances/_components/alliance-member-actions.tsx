@@ -111,32 +111,32 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
           <Button
             variant='ghost'
             size='icon'
-            className='h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent'
+            className='size-7 shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent'
             data-cy={`member-actions-${member.game_pseudo}`}
           >
-            <MoreHorizontal className='h-3.5 w-3.5' />
+            <MoreHorizontal className='size-3.5' />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end'>
           {canPromote && (
             <DropdownMenuItem
               onClick={() => setIsPromoteDialogOpen(true)}
-              className='text-blue-600 flex items-center'
+              className='text-primary flex items-center'
               disabled={isLoading.promote}
               data-cy={`promote-officer-${member.game_pseudo}`}
             >
-              <ShieldCheck className='mr-2 h-4 w-4' />
+              <ShieldCheck className='mr-2 size-4' />
               {t.game.alliances.promoteOfficer}
             </DropdownMenuItem>
           )}
           {canDemote && (
             <DropdownMenuItem
               onClick={() => handleAction(AllianceMemberAction.DEMOTE)}
-              className='text-orange-600 flex items-center'
+              className='text-amber-500 flex items-center'
               disabled={isLoading.demote}
               data-cy={`demote-officer-${member.game_pseudo}`}
             >
-              <ShieldMinus className='mr-2 h-4 w-4' />
+              <ShieldMinus className='mr-2 size-4' />
               {t.game.alliances.demoteOfficer}
             </DropdownMenuItem>
           )}
@@ -147,18 +147,18 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
               disabled={isLoading.leave}
               data-cy={`leave-alliance-${member.game_pseudo}`}
             >
-              <UserMinus className='mr-2 h-4 w-4' />
+              <UserMinus className='mr-2 size-4' />
               {t.game.alliances.leaveAlliance}
             </DropdownMenuItem>
           )}
           {canExclude && (
             <DropdownMenuItem
               onClick={() => setIsExcludeDialogOpen(true)}
-              className='text-red-600 flex items-center'
+              className='text-destructive flex items-center'
               disabled={isLoading.remove}
               data-cy={`exclude-member-${member.game_pseudo}`}
             >
-              <UserMinus className='mr-2 h-4 w-4' />
+              <UserMinus className='mr-2 size-4' />
               {t.game.alliances.excludeMember}
             </DropdownMenuItem>
           )}

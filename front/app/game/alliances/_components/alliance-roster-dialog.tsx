@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -98,13 +98,13 @@ export default function AllianceRosterDialog({
           </DialogHeader>
 
           {loading && (
-            <p className='text-gray-500 text-center py-8'>{t.game.alliances.loadingRoster}</p>
+            <p className='text-muted-foreground text-center py-8'>{t.game.alliances.loadingRoster}</p>
           )}
 
-          {error && <p className='text-red-500 text-center py-8'>{error}</p>}
+          {error && <p className='text-destructive text-center py-8'>{error}</p>}
 
           {!loading && !error && roster.length === 0 && (
-            <p className='text-gray-500 text-center py-8'>{t.game.alliances.emptyRoster}</p>
+            <p className='text-muted-foreground text-center py-8'>{t.game.alliances.emptyRoster}</p>
           )}
 
           {!loading && !error && roster.length > 0 && (
@@ -167,7 +167,7 @@ export default function AllianceRosterDialog({
             </DialogTitle>
           </DialogHeader>
 
-          <p className='text-sm text-gray-600 mb-3'>
+          <p className='text-sm text-muted-foreground mb-3'>
             {t.game.alliances.requestUpgradeDesc
               .replace('{name}', upgradeTarget?.champion_name ?? '')
               .replace(

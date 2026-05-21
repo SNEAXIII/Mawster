@@ -45,7 +45,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
   const point = payload[0].payload;
   return (
-    <div className='bg-popover border rounded-md p-2 text-xs shadow-md space-y-0.5'>
+    <div className='bg-popover border rounded-md p-2 text-xs shadow-md flex flex-col gap-0.5'>
       <p className='font-semibold text-foreground'>{point.opponent_name}</p>
       <p className='text-muted-foreground'>
         {t.game.alliances.elo}: <span className='text-foreground font-medium'>{point.elo_after}</span>
@@ -79,7 +79,7 @@ export default function AllianceRankingChart({ points, seasonNumber }: Readonly<
   }
 
   return (
-    <div className='space-y-1' data-cy='ranking-history-chart'>
+    <div className='flex flex-col gap-1' data-cy='ranking-history-chart'>
       {seasonNumber !== null && (
         <p className='text-xs text-muted-foreground'>
           {t.game.alliances.season} {seasonNumber}

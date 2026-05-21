@@ -31,7 +31,7 @@ export default function MasteryMiniView({
   }
 
   return (
-    <div className='space-y-3 max-w-xs'>
+    <div className='flex flex-col gap-3 max-w-xs'>
       {/* Mode tabs */}
       <div className='flex gap-1 bg-muted/40 rounded-lg p-1 w-fit'>
         {modes.map((m) => (
@@ -54,7 +54,7 @@ export default function MasteryMiniView({
       </div>
 
       {/* Mastery list */}
-      <div className='space-y-1'>
+      <div className='flex flex-col gap-1'>
         {masteries.map((m) => {
           const name =
             t.mastery.names[m.mastery_order as keyof typeof t.mastery.names] ?? m.mastery_name;

@@ -97,7 +97,7 @@ export default function WarTab() {
   })();
 
   return (
-    <div className='space-y-4'>
+    <div className='flex flex-col gap-4'>
       {/* Controls row: opponent name + BG picker + mode toggle + clear */}
       <div className='flex flex-wrap items-center gap-3'>
         <SeasonBanner
@@ -145,7 +145,7 @@ export default function WarTab() {
         {/* Opponent name */}
         {currentWar && (
           <div className='flex items-center gap-2'>
-            <Swords className='w-4 h-4 text-muted-foreground' />
+            <Swords className='size-4 text-muted-foreground' />
             <span
               data-cy='war-opponent-name'
               className='text-sm font-semibold'
@@ -183,7 +183,7 @@ export default function WarTab() {
               onClick={() => setWarMode(WarMode.Attackers)}
               dataCy='war-mode-attackers'
             >
-              <Swords className='w-3.5 h-3.5' />
+              <Swords className='size-3.5' />
               {t.game.war.modeAttackers}
             </ToggleButton>
             <ToggleButton
@@ -191,7 +191,7 @@ export default function WarTab() {
               onClick={() => setWarMode(WarMode.Defenders)}
               dataCy='war-mode-defenders'
             >
-              <Shield className='w-3.5 h-3.5' />
+              <Shield className='size-3.5' />
               {t.game.war.modeDefenders}
             </ToggleButton>
             <ToggleButton
@@ -199,7 +199,7 @@ export default function WarTab() {
               onClick={() => setWarMode(WarMode.Plan)}
               dataCy='war-mode-plan'
             >
-              <NotebookPen className='w-3.5 h-3.5' />
+              <NotebookPen className='size-3.5' />
               {t.game.war.modePlan}
             </ToggleButton>
           </div>
@@ -211,7 +211,7 @@ export default function WarTab() {
             onClick={() => setShowClearConfirm(true)}
             data-cy='clear-war-bg-btn'
           >
-            <Trash2 className='w-4 h-4 mr-2' />
+            <Trash2 className='size-4 mr-2' />
             {t.game.war.clearAll}
           </Button>
         )}

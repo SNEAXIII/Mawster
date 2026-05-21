@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { useI18n } from '@/app/i18n';
 import { RosterEntry, RARITY_LABELS, UpgradeRequest } from '@/app/services/roster';
 import RosterChampionCard from './roster-champion-card';
@@ -37,14 +36,14 @@ export default function RosterGrid({
   }
 
   return (
-    <div className='space-y-6'>
+    <div className='flex flex-col gap-6'>
       {groupedRoster.map(([rarity, entries]) => (
         <div
           key={rarity}
           data-cy={`rarity-group-${rarity}`}
         >
           <h3 className='text-lg font-semibold mb-2 flex items-center gap-2'>
-            <span className='bg-gray-800 text-yellow-400 px-3 py-0.5 rounded-md text-sm font-bold'>
+            <span className='bg-muted text-yellow-400 px-3 py-0.5 rounded-md text-sm font-bold'>
               {RARITY_LABELS[rarity]}
             </span>
             <span className='text-sm text-muted-foreground'>({entries.length})</span>
