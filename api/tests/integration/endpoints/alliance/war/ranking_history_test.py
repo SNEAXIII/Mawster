@@ -10,7 +10,7 @@ from src.models.War import War, WarStatus
 from src.utils.db import get_session
 from tests.utils.utils_client import create_auth_headers, execute_get_request
 from tests.utils.utils_constant import USER_ID, USER2_ID
-from tests.utils.utils_db import get_test_session, load_objects, reset_test_db
+from tests.utils.utils_db import get_test_session, load_objects
 from tests.integration.endpoints.setup.game_setup import push_alliance_with_owner, push_visitor
 from tests.integration.endpoints.setup.user_setup import get_generic_user
 
@@ -25,11 +25,6 @@ VISITOR_HEADERS = create_auth_headers(user_id=str(USER3_ID), role=Roles.USER)
 
 def _url(alliance_id: uuid.UUID) -> str:
     return f"/alliances/{alliance_id}/ranking-history"
-
-
-@pytest.fixture(autouse=True)
-def clean_db():
-    reset_test_db()
 
 
 async def _base_setup():

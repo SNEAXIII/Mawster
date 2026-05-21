@@ -12,7 +12,7 @@ from tests.utils.utils_client import (
     execute_patch_request,
 )
 from tests.utils.utils_constant import USER_ID, GAME_PSEUDO, ALLIANCE_NAME, ALLIANCE_TAG
-from tests.utils.utils_db import get_test_session, load_objects, reset_test_db
+from tests.utils.utils_db import get_test_session, load_objects
 from tests.integration.endpoints.setup.game_setup import push_alliance_with_owner
 from tests.integration.endpoints.setup.user_setup import get_admin, get_generic_user
 
@@ -25,13 +25,8 @@ SEASONS_URL = "/admin/seasons"
 CURRENT_URL = "/seasons/current"
 
 
-@pytest.fixture(autouse=True)
-def clean_db():
-    reset_test_db()
-
-
 @pytest.fixture()
-async def admin_in_db(clean_db):
+async def admin_in_db():
     await load_objects([get_admin()])
 
 
@@ -133,7 +128,7 @@ class TestDeactivateSeason:
 
 class TestGetCurrentSeason:
     @pytest.fixture()
-    async def user_in_db(self, clean_db):
+    async def user_in_db(self):
         await load_objects([get_generic_user(is_base_id=True)])
 
     @pytest.mark.anyio

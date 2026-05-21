@@ -13,7 +13,7 @@ from src.models.WarFightRecord import WarFightRecord
 from src.utils.db import get_session
 from tests.utils.utils_client import create_auth_headers, execute_get_request
 from tests.utils.utils_constant import USER_ID, USER2_ID
-from tests.utils.utils_db import get_test_session, load_objects, reset_test_db
+from tests.utils.utils_db import get_test_session, load_objects
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -30,11 +30,6 @@ USER2_HEADERS = create_auth_headers(user_id=str(USER2_ID), role=Roles.USER)
 
 STATS_URL = "/statistics/current_season"
 CHAMPION_USAGE_URL = "/statistics/champion-usage"
-
-
-@pytest.fixture(autouse=True)
-def clean_db():
-    reset_test_db()
 
 
 async def _base_setup():
