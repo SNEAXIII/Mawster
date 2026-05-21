@@ -434,6 +434,7 @@ class BulkCreateFightRecordsRequest(BaseModel):
     game_account_id: uuid.UUID
     count: int = Field(ge=1, le=50)
     tier: int = 1
+    season_id: uuid.UUID | None = None
 
 
 @dev_controller.post("/bulk-create-fight-records", status_code=201)
@@ -457,6 +458,7 @@ async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session
         record = WarFightRecord(
             war_id=body.war_id,
             alliance_id=body.alliance_id,
+            season_id=body.season_id,
             game_account_id=body.game_account_id,
             battlegroup=1,
             node_number=((node - 1) % 50) + 1,

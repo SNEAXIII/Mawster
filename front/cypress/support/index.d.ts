@@ -204,6 +204,7 @@ declare global {
         allianceId: string,
         gameAccountId: string,
         count: number,
+        seasonId?: string | null,
       ): Chainable<any>;
 
       /** Fill N war nodes with dummy attackers for a given account (dev endpoint, bypasses validations). */
