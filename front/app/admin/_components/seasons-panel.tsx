@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +22,7 @@ export default function SeasonsPanel() {
   const [newBigThing, setNewBigThing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const [s, c] = await Promise.all([listSeasons(), getAppConfig()]);
       setSeasons(s);
@@ -30,11 +30,11 @@ export default function SeasonsPanel() {
     } catch {
       setError(t.game.season.admin.createError);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const handleCreate = async () => {
     const n = parseInt(newNumber, 10);
@@ -64,7 +64,7 @@ export default function SeasonsPanel() {
       const updated = await setOffSeasonBigThing(!config.off_season_big_thing);
       setConfig(updated);
     } catch {
-      setError(t.game.season.admin.createError);
+      setError(t.game.season.admin.deactivateError);
     }
   };
 
