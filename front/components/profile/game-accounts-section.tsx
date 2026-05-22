@@ -55,9 +55,15 @@ export default function GameAccountsSection({
     fetchAccounts();
   }, []);
 
+  const PSEUDO_REGEX = /^[a-zA-Z0-9 ]{2,16}$/;
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pseudo.trim()) return;
+    if (!PSEUDO_REGEX.test(pseudo.trim())) {
+      toast.error(t.game.accounts.pseudoInvalid);
+      return;
+    }
 
     setCreating(true);
     try {
@@ -100,6 +106,10 @@ export default function GameAccountsSection({
 
   const handleEdit = async (account: GameAccount) => {
     if (!editPseudo.trim()) return;
+    if (!PSEUDO_REGEX.test(editPseudo.trim())) {
+      toast.error(t.game.accounts.pseudoInvalid);
+      return;
+    }
     try {
       await updateGameAccount(account.id, editPseudo.trim(), account.is_primary);
       toast.success(t.game.accounts.editSuccess);
