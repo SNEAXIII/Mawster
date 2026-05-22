@@ -2,10 +2,14 @@
 
 import dynamic from 'next/dynamic';
 import { FullPageSpinner } from '@/components/full-page-spinner';
-import { type WarPlacement } from '@/app/services/war';
+import { type WarPlacement, type WarType } from '@/app/services/war';
 import { type DefensePlacement } from '@/app/services/defense';
 
 const WarMap = dynamic(() => import('@/app/game/defense/_components/war-map'), {
+  loading: () => <FullPageSpinner />,
+});
+
+const BigThingWarMap = dynamic(() => import('@/app/game/defense/_components/big-thing-war-map'), {
   loading: () => <FullPageSpinner />,
 });
 
@@ -16,6 +20,7 @@ interface WarDefenseMapProps {
   canManage: boolean;
   dimmedNodes?: Set<number>;
   prefightNodes?: Set<number>;
+  warType?: WarType;
 }
 
 function toDefensePlacement(p: WarPlacement): DefensePlacement {
@@ -50,18 +55,22 @@ export default function WarDefenseMap({
   canManage,
   dimmedNodes,
   prefightNodes,
+  warType = 'normal',
 }: Readonly<WarDefenseMapProps>) {
   const adapted = placements.map(toDefensePlacement);
-  return (
-    <WarMap
-      placements={adapted}
-      onNodeClick={onNodeClick}
-      onRemove={onRemove}
-      canManage={canManage}
-      hidePseudo={false}
-      hideSig={true}
-      dimmedNodes={dimmedNodes}
-      prefightNodes={prefightNodes}
-    />
+  const commonProps = {
+    placements: adapted,
+    onNodeClick,
+    onRemove,
+    canManage,
+    hidePseudo: false,
+    hideSig: true,
+    dimmedNodes,
+    prefightNodes,
+  };
+  return warType === 'big_thing' ? (
+    <BigThingWarMap {...commonProps} />
+  ) : (
+    <WarMap {...commonProps} />
   );
 }

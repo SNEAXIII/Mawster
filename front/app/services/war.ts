@@ -11,6 +11,8 @@ export interface BannedChampion {
   is_saga_defender: boolean;
 }
 
+export type WarType = 'normal' | 'big_thing';
+
 export interface War {
   id: string;
   alliance_id: string;
@@ -24,6 +26,7 @@ export interface War {
   win: boolean | null;
   elo_change: number | null;
   tier: number | null;
+  war_type: WarType;
 }
 
 export interface WarPlacement {

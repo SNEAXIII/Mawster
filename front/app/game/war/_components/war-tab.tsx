@@ -267,6 +267,7 @@ export default function WarTab() {
                 canManage={canManageWar && warMode === WarMode.Defenders}
                 dimmedNodes={dimmedNodes}
                 prefightNodes={prefightNodes}
+                warType={currentWar?.war_type}
               />
             </div>
           </div>
