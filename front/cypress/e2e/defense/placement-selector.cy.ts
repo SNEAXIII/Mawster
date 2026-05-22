@@ -85,8 +85,8 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
 
-      cy.getByCy('champion-card-Spider-Man').should('contain', '7R5').and('contain', 'A1');
-      cy.getByCy('champion-card-Wolverine').should('contain', '7R3').and('not.contain', '· A');
+      cy.getByCy('champion-card-Spider-Man').should('contain', 'R5').and('contain', 'A1');
+      cy.getByCy('champion-card-Wolverine').should('contain', 'R3').and('not.contain', '· A');
     });
   });
 
@@ -127,13 +127,13 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.getByCy('champion-card-Spider-Man').click();
-      cy.getByCy('war-node-1').should('contain', '7R3·200');
+      cy.getByCy('war-node-1').should('contain', 'R3·200');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.contains('Select Champion').should('be.visible');
       cy.getByCy('champion-card-Wolverine').click();
 
-      cy.getByCy('war-node-1').should('contain', '7R4·100');
+      cy.getByCy('war-node-1').should('contain', 'R4·100');
       cy.getByCy('defender-count-ReplPlyr').should('contain', '1/5');
     });
   });

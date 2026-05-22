@@ -26,7 +26,7 @@ export function rarityBadgeClass(rarity: string): string {
   return 'text-red-400';
 }
 
-/** Human-readable label: "7R4·200" or "7R5·A1·200" if ascended. */
+/** Human-readable label: "R4·200" or "R5·A1·200" if ascended. */
 export function rarityLabel(rarity: string, signature: number, ascension?: number): string {
   const { rank } = parseRarity(rarity);
   const parts = [`R${rank}`];
