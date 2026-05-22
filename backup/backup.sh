@@ -61,14 +61,14 @@ rclone delete "${RCLONE_REMOTE}/" --min-age "${RETENTION_DAYS}d" --include "maws
 echo "[backup] Remote: purged files older than ${RETENTION_DAYS} days"
 
 # ── 6. Remote purge: by size ──────────────────────────────────────────────────
-REMOTE_SIZE=$(rclone size "${RCLONE_REMOTE}/" --json 2>/dev/null | jq -r '.bytes // 0')
+REMOTE_SIZE=$(rclone size "${RCLONE_REMOTE}/" --json 2>/dev/null | grep -o '"bytes":[0-9]*' | cut -d: -f2)
 while [ "${REMOTE_SIZE:-0}" -gt "$MAX_REMOTE_BYTES" ]; do
   OLDEST_REMOTE=$(rclone lsf "${RCLONE_REMOTE}/" --format "tp" --separator "|" --files-only 2>/dev/null \
     | sort | head -1 | cut -d'|' -f2)
   [ -z "$OLDEST_REMOTE" ] && break
   echo "[backup] Remote over limit ($(( REMOTE_SIZE / 1024 / 1024 )) MB), deleting: $OLDEST_REMOTE"
   rclone deletefile "${RCLONE_REMOTE}/${OLDEST_REMOTE}"
-  REMOTE_SIZE=$(rclone size "${RCLONE_REMOTE}/" --json 2>/dev/null | jq -r '.bytes // 0')
+  REMOTE_SIZE=$(rclone size "${RCLONE_REMOTE}/" --json 2>/dev/null | grep -o '"bytes":[0-9]*' | cut -d: -f2)
 done
 
 echo "[backup] $(date '+%Y-%m-%d %H:%M:%S') — Done: $FILENAME"

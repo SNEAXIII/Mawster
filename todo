@@ -3,26 +3,15 @@ technique:
     je veux que ce groupe aie tel perso monté def par les admins (commme la update request mais pas nominatif a une personne spécifique)
     "je compte up ce perso"
 
-
 low:
-    aficcher dans la pop up de suppr / edit le combat en cours
     mettre un champ texte pour les notes
-
 
 medium:
     fixer les multi appel api auth me
     fixer la nav bar qui met 3 ans a render
-    ne pas tout display quand on veut placer un def
     bloquer les lignes si le boug peut pas aller a un endroit
-    backup db auto google
-
 
 prio:
-    permettre de marquer un combat terminé
     meilleure affiche pour la def (déja placé etc)
 
 criTIQUE
-    les synergies sont mal bindé knowledge
-    mettre un switch pour ko deathless
-    afficher le joueurs
-    les e2e ?
