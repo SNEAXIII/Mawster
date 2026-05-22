@@ -9,7 +9,7 @@ class AppConfigResponse(BaseModel):
 
 
 class SetCurrentSeasonRequest(BaseModel):
-    season_id: Optional[uuid.UUID]
+    season_id: Optional[uuid.UUID] = None
 
 
 class SetOffSeasonBigThingRequest(BaseModel):

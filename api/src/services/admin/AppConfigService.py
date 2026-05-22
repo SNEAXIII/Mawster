@@ -22,6 +22,7 @@ class AppConfigService:
             entry.value = value
         session.add(entry)
         await session.commit()
+        await session.refresh(entry)
 
     @classmethod
     async def get_current_season_id(cls, session: SessionDep) -> Optional[uuid.UUID]:

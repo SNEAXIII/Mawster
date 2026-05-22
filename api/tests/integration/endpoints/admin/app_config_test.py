@@ -29,7 +29,7 @@ async def admin_in_db():
 
 class TestGetConfig:
     @pytest.mark.anyio
-    async def test_default_config_has_null_season_and_false_big_thing(self):
+    async def test_default_config_has_null_season_and_false_big_thing(self, admin_in_db):
         response = await execute_get_request(CONFIG_URL, ADMIN_HEADERS)
         assert response.status_code == 200
         data = response.json()
@@ -44,7 +44,7 @@ class TestGetConfig:
 
 class TestSetCurrentSeason:
     @pytest.mark.anyio
-    async def test_set_current_season_to_existing_season(self):
+    async def test_set_current_season_to_existing_season(self, admin_in_db):
         season_resp = await execute_post_request("/admin/seasons", {"number": 1}, ADMIN_HEADERS)
         season_id = season_resp.json()["id"]
         response = await execute_put_request(
@@ -54,7 +54,7 @@ class TestSetCurrentSeason:
         assert response.json()["current_season_id"] == season_id
 
     @pytest.mark.anyio
-    async def test_set_current_season_to_null_goes_off_season(self):
+    async def test_set_current_season_to_null_goes_off_season(self, admin_in_db):
         response = await execute_put_request(
             f"{CONFIG_URL}/current-season", {"season_id": None}, ADMIN_HEADERS
         )
@@ -62,7 +62,7 @@ class TestSetCurrentSeason:
         assert response.json()["current_season_id"] is None
 
     @pytest.mark.anyio
-    async def test_set_unknown_season_returns_404(self):
+    async def test_set_unknown_season_returns_404(self, admin_in_db):
         response = await execute_put_request(
             f"{CONFIG_URL}/current-season",
             {"season_id": str(uuid.uuid4())},
@@ -80,7 +80,7 @@ class TestSetCurrentSeason:
 
 class TestSetOffSeasonBigThing:
     @pytest.mark.anyio
-    async def test_enable_off_season_big_thing(self):
+    async def test_enable_off_season_big_thing(self, admin_in_db):
         response = await execute_put_request(
             f"{CONFIG_URL}/off-season-big-thing", {"enabled": True}, ADMIN_HEADERS
         )
@@ -88,7 +88,7 @@ class TestSetOffSeasonBigThing:
         assert response.json()["off_season_big_thing"] is True
 
     @pytest.mark.anyio
-    async def test_disable_off_season_big_thing(self):
+    async def test_disable_off_season_big_thing(self, admin_in_db):
         response = await execute_put_request(
             f"{CONFIG_URL}/off-season-big-thing", {"enabled": False}, ADMIN_HEADERS
         )
