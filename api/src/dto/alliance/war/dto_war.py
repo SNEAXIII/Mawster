@@ -50,7 +50,7 @@ class WarResponse(BaseModel):
 
 
 class WarPlacementCreateRequest(BaseModel):
-    node_number: int = Field(..., ge=1, le=55)
+    node_number: int = Field(..., ge=1, le=50)
     champion_id: uuid.UUID
     stars: int = Field(..., ge=6, le=7)
     rank: int = Field(..., ge=1, le=5)
@@ -255,7 +255,7 @@ class WarEndRequest(BaseModel):
 
 class WarPrefightCreateRequest(BaseModel):
     champion_user_id: uuid.UUID
-    target_node_number: int = Field(..., ge=1, le=55)
+    target_node_number: int = Field(..., ge=1, le=50)
 
 
 class WarPrefightResponse(BaseModel):

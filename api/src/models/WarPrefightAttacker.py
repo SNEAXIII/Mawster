@@ -28,7 +28,7 @@ class WarPrefightAttacker(SQLModel, table=True):
     battlegroup: int = Field(ge=1, le=3)
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     champion_user_id: uuid.UUID = Field(foreign_key="champion_user.id")
-    target_node_number: int = Field(ge=1, le=55)
+    target_node_number: int = Field(ge=1, le=50)
     created_at: datetime = Field(default_factory=datetime.now)
 
     # Relations

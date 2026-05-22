@@ -20,7 +20,7 @@ class WarDefensePlacement(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     war_id: uuid.UUID = Field(foreign_key="war.id")
     battlegroup: int = Field(ge=1, le=3)
-    node_number: int = Field(ge=1, le=55)
+    node_number: int = Field(ge=1, le=50)
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
     stars: int = Field(ge=6, le=7)
     rank: int = Field(ge=1, le=5)

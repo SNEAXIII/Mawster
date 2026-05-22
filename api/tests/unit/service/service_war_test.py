@@ -43,12 +43,12 @@ class TestWarPlacementCreateRequest:
 
     def test_node_number_max(self):
         req = WarPlacementCreateRequest(
-            node_number=55,
+            node_number=50,
             champion_id=uuid.uuid4(),
             stars=7,
             rank=3,
         )
-        assert req.node_number == 55
+        assert req.node_number == 50
 
     def test_node_number_too_low_raises(self):
         with pytest.raises(Exception):

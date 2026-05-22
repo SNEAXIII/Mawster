@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 class DefensePlacementCreateRequest(BaseModel):
     """Place a champion on a defense node."""
 
-    node_number: int = Field(..., ge=1, le=55)
+    node_number: int = Field(..., ge=1, le=50)
     champion_user_id: uuid.UUID
     game_account_id: uuid.UUID
 
