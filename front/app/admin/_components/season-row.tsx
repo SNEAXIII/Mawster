@@ -21,7 +21,7 @@ export function SeasonRow({ season, config, onSetCurrent }: SeasonRowProps) {
       data-cy={`season-row-${season.number}`}
     >
       <div className='flex items-center gap-3'>
-        <span className='font-medium'>Season {season.number}</span>
+        <span className='font-medium'>{t.game.season.current.replace('{number}', String(season.number))}</span>
         {season.is_big_thing && (
           <Badge variant='outline' title={t.game.season.admin.bigThingTooltip}>
             {t.game.season.admin.bigThingLabel}
