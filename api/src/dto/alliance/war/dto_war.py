@@ -47,7 +47,9 @@ class WarResponse(BaseModel):
             "win": data.win,
             "elo_change": data.elo_change,
             "tier": data.tier,
-            "war_type": "normal",
+            "war_type": "big_thing"
+            if (data.season is not None and data.season.is_big_thing)
+            else "normal",
         }
 
 
