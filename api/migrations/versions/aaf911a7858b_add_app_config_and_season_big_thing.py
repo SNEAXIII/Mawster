@@ -31,7 +31,9 @@ def upgrade() -> None:
     )
     op.execute("INSERT INTO app_config (`key`, `value`) VALUES ('current_season_id', 'null')")
     op.execute("INSERT INTO app_config (`key`, `value`) VALUES ('off_season_big_thing', 'false')")
-    op.add_column("season", sa.Column("is_big_thing", sa.Boolean(), nullable=False))
+    op.add_column(
+        "season", sa.Column("is_big_thing", sa.Boolean(), nullable=False, server_default=sa.false())
+    )
     op.drop_column("season", "is_active")
     # ### end Alembic commands ###
 
