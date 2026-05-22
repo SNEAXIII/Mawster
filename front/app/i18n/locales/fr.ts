@@ -717,6 +717,7 @@ const fr: Translations = {
       6: 'Courage Liquide',
       7: 'Double Tranchant',
       8: 'Collier Tech',
+      9: 'Impassible',
     },
   },
 } as const;

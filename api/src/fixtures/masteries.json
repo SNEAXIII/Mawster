@@ -11,7 +11,7 @@
   },
   {
     "name": "LIMBER",
-    "max_value": 3,
+    "max_value": 5,
     "order": 2
   },
   {
@@ -43,5 +43,10 @@
     "name": "COLLAR TECH",
     "max_value": 5,
     "order": 8
+  },
+  {
+    "name": "UNFAZED",
+    "max_value": 5,
+    "order": 9
   }
 ]
