@@ -26,6 +26,7 @@ from src.models.WarFightRecord import WarFightRecord
 from src.models.WarFightSynergy import WarFightSynergy
 from src.models.WarPrefightAttacker import WarPrefightAttacker
 from src.models.WarSynergyAttacker import WarSynergyAttacker
+from src.services.admin.AppConfigService import AppConfigService
 from src.utils.db import SessionDep
 
 
@@ -201,7 +202,12 @@ class FightRecordService:
         elif season_selector == SeasonSelectorType.OffSeason:
             conditions.append(WarFightRecord.season_id.is_(None))
         elif season_selector == SeasonSelectorType.Current:
-            active_subq = select(Season.id).where(Season.is_active == True)  # noqa: E712
+            _current_season_id = await AppConfigService.get_current_season_id(session)
+            active_subq = (
+                select(Season.id).where(Season.id == _current_season_id)
+                if _current_season_id is not None
+                else select(Season.id).where(False)
+            )
             conditions.append(WarFightRecord.season_id.in_(active_subq))
         elif season_selector == SeasonSelectorType.Specific and season_id is not None:
             conditions.append(WarFightRecord.season_id == season_id)

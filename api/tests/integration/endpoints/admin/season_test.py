@@ -9,7 +9,6 @@ from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
     execute_post_request,
-    execute_patch_request,
 )
 from tests.utils.utils_constant import USER_ID, GAME_PSEUDO, ALLIANCE_NAME, ALLIANCE_TAG
 from tests.utils.utils_db import get_test_session, load_objects
@@ -37,7 +36,7 @@ class TestCreateSeason:
         assert response.status_code == 201
         data = response.json()
         assert data["number"] == 64
-        assert data["is_active"] is False
+        assert data["is_big_thing"] is False
 
     @pytest.mark.anyio
     async def test_duplicate_number_returns_409(self):
@@ -78,52 +77,20 @@ class TestCreateSeason:
         assert response.json()["number"] == 1
 
 
-class TestActivateSeason:
+class TestCreateSeasonBigThing:
     @pytest.mark.anyio
-    async def test_activate_sets_is_active_true(self, admin_in_db):
-        create = await execute_post_request(SEASONS_URL, {"number": 70}, ADMIN_HEADERS)
-        season_id = create.json()["id"]
-        response = await execute_patch_request(
-            f"{SEASONS_URL}/{season_id}/activate", {}, ADMIN_HEADERS
+    async def test_create_big_thing_season(self, admin_in_db):
+        response = await execute_post_request(
+            SEASONS_URL, {"number": 70, "is_big_thing": True}, ADMIN_HEADERS
         )
-        assert response.status_code == 200
-        assert response.json()["is_active"] is True
+        assert response.status_code == 201
+        assert response.json()["is_big_thing"] is True
 
     @pytest.mark.anyio
-    async def test_activating_deactivates_previous(self, admin_in_db):
-        s1 = (await execute_post_request(SEASONS_URL, {"number": 71}, ADMIN_HEADERS)).json()
-        s2 = (await execute_post_request(SEASONS_URL, {"number": 72}, ADMIN_HEADERS)).json()
-        await execute_patch_request(f"{SEASONS_URL}/{s1['id']}/activate", {}, ADMIN_HEADERS)
-        await execute_patch_request(f"{SEASONS_URL}/{s2['id']}/activate", {}, ADMIN_HEADERS)
-        all_seasons = (await execute_get_request(SEASONS_URL, ADMIN_HEADERS)).json()
-        s1_data = next(s for s in all_seasons if s["id"] == s1["id"])
-        assert s1_data["is_active"] is False
-
-    @pytest.mark.anyio
-    async def test_activate_unknown_season_returns_404(self, admin_in_db):
-        response = await execute_patch_request(
-            f"{SEASONS_URL}/00000000-0000-0000-0000-000000000099/activate", {}, ADMIN_HEADERS
-        )
-        assert response.status_code == 404
-
-
-class TestDeactivateSeason:
-    @pytest.mark.anyio
-    async def test_deactivate_sets_is_active_false(self, admin_in_db):
-        s = (await execute_post_request(SEASONS_URL, {"number": 80}, ADMIN_HEADERS)).json()
-        await execute_patch_request(f"{SEASONS_URL}/{s['id']}/activate", {}, ADMIN_HEADERS)
-        response = await execute_patch_request(
-            f"{SEASONS_URL}/{s['id']}/deactivate", {}, ADMIN_HEADERS
-        )
-        assert response.status_code == 200
-        assert response.json()["is_active"] is False
-
-    @pytest.mark.anyio
-    async def test_deactivate_unknown_season_returns_404(self, admin_in_db):
-        response = await execute_patch_request(
-            f"{SEASONS_URL}/00000000-0000-0000-0000-000000000099/deactivate", {}, ADMIN_HEADERS
-        )
-        assert response.status_code == 404
+    async def test_create_normal_season_default(self, admin_in_db):
+        response = await execute_post_request(SEASONS_URL, {"number": 71}, ADMIN_HEADERS)
+        assert response.status_code == 201
+        assert response.json()["is_big_thing"] is False
 
 
 class TestGetCurrentSeason:
@@ -136,15 +103,6 @@ class TestGetCurrentSeason:
         response = await execute_get_request(CURRENT_URL, USER_HEADERS)
         assert response.status_code == 200
         assert response.json() is None
-
-    @pytest.mark.anyio
-    async def test_returns_active_season(self, admin_in_db):
-        s = (await execute_post_request(SEASONS_URL, {"number": 90}, ADMIN_HEADERS)).json()
-        await execute_patch_request(f"{SEASONS_URL}/{s['id']}/activate", {}, ADMIN_HEADERS)
-        response = await execute_get_request(CURRENT_URL, USER_HEADERS)
-        assert response.status_code == 200
-        assert response.json()["number"] == 90
-        assert response.json()["is_active"] is True
 
 
 class TestListSeasonsPublic:

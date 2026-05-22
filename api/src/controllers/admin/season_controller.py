@@ -1,4 +1,3 @@
-import uuid
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends
@@ -14,28 +13,22 @@ from src.utils.db import SessionDep
 season_admin_controller = APIRouter(
     prefix="/admin/seasons",
     tags=["Season"],
-    dependencies=[
-        Depends(AuthService.require_admin),
-    ],
+    dependencies=[Depends(AuthService.require_admin)],
 )
 
 season_public_controller = APIRouter(
     prefix="/seasons",
     tags=["Season"],
-    dependencies=[
-        Depends(AuthService.get_current_user_in_jwt),
-    ],
+    dependencies=[Depends(AuthService.get_current_user_in_jwt)],
 )
 
 
 @season_admin_controller.post(
-    "",
-    response_model=SeasonResponse,
-    status_code=status.HTTP_201_CREATED,
+    "", response_model=SeasonResponse, status_code=status.HTTP_201_CREATED
 )
 async def create_season(body: SeasonCreateRequest, session: SessionDep):
     """Create a new season. Admin only."""
-    return await SeasonService.create_season(session, body.number)
+    return await SeasonService.create_season(session, body.number, body.is_big_thing)
 
 
 @season_admin_controller.get("", response_model=list[SeasonResponse])
@@ -44,34 +37,12 @@ async def list_seasons(session: SessionDep):
     return await SeasonService.get_all_seasons(session)
 
 
-@season_admin_controller.patch("/{season_id}/activate", response_model=SeasonResponse)
-async def activate_season(
-    season_id: uuid.UUID,
-    session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
-):
-    """Activate a season (auto-deactivates any currently active season). Admin only."""
-    result = await SeasonService.activate_season(session, season_id)
-    return result
-
-
-@season_admin_controller.patch("/{season_id}/deactivate", response_model=SeasonResponse)
-async def deactivate_season(
-    season_id: uuid.UUID,
-    session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
-):
-    """Deactivate a season (moves to off-season). Admin only."""
-    result = await SeasonService.deactivate_season(session, season_id)
-    return result
-
-
 @season_public_controller.get("", response_model=list[SeasonResponse])
 async def list_seasons_public(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """List all seasons ordered by number desc. Requires alliance membership or visitor status."""
+    """List all seasons ordered by number desc."""
     await FightRecordService.assert_user_in_alliance(session, current_user.id)
     return await SeasonService.get_all_seasons(session)
 

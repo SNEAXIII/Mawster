@@ -6,6 +6,7 @@ import pytest
 from main import app
 from src.enums.Roles import Roles
 from src.models.GameAccount import GameAccount
+from src.models.AppConfig import AppConfig
 from src.models.Season import Season
 from src.models.War import War, WarStatus
 from src.models.WarDefensePlacement import WarDefensePlacement
@@ -41,7 +42,7 @@ async def _base_setup():
 
 async def _setup_with_active_season():
     data = await _base_setup()
-    season = Season(number=64, is_active=True)
+    season = Season(number=64)
     war = War(
         id=uuid.uuid4(),
         alliance_id=data["alliance"].id,
@@ -50,7 +51,7 @@ async def _setup_with_active_season():
         season_id=season.id,
         status=WarStatus.ended,
     )
-    await load_objects([season, war])
+    await load_objects([season, war, AppConfig(key="current_season_id", value=str(season.id))])
     cu = await push_champion_user(data["owner"], data["champ"])
     return {**data, "season": season, "war": war, "cu": cu}
 
@@ -83,7 +84,7 @@ class TestGetCurrentSeasonStatistics:
     @pytest.mark.anyio
     async def test_returns_empty_when_season_is_inactive(self):
         data = await _base_setup()
-        season = Season(number=64, is_active=False)
+        season = Season(number=64)
         war = War(
             id=uuid.uuid4(),
             alliance_id=data["alliance"].id,
@@ -220,7 +221,7 @@ class TestGetCurrentSeasonStatistics:
     @pytest.mark.anyio
     async def test_active_war_excluded(self):
         data = await _base_setup()
-        season = Season(number=64, is_active=True)
+        season = Season(number=64)
         active_war = War(
             id=uuid.uuid4(),
             alliance_id=data["alliance"].id,
@@ -229,7 +230,9 @@ class TestGetCurrentSeasonStatistics:
             season_id=season.id,
             status=WarStatus.active,
         )
-        await load_objects([season, active_war])
+        await load_objects(
+            [season, active_war, AppConfig(key="current_season_id", value=str(season.id))]
+        )
         cu = await push_champion_user(data["owner"], data["champ"])
         await _add_placement(active_war.id, cu.id, data["champ"].id, node_number=10)
 
@@ -241,7 +244,7 @@ class TestGetCurrentSeasonStatistics:
     async def test_only_ended_wars_counted_when_mixed(self):
         """Ended war placements are counted; active war placements are excluded."""
         data = await _base_setup()
-        season = Season(number=64, is_active=True)
+        season = Season(number=64)
         ended_war = War(
             id=uuid.uuid4(),
             alliance_id=data["alliance"].id,
@@ -258,7 +261,14 @@ class TestGetCurrentSeasonStatistics:
             season_id=season.id,
             status=WarStatus.active,
         )
-        await load_objects([season, ended_war, active_war])
+        await load_objects(
+            [
+                season,
+                ended_war,
+                active_war,
+                AppConfig(key="current_season_id", value=str(season.id)),
+            ]
+        )
         cu = await push_champion_user(data["owner"], data["champ"])
         await _add_placement(ended_war.id, cu.id, data["champ"].id, node_number=10, ko_count=0)
         await _add_placement(active_war.id, cu.id, data["champ"].id, node_number=11, ko_count=1)

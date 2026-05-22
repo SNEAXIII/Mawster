@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class SeasonCreateRequest(BaseModel):
     number: int = Field(..., ge=1, le=9999)
+    is_big_thing: bool = Field(default=False)
 
 
 class SeasonResponse(BaseModel):

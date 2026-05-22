@@ -29,6 +29,7 @@ from tests.integration.endpoints.setup.game_setup import (
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 from tests.utils.utils_db import load_objects
 from src.models import User
+from src.models.AppConfig import AppConfig
 from src.models.War import War
 from src.models.Season import Season
 from src.enums.Roles import Roles
@@ -374,8 +375,8 @@ class TestEndWar:
     @pytest.mark.asyncio
     async def test_end_war_during_season_applies_elo_gain(self):
         data = await _setup_alliance()
-        season = Season(number=64, is_active=True)
-        await load_objects([season])
+        season = Season(number=64)
+        await load_objects([season, AppConfig(key="current_season_id", value=str(season.id))])
         headers = create_auth_headers(user_id=str(USER_ID))
 
         declare = await execute_post_request(
@@ -401,8 +402,8 @@ class TestEndWar:
     @pytest.mark.asyncio
     async def test_end_war_during_season_win_negative_elo_rejected(self):
         data = await _setup_alliance()
-        season = Season(number=65, is_active=True)
-        await load_objects([season])
+        season = Season(number=65)
+        await load_objects([season, AppConfig(key="current_season_id", value=str(season.id))])
         headers = create_auth_headers(user_id=str(USER_ID))
 
         declare = await execute_post_request(
@@ -422,8 +423,8 @@ class TestEndWar:
     @pytest.mark.asyncio
     async def test_end_war_during_season_missing_elo_change_rejected(self):
         data = await _setup_alliance()
-        season = Season(number=66, is_active=True)
-        await load_objects([season])
+        season = Season(number=66)
+        await load_objects([season, AppConfig(key="current_season_id", value=str(season.id))])
         headers = create_auth_headers(user_id=str(USER_ID))
 
         declare = await execute_post_request(
@@ -444,8 +445,8 @@ class TestEndWar:
     async def test_end_war_loss_positive_elo_rejected(self):
         data = await _setup_alliance()
         headers = create_auth_headers(user_id=str(USER_ID))
-        season = Season(number=67, is_active=True)
-        await load_objects([season])
+        season = Season(number=67)
+        await load_objects([season, AppConfig(key="current_season_id", value=str(season.id))])
         declare = await execute_post_request(
             f"/alliances/{data['alliance'].id}/wars",
             payload={"opponent_name": "Season Foe"},
@@ -618,8 +619,8 @@ class TestWarSeasonLink:
     async def test_war_created_with_active_season(self):
         """War created while a season is active gets that season_id."""
         data = await _setup_alliance()
-        season = Season(number=64, is_active=True)
-        await load_objects([season])
+        season = Season(number=64)
+        await load_objects([season, AppConfig(key="current_season_id", value=str(season.id))])
 
         headers = create_auth_headers(user_id=str(USER_ID), role=Roles.USER)
         response = await execute_post_request(

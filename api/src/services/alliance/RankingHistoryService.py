@@ -9,6 +9,7 @@ from src.models.Alliance import Alliance
 from src.models.Season import Season
 from src.models.User import User
 from src.models.War import War, WarStatus
+from src.services.admin.AppConfigService import AppConfigService
 from src.services.alliance.AllianceService import AllianceService
 from src.utils.db import SessionDep
 
@@ -50,9 +51,8 @@ class RankingHistoryService:
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
 
-        active_season = (
-            await session.exec(select(Season).where(Season.is_active == True))  # noqa: E712
-        ).first()
+        season_id = await AppConfigService.get_current_season_id(session)
+        active_season = await session.get(Season, season_id) if season_id else None
 
         if active_season is None:
             return RankingHistoryResponse(season_number=None, points=[])

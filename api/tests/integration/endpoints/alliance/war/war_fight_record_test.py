@@ -34,6 +34,7 @@ from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightRecord import WarFightRecord
 from src.models.WarFightPrefight import WarFightPrefight
 from src.models.WarFightSynergy import WarFightSynergy
+from src.models.AppConfig import AppConfig
 from src.models.Season import Season
 from src.models.WarPrefightAttacker import WarPrefightAttacker
 from src.models.WarSynergyAttacker import WarSynergyAttacker
@@ -537,7 +538,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        season = Season(number=64, is_active=False)
+        season = Season(number=64)
         await load_objects([season])
 
         async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
@@ -683,7 +684,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        season = Season(number=65, is_active=False)
+        season = Season(number=65)
         await load_objects([season])
 
         # Record with season
@@ -741,7 +742,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        season = Season(number=66, is_active=False)
+        season = Season(number=66)
         await load_objects([season])
 
         record_with_season = WarFightRecord(
@@ -797,9 +798,15 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        active_season = Season(number=67, is_active=True)
-        old_season = Season(number=66, is_active=False)
-        await load_objects([active_season, old_season])
+        active_season = Season(number=67)
+        old_season = Season(number=66)
+        await load_objects(
+            [
+                active_season,
+                old_season,
+                AppConfig(key="current_season_id", value=str(active_season.id)),
+            ]
+        )
 
         record_current = WarFightRecord(
             war_id=data["war"].id,
@@ -852,7 +859,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        season = Season(number=68, is_active=False)
+        season = Season(number=68)
         await load_objects([season])
 
         record1 = WarFightRecord(

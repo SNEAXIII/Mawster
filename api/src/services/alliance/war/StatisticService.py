@@ -14,6 +14,7 @@ from sqlalchemy import and_, func, cast, Integer, Float, case, union
 from sqlmodel import select
 
 from src.dto.alliance.war.dto_statistic import ChampionUsageResponse, PlayerSeasonStatsResponse
+from src.services.admin.AppConfigService import AppConfigService
 from src.services.alliance.AllianceService import AllianceService
 from src.utils.db import SessionDep
 
@@ -53,6 +54,8 @@ class StatisticService:
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
 
+        current_season_id = await AppConfigService.get_current_season_id(session)
+
         assist_sq = (
             select(
                 ChampionUser.game_account_id.label("game_account_id"),
@@ -63,7 +66,7 @@ class StatisticService:
                 WarDefensePlacement, WarDefensePlacement.assist_champion_user_id == ChampionUser.id
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
+            .join(Season, and_(War.season_id == Season.id, Season.id == current_season_id))
             .where(War.alliance_id == alliance_id)
             .where(War.status == WarStatus.ended)
             .group_by(ChampionUser.game_account_id)
@@ -89,7 +92,7 @@ class StatisticService:
                 WarDefensePlacement.attacker_champion_user_id == ChampionUser.id,
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
+            .join(Season, and_(War.season_id == Season.id, Season.id == current_season_id))
             .where(War.alliance_id == alliance_id)
             .where(War.status == WarStatus.ended)
             .group_by(GameAccount.id)
@@ -106,7 +109,7 @@ class StatisticService:
                 WarDefensePlacement.attacker_champion_user_id == ChampionUser.id,
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
+            .join(Season, and_(War.season_id == Season.id, Season.id == current_season_id))
             .where(War.alliance_id == alliance_id)
             .where(War.status == WarStatus.ended),
             select(ChampionUser.game_account_id.label("game_account_id"), War.id.label("war_id"))
@@ -114,7 +117,7 @@ class StatisticService:
                 WarDefensePlacement, WarDefensePlacement.assist_champion_user_id == ChampionUser.id
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
+            .join(Season, and_(War.season_id == Season.id, Season.id == current_season_id))
             .where(War.alliance_id == alliance_id)
             .where(War.status == WarStatus.ended),
         ).subquery()
@@ -197,9 +200,10 @@ class StatisticService:
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
+        current_season_id = await AppConfigService.get_current_season_id(session)
         conditions = [
             WarFightRecord.alliance_id == alliance_id,
-            Season.is_active == True,  # noqa: E712
+            Season.id == current_season_id,
         ]
         if game_account_id is not None:
             conditions.append(WarFightRecord.game_account_id == game_account_id)
