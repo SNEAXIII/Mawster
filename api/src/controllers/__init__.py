@@ -5,6 +5,7 @@ from src.controllers.admin.season_controller import (
     season_admin_controller,
     season_public_controller,
 )
+from src.controllers.admin.app_config_controller import app_config_controller
 from src.controllers.admin.fight_record_controller import fight_record_controller
 from src.controllers.auth.auth_controller import auth_controller
 from src.controllers.account.user_controller import user_controller
@@ -49,4 +50,5 @@ routers = [
     statistics_controller,
     fight_record_controller,
     ranking_history_controller,
+    app_config_controller,
 ]
