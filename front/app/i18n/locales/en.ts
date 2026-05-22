@@ -710,6 +710,7 @@ const en = {
       6: 'Liquid Courage',
       7: 'Double Edge',
       8: 'Collar Tech',
+      9: 'Unfazed',
     },
   },
 } as const;
