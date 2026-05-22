@@ -12,6 +12,7 @@ from src.services.alliance.war.WarService import WarService
 from src.utils.db import SessionDep
 from src.utils.path_params import BattlegroupPath
 from src.controllers.alliance.war.war_deps import WarDep
+from src.services.alliance.war.WarConfig import resolve_war_config
 
 war_prefight_controller = APIRouter(
     prefix="/alliances/{alliance_id}/wars",
@@ -53,6 +54,7 @@ async def add_war_prefight(
 ):
     """Add a pre-fight champion for a battlegroup. All members can add."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
+    config = await resolve_war_config(war, session)
     return await WarService.add_prefight_attacker(
         session,
         war_id,
@@ -60,6 +62,7 @@ async def add_war_prefight(
         battlegroup,
         body.champion_user_id,
         body.target_node_number,
+        config,
     )
 
 

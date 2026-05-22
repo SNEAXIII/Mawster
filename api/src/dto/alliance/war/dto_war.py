@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -27,6 +27,7 @@ class WarResponse(BaseModel):
     win: Optional[bool] = None
     elo_change: Optional[int] = None
     tier: Optional[int] = None
+    war_type: Literal["normal", "big_thing"] = "normal"
 
     @model_validator(mode="before")
     @classmethod
@@ -46,6 +47,7 @@ class WarResponse(BaseModel):
             "win": data.win,
             "elo_change": data.elo_change,
             "tier": data.tier,
+            "war_type": "normal",
         }
 
 

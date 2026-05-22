@@ -62,6 +62,7 @@ from src.Messages.war_messages import (
     champion_with_id_not_found,
 )
 from src.services.admin.SeasonService import SeasonService
+from src.services.alliance.war.WarConfig import NORMAL_WAR_CONFIG, WarConfig
 from src.utils.db import SessionDep
 
 
@@ -429,6 +430,7 @@ class WarService:
         attacker_id: Optional[uuid.UUID] = None,
         war: Optional[War] = None,
         node_number: Optional[int] = None,
+        config: WarConfig = NORMAL_WAR_CONFIG,
     ) -> list[AvailableAttackerResponse]:
         # Get members assigned to this battlegroup (or just the specific attacker)
         member_conditions = and_(
@@ -523,7 +525,11 @@ class WarService:
                     continue
                 if champion_user.champion_id in banned_champion_ids:
                     continue
-                if war and len(ids_for_limit) >= 3 and champion_user.id not in all_attackers_ids:
+                if (
+                    war
+                    and len(ids_for_limit) >= config.max_attackers_per_player
+                    and champion_user.id not in all_attackers_ids
+                ):
                     continue
                 result.append(
                     AvailableAttackerResponse(
@@ -610,6 +616,7 @@ class WarService:
         battlegroup: int,
         node_number: int,
         champion_user_id: uuid.UUID,
+        config: WarConfig = NORMAL_WAR_CONFIG,
     ) -> WarPlacementResponse:
         # 1. Node must have a defender
         placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
@@ -714,7 +721,7 @@ class WarService:
         prefight_ids = {pf.champion_user_id for pf in prefight_result.all()}
         all_attackers_ids = all_attackers_ids | synergy_ids | prefight_ids
         member_attacker_count = len(all_attackers_ids)
-        if member_attacker_count > 3:
+        if member_attacker_count > config.max_attackers_per_player:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=MEMBER_ALREADY_HAS_3_ATTACKERS,
@@ -1047,6 +1054,7 @@ class WarService:
         champion_user_id: uuid.UUID,
         target_champion_user_id: uuid.UUID,
         current_user_id: uuid.UUID,
+        config: WarConfig = NORMAL_WAR_CONFIG,
     ) -> WarSynergyResponse:
         # 1. Load champion_user and validate it belongs to this alliance + BG
         cu_stmt = (
@@ -1181,7 +1189,7 @@ class WarService:
         prefight_ids = {pf.champion_user_id for pf in prefight_result.all()}
 
         total_slots = len(node_ids | synergy_ids | prefight_ids | {champion_user_id})
-        if total_slots > 3:
+        if total_slots > config.max_attackers_per_player:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=MEMBER_ALREADY_HAS_3_ATTACKERS,
@@ -1280,6 +1288,7 @@ class WarService:
         battlegroup: int,
         champion_user_id: uuid.UUID,
         target_node_number: int,
+        config: WarConfig = NORMAL_WAR_CONFIG,
     ) -> WarPrefightResponse:
         # 1. Load champion_user with game_account
         champion_user_stmt = (
@@ -1393,7 +1402,7 @@ class WarService:
         prefight_ids = {pf.champion_user_id for pf in prefight_result.all()}
 
         total_slots = len(node_ids | synergy_ids | prefight_ids | {champion_user_id})
-        if total_slots > 3:
+        if total_slots > config.max_attackers_per_player:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=MEMBER_ALREADY_HAS_3_ATTACKERS,

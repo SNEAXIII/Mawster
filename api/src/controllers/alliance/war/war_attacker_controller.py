@@ -17,6 +17,7 @@ from src.services.alliance.war.WarService import WarService
 from src.utils.db import SessionDep
 from src.utils.path_params import BattlegroupPath
 from src.controllers.alliance.war.war_deps import WarDep
+from src.services.alliance.war.WarConfig import resolve_war_config
 
 war_attacker_controller = APIRouter(
     prefix="/alliances/{alliance_id}/wars",
@@ -41,8 +42,9 @@ async def get_available_attackers(
 ):
     """List available attackers (BG roster minus defenders). Pass attacker_id to filter to a single member."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
+    config = await resolve_war_config(war, session)
     return await WarService.get_available_attackers(
-        session, alliance_id, battlegroup, attacker_id, war, node_number
+        session, alliance_id, battlegroup, attacker_id, war, node_number, config
     )
 
 
@@ -79,8 +81,9 @@ async def assign_war_attacker(
 ):
     """Assign an attacker to a war node. All members can assign."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
+    config = await resolve_war_config(war, session)
     return await WarService.assign_attacker(
-        session, war_id, alliance_id, battlegroup, node_number, body.champion_user_id
+        session, war_id, alliance_id, battlegroup, node_number, body.champion_user_id, config
     )
 
 
