@@ -28,8 +28,8 @@ export function rarityBadgeClass(rarity: string): string {
 
 /** Human-readable label: "7R4·200" or "7R5·A1·200" if ascended. */
 export function rarityLabel(rarity: string, signature: number, ascension?: number): string {
-  const { stars, rank } = parseRarity(rarity);
-  const parts = [`${stars}R${rank}`];
+  const { rank } = parseRarity(rarity);
+  const parts = [`R${rank}`];
   if (ascension && ascension > 0) parts.push(`A${ascension}`);
   parts.push(String(signature));
   return parts.join('·');
