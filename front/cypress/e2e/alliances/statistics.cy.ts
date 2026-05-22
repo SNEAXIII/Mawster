@@ -1,23 +1,5 @@
-import { BACKEND } from '../../support/e2e';
+import { BACKEND, createAndActivateSeason } from '../../support/e2e';
 // ── Helpers ──────────────────────────────────────────────────────────────
-
-function createAndActivateSeason(adminToken: string) {
-  return cy
-    .request({
-      method: 'POST',
-      url: `${BACKEND}/admin/seasons`,
-      body: { number: 64 },
-      headers: { Authorization: `Bearer ${adminToken}` },
-    })
-    .then((res) =>
-      cy.request({
-        method: 'PUT',
-        url: `${BACKEND}/admin/config/current-season`,
-        body: { season_id: res.body.id },
-        headers: { Authorization: `Bearer ${adminToken}` },
-      }),
-    );
-}
 
 function setupEndedAssistWar(opts: {
   adminToken: string;

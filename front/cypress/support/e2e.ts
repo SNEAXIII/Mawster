@@ -948,6 +948,24 @@ export function setupAllianceWithMember(
     });
 }
 
+export function createAndActivateSeason(adminToken: string, number = 64) {
+  return cy
+    .request({
+      method: 'POST',
+      url: `${BACKEND}/admin/seasons`,
+      body: { number },
+      headers: { Authorization: `Bearer ${adminToken}` },
+    })
+    .then((res) =>
+      cy.request({
+        method: 'PUT',
+        url: `${BACKEND}/admin/config/current-season`,
+        body: { season_id: res.body.id },
+        headers: { Authorization: `Bearer ${adminToken}` },
+      }),
+    );
+}
+
 // ── War API commands ──────────────────────────────────────────────────────────
 
 Cypress.Commands.add(
