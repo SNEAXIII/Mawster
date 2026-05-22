@@ -51,10 +51,10 @@ function createSeason(adminAT: string, number: number) {
 
 function activateSeason(adminAT: string, seasonId: string) {
   return cy.request({
-    method: 'PATCH',
-    url: `${BACKEND}/admin/seasons/${seasonId}/activate`,
+    method: 'PUT',
+    url: `${BACKEND}/admin/config/current-season`,
+    body: { season_id: seasonId },
     headers: { Authorization: `Bearer ${adminAT}` },
-    body: {},
   });
 }
 
