@@ -557,7 +557,7 @@ class WarService:
         session: SessionDep,
         alliance_id: uuid.UUID,
         battlegroup: int,
-        war: War = None,
+        war: Optional[War] = None,
     ) -> list[AvailablePrefightAttackerResponse]:
         # Exclude champion_users already on defense in this BG
         defense_subq = (
