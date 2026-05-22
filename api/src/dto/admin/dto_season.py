@@ -11,5 +11,4 @@ class SeasonResponse(BaseModel):
 
     id: uuid.UUID
     number: int
-    is_active: bool = False
     is_big_thing: bool
