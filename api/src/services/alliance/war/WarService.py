@@ -46,6 +46,7 @@ from src.Messages.war_messages import (
     KO_COUNT_NO_ATTACKER_ASSIGNED,
     MEMBER_ALREADY_HAS_3_ATTACKERS,
     NODE_HAS_NO_DEFENDER_PLACE_FIRST,
+    NODE_OUT_OF_RANGE,
     NO_ACTIVE_WAR_FOR_ALLIANCE,
     NO_ATTACKER_ASSIGNED_ON_NODE,
     NO_DEFENDER_ON_NODE,
@@ -284,7 +285,15 @@ class WarService:
         battlegroup: int,
         placement_request: WarPlacementCreateRequest,
         placed_by_id: uuid.UUID,
+        config: WarConfig = NORMAL_WAR_CONFIG,
     ) -> WarPlacementResponse:
+        node_min, node_max = config.node_range
+        if not (node_min <= placement_request.node_number <= node_max):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=NODE_OUT_OF_RANGE,
+            )
+
         # Validate champion exists
         champion = await session.get(Champion, placement_request.champion_id)
         if champion is None:
@@ -618,6 +627,13 @@ class WarService:
         champion_user_id: uuid.UUID,
         config: WarConfig = NORMAL_WAR_CONFIG,
     ) -> WarPlacementResponse:
+        node_min, node_max = config.node_range
+        if not (node_min <= node_number <= node_max):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=NODE_OUT_OF_RANGE,
+            )
+
         # 1. Node must have a defender
         placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
         if placement is None:

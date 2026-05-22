@@ -9,6 +9,7 @@ TARGET_CHAMPION_USER_NOT_FOUND = "Target champion user not found"
 CHAMPION_ALREADY_PLACED_IN_BG = (
     "This champion is already placed on another node in this battlegroup"
 )
+NODE_OUT_OF_RANGE = "Node number is out of range for this war type"
 NO_DEFENDER_ON_NODE = "No defender on this node"
 NODE_HAS_NO_DEFENDER_PLACE_FIRST = "This node has no defender — place a defender first"
 CHAMPION_NOT_IN_ALLIANCE_BG = (

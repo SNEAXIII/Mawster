@@ -16,6 +16,7 @@ from src.services.alliance.war.WarService import WarService
 from src.utils.db import SessionDep
 from src.utils.path_params import BattlegroupPath
 from src.controllers.alliance.war.war_deps import WarDep
+from src.services.alliance.war.WarConfig import resolve_war_config
 
 war_placement_controller = APIRouter(
     prefix="/alliances/{alliance_id}/wars",
@@ -59,7 +60,8 @@ async def place_war_defender(
     account = await AllianceService.assert_officer_or_owner_by_id(
         session, alliance_id, current_user.id
     )
-    return await WarService.place_defender(session, war_id, battlegroup, body, account.id)
+    config = await resolve_war_config(war, session)
+    return await WarService.place_defender(session, war_id, battlegroup, body, account.id, config)
 
 
 @war_placement_controller.delete(
