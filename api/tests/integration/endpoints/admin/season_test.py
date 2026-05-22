@@ -79,7 +79,7 @@ class TestCreateSeason:
 
 class TestCreateSeasonBigThing:
     @pytest.mark.anyio
-    async def test_create_big_thing_season(self, admin_in_db):
+    async def test_create_big_thing_season(self):
         response = await execute_post_request(
             SEASONS_URL, {"number": 70, "is_big_thing": True}, ADMIN_HEADERS
         )
@@ -87,7 +87,7 @@ class TestCreateSeasonBigThing:
         assert response.json()["is_big_thing"] is True
 
     @pytest.mark.anyio
-    async def test_create_normal_season_default(self, admin_in_db):
+    async def test_create_normal_season_default(self):
         response = await execute_post_request(SEASONS_URL, {"number": 71}, ADMIN_HEADERS)
         assert response.status_code == 201
         assert response.json()["is_big_thing"] is False

@@ -55,6 +55,8 @@ class StatisticService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
 
         current_season_id = await AppConfigService.get_current_season_id(session)
+        if current_season_id is None:
+            return []  # off-season: no active season stats
 
         assist_sq = (
             select(
@@ -201,6 +203,9 @@ class StatisticService:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
         current_season_id = await AppConfigService.get_current_season_id(session)
+        if current_season_id is None:
+            return []  # off-season: no active season stats
+
         conditions = [
             WarFightRecord.alliance_id == alliance_id,
             Season.id == current_season_id,
