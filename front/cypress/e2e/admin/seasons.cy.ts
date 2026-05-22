@@ -14,7 +14,7 @@ describe('Admin — seasons panel', () => {
     });
   });
 
-  it('admin can create and activate a season from admin panel', () => {
+  it('admin can create a season and set it as current from admin panel', () => {
     setupAdmin('season-admin-panel-token').then(({ user_id }) => {
       cy.apiLogin(user_id);
       cy.navTo('admin');
@@ -23,13 +23,13 @@ describe('Admin — seasons panel', () => {
       cy.getByCy('season-number-input').type('99');
       cy.getByCy('create-season-btn').click();
       cy.getByCy('season-row-99').should('be.visible');
-      cy.getByCy('activate-season-99').click();
-      cy.getByCy('season-active-indicator').should('be.visible');
+      cy.getByCy('set-current-season-99').click();
+      cy.getByCy('season-current-indicator').should('be.visible');
       cy.getByCy('season-number-input').should('have.value', '');
     });
   });
 
-  it('admin can deactivate a season', () => {
+  it('admin can set off-season mode (unset current season)', () => {
     setupAdmin('season-deact-token').then(({ access_token, user_id }) => {
       cy.request({
         method: 'POST',
@@ -38,20 +38,22 @@ describe('Admin — seasons panel', () => {
         headers: { Authorization: `Bearer ${access_token}` },
       }).then((res) => {
         cy.request({
-          method: 'PATCH',
-          url: `${BACKEND}/admin/seasons/${res.body.id}/activate`,
+          method: 'PUT',
+          url: `${BACKEND}/admin/config/current-season`,
+          body: { season_id: res.body.id },
           headers: { Authorization: `Bearer ${access_token}` },
         });
       });
       cy.apiLogin(user_id);
       cy.navTo('admin');
       cy.getByCy('tab-seasons').click();
-      cy.getByCy('deactivate-season-55').click();
-      cy.getByCy('season-inactive-indicator').should('be.visible');
+      cy.getByCy('season-current-indicator').should('be.visible');
+      cy.getByCy('set-off-season-btn').click();
+      cy.getByCy('season-current-indicator').should('not.exist');
     });
   });
 
-  it('activating a season via button deactivates the previously active season', () => {
+  it('setting a season as current replaces the previously current season', () => {
     setupAdmin('season-swap-token').then(({ user_id }) => {
       cy.apiLogin(user_id);
       cy.navTo('admin');
@@ -67,30 +69,25 @@ describe('Admin — seasons panel', () => {
       cy.getByCy('create-season-btn').click();
       cy.getByCy('season-row-201').should('be.visible');
 
-      // Verify both inactive before any activation
+      // Neither season is current yet
+      cy.getByCy('season-current-indicator').should('not.exist');
+
+      // Set season 200 as current — only 200 should show the indicator
+      cy.getByCy('set-current-season-200').click();
       cy.getByCy('season-row-200').within(() => {
-        cy.getByCy('season-inactive-indicator').should('be.visible');
+        cy.getByCy('season-current-indicator').should('be.visible');
       });
       cy.getByCy('season-row-201').within(() => {
-        cy.getByCy('season-inactive-indicator').should('be.visible');
+        cy.getByCy('season-current-indicator').should('not.exist');
       });
 
-      // Activate season 200 — only 200 should become active
-      cy.getByCy('activate-season-200').click();
+      // Set season 201 as current — 200 must lose the indicator
+      cy.getByCy('set-current-season-201').click();
       cy.getByCy('season-row-200').within(() => {
-        cy.getByCy('season-active-indicator').should('be.visible');
+        cy.getByCy('season-current-indicator').should('not.exist');
       });
       cy.getByCy('season-row-201').within(() => {
-        cy.getByCy('season-inactive-indicator').should('be.visible');
-      });
-
-      // Activate season 201 — 200 must be auto-deactivated
-      cy.getByCy('activate-season-201').click();
-      cy.getByCy('season-row-200').within(() => {
-        cy.getByCy('season-inactive-indicator').should('be.visible');
-      });
-      cy.getByCy('season-row-201').within(() => {
-        cy.getByCy('season-active-indicator').should('be.visible');
+        cy.getByCy('season-current-indicator').should('be.visible');
       });
     });
   });
