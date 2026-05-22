@@ -11,7 +11,7 @@ Mawster — MCOC (Marvel Contest of Champions) alliance management tool.
 
 ## Commands
 
-**Backend** (`api/`) — always via `make`, never raw `pytest`/`alembic`/`uvicorn`. Use skills: `make`, `db-reset`, `db-migrate`, `db-fixtures`, `db-champions`, `test-backend`.
+**Backend** (`api/`) — always via `/make` skill first, never raw `pytest`/`alembic`/`uvicorn`. Before any backend command, invoke `/make` to check available targets.
 
 Single test file: `uv run pytest tests/unit/dto/dto_from_model_test.py -v`
 Lint: `uvx ruff check` (run at end of every backend session)
@@ -19,9 +19,11 @@ Format: `uvx ruff format`
 
 **Frontend** (`front/`): `npm run dev` / `npm run build` (run build to catch TS errors)
 
-**E2E**: Always use the `/test-e2e` skill — **never** call `mcp__cypress-runner__run_parallel` directly. For failing tests only: `/test-e2e-failing`. Pass `spec_files=["roster/foo.cy.ts"]` for targeted runs. Requires Docker (mariadb-test on port 3307).
+**E2E**: Always use the `/test-e2e` skill — **never** call `mcp__cypress-runner__run_parallel` directly. Pass `spec_files=["roster/foo.cy.ts"]` for targeted runs. Requires Docker (mariadb-test on port 3307).
 
-**Servers**: use `/server-dev`, `/server-stop`, `/server-status` skills.
+**Migrations**: use `/db-migrate` skill — never touch dev DB directly.
+
+**Servers**: use `mcp__server-runner__start_dev` / `mcp__server-runner__stop` / `mcp__server-runner__status`.
 
 ---
 
