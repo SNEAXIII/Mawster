@@ -453,6 +453,12 @@ const fr: Translations = {
         createError: 'Échec de la création',
         activateError: "Échec de l'activation",
         deactivateError: 'Échec de la désactivation',
+        bigThingLabel: 'Big Thing',
+        bigThingTooltip: 'Guerres Big Thing : 10 nodes, 2 attaquants max par joueur',
+        currentSeason: 'Saison courante',
+        setCurrentSeason: 'Définir comme courante',
+        offSeasonMode: 'Hors-saison',
+        offSeasonBigThing: 'Mode Big Thing hors-saison',
       },
     },
     knowledgeBase: {

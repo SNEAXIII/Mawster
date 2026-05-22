@@ -2,26 +2,31 @@
 
 import { useEffect, useState } from 'react';
 import { useI18n } from '@/app/i18n';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { listSeasons, createSeason, type Season } from '@/app/services/season';
 import {
-  listSeasons,
-  createSeason,
-  activateSeason,
-  deactivateSeason,
-  type Season,
-} from '@/app/services/season';
+  getAppConfig,
+  setCurrentSeason,
+  setOffSeasonBigThing,
+  type AppConfigData,
+} from '@/app/services/app-config';
+import { SeasonRow } from './season-row';
 
 export default function SeasonsPanel() {
   const { t } = useI18n();
   const [seasons, setSeasons] = useState<Season[]>([]);
+  const [config, setConfig] = useState<AppConfigData | null>(null);
   const [newNumber, setNewNumber] = useState('');
+  const [newBigThing, setNewBigThing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
     try {
-      setSeasons(await listSeasons());
+      const [s, c] = await Promise.all([listSeasons(), getAppConfig()]);
+      setSeasons(s);
+      setConfig(c);
     } catch {
       setError(t.game.season.admin.createError);
     }
@@ -35,38 +40,47 @@ export default function SeasonsPanel() {
     const n = parseInt(newNumber, 10);
     if (isNaN(n)) return;
     try {
-      await createSeason(n);
+      await createSeason(n, newBigThing);
       setNewNumber('');
+      setNewBigThing(false);
       await load();
     } catch {
       setError(t.game.season.admin.createError);
     }
   };
 
-  const handleActivate = async (id: string) => {
+  const handleSetCurrent = async (id: string | null) => {
     try {
-      await activateSeason(id);
-      await load();
+      const updated = await setCurrentSeason(id);
+      setConfig(updated);
     } catch {
       setError(t.game.season.admin.activateError);
     }
   };
 
-  const handleDeactivate = async (id: string) => {
+  const handleOffSeasonBigThing = async () => {
+    if (!config) return;
     try {
-      await deactivateSeason(id);
-      await load();
+      const updated = await setOffSeasonBigThing(!config.off_season_big_thing);
+      setConfig(updated);
     } catch {
-      setError(t.game.season.admin.deactivateError);
+      setError(t.game.season.admin.createError);
     }
   };
 
   return (
-    <div
-      className='mt-6 flex flex-col gap-4'
-      data-cy='seasons-panel'
-    >
+    <div className='mt-6 flex flex-col gap-4' data-cy='seasons-panel'>
       <h2 className='text-lg font-semibold'>{t.game.season.admin.title}</h2>
+
+      <div className='flex items-center gap-3'>
+        <Switch
+          checked={config?.off_season_big_thing ?? false}
+          onCheckedChange={handleOffSeasonBigThing}
+          disabled={config?.current_season_id !== null}
+          data-cy='off-season-big-thing-toggle'
+        />
+        <span className='text-sm'>{t.game.season.admin.offSeasonBigThing}</span>
+      </div>
 
       <div className='flex gap-2 items-center'>
         <Input
@@ -75,10 +89,7 @@ export default function SeasonsPanel() {
           placeholder={t.game.season.admin.numberPlaceholder}
           value={newNumber}
           onKeyDown={(e) => {
-            if (
-              !/^\d$/.test(e.key) &&
-              !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)
-            ) {
+            if (!/^\d$/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
               e.preventDefault();
             }
           }}
@@ -86,10 +97,16 @@ export default function SeasonsPanel() {
           className='w-32'
           data-cy='season-number-input'
         />
-        <Button
-          onClick={handleCreate}
-          data-cy='create-season-btn'
-        >
+        <label className='flex items-center gap-2 text-sm'>
+          <input
+            type='checkbox'
+            checked={newBigThing}
+            onChange={(e) => setNewBigThing(e.target.checked)}
+            data-cy='season-big-thing-checkbox'
+          />
+          {t.game.season.admin.bigThingLabel}
+        </label>
+        <Button onClick={handleCreate} data-cy='create-season-btn'>
           {t.game.season.admin.createButton}
         </Button>
       </div>
@@ -97,44 +114,8 @@ export default function SeasonsPanel() {
       {error && <p className='text-destructive text-sm'>{error}</p>}
 
       <div className='flex flex-col gap-2'>
-        {seasons.map((s) => (
-          <div
-            key={s.id}
-            className='flex items-center justify-between rounded-md border px-4 py-2'
-            data-cy={`season-row-${s.number}`}
-          >
-            <div className='flex items-center gap-3'>
-              <span className='font-medium'>Season {s.number}</span>
-              <Badge
-                variant={s.is_active ? 'default' : 'secondary'}
-                className={s.is_active ? 'bg-primary text-primary-foreground hover:bg-primary' : ''}
-                data-cy={s.is_active ? 'season-active-indicator' : 'season-inactive-indicator'}
-              >
-                {s.is_active ? t.game.season.admin.active : t.game.season.admin.inactive}
-              </Badge>
-            </div>
-            <div className='flex gap-2'>
-              {!s.is_active && (
-                <Button
-                  size='sm'
-                  onClick={() => handleActivate(s.id)}
-                  data-cy={`activate-season-${s.number}`}
-                >
-                  {t.game.season.admin.activateButton}
-                </Button>
-              )}
-              {s.is_active && (
-                <Button
-                  size='sm'
-                  variant='outline'
-                  onClick={() => handleDeactivate(s.id)}
-                  data-cy={`deactivate-season-${s.number}`}
-                >
-                  {t.game.season.admin.deactivateButton}
-                </Button>
-              )}
-            </div>
-          </div>
+        {config && seasons.map((s) => (
+          <SeasonRow key={s.id} season={s} config={config} onSetCurrent={handleSetCurrent} />
         ))}
       </div>
     </div>

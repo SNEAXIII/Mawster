@@ -7,7 +7,7 @@ const jsonHeaders: HeadersInit = {
 export interface Season {
   id: string;
   number: number;
-  is_active: boolean;
+  is_big_thing: boolean;
 }
 
 export async function getCurrentSeason(): Promise<Season | null> {
@@ -22,30 +22,12 @@ export async function listSeasons(): Promise<Season[]> {
   return res.json();
 }
 
-export async function createSeason(number: number): Promise<Season> {
+export async function createSeason(number: number, is_big_thing = false): Promise<Season> {
   const res = await fetch(`${PROXY}/admin/seasons`, {
     method: 'POST',
     headers: jsonHeaders,
-    body: JSON.stringify({ number }),
+    body: JSON.stringify({ number, is_big_thing }),
   });
   if (!res.ok) throw new Error('Failed to create season');
-  return res.json();
-}
-
-export async function activateSeason(id: string): Promise<Season> {
-  const res = await fetch(`${PROXY}/admin/seasons/${id}/activate`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-  });
-  if (!res.ok) throw new Error('Failed to activate season');
-  return res.json();
-}
-
-export async function deactivateSeason(id: string): Promise<Season> {
-  const res = await fetch(`${PROXY}/admin/seasons/${id}/deactivate`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-  });
-  if (!res.ok) throw new Error('Failed to deactivate season');
   return res.json();
 }

@@ -448,6 +448,12 @@ const en = {
         createError: 'Failed to create season',
         activateError: 'Failed to activate season',
         deactivateError: 'Failed to deactivate season',
+        bigThingLabel: 'Big Thing',
+        bigThingTooltip: 'Big Thing wars: 10 nodes, 2 attackers max per player',
+        currentSeason: 'Current season',
+        setCurrentSeason: 'Set as current',
+        offSeasonMode: 'Off-season',
+        offSeasonBigThing: 'Off-season Big Thing mode',
       },
     },
     knowledgeBase: {
