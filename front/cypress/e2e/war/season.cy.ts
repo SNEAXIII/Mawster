@@ -24,8 +24,9 @@ describe('Season — war page', () => {
           headers: { Authorization: `Bearer ${adminData.access_token}` },
         }).then((res) => {
           cy.request({
-            method: 'PATCH',
-            url: `${BACKEND}/admin/seasons/${res.body.id}/activate`,
+            method: 'PUT',
+            url: `${BACKEND}/admin/config/current-season`,
+            body: { season_id: res.body.id },
             headers: { Authorization: `Bearer ${adminData.access_token}` },
           }).then(() => {
             cy.apiCreateWar(ownerData.access_token, allianceId, 'ActiveEnemy');
