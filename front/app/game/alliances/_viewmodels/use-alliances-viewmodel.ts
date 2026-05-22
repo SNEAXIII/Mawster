@@ -195,9 +195,20 @@ export function useAlliancesViewModel() {
     await loadSeasonStats(statsAllianceId);
   };
 
+  const ALLIANCE_NAME_REGEX = /^[a-zA-Z0-9 ]{3,50}$/;
+  const ALLIANCE_TAG_REGEX = /^[a-zA-Z0-9]{1,5}$/;
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !tag.trim() || !ownerId) return;
+    if (!ALLIANCE_NAME_REGEX.test(name.trim())) {
+      toast.error(t.game.alliances.nameInvalid);
+      return;
+    }
+    if (!ALLIANCE_TAG_REGEX.test(tag.trim())) {
+      toast.error(t.game.alliances.tagInvalid);
+      return;
+    }
     setCreating(true);
     try {
       await createAlliance(name.trim(), tag.trim(), ownerId);

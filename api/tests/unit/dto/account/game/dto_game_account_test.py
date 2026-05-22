@@ -4,7 +4,10 @@ import uuid
 from datetime import datetime
 from types import SimpleNamespace
 
-from src.dto.account.game.dto_game_account import GameAccountResponse
+import pytest
+from pydantic import ValidationError
+
+from src.dto.account.game.dto_game_account import GameAccountCreateRequest, GameAccountResponse
 
 
 # ---------------------------------------------------------------------------
@@ -16,6 +19,29 @@ TEST_ALLIANCE_NAME = "Test Alliance"
 
 def _ns(**kwargs):
     return SimpleNamespace(**kwargs)
+
+
+# ---------------------------------------------------------------------------
+# GameAccountCreateRequest — alphanumeric validation
+# ---------------------------------------------------------------------------
+
+
+class TestGameAccountCreateRequest:
+    def test_valid_simple(self):
+        dto = GameAccountCreateRequest(game_pseudo="DrBalise", is_primary=False)
+        assert dto.game_pseudo == "DrBalise"
+
+    def test_valid_with_space(self):
+        dto = GameAccountCreateRequest(game_pseudo="Dr Balise", is_primary=False)
+        assert dto.game_pseudo == "Dr Balise"
+
+    def test_rejects_special_chars(self):
+        with pytest.raises(ValidationError):
+            GameAccountCreateRequest(game_pseudo="Dr-Balise!", is_primary=False)
+
+    def test_rejects_underscore(self):
+        with pytest.raises(ValidationError):
+            GameAccountCreateRequest(game_pseudo="Dr_Balise", is_primary=False)
 
 
 # ---------------------------------------------------------------------------

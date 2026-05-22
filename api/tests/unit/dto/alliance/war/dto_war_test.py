@@ -5,7 +5,11 @@ from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import pytest
+from pydantic import ValidationError
+
 from src.dto.alliance.war.dto_war import (
+    WarCreateRequest,
     WarResponse,
     WarPlacementResponse,
     WarPrefightResponse,
@@ -97,6 +101,27 @@ def _make_attacker(**overrides):
     obj = _ns(**defaults)
     obj.rarity = f"{obj.stars}r{obj.rank}"
     return obj
+
+
+# ─── WarCreateRequest ─────────────────────────────────────
+
+
+class TestWarCreateRequest:
+    def test_valid(self):
+        dto = WarCreateRequest(opponent_name="Enemy Alliance")
+        assert dto.opponent_name == "Enemy Alliance"
+
+    def test_valid_no_space(self):
+        dto = WarCreateRequest(opponent_name="EnemyAlliance")
+        assert dto.opponent_name == "EnemyAlliance"
+
+    def test_rejects_special_chars(self):
+        with pytest.raises(ValidationError):
+            WarCreateRequest(opponent_name="Enemy-Alliance!")
+
+    def test_rejects_underscore(self):
+        with pytest.raises(ValidationError):
+            WarCreateRequest(opponent_name="Enemy_Alliance")
 
 
 # ─── WarResponse ──────────────────────────────────────────
