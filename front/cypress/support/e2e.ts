@@ -517,11 +517,21 @@ export function setupKnowledgeBaseFast(
           { name: 'Captain America', cls: 'Cosmic' },
         ])
         .then(() =>
-          cy.apiCreateWar(ownerData.access_token, allianceId, 'OpponentFast').then((war) => {
-            cy.apiEndWar(ownerData.access_token, allianceId, war.id, true, 10);
-            cy.apiDevBulkCreateFightRecords(war.id, allianceId, ownerAccId, count);
-            return cy.wrap({ adminToken: adminAT, userData: ownerData, accountId: ownerAccId, allianceId });
-          }),
+          cy
+            .request({
+              method: 'POST',
+              url: `${BACKEND}/admin/seasons`,
+              headers: { Authorization: `Bearer ${adminAT}` },
+              body: { number: 1 },
+            })
+            .then((res) => {
+              const seasonId = (res.body as { id: string }).id;
+              return cy.apiCreateWar(ownerData.access_token, allianceId, 'OpponentFast').then((war) => {
+                cy.apiEndWar(ownerData.access_token, allianceId, war.id, true, 10);
+                cy.apiDevBulkCreateFightRecords(war.id, allianceId, ownerAccId, count, seasonId);
+                return cy.wrap({ adminToken: adminAT, userData: ownerData, accountId: ownerAccId, allianceId });
+              });
+            }),
         );
     });
 }
