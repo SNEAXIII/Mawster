@@ -300,8 +300,8 @@ class TestCreateChampionUser:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "rarity",
-        ["6r4", "6r5", "7r1", "7r2", "7r3", "7r4", "7r5"],
-        ids=["6r4", "6r5", "7r1", "7r2", "7r3", "7r4", "7r5"],
+        ["6r4", "6r5", "7r1", "7r2", "7r3", "7r4", "7r5", "7r6"],
+        ids=["6r4", "6r5", "7r1", "7r2", "7r3", "7r4", "7r5", "7r6"],
     )
     async def test_all_valid_rarities_accepted(self, session, rarity):
         """Every valid rarity must succeed with 201."""
