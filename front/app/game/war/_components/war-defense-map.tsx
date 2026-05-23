@@ -69,7 +69,9 @@ export default function WarDefenseMap({
     prefightNodes,
   };
   return warType === 'big_thing' ? (
-    <BigThingWarMap {...commonProps} />
+    <div data-cy='big-thing-war-map'>
+      <BigThingWarMap {...commonProps} />
+    </div>
   ) : (
     <WarMap {...commonProps} />
   );

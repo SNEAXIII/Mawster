@@ -31,6 +31,7 @@ from tests.integration.endpoints.setup.user_setup import get_generic_user, push_
 from tests.utils.utils_db import load_objects
 from src.models import User
 from src.models.War import War
+from src.models.Season import Season
 from src.models.DefensePlacement import DefensePlacement
 from src.enums.Roles import Roles
 
@@ -691,6 +692,132 @@ class TestUpdateKo:
             headers=headers,
         )
         assert response.status_code == 404
+
+
+# ─── TestBigThingAttacker ────────────────────────────────
+
+
+async def _setup_big_thing_attacker_scenario():
+    """Alliance + BG1 owner + member + Big Thing war + defender on node 1."""
+    data = await _setup_alliance()
+    alliance = data["alliance"]
+    owner = data["owner"]
+    member = data["member"]
+    champ = data["champ"]
+
+    headers_owner = create_auth_headers(user_id=str(USER_ID))
+    await execute_patch_request(
+        f"/alliances/{alliance.id}/members/{owner.id}/group",
+        payload={"group": 1},
+        headers=headers_owner,
+    )
+    await execute_patch_request(
+        f"/alliances/{alliance.id}/members/{member.id}/group",
+        payload={"group": 1},
+        headers=headers_owner,
+    )
+
+    season = Season(number=80, is_big_thing=True)
+    war = War(
+        id=uuid.uuid4(),
+        alliance_id=alliance.id,
+        opponent_name=OPPONENT,
+        created_by_id=owner.id,
+        season_id=season.id,
+    )
+    await load_objects([season, war])
+
+    await execute_post_request(
+        f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
+        payload={
+            "node_number": 1,
+            "champion_id": str(champ.id),
+            "stars": 7,
+            "rank": 3,
+            "ascension": 0,
+        },
+        headers=headers_owner,
+    )
+
+    champ2 = await push_champion(name="Wolverine", champion_class="Mutant")
+    cu1 = await push_champion_user(member, champ2, stars=7, rank=3)
+
+    return {**data, "war": war, "season": season, "cu1": cu1, "champ2": champ2}
+
+
+class TestBigThingAttacker:
+    @pytest.mark.asyncio
+    async def test_attacker_on_valid_node_succeeds(self):
+        """Assigning attacker on node 1 (within range) in Big Thing war succeeds."""
+        data = await _setup_big_thing_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/1/attacker",
+            payload={"champion_user_id": str(data["cu1"].id)},
+            headers=headers,
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_attacker_on_node_above_range_rejected(self):
+        """Assigning attacker on node 11 (out of range) in Big Thing war is rejected."""
+        data = await _setup_big_thing_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/11/attacker",
+            payload={"champion_user_id": str(data["cu1"].id)},
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_third_attacker_rejected_when_limit_is_two(self):
+        """Big Thing wars limit each member to 2 attackers (vs 3 in normal)."""
+        data = await _setup_big_thing_attacker_scenario()
+        alliance = data["alliance"]
+        war = data["war"]
+        member = data["member"]
+        headers_owner = create_auth_headers(user_id=str(USER_ID))
+        headers_member = create_auth_headers(user_id=str(USER2_ID))
+
+        for node, name, cls in [(2, "Iron Man", "Tech"), (3, "Thor", "Cosmic")]:
+            c = await push_champion(name=name, champion_class=cls)
+            await execute_post_request(
+                f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
+                payload={
+                    "node_number": node,
+                    "champion_id": str(c.id),
+                    "stars": 7,
+                    "rank": 3,
+                    "ascension": 0,
+                },
+                headers=headers_owner,
+            )
+
+        c2 = await push_champion(name="Black Panther", champion_class="Skill")
+        c3 = await push_champion(name="Vision", champion_class="Tech")
+        cu2 = await push_champion_user(member, c2, stars=6, rank=3)
+        cu3 = await push_champion_user(member, c3, stars=6, rank=3)
+
+        await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/1/attacker",
+            payload={"champion_user_id": str(data["cu1"].id)},
+            headers=headers_member,
+        )
+        await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/2/attacker",
+            payload={"champion_user_id": str(cu2.id)},
+            headers=headers_member,
+        )
+
+        response = await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/3/attacker",
+            payload={"champion_user_id": str(cu3.id)},
+            headers=headers_member,
+        )
+        assert response.status_code == 409
 
 
 # ─── TestGetCurrentWar ────────────────────────────────────

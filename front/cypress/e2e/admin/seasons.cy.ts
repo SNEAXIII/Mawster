@@ -53,6 +53,31 @@ describe('Admin — seasons panel', () => {
     });
   });
 
+  it('admin can toggle off-season Big Thing mode on and off', () => {
+    setupAdmin('season-bt-toggle-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
+      cy.navTo('admin');
+      cy.getByCy('tab-seasons').click();
+      cy.getByCy('off-season-big-thing-toggle').should('not.be.checked');
+      cy.getByCy('off-season-big-thing-toggle').click();
+      cy.getByCy('off-season-big-thing-toggle').should('be.checked');
+      cy.getByCy('off-season-big-thing-toggle').click();
+      cy.getByCy('off-season-big-thing-toggle').should('not.be.checked');
+    });
+  });
+
+  it('Big Thing checkbox creates season flagged as big thing', () => {
+    setupAdmin('season-bt-create-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
+      cy.navTo('admin');
+      cy.getByCy('tab-seasons').click();
+      cy.getByCy('season-number-input').type('88');
+      cy.getByCy('season-big-thing-checkbox').click();
+      cy.getByCy('create-season-btn').click();
+      cy.getByCy('season-row-88').should('be.visible');
+    });
+  });
+
   it('setting a season as current replaces the previously current season', () => {
     setupAdmin('season-swap-token').then(({ user_id }) => {
       cy.apiLogin(user_id);

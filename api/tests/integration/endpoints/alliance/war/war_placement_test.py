@@ -29,6 +29,8 @@ from tests.integration.endpoints.setup.game_setup import (
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 from tests.utils.utils_db import load_objects
 from src.models.War import War
+from src.models.Season import Season
+from src.models.AppConfig import AppConfig
 
 USER3_ID = uuid.UUID("00000000-0000-0000-0000-000000000003")
 
@@ -437,6 +439,93 @@ class TestWarBans:
             headers=headers,
         )
         assert response.status_code == 404
+
+
+# ─── TestBigThingPlacement ───────────────────────────────
+
+
+class TestBigThingPlacement:
+    @pytest.mark.asyncio
+    async def test_placement_within_range_succeeds(self):
+        """Node 10 is valid in Big Thing wars (range 1–10)."""
+        data = await _setup_alliance()
+        season = Season(number=70, is_big_thing=True)
+        war = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name=OPPONENT,
+            created_by_id=data["owner"].id,
+            season_id=season.id,
+        )
+        await load_objects([season, war])
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{war.id}/bg/1/place",
+            payload={
+                "node_number": 10,
+                "champion_id": str(data["champ"].id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
+            headers=headers,
+        )
+        assert response.status_code == 201
+
+    @pytest.mark.asyncio
+    async def test_placement_above_range_rejected(self):
+        """Node 11+ is out of range for Big Thing wars (max 10 nodes)."""
+        data = await _setup_alliance()
+        season = Season(number=71, is_big_thing=True)
+        war = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name=OPPONENT,
+            created_by_id=data["owner"].id,
+            season_id=season.id,
+        )
+        await load_objects([season, war])
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{war.id}/bg/1/place",
+            payload={
+                "node_number": 11,
+                "champion_id": str(data["champ"].id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_off_season_big_thing_placement_above_range_rejected(self):
+        """Node 11+ rejected when off-season Big Thing mode is active."""
+        data = await _setup_alliance()
+        war = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name=OPPONENT,
+            created_by_id=data["owner"].id,
+        )
+        await load_objects([AppConfig(key="off_season_big_thing", value="true"), war])
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{war.id}/bg/1/place",
+            payload={
+                "node_number": 11,
+                "champion_id": str(data["champ"].id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
+            headers=headers,
+        )
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_available_attackers_excludes_banned_champion(self):
