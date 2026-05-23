@@ -116,6 +116,16 @@ async def get_my_alliance_roles(
     return await AllianceService.get_my_roles(session, current_user.id)
 
 
+@alliance_core_controller.get("/accessible", response_model=list[AllianceResponse])
+async def get_accessible_alliances(
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Get alliances the current user can access (member + visitor)."""
+    alliances = await AllianceService.get_accessible_alliances(session, current_user.id)
+    return [_to_response(a) for a in alliances]
+
+
 @alliance_core_controller.get("/{alliance_id}", response_model=AllianceResponse)
 async def get_alliance(alliance_id: uuid.UUID, session: SessionDep):
     """Get a specific alliance by ID."""

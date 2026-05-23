@@ -459,23 +459,42 @@ export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
       const attackerAccId = users[attackerToken].account_id!;
       const allianceId = users[defenderToken].alliance_id!;
 
-      // Load champions for both defender and attacker
+      // Activate a season so wars created after inherit season_id (required by all_seasons default filter)
       return cy
-        .apiLoadChampions(adminAT, [
-          { name: 'Iron Man', cls: 'Tech' },
-          { name: 'Captain America', cls: 'Cosmic' },
-          { name: 'Spider-Man', cls: 'Science' },
-          { name: 'Wolverine', cls: 'Mutant' },
-          { name: 'Black Widow', cls: 'Skill' },
-          { name: 'Absorbing Man', cls: 'Mystic', has_prefight: true },
-        ])
-        .then((champMap) =>
-          addIronManToRoster(atkData.access_token, attackerAccId, champMap)
-            .then((cuIronMan) => addCaptainAmericaToRoster(atkData.access_token, attackerAccId, champMap, cuIronMan))
-            .then((data) => addSpiderManToRoster(atkData.access_token, attackerAccId, champMap, data))
-            .then((data) => addAbsorbingManToRoster(atkData.access_token, attackerAccId, champMap, data))
-            .then((data) =>
-              setupKnowledgeBaseWar(adminAT, defData, atkData, defenderAccId, allianceId, champMap, data),
+        .request({
+          method: 'POST',
+          url: `${BACKEND}/admin/seasons`,
+          headers: { Authorization: `Bearer ${adminAT}` },
+          body: { number: 1 },
+        })
+        .then((res) => {
+          const seasonId = (res.body as { id: string }).id;
+          return cy.request({
+            method: 'PATCH',
+            url: `${BACKEND}/admin/seasons/${seasonId}/activate`,
+            headers: { Authorization: `Bearer ${adminAT}` },
+            body: {},
+          });
+        })
+        .then(() =>
+          // Load champions for both defender and attacker
+          cy
+            .apiLoadChampions(adminAT, [
+              { name: 'Iron Man', cls: 'Tech' },
+              { name: 'Captain America', cls: 'Cosmic' },
+              { name: 'Spider-Man', cls: 'Science' },
+              { name: 'Wolverine', cls: 'Mutant' },
+              { name: 'Black Widow', cls: 'Skill' },
+              { name: 'Absorbing Man', cls: 'Mystic', has_prefight: true },
+            ])
+            .then((champMap) =>
+              addIronManToRoster(atkData.access_token, attackerAccId, champMap)
+                .then((cuIronMan) => addCaptainAmericaToRoster(atkData.access_token, attackerAccId, champMap, cuIronMan))
+                .then((data) => addSpiderManToRoster(atkData.access_token, attackerAccId, champMap, data))
+                .then((data) => addAbsorbingManToRoster(atkData.access_token, attackerAccId, champMap, data))
+                .then((data) =>
+                  setupKnowledgeBaseWar(adminAT, defData, atkData, defenderAccId, allianceId, champMap, data),
+                ),
             ),
         );
     });
@@ -517,11 +536,21 @@ export function setupKnowledgeBaseFast(
           { name: 'Captain America', cls: 'Cosmic' },
         ])
         .then(() =>
-          cy.apiCreateWar(ownerData.access_token, allianceId, 'OpponentFast').then((war) => {
-            cy.apiEndWar(ownerData.access_token, allianceId, war.id, true, 10);
-            cy.apiDevBulkCreateFightRecords(war.id, allianceId, ownerAccId, count);
-            return cy.wrap({ adminToken: adminAT, userData: ownerData, accountId: ownerAccId, allianceId });
-          }),
+          cy
+            .request({
+              method: 'POST',
+              url: `${BACKEND}/admin/seasons`,
+              headers: { Authorization: `Bearer ${adminAT}` },
+              body: { number: 1 },
+            })
+            .then((res) => {
+              const seasonId = (res.body as { id: string }).id;
+              return cy.apiCreateWar(ownerData.access_token, allianceId, 'OpponentFast').then((war) => {
+                cy.apiEndWar(ownerData.access_token, allianceId, war.id, true, 10);
+                cy.apiDevBulkCreateFightRecords(war.id, allianceId, ownerAccId, count, seasonId);
+                return cy.wrap({ adminToken: adminAT, userData: ownerData, accountId: ownerAccId, allianceId });
+              });
+            }),
         );
     });
 }

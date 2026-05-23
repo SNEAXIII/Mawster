@@ -481,6 +481,8 @@ const en = {
       assistedBadge: 'Assisted',
       player: 'Player',
       filterSeason: 'Season',
+      filterAlliance: 'Alliance',
+      allAlliances: 'All alliances',
       seasonSelectorAll: 'All',
       seasonSelectorAllSeasons: 'All Seasons',
       seasonSelectorCurrent: 'Current Season',

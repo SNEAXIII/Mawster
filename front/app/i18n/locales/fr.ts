@@ -486,6 +486,8 @@ const fr: Translations = {
       assistedBadge: 'Assisté',
       player: 'Joueur',
       filterSeason: 'Saison',
+      filterAlliance: 'Alliance',
+      allAlliances: 'Toutes les alliances',
       seasonSelectorAll: 'Toutes',
       seasonSelectorAllSeasons: 'Toutes les saisons',
       seasonSelectorCurrent: 'Saison en cours',
