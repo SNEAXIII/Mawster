@@ -163,6 +163,29 @@ class FightRecordService:
             )
 
     @classmethod
+    async def get_accessible_alliance_ids(
+        cls, session: SessionDep, user_id: uuid.UUID
+    ) -> list[uuid.UUID]:
+        member_result = await session.exec(
+            select(GameAccount.alliance_id).where(
+                and_(
+                    GameAccount.user_id == user_id,
+                    GameAccount.alliance_id.isnot(None),
+                )
+            )
+        )
+        member_ids: set[uuid.UUID] = set(member_result.all())
+
+        visitor_result = await session.exec(
+            select(AllianceVisitor.alliance_id)
+            .join(GameAccount, AllianceVisitor.game_account_id == GameAccount.id)
+            .where(GameAccount.user_id == user_id)
+        )
+        visitor_ids: set[uuid.UUID] = set(visitor_result.all())
+
+        return list(member_ids | visitor_ids)
+
+    @classmethod
     async def get_fight_records(
         cls,
         session: SessionDep,
