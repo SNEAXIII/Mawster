@@ -753,6 +753,21 @@ class AllianceService:
         result = await session.exec(sql)
         return result.all()
 
+    @classmethod
+    async def get_accessible_alliances(
+        cls, session: SessionDep, user_id: uuid.UUID
+    ) -> list[Alliance]:
+        """Return alliances the user can access: member alliances + visited alliances, deduplicated."""
+        mine = await cls.get_my_alliances(session, user_id)
+        visited = await cls.get_my_visited_alliances(session, user_id)
+        seen: set[uuid.UUID] = set()
+        result: list[Alliance] = []
+        for a in mine + visited:
+            if a.id not in seen:
+                seen.add(a.id)
+                result.append(a)
+        return result
+
     # ---- Eligibility queries ----
 
     @classmethod

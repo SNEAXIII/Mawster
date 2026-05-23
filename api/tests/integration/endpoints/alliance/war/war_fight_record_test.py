@@ -23,6 +23,7 @@ from tests.integration.endpoints.setup.game_setup import (
     push_member,
     push_officer,
     push_champion,
+    push_visitor,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -1015,6 +1016,89 @@ class TestSnapshotWithPrefightsAndSynergies:
         ).all()
         assert len(synergies) == 1
         assert synergies[0].champion_id == synergy_cu_champ.id
+
+
+class TestFightRecordScoping:
+    @pytest.mark.asyncio
+    async def test_get_fight_records_member_sees_own_alliance(self):
+        """Member sees records from their own alliance only."""
+        data = await _setup_war_with_fight()
+        headers_owner = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 50},
+            headers=headers_owner,
+        )
+
+        resp = await execute_get_request("/fight-records", headers=headers_owner)
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["total"] > 0
+        for item in body["items"]:
+            assert item["alliance_id"] == str(data["alliance"].id)
+
+    @pytest.mark.asyncio
+    async def test_get_fight_records_no_alliance_returns_403(self):
+        """User with no alliance or visitor link gets 403."""
+        await load_objects([get_generic_user(is_base_id=True)])
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        resp = await execute_get_request("/fight-records", headers=headers)
+        assert resp.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_get_fight_records_visitor_sees_visited_alliance(self):
+        """Visitor of alliance A can see fight records from alliance A."""
+        data = await _setup_war_with_fight()
+        headers_owner = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 50},
+            headers=headers_owner,
+        )
+
+        visitor_user_id = uuid.uuid4()
+        from src.models import User
+        from src.utils.email_hash import hash_email
+
+        visitor_user = User(
+            id=visitor_user_id,
+            login="visitor_fight_record",
+            email_hash=hash_email("visitor_fight_record@test.com"),
+            discord_id="discord_visitor_fight_record",
+        )
+        await load_objects([visitor_user])
+
+        await push_visitor(data["alliance"], user_id=visitor_user_id, game_pseudo="VisitorPlayer")
+
+        visitor_headers = create_auth_headers(user_id=str(visitor_user_id))
+        resp = await execute_get_request("/fight-records", headers=visitor_headers)
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["total"] > 0
+        for item in body["items"]:
+            assert item["alliance_id"] == str(data["alliance"].id)
+
+    @pytest.mark.asyncio
+    async def test_get_fight_records_non_accessible_alliance_id_returns_empty(self):
+        """alliance_id filter for an inaccessible alliance returns 200 + empty list."""
+        data = await _setup_war_with_fight()
+        headers_owner = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 50},
+            headers=headers_owner,
+        )
+
+        other_id = uuid.uuid4()
+        resp = await execute_get_request(
+            f"/fight-records?alliance_id={other_id}", headers=headers_owner
+        )
+        assert resp.status_code == 200
+        assert resp.json()["total"] == 0
 
 
 class TestAdminSnapshotEndpoints:

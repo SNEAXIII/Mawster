@@ -66,6 +66,44 @@ describe('Alliances – Creation', () => {
     });
   });
 
+  // =========================================================================
+  // Validation
+  // =========================================================================
+
+  it('shows validation error when alliance name contains invalid characters', () => {
+    setupUser('alliance-nameinv-token').then(({ user_id, access_token }: UserSetupData) => {
+      cy.apiCreateGameAccount(access_token, 'LeaderNameInv', true);
+
+      cy.apiLogin(user_id);
+      cy.navTo('alliances');
+
+      cy.getByCy('tab-create').click();
+      cy.getByCy('alliance-name-input').type('Bad-Alliance!');
+      cy.getByCy('alliance-tag-input').type('BA');
+      cy.getByCy('alliance-create-btn').click();
+
+      cy.contains('3-50 characters, letters, numbers and spaces only').should('be.visible');
+      cy.contains('Alliance created').should('not.exist');
+    });
+  });
+
+  it('shows validation error when alliance tag contains invalid characters', () => {
+    setupUser('alliance-taginv-token').then(({ user_id, access_token }: UserSetupData) => {
+      cy.apiCreateGameAccount(access_token, 'LeaderTagInv', true);
+
+      cy.apiLogin(user_id);
+      cy.navTo('alliances');
+
+      cy.getByCy('tab-create').click();
+      cy.getByCy('alliance-name-input').type('Good Alliance');
+      cy.getByCy('alliance-tag-input').type('B A');
+      cy.getByCy('alliance-create-btn').click();
+
+      cy.contains('1-5 characters, letters and numbers only').should('be.visible');
+      cy.contains('Alliance created').should('not.exist');
+    });
+  });
+
   it('shows the empty state when user has game accounts but no alliances', () => {
     setupUser('alliance-empty-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'EmptyAcc', true);

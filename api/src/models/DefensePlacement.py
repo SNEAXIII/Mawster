@@ -19,7 +19,7 @@ class DefensePlacement(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
     battlegroup: int = Field(ge=1, le=3)
-    node_number: int = Field(ge=1, le=55)
+    node_number: int = Field(ge=1, le=50)
     champion_user_id: uuid.UUID = Field(foreign_key="champion_user.id")
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     placed_by_id: Optional[uuid.UUID] = Field(default=None, foreign_key="game_account.id")

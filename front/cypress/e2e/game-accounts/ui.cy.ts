@@ -67,6 +67,39 @@ describe('Game Accounts – UI', () => {
   });
 
   // =========================================================================
+  // Validation
+  // =========================================================================
+
+  it('shows validation error when pseudo contains invalid characters', () => {
+    setupUser('ga-invalid-token').then(({ user_id }) => {
+      cy.apiLogin(user_id);
+      cy.navTo('profile');
+
+      cy.getByCy('account-pseudo-input').scrollIntoView().type('bad-pseudo!');
+      cy.getByCy('account-create-btn').click();
+
+      cy.contains('2-16 characters, letters, numbers and spaces only').should('be.visible');
+      cy.contains('Game account created').should('not.exist');
+    });
+  });
+
+  it('shows validation error when editing pseudo with invalid characters', () => {
+    setupUser('ga-edit-invalid-token').then(({ user_id, access_token }) => {
+      cy.apiCreateGameAccount(access_token, 'ValidPseudo', true);
+
+      cy.apiLogin(user_id);
+      cy.navTo('profile');
+
+      cy.getByCy('account-row-ValidPseudo').find('[data-cy="account-edit-btn-0"]').click({ force: true });
+      cy.get('input[maxlength="16"]').clear().type('bad-name!');
+      cy.getByCy('account-edit-confirm').first().click({ force: true });
+
+      cy.contains('2-16 characters, letters, numbers and spaces only').should('be.visible');
+      cy.contains('Game account renamed').should('not.exist');
+    });
+  });
+
+  // =========================================================================
   // Edit
   // =========================================================================
 

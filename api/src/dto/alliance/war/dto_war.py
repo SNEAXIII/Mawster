@@ -8,7 +8,7 @@ from src.dto.admin.dto_champion import ChampionResponse
 
 
 class WarCreateRequest(BaseModel):
-    opponent_name: str = Field(..., max_length=100, min_length=1)
+    opponent_name: str = Field(..., max_length=100, min_length=1, pattern=r"^[a-zA-Z0-9 ]+$")
     banned_champion_ids: List[uuid.UUID] = Field(default_factory=list, max_length=6)
 
 
@@ -50,7 +50,7 @@ class WarResponse(BaseModel):
 
 
 class WarPlacementCreateRequest(BaseModel):
-    node_number: int = Field(..., ge=1, le=55)
+    node_number: int = Field(..., ge=1, le=50)
     champion_id: uuid.UUID
     stars: int = Field(..., ge=6, le=7)
     rank: int = Field(..., ge=1, le=5)
@@ -255,7 +255,7 @@ class WarEndRequest(BaseModel):
 
 class WarPrefightCreateRequest(BaseModel):
     champion_user_id: uuid.UUID
-    target_node_number: int = Field(..., ge=1, le=55)
+    target_node_number: int = Field(..., ge=1, le=50)
 
 
 class WarPrefightResponse(BaseModel):

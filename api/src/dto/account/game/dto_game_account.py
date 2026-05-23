@@ -8,7 +8,9 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 class GameAccountCreateRequest(BaseModel):
     """DTO to create a new game account. Only a pseudo is required."""
 
-    game_pseudo: str = Field(..., min_length=2, max_length=16, examples=["MyGamePseudo"])
+    game_pseudo: str = Field(
+        ..., min_length=2, max_length=16, pattern=r"^[a-zA-Z0-9 ]+$", examples=["MyGamePseudo"]
+    )
     is_primary: bool = Field(default=False, examples=[True])
 
 

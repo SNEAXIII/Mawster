@@ -4,7 +4,33 @@ import uuid
 from datetime import datetime
 from unittest.mock import MagicMock
 
-from src.dto.alliance.dto_alliance import AllianceResponse
+import pytest
+from pydantic import ValidationError
+
+from src.dto.alliance.dto_alliance import AllianceCreateRequest, AllianceResponse
+
+
+class TestAllianceCreateRequest:
+    def test_valid(self):
+        dto = AllianceCreateRequest(name="My Alliance", tag="ALLY", owner_id=uuid.uuid4())
+        assert dto.name == "My Alliance"
+        assert dto.tag == "ALLY"
+
+    def test_valid_no_space(self):
+        dto = AllianceCreateRequest(name="MyAlliance", tag="MAW", owner_id=uuid.uuid4())
+        assert dto.name == "MyAlliance"
+
+    def test_name_rejects_special_chars(self):
+        with pytest.raises(ValidationError):
+            AllianceCreateRequest(name="My-Alliance!", tag="ALLY", owner_id=uuid.uuid4())
+
+    def test_tag_rejects_special_chars(self):
+        with pytest.raises(ValidationError):
+            AllianceCreateRequest(name="MyAlliance", tag="AL-Y!", owner_id=uuid.uuid4())
+
+    def test_tag_rejects_spaces(self):
+        with pytest.raises(ValidationError):
+            AllianceCreateRequest(name="MyAlliance", tag="AL Y", owner_id=uuid.uuid4())
 
 
 def _make_alliance(elo: int = 1500, tier: int = 8):
