@@ -23,7 +23,7 @@ class WarDefensePlacement(SQLModel, table=True):
     node_number: int = Field(ge=1, le=50)
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
     stars: int = Field(ge=6, le=7)
-    rank: int = Field(ge=1, le=5)
+    rank: int = Field(ge=1, le=6)
     ascension: int = Field(default=0, ge=0, le=2)
     placed_by_id: Optional[uuid.UUID] = Field(default=None, foreign_key="game_account.id")
     created_at: datetime = Field(default_factory=datetime.now)
