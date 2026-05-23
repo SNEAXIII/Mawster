@@ -69,7 +69,7 @@ describe('Knowledge Base — alliance visibility', () => {
 
   it('alliance filter scopes records — A records visible, B shows empty', () => {
     const prefixA = 'kbafs';
-    const prefixB = 'kbafv';
+    const prefixB = 'vizbb';
 
     setupKnowledgeBaseFast(prefixA).then(({ userData: userA, accountId: accAId, allianceId: allianceAId }) => {
       cy.apiBatchSetup([
