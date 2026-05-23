@@ -71,6 +71,19 @@ class TestSetCurrentSeason:
         assert response.status_code == 404
 
     @pytest.mark.anyio
+    async def test_swap_current_season_replaces_previous(self, admin_in_db):
+        s1 = (await execute_post_request("/admin/seasons", {"number": 10}, ADMIN_HEADERS)).json()
+        s2 = (await execute_post_request("/admin/seasons", {"number": 11}, ADMIN_HEADERS)).json()
+        await execute_put_request(
+            f"{CONFIG_URL}/current-season", {"season_id": s1["id"]}, ADMIN_HEADERS
+        )
+        response = await execute_put_request(
+            f"{CONFIG_URL}/current-season", {"season_id": s2["id"]}, ADMIN_HEADERS
+        )
+        assert response.status_code == 200
+        assert response.json()["current_season_id"] == s2["id"]
+
+    @pytest.mark.anyio
     async def test_non_admin_returns_403(self):
         response = await execute_put_request(
             f"{CONFIG_URL}/current-season", {"season_id": None}, USER_HEADERS
