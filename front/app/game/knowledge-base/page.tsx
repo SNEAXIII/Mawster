@@ -58,7 +58,7 @@ function KnowledgeBaseContent() {
           onSort={vm.handleSort}
         />
       )}
-      {vm.error && <p className='text-destructive text-sm'>{t.game.knowledgeBase.noData}</p>}
+      {vm.error && <p className='text-destructive text-sm'>{vm.error}</p>}
     </div>
   );
 }
