@@ -210,6 +210,9 @@ class FightRecordService:
             WarFightRecordResponse,
         )
 
+        if not accessible_alliance_ids:
+            return PaginatedFightRecordsResponse(items=[], total=0, page=page, size=size, pages=1)
+
         # Build conditions list for reuse in count query
         conditions = []
         conditions.append(WarFightRecord.alliance_id.in_(accessible_alliance_ids))
