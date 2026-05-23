@@ -4,10 +4,12 @@ import { useRouter, usePathname } from 'next/navigation';
 import {
   getFightRecords,
   getSeasons,
+  getAccessibleAlliances,
   type FightRecord,
   type PaginatedFightRecords,
   type FightRecordFilters,
   type Season,
+  type AccessibleAlliance,
 } from '@/app/services/fight-records';
 
 interface Filters {
@@ -58,6 +60,8 @@ export function useKnowledgeBaseViewModel() {
   const [seasonSelector, setSeasonSelector] = useState<string>(() => getInitialParams().get('season_selector') ?? 'all_seasons');
   const [seasonId, setSeasonId] = useState<string | null>(() => getInitialParams().get('season_id'));
   const [seasons, setSeasons] = useState<Season[]>([]);
+  const [allianceId, setAllianceId] = useState<string | null>(() => getInitialParams().get('alliance_id'));
+  const [accessibleAlliances, setAccessibleAlliances] = useState<AccessibleAlliance[]>([]);
   const [data, setData] = useState<PaginatedFightRecords | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +76,10 @@ export function useKnowledgeBaseViewModel() {
   }, []);
 
   useEffect(() => {
+    getAccessibleAlliances().then(setAccessibleAlliances).catch(() => setAccessibleAlliances([]));
+  }, []);
+
+  useEffect(() => {
     const params = new URLSearchParams();
     if (filters.champion_id) params.set('champion_id', filters.champion_id);
     if (filters.defender_champion_id) params.set('defender_champion_id', filters.defender_champion_id);
@@ -81,13 +89,14 @@ export function useKnowledgeBaseViewModel() {
     if (planningErrorOnly !== null) params.set('planning_error_only', String(planningErrorOnly));
     if (seasonSelector !== 'all_seasons') params.set('season_selector', seasonSelector);
     if (seasonId) params.set('season_id', seasonId);
+    if (allianceId) params.set('alliance_id', allianceId);
     if (page !== 1) params.set('page', String(page));
     if (size !== 20) params.set('size', String(size));
     if (sortBy !== 'created_at') params.set('sort_by', sortBy);
     if (sortOrder !== 'desc') params.set('sort_order', sortOrder);
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  }, [filters, planningErrorOnly, seasonSelector, seasonId, page, size, sortBy, sortOrder, pathname, router]);
+  }, [filters, planningErrorOnly, seasonSelector, seasonId, allianceId, page, size, sortBy, sortOrder, pathname, router]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -102,6 +111,7 @@ export function useKnowledgeBaseViewModel() {
         planning_error_only: planningErrorOnly ?? undefined,
         season_selector: seasonSelector,
         season_id: seasonId ?? undefined,
+        alliance_id: allianceId ?? undefined,
         page,
         size,
         sort_by: sortBy,
@@ -113,7 +123,7 @@ export function useKnowledgeBaseViewModel() {
     } finally {
       setLoading(false);
     }
-  }, [filters.champion_id, filters.defender_champion_id, filters.node_number, filters.tier, debouncedPseudo, planningErrorOnly, seasonSelector, seasonId, page, size, sortBy, sortOrder]);
+  }, [filters.champion_id, filters.defender_champion_id, filters.node_number, filters.tier, debouncedPseudo, planningErrorOnly, seasonSelector, seasonId, allianceId, page, size, sortBy, sortOrder]);
 
   useEffect(() => {
     load();
@@ -134,12 +144,18 @@ export function useKnowledgeBaseViewModel() {
     setPage(1);
   };
 
+  const handleAllianceChange = (value: string | null) => {
+    setAllianceId(value);
+    setPage(1);
+  };
+
   const handleClearFilters = () => {
     setFilters(DEFAULT_FILTERS);
     setDebouncedPseudo('');
     setPlanningErrorOnly(null);
     setSeasonSelector('all_seasons');
     setSeasonId(null);
+    setAllianceId(null);
     setPage(1);
   };
 
@@ -166,7 +182,7 @@ export function useKnowledgeBaseViewModel() {
   const hasActiveFilters = Boolean(
     filters.champion_id || filters.defender_champion_id ||
     filters.node_number || filters.tier || filters.game_account_pseudo ||
-    planningErrorOnly !== null || seasonSelector !== 'all_seasons'
+    planningErrorOnly !== null || seasonSelector !== 'all_seasons' || allianceId !== null
   );
 
   return {
@@ -182,11 +198,14 @@ export function useKnowledgeBaseViewModel() {
     seasonSelector,
     seasonId,
     seasons,
+    allianceId,
+    accessibleAlliances,
     hasActiveFilters,
     handleFilterChange,
     handleTogglePlanningError,
     handleSeasonSelectorChange,
     handleSeasonIdChange,
+    handleAllianceChange,
     handleSort,
     handleClearFilters,
     setPage,

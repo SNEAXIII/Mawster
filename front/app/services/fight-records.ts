@@ -96,6 +96,18 @@ export interface FightRecordFilters {
   sort_order?: 'asc' | 'desc';
 }
 
+export interface AccessibleAlliance {
+  id: string;
+  name: string;
+  tag: string;
+}
+
+export async function getAccessibleAlliances(): Promise<AccessibleAlliance[]> {
+  const res = await fetch(`${PROXY}/alliances/accessible`, { headers: jsonHeaders });
+  if (!res.ok) throw new Error('Failed to load accessible alliances');
+  return res.json();
+}
+
 export async function getSeasons(): Promise<Season[]> {
   const res = await fetch(`${PROXY}/seasons`, { headers: jsonHeaders });
   if (!res.ok) throw new Error('Failed to load seasons');
