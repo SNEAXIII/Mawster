@@ -39,10 +39,13 @@ function KnowledgeBaseContent() {
         seasonSelector={vm.seasonSelector}
         seasonId={vm.seasonId}
         seasons={vm.seasons}
+        allianceId={vm.allianceId}
+        accessibleAlliances={vm.accessibleAlliances}
         onChange={vm.handleFilterChange}
         onTogglePlanningError={vm.handleTogglePlanningError}
         onSeasonSelectorChange={vm.handleSeasonSelectorChange}
         onSeasonIdChange={vm.handleSeasonIdChange}
+        onAllianceChange={vm.handleAllianceChange}
         onClear={vm.handleClearFilters}
       />
 

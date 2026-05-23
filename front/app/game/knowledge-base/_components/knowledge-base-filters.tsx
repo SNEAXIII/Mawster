@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import ChampionFilterSelect from './champion-filter-select';
-import type { Season } from '@/app/services/fight-records';
+import type { Season, AccessibleAlliance } from '@/app/services/fight-records';
 
 interface Filters {
   champion_id: string | null;
@@ -31,12 +31,16 @@ interface Props {
   onTogglePlanningError: () => void;
   onSeasonSelectorChange: (value: string) => void;
   onSeasonIdChange: (value: string | null) => void;
+  allianceId: string | null;
+  accessibleAlliances: AccessibleAlliance[];
+  onAllianceChange: (value: string | null) => void;
   onClear: () => void;
 }
 
 export default function KnowledgeBaseFilters({
   filters, planningErrorOnly, seasonSelector, seasonId, seasons,
-  onChange, onTogglePlanningError, onSeasonSelectorChange, onSeasonIdChange, onClear,
+  allianceId, accessibleAlliances,
+  onChange, onTogglePlanningError, onSeasonSelectorChange, onSeasonIdChange, onAllianceChange, onClear,
 }: Props) {
   const { t } = useI18n();
   const kb = t.game.knowledgeBase;
@@ -112,6 +116,26 @@ export default function KnowledgeBaseFilters({
             {seasons.map((s) => (
               <SelectItem key={s.id} value={s.id}>
                 {kb.seasonLabel.replace('{number}', String(s.number))}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
+      {accessibleAlliances.length > 1 && (
+        <Select
+          value={allianceId ?? 'all'}
+          onValueChange={(v) => onAllianceChange(v === 'all' ? null : v)}
+          data-cy='filter-alliance'
+        >
+          <SelectTrigger className='w-44' data-cy='filter-alliance-trigger'>
+            <SelectValue placeholder={kb.filterAlliance} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='all'>{kb.allAlliances}</SelectItem>
+            {accessibleAlliances.map((a) => (
+              <SelectItem key={a.id} value={a.id}>
+                [{a.tag}] {a.name}
               </SelectItem>
             ))}
           </SelectContent>
