@@ -1,7 +1,8 @@
 import uuid
 from typing import Annotated, Literal, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from starlette import status as http_status
 
 from src.dto.admin.dto_fight_record import PaginatedFightRecordsResponse
 from src.enums.SeasonSelectorType import SeasonSelectorType
@@ -47,9 +48,15 @@ async def list_fight_records(
     ] = Query(default="created_at"),
     sort_order: str = Query(default="desc", pattern="^(asc|desc)$"),
 ):
-    await FightRecordService.assert_user_in_alliance(session, current_user.id)
+    accessible_ids = await FightRecordService.get_accessible_alliance_ids(session, current_user.id)
+    if not accessible_ids:
+        raise HTTPException(
+            status_code=http_status.HTTP_403_FORBIDDEN,
+            detail="User must belong to or visit an alliance",
+        )
     return await FightRecordService.get_fight_records(
         session,
+        accessible_alliance_ids=accessible_ids,
         champion_id=champion_id,
         defender_champion_id=defender_champion_id,
         node_number=node_number,

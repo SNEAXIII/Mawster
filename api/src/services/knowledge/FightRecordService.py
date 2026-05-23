@@ -189,6 +189,7 @@ class FightRecordService:
     async def get_fight_records(
         cls,
         session: SessionDep,
+        accessible_alliance_ids: list[uuid.UUID],
         champion_id: Optional[uuid.UUID] = None,
         defender_champion_id: Optional[uuid.UUID] = None,
         node_number: Optional[int] = None,
@@ -211,6 +212,7 @@ class FightRecordService:
 
         # Build conditions list for reuse in count query
         conditions = []
+        conditions.append(WarFightRecord.alliance_id.in_(accessible_alliance_ids))
         if champion_id is not None:
             conditions.append(WarFightRecord.champion_id == champion_id)
         if defender_champion_id is not None:
