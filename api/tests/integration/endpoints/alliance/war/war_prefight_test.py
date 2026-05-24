@@ -591,3 +591,67 @@ class TestPrefightServiceCoverage:
             headers=data["headers_member"],
         )
         assert resp.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_add_prefight_target_node_no_defender_returns_422(self):  # L1319
+        """Target node with no defender placed in this war+BG returns 422."""
+        data = await _setup_prefight_scenario()
+        resp = await execute_post_request(
+            _prefight_url(data["alliance"].id, data["war"].id),
+            payload={"champion_user_id": str(data["prefight_cu"].id), "target_node_number": 42},
+            headers=data["headers_member"],
+        )
+        assert resp.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_add_prefight_banned_champion_returns_409(self):  # L1338
+        """Prefight provider whose champion is banned in the war is rejected with 409."""
+        data = await _setup_prefight_scenario()
+        alliance = data["alliance"]
+        war = data["war"]
+        prefight_cu = data["prefight_cu"]
+        attacker_cu = data["attacker_cu"]
+
+        # End current war, create a new one with Quake banned
+        await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/end",
+            payload={"win": True},
+            headers=data["headers_owner"],
+        )
+        new_war_resp = await execute_post_request(
+            f"/alliances/{alliance.id}/wars",
+            payload={
+                "opponent_name": "Ban Prefight War",
+                "banned_champion_ids": [str(prefight_cu.champion_id)],
+            },
+            headers=data["headers_owner"],
+        )
+        assert new_war_resp.status_code == 201
+        new_war_id = new_war_resp.json()["id"]
+
+        # Place a fresh defender on node 5 and assign the existing attacker
+        fresh_champ = await push_champion(name="Black Panther", champion_class="Skill")
+        await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{new_war_id}/bg/1/place",
+            payload={
+                "node_number": 5,
+                "champion_id": str(fresh_champ.id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
+            headers=data["headers_owner"],
+        )
+        await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{new_war_id}/bg/1/node/5/attacker",
+            payload={"champion_user_id": str(attacker_cu.id)},
+            headers=data["headers_member"],
+        )
+
+        # Try to add banned Quake as prefight provider → 409
+        resp = await execute_post_request(
+            _prefight_url(alliance.id, new_war_id),
+            payload={"champion_user_id": str(prefight_cu.id), "target_node_number": 5},
+            headers=data["headers_member"],
+        )
+        assert resp.status_code == 409

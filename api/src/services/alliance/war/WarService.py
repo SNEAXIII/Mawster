@@ -53,7 +53,6 @@ from src.Messages.war_messages import (
     PREFIGHT_ENTRY_NOT_FOUND,
     SYNERGY_ATTACKER_NOT_FOUND,
     SYNERGY_PROVIDER_CANNOT_BE_TARGET,
-    SYNERGY_PROVIDER_MUST_MATCH_TARGET_ACCOUNT,
     TARGET_CHAMPION_USER_NOT_FOUND,
     TARGET_NODE_NO_ATTACKER_ASSIGNED,
     TARGET_NODE_NO_DEFENDER_IN_WAR_BG,
@@ -73,11 +72,8 @@ class WarService:
         alliance_id: uuid.UUID,
         opponent_name: str,
         created_by_id: uuid.UUID,
-        banned_champion_ids: list[uuid.UUID] | None = None,
+        banned_champion_ids: list[uuid.UUID],
     ) -> WarResponse:
-        if banned_champion_ids is None:
-            banned_champion_ids = []
-
         if len(banned_champion_ids) != len(set(banned_champion_ids)):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -359,11 +355,6 @@ class WarService:
 
         war = await cls.get_war(session, war_id, alliance_id)
         alliance = await session.get(Alliance, alliance_id)
-        if alliance is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=WAR_NOT_FOUND,
-            )
 
         if war.season_id is not None:
             if elo_change is None:
@@ -1102,18 +1093,6 @@ class WarService:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=TARGET_NOT_ASSIGNED_AS_NODE_ATTACKER,
-            )
-
-        # 2b. Synergy provider must belong to the same game account as the target attacker
-        target_cu = (
-            await session.exec(
-                select(ChampionUser).where(ChampionUser.id == target_champion_user_id)
-            )
-        ).first()
-        if target_cu is None or target_cu.game_account_id != game_account.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=SYNERGY_PROVIDER_MUST_MATCH_TARGET_ACCOUNT,
             )
 
         # 3. Check synergy provider's champion is not banned in this war

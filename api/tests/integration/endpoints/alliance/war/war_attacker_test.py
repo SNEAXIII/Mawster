@@ -630,6 +630,53 @@ class TestRemoveAttacker:
         )
         assert prefight_resp.json() == []
 
+    @pytest.mark.asyncio
+    async def test_remove_attacker_cleans_up_target_synergy(self):
+        """Removing an attacker cascades and deletes synergy entries that targeted that attacker (L796-798)."""
+        data = await _setup_attacker_scenario()
+        headers_member = create_auth_headers(user_id=str(USER2_ID))
+        alliance = data["alliance"]
+        war = data["war"]
+
+        # Assign attacker on node 10
+        await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers_member,
+        )
+
+        # Add member's second champion as synergy provider targeting the node attacker
+        synergy_champ = await push_champion(name="Deadpool", champion_class="Mutant")
+        synergy_cu = await push_champion_user(data["member"], synergy_champ, stars=7, rank=3)
+        await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/synergy",
+            payload={
+                "champion_user_id": str(synergy_cu.id),
+                "target_champion_user_id": str(data["champion_user"].id),
+            },
+            headers=headers_member,
+        )
+
+        # Verify synergy exists
+        synergy_resp = await execute_get_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/synergy",
+            headers=headers_member,
+        )
+        assert len(synergy_resp.json()) == 1
+
+        # Remove the attacker — must cascade-delete the synergy targeting them
+        await execute_delete_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/10/attacker",
+            headers=headers_member,
+        )
+
+        # Synergy must be gone
+        synergy_resp2 = await execute_get_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/synergy",
+            headers=headers_member,
+        )
+        assert synergy_resp2.json() == []
+
 
 # ─── TestUpdateKo ─────────────────────────────────────────
 
