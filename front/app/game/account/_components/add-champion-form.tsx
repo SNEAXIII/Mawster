@@ -200,7 +200,6 @@ export default function AddChampionForm({
             <Input
               type='number'
               min={0}
-              max={200}
               className='w-24'
               value={signatureValue}
               onChange={(e) => setSignatureValue(Math.min(200, Math.max(0, parseInt(e.target.value) || 0)))}
