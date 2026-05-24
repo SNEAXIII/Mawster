@@ -38,6 +38,7 @@ const WAR_RARITIES: { label: string; stars: number; rank: number }[] = [
   { label: '7R3', stars: 7, rank: 3 },
   { label: '7R4', stars: 7, rank: 4 },
   { label: '7R5', stars: 7, rank: 5 },
+  { label: '7R6', stars: 7, rank: 6 },
 ];
 
 interface WarDefenderSelectorProps {

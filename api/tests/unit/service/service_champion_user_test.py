@@ -483,7 +483,7 @@ class TestUpgradeChampionRank:
         session.refresh.assert_awaited_once_with(entry)
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("rarity", ["6r5", "7r5"])
+    @pytest.mark.parametrize("rarity", ["6r5", "7r6"])
     async def test_upgrade_max_rank_raises_400(self, mocker, rarity):
         session = _mock_session(mocker)
         entry = _make_champion_user(rarity=rarity)

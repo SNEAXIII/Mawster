@@ -15,12 +15,14 @@ export function parseRarity(rarity: string): { stars: number; rank: number } {
 
 /**
  * Tailwind text-colour class for a rarity string:
+ *   - 7r6 → gold
  *   - 7r5 → blue
  *   - 7r4 → green
  *   - anything else → red
  */
 export function rarityBadgeClass(rarity: string): string {
   const { stars, rank } = parseRarity(rarity);
+  if (stars === 7 && rank === 6) return 'text-yellow-400';
   if (stars === 7 && rank === 5) return 'text-blue-400';
   if (stars === 7 && rank === 4) return 'text-green-400';
   return 'text-red-400';

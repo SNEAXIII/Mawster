@@ -84,6 +84,7 @@ export function TextConfirmationDialog({
               disabled={isLoading}
               autoFocus
               autoComplete='off'
+              data-cy='confirm-text-input'
             />
             {error && <p className='text-sm text-red-600'>{error}</p>}
           </div>
@@ -92,6 +93,7 @@ export function TextConfirmationDialog({
           <AlertDialogCancel
             disabled={isLoading}
             onClick={() => setInputValue('')}
+            data-cy='confirmation-dialog-cancel'
           >
             {cancelText ?? t.common.cancel}
           </AlertDialogCancel>
@@ -101,6 +103,7 @@ export function TextConfirmationDialog({
             }
             disabled={!isMatch || isLoading}
             onClick={onConfirm}
+            data-cy='confirmation-dialog-confirm'
           >
             {isLoading ? (
               <>

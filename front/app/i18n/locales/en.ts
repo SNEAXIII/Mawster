@@ -178,6 +178,11 @@ const en = {
       officerAddError: 'Failed to add officer',
       officerRemoveSuccess: 'Officer removed successfully!',
       officerRemoveError: 'Failed to remove officer',
+      transferOwner: 'Transfer leadership',
+      transferOwnerConfirm:
+        'You are about to transfer leadership of this alliance to {pseudo}. You will become an officer. Type {pseudo} to confirm.',
+      transferOwnerSuccess: 'Leadership transferred to {pseudo}!',
+      transferOwnerError: 'Failed to transfer leadership',
       group: 'Group',
       noGroup: 'No group',
       groupSetSuccess: '{pseudo} moved to {group}!',

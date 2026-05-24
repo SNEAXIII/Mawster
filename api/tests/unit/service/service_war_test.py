@@ -95,13 +95,13 @@ class TestWarPlacementCreateRequest:
                 rank=0,
             )
 
-    def test_rank_above_5_raises(self):
+    def test_rank_above_6_raises(self):
         with pytest.raises(Exception):
             WarPlacementCreateRequest(
                 node_number=10,
                 champion_id=uuid.uuid4(),
                 stars=7,
-                rank=6,
+                rank=7,
             )
 
     def test_ascension_defaults_to_zero(self):

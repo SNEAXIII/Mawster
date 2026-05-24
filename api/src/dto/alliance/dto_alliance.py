@@ -140,6 +140,12 @@ class AllianceMyRolesResponse(BaseModel):
     my_account_ids: list[str] = []
 
 
+class AllianceTransferOwnerRequest(BaseModel):
+    """DTO to transfer ownership to an existing officer."""
+
+    game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
+
+
 class AllianceUpdateEloRequest(BaseModel):
     elo: int = Field(..., ge=0, le=4500)
 
