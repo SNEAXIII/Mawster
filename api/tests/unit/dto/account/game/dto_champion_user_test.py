@@ -4,7 +4,14 @@ import uuid
 from datetime import datetime
 from types import SimpleNamespace
 
-from src.dto.account.game.dto_champion_user import ChampionUserDetailResponse, ChampionUserResponse
+import pytest
+
+from src.dto.account.game.dto_champion_user import (
+    ChampionUserBulkEntry,
+    ChampionUserCreateRequest,
+    ChampionUserDetailResponse,
+    ChampionUserResponse,
+)
 from src.dto.account.game.dto_upgrade_request import UpgradeRequestResponse
 
 
@@ -194,3 +201,71 @@ class TestUpgradeRequestResponseModelValidate:
         )
         dto = UpgradeRequestResponse.model_validate(req)
         assert dto.done_at == now
+
+
+# ---------------------------------------------------------------------------
+# ChampionUserCreateRequest — signature bounds
+# ---------------------------------------------------------------------------
+
+
+_BASE_CREATE = {
+    "game_account_id": uuid.uuid4(),
+    "champion_id": uuid.uuid4(),
+    "rarity": "7r3",
+}
+
+
+class TestChampionUserCreateRequestSignature:
+    def test_sig_zero(self):
+        dto = ChampionUserCreateRequest(**_BASE_CREATE, signature=0)
+        assert dto.signature == 0
+
+    def test_sig_max(self):
+        dto = ChampionUserCreateRequest(**_BASE_CREATE, signature=200)
+        assert dto.signature == 200
+
+    def test_sig_mid(self):
+        dto = ChampionUserCreateRequest(**_BASE_CREATE, signature=100)
+        assert dto.signature == 100
+
+    def test_sig_above_max_rejected(self):
+        with pytest.raises(Exception):
+            ChampionUserCreateRequest(**_BASE_CREATE, signature=201)
+
+    def test_sig_negative_rejected(self):
+        with pytest.raises(Exception):
+            ChampionUserCreateRequest(**_BASE_CREATE, signature=-1)
+
+    def test_sig_default_is_zero(self):
+        dto = ChampionUserCreateRequest(**_BASE_CREATE)
+        assert dto.signature == 0
+
+
+# ---------------------------------------------------------------------------
+# ChampionUserBulkEntry — signature bounds
+# ---------------------------------------------------------------------------
+
+
+_BASE_BULK = {"champion_name": "Doom", "rarity": "7r3"}
+
+
+class TestChampionUserBulkEntrySignature:
+    def test_sig_zero(self):
+        dto = ChampionUserBulkEntry(**_BASE_BULK, signature=0)
+        assert dto.signature == 0
+
+    def test_sig_max(self):
+        dto = ChampionUserBulkEntry(**_BASE_BULK, signature=200)
+        assert dto.signature == 200
+
+    def test_sig_above_max_rejected(self):
+        with pytest.raises(Exception):
+            ChampionUserBulkEntry(**_BASE_BULK, signature=201)
+
+    def test_sig_negative_rejected(self):
+        with pytest.raises(Exception):
+            ChampionUserBulkEntry(**_BASE_BULK, signature=-1)
+
+    def test_sig_default_is_zero(self):
+        dto = ChampionUserBulkEntry(**_BASE_BULK)
+        assert dto.signature == 0
