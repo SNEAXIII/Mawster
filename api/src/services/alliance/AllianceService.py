@@ -650,6 +650,54 @@ class AllianceService:
         await session.commit()
         return await cls._load_alliance_with_relations(session, alliance_id)
 
+    @classmethod
+    async def transfer_ownership(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        new_owner_game_account_id: uuid.UUID,
+    ) -> Alliance:
+        """Transfer alliance ownership to an existing officer.
+        The target becomes the new owner; the former owner becomes an officer."""
+        # Lightweight load — avoid populating the session cache with relations
+        # that would conflict with the manual officer row manipulations below.
+        alliance = await session.get(Alliance, alliance_id)
+        if alliance is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=ALLIANCE_NOT_FOUND,
+            )
+
+        # Target must be an existing officer
+        officer_row_result = await session.exec(
+            select(AllianceOfficer).where(
+                AllianceOfficer.alliance_id == alliance_id,
+                AllianceOfficer.game_account_id == new_owner_game_account_id,
+            )
+        )
+        officer_row = officer_row_result.first()
+        if officer_row is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=GAME_ACCOUNT_NOT_OFFICER,
+            )
+
+        former_owner_id = alliance.owner_id
+
+        # 1. Remove target from officers (they become owner)
+        await session.delete(officer_row)
+
+        # 2. Add former owner as officer
+        session.add(AllianceOfficer(alliance_id=alliance_id, game_account_id=former_owner_id))
+
+        # 3. Swap ownership
+        alliance.owner_id = new_owner_game_account_id
+        session.add(alliance)
+
+        await session.commit()
+        session.expire_all()
+        return await cls._load_alliance_with_relations(session, alliance_id)
+
     # ---- Group management ----
 
     @classmethod

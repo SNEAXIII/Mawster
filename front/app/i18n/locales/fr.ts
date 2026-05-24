@@ -181,6 +181,11 @@ const fr: Translations = {
       officerAddError: "Erreur lors de l'ajout de l'officier",
       officerRemoveSuccess: 'Officier retiré avec succès !',
       officerRemoveError: "Erreur lors du retrait de l'officer",
+      transferOwner: 'Transférer le commandement',
+      transferOwnerConfirm:
+        'Vous êtes sur le point de transférer le commandement à {pseudo}. Vous deviendrez officier. Tapez {pseudo} pour confirmer.',
+      transferOwnerSuccess: 'Commandement transféré à {pseudo} !',
+      transferOwnerError: 'Échec du transfert de commandement',
       group: 'Groupe',
       noGroup: 'Aucun groupe',
       groupSetSuccess: '{pseudo} déplacé dans le {group} !',

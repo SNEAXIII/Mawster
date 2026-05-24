@@ -9,6 +9,7 @@ from src.dto.alliance.dto_alliance import (
     AllianceRemoveOfficerRequest,
     AllianceResponse,
     AllianceSetGroupRequest,
+    AllianceTransferOwnerRequest,
 )
 from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.models import User
@@ -86,6 +87,26 @@ async def remove_officer(
     await AllianceService.require_owner(session, alliance_id, current_user.id)
     updated = await AllianceService.remove_officer(
         session=session, alliance_id=alliance_id, game_account_id=body.game_account_id
+    )
+    return _to_response(updated)
+
+
+@alliance_member_controller.patch("/{alliance_id}/owner", response_model=AllianceResponse)
+async def transfer_ownership(
+    alliance_id: uuid.UUID,
+    body: AllianceTransferOwnerRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Transfer alliance ownership to an existing officer. Only the current owner can do this."""
+    alliance = await AllianceService.get_alliance(session, alliance_id)
+    if alliance is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+    await AllianceService.require_owner(session, alliance_id, current_user.id)
+    updated = await AllianceService.transfer_ownership(
+        session=session,
+        alliance_id=alliance_id,
+        new_owner_game_account_id=body.game_account_id,
     )
     return _to_response(updated)
 
