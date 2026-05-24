@@ -9,6 +9,7 @@ export enum ChampionRarity {
   SEVEN_R3 = '7r3',
   SEVEN_R4 = '7r4',
   SEVEN_R5 = '7r5',
+  SEVEN_R6 = '7r6',
 }
 
 export const RARITIES = Object.values(ChampionRarity);
@@ -21,6 +22,7 @@ export const RARITY_LABELS: Record<string, string> = {
   '7r3': '7R3',
   '7r4': '7R4',
   '7r5': '7R5',
+  '7r6': '7R6',
 };
 
 export const SIGNATURE_PRESETS = [0, 20, 100, 200];

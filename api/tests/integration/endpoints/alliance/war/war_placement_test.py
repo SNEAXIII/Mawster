@@ -166,6 +166,28 @@ class TestPlaceWarDefender:
         assert body["ascension"] == 0
 
     @pytest.mark.asyncio
+    async def test_place_defender_7r6_accepted(self):
+        """7r6 placement must succeed — rank 6 is now a valid max rank."""
+        data = await _setup_war()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/place",
+            payload={
+                "node_number": 15,
+                "champion_id": str(data["champ"].id),
+                "stars": 7,
+                "rank": 6,
+                "ascension": 0,
+            },
+            headers=headers,
+        )
+        assert response.status_code == 201
+        body = response.json()
+        assert body["rarity"] == "7r6"
+        assert body["node_number"] == 15
+
+    @pytest.mark.asyncio
     async def test_place_defender_same_champion_multiple_nodes(self):
         data = await _setup_war()
         headers = create_auth_headers(user_id=str(USER_ID))

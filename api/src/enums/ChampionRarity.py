@@ -9,3 +9,4 @@ class ChampionRarity(str, Enum):
     SEVEN_R3 = "7r3"
     SEVEN_R4 = "7r4"
     SEVEN_R5 = "7r5"
+    SEVEN_R6 = "7r6"

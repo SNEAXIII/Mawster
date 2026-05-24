@@ -300,8 +300,8 @@ class TestCreateChampionUser:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "rarity",
-        ["6r4", "6r5", "7r1", "7r2", "7r3", "7r4", "7r5"],
-        ids=["6r4", "6r5", "7r1", "7r2", "7r3", "7r4", "7r5"],
+        ["6r4", "6r5", "7r1", "7r2", "7r3", "7r4", "7r5", "7r6"],
+        ids=["6r4", "6r5", "7r1", "7r2", "7r3", "7r4", "7r5", "7r6"],
     )
     async def test_all_valid_rarities_accepted(self, session, rarity):
         """Every valid rarity must succeed with 201."""
@@ -963,7 +963,7 @@ class TestUpgradeChampionRank:
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         champ = await push_champion()
-        entry = await _push_champion_user(acc.id, champ.id, "7r5")
+        entry = await _push_champion_user(acc.id, champ.id, "7r6")
 
         response = await execute_patch_request(
             f"{CHAMPION_USERS_ROUTE}/{entry.id}/upgrade", {}, headers=HEADERS
@@ -972,9 +972,9 @@ class TestUpgradeChampionRank:
         assert "maximum rank" in response.json()["message"].lower()
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("rarity", ["6r5", "7r5"])
+    @pytest.mark.parametrize("rarity", ["6r5", "7r6"])
     async def test_upgrade_all_max_rarities_return_400(self, session, rarity):
-        """Both 6r5 and 7r5 are ceilings for their star level."""
+        """Both 6r5 and 7r6 are ceilings for their star level."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         champ = await push_champion()
@@ -1057,12 +1057,12 @@ class TestUpgradeChampionRank:
 
     @pytest.mark.asyncio
     async def test_upgrade_successive_ranks(self):
-        """Chain upgrades: 7r1 -> 7r2 -> 7r3 -> 7r4 -> 7r5 -> 400."""
+        """Chain upgrades: 7r1 -> 7r2 -> 7r3 -> 7r4 -> 7r5 -> 7r6 -> 400."""
         await push_one_user()
         acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         champ = await push_champion()
         entry = await _push_champion_user(acc.id, champ.id, "7r1")
-        expected_rarities = ["7r2", "7r3", "7r4", "7r5"]
+        expected_rarities = ["7r2", "7r3", "7r4", "7r5", "7r6"]
         for expected in expected_rarities:
             r = await execute_patch_request(
                 f"{CHAMPION_USERS_ROUTE}/{entry.id}/upgrade", {}, headers=HEADERS

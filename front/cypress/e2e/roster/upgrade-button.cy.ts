@@ -49,10 +49,10 @@ describe('Roster – Champion Upgrade', () => {
     });
   });
 
-  it('upgrade button is NOT visible on a champion at max rank (7r5)', () => {
+  it('upgrade button is NOT visible on a champion at max rank (7r6)', () => {
     setupRosterUser('upg-max', 'MaxPlayer').then(({ adminData, userData, accountId }) => {
       cy.apiLoadChampion(adminData.access_token, 'MaxRankHero', 'Tech').then((champs) => {
-        cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r5');
+        cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r6');
 
         cy.apiLogin(userData.user_id);
         cy.navTo('roster');
@@ -64,7 +64,7 @@ describe('Roster – Champion Upgrade', () => {
   it('cannot upgrade past max rank via API', () => {
     setupRosterUser('upg-past', 'MaxPastPlayer').then(({ adminData, userData, accountId }) => {
       cy.apiLoadChampion(adminData.access_token, 'MaxPastHero', 'Skill').then((champs) => {
-        cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r5').then((cu) => {
+        cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r6').then((cu) => {
           cy.request({
             method: 'PATCH',
             url: `${BACKEND}/champion-users/${cu.id}/upgrade`,
