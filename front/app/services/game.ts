@@ -373,6 +373,19 @@ export async function removeOfficer(allianceId: string, gameAccountId: string): 
   return response.json();
 }
 
+export async function transferOwnership(
+  allianceId: string,
+  gameAccountId: string,
+): Promise<Alliance> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/owner`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+    body: JSON.stringify({ game_account_id: gameAccountId }),
+  });
+  await throwOnError(response, 'Failed to transfer ownership');
+  return response.json();
+}
+
 // ─── ELO / Tier ──────────────────────────────────────────
 export async function patchAllianceElo(allianceId: string, elo: number): Promise<Alliance> {
   const response = await debugFetch(`${PROXY}/alliances/${allianceId}/elo`, {

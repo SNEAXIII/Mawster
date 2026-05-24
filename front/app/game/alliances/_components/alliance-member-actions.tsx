@@ -12,8 +12,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { TextConfirmationDialog } from '@/components/text-confirmation-dialog';
-import { MoreHorizontal, ShieldCheck, ShieldMinus, UserMinus } from 'lucide-react';
-import { type Alliance, addOfficer, removeOfficer, removeMember } from '@/app/services/game';
+import { Crown, MoreHorizontal, ShieldCheck, ShieldMinus, UserMinus } from 'lucide-react';
+import {
+  type Alliance,
+  addOfficer,
+  removeOfficer,
+  removeMember,
+  transferOwnership,
+} from '@/app/services/game';
 import { useAllianceRole } from '@/hooks/use-alliance-role';
 
 const AllianceMemberAction = {
@@ -21,6 +27,7 @@ const AllianceMemberAction = {
   DEMOTE: 'demote',
   REMOVE: 'remove',
   LEAVE: 'leave',
+  TRANSFER_OWNER: 'transfer_owner',
 } as const;
 
 type AllianceMemberAction = (typeof AllianceMemberAction)[keyof typeof AllianceMemberAction];
@@ -52,10 +59,12 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
     demote: false,
     remove: false,
     leave: false,
+    transfer_owner: false,
   });
   const [isPromoteDialogOpen, setIsPromoteDialogOpen] = useState(false);
   const [isExcludeDialogOpen, setIsExcludeDialogOpen] = useState(false);
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
+  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
 
   const handleAction = async (action: AllianceMemberAction) => {
     setIsLoading((prev) => ({ ...prev, [action]: true }));
@@ -80,6 +89,13 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
           toast.success(t.game.alliances.memberRemoveSuccess);
           setIsLeaveDialogOpen(false);
           break;
+        case AllianceMemberAction.TRANSFER_OWNER:
+          await transferOwnership(allianceId, member.id);
+          toast.success(
+            t.game.alliances.transferOwnerSuccess.replace('{pseudo}', member.game_pseudo),
+          );
+          setIsTransferDialogOpen(false);
+          break;
       }
       onRefresh();
     } catch (err: unknown) {
@@ -89,7 +105,9 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
           ? t.game.alliances.officerAddError
           : action === AllianceMemberAction.DEMOTE
             ? t.game.alliances.officerRemoveError
-            : t.game.alliances.memberRemoveError;
+            : action === AllianceMemberAction.TRANSFER_OWNER
+              ? t.game.alliances.transferOwnerError
+              : t.game.alliances.memberRemoveError;
       const errMessage = err instanceof Error ? err.message : undefined;
       toast.error(errMessage || errorMsg);
     } finally {
@@ -101,8 +119,9 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
   const canDemote = userIsOwner && !member.is_owner && member.is_officer;
   const canLeave = !member.is_owner && memberIsMine;
   const canExclude = !member.is_owner && !memberIsMine && userCanManage;
+  const canTransferOwner = userIsOwner && member.is_officer && !member.is_owner;
 
-  if (!canPromote && !canDemote && !canLeave && !canExclude) return null;
+  if (!canPromote && !canDemote && !canLeave && !canExclude && !canTransferOwner) return null;
 
   return (
     <>
@@ -127,6 +146,17 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
             >
               <ShieldCheck className='mr-2 size-4' />
               {t.game.alliances.promoteOfficer}
+            </DropdownMenuItem>
+          )}
+          {canTransferOwner && (
+            <DropdownMenuItem
+              onClick={() => setIsTransferDialogOpen(true)}
+              className='text-yellow-500 flex items-center'
+              disabled={isLoading.transfer_owner}
+              data-cy={`transfer-owner-${member.game_pseudo}`}
+            >
+              <Crown className='mr-2 size-4' />
+              {t.game.alliances.transferOwner}
             </DropdownMenuItem>
           )}
           {canDemote && (
@@ -194,6 +224,19 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
         inputLabel={t.game.alliances.excludeTypeConfirm}
         confirmText={t.game.alliances.excludeMember}
         variant='destructive'
+      />
+
+      <TextConfirmationDialog
+        open={isTransferDialogOpen}
+        onOpenChange={setIsTransferDialogOpen}
+        title={t.game.alliances.transferOwner}
+        description={t.game.alliances.transferOwnerConfirm
+          .replace('{pseudo}', member.game_pseudo)
+          .replace('{pseudo}', member.game_pseudo)}
+        onConfirm={() => handleAction(AllianceMemberAction.TRANSFER_OWNER)}
+        confirmationWord={member.game_pseudo}
+        inputLabel={member.game_pseudo}
+        confirmText={t.game.alliances.transferOwner}
       />
     </>
   );
