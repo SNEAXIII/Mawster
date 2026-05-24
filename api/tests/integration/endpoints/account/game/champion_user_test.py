@@ -363,7 +363,7 @@ class TestBulkAddChampions:
                 "game_account_id": str(acc.id),
                 "champions": [
                     {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 100},
-                    {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 999},
+                    {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 150},
                 ],
             },
             headers=HEADERS,
