@@ -1,5 +1,7 @@
 'use client';
 
+import { useRef, useState } from 'react';
+import { snapdom } from '@zumer/snapdom';
 import { useI18n } from '@/app/i18n';
 import { useRequiredSession } from '@/hooks/use-required-session';
 import { FullPageSpinner } from '@/components/full-page-spinner';
@@ -24,6 +26,35 @@ export default function DefensePageContent({
   const { status } = useRequiredSession();
 
   const vm = useDefenseViewModel({ onStateChange, initialAllianceId, initialBg });
+
+  const exportDefenseMapRef = useRef<HTMLDivElement>(null);
+  const exportDefenseAssignementsRef = useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const selectedAlliance = vm.alliances.find((a) => a.id === vm.selectedAllianceId) ?? null;
+
+  const handleExport = async () => {
+    if (!exportDefenseMapRef.current || !exportDefenseAssignementsRef.current) return;
+    setExporting(true);
+    // Wait for React to commit the state change (bg-black, hidden remove buttons) to the DOM
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    try {
+      const pngMap = await snapdom.toPng(exportDefenseMapRef.current, { scale: 2, embedFonts: false });
+      const pngAssignements = await snapdom.toPng(exportDefenseAssignementsRef.current, { scale: 2, embedFonts: false });
+      const allianceName = selectedAlliance?.name ?? 'alliance';
+      const date = new Date().toISOString().split('T')[0];
+      const linkMap = document.createElement('a');
+      linkMap.download = `defense-bg${vm.selectedBg}-${allianceName}-${date}.png`;
+      linkMap.href = pngMap.src;
+      linkMap.click();
+      const linkAssignements = document.createElement('a');
+      linkAssignements.download = `defense-assignments-bg${vm.selectedBg}-${allianceName}-${date}.png`;
+      linkAssignements.href = pngAssignements.src;
+      linkAssignements.click();
+    } finally {
+      setExporting(false);
+    }
+  };
 
   if (vm.loading || status === 'loading') return <FullPageSpinner />;
 
@@ -50,10 +81,18 @@ export default function DefensePageContent({
           onClearClick={() => defenseActions.setClearConfirmOpen(true)}
           canManage={vm.userCanManage}
           defenseSummary={defenseActions.defenseSummary}
+          onExportClick={handleExport}
+          exporting={exporting}
         />
         <DefenseGrid
           onNodeClick={vm.handleNodeClick}
           canManage={vm.userCanManage}
+          exportDefenseMapRef={exportDefenseMapRef}
+          exportDefenseAssignementsRef={exportDefenseAssignementsRef}
+          exporting={exporting}
+          selectedAllianceTag={selectedAlliance?.tag}
+          selectedAllianceName={selectedAlliance?.name}
+          selectedBg={vm.selectedBg}
         />
       </DefenseActionsProvider>
     </div>

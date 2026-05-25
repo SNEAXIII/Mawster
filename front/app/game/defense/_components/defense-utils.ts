@@ -28,12 +28,11 @@ export function rarityBadgeClass(rarity: string): string {
   return 'text-red-400';
 }
 
-/** Human-readable label: "R4·200" or "R5·A1·200" if ascended. */
+/** Human-readable label: "R4·200" or "R4·200·A1". */
 export function rarityLabel(rarity: string, signature: number, ascension?: number): string {
   const { rank } = parseRarity(rarity);
-  const parts = [`R${rank}`];
+  const parts = [`R${rank}`, String(signature)];
   if (ascension && ascension > 0) parts.push(`A${ascension}`);
-  parts.push(String(signature));
   return parts.join('·');
 }
 
