@@ -53,6 +53,7 @@ export function useKnowledgeBaseViewModel() {
     return v === 'true' ? true : null;
   });
   const [debouncedPseudo, setDebouncedPseudo] = useState(() => getInitialParams().get('game_account_pseudo') ?? '');
+  const [debouncedNodeNumber, setDebouncedNodeNumber] = useState(() => getInitialParams().get('node_number') ?? '');
   const [page, setPage] = useState(() => Number(getInitialParams().get('page') ?? '1'));
   const [size, setSize] = useState(() => Number(getInitialParams().get('size') ?? '20'));
   const [sortBy, setSortBy] = useState(() => getInitialParams().get('sort_by') ?? 'created_at');
@@ -70,6 +71,11 @@ export function useKnowledgeBaseViewModel() {
     const timer = setTimeout(() => setDebouncedPseudo(filters.game_account_pseudo), 300);
     return () => clearTimeout(timer);
   }, [filters.game_account_pseudo]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedNodeNumber(filters.node_number), 300);
+    return () => clearTimeout(timer);
+  }, [filters.node_number]);
 
   useEffect(() => {
     getSeasons().then(setSeasons).catch(() => setSeasons([]));
@@ -105,7 +111,7 @@ export function useKnowledgeBaseViewModel() {
       const apiFilters: FightRecordFilters = {
         champion_id: filters.champion_id ?? undefined,
         defender_champion_id: filters.defender_champion_id ?? undefined,
-        node_number: filters.node_number ? Number.parseInt(filters.node_number) : undefined,
+        node_number: debouncedNodeNumber ? Number.parseInt(debouncedNodeNumber) : undefined,
         tier: filters.tier ? Number.parseInt(filters.tier) : undefined,
         game_account_pseudo: debouncedPseudo || undefined,
         planning_error_only: planningErrorOnly ?? undefined,
@@ -123,7 +129,7 @@ export function useKnowledgeBaseViewModel() {
     } finally {
       setLoading(false);
     }
-  }, [filters.champion_id, filters.defender_champion_id, filters.node_number, filters.tier, debouncedPseudo, planningErrorOnly, seasonSelector, seasonId, allianceId, page, size, sortBy, sortOrder]);
+  }, [filters.champion_id, filters.defender_champion_id, debouncedNodeNumber, filters.tier, debouncedPseudo, planningErrorOnly, seasonSelector, seasonId, allianceId, page, size, sortBy, sortOrder]);
 
   useEffect(() => {
     load();
@@ -152,6 +158,7 @@ export function useKnowledgeBaseViewModel() {
   const handleClearFilters = () => {
     setFilters(DEFAULT_FILTERS);
     setDebouncedPseudo('');
+    setDebouncedNodeNumber('');
     setPlanningErrorOnly(null);
     setSeasonSelector('all_seasons');
     setSeasonId(null);
