@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   getFightRecords,
   getSeasons,
@@ -44,23 +44,33 @@ function getInitialParams(): URLSearchParams {
 }
 
 export function useKnowledgeBaseViewModel() {
-  const router = useRouter();
   const pathname = usePathname();
+  const requestIdRef = useRef(0);
 
   const [filters, setFilters] = useState<Filters>(() => filtersFromParams(getInitialParams()));
   const [planningErrorOnly, setPlanningErrorOnly] = useState<boolean | null>(() => {
     const v = getInitialParams().get('planning_error_only');
     return v === 'true' ? true : null;
   });
-  const [debouncedPseudo, setDebouncedPseudo] = useState(() => getInitialParams().get('game_account_pseudo') ?? '');
+  const [debouncedPseudo, setDebouncedPseudo] = useState(
+    () => getInitialParams().get('game_account_pseudo') ?? ''
+  );
   const [page, setPage] = useState(() => Number(getInitialParams().get('page') ?? '1'));
   const [size, setSize] = useState(() => Number(getInitialParams().get('size') ?? '20'));
   const [sortBy, setSortBy] = useState(() => getInitialParams().get('sort_by') ?? 'created_at');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(() => (getInitialParams().get('sort_order') as 'asc' | 'desc') ?? 'desc');
-  const [seasonSelector, setSeasonSelector] = useState<string>(() => getInitialParams().get('season_selector') ?? 'all_seasons');
-  const [seasonId, setSeasonId] = useState<string | null>(() => getInitialParams().get('season_id'));
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+    () => (getInitialParams().get('sort_order') as 'asc' | 'desc') ?? 'desc'
+  );
+  const [seasonSelector, setSeasonSelector] = useState<string>(
+    () => getInitialParams().get('season_selector') ?? 'all_seasons'
+  );
+  const [seasonId, setSeasonId] = useState<string | null>(() =>
+    getInitialParams().get('season_id')
+  );
   const [seasons, setSeasons] = useState<Season[]>([]);
-  const [allianceId, setAllianceId] = useState<string | null>(() => getInitialParams().get('alliance_id'));
+  const [allianceId, setAllianceId] = useState<string | null>(() =>
+    getInitialParams().get('alliance_id')
+  );
   const [accessibleAlliances, setAccessibleAlliances] = useState<AccessibleAlliance[]>([]);
   const [data, setData] = useState<PaginatedFightRecords | null>(null);
   const [loading, setLoading] = useState(false);
@@ -72,17 +82,22 @@ export function useKnowledgeBaseViewModel() {
   }, [filters.game_account_pseudo]);
 
   useEffect(() => {
-    getSeasons().then(setSeasons).catch(() => setSeasons([]));
+    getSeasons()
+      .then(setSeasons)
+      .catch(() => setSeasons([]));
   }, []);
 
   useEffect(() => {
-    getAccessibleAlliances().then(setAccessibleAlliances).catch(() => setAccessibleAlliances([]));
+    getAccessibleAlliances()
+      .then(setAccessibleAlliances)
+      .catch(() => setAccessibleAlliances([]));
   }, []);
 
   useEffect(() => {
     const params = new URLSearchParams();
     if (filters.champion_id) params.set('champion_id', filters.champion_id);
-    if (filters.defender_champion_id) params.set('defender_champion_id', filters.defender_champion_id);
+    if (filters.defender_champion_id)
+      params.set('defender_champion_id', filters.defender_champion_id);
     if (filters.node_number) params.set('node_number', filters.node_number);
     if (filters.tier) params.set('tier', filters.tier);
     if (filters.game_account_pseudo) params.set('game_account_pseudo', filters.game_account_pseudo);
@@ -95,10 +110,22 @@ export function useKnowledgeBaseViewModel() {
     if (sortBy !== 'created_at') params.set('sort_by', sortBy);
     if (sortOrder !== 'desc') params.set('sort_order', sortOrder);
     const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  }, [filters, planningErrorOnly, seasonSelector, seasonId, allianceId, page, size, sortBy, sortOrder, pathname, router]);
+    window.history.replaceState(null, '', query ? `${pathname}?${query}` : pathname);
+  }, [
+    filters,
+    planningErrorOnly,
+    seasonSelector,
+    seasonId,
+    allianceId,
+    page,
+    size,
+    sortBy,
+    sortOrder,
+    pathname,
+  ]);
 
   const load = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     setLoading(true);
     setError(null);
     try {
@@ -117,13 +144,28 @@ export function useKnowledgeBaseViewModel() {
         sort_by: sortBy,
         sort_order: sortOrder,
       };
-      setData(await getFightRecords(apiFilters));
+      const result = await getFightRecords(apiFilters);
+      if (requestId === requestIdRef.current) setData(result);
     } catch {
-      setError('Failed to load fight records.');
+      if (requestId === requestIdRef.current) setError('Failed to load fight records.');
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
-  }, [filters.champion_id, filters.defender_champion_id, filters.node_number, filters.tier, debouncedPseudo, planningErrorOnly, seasonSelector, seasonId, allianceId, page, size, sortBy, sortOrder]);
+  }, [
+    filters.champion_id,
+    filters.defender_champion_id,
+    filters.node_number,
+    filters.tier,
+    debouncedPseudo,
+    planningErrorOnly,
+    seasonSelector,
+    seasonId,
+    allianceId,
+    page,
+    size,
+    sortBy,
+    sortOrder,
+  ]);
 
   useEffect(() => {
     load();
@@ -180,9 +222,14 @@ export function useKnowledgeBaseViewModel() {
   };
 
   const hasActiveFilters = Boolean(
-    filters.champion_id || filters.defender_champion_id ||
-    filters.node_number || filters.tier || filters.game_account_pseudo ||
-    planningErrorOnly !== null || seasonSelector !== 'all_seasons' || allianceId !== null
+    filters.champion_id ||
+    filters.defender_champion_id ||
+    filters.node_number ||
+    filters.tier ||
+    filters.game_account_pseudo ||
+    planningErrorOnly !== null ||
+    seasonSelector !== 'all_seasons' ||
+    allianceId !== null
   );
 
   return {
