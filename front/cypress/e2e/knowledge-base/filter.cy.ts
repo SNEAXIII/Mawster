@@ -7,9 +7,20 @@ import { setupKnowledgeBaseFast, setupKnowledgeBase } from '../../support/e2e';
 //   odd  nodes: attacker=Iron Man,       defender=Captain America
 //   even nodes: attacker=Captain America, defender=Iron Man
 
+// Drains intercepted fight-records requests until one matches the given query
+// params, so assertions run against the response for the current filter value
+// instead of racing the 300ms player-filter debounce.
+function waitForRecords(checks: Record<string, string>) {
+  cy.wait('@fightRecords').then(({ request }) => {
+    const matches = Object.entries(checks).every(([key, value]) => String(request.query[key] ?? '') === value);
+    if (!matches) waitForRecords(checks);
+  });
+}
+
 describe('Knowledge Base', () => {
   beforeEach(() => {
     cy.truncateDb();
+    cy.intercept('GET', '**/fight-records*').as('fightRecords');
   });
 
   it('filters by player name — exact, partial lowercase, no match, clear', () => {
@@ -22,20 +33,25 @@ describe('Knowledge Base', () => {
 
       cy.getByCy('filter-player').should('be.visible').clear();
       cy.getByCy('filter-player').type(pseudo);
+      waitForRecords({ game_account_pseudo: pseudo });
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
       cy.getByCy('fight-records-table')
         .find('tbody tr')
         .each(($tr) => cy.wrap($tr).find('td').eq(0).should('have.text', pseudo));
 
+      const partial = pseudo.toLowerCase().slice(0, 4);
       cy.getByCy('filter-player').should('be.visible').clear();
-      cy.getByCy('filter-player').type(pseudo.toLowerCase().slice(0, 4));
+      cy.getByCy('filter-player').type(partial);
+      waitForRecords({ game_account_pseudo: partial });
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
 
       cy.getByCy('filter-player').should('be.visible').clear();
       cy.getByCy('filter-player').type('zzznomatch');
+      waitForRecords({ game_account_pseudo: 'zzznomatch' });
       cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
 
       cy.getByCy('filter-clear').click();
+      waitForRecords({ game_account_pseudo: '' });
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
     });
   });
@@ -98,24 +114,29 @@ describe('Knowledge Base', () => {
     const prefix = 'kb-fcomb';
     // setupKnowledgeBase places attackers deterministically on nodes 1 and 2,
     // avoiding the substring-match flakiness of the bulk endpoint
-    setupKnowledgeBase(prefix).then(({ userData, atkData }) => {
+    setupKnowledgeBase(prefix).then(({ userData }) => {
       cy.apiLogin(userData.user_id);
       cy.visit('/game/knowledge-base');
 
       const attackerPseudo = `${prefix}Atk`.slice(0, 16);
       cy.getByCy('filter-player').should('be.visible').clear();
       cy.getByCy('filter-player').type(attackerPseudo);
+      waitForRecords({ game_account_pseudo: attackerPseudo });
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
 
       cy.getByCy('filter-node').should('be.visible').clear();
       cy.getByCy('filter-node').type('1');
+      waitForRecords({ game_account_pseudo: attackerPseudo, node_number: '1' });
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
 
-      cy.getByCy('filter-node').should('be.visible').should('have.value', '1').clear();
+      cy.getByCy('filter-node').should('be.visible').should('have.value', '1');
+      cy.getByCy('filter-node').clear();
       cy.getByCy('filter-node').type('50');
+      waitForRecords({ game_account_pseudo: attackerPseudo, node_number: '50' });
       cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
 
       cy.getByCy('filter-clear').click();
+      waitForRecords({ game_account_pseudo: '', node_number: '' });
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
     });
   });
