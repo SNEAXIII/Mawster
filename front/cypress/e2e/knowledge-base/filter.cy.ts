@@ -43,12 +43,13 @@ describe('Knowledge Base', () => {
 
       cy.getByCy('filter-attacker').click();
       cy.get('[role="dialog"]').should('be.visible');
-      cy.get('[role="dialog"]').find('input').clear();
       cy.get('[role="dialog"]').find('input').type('Captain America');
       cy.contains('[role="option"]', 'Captain America').click();
+      cy.intercept('GET', "**/fight-records**")
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
 
       cy.getByCy('filter-clear').click();
+      cy.intercept('GET', "**/fight-records**")
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
     });
   });
@@ -99,18 +100,22 @@ describe('Knowledge Base', () => {
       const attackerPseudo = `${prefix}Atk`.slice(0, 16);
       cy.getByCy('filter-player').should('be.visible').clear();
       cy.getByCy('filter-player').type(attackerPseudo);
+      cy.intercept('GET', "**/fight-records**")
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
 
       cy.getByCy('filter-node').should('be.visible').clear();
       cy.getByCy('filter-node').type('1');
+      cy.intercept('GET', "**/fight-records**")
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
 
       cy.getByCy('filter-node').should('be.visible').should('have.value', '1');
       cy.getByCy('filter-node').clear();
       cy.getByCy('filter-node').type('50');
+      cy.intercept('GET', "**/fight-records**")
       cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
 
       cy.getByCy('filter-clear').click();
+      cy.intercept('GET', "**/fight-records**")
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
     });
   });
