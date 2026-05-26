@@ -39,8 +39,8 @@ export default function DefensePageContent({
     // Wait for React to commit the state change (bg-black, hidden remove buttons) to the DOM
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     try {
-      const pngMap = await snapdom.toPng(exportDefenseMapRef.current, { scale: 2, embedFonts: false });
-      const pngAssignements = await snapdom.toPng(exportDefenseAssignementsRef.current, { scale: 2, embedFonts: false });
+      const pngMap = await snapdom.toPng(exportDefenseMapRef.current, { scale: 1, embedFonts: false });
+      const pngAssignements = await snapdom.toPng(exportDefenseAssignementsRef.current, { scale: 1, embedFonts: false });
       const allianceName = selectedAlliance?.name ?? 'alliance';
       const date = new Date().toISOString().split('T')[0];
       const linkMap = document.createElement('a');
