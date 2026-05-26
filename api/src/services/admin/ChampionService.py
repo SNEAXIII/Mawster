@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional
+from typing import Any, Optional
 
 from sqlalchemy import func
 from sqlmodel import select, or_
@@ -35,17 +35,16 @@ class ChampionService:
         return result.first()
 
     @classmethod
-    async def get_total_champions(
+    def _apply_filters(
         cls,
-        session: SessionDep,
+        sql: Any,
         champion_class: Optional[str] = None,
         search: Optional[str] = None,
         is_ascendable: Optional[bool] = None,
         has_prefight: Optional[bool] = None,
         is_saga_attacker: Optional[bool] = None,
         is_saga_defender: Optional[bool] = None,
-    ) -> int:
-        sql = select(func.count()).select_from(Champion)
+    ) -> Any:
         if champion_class:
             sql = sql.where(Champion.champion_class == champion_class)
         if search:
@@ -64,6 +63,29 @@ class ChampionService:
             sql = sql.where(Champion.is_saga_attacker == is_saga_attacker)
         if is_saga_defender is not None:
             sql = sql.where(Champion.is_saga_defender == is_saga_defender)
+        return sql
+
+    @classmethod
+    async def get_total_champions(
+        cls,
+        session: SessionDep,
+        champion_class: Optional[str] = None,
+        search: Optional[str] = None,
+        is_ascendable: Optional[bool] = None,
+        has_prefight: Optional[bool] = None,
+        is_saga_attacker: Optional[bool] = None,
+        is_saga_defender: Optional[bool] = None,
+    ) -> int:
+        sql = select(func.count()).select_from(Champion)
+        sql = cls._apply_filters(
+            sql,
+            champion_class,
+            search,
+            is_ascendable,
+            has_prefight,
+            is_saga_attacker,
+            is_saga_defender,
+        )
         result = await session.exec(sql)
         return result.one()
 
@@ -81,24 +103,15 @@ class ChampionService:
         is_saga_defender: Optional[bool] = None,
     ) -> list[Champion]:
         sql = select(Champion).order_by(Champion.name)
-        if champion_class:
-            sql = sql.where(Champion.champion_class == champion_class)
-        if search:
-            like_pattern = f"%{search}%"
-            sql = sql.where(
-                or_(
-                    Champion.name.ilike(like_pattern),
-                    Champion.alias.ilike(like_pattern),
-                )
-            )
-        if is_ascendable is not None:
-            sql = sql.where(Champion.is_ascendable == is_ascendable)
-        if has_prefight is not None:
-            sql = sql.where(Champion.has_prefight == has_prefight)
-        if is_saga_attacker is not None:
-            sql = sql.where(Champion.is_saga_attacker == is_saga_attacker)
-        if is_saga_defender is not None:
-            sql = sql.where(Champion.is_saga_defender == is_saga_defender)
+        sql = cls._apply_filters(
+            sql,
+            champion_class,
+            search,
+            is_ascendable,
+            has_prefight,
+            is_saga_attacker,
+            is_saga_defender,
+        )
         offset = (page - 1) * size
         sql = sql.offset(offset).limit(size)
         result = await session.exec(sql)
