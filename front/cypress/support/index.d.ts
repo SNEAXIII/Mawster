@@ -309,6 +309,12 @@ declare global {
         items: { mastery_id: string; unlocked: number; attack: number; defense: number }[],
       ): Chainable<unknown>;
 
+      /** Navigate to admin page and open the champions tab. */
+      goToAdminChampionsTab(): Chainable<void>;
+
+      /** Login as userId, navigate to war page, and click the given mode tab. */
+      goToWarMode(userId: string, mode: 'defenders' | 'attackers'): Chainable<void>;
+
       setupAllianceWithMember(
         tokenPrefix: string,
         championName: string,

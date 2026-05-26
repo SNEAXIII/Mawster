@@ -1,11 +1,5 @@
 import { setupAttackerScenario } from '../../support/e2e';
 
-function goToAttackersMode(userId: string) {
-  cy.apiLogin(userId);
-  cy.navTo('war');
-  cy.getByCy('war-mode-attackers').click();
-}
-
 describe('War – Fight Not Done & Planning Error', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -15,7 +9,7 @@ describe('War – Fight Not Done & Planning Error', () => {
 
   it('fight-not-done button is hidden when no attacker is assigned', () => {
     setupAttackerScenario('fnd-no-atk').then(({ ownerData }) => {
-      goToAttackersMode(ownerData.user_id);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
       cy.getByCy('fight-not-done-node-10').should('not.exist');
     });
@@ -24,7 +18,7 @@ describe('War – Fight Not Done & Planning Error', () => {
   it('fight-not-done button appears for officer after attacker is assigned', () => {
     setupAttackerScenario('fnd-appears').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      goToAttackersMode(ownerData.user_id);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('fight-not-done-node-10').should('be.visible');
     });
   });
@@ -43,7 +37,7 @@ describe('War – Fight Not Done & Planning Error', () => {
   it('clicking fight-not-done button marks node as not done', () => {
     setupAttackerScenario('fnd-toggle-on').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      goToAttackersMode(ownerData.user_id);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('fight-not-done-node-10').click();
       cy.getByCy('fight-not-done-node-10').should('have.class', 'bg-amber-500');
     });
@@ -53,7 +47,7 @@ describe('War – Fight Not Done & Planning Error', () => {
     setupAttackerScenario('fnd-toggle-off').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.apiToggleFightNotDone(ownerData.access_token, allianceId, warId, 1, 10);
-      goToAttackersMode(ownerData.user_id);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('fight-not-done-node-10').click();
       cy.getByCy('fight-not-done-node-10').should('not.have.class', 'bg-amber-500');
     });
@@ -63,7 +57,7 @@ describe('War – Fight Not Done & Planning Error', () => {
     setupAttackerScenario('fnd-hidden-completed').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
-      goToAttackersMode(ownerData.user_id);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('fight-not-done-node-10').should('not.exist');
     });
   });
@@ -72,7 +66,7 @@ describe('War – Fight Not Done & Planning Error', () => {
 
   it('planning-error button is hidden when no attacker is assigned', () => {
     setupAttackerScenario('pe-no-atk').then(({ ownerData }) => {
-      goToAttackersMode(ownerData.user_id);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
       cy.getByCy('planning-error-node-10').should('not.exist');
     });
@@ -81,7 +75,7 @@ describe('War – Fight Not Done & Planning Error', () => {
   it('planning-error button appears for officer after attacker is assigned', () => {
     setupAttackerScenario('pe-appears').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      goToAttackersMode(ownerData.user_id);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('planning-error-node-10').should('be.visible');
     });
   });
@@ -100,7 +94,7 @@ describe('War – Fight Not Done & Planning Error', () => {
   it('clicking planning-error button marks node as planning error', () => {
     setupAttackerScenario('pe-toggle-on').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      goToAttackersMode(ownerData.user_id);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('planning-error-node-10').click();
       cy.getByCy('planning-error-node-10').should('have.class', 'bg-amber-500');
     });
@@ -110,7 +104,7 @@ describe('War – Fight Not Done & Planning Error', () => {
     setupAttackerScenario('pe-toggle-off').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.apiTogglePlanningError(ownerData.access_token, allianceId, warId, 1, 10);
-      goToAttackersMode(ownerData.user_id);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('planning-error-node-10').click();
       cy.getByCy('planning-error-node-10').should('not.have.class', 'bg-amber-500');
     });
@@ -122,7 +116,7 @@ describe('War – Fight Not Done & Planning Error', () => {
     setupAttackerScenario('fnd-disabled-by-pe').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.apiTogglePlanningError(ownerData.access_token, allianceId, warId, 1, 10);
-      goToAttackersMode(ownerData.user_id);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('fight-not-done-node-10').should('have.class', 'opacity-40');
     });
   });
@@ -131,7 +125,7 @@ describe('War – Fight Not Done & Planning Error', () => {
     setupAttackerScenario('pe-disabled-by-fnd').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.apiToggleFightNotDone(ownerData.access_token, allianceId, warId, 1, 10);
-      goToAttackersMode(ownerData.user_id);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('planning-error-node-10').should('have.class', 'opacity-40');
     });
   });
@@ -140,7 +134,7 @@ describe('War – Fight Not Done & Planning Error', () => {
     setupAttackerScenario('fnd-no-state-change').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.apiTogglePlanningError(ownerData.access_token, allianceId, warId, 1, 10);
-      goToAttackersMode(ownerData.user_id);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('fight-not-done-node-10')
         .should('have.class', 'opacity-40')
         .should('not.have.class', 'bg-amber-500');
@@ -155,7 +149,7 @@ describe('War – Fight Not Done & Planning Error', () => {
     setupAttackerScenario('pe-no-state-change').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.apiToggleFightNotDone(ownerData.access_token, allianceId, warId, 1, 10);
-      goToAttackersMode(ownerData.user_id);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('planning-error-node-10')
         .should('have.class', 'opacity-40')
         .should('not.have.class', 'bg-amber-500');

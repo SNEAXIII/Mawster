@@ -1207,6 +1207,19 @@ Cypress.Commands.add(
   },
 );
 
+// ── Navigation helpers ────────────────────────────────────────────────────────
+
+Cypress.Commands.add('goToAdminChampionsTab', () => {
+  cy.navTo('admin');
+  cy.getByCy('tab-champions').click();
+});
+
+Cypress.Commands.add('goToWarMode', (userId: string, mode: 'defenders' | 'attackers') => {
+  cy.apiLogin(userId);
+  cy.navTo('war');
+  cy.getByCy(`war-mode-${mode}`).click();
+});
+
 // ── War setup helper ──────────────────────────────────────────────────────────
 
 export function setupWarOwner(
