@@ -1220,6 +1220,11 @@ Cypress.Commands.add('goToWarMode', (userId: string, mode: 'defenders' | 'attack
   cy.getByCy(`war-mode-${mode}`).click();
 });
 
+Cypress.Commands.add('goToAllianceStatsTab', () => {
+  cy.navTo('alliances');
+  cy.getByCy('tab-statistics').click();
+});
+
 // ── War setup helper ──────────────────────────────────────────────────────────
 
 export function setupWarOwner(

@@ -315,6 +315,9 @@ declare global {
       /** Login as userId, navigate to war page, and click the given mode tab. */
       goToWarMode(userId: string, mode: 'defenders' | 'attackers'): Chainable<void>;
 
+      /** Navigate to alliances page and open the statistics tab. */
+      goToAllianceStatsTab(): Chainable<void>;
+
       setupAllianceWithMember(
         tokenPrefix: string,
         championName: string,
