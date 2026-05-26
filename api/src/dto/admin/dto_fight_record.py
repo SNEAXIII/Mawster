@@ -5,7 +5,7 @@ from typing import Any, Optional
 from pydantic import BaseModel, ConfigDict, model_validator
 
 
-class WarFightSynergyResponse(BaseModel):
+class ChampionUserSnapshotResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     champion_id: uuid.UUID
@@ -30,29 +30,9 @@ class WarFightSynergyResponse(BaseModel):
         }
 
 
-class WarFightPrefightResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    champion_id: uuid.UUID
-    champion_name: str
-    champion_class: str
-    image_url: Optional[str] = None
-    stars: int
-    ascension: int
-
-    @model_validator(mode="before")
-    @classmethod
-    def flatten_relations(cls, data: Any) -> Any:
-        if isinstance(data, dict):
-            return data
-        return {
-            "champion_id": data.champion_id,
-            "champion_name": data.champion.name,
-            "champion_class": data.champion.champion_class,
-            "image_url": data.champion.image_url,
-            "stars": data.stars,
-            "ascension": data.ascension,
-        }
+# Aliases kept for backwards compatibility
+WarFightSynergyResponse = ChampionUserSnapshotResponse
+WarFightPrefightResponse = ChampionUserSnapshotResponse
 
 
 class WarFightRecordResponse(BaseModel):
