@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type RefObject } from 'react';
 import { useI18n } from '@/app/i18n';
 import ChampionPortrait from '@/components/champion-portrait';
 import PlayerFilterSelect from '@/app/game/_components/player-filter-select';
@@ -22,6 +22,7 @@ import MasteryDialog from '@/app/game/account/_components/mastery-dialog';
 import { Swords } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import { fightStateFilter } from './war-tab';
+import ExportHeader from '@/app/game/_components/export-header';
 
 interface MemberGroup {
   pseudo: string;
@@ -33,6 +34,8 @@ interface WarAttackerPanelProps {
   onPlayerChange: (v: string) => void;
   combatFilter: fightStateFilter;
   onCombatFilterChange: (v: fightStateFilter) => void;
+  exporting?: boolean;
+  exportRef?: RefObject<HTMLDivElement | null>;
 }
 
 export default function WarAttackerPanel({
@@ -40,9 +43,22 @@ export default function WarAttackerPanel({
   onPlayerChange,
   combatFilter,
   onCombatFilterChange,
+  exporting = false,
+  exportRef,
 }: Readonly<WarAttackerPanelProps>) {
   const { t } = useI18n();
-  const { placements, warMode, synergies, prefights, canManageWar, isVisitor } = useWar();
+  const {
+    placements,
+    warMode,
+    synergies,
+    prefights,
+    isVisitor,
+    selectedBg,
+    alliances,
+    selectedAllianceId,
+    currentWar,
+  } = useWar();
+  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId) ?? null;
   const [masteryTarget, setMasteryTarget] = useState<{
     gameAccountId: string;
     pseudo: string;
@@ -85,52 +101,71 @@ export default function WarAttackerPanel({
     ]),
   ].sort((a, b) => a.localeCompare(b));
 
-  const groups = Array.from(groupMap.values()).sort((a, b) => a.pseudo.localeCompare(b.pseudo));
+  const groups = Array.from(groupMap.values()).sort((a, b) =>
+    exporting ? b.entries.length - a.entries.length : a.pseudo.localeCompare(b.pseudo)
+  );
 
   return (
     <div
-      className='flex flex-col gap-3 min-h-0 flex-1'
+      ref={exportRef}
+      className={cn('flex flex-col gap-3', exporting ? 'p-2 bg-black' : 'min-h-0 flex-1')}
       data-cy='war-attacker-panel'
     >
-      <div className='flex items-center justify-between gap-2 px-1 shrink-0'>
-        <span
-          data-cy='attackers-count'
-          className={`text-xs font-semibold uppercase tracking-wide ${
-            assigned.length >= 50 ? 'text-yellow-400' : 'text-destructive'
-          }`}
-        >
-          {t.game.war.attackersPanelTitle.replace('{assigned}', String(assigned.length))}
-        </span>
-        <div className='flex items-center gap-1'>
-          <Select
-            value={combatFilter}
-            onValueChange={(v) => onCombatFilterChange(v as fightStateFilter)}
+      {exporting && selectedAlliance && (
+        <ExportHeader
+          allianceTag={selectedAlliance.tag}
+          allianceName={selectedAlliance.name}
+          modeLabel={t.game.war.modeAttackers}
+          bg={selectedBg}
+          opponentName={currentWar?.opponent_name}
+        />
+      )}
+      {!exporting && (
+        <div className='flex items-center justify-between gap-2 px-1 shrink-0'>
+          <span
+            data-cy='attackers-count'
+            className={`text-xs font-semibold uppercase tracking-wide ${
+              assigned.length >= 50 ? 'text-yellow-400' : 'text-destructive'
+            }`}
           >
-            <SelectTrigger
-              className='h-7 w-20 text-xs'
-              data-cy='war-combat-filter'
+            {t.game.war.attackersPanelTitle.replace('{assigned}', String(assigned.length))}
+          </span>
+          <div className='flex items-center gap-1'>
+            <Select
+              value={combatFilter}
+              onValueChange={(v) => onCombatFilterChange(v as fightStateFilter)}
             >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='todo'>{t.game.war.combatFilterTodo}</SelectItem>
-              <SelectItem value='done'>{t.game.war.combatFilterDone}</SelectItem>
-              <SelectItem value='all'>{t.game.war.combatFilterAll}</SelectItem>
-            </SelectContent>
-          </Select>
-          <PlayerFilterSelect
-            players={players}
-            value={playerFilter}
-            onChange={onPlayerChange}
-            dataCy='war-player-filter'
-          />
+              <SelectTrigger
+                className='h-7 w-20 text-xs'
+                data-cy='war-combat-filter'
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='todo'>{t.game.war.combatFilterTodo}</SelectItem>
+                <SelectItem value='done'>{t.game.war.combatFilterDone}</SelectItem>
+                <SelectItem value='all'>{t.game.war.combatFilterAll}</SelectItem>
+              </SelectContent>
+            </Select>
+            <PlayerFilterSelect
+              players={players}
+              value={playerFilter}
+              onChange={onPlayerChange}
+              dataCy='war-player-filter'
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {assigned.length === 0 ? (
         <div className='text-sm text-muted-foreground px-1'>{t.game.war.noAvailableAttackers}</div>
       ) : (
-        <div className='flex flex-col gap-4 overflow-y-auto min-h-0'>
+        <div
+          className={cn(
+            'flex gap-4',
+            exporting ? 'flex-row flex-wrap' : 'flex-col overflow-y-auto min-h-0'
+          )}
+        >
           {groups.map((memberGroup) => {
             // Node attacker unique champion_user_ids for this member
             const nodeAttackerIds = new Set(
@@ -185,7 +220,7 @@ export default function WarAttackerPanel({
                   <span className='text-primary font-bold text-xs'>
                     {t.game.war.memberAttackers.replace('{count}', String(totalSlots))}
                   </span>
-                  {memberGroup.entries[0]?.attacker_game_account_id && (
+                  {!exporting && memberGroup.entries[0]?.attacker_game_account_id && (
                     <button
                       onClick={() =>
                         setMasteryTarget({
@@ -276,8 +311,8 @@ export default function WarAttackerPanel({
                       <div
                         key={placement.id}
                         className={cn(
-                          combatFilter === 'todo' && placement.is_combat_completed && 'opacity-40',
-                          combatFilter === 'done' && !placement.is_combat_completed && 'opacity-40'
+                          combatFilter === 'todo' && placement.is_combat_completed && 'opacity-60',
+                          combatFilter === 'done' && !placement.is_combat_completed && 'opacity-60'
                         )}
                       >
                         <AttackerEntryRow

@@ -279,6 +279,7 @@ const fr: Translations = {
       defendersPlaced: 'Défenseurs',
       removeDefender: 'Retirer',
       clearAll: 'Tout effacer',
+      exportMap: 'Exporter',
       clearConfirmTitle: 'Effacer la défense',
       clearConfirmDesc:
         'Êtes-vous sûr de vouloir retirer tous les défenseurs de ce groupe de combat ?',
@@ -333,6 +334,7 @@ const fr: Translations = {
       clearConfirmTitle: 'Vider le groupe de combat',
       clearConfirmDesc: 'Êtes-vous sûr de vouloir retirer tous les défenseurs de ce groupe ?',
       clearAll: 'Tout effacer',
+      exportMap: 'Exporter',
       nodeEmpty: 'Nœud #{node} — Vide',
       removeDefender: 'Retirer',
       loadMore: 'Charger plus',

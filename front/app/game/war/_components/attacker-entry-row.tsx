@@ -147,7 +147,7 @@ export default function AttackerEntryRow({
             <button
               type='button'
               className={cn(
-                'rounded-full flex items-center justify-center flex-shrink-0 transition-colors',
+                'rounded-full flex items-center justify-center shrink-0 transition-colors',
                 placement.is_combat_completed
                   ? 'bg-red-700/80 hover:bg-red-700 text-white'
                   : 'bg-green-700 text-muted-foreground hover:text-white',
@@ -220,7 +220,7 @@ export default function AttackerEntryRow({
             <button
               type='button'
               className={cn(
-                'rounded-full flex items-center justify-center flex-shrink-0 transition-colors',
+                'rounded-full flex items-center justify-center shrink-0 transition-colors',
                 placement.is_fight_not_done
                   ? 'bg-amber-500 text-white hover:bg-amber-600'
                   : 'bg-muted text-muted-foreground hover:text-amber-400',
@@ -259,7 +259,7 @@ export default function AttackerEntryRow({
               <button
                 type='button'
                 className={cn(
-                  'rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center flex-shrink-0',
+                  'rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center shrink-0',
                   btnSize
                 )}
                 onClick={() => setConfirmOpen(true)}
