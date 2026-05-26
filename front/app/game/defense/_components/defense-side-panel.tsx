@@ -121,7 +121,7 @@ export default function DefenseSidePanel({
                   </div>
                 </div>
                 {playerPlacements.length > 0 ? (
-                  <div className='flex flex-wrap gap-1.5'>
+                  <div className='grid grid-cols-5 gap-1.5'>
                     {playerPlacements.map((p) => (
                       <div
                         key={p.id}
@@ -156,7 +156,7 @@ export default function DefenseSidePanel({
                             rarityBadgeClass(p.rarity)
                           )}
                         >
-                          {rarityLabel(p.rarity, p.signature, p.ascension)}
+                          {rarityLabel(p.rarity, p.signature)}
                         </span>
                         {canManage && (
                           <button

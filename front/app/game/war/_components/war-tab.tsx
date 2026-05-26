@@ -1,9 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect, useRef } from 'react';
+import { snapdom } from '@zumer/snapdom';
 import { Button } from '@/components/ui/button';
-import { Shield, Swords, Trash2, NotebookPen } from 'lucide-react';
+import { Shield, Swords, Trash2, NotebookPen, Camera } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import { useI18n } from '@/app/i18n';
 import { FullPageSpinner } from '@/components/full-page-spinner';
@@ -11,6 +12,7 @@ import ChampionPortrait from '@/components/champion-portrait';
 import { WarMode } from './war-types';
 import { useWar } from '@/app/contexts/war-context';
 import SeasonBanner from './season-banner';
+import ExportHeader from '@/app/game/_components/export-header';
 
 type ToggleButtonProps = {
   active: boolean;
@@ -68,6 +70,40 @@ export default function WarTab() {
 
   const [playerFilter, setPlayerFilter] = useState('');
   const [combatFilter, setCombatFilter] = useState<fightStateFilter>('todo');
+  const [exporting, setExporting] = useState(false);
+
+  const exportMapRef = useRef<HTMLDivElement>(null);
+  const exportAttackersRef = useRef<HTMLDivElement>(null);
+
+  const handleExport = async () => {
+    if (!exportMapRef.current || !exportAttackersRef.current) return;
+    const previousMode = warMode;
+    setWarMode(WarMode.Export);
+    setExporting(true);
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    try {
+      const pngMap = await snapdom.toPng(exportMapRef.current, { scale: 1, embedFonts: false });
+      await new Promise<void>((resolve) => setTimeout(resolve, 50));
+      const el = exportAttackersRef.current;
+      const pngAttackers = await snapdom.toPng(el, {
+        scale: 1,
+        embedFonts: false,
+      });
+      const allianceName = selectedAlliance?.name ?? 'alliance';
+      const date = new Date().toISOString().split('T')[0];
+      const linkMap = document.createElement('a');
+      linkMap.download = `war-map-bg${selectedBg}-${allianceName}-${date}.png`;
+      linkMap.href = pngMap.src;
+      linkMap.click();
+      const linkAttackers = document.createElement('a');
+      linkAttackers.download = `war-attackers-bg${selectedBg}-${allianceName}-${date}.png`;
+      linkAttackers.href = pngAttackers.src;
+      linkAttackers.click();
+    } finally {
+      setExporting(false);
+      setWarMode(previousMode);
+    }
+  };
 
   useEffect(() => {
     setPlayerFilter('');
@@ -194,14 +230,6 @@ export default function WarTab() {
               <Shield className='size-3.5' />
               {t.game.war.modeDefenders}
             </ToggleButton>
-            <ToggleButton
-              active={warMode === WarMode.Plan}
-              onClick={() => setWarMode(WarMode.Plan)}
-              dataCy='war-mode-plan'
-            >
-              <NotebookPen className='size-3.5' />
-              {t.game.war.modePlan}
-            </ToggleButton>
           </div>
         )}
         {/* Clear BG button */}
@@ -213,6 +241,18 @@ export default function WarTab() {
           >
             <Trash2 className='size-4 mr-2' />
             {t.game.war.clearAll}
+          </Button>
+        )}
+        {/* Export button */}
+        {placements.length > 0 && (
+          <Button
+            variant='outline'
+            onClick={handleExport}
+            disabled={exporting}
+            data-cy='export-war-btn'
+          >
+            <Camera className='w-4 h-4 mr-1' />
+            {exporting ? '…' : t.game.war.exportMap}
           </Button>
         )}
         {/* Banned champions */}
@@ -259,23 +299,37 @@ export default function WarTab() {
       ) : (
         <div className='flex flex-col-reverse lg:flex-row gap-4'>
           <div className='overflow-x-auto flex-1 min-w-0 rounded-xl border bg-card shadow-sm'>
-            <div className='p-2 sm:p-3 w-max mx-auto'>
+            <div
+              ref={exportMapRef}
+              className={cn('p-2 sm:p-3 w-max mx-auto', exporting && 'bg-black')}
+            >
+              {exporting && selectedAlliance && (
+                <ExportHeader
+                  allianceTag={selectedAlliance.tag}
+                  allianceName={selectedAlliance.name}
+                  modeLabel={t.game.war.modeAttackers}
+                  bg={selectedBg}
+                  opponentName={currentWar?.opponent_name}
+                />
+              )}
               <WarDefenseMap
                 placements={placements}
                 onNodeClick={handleNodeClick}
                 onRemove={handleRemoveDefender}
-                canManage={canManageWar && warMode === WarMode.Defenders}
-                dimmedNodes={dimmedNodes}
+                canManage={canManageWar && warMode === WarMode.Defenders && !exporting}
+                dimmedNodes={exporting ? undefined : dimmedNodes}
                 prefightNodes={prefightNodes}
               />
             </div>
           </div>
-          <div className='w-84 shrink-0 lg:self-start lg:sticky lg:top-0 flex flex-col lg:max-h-[calc(100vh-2rem)]'>
+          <div className={cn(exporting ? 'w-full' : 'w-84 shrink-0 lg:self-start lg:sticky lg:top-0 lg:max-h-[calc(100vh-2rem)]', 'flex flex-col')}>
             <WarAttackerPanel
               playerFilter={playerFilter}
               onPlayerChange={setPlayerFilter}
               combatFilter={combatFilter}
               onCombatFilterChange={setCombatFilter}
+              exporting={exporting}
+              exportRef={exportAttackersRef}
             />
           </div>
         </div>

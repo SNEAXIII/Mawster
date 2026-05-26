@@ -48,7 +48,7 @@ describe('Defense – Placement via UI', () => {
         pseudo: 'AscPlyr',
         tag: 'AS',
         node: 10,
-        expected: 'R5·A1·200',
+        expected: 'R5·200',
         champ: {
           name: 'Doctor Doom',
           cls: 'Mystic',
@@ -61,7 +61,7 @@ describe('Defense – Placement via UI', () => {
         pseudo: 'Asc2Plyr',
         tag: 'A2',
         node: 5,
-        expected: 'R5·A2·200',
+        expected: 'R5·200',
         champ: {
           name: 'Blade',
           cls: 'Skill',
@@ -180,13 +180,13 @@ describe('Defense – Placement via UI', () => {
       cy.getByCy('defender-count-SeqPlyr').should('contain', '3/5');
 
       cy.getByCy('war-node-50').find('[data-cy="preferred-badge"]').should('exist');
-      cy.getByCy('war-node-50').should('contain', 'R5·A1·200').and('contain', 'SeqPlyr');
+      cy.getByCy('war-node-50').should('contain', 'R5·200').and('contain', 'SeqPlyr');
       cy.getByCy('war-node-40').find('[data-cy="preferred-badge"]').should('not.exist');
       cy.getByCy('war-node-40').should('contain', 'R4·100').and('contain', 'SeqPlyr');
       cy.getByCy('war-node-1').find('[data-cy="preferred-badge"]').should('not.exist');
       cy.getByCy('war-node-1').should('contain', 'R3·20').and('contain', 'SeqPlyr');
 
-      cy.getByCy('defender-card-50').should('contain', 'R5·A1·200');
+      cy.getByCy('defender-card-50').should('contain', 'R5·200');
       cy.getByCy('defender-card-50').find('[data-cy="preferred-badge"]').should('exist');
       cy.getByCy('defender-card-40').should('contain', 'R4·100');
       cy.getByCy('defender-card-1').should('contain', 'R3·20');
@@ -236,7 +236,7 @@ describe('Defense – Placement via UI', () => {
       cy.getByCy('war-node-1').should('contain', 'R5·200');
       cy.getByCy('war-node-2').should('contain', 'R4·100');
       cy.getByCy('war-node-3').should('contain', 'R3·20');
-      cy.getByCy('war-node-4').should('contain', 'R5·A2·200');
+      cy.getByCy('war-node-4').should('contain', 'R5·200');
       cy.getByCy('war-node-5').should('contain', 'R3·0');
     });
   });

@@ -57,7 +57,7 @@ export function WarMapNode({
       tabIndex={0}
       className={cn(
         'relative flex flex-col items-center justify-center rounded-lg border-2 cursor-pointer transition-all',
-        'w-15 h-18 sm:w-17 sm:h-20.5 md:w-18.5 md:h-22',
+        'w-17 h-20.5',
         colorClasses,
         hoverClasses,
         hasPrefight && 'ring-2 ring-foreground',
@@ -200,7 +200,7 @@ export default function WarMap({
   }
 
   return (
-    <div className='flex flex-col items-center gap-1 py-4'>
+    <div className='flex flex-col items-center gap-1'>
       {MAP_SECTIONS.map((section) => (
         <div
           key={section.label}

@@ -274,7 +274,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
           if (!selectedAlliance || !canManage(selectedAlliance)) return;
           setSelectorNode(nodeNumber);
           break;
-        case WarMode.Plan:
+        case WarMode.Export:
           break;
       }
     },

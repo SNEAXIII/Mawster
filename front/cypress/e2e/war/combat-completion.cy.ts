@@ -101,7 +101,7 @@ describe('War – Combat completion', () => {
       cy.contains('To do').click({ force: true });
 
       cy.getByCy('attacker-entry-node-10').should('be.visible');
-      cy.getByCy('attacker-entry-node-10').parent().should('have.class', 'opacity-40');
+      cy.getByCy('attacker-entry-node-10').parent().should('have.class', 'opacity-60');
     });
   });
 
@@ -125,7 +125,7 @@ describe('War – Combat completion', () => {
       cy.getByCy('war-combat-filter').click({ force: true });
       cy.contains('To do').click({ force: true });
 
-      cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-40');
+      cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-60');
     });
   });
 
@@ -137,7 +137,7 @@ describe('War – Combat completion', () => {
       cy.getByCy('war-combat-filter').click({ force: true });
       cy.contains('Done').click({ force: true });
 
-      cy.getByCy('attacker-entry-node-10').parent().should('have.class', 'opacity-40');
+      cy.getByCy('attacker-entry-node-10').parent().should('have.class', 'opacity-60');
     });
   });
 
@@ -150,7 +150,7 @@ describe('War – Combat completion', () => {
       cy.getByCy('war-combat-filter').click({ force: true });
       cy.contains('Done').click({ force: true });
 
-      cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-40');
+      cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-60');
     });
   });
 
@@ -163,7 +163,7 @@ describe('War – Combat completion', () => {
       cy.getByCy('war-combat-filter').click({ force: true });
       cy.contains('[role="option"]', 'All').click({ force: true });
 
-      cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-40');
+      cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-60');
     });
   });
 });

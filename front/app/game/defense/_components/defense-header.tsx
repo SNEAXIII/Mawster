@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { type DefenseSummary } from '@/app/services/defense';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Camera } from 'lucide-react';
 
 interface DefenseHeaderProps {
   alliances: Alliance[];
@@ -23,6 +23,8 @@ interface DefenseHeaderProps {
   onClearClick: () => void;
   canManage: boolean;
   defenseSummary: DefenseSummary | null;
+  onExportClick: () => void;
+  exporting: boolean;
 }
 
 export default function DefenseHeader({
@@ -34,6 +36,8 @@ export default function DefenseHeader({
   onClearClick,
   canManage,
   defenseSummary,
+  onExportClick,
+  exporting,
 }: Readonly<DefenseHeaderProps>) {
   const { t } = useI18n();
 
@@ -91,9 +95,23 @@ export default function DefenseHeader({
             </div>
           </div>
 
-          {/* Clear — managers only */}
-          {canManage && defenseSummary && defenseSummary.placements.length > 0 && (
-            <div className='ml-auto'>
+          <div className='ml-auto flex items-center gap-2'>
+            {/* Export button — managers only */}
+            {canManage && (
+              <Button
+                variant='outline'
+                size='sm'
+                data-cy='defense-export-btn'
+                onClick={onExportClick}
+                disabled={exporting}
+                title={t.game.war.exportMap}
+              >
+                <Camera className='w-4 h-4 mr-1' />
+                {exporting ? '…' : t.game.war.exportMap}
+              </Button>
+            )}
+            {/* Clear — managers only */}
+            {canManage && defenseSummary && defenseSummary.placements.length > 0 && (
               <Button
                 variant='destructive'
                 size='sm'
@@ -103,8 +121,8 @@ export default function DefenseHeader({
                 <Trash2 className='w-4 h-4 mr-1' />
                 {t.game.defense.clearAll}
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
