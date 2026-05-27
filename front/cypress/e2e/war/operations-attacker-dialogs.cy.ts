@@ -11,9 +11,7 @@ describe('War – Operations (attacker-linked confirmations)', () => {
     setupAttackerScenario('war-op-rm-atk').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
-      cy.getByCy('war-mode-defenders').click();
+      cy.goToWarMode(ownerData.user_id, 'defenders');
 
       cy.getByCy('war-node-10').scrollIntoView().should('not.contain', '+');
       cy.getByCy('war-node-10').find('button').click({ force: true });
@@ -26,9 +24,7 @@ describe('War – Operations (attacker-linked confirmations)', () => {
     setupAttackerScenario('war-op-rm-cancel').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
-      cy.getByCy('war-mode-defenders').click();
+      cy.goToWarMode(ownerData.user_id, 'defenders');
 
       cy.getByCy('war-node-10').scrollIntoView().find('button').click({ force: true });
       cy.getByCy('confirmation-dialog-confirm').should('be.visible');
@@ -43,9 +39,7 @@ describe('War – Operations (attacker-linked confirmations)', () => {
     setupAttackerScenario('war-op-rm-entry').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
-      cy.getByCy('war-mode-defenders').click();
+      cy.goToWarMode(ownerData.user_id, 'defenders');
 
       cy.getByCy('war-node-10').scrollIntoView().find('button').click({ force: true });
 
@@ -81,9 +75,7 @@ describe('War – Operations (attacker-linked confirmations)', () => {
     setupAttackerScenario('war-op-rm-confirm').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
-      cy.getByCy('war-mode-defenders').click();
+      cy.goToWarMode(ownerData.user_id, 'defenders');
 
       cy.getByCy('war-node-10').scrollIntoView().find('button').click({ force: true });
       cy.getByCy('confirmation-dialog-confirm').click();

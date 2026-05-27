@@ -13,8 +13,7 @@ describe('Admin — champions list & filters', () => {
 
   it('champion appears in list after load', () => {
     cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('champions-list').should('be.visible');
       cy.getByCy('champion-row-Iron Man').should('be.visible');
     });
@@ -25,8 +24,7 @@ describe('Admin — champions list & filters', () => {
       { name: 'Iron Man', cls: 'Tech' },
       { name: 'Wolverine', cls: 'Mutant' },
     ]).then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('filter-class').click();
       cy.contains('[role="menuitemradio"]', 'Tech').click();
       cy.getByCy('champion-row-Iron Man').should('be.visible');
@@ -39,8 +37,7 @@ describe('Admin — champions list & filters', () => {
       { name: 'Iron Man', cls: 'Tech', has_prefight: true },
       { name: 'Wolverine', cls: 'Mutant', has_prefight: false },
     ]).then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('filter-prefight').click();
       cy.contains('[role="menuitemradio"]', 'Yes').click();
       cy.getByCy('champion-row-Iron Man').should('be.visible');
@@ -53,8 +50,7 @@ describe('Admin — champions list & filters', () => {
       { name: 'Iron Man', cls: 'Tech', is_ascendable: true },
       { name: 'Wolverine', cls: 'Mutant', is_ascendable: false },
     ]).then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('filter-ascendable').click();
       cy.contains('[role="menuitemradio"]', 'Yes').click();
       cy.getByCy('champion-row-Iron Man').should('be.visible');
@@ -93,8 +89,7 @@ describe('Admin — champions list & filters', () => {
       { name: 'Iron Man', cls: 'Tech' },
       { name: 'Wolverine', cls: 'Mutant' },
     ]).then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('champion-search').type('Iron');
       cy.getByCy('champion-row-Iron Man').should('be.visible');
       cy.getByCy('champion-row-Wolverine').should('not.exist');
@@ -106,8 +101,7 @@ describe('Admin — champions list & filters', () => {
       { name: 'Iron Man', cls: 'Tech' },
       { name: 'Wolverine', cls: 'Mutant' },
     ]).then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('filter-class').click();
       cy.contains('[role="menuitemradio"]', 'Tech').click();
       cy.getByCy('champion-row-Wolverine').should('not.exist');
