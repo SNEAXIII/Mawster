@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
@@ -9,8 +9,9 @@ import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
 import { getClassColors, shortenChampionName } from '@/app/services/roster';
 import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils';
-import { type AvailableAttacker, getAvailablePrefightAttackers } from '@/app/services/war';
+import { getAvailablePrefightAttackers } from '@/app/services/war';
 import { useWar } from '@/app/contexts/war-context';
+import { useAvailableAttackers } from './use-available-attackers';
 
 interface PrefightSelectorDialogProps {
   open: boolean;
@@ -25,35 +26,25 @@ export default function PrefightSelectorDialog({
   targetNodeNumber,
 }: Readonly<PrefightSelectorDialogProps>) {
   const { t } = useI18n();
-  const { selectedAllianceId, activeWarId, selectedBg, handleAddPrefight, prefights, placements } =
-    useWar();
-  const [available, setAvailable] = useState<AvailableAttacker[]>([]);
-  const [playerSearch, setPlayerSearch] = useState('');
-  const [championSearch, setChampionSearch] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const { selectedAllianceId, activeWarId, selectedBg, handleAddPrefight, prefights } = useWar();
 
-  const fetchAvailable = useCallback(async () => {
-    if (!selectedAllianceId || !activeWarId) return;
-    setLoading(true);
-    setError(false);
-    try {
-      const data = await getAvailablePrefightAttackers(selectedAllianceId, activeWarId, selectedBg);
-      setAvailable(data);
-    } catch {
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedAllianceId, activeWarId, selectedBg]);
+  const fetchFn = useCallback(
+    () => getAvailablePrefightAttackers(selectedAllianceId!, activeWarId!, selectedBg),
+    [selectedAllianceId, activeWarId, selectedBg]
+  );
+  const guardedFetch = selectedAllianceId && activeWarId ? fetchFn : null;
 
-  useEffect(() => {
-    if (open) {
-      fetchAvailable();
-      setPlayerSearch('');
-      setChampionSearch('');
-    }
-  }, [open, fetchAvailable]);
+  const {
+    available,
+    playerSearch,
+    setPlayerSearch,
+    championSearch,
+    setChampionSearch,
+    loading,
+    error,
+    filterBySearch,
+    buildGroups,
+  } = useAvailableAttackers(open, guardedFetch);
 
   // Only exclude champions already prefighting THIS specific node (same champion can prefight other nodes)
   const usedPrefightIds = new Set(
@@ -62,35 +53,10 @@ export default function PrefightSelectorDialog({
       .map((p) => p.champion_user_id)
   );
 
-  const filtered = available
-    .filter((a) => !usedPrefightIds.has(a.champion_user_id))
-    .filter((a) => {
-      const matchPlayer =
-        !playerSearch || a.game_pseudo.toLowerCase().includes(playerSearch.toLowerCase());
-      const alias = (a.champion_alias ?? '').toLowerCase();
-      const matchChampion =
-        !championSearch ||
-        a.champion_name.toLowerCase().includes(championSearch.toLowerCase()) ||
-        alias.includes(championSearch.toLowerCase());
-      return matchPlayer && matchChampion;
-    });
-
-  const groupMap = new Map<
-    string,
-    { pseudo: string; gameAccountId: string; attackers: AvailableAttacker[] }
-  >();
-  for (const a of filtered) {
-    let group = groupMap.get(a.game_account_id);
-    if (!group) {
-      group = { pseudo: a.game_pseudo, gameAccountId: a.game_account_id, attackers: [] };
-      groupMap.set(a.game_account_id, group);
-    }
-    group.attackers.push(a);
-  }
-  const groups = Array.from(groupMap.values());
-
-  // placements is consumed by war context; kept in destructure for interface compat
-  placements satisfies typeof placements;
+  const filtered = filterBySearch(
+    available.filter((a) => !usedPrefightIds.has(a.champion_user_id))
+  );
+  const groups = buildGroups(filtered);
 
   let content: React.ReactNode;
   if (loading) {

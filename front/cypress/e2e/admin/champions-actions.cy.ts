@@ -13,8 +13,7 @@ describe('Admin — champion alias & delete actions', () => {
 
   it('click edit alias → input appears', () => {
     cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('edit-alias-Iron Man').click();
       cy.getByCy('alias-input').should('be.visible');
     });
@@ -22,8 +21,7 @@ describe('Admin — champion alias & delete actions', () => {
 
   it('type alias → save → alias shown in row', () => {
     cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('edit-alias-Iron Man').click();
       cy.getByCy('alias-input').clear().type('IM;Tony');
       cy.getByCy('save-alias').click();
@@ -33,8 +31,7 @@ describe('Admin — champion alias & delete actions', () => {
 
   it('click edit alias → cancel → input disappears, alias unchanged', () => {
     cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('edit-alias-Iron Man').click();
       cy.getByCy('alias-input').type('should-not-save');
       cy.getByCy('cancel-alias').click();
@@ -45,8 +42,7 @@ describe('Admin — champion alias & delete actions', () => {
 
   it('click delete → confirmation dialog appears', () => {
     cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('delete-champion-Iron Man').click();
       cy.getByCy('confirmation-dialog-confirm').should('be.visible');
     });
@@ -54,8 +50,7 @@ describe('Admin — champion alias & delete actions', () => {
 
   it('confirm delete → champion removed from list', () => {
     cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('delete-champion-Iron Man').click();
       cy.getByCy('confirmation-dialog-confirm').click();
       cy.getByCy('champion-row-Iron Man').should('not.exist');

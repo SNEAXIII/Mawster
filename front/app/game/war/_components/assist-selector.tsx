@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
@@ -9,8 +9,9 @@ import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
 import { getClassColors, shortenChampionName } from '@/app/services/roster';
 import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils';
-import { type AvailableAttacker, getAvailableAttackers } from '@/app/services/war';
+import { getAvailableAttackers } from '@/app/services/war';
 import { useWar } from '@/app/contexts/war-context';
+import { useAvailableAttackers } from './use-available-attackers';
 
 interface AssistSelectorDialogProps {
   open: boolean;
@@ -27,60 +28,31 @@ export default function AssistSelectorDialog({
 }: Readonly<AssistSelectorDialogProps>) {
   const { t } = useI18n();
   const { selectedAllianceId, activeWarId, selectedBg, handleAssignAssist } = useWar();
-  const [available, setAvailable] = useState<AvailableAttacker[]>([]);
-  const [playerSearch, setPlayerSearch] = useState('');
-  const [championSearch, setChampionSearch] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
 
-  const fetchAvailable = useCallback(async () => {
-    if (!selectedAllianceId || !activeWarId) return;
-    setLoading(true);
-    setError(false);
-    try {
-      const data = await getAvailableAttackers(selectedAllianceId, activeWarId, selectedBg);
-      setAvailable(data);
-    } catch {
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedAllianceId, activeWarId, selectedBg]);
+  const fetchFn = useCallback(
+    () => getAvailableAttackers(selectedAllianceId!, activeWarId!, selectedBg),
+    [selectedAllianceId, activeWarId, selectedBg]
+  );
+  const guardedFetch = selectedAllianceId && activeWarId ? fetchFn : null;
 
-  useEffect(() => {
-    if (open) {
-      fetchAvailable();
-      setPlayerSearch('');
-      setChampionSearch('');
-    }
-  }, [open, fetchAvailable]);
+  const {
+    available,
+    playerSearch,
+    setPlayerSearch,
+    championSearch,
+    setChampionSearch,
+    loading,
+    error,
+    filterBySearch,
+    buildGroups,
+  } = useAvailableAttackers(open, guardedFetch);
 
-  const filtered = available
-    .filter((a) => attackerGameAccountId === null || a.game_account_id !== attackerGameAccountId)
-    .filter((a) => {
-      const matchPlayer =
-        !playerSearch || a.game_pseudo.toLowerCase().includes(playerSearch.toLowerCase());
-      const alias = (a.champion_alias ?? '').toLowerCase();
-      const matchChampion =
-        !championSearch ||
-        a.champion_name.toLowerCase().includes(championSearch.toLowerCase()) ||
-        alias.includes(championSearch.toLowerCase());
-      return matchPlayer && matchChampion;
-    });
-
-  const groupMap = new Map<
-    string,
-    { pseudo: string; gameAccountId: string; attackers: AvailableAttacker[] }
-  >();
-  for (const a of filtered) {
-    let group = groupMap.get(a.game_account_id);
-    if (!group) {
-      group = { pseudo: a.game_pseudo, gameAccountId: a.game_account_id, attackers: [] };
-      groupMap.set(a.game_account_id, group);
-    }
-    group.attackers.push(a);
-  }
-  const groups = Array.from(groupMap.values());
+  const filtered = filterBySearch(
+    available.filter(
+      (a) => attackerGameAccountId === null || a.game_account_id !== attackerGameAccountId
+    )
+  );
+  const groups = buildGroups(filtered);
 
   let content: React.ReactNode;
   if (loading) {

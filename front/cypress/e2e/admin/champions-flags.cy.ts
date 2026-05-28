@@ -13,8 +13,7 @@ describe('Admin — champion flag toggles', () => {
 
   it('toggle prefight off→on shows Yes, persists on reload', () => {
     cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('toggle-prefight-Iron Man').should('contain.text', 'No');
       cy.getByCy('toggle-prefight-Iron Man').click();
       cy.getByCy('toggle-prefight-Iron Man').should('contain.text', 'Yes');
@@ -26,8 +25,7 @@ describe('Admin — champion flag toggles', () => {
 
   it('toggle prefight on→off shows No', () => {
     cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('toggle-prefight-Iron Man').click();
       cy.getByCy('toggle-prefight-Iron Man').should('contain.text', 'Yes');
       cy.getByCy('toggle-prefight-Iron Man').click();
@@ -37,8 +35,7 @@ describe('Admin — champion flag toggles', () => {
 
   it('toggle ascendable off→on shows Yes, persists on reload', () => {
     cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('toggle-ascendable-Wolverine').should('contain.text', 'No');
       cy.getByCy('toggle-ascendable-Wolverine').click();
       cy.getByCy('toggle-ascendable-Wolverine').should('contain.text', 'Yes');
@@ -50,8 +47,7 @@ describe('Admin — champion flag toggles', () => {
 
   it('toggle ascendable on→off shows No', () => {
     cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant', { is_ascendable: true }).then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('toggle-ascendable-Wolverine').should('contain.text', 'Yes');
       cy.getByCy('toggle-ascendable-Wolverine').click();
       cy.getByCy('toggle-ascendable-Wolverine').should('contain.text', 'No');
@@ -60,8 +56,7 @@ describe('Admin — champion flag toggles', () => {
 
   it('toggle saga attacker off→on shows Yes, persists on reload', () => {
     cy.apiLoadChampion(adminToken, 'Thor', 'Cosmic').then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('toggle-saga-attacker-Thor').should('contain.text', 'No');
       cy.getByCy('toggle-saga-attacker-Thor').click();
       cy.getByCy('toggle-saga-attacker-Thor').should('contain.text', 'Yes');
@@ -73,8 +68,7 @@ describe('Admin — champion flag toggles', () => {
 
   it('toggle saga attacker on→off shows No', () => {
     cy.apiLoadChampion(adminToken, 'Thor', 'Cosmic', { is_saga_attacker: true }).then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('toggle-saga-attacker-Thor').should('contain.text', 'Yes');
       cy.getByCy('toggle-saga-attacker-Thor').click();
       cy.getByCy('toggle-saga-attacker-Thor').should('contain.text', 'No');
@@ -83,8 +77,7 @@ describe('Admin — champion flag toggles', () => {
 
   it('toggle saga defender off→on shows Yes, persists on reload', () => {
     cy.apiLoadChampion(adminToken, 'Hulk', 'Science').then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('toggle-saga-defender-Hulk').should('contain.text', 'No');
       cy.getByCy('toggle-saga-defender-Hulk').click();
       cy.getByCy('toggle-saga-defender-Hulk').should('contain.text', 'Yes');
@@ -96,8 +89,7 @@ describe('Admin — champion flag toggles', () => {
 
   it('toggle saga defender on→off shows No', () => {
     cy.apiLoadChampion(adminToken, 'Hulk', 'Science', { is_saga_defender: true }).then(() => {
-      cy.navTo('admin');
-      cy.getByCy('tab-champions').click();
+      cy.goToAdminChampionsTab();
       cy.getByCy('toggle-saga-defender-Hulk').should('contain.text', 'Yes');
       cy.getByCy('toggle-saga-defender-Hulk').click();
       cy.getByCy('toggle-saga-defender-Hulk').should('contain.text', 'No');
