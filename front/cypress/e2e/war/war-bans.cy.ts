@@ -70,7 +70,7 @@ describe('War – Bans', () => {
     });
   });
 
-  it('cannot select more than 6 bans', () => {
+  it('cannot select more than 7 bans', () => {
     setupWarOwner('war-bans-max', 'BanOfficer3', 'BanAlliance3', 'BC').then(({ adminData, ownerData }) => {
       const champions = [
         { name: 'Iron Man', cls: 'Tech' },
@@ -79,6 +79,7 @@ describe('War – Bans', () => {
         { name: 'Magneto', cls: 'Mutant' },
         { name: 'Guillotine', cls: 'Mystic' },
         { name: 'Black Widow', cls: 'Skill' },
+        { name: 'Black Panther', cls: 'Skill' },
       ];
       cy.apiLoadChampions(
         adminData.access_token,
@@ -91,13 +92,13 @@ describe('War – Bans', () => {
         cy.getByCy('declare-war-btn').click();
         cy.getByCy('opponent-name-input').type('MaxBanEnemy');
 
-        // Select all 6 bans
+        // Select all 7 bans
         ids.forEach((c) => {
           cy.getByCy('ban-search-input').clear().type(c.name.substring(0, 4));
           cy.getByCy(`ban-option-${c.id}`).click();
         });
 
-        // After 6 bans, search input should be disabled
+        // After 7 bans, search input should be disabled
         cy.getByCy('ban-search-input').should('be.disabled');
       });
     });
