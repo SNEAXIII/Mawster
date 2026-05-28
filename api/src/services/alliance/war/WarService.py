@@ -28,6 +28,7 @@ from src.dto.alliance.war.dto_war import (
 from src.Messages.war_messages import (
     ACTIVE_WAR_ALREADY_EXISTS,
     BANNED_CHAMPION_LIST_DUPLICATES,
+    BANNED_CHAMPION_LIST_TOO_LONG,
     CHAMPION_ALREADY_IN_ALLIANCE_DEFENSE,
     CHAMPION_ALREADY_PREFIGHT_ON_NODE,
     CHAMPION_ALREADY_SYNERGY_PROVIDER,
@@ -60,6 +61,7 @@ from src.Messages.war_messages import (
     WAR_NOT_FOUND,
     champion_with_id_not_found,
 )
+from src.dto.alliance.war.dto_war import MAX_BANNED_CHAMPIONS
 from src.services.admin.SeasonService import SeasonService
 from src.utils.db import SessionDep
 
@@ -74,6 +76,12 @@ class WarService:
         created_by_id: uuid.UUID,
         banned_champion_ids: list[uuid.UUID],
     ) -> WarResponse:
+        if len(banned_champion_ids) > MAX_BANNED_CHAMPIONS:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=BANNED_CHAMPION_LIST_TOO_LONG,
+            )
+
         if len(banned_champion_ids) != len(set(banned_champion_ids)):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
