@@ -401,23 +401,13 @@ class TestWarBans:
         assert response.json()["banned_champions"] == []
 
     @pytest.mark.asyncio
-    async def test_create_war_with_6_bans_rejected(self):
-        """More than 6 bans is rejected."""
+    async def test_create_war_with_7_bans_rejected(self):
+        """More than 7 bans is rejected."""
         data = await _setup_alliance()
         headers = create_auth_headers(user_id=str(USER_ID))
-        extra_champs = []
-        for i, (name, cls) in enumerate(
-            [
-                ("Thor", "Cosmic"),
-                ("Iron Man", "Tech"),
-                ("Hulk", "Science"),
-                ("Black Widow", "Skill"),
-                ("Vision", "Tech"),
-                ("Wolverine", "Mutant"),
-            ]
-        ):
-            extra_champs.append(await push_champion(name=name, champion_class=cls))
-
+        extra_champs = [
+            await push_champion(name=f"Champ{index}", champion_class="class") for index in range(7)
+        ]
         response = await execute_post_request(
             f"/alliances/{data['alliance'].id}/wars",
             payload={

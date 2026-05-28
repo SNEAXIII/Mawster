@@ -16,7 +16,9 @@ import { FiX } from 'react-icons/fi';
 import { type Champion, getChampions } from '@/app/services/champions';
 import ChampionPortrait from '@/components/champion-portrait';
 
-const MAX_BANS = 6;
+
+// todo max ban automatique
+const MAX_BANS = 7;
 
 interface CreateWarDialogProps {
   open: boolean;

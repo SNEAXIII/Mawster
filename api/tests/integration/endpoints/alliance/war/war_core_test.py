@@ -29,6 +29,7 @@ from tests.integration.endpoints.setup.game_setup import (
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 from tests.utils.utils_db import load_objects
 from src.models import User
+from src.models.Champion import Champion
 from src.models.War import War
 from src.models.Season import Season
 from src.enums.Roles import Roles
@@ -106,6 +107,26 @@ class TestCreateWar:
         assert body["opponent_name"] == "New Enemy"
         assert body["alliance_id"] == str(data["alliance"].id)
         assert "created_by_pseudo" in body
+
+    @pytest.mark.asyncio
+    async def test_create_war_rejects_more_than_seven_bans(self):
+        data = await _setup_alliance()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        extra_champs = [
+            Champion(name=f"Ban Champ {idx}", champion_class="Science") for idx in range(8)
+        ]
+        await load_objects(extra_champs)
+
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={
+                "opponent_name": "New Enemy",
+                "banned_champion_ids": [str(champ.id) for champ in extra_champs],
+            },
+            headers=headers,
+        )
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_create_war_non_officer_forbidden(self):

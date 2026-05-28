@@ -1,5 +1,6 @@
 # ─── War error messages ───────────────────────────────────
 BANNED_CHAMPION_LIST_DUPLICATES = "Banned champion list contains duplicates"
+BANNED_CHAMPION_LIST_TOO_LONG = "Banned champion list cannot exceed 6 champions"
 ACTIVE_WAR_ALREADY_EXISTS = "An active war already exists for this alliance"
 NO_ACTIVE_WAR_FOR_ALLIANCE = "No active war for this alliance"
 WAR_NOT_FOUND = "War not found"
