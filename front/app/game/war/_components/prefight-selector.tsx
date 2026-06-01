@@ -134,7 +134,7 @@ export default function PrefightSelectorDialog({
       >
         <DialogHeader className='px-6 py-4'>
           <DialogTitle>
-            {t.game.war.prefight.add} —{' '}
+            {t.game.war.prefight.add} —
             {t.game.war.prefight.for.replace('#{node}', String(targetNodeNumber))}
           </DialogTitle>
         </DialogHeader>

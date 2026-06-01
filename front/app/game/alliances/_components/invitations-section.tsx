@@ -38,7 +38,7 @@ export default function InvitationsSection({
               <div className='flex flex-col gap-0.5'>
                 <div className='flex items-center gap-2'>
                   <p className='text-sm font-medium text-foreground'>
-                    {inv.alliance_name}{' '}
+                    {inv.alliance_name}
                     <span className='text-xs text-purple-700 font-bold'>[{inv.alliance_tag}]</span>
                   </p>
                   {inv.type === 'visitor' ? (

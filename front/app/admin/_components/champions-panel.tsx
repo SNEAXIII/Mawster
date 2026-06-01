@@ -275,7 +275,7 @@ export default function ChampionsPanel() {
           disabled={importing}
           data-cy='import-champions-btn'
         >
-          <Upload className='mr-1 size-4' />{' '}
+          <Upload className='mr-1 size-4' />
           {importing ? t.common.loading : t.champions.importJson}
         </Button>
         <input
