@@ -186,10 +186,156 @@ class FightRecordService:
         return list(member_ids | visitor_ids)
 
     @classmethod
+    async def _get_imported_records(
+        cls,
+        session: SessionDep,
+        accessible_alliance_ids: list[uuid.UUID],
+        champion_id: Optional[uuid.UUID] = None,
+        defender_champion_id: Optional[uuid.UUID] = None,
+        node_number: Optional[int] = None,
+        season_id: Optional[uuid.UUID] = None,
+        alliance_id: Optional[uuid.UUID] = None,
+        page: int = 1,
+        size: int = 20,
+    ) -> "PaginatedFightRecordsResponse":
+        from src.dto.admin.dto_fight_record import (
+            PaginatedFightRecordsResponse,
+            WarFightRecordResponse,
+        )
+        from src.models.WarFightRecordImport import WarFightRecordImport
+
+        conditions = [WarFightRecordImport.alliance_id.in_(accessible_alliance_ids)]
+        if champion_id:
+            conditions.append(WarFightRecordImport.champion_id == champion_id)
+        if defender_champion_id:
+            conditions.append(WarFightRecordImport.defender_champion_id == defender_champion_id)
+        if node_number:
+            conditions.append(WarFightRecordImport.node_number == node_number)
+        if season_id:
+            conditions.append(WarFightRecordImport.season_id == season_id)
+        if alliance_id:
+            conditions.append(WarFightRecordImport.alliance_id == alliance_id)
+
+        count_stmt = select(func.count()).select_from(WarFightRecordImport).where(and_(*conditions))
+        total = (await session.exec(count_stmt)).one()
+
+        stmt = (
+            select(WarFightRecordImport)
+            .options(
+                selectinload(WarFightRecordImport.alliance),
+                selectinload(WarFightRecordImport.champion),
+                selectinload(WarFightRecordImport.defender_champion),
+            )
+            .where(and_(*conditions))
+            .order_by(WarFightRecordImport.created_at.desc())
+            .offset((page - 1) * size)
+            .limit(size)
+        )
+        result = await session.exec(stmt)
+        records = result.all()
+        items = [WarFightRecordResponse.model_validate(r) for r in records]
+        return PaginatedFightRecordsResponse(
+            items=items,
+            total=total,
+            page=page,
+            size=size,
+            pages=max(1, math.ceil(total / size)),
+        )
+
+    @classmethod
+    async def _get_all_records(
+        cls,
+        session: SessionDep,
+        accessible_alliance_ids: list[uuid.UUID],
+        champion_id: Optional[uuid.UUID] = None,
+        defender_champion_id: Optional[uuid.UUID] = None,
+        node_number: Optional[int] = None,
+        season_id: Optional[uuid.UUID] = None,
+        alliance_id: Optional[uuid.UUID] = None,
+        page: int = 1,
+        size: int = 20,
+    ) -> "PaginatedFightRecordsResponse":
+        """Merge WarFightRecord + WarFightRecordImport, sort by created_at desc, paginate in Python."""
+        from datetime import datetime as dt
+        from src.dto.admin.dto_fight_record import (
+            PaginatedFightRecordsResponse,
+            WarFightRecordResponse,
+        )
+        from src.models.WarFightRecordImport import WarFightRecordImport
+
+        # --- Regular records ---
+        reg_conditions = [WarFightRecord.alliance_id.in_(accessible_alliance_ids)]
+        if champion_id:
+            reg_conditions.append(WarFightRecord.champion_id == champion_id)
+        if defender_champion_id:
+            reg_conditions.append(WarFightRecord.defender_champion_id == defender_champion_id)
+        if node_number:
+            reg_conditions.append(WarFightRecord.node_number == node_number)
+        if season_id:
+            reg_conditions.append(WarFightRecord.season_id == season_id)
+        if alliance_id:
+            reg_conditions.append(WarFightRecord.alliance_id == alliance_id)
+
+        reg_stmt = (
+            select(WarFightRecord)
+            .options(
+                selectinload(WarFightRecord.war),
+                selectinload(WarFightRecord.alliance),
+                selectinload(WarFightRecord.champion),
+                selectinload(WarFightRecord.defender_champion),
+                selectinload(WarFightRecord.game_account),
+                selectinload(WarFightRecord.synergies).selectinload(WarFightSynergy.champion),
+                selectinload(WarFightRecord.prefights).selectinload(WarFightPrefight.champion),
+            )
+            .where(and_(*reg_conditions))
+        )
+        reg_records = (await session.exec(reg_stmt)).all()
+
+        # --- Imported records ---
+        imp_conditions = [WarFightRecordImport.alliance_id.in_(accessible_alliance_ids)]
+        if champion_id:
+            imp_conditions.append(WarFightRecordImport.champion_id == champion_id)
+        if defender_champion_id:
+            imp_conditions.append(WarFightRecordImport.defender_champion_id == defender_champion_id)
+        if node_number:
+            imp_conditions.append(WarFightRecordImport.node_number == node_number)
+        if season_id:
+            imp_conditions.append(WarFightRecordImport.season_id == season_id)
+        if alliance_id:
+            imp_conditions.append(WarFightRecordImport.alliance_id == alliance_id)
+
+        imp_stmt = (
+            select(WarFightRecordImport)
+            .options(
+                selectinload(WarFightRecordImport.alliance),
+                selectinload(WarFightRecordImport.champion),
+                selectinload(WarFightRecordImport.defender_champion),
+            )
+            .where(and_(*imp_conditions))
+        )
+        imp_records = (await session.exec(imp_stmt)).all()
+
+        all_items = [WarFightRecordResponse.model_validate(r) for r in reg_records] + [
+            WarFightRecordResponse.model_validate(r) for r in imp_records
+        ]
+        all_items.sort(key=lambda x: x.created_at or dt.min, reverse=True)
+
+        total = len(all_items)
+        offset = (page - 1) * size
+        return PaginatedFightRecordsResponse(
+            items=all_items[offset : offset + size],
+            total=total,
+            page=page,
+            size=size,
+            pages=max(1, math.ceil(total / size)),
+        )
+
+    @classmethod
     async def get_fight_records(
         cls,
         session: SessionDep,
         accessible_alliance_ids: list[uuid.UUID],
+        source: str = "non_imported",
         champion_id: Optional[uuid.UUID] = None,
         defender_champion_id: Optional[uuid.UUID] = None,
         node_number: Optional[int] = None,
@@ -212,6 +358,32 @@ class FightRecordService:
 
         if not accessible_alliance_ids:
             return PaginatedFightRecordsResponse(items=[], total=0, page=page, size=size, pages=1)
+
+        if source == "imported":
+            return await cls._get_imported_records(
+                session,
+                accessible_alliance_ids,
+                champion_id=champion_id,
+                defender_champion_id=defender_champion_id,
+                node_number=node_number,
+                season_id=season_id,
+                alliance_id=alliance_id,
+                page=page,
+                size=size,
+            )
+        if source == "all":
+            return await cls._get_all_records(
+                session,
+                accessible_alliance_ids,
+                champion_id=champion_id,
+                defender_champion_id=defender_champion_id,
+                node_number=node_number,
+                season_id=season_id,
+                alliance_id=alliance_id,
+                page=page,
+                size=size,
+            )
+        # source == "non_imported" → existing logic continues below
 
         # Build conditions list for reuse in count query
         conditions = []

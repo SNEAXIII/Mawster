@@ -47,6 +47,7 @@ async def list_fight_records(
         "alliance_name",
     ] = Query(default="created_at"),
     sort_order: str = Query(default="desc", pattern="^(asc|desc)$"),
+    source: Literal["all", "imported", "non_imported"] = Query(default="non_imported"),
 ):
     accessible_ids = await FightRecordService.get_accessible_alliance_ids(session, current_user.id)
     if not accessible_ids:
@@ -57,6 +58,7 @@ async def list_fight_records(
     return await FightRecordService.get_fight_records(
         session,
         accessible_alliance_ids=accessible_ids,
+        source=source,
         champion_id=champion_id,
         defender_champion_id=defender_champion_id,
         node_number=node_number,
