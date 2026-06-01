@@ -49,46 +49,29 @@ class FightRecordImportService:
     ) -> int:
         await AllianceService.require_officer(session, alliance_id, current_user_id)
 
-        from src.models.AllianceOfficer import AllianceOfficer
-        from src.models.Alliance import Alliance
-
-        acc_stmt = select(GameAccount).where(GameAccount.user_id == current_user_id)
-        acc_result = await session.exec(acc_stmt)
-        accounts = acc_result.all()
-
-        officer_acc_id: Optional[uuid.UUID] = None
-        for acc in accounts:
-            officer_check = await session.exec(
-                select(AllianceOfficer).where(
-                    AllianceOfficer.alliance_id == alliance_id,
-                    AllianceOfficer.game_account_id == acc.id,
-                )
+        acc_result = await session.exec(
+            select(GameAccount).where(
+                GameAccount.user_id == current_user_id,
+                GameAccount.alliance_id == alliance_id,
             )
-            if officer_check.first():
-                officer_acc_id = acc.id
-                break
+        )
+        account = acc_result.first()
 
-        # Fallback: check if user owns the alliance
-        if officer_acc_id is None:
-            alliance = await session.get(Alliance, alliance_id)
-            if alliance:
-                for acc in accounts:
-                    if acc.id == alliance.owner_id:
-                        officer_acc_id = acc.id
-                        break
-
-        # Final fallback: any account of this user
-        if officer_acc_id is None and accounts:
-            officer_acc_id = accounts[0].id
-
-        if officer_acc_id is None:
+        if account is None:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="No game account found for current user",
+                detail="No game account found for current user in this alliance",
             )
 
+        officer_acc_id: uuid.UUID = account.id
+
+        unique_names = {row.season_name for row in rows}
+        season_map: dict[str, uuid.UUID] = {}
+        for name in unique_names:
+            season_map[name] = await cls.resolve_season(session, name)
+
         for row in rows:
-            season_id = await cls.resolve_season(session, row.season_name)
+            season_id = season_map[row.season_name]
             record = WarFightRecordImport(
                 alliance_id=alliance_id,
                 season_id=season_id,
