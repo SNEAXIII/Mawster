@@ -251,6 +251,11 @@ class FightRecordService:
         defender_champion_id: Optional[uuid.UUID] = None,
         node_number: Optional[int] = None,
         season_id: Optional[uuid.UUID] = None,
+        season_selector: Optional[SeasonSelectorType] = None,
+        tier: Optional[int] = None,
+        battlegroup: Optional[int] = None,
+        game_account_pseudo: Optional[str] = None,
+        planning_error_only: Optional[bool] = None,
         alliance_id: Optional[uuid.UUID] = None,
         page: int = 1,
         size: int = 20,
@@ -271,10 +276,27 @@ class FightRecordService:
             reg_conditions.append(WarFightRecord.defender_champion_id == defender_champion_id)
         if node_number:
             reg_conditions.append(WarFightRecord.node_number == node_number)
-        if season_id:
+        if tier is not None:
+            reg_conditions.append(WarFightRecord.tier == tier)
+        if battlegroup is not None:
+            reg_conditions.append(WarFightRecord.battlegroup == battlegroup)
+        if planning_error_only is not None:
+            reg_conditions.append(WarFightRecord.is_planning_error == planning_error_only)
+        if season_selector == SeasonSelectorType.AllSeasons:
+            reg_conditions.append(WarFightRecord.season_id.isnot(None))
+        elif season_selector == SeasonSelectorType.OffSeason:
+            reg_conditions.append(WarFightRecord.season_id.is_(None))
+        elif season_selector == SeasonSelectorType.Current:
+            active_subq = select(Season.id).where(Season.is_active == True)  # noqa: E712
+            reg_conditions.append(WarFightRecord.season_id.in_(active_subq))
+        elif season_selector == SeasonSelectorType.Specific and season_id is not None:
+            reg_conditions.append(WarFightRecord.season_id == season_id)
+        elif season_id:
             reg_conditions.append(WarFightRecord.season_id == season_id)
         if alliance_id:
             reg_conditions.append(WarFightRecord.alliance_id == alliance_id)
+        if game_account_pseudo is not None:
+            reg_conditions.append(GameAccount.game_pseudo.ilike(f"%{game_account_pseudo}%"))
 
         reg_stmt = (
             select(WarFightRecord)
@@ -289,6 +311,8 @@ class FightRecordService:
             )
             .where(and_(*reg_conditions))
         )
+        if game_account_pseudo is not None:
+            reg_stmt = reg_stmt.join(GameAccount, WarFightRecord.game_account_id == GameAccount.id)
         reg_records = (await session.exec(reg_stmt)).all()
 
         # --- Imported records ---
@@ -379,6 +403,11 @@ class FightRecordService:
                 defender_champion_id=defender_champion_id,
                 node_number=node_number,
                 season_id=season_id,
+                season_selector=season_selector,
+                tier=tier,
+                battlegroup=battlegroup,
+                game_account_pseudo=game_account_pseudo,
+                planning_error_only=planning_error_only,
                 alliance_id=alliance_id,
                 page=page,
                 size=size,
