@@ -18,6 +18,7 @@ import {
   type ImportRow,
   type AccessibleAlliance,
 } from '@/app/services/fight-records';
+import { getMyAllianceRoles } from '@/app/services/game';
 
 interface RawRow {
   attackerName: string;
@@ -64,15 +65,19 @@ export default function CsvImportForm() {
   const [resourcesLoaded, setResourcesLoaded] = useState(false);
 
   const loadResources = async (): Promise<Champion[]> => {
-    const [champsData, accessibleAlliances] = await Promise.all([
+    const [champsData, accessibleAlliances, rolesData] = await Promise.all([
       getChampions(1, 9999),
       getAccessibleAlliances(),
+      getMyAllianceRoles(),
     ]);
     const champs = champsData.champions;
     setChampions(champs);
-    setAlliances(accessibleAlliances);
-    if (accessibleAlliances.length === 1) {
-      setSelectedAllianceId(accessibleAlliances[0].id);
+    const managedAlliances = accessibleAlliances.filter(
+      a => rolesData.roles[a.id]?.is_owner || rolesData.roles[a.id]?.is_officer
+    );
+    setAlliances(managedAlliances);
+    if (managedAlliances.length === 1) {
+      setSelectedAllianceId(managedAlliances[0].id);
     }
     setResourcesLoaded(true);
     return champs;
