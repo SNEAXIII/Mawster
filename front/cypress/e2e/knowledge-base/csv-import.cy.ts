@@ -63,11 +63,11 @@ describe('Knowledge Base – CSV Import', () => {
                 cy.apiLogin(ownerData.user_id);
                 cy.visit('/game/knowledge-base');
                 cy.getByCy('filter-source-trigger').click();
-                cy.contains('Imported').click();
+                cy.getByCy('filter-source-imported').click();
                 cy.contains('Magik').should('be.visible');
 
                 cy.getByCy('filter-source-trigger').click();
-                cy.contains('Non-imported').click();
+                cy.getByCy('filter-source-non-imported').click();
                 cy.contains('Magik').should('not.exist');
               });
             });

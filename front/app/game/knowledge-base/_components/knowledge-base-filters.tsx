@@ -149,9 +149,9 @@ export default function KnowledgeBaseFilters({
           <SelectValue placeholder={kb.sourceFilter} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value='non_imported'>{kb.sourceNonImported}</SelectItem>
-          <SelectItem value='all'>{kb.sourceAll}</SelectItem>
-          <SelectItem value='imported'>{kb.sourceImported}</SelectItem>
+          <SelectItem value='non_imported' data-cy='filter-source-non-imported'>{kb.sourceNonImported}</SelectItem>
+          <SelectItem value='all' data-cy='filter-source-all'>{kb.sourceAll}</SelectItem>
+          <SelectItem value='imported' data-cy='filter-source-imported'>{kb.sourceImported}</SelectItem>
         </SelectContent>
       </Select>
 
