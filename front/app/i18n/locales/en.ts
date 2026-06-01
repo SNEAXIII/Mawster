@@ -103,7 +103,6 @@ const en = {
       createButton: 'Add account',
       creating: 'Creating...',
       empty: 'No game accounts yet. Add one to get started!',
-      primary: 'Primary',
       deleteConfirm: 'Are you sure you want to delete this game account?',
       createSuccess: 'Game account created successfully!',
       createError: 'Failed to create game account',

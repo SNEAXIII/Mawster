@@ -137,6 +137,7 @@ class AllianceMyRolesResponse(BaseModel):
     """All alliance roles for the current user, plus their game account IDs."""
 
     roles: dict[str, AllianceRoleEntry] = {}
+    roles_by_account: dict[str, AllianceRoleEntry] = {}
     my_account_ids: list[str] = []
 
 

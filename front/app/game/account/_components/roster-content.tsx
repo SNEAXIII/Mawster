@@ -78,7 +78,7 @@ export default function RosterContent() {
                               value={acc.id}
                             >
                               {acc.game_pseudo}
-                              {acc.is_primary ? ` (${t.game.accounts.primary})` : ''}
+                              {acc.is_primary ? ` (${t.game.accounts.isPrimary})` : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>
