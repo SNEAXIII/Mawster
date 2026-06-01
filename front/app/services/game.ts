@@ -206,6 +206,7 @@ export interface AllianceRoleEntry {
 
 export interface AllianceMyRoles {
   roles: Record<string, AllianceRoleEntry>;
+  roles_by_account: Record<string, AllianceRoleEntry>;
   my_account_ids: string[];
 }
 

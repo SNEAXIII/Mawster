@@ -107,7 +107,6 @@ const fr: Translations = {
       createButton: 'Ajouter le compte',
       creating: 'Création...',
       empty: 'Aucun compte de jeu. Ajoutez-en un pour commencer !',
-      primary: 'Principal',
       deleteConfirm: 'Êtes-vous sûr de vouloir supprimer ce compte de jeu ?',
       createSuccess: 'Compte de jeu créé avec succès !',
       createError: 'Erreur lors de la création du compte de jeu',
