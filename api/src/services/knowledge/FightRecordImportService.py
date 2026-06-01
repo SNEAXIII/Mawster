@@ -27,14 +27,14 @@ class FightRecordImportService:
         number = cls._parse_season_number(season_name)
         if number is None:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"Cannot parse season name: '{season_name}'",
             )
         result = await session.exec(select(Season).where(Season.number == number))
         season = result.first()
         if season is None:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"Season not found: '{season_name}'",
             )
         return season.id
@@ -59,7 +59,7 @@ class FightRecordImportService:
 
         if account is None:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="No game account found for current user in this alliance",
             )
 
