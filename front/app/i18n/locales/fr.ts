@@ -88,7 +88,8 @@ const fr: Translations = {
     deleteError: 'Une erreur est survenue lors de la suppression du compte',
     editUsernameTooltip: 'Modifier le pseudo',
     editUsernamePlaceholder: '3 à 30 caractères alphanumériques',
-    editUsernameInvalid: "3 à 30 caractères, alphanumérique uniquement (pas d'espaces ni caractères spéciaux)",
+    editUsernameInvalid:
+      "3 à 30 caractères, alphanumérique uniquement (pas d'espaces ni caractères spéciaux)",
     editUsernameTaken: 'Ce pseudo est déjà pris',
     editUsernameError: 'Une erreur est survenue lors de la mise à jour du pseudo',
   },
@@ -301,10 +302,15 @@ const fr: Translations = {
     },
     war: {
       title: "Guerre d'Alliance",
+      editWar: 'Modifier la guerre',
+      editWarSuccess: 'Guerre mise à jour !',
+      editWarError: 'Erreur lors de la mise à jour de la guerre',
       description: "Planifiez votre défense sur la carte de guerre de l'alliance adverse.",
       management: 'Gestion des guerres',
       defenders: 'Défenseurs',
       declareWar: 'Déclarer une guerre',
+      declareWarConfirmDesc:
+        'Vous êtes sur le point de déclarer une guerre contre {name}. Êtes-vous sûr ?',
       declareWarTooltip: 'Une seule guerre peut être déclenchée à la fois',
       noActiveWar:
         "Aucune guerre en cours, contactez vos officiers d'alliance pour déclarer une guerre.",

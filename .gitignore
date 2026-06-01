@@ -1,5 +1,5 @@
 **/.vscode/*
-caddy/
+node_modules/
 .claude/settings.local.json
 test*.db*
 *db*/**

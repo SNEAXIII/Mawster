@@ -4,7 +4,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from starlette import status
 
-from src.dto.alliance.war.dto_war import WarCreateRequest, WarEndRequest, WarResponse
+from src.dto.alliance.war.dto_war import (
+    WarCreateRequest,
+    WarEndRequest,
+    WarUpdateRequest,
+    WarResponse,
+)
 from src.models import User
 from src.services.alliance.AllianceService import AllianceService
 from src.services.auth.AuthService import AuthService
@@ -64,6 +69,24 @@ async def get_current_war(
     """Get the currently active war for an alliance. All members can view."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
     return await WarService.get_current_war(session, alliance_id)
+
+
+@war_core_controller.patch(
+    "/{war_id}",
+    response_model=WarResponse,
+)
+async def update_war(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    body: WarUpdateRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Update opponent name and bans for an active war. Officers/owner only."""
+    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    return await WarService.update_war(
+        session, war_id, alliance_id, body.opponent_name, body.banned_champion_ids
+    )
 
 
 @war_core_controller.post(

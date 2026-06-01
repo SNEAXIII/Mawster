@@ -15,6 +15,8 @@ describe('War – Operations (declare, place, remove)', () => {
       cy.getByCy('declare-war-btn').click();
       cy.getByCy('opponent-name-input').type('MightyFoes');
       cy.getByCy('create-war-confirm').click();
+      cy.getByCy('confirm-text-input').type('confirm');
+      cy.getByCy('confirmation-dialog-confirm').click();
 
       cy.contains('War declared against MightyFoes').should('be.visible');
       cy.getByCy('war-opponent-name').should('contain', 'MightyFoes');

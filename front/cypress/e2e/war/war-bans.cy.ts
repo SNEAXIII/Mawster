@@ -23,6 +23,8 @@ describe('War – Bans', () => {
         cy.getByCy(`ban-badge-${champ.id}`).should('have.attr', 'title', champ.name);
 
         cy.getByCy('create-war-confirm').click();
+        cy.getByCy('confirm-text-input').type('confirm');
+        cy.getByCy('confirmation-dialog-confirm').click();
 
         // Ban badge visible in war header area
         cy.getByCy(`ban-display-${champ.id}`).should('have.attr', 'title', champ.name);

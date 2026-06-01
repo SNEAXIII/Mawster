@@ -177,6 +177,21 @@ export async function createWar(
   return response.json();
 }
 
+export async function updateWar(
+  allianceId: string,
+  warId: string,
+  opponentName: string,
+  bannedChampionIds: string[] = []
+): Promise<War> {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/${warId}`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+    body: JSON.stringify({ opponent_name: opponentName, banned_champion_ids: bannedChampionIds }),
+  });
+  await throwOnError(response, 'Failed to update war');
+  return response.json();
+}
+
 export async function getWarDefense(
   allianceId: string,
   warId: string,
