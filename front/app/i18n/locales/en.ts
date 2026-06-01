@@ -297,10 +297,12 @@ const en = {
     },
     war: {
       title: 'Alliance War',
+      editWar: 'Edit war',
       description: 'Plan your defense on the opponent alliance war map.',
       management: 'War Management',
       defenders: 'Defenders',
       declareWar: 'Declare War',
+      declareWarConfirmDesc: 'You are about to declare war against {name}. Are you sure?',
       declareWarTooltip: 'Only one war can be active at a time',
       noActiveWar: 'No active war in progress, contact your alliance officers to declare a war.',
       modeDefenders: 'Defenders',

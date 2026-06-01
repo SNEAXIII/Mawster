@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useI18n } from '@/app/i18n';
 import {
   Dialog,
@@ -33,6 +34,7 @@ export default function CreateWarDialog({ open, onClose, onConfirm }: CreateWarD
   const [champions, setChampions] = useState<Champion[]>([]);
   const [search, setSearch] = useState('');
   const [bannedIds, setBannedIds] = useState<string[]>([]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -67,9 +69,14 @@ export default function CreateWarDialog({ open, onClose, onConfirm }: CreateWarD
     onClose();
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!opponentName.trim()) return;
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmWar = async () => {
+    setConfirmOpen(false);
     setLoading(true);
     try {
       await onConfirm(opponentName.trim(), bannedIds);
@@ -83,6 +90,15 @@ export default function CreateWarDialog({ open, onClose, onConfirm }: CreateWarD
   };
 
   return (
+    <>
+    <ConfirmationDialog
+      open={confirmOpen}
+      onOpenChange={setConfirmOpen}
+      title={t.game.war.declareWar}
+      description={t.game.war.declareWarConfirmDesc.replace('{name}', opponentName.trim())}
+      onConfirm={handleConfirmWar}
+      requireConfirmText='confirm'
+    />
     <Dialog
       open={open}
       onOpenChange={(o) => !o && handleClose()}
@@ -197,11 +213,12 @@ export default function CreateWarDialog({ open, onClose, onConfirm }: CreateWarD
               disabled={!opponentName.trim() || loading}
               data-cy='create-war-confirm'
             >
-              {loading ? '...' : t.game.war.declareWar}
+              {t.game.war.declareWar}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
