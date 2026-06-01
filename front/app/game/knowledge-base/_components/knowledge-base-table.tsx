@@ -50,8 +50,8 @@ function SortableTh({ col, label, sortBy, sortOrder, onSort }: SortableThProps) 
 type ChampionCellProps = Readonly<{
   name: string;
   imageUrl: string | null;
-  stars: number;
-  rank: number;
+  stars?: number | null;
+  rank?: number | null;
 }>;
 
 function ChampionCell({ name, imageUrl, stars, rank }: ChampionCellProps) {
@@ -173,7 +173,7 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
               <td className='px-3 py-2'>{r.tier}</td>
               <td className={cn('px-3 py-2',r.ko_count ? 'text-red-500' : 'text-green-500' )}>{r.ko_count}</td>
               <td className='px-3 py-2'>{r.alliance_name}</td>
-              <td className='px-3 py-2 whitespace-nowrap'>{new Date(r.created_at).toLocaleDateString()}</td>
+              <td className='px-3 py-2 whitespace-nowrap'>{r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}</td>
             </tr>
           ))}
         </tbody>

@@ -1,5 +1,6 @@
 'use client';
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { useI18n } from '@/app/i18n';
 import { useKnowledgeBaseViewModel } from './_viewmodels/use-knowledge-base-viewmodel';
 import KnowledgeBaseFilters from './_components/knowledge-base-filters';
@@ -12,7 +13,16 @@ function KnowledgeBaseContent() {
 
   return (
     <div className='px-3 py-4 sm:p-6 flex flex-col gap-4'>
-      <h1 className='text-2xl font-bold'>{t.game.knowledgeBase.title}</h1>
+      <div className='flex items-center justify-between'>
+        <h1 className='text-2xl font-bold'>{t.game.knowledgeBase.title}</h1>
+        <Link
+          href='/game/knowledge-base/import'
+          className='inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground'
+          data-cy='import-records-link'
+        >
+          {t.game.knowledgeBase.importRecords}
+        </Link>
+      </div>
       {vm.data && (
         <PaginationControls
           currentPage={vm.page}
@@ -46,6 +56,8 @@ function KnowledgeBaseContent() {
         onSeasonSelectorChange={vm.handleSeasonSelectorChange}
         onSeasonIdChange={vm.handleSeasonIdChange}
         onAllianceChange={vm.handleAllianceChange}
+        source={vm.source}
+        onSourceChange={vm.handleSourceChange}
         onClear={vm.handleClearFilters}
       />
 

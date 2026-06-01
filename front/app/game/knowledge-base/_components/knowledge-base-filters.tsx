@@ -34,13 +34,15 @@ interface Props {
   allianceId: string | null;
   accessibleAlliances: AccessibleAlliance[];
   onAllianceChange: (value: string | null) => void;
+  source: 'all' | 'imported' | 'non_imported';
+  onSourceChange: (v: string) => void;
   onClear: () => void;
 }
 
 export default function KnowledgeBaseFilters({
   filters, planningErrorOnly, seasonSelector, seasonId, seasons,
-  allianceId, accessibleAlliances,
-  onChange, onTogglePlanningError, onSeasonSelectorChange, onSeasonIdChange, onAllianceChange, onClear,
+  allianceId, accessibleAlliances, source,
+  onChange, onTogglePlanningError, onSeasonSelectorChange, onSeasonIdChange, onAllianceChange, onSourceChange, onClear,
 }: Props) {
   const { t } = useI18n();
   const kb = t.game.knowledgeBase;
@@ -141,6 +143,17 @@ export default function KnowledgeBaseFilters({
           </SelectContent>
         </Select>
       )}
+
+      <Select value={source} onValueChange={onSourceChange} data-cy='filter-source'>
+        <SelectTrigger className='w-36' data-cy='filter-source-trigger'>
+          <SelectValue placeholder={kb.sourceFilter} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value='non_imported'>{kb.sourceNonImported}</SelectItem>
+          <SelectItem value='all'>{kb.sourceAll}</SelectItem>
+          <SelectItem value='imported'>{kb.sourceImported}</SelectItem>
+        </SelectContent>
+      </Select>
 
       <Button
         variant={planningErrorOnly ? 'default' : 'outline'}

@@ -74,6 +74,7 @@ export function useKnowledgeBaseViewModel() {
   const [allianceId, setAllianceId] = useState<string | null>(() =>
     getInitialParams().get('alliance_id')
   );
+  const [source, setSource] = useState<'all' | 'imported' | 'non_imported'>('non_imported');
   const [accessibleAlliances, setAccessibleAlliances] = useState<AccessibleAlliance[]>([]);
   const [data, setData] = useState<PaginatedFightRecords | null>(null);
   const [loading, setLoading] = useState(false);
@@ -147,6 +148,7 @@ export function useKnowledgeBaseViewModel() {
         season_selector: seasonSelector,
         season_id: seasonId ?? undefined,
         alliance_id: allianceId ?? undefined,
+        source,
         page,
         size,
         sort_by: sortBy,
@@ -169,6 +171,7 @@ export function useKnowledgeBaseViewModel() {
     seasonSelector,
     seasonId,
     allianceId,
+    source,
     page,
     size,
     sortBy,
@@ -199,6 +202,11 @@ export function useKnowledgeBaseViewModel() {
     setPage(1);
   };
 
+  const handleSourceChange = (v: string) => {
+    setSource(v as 'all' | 'imported' | 'non_imported');
+    setPage(1);
+  };
+
   const handleClearFilters = () => {
     setFilters(DEFAULT_FILTERS);
     setDebouncedPseudo('');
@@ -207,6 +215,7 @@ export function useKnowledgeBaseViewModel() {
     setSeasonSelector('all_seasons');
     setSeasonId(null);
     setAllianceId(null);
+    setSource('non_imported');
     setPage(1);
   };
 
@@ -256,12 +265,14 @@ export function useKnowledgeBaseViewModel() {
     seasons,
     allianceId,
     accessibleAlliances,
+    source,
     hasActiveFilters,
     handleFilterChange,
     handleTogglePlanningError,
     handleSeasonSelectorChange,
     handleSeasonIdChange,
     handleAllianceChange,
+    handleSourceChange,
     handleSort,
     handleClearFilters,
     setPage,
