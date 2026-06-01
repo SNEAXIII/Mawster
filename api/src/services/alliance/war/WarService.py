@@ -122,6 +122,52 @@ class WarService:
         return WarResponse.model_validate(await cls._load_war(session, war.id))
 
     @classmethod
+    async def update_war(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+        opponent_name: str,
+        banned_champion_ids: list[uuid.UUID],
+    ) -> WarResponse:
+        war = await session.get(War, war_id)
+        if war is None or war.alliance_id != alliance_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=WAR_NOT_FOUND)
+
+        if len(banned_champion_ids) > MAX_BANNED_CHAMPIONS:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=BANNED_CHAMPION_LIST_TOO_LONG,
+            )
+
+        if len(banned_champion_ids) != len(set(banned_champion_ids)):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=BANNED_CHAMPION_LIST_DUPLICATES,
+            )
+
+        for champion_id in banned_champion_ids:
+            champ = await session.get(Champion, champion_id)
+            if champ is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=champion_with_id_not_found(champion_id),
+                )
+
+        war.opponent_name = opponent_name
+
+        existing_bans = await session.exec(select(WarBan).where(WarBan.war_id == war_id))
+        for ban in existing_bans.all():
+            await session.delete(ban)
+        await session.flush()
+
+        for champion_id in banned_champion_ids:
+            session.add(WarBan(war_id=war_id, champion_id=champion_id))
+
+        await session.commit()
+        return WarResponse.model_validate(await cls._load_war(session, war_id))
+
+    @classmethod
     async def get_wars(
         cls,
         session: SessionDep,
