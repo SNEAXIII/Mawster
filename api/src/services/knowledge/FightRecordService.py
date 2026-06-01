@@ -244,6 +244,8 @@ class FightRecordService:
 
     @classmethod
     async def _get_all_records(
+        # NOTE: merges both tables in Python memory then paginates. Acceptable at current scale
+        # (~hundreds of records per alliance). Replace with SQL UNION ALL if volume grows.
         cls,
         session: SessionDep,
         accessible_alliance_ids: list[uuid.UUID],
