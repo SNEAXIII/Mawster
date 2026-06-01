@@ -62,7 +62,7 @@ function ChampionCell({ name, imageUrl, stars, rank }: ChampionCellProps) {
         {src && <img src={src} alt={name} className='w-10 h-10 object-contain rounded' />}
         <div>
           <p className='text-sm font-medium whitespace-nowrap'>{shortenChampionName(name)}</p>
-          <p className='text-xs text-muted-foreground'>{stars}★ R{rank}</p>
+          <p className='text-xs text-muted-foreground'>{stars != null ? `${stars}★` : ''}{rank != null ? ` R${rank}` : ''}</p>
         </div>
       </div>
     </td>
