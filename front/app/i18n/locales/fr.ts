@@ -302,7 +302,9 @@ const fr: Translations = {
     },
     war: {
       title: "Guerre d'Alliance",
-      editWar: 'Editer guerre',
+      editWar: 'Modifier la guerre',
+      editWarSuccess: 'Guerre mise à jour !',
+      editWarError: 'Erreur lors de la mise à jour de la guerre',
       description: "Planifiez votre défense sur la carte de guerre de l'alliance adverse.",
       management: 'Gestion des guerres',
       defenders: 'Défenseurs',

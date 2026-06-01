@@ -298,6 +298,8 @@ const en = {
     war: {
       title: 'Alliance War',
       editWar: 'Edit war',
+      editWarSuccess: 'War updated!',
+      editWarError: 'Failed to update war',
       description: 'Plan your defense on the opponent alliance war map.',
       management: 'War Management',
       defenders: 'Defenders',

@@ -46,7 +46,7 @@ const WarAttackerPanel = dynamic(() => import('./war-attacker-panel'), {
   loading: () => <FullPageSpinner />,
 });
 
-export default function WarTab() {
+export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
   const { t } = useI18n();
   const {
     currentWar,
@@ -138,11 +138,6 @@ export default function WarTab() {
     <div className='flex flex-col gap-4'>
       {/* Controls row: opponent name + BG picker + mode toggle + clear */}
       <div className='flex flex-wrap items-center gap-3'>
-        {canManageWar && (
-          <Button variant='outline'>
-            <Pencil className='size-4 mr-2' /> {t.common.edit}
-          </Button>
-        )}
         <SeasonBanner
           season={
             currentWar
@@ -286,6 +281,15 @@ export default function WarTab() {
                 />
               </div>
             ))
+          )}
+          {canManageWar && (
+            <Button
+              variant='outline'
+              onClick={onEditClick}
+              data-cy='edit-war-btn'
+            >
+              <Pencil className='size-4 mr-2' /> {t.game.war.editWar}
+            </Button>
           )}
         </div>
         {/* End war button */}
