@@ -18,7 +18,7 @@ describe('Knowledge Base – CSV Import', () => {
       });
 
       cy.getByCy('import-confirm-btn').should('be.disabled');
-      cy.contains('Resolve unknown champions').should('be.visible');
+      cy.getByCy('import-resolve-title').should('be.visible');
     });
   });
 

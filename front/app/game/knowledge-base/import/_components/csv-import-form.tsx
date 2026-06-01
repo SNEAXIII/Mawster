@@ -190,7 +190,7 @@ export default function CsvImportForm() {
 
       {unknownNames.length > 0 && (
         <div className='space-y-2'>
-          <p className='font-medium text-sm'>{kb.importResolveTitle}</p>
+          <p className='font-medium text-sm' data-cy='import-resolve-title'>{kb.importResolveTitle}</p>
           {unknownNames.map(name => (
             <div key={name} className='flex items-center gap-3'>
               <span className='text-sm text-muted-foreground w-36 truncate'>
@@ -204,7 +204,7 @@ export default function CsvImportForm() {
                 data-cy={`champion-map-${name}`}
               >
                 <SelectTrigger className='w-48'>
-                  <SelectValue placeholder='Select champion' />
+                  <SelectValue placeholder={kb.selectChampion} />
                 </SelectTrigger>
                 <SelectContent>
                   {champions.map(c => (

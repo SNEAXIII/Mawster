@@ -323,7 +323,16 @@ class FightRecordService:
             imp_conditions.append(WarFightRecordImport.defender_champion_id == defender_champion_id)
         if node_number:
             imp_conditions.append(WarFightRecordImport.node_number == node_number)
-        if season_id:
+        if season_selector == SeasonSelectorType.AllSeasons:
+            imp_conditions.append(WarFightRecordImport.season_id.isnot(None))
+        elif season_selector == SeasonSelectorType.OffSeason:
+            imp_conditions.append(WarFightRecordImport.season_id.is_(None))
+        elif season_selector == SeasonSelectorType.Current:
+            active_subq = select(Season.id).where(Season.is_active == True)  # noqa: E712
+            imp_conditions.append(WarFightRecordImport.season_id.in_(active_subq))
+        elif season_selector == SeasonSelectorType.Specific and season_id is not None:
+            imp_conditions.append(WarFightRecordImport.season_id == season_id)
+        elif season_id:
             imp_conditions.append(WarFightRecordImport.season_id == season_id)
         if alliance_id:
             imp_conditions.append(WarFightRecordImport.alliance_id == alliance_id)

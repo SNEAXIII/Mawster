@@ -520,6 +520,7 @@ const fr: Translations = {
       importConfirmBtn: 'Importer {count} combats',
       importSuccess: '{count} combats importés',
       importError: "Échec de l'import",
+      selectChampion: 'Sélectionner un champion',
     },
   },
 

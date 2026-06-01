@@ -513,6 +513,7 @@ const en = {
       importConfirmBtn: 'Import {count} rows',
       importSuccess: 'Imported {count} fight records',
       importError: 'Import failed',
+      selectChampion: 'Select champion',
     },
   },
 
