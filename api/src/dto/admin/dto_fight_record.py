@@ -76,7 +76,9 @@ class WarFightRecordResponse(BaseModel):
     def flatten_relations(cls, data: Any) -> Any:
         if isinstance(data, dict):
             return data
-        is_import = data.__class__.__name__ == "WarFightRecordImport"
+        from src.models.WarFightRecordImport import WarFightRecordImport as _WarFightRecordImport
+
+        is_import = isinstance(data, _WarFightRecordImport)
         if is_import:
             return {
                 "id": data.id,
@@ -119,7 +121,7 @@ class WarFightRecordResponse(BaseModel):
             "alliance_id": data.alliance_id,
             "alliance_name": data.alliance.name,
             "season_id": data.season_id,
-            "game_account_pseudo": data.game_account.game_pseudo,
+            "game_account_pseudo": data.game_account.game_pseudo if data.game_account else None,
             "battlegroup": data.battlegroup,
             "node_number": data.node_number,
             "tier": data.tier,
