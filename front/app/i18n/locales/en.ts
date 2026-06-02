@@ -514,6 +514,12 @@ const en = {
       importSuccess: 'Imported {count} fight records',
       importError: 'Import failed',
       selectChampion: 'Select champion',
+      importPreviewTitle: 'Preview ({count} rows)',
+      importColAttacker: 'Attacker',
+      importColDefender: 'Defender',
+      importColNode: 'Node',
+      importColSeason: 'Season',
+      importColKo: 'KO',
     },
   },
 

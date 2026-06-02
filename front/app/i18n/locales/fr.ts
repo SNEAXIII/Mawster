@@ -521,6 +521,12 @@ const fr: Translations = {
       importSuccess: '{count} combats importés',
       importError: "Échec de l'import",
       selectChampion: 'Sélectionner un champion',
+      importPreviewTitle: 'Aperçu ({count} lignes)',
+      importColAttacker: 'Attaquant',
+      importColDefender: 'Défenseur',
+      importColNode: 'Node',
+      importColSeason: 'Saison',
+      importColKo: 'KO',
     },
   },
 

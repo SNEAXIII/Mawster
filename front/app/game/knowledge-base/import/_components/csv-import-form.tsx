@@ -209,13 +209,50 @@ export default function CsvImportForm() {
       )}
 
       {rows.length > 0 && (
-        <Button
-          onClick={handleImport}
-          disabled={loading || !allResolved || !selectedAllianceId}
-          data-cy='import-confirm-btn'
-        >
-          {kb.importConfirmBtn.replace('{count}', String(rows.length))}
-        </Button>
+        <div className='space-y-3'>
+          <p className='font-medium text-sm'>
+            {kb.importPreviewTitle.replace('{count}', String(rows.length))}
+          </p>
+          <div className='overflow-x-auto rounded-lg border'>
+            <table className='w-full text-sm'>
+              <thead>
+                <tr className='bg-muted/50 text-muted-foreground'>
+                  <th className='px-3 py-2 text-left font-medium'>{kb.importColAttacker}</th>
+                  <th className='px-3 py-2 text-left font-medium'>{kb.importColDefender}</th>
+                  <th className='px-3 py-2 text-left font-medium'>{kb.importColNode}</th>
+                  <th className='px-3 py-2 text-left font-medium'>{kb.importColSeason}</th>
+                  <th className='px-3 py-2 text-left font-medium'>{kb.importColKo}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, i) => {
+                  const attackerOk = !!resolveId(row.attackerName, champions);
+                  const defenderOk = !!resolveId(row.defenderName, champions);
+                  return (
+                    <tr key={i} className='border-t'>
+                      <td className={`px-3 py-1.5 ${!attackerOk ? 'text-destructive font-medium' : ''}`}>
+                        {row.attackerName}
+                      </td>
+                      <td className={`px-3 py-1.5 ${!defenderOk ? 'text-destructive font-medium' : ''}`}>
+                        {row.defenderName}
+                      </td>
+                      <td className='px-3 py-1.5 text-muted-foreground'>{row.node}</td>
+                      <td className='px-3 py-1.5 text-muted-foreground'>{row.seasonName}</td>
+                      <td className='px-3 py-1.5 text-muted-foreground'>{row.koCount}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <Button
+            onClick={handleImport}
+            disabled={loading || !allResolved || !selectedAllianceId}
+            data-cy='import-confirm-btn'
+          >
+            {kb.importConfirmBtn.replace('{count}', String(rows.length))}
+          </Button>
+        </div>
       )}
     </div>
   );
