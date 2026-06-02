@@ -1,7 +1,7 @@
 import math
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import func
@@ -9,9 +9,7 @@ from sqlalchemy.orm import aliased, selectinload
 from sqlmodel import and_, select
 from starlette import status
 
-if TYPE_CHECKING:
-    from src.dto.admin.dto_fight_record import PaginatedFightRecordsResponse
-
+from src.dto.admin.dto_fight_record import PaginatedFightRecordsResponse, WarFightRecordResponse
 from src.enums.SeasonSelectorType import SeasonSelectorType
 from src.models.Alliance import Alliance
 from src.models.AllianceVisitor import AllianceVisitor
@@ -23,6 +21,7 @@ from src.models.War import War
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightPrefight import WarFightPrefight
 from src.models.WarFightRecord import WarFightRecord
+from src.models.WarFightRecordImport import WarFightRecordImport
 from src.models.WarFightSynergy import WarFightSynergy
 from src.models.WarPrefightAttacker import WarPrefightAttacker
 from src.models.WarSynergyAttacker import WarSynergyAttacker
@@ -197,13 +196,7 @@ class FightRecordService:
         alliance_id: Optional[uuid.UUID] = None,
         page: int = 1,
         size: int = 20,
-    ) -> "PaginatedFightRecordsResponse":
-        from src.dto.admin.dto_fight_record import (
-            PaginatedFightRecordsResponse,
-            WarFightRecordResponse,
-        )
-        from src.models.WarFightRecordImport import WarFightRecordImport
-
+    ) -> PaginatedFightRecordsResponse:
         conditions = [WarFightRecordImport.alliance_id.in_(accessible_alliance_ids)]
         if champion_id:
             conditions.append(WarFightRecordImport.champion_id == champion_id)
@@ -261,15 +254,8 @@ class FightRecordService:
         alliance_id: Optional[uuid.UUID] = None,
         page: int = 1,
         size: int = 20,
-    ) -> "PaginatedFightRecordsResponse":
+    ) -> PaginatedFightRecordsResponse:
         """Merge WarFightRecord + WarFightRecordImport, sort by created_at desc, paginate in Python."""
-        from datetime import datetime as dt
-        from src.dto.admin.dto_fight_record import (
-            PaginatedFightRecordsResponse,
-            WarFightRecordResponse,
-        )
-        from src.models.WarFightRecordImport import WarFightRecordImport
-
         # --- Regular records ---
         reg_conditions = [WarFightRecord.alliance_id.in_(accessible_alliance_ids)]
         if champion_id:
@@ -353,7 +339,7 @@ class FightRecordService:
         all_items = [WarFightRecordResponse.model_validate(r) for r in reg_records] + [
             WarFightRecordResponse.model_validate(r) for r in imp_records
         ]
-        all_items.sort(key=lambda x: x.created_at or dt.min, reverse=True)
+        all_items.sort(key=lambda x: x.created_at or datetime.min, reverse=True)
 
         total = len(all_items)
         offset = (page - 1) * size
@@ -385,12 +371,7 @@ class FightRecordService:
         size: int = 20,
         sort_by: str = "created_at",
         sort_order: str = "desc",
-    ) -> "PaginatedFightRecordsResponse":
-        from src.dto.admin.dto_fight_record import (
-            PaginatedFightRecordsResponse,
-            WarFightRecordResponse,
-        )
-
+    ) -> PaginatedFightRecordsResponse:
         if not accessible_alliance_ids:
             return PaginatedFightRecordsResponse(items=[], total=0, page=page, size=size, pages=1)
 
