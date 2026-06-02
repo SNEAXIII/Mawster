@@ -75,7 +75,7 @@ export function useKnowledgeBaseViewModel() {
     getInitialParams().get('alliance_id')
   );
   const [source, setSource] = useState<'all' | 'imported' | 'non_imported'>(
-    () => (getInitialParams().get('source') as 'all' | 'imported' | 'non_imported') ?? 'non_imported'
+    () => (getInitialParams().get('source') as 'all' | 'imported' | 'non_imported') ?? 'all'
   );
   const [accessibleAlliances, setAccessibleAlliances] = useState<AccessibleAlliance[]>([]);
   const [data, setData] = useState<PaginatedFightRecords | null>(null);
@@ -116,7 +116,7 @@ export function useKnowledgeBaseViewModel() {
     if (seasonSelector !== 'all_seasons') params.set('season_selector', seasonSelector);
     if (seasonId) params.set('season_id', seasonId);
     if (allianceId) params.set('alliance_id', allianceId);
-    if (source !== 'non_imported') params.set('source', source);
+    if (source !== 'all') params.set('source', source);
     if (page !== 1) params.set('page', String(page));
     if (size !== 20) params.set('size', String(size));
     if (sortBy !== 'created_at') params.set('sort_by', sortBy);
@@ -244,7 +244,7 @@ export function useKnowledgeBaseViewModel() {
   };
 
   const hasActiveFilters = Boolean(
-    source !== 'non_imported' ||
+    source !== 'all' ||
     filters.champion_id ||
     filters.defender_champion_id ||
     filters.node_number ||
