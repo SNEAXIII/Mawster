@@ -519,6 +519,7 @@ const fr: Translations = {
       importAllianceLabel: 'Alliance',
       importConfirmBtn: 'Importer {count} combats',
       importSuccess: '{count} combats importés',
+      importSkipped: '{count} doublon(s) ignoré(s)',
       importError: "Échec de l'import",
       selectChampion: 'Sélectionner un champion',
       importPreviewTitle: 'Aperçu ({count} lignes)',

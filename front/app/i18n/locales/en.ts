@@ -512,6 +512,7 @@ const en = {
       importAllianceLabel: 'Alliance',
       importConfirmBtn: 'Import {count} rows',
       importSuccess: 'Imported {count} fight records',
+      importSkipped: '{count} duplicate(s) skipped',
       importError: 'Import failed',
       selectChampion: 'Select champion',
       importPreviewTitle: 'Preview ({count} rows)',

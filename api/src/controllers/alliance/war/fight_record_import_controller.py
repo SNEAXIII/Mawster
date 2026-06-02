@@ -31,7 +31,7 @@ async def import_fight_records(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    imported = await FightRecordImportService.import_records(
+    imported, skipped = await FightRecordImportService.import_records(
         session, alliance_id, current_user.id, body.rows
     )
-    return FightRecordImportResponse(imported=imported)
+    return FightRecordImportResponse(imported=imported, skipped=skipped)

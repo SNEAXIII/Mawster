@@ -146,6 +146,8 @@ export default function CsvImportForm() {
     try {
       const res = await importFightRecords(selectedAllianceId, { rows: payload });
       toast.success(kb.importSuccess.replace('{count}', String(res.imported)));
+      if (res.skipped > 0)
+        toast.info(kb.importSkipped.replace('{count}', String(res.skipped)));
       setRows([]);
       setNameMap({});
       if (fileRef.current) fileRef.current.value = '';

@@ -17,3 +17,4 @@ class FightRecordImportRequest(BaseModel):
 
 class FightRecordImportResponse(BaseModel):
     imported: int
+    skipped: int = 0
