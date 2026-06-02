@@ -36,6 +36,7 @@ async def list_fight_records(
     planning_error_only: Optional[bool] = Query(default=None),
     page: int = Query(default=1, ge=1),
     size: int = Query(default=20, ge=1, le=100),
+    source: Literal["all", "imported", "non_imported"] = Query(default="all"),
     sort_by: Literal[
         "created_at",
         "ko_count",
@@ -47,7 +48,6 @@ async def list_fight_records(
         "alliance_name",
     ] = Query(default="created_at"),
     sort_order: str = Query(default="desc", pattern="^(asc|desc)$"),
-    source: Literal["all", "imported", "non_imported"] = Query(default="non_imported"),
 ):
     accessible_ids = await FightRecordService.get_accessible_alliance_ids(session, current_user.id)
     if not accessible_ids:
