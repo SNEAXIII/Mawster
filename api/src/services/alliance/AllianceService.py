@@ -236,6 +236,44 @@ class AllianceService:
             )
 
     @classmethod
+    async def require_officer_account(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> "GameAccount":
+        """Raise 403 if user is not an officer or owner. Returns their GameAccount in this alliance."""
+        alliance = await cls._load_alliance_with_relations(session, alliance_id)
+        if alliance is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=OWNER_OR_OFFICER_REQUIRED,
+            )
+        user_account_ids = await cls._get_user_account_ids(session, user_id)
+
+        # Determine the privileged account id (owner first, then any officer)
+        if alliance.owner_id in user_account_ids:
+            privileged_id = alliance.owner_id
+        else:
+            officer_ids = {off.game_account_id for off in alliance.officers}
+            matching = user_account_ids & officer_ids
+            if not matching:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=OWNER_OR_OFFICER_REQUIRED,
+                )
+            privileged_id = next(iter(matching))
+
+        # alliance.members is already eagerly loaded — no extra query needed
+        account = next((m for m in alliance.members if m.id == privileged_id), None)
+        if account is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=OWNER_OR_OFFICER_REQUIRED,
+            )
+        return account
+
+    @classmethod
     async def require_member(
         cls,
         session: SessionDep,

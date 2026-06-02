@@ -6,7 +6,6 @@ from fastapi import HTTPException
 from sqlmodel import select
 from starlette import status
 
-from src.models.GameAccount import GameAccount
 from src.models.Season import Season
 from src.models.WarFightRecordImport import WarFightRecordImport
 from src.services.alliance.AllianceService import AllianceService
@@ -47,22 +46,9 @@ class FightRecordImportService:
         current_user_id: uuid.UUID,
         rows: list,
     ) -> int:
-        await AllianceService.require_officer(session, alliance_id, current_user_id)
-
-        acc_result = await session.exec(
-            select(GameAccount).where(
-                GameAccount.user_id == current_user_id,
-                GameAccount.alliance_id == alliance_id,
-            )
+        account = await AllianceService.require_officer_account(
+            session, alliance_id, current_user_id
         )
-        account = acc_result.first()
-
-        if account is None:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail="No game account found for current user in this alliance",
-            )
-
         officer_acc_id: uuid.UUID = account.id
 
         unique_names = {row.season_name for row in rows}
