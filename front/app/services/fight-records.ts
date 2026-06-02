@@ -163,6 +163,7 @@ export interface ImportFightRecordsRequest {
 
 export interface ImportFightRecordsResponse {
   imported: number;
+  skipped: number;
 }
 
 export async function importFightRecords(
