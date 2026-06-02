@@ -252,7 +252,7 @@ export default function AllianceDefenseSelector({
                           {RARITY_LABELS[bestOwner.rarity] ?? bestOwner.rarity}
                           {bestOwner.ascension > 0 && (
                             <span className='text-purple-400 font-semibold'>
-                              {' '}
+                              
                               · A{bestOwner.ascension}
                             </span>
                           )}

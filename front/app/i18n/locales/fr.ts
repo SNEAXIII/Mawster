@@ -246,7 +246,7 @@ const fr: Translations = {
           score: 'Score',
           warsParticipated: 'Guerres',
           avgFights: 'Moy. Combats',
-          avgBossMiniboss: 'Boss+MB',
+          avgBossMiniboss: 'AVG MB/B',
         },
         memberFilter: {
           all: 'Tous les membres',

@@ -46,7 +46,7 @@ describe('Alliance Statistics – Players, members & perspective', () => {
     });
   });
 
-  it('shows boss+MB average of 1.0 after one boss fight in one war', () => {
+  it('shows AVG MB/B average of 1.0 after one boss fight in one war', () => {
     cy.apiBatchSetup([
       { discord_token: 'stat-bm-admin', role: 'admin' },
       {

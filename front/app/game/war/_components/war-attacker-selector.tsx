@@ -165,7 +165,7 @@ export default function WarAttackerSelector({
     content = groups.map((group) => (
       <div key={group.gameAccountId}>
         <div className='text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1'>
-          {group.pseudo}{' '}
+          {group.pseudo}
           <span className='text-primary font-bold'>
             {t.game.war.memberAttackers.replace('{count}', String(group.assignedCount))}
           </span>
