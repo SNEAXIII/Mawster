@@ -437,8 +437,11 @@ class AllianceService:
         result = await session.exec(sql)
         alliances = result.all()
 
-        # 4. Build role map
+        # 4. Build role maps
+        alliance_map = {a.id: a for a in alliances}
         roles: dict[str, dict] = {}
+        roles_by_account: dict[str, dict] = {}
+
         for alliance in alliances:
             is_owner = alliance.owner_id in user_account_ids
             officer_ids = {off.game_account_id for off in alliance.officers}
@@ -450,7 +453,24 @@ class AllianceService:
                 "can_manage": can_manage,
             }
 
-        return {"roles": roles, "my_account_ids": my_account_ids}
+        for acc in user_accounts:
+            if acc.alliance_id is None or acc.alliance_id not in alliance_map:
+                continue
+            alliance = alliance_map[acc.alliance_id]
+            officer_ids = {off.game_account_id for off in alliance.officers}
+            acc_is_owner = alliance.owner_id == acc.id
+            acc_is_officer = acc.id in officer_ids
+            roles_by_account[str(acc.id)] = {
+                "is_owner": acc_is_owner,
+                "is_officer": acc_is_officer,
+                "can_manage": acc_is_owner or acc_is_officer,
+            }
+
+        return {
+            "roles": roles,
+            "roles_by_account": roles_by_account,
+            "my_account_ids": my_account_ids,
+        }
 
     @classmethod
     async def update_alliance(

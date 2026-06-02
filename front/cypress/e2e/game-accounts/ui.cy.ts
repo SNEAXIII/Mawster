@@ -154,13 +154,13 @@ describe('Game Accounts – UI', () => {
 
       cy.apiLogin(user_id);
       cy.navTo('profile');
-      cy.getByCy('account-row-Account1').scrollIntoView().find('[data-cy="account-primary-badge"]').should('exist');
-      cy.getByCy('account-row-Account2').scrollIntoView().find('[data-cy="account-primary-badge"]').should('not.exist');
+      cy.getByCy('account-row-Account1').scrollIntoView().find('[data-cy^="account-star-btn"]').should('be.disabled');
+      cy.getByCy('account-row-Account2').scrollIntoView().find('[data-cy^="account-star-btn"]').should('not.be.disabled');
 
       cy.getByCy('account-star-btn-1').click();
 
-      cy.getByCy('account-row-Account2').scrollIntoView().find('[data-cy="account-primary-badge"]').should('exist');
-      cy.getByCy('account-row-Account1').scrollIntoView().find('[data-cy="account-primary-badge"]').should('not.exist');
+      cy.getByCy('account-row-Account2').scrollIntoView().find('[data-cy^="account-star-btn"]').should('be.disabled');
+      cy.getByCy('account-row-Account1').scrollIntoView().find('[data-cy^="account-star-btn"]').should('not.be.disabled');
     });
   });
 
@@ -177,23 +177,23 @@ describe('Game Accounts – UI', () => {
 
       cy.contains('SecondAccount').scrollIntoView().should('be.visible');
 
-      cy.getByCy('account-row-MainAccount').scrollIntoView().find('[data-cy="account-primary-badge"]').should('exist');
+      cy.getByCy('account-row-MainAccount').scrollIntoView().find('[data-cy^="account-star-btn"]').should('be.disabled');
       cy.getByCy('account-row-SecondAccount')
         .scrollIntoView()
-        .find('[data-cy="account-primary-badge"]')
-        .should('not.exist');
+        .find('[data-cy^="account-star-btn"]')
+        .should('not.be.disabled');
 
       // Switch primary to SecondAccount
       cy.getByCy('account-star-btn-1').click();
 
       cy.getByCy('account-row-SecondAccount')
         .scrollIntoView()
-        .find('[data-cy="account-primary-badge"]')
-        .should('exist');
+        .find('[data-cy^="account-star-btn"]')
+        .should('be.disabled');
       cy.getByCy('account-row-MainAccount')
         .scrollIntoView()
-        .find('[data-cy="account-primary-badge"]')
-        .should('not.exist');
+        .find('[data-cy^="account-star-btn"]')
+        .should('not.be.disabled');
     });
   });
 });

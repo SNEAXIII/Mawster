@@ -23,6 +23,7 @@ import {
   type WarPrefight,
   getCurrentWar,
   createWar,
+  updateWar,
   endWar,
   getWarDefense,
   placeWarDefender,
@@ -89,6 +90,7 @@ interface WarContextValue {
   // Actions
   handleNodeClick: (node: number) => void;
   handleCreateWar: (opponentName: string, bannedChampionIds: string[]) => Promise<void>;
+  handleEditWar: (opponentName: string, bannedChampionIds: string[]) => Promise<void>;
   handleEndWar: (win: boolean, eloChange: number | null) => Promise<void>;
   refreshAlliances: () => Promise<void>;
   handlePlaceDefender: (
@@ -288,6 +290,18 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       setCurrentWar(war);
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.createError);
+      throw err;
+    }
+  };
+
+  const handleEditWar = async (opponentName: string, bannedChampionIds: string[]) => {
+    if (!currentWar) return;
+    try {
+      const war = await updateWar(selectedAllianceId, currentWar.id, opponentName, bannedChampionIds);
+      setCurrentWar(war);
+      toast.success(t.game.war.editWarSuccess);
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.editWarError);
       throw err;
     }
   };
@@ -672,6 +686,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       setPendingRemoveNode,
       handleNodeClick,
       handleCreateWar,
+      handleEditWar,
       handleEndWar,
       refreshAlliances: refresh,
       handlePlaceDefender,

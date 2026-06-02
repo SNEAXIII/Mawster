@@ -189,7 +189,7 @@ export default function WarDefenderSelector({
         >
           <DialogHeader className='px-4 py-4 border-b'>
             <DialogTitle>
-              {t.game.defense.selectChampion} —{' '}
+              {t.game.defense.selectChampion} —
               {t.game.defense.nodeEmpty.replace('{node}', String(nodeNumber))}
             </DialogTitle>
           </DialogHeader>

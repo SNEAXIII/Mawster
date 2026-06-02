@@ -5,11 +5,12 @@ import { useRequiredSession } from '@/hooks/use-required-session';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useI18n } from '@/app/i18n';
+import { useState } from 'react';
 import { WarProvider, useWar } from '@/app/contexts/war-context';
 import WarHeader from './war-header';
 import WarTab from './war-tab';
 import WarManagementBar from './war-management-bar';
-import CreateWarDialog from './create-war-dialog';
+import WarFormDialog from './war-form-dialog';
 import AttackerEntryRow from './attacker-entry-row';
 import EndWarDialog from './end-war-dialog';
 
@@ -32,6 +33,8 @@ export default function WarContent() {
 function WarLayout() {
   const { t } = useI18n();
   useRequiredSession();
+
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const {
     alliances,
@@ -57,6 +60,7 @@ function WarLayout() {
     pendingRemoveNode,
     setPendingRemoveNode,
     handleCreateWar,
+    handleEditWar,
     handleEndWar,
     handlePlaceDefender,
     handleAssignAttacker,
@@ -94,7 +98,7 @@ function WarLayout() {
 
           {/* ── War map ──────────────────────────────────── */}
           {activeWarId ? (
-            <WarTab />
+            <WarTab onEditClick={() => setShowEditDialog(true)} />
           ) : (
             <p className='text-muted-foreground'>{t.game.war.noActiveWar}</p>
           )}
@@ -102,10 +106,20 @@ function WarLayout() {
       )}
 
       {/* Declare war dialog */}
-      <CreateWarDialog
+      <WarFormDialog
         open={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
         onConfirm={handleCreateWar}
+      />
+
+      {/* Edit war dialog */}
+      <WarFormDialog
+        mode='edit'
+        open={showEditDialog}
+        onClose={() => setShowEditDialog(false)}
+        onConfirm={handleEditWar}
+        initialOpponentName={currentWar?.opponent_name ?? ''}
+        initialBannedIds={currentWar?.banned_champions.map((c) => c.id) ?? []}
       />
 
       {/* End war dialog */}

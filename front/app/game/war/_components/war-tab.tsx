@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { ReactNode, useState, useEffect, useRef } from 'react';
 import { snapdom } from '@zumer/snapdom';
 import { Button } from '@/components/ui/button';
-import { Shield, Swords, Trash2, NotebookPen, Camera } from 'lucide-react';
+import { Shield, Swords, Trash2, Pencil, Camera } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import { useI18n } from '@/app/i18n';
 import { FullPageSpinner } from '@/components/full-page-spinner';
@@ -46,7 +46,7 @@ const WarAttackerPanel = dynamic(() => import('./war-attacker-panel'), {
   loading: () => <FullPageSpinner />,
 });
 
-export default function WarTab() {
+export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
   const { t } = useI18n();
   const {
     currentWar,
@@ -80,7 +80,9 @@ export default function WarTab() {
     const previousMode = warMode;
     setWarMode(WarMode.Export);
     setExporting(true);
-    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    );
     try {
       const pngMap = await snapdom.toPng(exportMapRef.current, { scale: 1, embedFonts: false });
       await new Promise<void>((resolve) => setTimeout(resolve, 50));
@@ -280,6 +282,15 @@ export default function WarTab() {
               </div>
             ))
           )}
+          {canManageWar && (
+            <Button
+              variant='outline'
+              onClick={onEditClick}
+              data-cy='edit-war-btn'
+            >
+              <Pencil className='size-4 mr-2' /> {t.game.war.editWar}
+            </Button>
+          )}
         </div>
         {/* End war button */}
         {canManageWar && (
@@ -322,7 +333,14 @@ export default function WarTab() {
               />
             </div>
           </div>
-          <div className={cn(exporting ? 'w-full' : 'w-84 shrink-0 lg:self-start lg:sticky lg:top-0 lg:max-h-[calc(100vh-2rem)]', 'flex flex-col')}>
+          <div
+            className={cn(
+              exporting
+                ? 'w-full'
+                : 'w-84 shrink-0 lg:self-start lg:sticky lg:top-0 lg:max-h-[calc(100vh-2rem)]',
+              'flex flex-col'
+            )}
+          >
             <WarAttackerPanel
               playerFilter={playerFilter}
               onPlayerChange={setPlayerFilter}

@@ -43,15 +43,15 @@ export default function ImportPreviewDialog({
         <DialogHeader>
           <DialogTitle>{t.roster.importExport.previewTitle}</DialogTitle>
           <DialogDescription>
-            {t.roster.importExport.detectedCount.replace('{count}', String(previewRows.length))} —{' '}
+            {t.roster.importExport.detectedCount.replace('{count}', String(previewRows.length))} —
             <span className='text-green-600 font-medium'>
               {t.roster.importExport.newCount.replace('{count}', String(newCount))}
             </span>
-            ,{' '}
+            ,
             <span className='text-blue-600 font-medium'>
               {t.roster.importExport.updateCount.replace('{count}', String(changeCount))}
             </span>
-            ,{' '}
+            ,
             <span className='text-gray-500'>
               {t.roster.importExport.unchangedCount.replace('{count}', String(unchangedCount))}
             </span>

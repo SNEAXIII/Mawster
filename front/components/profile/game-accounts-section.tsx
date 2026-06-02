@@ -5,7 +5,9 @@ import { useI18n } from '@/app/i18n';
 import { toast } from 'sonner';
 import {
   type GameAccount,
+  type AllianceRoleEntry,
   getMyGameAccounts,
+  getMyAllianceRoles,
   createGameAccount,
   updateGameAccount,
   deleteGameAccount,
@@ -17,7 +19,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { CollapsibleSection } from '@/components/collapsible-section';
-import { Loader, Plus, Trash2, Gamepad2, Star, Pencil, Check, X, Shield } from 'lucide-react';
+import { Loader, Plus, Trash2, Gamepad2, Star, Pencil, Check, X, Shield, Crown, ShieldCheck, Eye } from 'lucide-react';
+
+type RoleKey = 'owner' | 'officer' | 'member' | 'visitor';
+
+const ROLE_CONFIG: Record<RoleKey, { Icon: React.ComponentType<{ className?: string }>; cls: string }> = {
+  owner:   { Icon: Crown,       cls: 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300' },
+  officer: { Icon: ShieldCheck, cls: 'bg-purple-500/20 text-purple-700 dark:text-purple-300' },
+  member:  { Icon: Shield,      cls: 'bg-blue-500/20 text-blue-700 dark:text-blue-300' },
+  visitor: { Icon: Eye,         cls: 'bg-muted/80 text-muted-foreground' },
+};
+
+function getRoleKey(allianceTag: string | null, entry: AllianceRoleEntry | undefined): RoleKey | null {
+  if (!allianceTag) return null;
+  if (entry?.is_owner) return 'owner';
+  if (entry?.is_officer) return 'officer';
+  if (entry) return 'member';
+  return 'visitor';
+}
 
 interface GameAccountsSectionProps {
   onAccountsChange?: () => void;
@@ -29,6 +48,7 @@ export default function GameAccountsSection({
   const { t } = useI18n();
 
   const [accounts, setAccounts] = useState<GameAccount[]>([]);
+  const [rolesByAccount, setRolesByAccount] = useState<Record<string, AllianceRoleEntry>>({});
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -42,8 +62,12 @@ export default function GameAccountsSection({
 
   const fetchAccounts = async () => {
     try {
-      const data = await getMyGameAccounts();
+      const [data, rolesData] = await Promise.all([
+        getMyGameAccounts(),
+        getMyAllianceRoles().catch(() => ({ roles: {}, roles_by_account: {}, my_account_ids: [] })),
+      ]);
       setAccounts(data);
+      setRolesByAccount(rolesData.roles_by_account);
     } catch (err) {
       console.error(err);
     } finally {
@@ -217,14 +241,23 @@ export default function GameAccountsSection({
             </div>
           ) : (
             <div className='space-y-2'>
-              {accounts.map((account, index) => (
+              {accounts.map((account, index) => {
+                const roleKey = getRoleKey(account.alliance_tag, rolesByAccount[account.id]);
+                const roleConfig = roleKey ? ROLE_CONFIG[roleKey] : null;
+                const ROLE_LABELS: Record<RoleKey, string> = {
+                  owner:   t.game.alliances.owner,
+                  officer: t.game.alliances.officers,
+                  member:  t.game.alliances.memberBadge,
+                  visitor: t.game.alliances.visitorBadge,
+                };
+                const roleLabel = roleKey ? ROLE_LABELS[roleKey] : '';
+                return (
                 <div
                   key={account.id}
                   className='flex items-center justify-between p-3 rounded-lg bg-muted/50 border'
                   data-cy={`account-row-${account.game_pseudo}`}
                 >
-                  <div className='flex items-center gap-3 flex-1 min-w-0'>
-                    <Gamepad2 className='h-4 w-4 text-blue-500 shrink-0' />
+                  <div className='flex items-center gap-1 flex-1 min-w-0'>
                     {editingId === account.id ? (
                       <form
                         className='flex items-center gap-2 flex-1'
@@ -264,28 +297,21 @@ export default function GameAccountsSection({
                     ) : (
                       <>
                         <p className='font-medium text-sm text-foreground'>{account.game_pseudo}</p>
-                        {account.is_primary && (
+                        {roleConfig && (
                           <span
-                            data-cy='account-primary-badge'
-                            className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-700 dark:text-yellow-300'
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${roleConfig.cls}`}
+                            title={`${account.alliance_name} · ${roleLabel}`}
+                            data-cy={`account-role-badge-${account.game_pseudo}`}
+                            data-role={roleKey}
                           >
-                            <Star className='h-3 w-3' />
-                            {t.game.accounts.primary}
-                          </span>
-                        )}
-                        {account.alliance_tag && (
-                          <span
-                            className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-700 dark:text-blue-300'
-                            title={account.alliance_name ?? ''}
-                          >
-                            <Shield className='h-3 w-3' />[{account.alliance_tag}]
+                            <roleConfig.Icon className='h-3 w-3' />[{account.alliance_tag}]
                           </span>
                         )}
                       </>
                     )}
                   </div>
                   {editingId !== account.id && (
-                    <div className='flex items-center gap-1 shrink-0'>
+                    <div className='flex items-center shrink-0'>
                       <Button
                         variant='ghost'
                         size='icon'
@@ -295,16 +321,11 @@ export default function GameAccountsSection({
                             : 'text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10'
                         }
                         onClick={() => handleSetPrimary(account)}
-                        title={
-                          account.is_primary
-                            ? t.game.accounts.primary
-                            : (t.game.accounts.setAsPrimary ?? 'Set as primary')
-                        }
                         disabled={account.is_primary}
                         data-cy={`account-star-btn-${index}`}
                       >
                         <Star
-                          className={`h-4 w-4 ${account.is_primary ? 'fill-yellow-500' : ''}`}
+                          className={`h-4 ${account.is_primary ? 'fill-yellow-500' : ''}`}
                         />
                       </Button>
                       <Button
@@ -314,7 +335,7 @@ export default function GameAccountsSection({
                         onClick={() => startEditing(account)}
                         data-cy={`account-edit-btn-${index}`}
                       >
-                        <Pencil className='h-4 w-4' />
+                        <Pencil className='h-4' />
                       </Button>
                       <Button
                         variant='ghost'
@@ -323,12 +344,13 @@ export default function GameAccountsSection({
                         onClick={() => setDeleteTarget(account.id)}
                         data-cy='account-delete-btn'
                       >
-                        <Trash2 className='h-4 w-4' />
+                        <Trash2 className='h-4' />
                       </Button>
                     </div>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

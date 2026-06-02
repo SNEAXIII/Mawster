@@ -58,13 +58,13 @@ export default function ImportReportDialog({
           <DialogDescription className='flex items-center gap-3 mt-1 flex-wrap'>
             {addedCount > 0 && (
               <span className='inline-flex items-center gap-1 text-green-600 font-medium'>
-                <Check className='h-3.5 w-3.5' /> {addedCount}{' '}
+                <Check className='h-3.5 w-3.5' /> {addedCount}
                 {t.roster.importExport.badgeAdded.toLowerCase()}
               </span>
             )}
             {updatedCount > 0 && (
               <span className='inline-flex items-center gap-1 text-blue-600 font-medium'>
-                <Check className='h-3.5 w-3.5' /> {updatedCount}{' '}
+                <Check className='h-3.5 w-3.5' /> {updatedCount}
                 {t.roster.importExport.badgeUpdated.toLowerCase()}
               </span>
             )}
@@ -75,7 +75,7 @@ export default function ImportReportDialog({
             )}
             {failCount > 0 && (
               <span className='inline-flex items-center gap-1 text-red-600 font-medium'>
-                <X className='h-3.5 w-3.5' /> {failCount}{' '}
+                <X className='h-3.5 w-3.5' /> {failCount}
                 {t.roster.importExport.badgeError.toLowerCase()}
               </span>
             )}
@@ -146,7 +146,7 @@ export default function ImportReportDialog({
                         {t.roster.importExport.badgeAdded}
                       </span>
                       <div className='text-gray-600 dark:text-gray-300'>
-                        {RARITY_LABELS[result.newRarity] ?? result.newRarity} · sig{' '}
+                        {RARITY_LABELS[result.newRarity] ?? result.newRarity} · sig
                         {result.newSignature}
                       </div>
                     </div>
