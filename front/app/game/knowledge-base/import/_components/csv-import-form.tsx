@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import ChampionFilterSelect from '@/app/game/knowledge-base/_components/champion-filter-select';
 import { getChampions, type Champion } from '@/app/services/champions';
 import {
   getAccessibleAlliances,
@@ -196,24 +197,12 @@ export default function CsvImportForm() {
               <span className='text-sm text-muted-foreground w-36 truncate'>
                 {kb.importUnknown.replace('{name}', name)}
               </span>
-              <Select
-                value={nameMap[name] ?? ''}
-                onValueChange={v =>
-                  setNameMap(m => ({ ...m, [name]: v || null }))
-                }
+              <ChampionFilterSelect
+                value={nameMap[name]}
+                onChange={id => setNameMap(m => ({ ...m, [name]: id }))}
+                placeholder={kb.selectChampion}
                 data-cy={`champion-map-${name}`}
-              >
-                <SelectTrigger className='w-48'>
-                  <SelectValue placeholder={kb.selectChampion} />
-                </SelectTrigger>
-                <SelectContent>
-                  {champions.map(c => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             </div>
           ))}
         </div>
