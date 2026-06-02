@@ -11,6 +11,7 @@ import {
   type Season,
   type AccessibleAlliance,
 } from '@/app/services/fight-records';
+import { getMyAllianceRoles } from '@/app/services/game';
 
 interface Filters {
   champion_id: string | null;
@@ -78,6 +79,7 @@ export function useKnowledgeBaseViewModel() {
     () => (getInitialParams().get('source') as 'all' | 'imported' | 'non_imported') ?? 'all'
   );
   const [accessibleAlliances, setAccessibleAlliances] = useState<AccessibleAlliance[]>([]);
+  const [canImport, setCanImport] = useState(false);
   const [data, setData] = useState<PaginatedFightRecords | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,9 +101,17 @@ export function useKnowledgeBaseViewModel() {
   }, []);
 
   useEffect(() => {
-    getAccessibleAlliances()
-      .then(setAccessibleAlliances)
-      .catch(() => setAccessibleAlliances([]));
+    Promise.all([getAccessibleAlliances(), getMyAllianceRoles()])
+      .then(([alliances, rolesData]) => {
+        setAccessibleAlliances(alliances);
+        setCanImport(
+          alliances.some(a => rolesData.roles[a.id]?.is_owner || rolesData.roles[a.id]?.is_officer)
+        );
+      })
+      .catch(() => {
+        setAccessibleAlliances([]);
+        setCanImport(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -270,6 +280,7 @@ export function useKnowledgeBaseViewModel() {
     seasons,
     allianceId,
     accessibleAlliances,
+    canImport,
     source,
     hasActiveFilters,
     handleFilterChange,
