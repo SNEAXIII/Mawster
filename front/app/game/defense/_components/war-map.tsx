@@ -15,24 +15,12 @@ interface WarMapNodeProps {
   onNodeClick: (nodeNumber: number) => void;
   onRemove: (nodeNumber: number) => void;
   canManage: boolean;
+  colorClasses: string;
+  hoverClasses: string;
   hidePseudo?: boolean;
   hideSig?: boolean;
   dimmed?: boolean;
   hasPrefight?: boolean;
-}
-
-function getNodeColor(nodeNumber: number): string {
-  if (nodeNumber >= 46) return 'border-yellow-500 bg-yellow-950/40';
-  if (nodeNumber >= 37) return 'border-blue-500 bg-blue-950/40';
-  if (nodeNumber >= 19) return 'border-purple-500 bg-purple-950/40';
-  return 'border-red-500 bg-red-950/40';
-}
-
-function getNodeHoverColor(nodeNumber: number): string {
-  if (nodeNumber >= 46) return 'hover:bg-yellow-900/60';
-  if (nodeNumber >= 37) return 'hover:bg-blue-900/60';
-  if (nodeNumber >= 19) return 'hover:bg-purple-900/60';
-  return 'hover:bg-red-900/60';
 }
 
 export function WarMapPlaceHolder() {
@@ -44,14 +32,14 @@ export function WarMapNode({
   onNodeClick,
   onRemove,
   canManage,
+  colorClasses,
+  hoverClasses,
   hidePseudo = false,
   hideSig = false,
   dimmed = false,
   hasPrefight = false,
 }: Readonly<WarMapNodeProps>) {
   const { t } = useI18n();
-  const colorClasses = getNodeColor(nodeNumber);
-  const hoverClasses = getNodeHoverColor(nodeNumber);
 
   return (
     <div
@@ -197,6 +185,8 @@ export default function WarMap({
                     onNodeClick={onNodeClick}
                     onRemove={onRemove}
                     canManage={canManage}
+                    colorClasses={section.nodeColor}
+                    hoverClasses={section.nodeHoverColor}
                     hidePseudo={hidePseudo}
                     hideSig={hideSig}
                     dimmed={dimmedNodes?.has(nodeNumber) ?? false}
