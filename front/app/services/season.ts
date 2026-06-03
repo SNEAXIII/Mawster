@@ -4,10 +4,16 @@ const jsonHeaders: HeadersInit = {
   'Content-Type': 'application/json',
 };
 
+export type SeasonFormat = 'regular' | 'big_thing';
+
 export interface Season {
   id: string;
   number: number;
   is_active: boolean;
+  format: SeasonFormat;
+  max_defenders_per_player: number;
+  max_attackers_per_member: number;
+  node_count: number;
 }
 
 export async function getCurrentSeason(): Promise<Season | null> {
@@ -22,11 +28,14 @@ export async function listSeasons(): Promise<Season[]> {
   return res.json();
 }
 
-export async function createSeason(number: number): Promise<Season> {
+export async function createSeason(
+  number: number,
+  format: SeasonFormat = 'regular'
+): Promise<Season> {
   const res = await fetch(`${PROXY}/admin/seasons`, {
     method: 'POST',
     headers: jsonHeaders,
-    body: JSON.stringify({ number }),
+    body: JSON.stringify({ number, format }),
   });
   if (!res.ok) throw new Error('Failed to create season');
   return res.json();
