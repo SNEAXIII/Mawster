@@ -6,17 +6,26 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   listSeasons,
   createSeason,
   activateSeason,
   deactivateSeason,
   type Season,
+  type SeasonFormat,
 } from '@/app/services/season';
 
 export default function SeasonsPanel() {
   const { t } = useI18n();
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [newNumber, setNewNumber] = useState('');
+  const [newFormat, setNewFormat] = useState<SeasonFormat>('regular');
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
@@ -35,8 +44,9 @@ export default function SeasonsPanel() {
     const n = parseInt(newNumber, 10);
     if (isNaN(n)) return;
     try {
-      await createSeason(n);
+      await createSeason(n, newFormat);
       setNewNumber('');
+      setNewFormat('regular');
       await load();
     } catch {
       setError(t.game.season.admin.createError);
@@ -86,6 +96,21 @@ export default function SeasonsPanel() {
           className='w-32'
           data-cy='season-number-input'
         />
+        <Select
+          value={newFormat}
+          onValueChange={(v) => setNewFormat(v as SeasonFormat)}
+        >
+          <SelectTrigger
+            className='w-40'
+            data-cy='season-format-select'
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='regular'>{t.game.season.format.regular}</SelectItem>
+            <SelectItem value='big_thing'>{t.game.season.format.bigThing}</SelectItem>
+          </SelectContent>
+        </Select>
         <Button
           onClick={handleCreate}
           data-cy='create-season-btn'
@@ -111,6 +136,14 @@ export default function SeasonsPanel() {
                 data-cy={s.is_active ? 'season-active-indicator' : 'season-inactive-indicator'}
               >
                 {s.is_active ? t.game.season.admin.active : t.game.season.admin.inactive}
+              </Badge>
+              <Badge
+                variant='outline'
+                data-cy={`season-format-${s.number}`}
+              >
+                {s.format === 'big_thing'
+                  ? t.game.season.format.bigThing
+                  : t.game.season.format.regular}
               </Badge>
             </div>
             <div className='flex gap-2'>
