@@ -19,11 +19,12 @@ from src.Messages.defense_messages import (
     NO_DEFENDER_ON_NODE,
     PLAYER_NOT_IN_ALLIANCE,
     PLAYER_NOT_IN_BATTLEGROUP,
+    node_exceeds_map,
     player_max_defenders_reached,
 )
+from src.services.admin.SeasonService import SeasonService
+from src.services.alliance.war.WarFormatConfig import for_format
 from src.utils.db import SessionDep
-
-MAX_DEFENDERS_PER_PLAYER = 5
 
 
 class DefensePlacementService:
@@ -64,6 +65,16 @@ class DefensePlacementService:
         placed_by_id: Optional[uuid.UUID] = None,
     ) -> DefensePlacement:
         """Place a defender on a node. Validates all business rules."""
+        # 0. Resolve format params from the active season
+        params = for_format(await SeasonService.get_active_format(session))
+
+        # Validate node number against format map size
+        if node_number < 1 or node_number > params.node_count:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=node_exceeds_map(params.node_count),
+            )
+
         # 1. Verify the champion_user exists and belongs to game_account
         champion_user = await session.get(ChampionUser, champion_user_id)
         if champion_user is None:
@@ -128,7 +139,7 @@ class DefensePlacementService:
                 detail=CHAMPION_ALREADY_PLACED_OTHER_NODE,
             )
 
-        # 5. Check max defenders per player (5)
+        # 5. Check max defenders per player (format-derived)
         player_count_result = await session.exec(
             select(DefensePlacement).where(
                 and_(
@@ -139,10 +150,10 @@ class DefensePlacementService:
             )
         )
         player_placements = player_count_result.all()
-        if len(player_placements) >= MAX_DEFENDERS_PER_PLAYER:
+        if len(player_placements) >= params.max_defenders_per_player:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=player_max_defenders_reached(MAX_DEFENDERS_PER_PLAYER),
+                status_code=status.HTTP_409_CONFLICT,
+                detail=player_max_defenders_reached(params.max_defenders_per_player),
             )
 
         # 6. Create the placement
@@ -293,6 +304,9 @@ class DefensePlacementService:
         placed_cu_result = await session.exec(placed_cu_stmt)
         placed_champion_ids = set(placed_cu_result.all())
 
+        # Resolve format params from the active season
+        params = for_format(await SeasonService.get_active_format(session))
+
         # Get defender counts per player
         defender_counts = await cls._get_defender_counts(session, alliance_id, battlegroup)
 
@@ -302,8 +316,8 @@ class DefensePlacementService:
             # Exclude if this champion (by champion_id) is already placed anywhere on the map
             if cu.champion_id in placed_champion_ids:
                 continue
-            # Skip players who already have 5 defenders
-            if defender_counts.get(cu.game_account_id, 0) >= MAX_DEFENDERS_PER_PLAYER:
+            # Skip players who already have max defenders
+            if defender_counts.get(cu.game_account_id, 0) >= params.max_defenders_per_player:
                 continue
 
             champ_id = cu.champion_id
@@ -361,6 +375,9 @@ class DefensePlacementService:
 
         defender_counts = await cls._get_defender_counts(session, alliance_id, battlegroup)
 
+        # Resolve format params from the active season
+        params = for_format(await SeasonService.get_active_format(session))
+
         # Fetch alliance to determine the owner
         alliance = await session.get(Alliance, alliance_id)
         owner_game_account_id: uuid.UUID | None = alliance.owner_id if alliance else None
@@ -376,7 +393,7 @@ class DefensePlacementService:
                 "game_account_id": str(m.id),
                 "game_pseudo": m.game_pseudo,
                 "defender_count": defender_counts.get(m.id, 0),
-                "max_defenders": MAX_DEFENDERS_PER_PLAYER,
+                "max_defenders": params.max_defenders_per_player,
                 "is_owner": m.id == owner_game_account_id,
                 "is_officer": m.id in officer_ids,
             }

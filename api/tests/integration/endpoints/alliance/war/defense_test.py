@@ -4,9 +4,11 @@ import uuid
 
 import pytest
 
+from src.enums.Roles import Roles
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
+    execute_patch_request,
     execute_post_request,
     execute_delete_request,
 )
@@ -727,7 +729,7 @@ class TestPlaceDefenderEdgeCases:
             },
             headers=headers,
         )
-        assert response.status_code == 400
+        assert response.status_code == 409
 
 
 class TestAvailableChampionsEdgeCases:
@@ -930,3 +932,89 @@ class TestDefenseAlias:
         assert response.status_code == 200
         placement = response.json()["placements"][0]
         assert placement["champion_alias"] == "spidey;peter"
+
+
+class TestBigThingFormat:
+    """Defender cap and node range enforced by active big_thing season format."""
+
+    ADMIN_HEADERS = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
+
+    @pytest.mark.asyncio
+    async def test_big_thing_cap_is_one_defender_per_player(self):
+        """Under big_thing season, second placement for same player → 409."""
+        data = await _setup_alliance_with_bg()
+
+        # Create and activate a big_thing season via admin endpoints
+        create_resp = await execute_post_request(
+            "/admin/seasons",
+            payload={"number": 99, "format": "big_thing"},
+            headers=self.ADMIN_HEADERS,
+        )
+        assert create_resp.status_code == 201
+        season_id = create_resp.json()["id"]
+
+        activate_resp = await execute_patch_request(
+            f"/admin/seasons/{season_id}/activate",
+            payload={},
+            headers=self.ADMIN_HEADERS,
+        )
+        assert activate_resp.status_code == 200
+
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        # First placement (node 1) — must succeed
+        resp1 = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 1,
+                "champion_user_id": str(data["cu_owner1"].id),
+                "game_account_id": str(data["owner"].id),
+            },
+            headers=headers,
+        )
+        assert resp1.status_code == 201
+
+        # Second placement (node 2, different champion) — must be rejected under cap=1
+        resp2 = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 2,
+                "champion_user_id": str(data["cu_owner2"].id),
+                "game_account_id": str(data["owner"].id),
+            },
+            headers=headers,
+        )
+        assert resp2.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_big_thing_node_range_rejects_node_11(self):
+        """Under big_thing season (node_count=10), placing on node 11 → 422."""
+        data = await _setup_alliance_with_bg()
+
+        create_resp = await execute_post_request(
+            "/admin/seasons",
+            payload={"number": 100, "format": "big_thing"},
+            headers=self.ADMIN_HEADERS,
+        )
+        assert create_resp.status_code == 201
+        season_id = create_resp.json()["id"]
+
+        activate_resp = await execute_patch_request(
+            f"/admin/seasons/{season_id}/activate",
+            payload={},
+            headers=self.ADMIN_HEADERS,
+        )
+        assert activate_resp.status_code == 200
+
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        resp = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/defense/bg/1/place",
+            payload={
+                "node_number": 11,
+                "champion_user_id": str(data["cu_owner1"].id),
+                "game_account_id": str(data["owner"].id),
+            },
+            headers=headers,
+        )
+        assert resp.status_code == 422
