@@ -353,6 +353,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
               exporting={exporting}
               exportRef={exportAttackersRef}
               nodeCount={currentSeason?.node_count ?? 50}
+              maxAttackers={currentSeason?.max_attackers_per_member ?? 3}
             />
           </div>
         </div>

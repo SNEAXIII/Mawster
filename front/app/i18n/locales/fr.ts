@@ -384,8 +384,8 @@ const fr: Translations = {
       defenderRequired: "Ce nœud doit avoir un défenseur avant d'assigner un attaquant",
       noAvailableAttackers: 'Aucun attaquant disponible pour ce groupe de combat',
       availableAttackersError: 'Erreur lors du chargement des attaquants disponibles',
-      attackersPanelTitle: '{assigned}/50 combats attribués',
-      memberAttackers: '{count}/3',
+      attackersPanelTitle: '{assigned}/{total} combats attribués',
+      memberAttackers: '{count}/{max}',
       sagaAttackerFilter: 'Saga Attaquant',
       preferredAttackerFilter: 'Préféré',
       synergy: {

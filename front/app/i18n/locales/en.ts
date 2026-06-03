@@ -377,8 +377,8 @@ const en = {
       defenderRequired: 'This node needs a defender before assigning an attacker',
       noAvailableAttackers: 'No available attackers for this battlegroup',
       availableAttackersError: 'Failed to load available attackers',
-      attackersPanelTitle: '{assigned}/50 fights attributed',
-      memberAttackers: '{count}/3',
+      attackersPanelTitle: '{assigned}/{total} fights attributed',
+      memberAttackers: '{count}/{max}',
       sagaAttackerFilter: 'Saga Attacker',
       preferredAttackerFilter: 'Preferred',
       synergy: {
