@@ -1,6 +1,7 @@
 ---
 name: test-python
 description: Write Python tests (unit and integration) for backend FastAPI/SQLModel features in this project. Use when adding a new endpoint, service, or DTO that needs tests, or when tests are missing for an existing feature. Invoke whenever the user says "fais des tests", "écris des tests", "add tests", "write tests", "tests pour X", or when code changes need test coverage. Always research the implementation first before writing tests.
+model: claude-sonnet-4-6
 ---
 
 # Python Test Writer
@@ -9,7 +10,24 @@ Write tests for FastAPI/SQLModel backend features. Always research before writin
 
 ## Step 1: Research
 
-Read these files before writing any test:
+**Garder l'output de recherche hors de la fenêtre de contexte.** Ne pas charger les
+fichiers impl + tests référence entiers via `Read` (réservé aux fichiers qu'on va `Edit`).
+À la place, extraire seulement ce qui sert via la sandbox :
+
+```
+ctx_execute_file(path: "api/src/services/<Feature>Service.py", language: "python", code: "...")
+```
+ou regrouper en une passe :
+```
+ctx_batch_execute(
+  commands: ["sed -n '1,80p' api/src/controllers/<feature>_controller.py", ...],
+  queries: ["auth deps and routes", "service business logic", "dto fields"]
+)
+```
+Puis `ctx_search` pour les questions de suivi. Ne `Read` que le(s) fichier(s) de test
+que tu vas réellement écrire/éditer.
+
+Fichiers à analyser avant d'écrire :
 
 **Implementation to test:**
 - `api/src/controllers/<feature>_controller.py` — endpoints, auth deps, routes
@@ -138,9 +156,14 @@ Only write these when the service has pure logic testable without DB. Don't dupl
 
 ## Step 5: Run and Fix
 
-Run with:
+Lancer via le **runner pytest MCP** (`mcp__pytest-runner__run_specific_tests`) plutôt que
+`uv run pytest` en Bash — il garde l'output de test volumineux hors de la fenêtre de
+contexte et ne remonte que les échecs.
+
+Si lancé en Bash malgré tout, réduire l'output : `--tb=line -q` (pas `-v --tb=short`),
+et passer la sortie par `ctx_execute` pour ne garder que les lignes d'échec :
 ```bash
-uv run pytest tests/integration/endpoints/<feature>_test.py -v --tb=short
+uv run pytest tests/integration/endpoints/<feature>_test.py --tb=line -q
 ```
 (from `api/` directory)
 
