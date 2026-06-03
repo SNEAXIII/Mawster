@@ -53,6 +53,14 @@ export default function KnowledgeBaseFilters({
 
   return (
     <div className='flex flex-wrap gap-2 items-center'>
+      <Input
+        className='w-36'
+        type='text'
+        placeholder={kb.filterPlayer}
+        value={filters.game_account_pseudo}
+        onChange={(e) => onChange('game_account_pseudo', e.target.value)}
+        data-cy='filter-player'
+      />
       <ChampionFilterSelect
         value={filters.champion_id}
         onChange={(id) => onChange('champion_id', id)}
@@ -83,14 +91,26 @@ export default function KnowledgeBaseFilters({
         onChange={(e) => onChange('tier', e.target.value)}
         data-cy='filter-tier'
       />
-      <Input
-        className='w-36'
-        type='text'
-        placeholder={kb.filterPlayer}
-        value={filters.game_account_pseudo}
-        onChange={(e) => onChange('game_account_pseudo', e.target.value)}
-        data-cy='filter-player'
-      />
+
+      {accessibleAlliances.length > 1 && (
+        <Select
+          value={allianceId ?? 'all'}
+          onValueChange={(v) => onAllianceChange(v === 'all' ? null : v)}
+          data-cy='filter-alliance'
+        >
+          <SelectTrigger className='w-44' data-cy='filter-alliance-trigger'>
+            <SelectValue placeholder={kb.filterAlliance} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='all'>{kb.allAlliances}</SelectItem>
+            {accessibleAlliances.map((a) => (
+              <SelectItem key={a.id} value={a.id}>
+                [{a.tag}] {a.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       <Select
         value={seasonSelector}
@@ -122,26 +142,6 @@ export default function KnowledgeBaseFilters({
             {seasons.map((s) => (
               <SelectItem key={s.id} value={s.id}>
                 {kb.seasonLabel.replace('{number}', String(s.number))}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
-
-      {accessibleAlliances.length > 1 && (
-        <Select
-          value={allianceId ?? 'all'}
-          onValueChange={(v) => onAllianceChange(v === 'all' ? null : v)}
-          data-cy='filter-alliance'
-        >
-          <SelectTrigger className='w-44' data-cy='filter-alliance-trigger'>
-            <SelectValue placeholder={kb.filterAlliance} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='all'>{kb.allAlliances}</SelectItem>
-            {accessibleAlliances.map((a) => (
-              <SelectItem key={a.id} value={a.id}>
-                [{a.tag}] {a.name}
               </SelectItem>
             ))}
           </SelectContent>
