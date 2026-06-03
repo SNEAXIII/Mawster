@@ -5,11 +5,12 @@ const jsonHeaders: HeadersInit = {
 };
 
 export type SeasonFormat = 'regular' | 'big_thing';
+export type SeasonStatus = 'upcoming' | 'active' | 'ended';
 
 export interface Season {
   id: string;
   number: number;
-  is_active: boolean;
+  status: SeasonStatus;
   format: SeasonFormat;
   max_defenders_per_player: number;
   max_attackers_per_member: number;
@@ -41,20 +42,20 @@ export async function createSeason(
   return res.json();
 }
 
-export async function activateSeason(id: string): Promise<Season> {
-  const res = await fetch(`${PROXY}/admin/seasons/${id}/activate`, {
+export async function openSeason(id: string): Promise<Season> {
+  const res = await fetch(`${PROXY}/admin/seasons/${id}/open`, {
     method: 'PATCH',
     headers: jsonHeaders,
   });
-  if (!res.ok) throw new Error('Failed to activate season');
+  if (!res.ok) throw new Error('Failed to open season');
   return res.json();
 }
 
-export async function deactivateSeason(id: string): Promise<Season> {
-  const res = await fetch(`${PROXY}/admin/seasons/${id}/deactivate`, {
+export async function closeSeason(id: string): Promise<Season> {
+  const res = await fetch(`${PROXY}/admin/seasons/${id}/close`, {
     method: 'PATCH',
     headers: jsonHeaders,
   });
-  if (!res.ok) throw new Error('Failed to deactivate season');
+  if (!res.ok) throw new Error('Failed to close season');
   return res.json();
 }

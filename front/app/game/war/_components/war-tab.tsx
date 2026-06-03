@@ -149,6 +149,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
               : undefined
           }
           format={currentSeason?.format ?? 'regular'}
+          status={currentSeason?.status}
         />
 
         {/* ELO badge — read-only, edit from the alliances page */}

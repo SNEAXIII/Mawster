@@ -77,7 +77,7 @@ export interface PaginatedFightRecords {
 export interface Season {
   id: string;
   number: number;
-  is_active: boolean;
+  status: 'upcoming' | 'active' | 'ended';
 }
 
 export interface FightRecordFilters {
