@@ -1,6 +1,7 @@
 ---
 name: commit
 description: Use when ready to commit changes — analyzes git status and diff, groups changes by responsibility, creates separate conventional commits in the right order with Co-Authored-By trailer.
+model: claude-haiku-4-5-20251001
 ---
 
 # Git Commit
@@ -9,10 +10,17 @@ Analyze changes, group by responsibility, commit with conventional messages.
 
 ## Process
 
-1. `git status` + `git diff` pour voir tous les changements
-2. Identifier les changements non liés à la feature principale → commits séparés
-3. Commiter chaque groupe dans le bon ordre (fixes avant features)
-4. Vérifier que chaque commit passe le pre-commit hook avant de continuer
+1. **Vue d'ensemble légère d'abord** — jamais `git diff` brut complet :
+   - `git status --short`
+   - `git diff --stat` (aperçu fichiers + volume, sans charger le contenu)
+2. Diff ciblé **seulement si nécessaire** pour décider du groupement :
+   - `git diff -- <fichier>` sur un fichier précis, pas tout le working tree
+   - Garder les gros diffs hors de la fenêtre : passer par
+     `ctx_execute(language: "shell", code: "git diff -- <fichier>")`
+     plutôt que de lire le diff brut directement
+3. Identifier les changements non liés à la feature principale → commits séparés
+4. Commiter chaque groupe dans le bon ordre (fixes avant features)
+5. Vérifier que chaque commit passe le pre-commit hook avant de continuer
 
 ## Conventional Commit Types
 
