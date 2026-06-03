@@ -35,7 +35,7 @@ season_public_controller = APIRouter(
 )
 async def create_season(body: SeasonCreateRequest, session: SessionDep):
     """Create a new season. Admin only."""
-    return await SeasonService.create_season(session, body.number)
+    return await SeasonService.create_season(session, body.number, body.format)
 
 
 @season_admin_controller.get("", response_model=list[SeasonResponse])

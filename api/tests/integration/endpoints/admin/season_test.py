@@ -77,6 +77,28 @@ class TestCreateSeason:
         assert response.status_code == 201
         assert response.json()["number"] == 1
 
+    @pytest.mark.anyio
+    async def test_create_defaults_to_regular_with_limits(self):
+        response = await execute_post_request(SEASONS_URL, {"number": 200}, ADMIN_HEADERS)
+        assert response.status_code == 201
+        data = response.json()
+        assert data["format"] == "regular"
+        assert data["max_defenders_per_player"] == 5
+        assert data["max_attackers_per_member"] == 3
+        assert data["node_count"] == 50
+
+    @pytest.mark.anyio
+    async def test_create_big_thing_returns_big_thing_limits(self):
+        response = await execute_post_request(
+            SEASONS_URL, {"number": 201, "format": "big_thing"}, ADMIN_HEADERS
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["format"] == "big_thing"
+        assert data["max_defenders_per_player"] == 1
+        assert data["max_attackers_per_member"] == 2
+        assert data["node_count"] == 10
+
 
 class TestActivateSeason:
     @pytest.mark.anyio
@@ -145,6 +167,20 @@ class TestGetCurrentSeason:
         assert response.status_code == 200
         assert response.json()["number"] == 90
         assert response.json()["is_active"] is True
+
+    @pytest.mark.anyio
+    async def test_active_big_thing_season_returns_correct_format_and_limits(self, admin_in_db):
+        s = (
+            await execute_post_request(
+                SEASONS_URL, {"number": 91, "format": "big_thing"}, ADMIN_HEADERS
+            )
+        ).json()
+        await execute_patch_request(f"{SEASONS_URL}/{s['id']}/activate", {}, ADMIN_HEADERS)
+        response = await execute_get_request(CURRENT_URL, USER_HEADERS)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["format"] == "big_thing"
+        assert data["node_count"] == 10
 
 
 class TestListSeasonsPublic:
