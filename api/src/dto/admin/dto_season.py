@@ -2,6 +2,7 @@ import uuid
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from src.enums.SeasonFormat import SeasonFormat
+from src.enums.SeasonStatus import SeasonStatus
 from src.services.alliance.war.WarFormatConfig import for_format
 
 
@@ -15,7 +16,7 @@ class SeasonResponse(BaseModel):
 
     id: uuid.UUID
     number: int
-    is_active: bool
+    status: SeasonStatus
     format: SeasonFormat
 
     @computed_field

@@ -2,24 +2,36 @@ import uuid
 
 from fastapi import HTTPException
 from sqlmodel import select
-from starlette import status
+from starlette import status as http_status
 
 from src.enums.SeasonFormat import SeasonFormat
+from src.enums.SeasonStatus import SeasonStatus
 from src.models.Season import Season
-from src.Messages.season_messages import SEASON_NOT_FOUND, SEASON_NUMBER_ALREADY_EXISTS
+from src.Messages.season_messages import (
+    SEASON_CURRENT_EXISTS,
+    SEASON_NOT_FOUND,
+    SEASON_NUMBER_ALREADY_EXISTS,
+)
 from src.utils.db import SessionDep
 
 
 class SeasonService:
     @classmethod
-    async def get_active_season(cls, session: SessionDep) -> Season | None:
-        result = await session.exec(select(Season).where(Season.is_active))
+    async def get_current_season(cls, session: SessionDep) -> Season | None:
+        """The single non-ended season (upcoming or active). Source of the war format."""
+        result = await session.exec(select(Season).where(Season.status != SeasonStatus.ended))
         return result.first()
 
     @classmethod
-    async def get_active_format(cls, session: SessionDep) -> SeasonFormat:
-        season = await cls.get_active_season(session)
+    async def get_current_format(cls, session: SessionDep) -> SeasonFormat:
+        season = await cls.get_current_season(session)
         return season.format if season is not None else SeasonFormat.regular
+
+    @classmethod
+    async def get_active_season(cls, session: SessionDep) -> Season | None:
+        """The live season (status == active). Scope of stats / ranking."""
+        result = await session.exec(select(Season).where(Season.status == SeasonStatus.active))
+        return result.first()
 
     @classmethod
     async def get_all_seasons(cls, session: SessionDep) -> list[Season]:
@@ -33,8 +45,13 @@ class SeasonService:
         existing = await session.exec(select(Season).where(Season.number == number))
         if existing.first() is not None:
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
+                status_code=http_status.HTTP_409_CONFLICT,
                 detail=SEASON_NUMBER_ALREADY_EXISTS,
+            )
+        if await cls.get_current_season(session) is not None:
+            raise HTTPException(
+                status_code=http_status.HTTP_409_CONFLICT,
+                detail=SEASON_CURRENT_EXISTS,
             )
         season = Season(number=number, format=format)
         session.add(season)
@@ -43,27 +60,30 @@ class SeasonService:
         return season
 
     @classmethod
-    async def activate_season(cls, session: SessionDep, season_id: uuid.UUID) -> Season:
+    async def open_season(cls, session: SessionDep, season_id: uuid.UUID) -> Season:
+        """Make a season live: upcoming | ended -> active. Recovers a mistaken close."""
         season = await session.get(Season, season_id)
         if season is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=SEASON_NOT_FOUND)
-        # Deactivate all active seasons before activating the new one
-        active_seasons = await session.exec(select(Season).where(Season.is_active))
-        for s in active_seasons.all():
-            s.is_active = False
-            session.add(s)
-        season.is_active = True
+            raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail=SEASON_NOT_FOUND)
+        current = await cls.get_current_season(session)
+        if current is not None and current.id != season.id:
+            raise HTTPException(
+                status_code=http_status.HTTP_409_CONFLICT,
+                detail=SEASON_CURRENT_EXISTS,
+            )
+        season.status = SeasonStatus.active
         session.add(season)
         await session.commit()
         await session.refresh(season)
         return season
 
     @classmethod
-    async def deactivate_season(cls, session: SessionDep, season_id: uuid.UUID) -> Season:
+    async def close_season(cls, session: SessionDep, season_id: uuid.UUID) -> Season:
+        """End a season: active -> ended."""
         season = await session.get(Season, season_id)
         if season is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=SEASON_NOT_FOUND)
-        season.is_active = False
+            raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail=SEASON_NOT_FOUND)
+        season.status = SeasonStatus.ended
         session.add(season)
         await session.commit()
         await session.refresh(season)

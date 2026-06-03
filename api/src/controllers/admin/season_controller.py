@@ -44,26 +44,24 @@ async def list_seasons(session: SessionDep):
     return await SeasonService.get_all_seasons(session)
 
 
-@season_admin_controller.patch("/{season_id}/activate", response_model=SeasonResponse)
-async def activate_season(
+@season_admin_controller.patch("/{season_id}/open", response_model=SeasonResponse)
+async def open_season(
     season_id: uuid.UUID,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Activate a season (auto-deactivates any currently active season). Admin only."""
-    result = await SeasonService.activate_season(session, season_id)
-    return result
+    """Open a season (upcoming or previously closed -> active). Admin only."""
+    return await SeasonService.open_season(session, season_id)
 
 
-@season_admin_controller.patch("/{season_id}/deactivate", response_model=SeasonResponse)
-async def deactivate_season(
+@season_admin_controller.patch("/{season_id}/close", response_model=SeasonResponse)
+async def close_season(
     season_id: uuid.UUID,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Deactivate a season (moves to off-season). Admin only."""
-    result = await SeasonService.deactivate_season(session, season_id)
-    return result
+    """Close a season (active -> ended). Admin only."""
+    return await SeasonService.close_season(session, season_id)
 
 
 @season_public_controller.get("", response_model=list[SeasonResponse])
@@ -78,5 +76,5 @@ async def list_seasons_public(
 
 @season_public_controller.get("/current", response_model=Optional[SeasonResponse])
 async def get_current_season(session: SessionDep):
-    """Return the active season, or null if off-season."""
-    return await SeasonService.get_active_season(session)
+    """Return the current (non-ended) season, or null if none exists."""
+    return await SeasonService.get_current_season(session)

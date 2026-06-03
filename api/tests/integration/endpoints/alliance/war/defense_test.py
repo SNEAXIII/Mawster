@@ -954,7 +954,7 @@ class TestBigThingFormat:
         season_id = create_resp.json()["id"]
 
         activate_resp = await execute_patch_request(
-            f"/admin/seasons/{season_id}/activate",
+            f"/admin/seasons/{season_id}/open",
             payload={},
             headers=self.ADMIN_HEADERS,
         )
@@ -1000,7 +1000,7 @@ class TestBigThingFormat:
         season_id = create_resp.json()["id"]
 
         activate_resp = await execute_patch_request(
-            f"/admin/seasons/{season_id}/activate",
+            f"/admin/seasons/{season_id}/open",
             payload={},
             headers=self.ADMIN_HEADERS,
         )

@@ -32,6 +32,7 @@ from src.models import User
 from src.models.Champion import Champion
 from src.models.War import War
 from src.models.Season import Season
+from src.enums.SeasonStatus import SeasonStatus
 from src.enums.Roles import Roles
 
 USER3_ID = uuid.UUID("00000000-0000-0000-0000-000000000003")
@@ -395,7 +396,7 @@ class TestEndWar:
     @pytest.mark.asyncio
     async def test_end_war_during_season_applies_elo_gain(self):
         data = await _setup_alliance()
-        season = Season(number=64, is_active=True)
+        season = Season(number=64, status=SeasonStatus.active)
         await load_objects([season])
         headers = create_auth_headers(user_id=str(USER_ID))
 
@@ -422,7 +423,7 @@ class TestEndWar:
     @pytest.mark.asyncio
     async def test_end_war_during_season_win_negative_elo_rejected(self):
         data = await _setup_alliance()
-        season = Season(number=65, is_active=True)
+        season = Season(number=65, status=SeasonStatus.active)
         await load_objects([season])
         headers = create_auth_headers(user_id=str(USER_ID))
 
@@ -443,7 +444,7 @@ class TestEndWar:
     @pytest.mark.asyncio
     async def test_end_war_during_season_missing_elo_change_rejected(self):
         data = await _setup_alliance()
-        season = Season(number=66, is_active=True)
+        season = Season(number=66, status=SeasonStatus.active)
         await load_objects([season])
         headers = create_auth_headers(user_id=str(USER_ID))
 
@@ -465,7 +466,7 @@ class TestEndWar:
     async def test_end_war_loss_positive_elo_rejected(self):
         data = await _setup_alliance()
         headers = create_auth_headers(user_id=str(USER_ID))
-        season = Season(number=67, is_active=True)
+        season = Season(number=67, status=SeasonStatus.active)
         await load_objects([season])
         declare = await execute_post_request(
             f"/alliances/{data['alliance'].id}/wars",
@@ -639,7 +640,7 @@ class TestWarSeasonLink:
     async def test_war_created_with_active_season(self):
         """War created while a season is active gets that season_id."""
         data = await _setup_alliance()
-        season = Season(number=64, is_active=True)
+        season = Season(number=64, status=SeasonStatus.active)
         await load_objects([season])
 
         headers = create_auth_headers(user_id=str(USER_ID), role=Roles.USER)

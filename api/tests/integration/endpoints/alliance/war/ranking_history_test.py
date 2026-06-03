@@ -6,6 +6,7 @@ import pytest
 from main import app
 from src.enums.Roles import Roles
 from src.models.Season import Season
+from src.enums.SeasonStatus import SeasonStatus
 from src.models.War import War, WarStatus
 from src.utils.db import get_session
 from tests.utils.utils_client import create_auth_headers, execute_get_request
@@ -34,7 +35,7 @@ async def _base_setup():
 
 
 async def _setup_wars(alliance, owner, elo_changes: list[int | None]):
-    season = Season(number=64, is_active=True)
+    season = Season(number=64, status=SeasonStatus.active)
     await load_objects([season])
     wars = []
     for i, change in enumerate(elo_changes):
@@ -101,7 +102,7 @@ class TestRankingHistoryData:
     @pytest.mark.anyio
     async def test_active_season_no_wars_returns_empty(self):
         alliance, _ = await _base_setup()
-        season = Season(number=64, is_active=True)
+        season = Season(number=64, status=SeasonStatus.active)
         await load_objects([season])
         resp = await execute_get_request(_url(alliance.id), headers=OWNER_HEADERS)
         data = resp.json()
@@ -129,7 +130,7 @@ class TestRankingHistoryData:
     @pytest.mark.anyio
     async def test_active_war_excluded(self):
         alliance, owner = await _base_setup()
-        season = Season(number=64, is_active=True)
+        season = Season(number=64, status=SeasonStatus.active)
         active_war = War(
             id=uuid.uuid4(),
             alliance_id=alliance.id,

@@ -19,6 +19,7 @@ from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
 from src.models.Season import Season
+from src.enums.SeasonStatus import SeasonStatus
 from src.models.War import War
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightPrefight import WarFightPrefight
@@ -229,7 +230,7 @@ class FightRecordService:
         elif season_selector == SeasonSelectorType.OffSeason:
             conditions.append(WarFightRecord.season_id.is_(None))
         elif season_selector == SeasonSelectorType.Current:
-            active_subq = select(Season.id).where(Season.is_active == True)  # noqa: E712
+            active_subq = select(Season.id).where(Season.status == SeasonStatus.active)
             conditions.append(WarFightRecord.season_id.in_(active_subq))
         elif season_selector == SeasonSelectorType.Specific and season_id is not None:
             conditions.append(WarFightRecord.season_id == season_id)

@@ -66,7 +66,7 @@ class DefensePlacementService:
     ) -> DefensePlacement:
         """Place a defender on a node. Validates all business rules."""
         # 0. Resolve format params from the active season
-        params = for_format(await SeasonService.get_active_format(session))
+        params = for_format(await SeasonService.get_current_format(session))
 
         # Validate node number against format map size
         if node_number < 1 or node_number > params.node_count:
@@ -305,7 +305,7 @@ class DefensePlacementService:
         placed_champion_ids = set(placed_cu_result.all())
 
         # Resolve format params from the active season
-        params = for_format(await SeasonService.get_active_format(session))
+        params = for_format(await SeasonService.get_current_format(session))
 
         # Get defender counts per player
         defender_counts = await cls._get_defender_counts(session, alliance_id, battlegroup)
@@ -376,7 +376,7 @@ class DefensePlacementService:
         defender_counts = await cls._get_defender_counts(session, alliance_id, battlegroup)
 
         # Resolve format params from the active season
-        params = for_format(await SeasonService.get_active_format(session))
+        params = for_format(await SeasonService.get_current_format(session))
 
         # Fetch alliance to determine the owner
         alliance = await session.get(Alliance, alliance_id)

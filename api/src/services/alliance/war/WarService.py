@@ -107,12 +107,12 @@ class WarService:
                     detail=champion_with_id_not_found(champion_id),
                 )
 
-        active_season = await SeasonService.get_active_season(session)
+        current_season = await SeasonService.get_current_season(session)
         war = War(
             alliance_id=alliance_id,
             opponent_name=opponent_name,
             created_by_id=created_by_id,
-            season_id=active_season.id if active_season else None,
+            season_id=current_season.id if current_season else None,
         )
         session.add(war)
         await session.flush()
@@ -478,7 +478,7 @@ class WarService:
         node_number: Optional[int] = None,
     ) -> list[AvailableAttackerResponse]:
         max_attackers = for_format(
-            await SeasonService.get_active_format(session)
+            await SeasonService.get_current_format(session)
         ).max_attackers_per_member
         # Get members assigned to this battlegroup (or just the specific attacker)
         member_conditions = and_(
@@ -666,7 +666,7 @@ class WarService:
         champion_user_id: uuid.UUID,
     ) -> WarPlacementResponse:
         # 0. Resolve format caps for this season
-        _params = for_format(await SeasonService.get_active_format(session))
+        _params = for_format(await SeasonService.get_current_format(session))
         if node_number < 1 or node_number > _params.node_count:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -1112,7 +1112,7 @@ class WarService:
         current_user_id: uuid.UUID,
     ) -> WarSynergyResponse:
         max_attackers = for_format(
-            await SeasonService.get_active_format(session)
+            await SeasonService.get_current_format(session)
         ).max_attackers_per_member
         # 1. Load champion_user and validate it belongs to this alliance + BG
         cu_stmt = (
@@ -1336,7 +1336,7 @@ class WarService:
         target_node_number: int,
     ) -> WarPrefightResponse:
         # 0. Resolve format caps for this season
-        _params = for_format(await SeasonService.get_active_format(session))
+        _params = for_format(await SeasonService.get_current_format(session))
         if target_node_number < 1 or target_node_number > _params.node_count:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,

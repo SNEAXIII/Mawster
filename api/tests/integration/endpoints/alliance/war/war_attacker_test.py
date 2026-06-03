@@ -767,7 +767,7 @@ class TestBigThingFormat:
         assert create_resp.status_code == 201
         season_id = create_resp.json()["id"]
         activate_resp = await execute_patch_request(
-            f"/admin/seasons/{season_id}/activate",
+            f"/admin/seasons/{season_id}/open",
             payload={},
             headers=admin_headers,
         )
