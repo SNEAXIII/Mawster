@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from starlette import status as http_status
 
 from src.dto.admin.dto_fight_record import PaginatedFightRecordsResponse
+from src.enums.FightRecordSource import FightRecordSource
 from src.enums.SeasonSelectorType import SeasonSelectorType
 from src.models import User
 from src.services.auth.AuthService import AuthService
@@ -36,6 +37,7 @@ async def list_fight_records(
     planning_error_only: Optional[bool] = Query(default=None),
     page: int = Query(default=1, ge=1),
     size: int = Query(default=20, ge=1, le=100),
+    source: FightRecordSource = Query(default=FightRecordSource.All),
     sort_by: Literal[
         "created_at",
         "ko_count",
@@ -57,6 +59,7 @@ async def list_fight_records(
     return await FightRecordService.get_fight_records(
         session,
         accessible_alliance_ids=accessible_ids,
+        source=source,
         champion_id=champion_id,
         defender_champion_id=defender_champion_id,
         node_number=node_number,

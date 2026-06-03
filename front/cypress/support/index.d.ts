@@ -309,6 +309,12 @@ declare global {
         items: { mastery_id: string; unlocked: number; attack: number; defense: number }[],
       ): Chainable<unknown>;
 
+      /** Create a season via admin backend API. */
+      apiCreateSeason(token: string, number: number): Chainable<Cypress.Response<any>>;
+
+      /** Import fight records for an alliance via backend API. */
+      apiImportFightRecords(token: string, allianceId: string, rows: object[]): Chainable<Cypress.Response<any>>;
+
       /** Navigate to admin page and open the champions tab. */
       goToAdminChampionsTab(): Chainable<void>;
 

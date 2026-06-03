@@ -1,17 +1,21 @@
 import math
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import func
+from sqlalchemy import func, literal, null, union_all
 from sqlalchemy.orm import aliased, selectinload
 from sqlmodel import and_, select
 from starlette import status
 
-if TYPE_CHECKING:
-    from src.dto.admin.dto_fight_record import PaginatedFightRecordsResponse
-
+from src.dto.admin.dto_fight_record import (
+    PaginatedFightRecordsResponse,
+    WarFightRecordResponse,
+    WarFightSynergyResponse,
+    WarFightPrefightResponse,
+)
+from src.enums.FightRecordSource import FightRecordSource
 from src.enums.SeasonSelectorType import SeasonSelectorType
 from src.models.Alliance import Alliance
 from src.models.AllianceVisitor import AllianceVisitor
@@ -19,11 +23,11 @@ from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
 from src.models.Season import Season
-from src.enums.SeasonStatus import SeasonStatus
 from src.models.War import War
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightPrefight import WarFightPrefight
 from src.models.WarFightRecord import WarFightRecord
+from src.models.WarFightRecordImport import WarFightRecordImport
 from src.models.WarFightSynergy import WarFightSynergy
 from src.models.WarPrefightAttacker import WarPrefightAttacker
 from src.models.WarSynergyAttacker import WarSynergyAttacker
@@ -187,10 +191,26 @@ class FightRecordService:
         return list(member_ids | visitor_ids)
 
     @classmethod
+    def _season_conditions(cls, model, season_selector, season_id):
+        """Return season filter conditions for any model with a season_id column."""
+        if season_selector == SeasonSelectorType.AllSeasons:
+            return [model.season_id.isnot(None)]
+        if season_selector == SeasonSelectorType.OffSeason:
+            return [model.season_id.is_(None)]
+        if season_selector == SeasonSelectorType.Current:
+            return [model.season_id.in_(select(Season.id).where(Season.is_active == True))]  # noqa: E712
+        if season_selector == SeasonSelectorType.Specific and season_id:
+            return [model.season_id == season_id]
+        if season_id:
+            return [model.season_id == season_id]
+        return []
+
+    @classmethod
     async def get_fight_records(
         cls,
         session: SessionDep,
         accessible_alliance_ids: list[uuid.UUID],
+        source: FightRecordSource = FightRecordSource.NonImported,
         champion_id: Optional[uuid.UUID] = None,
         defender_champion_id: Optional[uuid.UUID] = None,
         node_number: Optional[int] = None,
@@ -205,106 +225,243 @@ class FightRecordService:
         size: int = 20,
         sort_by: str = "created_at",
         sort_order: str = "desc",
-    ) -> "PaginatedFightRecordsResponse":
-        from src.dto.admin.dto_fight_record import (
-            PaginatedFightRecordsResponse,
-            WarFightRecordResponse,
-        )
-
+    ) -> PaginatedFightRecordsResponse:
         if not accessible_alliance_ids:
             return PaginatedFightRecordsResponse(items=[], total=0, page=page, size=size, pages=1)
 
-        # Build conditions list for reuse in count query
-        conditions = []
-        conditions.append(WarFightRecord.alliance_id.in_(accessible_alliance_ids))
-        if champion_id is not None:
-            conditions.append(WarFightRecord.champion_id == champion_id)
-        if defender_champion_id is not None:
-            conditions.append(WarFightRecord.defender_champion_id == defender_champion_id)
-        if node_number is not None:
-            conditions.append(WarFightRecord.node_number == node_number)
-        if tier is not None:
-            conditions.append(WarFightRecord.tier == tier)
-        if season_selector == SeasonSelectorType.AllSeasons:
-            conditions.append(WarFightRecord.season_id.isnot(None))
-        elif season_selector == SeasonSelectorType.OffSeason:
-            conditions.append(WarFightRecord.season_id.is_(None))
-        elif season_selector == SeasonSelectorType.Current:
-            active_subq = select(Season.id).where(Season.status == SeasonStatus.active)
-            conditions.append(WarFightRecord.season_id.in_(active_subq))
-        elif season_selector == SeasonSelectorType.Specific and season_id is not None:
-            conditions.append(WarFightRecord.season_id == season_id)
-        if alliance_id is not None:
-            conditions.append(WarFightRecord.alliance_id == alliance_id)
-        if battlegroup is not None:
-            conditions.append(WarFightRecord.battlegroup == battlegroup)
-        if game_account_pseudo is not None:
-            conditions.append(GameAccount.game_pseudo.ilike(f"%{game_account_pseudo}%"))
-        if planning_error_only is not None:
-            conditions.append(WarFightRecord.is_planning_error == planning_error_only)
+        include_reg = source in (FightRecordSource.NonImported, FightRecordSource.All)
+        include_imp = source in (FightRecordSource.Imported, FightRecordSource.All)
 
-        # Count query
-        count_stmt = select(func.count()).select_from(WarFightRecord)
-        if game_account_pseudo is not None:
-            count_stmt = count_stmt.join(
-                GameAccount, WarFightRecord.game_account_id == GameAccount.id
+        # Aliases for the two champion joins in each sub-query
+        RegAttacker = aliased(Champion)
+        RegDefender = aliased(Champion)
+        ImpAttacker = aliased(Champion)
+        ImpDefender = aliased(Champion)
+
+        sub_queries = []
+
+        if include_reg:
+            reg_conds = [WarFightRecord.alliance_id.in_(accessible_alliance_ids)]
+            if champion_id:
+                reg_conds.append(WarFightRecord.champion_id == champion_id)
+            if defender_champion_id:
+                reg_conds.append(WarFightRecord.defender_champion_id == defender_champion_id)
+            if node_number is not None:
+                reg_conds.append(WarFightRecord.node_number == node_number)
+            if tier is not None:
+                reg_conds.append(WarFightRecord.tier == tier)
+            if battlegroup is not None:
+                reg_conds.append(WarFightRecord.battlegroup == battlegroup)
+            if planning_error_only is not None:
+                reg_conds.append(WarFightRecord.is_planning_error == planning_error_only)
+            if game_account_pseudo is not None:
+                reg_conds.append(GameAccount.game_pseudo.ilike(f"%{game_account_pseudo}%"))
+            if alliance_id:
+                reg_conds.append(WarFightRecord.alliance_id == alliance_id)
+            reg_conds.extend(cls._season_conditions(WarFightRecord, season_selector, season_id))
+
+            reg_sub = (
+                select(
+                    WarFightRecord.id.label("id"),
+                    WarFightRecord.alliance_id.label("alliance_id"),
+                    WarFightRecord.season_id.label("season_id"),
+                    WarFightRecord.node_number.label("node_number"),
+                    WarFightRecord.champion_id.label("champion_id"),
+                    WarFightRecord.defender_champion_id.label("defender_champion_id"),
+                    WarFightRecord.ko_count.label("ko_count"),
+                    WarFightRecord.created_at.label("created_at"),
+                    WarFightRecord.war_id.label("war_id"),
+                    WarFightRecord.battlegroup.label("battlegroup"),
+                    WarFightRecord.tier.label("tier"),
+                    WarFightRecord.stars.label("stars"),
+                    WarFightRecord.rank.label("rank"),
+                    WarFightRecord.ascension.label("ascension"),
+                    WarFightRecord.is_saga_attacker.label("is_saga_attacker"),
+                    WarFightRecord.defender_stars.label("defender_stars"),
+                    WarFightRecord.defender_rank.label("defender_rank"),
+                    WarFightRecord.defender_ascension.label("defender_ascension"),
+                    WarFightRecord.defender_is_saga_defender.label("defender_is_saga_defender"),
+                    WarFightRecord.is_planning_error.label("is_planning_error"),
+                    WarFightRecord.assisted.label("assisted"),
+                    literal(False).label("is_imported"),
+                    Alliance.name.label("alliance_name"),
+                    RegAttacker.name.label("champion_name"),
+                    RegAttacker.champion_class.label("champion_class"),
+                    RegAttacker.image_url.label("image_url"),
+                    RegDefender.name.label("defender_champion_name"),
+                    RegDefender.champion_class.label("defender_champion_class"),
+                    RegDefender.image_url.label("defender_image_url"),
+                    GameAccount.game_pseudo.label("game_account_pseudo"),
+                )
+                .join(Alliance, WarFightRecord.alliance_id == Alliance.id)
+                .join(RegAttacker, WarFightRecord.champion_id == RegAttacker.id)
+                .join(RegDefender, WarFightRecord.defender_champion_id == RegDefender.id)
+                .join(GameAccount, WarFightRecord.game_account_id == GameAccount.id)
+                .where(and_(*reg_conds))
             )
-        if conditions:
-            count_stmt = count_stmt.where(and_(*conditions))
-        total = (await session.exec(count_stmt)).one()
+            sub_queries.append(reg_sub)
 
-        # Build sort column
-        AttackerChampion = aliased(Champion)
-        DefenderChampion = aliased(Champion)
+        # Imported records have no game account and no tier, so those filters can never match them.
+        if include_imp and game_account_pseudo is None and tier is None:
+            imp_conds = [WarFightRecordImport.alliance_id.in_(accessible_alliance_ids)]
+            if champion_id:
+                imp_conds.append(WarFightRecordImport.champion_id == champion_id)
+            if defender_champion_id:
+                imp_conds.append(WarFightRecordImport.defender_champion_id == defender_champion_id)
+            if node_number is not None:
+                imp_conds.append(WarFightRecordImport.node_number == node_number)
+            if alliance_id:
+                imp_conds.append(WarFightRecordImport.alliance_id == alliance_id)
+            imp_conds.extend(
+                cls._season_conditions(WarFightRecordImport, season_selector, season_id)
+            )
 
+            imp_sub = (
+                select(
+                    WarFightRecordImport.id.label("id"),
+                    WarFightRecordImport.alliance_id.label("alliance_id"),
+                    WarFightRecordImport.season_id.label("season_id"),
+                    WarFightRecordImport.node_number.label("node_number"),
+                    WarFightRecordImport.champion_id.label("champion_id"),
+                    WarFightRecordImport.defender_champion_id.label("defender_champion_id"),
+                    WarFightRecordImport.ko_count.label("ko_count"),
+                    WarFightRecordImport.created_at.label("created_at"),
+                    null().label("war_id"),
+                    null().label("battlegroup"),
+                    null().label("tier"),
+                    null().label("stars"),
+                    null().label("rank"),
+                    null().label("ascension"),
+                    null().label("is_saga_attacker"),
+                    null().label("defender_stars"),
+                    null().label("defender_rank"),
+                    null().label("defender_ascension"),
+                    null().label("defender_is_saga_defender"),
+                    literal(False).label("is_planning_error"),
+                    literal(False).label("assisted"),
+                    literal(True).label("is_imported"),
+                    Alliance.name.label("alliance_name"),
+                    ImpAttacker.name.label("champion_name"),
+                    ImpAttacker.champion_class.label("champion_class"),
+                    ImpAttacker.image_url.label("image_url"),
+                    ImpDefender.name.label("defender_champion_name"),
+                    ImpDefender.champion_class.label("defender_champion_class"),
+                    ImpDefender.image_url.label("defender_image_url"),
+                    null().label("game_account_pseudo"),
+                )
+                .join(Alliance, WarFightRecordImport.alliance_id == Alliance.id)
+                .join(ImpAttacker, WarFightRecordImport.champion_id == ImpAttacker.id)
+                .join(ImpDefender, WarFightRecordImport.defender_champion_id == ImpDefender.id)
+                .where(and_(*imp_conds))
+            )
+            sub_queries.append(imp_sub)
+
+        if not sub_queries:
+            return PaginatedFightRecordsResponse(items=[], total=0, page=page, size=size, pages=1)
+
+        base = (union_all(*sub_queries) if len(sub_queries) > 1 else sub_queries[0]).subquery()
+
+        # COUNT
+        total = (await session.execute(select(func.count()).select_from(base))).scalar_one()
+
+        # SORT — all labeled columns are directly accessible on the subquery
         sort_col_map = {
-            "ko_count": WarFightRecord.ko_count,
-            "tier": WarFightRecord.tier,
-            "node_number": WarFightRecord.node_number,
-            "battlegroup": WarFightRecord.battlegroup,
-            "created_at": WarFightRecord.created_at,
+            "ko_count": base.c.ko_count,
+            "tier": base.c.tier,
+            "node_number": base.c.node_number,
+            "battlegroup": base.c.battlegroup,
+            "created_at": base.c.created_at,
+            "champion_name": base.c.champion_name,
+            "defender_champion_name": base.c.defender_champion_name,
+            "alliance_name": base.c.alliance_name,
         }
+        sort_col = sort_col_map.get(sort_by, base.c.created_at)
+        sort_expr = sort_col.desc() if sort_order == "desc" else sort_col.asc()
 
-        needs_attacker_join = sort_by == "champion_name"
-        needs_defender_join = sort_by == "defender_champion_name"
-        needs_alliance_join = sort_by == "alliance_name"
-
-        # Main query
-        stmt = select(WarFightRecord).options(
-            selectinload(WarFightRecord.war),
-            selectinload(WarFightRecord.alliance),
-            selectinload(WarFightRecord.champion),
-            selectinload(WarFightRecord.defender_champion),
-            selectinload(WarFightRecord.game_account),
-            selectinload(WarFightRecord.synergies).selectinload(WarFightSynergy.champion),
-            selectinload(WarFightRecord.prefights).selectinload(WarFightPrefight.champion),
-        )
-        if game_account_pseudo is not None:
-            stmt = stmt.join(GameAccount, WarFightRecord.game_account_id == GameAccount.id)
-        if conditions:
-            stmt = stmt.where(and_(*conditions))
-
-        if needs_attacker_join:
-            stmt = stmt.join(AttackerChampion, WarFightRecord.champion_id == AttackerChampion.id)
-            raw_col = AttackerChampion.name
-        elif needs_defender_join:
-            stmt = stmt.join(
-                DefenderChampion, WarFightRecord.defender_champion_id == DefenderChampion.id
+        rows = (
+            (
+                await session.execute(
+                    select(base).order_by(sort_expr).offset((page - 1) * size).limit(size)
+                )
             )
-            raw_col = DefenderChampion.name
-        elif needs_alliance_join:
-            stmt = stmt.join(Alliance, WarFightRecord.alliance_id == Alliance.id)
-            raw_col = Alliance.name
-        else:
-            raw_col = sort_col_map.get(sort_by, WarFightRecord.created_at)
+            .mappings()
+            .all()
+        )
 
-        sort_col = raw_col.desc() if sort_order == "desc" else raw_col.asc()
-        stmt = stmt.order_by(sort_col).offset((page - 1) * size).limit(size)
+        # Map raw rows → WarFightRecordResponse
+        items = [
+            WarFightRecordResponse(
+                id=row["id"],
+                is_imported=row["is_imported"],
+                war_id=row["war_id"],
+                alliance_id=row["alliance_id"],
+                alliance_name=row["alliance_name"],
+                season_id=row["season_id"],
+                game_account_pseudo=row["game_account_pseudo"],
+                battlegroup=row["battlegroup"],
+                node_number=row["node_number"],
+                tier=row["tier"],
+                champion_id=row["champion_id"],
+                champion_name=row["champion_name"],
+                champion_class=row["champion_class"],
+                image_url=row["image_url"],
+                stars=row["stars"],
+                rank=row["rank"],
+                ascension=row["ascension"],
+                is_saga_attacker=row["is_saga_attacker"],
+                defender_champion_id=row["defender_champion_id"],
+                defender_champion_name=row["defender_champion_name"],
+                defender_champion_class=row["defender_champion_class"],
+                defender_image_url=row["defender_image_url"],
+                defender_stars=row["defender_stars"],
+                defender_rank=row["defender_rank"],
+                defender_ascension=row["defender_ascension"],
+                defender_is_saga_defender=row["defender_is_saga_defender"],
+                ko_count=row["ko_count"],
+                is_planning_error=bool(row["is_planning_error"]),
+                assisted=bool(row["assisted"]),
+                synergies=[],
+                prefights=[],
+                created_at=row["created_at"],
+            )
+            for row in rows
+        ]
 
-        result = await session.exec(stmt)
-        records = result.all()
+        # Load synergies + prefights for regular (non-imported) records in this page
+        if include_reg:
+            reg_ids = [item.id for item in items if not item.is_imported]
+            if reg_ids:
+                syn_rows = (
+                    await session.exec(
+                        select(WarFightSynergy)
+                        .options(selectinload(WarFightSynergy.champion))
+                        .where(WarFightSynergy.war_fight_record_id.in_(reg_ids))
+                    )
+                ).all()
+                pf_rows = (
+                    await session.exec(
+                        select(WarFightPrefight)
+                        .options(selectinload(WarFightPrefight.champion))
+                        .where(WarFightPrefight.war_fight_record_id.in_(reg_ids))
+                    )
+                ).all()
+                syns_by = {}
+                for s in syn_rows:
+                    syns_by.setdefault(s.war_fight_record_id, []).append(s)
+                pfs_by = {}
+                for p in pf_rows:
+                    pfs_by.setdefault(p.war_fight_record_id, []).append(p)
+                for item in items:
+                    if not item.is_imported:
+                        item.synergies = [
+                            WarFightSynergyResponse.model_validate(s)
+                            for s in syns_by.get(item.id, [])
+                        ]
+                        item.prefights = [
+                            WarFightPrefightResponse.model_validate(p)
+                            for p in pfs_by.get(item.id, [])
+                        ]
 
-        items = [WarFightRecordResponse.model_validate(r) for r in records]
         return PaginatedFightRecordsResponse(
             items=items,
             total=total,

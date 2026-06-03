@@ -35,35 +35,36 @@ export interface PrefightRecord {
 
 export interface FightRecord {
   id: string;
-  war_id: string;
+  war_id?: string | null;
   alliance_id: string;
   alliance_name: string;
   season_id: string | null;
-  game_account_pseudo: string;
+  game_account_pseudo?: string | null;
   node_number: number;
-  tier: number;
+  tier?: number | null;
   champion_id: string;
   champion_name: string;
   champion_class: string;
   image_url: string | null;
-  stars: number;
-  rank: number;
-  ascension: number;
-  is_saga_attacker: boolean;
+  stars?: number | null;
+  rank?: number | null;
+  ascension?: number | null;
+  is_saga_attacker?: boolean | null;
   defender_champion_id: string;
   defender_champion_name: string;
   defender_champion_class: string;
   defender_image_url: string | null;
-  defender_stars: number;
-  defender_rank: number;
-  defender_ascension: number;
-  defender_is_saga_defender: boolean;
+  defender_stars?: number | null;
+  defender_rank?: number | null;
+  defender_ascension?: number | null;
+  defender_is_saga_defender?: boolean | null;
   ko_count: number;
   is_planning_error: boolean;
   assisted: boolean;
   synergies: SynergyRecord[];
   prefights: PrefightRecord[];
-  created_at: string;
+  is_imported?: boolean;
+  created_at?: string | null;
 }
 
 export interface PaginatedFightRecords {
@@ -80,6 +81,8 @@ export interface Season {
   status: 'upcoming' | 'active' | 'ended';
 }
 
+export type FightRecordSource = 'all' | 'imported' | 'non_imported';
+
 export interface FightRecordFilters {
   champion_id?: string;
   defender_champion_id?: string;
@@ -90,6 +93,7 @@ export interface FightRecordFilters {
   alliance_id?: string;
   game_account_pseudo?: string;
   planning_error_only?: boolean;
+  source?: FightRecordSource;
   page?: number;
   size?: number;
   sort_by?: string;
@@ -145,4 +149,34 @@ export async function getFightRecords(filters?: FightRecordFilters): Promise<Pag
   });
   if (!res.ok) throw new Error('Failed to load fight records');
   return res.json();
+}
+
+export interface ImportRow {
+  champion_id: string;
+  defender_champion_id: string;
+  node_number: number;
+  season_name: string;
+  ko_count: number;
+}
+
+export interface ImportFightRecordsRequest {
+  rows: ImportRow[];
+}
+
+export interface ImportFightRecordsResponse {
+  imported: number;
+  skipped: number;
+}
+
+export async function importFightRecords(
+  allianceId: string,
+  payload: ImportFightRecordsRequest
+): Promise<ImportFightRecordsResponse> {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/fight-records/import`, {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error(await response.text());
+  return response.json();
 }

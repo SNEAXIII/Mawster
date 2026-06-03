@@ -638,6 +638,28 @@ function setupKnowledgeBaseWar(
   });
 }
 
+// ── Season API commands ───────────────────────────────────────────────────────
+
+Cypress.Commands.add('apiCreateSeason', (token: string, number: number) => {
+  return cy.request({
+    method: 'POST',
+    url: `${BACKEND}/admin/seasons`,
+    headers: { Authorization: `Bearer ${token}` },
+    body: { number },
+  });
+});
+
+// ── Fight records import API command ─────────────────────────────────────────
+
+Cypress.Commands.add('apiImportFightRecords', (token: string, allianceId: string, rows: object[]) => {
+  return cy.request({
+    method: 'POST',
+    url: `${BACKEND}/alliances/${allianceId}/fight-records/import`,
+    headers: { Authorization: `Bearer ${token}` },
+    body: { rows },
+  });
+});
+
 // ── Mastery commands ──────────────────────────────────────────────────────────
 
 Cypress.Commands.add('apiCreateMastery', (_adminToken: string, name: string, maxValue: number, order: number) => {
