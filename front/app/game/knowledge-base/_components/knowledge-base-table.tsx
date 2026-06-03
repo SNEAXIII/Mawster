@@ -50,8 +50,8 @@ function SortableTh({ col, label, sortBy, sortOrder, onSort }: SortableThProps) 
 type ChampionCellProps = Readonly<{
   name: string;
   imageUrl: string | null;
-  stars: number;
-  rank: number;
+  stars?: number | null;
+  rank?: number | null;
 }>;
 
 function ChampionCell({ name, imageUrl, stars, rank }: ChampionCellProps) {
@@ -62,7 +62,7 @@ function ChampionCell({ name, imageUrl, stars, rank }: ChampionCellProps) {
         {src && <img src={src} alt={name} className='w-10 h-10 object-contain rounded' />}
         <div>
           <p className='text-sm font-medium whitespace-nowrap'>{shortenChampionName(name)}</p>
-          <p className='text-xs text-muted-foreground'>{stars}★ R{rank}</p>
+          <p className='text-xs text-muted-foreground'>{stars != null ? `${stars}★` : ''}{rank != null ? ` R${rank}` : ''}</p>
         </div>
       </div>
     </td>
@@ -173,7 +173,7 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
               <td className='px-3 py-2'>{r.tier}</td>
               <td className={cn('px-3 py-2',r.ko_count ? 'text-red-500' : 'text-green-500' )}>{r.ko_count}</td>
               <td className='px-3 py-2'>{r.alliance_name}</td>
-              <td className='px-3 py-2 whitespace-nowrap'>{new Date(r.created_at).toLocaleDateString()}</td>
+              <td className='px-3 py-2 whitespace-nowrap'>{r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}</td>
             </tr>
           ))}
         </tbody>

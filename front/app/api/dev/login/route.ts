@@ -41,6 +41,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Invalid token' }, { status: 500 });
     }
 
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      return NextResponse.json(
+        { message: 'NEXTAUTH_SECRET is not set' },
+        { status: 500 },
+      );
+    }
+
     const sessionToken = await encode({
       token: {
         id: decoded.user_id,
@@ -51,7 +59,7 @@ export async function POST(req: NextRequest) {
         expired: false,
         backendAuthenticated: true,
       },
-      secret: process.env.NEXTAUTH_SECRET!,
+      secret,
       salt: COOKIE_NAME,
     });
 
