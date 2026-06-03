@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { type WarPlacement } from '@/app/services/war';
 import { type DefensePlacement } from '@/app/services/defense';
+import type { SeasonFormat } from '@/app/services/season';
 
 const WarMap = dynamic(() => import('@/app/game/defense/_components/war-map'), {
   loading: () => <FullPageSpinner />,
@@ -16,6 +17,7 @@ interface WarDefenseMapProps {
   canManage: boolean;
   dimmedNodes?: Set<number>;
   prefightNodes?: Set<number>;
+  format?: SeasonFormat;
 }
 
 function toDefensePlacement(p: WarPlacement): DefensePlacement {
@@ -50,6 +52,7 @@ export default function WarDefenseMap({
   canManage,
   dimmedNodes,
   prefightNodes,
+  format = 'regular',
 }: Readonly<WarDefenseMapProps>) {
   const adapted = placements.map(toDefensePlacement);
   return (
@@ -62,6 +65,7 @@ export default function WarDefenseMap({
       hideSig={true}
       dimmedNodes={dimmedNodes}
       prefightNodes={prefightNodes}
+      format={format}
     />
   );
 }

@@ -11,6 +11,7 @@ import { FullPageSpinner } from '@/components/full-page-spinner';
 import ChampionPortrait from '@/components/champion-portrait';
 import { WarMode } from './war-types';
 import { useWar } from '@/app/contexts/war-context';
+import { useCurrentSeason } from '@/hooks/use-current-season';
 import SeasonBanner from './season-banner';
 import ExportHeader from '@/app/game/_components/export-header';
 
@@ -67,6 +68,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
   } = useWar();
 
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId) ?? null;
+  const currentSeason = useCurrentSeason();
 
   const [playerFilter, setPlayerFilter] = useState('');
   const [combatFilter, setCombatFilter] = useState<fightStateFilter>('todo');
@@ -330,6 +332,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
                 canManage={canManageWar && warMode === WarMode.Defenders && !exporting}
                 dimmedNodes={exporting ? undefined : dimmedNodes}
                 prefightNodes={prefightNodes}
+                format={currentSeason?.format ?? 'regular'}
               />
             </div>
           </div>
