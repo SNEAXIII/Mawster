@@ -6,6 +6,8 @@ import { cn } from '@/app/lib/utils';
 import { X } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 import { rarityBadgeClass, rarityLabel, parseRarity } from './defense-utils';
+import { mapSectionsForFormat } from './war-format';
+import type { SeasonFormat } from '@/app/services/season';
 
 interface WarMapNodeProps {
   nodeNumber: number;
@@ -144,45 +146,8 @@ interface WarMapProps {
   hideSig?: boolean;
   dimmedNodes?: Set<number>;
   prefightNodes?: Set<number>;
+  format?: SeasonFormat;
 }
-
-// Map layout: rows of nodes from top (boss) to bottom (start)
-// This mimics the AW defense map layout
-const MAP_SECTIONS = [
-  {
-    label: 'Boss',
-    color: 'text-yellow-400',
-    borderColor: 'border-yellow-600',
-    rows: [[50], [48, 49], [46, 47]],
-  },
-  {
-    label: 'Mini Boss',
-    color: 'text-blue-400',
-    borderColor: 'border-blue-600',
-    rows: [
-      [43, 44, 45],
-      [40, 41, 42, 0, 37, 38, 39],
-    ],
-  },
-  {
-    label: 'Tier 2',
-    color: 'text-purple-400',
-    borderColor: 'border-purple-600',
-    rows: [
-      [28, 29, 30, 0, 31, 32, 33, 0, 34, 35, 36],
-      [19, 20, 21, 0, 22, 23, 24, 0, 25, 26, 27],
-    ],
-  },
-  {
-    label: 'Tier 1',
-    color: 'text-red-400',
-    borderColor: 'border-red-600',
-    rows: [
-      [10, 11, 12, 0, 13, 14, 15, 0, 16, 17, 18],
-      [1, 2, 3, 0, 4, 5, 6, 0, 7, 8, 9],
-    ],
-  },
-];
 
 export default function WarMap({
   placements,
@@ -193,7 +158,9 @@ export default function WarMap({
   hideSig = false,
   dimmedNodes,
   prefightNodes,
+  format = 'regular',
 }: Readonly<WarMapProps>) {
+  const sections = mapSectionsForFormat(format);
   const placementMap = new Map<number, DefensePlacement>();
   for (const p of placements) {
     placementMap.set(p.node_number, p);
@@ -201,7 +168,7 @@ export default function WarMap({
 
   return (
     <div className='flex flex-col items-center gap-1'>
-      {MAP_SECTIONS.map((section) => (
+      {sections.map((section) => (
         <div
           key={section.label}
           className='flex flex-col items-center gap-1 w-full'
