@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlmodel import select
 from starlette import status
 
+from src.enums.SeasonFormat import SeasonFormat
 from src.models.Season import Season
 from src.Messages.season_messages import SEASON_NOT_FOUND, SEASON_NUMBER_ALREADY_EXISTS
 from src.utils.db import SessionDep
@@ -16,19 +17,26 @@ class SeasonService:
         return result.first()
 
     @classmethod
+    async def get_active_format(cls, session: SessionDep) -> SeasonFormat:
+        season = await cls.get_active_season(session)
+        return season.format if season is not None else SeasonFormat.regular
+
+    @classmethod
     async def get_all_seasons(cls, session: SessionDep) -> list[Season]:
         result = await session.exec(select(Season).order_by(Season.number.desc()))
         return list(result.all())
 
     @classmethod
-    async def create_season(cls, session: SessionDep, number: int) -> Season:
+    async def create_season(
+        cls, session: SessionDep, number: int, format: SeasonFormat = SeasonFormat.regular
+    ) -> Season:
         existing = await session.exec(select(Season).where(Season.number == number))
         if existing.first() is not None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=SEASON_NUMBER_ALREADY_EXISTS,
             )
-        season = Season(number=number)
+        season = Season(number=number, format=format)
         session.add(season)
         await session.commit()
         await session.refresh(season)
