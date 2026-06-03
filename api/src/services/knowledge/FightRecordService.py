@@ -301,7 +301,8 @@ class FightRecordService:
             )
             sub_queries.append(reg_sub)
 
-        if include_imp:
+        # Imported records have no game account and no tier, so those filters can never match them.
+        if include_imp and game_account_pseudo is None and tier is None:
             imp_conds = [WarFightRecordImport.alliance_id.in_(accessible_alliance_ids)]
             if champion_id:
                 imp_conds.append(WarFightRecordImport.champion_id == champion_id)
@@ -354,6 +355,9 @@ class FightRecordService:
                 .where(and_(*imp_conds))
             )
             sub_queries.append(imp_sub)
+
+        if not sub_queries:
+            return PaginatedFightRecordsResponse(items=[], total=0, page=page, size=size, pages=1)
 
         base = (union_all(*sub_queries) if len(sub_queries) > 1 else sub_queries[0]).subquery()
 
