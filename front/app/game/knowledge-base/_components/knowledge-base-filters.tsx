@@ -11,7 +11,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import ChampionFilterSelect from './champion-filter-select';
-import type { Season, AccessibleAlliance } from '@/app/services/fight-records';
+import type {
+  Season,
+  AccessibleAlliance,
+  FightRecordSource,
+} from '@/app/services/fight-records';
 
 interface Filters {
   champion_id: string | null;
@@ -34,7 +38,7 @@ interface Props {
   allianceId: string | null;
   accessibleAlliances: AccessibleAlliance[];
   onAllianceChange: (value: string | null) => void;
-  source: 'all' | 'imported' | 'non_imported';
+  source: FightRecordSource;
   onSourceChange: (v: string) => void;
   onClear: () => void;
 }

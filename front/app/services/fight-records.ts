@@ -81,6 +81,8 @@ export interface Season {
   is_active: boolean;
 }
 
+export type FightRecordSource = 'all' | 'imported' | 'non_imported';
+
 export interface FightRecordFilters {
   champion_id?: string;
   defender_champion_id?: string;
@@ -91,7 +93,7 @@ export interface FightRecordFilters {
   alliance_id?: string;
   game_account_pseudo?: string;
   planning_error_only?: boolean;
-  source?: 'all' | 'imported' | 'non_imported';
+  source?: FightRecordSource;
   page?: number;
   size?: number;
   sort_by?: string;

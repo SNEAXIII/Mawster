@@ -8,6 +8,7 @@ import {
   type FightRecord,
   type PaginatedFightRecords,
   type FightRecordFilters,
+  type FightRecordSource,
   type Season,
   type AccessibleAlliance,
 } from '@/app/services/fight-records';
@@ -75,8 +76,8 @@ export function useKnowledgeBaseViewModel() {
   const [allianceId, setAllianceId] = useState<string | null>(() =>
     getInitialParams().get('alliance_id')
   );
-  const [source, setSource] = useState<'all' | 'imported' | 'non_imported'>(
-    () => (getInitialParams().get('source') as 'all' | 'imported' | 'non_imported') ?? 'all'
+  const [source, setSource] = useState<FightRecordSource>(
+    () => (getInitialParams().get('source') as FightRecordSource) ?? 'all'
   );
   const [accessibleAlliances, setAccessibleAlliances] = useState<AccessibleAlliance[]>([]);
   const [canImport, setCanImport] = useState(false);
@@ -217,7 +218,7 @@ export function useKnowledgeBaseViewModel() {
   };
 
   const handleSourceChange = (v: string) => {
-    setSource(v as 'all' | 'imported' | 'non_imported');
+    setSource(v as FightRecordSource);
     setPage(1);
   };
 
