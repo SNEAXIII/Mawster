@@ -8,9 +8,11 @@ import {
   type FightRecord,
   type PaginatedFightRecords,
   type FightRecordFilters,
+  type FightRecordSource,
   type Season,
   type AccessibleAlliance,
 } from '@/app/services/fight-records';
+import { getMyAllianceRoles } from '@/app/services/game';
 
 interface Filters {
   champion_id: string | null;
@@ -74,7 +76,11 @@ export function useKnowledgeBaseViewModel() {
   const [allianceId, setAllianceId] = useState<string | null>(() =>
     getInitialParams().get('alliance_id')
   );
+  const [source, setSource] = useState<FightRecordSource>(
+    () => (getInitialParams().get('source') as FightRecordSource) ?? 'all'
+  );
   const [accessibleAlliances, setAccessibleAlliances] = useState<AccessibleAlliance[]>([]);
+  const [canImport, setCanImport] = useState(false);
   const [data, setData] = useState<PaginatedFightRecords | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,9 +102,17 @@ export function useKnowledgeBaseViewModel() {
   }, []);
 
   useEffect(() => {
-    getAccessibleAlliances()
-      .then(setAccessibleAlliances)
-      .catch(() => setAccessibleAlliances([]));
+    Promise.all([getAccessibleAlliances(), getMyAllianceRoles()])
+      .then(([alliances, rolesData]) => {
+        setAccessibleAlliances(alliances);
+        setCanImport(
+          alliances.some(a => rolesData.roles[a.id]?.is_owner || rolesData.roles[a.id]?.is_officer)
+        );
+      })
+      .catch(() => {
+        setAccessibleAlliances([]);
+        setCanImport(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -113,6 +127,7 @@ export function useKnowledgeBaseViewModel() {
     if (seasonSelector !== 'all_seasons') params.set('season_selector', seasonSelector);
     if (seasonId) params.set('season_id', seasonId);
     if (allianceId) params.set('alliance_id', allianceId);
+    if (source !== 'all') params.set('source', source);
     if (page !== 1) params.set('page', String(page));
     if (size !== 20) params.set('size', String(size));
     if (sortBy !== 'created_at') params.set('sort_by', sortBy);
@@ -125,6 +140,7 @@ export function useKnowledgeBaseViewModel() {
     seasonSelector,
     seasonId,
     allianceId,
+    source,
     page,
     size,
     sortBy,
@@ -147,6 +163,7 @@ export function useKnowledgeBaseViewModel() {
         season_selector: seasonSelector,
         season_id: seasonId ?? undefined,
         alliance_id: allianceId ?? undefined,
+        source,
         page,
         size,
         sort_by: sortBy,
@@ -169,6 +186,7 @@ export function useKnowledgeBaseViewModel() {
     seasonSelector,
     seasonId,
     allianceId,
+    source,
     page,
     size,
     sortBy,
@@ -199,6 +217,11 @@ export function useKnowledgeBaseViewModel() {
     setPage(1);
   };
 
+  const handleSourceChange = (v: string) => {
+    setSource(v as FightRecordSource);
+    setPage(1);
+  };
+
   const handleClearFilters = () => {
     setFilters(DEFAULT_FILTERS);
     setDebouncedPseudo('');
@@ -207,6 +230,7 @@ export function useKnowledgeBaseViewModel() {
     setSeasonSelector('all_seasons');
     setSeasonId(null);
     setAllianceId(null);
+    setSource('non_imported');
     setPage(1);
   };
 
@@ -231,6 +255,7 @@ export function useKnowledgeBaseViewModel() {
   };
 
   const hasActiveFilters = Boolean(
+    source !== 'all' ||
     filters.champion_id ||
     filters.defender_champion_id ||
     filters.node_number ||
@@ -256,12 +281,15 @@ export function useKnowledgeBaseViewModel() {
     seasons,
     allianceId,
     accessibleAlliances,
+    canImport,
+    source,
     hasActiveFilters,
     handleFilterChange,
     handleTogglePlanningError,
     handleSeasonSelectorChange,
     handleSeasonIdChange,
     handleAllianceChange,
+    handleSourceChange,
     handleSort,
     handleClearFilters,
     setPage,
