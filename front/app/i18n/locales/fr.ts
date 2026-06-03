@@ -449,6 +449,11 @@ const fr: Translations = {
     season: {
       current: 'Saison {number}',
       offSeason: 'Hors-saison',
+      format: {
+        label: 'Format',
+        regular: 'Régulière',
+        bigThing: 'Big Thing',
+      },
       bans: {
         title: 'Bans de saison',
         comingSoon: 'Bientôt disponible',

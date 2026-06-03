@@ -442,6 +442,11 @@ const en = {
     season: {
       current: 'Season {number}',
       offSeason: 'Off-season',
+      format: {
+        label: 'Format',
+        regular: 'Regular',
+        bigThing: 'Big Thing',
+      },
       bans: {
         title: 'Season bans',
         comingSoon: 'Coming soon',
