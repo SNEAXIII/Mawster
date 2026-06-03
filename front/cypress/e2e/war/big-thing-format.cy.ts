@@ -16,7 +16,7 @@ describe('Big Thing season format — war page', () => {
         }).then((res) => {
           cy.request({
             method: 'PATCH',
-            url: `${BACKEND}/admin/seasons/${res.body.id}/activate`,
+            url: `${BACKEND}/admin/seasons/${res.body.id}/open`,
             headers: { Authorization: `Bearer ${adminData.access_token}` },
           }).then(() => {
             cy.apiCreateWar(ownerData.access_token, allianceId, 'BTEnemy');
