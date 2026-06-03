@@ -729,7 +729,7 @@ class TestPlaceDefenderEdgeCases:
             },
             headers=headers,
         )
-        assert response.status_code == 409
+        assert response.status_code == 400
 
 
 class TestAvailableChampionsEdgeCases:
@@ -941,7 +941,7 @@ class TestBigThingFormat:
 
     @pytest.mark.asyncio
     async def test_big_thing_cap_is_one_defender_per_player(self):
-        """Under big_thing season, second placement for same player → 409."""
+        """Under big_thing season, second placement for same player → 400."""
         data = await _setup_alliance_with_bg()
 
         # Create and activate a big_thing season via admin endpoints
@@ -984,7 +984,7 @@ class TestBigThingFormat:
             },
             headers=headers,
         )
-        assert resp2.status_code == 409
+        assert resp2.status_code == 400
 
     @pytest.mark.asyncio
     async def test_big_thing_node_range_rejects_node_11(self):

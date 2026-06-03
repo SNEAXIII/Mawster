@@ -152,7 +152,7 @@ class DefensePlacementService:
         player_placements = player_count_result.all()
         if len(player_placements) >= params.max_defenders_per_player:
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail=player_max_defenders_reached(params.max_defenders_per_player),
             )
 
