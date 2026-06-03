@@ -2,12 +2,14 @@
 
 import { useI18n } from '@/app/i18n';
 import { Badge } from '@/components/ui/badge';
+import type { SeasonFormat } from '@/app/services/season';
 
 interface Props {
   season: { number: number } | null | undefined;
+  format?: SeasonFormat;
 }
 
-export default function SeasonBanner({ season }: Readonly<Props>) {
+export default function SeasonBanner({ season, format }: Readonly<Props>) {
   const { t } = useI18n();
 
   if (season === undefined) return null;
@@ -30,6 +32,14 @@ export default function SeasonBanner({ season }: Readonly<Props>) {
           data-cy='season-off-season-badge'
         >
           {t.game.season.offSeason}
+        </Badge>
+      )}
+      {format === 'big_thing' && (
+        <Badge
+          className='bg-amber-600 text-white hover:bg-amber-600'
+          data-cy='season-format-banner'
+        >
+          {t.game.season.format.bigThing}
         </Badge>
       )}
     </div>

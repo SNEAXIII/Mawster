@@ -148,6 +148,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
                 : null
               : undefined
           }
+          format={currentSeason?.format ?? 'regular'}
         />
 
         {/* ELO badge — read-only, edit from the alliances page */}
@@ -351,6 +352,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
               onCombatFilterChange={setCombatFilter}
               exporting={exporting}
               exportRef={exportAttackersRef}
+              nodeCount={currentSeason?.node_count ?? 50}
             />
           </div>
         </div>

@@ -36,6 +36,7 @@ interface WarAttackerPanelProps {
   onCombatFilterChange: (v: fightStateFilter) => void;
   exporting?: boolean;
   exportRef?: RefObject<HTMLDivElement | null>;
+  nodeCount?: number;
 }
 
 export default function WarAttackerPanel({
@@ -45,6 +46,7 @@ export default function WarAttackerPanel({
   onCombatFilterChange,
   exporting = false,
   exportRef,
+  nodeCount = 50,
 }: Readonly<WarAttackerPanelProps>) {
   const { t } = useI18n();
   const {
@@ -125,7 +127,7 @@ export default function WarAttackerPanel({
           <span
             data-cy='attackers-count'
             className={`text-xs font-semibold uppercase tracking-wide ${
-              assigned.length >= 50 ? 'text-yellow-400' : 'text-destructive'
+              assigned.length >= nodeCount ? 'text-yellow-400' : 'text-destructive'
             }`}
           >
             {t.game.war.attackersPanelTitle.replace('{assigned}', String(assigned.length))}
