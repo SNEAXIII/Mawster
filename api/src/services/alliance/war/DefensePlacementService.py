@@ -71,7 +71,7 @@ class DefensePlacementService:
         # Validate node number against format map size
         if node_number < 1 or node_number > params.node_count:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=node_exceeds_map(params.node_count),
             )
 
