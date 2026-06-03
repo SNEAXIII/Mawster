@@ -30,18 +30,22 @@ interface RawRow {
 }
 
 function parseCSV(text: string): RawRow[] {
-  const lines = text.trim().split('\n').slice(1);
+  let lines = text.trim().split('\n');
+  // Skip header row only if present (3rd column is not a numeric node)
+  const firstParts = lines[0]?.split(',').map(p => p.trim()) ?? [];
+  if (Number.isNaN(Number.parseInt(firstParts[2], 10))) lines = lines.slice(1);
   return lines
     .filter(line => line.trim())
     .map((line, i) => {
       const parts = line.split(',').map(p => p.trim());
-      if (parts.length < 5) throw new Error(`Row ${i + 2}: expected 5 columns`);
-      const node = parseInt(parts[2], 10);
-      const koCount = parseInt(parts[4], 10);
-      if (isNaN(node) || node < 1 || node > 50)
-        throw new Error(`Row ${i + 2}: invalid node (1-50)`);
-      if (isNaN(koCount) || koCount < 0)
-        throw new Error(`Row ${i + 2}: invalid ko_count`);
+      if (parts.length < 4) throw new Error(`Row ${i + 1}: expected at least 4 columns`);
+      const node = Number.parseInt(parts[2], 10);
+      const koRaw = parts[4] ?? '';
+      const koCount = koRaw === '' ? 0 : Number.parseInt(koRaw, 10);
+      if (Number.isNaN(node) || node < 1 || node > 50)
+        throw new Error(`Row ${i + 1}: invalid node (1-50)`);
+      if (Number.isNaN(koCount) || koCount < 0)
+        throw new Error(`Row ${i + 1}: invalid ko_count`);
       return {
         attackerName: parts[0],
         defenderName: parts[1],
