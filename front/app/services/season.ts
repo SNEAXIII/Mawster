@@ -59,3 +59,12 @@ export async function closeSeason(id: string): Promise<Season> {
   if (!res.ok) throw new Error('Failed to close season');
   return res.json();
 }
+
+export async function revertSeason(id: string): Promise<Season> {
+  const res = await fetch(`${PROXY}/admin/seasons/${id}/revert`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+  });
+  if (!res.ok) throw new Error('Failed to revert season');
+  return res.json();
+}

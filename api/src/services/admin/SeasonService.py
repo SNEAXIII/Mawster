@@ -9,6 +9,7 @@ from src.enums.SeasonStatus import SeasonStatus
 from src.models.Season import Season
 from src.Messages.season_messages import (
     SEASON_CURRENT_EXISTS,
+    SEASON_NOT_ENDED,
     SEASON_NOT_FOUND,
     SEASON_NUMBER_ALREADY_EXISTS,
 )
@@ -72,6 +73,28 @@ class SeasonService:
                 detail=SEASON_CURRENT_EXISTS,
             )
         season.status = SeasonStatus.active
+        session.add(season)
+        await session.commit()
+        await session.refresh(season)
+        return season
+
+    @classmethod
+    async def revert_to_preseason(cls, session: SessionDep, season_id: uuid.UUID) -> Season:
+        """Revert a closed season back to pre-season: ended -> upcoming. Recovers a mistaken close."""
+        season = await session.get(Season, season_id)
+        if season is None:
+            raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail=SEASON_NOT_FOUND)
+        if season.status != SeasonStatus.ended:
+            raise HTTPException(
+                status_code=http_status.HTTP_409_CONFLICT,
+                detail=SEASON_NOT_ENDED,
+            )
+        if await cls.get_current_season(session) is not None:
+            raise HTTPException(
+                status_code=http_status.HTTP_409_CONFLICT,
+                detail=SEASON_CURRENT_EXISTS,
+            )
+        season.status = SeasonStatus.upcoming
         session.add(season)
         await session.commit()
         await session.refresh(season)

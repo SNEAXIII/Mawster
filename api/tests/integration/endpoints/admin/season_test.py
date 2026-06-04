@@ -161,6 +161,56 @@ class TestCloseSeason:
         assert response.status_code == 404
 
 
+class TestRevertSeason:
+    @pytest.mark.anyio
+    async def test_revert_ended_to_preseason(self, admin_in_db):
+        s = (await execute_post_request(SEASONS_URL, {"number": 120}, ADMIN_HEADERS)).json()
+        await execute_patch_request(f"{SEASONS_URL}/{s['id']}/open", {}, ADMIN_HEADERS)
+        await execute_patch_request(f"{SEASONS_URL}/{s['id']}/close", {}, ADMIN_HEADERS)
+        response = await execute_patch_request(f"{SEASONS_URL}/{s['id']}/revert", {}, ADMIN_HEADERS)
+        assert response.status_code == 200
+        assert response.json()["status"] == "upcoming"
+
+    @pytest.mark.anyio
+    async def test_revert_upcoming_returns_409(self, admin_in_db):
+        s = (await execute_post_request(SEASONS_URL, {"number": 121}, ADMIN_HEADERS)).json()
+        response = await execute_patch_request(f"{SEASONS_URL}/{s['id']}/revert", {}, ADMIN_HEADERS)
+        assert response.status_code == 409
+
+    @pytest.mark.anyio
+    async def test_revert_active_returns_409(self, admin_in_db):
+        s = (await execute_post_request(SEASONS_URL, {"number": 122}, ADMIN_HEADERS)).json()
+        await execute_patch_request(f"{SEASONS_URL}/{s['id']}/open", {}, ADMIN_HEADERS)
+        response = await execute_patch_request(f"{SEASONS_URL}/{s['id']}/revert", {}, ADMIN_HEADERS)
+        assert response.status_code == 409
+
+    @pytest.mark.anyio
+    async def test_revert_rejected_when_another_current_exists(self, admin_in_db):
+        s1 = (await execute_post_request(SEASONS_URL, {"number": 123}, ADMIN_HEADERS)).json()
+        await execute_patch_request(f"{SEASONS_URL}/{s1['id']}/open", {}, ADMIN_HEADERS)
+        await execute_patch_request(f"{SEASONS_URL}/{s1['id']}/close", {}, ADMIN_HEADERS)
+        # creating season 124 makes it the current (upcoming) season
+        await execute_post_request(SEASONS_URL, {"number": 124}, ADMIN_HEADERS)
+        response = await execute_patch_request(
+            f"{SEASONS_URL}/{s1['id']}/revert", {}, ADMIN_HEADERS
+        )
+        assert response.status_code == 409
+
+    @pytest.mark.anyio
+    async def test_revert_unknown_season_returns_404(self, admin_in_db):
+        response = await execute_patch_request(
+            f"{SEASONS_URL}/00000000-0000-0000-0000-000000000099/revert", {}, ADMIN_HEADERS
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.anyio
+    async def test_revert_non_admin_returns_403(self):
+        response = await execute_patch_request(
+            f"{SEASONS_URL}/00000000-0000-0000-0000-000000000099/revert", {}, USER_HEADERS
+        )
+        assert response.status_code == 403
+
+
 class TestGetCurrentSeason:
     @pytest.fixture()
     async def user_in_db(self):

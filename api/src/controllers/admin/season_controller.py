@@ -54,6 +54,16 @@ async def open_season(
     return await SeasonService.open_season(session, season_id)
 
 
+@season_admin_controller.patch("/{season_id}/revert", response_model=SeasonResponse)
+async def revert_season(
+    season_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Revert a closed season back to pre-season (ended -> upcoming). Admin only."""
+    return await SeasonService.revert_to_preseason(session, season_id)
+
+
 @season_admin_controller.patch("/{season_id}/close", response_model=SeasonResponse)
 async def close_season(
     season_id: uuid.UUID,

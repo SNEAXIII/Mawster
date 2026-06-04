@@ -71,4 +71,34 @@ describe('Admin — seasons panel', () => {
       });
     });
   });
+
+  it('admin can revert a closed season back to pre-season (recover a mistaken close)', () => {
+    setupAdmin('season-revert-token').then(({ access_token, user_id }) => {
+      cy.request({
+        method: 'POST',
+        url: `${BACKEND}/admin/seasons`,
+        body: { number: 56 },
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+      cy.apiLogin(user_id);
+      cy.navTo('admin');
+      cy.getByCy('tab-seasons').click();
+
+      // Open then close to reach the ended state
+      cy.getByCy('open-season-56').click();
+      cy.getByCy('confirmation-dialog-confirm').click();
+      cy.getByCy('close-season-56').click();
+      cy.getByCy('confirmation-dialog-confirm').click();
+      cy.getByCy('season-row-56').within(() => {
+        cy.getByCy('season-status-ended').should('be.visible');
+      });
+
+      // Revert back to pre-season
+      cy.getByCy('revert-season-56').click();
+      cy.getByCy('confirmation-dialog-confirm').click();
+      cy.getByCy('season-row-56').within(() => {
+        cy.getByCy('season-status-upcoming').should('be.visible');
+      });
+    });
+  });
 });

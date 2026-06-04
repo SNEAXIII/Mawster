@@ -465,6 +465,7 @@ const fr: Translations = {
         numberPlaceholder: 'ex. 64',
         openButton: 'Ouvrir',
         closeButton: 'Fermer',
+        revertButton: 'Remettre en pré-saison',
         statusUpcoming: 'Pré-saison',
         statusActive: 'Ouverte',
         statusEnded: 'Fermée',
@@ -472,9 +473,13 @@ const fr: Translations = {
         confirmOpenBody: 'Elle devient la saison en cours et ses résultats comptent dans les stats.',
         confirmCloseTitle: 'Fermer cette saison ?',
         confirmCloseBody: 'Elle n’est plus en cours. Tu pourras la rouvrir plus tard si besoin.',
+        confirmRevertTitle: 'Remettre en pré-saison ?',
+        confirmRevertBody:
+          'Cette saison fermée repasse en pré-saison. À utiliser pour annuler une fermeture par erreur.',
         createError: 'Échec de la création',
         openError: "Échec de l'ouverture de la saison",
         closeError: 'Échec de la fermeture de la saison',
+        revertError: 'Échec du retour en pré-saison',
       },
     },
     knowledgeBase: {
