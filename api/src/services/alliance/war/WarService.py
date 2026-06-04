@@ -107,12 +107,12 @@ class WarService:
                     detail=champion_with_id_not_found(champion_id),
                 )
 
-        current_season = await SeasonService.get_current_season(session)
+        active_season = await SeasonService.get_active_season(session)
         war = War(
             alliance_id=alliance_id,
             opponent_name=opponent_name,
             created_by_id=created_by_id,
-            season_id=current_season.id if current_season else None,
+            season_id=active_season.id if active_season else None,
         )
         session.add(war)
         await session.flush()

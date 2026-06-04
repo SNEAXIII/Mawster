@@ -482,6 +482,65 @@ class TestEndWar:
         )
         assert resp.status_code == 422
 
+    @pytest.mark.asyncio
+    async def test_create_war_in_preseason_has_no_season(self):
+        """A war declared while the only season is `upcoming` (pré-saison) is off-season."""
+        data = await _setup_alliance()
+        season = Season(number=70, status=SeasonStatus.upcoming)
+        await load_objects([season])
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        declare = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={"opponent_name": "Preseason Foe", "banned_champion_ids": []},
+            headers=headers,
+        )
+        assert declare.status_code == 201
+        assert declare.json()["season_id"] is None
+
+    @pytest.mark.asyncio
+    async def test_end_preseason_war_without_elo_succeeds(self):
+        """Ending a pré-saison war needs no elo_change and leaves alliance ELO untouched."""
+        data = await _setup_alliance()
+        season = Season(number=71, status=SeasonStatus.upcoming)
+        await load_objects([season])
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        declare = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={"opponent_name": "Preseason Foe2", "banned_champion_ids": []},
+            headers=headers,
+        )
+        war_id = declare.json()["id"]
+
+        end = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{war_id}/end",
+            payload={"win": True},
+            headers=headers,
+        )
+        assert end.status_code == 200
+        assert end.json()["elo_change"] is None
+
+        alliances = (await execute_get_request("/alliances/mine", headers=headers)).json()
+        updated = next(a for a in alliances if a["id"] == str(data["alliance"].id))
+        assert updated["elo"] == 0
+
+    @pytest.mark.asyncio
+    async def test_create_war_in_active_season_keeps_season(self):
+        """Regression: an active season is still attached, so ELO stays required."""
+        data = await _setup_alliance()
+        season = Season(number=72, status=SeasonStatus.active)
+        await load_objects([season])
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        declare = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={"opponent_name": "Active Foe", "banned_champion_ids": []},
+            headers=headers,
+        )
+        assert declare.status_code == 201
+        assert declare.json()["season_id"] is not None
+
 
 # ─── Attacker helpers ─────────────────────────────────────
 
