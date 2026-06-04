@@ -448,7 +448,6 @@ const fr: Translations = {
     },
     season: {
       current: 'Saison {number}',
-      offSeason: 'Hors-saison',
       preSeason: 'Pré-saison',
       format: {
         label: 'Format',
@@ -511,7 +510,7 @@ const fr: Translations = {
       seasonSelectorAll: 'Toutes périodes',
       seasonSelectorAllSeasons: 'Toutes les saisons',
       seasonSelectorCurrent: 'Saison en cours',
-      seasonSelectorOffSeason: 'Hors-saison',
+      seasonSelectorOffSeason: 'Pré-saison',
       seasonSelectorSpecific: 'Saison spécifique',
       seasonLabel: 'Saison {number}',
       sourceFilter: 'Source',

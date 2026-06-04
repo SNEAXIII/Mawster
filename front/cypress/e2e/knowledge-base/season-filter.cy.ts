@@ -102,7 +102,7 @@ describe('Knowledge Base - Season Filter', () => {
     });
   });
 
-  it('"Off-Season" shows only records without a season', () => {
+  it('"Pre-season" shows only records without a season', () => {
     setupSeasonFilter('kb-sf-off').then(({ adminAT, ownerAccId, allianceId, warId, userId }) => {
       createSeason(adminAT, 1).then((season) => {
         cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 2, season.id);
@@ -112,7 +112,7 @@ describe('Knowledge Base - Season Filter', () => {
         cy.visit('/game/knowledge-base');
 
         cy.getByCy('filter-season-selector-trigger').click();
-        cy.contains('[role="option"]', 'Off-Season').click();
+        cy.contains('[role="option"]', 'Pre-season').click();
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
       });
     });

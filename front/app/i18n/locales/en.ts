@@ -441,7 +441,6 @@ const en = {
     },
     season: {
       current: 'Season {number}',
-      offSeason: 'Off-season',
       preSeason: 'Pre-season',
       format: {
         label: 'Format',
@@ -504,7 +503,7 @@ const en = {
       seasonSelectorAll: 'All periods',
       seasonSelectorAllSeasons: 'All Seasons',
       seasonSelectorCurrent: 'Current Season',
-      seasonSelectorOffSeason: 'Off-Season',
+      seasonSelectorOffSeason: 'Pre-season',
       seasonSelectorSpecific: 'Specific Season',
       seasonLabel: 'Season {number}',
       sourceFilter: 'Source',

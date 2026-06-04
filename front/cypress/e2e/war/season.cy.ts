@@ -5,12 +5,12 @@ describe('Season — war page', () => {
     cy.truncateDb();
   });
 
-  it('shows off-season badge on war page when no active season', () => {
+  it('shows pre-season badge on war page when no active season', () => {
     setupWarOwner('season-off', 'OffOwner', 'OffAlliance', 'OF').then(({ ownerData, allianceId }) => {
       cy.apiCreateWar(ownerData.access_token, allianceId, 'OffEnemy');
       cy.apiLogin(ownerData.user_id);
       cy.navTo('war');
-      cy.getByCy('season-off-season-badge').should('be.visible').and('contain', 'Off-season');
+      cy.getByCy('season-pre-season-badge').should('be.visible').and('contain', 'Pre-season');
     });
   });
 
