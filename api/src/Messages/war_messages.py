@@ -17,7 +17,6 @@ CHAMPION_NOT_IN_ALLIANCE_BG = (
 )
 CHAMPION_BANNED_FOR_WAR = "This champion is banned for this war"
 CHAMPION_ALREADY_IN_ALLIANCE_DEFENSE = "This champion is already placed in the alliance defense"
-MEMBER_ALREADY_HAS_3_ATTACKERS = "This member already has 3 attackers assigned in this battlegroup"
 NO_ATTACKER_ASSIGNED_ON_NODE = "No attacker assigned to this node"
 KO_COUNT_NO_ATTACKER_ASSIGNED = "Cannot update KO count: no attacker assigned to this node"
 ONLY_OWN_CHAMPIONS_SYNERGY = "You can only add your own champions as synergy providers"
@@ -52,3 +51,11 @@ ASSIST_NOT_FOUND = "No assist assigned to this node"
 
 def champion_with_id_not_found(champion_id) -> str:
     return f"Champion {champion_id} not found"
+
+
+def member_max_attackers_reached(max_attackers: int) -> str:  # pragma: no cover
+    return f"This member already has {max_attackers} attackers assigned in this battlegroup"
+
+
+def node_exceeds_map(max_node: int) -> str:  # pragma: no cover
+    return f"Node number must be between 1 and {max_node} for the current format"

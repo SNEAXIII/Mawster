@@ -45,7 +45,8 @@ from src.Messages.war_messages import (
     ASSIST_SAME_ACCOUNT,
     ASSIST_NOT_FOUND,
     KO_COUNT_NO_ATTACKER_ASSIGNED,
-    MEMBER_ALREADY_HAS_3_ATTACKERS,
+    member_max_attackers_reached,
+    node_exceeds_map,
     NODE_HAS_NO_DEFENDER_PLACE_FIRST,
     NO_ACTIVE_WAR_FOR_ALLIANCE,
     NO_ATTACKER_ASSIGNED_ON_NODE,
@@ -63,6 +64,7 @@ from src.Messages.war_messages import (
 )
 from src.dto.alliance.war.dto_war import MAX_BANNED_CHAMPIONS
 from src.services.admin.SeasonService import SeasonService
+from src.services.alliance.war.WarFormatConfig import for_format
 from src.utils.db import SessionDep
 
 
@@ -475,6 +477,9 @@ class WarService:
         war: Optional[War] = None,
         node_number: Optional[int] = None,
     ) -> list[AvailableAttackerResponse]:
+        max_attackers = for_format(
+            await SeasonService.get_current_format(session)
+        ).max_attackers_per_member
         # Get members assigned to this battlegroup (or just the specific attacker)
         member_conditions = and_(
             GameAccount.alliance_id == alliance_id,
@@ -568,7 +573,11 @@ class WarService:
                     continue
                 if champion_user.champion_id in banned_champion_ids:
                     continue
-                if war and len(ids_for_limit) >= 3 and champion_user.id not in all_attackers_ids:
+                if (
+                    war
+                    and len(ids_for_limit) >= max_attackers
+                    and champion_user.id not in all_attackers_ids
+                ):
                     continue
                 result.append(
                     AvailableAttackerResponse(
@@ -656,6 +665,15 @@ class WarService:
         node_number: int,
         champion_user_id: uuid.UUID,
     ) -> WarPlacementResponse:
+        # 0. Resolve format caps for this season
+        _params = for_format(await SeasonService.get_current_format(session))
+        if node_number < 1 or node_number > _params.node_count:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=node_exceeds_map(_params.node_count),
+            )
+        max_attackers = _params.max_attackers_per_member
+
         # 1. Node must have a defender
         placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
         if placement is None:
@@ -759,10 +777,10 @@ class WarService:
         prefight_ids = {pf.champion_user_id for pf in prefight_result.all()}
         all_attackers_ids = all_attackers_ids | synergy_ids | prefight_ids
         member_attacker_count = len(all_attackers_ids)
-        if member_attacker_count > 3:
+        if member_attacker_count > max_attackers:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=MEMBER_ALREADY_HAS_3_ATTACKERS,
+                detail=member_max_attackers_reached(max_attackers),
             )
 
         # 6. Assign
@@ -1093,6 +1111,9 @@ class WarService:
         target_champion_user_id: uuid.UUID,
         current_user_id: uuid.UUID,
     ) -> WarSynergyResponse:
+        max_attackers = for_format(
+            await SeasonService.get_current_format(session)
+        ).max_attackers_per_member
         # 1. Load champion_user and validate it belongs to this alliance + BG
         cu_stmt = (
             select(ChampionUser)
@@ -1214,10 +1235,10 @@ class WarService:
         prefight_ids = {pf.champion_user_id for pf in prefight_result.all()}
 
         total_slots = len(node_ids | synergy_ids | prefight_ids | {champion_user_id})
-        if total_slots > 3:
+        if total_slots > max_attackers:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=MEMBER_ALREADY_HAS_3_ATTACKERS,
+                detail=member_max_attackers_reached(max_attackers),
             )
 
         # 5. Insert (unique constraint handles duplicate)
@@ -1314,6 +1335,15 @@ class WarService:
         champion_user_id: uuid.UUID,
         target_node_number: int,
     ) -> WarPrefightResponse:
+        # 0. Resolve format caps for this season
+        _params = for_format(await SeasonService.get_current_format(session))
+        if target_node_number < 1 or target_node_number > _params.node_count:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=node_exceeds_map(_params.node_count),
+            )
+        max_attackers = _params.max_attackers_per_member
+
         # 1. Load champion_user with game_account
         champion_user_stmt = (
             select(ChampionUser)
@@ -1426,10 +1456,10 @@ class WarService:
         prefight_ids = {pf.champion_user_id for pf in prefight_result.all()}
 
         total_slots = len(node_ids | synergy_ids | prefight_ids | {champion_user_id})
-        if total_slots > 3:
+        if total_slots > max_attackers:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=MEMBER_ALREADY_HAS_3_ATTACKERS,
+                detail=member_max_attackers_reached(max_attackers),
             )
 
         # 5. Insert (unique constraint handles duplicate)

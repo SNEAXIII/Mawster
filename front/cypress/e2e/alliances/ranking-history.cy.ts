@@ -11,7 +11,7 @@ function createAndActivateSeason(adminToken: string) {
     .then((res) =>
       cy.request({
         method: 'PATCH',
-        url: `${BACKEND}/admin/seasons/${res.body.id}/activate`,
+        url: `${BACKEND}/admin/seasons/${res.body.id}/open`,
         headers: { Authorization: `Bearer ${adminToken}` },
       }),
     );

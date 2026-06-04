@@ -471,7 +471,7 @@ export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
           const seasonId = (res.body as { id: string }).id;
           return cy.request({
             method: 'PATCH',
-            url: `${BACKEND}/admin/seasons/${seasonId}/activate`,
+            url: `${BACKEND}/admin/seasons/${seasonId}/open`,
             headers: { Authorization: `Bearer ${adminAT}` },
             body: {},
           });

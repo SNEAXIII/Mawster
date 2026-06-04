@@ -11,6 +11,7 @@ import { FullPageSpinner } from '@/components/full-page-spinner';
 import ChampionPortrait from '@/components/champion-portrait';
 import { WarMode } from './war-types';
 import { useWar } from '@/app/contexts/war-context';
+import { useCurrentSeason } from '@/hooks/use-current-season';
 import SeasonBanner from './season-banner';
 import ExportHeader from '@/app/game/_components/export-header';
 
@@ -67,6 +68,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
   } = useWar();
 
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId) ?? null;
+  const currentSeason = useCurrentSeason();
 
   const [playerFilter, setPlayerFilter] = useState('');
   const [combatFilter, setCombatFilter] = useState<fightStateFilter>('todo');
@@ -75,7 +77,8 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
   const exportMapRef = useRef<HTMLDivElement>(null);
   const exportAttackersRef = useRef<HTMLDivElement>(null);
 
-  const handleExport = async () => {
+  const exportImage = async (target: 'map' | 'attackers') => {
+    const ref = target === 'map' ? exportMapRef : exportAttackersRef;
     if (!exportMapRef.current || !exportAttackersRef.current) return;
     const previousMode = warMode;
     setWarMode(WarMode.Export);
@@ -84,28 +87,22 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
       requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
     );
     try {
-      const pngMap = await snapdom.toPng(exportMapRef.current, { scale: 1, embedFonts: false });
-      await new Promise<void>((resolve) => setTimeout(resolve, 50));
-      const el = exportAttackersRef.current;
-      const pngAttackers = await snapdom.toPng(el, {
-        scale: 1,
-        embedFonts: false,
-      });
+      if (!ref.current) return;
+      const png = await snapdom.toPng(ref.current, { scale: 1, embedFonts: false });
       const allianceName = selectedAlliance?.name ?? 'alliance';
       const date = new Date().toISOString().split('T')[0];
-      const linkMap = document.createElement('a');
-      linkMap.download = `war-map-bg${selectedBg}-${allianceName}-${date}.png`;
-      linkMap.href = pngMap.src;
-      linkMap.click();
-      const linkAttackers = document.createElement('a');
-      linkAttackers.download = `war-attackers-bg${selectedBg}-${allianceName}-${date}.png`;
-      linkAttackers.href = pngAttackers.src;
-      linkAttackers.click();
+      const link = document.createElement('a');
+      link.download = `war-${target}-bg${selectedBg}-${allianceName}-${date}.png`;
+      link.href = png.src;
+      link.click();
     } finally {
       setExporting(false);
       setWarMode(previousMode);
     }
   };
+
+  const handleExportMap = () => exportImage('map');
+  const handleExportList = () => exportImage('attackers');
 
   useEffect(() => {
     setPlayerFilter('');
@@ -138,15 +135,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
     <div className='flex flex-col gap-4'>
       {/* Controls row: opponent name + BG picker + mode toggle + clear */}
       <div className='flex flex-wrap items-center gap-3'>
-        <SeasonBanner
-          season={
-            currentWar
-              ? currentWar.season_number !== null
-                ? { number: currentWar.season_number }
-                : null
-              : undefined
-          }
-        />
+        <SeasonBanner season={currentWar ? currentSeason : undefined} />
 
         {/* ELO badge — read-only, edit from the alliances page */}
         {selectedAlliance && (
@@ -245,17 +234,28 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
             {t.game.war.clearAll}
           </Button>
         )}
-        {/* Export button */}
+        {/* Export buttons — one image per click */}
         {placements.length > 0 && (
-          <Button
-            variant='outline'
-            onClick={handleExport}
-            disabled={exporting}
-            data-cy='export-war-btn'
-          >
-            <Camera className='w-4 h-4 mr-1' />
-            {exporting ? '…' : t.game.war.exportMap}
-          </Button>
+          <>
+            <Button
+              variant='outline'
+              onClick={handleExportMap}
+              disabled={exporting}
+              data-cy='export-war-map-btn'
+            >
+              <Camera className='w-4 h-4 mr-1' />
+              {exporting ? '…' : t.game.war.exportMap}
+            </Button>
+            <Button
+              variant='outline'
+              onClick={handleExportList}
+              disabled={exporting}
+              data-cy='export-war-list-btn'
+            >
+              <Camera className='w-4 h-4 mr-1' />
+              {exporting ? '…' : t.game.war.exportList}
+            </Button>
+          </>
         )}
         {/* Banned champions */}
         <div className='flex items-center gap-2 flex-wrap'>
@@ -330,6 +330,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
                 canManage={canManageWar && warMode === WarMode.Defenders && !exporting}
                 dimmedNodes={exporting ? undefined : dimmedNodes}
                 prefightNodes={prefightNodes}
+                format={currentSeason?.format ?? 'regular'}
               />
             </div>
           </div>
@@ -348,6 +349,8 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
               onCombatFilterChange={setCombatFilter}
               exporting={exporting}
               exportRef={exportAttackersRef}
+              nodeCount={currentSeason?.node_count ?? 50}
+              maxAttackers={currentSeason?.max_attackers_per_member ?? 3}
             />
           </div>
         </div>

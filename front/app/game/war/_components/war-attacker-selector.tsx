@@ -16,6 +16,7 @@ import {
 } from '@/app/services/war';
 import AttackerEntryRow from './attacker-entry-row';
 import SelectorFilterBar from '@/app/game/_components/selector-filter-bar';
+import { useCurrentSeason } from '@/hooks/use-current-season';
 
 interface WarAttackerSelectorProps {
   open: boolean;
@@ -46,6 +47,8 @@ export default function WarAttackerSelector({
   onSelect,
 }: Readonly<WarAttackerSelectorProps>) {
   const { t } = useI18n();
+  const currentSeason = useCurrentSeason();
+  const maxAttackers = currentSeason?.max_attackers_per_member ?? 3;
   const [available, setAvailable] = useState<AvailableAttacker[]>([]);
   const [playerFilter, setPlayerFilter] = useState('');
   const [championSearch, setChampionSearch] = useState('');
@@ -167,7 +170,9 @@ export default function WarAttackerSelector({
         <div className='text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1'>
           {group.pseudo}
           <span className='text-primary font-bold'>
-            {t.game.war.memberAttackers.replace('{count}', String(group.assignedCount))}
+            {t.game.war.memberAttackers
+              .replace('{count}', String(group.assignedCount))
+              .replace('{max}', String(maxAttackers))}
           </span>
         </div>
         <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2'>

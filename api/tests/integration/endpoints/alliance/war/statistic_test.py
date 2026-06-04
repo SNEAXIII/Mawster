@@ -7,6 +7,7 @@ from main import app
 from src.enums.Roles import Roles
 from src.models.GameAccount import GameAccount
 from src.models.Season import Season
+from src.enums.SeasonStatus import SeasonStatus
 from src.models.War import War, WarStatus
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightRecord import WarFightRecord
@@ -41,7 +42,7 @@ async def _base_setup():
 
 async def _setup_with_active_season():
     data = await _base_setup()
-    season = Season(number=64, is_active=True)
+    season = Season(number=64, status=SeasonStatus.active)
     war = War(
         id=uuid.uuid4(),
         alliance_id=data["alliance"].id,
@@ -83,7 +84,7 @@ class TestGetCurrentSeasonStatistics:
     @pytest.mark.anyio
     async def test_returns_empty_when_season_is_inactive(self):
         data = await _base_setup()
-        season = Season(number=64, is_active=False)
+        season = Season(number=64, status=SeasonStatus.ended)
         war = War(
             id=uuid.uuid4(),
             alliance_id=data["alliance"].id,
@@ -220,7 +221,7 @@ class TestGetCurrentSeasonStatistics:
     @pytest.mark.anyio
     async def test_active_war_excluded(self):
         data = await _base_setup()
-        season = Season(number=64, is_active=True)
+        season = Season(number=64, status=SeasonStatus.active)
         active_war = War(
             id=uuid.uuid4(),
             alliance_id=data["alliance"].id,
@@ -241,7 +242,7 @@ class TestGetCurrentSeasonStatistics:
     async def test_only_ended_wars_counted_when_mixed(self):
         """Ended war placements are counted; active war placements are excluded."""
         data = await _base_setup()
-        season = Season(number=64, is_active=True)
+        season = Season(number=64, status=SeasonStatus.active)
         ended_war = War(
             id=uuid.uuid4(),
             alliance_id=data["alliance"].id,

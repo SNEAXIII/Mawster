@@ -9,6 +9,7 @@ from src.models import ChampionUser, Season, War, WarDefensePlacement, GameAccou
 from src.models.Alliance import Alliance
 from src.models.Champion import Champion
 from src.models.War import WarStatus
+from src.enums.SeasonStatus import SeasonStatus
 from src.models.WarFightRecord import WarFightRecord
 from sqlalchemy import and_, func, cast, Integer, Float, case, union
 from sqlmodel import select
@@ -63,7 +64,7 @@ class StatisticService:
                 WarDefensePlacement, WarDefensePlacement.assist_champion_user_id == ChampionUser.id
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
+            .join(Season, and_(War.season_id == Season.id, Season.status == SeasonStatus.active))
             .where(War.alliance_id == alliance_id)
             .where(War.status == WarStatus.ended)
             .group_by(ChampionUser.game_account_id)
@@ -89,7 +90,7 @@ class StatisticService:
                 WarDefensePlacement.attacker_champion_user_id == ChampionUser.id,
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
+            .join(Season, and_(War.season_id == Season.id, Season.status == SeasonStatus.active))
             .where(War.alliance_id == alliance_id)
             .where(War.status == WarStatus.ended)
             .group_by(GameAccount.id)
@@ -106,7 +107,7 @@ class StatisticService:
                 WarDefensePlacement.attacker_champion_user_id == ChampionUser.id,
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
+            .join(Season, and_(War.season_id == Season.id, Season.status == SeasonStatus.active))
             .where(War.alliance_id == alliance_id)
             .where(War.status == WarStatus.ended),
             select(ChampionUser.game_account_id.label("game_account_id"), War.id.label("war_id"))
@@ -114,7 +115,7 @@ class StatisticService:
                 WarDefensePlacement, WarDefensePlacement.assist_champion_user_id == ChampionUser.id
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .join(Season, and_(War.season_id == Season.id, Season.is_active == True))  # noqa: E712
+            .join(Season, and_(War.season_id == Season.id, Season.status == SeasonStatus.active))
             .where(War.alliance_id == alliance_id)
             .where(War.status == WarStatus.ended),
         ).subquery()
@@ -199,7 +200,7 @@ class StatisticService:
 
         conditions = [
             WarFightRecord.alliance_id == alliance_id,
-            Season.is_active == True,  # noqa: E712
+            Season.status == SeasonStatus.active,
         ]
         if game_account_id is not None:
             conditions.append(WarFightRecord.game_account_id == game_account_id)

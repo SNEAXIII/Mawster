@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { snapdom } from '@zumer/snapdom';
 import { useI18n } from '@/app/i18n';
 import { useRequiredSession } from '@/hooks/use-required-session';
+import { useCurrentSeason } from '@/hooks/use-current-season';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { Shield } from 'lucide-react';
 import { DefenseActionsProvider } from '@/app/contexts/defense-actions-context';
@@ -26,6 +27,7 @@ export default function DefensePageContent({
   const { status } = useRequiredSession();
 
   const vm = useDefenseViewModel({ onStateChange, initialAllianceId, initialBg });
+  const currentSeason = useCurrentSeason();
 
   const exportDefenseMapRef = useRef<HTMLDivElement>(null);
   const exportDefenseAssignementsRef = useRef<HTMLDivElement>(null);
@@ -33,28 +35,28 @@ export default function DefensePageContent({
 
   const selectedAlliance = vm.alliances.find((a) => a.id === vm.selectedAllianceId) ?? null;
 
-  const handleExport = async () => {
+  const exportImage = async (target: 'map' | 'assignments') => {
+    const ref = target === 'map' ? exportDefenseMapRef : exportDefenseAssignementsRef;
     if (!exportDefenseMapRef.current || !exportDefenseAssignementsRef.current) return;
     setExporting(true);
     // Wait for React to commit the state change (bg-black, hidden remove buttons) to the DOM
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     try {
-      const pngMap = await snapdom.toPng(exportDefenseMapRef.current, { scale: 1, embedFonts: false });
-      const pngAssignements = await snapdom.toPng(exportDefenseAssignementsRef.current, { scale: 1, embedFonts: false });
+      if (!ref.current) return;
+      const png = await snapdom.toPng(ref.current, { scale: 1, embedFonts: false });
       const allianceName = selectedAlliance?.name ?? 'alliance';
       const date = new Date().toISOString().split('T')[0];
-      const linkMap = document.createElement('a');
-      linkMap.download = `defense-bg${vm.selectedBg}-${allianceName}-${date}.png`;
-      linkMap.href = pngMap.src;
-      linkMap.click();
-      const linkAssignements = document.createElement('a');
-      linkAssignements.download = `defense-assignments-bg${vm.selectedBg}-${allianceName}-${date}.png`;
-      linkAssignements.href = pngAssignements.src;
-      linkAssignements.click();
+      const link = document.createElement('a');
+      link.download = `defense-${target}-bg${vm.selectedBg}-${allianceName}-${date}.png`;
+      link.href = png.src;
+      link.click();
     } finally {
       setExporting(false);
     }
   };
+
+  const handleExportMap = () => exportImage('map');
+  const handleExportList = () => exportImage('assignments');
 
   if (vm.loading || status === 'loading') return <FullPageSpinner />;
 
@@ -81,7 +83,8 @@ export default function DefensePageContent({
           onClearClick={() => defenseActions.setClearConfirmOpen(true)}
           canManage={vm.userCanManage}
           defenseSummary={defenseActions.defenseSummary}
-          onExportClick={handleExport}
+          onExportMapClick={handleExportMap}
+          onExportListClick={handleExportList}
           exporting={exporting}
         />
         <DefenseGrid
@@ -93,6 +96,7 @@ export default function DefensePageContent({
           selectedAllianceTag={selectedAlliance?.tag}
           selectedAllianceName={selectedAlliance?.name}
           selectedBg={vm.selectedBg}
+          format={currentSeason?.format ?? 'regular'}
         />
       </DefenseActionsProvider>
     </div>

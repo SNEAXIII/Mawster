@@ -57,10 +57,10 @@ cancel-last:
 	uv run alembic downgrade -1
 
 test:
-	uv run pytest tests -v --tb=short -n 10
+	uv run pytest tests -v --tb=short -n 5
 
 test-cov:
-	uv run pytest tests --cov --cov-report term-missing -v -n 10 --dist=loadscope
+	uv run pytest tests --cov --cov-report term-missing -v -n 5 --dist=loadscope
 
 scrape-champions:
 	cd ../static-assets && uv run python scrape_champions.py

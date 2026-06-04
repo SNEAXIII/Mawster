@@ -10,3 +10,7 @@ NO_DEFENDER_ON_NODE = "No defender on this node"
 
 def player_max_defenders_reached(max_defenders: int) -> str:  # pragma: no cover
     return f"Player already has {max_defenders} defenders placed"
+
+
+def node_exceeds_map(max_node: int) -> str:  # pragma: no cover
+    return f"Node number must be between 1 and {max_node} for the current format"

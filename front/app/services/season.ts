@@ -4,10 +4,17 @@ const jsonHeaders: HeadersInit = {
   'Content-Type': 'application/json',
 };
 
+export type SeasonFormat = 'regular' | 'big_thing';
+export type SeasonStatus = 'upcoming' | 'active' | 'ended';
+
 export interface Season {
   id: string;
   number: number;
-  is_active: boolean;
+  status: SeasonStatus;
+  format: SeasonFormat;
+  max_defenders_per_player: number;
+  max_attackers_per_member: number;
+  node_count: number;
 }
 
 export async function getCurrentSeason(): Promise<Season | null> {
@@ -22,30 +29,42 @@ export async function listSeasons(): Promise<Season[]> {
   return res.json();
 }
 
-export async function createSeason(number: number): Promise<Season> {
+export async function createSeason(
+  number: number,
+  format: SeasonFormat = 'regular'
+): Promise<Season> {
   const res = await fetch(`${PROXY}/admin/seasons`, {
     method: 'POST',
     headers: jsonHeaders,
-    body: JSON.stringify({ number }),
+    body: JSON.stringify({ number, format }),
   });
   if (!res.ok) throw new Error('Failed to create season');
   return res.json();
 }
 
-export async function activateSeason(id: string): Promise<Season> {
-  const res = await fetch(`${PROXY}/admin/seasons/${id}/activate`, {
+export async function openSeason(id: string): Promise<Season> {
+  const res = await fetch(`${PROXY}/admin/seasons/${id}/open`, {
     method: 'PATCH',
     headers: jsonHeaders,
   });
-  if (!res.ok) throw new Error('Failed to activate season');
+  if (!res.ok) throw new Error('Failed to open season');
   return res.json();
 }
 
-export async function deactivateSeason(id: string): Promise<Season> {
-  const res = await fetch(`${PROXY}/admin/seasons/${id}/deactivate`, {
+export async function closeSeason(id: string): Promise<Season> {
+  const res = await fetch(`${PROXY}/admin/seasons/${id}/close`, {
     method: 'PATCH',
     headers: jsonHeaders,
   });
-  if (!res.ok) throw new Error('Failed to deactivate season');
+  if (!res.ok) throw new Error('Failed to close season');
+  return res.json();
+}
+
+export async function revertSeason(id: string): Promise<Season> {
+  const res = await fetch(`${PROXY}/admin/seasons/${id}/revert`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+  });
+  if (!res.ok) throw new Error('Failed to revert season');
   return res.json();
 }

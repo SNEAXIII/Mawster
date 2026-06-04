@@ -49,10 +49,20 @@ function createSeason(adminAT: string, number: number) {
     .then((res) => res.body as { id: string; number: number });
 }
 
-function activateSeason(adminAT: string, seasonId: string) {
+function openSeason(adminAT: string, seasonId: string) {
   return cy.request({
     method: 'PATCH',
-    url: `${BACKEND}/admin/seasons/${seasonId}/activate`,
+    url: `${BACKEND}/admin/seasons/${seasonId}/open`,
+    headers: { Authorization: `Bearer ${adminAT}` },
+    body: {},
+  });
+}
+
+// Closing a season frees the single-current slot so the next season can be created.
+function closeSeason(adminAT: string, seasonId: string) {
+  return cy.request({
+    method: 'PATCH',
+    url: `${BACKEND}/admin/seasons/${seasonId}/close`,
     headers: { Authorization: `Bearer ${adminAT}` },
     body: {},
   });
@@ -92,7 +102,7 @@ describe('Knowledge Base - Season Filter', () => {
     });
   });
 
-  it('"Off-Season" shows only records without a season', () => {
+  it('"Pre-season" shows only records without a season', () => {
     setupSeasonFilter('kb-sf-off').then(({ adminAT, ownerAccId, allianceId, warId, userId }) => {
       createSeason(adminAT, 1).then((season) => {
         cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 2, season.id);
@@ -102,7 +112,7 @@ describe('Knowledge Base - Season Filter', () => {
         cy.visit('/game/knowledge-base');
 
         cy.getByCy('filter-season-selector-trigger').click();
-        cy.contains('[role="option"]', 'Off-Season').click();
+        cy.contains('[role="option"]', 'Pre-season').click();
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
       });
     });
@@ -111,8 +121,10 @@ describe('Knowledge Base - Season Filter', () => {
   it('"Current Season" shows only records for the active season', () => {
     setupSeasonFilter('kb-sf-cur').then(({ adminAT, ownerAccId, allianceId, warId, userId }) => {
       createSeason(adminAT, 1).then((seasonA) => {
+        // Close A so a second season can be created (single-current invariant), then open B.
+        closeSeason(adminAT, seasonA.id);
         createSeason(adminAT, 2).then((seasonB) => {
-          activateSeason(adminAT, seasonB.id);
+          openSeason(adminAT, seasonB.id);
           cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 2, seasonA.id);
           cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 1, seasonB.id);
 
@@ -130,6 +142,8 @@ describe('Knowledge Base - Season Filter', () => {
   it('"Specific Season" shows only records for the selected season', () => {
     setupSeasonFilter('kb-sf-spe').then(({ adminAT, ownerAccId, allianceId, warId, userId }) => {
       createSeason(adminAT, 1).then((seasonA) => {
+        // Close A so a second season can be created (single-current invariant).
+        closeSeason(adminAT, seasonA.id);
         createSeason(adminAT, 2).then((seasonB) => {
           cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 1, seasonA.id);
           cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 2, seasonB.id);

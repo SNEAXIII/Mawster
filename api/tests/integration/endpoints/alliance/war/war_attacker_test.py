@@ -740,4 +740,113 @@ class TestUpdateKo:
         assert response.status_code == 404
 
 
+# ─── TestBigThingFormat ───────────────────────────────────
+
+
+class TestBigThingFormat:
+    """Under an active big_thing season, the attacker cap is 2 (not 3)."""
+
+    @pytest.mark.asyncio
+    async def test_big_thing_attacker_cap_is_2(self):
+        """Member can assign 2 attackers; the 3rd returns 409."""
+        # Setup: alliance + war + defenders (big_thing has nodes 1-10)
+        # _setup_alliance loads the owner user (USER_ID); admin headers use JWT role override.
+        data = await _setup_alliance()
+        alliance = data["alliance"]
+        member = data["member"]
+        headers_owner = create_auth_headers(user_id=str(USER_ID))
+        headers_member = create_auth_headers(user_id=str(USER2_ID))
+        admin_headers = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
+
+        # Activate a big_thing season
+        create_resp = await execute_post_request(
+            "/admin/seasons",
+            payload={"number": 99, "format": "big_thing"},
+            headers=admin_headers,
+        )
+        assert create_resp.status_code == 201
+        season_id = create_resp.json()["id"]
+        activate_resp = await execute_patch_request(
+            f"/admin/seasons/{season_id}/open",
+            payload={},
+            headers=admin_headers,
+        )
+        assert activate_resp.status_code == 200
+
+        # Assign BG1 to owner and member
+        await execute_patch_request(
+            f"/alliances/{alliance.id}/members/{data['owner'].id}/group",
+            payload={"group": 1},
+            headers=headers_owner,
+        )
+        await execute_patch_request(
+            f"/alliances/{alliance.id}/members/{member.id}/group",
+            payload={"group": 1},
+            headers=headers_owner,
+        )
+
+        # Create war
+        war = War(
+            id=uuid.uuid4(),
+            alliance_id=alliance.id,
+            opponent_name="Big Enemy",
+            created_by_id=data["owner"].id,
+        )
+        await load_objects([war])
+
+        # Place defenders on nodes 1, 2, 3 using 3 distinct defender champions
+        defender_champs = [
+            ("Defender One", "Cosmic"),
+            ("Defender Two", "Tech"),
+            ("Defender Three", "Mystic"),
+        ]
+        for node, (name, cls) in enumerate(defender_champs, start=1):
+            dc = await push_champion(name=name, champion_class=cls)
+            resp = await execute_post_request(
+                f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
+                payload={
+                    "node_number": node,
+                    "champion_id": str(dc.id),
+                    "stars": 6,
+                    "rank": 3,
+                    "ascension": 0,
+                },
+                headers=headers_owner,
+            )
+            assert resp.status_code == 201, f"Place defender on node {node} failed: {resp.json()}"
+
+        # Create 3 attacker champion_users for member
+        attacker_cus = []
+        for i, (name, cls) in enumerate(
+            [("Attacker A", "Science"), ("Attacker B", "Mutant"), ("Attacker C", "Skill")]
+        ):
+            ac = await push_champion(name=name, champion_class=cls)
+            cu = await push_champion_user(member, ac, stars=6, rank=3)
+            attacker_cus.append(cu)
+
+        # Assign attacker 1 → node 1: must succeed
+        r1 = await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/1/attacker",
+            payload={"champion_user_id": str(attacker_cus[0].id)},
+            headers=headers_member,
+        )
+        assert r1.status_code == 200, f"1st attacker failed: {r1.json()}"
+
+        # Assign attacker 2 → node 2: must succeed
+        r2 = await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/2/attacker",
+            payload={"champion_user_id": str(attacker_cus[1].id)},
+            headers=headers_member,
+        )
+        assert r2.status_code == 200, f"2nd attacker failed: {r2.json()}"
+
+        # Assign attacker 3 → node 3: must fail with 409 (cap is 2 in big_thing)
+        r3 = await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/3/attacker",
+            payload={"champion_user_id": str(attacker_cus[2].id)},
+            headers=headers_member,
+        )
+        assert r3.status_code == 409, f"Expected 409 but got {r3.status_code}: {r3.json()}"
+
+
 # ─── TestGetCurrentWar ────────────────────────────────────

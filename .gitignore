@@ -16,7 +16,7 @@ runner-results
 # Application logs (RGPD — never commit)
 api/logs/
 api/test-results/
-
+docs/superpowers/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
