@@ -93,8 +93,6 @@ class FightRecordImportService:
         imported = skipped = 0
         for champ_id, def_id, node, season_id, row in resolved:
             key = (champ_id, def_id, node, season_id)
-            # existing_set holds both DB rows and keys already inserted in this payload,
-            # so intra-payload duplicates are skipped too.
             if key in existing_set:
                 skipped += 1
                 continue
