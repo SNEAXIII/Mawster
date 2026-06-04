@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { useDefenseActionsContext } from '@/app/contexts/defense-actions-context';
 import ExportHeader from '@/app/game/_components/export-header';
+import type { SeasonFormat } from '@/app/services/season';
 
 const WarMap = dynamic(() => import('./war-map'), {
   loading: () => <FullPageSpinner />,
@@ -31,6 +32,7 @@ interface DefenseGridProps {
   selectedAllianceTag?: string;
   selectedAllianceName?: string;
   selectedBg?: number;
+  format?: SeasonFormat;
 }
 
 export default function DefenseGrid({
@@ -42,6 +44,7 @@ export default function DefenseGrid({
   selectedAllianceTag,
   selectedAllianceName,
   selectedBg,
+  format = 'regular',
 }: Readonly<DefenseGridProps>) {
   const { t } = useI18n();
   const [playerFilter, setPlayerFilter] = useState('');
@@ -92,6 +95,7 @@ export default function DefenseGrid({
               onRemove={handleRemoveDefender}
               canManage={canManage && !exporting}
               dimmedNodes={dimmedNodes}
+              format={format}
             />
           </div>
         </div>

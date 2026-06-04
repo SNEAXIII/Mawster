@@ -6,6 +6,8 @@ import { cn } from '@/app/lib/utils';
 import { X } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 import { rarityBadgeClass, rarityLabel, parseRarity } from './defense-utils';
+import { mapSectionsForFormat } from './war-format';
+import type { SeasonFormat } from '@/app/services/season';
 
 interface WarMapNodeProps {
   nodeNumber: number;
@@ -13,24 +15,12 @@ interface WarMapNodeProps {
   onNodeClick: (nodeNumber: number) => void;
   onRemove: (nodeNumber: number) => void;
   canManage: boolean;
+  colorClasses: string;
+  hoverClasses: string;
   hidePseudo?: boolean;
   hideSig?: boolean;
   dimmed?: boolean;
   hasPrefight?: boolean;
-}
-
-function getNodeColor(nodeNumber: number): string {
-  if (nodeNumber >= 46) return 'border-yellow-500 bg-yellow-950/40';
-  if (nodeNumber >= 37) return 'border-blue-500 bg-blue-950/40';
-  if (nodeNumber >= 19) return 'border-purple-500 bg-purple-950/40';
-  return 'border-red-500 bg-red-950/40';
-}
-
-function getNodeHoverColor(nodeNumber: number): string {
-  if (nodeNumber >= 46) return 'hover:bg-yellow-900/60';
-  if (nodeNumber >= 37) return 'hover:bg-blue-900/60';
-  if (nodeNumber >= 19) return 'hover:bg-purple-900/60';
-  return 'hover:bg-red-900/60';
 }
 
 export function WarMapPlaceHolder() {
@@ -42,14 +32,14 @@ export function WarMapNode({
   onNodeClick,
   onRemove,
   canManage,
+  colorClasses,
+  hoverClasses,
   hidePseudo = false,
   hideSig = false,
   dimmed = false,
   hasPrefight = false,
 }: Readonly<WarMapNodeProps>) {
   const { t } = useI18n();
-  const colorClasses = getNodeColor(nodeNumber);
-  const hoverClasses = getNodeHoverColor(nodeNumber);
 
   return (
     <div
@@ -144,45 +134,8 @@ interface WarMapProps {
   hideSig?: boolean;
   dimmedNodes?: Set<number>;
   prefightNodes?: Set<number>;
+  format?: SeasonFormat;
 }
-
-// Map layout: rows of nodes from top (boss) to bottom (start)
-// This mimics the AW defense map layout
-const MAP_SECTIONS = [
-  {
-    label: 'Boss',
-    color: 'text-yellow-400',
-    borderColor: 'border-yellow-600',
-    rows: [[50], [48, 49], [46, 47]],
-  },
-  {
-    label: 'Mini Boss',
-    color: 'text-blue-400',
-    borderColor: 'border-blue-600',
-    rows: [
-      [43, 44, 45],
-      [40, 41, 42, 0, 37, 38, 39],
-    ],
-  },
-  {
-    label: 'Tier 2',
-    color: 'text-purple-400',
-    borderColor: 'border-purple-600',
-    rows: [
-      [28, 29, 30, 0, 31, 32, 33, 0, 34, 35, 36],
-      [19, 20, 21, 0, 22, 23, 24, 0, 25, 26, 27],
-    ],
-  },
-  {
-    label: 'Tier 1',
-    color: 'text-red-400',
-    borderColor: 'border-red-600',
-    rows: [
-      [10, 11, 12, 0, 13, 14, 15, 0, 16, 17, 18],
-      [1, 2, 3, 0, 4, 5, 6, 0, 7, 8, 9],
-    ],
-  },
-];
 
 export default function WarMap({
   placements,
@@ -193,7 +146,9 @@ export default function WarMap({
   hideSig = false,
   dimmedNodes,
   prefightNodes,
+  format = 'regular',
 }: Readonly<WarMapProps>) {
+  const sections = mapSectionsForFormat(format);
   const placementMap = new Map<number, DefensePlacement>();
   for (const p of placements) {
     placementMap.set(p.node_number, p);
@@ -201,7 +156,7 @@ export default function WarMap({
 
   return (
     <div className='flex flex-col items-center gap-1'>
-      {MAP_SECTIONS.map((section) => (
+      {sections.map((section) => (
         <div
           key={section.label}
           className='flex flex-col items-center gap-1 w-full'
@@ -230,6 +185,8 @@ export default function WarMap({
                     onNodeClick={onNodeClick}
                     onRemove={onRemove}
                     canManage={canManage}
+                    colorClasses={section.nodeColor}
+                    hoverClasses={section.nodeHoverColor}
                     hidePseudo={hidePseudo}
                     hideSig={hideSig}
                     dimmed={dimmedNodes?.has(nodeNumber) ?? false}

@@ -36,6 +36,8 @@ interface WarAttackerPanelProps {
   onCombatFilterChange: (v: fightStateFilter) => void;
   exporting?: boolean;
   exportRef?: RefObject<HTMLDivElement | null>;
+  nodeCount?: number;
+  maxAttackers?: number;
 }
 
 export default function WarAttackerPanel({
@@ -45,6 +47,8 @@ export default function WarAttackerPanel({
   onCombatFilterChange,
   exporting = false,
   exportRef,
+  nodeCount = 50,
+  maxAttackers = 3,
 }: Readonly<WarAttackerPanelProps>) {
   const { t } = useI18n();
   const {
@@ -125,10 +129,12 @@ export default function WarAttackerPanel({
           <span
             data-cy='attackers-count'
             className={`text-xs font-semibold uppercase tracking-wide ${
-              assigned.length >= 50 ? 'text-yellow-400' : 'text-destructive'
+              assigned.length >= nodeCount ? 'text-yellow-400' : 'text-destructive'
             }`}
           >
-            {t.game.war.attackersPanelTitle.replace('{assigned}', String(assigned.length))}
+            {t.game.war.attackersPanelTitle
+              .replace('{assigned}', String(assigned.length))
+              .replace('{total}', String(nodeCount))}
           </span>
           <div className='flex items-center gap-1'>
             <Select
@@ -218,7 +224,9 @@ export default function WarAttackerPanel({
                     {memberGroup.pseudo}
                   </span>
                   <span className='text-primary font-bold text-xs'>
-                    {t.game.war.memberAttackers.replace('{count}', String(totalSlots))}
+                    {t.game.war.memberAttackers
+                      .replace('{count}', String(totalSlots))
+                      .replace('{max}', String(maxAttackers))}
                   </span>
                   {!exporting && memberGroup.entries[0]?.attacker_game_account_id && (
                     <button

@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { snapdom } from '@zumer/snapdom';
 import { useI18n } from '@/app/i18n';
 import { useRequiredSession } from '@/hooks/use-required-session';
+import { useCurrentSeason } from '@/hooks/use-current-season';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import { Shield } from 'lucide-react';
 import { DefenseActionsProvider } from '@/app/contexts/defense-actions-context';
@@ -26,6 +27,7 @@ export default function DefensePageContent({
   const { status } = useRequiredSession();
 
   const vm = useDefenseViewModel({ onStateChange, initialAllianceId, initialBg });
+  const currentSeason = useCurrentSeason();
 
   const exportDefenseMapRef = useRef<HTMLDivElement>(null);
   const exportDefenseAssignementsRef = useRef<HTMLDivElement>(null);
@@ -93,6 +95,7 @@ export default function DefensePageContent({
           selectedAllianceTag={selectedAlliance?.tag}
           selectedAllianceName={selectedAlliance?.name}
           selectedBg={vm.selectedBg}
+          format={currentSeason?.format ?? 'regular'}
         />
       </DefenseActionsProvider>
     </div>

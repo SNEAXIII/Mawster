@@ -6,18 +6,33 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   listSeasons,
   createSeason,
-  activateSeason,
-  deactivateSeason,
+  openSeason,
+  closeSeason,
+  revertSeason,
   type Season,
+  type SeasonFormat,
 } from '@/app/services/season';
+import { ConfirmationDialog } from '@/components/confirmation-dialog';
 
 export default function SeasonsPanel() {
   const { t } = useI18n();
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [newNumber, setNewNumber] = useState('');
+  const [newFormat, setNewFormat] = useState<SeasonFormat>('regular');
   const [error, setError] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<{
+    id: string;
+    action: 'open' | 'close' | 'revert';
+  } | null>(null);
 
   const load = async () => {
     try {
@@ -35,30 +50,49 @@ export default function SeasonsPanel() {
     const n = parseInt(newNumber, 10);
     if (isNaN(n)) return;
     try {
-      await createSeason(n);
+      await createSeason(n, newFormat);
       setNewNumber('');
+      setNewFormat('regular');
       await load();
     } catch {
       setError(t.game.season.admin.createError);
     }
   };
 
-  const handleActivate = async (id: string) => {
+  const handleOpen = async (id: string) => {
     try {
-      await activateSeason(id);
+      await openSeason(id);
       await load();
     } catch {
-      setError(t.game.season.admin.activateError);
+      setError(t.game.season.admin.openError);
     }
   };
 
-  const handleDeactivate = async (id: string) => {
+  const handleClose = async (id: string) => {
     try {
-      await deactivateSeason(id);
+      await closeSeason(id);
       await load();
     } catch {
-      setError(t.game.season.admin.deactivateError);
+      setError(t.game.season.admin.closeError);
     }
+  };
+
+  const handleRevert = async (id: string) => {
+    try {
+      await revertSeason(id);
+      await load();
+    } catch {
+      setError(t.game.season.admin.revertError);
+    }
+  };
+
+  const runConfirm = async () => {
+    if (!confirm) return;
+    const { id, action } = confirm;
+    setConfirm(null);
+    if (action === 'open') await handleOpen(id);
+    else if (action === 'close') await handleClose(id);
+    else await handleRevert(id);
   };
 
   return (
@@ -86,6 +120,21 @@ export default function SeasonsPanel() {
           className='w-32'
           data-cy='season-number-input'
         />
+        <Select
+          value={newFormat}
+          onValueChange={(v) => setNewFormat(v as SeasonFormat)}
+        >
+          <SelectTrigger
+            className='w-40'
+            data-cy='season-format-select'
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='regular'>{t.game.season.format.regular}</SelectItem>
+            <SelectItem value='big_thing'>{t.game.season.format.bigThing}</SelectItem>
+          </SelectContent>
+        </Select>
         <Button
           onClick={handleCreate}
           data-cy='create-season-btn'
@@ -106,37 +155,83 @@ export default function SeasonsPanel() {
             <div className='flex items-center gap-3'>
               <span className='font-medium'>Season {s.number}</span>
               <Badge
-                variant={s.is_active ? 'default' : 'secondary'}
-                className={s.is_active ? 'bg-primary text-primary-foreground hover:bg-primary' : ''}
-                data-cy={s.is_active ? 'season-active-indicator' : 'season-inactive-indicator'}
+                variant={s.status === 'active' ? 'default' : 'secondary'}
+                className={
+                  s.status === 'active' ? 'bg-primary text-primary-foreground hover:bg-primary' : ''
+                }
+                data-cy={`season-status-${s.status}`}
               >
-                {s.is_active ? t.game.season.admin.active : t.game.season.admin.inactive}
+                {s.status === 'active'
+                  ? t.game.season.admin.statusActive
+                  : s.status === 'ended'
+                    ? t.game.season.admin.statusEnded
+                    : t.game.season.admin.statusUpcoming}
+              </Badge>
+              <Badge
+                variant='outline'
+                data-cy={`season-format-${s.number}`}
+              >
+                {s.format === 'big_thing'
+                  ? t.game.season.format.bigThing
+                  : t.game.season.format.regular}
               </Badge>
             </div>
             <div className='flex gap-2'>
-              {!s.is_active && (
+              {s.status !== 'active' && (
                 <Button
                   size='sm'
-                  onClick={() => handleActivate(s.id)}
-                  data-cy={`activate-season-${s.number}`}
+                  onClick={() => setConfirm({ id: s.id, action: 'open' })}
+                  data-cy={`open-season-${s.number}`}
                 >
-                  {t.game.season.admin.activateButton}
+                  {t.game.season.admin.openButton}
                 </Button>
               )}
-              {s.is_active && (
+              {s.status === 'active' && (
                 <Button
                   size='sm'
                   variant='outline'
-                  onClick={() => handleDeactivate(s.id)}
-                  data-cy={`deactivate-season-${s.number}`}
+                  onClick={() => setConfirm({ id: s.id, action: 'close' })}
+                  data-cy={`close-season-${s.number}`}
                 >
-                  {t.game.season.admin.deactivateButton}
+                  {t.game.season.admin.closeButton}
+                </Button>
+              )}
+              {s.status === 'ended' && (
+                <Button
+                  size='sm'
+                  variant='outline'
+                  onClick={() => setConfirm({ id: s.id, action: 'revert' })}
+                  data-cy={`revert-season-${s.number}`}
+                >
+                  {t.game.season.admin.revertButton}
                 </Button>
               )}
             </div>
           </div>
         ))}
       </div>
+
+      <ConfirmationDialog
+        open={confirm !== null}
+        onOpenChange={(next) => {
+          if (!next) setConfirm(null);
+        }}
+        title={
+          confirm?.action === 'close'
+            ? t.game.season.admin.confirmCloseTitle
+            : confirm?.action === 'revert'
+              ? t.game.season.admin.confirmRevertTitle
+              : t.game.season.admin.confirmOpenTitle
+        }
+        description={
+          confirm?.action === 'close'
+            ? t.game.season.admin.confirmCloseBody
+            : confirm?.action === 'revert'
+              ? t.game.season.admin.confirmRevertBody
+              : t.game.season.admin.confirmOpenBody
+        }
+        onConfirm={runConfirm}
+      />
     </div>
   );
 }

@@ -1,15 +1,30 @@
 ---
 name: test-python
-description: Write Python tests (unit and integration) for backend FastAPI/SQLModel features in this project. Use when adding a new endpoint, service, or DTO that needs tests, or when tests are missing for an existing feature. Invoke whenever the user says "fais des tests", "écris des tests", "add tests", "write tests", "tests pour X", or when code changes need test coverage. Always research the implementation first before writing tests.
+description: Writes unit and integration tests for backend FastAPI/SQLModel features in this project. Use when adding a new endpoint, service, or DTO that needs tests, or when tests are missing for an existing feature. Researches the implementation first, then writes tests matching project conventions and runs them.
+model: claude-sonnet-4-6
 ---
 
-# Python Test Writer
-
-Write tests for FastAPI/SQLModel backend features. Always research before writing — read the implementation, then read similar existing tests to match conventions.
+You are a Python test writer for this FastAPI/SQLModel backend. You run in an isolated context — research the implementation first, then write tests matching project conventions, then run them until green.
 
 ## Step 1: Research
 
-Read these files before writing any test:
+Keep research output out of the context window. Do NOT load whole impl + reference
+test files via `Read` (reserved for files you will `Edit`). Extract only what you need
+via the sandbox:
+
+```
+ctx_execute_file(path: "api/src/services/<Feature>Service.py", language: "python", code: "...")
+```
+or batch in one pass:
+```
+ctx_batch_execute(
+  commands: ["sed -n '1,80p' api/src/controllers/<feature>_controller.py", ...],
+  queries: ["auth deps and routes", "service business logic", "dto fields"]
+)
+```
+Then `ctx_search` for follow-ups. Only `Read` the test file(s) you will actually write/edit.
+
+Files to analyze before writing:
 
 **Implementation to test:**
 - `api/src/controllers/<feature>_controller.py` — endpoints, auth deps, routes
@@ -62,11 +77,6 @@ USER_HEADERS = create_auth_headers(user_id=str(USER_ID), role=Roles.USER)
 ADMIN_HEADERS = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
 
 BASE_URL = "/route/prefix"
-
-
-@pytest.fixture(autouse=True)
-def clean_db():
-    reset_test_db()
 
 
 async def _setup_...():
@@ -138,9 +148,14 @@ Only write these when the service has pure logic testable without DB. Don't dupl
 
 ## Step 5: Run and Fix
 
-Run with:
+Run via the **pytest MCP runner** (`mcp__pytest-runner__run_specific_tests`) rather than
+`uv run pytest` in Bash — it keeps large test output out of the context window and only
+surfaces failures.
+
+If run in Bash anyway, reduce output: `--tb=line -q` (not `-v --tb=short`), and pipe
+through `ctx_execute` to keep only failure lines:
 ```bash
-uv run pytest tests/integration/endpoints/<feature>_test.py -v --tb=short
+uv run pytest tests/integration/endpoints/<feature>_test.py --tb=line -q
 ```
 (from `api/` directory)
 
@@ -150,4 +165,4 @@ Fix failures by reading the error message:
 - `422` → payload field missing or wrong type
 - `assert X == Y` mismatch → re-read the service logic for the actual return value
 
-All tests must pass before reporting done.
+All tests must pass before reporting done. Report back: files created/modified, test count, and pass/fail result.

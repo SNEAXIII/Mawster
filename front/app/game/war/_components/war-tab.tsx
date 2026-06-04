@@ -11,6 +11,7 @@ import { FullPageSpinner } from '@/components/full-page-spinner';
 import ChampionPortrait from '@/components/champion-portrait';
 import { WarMode } from './war-types';
 import { useWar } from '@/app/contexts/war-context';
+import { useCurrentSeason } from '@/hooks/use-current-season';
 import SeasonBanner from './season-banner';
 import ExportHeader from '@/app/game/_components/export-header';
 
@@ -67,6 +68,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
   } = useWar();
 
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId) ?? null;
+  const currentSeason = useCurrentSeason();
 
   const [playerFilter, setPlayerFilter] = useState('');
   const [combatFilter, setCombatFilter] = useState<fightStateFilter>('todo');
@@ -138,15 +140,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
     <div className='flex flex-col gap-4'>
       {/* Controls row: opponent name + BG picker + mode toggle + clear */}
       <div className='flex flex-wrap items-center gap-3'>
-        <SeasonBanner
-          season={
-            currentWar
-              ? currentWar.season_number !== null
-                ? { number: currentWar.season_number }
-                : null
-              : undefined
-          }
-        />
+        <SeasonBanner season={currentWar ? currentSeason : undefined} />
 
         {/* ELO badge — read-only, edit from the alliances page */}
         {selectedAlliance && (
@@ -330,6 +324,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
                 canManage={canManageWar && warMode === WarMode.Defenders && !exporting}
                 dimmedNodes={exporting ? undefined : dimmedNodes}
                 prefightNodes={prefightNodes}
+                format={currentSeason?.format ?? 'regular'}
               />
             </div>
           </div>
@@ -348,6 +343,8 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
               onCombatFilterChange={setCombatFilter}
               exporting={exporting}
               exportRef={exportAttackersRef}
+              nodeCount={currentSeason?.node_count ?? 50}
+              maxAttackers={currentSeason?.max_attackers_per_member ?? 3}
             />
           </div>
         </div>

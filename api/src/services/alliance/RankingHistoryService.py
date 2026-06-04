@@ -7,6 +7,7 @@ from starlette import status
 from src.dto.alliance.war.dto_ranking_history import RankingHistoryPoint, RankingHistoryResponse
 from src.models.Alliance import Alliance
 from src.models.Season import Season
+from src.enums.SeasonStatus import SeasonStatus
 from src.models.User import User
 from src.models.War import War, WarStatus
 from src.services.alliance.AllianceService import AllianceService
@@ -51,7 +52,7 @@ class RankingHistoryService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
 
         active_season = (
-            await session.exec(select(Season).where(Season.is_active == True))  # noqa: E712
+            await session.exec(select(Season).where(Season.status == SeasonStatus.active))
         ).first()
 
         if active_season is None:

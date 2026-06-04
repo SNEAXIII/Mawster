@@ -22,6 +22,7 @@ from src.models.AllianceVisitor import AllianceVisitor
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
+from src.enums.SeasonStatus import SeasonStatus
 from src.models.Season import Season
 from src.models.War import War
 from src.models.WarDefensePlacement import WarDefensePlacement
@@ -198,7 +199,9 @@ class FightRecordService:
         if season_selector == SeasonSelectorType.OffSeason:
             return [model.season_id.is_(None)]
         if season_selector == SeasonSelectorType.Current:
-            return [model.season_id.in_(select(Season.id).where(Season.is_active == True))]  # noqa: E712
+            return [
+                model.season_id.in_(select(Season.id).where(Season.status == SeasonStatus.active))
+            ]
         if season_selector == SeasonSelectorType.Specific and season_id:
             return [model.season_id == season_id]
         if season_id:
