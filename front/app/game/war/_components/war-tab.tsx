@@ -77,7 +77,8 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
   const exportMapRef = useRef<HTMLDivElement>(null);
   const exportAttackersRef = useRef<HTMLDivElement>(null);
 
-  const handleExport = async () => {
+  const exportImage = async (target: 'map' | 'attackers') => {
+    const ref = target === 'map' ? exportMapRef : exportAttackersRef;
     if (!exportMapRef.current || !exportAttackersRef.current) return;
     const previousMode = warMode;
     setWarMode(WarMode.Export);
@@ -86,28 +87,22 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
       requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
     );
     try {
-      const pngMap = await snapdom.toPng(exportMapRef.current, { scale: 1, embedFonts: false });
-      await new Promise<void>((resolve) => setTimeout(resolve, 50));
-      const el = exportAttackersRef.current;
-      const pngAttackers = await snapdom.toPng(el, {
-        scale: 1,
-        embedFonts: false,
-      });
+      if (!ref.current) return;
+      const png = await snapdom.toPng(ref.current, { scale: 1, embedFonts: false });
       const allianceName = selectedAlliance?.name ?? 'alliance';
       const date = new Date().toISOString().split('T')[0];
-      const linkMap = document.createElement('a');
-      linkMap.download = `war-map-bg${selectedBg}-${allianceName}-${date}.png`;
-      linkMap.href = pngMap.src;
-      linkMap.click();
-      const linkAttackers = document.createElement('a');
-      linkAttackers.download = `war-attackers-bg${selectedBg}-${allianceName}-${date}.png`;
-      linkAttackers.href = pngAttackers.src;
-      linkAttackers.click();
+      const link = document.createElement('a');
+      link.download = `war-${target}-bg${selectedBg}-${allianceName}-${date}.png`;
+      link.href = png.src;
+      link.click();
     } finally {
       setExporting(false);
       setWarMode(previousMode);
     }
   };
+
+  const handleExportMap = () => exportImage('map');
+  const handleExportList = () => exportImage('attackers');
 
   useEffect(() => {
     setPlayerFilter('');
@@ -239,17 +234,28 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
             {t.game.war.clearAll}
           </Button>
         )}
-        {/* Export button */}
+        {/* Export buttons — one image per click */}
         {placements.length > 0 && (
-          <Button
-            variant='outline'
-            onClick={handleExport}
-            disabled={exporting}
-            data-cy='export-war-btn'
-          >
-            <Camera className='w-4 h-4 mr-1' />
-            {exporting ? '…' : t.game.war.exportMap}
-          </Button>
+          <>
+            <Button
+              variant='outline'
+              onClick={handleExportMap}
+              disabled={exporting}
+              data-cy='export-war-map-btn'
+            >
+              <Camera className='w-4 h-4 mr-1' />
+              {exporting ? '…' : t.game.war.exportMap}
+            </Button>
+            <Button
+              variant='outline'
+              onClick={handleExportList}
+              disabled={exporting}
+              data-cy='export-war-list-btn'
+            >
+              <Camera className='w-4 h-4 mr-1' />
+              {exporting ? '…' : t.game.war.exportList}
+            </Button>
+          </>
         )}
         {/* Banned champions */}
         <div className='flex items-center gap-2 flex-wrap'>
