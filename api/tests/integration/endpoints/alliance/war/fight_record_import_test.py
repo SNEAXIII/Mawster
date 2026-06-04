@@ -130,6 +130,144 @@ class TestImportFightRecords:
         assert response.status_code == 403
 
 
+def _row(champ_id, defender_id, node_number=15, season_name="S1", ko_count=0):
+    return {
+        "champion_id": str(champ_id),
+        "defender_champion_id": str(defender_id),
+        "node_number": node_number,
+        "season_name": season_name,
+        "ko_count": ko_count,
+    }
+
+
+class TestImportDeduplication:
+    @pytest.mark.asyncio
+    async def test_reimport_same_row_is_skipped(self, officer_with_champions):
+        alliance_id, _, champ_id, defender_id, _ = officer_with_champions
+        url = f"/alliances/{alliance_id}/fight-records/import"
+        payload = {"rows": [_row(champ_id, defender_id)]}
+
+        first = await execute_post_request(url, payload, HEADERS_USER2)
+        assert first.status_code == 201
+        assert first.json() == {"imported": 1, "skipped": 0}
+
+        second = await execute_post_request(url, payload, HEADERS_USER2)
+        assert second.status_code == 201
+        assert second.json() == {"imported": 0, "skipped": 1}
+
+    @pytest.mark.asyncio
+    async def test_mixed_new_and_duplicate(self, officer_with_champions):
+        alliance_id, _, champ_id, defender_id, _ = officer_with_champions
+        url = f"/alliances/{alliance_id}/fight-records/import"
+
+        await execute_post_request(
+            url, {"rows": [_row(champ_id, defender_id, node_number=10)]}, HEADERS_USER2
+        )
+        response = await execute_post_request(
+            url,
+            {
+                "rows": [
+                    _row(champ_id, defender_id, node_number=10),  # duplicate
+                    _row(champ_id, defender_id, node_number=20),  # new
+                ]
+            },
+            HEADERS_USER2,
+        )
+        assert response.status_code == 201
+        assert response.json() == {"imported": 1, "skipped": 1}
+
+    @pytest.mark.asyncio
+    async def test_same_combo_different_season_not_deduplicated(self, officer_with_champions):
+        from src.models.Season import Season
+
+        alliance_id, _, champ_id, defender_id, _ = officer_with_champions
+        await load_objects([Season(number=2, is_active=False)])
+        url = f"/alliances/{alliance_id}/fight-records/import"
+        payload = {
+            "rows": [
+                _row(champ_id, defender_id, season_name="S1"),
+                _row(champ_id, defender_id, season_name="S2"),
+            ]
+        }
+        response = await execute_post_request(url, payload, HEADERS_USER2)
+        assert response.status_code == 201
+        assert response.json() == {"imported": 2, "skipped": 0}
+
+    @pytest.mark.asyncio
+    async def test_duplicate_rows_in_same_payload_are_deduplicated(self, officer_with_champions):
+        alliance_id, _, champ_id, defender_id, _ = officer_with_champions
+        url = f"/alliances/{alliance_id}/fight-records/import"
+        payload = {"rows": [_row(champ_id, defender_id), _row(champ_id, defender_id)]}
+        response = await execute_post_request(url, payload, HEADERS_USER2)
+        assert response.status_code == 201
+        # The second identical row in the same payload is skipped, not inserted twice.
+        assert response.json() == {"imported": 1, "skipped": 1}
+
+
+class TestImportSeasonResolution:
+    @pytest.mark.parametrize("season_name", ["S1", "s1", "1", " 1 "])
+    @pytest.mark.asyncio
+    async def test_season_name_formats_resolve(self, officer_with_champions, season_name):
+        alliance_id, _, champ_id, defender_id, _ = officer_with_champions
+        url = f"/alliances/{alliance_id}/fight-records/import"
+        payload = {"rows": [_row(champ_id, defender_id, season_name=season_name)]}
+        response = await execute_post_request(url, payload, HEADERS_USER2)
+        assert response.status_code == 201
+        assert response.json()["imported"] == 1
+
+    @pytest.mark.parametrize("season_name", ["abc", "S", ""])
+    @pytest.mark.asyncio
+    async def test_unparsable_season_returns_422(self, officer_with_champions, season_name):
+        alliance_id, _, champ_id, defender_id, _ = officer_with_champions
+        url = f"/alliances/{alliance_id}/fight-records/import"
+        payload = {"rows": [_row(champ_id, defender_id, season_name=season_name)]}
+        response = await execute_post_request(url, payload, HEADERS_USER2)
+        assert response.status_code == 422
+
+
+class TestImportPayloadValidation:
+    @pytest.mark.asyncio
+    async def test_empty_rows_returns_422(self, officer_with_champions):
+        alliance_id, *_ = officer_with_champions
+        url = f"/alliances/{alliance_id}/fight-records/import"
+        response = await execute_post_request(url, {"rows": []}, HEADERS_USER2)
+        assert response.status_code == 422
+
+    @pytest.mark.parametrize("node_number", [0, 51])
+    @pytest.mark.asyncio
+    async def test_node_number_out_of_bounds_returns_422(self, officer_with_champions, node_number):
+        alliance_id, _, champ_id, defender_id, _ = officer_with_champions
+        url = f"/alliances/{alliance_id}/fight-records/import"
+        payload = {"rows": [_row(champ_id, defender_id, node_number=node_number)]}
+        response = await execute_post_request(url, payload, HEADERS_USER2)
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_negative_ko_count_returns_422(self, officer_with_champions):
+        alliance_id, _, champ_id, defender_id, _ = officer_with_champions
+        url = f"/alliances/{alliance_id}/fight-records/import"
+        payload = {"rows": [_row(champ_id, defender_id, ko_count=-1)]}
+        response = await execute_post_request(url, payload, HEADERS_USER2)
+        assert response.status_code == 422
+
+
+class TestImportMultipleRows:
+    @pytest.mark.asyncio
+    async def test_multiple_distinct_rows_all_imported(self, officer_with_champions):
+        alliance_id, _, champ_id, defender_id, _ = officer_with_champions
+        url = f"/alliances/{alliance_id}/fight-records/import"
+        payload = {
+            "rows": [
+                _row(champ_id, defender_id, node_number=10),
+                _row(champ_id, defender_id, node_number=20),
+                _row(champ_id, defender_id, node_number=30),
+            ]
+        }
+        response = await execute_post_request(url, payload, HEADERS_USER2)
+        assert response.status_code == 201
+        assert response.json() == {"imported": 3, "skipped": 0}
+
+
 @pytest.fixture
 async def owner_with_champions():
     from src.models.Season import Season
