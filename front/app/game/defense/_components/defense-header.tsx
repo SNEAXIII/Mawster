@@ -23,7 +23,8 @@ interface DefenseHeaderProps {
   onClearClick: () => void;
   canManage: boolean;
   defenseSummary: DefenseSummary | null;
-  onExportClick: () => void;
+  onExportMapClick: () => void;
+  onExportListClick: () => void;
   exporting: boolean;
 }
 
@@ -36,7 +37,8 @@ export default function DefenseHeader({
   onClearClick,
   canManage,
   defenseSummary,
-  onExportClick,
+  onExportMapClick,
+  onExportListClick,
   exporting,
 }: Readonly<DefenseHeaderProps>) {
   const { t } = useI18n();
@@ -96,19 +98,32 @@ export default function DefenseHeader({
           </div>
 
           <div className='ml-auto flex items-center gap-2'>
-            {/* Export button — managers only */}
+            {/* Export buttons — managers only, one image per click */}
             {canManage && (
-              <Button
-                variant='outline'
-                size='sm'
-                data-cy='defense-export-btn'
-                onClick={onExportClick}
-                disabled={exporting}
-                title={t.game.war.exportMap}
-              >
-                <Camera className='w-4 h-4 mr-1' />
-                {exporting ? '…' : t.game.war.exportMap}
-              </Button>
+              <>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  data-cy='defense-export-map-btn'
+                  onClick={onExportMapClick}
+                  disabled={exporting}
+                  title={t.game.defense.exportMap}
+                >
+                  <Camera className='w-4 h-4 mr-1' />
+                  {exporting ? '…' : t.game.defense.exportMap}
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  data-cy='defense-export-list-btn'
+                  onClick={onExportListClick}
+                  disabled={exporting}
+                  title={t.game.defense.exportList}
+                >
+                  <Camera className='w-4 h-4 mr-1' />
+                  {exporting ? '…' : t.game.defense.exportList}
+                </Button>
+              </>
             )}
             {/* Clear — managers only */}
             {canManage && defenseSummary && defenseSummary.placements.length > 0 && (
