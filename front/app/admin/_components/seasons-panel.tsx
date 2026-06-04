@@ -17,6 +17,7 @@ import {
   createSeason,
   openSeason,
   closeSeason,
+  revertSeason,
   type Season,
   type SeasonFormat,
 } from '@/app/services/season';
@@ -28,7 +29,10 @@ export default function SeasonsPanel() {
   const [newNumber, setNewNumber] = useState('');
   const [newFormat, setNewFormat] = useState<SeasonFormat>('regular');
   const [error, setError] = useState<string | null>(null);
-  const [confirm, setConfirm] = useState<{ id: string; action: 'open' | 'close' } | null>(null);
+  const [confirm, setConfirm] = useState<{
+    id: string;
+    action: 'open' | 'close' | 'revert';
+  } | null>(null);
 
   const load = async () => {
     try {
@@ -73,12 +77,22 @@ export default function SeasonsPanel() {
     }
   };
 
+  const handleRevert = async (id: string) => {
+    try {
+      await revertSeason(id);
+      await load();
+    } catch {
+      setError(t.game.season.admin.revertError);
+    }
+  };
+
   const runConfirm = async () => {
     if (!confirm) return;
     const { id, action } = confirm;
     setConfirm(null);
     if (action === 'open') await handleOpen(id);
-    else await handleClose(id);
+    else if (action === 'close') await handleClose(id);
+    else await handleRevert(id);
   };
 
   return (
@@ -143,9 +157,7 @@ export default function SeasonsPanel() {
               <Badge
                 variant={s.status === 'active' ? 'default' : 'secondary'}
                 className={
-                  s.status === 'active'
-                    ? 'bg-primary text-primary-foreground hover:bg-primary'
-                    : ''
+                  s.status === 'active' ? 'bg-primary text-primary-foreground hover:bg-primary' : ''
                 }
                 data-cy={`season-status-${s.status}`}
               >
@@ -184,6 +196,16 @@ export default function SeasonsPanel() {
                   {t.game.season.admin.closeButton}
                 </Button>
               )}
+              {s.status === 'ended' && (
+                <Button
+                  size='sm'
+                  variant='outline'
+                  onClick={() => setConfirm({ id: s.id, action: 'revert' })}
+                  data-cy={`revert-season-${s.number}`}
+                >
+                  {t.game.season.admin.revertButton}
+                </Button>
+              )}
             </div>
           </div>
         ))}
@@ -197,12 +219,16 @@ export default function SeasonsPanel() {
         title={
           confirm?.action === 'close'
             ? t.game.season.admin.confirmCloseTitle
-            : t.game.season.admin.confirmOpenTitle
+            : confirm?.action === 'revert'
+              ? t.game.season.admin.confirmRevertTitle
+              : t.game.season.admin.confirmOpenTitle
         }
         description={
           confirm?.action === 'close'
             ? t.game.season.admin.confirmCloseBody
-            : t.game.season.admin.confirmOpenBody
+            : confirm?.action === 'revert'
+              ? t.game.season.admin.confirmRevertBody
+              : t.game.season.admin.confirmOpenBody
         }
         onConfirm={runConfirm}
       />

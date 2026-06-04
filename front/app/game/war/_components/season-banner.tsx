@@ -2,14 +2,13 @@
 
 import { useI18n } from '@/app/i18n';
 import { Badge } from '@/components/ui/badge';
-import type { SeasonFormat } from '@/app/services/season';
+import type { Season } from '@/app/services/season';
 
 interface Props {
-  season: { number: number } | null | undefined;
-  format?: SeasonFormat;
+  season: Season | null | undefined;
 }
 
-export default function SeasonBanner({ season, format }: Readonly<Props>) {
+export default function SeasonBanner({ season }: Readonly<Props>) {
   const { t } = useI18n();
 
   if (season === undefined) return null;
@@ -19,7 +18,7 @@ export default function SeasonBanner({ season, format }: Readonly<Props>) {
       className='flex items-center gap-2'
       data-cy='season-banner'
     >
-      {season ? (
+      {season && season.status === 'active' ? (
         <Badge
           className='bg-green-600 text-white hover:bg-green-600'
           data-cy='season-active-badge'
@@ -34,7 +33,7 @@ export default function SeasonBanner({ season, format }: Readonly<Props>) {
           {t.game.season.preSeason}
         </Badge>
       )}
-      {format === 'big_thing' && (
+      {season?.format === 'big_thing' && (
         <Badge
           className='bg-amber-600 text-white hover:bg-amber-600'
           data-cy='season-format-banner'

@@ -140,16 +140,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
     <div className='flex flex-col gap-4'>
       {/* Controls row: opponent name + BG picker + mode toggle + clear */}
       <div className='flex flex-wrap items-center gap-3'>
-        <SeasonBanner
-          season={
-            currentWar
-              ? currentWar.season_number !== null
-                ? { number: currentWar.season_number }
-                : null
-              : undefined
-          }
-          format={currentSeason?.format ?? 'regular'}
-        />
+        <SeasonBanner season={currentWar ? currentSeason : undefined} />
 
         {/* ELO badge — read-only, edit from the alliances page */}
         {selectedAlliance && (
