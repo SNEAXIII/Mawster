@@ -92,7 +92,10 @@ class FightRecordImportService:
 
         imported = skipped = 0
         for champ_id, def_id, node, season_id, row in resolved:
-            if (champ_id, def_id, node, season_id) in existing_set:
+            key = (champ_id, def_id, node, season_id)
+            # existing_set holds both DB rows and keys already inserted in this payload,
+            # so intra-payload duplicates are skipped too.
+            if key in existing_set:
                 skipped += 1
                 continue
             session.add(
@@ -106,6 +109,7 @@ class FightRecordImportService:
                     imported_by_id=officer_acc_id,
                 )
             )
+            existing_set.add(key)
             imported += 1
 
         await session.commit()
