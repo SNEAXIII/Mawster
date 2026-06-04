@@ -17,21 +17,27 @@ Génère une migration Alembic sur une DB dédiée (`mawster_migrate`) sans touc
 
 ## Commandes
 
-Toutes les commandes s'exécutent depuis `api/` avec `MARIADB_DATABASE=mawster_migrate` :
+Toutes les commandes s'exécutent depuis `api/` avec `MARIADB_DATABASE=mawster_migrate`.
+
+**Garder la sortie hors du contexte** : Alembic (`create-mig`, `migrate`) crache toute la réflexion de schéma + le SQL. Exécuter ces commandes via `ctx_execute(language: "shell", code: "...")` plutôt qu'avec Bash — seule une synthèse rentre dans le contexte.
 
 ```bash
-cd api
+cd api && MARIADB_DATABASE=mawster_migrate make reset-db
 
-MARIADB_DATABASE=mawster_migrate make reset-db
+cd api && MARIADB_DATABASE=mawster_migrate make create-mig MESSAGE="<MESSAGE>"
 
-MARIADB_DATABASE=mawster_migrate make create-mig MESSAGE="<MESSAGE>"
-
-MARIADB_DATABASE=mawster_migrate make migrate
+cd api && MARIADB_DATABASE=mawster_migrate make migrate
 ```
 
 ## Après la migration
 
-Lire et afficher le fichier généré dans `api/alembic/versions/` pour que l'utilisateur puisse le valider.
+Pour la review, **ne pas faire un `Read` complet** du fichier généré (boilerplate `upgrade`/`downgrade` + chaque colonne). Extraire seulement les opérations réelles :
+
+```bash
+grep -nE "op\.|sa\.Column" api/alembic/versions/<dernier_fichier>.py
+```
+
+Afficher ces lignes à l'utilisateur. Ne `Read` le fichier entier que s'il faut l'éditer.
 
 Une fois validé, proposer d'appliquer sur la DB de dev :
 
