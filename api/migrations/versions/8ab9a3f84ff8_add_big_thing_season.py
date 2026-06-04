@@ -26,7 +26,7 @@ def upgrade() -> None:
     op.add_column(
         "season",
         sa.Column(
-            "status", sa.Enum("upcoming", "active", "ended", name="seasonstatus"), nullable=False
+            "status", sa.Enum("ended", "upcoming", "active", name="seasonstatus"), nullable=False
         ),
     )
     op.add_column(
