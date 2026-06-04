@@ -1618,5 +1618,15 @@
     "name": "Wave",
     "champion_class": "Science",
     "image_url": "/static/champions/wave.png"
+  },
+  {
+    "name": "Phyla-Vell",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/phyla-vell.png"
+  },
+  {
+    "name": "Shatterstar",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/shatterstar.png"
   }
 ]
