@@ -19,6 +19,7 @@ from src.controllers.alliance.war.defense_controller import defense_controller
 from src.controllers.alliance.war.statistic_controller import statistics_controller
 from src.controllers.alliance.war.war_core_controller import war_core_controller
 from src.controllers.alliance.war.war_placement_controller import war_placement_controller
+from src.controllers.alliance.war.war_note_controller import war_note_controller
 from src.controllers.alliance.war.war_attacker_controller import war_attacker_controller
 from src.controllers.alliance.war.war_synergy_controller import war_synergy_controller
 from src.controllers.alliance.war.war_prefight_controller import war_prefight_controller
@@ -44,6 +45,7 @@ routers = [
     defense_controller,
     war_core_controller,
     war_placement_controller,
+    war_note_controller,
     war_attacker_controller,
     war_synergy_controller,
     war_prefight_controller,
