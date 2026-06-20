@@ -23,6 +23,7 @@ from tests.integration.endpoints.setup.user_setup import (
 )
 from tests.utils.utils_client import (
     create_auth_headers,
+    execute_get_request,
     execute_post_request,
     execute_put_request,
 )
@@ -220,6 +221,30 @@ async def test_put_note_officer_ok_member_forbidden():
         headers=member_headers,
     )
     assert forbidden.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_note_visible_in_war_defense_response():
+    data = await _setup_http_war_with_placement()
+    content = "watch out for unblockable"
+
+    officer_headers = create_auth_headers(user_id=str(USER_ID))
+    put_response = await execute_put_request(
+        f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/nodes/{BG}/{NODE}/note",
+        payload={"content": content},
+        headers=officer_headers,
+    )
+    assert put_response.status_code == 200
+
+    member_headers = create_auth_headers(user_id=str(USER2_ID))
+    response = await execute_get_request(
+        f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/{BG}",
+        headers=member_headers,
+    )
+    assert response.status_code == 200
+    placements = response.json()["placements"]
+    node_placement = next(p for p in placements if p["node_number"] == NODE)
+    assert node_placement["note"] == content
 
 
 @pytest.mark.asyncio

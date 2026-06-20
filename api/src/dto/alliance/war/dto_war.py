@@ -79,6 +79,7 @@ class WarPlacementResponse(BaseModel):
     ascension: int
     placed_by_pseudo: Optional[str] = None
     created_at: datetime
+    note: Optional[str] = None
     ko_count: int = 0
     is_combat_completed: bool = False
     is_fight_not_done: bool = False
@@ -126,6 +127,7 @@ class WarPlacementResponse(BaseModel):
             "ascension": data.ascension,
             "placed_by_pseudo": data.placed_by.game_pseudo if data.placed_by else None,
             "created_at": data.created_at,
+            "note": getattr(data, "_note_content", None),
             "ko_count": data.ko_count,
             "is_combat_completed": data.is_combat_completed,
             "is_fight_not_done": data.is_fight_not_done,
