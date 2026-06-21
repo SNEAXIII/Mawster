@@ -93,6 +93,24 @@ class WarFightNoteService:
             note.updated_by_game_account_id = editor_account_id
             note.updated_at = now
             session.add(note)
+            note.whitelisted_at = None
+            note.whitelisted_by_id = None
+            from src.models.NoteReport import NoteReport
+            from src.enums.NoteReportStatus import NoteReportStatus
+
+            pending_reports = (
+                await session.exec(
+                    select(NoteReport).where(
+                        and_(
+                            NoteReport.note_id == note.id,
+                            NoteReport.status == NoteReportStatus.pending,
+                        )
+                    )
+                )
+            ).all()
+            for r in pending_reports:
+                r.status = NoteReportStatus.stale
+                session.add(r)
 
         session.add(
             WarFightNoteRevision(

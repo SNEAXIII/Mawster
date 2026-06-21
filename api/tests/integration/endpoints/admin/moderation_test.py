@@ -201,6 +201,41 @@ async def test_report_refused_when_muted(session):
 
 
 @pytest.mark.asyncio
+async def test_edit_clears_whitelist_and_stales_reports(session):
+    data = await _setup_note_and_reporter(session)
+    note = data["note"]
+    reporter = data["reporter"]
+    owner = data["owner"]
+    war = data["war"]
+
+    await ModerationService.report_note(
+        session,
+        note_id=note.id,
+        reporter_account_id=reporter.id,
+        reporter_user_id=reporter.user_id,
+        body=NoteReportCreateRequest(reason="bad"),
+    )
+
+    note.whitelisted_at = datetime.now()
+    session.add(note)
+    await session.commit()
+
+    await WarFightNoteService.upsert_note(
+        session,
+        war=war,
+        battlegroup=BG,
+        node_number=NODE,
+        body=WarFightNoteUpsertRequest(content="edited"),
+        editor_account_id=owner.id,
+        editor_user_id=owner.user_id,
+    )
+
+    await session.refresh(note)
+    assert note.whitelisted_at is None
+    assert await _count_pending(session, note.id) == 0
+
+
+@pytest.mark.asyncio
 async def test_active_mute_blocks_note_edit(session):
     data = await _setup_war_with_placement()
     owner = data["owner"]
