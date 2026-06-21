@@ -5,6 +5,7 @@ import TestModeBanner from '@/components/test-mode-banner';
 import { Providers } from './providers';
 import { Toaster } from '@/components/ui/sonner';
 import { DevInspector } from './_components/dev-inspector';
+import ModerationBanner from './_components/moderation-banner';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -36,7 +37,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
               <SideNavBar />
             </div>
             <Toaster />
-            <div className='grow overflow-y-auto p-3'>{children}</div>
+            <div className='grow overflow-y-auto p-3'>
+              <ModerationBanner />
+              {children}
+            </div>
           </div>
         </Providers>
       </body>
