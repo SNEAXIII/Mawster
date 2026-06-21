@@ -178,6 +178,8 @@ export default function NodeActionsPopover({
           <WarNoteEditor
             nodeNumber={nodeNumber}
             note={placement?.note ?? null}
+            noteId={placement?.note_id ?? null}
+            noteBlocked={placement?.note_blocked ?? false}
             canManage={canManage}
             onSaved={() => setOpen(false)}
           />

@@ -1,10 +1,59 @@
 'use client';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { ArrowUp, ArrowDown, ArrowUpDown, AlertTriangle, Users } from 'lucide-react';
+import { FiFlag } from 'react-icons/fi';
 import { useI18n } from '@/app/i18n';
 import { getChampionImageUrl } from '@/app/services/champions';
 import { shortenChampionName } from '@/app/services/roster';
 import type { FightRecord, SynergyRecord, PrefightRecord } from '@/app/services/fight-records';
+import { reportNote } from '@/app/services/moderation';
 import { cn } from '@/app/lib/utils';
+
+type NoteCellProps = Readonly<{ record: FightRecord }>;
+
+function NoteCell({ record }: NoteCellProps) {
+  const { t } = useI18n();
+  const [reported, setReported] = useState(false);
+
+  const onReport = async () => {
+    if (!record.note_id) return;
+    try {
+      await reportNote(record.note_id);
+      setReported(true);
+      toast.success(t.moderation.reportSuccess);
+    } catch (err) {
+      toast.error((err as Error).message || t.moderation.reportError);
+    }
+  };
+
+  return (
+    <td className='px-3 py-2 max-w-48'>
+      <div className='flex items-center gap-1'>
+        {record.note_blocked ? (
+          <span className='italic text-muted-foreground truncate' data-cy='kb-note-blocked'>
+            {t.moderation.noteBlocked}
+          </span>
+        ) : (
+          <span className='truncate' title={record.note ?? ''}>
+            {record.note ?? '—'}
+          </span>
+        )}
+        {record.note_id && !record.note_blocked && (
+          <button
+            className='shrink-0 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed'
+            data-cy='kb-note-report'
+            disabled={reported}
+            title={reported ? t.moderation.reported : t.moderation.report}
+            onClick={onReport}
+          >
+            <FiFlag className='h-3.5 w-3.5' />
+          </button>
+        )}
+      </div>
+    </td>
+  );
+}
 
 interface Props {
   readonly records: ReadonlyArray<FightRecord>;
@@ -175,7 +224,7 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
               <td className={cn('px-3 py-2',r.ko_count ? 'text-red-500' : 'text-green-500' )}>{r.ko_count}</td>
               <td className='px-3 py-2'>{r.alliance_name}</td>
               <td className='px-3 py-2 whitespace-nowrap'>{r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}</td>
-              <td className='px-3 py-2 max-w-48 truncate' title={r.note ?? ''}>{r.note ?? '—'}</td>
+              <NoteCell record={r} />
             </tr>
           ))}
         </tbody>
