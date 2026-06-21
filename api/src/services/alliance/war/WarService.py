@@ -14,6 +14,7 @@ from src.models.War import War, WarStatus
 from src.models.WarBan import WarBan
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightNote import WarFightNote
+from src.services.admin.ModerationService import AUTO_BLOCK_THRESHOLD, ModerationService
 from src.models.WarSynergyAttacker import WarSynergyAttacker
 from src.models.WarPrefightAttacker import WarPrefightAttacker
 from src.dto.alliance.war.dto_war import (
@@ -253,8 +254,13 @@ class WarService:
             )
         ).all()
         note_by_node = {n.node_number: n.content for n in notes}
+        id_by_node = {n.node_number: n.id for n in notes}
+        counts = await ModerationService.pending_report_counts(session, [n.id for n in notes])
         for p in placements:
-            p._note_content = note_by_node.get(p.node_number)
+            nid = id_by_node.get(p.node_number)
+            blocked = nid is not None and counts.get(nid, 0) >= AUTO_BLOCK_THRESHOLD
+            p._note_blocked = blocked
+            p._note_content = None if blocked else note_by_node.get(p.node_number)
         return WarDefenseSummaryResponse(
             war_id=war_id,
             battlegroup=battlegroup,

@@ -448,3 +448,47 @@ async def test_admin_mute_and_warn_endpoints(session):
     )
     assert lifted.status_code == 200
     assert await ModerationService.is_user_muted(session, target_user_id) is False
+
+
+@pytest.mark.asyncio
+async def test_three_reports_block_note_in_war_map(session):
+    from src.services.alliance.war.WarService import WarService
+
+    data = await _setup_war_with_placement()
+    alliance = data["alliance"]
+    owner = data["owner"]
+    war = data["war"]
+
+    note = await WarFightNoteService.upsert_note(
+        session,
+        war=war,
+        battlegroup=BG,
+        node_number=NODE,
+        body=WarFightNoteUpsertRequest(content="secret note"),
+        editor_account_id=owner.id,
+        editor_user_id=owner.user_id,
+    )
+
+    for i in range(3):
+        reporter_user = User(
+            id=uuid.uuid4(),
+            login=f"reporter{i}",
+            email_hash=f"reporter{i}_hash",
+            discord_id=70000 + i,
+            role=Roles.USER,
+        )
+        session.add(reporter_user)
+        await session.commit()
+        member = await push_member(alliance, user_id=reporter_user.id, game_pseudo=f"Reporter{i}")
+        await ModerationService.report_note(
+            session,
+            note_id=note.id,
+            reporter_account_id=member.id,
+            reporter_user_id=reporter_user.id,
+            body=NoteReportCreateRequest(),
+        )
+
+    summary = await WarService.get_war_defense(session, war.id, BG)
+    node = next(p for p in summary.placements if p.node_number == NODE)
+    assert node.note_blocked is True
+    assert node.note is None

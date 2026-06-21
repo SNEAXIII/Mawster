@@ -6,6 +6,8 @@ from sqlmodel import and_, or_, select
 from src.models.UserMute import UserMute
 from src.utils.db import SessionDep
 
+AUTO_BLOCK_THRESHOLD = 3
+
 
 class ModerationService:
     @classmethod
