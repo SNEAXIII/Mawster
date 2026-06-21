@@ -8,6 +8,7 @@ from src.controllers.admin.season_controller import (
 from src.controllers.admin.fight_record_controller import fight_record_controller
 from src.controllers.auth.auth_controller import auth_controller
 from src.controllers.account.user_controller import user_controller
+from src.controllers.account.me_moderation_controller import me_moderation_controller
 from src.controllers.account.game.game_account_controller import game_account_controller
 from src.controllers.account.game.champion_user_controller import champion_user_controller
 from src.controllers.account.game.upgrade_request_controller import upgrade_request_controller
@@ -50,6 +51,7 @@ routers = [
     war_note_controller,
     note_report_controller,
     moderation_controller,
+    me_moderation_controller,
     war_attacker_controller,
     war_synergy_controller,
     war_prefight_controller,

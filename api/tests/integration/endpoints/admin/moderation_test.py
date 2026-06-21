@@ -492,3 +492,52 @@ async def test_three_reports_block_note_in_war_map(session):
     node = next(p for p in summary.placements if p.node_number == NODE)
     assert node.note_blocked is True
     assert node.note is None
+
+
+@pytest.mark.asyncio
+async def test_note_id_present_in_war_map(session):
+    from src.services.alliance.war.WarService import WarService
+
+    data = await _setup_war_with_placement()
+    owner = data["owner"]
+    war = data["war"]
+    note = await WarFightNoteService.upsert_note(
+        session,
+        war=war,
+        battlegroup=BG,
+        node_number=NODE,
+        body=WarFightNoteUpsertRequest(content="visible"),
+        editor_account_id=owner.id,
+        editor_user_id=owner.user_id,
+    )
+
+    summary = await WarService.get_war_defense(session, war.id, BG)
+    node = next(p for p in summary.placements if p.node_number == NODE)
+    assert node.note_id == note.id
+    assert node.note == "visible"
+
+
+@pytest.mark.asyncio
+async def test_me_moderation_reports_mute_and_warns(session):
+    data = await _setup_note_and_reporter(session)
+    target_user_id = data["reporter"].user_id
+    admin = await _push_admin(session)
+    admin_headers = create_auth_headers(user_id=str(admin.id), role=Roles.ADMIN)
+
+    await execute_post_request(
+        f"/admin/users/{target_user_id}/mute",
+        payload={"reason": "stop"},
+        headers=admin_headers,
+    )
+    await execute_post_request(
+        f"/admin/users/{target_user_id}/warn",
+        payload={"reason": "warned"},
+        headers=admin_headers,
+    )
+
+    member_headers = create_auth_headers(user_id=str(target_user_id))
+    me = await execute_get_request("/me/moderation", headers=member_headers)
+    assert me.status_code == 200
+    body = me.json()
+    assert body["mute"]["reason"] == "stop"
+    assert any(w["reason"] == "warned" for w in body["warns"])

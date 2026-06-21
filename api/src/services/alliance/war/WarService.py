@@ -260,6 +260,7 @@ class WarService:
             nid = id_by_node.get(p.node_number)
             blocked = nid is not None and counts.get(nid, 0) >= AUTO_BLOCK_THRESHOLD
             p._note_blocked = blocked
+            p._note_id = nid
             p._note_content = None if blocked else note_by_node.get(p.node_number)
         return WarDefenseSummaryResponse(
             war_id=war_id,

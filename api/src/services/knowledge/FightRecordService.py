@@ -496,11 +496,13 @@ class FightRecordService:
                 )
             ).all()
             note_by_record = {n.war_fight_record_id: n.content for n in notes}
+            note_id_by_record = {n.war_fight_record_id: n.id for n in notes}
             counts = await ModerationService.pending_report_counts(session, [n.id for n in notes])
             blocked_records = {
                 n.war_fight_record_id for n in notes if counts.get(n.id, 0) >= AUTO_BLOCK_THRESHOLD
             }
             for it in items:
+                it.note_id = note_id_by_record.get(it.id)
                 if it.id in blocked_records:
                     it.note = None
                     it.note_blocked = True

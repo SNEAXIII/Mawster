@@ -71,6 +71,7 @@ class WarFightRecordResponse(BaseModel):
     prefights: list[WarFightPrefightResponse] = []
     created_at: Optional[datetime] = None
     note: Optional[str] = None
+    note_id: Optional[uuid.UUID] = None
     note_blocked: bool = False
 
     @model_validator(mode="before")
@@ -116,6 +117,7 @@ class WarFightRecordResponse(BaseModel):
                 "prefights": [],
                 "created_at": data.created_at,
                 "note": None,
+                "note_id": None,
                 "note_blocked": False,
             }
         return {
