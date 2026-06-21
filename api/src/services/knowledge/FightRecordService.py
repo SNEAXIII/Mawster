@@ -27,6 +27,7 @@ from src.models.Season import Season
 from src.models.War import War
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightPrefight import WarFightPrefight
+from src.models.WarFightNote import WarFightNote
 from src.models.WarFightRecord import WarFightRecord
 from src.models.WarFightRecordImport import WarFightRecordImport
 from src.models.WarFightSynergy import WarFightSynergy
@@ -89,6 +90,21 @@ class FightRecordService:
             )
             session.add(record)
             await session.flush()
+
+            note = (
+                await session.exec(
+                    select(WarFightNote).where(
+                        and_(
+                            WarFightNote.war_id == war.id,
+                            WarFightNote.battlegroup == placement.battlegroup,
+                            WarFightNote.node_number == placement.node_number,
+                        )
+                    )
+                )
+            ).first()
+            if note is not None:
+                note.war_fight_record_id = record.id
+                session.add(note)
 
             pf_stmt = (
                 select(WarPrefightAttacker)
