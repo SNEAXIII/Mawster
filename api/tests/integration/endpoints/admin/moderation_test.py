@@ -39,6 +39,12 @@ from tests.utils.utils_constant import (
     USER2_ID,
     USER_ID,
 )
+from tests.utils.utils_client import (
+    create_auth_headers,
+    execute_delete_request,
+    execute_get_request,
+    execute_post_request,
+)
 from tests.utils.utils_db import load_objects
 
 BG = 1
@@ -374,3 +380,71 @@ async def test_warn_user(session):
     warns = (await session.exec(select(UserWarn).where(UserWarn.user_id == target.user_id))).all()
     assert len(warns) == 1
     assert warns[0].reason == "be nice"
+
+
+@pytest.mark.asyncio
+async def test_report_endpoint_and_admin_flow(session):
+    data = await _setup_note_and_reporter(session)
+    note = data["note"]
+    admin = await _push_admin(session)
+
+    member_headers = create_auth_headers(user_id=str(USER2_ID))
+    admin_headers = create_auth_headers(user_id=str(admin.id), role=Roles.ADMIN)
+
+    reported = await execute_post_request(
+        f"/notes/{note.id}/report", payload={"reason": "bad"}, headers=member_headers
+    )
+    assert reported.status_code == 201
+
+    listed = await execute_get_request("/admin/note-reports?status=pending", headers=admin_headers)
+    assert listed.status_code == 200
+    assert listed.json()["total"] >= 1
+    report_id = listed.json()["items"][0]["id"]
+
+    forbidden = await execute_get_request("/admin/note-reports", headers=member_headers)
+    assert forbidden.status_code in (401, 403)
+
+    resolved = await execute_post_request(
+        f"/admin/note-reports/{report_id}/resolve",
+        payload={"action": "delete"},
+        headers=admin_headers,
+    )
+    assert resolved.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_admin_mute_and_warn_endpoints(session):
+    data = await _setup_note_and_reporter(session)
+    target_user_id = data["reporter"].user_id
+    admin = await _push_admin(session)
+    admin_headers = create_auth_headers(user_id=str(admin.id), role=Roles.ADMIN)
+
+    muted = await execute_post_request(
+        f"/admin/users/{target_user_id}/mute",
+        payload={"reason": "stop spamming"},
+        headers=admin_headers,
+    )
+    assert muted.status_code == 200
+
+    warned = await execute_post_request(
+        f"/admin/users/{target_user_id}/warn",
+        payload={"reason": "be nice"},
+        headers=admin_headers,
+    )
+    assert warned.status_code == 200
+
+    mutes = await execute_get_request("/admin/mutes", headers=admin_headers)
+    assert mutes.status_code == 200
+    assert any(m["user_id"] == str(target_user_id) for m in mutes.json())
+
+    warns = await execute_get_request(
+        f"/admin/warns?user_id={target_user_id}", headers=admin_headers
+    )
+    assert warns.status_code == 200
+    assert any(w["reason"] == "be nice" for w in warns.json())
+
+    lifted = await execute_delete_request(
+        f"/admin/users/{target_user_id}/mute", headers=admin_headers
+    )
+    assert lifted.status_code == 200
+    assert await ModerationService.is_user_muted(session, target_user_id) is False

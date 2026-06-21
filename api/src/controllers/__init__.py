@@ -27,6 +27,8 @@ from src.controllers.alliance.war.ranking_history_controller import ranking_hist
 from src.controllers.alliance.war.fight_record_import_controller import (
     fight_record_import_controller,
 )
+from src.controllers.alliance.war.note_report_controller import note_report_controller
+from src.controllers.admin.moderation_controller import moderation_controller
 
 routers = [
     user_admin_controller,
@@ -46,6 +48,8 @@ routers = [
     war_core_controller,
     war_placement_controller,
     war_note_controller,
+    note_report_controller,
+    moderation_controller,
     war_attacker_controller,
     war_synergy_controller,
     war_prefight_controller,
