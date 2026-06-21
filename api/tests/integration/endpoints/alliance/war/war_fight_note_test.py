@@ -80,6 +80,7 @@ async def test_upsert_creates_note_and_revision(session):
     data = await _setup_war_with_placement()
     war = data["war"]
     editor_id = data["owner"].id
+    editor_user_id = data["owner"].user_id
 
     note = await WarFightNoteService.upsert_note(
         session=session,
@@ -88,6 +89,7 @@ async def test_upsert_creates_note_and_revision(session):
         node_number=NODE,
         body=WarFightNoteUpsertRequest(content="first note"),
         editor_account_id=editor_id,
+        editor_user_id=editor_user_id,
     )
 
     assert note.content == "first note"
@@ -110,6 +112,7 @@ async def test_upsert_twice_reuses_note_and_adds_revision(session):
     data = await _setup_war_with_placement()
     war = data["war"]
     editor_id = data["owner"].id
+    editor_user_id = data["owner"].user_id
 
     await WarFightNoteService.upsert_note(
         session=session,
@@ -118,6 +121,7 @@ async def test_upsert_twice_reuses_note_and_adds_revision(session):
         node_number=NODE,
         body=WarFightNoteUpsertRequest(content="v1"),
         editor_account_id=editor_id,
+        editor_user_id=editor_user_id,
     )
     note = await WarFightNoteService.upsert_note(
         session=session,
@@ -126,6 +130,7 @@ async def test_upsert_twice_reuses_note_and_adds_revision(session):
         node_number=NODE,
         body=WarFightNoteUpsertRequest(content="v2"),
         editor_account_id=editor_id,
+        editor_user_id=editor_user_id,
     )
 
     notes = (await session.exec(select(WarFightNote).where(WarFightNote.war_id == war.id))).all()
@@ -157,6 +162,7 @@ async def test_upsert_on_ended_war_raises_409(session):
             node_number=NODE,
             body=WarFightNoteUpsertRequest(content="too late"),
             editor_account_id=data["owner"].id,
+            editor_user_id=data["owner"].user_id,
         )
     assert exc_info.value.status_code == 409
 

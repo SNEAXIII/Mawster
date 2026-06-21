@@ -11,6 +11,7 @@ from src.models.War import War, WarStatus
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightNote import WarFightNote
 from src.models.WarFightNoteRevision import WarFightNoteRevision
+from src.services.admin.ModerationService import ModerationService
 from src.utils.db import SessionDep
 
 WAR_ENDED_NOTE_LOCKED = HTTPException(
@@ -20,6 +21,10 @@ WAR_ENDED_NOTE_LOCKED = HTTPException(
 NODE_HAS_NO_PLACEMENT = HTTPException(
     status_code=status.HTTP_404_NOT_FOUND,
     detail="No defender placement on this node",
+)
+USER_MUTED = HTTPException(
+    status_code=status.HTTP_403_FORBIDDEN,
+    detail="You are muted and cannot edit notes",
 )
 
 
@@ -33,7 +38,11 @@ class WarFightNoteService:
         node_number: int,
         body: WarFightNoteUpsertRequest,
         editor_account_id: uuid.UUID,
+        editor_user_id: uuid.UUID,
     ) -> WarFightNote:
+        if await ModerationService.is_user_muted(session, editor_user_id):
+            raise USER_MUTED
+
         if war.status == WarStatus.ended:
             raise WAR_ENDED_NOTE_LOCKED
 

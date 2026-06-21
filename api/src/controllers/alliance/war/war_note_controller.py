@@ -47,6 +47,7 @@ async def upsert_war_fight_note(
         node_number=node_number,
         body=body,
         editor_account_id=account.id,
+        editor_user_id=current_user.id,
     )
     return WarFightNoteResponse(
         id=note.id,

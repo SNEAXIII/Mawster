@@ -209,6 +209,7 @@ class TestWarFightRecordSnapshot:
                 node_number=10,
                 body=WarFightNoteUpsertRequest(content="frozen note"),
                 editor_account_id=data["owner"].id,
+                editor_user_id=data["owner"].user_id,
             )
             await FightRecordService.snapshot_war(s, war)
 
@@ -251,6 +252,7 @@ class TestWarFightRecordSnapshot:
                 node_number=10,
                 body=WarFightNoteUpsertRequest(content="frozen note"),
                 editor_account_id=data["owner"].id,
+                editor_user_id=data["owner"].user_id,
             )
             await FightRecordService.snapshot_war(s, war)
 
