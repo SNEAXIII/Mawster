@@ -18,6 +18,7 @@ import {
   type NoteReport,
 } from '@/app/services/moderation';
 import RevisionHistoryDialog from './revision-history-dialog';
+import MutesWarnsSection from './mutes-warns-section';
 
 const STATUSES = ['all', 'pending', 'resolved', 'dismissed'] as const;
 
@@ -134,6 +135,8 @@ export default function ModerationPanel() {
           </tbody>
         </table>
       </div>
+
+      <MutesWarnsSection />
 
       <RevisionHistoryDialog noteId={historyNoteId} onClose={() => setHistoryNoteId(null)} />
 
