@@ -231,6 +231,37 @@ class TestWarFightRecordSnapshot:
         assert note.war_fight_record_id == record.id
 
     @pytest.mark.asyncio
+    async def test_fight_record_row_includes_note(self, session):
+        """A knowledge-base fight-record row must surface the linked note content."""
+        from src.services.knowledge.FightRecordService import FightRecordService
+        from src.services.alliance.war.WarFightNoteService import WarFightNoteService
+        from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
+
+        data = await _setup_war_with_fight()
+
+        async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as s:
+            war = await s.get(War, data["war"].id)
+            war.tier = 1
+            s.add(war)
+            await s.commit()
+            await WarFightNoteService.upsert_note(
+                s,
+                war=war,
+                battlegroup=1,
+                node_number=10,
+                body=WarFightNoteUpsertRequest(content="frozen note"),
+                editor_account_id=data["owner"].id,
+            )
+            await FightRecordService.snapshot_war(s, war)
+
+        result = await FightRecordService.get_fight_records(
+            session,
+            accessible_alliance_ids=[data["war"].alliance_id],
+        )
+        row = next(item for item in result.items if item.node_number == 10)
+        assert row.note == "frozen note"
+
+    @pytest.mark.asyncio
     async def test_end_war_idempotent_snapshot(self, session):
         """Calling end_war twice must not create duplicate fight records."""
         data = await _setup_war_with_fight()

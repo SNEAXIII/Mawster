@@ -481,6 +481,23 @@ class FightRecordService:
                             for p in pfs_by.get(item.id, [])
                         ]
 
+        # Attach war fight notes to regular (non-imported) records in this page
+        record_ids = [it.id for it in items if not it.is_imported]
+        if record_ids:
+            notes = (
+                await session.exec(
+                    select(WarFightNote).where(
+                        and_(
+                            WarFightNote.war_fight_record_id.in_(record_ids),
+                            WarFightNote.deleted_at.is_(None),
+                        )
+                    )
+                )
+            ).all()
+            note_by_record = {n.war_fight_record_id: n.content for n in notes}
+            for it in items:
+                it.note = note_by_record.get(it.id)
+
         return PaginatedFightRecordsResponse(
             items=items,
             total=total,
