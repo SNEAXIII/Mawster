@@ -383,6 +383,10 @@ const en = {
       memberAttackers: '{count}/{max}',
       sagaAttackerFilter: 'Saga Attacker',
       preferredAttackerFilter: 'Preferred',
+      noteLabel: 'Note',
+      notePlaceholder: 'Add a note for this combat…',
+      noteSave: 'Save note',
+      noteSaved: 'Note saved',
       synergy: {
         add: 'Add a synergy',
         revoke: 'Revoke',
@@ -491,6 +495,7 @@ const en = {
       synergies: 'Synergies',
       prefights: 'Prefights',
       date: 'Date',
+      note: 'Note',
       noData: 'No fight records found.',
       filterAttacker: 'Select attacker',
       filterDefender: 'Select defender',

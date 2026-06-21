@@ -390,6 +390,10 @@ const fr: Translations = {
       memberAttackers: '{count}/{max}',
       sagaAttackerFilter: 'Saga Attaquant',
       preferredAttackerFilter: 'Préféré',
+      noteLabel: 'Note',
+      notePlaceholder: 'Ajouter une note pour ce combat…',
+      noteSave: 'Enregistrer la note',
+      noteSaved: 'Note enregistrée',
       synergy: {
         add: 'Ajouter une synergie',
         revoke: 'Révoquer',
@@ -499,6 +503,7 @@ const fr: Translations = {
       synergies: 'Synergies',
       prefights: 'Préfights',
       date: 'Date',
+      note: 'Note',
       noData: 'Aucun combat enregistré.',
       filterAttacker: 'Sélectionner attaquant',
       filterDefender: 'Sélectionner défenseur',

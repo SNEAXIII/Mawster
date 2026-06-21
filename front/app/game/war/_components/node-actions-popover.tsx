@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import ChampionPortrait from '@/components/champion-portrait';
 import PrefightSelectorDialog from './prefight-selector';
 import AssistSelectorDialog from './assist-selector';
+import WarNoteEditor from './war-note-editor';
 import { useWar } from '@/app/contexts/war-context';
 
 interface NodeActionsPopoverProps {
@@ -173,6 +174,13 @@ export default function NodeActionsPopover({
               </button>
             )}
           </div>
+
+          <WarNoteEditor
+            nodeNumber={nodeNumber}
+            note={placement?.note ?? null}
+            canManage={canManage}
+            onSaved={() => setOpen(false)}
+          />
         </PopoverContent>
       </Popover>
 
