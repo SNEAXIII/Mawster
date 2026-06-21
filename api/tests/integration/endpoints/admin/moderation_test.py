@@ -7,7 +7,15 @@ import pytest
 from fastapi import HTTPException
 from sqlmodel import and_, func, select
 
-from src.dto.admin.dto_moderation import NoteReportCreateRequest
+from src.dto.admin.dto_moderation import (
+    MuteCreateRequest,
+    NoteReportCreateRequest,
+    ReportResolveRequest,
+    WarnCreateRequest,
+)
+from src.enums.Roles import Roles
+from src.models.User import User
+from src.models.UserWarn import UserWarn
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
 from src.enums.NoteReportStatus import NoteReportStatus
 from src.models.NoteReport import NoteReport
@@ -261,3 +269,108 @@ async def test_active_mute_blocks_note_edit(session):
             editor_user_id=owner.user_id,
         )
     assert exc.value.status_code == 403
+
+
+async def _push_admin(session):
+    """Create a standalone admin user; only its id is needed for moderation actions."""
+    admin = User(
+        id=uuid.uuid4(),
+        login="modadmin",
+        email_hash="modadmin_hash",
+        discord_id=999999,
+        role=Roles.ADMIN,
+    )
+    session.add(admin)
+    await session.commit()
+    await session.refresh(admin)
+    return admin
+
+
+async def _push_pending_report(session, note_id, reporter):
+    return await ModerationService.report_note(
+        session,
+        note_id=note_id,
+        reporter_account_id=reporter.id,
+        reporter_user_id=reporter.user_id,
+        body=NoteReportCreateRequest(reason="bad"),
+    )
+
+
+@pytest.mark.asyncio
+async def test_resolve_delete_soft_deletes_note(session):
+    data = await _setup_note_and_reporter(session)
+    note = data["note"]
+    report = await _push_pending_report(session, note.id, data["reporter"])
+    admin = await _push_admin(session)
+
+    await ModerationService.resolve_report(
+        session,
+        report_id=report.id,
+        admin_user_id=admin.id,
+        body=ReportResolveRequest(action="delete"),
+    )
+
+    await session.refresh(note)
+    await session.refresh(report)
+    assert note.deleted_at is not None
+    assert report.status == NoteReportStatus.resolved
+
+
+@pytest.mark.asyncio
+async def test_resolve_dismiss_whitelists_note(session):
+    data = await _setup_note_and_reporter(session)
+    note = data["note"]
+    report = await _push_pending_report(session, note.id, data["reporter"])
+    admin = await _push_admin(session)
+
+    await ModerationService.resolve_report(
+        session,
+        report_id=report.id,
+        admin_user_id=admin.id,
+        body=ReportResolveRequest(action="dismiss"),
+    )
+
+    await session.refresh(note)
+    await session.refresh(report)
+    assert note.whitelisted_at is not None
+    assert report.status == NoteReportStatus.dismissed
+
+
+@pytest.mark.asyncio
+async def test_mute_then_lift(session):
+    data = await _setup_note_and_reporter(session)
+    target = data["reporter"]
+    admin = await _push_admin(session)
+
+    await ModerationService.mute_user(
+        session,
+        user_id=target.user_id,
+        admin_user_id=admin.id,
+        body=MuteCreateRequest(reason="spam"),
+    )
+    assert await ModerationService.is_user_muted(session, target.user_id) is True
+
+    await ModerationService.lift_mute(
+        session,
+        user_id=target.user_id,
+        admin_user_id=admin.id,
+    )
+    assert await ModerationService.is_user_muted(session, target.user_id) is False
+
+
+@pytest.mark.asyncio
+async def test_warn_user(session):
+    data = await _setup_note_and_reporter(session)
+    target = data["reporter"]
+    admin = await _push_admin(session)
+
+    await ModerationService.warn_user(
+        session,
+        user_id=target.user_id,
+        admin_user_id=admin.id,
+        body=WarnCreateRequest(reason="be nice"),
+    )
+
+    warns = (await session.exec(select(UserWarn).where(UserWarn.user_id == target.user_id))).all()
+    assert len(warns) == 1
+    assert warns[0].reason == "be nice"
