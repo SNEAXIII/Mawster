@@ -65,6 +65,7 @@ export interface FightRecord {
   prefights: PrefightRecord[];
   is_imported?: boolean;
   created_at?: string | null;
+  note?: string | null;
 }
 
 export interface PaginatedFightRecords {

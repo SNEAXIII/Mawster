@@ -65,6 +65,7 @@ export interface WarPlacement {
   assistor_image_url: string | null;
   assistor_rarity: string | null;
   assistor_ascension: number | null;
+  note?: string | null;
 }
 
 export interface WarDefenseSummary {
