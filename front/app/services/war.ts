@@ -66,6 +66,8 @@ export interface WarPlacement {
   assistor_rarity: string | null;
   assistor_ascension: number | null;
   note?: string | null;
+  note_id?: string | null;
+  note_blocked?: boolean;
 }
 
 export interface WarDefenseSummary {
