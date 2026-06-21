@@ -2,13 +2,27 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.enums.NoteReportStatus import NoteReportStatus
+from src.utils.sanitize import sanitize_text
+
+
+def _sanitize_required(value):
+    return sanitize_text(value) if isinstance(value, str) else value
+
+
+def _sanitize_optional(value):
+    if not isinstance(value, str):
+        return value
+    cleaned = sanitize_text(value)
+    return cleaned or None
 
 
 class NoteReportCreateRequest(BaseModel):
     reason: Optional[str] = Field(default=None, max_length=500)
+
+    _clean_reason = field_validator("reason", mode="before")(_sanitize_optional)
 
 
 class NoteRevisionResponse(BaseModel):
@@ -52,6 +66,8 @@ class MuteCreateRequest(BaseModel):
     reason: str = Field(..., min_length=1, max_length=500)
     expires_at: Optional[datetime] = None
 
+    _clean_reason = field_validator("reason", mode="before")(_sanitize_required)
+
 
 class MuteResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -67,6 +83,8 @@ class MuteResponse(BaseModel):
 
 class WarnCreateRequest(BaseModel):
     reason: str = Field(..., min_length=1, max_length=500)
+
+    _clean_reason = field_validator("reason", mode="before")(_sanitize_required)
 
 
 class WarnResponse(BaseModel):
