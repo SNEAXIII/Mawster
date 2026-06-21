@@ -557,6 +557,41 @@ const en = {
     },
   },
 
+  // Moderation
+  moderation: {
+    tab: 'Moderation',
+    report: 'Report',
+    reported: 'Reported',
+    reportSuccess: 'Note reported',
+    reportError: 'Failed to report note',
+    noteBlocked: 'Note temporarily blocked',
+    muted: 'You are muted',
+    warned: 'Warning',
+    loadError: 'Failed to load reports',
+    resolveSuccess: 'Report processed',
+    resolveError: 'Failed to process report',
+    noReports: 'No reports found.',
+    statusAll: 'All',
+    statusPending: 'Pending',
+    statusResolved: 'Resolved',
+    statusDismissed: 'Dismissed',
+    colAlliance: 'Alliance',
+    colLocation: 'Location',
+    colNote: 'Note',
+    colReporter: 'Reporter',
+    colReason: 'Reason',
+    colStatus: 'Status',
+    colDate: 'Date',
+    colActions: 'Actions',
+    viewHistory: 'View history',
+    delete: 'Delete',
+    dismiss: 'Dismiss',
+    deleteTitle: 'Delete note',
+    deleteDescription: 'This will permanently delete the reported note. Continue?',
+    revisionsTitle: 'Note history',
+    noRevisions: 'No revisions found.',
+  },
+
   // Dashboard / Admin
   dashboard: {
     tableHeaders: {

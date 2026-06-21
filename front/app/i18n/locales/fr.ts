@@ -565,6 +565,41 @@ const fr: Translations = {
     },
   },
 
+  // Moderation
+  moderation: {
+    tab: 'Modération',
+    report: 'Signaler',
+    reported: 'Signalé',
+    reportSuccess: 'Note signalée',
+    reportError: 'Échec du signalement',
+    noteBlocked: 'Note temporairement bloquée',
+    muted: 'Vous êtes réduit au silence',
+    warned: 'Avertissement',
+    loadError: 'Échec du chargement des signalements',
+    resolveSuccess: 'Signalement traité',
+    resolveError: 'Échec du traitement du signalement',
+    noReports: 'Aucun signalement.',
+    statusAll: 'Tous',
+    statusPending: 'En attente',
+    statusResolved: 'Résolu',
+    statusDismissed: 'Rejeté',
+    colAlliance: 'Alliance',
+    colLocation: 'Emplacement',
+    colNote: 'Note',
+    colReporter: 'Signaleur',
+    colReason: 'Raison',
+    colStatus: 'Statut',
+    colDate: 'Date',
+    colActions: 'Actions',
+    viewHistory: "Voir l'historique",
+    delete: 'Supprimer',
+    dismiss: 'Rejeter',
+    deleteTitle: 'Supprimer la note',
+    deleteDescription: 'Cela supprimera définitivement la note signalée. Continuer ?',
+    revisionsTitle: 'Historique de la note',
+    noRevisions: 'Aucune révision.',
+  },
+
   // Dashboard / Admin
   dashboard: {
     tableHeaders: {
