@@ -29,6 +29,7 @@ export default function ModerationPanel() {
   const [status, setStatus] = useState<string>('pending');
   const [historyNoteId, setHistoryNoteId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [dismissTarget, setDismissTarget] = useState<string | null>(null);
   const [actionCount, setActionCount] = useState(0);
 
   const load = useCallback(async () => {
@@ -75,7 +76,7 @@ export default function ModerationPanel() {
       </div>
 
       <div className='overflow-x-auto rounded-md border border-border'>
-        <table className='w-full text-sm' data-cy='moderation-reports-table'>
+        <table className='w-full min-w-225 text-sm' data-cy='moderation-reports-table'>
           <thead className='bg-muted/50'>
             <tr>
               <th className='px-3 py-2 text-left text-xs font-semibold text-muted-foreground'>{m.colAlliance}</th>
@@ -113,19 +114,21 @@ export default function ModerationPanel() {
                     >
                       {m.viewHistory}
                     </Button>
-                    <Button
-                      size='sm'
-                      variant='destructive'
-                      data-cy='moderation-delete'
-                      onClick={() => setDeleteTarget(r.id)}
-                    >
-                      {m.delete}
-                    </Button>
+                    {!r.note_deleted && (
+                      <Button
+                        size='sm'
+                        variant='destructive'
+                        data-cy='moderation-delete'
+                        onClick={() => setDeleteTarget(r.id)}
+                      >
+                        {m.delete}
+                      </Button>
+                    )}
                     <Button
                       size='sm'
                       variant='outline'
                       data-cy='moderation-dismiss'
-                      onClick={() => onResolve(r.id, 'dismiss')}
+                      onClick={() => setDismissTarget(r.id)}
                     >
                       {m.dismiss}
                     </Button>
@@ -155,6 +158,18 @@ export default function ModerationPanel() {
         onConfirm={() => {
           if (deleteTarget) onResolve(deleteTarget, 'delete');
           setDeleteTarget(null);
+        }}
+      />
+
+      <ConfirmationDialog
+        open={!!dismissTarget}
+        onOpenChange={(open) => !open && setDismissTarget(null)}
+        title={m.dismissTitle}
+        description={m.dismissDescription}
+        confirmText={m.dismiss}
+        onConfirm={() => {
+          if (dismissTarget) onResolve(dismissTarget, 'dismiss');
+          setDismissTarget(null);
         }}
       />
     </div>

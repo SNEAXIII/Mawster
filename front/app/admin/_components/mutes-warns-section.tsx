@@ -92,7 +92,14 @@ export default function MutesWarnsSection({ refreshSignal }: MutesWarnsSectionPr
       </div>
 
       <div className='overflow-x-auto rounded-md border border-border'>
-        <table className='w-full text-sm' data-cy='mutes-table'>
+        <table className='w-full min-w-160 table-fixed text-sm' data-cy='mutes-table'>
+          <colgroup>
+            <col className='w-[16%]' />
+            <col className='w-[24%]' />
+            <col className='w-[20%]' />
+            <col className='w-[16%]' />
+            <col className='w-[24%]' />
+          </colgroup>
           <thead className='bg-muted/50'>
             <tr>
               <th className='px-3 py-2 text-left text-xs font-semibold text-muted-foreground'>{m.colUser}</th>
@@ -145,7 +152,14 @@ export default function MutesWarnsSection({ refreshSignal }: MutesWarnsSectionPr
       </div>
 
       <div className='overflow-x-auto rounded-md border border-border'>
-        <table className='w-full text-sm' data-cy='warns-table'>
+        <table className='w-full min-w-160 table-fixed text-sm' data-cy='warns-table'>
+          <colgroup>
+            <col className='w-[16%]' />
+            <col className='w-[24%]' />
+            <col className='w-[20%]' />
+            <col className='w-[16%]' />
+            <col className='w-[24%]' />
+          </colgroup>
           <thead className='bg-muted/50'>
             <tr>
               <th className='px-3 py-2 text-left text-xs font-semibold text-muted-foreground'>{m.colUser}</th>

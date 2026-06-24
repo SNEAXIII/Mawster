@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { FiVolumeX, FiAlertTriangle } from 'react-icons/fi';
+import { FiVolumeX, FiAlertTriangle, FiTrash2 } from 'react-icons/fi';
 import {
   Dialog,
   DialogContent,
@@ -84,6 +84,21 @@ export default function RevisionHistoryDialog({
         ) : (
           <ul className='flex flex-col gap-3 max-h-96 overflow-y-auto'>
             {revisions.map((rev) => {
+              if (rev.is_deletion) {
+                return (
+                  <li
+                    key={rev.id}
+                    className='flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive'
+                    data-cy='moderation-revision-deletion'
+                  >
+                    <FiTrash2 className='size-4 shrink-0' />
+                    <span>
+                      {m.noteDeletedBy} {rev.edited_by_pseudo ?? '—'} ·{' '}
+                      {new Date(rev.edited_at).toLocaleString()}
+                    </span>
+                  </li>
+                );
+              }
               const author: Target | null = rev.edited_by_user_id
                 ? { userId: rev.edited_by_user_id, userLogin: rev.edited_by_pseudo ?? '—' }
                 : null;

@@ -5,7 +5,7 @@ import TestModeBanner from '@/components/test-mode-banner';
 import { Providers } from './providers';
 import { Toaster } from '@/components/ui/sonner';
 import { DevInspector } from './_components/dev-inspector';
-import ModerationBanner from './_components/moderation-banner';
+import MyModerationProvider from './contexts/moderation-context';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -38,8 +38,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
             </div>
             <Toaster />
             <div className='grow overflow-y-auto p-3'>
-              <ModerationBanner />
-              {children}
+              <MyModerationProvider>{children}</MyModerationProvider>
             </div>
           </div>
         </Providers>

@@ -28,6 +28,7 @@ export interface NoteReport {
   battlegroup: number;
   node_number: number;
   note_content: string;
+  note_deleted: boolean;
   reporter_pseudo: string;
   reason: string | null;
   status: string;
@@ -47,6 +48,7 @@ export interface NoteRevision {
   content: string;
   edited_by_user_id: string | null;
   edited_by_pseudo: string | null;
+  is_deletion: boolean;
   edited_at: string;
 }
 

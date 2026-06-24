@@ -63,9 +63,11 @@ export default function UserModerationDialog({
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder={m.reasonPlaceholder}
+            maxLength={500}
             data-cy='moderation-reason-input'
             className='min-h-24 w-full rounded-md border border-input bg-background p-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
           />
+          <span className='text-xs text-muted-foreground self-end'>{reason.length} / 500</span>
         </div>
         {isMute && (
           <div className='flex flex-col gap-2'>
