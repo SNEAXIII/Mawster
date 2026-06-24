@@ -324,6 +324,145 @@ async def test_resolve_delete_soft_deletes_note(session):
 
 
 @pytest.mark.asyncio
+async def test_delete_records_deletion_in_history(session):
+    data = await _setup_note_and_reporter(session)
+    note = data["note"]
+    owner = data["owner"]
+    war = data["war"]
+    report = await _push_pending_report(session, note.id, data["reporter"])
+    admin = await _push_admin(session)
+
+    await ModerationService.resolve_report(
+        session,
+        report_id=report.id,
+        admin_user_id=admin.id,
+        body=ReportResolveRequest(action="delete"),
+    )
+
+    revs = await ModerationService.get_revisions(session, note.id)
+    deletions = [r for r in revs if r.is_deletion]
+    assert len(deletions) == 1
+    assert deletions[0].edited_by_pseudo == admin.login
+    # Admin deletions have no contributor to mute/warn.
+    assert deletions[0].edited_by_user_id is None
+
+    # Reactivating the note must keep the deletion entry in the history.
+    await WarFightNoteService.upsert_note(
+        session,
+        war=war,
+        battlegroup=BG,
+        node_number=NODE,
+        body=WarFightNoteUpsertRequest(content="back"),
+        editor_account_id=owner.id,
+        editor_user_id=owner.user_id,
+    )
+    revs_after = await ModerationService.get_revisions(session, note.id)
+    assert any(r.is_deletion for r in revs_after)
+
+
+@pytest.mark.asyncio
+async def test_editing_deleted_note_reactivates_it(session):
+    data = await _setup_note_and_reporter(session)
+    note = data["note"]
+    owner = data["owner"]
+    war = data["war"]
+    report = await _push_pending_report(session, note.id, data["reporter"])
+    admin = await _push_admin(session)
+
+    await ModerationService.resolve_report(
+        session,
+        report_id=report.id,
+        admin_user_id=admin.id,
+        body=ReportResolveRequest(action="delete"),
+    )
+    await session.refresh(note)
+    assert note.deleted_at is not None
+
+    # Writing a new note on the same node reactivates the row so it is no longer hidden.
+    await WarFightNoteService.upsert_note(
+        session,
+        war=war,
+        battlegroup=BG,
+        node_number=NODE,
+        body=WarFightNoteUpsertRequest(content="fresh note"),
+        editor_account_id=owner.id,
+        editor_user_id=owner.user_id,
+    )
+
+    await session.refresh(note)
+    assert note.deleted_at is None
+    assert note.deleted_by_id is None
+    assert note.content == "fresh note"
+
+    visible = await WarFightNoteService.get_note_for_node(
+        session, war_id=war.id, battlegroup=BG, node_number=NODE
+    )
+    assert visible is not None
+    assert visible.id == note.id
+
+
+@pytest.mark.asyncio
+async def test_upsert_identical_content_rejected(session):
+    data = await _setup_note_and_reporter(session)
+    war = data["war"]
+    owner = data["owner"]
+
+    # The note created by the helper already has content "n".
+    with pytest.raises(HTTPException) as exc:
+        await WarFightNoteService.upsert_note(
+            session,
+            war=war,
+            battlegroup=BG,
+            node_number=NODE,
+            body=WarFightNoteUpsertRequest(content="n"),
+            editor_account_id=owner.id,
+            editor_user_id=owner.user_id,
+        )
+    assert exc.value.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_delete_same_node_twice_across_reactivation(session):
+    data = await _setup_note_and_reporter(session)
+    note = data["note"]
+    reporter = data["reporter"]
+    owner = data["owner"]
+    war = data["war"]
+    admin = await _push_admin(session)
+
+    r1 = await _push_pending_report(session, note.id, reporter)
+    await ModerationService.resolve_report(
+        session,
+        report_id=r1.id,
+        admin_user_id=admin.id,
+        body=ReportResolveRequest(action="delete"),
+    )
+
+    # Editing reactivates the note (clears deleted_at).
+    await WarFightNoteService.upsert_note(
+        session,
+        war=war,
+        battlegroup=BG,
+        node_number=NODE,
+        body=WarFightNoteUpsertRequest(content="again"),
+        editor_account_id=owner.id,
+        editor_user_id=owner.user_id,
+    )
+
+    # Same reporter reports again and admin deletes again: must not raise (no unique clash).
+    r2 = await _push_pending_report(session, note.id, reporter)
+    await ModerationService.resolve_report(
+        session,
+        report_id=r2.id,
+        admin_user_id=admin.id,
+        body=ReportResolveRequest(action="delete"),
+    )
+
+    await session.refresh(note)
+    assert note.deleted_at is not None
+
+
+@pytest.mark.asyncio
 async def test_resolve_dismiss_whitelists_note(session):
     data = await _setup_note_and_reporter(session)
     note = data["note"]

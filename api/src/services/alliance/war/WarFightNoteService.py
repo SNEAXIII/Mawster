@@ -26,6 +26,10 @@ USER_MUTED = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
     detail="You are muted and cannot edit notes",
 )
+NOTE_CONTENT_UNCHANGED = HTTPException(
+    status_code=status.HTTP_409_CONFLICT,
+    detail="Note content is identical to the current one",
+)
 
 
 class WarFightNoteService:
@@ -89,6 +93,10 @@ class WarFightNoteService:
             session.add(note)
             await session.flush()
         else:
+            # Reject a no-op save: identical content on an active note (a deleted note may
+            # still be reactivated with the same text).
+            if note.deleted_at is None and note.content == body.content:
+                raise NOTE_CONTENT_UNCHANGED
             note.content = body.content
             note.updated_by_game_account_id = editor_account_id
             note.updated_at = now
@@ -97,6 +105,11 @@ class WarFightNoteService:
             # admins review the revision history and act manually.
             note.whitelisted_at = None
             note.whitelisted_by_id = None
+            # A node only allows one note (unique constraint). If the previous one was
+            # deleted by moderation, writing a new note reactivates the row so it is no
+            # longer hidden — a deleted note must not mask the next one for that node.
+            note.deleted_at = None
+            note.deleted_by_id = None
 
         session.add(
             WarFightNoteRevision(

@@ -32,6 +32,7 @@ class NoteRevisionResponse(BaseModel):
     content: str
     edited_by_user_id: Optional[uuid.UUID] = None
     edited_by_pseudo: Optional[str] = None
+    is_deletion: bool = False
     edited_at: datetime
 
 
@@ -45,6 +46,7 @@ class NoteReportResponse(BaseModel):
     battlegroup: int
     node_number: int
     note_content: str
+    note_deleted: bool = False
     reporter_pseudo: Optional[str] = None
     reason: Optional[str] = None
     status: NoteReportStatus

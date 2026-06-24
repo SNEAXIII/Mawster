@@ -10,14 +10,6 @@ from src.enums.NoteReportStatus import NoteReportStatus
 
 class NoteReport(SQLModel, table=True):
     __tablename__ = "note_report"
-    __table_args__ = (
-        sa.UniqueConstraint(
-            "note_id",
-            "reporter_game_account_id",
-            "status",
-            name="uq_note_report_active_per_account",
-        ),
-    )
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     note_id: uuid.UUID = Field(foreign_key="war_fight_note.id")

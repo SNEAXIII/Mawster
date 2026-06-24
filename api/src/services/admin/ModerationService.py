@@ -104,6 +104,17 @@ class ModerationService:
             note.deleted_at = now
             note.deleted_by_id = admin_user_id
             new_status = NoteReportStatus.resolved
+            # Persist a deletion snapshot in the note history so it stays visible even if
+            # the note is later reactivated by a new edit.
+            session.add(
+                WarFightNoteRevision(
+                    note_id=note.id,
+                    content=note.content,
+                    edited_by_user_id=admin_user_id,
+                    is_deletion=True,
+                    edited_at=now,
+                )
+            )
         else:  # dismiss -> whitelist
             note.whitelisted_at = now
             note.whitelisted_by_id = admin_user_id
@@ -223,6 +234,7 @@ class ModerationService:
                 battlegroup=note.battlegroup,
                 node_number=note.node_number,
                 note_content=note.content,
+                note_deleted=note.deleted_at is not None,
                 reporter_pseudo=acc.game_pseudo,
                 reason=rep.reason,
                 status=rep.status,
@@ -240,13 +252,16 @@ class ModerationService:
 
     @classmethod
     async def get_revisions(cls, session, note_id):
+        admin = aliased(User)
         rows = (
             await session.exec(
-                select(WarFightNoteRevision, GameAccount)
+                select(WarFightNoteRevision, GameAccount, admin)
                 .join(
                     GameAccount,
                     WarFightNoteRevision.edited_by_game_account_id == GameAccount.id,
+                    isouter=True,
                 )
+                .join(admin, WarFightNoteRevision.edited_by_user_id == admin.id, isouter=True)
                 .where(WarFightNoteRevision.note_id == note_id)
                 .order_by(WarFightNoteRevision.edited_at.desc())
             )
@@ -255,11 +270,15 @@ class ModerationService:
             NoteRevisionResponse(
                 id=rev.id,
                 content=rev.content,
-                edited_by_user_id=acc.user_id,
-                edited_by_pseudo=acc.game_pseudo,
+                # Deletion entries are admin actions with no contributor to mute/warn.
+                edited_by_user_id=None if rev.is_deletion else (acc.user_id if acc else None),
+                edited_by_pseudo=(
+                    adm.login if rev.is_deletion and adm else (acc.game_pseudo if acc else None)
+                ),
+                is_deletion=rev.is_deletion,
                 edited_at=rev.edited_at,
             )
-            for rev, acc in rows
+            for rev, acc, adm in rows
         ]
 
     @classmethod

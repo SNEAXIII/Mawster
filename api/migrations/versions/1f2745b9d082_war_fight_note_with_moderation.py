@@ -1,8 +1,8 @@
 """war_fight_note_with_moderation
 
-Revision ID: 491061423fd5
+Revision ID: 1f2745b9d082
 Revises: 8ab9a3f84ff8
-Create Date: 2026-06-23 14:27:40.691174
+Create Date: 2026-06-24 13:32:45.158900
 
 """
 
@@ -14,7 +14,7 @@ import sqlmodel  # noqa: F401
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision: str = "491061423fd5"
+revision: str = "1f2745b9d082"
 down_revision: Union[str, None] = "8ab9a3f84ff8"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -144,23 +144,23 @@ def upgrade() -> None:
             ["user.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "note_id",
-            "reporter_game_account_id",
-            "status",
-            name="uq_note_report_active_per_account",
-        ),
     )
     op.create_table(
         "war_fight_note_revision",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("note_id", sa.Uuid(), nullable=False),
         sa.Column("content", sa.Text(), nullable=False),
-        sa.Column("edited_by_game_account_id", sa.Uuid(), nullable=False),
+        sa.Column("edited_by_game_account_id", sa.Uuid(), nullable=True),
+        sa.Column("edited_by_user_id", sa.Uuid(), nullable=True),
+        sa.Column("is_deletion", sa.Boolean(), nullable=False),
         sa.Column("edited_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
             ["edited_by_game_account_id"],
             ["game_account.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["edited_by_user_id"],
+            ["user.id"],
         ),
         sa.ForeignKeyConstraint(
             ["note_id"],
