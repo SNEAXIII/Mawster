@@ -422,6 +422,137 @@ async def test_upsert_identical_content_rejected(session):
 
 
 @pytest.mark.asyncio
+async def test_list_reports_exposes_note_deleted(session):
+    data = await _setup_note_and_reporter(session)
+    note = data["note"]
+    report = await _push_pending_report(session, note.id, data["reporter"])
+    admin = await _push_admin(session)
+
+    before = await ModerationService.list_reports(session)
+    assert all(item.note_deleted is False for item in before.items)
+
+    await ModerationService.resolve_report(
+        session,
+        report_id=report.id,
+        admin_user_id=admin.id,
+        body=ReportResolveRequest(action="delete"),
+    )
+
+    after = await ModerationService.list_reports(session)
+    target = next(item for item in after.items if item.note_id == note.id)
+    assert target.note_deleted is True
+
+
+@pytest.mark.asyncio
+async def test_get_revisions_orders_deletion_above_edits(session):
+    data = await _setup_note_and_reporter(session)
+    note = data["note"]
+    owner = data["owner"]
+    war = data["war"]
+
+    # A second edit (the helper already created revision #1).
+    await WarFightNoteService.upsert_note(
+        session,
+        war=war,
+        battlegroup=BG,
+        node_number=NODE,
+        body=WarFightNoteUpsertRequest(content="v2"),
+        editor_account_id=owner.id,
+        editor_user_id=owner.user_id,
+    )
+    report = await _push_pending_report(session, note.id, data["reporter"])
+    admin = await _push_admin(session)
+    await ModerationService.resolve_report(
+        session,
+        report_id=report.id,
+        admin_user_id=admin.id,
+        body=ReportResolveRequest(action="delete"),
+    )
+
+    revs = await ModerationService.get_revisions(session, note.id)
+    # Most recent event (the deletion) comes first; edits follow.
+    assert revs[0].is_deletion is True
+    assert any(not r.is_deletion for r in revs)
+    # edited_at is sorted descending.
+    assert [r.edited_at for r in revs] == sorted((r.edited_at for r in revs), reverse=True)
+
+
+@pytest.mark.asyncio
+async def test_muted_user_cannot_edit_or_report(session):
+    data = await _setup_note_and_reporter(session)
+    note = data["note"]
+    reporter = data["reporter"]
+    war = data["war"]
+    admin = await _push_admin(session)
+
+    await ModerationService.mute_user(
+        session,
+        user_id=reporter.user_id,
+        admin_user_id=admin.id,
+        body=MuteCreateRequest(reason="spam"),
+    )
+
+    with pytest.raises(HTTPException) as edit_exc:
+        await WarFightNoteService.upsert_note(
+            session,
+            war=war,
+            battlegroup=BG,
+            node_number=NODE,
+            body=WarFightNoteUpsertRequest(content="x"),
+            editor_account_id=reporter.id,
+            editor_user_id=reporter.user_id,
+        )
+    assert edit_exc.value.status_code == 403
+
+    with pytest.raises(HTTPException) as report_exc:
+        await ModerationService.report_note(
+            session,
+            note_id=note.id,
+            reporter_account_id=reporter.id,
+            reporter_user_id=reporter.user_id,
+            body=NoteReportCreateRequest(reason="bad"),
+        )
+    assert report_exc.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_dismiss_then_edit_allows_rereport(session):
+    data = await _setup_note_and_reporter(session)
+    note = data["note"]
+    reporter = data["reporter"]
+    owner = data["owner"]
+    war = data["war"]
+    report = await _push_pending_report(session, note.id, reporter)
+    admin = await _push_admin(session)
+
+    await ModerationService.resolve_report(
+        session,
+        report_id=report.id,
+        admin_user_id=admin.id,
+        body=ReportResolveRequest(action="dismiss"),
+    )
+
+    # Whitelisted: cannot report until the note is edited.
+    with pytest.raises(HTTPException) as exc:
+        await _push_pending_report(session, note.id, reporter)
+    assert exc.value.status_code == 409
+
+    await WarFightNoteService.upsert_note(
+        session,
+        war=war,
+        battlegroup=BG,
+        node_number=NODE,
+        body=WarFightNoteUpsertRequest(content="reworded"),
+        editor_account_id=owner.id,
+        editor_user_id=owner.user_id,
+    )
+
+    # Editing cleared the whitelist: reporting is allowed again.
+    new_report = await _push_pending_report(session, note.id, reporter)
+    assert new_report.status == NoteReportStatus.pending
+
+
+@pytest.mark.asyncio
 async def test_delete_same_node_twice_across_reactivation(session):
     data = await _setup_note_and_reporter(session)
     note = data["note"]

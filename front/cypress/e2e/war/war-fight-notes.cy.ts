@@ -15,7 +15,8 @@ describe('War Fight Notes', () => {
       cy.getByCy('war-note-input').type('Bait the special then heavy');
       cy.getByCy('war-note-save').click();
 
-      // Reopen the popover — the note persists in the textarea
+      // Saving keeps the popover open; close it, then reopen — the note persists
+      cy.get('body').type('{esc}');
       cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('war-note-input').should('have.value', 'Bait the special then heavy');
     });

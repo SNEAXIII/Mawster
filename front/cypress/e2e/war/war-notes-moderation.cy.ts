@@ -52,6 +52,16 @@ describe('War note moderation', () => {
         // Delete the note (destructive → confirmation dialog)
         cy.getByCy('moderation-delete').first().click();
         cy.getByCy('confirmation-dialog-confirm').click();
+
+        // Show resolved reports: the deletion is now recorded in the note history,
+        // and the Delete button is hidden on an already-deleted note.
+        cy.getByCy('moderation-status-filter').click();
+        cy.getByCy('moderation-status-resolved').click();
+        cy.getByCy('moderation-report-row').should('have.length.at.least', 1);
+        cy.getByCy('moderation-delete').should('not.exist');
+        cy.getByCy('moderation-view-history').first().click();
+        cy.getByCy('moderation-revision-deletion').should('exist');
+        cy.get('body').type('{esc}');
       });
 
       // The note is gone for the member afterwards
@@ -72,6 +82,7 @@ describe('War note moderation', () => {
         openModerationTab(admin.user_id);
         cy.getByCy('moderation-report-row').should('have.length.at.least', 1);
         cy.getByCy('moderation-dismiss').first().click();
+        cy.getByCy('confirmation-dialog-confirm').click();
       });
 
       // Dismiss = whitelisted, so the note stays readable for members
@@ -83,12 +94,52 @@ describe('War note moderation', () => {
     });
   });
 
-  // TODO: mute/warn + moderation-banner coverage.
-  // The mutes/warns admin UI keys its "mute" action off existing warn rows and its "warn"
-  // action off existing mute rows, so the first mute/warn cannot be initiated from a clean
-  // panel. Covering the banner (data-cy="moderation-banner" / "moderation-mute" /
-  // "moderation-warn") needs either a backend seed helper for muted/warned state or a
-  // standalone "moderate user" entry point in the admin users panel. The backend flow is
-  // already covered by api/tests/integration/endpoints/admin/moderation_test.py
-  // (test_me_moderation_reports_mute_and_warns, test_admin_mute_and_warn_endpoints).
+  it('restricts note editing to officers and badges noted nodes', () => {
+    setupAttackerScenario('mod3').then(({ ownerData, memberData }) => {
+      writeNoteAsOfficer(ownerData.user_id);
+
+      // A note badge appears on the noted node (close the popover first).
+      cy.get('body').type('{esc}');
+      cy.getByCy('node-has-note-10').should('exist');
+
+      // A simple member gets a read-only note (no editor) but can still report.
+      cy.apiLogin(memberData.user_id);
+      cy.visit('/game/war');
+      cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+      cy.getByCy('node-actions-trigger-node-10').click();
+      cy.getByCy('war-note-readonly').should('contain.text', NOTE);
+      cy.getByCy('war-note-input').should('not.exist');
+      cy.getByCy('war-note-report').should('exist');
+    });
+  });
+
+  it('admin mutes the note author from the revision history; author sees the contextual notice', () => {
+    setupAttackerScenario('mod3').then(({ ownerData, memberData }) => {
+      writeNoteAsOfficer(ownerData.user_id);
+      reportNoteAsMember(memberData.user_id);
+
+      setupAdmin('mod3-admin').then((admin) => {
+        openModerationTab(admin.user_id);
+
+        // Mute the note author directly from the revision history entry point.
+        cy.getByCy('moderation-view-history').first().click();
+        cy.getByCy('moderation-revisions-dialog').should('be.visible');
+        cy.getByCy('revision-mute').first().click();
+        cy.getByCy('moderation-reason-input').type('Inappropriate note');
+        cy.getByCy('moderation-mute-confirm').click();
+
+        // Close the history dialog; the mute now shows in the mutes table.
+        cy.get('body').type('{esc}');
+        cy.getByCy('mutes-table').should('contain.text', 'Inappropriate note');
+      });
+
+      // The muted author sees the contextual notice and cannot edit anymore.
+      cy.apiLogin(ownerData.user_id);
+      cy.visit('/game/war');
+      cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+      cy.getByCy('node-actions-trigger-node-10').click();
+      cy.getByCy('war-note-mute-notice').should('be.visible');
+      cy.getByCy('war-note-save').should('be.disabled');
+    });
+  });
 });
