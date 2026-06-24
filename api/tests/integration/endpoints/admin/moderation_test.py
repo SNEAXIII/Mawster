@@ -215,7 +215,7 @@ async def test_report_refused_when_muted(session):
 
 
 @pytest.mark.asyncio
-async def test_edit_clears_whitelist_and_stales_reports(session):
+async def test_edit_clears_whitelist_but_keeps_reports_pending(session):
     data = await _setup_note_and_reporter(session)
     note = data["note"]
     reporter = data["reporter"]
@@ -246,7 +246,8 @@ async def test_edit_clears_whitelist_and_stales_reports(session):
 
     await session.refresh(note)
     assert note.whitelisted_at is None
-    assert await _count_pending(session, note.id) == 0
+    # Editing no longer invalidates reports: they stay pending for admin review.
+    assert await _count_pending(session, note.id) == 1
 
 
 @pytest.mark.asyncio
@@ -413,6 +414,22 @@ async def test_report_endpoint_and_admin_flow(session):
 
 
 @pytest.mark.asyncio
+async def test_get_revisions_exposes_editor_user_id(session):
+    data = await _setup_note_and_reporter(session)
+    note = data["note"]
+    owner = data["owner"]
+    admin = await _push_admin(session)
+    admin_headers = create_auth_headers(user_id=str(admin.id), role=Roles.ADMIN)
+
+    res = await execute_get_request(f"/admin/notes/{note.id}/revisions", headers=admin_headers)
+    assert res.status_code == 200
+    revisions = res.json()
+    assert len(revisions) == 1
+    assert revisions[0]["edited_by_user_id"] == str(owner.user_id)
+    assert revisions[0]["edited_by_pseudo"] is not None
+
+
+@pytest.mark.asyncio
 async def test_admin_mute_and_warn_endpoints(session):
     data = await _setup_note_and_reporter(session)
     target_user_id = data["reporter"].user_id
@@ -435,13 +452,15 @@ async def test_admin_mute_and_warn_endpoints(session):
 
     mutes = await execute_get_request("/admin/mutes", headers=admin_headers)
     assert mutes.status_code == 200
-    assert any(m["user_id"] == str(target_user_id) for m in mutes.json())
+    target_mute = next(m for m in mutes.json() if m["user_id"] == str(target_user_id))
+    assert target_mute["muted_by_login"] == admin.login
 
     warns = await execute_get_request(
         f"/admin/warns?user_id={target_user_id}", headers=admin_headers
     )
     assert warns.status_code == 200
-    assert any(w["reason"] == "be nice" for w in warns.json())
+    target_warn = next(w for w in warns.json() if w["reason"] == "be nice")
+    assert target_warn["warned_by_login"] == admin.login
 
     lifted = await execute_delete_request(
         f"/admin/users/{target_user_id}/mute", headers=admin_headers

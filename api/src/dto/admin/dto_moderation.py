@@ -30,6 +30,7 @@ class NoteRevisionResponse(BaseModel):
 
     id: uuid.UUID
     content: str
+    edited_by_user_id: Optional[uuid.UUID] = None
     edited_by_pseudo: Optional[str] = None
     edited_at: datetime
 
@@ -79,6 +80,7 @@ class MuteResponse(BaseModel):
     created_at: datetime
     expires_at: Optional[datetime] = None
     lifted_at: Optional[datetime] = None
+    muted_by_login: Optional[str] = None
 
 
 class WarnCreateRequest(BaseModel):
@@ -95,3 +97,4 @@ class WarnResponse(BaseModel):
     user_login: Optional[str] = None
     reason: str
     created_at: datetime
+    warned_by_login: Optional[str] = None

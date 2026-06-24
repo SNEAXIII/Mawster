@@ -19,7 +19,11 @@ import UserModerationDialog, { type ModerationKind } from './user-moderation-dia
 
 type Target = { userId: string; userLogin: string };
 
-export default function MutesWarnsSection() {
+type MutesWarnsSectionProps = Readonly<{
+  refreshSignal?: number;
+}>;
+
+export default function MutesWarnsSection({ refreshSignal }: MutesWarnsSectionProps) {
   const { t } = useI18n();
   const m = t.moderation;
   const [mutes, setMutes] = useState<Mute[]>([]);
@@ -40,7 +44,7 @@ export default function MutesWarnsSection() {
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, refreshSignal]);
 
   const openDialog = (kind: ModerationKind, target: Target) => {
     setDialogTarget(target);
@@ -94,13 +98,14 @@ export default function MutesWarnsSection() {
               <th className='px-3 py-2 text-left text-xs font-semibold text-muted-foreground'>{m.colUser}</th>
               <th className='px-3 py-2 text-left text-xs font-semibold text-muted-foreground'>{m.colReason}</th>
               <th className='px-3 py-2 text-left text-xs font-semibold text-muted-foreground'>{m.colExpiry}</th>
+              <th className='px-3 py-2 text-left text-xs font-semibold text-muted-foreground'>{m.colBy}</th>
               <th className='px-3 py-2 text-left text-xs font-semibold text-muted-foreground'>{m.colActions}</th>
             </tr>
           </thead>
           <tbody>
             {mutes.length === 0 && (
               <tr>
-                <td colSpan={4} className='px-3 py-6 text-center text-muted-foreground'>{m.noMutes}</td>
+                <td colSpan={5} className='px-3 py-6 text-center text-muted-foreground'>{m.noMutes}</td>
               </tr>
             )}
             {mutes.map((mu) => (
@@ -110,6 +115,7 @@ export default function MutesWarnsSection() {
                 <td className='px-3 py-2 whitespace-nowrap'>
                   {mu.expires_at ? new Date(mu.expires_at).toLocaleString() : m.noExpiry}
                 </td>
+                <td className='px-3 py-2 whitespace-nowrap'>{mu.muted_by_login ?? '—'}</td>
                 <td className='px-3 py-2'>
                   <div className='flex items-center gap-2'>
                     <Button
@@ -145,13 +151,14 @@ export default function MutesWarnsSection() {
               <th className='px-3 py-2 text-left text-xs font-semibold text-muted-foreground'>{m.colUser}</th>
               <th className='px-3 py-2 text-left text-xs font-semibold text-muted-foreground'>{m.colReason}</th>
               <th className='px-3 py-2 text-left text-xs font-semibold text-muted-foreground'>{m.colDate}</th>
+              <th className='px-3 py-2 text-left text-xs font-semibold text-muted-foreground'>{m.colBy}</th>
               <th className='px-3 py-2 text-left text-xs font-semibold text-muted-foreground'>{m.colActions}</th>
             </tr>
           </thead>
           <tbody>
             {warns.length === 0 && (
               <tr>
-                <td colSpan={4} className='px-3 py-6 text-center text-muted-foreground'>{m.noWarns}</td>
+                <td colSpan={5} className='px-3 py-6 text-center text-muted-foreground'>{m.noWarns}</td>
               </tr>
             )}
             {warns.map((wa) => (
@@ -159,6 +166,7 @@ export default function MutesWarnsSection() {
                 <td className='px-3 py-2 whitespace-nowrap'>{wa.user_login}</td>
                 <td className='px-3 py-2 max-w-48 truncate' title={wa.reason}>{wa.reason}</td>
                 <td className='px-3 py-2 whitespace-nowrap'>{new Date(wa.created_at).toLocaleString()}</td>
+                <td className='px-3 py-2 whitespace-nowrap'>{wa.warned_by_login ?? '—'}</td>
                 <td className='px-3 py-2'>
                   <Button
                     size='sm'

@@ -614,6 +614,7 @@ const fr: Translations = {
     expiryLabel: 'Expire le (optionnel)',
     colUser: 'Utilisateur',
     colExpiry: 'Expiration',
+    colBy: 'Par',
     noMutes: 'Aucun silence actif.',
     noWarns: 'Aucun avertissement.',
     muteSuccess: 'Utilisateur réduit au silence',

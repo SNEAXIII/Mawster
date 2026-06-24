@@ -29,6 +29,7 @@ export default function ModerationPanel() {
   const [status, setStatus] = useState<string>('pending');
   const [historyNoteId, setHistoryNoteId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [actionCount, setActionCount] = useState(0);
 
   const load = useCallback(async () => {
     try {
@@ -136,9 +137,13 @@ export default function ModerationPanel() {
         </table>
       </div>
 
-      <MutesWarnsSection />
+      <MutesWarnsSection refreshSignal={actionCount} />
 
-      <RevisionHistoryDialog noteId={historyNoteId} onClose={() => setHistoryNoteId(null)} />
+      <RevisionHistoryDialog
+        noteId={historyNoteId}
+        onClose={() => setHistoryNoteId(null)}
+        onActionDone={() => setActionCount((c) => c + 1)}
+      />
 
       <ConfirmationDialog
         open={!!deleteTarget}

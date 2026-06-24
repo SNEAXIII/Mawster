@@ -606,6 +606,7 @@ const en = {
     expiryLabel: 'Expires at (optional)',
     colUser: 'User',
     colExpiry: 'Expiry',
+    colBy: 'By',
     noMutes: 'No active mutes.',
     noWarns: 'No warnings.',
     muteSuccess: 'User muted',

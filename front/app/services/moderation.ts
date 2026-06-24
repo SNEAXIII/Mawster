@@ -45,6 +45,7 @@ export interface PaginatedReports {
 export interface NoteRevision {
   id: string;
   content: string;
+  edited_by_user_id: string | null;
   edited_by_pseudo: string | null;
   edited_at: string;
 }
@@ -57,6 +58,7 @@ export interface Mute {
   created_at: string;
   expires_at: string | null;
   lifted_at: string | null;
+  muted_by_login: string | null;
 }
 
 export interface Warn {
@@ -65,6 +67,7 @@ export interface Warn {
   user_login: string;
   reason: string;
   created_at: string;
+  warned_by_login: string | null;
 }
 
 export interface MyModeration {

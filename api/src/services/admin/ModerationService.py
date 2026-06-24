@@ -1,10 +1,28 @@
 import uuid
+import math
 from datetime import datetime
+from sqlalchemy import func
 
 from sqlmodel import and_, or_, select
+from fastapi import HTTPException
+from starlette import status
+from sqlalchemy.orm import aliased
 
-from src.models.UserMute import UserMute
 from src.utils.db import SessionDep
+
+from src.dto.admin.dto_moderation import WarnResponse, NoteRevisionResponse, MuteResponse
+from src.dto.admin.dto_moderation import NoteReportResponse, PaginatedNoteReports
+from src.models.User import User
+from src.models.UserWarn import UserWarn
+
+from src.enums.NoteReportStatus import NoteReportStatus
+from src.models.NoteReport import NoteReport
+from src.models.WarFightNote import WarFightNote
+from src.models.GameAccount import GameAccount
+from src.models.WarFightNoteRevision import WarFightNoteRevision
+from src.models.UserMute import UserMute
+from src.models.Alliance import Alliance
+
 
 AUTO_BLOCK_THRESHOLD = 3
 
@@ -28,13 +46,6 @@ class ModerationService:
 
     @classmethod
     async def report_note(cls, session, note_id, reporter_account_id, reporter_user_id, body):
-        from fastapi import HTTPException
-        from starlette import status
-
-        from src.enums.NoteReportStatus import NoteReportStatus
-        from src.models.NoteReport import NoteReport
-        from src.models.WarFightNote import WarFightNote
-
         note = (await session.exec(select(WarFightNote).where(WarFightNote.id == note_id))).first()
         if note is None or note.deleted_at is not None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
@@ -81,13 +92,6 @@ class ModerationService:
 
     @classmethod
     async def resolve_report(cls, session, report_id, admin_user_id, body):
-        from fastapi import HTTPException
-        from starlette import status
-
-        from src.enums.NoteReportStatus import NoteReportStatus
-        from src.models.NoteReport import NoteReport
-        from src.models.WarFightNote import WarFightNote
-
         report = (await session.exec(select(NoteReport).where(NoteReport.id == report_id))).first()
         if report is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Report not found")
@@ -160,8 +164,6 @@ class ModerationService:
 
     @classmethod
     async def warn_user(cls, session, user_id, admin_user_id, body):
-        from src.models.UserWarn import UserWarn
-
         warn = UserWarn(user_id=user_id, reason=body.reason, warned_by_id=admin_user_id)
         session.add(warn)
         await session.commit()
@@ -171,10 +173,6 @@ class ModerationService:
     @classmethod
     async def pending_report_counts(cls, session, note_ids):
         """Return {note_id: pending_count} for the given note ids."""
-        from sqlalchemy import func
-
-        from src.enums.NoteReportStatus import NoteReportStatus
-        from src.models.NoteReport import NoteReport
 
         if not note_ids:
             return {}
@@ -194,16 +192,6 @@ class ModerationService:
 
     @classmethod
     async def list_reports(cls, session, status=None, alliance_id=None, page=1, size=20):
-        import math
-
-        from sqlalchemy import func
-
-        from src.dto.admin.dto_moderation import NoteReportResponse, PaginatedNoteReports
-        from src.models.Alliance import Alliance
-        from src.models.GameAccount import GameAccount
-        from src.models.NoteReport import NoteReport
-        from src.models.WarFightNote import WarFightNote
-
         conds = []
         if status is not None:
             conds.append(NoteReport.status == status)
@@ -252,10 +240,6 @@ class ModerationService:
 
     @classmethod
     async def get_revisions(cls, session, note_id):
-        from src.dto.admin.dto_moderation import NoteRevisionResponse
-        from src.models.GameAccount import GameAccount
-        from src.models.WarFightNoteRevision import WarFightNoteRevision
-
         rows = (
             await session.exec(
                 select(WarFightNoteRevision, GameAccount)
@@ -271,6 +255,7 @@ class ModerationService:
             NoteRevisionResponse(
                 id=rev.id,
                 content=rev.content,
+                edited_by_user_id=acc.user_id,
                 edited_by_pseudo=acc.game_pseudo,
                 edited_at=rev.edited_at,
             )
@@ -279,9 +264,7 @@ class ModerationService:
 
     @classmethod
     async def list_mutes(cls, session, active_only=True):
-        from src.dto.admin.dto_moderation import MuteResponse
-        from src.models.User import User
-
+        admin = aliased(User)
         conds = []
         if active_only:
             now = datetime.now()
@@ -289,7 +272,11 @@ class ModerationService:
                 UserMute.lifted_at.is_(None),
                 or_(UserMute.expires_at.is_(None), UserMute.expires_at > now),
             ]
-        stmt = select(UserMute, User).join(User, UserMute.user_id == User.id)
+        stmt = (
+            select(UserMute, User, admin)
+            .join(User, UserMute.user_id == User.id)
+            .join(admin, UserMute.muted_by_id == admin.id, isouter=True)
+        )
         if conds:
             stmt = stmt.where(and_(*conds))
         rows = (await session.exec(stmt.order_by(UserMute.created_at.desc()))).all()
@@ -302,17 +289,19 @@ class ModerationService:
                 created_at=m.created_at,
                 expires_at=m.expires_at,
                 lifted_at=m.lifted_at,
+                muted_by_login=adm.login if adm else None,
             )
-            for m, u in rows
+            for m, u, adm in rows
         ]
 
     @classmethod
     async def list_warns(cls, session, user_id=None):
-        from src.dto.admin.dto_moderation import WarnResponse
-        from src.models.User import User
-        from src.models.UserWarn import UserWarn
-
-        stmt = select(UserWarn, User).join(User, UserWarn.user_id == User.id)
+        admin = aliased(User)
+        stmt = (
+            select(UserWarn, User, admin)
+            .join(User, UserWarn.user_id == User.id)
+            .join(admin, UserWarn.warned_by_id == admin.id, isouter=True)
+        )
         if user_id is not None:
             stmt = stmt.where(UserWarn.user_id == user_id)
         rows = (await session.exec(stmt.order_by(UserWarn.created_at.desc()))).all()
@@ -323,8 +312,9 @@ class ModerationService:
                 user_login=u.login,
                 reason=w.reason,
                 created_at=w.created_at,
+                warned_by_login=adm.login if adm else None,
             )
-            for w, u in rows
+            for w, u, adm in rows
         ]
 
     @classmethod
