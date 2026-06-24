@@ -3,7 +3,7 @@
 import { type DefensePlacement } from '@/app/services/defense';
 import ChampionPortrait from '@/components/champion-portrait';
 import { cn } from '@/app/lib/utils';
-import { X } from 'lucide-react';
+import { X, StickyNote } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 import { rarityBadgeClass, rarityLabel, parseRarity } from './defense-utils';
 import { mapSectionsForFormat } from './war-format';
@@ -21,6 +21,7 @@ interface WarMapNodeProps {
   hideSig?: boolean;
   dimmed?: boolean;
   hasPrefight?: boolean;
+  hasNote?: boolean;
 }
 
 export function WarMapPlaceHolder() {
@@ -38,6 +39,7 @@ export function WarMapNode({
   hideSig = false,
   dimmed = false,
   hasPrefight = false,
+  hasNote = false,
 }: Readonly<WarMapNodeProps>) {
   const { t } = useI18n();
 
@@ -68,6 +70,17 @@ export function WarMapNode({
       <span className='absolute -top-2 -left-1 text-[10px] font-bold bg-black/70 text-white rounded px-1 z-20'>
         {nodeNumber}
       </span>
+
+      {/* Note indicator */}
+      {hasNote && (
+        <span
+          className='absolute -bottom-1.5 -right-1.5 z-30 flex items-center justify-center rounded-full bg-amber-500 text-white ring-1 ring-background p-0.5 shadow'
+          data-cy={`war-node-has-note-${nodeNumber}`}
+          title={t.game.war.noteLabel}
+        >
+          <StickyNote className='size-2.5' />
+        </span>
+      )}
 
       {/* Remove button */}
       {placement && canManage && (
@@ -134,6 +147,7 @@ interface WarMapProps {
   hideSig?: boolean;
   dimmedNodes?: Set<number>;
   prefightNodes?: Set<number>;
+  noteNodes?: Set<number>;
   format?: SeasonFormat;
 }
 
@@ -146,6 +160,7 @@ export default function WarMap({
   hideSig = false,
   dimmedNodes,
   prefightNodes,
+  noteNodes,
   format = 'regular',
 }: Readonly<WarMapProps>) {
   const sections = mapSectionsForFormat(format);
@@ -191,6 +206,7 @@ export default function WarMap({
                     hideSig={hideSig}
                     dimmed={dimmedNodes?.has(nodeNumber) ?? false}
                     hasPrefight={prefightNodes?.has(nodeNumber) ?? false}
+                    hasNote={noteNodes?.has(nodeNumber) ?? false}
                   />
                 )
               )}
