@@ -133,5 +133,22 @@ Tools: `ctx_batch_execute` (research) → `ctx_search` (follow-up) → `ctx_exec
 
 ## Docker
 
-- Dev: `docker compose -f compose-dev.yaml up -d` (MariaDB + phpMyAdmin 3306/8080)
+- Dev: `docker compose -f compose-dev.yaml up -d`
+  - `mariadb-dev` → host **3305** (container 3306), phpMyAdmin **8080**
+  - `mariadb-test` → host **3307** (container 3306), phpMyAdmin **8081**
+  - DB `mawster`, user `user`/`password`, root `rootpassword`
 - Prod: Docker Swarm + Traefik (TLS 80/443), stack définie dans `stack-app.yaml`
+
+### Backup / Restore
+
+Backups are gzipped SQL dumps in `backups/` (e.g. `mawster_YYYY-MM-DD_HH-MM.sql.gz`) — **gzip, not zip** (`unzip` will fail).
+
+Restore a dump into the dev DB (stream, no temp file):
+```bash
+gunzip -c backups/<file>.sql.gz | mysql -h 127.0.0.1 -P 3305 -u root -prootpassword mawster
+```
+
+Or directly into the container:
+```bash
+gunzip -c backups/<file>.sql.gz | docker exec -i mariadb-dev mysql -u root -prootpassword mawster
+```
