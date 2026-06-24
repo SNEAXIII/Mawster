@@ -10,7 +10,7 @@ dependencies = [
     "pydantic-settings",
     "sqlmodel",
     "aiomysql",
-    "bleach",
+    "nh3",
     "sentry-sdk",
     "slowapi",
     "prometheus-fastapi-instrumentator",

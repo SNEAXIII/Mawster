@@ -1,6 +1,6 @@
 import html
 
-import bleach
+import nh3
 
 
 def sanitize_text(value: str) -> str:
@@ -10,5 +10,5 @@ def sanitize_text(value: str) -> str:
     Entities introduced by escaping are unescaped back to readable characters so normal text
     like ``Cap & Thor`` is preserved without artifacts. The result is trimmed.
     """
-    stripped = bleach.clean(value, tags=[], attributes={}, strip=True)
+    stripped = nh3.clean(value, tags=set())
     return html.unescape(stripped).strip()
