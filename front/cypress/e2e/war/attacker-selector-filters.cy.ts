@@ -116,9 +116,10 @@ describe('War – WarAttackerSelector filters', () => {
       cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
       cy.getByCy('war-attacker-search').should('be.visible');
 
-      // Both attackers visible initially
-      cy.getByCy('attacker-card-Storm').should('be.visible');
-      cy.getByCy('attacker-card-Wolverine').should('be.visible');
+      // Both attackers visible initially (two member groups overflow the
+      // dialog's scrollable list, so scroll each card into view before asserting)
+      cy.getByCy('attacker-card-Storm').scrollIntoView().should('be.visible');
+      cy.getByCy('attacker-card-Wolverine').scrollIntoView().should('be.visible');
 
       // Filter by member → only Wolverine
       cy.getByCy('selector-player-filter').click();
@@ -181,8 +182,9 @@ describe('War – WarAttackerSelector filters', () => {
       cy.getByCy('attacker-card-Wolverine').should('not.exist');
 
       cy.getByCy('selector-reset-filters').click();
-      cy.getByCy('attacker-card-Storm').should('be.visible');
-      cy.getByCy('attacker-card-Wolverine').should('be.visible');
+      // Both groups are restored and overflow the list — scroll into view first
+      cy.getByCy('attacker-card-Storm').scrollIntoView().should('be.visible');
+      cy.getByCy('attacker-card-Wolverine').scrollIntoView().should('be.visible');
       cy.getByCy('selector-reset-filters').should('not.exist');
     });
   });

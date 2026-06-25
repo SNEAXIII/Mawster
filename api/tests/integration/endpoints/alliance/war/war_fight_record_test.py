@@ -39,7 +39,7 @@ from src.models.Season import Season
 from src.enums.SeasonStatus import SeasonStatus
 from src.models.WarPrefightAttacker import WarPrefightAttacker
 from src.models.WarSynergyAttacker import WarSynergyAttacker
-from sqlmodel import select
+from sqlmodel import and_, select
 
 OPPONENT = "Enemy Alliance"
 
@@ -186,6 +186,82 @@ class TestWarFightRecordSnapshot:
             await session.exec(select(WarFightRecord).where(WarFightRecord.war_id == war.id))
         ).all()
         assert len(records) == 0
+
+    @pytest.mark.asyncio
+    async def test_snapshot_links_note_to_fight_record(self, session):
+        """A WarFightNote on a snapshotted node must be linked to its WarFightRecord."""
+        from src.services.knowledge.FightRecordService import FightRecordService
+        from src.services.alliance.war.WarFightNoteService import WarFightNoteService
+        from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
+        from src.models.WarFightNote import WarFightNote
+
+        data = await _setup_war_with_fight()
+
+        async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as s:
+            war = await s.get(War, data["war"].id)
+            war.tier = 1
+            s.add(war)
+            await s.commit()
+            await WarFightNoteService.upsert_note(
+                s,
+                war=war,
+                battlegroup=1,
+                node_number=10,
+                body=WarFightNoteUpsertRequest(content="frozen note"),
+                editor_account_id=data["owner"].id,
+                editor_user_id=data["owner"].user_id,
+            )
+            await FightRecordService.snapshot_war(s, war)
+
+        record = (
+            await session.exec(
+                select(WarFightRecord).where(
+                    and_(
+                        WarFightRecord.war_id == data["war"].id,
+                        WarFightRecord.node_number == 10,
+                    )
+                )
+            )
+        ).first()
+        assert record is not None
+
+        note = (
+            await session.exec(select(WarFightNote).where(WarFightNote.war_id == data["war"].id))
+        ).first()
+        assert note is not None
+        assert note.war_fight_record_id == record.id
+
+    @pytest.mark.asyncio
+    async def test_fight_record_row_includes_note(self, session):
+        """A knowledge-base fight-record row must surface the linked note content."""
+        from src.services.knowledge.FightRecordService import FightRecordService
+        from src.services.alliance.war.WarFightNoteService import WarFightNoteService
+        from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
+
+        data = await _setup_war_with_fight()
+
+        async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as s:
+            war = await s.get(War, data["war"].id)
+            war.tier = 1
+            s.add(war)
+            await s.commit()
+            await WarFightNoteService.upsert_note(
+                s,
+                war=war,
+                battlegroup=1,
+                node_number=10,
+                body=WarFightNoteUpsertRequest(content="frozen note"),
+                editor_account_id=data["owner"].id,
+                editor_user_id=data["owner"].user_id,
+            )
+            await FightRecordService.snapshot_war(s, war)
+
+        result = await FightRecordService.get_fight_records(
+            session,
+            accessible_alliance_ids=[data["war"].alliance_id],
+        )
+        row = next(item for item in result.items if item.node_number == 10)
+        assert row.note == "frozen note"
 
     @pytest.mark.asyncio
     async def test_end_war_idempotent_snapshot(self, session):

@@ -17,6 +17,7 @@ interface WarDefenseMapProps {
   canManage: boolean;
   dimmedNodes?: Set<number>;
   prefightNodes?: Set<number>;
+  noteNodes?: Set<number>;
   format?: SeasonFormat;
 }
 
@@ -52,6 +53,7 @@ export default function WarDefenseMap({
   canManage,
   dimmedNodes,
   prefightNodes,
+  noteNodes,
   format = 'regular',
 }: Readonly<WarDefenseMapProps>) {
   const adapted = placements.map(toDefensePlacement);
@@ -65,6 +67,7 @@ export default function WarDefenseMap({
       hideSig={true}
       dimmedNodes={dimmedNodes}
       prefightNodes={prefightNodes}
+      noteNodes={noteNodes}
       format={format}
     />
   );

@@ -13,6 +13,8 @@ from src.models.GameAccount import GameAccount
 from src.models.War import War, WarStatus
 from src.models.WarBan import WarBan
 from src.models.WarDefensePlacement import WarDefensePlacement
+from src.models.WarFightNote import WarFightNote
+from src.services.admin.ModerationService import AUTO_BLOCK_THRESHOLD, ModerationService
 from src.models.WarSynergyAttacker import WarSynergyAttacker
 from src.models.WarPrefightAttacker import WarPrefightAttacker
 from src.dto.alliance.war.dto_war import (
@@ -240,6 +242,26 @@ class WarService:
         battlegroup: int,
     ) -> WarDefenseSummaryResponse:
         placements = await cls._get_placements(session, war_id, battlegroup)
+        notes = (
+            await session.exec(
+                select(WarFightNote).where(
+                    and_(
+                        WarFightNote.war_id == war_id,
+                        WarFightNote.battlegroup == battlegroup,
+                        WarFightNote.deleted_at.is_(None),
+                    )
+                )
+            )
+        ).all()
+        note_by_node = {n.node_number: n.content for n in notes}
+        id_by_node = {n.node_number: n.id for n in notes}
+        counts = await ModerationService.pending_report_counts(session, [n.id for n in notes])
+        for p in placements:
+            nid = id_by_node.get(p.node_number)
+            blocked = nid is not None and counts.get(nid, 0) >= AUTO_BLOCK_THRESHOLD
+            p._note_blocked = blocked
+            p._note_id = nid
+            p._note_content = None if blocked else note_by_node.get(p.node_number)
         return WarDefenseSummaryResponse(
             war_id=war_id,
             battlegroup=battlegroup,
