@@ -6,7 +6,9 @@ describe('War Fight Notes', () => {
   });
 
   it('officer saves a note on a node via the popover', () => {
-    setupAttackerScenario('wfn1').then(({ ownerData }) => {
+    setupAttackerScenario('wfn1').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
+      // The note popover only renders on nodes with an assigned attacker.
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.apiLogin(ownerData.user_id);
       cy.visit('/game/war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
@@ -23,7 +25,8 @@ describe('War Fight Notes', () => {
   });
 
   it('non-officer member sees the note read-only', () => {
-    setupAttackerScenario('wfn2').then(({ ownerData, memberData }) => {
+    setupAttackerScenario('wfn2').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       // Officer writes the note first
       cy.apiLogin(ownerData.user_id);
       cy.visit('/game/war');

@@ -35,7 +35,9 @@ describe('War note moderation', () => {
   });
 
   it('member reports a note; admin reviews history then deletes it', () => {
-    setupAttackerScenario('mod1').then(({ ownerData, memberData }) => {
+    setupAttackerScenario('mod1').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
+      // The note popover only renders on nodes with an assigned attacker.
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       writeNoteAsOfficer(ownerData.user_id);
       reportNoteAsMember(memberData.user_id);
 
@@ -74,7 +76,8 @@ describe('War note moderation', () => {
   });
 
   it('admin dismiss keeps the note visible to members', () => {
-    setupAttackerScenario('mod2').then(({ ownerData, memberData }) => {
+    setupAttackerScenario('mod2').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       writeNoteAsOfficer(ownerData.user_id);
       reportNoteAsMember(memberData.user_id);
 
@@ -95,7 +98,8 @@ describe('War note moderation', () => {
   });
 
   it('restricts note editing to officers and badges noted nodes', () => {
-    setupAttackerScenario('mod3').then(({ ownerData, memberData }) => {
+    setupAttackerScenario('mod3').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       writeNoteAsOfficer(ownerData.user_id);
 
       // A note badge appears on the noted node (close the popover first).
@@ -114,11 +118,12 @@ describe('War note moderation', () => {
   });
 
   it('admin mutes the note author from the revision history; author sees the contextual notice', () => {
-    setupAttackerScenario('mod3').then(({ ownerData, memberData }) => {
+    setupAttackerScenario('mod4').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       writeNoteAsOfficer(ownerData.user_id);
       reportNoteAsMember(memberData.user_id);
 
-      setupAdmin('mod3-admin').then((admin) => {
+      setupAdmin('mod4-admin').then((admin) => {
         openModerationTab(admin.user_id);
 
         // Mute the note author directly from the revision history entry point.
