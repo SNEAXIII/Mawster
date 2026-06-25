@@ -151,7 +151,7 @@ describe('War note moderation', () => {
     });
   });
 
-  it('muted officer cannot delete their note', () => {
+  it('muted officer cannot delete any note', () => {
     setupAttackerScenario('mod4b').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       writeNoteAsOfficer(ownerData.user_id);
