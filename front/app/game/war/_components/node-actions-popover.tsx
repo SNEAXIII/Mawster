@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { StickyNote } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import ChampionPortrait from '@/components/champion-portrait';
 import PrefightSelectorDialog from './prefight-selector';
 import AssistSelectorDialog from './assist-selector';
+import WarNoteEditor from './war-note-editor';
 import { useWar } from '@/app/contexts/war-context';
 
 interface NodeActionsPopoverProps {
@@ -36,7 +38,8 @@ export default function NodeActionsPopover({
   canManage = true,
 }: Readonly<NodeActionsPopoverProps>) {
   const { t } = useI18n();
-  const { prefights, handleRemovePrefight, placements, handleRemoveAssist } = useWar();
+  const { prefights, handleRemovePrefight, placements, handleRemoveAssist, canManageWar } =
+    useWar();
   const [open, setOpen] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [assistSelectorOpen, setAssistSelectorOpen] = useState(false);
@@ -67,6 +70,15 @@ export default function NodeActionsPopover({
               is_saga_defender={is_saga_defender}
               sagaMode='attacker'
             />
+            {placement?.note && (
+              <span
+                className='absolute -top-1 -right-1 flex items-center justify-center rounded-full bg-amber-500 text-white shadow ring-1 ring-background p-0.5'
+                data-cy={`node-has-note-${nodeNumber}`}
+                title={placement.note}
+              >
+                <StickyNote className='size-2.5' />
+              </span>
+            )}
           </button>
         </PopoverTrigger>
         <PopoverContent
@@ -173,6 +185,14 @@ export default function NodeActionsPopover({
               </button>
             )}
           </div>
+
+          <WarNoteEditor
+            nodeNumber={nodeNumber}
+            note={placement?.note ?? null}
+            noteId={placement?.note_id ?? null}
+            noteBlocked={placement?.note_blocked ?? false}
+            canManage={canManageWar}
+          />
         </PopoverContent>
       </Popover>
 

@@ -110,6 +110,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
   }, [selectedBg]);
 
   const prefightNodes = new Set(prefights.map((pf) => pf.target_node_number));
+  const noteNodes = new Set(placements.filter((p) => p.note).map((p) => p.node_number));
 
   const dimmedNodes = (() => {
     const dimmed = new Set<number>();
@@ -330,6 +331,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
                 canManage={canManageWar && warMode === WarMode.Defenders && !exporting}
                 dimmedNodes={exporting ? undefined : dimmedNodes}
                 prefightNodes={prefightNodes}
+                noteNodes={noteNodes}
                 format={currentSeason?.format ?? 'regular'}
               />
             </div>

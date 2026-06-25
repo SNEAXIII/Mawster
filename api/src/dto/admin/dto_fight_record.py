@@ -70,6 +70,9 @@ class WarFightRecordResponse(BaseModel):
     synergies: list[WarFightSynergyResponse] = []
     prefights: list[WarFightPrefightResponse] = []
     created_at: Optional[datetime] = None
+    note: Optional[str] = None
+    note_id: Optional[uuid.UUID] = None
+    note_blocked: bool = False
 
     @model_validator(mode="before")
     @classmethod
@@ -113,6 +116,9 @@ class WarFightRecordResponse(BaseModel):
                 "synergies": [],
                 "prefights": [],
                 "created_at": data.created_at,
+                "note": None,
+                "note_id": None,
+                "note_blocked": False,
             }
         return {
             "id": data.id,
@@ -147,6 +153,7 @@ class WarFightRecordResponse(BaseModel):
             "synergies": data.synergies,
             "prefights": data.prefights,
             "created_at": data.created_at,
+            "note": None,
         }
 
 

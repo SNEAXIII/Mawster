@@ -44,6 +44,7 @@ import {
   assignWarAssist,
   removeWarAssist,
 } from '@/app/services/war';
+import { upsertWarFightNote } from '@/app/services/war-notes';
 import { WarMode } from '@/app/game/war/_components/war-types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -125,6 +126,9 @@ interface WarContextValue {
   // Assist
   handleAssignAssist: (nodeNumber: number, championUserId: string) => Promise<void>;
   handleRemoveAssist: (nodeNumber: number) => Promise<void>;
+
+  // Fight note
+  handleSaveNote: (nodeNumber: number, content: string) => Promise<void>;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -652,6 +656,32 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
   };
 
+  const handleSaveNote = async (nodeNumber: number, content: string) => {
+    if (!selectedAllianceId || !activeWarId) return;
+    try {
+      const note = await upsertWarFightNote(
+        selectedAllianceId,
+        activeWarId,
+        selectedBg,
+        nodeNumber,
+        content
+      );
+      toast.success(t.game.war.noteSaved);
+      setWarSummary((prev) =>
+        prev
+          ? {
+              ...prev,
+              placements: prev.placements.map((p) =>
+                p.node_number === nodeNumber ? { ...p, note: note.content } : p
+              ),
+            }
+          : prev
+      );
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.loadError);
+    }
+  };
+
   // ─── Context value ─────────────────────────────────────────────────────────
 
   const value = useMemo<WarContextValue>(
@@ -707,6 +737,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       handleTogglePlanningError,
       handleAssignAssist,
       handleRemoveAssist,
+      handleSaveNote,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [

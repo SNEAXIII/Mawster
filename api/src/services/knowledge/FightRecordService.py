@@ -27,6 +27,8 @@ from src.models.Season import Season
 from src.models.War import War
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightPrefight import WarFightPrefight
+from src.models.WarFightNote import WarFightNote
+from src.services.admin.ModerationService import AUTO_BLOCK_THRESHOLD, ModerationService
 from src.models.WarFightRecord import WarFightRecord
 from src.models.WarFightRecordImport import WarFightRecordImport
 from src.models.WarFightSynergy import WarFightSynergy
@@ -89,6 +91,21 @@ class FightRecordService:
             )
             session.add(record)
             await session.flush()
+
+            note = (
+                await session.exec(
+                    select(WarFightNote).where(
+                        and_(
+                            WarFightNote.war_id == war.id,
+                            WarFightNote.battlegroup == placement.battlegroup,
+                            WarFightNote.node_number == placement.node_number,
+                        )
+                    )
+                )
+            ).first()
+            if note is not None:
+                note.war_fight_record_id = record.id
+                session.add(note)
 
             pf_stmt = (
                 select(WarPrefightAttacker)
@@ -464,6 +481,33 @@ class FightRecordService:
                             WarFightPrefightResponse.model_validate(p)
                             for p in pfs_by.get(item.id, [])
                         ]
+
+        # Attach war fight notes to regular (non-imported) records in this page
+        record_ids = [it.id for it in items if not it.is_imported]
+        if record_ids:
+            notes = (
+                await session.exec(
+                    select(WarFightNote).where(
+                        and_(
+                            WarFightNote.war_fight_record_id.in_(record_ids),
+                            WarFightNote.deleted_at.is_(None),
+                        )
+                    )
+                )
+            ).all()
+            note_by_record = {n.war_fight_record_id: n.content for n in notes}
+            note_id_by_record = {n.war_fight_record_id: n.id for n in notes}
+            counts = await ModerationService.pending_report_counts(session, [n.id for n in notes])
+            blocked_records = {
+                n.war_fight_record_id for n in notes if counts.get(n.id, 0) >= AUTO_BLOCK_THRESHOLD
+            }
+            for it in items:
+                it.note_id = note_id_by_record.get(it.id)
+                if it.id in blocked_records:
+                    it.note = None
+                    it.note_blocked = True
+                else:
+                    it.note = note_by_record.get(it.id)
 
         return PaginatedFightRecordsResponse(
             items=items,

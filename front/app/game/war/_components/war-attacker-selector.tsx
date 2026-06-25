@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useI18n } from '@/app/i18n';
+import { useWar } from '@/app/contexts/war-context';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { SearchInput } from '@/components/search-input';
@@ -15,6 +16,7 @@ import {
   getAvailableAttackers,
 } from '@/app/services/war';
 import AttackerEntryRow from './attacker-entry-row';
+import WarNoteEditor from './war-note-editor';
 import SelectorFilterBar from '@/app/game/_components/selector-filter-bar';
 import { useCurrentSeason } from '@/hooks/use-current-season';
 
@@ -47,6 +49,7 @@ export default function WarAttackerSelector({
   onSelect,
 }: Readonly<WarAttackerSelectorProps>) {
   const { t } = useI18n();
+  const { canManageWar } = useWar();
   const currentSeason = useCurrentSeason();
   const maxAttackers = currentSeason?.max_attackers_per_member ?? 3;
   const [available, setAvailable] = useState<AvailableAttacker[]>([]);
@@ -246,6 +249,15 @@ export default function WarAttackerSelector({
                 mode='full'
               />
             </div>
+            <div className='px-3 pb-1' data-cy='war-attacker-selector-note'>
+              <WarNoteEditor
+                nodeNumber={nodeNumber}
+                note={currentPlacement.note ?? null}
+                noteId={currentPlacement.note_id ?? null}
+                noteBlocked={currentPlacement.note_blocked ?? false}
+                canManage={canManageWar}
+              />
+            </div>
           </>
         ) : null}
         <Separator />
@@ -282,7 +294,7 @@ export default function WarAttackerSelector({
           />
         </div>
         <Separator />
-        <div className='overflow-y-auto flex-1 p-3 flex flex-col gap-4'>{content}</div>
+        <div className='overflow-y-auto flex-1 min-h-0 p-3 flex flex-col gap-4'>{content}</div>
       </DialogContent>
     </Dialog>
   );

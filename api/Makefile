@@ -1,6 +1,6 @@
 MESSAGE ?=
 
-.PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions reset-db init-db cancel-last test test-cov scrape-champions check fix format
+.PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions reset-db delete-db init-db cancel-last test test-cov scrape-champions check fix format
 
 help:
 	@echo "run-dev      --> run the server in dev mode with auto reload"
@@ -17,6 +17,7 @@ help:
 	@echo "install      --> install prod dependencies only"
 	@echo "install-dev  --> install all dependencies (prod + dev + migrate groups)"
 	@echo "reset-db     --> reset the database"
+	@echo "delete-db    --> drop all tables WITHOUT recreating the schema (empty db)"
 	@echo "repopulate-db --> reset the database and load champions + fixtures"
 	@echo "scrape-champions --> scrape MCOC wiki and download champion images"
 
@@ -49,6 +50,9 @@ load-masteries:
 
 reset-db:
 	uv run python -m src.fixtures.reset_db
+
+delete-db:
+	uv run python -m src.fixtures.delete_db
 
 init-db:
 	uv run python -m src.fixtures.first_init_prod

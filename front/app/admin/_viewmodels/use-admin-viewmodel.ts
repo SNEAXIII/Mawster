@@ -9,6 +9,7 @@ export enum AdminTab {
   Champions = 'champions',
   Seasons = 'seasons',
   KnowledgeBase = 'knowledge-base',
+  Moderation = 'moderation',
 }
 
 interface UseAdminViewModelOptions {
