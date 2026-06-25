@@ -136,15 +136,78 @@ describe('War note moderation', () => {
         // Close the history dialog; the mute now shows in the mutes table.
         cy.get('body').type('{esc}');
         cy.getByCy('mutes-table').should('contain.text', 'Inappropriate note');
+        // The "By" column records which admin issued the mute.
+        cy.getByCy('mute-row').first().should('contain.text', admin.login);
       });
 
-      // The muted author sees the contextual notice and cannot edit anymore.
+      // The muted author sees the contextual notice and can neither edit nor report.
       cy.apiLogin(ownerData.user_id);
       cy.visit('/game/war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('war-note-mute-notice').should('be.visible');
       cy.getByCy('war-note-save').should('be.disabled');
+      cy.getByCy('war-note-report').should('be.disabled');
+    });
+  });
+
+  it('admin warns the note author from history; the reason field is capped at 500', () => {
+    setupAttackerScenario('mod5').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      writeNoteAsOfficer(ownerData.user_id);
+      reportNoteAsMember(memberData.user_id);
+
+      setupAdmin('mod5-admin').then((admin) => {
+        openModerationTab(admin.user_id);
+
+        // Warn the note author straight from the revision history.
+        cy.getByCy('moderation-view-history').first().click();
+        cy.getByCy('moderation-revisions-dialog').should('be.visible');
+        cy.getByCy('revision-warn').first().click();
+        // The moderation reason is bounded to 500 characters.
+        cy.getByCy('moderation-reason-input').should('have.attr', 'maxlength', '500');
+        cy.getByCy('moderation-reason-input').type('Please keep notes factual');
+        cy.getByCy('moderation-warn-confirm').click();
+
+        // Close the history dialog; the warn shows in the warns table with its author.
+        cy.get('body').type('{esc}');
+        cy.getByCy('warns-table').should('contain.text', 'Please keep notes factual');
+        cy.getByCy('warn-row').first().should('contain.text', admin.login);
+      });
+    });
+  });
+
+  it('deletion history entries expose no moderation buttons; editable revisions do', () => {
+    setupAttackerScenario('mod6').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      writeNoteAsOfficer(ownerData.user_id);
+
+      // Edit the note so a non-deletion revision exists alongside the future deletion.
+      cy.getByCy('war-note-input').clear().type('Edited note content');
+      cy.getByCy('war-note-save').click();
+
+      reportNoteAsMember(memberData.user_id);
+
+      setupAdmin('mod6-admin').then((admin) => {
+        openModerationTab(admin.user_id);
+        cy.getByCy('moderation-delete').first().click();
+        cy.getByCy('confirmation-dialog-confirm').click();
+
+        cy.getByCy('moderation-status-filter').click();
+        cy.getByCy('moderation-status-resolved').click();
+        cy.getByCy('moderation-view-history').first().click();
+
+        // The deletion marker offers no mute/warn — you cannot moderate a deletion.
+        cy.getByCy('moderation-revision-deletion').should('exist').within(() => {
+          cy.getByCy('revision-mute').should('not.exist');
+          cy.getByCy('revision-warn').should('not.exist');
+        });
+        // An editable revision still offers both moderation actions.
+        cy.getByCy('moderation-revision-row').first().within(() => {
+          cy.getByCy('revision-mute').should('exist');
+          cy.getByCy('revision-warn').should('exist');
+        });
+      });
     });
   });
 });
