@@ -151,6 +151,31 @@ describe('War note moderation', () => {
     });
   });
 
+  it('muted officer cannot delete their note', () => {
+    setupAttackerScenario('mod4b').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      writeNoteAsOfficer(ownerData.user_id);
+      reportNoteAsMember(memberData.user_id);
+
+      setupAdmin('mod4b-admin').then((admin) => {
+        openModerationTab(admin.user_id);
+        cy.getByCy('moderation-view-history').first().click();
+        cy.getByCy('moderation-revisions-dialog').should('be.visible');
+        cy.getByCy('revision-mute').first().click();
+        cy.getByCy('moderation-reason-input').type('Inappropriate note');
+        cy.getByCy('moderation-mute-confirm').click();
+      });
+
+      // The muted officer sees the notice and the delete button is disabled.
+      cy.apiLogin(ownerData.user_id);
+      cy.visit('/game/war');
+      cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+      cy.getByCy('node-actions-trigger-node-10').click();
+      cy.getByCy('war-note-mute-notice').should('be.visible');
+      cy.getByCy('war-note-delete').should('be.disabled');
+    });
+  });
+
   it('admin warns the note author from history; the reason field is capped at 500', () => {
     setupAttackerScenario('mod5').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
