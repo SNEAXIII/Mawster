@@ -204,7 +204,7 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
                 <div className='flex items-center gap-1'>
                   {r.game_account_pseudo}
                   {r.is_planning_error && (
-                    <span title={kb.planningErrorBadge}>
+                    <span title={kb.planningErrorBadge} data-cy='fight-record-planning-error'>
                       <AlertTriangle className='h-3.5 w-3.5 text-amber-500 shrink-0' />
                     </span>
                   )}
@@ -221,7 +221,7 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
               <PrefightsCell prefights={r.prefights} />
               <td className='px-3 py-2'>{r.node_number}</td>
               <td className='px-3 py-2'>{r.tier}</td>
-              <td className={cn('px-3 py-2',r.ko_count ? 'text-red-500' : 'text-green-500' )}>{r.ko_count}</td>
+              <td className={cn('px-3 py-2',r.ko_count ? 'text-red-500' : 'text-green-500' )} data-cy='fight-record-ko'>{r.ko_count}</td>
               <td className='px-3 py-2'>{r.alliance_name}</td>
               <td className='px-3 py-2 whitespace-nowrap'>{r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}</td>
               <NoteCell record={r} />
