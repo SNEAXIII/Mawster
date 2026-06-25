@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { FiFlag } from 'react-icons/fi';
+import { FiFlag, FiTrash2 } from 'react-icons/fi';
 import { AlertTriangle } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 import { useWar } from '@/app/contexts/war-context';
@@ -27,10 +27,11 @@ export default function WarNoteEditor({
   onSaved,
 }: Readonly<WarNoteEditorProps>) {
   const { t } = useI18n();
-  const { handleSaveNote } = useWar();
+  const { handleSaveNote, handleDeleteNote } = useWar();
   const { mute } = useMyModeration();
   const [value, setValue] = useState(note ?? '');
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [reported, setReported] = useState(false);
 
   const muteNotice = mute && (
@@ -115,6 +116,17 @@ export default function WarNoteEditor({
     }
   };
 
+  const onDelete = async () => {
+    setDeleting(true);
+    try {
+      await handleDeleteNote(nodeNumber);
+      setValue('');
+      onSaved?.();
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className='border-t border-border/40 pt-2 flex flex-col gap-1'>
       <p className='text-[10px] text-muted-foreground'>{t.game.war.noteLabel}</p>
@@ -138,6 +150,17 @@ export default function WarNoteEditor({
       >
         {t.game.war.noteSave}
       </button>
+      {note && (
+        <button
+          className='flex items-center justify-center gap-1 w-full text-xs py-1 px-2 rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed'
+          data-cy='war-note-delete'
+          disabled={deleting || !!mute}
+          onClick={onDelete}
+        >
+          <FiTrash2 className='h-3 w-3' />
+          {t.game.war.noteDelete}
+        </button>
+      )}
       {reportButton}
     </div>
   );
