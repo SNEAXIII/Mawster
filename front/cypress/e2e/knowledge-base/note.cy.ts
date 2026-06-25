@@ -44,7 +44,8 @@ describe('Knowledge Base — note', () => {
       cy.apiLogin(userData.user_id);
       cy.visit('/game/knowledge-base');
 
-      cy.getByCy('kb-note-report').should('have.length', 1).and('be.visible');
+      // The Note column sits at the far right of a horizontally scrollable table.
+      cy.getByCy('kb-note-report').should('have.length', 1).scrollIntoView().should('be.visible');
     });
   });
 });
