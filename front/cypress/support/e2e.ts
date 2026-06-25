@@ -606,6 +606,10 @@ function addAbsorbingManToRoster(
     }));
 }
 
+// Note text frozen onto the node-1 fight record by setupKnowledgeBase, used by KB note tests.
+export const KB_SETUP_NOTE =
+  'Bait the special, then unload heavy attacks while the defender recovers from the parry window.';
+
 function setupKnowledgeBaseWar(
   adminToken: string,
   defData: UserSetupData,
@@ -628,6 +632,8 @@ function setupKnowledgeBaseWar(
     console.log('Added synergy between Iron Man and Captain America');
     cy.apiUpdateWarKo(defData.access_token, allianceId, war.id, 1, 1, 2);
     cy.apiUpdateWarKo(defData.access_token, allianceId, war.id, 1, 2, 1);
+    // Note on node 1 (written by the owner) so it freezes onto the fight record at snapshot.
+    cy.apiUpsertWarNote(defData.access_token, allianceId, war.id, 1, 1, KB_SETUP_NOTE);
     return cy.apiEndWar(defData.access_token, allianceId, war.id, true, 10).then(() => ({
       adminToken,
       userData: defData,
@@ -1161,6 +1167,23 @@ Cypress.Commands.add('apiEndWar', (token: string, allianceId: string, warId: str
     return res.body;
   });
 });
+
+Cypress.Commands.add(
+  'apiUpsertWarNote',
+  (token: string, allianceId: string, warId: string, battlegroup: number, nodeNumber: number, content: string) => {
+    return cy
+      .request({
+        method: 'PUT',
+        url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/nodes/${battlegroup}/${nodeNumber}/note`,
+        headers: { Authorization: `Bearer ${token}` },
+        body: { content },
+      })
+      .then((res) => {
+        expect(res.status).to.eq(200);
+        return res.body;
+      });
+  },
+);
 
 Cypress.Commands.add(
   'apiAddWarSynergy',
