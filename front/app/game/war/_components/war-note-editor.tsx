@@ -154,7 +154,7 @@ export default function WarNoteEditor({
         <button
           className='flex items-center justify-center gap-1 w-full text-xs py-1 px-2 rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed'
           data-cy='war-note-delete'
-          disabled={deleting}
+          disabled={deleting || !!mute}
           onClick={onDelete}
         >
           <FiTrash2 className='h-3 w-3' />

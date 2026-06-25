@@ -193,6 +193,44 @@ async def test_delete_soft_deletes_note_and_keeps_history(session):
 
 
 @pytest.mark.asyncio
+async def test_delete_by_muted_officer_raises_403(session):
+    from fastapi import HTTPException
+
+    from src.models.UserMute import UserMute
+
+    data = await _setup_war_with_placement()
+    war = data["war"]
+    editor_id = data["owner"].id
+    editor_user_id = data["owner"].user_id
+
+    await WarFightNoteService.upsert_note(
+        session=session,
+        war=war,
+        battlegroup=BG,
+        node_number=NODE,
+        body=WarFightNoteUpsertRequest(content="to delete"),
+        editor_account_id=editor_id,
+        editor_user_id=editor_user_id,
+    )
+
+    session.add(UserMute(user_id=editor_user_id, reason="spam", muted_by_id=editor_user_id))
+    await session.commit()
+
+    with pytest.raises(HTTPException) as exc_info:
+        await WarFightNoteService.delete_note(
+            session=session,
+            war=war,
+            battlegroup=BG,
+            node_number=NODE,
+            editor_user_id=editor_user_id,
+        )
+    assert exc_info.value.status_code == 403
+
+    # Note stays intact.
+    assert (await WarFightNoteService.get_note_for_node(session, war.id, BG, NODE)) is not None
+
+
+@pytest.mark.asyncio
 async def test_delete_missing_note_raises_404(session):
     from fastapi import HTTPException
 
