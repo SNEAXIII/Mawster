@@ -42,7 +42,7 @@ function NoteCell({ record }: NoteCellProps) {
               <PopoverTrigger asChild>
                 <button
                   type='button'
-                  className='truncate text-left cursor-pointer hover:text-foreground transition-colors'
+                  className='min-w-0 truncate text-left cursor-pointer hover:text-foreground transition-colors'
                   data-cy='kb-note-text'
                   title={t.game.knowledgeBase.noteExpand}
                 >
