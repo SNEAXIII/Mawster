@@ -497,12 +497,29 @@ class FightRecordService:
             ).all()
             note_by_record = {n.war_fight_record_id: n.content for n in notes}
             note_id_by_record = {n.war_fight_record_id: n.id for n in notes}
+            # Pseudo of the author of the latest note version (updated_by).
+            editor_ids = {n.updated_by_game_account_id for n in notes}
+            pseudo_by_account = {}
+            if editor_ids:
+                editor_accounts = (
+                    await session.exec(
+                        select(GameAccount.id, GameAccount.game_pseudo).where(
+                            GameAccount.id.in_(editor_ids)
+                        )
+                    )
+                ).all()
+                pseudo_by_account = {acc_id: pseudo for acc_id, pseudo in editor_accounts}
+            author_by_record = {
+                n.war_fight_record_id: pseudo_by_account.get(n.updated_by_game_account_id)
+                for n in notes
+            }
             counts = await ModerationService.pending_report_counts(session, [n.id for n in notes])
             blocked_records = {
                 n.war_fight_record_id for n in notes if counts.get(n.id, 0) >= AUTO_BLOCK_THRESHOLD
             }
             for it in items:
                 it.note_id = note_id_by_record.get(it.id)
+                it.note_author = author_by_record.get(it.id)
                 if it.id in blocked_records:
                     it.note = None
                     it.note_blocked = True

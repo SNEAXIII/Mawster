@@ -504,6 +504,8 @@ const fr: Translations = {
       prefights: 'Préfights',
       date: 'Date',
       note: 'Note',
+      noteBy: 'par',
+      noteExpand: 'Cliquer pour afficher la note entière',
       noData: 'Aucun combat enregistré.',
       filterAttacker: 'Sélectionner attaquant',
       filterDefender: 'Sélectionner défenseur',
