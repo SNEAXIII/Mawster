@@ -8,6 +8,7 @@ import { getChampionImageUrl } from '@/app/services/champions';
 import { shortenChampionName } from '@/app/services/roster';
 import type { FightRecord, SynergyRecord, PrefightRecord } from '@/app/services/fight-records';
 import { reportNote } from '@/app/services/moderation';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/app/lib/utils';
 
 type NoteCellProps = Readonly<{ record: FightRecord }>;
@@ -15,6 +16,7 @@ type NoteCellProps = Readonly<{ record: FightRecord }>;
 function NoteCell({ record }: NoteCellProps) {
   const { t } = useI18n();
   const [reported, setReported] = useState(false);
+  const hasNote = !record.note_blocked && !!record.note;
 
   const onReport = async () => {
     if (!record.note_id) return;
@@ -29,26 +31,55 @@ function NoteCell({ record }: NoteCellProps) {
 
   return (
     <td className='px-3 py-2 max-w-48'>
-      <div className='flex items-center gap-1'>
-        {record.note_blocked ? (
-          <span className='italic text-muted-foreground truncate' data-cy='kb-note-blocked'>
-            {t.moderation.noteBlocked}
+      <div className='flex flex-col gap-0.5'>
+        <div className='flex items-start gap-1'>
+          {record.note_blocked ? (
+            <span className='italic text-muted-foreground truncate' data-cy='kb-note-blocked'>
+              {t.moderation.noteBlocked}
+            </span>
+          ) : hasNote ? (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type='button'
+                  className='min-w-0 truncate text-left cursor-pointer hover:text-foreground transition-colors'
+                  data-cy='kb-note-text'
+                  title={t.game.knowledgeBase.noteExpand}
+                >
+                  {record.note}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                className='max-h-80 w-80 overflow-y-auto whitespace-pre-wrap break-words text-sm'
+                data-cy='kb-note-popover'
+              >
+                {record.note}
+                {record.note_author && (
+                  <p className='mt-2 text-[10px] text-muted-foreground'>
+                    {t.game.knowledgeBase.noteBy} {record.note_author}
+                  </p>
+                )}
+              </PopoverContent>
+            </Popover>
+          ) : (
+            <span className='text-muted-foreground'>—</span>
+          )}
+          {record.note_id && !record.note_blocked && (
+            <button
+              className='shrink-0 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed'
+              data-cy='kb-note-report'
+              disabled={reported}
+              title={reported ? t.moderation.reported : t.moderation.report}
+              onClick={onReport}
+            >
+              <FiFlag className='h-3.5 w-3.5' />
+            </button>
+          )}
+        </div>
+        {record.note_author && !record.note_blocked && (
+          <span className='text-[10px] text-muted-foreground truncate' data-cy='kb-note-author'>
+            {t.game.knowledgeBase.noteBy} {record.note_author}
           </span>
-        ) : (
-          <span className='truncate' title={record.note ?? ''}>
-            {record.note ?? '—'}
-          </span>
-        )}
-        {record.note_id && !record.note_blocked && (
-          <button
-            className='shrink-0 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed'
-            data-cy='kb-note-report'
-            disabled={reported}
-            title={reported ? t.moderation.reported : t.moderation.report}
-            onClick={onReport}
-          >
-            <FiFlag className='h-3.5 w-3.5' />
-          </button>
         )}
       </div>
     </td>

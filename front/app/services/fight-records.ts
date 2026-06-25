@@ -68,6 +68,7 @@ export interface FightRecord {
   note?: string | null;
   note_id?: string | null;
   note_blocked?: boolean;
+  note_author?: string | null;
 }
 
 export interface PaginatedFightRecords {

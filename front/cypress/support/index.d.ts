@@ -198,6 +198,16 @@ declare global {
         championUserId: string,
       ): Chainable<any>;
 
+      /** Create or update the note on a war node (direct backend call, officer/owner only). */
+      apiUpsertWarNote(
+        token: string,
+        allianceId: string,
+        warId: string,
+        battlegroup: number,
+        nodeNumber: number,
+        content: string,
+      ): Chainable<any>;
+
       /** Insert N WarFightRecord rows directly (dev endpoint, bypasses placement flow). */
       apiDevBulkCreateFightRecords(
         warId: string,

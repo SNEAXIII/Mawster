@@ -262,6 +262,7 @@ class TestWarFightRecordSnapshot:
         )
         row = next(item for item in result.items if item.node_number == 10)
         assert row.note == "frozen note"
+        assert row.note_author == data["owner"].game_pseudo
 
     @pytest.mark.asyncio
     async def test_end_war_idempotent_snapshot(self, session):
