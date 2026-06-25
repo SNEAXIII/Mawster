@@ -23,6 +23,7 @@ from tests.integration.endpoints.setup.user_setup import (
 )
 from tests.utils.utils_client import (
     create_auth_headers,
+    execute_delete_request,
     execute_get_request,
     execute_post_request,
     execute_put_request,
@@ -147,6 +148,68 @@ async def test_upsert_twice_reuses_note_and_adds_revision(session):
 
 
 @pytest.mark.asyncio
+async def test_delete_soft_deletes_note_and_keeps_history(session):
+    data = await _setup_war_with_placement()
+    war = data["war"]
+    editor_id = data["owner"].id
+    editor_user_id = data["owner"].user_id
+
+    note = await WarFightNoteService.upsert_note(
+        session=session,
+        war=war,
+        battlegroup=BG,
+        node_number=NODE,
+        body=WarFightNoteUpsertRequest(content="to delete"),
+        editor_account_id=editor_id,
+        editor_user_id=editor_user_id,
+    )
+
+    await WarFightNoteService.delete_note(
+        session=session,
+        war=war,
+        battlegroup=BG,
+        node_number=NODE,
+        editor_user_id=editor_user_id,
+    )
+
+    # Row is kept (soft delete), flagged as deleted by the officer.
+    await session.refresh(note)
+    assert note.deleted_at is not None
+    assert note.deleted_by_id == editor_user_id
+
+    # No active note is returned for the node anymore.
+    assert (await WarFightNoteService.get_note_for_node(session, war.id, BG, NODE)) is None
+
+    # History preserved: original revision + a deletion snapshot.
+    revisions = (
+        await session.exec(
+            select(WarFightNoteRevision).where(WarFightNoteRevision.note_id == note.id)
+        )
+    ).all()
+    assert len(revisions) == 2
+    deletion = next(r for r in revisions if r.is_deletion)
+    assert deletion.content == "to delete"
+    assert deletion.edited_by_user_id == editor_user_id
+
+
+@pytest.mark.asyncio
+async def test_delete_missing_note_raises_404(session):
+    from fastapi import HTTPException
+
+    data = await _setup_war_with_placement()
+
+    with pytest.raises(HTTPException) as exc_info:
+        await WarFightNoteService.delete_note(
+            session=session,
+            war=data["war"],
+            battlegroup=BG,
+            node_number=NODE,
+            editor_user_id=data["owner"].user_id,
+        )
+    assert exc_info.value.status_code == 404
+
+
+@pytest.mark.asyncio
 async def test_upsert_on_ended_war_raises_409(session):
     from fastapi import HTTPException
 
@@ -251,6 +314,55 @@ async def test_note_visible_in_war_defense_response():
     placements = response.json()["placements"]
     node_placement = next(p for p in placements if p["node_number"] == NODE)
     assert node_placement["note"] == content
+
+
+@pytest.mark.asyncio
+async def test_delete_note_officer_ok_member_forbidden():
+    data = await _setup_http_war_with_placement()
+    url = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/nodes/{BG}/{NODE}/note"
+
+    officer_headers = create_auth_headers(user_id=str(USER_ID))
+    created = await execute_put_request(
+        url, payload={"content": "delete me"}, headers=officer_headers
+    )
+    assert created.status_code == 200
+
+    member_headers = create_auth_headers(user_id=str(USER2_ID))
+    forbidden = await execute_delete_request(url, headers=member_headers)
+    assert forbidden.status_code == 403
+
+    ok = await execute_delete_request(url, headers=officer_headers)
+    assert ok.status_code == 204
+
+    # Note no longer surfaced on the node.
+    response = await execute_get_request(
+        f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/{BG}",
+        headers=member_headers,
+    )
+    node_placement = next(p for p in response.json()["placements"] if p["node_number"] == NODE)
+    assert node_placement["note"] is None
+
+
+@pytest.mark.asyncio
+async def test_delete_note_on_ended_war_returns_409():
+    data = await _setup_http_war_with_placement()
+    url = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/nodes/{BG}/{NODE}/note"
+    officer_headers = create_auth_headers(user_id=str(USER_ID))
+
+    created = await execute_put_request(
+        url, payload={"content": "delete me"}, headers=officer_headers
+    )
+    assert created.status_code == 200
+
+    end = await execute_post_request(
+        f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+        payload={"win": True},
+        headers=officer_headers,
+    )
+    assert end.status_code == 200
+
+    response = await execute_delete_request(url, headers=officer_headers)
+    assert response.status_code == 409
 
 
 @pytest.mark.asyncio

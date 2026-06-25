@@ -30,6 +30,10 @@ NOTE_CONTENT_UNCHANGED = HTTPException(
     status_code=status.HTTP_409_CONFLICT,
     detail="Note content is identical to the current one",
 )
+NOTE_NOT_FOUND = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND,
+    detail="No note on this node",
+)
 
 
 class WarFightNoteService:
@@ -122,6 +126,51 @@ class WarFightNoteService:
         await session.commit()
         await session.refresh(note)
         return note
+
+    @classmethod
+    async def delete_note(
+        cls,
+        session: SessionDep,
+        war: War,
+        battlegroup: int,
+        node_number: int,
+        editor_user_id: uuid.UUID,
+    ) -> None:
+        """Soft-delete the active note on a node (officer/owner action). The note row is kept
+        and a deletion snapshot is appended to the revision history so it stays auditable —
+        same persistence path as an admin moderation deletion."""
+        if war.status == WarStatus.ended:
+            raise WAR_ENDED_NOTE_LOCKED
+
+        note = (
+            await session.exec(
+                select(WarFightNote).where(
+                    and_(
+                        WarFightNote.war_id == war.id,
+                        WarFightNote.battlegroup == battlegroup,
+                        WarFightNote.node_number == node_number,
+                        WarFightNote.deleted_at.is_(None),
+                    )
+                )
+            )
+        ).first()
+        if note is None:
+            raise NOTE_NOT_FOUND
+
+        now = datetime.now()
+        note.deleted_at = now
+        note.deleted_by_id = editor_user_id
+        session.add(note)
+        session.add(
+            WarFightNoteRevision(
+                note_id=note.id,
+                content=note.content,
+                edited_by_user_id=editor_user_id,
+                is_deletion=True,
+                edited_at=now,
+            )
+        )
+        await session.commit()
 
     @classmethod
     async def get_note_for_node(

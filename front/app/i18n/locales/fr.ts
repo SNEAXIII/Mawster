@@ -394,6 +394,9 @@ const fr: Translations = {
       notePlaceholder: 'Ajouter une note pour ce combat…',
       noteSave: 'Enregistrer la note',
       noteSaved: 'Note enregistrée',
+      noteDelete: 'Supprimer la note',
+      noteDeleted: 'Note supprimée',
+      noteDeleteError: 'Échec de la suppression de la note',
       synergy: {
         add: 'Ajouter une synergie',
         revoke: 'Révoquer',

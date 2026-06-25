@@ -387,6 +387,9 @@ const en = {
       notePlaceholder: 'Add a note for this combat…',
       noteSave: 'Save note',
       noteSaved: 'Note saved',
+      noteDelete: 'Delete note',
+      noteDeleted: 'Note deleted',
+      noteDeleteError: 'Failed to delete note',
       synergy: {
         add: 'Add a synergy',
         revoke: 'Revoke',

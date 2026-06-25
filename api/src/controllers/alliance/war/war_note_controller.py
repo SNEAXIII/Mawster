@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 
 from src.dto.alliance.war.dto_war_note import (
     WarFightNoteResponse,
@@ -57,4 +57,28 @@ async def upsert_war_fight_note(
         content=note.content,
         updated_by_pseudo=account.game_pseudo,
         updated_at=note.updated_at,
+    )
+
+
+@war_note_controller.delete(
+    "/{war_id}/nodes/{battlegroup}/{node_number}/note",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_war_fight_note(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    node_number: int,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    war: WarDep,
+):
+    """Soft-delete the note on a war combat node, keeping its history. Officers/owner only."""
+    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    await WarFightNoteService.delete_note(
+        session,
+        war=war,
+        battlegroup=battlegroup,
+        node_number=node_number,
+        editor_user_id=current_user.id,
     )

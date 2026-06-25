@@ -24,6 +24,27 @@ describe('War Fight Notes', () => {
     });
   });
 
+  it('officer deletes a note from a node', () => {
+    setupAttackerScenario('wfn3').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      cy.apiLogin(ownerData.user_id);
+      cy.visit('/game/war');
+      cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+
+      // Write a note, then delete it
+      cy.getByCy('node-actions-trigger-node-10').click();
+      cy.getByCy('war-note-input').type('Delete me');
+      cy.getByCy('war-note-save').click();
+      cy.getByCy('war-note-delete').click();
+
+      // Reopen — note is gone, delete button no longer shown
+      cy.get('body').type('{esc}');
+      cy.getByCy('node-actions-trigger-node-10').click();
+      cy.getByCy('war-note-input').should('have.value', '');
+      cy.getByCy('war-note-delete').should('not.exist');
+    });
+  });
+
   it('non-officer member sees the note read-only', () => {
     setupAttackerScenario('wfn2').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
