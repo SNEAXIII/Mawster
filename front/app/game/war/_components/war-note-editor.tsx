@@ -41,7 +41,7 @@ export default function WarNoteEditor({
       <AlertTriangle className='h-3.5 w-3.5 shrink-0 mt-0.5' />
       <div className='flex flex-col'>
         <span className='font-semibold'>
-          {t.moderation.muted} — {t.moderation.muteEditDisabled}
+          {t.moderation.muted}
         </span>
         <span>{mute.reason}</span>
         <span>
