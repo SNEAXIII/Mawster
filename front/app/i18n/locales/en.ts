@@ -566,7 +566,6 @@ const en = {
     reportError: 'Failed to report note',
     noteBlocked: 'Note temporarily blocked',
     muted: 'You are muted',
-    muteEditDisabled: 'Editing disabled',
     muteExpires: 'Expires',
     warned: 'Warning',
     loadError: 'Failed to load reports',

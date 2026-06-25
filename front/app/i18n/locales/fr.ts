@@ -574,7 +574,6 @@ const fr: Translations = {
     reportError: 'Échec du signalement',
     noteBlocked: 'Note temporairement bloquée',
     muted: 'Vous êtes réduit au silence',
-    muteEditDisabled: 'Édition désactivée',
     muteExpires: 'Expire le',
     warned: 'Avertissement',
     loadError: 'Échec du chargement des signalements',
