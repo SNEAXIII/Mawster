@@ -499,6 +499,8 @@ const en = {
       prefights: 'Prefights',
       date: 'Date',
       note: 'Note',
+      noteBy: 'by',
+      noteExpand: 'Click to show the full note',
       noData: 'No fight records found.',
       filterAttacker: 'Select attacker',
       filterDefender: 'Select defender',

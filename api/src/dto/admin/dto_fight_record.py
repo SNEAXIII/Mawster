@@ -73,6 +73,7 @@ class WarFightRecordResponse(BaseModel):
     note: Optional[str] = None
     note_id: Optional[uuid.UUID] = None
     note_blocked: bool = False
+    note_author: Optional[str] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -119,6 +120,7 @@ class WarFightRecordResponse(BaseModel):
                 "note": None,
                 "note_id": None,
                 "note_blocked": False,
+                "note_author": None,
             }
         return {
             "id": data.id,
