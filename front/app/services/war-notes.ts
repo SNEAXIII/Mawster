@@ -44,3 +44,19 @@ export async function upsertWarFightNote(
   await throwOnError(response, 'Failed to save war fight note');
   return response.json();
 }
+
+export async function deleteWarFightNote(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  nodeNumber: number
+): Promise<void> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/nodes/${battlegroup}/${nodeNumber}/note`,
+    {
+      method: 'DELETE',
+      headers: jsonHeaders,
+    }
+  );
+  await throwOnError(response, 'Failed to delete war fight note');
+}

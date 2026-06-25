@@ -44,7 +44,7 @@ import {
   assignWarAssist,
   removeWarAssist,
 } from '@/app/services/war';
-import { upsertWarFightNote } from '@/app/services/war-notes';
+import { upsertWarFightNote, deleteWarFightNote } from '@/app/services/war-notes';
 import { WarMode } from '@/app/game/war/_components/war-types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -129,6 +129,7 @@ interface WarContextValue {
 
   // Fight note
   handleSaveNote: (nodeNumber: number, content: string) => Promise<void>;
+  handleDeleteNote: (nodeNumber: number) => Promise<void>;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -682,6 +683,26 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
   };
 
+  const handleDeleteNote = async (nodeNumber: number) => {
+    if (!selectedAllianceId || !activeWarId) return;
+    try {
+      await deleteWarFightNote(selectedAllianceId, activeWarId, selectedBg, nodeNumber);
+      toast.success(t.game.war.noteDeleted);
+      setWarSummary((prev) =>
+        prev
+          ? {
+              ...prev,
+              placements: prev.placements.map((p) =>
+                p.node_number === nodeNumber ? { ...p, note: null } : p
+              ),
+            }
+          : prev
+      );
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.game.war.noteDeleteError);
+    }
+  };
+
   // ─── Context value ─────────────────────────────────────────────────────────
 
   const value = useMemo<WarContextValue>(
@@ -738,6 +759,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       handleAssignAssist,
       handleRemoveAssist,
       handleSaveNote,
+      handleDeleteNote,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
