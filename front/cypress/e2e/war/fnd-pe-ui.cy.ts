@@ -19,7 +19,10 @@ describe('War – FND & Planning Error: knowledge base rendering', () => {
       cy.apiEndWar(ownerData.access_token, allianceId, warId);
 
       cy.apiLogin(ownerData.user_id);
-      cy.visit('/game/knowledge-base');
+      // These wars have no season (setupAttackerScenario creates none), so their
+      // fight records are off-season. The KB defaults to the "all_seasons" filter,
+      // which is season_id IS NOT NULL and would hide them — query off-season here.
+      cy.visit('/game/knowledge-base?season_selector=off_season');
 
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
       cy.getByCy('fight-record-planning-error').should('be.visible');
@@ -35,7 +38,7 @@ describe('War – FND & Planning Error: knowledge base rendering', () => {
       cy.apiEndWar(ownerData.access_token, allianceId, warId);
 
       cy.apiLogin(ownerData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.visit('/game/knowledge-base?season_selector=off_season');
 
       cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
       cy.getByCy('fight-record-planning-error').should('not.exist');
@@ -49,7 +52,7 @@ describe('War – FND & Planning Error: knowledge base rendering', () => {
       cy.apiEndWar(ownerData.access_token, allianceId, warId);
 
       cy.apiLogin(ownerData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.visit('/game/knowledge-base?season_selector=off_season');
 
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
       cy.getByCy('fight-record-ko').should('have.text', '1');
