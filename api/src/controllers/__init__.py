@@ -30,6 +30,7 @@ from src.controllers.alliance.war.fight_record_import_controller import (
 )
 from src.controllers.alliance.war.note_report_controller import note_report_controller
 from src.controllers.admin.moderation_controller import moderation_controller
+from src.controllers.stats_controller import stats_controller
 
 routers = [
     user_admin_controller,
@@ -61,4 +62,5 @@ routers = [
     statistics_controller,
     fight_record_controller,
     ranking_history_controller,
+    stats_controller,
 ]
