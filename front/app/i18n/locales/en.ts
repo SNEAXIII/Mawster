@@ -47,6 +47,129 @@ const en = {
   landing: {
     wip: '🚧 Work in Progress',
     wipDescription: 'The application is under development. Come back soon!',
+
+    eyebrow: 'Alliance War manager',
+    evolving: 'Evolving · Open source',
+    heroTitle: 'Win the war on paper first.',
+    heroSubtitle:
+      'Mawster turns Alliance War into one clear plan — defense, attack, synergies and stats in one place. No more screenshots or Excel sheets to manage your roster.',
+    heroCtaPrimary: 'Get started — free',
+    heroCtaSecondary: 'See features',
+    heroNote: 'Discord & Google login · Line and more coming soon',
+
+    mapDefenseLabel: 'Defense',
+    mapAttackLabel: 'Attack',
+
+    statActiveAlliances: 'Active alliances',
+    statParticipatingPlayers: 'Participating players',
+    statKnowledgeBaseFights: 'Fights in the knowledge base',
+    statWarsRecorded: 'Wars recorded',
+
+    featuresEyebrow: 'Features',
+    featuresTitle: 'Everything you need to run Alliance War.',
+
+    featStatsTitle: 'Advanced statistics',
+    featStatsDesc:
+      'KO counts, weighted fights, kill ratio, assists given and received, boss and miniboss tallies — per player, per war, and lifetime.',
+    featHistoryTitle: 'Fight history',
+    featHistoryDesc:
+      'Every combat logged per node, war and battlegroup, with prefight abilities and synergy providers. Import past wars by CSV.',
+    featAttackTitle: 'Attack planning',
+    featAttackDesc:
+      'Assign attackers to nodes, write fight notes, plan synergies and prefights, then track KOs and assists as the war runs.',
+    featDefenseTitle: 'Defense board',
+    featDefenseDesc:
+      'Lay out your defense on the war map for each battlegroup and lock your champion ban list before the war opens.',
+    featLockTitle: 'No champion plays twice',
+    featLockDesc:
+      'A champion placed on defense is locked out of attack — so nobody ever plans a fight around a champion that cannot show up.',
+    featOnboardingTitle: '20-minute roster',
+    featOnboardingDesc:
+      'Fill your entire roster in twenty minutes, tops — then never type it into a spreadsheet again.',
+    featPrivacyTitle: 'Your data stays private',
+    featPrivacyDesc:
+      'Even site admins cannot read your alliance content — rosters, wars and plans stay inside your alliance.',
+
+    featNew: 'New',
+    featNotesTitle: 'Plan notes with moderation',
+    featNotesDesc:
+      'Drop notes straight onto alliance-war plans, with a moderation system so officers keep the board clean and on-topic.',
+
+    previewTitle: 'War battlegroup',
+    previewSubtitle: 'Example layout',
+    previewCaption: 'Preview of the alliance war board',
+
+    statsShowcase: {
+      eyebrow: 'Accountability stats',
+      demoBadge: 'Sample data',
+      title: 'See exactly who carried the war.',
+      subtitle:
+        'Per-player KO, kill ratio, assists, boss and miniboss tallies — plus champion KO distribution and season ranking. The post-war analytics other tools leave out.',
+      rankingTitle: 'Ranking history',
+    },
+
+    testimonialsTitle: 'A few words from our users',
+
+    faqEyebrow: 'FAQ',
+    faqTitle: 'Frequently asked questions',
+    faqItems: [
+      {
+        q: 'Is Mawster free?',
+        a: 'Yes. Mawster is open source and the core tools are free to use. Down the line, some optional extras — like priority support, faster bug fixes, or advanced features — may become paid to help keep the project alive, but the essentials stay free.',
+      },
+      {
+        q: 'How do I sign in?',
+        a: 'Sign in with your Discord account in one click. Google sign-in is also available, and more providers are coming.',
+      },
+      {
+        q: 'What can I manage with Mawster?',
+        a: 'Track your champion roster, plan alliance war defense placements and attack assignments across battlegroups, and manage your alliance members and officers.',
+      },
+      {
+        q: 'Does every alliance member need an account?',
+        a: 'Only members who want to manage their own roster or take part in war planning need to sign in. Leaders and officers can organize the alliance either way.',
+      },
+      {
+        q: 'Can I use it on mobile?',
+        a: 'Yes. Mawster runs in your browser and adapts to phones and tablets, so you can check placements and update your roster on the go.',
+      },
+    ],
+
+    requestEyebrow: 'Your ideas',
+    requestTitle: 'You decide what comes next.',
+    requestDesc:
+      'Mawster grows from what alliances actually ask for. Suggest a feature and we build the roadmap around the community.',
+    requestStep1: 'Suggest a feature on Discord',
+    requestStep2: 'The community weighs in',
+    requestStep3: 'We build what matters most',
+    requestPremiumTitle: 'Premium priority',
+    requestPremiumDesc:
+      'Premium supporters get their requests moved to the front of the queue, plus faster bug fixes.',
+    requestCta: 'Request a feature',
+
+    soonEyebrow: 'Roadmap',
+    soonTitle: 'Already in the works.',
+    soonBadge: 'Soon',
+    soonBotTitle: 'Discord bot',
+    soonBotDesc:
+      'Run Mawster straight from Discord — check placements, post war plans and ping your battlegroups without leaving the server.',
+    soonScanTitle: 'Screenshot roster import',
+    soonScanDesc:
+      'Drop a screenshot of your champions and let Mawster read it to fill your roster automatically — no more manual entry.',
+
+    openSourceEyebrow: 'Open source',
+    openSourceTitle: 'Built in the open, with the community.',
+    openSourceDesc:
+      'Mawster is free and open source, and it keeps growing. Read the code, open an issue, or come talk strategy on Discord.',
+    linkRepo: 'View the code',
+    linkSupport: 'Support on Discord',
+    contactLabel: 'Reach the maker',
+
+    ctaTitle: 'Get your alliance organized.',
+    ctaSubtitle: 'Sign in and build your first battle plan tonight.',
+    ctaDiscord: 'Continue with Discord',
+    ctaGoogle: 'Continue with Google',
+    ctaSoon: 'Line and more coming soon',
   },
 
   // Login page
@@ -476,7 +599,8 @@ const en = {
         confirmCloseTitle: 'Close this season?',
         confirmCloseBody: 'It stops being live. You can reopen it later if needed.',
         confirmRevertTitle: 'Back to pre-season?',
-        confirmRevertBody: 'This closed season returns to pre-season. Use it to undo a mistaken close.',
+        confirmRevertBody:
+          'This closed season returns to pre-season. Use it to undo a mistaken close.',
         createError: 'Failed to create season',
         openError: 'Failed to open season',
         closeError: 'Failed to close season',
@@ -501,6 +625,7 @@ const en = {
       note: 'Note',
       noteBy: 'by',
       noteExpand: 'Click to show the full note',
+      noteCollapse: 'Click to collapse',
       noData: 'No fight records found.',
       filterAttacker: 'Select attacker',
       filterDefender: 'Select defender',
@@ -609,7 +734,7 @@ const en = {
     warnTitle: 'Warn user',
     warnDescription: 'Send a warning to this user.',
     liftMuteTitle: 'Lift mute',
-    liftMuteDescription: 'Restore this user\'s ability to post notes. Continue?',
+    liftMuteDescription: "Restore this user's ability to post notes. Continue?",
     reasonLabel: 'Reason',
     reasonPlaceholder: 'Explain the reason…',
     expiryLabel: 'Expires at (optional)',
