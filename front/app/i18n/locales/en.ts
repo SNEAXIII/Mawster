@@ -50,10 +50,10 @@ const en = {
 
     eyebrow: 'Alliance War manager',
     evolving: 'Evolving · Open source',
-    heroTitle: 'Win the war on paper first.',
+    heroTitle: 'Wars are won in the planning.',
     heroSubtitle:
-      'Mawster turns Alliance War into one clear plan — defense, attack, synergies and stats in one place. No more screenshots or Excel sheets to manage your roster.',
-    heroCtaPrimary: 'Get started — free',
+      'Mawster turns Alliance War into one clear plan — defense, attack, synergies and stats in one place. No more screenshots or Excel sheets to manage your teammates rosters.',
+    heroCtaPrimary: 'Get started for free',
     heroCtaSecondary: 'See features',
     heroNote: 'Discord & Google login · Line and more coming soon',
 
@@ -65,7 +65,7 @@ const en = {
     statKnowledgeBaseFights: 'Fights in the knowledge base',
     statWarsRecorded: 'Wars recorded',
 
-    featuresEyebrow: 'Features',
+    featuresEyebrow: 'Main features',
     featuresTitle: 'Everything you need to run Alliance War.',
 
     featStatsTitle: 'Advanced statistics',
@@ -74,15 +74,9 @@ const en = {
     featHistoryTitle: 'Fight history',
     featHistoryDesc:
       'Every combat logged per node, war and battlegroup, with prefight abilities and synergy providers. Import past wars by CSV.',
-    featAttackTitle: 'Attack planning',
-    featAttackDesc:
-      'Assign attackers to nodes, write fight notes, plan synergies and prefights, then track KOs and assists as the war runs.',
-    featDefenseTitle: 'Defense board',
-    featDefenseDesc:
-      'Lay out your defense on the war map for each battlegroup and lock your champion ban list before the war opens.',
-    featLockTitle: 'No champion plays twice',
-    featLockDesc:
-      'A champion placed on defense is locked out of attack — so nobody ever plans a fight around a champion that cannot show up.',
+    featWarTitle: 'War planning',
+    featWarDesc:
+      'Assign attackers to nodes with fight notes, synergies and prefights, lay out your defense per battlegroup and lock your ban list — then track KOs and assists as the war runs.',
     featOnboardingTitle: '20-minute roster',
     featOnboardingDesc:
       'Fill your entire roster in twenty minutes, tops — then never type it into a spreadsheet again.',
@@ -97,18 +91,28 @@ const en = {
 
     previewTitle: 'War battlegroup',
     previewSubtitle: 'Example layout',
-    previewCaption: 'Preview of the alliance war board',
+    previewCaption: 'Preview of the alliance war history',
 
     statsShowcase: {
-      eyebrow: 'Accountability stats',
+      eyebrow: 'War stats',
       demoBadge: 'Sample data',
       title: 'See exactly who carried the war.',
       subtitle:
-        'Per-player KO, kill ratio, assists, boss and miniboss tallies — plus champion KO distribution and season ranking. The post-war analytics other tools leave out.',
+        'Per-player KO, kill ratio, assists, boss and miniboss tallies — plus champion KO distribution and season ranking.',
       rankingTitle: 'Ranking history',
     },
 
     testimonialsTitle: 'A few words from our users',
+    testimonialRoles: {
+      leader: 'Leader',
+      officer: 'Officer',
+      member: 'Member',
+    },
+    testimonialQuotes: {
+      placeholder: 'Placeholder quote. Please replace with a real quote.',
+      elliebingo:
+        "Mawster has been an invaluable resource in my alliance planning, it's simple to use and does a lot of the busywork for you. I'd highly recommend it.",
+    },
 
     faqEyebrow: 'FAQ',
     faqTitle: 'Frequently asked questions',
@@ -148,7 +152,7 @@ const en = {
     requestCta: 'Request a feature',
 
     soonEyebrow: 'Roadmap',
-    soonTitle: 'Already in the works.',
+    soonTitle: 'Roadmap',
     soonBadge: 'Soon',
     soonBotTitle: 'Discord bot',
     soonBotDesc:

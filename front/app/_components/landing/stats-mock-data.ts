@@ -34,7 +34,7 @@ export const MOCK_CHAMPION_USAGE: ChampionUsageItem[] = [
   champ('Absorbing Man', 41),
   champ('Prowler', 34),
   champ('Kushala', 32),
-  champ('Human Torch', 42),
+  champ('Wave', 42),
 ];
 
 // Season ranking progression (ELO per war). First war lost, then a win streak.

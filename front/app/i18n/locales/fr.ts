@@ -52,10 +52,10 @@ const fr: Translations = {
 
     eyebrow: "Gestion de Guerre d'Alliance",
     evolving: 'En évolution · Open source',
-    heroTitle: "Gagne la guerre d'abord sur le papier.",
+    heroTitle: 'La guerre se gagne lors de la planification.',
     heroSubtitle:
-      "Mawster transforme la Guerre d'Alliance en un plan clair — défense, attaque, synergies et stats au même endroit. Fini les screenshots et les fichiers Excel pour gérer ton roster.",
-    heroCtaPrimary: 'Commencer — gratuit',
+      "Mawster transforme la Guerre d'Alliance en un plan clair — défense, attaque, synergies et stats au même endroit. Fini les screenshots et les fichiers Excel pour gérer les rosters de tes équipiers.",
+    heroCtaPrimary: 'Commencer gratuitement',
     heroCtaSecondary: 'Voir les fonctionnalités',
     heroNote: 'Connexion Discord & Google · Line et plus à venir',
 
@@ -67,7 +67,7 @@ const fr: Translations = {
     statKnowledgeBaseFights: 'Combats dans la base de connaissances',
     statWarsRecorded: 'Guerres enregistrées',
 
-    featuresEyebrow: 'Fonctionnalités',
+    featuresEyebrow: 'Fonctionnalités principales',
     featuresTitle: "Tout ce qu'il faut pour gérer la Guerre d'Alliance.",
 
     featStatsTitle: 'Statistiques avancées',
@@ -76,41 +76,45 @@ const fr: Translations = {
     featHistoryTitle: 'Historique des combats',
     featHistoryDesc:
       'Chaque combat enregistré par nœud, guerre et bataillon, avec les capacités de prefight et les fournisseurs de synergie. Import des guerres passées en CSV.',
-    featAttackTitle: "Planification de l'attaque",
-    featAttackDesc:
-      'Assigne les attaquants aux nœuds, rédige des notes de combat, planifie synergies et prefights, puis suis les KO et assists au fil de la guerre.',
-    featDefenseTitle: 'Tableau de défense',
-    featDefenseDesc:
-      "Place ta défense sur la carte de guerre pour chaque bataillon et verrouille ta liste de bannissements avant l'ouverture.",
-    featLockTitle: 'Aucun champion ne joue deux fois',
-    featLockDesc:
-      "Un champion placé en défense est verrouillé en attaque — personne ne planifie un combat autour d'un champion qui ne peut pas se présenter.",
+    featWarTitle: 'Planification de guerre',
+    featWarDesc:
+      'Assigne les attaquants aux nœuds avec notes, synergies et prefights, place ta défense par bataillon et verrouille ta liste de bannissements — puis suis les KO et assists au fil de la guerre.',
     featOnboardingTitle: 'Roster en 20 minutes',
     featOnboardingDesc:
       'Remplis tout ton roster en vingt minutes maximum — et ne le retape plus jamais dans un tableur.',
     featPrivacyTitle: 'Vos données restent privées',
     featPrivacyDesc:
-      "Même les admins du site ne voient pas le contenu de votre alliance — rosters, guerres et plans restent dans votre alliance.",
+      'Même les admins du site ne voient pas le contenu de votre alliance — rosters, guerres et plans restent dans votre alliance.',
 
     featNew: 'Nouveau',
     featNotesTitle: 'Notes sur les plans, avec modération',
     featNotesDesc:
-      "Ajoute des notes directement sur les plans de guerre d'alliance, avec un système de modération pour que les officiers gardent le plateau propre et pertinent.",
+      "Ajoute des notes directement sur les plans de guerre d'alliance, avec un système de modération pour que les officiers gardent le tableau propre et pertinent.",
 
     previewTitle: 'Carte de guerre',
     previewSubtitle: 'Exemple de disposition',
-    previewCaption: "Aperçu du plateau de guerre d'alliance",
+    previewCaption: "Aperçu l'historique de guerre d'alliance",
 
     statsShowcase: {
-      eyebrow: 'Stats de responsabilité',
+      eyebrow: 'Stats de guerre',
       demoBadge: "Données d'exemple",
       title: 'Voyez exactement qui a porté la guerre.',
       subtitle:
-        'KO, kill ratio, assists, comptes de boss et miniboss par joueur — plus la répartition des KO par champion et le classement de saison. L\'analytique post-guerre que les autres outils laissent de côté.',
+        'KO, kill ratio, assists, comptes de boss et miniboss par joueur — plus la répartition des KO par champion et le classement de saison.',
       rankingTitle: 'Historique de classement',
     },
 
-    testimonialsTitle: "Quelques avis des utilisateurs",
+    testimonialsTitle: 'Quelques avis des utilisateurs',
+    testimonialRoles: {
+      leader: 'Leader',
+      officer: 'Officier',
+      member: 'Membre',
+    },
+    testimonialQuotes: {
+      placeholder: 'Citation à remplacer par un vrai avis.',
+      elliebingo:
+        'Mawster est une ressource précieuse pour la planification de mon alliance, simple à utiliser et il fait une grande partie du travail fastidieux à ta place. Je le recommande vivement.',
+    },
 
     faqEyebrow: 'FAQ',
     faqTitle: 'Questions fréquentes',
@@ -132,7 +136,7 @@ const fr: Translations = {
         a: "Seuls les membres qui veulent gérer leur propre roster ou participer à la planification de guerre doivent se connecter. Les leaders et officiers peuvent organiser l'alliance dans tous les cas.",
       },
       {
-        q: 'Puis-je l\'utiliser sur mobile ?',
+        q: "Puis-je l'utiliser sur mobile ?",
         a: "Oui. Mawster fonctionne dans ton navigateur et s'adapte aux téléphones et tablettes, pour consulter les placements et mettre à jour ton roster où que tu sois.",
       },
     ],
@@ -140,17 +144,17 @@ const fr: Translations = {
     requestEyebrow: 'Vos idées',
     requestTitle: 'Tu décides de la suite.',
     requestDesc:
-      "Mawster évolue à partir de ce que les alliances demandent vraiment. Propose une fonctionnalité et on construit la roadmap autour de la communauté.",
+      'Mawster évolue à partir de ce que les alliances demandent vraiment. Propose une fonctionnalité et on construit la roadmap autour de la communauté.',
     requestStep1: 'Propose une fonctionnalité sur Discord',
     requestStep2: 'La communauté donne son avis',
     requestStep3: 'On construit ce qui compte le plus',
     requestPremiumTitle: 'Priorité premium',
     requestPremiumDesc:
-      "Les soutiens premium voient leurs demandes passer en tête de file, avec des corrections de bugs accélérées.",
+      'Les soutiens premium voient leurs demandes passer en tête de file, avec des corrections de bugs accélérées.',
     requestCta: 'Proposer une fonctionnalité',
 
     soonEyebrow: 'Roadmap',
-    soonTitle: 'Déjà en chantier.',
+    soonTitle: 'Roadmap',
     soonBadge: 'Bientôt',
     soonBotTitle: 'Bot Discord',
     soonBotDesc:

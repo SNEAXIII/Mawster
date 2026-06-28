@@ -1,15 +1,16 @@
+export type TestimonialRole = 'leader' | 'officer' | 'member';
+
 export type Testimonial = {
   name: string; // account name
   alliance: string; // alliance name or tag
-  role: string; // e.g. Leader, Officer, Member
-  quote: string;
+  roleKey: TestimonialRole;
+  quoteKey: string; // key in landing.testimonialQuotes
 };
 
-// Fill these in with real quotes. While any field equals PLACEHOLDER,
-// the testimonials section stays hidden (no fake quotes in production).
-export const PLACEHOLDER = 'Placeholder quote. Please replace with a real quote.';
-
+// While a testimonial points at the 'placeholder' quote, it stays hidden
+// (no fake quotes in production). Add a real quoteKey to publish it.
 export const TESTIMONIALS: Testimonial[] = [
-  { name: 'Babayaga', alliance: "2-1-1", role: "Leader", quote: PLACEHOLDER },
-  { name: 'Ssalazard', alliance: 'WAM6', role: "Leader", quote: PLACEHOLDER },
+  { name: 'Babayaga', alliance: '2-1-1', roleKey: 'leader', quoteKey: 'placeholder' },
+  { name: 'Aragorn', alliance: 'WAM6', roleKey: 'leader', quoteKey: 'placeholder' },
+  { name: 'Elliebingo', alliance: 'SPYTY', roleKey: 'leader', quoteKey: 'elliebingo' },
 ];
