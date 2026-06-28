@@ -57,7 +57,13 @@ async def _setup_with_active_season():
 
 
 async def _add_placement(
-    war_id, champion_user_id, champion_id, node_number, battlegroup=1, ko_count=0
+    war_id,
+    champion_user_id,
+    champion_id,
+    node_number,
+    battlegroup=1,
+    ko_count=0,
+    is_fight_not_done=False,
 ):
     placement = WarDefensePlacement(
         war_id=war_id,
@@ -68,6 +74,7 @@ async def _add_placement(
         rank=3,
         attacker_champion_user_id=champion_user_id,
         ko_count=ko_count,
+        is_fight_not_done=is_fight_not_done,
     )
     await load_objects([placement])
     return placement
@@ -129,6 +136,31 @@ class TestGetCurrentSeasonStatistics:
         assert p["total_fights"] == 2
         assert p["total_kos"] == 1
         assert p["ratio"] == 50  # (1 - 1/2) * 100
+
+    @pytest.mark.anyio
+    async def test_not_done_fight_counts_as_three_kos_in_ratio(self):
+        # 1 clean done fight + 1 not-done fight. The not-done fight is treated
+        # as a fight with 3 KOs, so it tanks the ratio.
+        data = await _setup_with_active_season()
+        await _add_placement(
+            data["war"].id, data["cu"].id, data["champ"].id, node_number=10, ko_count=0
+        )
+        await _add_placement(
+            data["war"].id,
+            data["cu"].id,
+            data["champ"].id,
+            node_number=11,
+            battlegroup=2,
+            is_fight_not_done=True,
+        )
+
+        response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
+        assert response.status_code == 200
+        p = response.json()[0]
+        assert p["total_fights"] == 1  # not-done excluded from the fight tally
+        assert p["total_kos"] == 0
+        assert p["total_not_fought"] == 1
+        assert p["ratio"] == -50  # (1 - (0 + 3 * 1) / (1 + 1)) * 100
 
     @pytest.mark.anyio
     async def test_miniboss_and_boss_counted_separately(self):
