@@ -172,7 +172,7 @@ const fr: Translations = {
     contactLabel: 'Contacter le créateur',
 
     ctaTitle: 'Organise ton alliance.',
-    ctaSubtitle: 'Connecte-toi et bâtis ton premier plan de bataille ce soir.',
+    ctaSubtitle: 'Organise dès maintenant tes plans offensifs et défensifs.',
     ctaDiscord: 'Continuer avec Discord',
     ctaGoogle: 'Continuer avec Google',
     ctaSoon: 'Line et plus à venir',

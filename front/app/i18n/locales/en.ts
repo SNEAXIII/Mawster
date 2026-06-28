@@ -170,7 +170,7 @@ const en = {
     contactLabel: 'Reach the maker',
 
     ctaTitle: 'Get your alliance organized.',
-    ctaSubtitle: 'Sign in and build your first battle plan tonight.',
+    ctaSubtitle: 'Set up your attack and defense plans right now.',
     ctaDiscord: 'Continue with Discord',
     ctaGoogle: 'Continue with Google',
     ctaSoon: 'Line and more coming soon',
