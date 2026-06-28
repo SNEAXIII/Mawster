@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { useWar } from '@/app/contexts/war-context';
+import { ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { SearchInput } from '@/components/search-input';
@@ -52,6 +53,8 @@ export default function WarAttackerSelector({
   const { canManageWar } = useWar();
   const currentSeason = useCurrentSeason();
   const maxAttackers = currentSeason?.max_attackers_per_member ?? 3;
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [showNote, setShowNote] = useState(false);
   const [available, setAvailable] = useState<AvailableAttacker[]>([]);
   const [playerFilter, setPlayerFilter] = useState('');
   const [championSearch, setChampionSearch] = useState('');
@@ -88,7 +91,11 @@ export default function WarAttackerSelector({
       setClassFilter('');
       setSagaFilter(false);
       setPreferredFilter(false);
+      // Unfold the note when one already exists, fold it otherwise.
+      const existingNote = placements.find((p) => p.node_number === nodeNumber)?.note;
+      setShowNote(!!existingNote);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, fetchAvailable]);
 
   // Count already-assigned attackers per pseudo from current placements
@@ -100,12 +107,16 @@ export default function WarAttackerSelector({
   }
 
   const availableClasses = useMemo(
-    () => Array.from(new Set(available.map((a) => a.champion_class))).sort((a, b) => a.localeCompare(b)),
+    () =>
+      Array.from(new Set(available.map((a) => a.champion_class))).sort((a, b) =>
+        a.localeCompare(b)
+      ),
     [available]
   );
 
   const availablePlayers = useMemo(
-    () => Array.from(new Set(available.map((a) => a.game_pseudo))).sort((a, b) => a.localeCompare(b)),
+    () =>
+      Array.from(new Set(available.map((a) => a.game_pseudo))).sort((a, b) => a.localeCompare(b)),
     [available]
   );
 
@@ -234,6 +245,11 @@ export default function WarAttackerSelector({
       <DialogContent
         className='max-w-2xl max-h-[90vh] overflow-hidden flex flex-col gap-0 p-0'
         data-cy='war-attacker-search'
+        onOpenAutoFocus={(e) => {
+          // Default focus the champion search instead of the note textarea
+          e.preventDefault();
+          searchRef.current?.focus();
+        }}
       >
         <DialogHeader className='px-6 py-4'>
           <DialogTitle>
@@ -249,20 +265,41 @@ export default function WarAttackerSelector({
                 mode='full'
               />
             </div>
-            <div className='px-3 pb-1' data-cy='war-attacker-selector-note'>
-              <WarNoteEditor
-                nodeNumber={nodeNumber}
-                note={currentPlacement.note ?? null}
-                noteId={currentPlacement.note_id ?? null}
-                noteBlocked={currentPlacement.note_blocked ?? false}
-                canManage={canManageWar}
-              />
+            <div
+              className='px-3 pb-1'
+              data-cy='war-attacker-selector-note'
+            >
+              <button
+                type='button'
+                onClick={() => setShowNote((v) => !v)}
+                className='flex w-full items-center gap-1.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground'
+                data-cy='war-attacker-selector-note-toggle'
+                aria-expanded={showNote}
+              >
+                <ChevronRight
+                  className={cn('h-3.5 w-3.5 transition-transform', showNote && 'rotate-90')}
+                />
+                {t.game.war.noteLabel}
+                {currentPlacement.note && !showNote && (
+                  <span className='h-1.5 w-1.5 rounded-full bg-primary' />
+                )}
+              </button>
+              {showNote && (
+                <WarNoteEditor
+                  nodeNumber={nodeNumber}
+                  note={currentPlacement.note ?? null}
+                  noteId={currentPlacement.note_id ?? null}
+                  noteBlocked={currentPlacement.note_blocked ?? false}
+                  canManage={canManageWar}
+                />
+              )}
             </div>
           </>
         ) : null}
         <Separator />
         <div className='px-4 py-3 flex flex-col gap-2'>
           <SearchInput
+            ref={searchRef}
             value={championSearch}
             onChange={setChampionSearch}
             placeholder={t.game.war.searchChampion}
