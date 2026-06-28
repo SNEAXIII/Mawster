@@ -49,6 +49,133 @@ const fr: Translations = {
   landing: {
     wip: '🚧 Work in Progress',
     wipDescription: "L'application est en cours de développement. Revenez bientôt !",
+
+    eyebrow: "Gestion de Guerre d'Alliance",
+    evolving: 'En évolution · Open source',
+    heroTitle: 'La guerre se gagne lors de la planification.',
+    heroSubtitle:
+      "Mawster transforme la Guerre d'Alliance en un plan clair — défense, attaque, synergies et stats au même endroit. Fini les screenshots et les fichiers Excel pour gérer les rosters de tes équipiers.",
+    heroCtaPrimary: 'Commencer gratuitement',
+    heroCtaSecondary: 'Voir les fonctionnalités',
+    heroNote: 'Connexion Discord & Google · Line et plus à venir',
+
+    mapDefenseLabel: 'Défense',
+    mapAttackLabel: 'Attaque',
+
+    statActiveAlliances: 'Alliances actives',
+    statParticipatingPlayers: 'Joueurs participants',
+    statKnowledgeBaseFights: 'Combats dans la base de connaissances',
+    statWarsRecorded: 'Guerres enregistrées',
+
+    featuresEyebrow: 'Fonctionnalités principales',
+    featuresTitle: "Tout ce qu'il faut pour gérer la Guerre d'Alliance.",
+
+    featStatsTitle: 'Statistiques avancées',
+    featStatsDesc:
+      'Nombre de KO, combats pondérés, ratio, assists donnés et reçus, comptage des boss et minibosses — par joueur, par guerre et sur toute la carrière.',
+    featHistoryTitle: 'Historique des combats',
+    featHistoryDesc:
+      'Chaque combat enregistré par nœud, guerre et bataillon, avec les capacités de prefight et les fournisseurs de synergie. Import des guerres passées en CSV.',
+    featWarTitle: 'Planification de guerre',
+    featWarDesc:
+      'Assigne les attaquants aux nœuds avec notes, synergies et prefights, place ta défense par bataillon et verrouille ta liste de bannissements — puis suis les KO et assists au fil de la guerre.',
+    featOnboardingTitle: 'Roster en 20 minutes',
+    featOnboardingDesc:
+      'Remplis tout ton roster en vingt minutes maximum — et ne le retape plus jamais dans un tableur.',
+    featPrivacyTitle: 'Vos données restent privées',
+    featPrivacyDesc:
+      'Même les admins du site ne voient pas le contenu de votre alliance — rosters, guerres et plans restent dans votre alliance.',
+
+    featNew: 'Nouveau',
+    featNotesTitle: 'Notes sur les plans, avec modération',
+    featNotesDesc:
+      "Ajoute des notes directement sur les plans de guerre d'alliance, avec un système de modération pour que les officiers gardent le tableau propre et pertinent.",
+
+    previewTitle: 'Carte de guerre',
+    previewSubtitle: 'Exemple de disposition',
+    previewCaption: "Aperçu l'historique de guerre d'alliance",
+
+    statsShowcase: {
+      eyebrow: 'Stats de guerre',
+      demoBadge: "Données d'exemple",
+      title: 'Voyez exactement qui a porté la guerre.',
+      subtitle:
+        'KO, kill ratio, assists, comptes de boss et miniboss par joueur — plus la répartition des KO par champion et le classement de saison.',
+      rankingTitle: 'Historique de classement',
+    },
+
+    testimonialsTitle: 'Quelques avis des utilisateurs',
+    testimonialRoles: {
+      leader: 'Leader',
+      officer: 'Officier',
+      member: 'Membre',
+    },
+    testimonialQuotes: {
+      placeholder: 'Citation à remplacer par un vrai avis.',
+      elliebingo:
+        'Mawster est une ressource précieuse pour la planification de mon alliance, simple à utiliser et il fait une grande partie du travail fastidieux à ta place. Je le recommande vivement.',
+    },
+
+    faqEyebrow: 'FAQ',
+    faqTitle: 'Questions fréquentes',
+    faqItems: [
+      {
+        q: 'Mawster est-il gratuit ?',
+        a: "Oui. Mawster est open source et les outils essentiels sont gratuits. À terme, certains extras optionnels — support prioritaire, corrections de bugs accélérées ou fonctionnalités avancées — pourront devenir payants pour aider à faire vivre le projet, mais l'essentiel reste gratuit.",
+      },
+      {
+        q: 'Comment se connecter ?',
+        a: 'Connecte-toi avec ton compte Discord en un clic. La connexion via Google est aussi disponible, et de nouveaux fournisseurs arrivent.',
+      },
+      {
+        q: 'Que puis-je gérer avec Mawster ?',
+        a: "Suis ton roster de champions, planifie les placements de défense et les assignations d'attaque en guerre d'alliance sur tous les battlegroups, et gère les membres et officiers de ton alliance.",
+      },
+      {
+        q: "Chaque membre de l'alliance doit-il avoir un compte ?",
+        a: "Seuls les membres qui veulent gérer leur propre roster ou participer à la planification de guerre doivent se connecter. Les leaders et officiers peuvent organiser l'alliance dans tous les cas.",
+      },
+      {
+        q: "Puis-je l'utiliser sur mobile ?",
+        a: "Oui. Mawster fonctionne dans ton navigateur et s'adapte aux téléphones et tablettes, pour consulter les placements et mettre à jour ton roster où que tu sois.",
+      },
+    ],
+
+    requestEyebrow: 'Vos idées',
+    requestTitle: 'Tu décides de la suite.',
+    requestDesc:
+      'Mawster évolue à partir de ce que les alliances demandent vraiment. Propose une fonctionnalité et on construit la roadmap autour de la communauté.',
+    requestStep1: 'Propose une fonctionnalité sur Discord',
+    requestStep2: 'La communauté donne son avis',
+    requestStep3: 'On construit ce qui compte le plus',
+    requestPremiumTitle: 'Priorité premium',
+    requestPremiumDesc:
+      'Les soutiens premium voient leurs demandes passer en tête de file, avec des corrections de bugs accélérées.',
+    requestCta: 'Proposer une fonctionnalité',
+
+    soonEyebrow: 'Roadmap',
+    soonTitle: 'Roadmap',
+    soonBadge: 'Bientôt',
+    soonBotTitle: 'Bot Discord',
+    soonBotDesc:
+      'Pilotez Mawster directement depuis Discord — consultez les placements, publiez les plans de guerre et pinguez vos battlegroups sans quitter le serveur.',
+    soonScanTitle: 'Import du roster par capture d’écran',
+    soonScanDesc:
+      'Envoyez une capture de vos champions et laissez Mawster la lire pour remplir votre roster automatiquement — fini la saisie manuelle.',
+
+    openSourceEyebrow: 'Open source',
+    openSourceTitle: 'Construit en public, avec la communauté.',
+    openSourceDesc:
+      "Mawster est gratuit et open source, et il ne cesse d'évoluer. Lis le code, ouvre une issue, ou viens parler stratégie sur Discord.",
+    linkRepo: 'Voir le code',
+    linkSupport: 'Support sur Discord',
+    contactLabel: 'Contacter le créateur',
+
+    ctaTitle: 'Organise ton alliance.',
+    ctaSubtitle: 'Organise dès maintenant tes plans offensifs et défensifs.',
+    ctaDiscord: 'Continuer avec Discord',
+    ctaGoogle: 'Continuer avec Google',
+    ctaSoon: 'Line et plus à venir',
   },
 
   // Login page
@@ -479,7 +606,8 @@ const fr: Translations = {
         statusActive: 'Ouverte',
         statusEnded: 'Fermée',
         confirmOpenTitle: 'Ouvrir cette saison ?',
-        confirmOpenBody: 'Elle devient la saison en cours et ses résultats comptent dans les stats.',
+        confirmOpenBody:
+          'Elle devient la saison en cours et ses résultats comptent dans les stats.',
         confirmCloseTitle: 'Fermer cette saison ?',
         confirmCloseBody: 'Elle n’est plus en cours. Tu pourras la rouvrir plus tard si besoin.',
         confirmRevertTitle: 'Remettre en pré-saison ?',
@@ -509,6 +637,7 @@ const fr: Translations = {
       note: 'Note',
       noteBy: 'par',
       noteExpand: 'Cliquer pour afficher la note entière',
+      noteCollapse: 'Cliquer pour replier',
       noData: 'Aucun combat enregistré.',
       filterAttacker: 'Sélectionner attaquant',
       filterDefender: 'Sélectionner défenseur',
@@ -614,10 +743,11 @@ const fr: Translations = {
     liftMute: 'Lever le silence',
     muteTitle: 'Réduire au silence',
     muteDescription: 'Empêcher cet utilisateur de publier des notes.',
-    warnTitle: 'Avertir l\'utilisateur',
+    warnTitle: "Avertir l'utilisateur",
     warnDescription: 'Envoyer un avertissement à cet utilisateur.',
     liftMuteTitle: 'Lever le silence',
-    liftMuteDescription: 'Restaurer la capacité de cet utilisateur à publier des notes. Continuer ?',
+    liftMuteDescription:
+      'Restaurer la capacité de cet utilisateur à publier des notes. Continuer ?',
     reasonLabel: 'Raison',
     reasonPlaceholder: 'Expliquez la raison…',
     expiryLabel: 'Expire le (optionnel)',
@@ -629,7 +759,7 @@ const fr: Translations = {
     muteSuccess: 'Utilisateur réduit au silence',
     muteError: 'Échec de la réduction au silence',
     warnSuccess: 'Utilisateur averti',
-    warnError: 'Échec de l\'avertissement',
+    warnError: "Échec de l'avertissement",
     liftSuccess: 'Silence levé',
     liftError: 'Échec de la levée du silence',
     reasonRequired: 'La raison est requise',

@@ -1,25 +1,27 @@
-'use client';
-
-import { useI18n } from '@/app/i18n';
-import { Badge } from '@/components/ui/badge';
+import { Hero } from './_components/landing/hero';
+import { StatStrip } from './_components/landing/stat-strip';
+import { FeatureGrid } from './_components/landing/feature-grid';
+import { StatsShowcase } from './_components/landing/stats-showcase';
+import { FeatureRequest } from './_components/landing/feature-request';
+import { ComingSoon } from './_components/landing/coming-soon';
+import { Testimonials } from './_components/landing/testimonials';
+import { Faq } from './_components/landing/faq';
+import { Community } from './_components/landing/community';
+import { Cta } from './_components/landing/cta';
 
 export default function Page() {
-  const { t } = useI18n();
-
   return (
-    <div className='flex min-h-[80vh] items-center justify-center p-4'>
-      <div className='text-center'>
-        <h1 className='text-4xl sm:text-5xl font-bold text-foreground mb-4'>{t.common.appName}</h1>
-        <Badge
-          variant='secondary'
-          className='mb-6 text-base px-4 py-1.5 bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100'
-        >
-          {t.landing.wip}
-        </Badge>
-        <p className='text-muted-foreground text-base sm:text-lg max-w-md mx-auto'>
-          {t.landing.wipDescription}
-        </p>
-      </div>
+    <div className='-m-3 min-h-full bg-background text-foreground'>
+      <Hero />
+      <StatStrip />
+      <FeatureGrid />
+      <Testimonials />
+      <FeatureRequest />
+      <StatsShowcase />
+      <ComingSoon />
+      <Community />
+      <Faq />
+      <Cta />
     </div>
   );
 }
