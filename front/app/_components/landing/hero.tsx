@@ -14,12 +14,7 @@ export function Hero() {
   return (
     <section className='grid items-center gap-12 px-6 pb-20 pt-16 md:grid-cols-2 md:gap-10 md:px-12 md:pt-24'>
       <div>
-        <span className='inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand/10 px-3 py-1 text-xs font-medium uppercase tracking-wider text-brand'>
-          <span className='h-1.5 w-1.5 rounded-full bg-brand' />
-          {t.landing.eyebrow}
-        </span>
-
-        <h1 className='mt-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl'>
+        <h1 className='text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl'>
           {t.landing.heroTitle}
         </h1>
 
@@ -32,7 +27,10 @@ export function Hero() {
             asChild
             size='lg'
           >
-            <Link href='/login' data-cy='hero-cta-primary'>
+            <Link
+              href='/login'
+              data-cy='hero-cta-primary'
+            >
               {t.landing.heroCtaPrimary}
               <ArrowRight className='h-4 w-4' />
             </Link>
@@ -42,7 +40,12 @@ export function Hero() {
             variant='outline'
             size='lg'
           >
-            <a href='#features' data-cy='hero-cta-secondary'>{t.landing.heroCtaSecondary}</a>
+            <a
+              href='#features'
+              data-cy='hero-cta-secondary'
+            >
+              {t.landing.heroCtaSecondary}
+            </a>
           </Button>
         </div>
 

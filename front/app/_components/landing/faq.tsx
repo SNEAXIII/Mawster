@@ -9,7 +9,7 @@ export function Faq() {
 
   return (
     <section
-      className='px-6 py-20 md:px-12'
+      className='px-6 py-12 md:px-12'
       data-cy='landing-faq'
     >
       <div className='mx-auto max-w-3xl'>

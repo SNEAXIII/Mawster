@@ -14,14 +14,11 @@ export function ComingSoon() {
 
   return (
     <section
-      className='px-6 py-20 md:px-12'
+      className='px-6 py-12 md:px-12'
       data-cy='landing-coming-soon'
     >
       <div className='mx-auto max-w-5xl'>
-        <p className='text-sm font-medium uppercase tracking-wider text-brand'>
-          {t.landing.soonEyebrow}
-        </p>
-        <h2 className='mt-3 text-3xl font-bold sm:text-4xl'>{t.landing.soonTitle}</h2>
+        <h2 className='text-3xl font-bold sm:text-4xl'>{t.landing.soonTitle}</h2>
 
         <div className='mt-10 grid gap-4 sm:grid-cols-2'>
           {items.map((item) => {

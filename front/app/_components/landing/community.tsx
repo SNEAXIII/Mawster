@@ -10,7 +10,7 @@ export function Community() {
   const { t } = useI18n();
 
   return (
-    <section className='px-6 py-20 md:px-12'>
+    <section className='px-6 py-12 md:px-12'>
       <Card className='mx-auto max-w-4xl'>
         <CardContent className='p-8 text-center md:p-12'>
           <p className='text-sm font-medium uppercase tracking-wider text-brand'>

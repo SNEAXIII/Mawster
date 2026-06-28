@@ -17,14 +17,11 @@ export function FeatureRequest() {
 
   return (
     <section
-      className='px-6 py-20 md:px-12'
+      className='px-6 py-12 md:px-12'
       data-cy='landing-feature-request'
     >
       <div className='mx-auto max-w-5xl'>
-        <p className='text-sm font-medium uppercase tracking-wider text-brand'>
-          {t.landing.requestEyebrow}
-        </p>
-        <h2 className='mt-3 text-3xl font-bold sm:text-4xl'>{t.landing.requestTitle}</h2>
+        <h2 className='text-3xl font-bold sm:text-4xl'>{t.landing.requestTitle}</h2>
         <p className='mt-4 max-w-2xl leading-relaxed text-muted-foreground'>
           {t.landing.requestDesc}
         </p>
@@ -35,14 +32,14 @@ export function FeatureRequest() {
             return (
               <li
                 key={step.label}
-                className='flex flex-col gap-4 rounded-xl border border-border/60 bg-card/40 p-5'
+                className='flex items-center gap-4 rounded-xl border border-border/60 bg-card/40 p-5'
               >
-                <div className='flex items-center justify-between'>
-                  <span className='flex h-10 w-10 items-center justify-center rounded-full bg-brand/10 text-base font-bold text-brand'>
+                <span className='relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand'>
+                  <Icon className='h-5 w-5' />
+                  <span className='absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white'>
                     {i + 1}
                   </span>
-                  <Icon className='h-5 w-5 text-muted-foreground' />
-                </div>
+                </span>
                 <p className='text-sm font-medium leading-relaxed'>{step.label}</p>
               </li>
             );

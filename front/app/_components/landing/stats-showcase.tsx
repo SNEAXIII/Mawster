@@ -42,12 +42,12 @@ export function StatsShowcase() {
         const bv = b[sortField] as number;
         return sortDir === 'asc' ? av - bv : bv - av;
       }),
-    [sortField, sortDir],
+    [sortField, sortDir]
   );
 
   return (
     <section
-      className='px-6 py-20 md:px-12'
+      className='px-6 py-12 md:px-12'
       data-cy='landing-stats-showcase'
     >
       <div className='mx-auto max-w-6xl'>
@@ -69,7 +69,10 @@ export function StatsShowcase() {
               <CardTitle className='text-sm'>{s.rankingTitle}</CardTitle>
             </CardHeader>
             <CardContent>
-              <AllianceRankingChart points={MOCK_RANKING_POINTS} seasonNumber={MOCK_RANKING_SEASON} />
+              <AllianceRankingChart
+                points={MOCK_RANKING_POINTS}
+                seasonNumber={MOCK_RANKING_SEASON}
+              />
             </CardContent>
           </Card>
 
