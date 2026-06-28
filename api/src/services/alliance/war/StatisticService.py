@@ -14,7 +14,11 @@ from src.models.WarFightRecord import WarFightRecord
 from sqlalchemy import and_, func, cast, Integer, Float, case, union
 from sqlmodel import select
 
-from src.dto.alliance.war.dto_statistic import ChampionUsageResponse, PlayerSeasonStatsResponse
+from src.dto.alliance.war.dto_statistic import (
+    NOT_FOUGHT_KOS,
+    ChampionUsageResponse,
+    PlayerSeasonStatsResponse,
+)
 from src.services.alliance.AllianceService import AllianceService
 from src.utils.db import SessionDep
 
@@ -133,6 +137,11 @@ class StatisticService:
             attacker_sq.c.attack_weighted_fights, 0
         ) + func.coalesce(assist_sq.c.assist_fights, 0)
         _kos = func.coalesce(attacker_sq.c.total_kos, 0)
+        _not_fought = func.coalesce(attacker_sq.c.total_not_fought, 0)
+        # Each not-done fight counts as a fight with NOT_FOUGHT_KOS KOs in the
+        # ratio, so skipping a node penalizes the player just like in the score.
+        _ratio_kos = _kos + NOT_FOUGHT_KOS * _not_fought
+        _ratio_fights = _combined_fights + _not_fought
         _wars = wars_sq.c.wars_participated
 
         sql = (
@@ -155,7 +164,7 @@ class StatisticService:
                     "total_not_fought"
                 ),
                 cast(
-                    func.coalesce((1 - _kos / func.nullif(_combined_fights, 0)) * 100, 100),
+                    func.coalesce((1 - _ratio_kos / func.nullif(_ratio_fights, 0)) * 100, 100),
                     Integer,
                 ).label("ratio"),
                 cast(_wars, Integer).label("wars_participated"),
