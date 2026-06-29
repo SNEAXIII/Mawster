@@ -1,8 +1,9 @@
 import uuid
-from datetime import datetime
 from typing import List, Optional, TYPE_CHECKING
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship
+
+from src.models.Base import TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.Alliance import Alliance
@@ -14,10 +15,9 @@ if TYPE_CHECKING:
     from src.models.WarFightSynergy import WarFightSynergy
 
 
-class WarFightRecord(SQLModel, table=True):
+class WarFightRecord(UUIDBase, TimestampMixin, table=True):
     __tablename__ = "war_fight_record"
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     war_id: uuid.UUID = Field(foreign_key="war.id")
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
     season_id: Optional[uuid.UUID] = Field(default=None, foreign_key="season.id")
@@ -38,7 +38,6 @@ class WarFightRecord(SQLModel, table=True):
     ko_count: int = Field(default=0)
     is_planning_error: bool = Field(default=False)
     assisted: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=datetime.now)
 
     war: "War" = Relationship(sa_relationship_kwargs={"foreign_keys": "[WarFightRecord.war_id]"})
     alliance: "Alliance" = Relationship(

@@ -3,16 +3,17 @@ from datetime import datetime
 from typing import Optional, TYPE_CHECKING
 
 import sqlalchemy as sa
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship
+
+from src.models.Base import UUIDBase, utcnow
 
 if TYPE_CHECKING:
     from src.models.WarFightNote import WarFightNote
 
 
-class WarFightNoteRevision(SQLModel, table=True):
+class WarFightNoteRevision(UUIDBase, table=True):
     __tablename__ = "war_fight_note_revision"
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     note_id: uuid.UUID = Field(foreign_key="war_fight_note.id")
     content: str = Field(sa_column=sa.Column(sa.Text, nullable=False))
     edited_by_game_account_id: Optional[uuid.UUID] = Field(
@@ -20,6 +21,6 @@ class WarFightNoteRevision(SQLModel, table=True):
     )
     edited_by_user_id: Optional[uuid.UUID] = Field(default=None, foreign_key="user.id")
     is_deletion: bool = Field(default=False)
-    edited_at: datetime = Field(default_factory=datetime.now)
+    edited_at: datetime = Field(default_factory=utcnow)
 
     note: "WarFightNote" = Relationship(back_populates="revisions")

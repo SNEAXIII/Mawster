@@ -1,28 +1,27 @@
 import uuid
 from datetime import datetime
 from typing import Optional, TYPE_CHECKING
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship
 
 from src.enums.InvitationStatus import InvitationStatus
 from src.enums.InvitationType import InvitationType
+from src.models.Base import TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.Alliance import Alliance
     from src.models.GameAccount import GameAccount
 
 
-class AllianceInvitation(SQLModel, table=True):
+class AllianceInvitation(UUIDBase, TimestampMixin, table=True):
     """An invitation for a game account to join or visit an alliance."""
 
     __tablename__ = "alliance_invitation"
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     invited_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     status: InvitationStatus = Field(default=InvitationStatus.PENDING)
     type: InvitationType = Field(default=InvitationType.MEMBER)
-    created_at: datetime = Field(default_factory=datetime.now)
     responded_at: Optional[datetime] = Field(default=None)
 
     # Relations

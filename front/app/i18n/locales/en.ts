@@ -110,6 +110,10 @@ const en = {
     },
     testimonialQuotes: {
       placeholder: 'Placeholder quote. Please replace with a real quote.',
+      babayaga:
+        'The 3rd tool we use to drive war at a high level, and the only one that brings together everything we needed. Super smooth on mobile and constantly updated — top notch.',
+      aragorn:
+        'Mawster is a tool that saves a lot of time while giving you a full visual of the map. The fact that the developer listens and that we can interact to add features is also a great thing. I recommend it.',
       elliebingo:
         "Mawster has been an invaluable resource in my alliance planning, it's simple to use and does a lot of the busywork for you. I'd highly recommend it.",
     },
