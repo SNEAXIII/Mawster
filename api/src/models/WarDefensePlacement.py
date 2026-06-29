@@ -1,8 +1,9 @@
 import uuid
-from datetime import datetime
 from typing import Optional, TYPE_CHECKING
 import sqlalchemy as sa
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship
+
+from src.models.Base import TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.War import War
@@ -11,13 +12,12 @@ if TYPE_CHECKING:
     from src.models.ChampionUser import ChampionUser
 
 
-class WarDefensePlacement(SQLModel, table=True):
+class WarDefensePlacement(UUIDBase, TimestampMixin, table=True):
     __tablename__ = "war_defense_placement"
     __table_args__ = (
         sa.UniqueConstraint("war_id", "battlegroup", "node_number", name="uq_war_defense_node"),
     )
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     war_id: uuid.UUID = Field(foreign_key="war.id")
     battlegroup: int = Field(ge=1, le=3)
     node_number: int = Field(ge=1, le=50)
@@ -26,7 +26,6 @@ class WarDefensePlacement(SQLModel, table=True):
     rank: int = Field(ge=1, le=6)
     ascension: int = Field(default=0, ge=0, le=2)
     placed_by_id: Optional[uuid.UUID] = Field(default=None, foreign_key="game_account.id")
-    created_at: datetime = Field(default_factory=datetime.now)
     attacker_champion_user_id: Optional[uuid.UUID] = Field(
         default=None, foreign_key="champion_user.id"
     )

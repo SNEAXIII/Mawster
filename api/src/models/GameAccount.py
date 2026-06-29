@@ -1,7 +1,8 @@
 import uuid
-from datetime import datetime
 from typing import List, Optional, TYPE_CHECKING
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship
+
+from src.models.Base import TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.User import User
@@ -13,16 +14,14 @@ if TYPE_CHECKING:
     from src.models.RequestedUpgrade import RequestedUpgrade
 
 
-class GameAccount(SQLModel, table=True):
+class GameAccount(UUIDBase, TimestampMixin, table=True):
     __tablename__ = "game_account"
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = Field(foreign_key="user.id")
     alliance_id: Optional[uuid.UUID] = Field(default=None, foreign_key="alliance.id")
     alliance_group: Optional[int] = Field(default=None)  # 1, 2, 3 or None
     game_pseudo: str = Field(max_length=16)
     is_primary: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=datetime.now)
 
     # Relations
     user: "User" = Relationship(back_populates="game_accounts")

@@ -1,9 +1,10 @@
 import uuid
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship
+
+from src.models.Base import TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.ChampionUser import ChampionUser
@@ -11,7 +12,7 @@ if TYPE_CHECKING:
     from src.models.War import War
 
 
-class WarSynergyAttacker(SQLModel, table=True):
+class WarSynergyAttacker(UUIDBase, TimestampMixin, table=True):
     __tablename__ = "war_synergy_attacker"
     __table_args__ = (
         sa.UniqueConstraint(
@@ -22,13 +23,11 @@ class WarSynergyAttacker(SQLModel, table=True):
         ),
     )
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     war_id: uuid.UUID = Field(foreign_key="war.id")
     battlegroup: int = Field(ge=1, le=3)
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     champion_user_id: uuid.UUID = Field(foreign_key="champion_user.id")
     target_champion_user_id: uuid.UUID = Field(foreign_key="champion_user.id")
-    created_at: datetime = Field(default_factory=datetime.now)
 
     # Relations
     war: "War" = Relationship(

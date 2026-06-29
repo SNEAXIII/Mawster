@@ -1,6 +1,8 @@
 import uuid
 from typing import List, TYPE_CHECKING
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship
+
+from src.models.Base import UUIDBase
 
 if TYPE_CHECKING:
     from src.models.GameAccount import GameAccount
@@ -8,10 +10,9 @@ if TYPE_CHECKING:
     from src.models.RequestedUpgrade import RequestedUpgrade
 
 
-class ChampionUser(SQLModel, table=True):
+class ChampionUser(UUIDBase, table=True):
     __tablename__ = "champion_user"
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
     stars: int = Field(default=6)
