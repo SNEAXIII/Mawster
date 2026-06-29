@@ -1,25 +1,23 @@
-import uuid
 from datetime import datetime
 from typing import List, Optional, TYPE_CHECKING
-from sqlmodel import Relationship, Field, SQLModel
+from sqlmodel import Relationship, Field
 
 from src.enums.Roles import Roles
+from src.models.Base import TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.LoginLog import LoginLog
     from src.models.GameAccount import GameAccount
 
 
-class User(SQLModel, table=True):
+class User(UUIDBase, TimestampMixin, table=True):
     __tablename__ = "user"
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     login: str = Field(unique=True)
     email_hash: Optional[str] = Field(default=None, unique=True)
     email_hash_version: int = Field(default=1)
     disabled_at: Optional[datetime] = Field(default=None)
     deleted_at: Optional[datetime] = Field(default=None)
-    created_at: datetime = Field(default_factory=datetime.now)
     last_login_date: Optional[datetime] = Field(default=None)
     role: Roles = Field(default=Roles.USER)
 

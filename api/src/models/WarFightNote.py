@@ -3,13 +3,15 @@ from datetime import datetime
 from typing import List, Optional, TYPE_CHECKING
 
 import sqlalchemy as sa
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship
+
+from src.models.Base import TimestampMixin, UUIDBase, utcnow
 
 if TYPE_CHECKING:
     from src.models.WarFightNoteRevision import WarFightNoteRevision
 
 
-class WarFightNote(SQLModel, table=True):
+class WarFightNote(UUIDBase, TimestampMixin, table=True):
     """A note attached to one war combat node. Editable by officers/owners while the war is
     active; frozen (linked to the fight record) at snapshot."""
 
@@ -18,7 +20,6 @@ class WarFightNote(SQLModel, table=True):
         sa.UniqueConstraint("war_id", "battlegroup", "node_number", name="uq_war_fight_note_node"),
     )
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     war_defense_placement_id: uuid.UUID = Field(foreign_key="war_defense_placement.id")
     war_id: uuid.UUID = Field(foreign_key="war.id")
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
@@ -27,8 +28,7 @@ class WarFightNote(SQLModel, table=True):
     content: str = Field(sa_column=sa.Column(sa.Text, nullable=False))
     created_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     updated_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=utcnow)
     war_fight_record_id: Optional[uuid.UUID] = Field(
         default=None, foreign_key="war_fight_record.id"
     )

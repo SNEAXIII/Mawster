@@ -1,17 +1,18 @@
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship
+
+from src.models.Base import UUIDBase
 
 if TYPE_CHECKING:
     from src.models.Champion import Champion
     from src.models.WarFightRecord import WarFightRecord
 
 
-class WarFightPrefight(SQLModel, table=True):
+class WarFightPrefight(UUIDBase, table=True):
     __tablename__ = "war_fight_prefight"
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     war_fight_record_id: uuid.UUID = Field(foreign_key="war_fight_record.id")
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
     stars: int
