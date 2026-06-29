@@ -112,6 +112,10 @@ const fr: Translations = {
     },
     testimonialQuotes: {
       placeholder: 'Citation à remplacer par un vrai avis.',
+      babayaga:
+        "3e outil qu'on utilise pour le pilotage de la war à haut niveau, et le seul qui regroupe tout ce dont nous avions besoin. Super fluide sur mobile et mis à jour constamment, au top.",
+      aragorn:
+        "Mawster est un outil qui fait gagner beaucoup de temps tout en offrant une vue d'ensemble de la map. Le fait que le développeur soit à l'écoute et qu'on puisse échanger pour ajouter des fonctionnalités est aussi un vrai plus. Je le recommande.",
       elliebingo:
         'Mawster est une ressource précieuse pour la planification de mon alliance, simple à utiliser et il fait une grande partie du travail fastidieux à ta place. Je le recommande vivement.',
     },
