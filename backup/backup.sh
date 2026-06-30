@@ -5,10 +5,15 @@ trap 'echo "[backup] FATAL: backup failed at line $LINENO (exit $?)" >&2; exit 1
 
 # ── Secrets ──────────────────────────────────────────────────────────────────
 export MARIADB_ROOT_PASSWORD=$(cat /run/secrets/mawster_db_root_password)
-RCLONE_CONFIG_WRITABLE=/tmp/rclone.conf
-cp /run/secrets/mawster_rclone_conf "$RCLONE_CONFIG_WRITABLE"
-chmod 600 "$RCLONE_CONFIG_WRITABLE"
-export RCLONE_CONFIG="$RCLONE_CONFIG_WRITABLE"
+
+# Remote upload (Google Drive via rclone) is optional — disabled on staging.
+BACKUP_REMOTE_ENABLED=${BACKUP_REMOTE_ENABLED:-true}
+if [ "$BACKUP_REMOTE_ENABLED" = "true" ]; then
+  RCLONE_CONFIG_WRITABLE=/tmp/rclone.conf
+  cp /run/secrets/mawster_rclone_conf "$RCLONE_CONFIG_WRITABLE"
+  chmod 600 "$RCLONE_CONFIG_WRITABLE"
+  export RCLONE_CONFIG="$RCLONE_CONFIG_WRITABLE"
+fi
 
 # ── Config ────────────────────────────────────────────────────────────────────
 BACKUP_DIR="/backups"
@@ -51,24 +56,28 @@ while true; do
   rm "$OLDEST"
 done
 
-# ── 4. Upload to remote ───────────────────────────────────────────────────────
-echo "[backup] Uploading to remote..."
-rclone copy "${BACKUP_DIR}/" "${RCLONE_REMOTE}/" --include "mawster_*.sql.gz"
-echo "[backup] Upload complete"
+if [ "$BACKUP_REMOTE_ENABLED" = "true" ]; then
+  # ── 4. Upload to remote ─────────────────────────────────────────────────────
+  echo "[backup] Uploading to remote..."
+  rclone copy "${BACKUP_DIR}/" "${RCLONE_REMOTE}/" --include "mawster_*.sql.gz"
+  echo "[backup] Upload complete"
 
-# ── 5. Remote purge: by age ───────────────────────────────────────────────────
-rclone delete "${RCLONE_REMOTE}/" --min-age "${RETENTION_DAYS}d" --include "mawster_*.sql.gz"
-echo "[backup] Remote: purged files older than ${RETENTION_DAYS} days"
+  # ── 5. Remote purge: by age ─────────────────────────────────────────────────
+  rclone delete "${RCLONE_REMOTE}/" --min-age "${RETENTION_DAYS}d" --include "mawster_*.sql.gz"
+  echo "[backup] Remote: purged files older than ${RETENTION_DAYS} days"
 
-# ── 6. Remote purge: by size ──────────────────────────────────────────────────
-REMOTE_SIZE=$(rclone size "${RCLONE_REMOTE}/" --json 2>/dev/null | grep -o '"bytes":[0-9]*' | cut -d: -f2)
-while [ "${REMOTE_SIZE:-0}" -gt "$MAX_REMOTE_BYTES" ]; do
-  OLDEST_REMOTE=$(rclone lsf "${RCLONE_REMOTE}/" --format "tp" --separator "|" --files-only 2>/dev/null \
-    | sort | head -1 | cut -d'|' -f2)
-  [ -z "$OLDEST_REMOTE" ] && break
-  echo "[backup] Remote over limit ($(( REMOTE_SIZE / 1024 / 1024 )) MB), deleting: $OLDEST_REMOTE"
-  rclone deletefile "${RCLONE_REMOTE}/${OLDEST_REMOTE}"
+  # ── 6. Remote purge: by size ────────────────────────────────────────────────
   REMOTE_SIZE=$(rclone size "${RCLONE_REMOTE}/" --json 2>/dev/null | grep -o '"bytes":[0-9]*' | cut -d: -f2)
-done
+  while [ "${REMOTE_SIZE:-0}" -gt "$MAX_REMOTE_BYTES" ]; do
+    OLDEST_REMOTE=$(rclone lsf "${RCLONE_REMOTE}/" --format "tp" --separator "|" --files-only 2>/dev/null \
+      | sort | head -1 | cut -d'|' -f2)
+    [ -z "$OLDEST_REMOTE" ] && break
+    echo "[backup] Remote over limit ($(( REMOTE_SIZE / 1024 / 1024 )) MB), deleting: $OLDEST_REMOTE"
+    rclone deletefile "${RCLONE_REMOTE}/${OLDEST_REMOTE}"
+    REMOTE_SIZE=$(rclone size "${RCLONE_REMOTE}/" --json 2>/dev/null | grep -o '"bytes":[0-9]*' | cut -d: -f2)
+  done
+else
+  echo "[backup] Remote upload disabled (BACKUP_REMOTE_ENABLED=false) — local backup only"
+fi
 
 echo "[backup] $(date '+%Y-%m-%d %H:%M:%S') — Done: $FILENAME"

@@ -1,7 +1,7 @@
 # Root Makefile — E2E test orchestration + backup operations
 .PHONY: help e2e e2e-open e2e-parallel e2e-parallel-quiet e2e-db e2e-stop \
-        backup-deploy backup-now backup-list backup-logs backup-restore backup-restore-remote deploy db \
-        migrate
+        backup-now backup-now-staging backup-list backup-restore backup-restore-staging backup-restore-remote deploy db \
+        migrate migrate-staging
 
 NEXTAUTH_SECRET ?= e2e-local-nextauth-secret
 NEXTAUTH_URL    ?= http://localhost:3000
@@ -27,14 +27,15 @@ help:
 	@echo "Variables : N=4  SPEC=war/war-management.cy.ts  Q=1  NEXTAUTH_SECRET=..."
 	@echo ""
 	@echo "=== Migrate ==="
-	@echo "migrate              --> lancer les migrations Alembic via Docker Swarm"
+	@echo "migrate              --> lancer les migrations Alembic via Docker Swarm (prod)"
+	@echo "migrate-staging      --> lancer les migrations Alembic via Docker Swarm (staging)"
 	@echo ""
 	@echo "=== Backup ==="
-	@echo "backup-deploy        --> builder l'image et (re)demarrer le container backup"
-	@echo "backup-now           --> declencher un backup immediatement"
+	@echo "backup-now           --> declencher un backup immediatement (prod)"
+	@echo "backup-now-staging   --> declencher un backup manuel (staging, local only)"
 	@echo "backup-list          --> lister les fichiers de backup locaux"
-	@echo "backup-logs          --> afficher les logs du container backup"
 	@echo "backup-restore       --> restaurer depuis un backup local (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)"
+	@echo "backup-restore-staging --> restaurer un backup local dans la staging (FILE=...)"
 	@echo "backup-restore-remote --> restaurer depuis Google Drive (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)"
 	@echo ""
 
@@ -100,14 +101,15 @@ help:
 	@echo "Variables : N=4  SPEC=war/war-management.cy.ts  Q=1  NEXTAUTH_SECRET=..."
 	@echo ""
 	@echo "=== Migrate ==="
-	@echo "migrate               --> lancer les migrations Alembic via Docker Swarm"
+	@echo "migrate               --> lancer les migrations Alembic via Docker Swarm (prod)"
+	@echo "migrate-staging       --> lancer les migrations Alembic via Docker Swarm (staging)"
 	@echo ""
 	@echo "=== Backup ==="
-	@echo "backup-deploy         --> builder l'image et (re)demarrer le container backup"
-	@echo "backup-now            --> declencher un backup immediatement"
+	@echo "backup-now            --> declencher un backup immediatement (prod)"
+	@echo "backup-now-staging    --> declencher un backup manuel (staging, local only)"
 	@echo "backup-list           --> lister les fichiers de backup locaux"
-	@echo "backup-logs           --> afficher les logs du container backup"
 	@echo "backup-restore        --> restaurer depuis un backup local (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)"
+	@echo "backup-restore-staging --> restaurer un backup local dans la staging (FILE=...)"
 	@echo "backup-restore-remote --> restaurer depuis Google Drive (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)"
 	@echo ""
 
@@ -167,17 +169,18 @@ e2e-db:
 
 # ── Backup ────────────────────────────────────────────────────────────────────
 
-## Build the backup image and (re)start the backup container
-backup-deploy:
-	docker compose -f compose-prod.yaml up -d --build backup
-
 ## Trigger a backup immediately (runs backup.sh inside the swarm container)
 backup-now:
 	docker exec $$(docker ps -q -f name=mawster_backup) /usr/local/bin/backup.sh
 
-## Tail the backup container logs
-backup-logs:
-	docker compose -f compose-prod.yaml logs -f backup
+## Trigger a manual backup of the STAGING db (local only, no Google Drive)
+backup-now-staging:
+	docker exec $$(docker ps -q -f name=mawster-staging_backup) /usr/local/bin/backup.sh
+
+## Restore a local backup into the STAGING db (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)
+backup-restore-staging:
+	@test -n "$(FILE)" || (echo "Usage: make backup-restore-staging FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
+	docker exec $$(docker ps -q -f name=mawster-staging_backup) /usr/local/bin/restore.sh $(FILE)
 
 migrate:
 	docker service rm mawster-migrate 2>/dev/null || true
@@ -195,6 +198,22 @@ migrate:
 	@docker service ps mawster-migrate --format "{{.CurrentState}}" | grep -q "^Failed" && \
 		(docker service rm mawster-migrate; exit 1) || docker service rm mawster-migrate
 
+migrate-staging:
+	docker service rm mawster-migrate-staging 2>/dev/null || true
+	docker service create \
+		--name mawster-migrate-staging \
+		--network internal-staging \
+		--secret source=mawster_db_password_staging,target=mawster_db_password \
+		--secret source=mawster_db_root_password_staging,target=mawster_db_root_password \
+		-e MARIADB_USER=mawster \
+		-e MARIADB_PORT=3306 \
+		-e MARIADB_DATABASE=mawster \
+		--mode replicated-job \
+		sneaxiii/mawster-migrate:latest sh migrate.sh
+	docker service logs -f mawster-migrate-staging
+	@docker service ps mawster-migrate-staging --format "{{.CurrentState}}" | grep -q "^Failed" && \
+		(docker service rm mawster-migrate-staging; exit 1) || docker service rm mawster-migrate-staging
+
 deploy:
 	docker pull sneaxiii/mawster-api:latest
 	docker pull sneaxiii/mawster-migrate:latest
@@ -203,6 +222,7 @@ deploy:
 	docker pull sneaxiii/mawster-static:latest
 	docker stack deploy --with-registry-auth --resolve-image always -c stack-obs.yaml mawster-obs
 	docker stack deploy --with-registry-auth --resolve-image always -c stack-app.yaml mawster
+	docker stack deploy --with-registry-auth --resolve-image always -c stack-app-staging.yaml mawster-staging
 
 panic:
 	docker stack rm mawster

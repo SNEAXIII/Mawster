@@ -4,6 +4,9 @@ set -euo pipefail
 BACKUP_DIR="/backups"
 RCLONE_REMOTE="gdrive-crypt:mawster"
 
+# Fall back to the mounted secret when the caller didn't pass the password in.
+MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD:-$(cat /run/secrets/mawster_db_root_password 2>/dev/null || true)}
+
 REMOTE=false
 FILENAME=""
 
