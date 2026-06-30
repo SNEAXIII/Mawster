@@ -3,7 +3,7 @@ from typing import Optional, TYPE_CHECKING
 import sqlalchemy as sa
 from sqlmodel import Field, Relationship
 
-from src.models.Base import TimestampMixin, UUIDBase
+from src.models.Base import Battlegroup, NodeNumber, TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.War import War
@@ -19,8 +19,8 @@ class WarDefensePlacement(UUIDBase, TimestampMixin, table=True):
     )
 
     war_id: uuid.UUID = Field(foreign_key="war.id")
-    battlegroup: int = Field(ge=1, le=3)
-    node_number: int = Field(ge=1, le=50)
+    battlegroup: Battlegroup
+    node_number: NodeNumber
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
     stars: int = Field(ge=6, le=7)
     rank: int = Field(ge=1, le=6)

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 import sqlalchemy as sa
 from sqlmodel import Field, Relationship
 
-from src.models.Base import TimestampMixin, UUIDBase
+from src.models.Base import Battlegroup, TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.ChampionUser import ChampionUser
@@ -24,7 +24,7 @@ class WarSynergyAttacker(UUIDBase, TimestampMixin, table=True):
     )
 
     war_id: uuid.UUID = Field(foreign_key="war.id")
-    battlegroup: int = Field(ge=1, le=3)
+    battlegroup: Battlegroup
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     champion_user_id: uuid.UUID = Field(foreign_key="champion_user.id")
     target_champion_user_id: uuid.UUID = Field(foreign_key="champion_user.id")

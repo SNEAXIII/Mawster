@@ -3,7 +3,7 @@ from typing import List, Optional, TYPE_CHECKING
 
 from sqlmodel import Field, Relationship
 
-from src.models.Base import TimestampMixin, UUIDBase
+from src.models.Base import Battlegroup, NodeNumber, TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.Alliance import Alliance
@@ -22,8 +22,8 @@ class WarFightRecord(UUIDBase, TimestampMixin, table=True):
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
     season_id: Optional[uuid.UUID] = Field(default=None, foreign_key="season.id")
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
-    battlegroup: int = Field(ge=1, le=3)
-    node_number: int = Field(ge=1, le=50)
+    battlegroup: Battlegroup
+    node_number: NodeNumber
     tier: int
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
     stars: int

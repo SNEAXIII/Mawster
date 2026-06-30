@@ -3,7 +3,7 @@ from typing import Optional, TYPE_CHECKING
 
 from sqlmodel import Field, Relationship
 
-from src.models.Base import TimestampMixin, UUIDBase
+from src.models.Base import NodeNumber, TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.Alliance import Alliance
@@ -17,7 +17,7 @@ class WarFightRecordImport(UUIDBase, TimestampMixin, table=True):
 
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
     season_id: Optional[uuid.UUID] = Field(default=None, foreign_key="season.id")
-    node_number: int = Field(ge=1, le=50)
+    node_number: NodeNumber
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
     defender_champion_id: uuid.UUID = Field(foreign_key="champion.id")
     ko_count: int = Field(default=0)
