@@ -11,6 +11,6 @@
 export function getServerApiUrl(): string {
   const port = process.env['API_PORT'] ?? '8000';
   const isDockerProd = process.env.NODE_ENV === 'production' && process.env['DEV_MODE'] !== 'true';
-  const host = isDockerProd ? 'api' : 'localhost';
+  const host = isDockerProd ? 'api' : '127.0.0.1';
   return `http://${host}:${port}`;
 }
