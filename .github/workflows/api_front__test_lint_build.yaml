@@ -14,6 +14,7 @@ permissions:
 env:
   WORKDIR: ./api
   PYTHON_VERSION: ${{ vars.PYTHON_VERSION }}
+  NODE_VERSION: '24'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   E2E_RUNNERS: '8'
 
@@ -70,7 +71,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@v5
@@ -144,7 +145,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@v5
