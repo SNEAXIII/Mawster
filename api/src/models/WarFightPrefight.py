@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship
 
-from src.models.Base import UUIDBase
+from src.models.Base import Ascension, Stars, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.Champion import Champion
@@ -15,8 +15,8 @@ class WarFightPrefight(UUIDBase, table=True):
 
     war_fight_record_id: uuid.UUID = Field(foreign_key="war_fight_record.id")
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
-    stars: int
-    ascension: int
+    stars: Stars
+    ascension: Ascension
 
     fight_record: "WarFightRecord" = Relationship(
         back_populates="prefights",

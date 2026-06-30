@@ -2,7 +2,7 @@ import uuid
 from typing import List, TYPE_CHECKING
 from sqlmodel import Field, Relationship
 
-from src.models.Base import UUIDBase
+from src.models.Base import Ascension, Rank, Stars, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.GameAccount import GameAccount
@@ -15,11 +15,11 @@ class ChampionUser(UUIDBase, table=True):
 
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
-    stars: int = Field(default=7, ge=6, le=7)
-    rank: int = Field(default=1, ge=1, le=6)
+    stars: Stars = 7
+    rank: Rank = 1
     signature: int = Field(default=0, ge=0, le=200)
     is_preferred_attacker: bool = Field(default=False)
-    ascension: int = Field(default=0, ge=0, le=2)
+    ascension: Ascension = 0
 
     @property
     def rarity(self) -> str:
