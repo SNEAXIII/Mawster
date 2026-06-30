@@ -955,6 +955,20 @@ const fr: Translations = {
     preferredAttackerHint:
       'Marqué comme attaquant préféré — les officiers peuvent quand même le placer en défense.',
     manageTab: 'Gérer',
+    filter: {
+      namePlaceholder: 'Rechercher par nom…',
+      rank: 'Rang',
+      ascension: 'Ascension',
+      classLabel: 'Classe',
+      allClasses: 'Toutes les classes',
+      sagaAttacker: 'Saga Off',
+      sagaDefender: 'Saga Déf',
+      preferred: 'Préféré',
+      awakened: 'Awakened',
+      minSignature: 'Sig min',
+      reset: 'Réinitialiser',
+      count: '{filtered} / {total} champions',
+    },
   },
 
   mastery: {
