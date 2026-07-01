@@ -428,6 +428,7 @@ const fr: Translations = {
       preferredAttackerWarning: 'Attaquant préféré',
       sagaDefenderFilter: 'Saga Défenseur',
       notPreferredFilter: 'Non préféré',
+      rankFilter: 'Rang',
       playerFilter: 'Joueur',
       allFilter: 'Tous',
     },

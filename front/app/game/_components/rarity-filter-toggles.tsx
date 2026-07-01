@@ -1,27 +1,28 @@
 'use client';
 
-import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/app/lib/utils';
-import { RARITY_TIERS } from './use-attacker-rarity-filter';
+import { RARITY_TIERS } from './use-rarity-filter';
 
 interface RarityFilterTogglesProps {
   activeTiers: Set<string>;
   onToggle: (tier: string) => void;
+  /** Short label shown before the pills (e.g. "Rank"). */
+  label: string;
+  /** data-cy prefix per pill, e.g. "war-attacker-rarity" → "war-attacker-rarity-7r5". */
+  cyPrefix: string;
 }
 
 /** Compact pill row of rarity-tier toggles, visually grouped 6★ | 7★. */
 export default function RarityFilterToggles({
   activeTiers,
   onToggle,
+  label,
+  cyPrefix,
 }: Readonly<RarityFilterTogglesProps>) {
-  const { t } = useI18n();
-
   return (
     <div className='flex flex-wrap items-center gap-1'>
-      <span className='mr-1 text-[11px] font-medium text-muted-foreground'>
-        {t.game.war.rankFilter}
-      </span>
+      <span className='mr-1 text-[11px] font-medium text-muted-foreground'>{label}</span>
       {RARITY_TIERS.map((tier, i) => {
         const active = activeTiers.has(tier);
         // Small gap between the 6★ block and the 7★ block.
@@ -34,7 +35,7 @@ export default function RarityFilterToggles({
             <Button
               variant='outline'
               size='sm'
-              data-cy={`war-attacker-rarity-${tier}`}
+              data-cy={`${cyPrefix}-${tier}`}
               aria-pressed={active}
               className={cn(
                 'h-7 px-2 text-[11px] font-mono',

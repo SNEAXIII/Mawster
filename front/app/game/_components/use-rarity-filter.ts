@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { parseRarity } from '@/app/game/defense/_components/defense-utils';
 
-const STORAGE_KEY = 'mawster:war-attacker-rarity-tiers';
-
 /** Selectable rarity tiers, ordered low → high. */
 export const RARITY_TIERS = ['6r4', '6r5', '7r1', '7r2', '7r3', '7r4', '7r5', '7r6'] as const;
 
@@ -17,10 +15,10 @@ export function rarityWeight(rarity: string): number {
   return stars * 100 + rank;
 }
 
-function loadTiers(): Set<string> {
+function loadTiers(storageKey: string): Set<string> {
   if (typeof window === 'undefined') return new Set(DEFAULT_TIERS);
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(storageKey);
     if (!raw) return new Set(DEFAULT_TIERS);
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return new Set(parsed.filter((t) => typeof t === 'string'));
@@ -31,26 +29,31 @@ function loadTiers(): Set<string> {
 }
 
 /**
- * Manages the active rarity-tier filter for the war attacker selector.
- * Persisted in localStorage, independent of dialog open/close, and untouched
- * by the "Reset filters" action.
+ * Manages a persisted rarity-tier filter for a champion selector.
+ * State lives in localStorage under `storageKey`, is independent of dialog
+ * open/close (loaded once on mount), and is meant to survive "Reset filters".
+ *
+ * With no stored preference, 6★ tiers are hidden by default.
  */
-export function useAttackerRarityFilter() {
+export function useRarityFilter(storageKey: string) {
   const [activeTiers, setActiveTiers] = useState<Set<string>>(() => new Set(DEFAULT_TIERS));
 
   // Hydrate from storage on mount (avoids SSR mismatch).
   useEffect(() => {
-    setActiveTiers(loadTiers());
-  }, []);
+    setActiveTiers(loadTiers(storageKey));
+  }, [storageKey]);
 
-  const persist = useCallback((next: Set<string>) => {
-    setActiveTiers(next);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
-    } catch {
-      // Ignore storage failures (private browsing).
-    }
-  }, []);
+  const persist = useCallback(
+    (next: Set<string>) => {
+      setActiveTiers(next);
+      try {
+        window.localStorage.setItem(storageKey, JSON.stringify([...next]));
+      } catch {
+        // Ignore storage failures (private browsing).
+      }
+    },
+    [storageKey]
+  );
 
   const toggleTier = useCallback(
     (tier: string) => {
@@ -70,8 +73,5 @@ export function useAttackerRarityFilter() {
     [activeTiers]
   );
 
-  return useMemo(
-    () => ({ activeTiers, toggleTier, matches }),
-    [activeTiers, toggleTier, matches]
-  );
+  return useMemo(() => ({ activeTiers, toggleTier, matches }), [activeTiers, toggleTier, matches]);
 }

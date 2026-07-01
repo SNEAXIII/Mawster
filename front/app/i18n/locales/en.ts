@@ -423,6 +423,7 @@ const en = {
       preferredAttackerWarning: 'Preferred attacker',
       sagaDefenderFilter: 'Saga Defender',
       notPreferredFilter: 'Not Preferred',
+      rankFilter: 'Rank',
       playerFilter: 'Player',
       allFilter: 'All',
     },
