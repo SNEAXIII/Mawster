@@ -215,7 +215,13 @@ export function WarProvider({
       const war = await getCurrentWar(selectedAllianceId);
       setCurrentWar(war);
     } catch (err: unknown) {
-      if ((err as { status?: number }).status === 404) {
+      const status = (err as { status?: number }).status;
+      if (status === 404) {
+        setCurrentWar(null);
+      } else if (status === 403) {
+        // 403 means selectedAllianceId is a foreign alliance from a shared
+        // link the user doesn't belong to; the auto-select effect is about
+        // to correct it, so treat this like "no war" and stay silent.
         setCurrentWar(null);
       } else {
         toast.error(tRef.current.game.war.loadError);
