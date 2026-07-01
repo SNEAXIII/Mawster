@@ -332,13 +332,18 @@ def load_sample_data(engine=sync_engine):
             for i, pseudo in enumerate(GAME_PSEUDOS):
                 user_index = i + 2
                 slug = pseudo.lower().replace(" ", "_")
+                # ~22% of users have a Google identity; every 9th of those is Google-only.
+                has_google = user_index % 9 in (2, 5)
+                google_only = user_index % 9 == 5
                 user = User(
                     login=f"{slug}_{user_index:02d}",
                     email_hash=hash_email(f"{slug}_{user_index:02d}@gmail.com"),
-                    discord_id=f"discord_{slug}_{user_index}",
+                    discord_id=None if google_only else f"discord_{slug}_{user_index}",
+                    google_id=f"google_{slug}_{user_index}" if has_google else None,
                     role=Roles.USER,
                     created_at=fake.date_time_between(start_date="-1y", end_date=NOW),
                     last_login_date=fake.date_time_between(start_date="-30d", end_date=NOW),
+                    disabled_at=(NOW - timedelta(days=3)) if user_index == 15 else None,
                 )
                 session.add(user)
                 session.flush()
@@ -354,6 +359,18 @@ def load_sample_data(engine=sync_engine):
                     session.add(entry)
                 session.flush()
                 all_rosters[ga.id] = roster
+
+                # A couple of users own a second (alt) game account.
+                if user_index in (4, 7):
+                    alt = GameAccount(user_id=user.id, game_pseudo=f"{pseudo}Alt", is_primary=False)
+                    session.add(alt)
+                    session.flush()
+                    game_accounts.append(alt)
+                    alt_roster = _build_roster(alt.id, user_index + 100, champions_db)
+                    for entry in alt_roster:
+                        session.add(entry)
+                    session.flush()
+                    all_rosters[alt.id] = alt_roster
 
                 session.add(
                     LoginLog(
@@ -375,10 +392,47 @@ def load_sample_data(engine=sync_engine):
             session.add(alliance)
             session.flush()
 
-            for number, ga in enumerate(game_accounts):
+            # Demo HEHE gets the first 25 accounts across 3 battlegroups.
+            demo_members = game_accounts[:25]
+            for number, ga in enumerate(demo_members):
                 ga.alliance_id = alliance.id
                 ga.alliance_group = number % 3 + 1
                 session.add(ga)
+            session.flush()
+
+            # Second, smaller alliance owned by a mid-roster account.
+            second_owner = game_accounts[25]
+            alliance2 = Alliance(
+                name="Second Wave",
+                tag="SCND",
+                owner_id=second_owner.id,
+                elo=3600,
+                tier=2,
+                created_at=NOW - timedelta(days=20),
+            )
+            session.add(alliance2)
+            session.flush()
+            for number, ga in enumerate(game_accounts[25:30]):
+                ga.alliance_id = alliance2.id
+                ga.alliance_group = number % 3 + 1
+                session.add(ga)
+            session.flush()
+
+            # Empty, unranked alliance (owner only) — mirrors freshly created prod alliances.
+            empty_owner = game_accounts[30] if len(game_accounts) > 30 else game_accounts[-1]
+            alliance_empty = Alliance(
+                name="Fresh Recruits",
+                tag="FRESH",
+                owner_id=empty_owner.id,
+                elo=0,
+                tier=20,
+                created_at=NOW - timedelta(days=1),
+            )
+            session.add(alliance_empty)
+            session.flush()
+            empty_owner.alliance_id = alliance_empty.id
+            empty_owner.alliance_group = 1
+            session.add(empty_owner)
             session.flush()
 
             # ── Officers (5 members) ──────────────────────────────────────────────
