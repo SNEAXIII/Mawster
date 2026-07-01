@@ -53,7 +53,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
   const {
     currentWar,
     selectedBg,
-    setSelectedBg,
+    handleBgChange,
     canManageWar,
     warMode,
     setWarMode,
@@ -199,7 +199,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
             <ToggleButton
               key={bg}
               active={selectedBg === bg}
-              onClick={() => setSelectedBg(bg)}
+              onClick={() => handleBgChange(bg)}
               dataCy={`bg-btn-${bg}`}
             >
               G{bg}

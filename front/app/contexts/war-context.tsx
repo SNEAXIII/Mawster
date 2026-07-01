@@ -56,8 +56,10 @@ interface WarContextValue {
   alliances: Alliance[];
   selectedAllianceId: string;
   setSelectedAllianceId: (id: string) => void;
+  handleAllianceChange: (allianceId: string) => void;
   selectedBg: number;
   setSelectedBg: (bg: number) => void;
+  handleBgChange: (bg: number) => void;
   loading: boolean;
   canManageWar: boolean;
   isVisitor: boolean;
@@ -146,9 +148,15 @@ export function useWar(): WarContextValue {
 
 export function WarProvider({
   children,
+  onStateChange,
   initialAllianceId,
   initialBg,
-}: Readonly<{ children: ReactNode; initialAllianceId?: string; initialBg?: number }>) {
+}: Readonly<{
+  children: ReactNode;
+  onStateChange?: (allianceId: string, bg: number) => void;
+  initialAllianceId?: string;
+  initialBg?: number;
+}>) {
   const { t } = useI18n();
   const { canManage, isMine } = useAllianceRole();
 
@@ -197,6 +205,22 @@ export function WarProvider({
     [alliances, selectedAllianceId]
   );
 
+  const handleAllianceChange = useCallback(
+    (allianceId: string) => {
+      setSelectedAllianceId(allianceId);
+      onStateChange?.(allianceId, selectedBg);
+    },
+    [setSelectedAllianceId, onStateChange, selectedBg]
+  );
+
+  const handleBgChange = useCallback(
+    (bg: number) => {
+      setSelectedBg(bg);
+      if (selectedAllianceId) onStateChange?.(selectedAllianceId, bg);
+    },
+    [setSelectedBg, onStateChange, selectedAllianceId]
+  );
+
   // Auto-select first alliance when none is selected, or when the selected id
   // (e.g. from a shared link) is not among the user's alliances.
   useEffect(() => {
@@ -204,7 +228,9 @@ export function WarProvider({
     const exists = alliances.some((a) => a.id === selectedAllianceId);
     if (!selectedAllianceId || !exists) {
       setSelectedAllianceId(alliances[0].id);
+      onStateChange?.(alliances[0].id, selectedBg);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alliances, selectedAllianceId, setSelectedAllianceId]);
 
   // ─── Fetch current war ─────────────────────────────────────────────────────
@@ -723,8 +749,10 @@ export function WarProvider({
       alliances,
       selectedAllianceId,
       setSelectedAllianceId,
+      handleAllianceChange,
       selectedBg,
       setSelectedBg,
+      handleBgChange,
       loading,
       canManageWar,
       isVisitor,
@@ -778,7 +806,9 @@ export function WarProvider({
     [
       alliances,
       selectedAllianceId,
+      handleAllianceChange,
       selectedBg,
+      handleBgChange,
       loading,
       canManageWar,
       isVisitor,

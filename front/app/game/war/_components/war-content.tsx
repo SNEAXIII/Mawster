@@ -23,11 +23,20 @@ const WarAttackerSelector = dynamic(() => import('./war-attacker-selector'), {
 });
 
 export default function WarContent({
+  onStateChange,
   initialAllianceId,
   initialBg,
-}: Readonly<{ initialAllianceId?: string; initialBg?: number }>) {
+}: Readonly<{
+  onStateChange?: (allianceId: string, bg: number) => void;
+  initialAllianceId?: string;
+  initialBg?: number;
+}>) {
   return (
-    <WarProvider initialAllianceId={initialAllianceId} initialBg={initialBg}>
+    <WarProvider
+      onStateChange={onStateChange}
+      initialAllianceId={initialAllianceId}
+      initialBg={initialBg}
+    >
       <WarLayout />
     </WarProvider>
   );
@@ -42,7 +51,7 @@ function WarLayout() {
   const {
     alliances,
     selectedAllianceId,
-    setSelectedAllianceId,
+    handleAllianceChange,
     selectedBg,
     loading,
     canManageWar,
@@ -87,7 +96,7 @@ function WarLayout() {
           <WarHeader
             alliances={alliances}
             selectedAllianceId={selectedAllianceId}
-            onAllianceChange={setSelectedAllianceId}
+            onAllianceChange={handleAllianceChange}
           />
 
           {/* ── Management bar (officers/owners only, no active war) ──── */}

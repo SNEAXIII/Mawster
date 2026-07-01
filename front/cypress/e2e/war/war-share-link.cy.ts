@@ -35,4 +35,17 @@ describe('War share link', () => {
       }
     );
   });
+
+  it('updates the URL when the battlegroup is changed', () => {
+    setupWarOwner('share', 'ShareOwner', 'Share Alliance', 'SHR').then(
+      ({ ownerData, allianceId }) => {
+        cy.apiLogin(ownerData.user_id);
+        cy.visit(`/game/war?alliance=${allianceId}&bg=1`);
+
+        cy.getByCy('bg-btn-2').click();
+        cy.location('search').should('contain', 'bg=2');
+        cy.location('search').should('contain', `alliance=${allianceId}`);
+      }
+    );
+  });
 });
