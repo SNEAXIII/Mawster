@@ -474,6 +474,8 @@ const fr: Translations = {
       clearAll: 'Tout effacer',
       exportMap: 'Exporter carte',
       exportList: 'Exporter liste',
+      shareLink: 'Copier le lien',
+      shareLinkCopied: 'Lien copié dans le presse-papier',
       nodeEmpty: 'Nœud #{node} — Vide',
       removeDefender: 'Retirer',
       loadMore: 'Charger plus',
