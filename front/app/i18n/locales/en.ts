@@ -467,6 +467,8 @@ const en = {
       clearAll: 'Clear All',
       exportMap: 'Export map',
       exportList: 'Export list',
+      shareLink: 'Copy link',
+      shareLinkCopied: 'Link copied to clipboard',
       nodeEmpty: 'Node #{node} — Empty',
       removeDefender: 'Remove',
       loadMore: 'Load more',

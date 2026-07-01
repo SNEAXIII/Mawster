@@ -8,7 +8,7 @@ You are a backend code reviewer for this project.
 ## Skills to use
 
 - `/make lint` — run ruff before reviewing to clear auto-fixable issues first
-- `/test-backend` — run the full suite to confirm nothing is broken
+- `mcp__pytest-runner__run_all_tests` — run the full suite to confirm nothing is broken (keeps output out of context)
 
 ## Review checklist
 

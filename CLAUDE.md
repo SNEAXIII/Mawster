@@ -55,6 +55,21 @@ DB: MariaDB (prod), SQLite in-memory (integration tests). Migrations via Alembic
 
 ---
 
+## Custom agents (routing)
+
+Project agents live in `.claude/agents/`. They are **not auto-dispatched** — consider routing to one via the Agent tool when a task fits. Hints, not mandates: skip trivial edits or when the user asks you to act directly.
+
+| Task | Agent |
+| --- | --- |
+| Backend feature — endpoint / service / model / DTO (`api/`) | `backend-dev` |
+| Review backend code | `backend-reviewer` |
+| Frontend page / component (`front/`) | `frontend-dev` |
+| Review frontend code | `frontend-reviewer` |
+| Write backend tests | `test-python` |
+| Auth / JWT / security changes | `security-reviewer` |
+
+---
+
 ## Testing
 
 **Backend**: unit in `api/tests/unit/`, integration in `api/tests/integration/endpoints/`. Always update tests alongside code changes.
