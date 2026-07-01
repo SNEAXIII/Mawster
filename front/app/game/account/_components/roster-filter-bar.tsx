@@ -130,7 +130,7 @@ export default function RosterFilterBar({
         {isFilterActive(filters) && (
           <Button
             type='button'
-            variant='ghost'
+            variant='outline'
             size='sm'
             className='h-8 text-xs text-muted-foreground'
             data-cy='roster-filter-reset'

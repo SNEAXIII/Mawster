@@ -947,7 +947,7 @@ const en = {
     filter: {
       namePlaceholder: 'Search by name…',
       rank: 'Rank',
-      ascension: 'Ascension',
+      ascension: 'Asc',
       classLabel: 'Class',
       allClasses: 'All classes',
       sagaAttacker: 'Saga Off',
