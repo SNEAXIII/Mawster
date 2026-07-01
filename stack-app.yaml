@@ -155,6 +155,7 @@ services:
     environment:
       NEXTAUTH_URL: https://www.mawster.app
       NEXTAUTH_URL_INTERNAL: http://front:3000
+      NEXT_PUBLIC_API_CLIENT_HOST: www.mawster.app
     secrets:
       - mawster_nextauth_secret
       - mawster_discord_client_id

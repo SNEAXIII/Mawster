@@ -23,8 +23,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
-ARG NEXT_PUBLIC_API_CLIENT_HOST
-ENV NEXT_PUBLIC_API_CLIENT_HOST=${NEXT_PUBLIC_API_CLIENT_HOST}
+# Host-agnostic build: bake a placeholder, rewritten at container start in run.sh.
+ENV NEXT_PUBLIC_API_CLIENT_HOST=__NEXT_PUBLIC_API_HOST__
 
 RUN \
   if [ -f package-lock.json ]; then npm run build; \
@@ -39,8 +39,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ARG NEXT_PUBLIC_API_CLIENT_HOST
-ENV NEXT_PUBLIC_API_CLIENT_HOST=${NEXT_PUBLIC_API_CLIENT_HOST}
+# NEXT_PUBLIC_API_CLIENT_HOST is provided at runtime (stack env) and applied by run.sh.
 
 RUN addgroup --system --gid 1001 nodejs &&\
     adduser --system --uid 1001 nextjs

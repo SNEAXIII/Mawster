@@ -266,8 +266,7 @@ jobs:
           context: ./front
           file: ./front/front.Dockerfile
           push: true
-          build-args: |
-            NEXT_PUBLIC_API_CLIENT_HOST=${{ vars.API_CLIENT_HOST }}
+          # Host-agnostic image: NEXT_PUBLIC_API_CLIENT_HOST is applied at runtime by run.sh (stack env).
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:latest
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:${{ env.TAG }}

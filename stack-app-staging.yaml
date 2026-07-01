@@ -1,0 +1,219 @@
+networks:
+  traefik-public:
+    external: true
+  internal-staging:
+    external: true
+    attachable: true
+
+secrets:
+  mawster_secret_key_staging:
+    external: true
+  mawster_db_password_staging:
+    external: true
+  mawster_db_root_password_staging:
+    external: true
+  mawster_email_pepper_staging:
+    external: true
+  mawster_nextauth_secret_staging:
+    external: true
+  mawster_discord_client_id:
+    external: true
+  mawster_discord_client_secret:
+    external: true
+  mawster_google_client_id:
+    external: true
+  mawster_google_client_secret:
+    external: true
+
+services:
+  mariadb:
+    image: mariadb:11.4
+    networks:
+      - internal-staging
+    ports:
+      - target: 3306
+        published: 3307
+        protocol: tcp
+        mode: host
+    environment:
+      MARIADB_USER: mawster
+      MARIADB_DATABASE: mawster
+      MARIADB_PASSWORD_FILE: /run/secrets/mawster_db_password_staging
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/mawster_db_root_password_staging
+    secrets:
+      - mawster_db_password_staging
+      - mawster_db_root_password_staging
+    volumes:
+      - data_db_staging:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '5'
+
+  api:
+    image: sneaxiii/mawster-api:latest
+    networks:
+      - internal-staging
+      - traefik-public
+    environment:
+      MODE: prod
+      CONTAINER: '1'
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: '60'
+      REFRESH_TOKEN_EXPIRE_DAYS: '7'
+      MARIADB_USER: mawster
+      MARIADB_PORT: '3306'
+      MARIADB_DATABASE: mawster
+      ALLOWED_ORIGINS: https://www.staging.mawster.app
+      API_PORT: '8000'
+      EMAIL_PEPPER_VERSION: '1'
+    secrets:
+      - mawster_secret_key_staging
+      - mawster_db_password_staging
+      - mawster_email_pepper_staging
+    volumes:
+      - api_logs_staging:/app/api/logs
+    command: ['sh', 'run.sh']
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '5'
+
+  front-staging:
+    image: sneaxiii/mawster-front:latest
+    networks:
+      - internal-staging
+      - traefik-public
+    environment:
+      NEXTAUTH_URL: https://www.staging.mawster.app
+      NEXTAUTH_URL_INTERNAL: http://front-staging:3000
+      NEXT_PUBLIC_API_CLIENT_HOST: www.staging.mawster.app
+    secrets:
+      - mawster_nextauth_secret_staging
+      - mawster_discord_client_id
+      - mawster_discord_client_secret
+      - mawster_google_client_id
+      - mawster_google_client_secret
+    command: ['sh', 'run.sh']
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.front-staging.rule=Host(`www.staging.mawster.app`)
+        - traefik.http.routers.front-staging.entrypoints=websecure
+        - traefik.http.routers.front-staging.tls.certresolver=letsencrypt
+        - traefik.http.routers.front-staging.service=front-staging
+        - traefik.http.services.front-staging.loadbalancer.server.port=3000
+        - traefik.http.routers.front-staging.middlewares=security-headers-staging
+        - traefik.http.middlewares.security-headers-staging.headers.frameDeny=true
+        - traefik.http.middlewares.security-headers-staging.headers.contentTypeNosniff=true
+        - traefik.http.middlewares.security-headers-staging.headers.referrerPolicy=strict-origin-when-cross-origin
+        - traefik.http.middlewares.security-headers-staging.headers.permissionsPolicy=camera=(),microphone=(),geolocation=(),payment=(),usb=(),accelerometer=()
+        - traefik.http.middlewares.security-headers-staging.headers.customResponseHeaders.Server=
+        - traefik.http.routers.apex-redirect-staging.rule=Host(`staging.mawster.app`)
+        - traefik.http.routers.apex-redirect-staging.entrypoints=websecure
+        - traefik.http.routers.apex-redirect-staging.tls.certresolver=letsencrypt
+        - traefik.http.routers.apex-redirect-staging.middlewares=apex-to-www-staging
+        - traefik.http.middlewares.apex-to-www-staging.redirectregex.regex=^https://staging.mawster.app/(.*)
+        - traefik.http.middlewares.apex-to-www-staging.redirectregex.replacement=https://www.staging.mawster.app/$${1}
+        - traefik.http.middlewares.apex-to-www-staging.redirectregex.permanent=true
+        - traefik.docker.network=traefik-public
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '5'
+
+  static-staging:
+    image: sneaxiii/mawster-static:latest
+    networks:
+      - traefik-public
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.static-staging.rule=Host(`www.staging.mawster.app`) && PathPrefix(`/static/`)
+        - traefik.http.routers.static-staging.entrypoints=websecure
+        - traefik.http.routers.static-staging.tls.certresolver=letsencrypt
+        - traefik.http.routers.static-staging.service=static-staging
+        - traefik.http.services.static-staging.loadbalancer.server.port=80
+        - traefik.docker.network=traefik-public
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: '3'
+
+  backup:
+    image: sneaxiii/mawster-backup:latest
+    networks:
+      - internal-staging
+    environment:
+      TZ: Europe/Paris
+      MARIADB_USER: mawster
+      MARIADB_DATABASE: mawster
+      MARIADB_PORT: '3306'
+      BACKUP_CRON_ENABLED: 'false'
+      BACKUP_REMOTE_ENABLED: 'false'
+    secrets:
+      - source: mawster_db_root_password_staging
+        target: mawster_db_root_password
+    volumes:
+      - type: bind
+        source: /home/mawster/Mawster/backups-staging
+        target: /backups
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: '3'
+
+volumes:
+  data_db_staging:
+  api_logs_staging:
