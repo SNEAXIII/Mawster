@@ -4,9 +4,10 @@ import dynamic from 'next/dynamic';
 import { ReactNode, useState, useEffect, useRef } from 'react';
 import { snapdom } from '@zumer/snapdom';
 import { Button } from '@/components/ui/button';
-import { Shield, Swords, Trash2, Pencil, Camera } from 'lucide-react';
+import { Shield, Swords, Trash2, Pencil, Camera, Link2 } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import { useI18n } from '@/app/i18n';
+import { toast } from 'sonner';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import ChampionPortrait from '@/components/champion-portrait';
 import { WarMode } from './war-types';
@@ -103,6 +104,12 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
 
   const handleExportMap = () => exportImage('map');
   const handleExportList = () => exportImage('attackers');
+
+  const handleCopyShareLink = async () => {
+    const url = `${window.location.origin}/game/war?alliance=${selectedAllianceId}&bg=${selectedBg}`;
+    await navigator.clipboard.writeText(url);
+    toast.success(t.game.war.shareLinkCopied);
+  };
 
   useEffect(() => {
     setPlayerFilter('');
@@ -235,6 +242,15 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
             {t.game.war.clearAll}
           </Button>
         )}
+        {/* Share link — always available while a war is active */}
+        <Button
+          variant='outline'
+          onClick={handleCopyShareLink}
+          data-cy='share-war-link-btn'
+        >
+          <Link2 className='w-4 h-4 mr-1' />
+          {t.game.war.shareLink}
+        </Button>
         {/* Export buttons — one image per click */}
         {placements.length > 0 && (
           <>
