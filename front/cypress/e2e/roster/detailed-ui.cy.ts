@@ -124,7 +124,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
           cy.contains('EditUpd added / updated').should('be.visible');
 
           // Verify updated values on the card
-          cy.getByCy('rarity-group-7r4').contains('EditUpd').should('be.visible');
+          cy.getByCy('rarity-group-7r4').contains('EditUpd').scrollIntoView().should('be.visible');
           cy.getByCy('champion-card-EditUpd').find('[data-cy="champion-sig"]').should('contain', 'sig 200');
           cy.getByCy('champion-card-EditUpd').find('[data-cy="champion-ascension"]').should('contain', 'A1');
         });
