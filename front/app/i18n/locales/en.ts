@@ -957,6 +957,7 @@ const en = {
       minSignature: 'Min sig',
       reset: 'Reset',
       count: '{filtered} / {total} champions',
+      noResults: 'No champion matches the current filters.',
     },
   },
 

@@ -16,6 +16,8 @@ interface RosterGridProps {
   upgradeRequests?: UpgradeRequest[];
   /** Callback to cancel an upgrade request */
   onCancelRequest?: (requestId: string) => void;
+  /** True when filters are active — changes the empty-state message */
+  isFiltered?: boolean;
 }
 
 export default function RosterGrid({
@@ -28,11 +30,16 @@ export default function RosterGrid({
   readOnly = false,
   upgradeRequests,
   onCancelRequest,
+  isFiltered = false,
 }: RosterGridProps) {
   const { t } = useI18n();
 
   if (groupedRoster.length === 0) {
-    return <p className='text-muted-foreground'>{t.roster.empty}</p>;
+    return (
+      <p className='text-muted-foreground'>
+        {isFiltered ? t.roster.filter.noResults : t.roster.empty}
+      </p>
+    );
   }
 
   return (

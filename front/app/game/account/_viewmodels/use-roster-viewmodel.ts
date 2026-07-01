@@ -23,7 +23,7 @@ import {
   MasteryEntry,
   MasteryUpsertItem,
 } from '@/app/services/masteries';
-import { RosterFilters, EMPTY_FILTERS, applyRosterFilters } from './roster-filters';
+import { RosterFilters, EMPTY_FILTERS, applyRosterFilters, isFilterActive } from './roster-filters';
 
 export enum RosterTab {
   Roster = 'roster',
@@ -324,6 +324,7 @@ export function useRosterViewModel() {
     availableClasses,
     filteredCount: filteredRoster.length,
     totalCount: roster.length,
+    hasActiveFilters: isFilterActive(filters),
     masteries,
     masteryForm,
     loadingMasteries,

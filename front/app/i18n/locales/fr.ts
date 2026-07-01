@@ -968,6 +968,7 @@ const fr: Translations = {
       minSignature: 'Sig min',
       reset: 'Réinitialiser',
       count: '{filtered} / {total} champions',
+      noResults: 'Aucun champion ne correspond aux filtres.',
     },
   },
 

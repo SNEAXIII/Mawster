@@ -136,6 +136,7 @@ export default function RosterContent() {
                     ) : (
                       <RosterGrid
                         groupedRoster={vm.groupedRoster}
+                        isFiltered={vm.hasActiveFilters}
                         onEdit={vm.startEditEntry}
                         onDelete={vm.setDeleteTarget}
                         onUpgrade={vm.setUpgradeTarget}
