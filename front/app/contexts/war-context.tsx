@@ -56,8 +56,10 @@ interface WarContextValue {
   alliances: Alliance[];
   selectedAllianceId: string;
   setSelectedAllianceId: (id: string) => void;
+  handleAllianceChange: (allianceId: string) => void;
   selectedBg: number;
   setSelectedBg: (bg: number) => void;
+  handleBgChange: (bg: number) => void;
   loading: boolean;
   canManageWar: boolean;
   isVisitor: boolean;
@@ -144,7 +146,17 @@ export function useWar(): WarContextValue {
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
-export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
+export function WarProvider({
+  children,
+  onStateChange,
+  initialAllianceId,
+  initialBg,
+}: Readonly<{
+  children: ReactNode;
+  onStateChange?: (allianceId: string, bg: number) => void;
+  initialAllianceId?: string;
+  initialBg?: number;
+}>) {
   const { t } = useI18n();
   const { canManage, isMine } = useAllianceRole();
 
@@ -156,7 +168,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     setSelectedBg,
     loading,
     refresh,
-  } = useAllianceSelector();
+  } = useAllianceSelector({ initialAllianceId, initialBg });
 
   // ─── War state ─────────────────────────────────────────────────────────────
   const [currentWar, setCurrentWar] = useState<War | null>(null);
@@ -193,11 +205,32 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     [alliances, selectedAllianceId]
   );
 
-  // ─── Auto-select first alliance ────────────────────────────────────────────
+  const handleAllianceChange = useCallback(
+    (allianceId: string) => {
+      setSelectedAllianceId(allianceId);
+      onStateChange?.(allianceId, selectedBg);
+    },
+    [setSelectedAllianceId, onStateChange, selectedBg]
+  );
+
+  const handleBgChange = useCallback(
+    (bg: number) => {
+      setSelectedBg(bg);
+      if (selectedAllianceId) onStateChange?.(selectedAllianceId, bg);
+    },
+    [setSelectedBg, onStateChange, selectedAllianceId]
+  );
+
+  // Auto-select first alliance when none is selected, or when the selected id
+  // (e.g. from a shared link) is not among the user's alliances.
   useEffect(() => {
-    if (alliances.length > 0 && !selectedAllianceId) {
+    if (alliances.length === 0) return;
+    const exists = alliances.some((a) => a.id === selectedAllianceId);
+    if (!selectedAllianceId || !exists) {
       setSelectedAllianceId(alliances[0].id);
+      onStateChange?.(alliances[0].id, selectedBg);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alliances, selectedAllianceId, setSelectedAllianceId]);
 
   // ─── Fetch current war ─────────────────────────────────────────────────────
@@ -208,7 +241,13 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       const war = await getCurrentWar(selectedAllianceId);
       setCurrentWar(war);
     } catch (err: unknown) {
-      if ((err as { status?: number }).status === 404) {
+      const status = (err as { status?: number }).status;
+      if (status === 404) {
+        setCurrentWar(null);
+      } else if (status === 403) {
+        // 403 means selectedAllianceId is a foreign alliance from a shared
+        // link the user doesn't belong to; the auto-select effect is about
+        // to correct it, so treat this like "no war" and stay silent.
         setCurrentWar(null);
       } else {
         toast.error(tRef.current.game.war.loadError);
@@ -710,8 +749,10 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
       alliances,
       selectedAllianceId,
       setSelectedAllianceId,
+      handleAllianceChange,
       selectedBg,
       setSelectedBg,
+      handleBgChange,
       loading,
       canManageWar,
       isVisitor,
@@ -765,7 +806,9 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     [
       alliances,
       selectedAllianceId,
+      handleAllianceChange,
       selectedBg,
+      handleBgChange,
       loading,
       canManageWar,
       isVisitor,

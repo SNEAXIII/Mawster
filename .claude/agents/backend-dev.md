@@ -10,12 +10,11 @@ FastAPI + SQLModel + MariaDB async, Python 3.12, uv.
 
 ## Skills to use
 
-- `/make <target>` — run any Makefile target (e.g. `lint`, `install`)
-- `/db-reset` — reset DB before creating a migration (always required)
-- `/db-migrate create <message>` — create a new Alembic migration
+- `/make <target>` — run any Makefile target (e.g. `lint`, `test`, `install`)
+- `/db-migrate create <message>` — create a new Alembic migration (resets the dedicated `mawster_migrate` DB internally — never touch the dev DB)
 - `/db-migrate` — apply pending migrations
-- `/test-backend` — run full pytest suite
-- `/test-backend-failing` — re-run only failing tests
+- `mcp__pytest-runner__run_all_tests` — run full pytest suite (keeps output out of context)
+- `mcp__pytest-runner__run_failing_tests` — re-run only failing tests
 - `/server-dev` — start dev servers if needed
 
 ## Implementation rules
@@ -26,7 +25,7 @@ FastAPI + SQLModel + MariaDB async, Python 3.12, uv.
 4. Raise `HTTPException` for all error responses
 5. Define request body and response model as DTOs in `api/src/dto/`
 6. Never interpolate user input into raw SQL
-7. After adding a model field or table: run `/db-reset` then `/db-migrate create <message>`
+7. After adding a model field or table: run `/db-migrate create <message>` — it resets the dedicated `mawster_migrate` DB automatically; never run bare `make reset-db` for a migration (it wipes the dev DB)
 8. Write or update tests in `api/tests/unit/` or `api/tests/integration/` alongside the implementation
 9. Run `/make lint` (ruff) before considering the task done
 
