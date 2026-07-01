@@ -93,6 +93,10 @@ describe('Defense – Placement via UI', () => {
         cy.navTo('defense');
 
         cy.getByCy(`war-node-${node}`).scrollIntoView().click({ force: true });
+        // 6★ are hidden by default — enable the tier so the card is visible.
+        if (champ.rarity.startsWith('6')) {
+          cy.getByCy(`defense-rarity-${champ.rarity}`).click();
+        }
         cy.getByCy(`champion-card-${champ.name.replace(/ /g, '-')}`).click();
 
         cy.getByCy(`war-node-${node}`).should('contain', expected);

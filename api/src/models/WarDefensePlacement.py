@@ -3,7 +3,16 @@ from typing import Optional, TYPE_CHECKING
 import sqlalchemy as sa
 from sqlmodel import Field, Relationship
 
-from src.models.Base import TimestampMixin, UUIDBase
+from src.models.Base import (
+    Ascension,
+    Battlegroup,
+    KoCount,
+    NodeNumber,
+    Rank,
+    Stars,
+    TimestampMixin,
+    UUIDBase,
+)
 
 if TYPE_CHECKING:
     from src.models.War import War
@@ -19,12 +28,12 @@ class WarDefensePlacement(UUIDBase, TimestampMixin, table=True):
     )
 
     war_id: uuid.UUID = Field(foreign_key="war.id")
-    battlegroup: int = Field(ge=1, le=3)
-    node_number: int = Field(ge=1, le=50)
+    battlegroup: Battlegroup
+    node_number: NodeNumber
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
-    stars: int = Field(ge=6, le=7)
-    rank: int = Field(ge=1, le=6)
-    ascension: int = Field(default=0, ge=0, le=2)
+    stars: Stars
+    rank: Rank
+    ascension: Ascension = 0
     placed_by_id: Optional[uuid.UUID] = Field(default=None, foreign_key="game_account.id")
     attacker_champion_user_id: Optional[uuid.UUID] = Field(
         default=None, foreign_key="champion_user.id"
@@ -32,7 +41,7 @@ class WarDefensePlacement(UUIDBase, TimestampMixin, table=True):
     assist_champion_user_id: Optional[uuid.UUID] = Field(
         default=None, foreign_key="champion_user.id"
     )
-    ko_count: int = Field(default=0, ge=0)
+    ko_count: KoCount = 0
     is_combat_completed: bool = Field(default=False)
     is_fight_not_done: bool = Field(default=False)
     is_planning_error: bool = Field(default=False)

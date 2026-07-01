@@ -16,4 +16,6 @@ if __name__ == "__main__":
         f"  DB       : {SECRET.MARIADB_DATABASE} @ {SECRET.MARIADB_HOST}:{SECRET.MARIADB_PORT}\n"
         f"  DB user  : {SECRET.MARIADB_USER}\n"
     )
-    uvicorn.run("main:app", host="127.0.0.1", port=port, reload=True)
+    # reload=False: the WatchFiles autoreloader has no place in E2E/CI — a stray
+    # file change mid-run would restart the server and break in-flight tests.
+    uvicorn.run("main:app", host="127.0.0.1", port=port, reload=False)

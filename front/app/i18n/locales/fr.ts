@@ -428,6 +428,7 @@ const fr: Translations = {
       preferredAttackerWarning: 'Attaquant préféré',
       sagaDefenderFilter: 'Saga Défenseur',
       notPreferredFilter: 'Non préféré',
+      rankFilter: 'Rang',
       playerFilter: 'Joueur',
       allFilter: 'Tous',
     },
@@ -521,6 +522,7 @@ const fr: Translations = {
       memberAttackers: '{count}/{max}',
       sagaAttackerFilter: 'Saga Attaquant',
       preferredAttackerFilter: 'Préféré',
+      rankFilter: 'Rang',
       noteLabel: 'Note',
       notePlaceholder: 'Ajouter une note pour ce combat…',
       noteSave: 'Enregistrer la note',
@@ -955,6 +957,21 @@ const fr: Translations = {
     preferredAttackerHint:
       'Marqué comme attaquant préféré — les officiers peuvent quand même le placer en défense.',
     manageTab: 'Gérer',
+    filter: {
+      namePlaceholder: 'Rechercher par nom…',
+      rank: 'Rang',
+      ascension: 'Asc',
+      classLabel: 'Classe',
+      allClasses: 'Toutes les classes',
+      sagaAttacker: 'Saga Off',
+      sagaDefender: 'Saga Déf',
+      preferred: 'Préféré',
+      awakened: 'Eveillé',
+      minSignature: 'Sig min',
+      reset: 'Réinitialiser',
+      count: '{filtered} / {total} champions',
+      noResults: 'Aucun champion ne correspond aux filtres.',
+    },
   },
 
   mastery: {

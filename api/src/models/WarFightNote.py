@@ -5,7 +5,7 @@ from typing import List, Optional, TYPE_CHECKING
 import sqlalchemy as sa
 from sqlmodel import Field, Relationship
 
-from src.models.Base import TimestampMixin, UUIDBase, utcnow
+from src.models.Base import Battlegroup, NodeNumber, TimestampMixin, UUIDBase, utcnow
 
 if TYPE_CHECKING:
     from src.models.WarFightNoteRevision import WarFightNoteRevision
@@ -23,8 +23,8 @@ class WarFightNote(UUIDBase, TimestampMixin, table=True):
     war_defense_placement_id: uuid.UUID = Field(foreign_key="war_defense_placement.id")
     war_id: uuid.UUID = Field(foreign_key="war.id")
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
-    battlegroup: int = Field(ge=1, le=3)
-    node_number: int = Field(ge=1, le=50)
+    battlegroup: Battlegroup
+    node_number: NodeNumber
     content: str = Field(sa_column=sa.Column(sa.Text, nullable=False))
     created_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     updated_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")

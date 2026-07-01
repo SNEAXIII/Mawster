@@ -423,6 +423,7 @@ const en = {
       preferredAttackerWarning: 'Preferred attacker',
       sagaDefenderFilter: 'Saga Defender',
       notPreferredFilter: 'Not Preferred',
+      rankFilter: 'Rank',
       playerFilter: 'Player',
       allFilter: 'All',
     },
@@ -514,6 +515,7 @@ const en = {
       memberAttackers: '{count}/{max}',
       sagaAttackerFilter: 'Saga Attacker',
       preferredAttackerFilter: 'Preferred',
+      rankFilter: 'Rank',
       noteLabel: 'Note',
       notePlaceholder: 'Add a note for this combat…',
       noteSave: 'Save note',
@@ -944,6 +946,21 @@ const en = {
     preferredAttackerHint:
       'Marked as preferred attacker — officers can still place them in defense.',
     manageTab: 'Manage',
+    filter: {
+      namePlaceholder: 'Search by name…',
+      rank: 'Rank',
+      ascension: 'Asc',
+      classLabel: 'Class',
+      allClasses: 'All classes',
+      sagaAttacker: 'Saga Off',
+      sagaDefender: 'Saga Def',
+      preferred: 'Preferred',
+      awakened: 'Awakened',
+      minSignature: 'Min sig',
+      reset: 'Reset',
+      count: '{filtered} / {total} champions',
+      noResults: 'No champion matches the current filters.',
+    },
   },
 
   mastery: {
