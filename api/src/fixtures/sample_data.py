@@ -23,6 +23,8 @@ from sqlmodel import Session, select
 
 from src.enums.InvitationStatus import InvitationStatus
 from src.enums.Roles import Roles
+from src.enums.SeasonStatus import SeasonStatus
+from src.enums.SeasonFormat import SeasonFormat
 from src.models import User, LoginLog
 from src.utils.email_hash import hash_email
 from src.models.GameAccount import GameAccount
@@ -34,6 +36,12 @@ from src.models.ChampionUser import ChampionUser
 from src.models.GameAccountMastery import GameAccountMastery
 from src.models.Mastery import Mastery
 from src.models.RequestedUpgrade import RequestedUpgrade
+from src.models.Season import Season
+from src.models.War import War, WarStatus
+from src.models.WarBan import WarBan
+from src.models.WarDefensePlacement import WarDefensePlacement
+from src.models.WarPrefightAttacker import WarPrefightAttacker
+from src.models.WarSynergyAttacker import WarSynergyAttacker
 from src.fixtures import sync_engine
 
 fake = Faker(locale="en")
@@ -208,6 +216,11 @@ WAR_ACTIVE_NODE_LAYOUT = [
 
 # BG1 nodes with defenders in active war — used for the "full combats" GA prefights
 BG1_NODES = [row[1] for row in WAR_ACTIVE_NODE_LAYOUT if row[0] == 1][:5]  # first 5
+
+
+def _valid_layout(layout: list) -> list:
+    """Keep only rows whose node_number is within the NodeNumber bound (1..50)."""
+    return [row for row in layout if 1 <= row[1] <= 50]
 
 
 def _pick_champions(user_index: int, all_names: list, count: int) -> list:
@@ -521,6 +534,141 @@ def load_sample_data(engine=sync_engine):
                         requested_rarity=rarity,
                         created_at=NOW - timedelta(days=days_created),
                         done_at=NOW - timedelta(days=days_done) if days_done is not None else None,
+                    )
+                )
+
+            # ── Seasons 60-67 (67 active, rest ended) ─────────────────────────────
+            print("🚀 Creating seasons 60-67...")
+            seasons = {}
+            for number in range(60, 68):
+                season = Season(
+                    number=number,
+                    status=SeasonStatus.active if number == 67 else SeasonStatus.ended,
+                    format=SeasonFormat.regular,
+                )
+                session.add(season)
+                session.flush()
+                seasons[number] = season
+
+            # ── Wars for Demo HEHE (2 ended + 1 active) ───────────────────────────
+            print("🚀 Creating wars...")
+            demo_roster_gas = [ga for ga in demo_members]
+            # champion_users of the alliance, grouped for saga-aware picking
+            alliance_cus = [cu for ga in demo_roster_gas for cu in all_rosters.get(ga.id, [])]
+            champ_by_id = {c.id: c for c in champions_list}
+            saga_def_cus = [
+                cu for cu in alliance_cus if champ_by_id[cu.champion_id].is_saga_defender
+            ]
+            saga_atk_cus = [
+                cu for cu in alliance_cus if champ_by_id[cu.champion_id].is_saga_attacker
+            ]
+            defender_pool = saga_def_cus or alliance_cus
+            attacker_pool = saga_atk_cus or alliance_cus
+
+            war_specs = [
+                # (opponent, status, season, win, elo_change, tier, days_ago, layout)
+                ("ABI58", WarStatus.ended, 66, True, 33, 3, 40, WAR_ENDED_NODE_LAYOUT),
+                ("XMN.M", WarStatus.ended, 67, False, -19, 1, 6, WAR_ENDED_NODE_LAYOUT),
+                ("U.KR", WarStatus.active, 67, None, None, 1, 1, WAR_ACTIVE_NODE_LAYOUT),
+            ]
+            wars = []
+            for opponent, wstatus, season_no, win, elo_change, tier, days_ago, layout in war_specs:
+                created = NOW - timedelta(days=days_ago)
+                war = War(
+                    alliance_id=alliance.id,
+                    opponent_name=opponent,
+                    status=wstatus,
+                    created_by_id=super_admin_game.id,
+                    season_id=seasons[season_no].id,
+                    win=win,
+                    elo_change=elo_change,
+                    tier=tier,
+                    created_at=created,
+                    snapshotted_at=(created + timedelta(days=2))
+                    if wstatus == WarStatus.ended
+                    else None,
+                )
+                session.add(war)
+                session.flush()
+                wars.append(war)
+
+                # Defense placements from the (guarded) layout.
+                for i, (bg, node, stars, rank, ascension, ko) in enumerate(_valid_layout(layout)):
+                    defender = defender_pool[i % len(defender_pool)]
+                    champ = champ_by_id[defender.champion_id]
+                    combat_done = wstatus == WarStatus.ended or ko > 0
+                    attacker = attacker_pool[i % len(attacker_pool)] if combat_done else None
+                    session.add(
+                        WarDefensePlacement(
+                            war_id=war.id,
+                            battlegroup=bg,
+                            node_number=node,
+                            champion_id=champ.id,
+                            stars=stars,
+                            rank=rank,
+                            ascension=ascension if champ.is_ascendable else 0,
+                            placed_by_id=super_admin_game.id,
+                            attacker_champion_user_id=attacker.id if attacker else None,
+                            ko_count=ko,
+                            is_combat_completed=combat_done,
+                        )
+                    )
+
+                # ~5 bans per war (distinct champions from the catalogue).
+                for champ in champions_list[:5]:
+                    session.add(WarBan(war_id=war.id, champion_id=champ.id))
+
+            session.flush()
+
+            # ── Prefight / synergy attackers on the active war's BG1 ──────────────
+            print("🚀 Creating prefight/synergy attackers...")
+            active_war = wars[-1]
+            bg1_gas = [ga for ga in demo_members if ga.alliance_group == 1]
+            banned_ids = {
+                b.champion_id
+                for b in session.exec(select(WarBan).where(WarBan.war_id == active_war.id)).all()
+            }
+            bg1_defense_cu_ids = {
+                p.attacker_champion_user_id
+                for p in session.exec(
+                    select(WarDefensePlacement).where(
+                        WarDefensePlacement.war_id == active_war.id,
+                        WarDefensePlacement.battlegroup == 1,
+                    )
+                ).all()
+                if p.attacker_champion_user_id
+            }
+            prefight_cus = [
+                cu
+                for ga in bg1_gas
+                for cu in all_rosters.get(ga.id, [])
+                if champ_by_id[cu.champion_id].has_prefight
+                and cu.champion_id not in banned_ids
+                and cu.id not in bg1_defense_cu_ids
+            ]
+            for i, target_node in enumerate(BG1_NODES[:3]):
+                if i >= len(prefight_cus):
+                    break
+                cu = prefight_cus[i]
+                session.add(
+                    WarPrefightAttacker(
+                        war_id=active_war.id,
+                        battlegroup=1,
+                        game_account_id=cu.game_account_id,
+                        champion_user_id=cu.id,
+                        target_node_number=target_node,
+                    )
+                )
+            # One synergy attacker if we have two distinct BG1 champion_users.
+            bg1_cus = [cu for ga in bg1_gas for cu in all_rosters.get(ga.id, [])]
+            if len(bg1_cus) >= 2:
+                session.add(
+                    WarSynergyAttacker(
+                        war_id=active_war.id,
+                        battlegroup=1,
+                        game_account_id=bg1_cus[0].game_account_id,
+                        champion_user_id=bg1_cus[0].id,
+                        target_champion_user_id=bg1_cus[1].id,
                     )
                 )
 
