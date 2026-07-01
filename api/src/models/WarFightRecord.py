@@ -1,8 +1,18 @@
 import uuid
-from datetime import datetime
 from typing import List, Optional, TYPE_CHECKING
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship
+
+from src.models.Base import (
+    Ascension,
+    Battlegroup,
+    KoCount,
+    NodeNumber,
+    Rank,
+    Stars,
+    TimestampMixin,
+    UUIDBase,
+)
 
 if TYPE_CHECKING:
     from src.models.Alliance import Alliance
@@ -14,31 +24,29 @@ if TYPE_CHECKING:
     from src.models.WarFightSynergy import WarFightSynergy
 
 
-class WarFightRecord(SQLModel, table=True):
+class WarFightRecord(UUIDBase, TimestampMixin, table=True):
     __tablename__ = "war_fight_record"
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     war_id: uuid.UUID = Field(foreign_key="war.id")
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
     season_id: Optional[uuid.UUID] = Field(default=None, foreign_key="season.id")
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
-    battlegroup: int = Field(ge=1, le=3)
-    node_number: int = Field(ge=1, le=50)
+    battlegroup: Battlegroup
+    node_number: NodeNumber
     tier: int
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
-    stars: int
-    rank: int
-    ascension: int
+    stars: Stars
+    rank: Rank
+    ascension: Ascension
     is_saga_attacker: bool
     defender_champion_id: uuid.UUID = Field(foreign_key="champion.id")
     defender_stars: int
     defender_rank: int
     defender_ascension: int
     defender_is_saga_defender: bool
-    ko_count: int = Field(default=0)
+    ko_count: KoCount = 0
     is_planning_error: bool = Field(default=False)
     assisted: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=datetime.now)
 
     war: "War" = Relationship(sa_relationship_kwargs={"foreign_keys": "[WarFightRecord.war_id]"})
     alliance: "Alliance" = Relationship(

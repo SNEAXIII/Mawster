@@ -27,6 +27,13 @@
       }
     ]
   },
+  "permissions": {
+    "allow": [
+      "Bash(*/.claude/plugins/cache/claude-plugins-official/superpowers/*/skills/subagent-driven-development/scripts/task-brief *)",
+      "Bash(*/.claude/plugins/cache/claude-plugins-official/superpowers/*/skills/subagent-driven-development/scripts/sdd-workspace *)",
+      "Bash(*/.claude/plugins/cache/claude-plugins-official/superpowers/*/skills/subagent-driven-development/scripts/review-package *)"
+    ]
+  },
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,

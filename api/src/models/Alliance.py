@@ -1,8 +1,9 @@
 import uuid
-from datetime import datetime
 from typing import List, TYPE_CHECKING
 import sqlalchemy as sa
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship
+
+from src.models.Base import TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.GameAccount import GameAccount
@@ -11,10 +12,9 @@ if TYPE_CHECKING:
     from src.models.AllianceVisitor import AllianceVisitor
 
 
-class Alliance(SQLModel, table=True):
+class Alliance(UUIDBase, TimestampMixin, table=True):
     __tablename__ = "alliance"
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(max_length=50)
     tag: str = Field(max_length=5)
     owner_id: uuid.UUID = Field(
@@ -24,7 +24,6 @@ class Alliance(SQLModel, table=True):
             nullable=False,
         )
     )
-    created_at: datetime = Field(default_factory=datetime.now)
     elo: int = Field(default=0)
     tier: int = Field(default=20)
 

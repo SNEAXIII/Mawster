@@ -9,7 +9,7 @@ class UpgradeRequestCreate(BaseModel):
     """DTO to create a new upgrade request."""
 
     champion_user_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
-    requested_rarity: str = Field(..., examples=["7r3"])
+    requested_rarity: str = Field(..., min_length=3, max_length=3, examples=["7r3"])
 
 
 class UpgradeRequestResponse(BaseModel):

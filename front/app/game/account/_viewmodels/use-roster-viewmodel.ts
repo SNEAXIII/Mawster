@@ -23,6 +23,7 @@ import {
   MasteryEntry,
   MasteryUpsertItem,
 } from '@/app/services/masteries';
+import { RosterFilters, EMPTY_FILTERS, applyRosterFilters, isFilterActive } from './roster-filters';
 
 export enum RosterTab {
   Roster = 'roster',
@@ -72,6 +73,7 @@ export function useRosterViewModel() {
   const [ascendTarget, setAscendTarget] = useState<RosterEntry | null>(null);
   const [upgradeRefreshKey, setUpgradeRefreshKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<RosterFilters>(EMPTY_FILTERS);
 
   useEffect(() => {
     if (authStatus === 'unauthenticated') redirect('/login');
@@ -102,6 +104,7 @@ export function useRosterViewModel() {
   }, [activeTab]);
 
   useEffect(() => {
+    setFilters(EMPTY_FILTERS);
     if (!selectedAccountId) {
       setRoster([]);
       return;
@@ -253,14 +256,28 @@ export function useRosterViewModel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ascendTarget, selectedAccountId]);
 
+  const filteredRoster = useMemo(() => applyRosterFilters(roster, filters), [roster, filters]);
+
+  const availableClasses = useMemo(
+    () =>
+      Array.from(new Set(roster.map((r) => r.champion_class))).sort((a, b) => a.localeCompare(b)),
+    [roster]
+  );
+
   const groupedRoster = useMemo(() => {
     const groups: Record<string, RosterEntry[]> = {};
     for (const rarity of [...RARITIES].reverse()) {
-      const entries = roster.filter((r) => r.rarity === rarity);
+      const entries = filteredRoster.filter((r) => r.rarity === rarity);
       if (entries.length > 0) groups[rarity] = entries;
     }
     return Object.entries(groups);
-  }, [roster]);
+  }, [filteredRoster]);
+
+  const setFilterPatch = useCallback(
+    (patch: Partial<RosterFilters>) => setFilters((prev) => ({ ...prev, ...patch })),
+    []
+  );
+  const resetFilters = useCallback(() => setFilters(EMPTY_FILTERS), []);
 
   useEffect(() => {
     if (activeTab === RosterTab.Mastery && selectedAccountId) {
@@ -301,6 +318,13 @@ export function useRosterViewModel() {
     handleTogglePreferredAttacker,
     clearError,
     fetchAccounts,
+    filters,
+    setFilterPatch,
+    resetFilters,
+    availableClasses,
+    filteredCount: filteredRoster.length,
+    totalCount: roster.length,
+    hasActiveFilters: isFilterActive(filters),
     masteries,
     masteryForm,
     loadingMasteries,

@@ -112,6 +112,10 @@ const fr: Translations = {
     },
     testimonialQuotes: {
       placeholder: 'Citation à remplacer par un vrai avis.',
+      babayaga:
+        "3e outil qu'on utilise pour le pilotage de la war à haut niveau, et le seul qui regroupe tout ce dont nous avions besoin. Super fluide sur mobile et mis à jour constamment, au top.",
+      aragorn:
+        "Mawster est un outil qui fait gagner beaucoup de temps tout en offrant une vue d'ensemble de la map. Le fait que le développeur soit à l'écoute et qu'on puisse échanger pour ajouter des fonctionnalités est aussi un vrai plus. Je le recommande.",
       elliebingo:
         'Mawster est une ressource précieuse pour la planification de mon alliance, simple à utiliser et il fait une grande partie du travail fastidieux à ta place. Je le recommande vivement.',
     },
@@ -424,6 +428,7 @@ const fr: Translations = {
       preferredAttackerWarning: 'Attaquant préféré',
       sagaDefenderFilter: 'Saga Défenseur',
       notPreferredFilter: 'Non préféré',
+      rankFilter: 'Rang',
       playerFilter: 'Joueur',
       allFilter: 'Tous',
     },
@@ -469,6 +474,8 @@ const fr: Translations = {
       clearAll: 'Tout effacer',
       exportMap: 'Exporter carte',
       exportList: 'Exporter liste',
+      shareLink: 'Copier le lien',
+      shareLinkCopied: 'Lien copié dans le presse-papier',
       nodeEmpty: 'Nœud #{node} — Vide',
       removeDefender: 'Retirer',
       loadMore: 'Charger plus',
@@ -517,6 +524,7 @@ const fr: Translations = {
       memberAttackers: '{count}/{max}',
       sagaAttackerFilter: 'Saga Attaquant',
       preferredAttackerFilter: 'Préféré',
+      rankFilter: 'Rang',
       noteLabel: 'Note',
       notePlaceholder: 'Ajouter une note pour ce combat…',
       noteSave: 'Enregistrer la note',
@@ -951,6 +959,21 @@ const fr: Translations = {
     preferredAttackerHint:
       'Marqué comme attaquant préféré — les officiers peuvent quand même le placer en défense.',
     manageTab: 'Gérer',
+    filter: {
+      namePlaceholder: 'Rechercher par nom…',
+      rank: 'Rang',
+      ascension: 'Asc',
+      classLabel: 'Classe',
+      allClasses: 'Toutes les classes',
+      sagaAttacker: 'Saga Off',
+      sagaDefender: 'Saga Déf',
+      preferred: 'Préféré',
+      awakened: 'Eveillé',
+      minSignature: 'Sig min',
+      reset: 'Réinitialiser',
+      count: '{filtered} / {total} champions',
+      noResults: 'Aucun champion ne correspond aux filtres.',
+    },
   },
 
   mastery: {

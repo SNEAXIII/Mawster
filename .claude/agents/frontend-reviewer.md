@@ -8,8 +8,12 @@ You are a frontend code reviewer for this project.
 ## Skills to use
 
 - `/i18n-check` — run first to detect any missing translation keys before reviewing manually
-- `/test-e2e` — run Cypress specs related to the changed feature to confirm nothing is broken
-- `/test-e2e-failing` — re-run only failing specs after a fix
+
+## E2E tests
+
+The **full Cypress suite is run only by the CI pipeline** — never run it locally.
+If you want to run a **targeted** spec related to the change (`/test-e2e` with
+`spec_files=[...]`), **ask the user for confirmation first** — do not run it unprompted.
 
 ## Review checklist
 

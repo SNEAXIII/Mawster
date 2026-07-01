@@ -279,3 +279,142 @@ describe('Defense – AllianceDefenseSelector filters', () => {
     });
   });
 });
+
+describe('Defense – AllianceDefenseSelector rarity filter', () => {
+  beforeEach(() => {
+    cy.truncateDb();
+  });
+
+  // =========================================================================
+  // Default: 6★ hidden, 7★ shown (no stored preference)
+  // =========================================================================
+
+  it('hides 6-star champions by default and reveals them when the tier is toggled on', () => {
+    setupDefenseOwner('def-rar-def', 'RarDefPlyr', 'RarDefAll', 'RD').then(
+      ({ adminData, ownerData, ownerAccId }) => {
+        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+        });
+        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '6r5');
+        });
+
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('defense');
+
+        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+
+        // Default: 7★ Spider-Man visible, 6★ Wolverine hidden
+        cy.getByCy('champion-card-Spider-Man').should('be.visible');
+        cy.getByCy('champion-card-Wolverine').should('not.exist');
+
+        // Toggle 6r5 on → Wolverine appears
+        cy.getByCy('defense-rarity-6r5').click();
+        cy.getByCy('champion-card-Wolverine').should('be.visible');
+        cy.getByCy('champion-card-Spider-Man').should('be.visible');
+      },
+    );
+  });
+
+  // =========================================================================
+  // Toggling a 7★ tier off hides that tier
+  // =========================================================================
+
+  it('deactivating a 7-star tier hides champions of that exact tier', () => {
+    setupDefenseOwner('def-rar-tier', 'RarTierPlyr', 'RarTierAll', 'RT').then(
+      ({ adminData, ownerData, ownerAccId }) => {
+        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+        });
+        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5');
+        });
+
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('defense');
+
+        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        cy.getByCy('champion-card-Spider-Man').should('be.visible');
+        cy.getByCy('champion-card-Wolverine').should('be.visible');
+
+        // Turn 7r3 off → Spider-Man (7r3) hidden, Wolverine (7r5) stays
+        cy.getByCy('defense-rarity-7r3').click();
+        cy.getByCy('champion-card-Spider-Man').should('not.exist');
+        cy.getByCy('champion-card-Wolverine').should('be.visible');
+      },
+    );
+  });
+
+  // =========================================================================
+  // Persistence + independence from Reset
+  // =========================================================================
+
+  it('persists the rarity preference across reopen and is untouched by Reset', () => {
+    setupDefenseOwner('def-rar-persist', 'RarPersPlyr', 'RarPersAll', 'RP').then(
+      ({ adminData, ownerData, ownerAccId }) => {
+        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant', { is_saga_defender: true }).then(
+          (champs) => {
+            cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '6r5');
+          },
+        );
+
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('defense');
+
+        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+
+        // Enable 6r5 → Wolverine visible
+        cy.getByCy('defense-rarity-6r5').click();
+        cy.getByCy('champion-card-Wolverine').should('be.visible');
+
+        // Activate then Reset a normal filter — rarity must survive
+        cy.getByCy('selector-toggle-saga').click();
+        cy.getByCy('selector-reset-filters').click();
+        cy.getByCy('champion-card-Wolverine').should('be.visible');
+
+        // Close and reopen the dialog — preference persisted via localStorage
+        cy.get('body').type('{esc}');
+        cy.getByCy('champion-card-Wolverine').should('not.exist');
+        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        cy.getByCy('champion-card-Wolverine').should('be.visible');
+      },
+    );
+  });
+
+  // =========================================================================
+  // Sorting: preferred first, then rank descending
+  // =========================================================================
+
+  it('orders champions preferred-first then by descending rank', () => {
+    setupDefenseOwner('def-rar-sort', 'RarSortPlyr', 'RarSortAll', 'RS').then(
+      ({ adminData, ownerData, ownerAccId }) => {
+        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5');
+        });
+        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+        });
+        cy.apiLoadChampion(adminData.access_token, 'Iron Man', 'Tech').then((champs) => {
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r1', {
+            is_preferred_attacker: true,
+          });
+        });
+
+        cy.apiLogin(ownerData.user_id);
+        cy.navTo('defense');
+
+        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+
+        // Expected order: Iron Man (preferred) → Spider-Man (7r5) → Wolverine (7r3)
+        cy.get('[data-cy^="champion-card-"]').then(($cards) => {
+          const order = [...$cards].map((el) => el.getAttribute('data-cy'));
+          expect(order).to.deep.equal([
+            'champion-card-Iron-Man',
+            'champion-card-Spider-Man',
+            'champion-card-Wolverine',
+          ]);
+        });
+      },
+    );
+  });
+});

@@ -1,6 +1,8 @@
 import uuid
 from typing import List, TYPE_CHECKING
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship
+
+from src.models.Base import Ascension, Rank, Stars, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.GameAccount import GameAccount
@@ -8,17 +10,16 @@ if TYPE_CHECKING:
     from src.models.RequestedUpgrade import RequestedUpgrade
 
 
-class ChampionUser(SQLModel, table=True):
+class ChampionUser(UUIDBase, table=True):
     __tablename__ = "champion_user"
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
-    stars: int = Field(default=6)
-    rank: int = Field(default=1)
-    signature: int = Field(default=0)
+    stars: Stars = 7
+    rank: Rank = 1
+    signature: int = Field(default=0, ge=0, le=200)
     is_preferred_attacker: bool = Field(default=False)
-    ascension: int = Field(default=0)
+    ascension: Ascension = 0
 
     @property
     def rarity(self) -> str:

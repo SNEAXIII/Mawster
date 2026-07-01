@@ -110,6 +110,10 @@ const en = {
     },
     testimonialQuotes: {
       placeholder: 'Placeholder quote. Please replace with a real quote.',
+      babayaga:
+        'The 3rd tool we use to drive war at a high level, and the only one that brings together everything we needed. Super smooth on mobile and constantly updated — top notch.',
+      aragorn:
+        'Mawster is a tool that saves a lot of time while giving you a full visual of the map. The fact that the developer listens and that we can interact to add features is also a great thing. I recommend it.',
       elliebingo:
         "Mawster has been an invaluable resource in my alliance planning, it's simple to use and does a lot of the busywork for you. I'd highly recommend it.",
     },
@@ -419,6 +423,7 @@ const en = {
       preferredAttackerWarning: 'Preferred attacker',
       sagaDefenderFilter: 'Saga Defender',
       notPreferredFilter: 'Not Preferred',
+      rankFilter: 'Rank',
       playerFilter: 'Player',
       allFilter: 'All',
     },
@@ -462,6 +467,8 @@ const en = {
       clearAll: 'Clear All',
       exportMap: 'Export map',
       exportList: 'Export list',
+      shareLink: 'Copy link',
+      shareLinkCopied: 'Link copied to clipboard',
       nodeEmpty: 'Node #{node} — Empty',
       removeDefender: 'Remove',
       loadMore: 'Load more',
@@ -510,6 +517,7 @@ const en = {
       memberAttackers: '{count}/{max}',
       sagaAttackerFilter: 'Saga Attacker',
       preferredAttackerFilter: 'Preferred',
+      rankFilter: 'Rank',
       noteLabel: 'Note',
       notePlaceholder: 'Add a note for this combat…',
       noteSave: 'Save note',
@@ -940,6 +948,21 @@ const en = {
     preferredAttackerHint:
       'Marked as preferred attacker — officers can still place them in defense.',
     manageTab: 'Manage',
+    filter: {
+      namePlaceholder: 'Search by name…',
+      rank: 'Rank',
+      ascension: 'Asc',
+      classLabel: 'Class',
+      allClasses: 'All classes',
+      sagaAttacker: 'Saga Off',
+      sagaDefender: 'Saga Def',
+      preferred: 'Preferred',
+      awakened: 'Awakened',
+      minSignature: 'Min sig',
+      reset: 'Reset',
+      count: '{filtered} / {total} champions',
+      noResults: 'No champion matches the current filters.',
+    },
   },
 
   mastery: {
