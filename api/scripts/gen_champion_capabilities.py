@@ -73,7 +73,11 @@ def _split_rows(seg: str):
 
 
 def _unquote(s: str) -> str:
-    return s[1:-1] if s.startswith("'") and s.endswith("'") else s
+    if not (s.startswith("'") and s.endswith("'")):
+        return s
+    # Reverse SQL backslash-escaping (e.g. 'M\'Baku' -> M'Baku) in a single pass
+    # so that `\\` and `\'` sequences aren't double-processed.
+    return re.sub(r"\\(.)", lambda m: m.group(1), s[1:-1])
 
 
 def main(sql_path: str) -> None:
