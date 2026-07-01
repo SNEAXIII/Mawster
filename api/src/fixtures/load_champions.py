@@ -35,9 +35,20 @@ sync_engine = create_engine(
 
 DEFAULT_JSON_PATH = Path(__file__).parent.parent.parent / "src" / "fixtures" / "champions.json"
 
+FLAG_FIELDS = ("is_ascendable", "has_prefight", "is_saga_attacker", "is_saga_defender")
+CAPABILITIES_JSON_PATH = Path(__file__).parent / "champions_capabilities.json"
+
+
+def _load_capabilities(path: Path = CAPABILITIES_JSON_PATH) -> dict:
+    """Load the name->flags capability map. Returns {} if the file is absent."""
+    if not path.exists():
+        return {}
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
 
 def _update_existing_champion(
-    session: Session, existing: Champion, image_url, alias, champion_class
+    session: Session, existing: Champion, image_url, alias, champion_class, flags
 ) -> bool:
     """Update an existing champion's fields if they changed. Returns True if updated."""
     changed = False
@@ -50,13 +61,21 @@ def _update_existing_champion(
     if existing.champion_class != champion_class:
         existing.champion_class = champion_class
         changed = True
+    for field, value in flags.items():
+        if getattr(existing, field) != value:
+            setattr(existing, field, value)
+            changed = True
     if changed:
         session.add(existing)
     return changed
 
 
-def _process_champion_item(session: Session, item: dict) -> str:
-    """Process a single champion item. Returns 'added', 'updated', or 'skipped'."""
+def _process_champion_item(session: Session, item: dict, capabilities: dict) -> str:
+    """Process a single champion item. Returns 'added', 'updated', or 'skipped'.
+
+    Capability flags come from the separate `capabilities` map (name -> flags),
+    NOT from the pure `item` (champions.json). Absent flags default to False.
+    """
     name = item.get("name", "").strip()
     if not name:
         return "skipped"
@@ -64,13 +83,15 @@ def _process_champion_item(session: Session, item: dict) -> str:
     champion_class = item.get("champion_class", "").strip()
     image_url = item.get("image_url") or None
     alias = item.get("alias") or None
+    champ_caps = capabilities.get(name, {})
+    flags = {field: bool(champ_caps.get(field, False)) for field in FLAG_FIELDS}
 
     existing = session.exec(select(Champion).where(Champion.name == name)).first()
 
     if existing:
         return (
             "updated"
-            if _update_existing_champion(session, existing, image_url, alias, champion_class)
+            if _update_existing_champion(session, existing, image_url, alias, champion_class, flags)
             else "skipped"
         )
 
@@ -79,6 +100,7 @@ def _process_champion_item(session: Session, item: dict) -> str:
         champion_class=champion_class,
         image_url=image_url,
         alias=alias,
+        **flags,
     )
     session.add(champion)
     return "added"
@@ -108,8 +130,10 @@ def load_champions(json_path: Path = DEFAULT_JSON_PATH):
                 print("❌ JSON root must be an array of champion objects")
                 return
 
+            capabilities = _load_capabilities()
+
             for item in champions_data:
-                result = _process_champion_item(session, item)
+                result = _process_champion_item(session, item, capabilities)
                 if result == "added":
                     added += 1
                 elif result == "updated":
