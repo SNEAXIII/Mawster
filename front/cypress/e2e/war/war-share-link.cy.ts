@@ -8,6 +8,9 @@ describe('War share link', () => {
   it('deep-links to the active war on the battlegroup from the URL', () => {
     setupWarOwner('share', 'ShareOwner', 'Share Alliance', 'SHR').then(
       ({ ownerData, allianceId }) => {
+        // WarTab (and its BG picker / share button) only renders when the
+        // alliance has an active war — create one first.
+        cy.apiCreateWar(ownerData.access_token, allianceId, 'ShareEnemy');
         cy.apiLogin(ownerData.user_id);
         cy.visit(`/game/war?alliance=${allianceId}&bg=2`);
 
@@ -20,6 +23,7 @@ describe('War share link', () => {
   it('copies a share link containing the alliance id and current bg', () => {
     setupWarOwner('share', 'ShareOwner', 'Share Alliance', 'SHR').then(
       ({ ownerData, allianceId }) => {
+        cy.apiCreateWar(ownerData.access_token, allianceId, 'ShareEnemy');
         cy.apiLogin(ownerData.user_id);
         cy.visit(`/game/war?alliance=${allianceId}&bg=2`);
 
@@ -39,6 +43,7 @@ describe('War share link', () => {
   it('updates the URL when the battlegroup is changed', () => {
     setupWarOwner('share', 'ShareOwner', 'Share Alliance', 'SHR').then(
       ({ ownerData, allianceId }) => {
+        cy.apiCreateWar(ownerData.access_token, allianceId, 'ShareEnemy');
         cy.apiLogin(ownerData.user_id);
         cy.visit(`/game/war?alliance=${allianceId}&bg=1`);
 
