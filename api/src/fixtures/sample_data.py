@@ -40,9 +40,9 @@ fake = Faker(locale="en")
 NOW = datetime.now()
 
 GAME_PSEUDOS = [
-    "SAINT",
-    "Circle",
-    "Papa Supremacy",
+    "CosmicFlop",
+    "Trickshot3000",
+    "SupremePoulet",
     "Megacard14",
     "DarkPhoenix",
     "XMutant77",
@@ -70,29 +70,49 @@ GAME_PSEUDOS = [
     "CyberVortex",
 ]  # exactly 28
 
-SIG_CYCLE = [
-    200,
-    20,
-    0,
-    200,
-    200,
-    20,
-    0,
-    200,
-    20,
-    0,  # slots  0-9  (7r3)
-    200,
-    20,
-    200,
-    0,
-    20,
-    200,
-    20,
-    0,
-    200,
-    20,  # slots 10-19 (7r4)
-    200,  # slot  20   (7r5)
-]
+# Signatures observed in prod (wide spread), used deterministically.
+SIG_CYCLE = [0, 1, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200]
+
+
+def roster_size(user_index: int) -> int:
+    """Deterministic roster size in [15, 45]."""
+    return 15 + (user_index * 17) % 31
+
+
+def roster_rank(slot: int, size: int) -> int:
+    """Rank per slot reproducing prod shape: r1 ~7%, r2 ~4%, r3 ~32%, r4 ~51%, r5 ~7%."""
+    frac = slot / max(size, 1)
+    if frac < 0.07:
+        return 1
+    if frac < 0.11:
+        return 2
+    if frac < 0.43:
+        return 3
+    if frac < 0.93:
+        return 4
+    return 5
+
+
+def roster_ascension(slot: int, user_index: int, rank: int, is_ascendable: bool) -> int:
+    """Ascension 0..2. Always 0 unless the champion is ascendable and rank >= 4."""
+    if not is_ascendable or rank < 4:
+        return 0
+    bucket = (slot * 7 + user_index * 13) % 6
+    if bucket == 0:
+        return 2
+    if bucket in (1, 2):
+        return 1
+    return 0
+
+
+def roster_signature(slot: int, user_index: int) -> int:
+    return SIG_CYCLE[(slot + user_index) % len(SIG_CYCLE)]
+
+
+def is_preferred_slot(slot: int, user_index: int, size: int) -> bool:
+    """Exactly one preferred attacker per roster."""
+    return slot == (user_index % max(size, 1))
+
 
 # (battlegroup, node_number, stars, rank, ascension, ko_count)
 # Ended wars — dense layout with varied ko_count
@@ -209,38 +229,37 @@ def _pick_champions(user_index: int, all_names: list, count: int) -> list:
     return picks
 
 
-def _build_roster(game_account_id, user_index: int, champions_db: dict, has_7r5: bool) -> list:
+def _build_roster(
+    game_account_id, user_index: int, champions_db: dict, has_7r5: bool = False
+) -> list:
     all_names = sorted(champions_db.keys())
-    count = 21 if has_7r5 else 20
-    names = _pick_champions(user_index, all_names, count)
+    size = roster_size(user_index)
+    names = _pick_champions(user_index, all_names, size)
 
     entries = []
     for slot, name in enumerate(names):
-        if name not in champions_db:
+        champ = champions_db.get(name)
+        if champ is None:
             continue
-        champ = champions_db[name]
-        if slot < 10:
-            stars, rank = 7, 3
-        elif slot < 20:
-            stars, rank = 7, 4
-        else:
-            stars, rank = 7, 5
+        rank = roster_rank(slot, size)
+        ascension = roster_ascension(slot, user_index, rank, champ.is_ascendable)
         entries.append(
             ChampionUser(
                 game_account_id=game_account_id,
                 champion_id=champ.id,
-                stars=stars,
+                stars=7,
                 rank=rank,
-                signature=SIG_CYCLE[slot % len(SIG_CYCLE)],
-                is_preferred_attacker=False,
+                signature=roster_signature(slot, user_index),
+                is_preferred_attacker=is_preferred_slot(slot, user_index, size),
+                ascension=ascension,
             )
         )
     return entries
 
 
-def load_sample_data():
+def load_sample_data(engine=sync_engine):
     try:
-        with Session(sync_engine) as session:
+        with Session(engine) as session:
             # ── Champion catalogue ────────────────────────────────────────────────
             champions_list = session.exec(select(Champion)).all()
             champions_db: dict = {c.name: c for c in champions_list}
@@ -344,13 +363,13 @@ def load_sample_data():
                 )
 
             # ── Alliance ─────────────────────────────────────────────────────────
-            print("🚀 Creating alliance 'WE ARE AM6' [WAM6]...")
+            print("🚀 Creating alliance ...")
             alliance = Alliance(
-                name="WE ARE AM6",
-                tag="WAM6",
+                name="Demo HEHE",
+                tag="DEMO",
                 owner_id=super_admin_game.id,
-                elo=3326,
-                tier=3,
+                elo=3800,
+                tier=1,
                 created_at=NOW - timedelta(days=33),
             )
             session.add(alliance)
@@ -455,7 +474,7 @@ def load_sample_data():
 
             total = len(game_accounts)
             print(f"✅ {total} users (1 super admin + 1 admin + {total - 2} regular)")
-            print("✅ Alliance 'WE ARE AM6' [WAM6] — elo 3326, tier 3")
+            print("✅ Alliance 'Demo HEHE' [DEMO] — elo 3800, tier 1")
             print("✅ 5 officers, 2 invitations")
             print("✅ Season 66 (active)")
             print("✅ 3 wars — ended vs ABI58 (+33), ended vs XMN.M (+32), active vs U.KR")
