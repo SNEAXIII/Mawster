@@ -15,6 +15,8 @@ import {
 import { RARITY_LABELS, getClassColors, shortenChampionName } from '@/app/services/roster';
 import { Separator } from '@/components/ui/separator';
 import SelectorFilterBar from '@/app/game/_components/selector-filter-bar';
+import RarityFilterToggles from '@/app/game/_components/rarity-filter-toggles';
+import { useRarityFilter, rarityWeight } from '@/app/game/_components/use-rarity-filter';
 
 interface AllianceDefenseSelectorProps {
   open: boolean;
@@ -41,6 +43,11 @@ export default function AllianceDefenseSelector({
   const [notPreferredFilter, setNotPreferredFilter] = useState(false);
   const [selectedChampion, setSelectedChampion] = useState<AvailableChampion | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const {
+    activeTiers,
+    toggleTier,
+    matches: matchRarity,
+  } = useRarityFilter('mawster:defense-rarity-tiers');
 
   const availableClasses = useMemo(() => {
     const classes = new Set(availableChampions.map((c) => c.champion_class));
@@ -57,15 +64,26 @@ export default function AllianceDefenseSelector({
   const canReset =
     search !== '' || classFilter !== '' || playerFilter !== '' || sagaFilter || notPreferredFilter;
 
+  // Preferred first, then rarity descending.
+  const ownerSort = (a: ChampionOwner, b: ChampionOwner) => {
+    if (a.is_preferred_attacker !== b.is_preferred_attacker) {
+      return a.is_preferred_attacker ? -1 : 1;
+    }
+    return rarityWeight(b.rarity) - rarityWeight(a.rarity);
+  };
+
   const filtered = useMemo(() => {
     return availableChampions
       .map((champ) => {
-        const owners = champ.owners.filter((owner) => {
-          const matchPlayer =
-            !playerFilter || owner.game_pseudo.toLowerCase().includes(playerFilter.toLowerCase());
-          const matchNotPreferred = !notPreferredFilter || !owner.is_preferred_attacker;
-          return matchPlayer && matchNotPreferred;
-        });
+        const owners = champ.owners
+          .filter((owner) => {
+            const matchPlayer =
+              !playerFilter || owner.game_pseudo.toLowerCase().includes(playerFilter.toLowerCase());
+            const matchNotPreferred = !notPreferredFilter || !owner.is_preferred_attacker;
+            const matchTier = matchRarity(owner.rarity);
+            return matchPlayer && matchNotPreferred && matchTier;
+          })
+          .sort(ownerSort);
         return { ...champ, owners };
       })
       .filter((champ) => {
@@ -79,8 +97,10 @@ export default function AllianceDefenseSelector({
         const matchClass = !classFilter || champ.champion_class === classFilter;
         const matchSaga = !sagaFilter || champ.is_saga_defender;
         return matchSearch && matchClass && matchSaga;
-      });
-  }, [search, classFilter, playerFilter, sagaFilter, notPreferredFilter, availableChampions]);
+      })
+      // Order champions by their best owner: preferred first, then rank desc.
+      .sort((a, b) => ownerSort(a.owners[0], b.owners[0]));
+  }, [search, classFilter, playerFilter, sagaFilter, notPreferredFilter, matchRarity, availableChampions]);
 
   // Defer rendering of the grid by one frame so the dialog open animation is smooth
   const [ready, setReady] = useState(false);
@@ -210,6 +230,14 @@ export default function AllianceDefenseSelector({
               canReset={canReset}
               onReset={handleReset}
             />
+            <div className='mt-2'>
+              <RarityFilterToggles
+                activeTiers={activeTiers}
+                onToggle={toggleTier}
+                label={t.game.defense.rankFilter}
+                cyPrefix='defense-rarity'
+              />
+            </div>
             <div className='overflow-y-auto flex-1 pr-1 mt-3'>
               {!ready ? (
                 <p className='text-muted-foreground text-sm text-center py-8'>{t.common.loading}</p>

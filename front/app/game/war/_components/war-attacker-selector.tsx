@@ -19,6 +19,8 @@ import {
 import AttackerEntryRow from './attacker-entry-row';
 import WarNoteEditor from './war-note-editor';
 import SelectorFilterBar from '@/app/game/_components/selector-filter-bar';
+import RarityFilterToggles from '@/app/game/_components/rarity-filter-toggles';
+import { useRarityFilter, rarityWeight } from '@/app/game/_components/use-rarity-filter';
 import { useCurrentSeason } from '@/hooks/use-current-season';
 
 interface WarAttackerSelectorProps {
@@ -63,6 +65,11 @@ export default function WarAttackerSelector({
   const [classFilter, setClassFilter] = useState('');
   const [sagaFilter, setSagaFilter] = useState(false);
   const [preferredFilter, setPreferredFilter] = useState(false);
+  const {
+    activeTiers,
+    toggleTier,
+    matches: matchRarity,
+  } = useRarityFilter('mawster:war-attacker-rarity-tiers');
 
   const fetchAvailable = useCallback(async () => {
     setLoading(true);
@@ -145,7 +152,8 @@ export default function WarAttackerSelector({
     const matchClass = !classFilter || a.champion_class === classFilter;
     const matchSaga = !sagaFilter || a.is_saga_attacker;
     const matchPreferred = !preferredFilter || a.is_preferred_attacker;
-    return matchPlayer && matchChampion && matchClass && matchSaga && matchPreferred;
+    const matchTier = matchRarity(a.rarity);
+    return matchPlayer && matchChampion && matchClass && matchSaga && matchPreferred && matchTier;
   });
 
   // Group by member
@@ -164,6 +172,15 @@ export default function WarAttackerSelector({
     group.attackers.push(a);
   }
   const groups = Array.from(groupMap.values());
+  // Sort each member's champions: preferred first, then rarity descending.
+  for (const group of groups) {
+    group.attackers.sort((a, b) => {
+      if (a.is_preferred_attacker !== b.is_preferred_attacker) {
+        return a.is_preferred_attacker ? -1 : 1;
+      }
+      return rarityWeight(b.rarity) - rarityWeight(a.rarity);
+    });
+  }
 
   let content: React.ReactNode;
   if (loading) {
@@ -328,6 +345,12 @@ export default function WarAttackerSelector({
             ]}
             canReset={canReset}
             onReset={handleReset}
+          />
+          <RarityFilterToggles
+            activeTiers={activeTiers}
+            onToggle={toggleTier}
+            label={t.game.war.rankFilter}
+            cyPrefix='war-attacker-rarity'
           />
         </div>
         <Separator />
