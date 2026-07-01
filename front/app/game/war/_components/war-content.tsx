@@ -22,9 +22,12 @@ const WarAttackerSelector = dynamic(() => import('./war-attacker-selector'), {
   loading: () => <FullPageSpinner />,
 });
 
-export default function WarContent() {
+export default function WarContent({
+  initialAllianceId,
+  initialBg,
+}: Readonly<{ initialAllianceId?: string; initialBg?: number }>) {
   return (
-    <WarProvider>
+    <WarProvider initialAllianceId={initialAllianceId} initialBg={initialBg}>
       <WarLayout />
     </WarProvider>
   );

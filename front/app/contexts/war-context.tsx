@@ -144,7 +144,11 @@ export function useWar(): WarContextValue {
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
-export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
+export function WarProvider({
+  children,
+  initialAllianceId,
+  initialBg,
+}: Readonly<{ children: ReactNode; initialAllianceId?: string; initialBg?: number }>) {
   const { t } = useI18n();
   const { canManage, isMine } = useAllianceRole();
 
@@ -156,7 +160,7 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     setSelectedBg,
     loading,
     refresh,
-  } = useAllianceSelector();
+  } = useAllianceSelector({ initialAllianceId, initialBg });
 
   // ─── War state ─────────────────────────────────────────────────────────────
   const [currentWar, setCurrentWar] = useState<War | null>(null);
@@ -193,9 +197,12 @@ export function WarProvider({ children }: Readonly<{ children: ReactNode }>) {
     [alliances, selectedAllianceId]
   );
 
-  // ─── Auto-select first alliance ────────────────────────────────────────────
+  // Auto-select first alliance when none is selected, or when the selected id
+  // (e.g. from a shared link) is not among the user's alliances.
   useEffect(() => {
-    if (alliances.length > 0 && !selectedAllianceId) {
+    if (alliances.length === 0) return;
+    const exists = alliances.some((a) => a.id === selectedAllianceId);
+    if (!selectedAllianceId || !exists) {
       setSelectedAllianceId(alliances[0].id);
     }
   }, [alliances, selectedAllianceId, setSelectedAllianceId]);
