@@ -249,3 +249,126 @@ describe('War – WarAttackerSelector filters', () => {
     });
   });
 });
+
+describe('War – WarAttackerSelector rarity filter', () => {
+  beforeEach(() => {
+    cy.truncateDb();
+  });
+
+  // =========================================================================
+  // Default: 6★ hidden, 7★ shown (no stored preference)
+  // =========================================================================
+
+  it('hides 6-star attackers by default and reveals them when the tier is toggled on', () => {
+    setupAttackerScenario('atk-rar-def').then(({ adminToken, memberData, ownerData, memberAccId }) => {
+      // Member already has Wolverine 7r3; add a 6r5 champion
+      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '6r5');
+      });
+
+      goToAttackersMode(ownerData.user_id);
+      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      cy.getByCy('war-attacker-search').should('be.visible');
+
+      // Default: 7★ Wolverine visible, 6★ Storm hidden
+      cy.getByCy('attacker-card-Wolverine').should('be.visible');
+      cy.getByCy('attacker-card-Storm').should('not.exist');
+
+      // Toggle 6r5 on → Storm appears
+      cy.getByCy('war-attacker-rarity-6r5').click();
+      cy.getByCy('attacker-card-Storm').should('be.visible');
+      cy.getByCy('attacker-card-Wolverine').should('be.visible');
+    });
+  });
+
+  // =========================================================================
+  // Toggling a 7★ tier off hides that tier
+  // =========================================================================
+
+  it('deactivating a 7-star tier hides attackers of that exact tier', () => {
+    setupAttackerScenario('atk-rar-tier').then(({ adminToken, memberData, ownerData, memberAccId }) => {
+      // Member has Wolverine 7r3; add Storm at 7r5
+      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r5');
+      });
+
+      goToAttackersMode(ownerData.user_id);
+      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      cy.getByCy('war-attacker-search').should('be.visible');
+
+      // Both 7★ visible by default
+      cy.getByCy('attacker-card-Wolverine').should('be.visible');
+      cy.getByCy('attacker-card-Storm').should('be.visible');
+
+      // Turn 7r3 off → Wolverine (7r3) hidden, Storm (7r5) stays
+      cy.getByCy('war-attacker-rarity-7r3').click();
+      cy.getByCy('attacker-card-Wolverine').should('not.exist');
+      cy.getByCy('attacker-card-Storm').should('be.visible');
+    });
+  });
+
+  // =========================================================================
+  // Persistence + independence from Reset
+  // =========================================================================
+
+  it('persists the rarity preference across reopen and is untouched by Reset', () => {
+    setupAttackerScenario('atk-rar-persist').then(({ adminToken, memberData, ownerData, memberAccId }) => {
+      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '6r5');
+      });
+
+      goToAttackersMode(ownerData.user_id);
+      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      cy.getByCy('war-attacker-search').should('be.visible');
+
+      // Enable 6r5 → Storm visible
+      cy.getByCy('war-attacker-rarity-6r5').click();
+      cy.getByCy('attacker-card-Storm').should('be.visible');
+
+      // Activate then Reset a normal filter — rarity must survive
+      cy.getByCy('selector-toggle-saga').click();
+      cy.getByCy('selector-reset-filters').click();
+      cy.getByCy('attacker-card-Storm').should('be.visible');
+
+      // Close and reopen the dialog — preference persisted via localStorage
+      cy.get('body').type('{esc}');
+      cy.getByCy('war-attacker-search').should('not.exist');
+      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      cy.getByCy('war-attacker-search').should('be.visible');
+      cy.getByCy('attacker-card-Storm').should('be.visible');
+    });
+  });
+
+  // =========================================================================
+  // Sorting: preferred first, then rank descending
+  // =========================================================================
+
+  it('sorts each member group preferred-first then by descending rank', () => {
+    setupAttackerScenario('atk-rar-sort').then(({ adminToken, memberData, ownerData, memberAccId }) => {
+      // Member has Wolverine 7r3 (not preferred); add Storm 7r5 (not preferred)
+      // and Deadpool 7r1 (preferred).
+      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r5');
+      });
+      cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r1', {
+          is_preferred_attacker: true,
+        });
+      });
+
+      goToAttackersMode(ownerData.user_id);
+      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      cy.getByCy('war-attacker-search').should('be.visible');
+
+      // Expected order: Deadpool (preferred) → Storm (7r5) → Wolverine (7r3)
+      cy.get('[data-cy^="attacker-card-"]').then(($cards) => {
+        const order = [...$cards].map((el) => el.getAttribute('data-cy'));
+        expect(order).to.deep.equal([
+          'attacker-card-Deadpool',
+          'attacker-card-Storm',
+          'attacker-card-Wolverine',
+        ]);
+      });
+    });
+  });
+});

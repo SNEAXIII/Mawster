@@ -514,6 +514,7 @@ const en = {
       memberAttackers: '{count}/{max}',
       sagaAttackerFilter: 'Saga Attacker',
       preferredAttackerFilter: 'Preferred',
+      rankFilter: 'Rank',
       noteLabel: 'Note',
       notePlaceholder: 'Add a note for this combat…',
       noteSave: 'Save note',

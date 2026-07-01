@@ -521,6 +521,7 @@ const fr: Translations = {
       memberAttackers: '{count}/{max}',
       sagaAttackerFilter: 'Saga Attaquant',
       preferredAttackerFilter: 'Préféré',
+      rankFilter: 'Rang',
       noteLabel: 'Note',
       notePlaceholder: 'Ajouter une note pour ce combat…',
       noteSave: 'Enregistrer la note',
