@@ -36,7 +36,10 @@ export default function RosterGrid({
 
   if (groupedRoster.length === 0) {
     return (
-      <p className='text-muted-foreground'>
+      <p
+        className='text-muted-foreground'
+        data-cy={isFiltered ? 'roster-no-results' : 'roster-empty'}
+      >
         {isFiltered ? t.roster.filter.noResults : t.roster.empty}
       </p>
     );

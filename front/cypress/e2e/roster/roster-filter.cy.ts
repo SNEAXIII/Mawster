@@ -81,4 +81,30 @@ describe('Roster – Filter bar', () => {
       cy.getByCy('champion-card-Magik').should('not.exist');
     });
   });
+
+  it('shows a "no results" message (not the empty-roster message) when a filter hides everything', () => {
+    setupRosterUser('ui-filter-empty', 'FilterEmptyPlayer').then(({ adminData, userData }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Hercules', 'Cosmic');
+
+      cy.apiLogin(userData.user_id);
+      cy.navTo('roster');
+
+      cy.contains('Add / Update a Champion').click();
+      addChampion('Hercules', '7r5', 200);
+      cy.get('body').type('{esc}'); // close the dialog
+
+      cy.getByCy('champion-card-Hercules').should('exist');
+
+      // Filter to a name that matches nothing
+      cy.getByCy('roster-filter-name').type('Zzz');
+      cy.getByCy('champion-card-Hercules').should('not.exist');
+      cy.getByCy('roster-no-results').should('be.visible');
+      cy.getByCy('roster-empty').should('not.exist');
+
+      // Clearing the filter brings the champion back
+      cy.getByCy('roster-filter-reset').click();
+      cy.getByCy('champion-card-Hercules').should('exist');
+      cy.getByCy('roster-no-results').should('not.exist');
+    });
+  });
 });

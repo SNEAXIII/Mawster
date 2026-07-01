@@ -212,4 +212,7 @@ db-access:
 	docker compose -f compose-prod.yaml -f compose-prod.yaml -f compose-db-access.yaml up mariadb backup -d
 
 db-dev:
+	docker compose -f compose-dev.yaml up -d --build mariadb-dev static
+
+db-dev-all:
 	docker compose -f compose-dev.yaml up -d --build
