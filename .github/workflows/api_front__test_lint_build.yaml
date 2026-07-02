@@ -384,7 +384,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
             cd /home/mawster/Mawster
+            git config --global --add safe.directory /home/mawster/Mawster
 
             git pull origin release
 
@@ -446,7 +448,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
             cd /home/mawster/Mawster
+            git config --global --add safe.directory /home/mawster/Mawster
 
             git pull origin ${{ github.ref_name }}
 
