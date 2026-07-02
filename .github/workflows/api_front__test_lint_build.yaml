@@ -179,23 +179,14 @@ jobs:
 
   changes:
     if: github.ref_name == 'release' || github.ref_name == 'staging'
-    name: Detect changed paths
+    name: Compute deploy metadata
     runs-on: ubuntu-latest
     needs: e2e
     outputs:
-      api: ${{ steps.filter.outputs.api }}
-      front: ${{ steps.filter.outputs.front }}
-      backup: ${{ steps.filter.outputs.backup }}
-      static: ${{ steps.filter.outputs.static }}
-      migrate: ${{ steps.filter.outputs.migrate }}
       moving_tag: ${{ steps.meta.outputs.moving_tag }}
       tag_prefix: ${{ steps.meta.outputs.tag_prefix }}
       also_staging: ${{ github.ref_name == 'release' && contains(github.event.head_commit.message, '[sync-staging]') }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
       - name: Compute deploy metadata
         id: meta
         run: |
@@ -206,24 +197,8 @@ jobs:
             echo "moving_tag=staging" >> "$GITHUB_OUTPUT"
             echo "tag_prefix=staging-" >> "$GITHUB_OUTPUT"
           fi
-      - name: Detect changes
-        id: filter
-        run: |
-          BEFORE="${{ github.event.before }}"
-          SHA="${{ github.sha }}"
-          API=$(git diff --name-only "${BEFORE}...${SHA}" -- api/ | wc -l | tr -d ' ')
-          FRONT=$(git diff --name-only "${BEFORE}...${SHA}" -- front/ | wc -l | tr -d ' ')
-          BACKUP=$(git diff --name-only "${BEFORE}...${SHA}" -- backup/ | wc -l | tr -d ' ')
-          STATIC=$(git diff --name-only "${BEFORE}...${SHA}" -- static-assets/ | wc -l | tr -d ' ')
-          MIGRATE=$(git diff --name-only "${BEFORE}...${SHA}" -- api/migrations/ api/migrate.Dockerfile api/migrate.sh api/pyproject.toml api/uv.lock | wc -l | tr -d ' ')
-          echo "api=$([ "$API" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "front=$([ "$FRONT" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "backup=$([ "$BACKUP" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "static=$([ "$STATIC" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "migrate=$([ "$MIGRATE" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
 
   docker-api:
-    if: needs.changes.outputs.api == 'true'
     environment: Api
     name: Docker Build & Push (API)
     runs-on: ubuntu-latest
@@ -256,7 +231,6 @@ jobs:
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-api:buildcache,mode=max
 
   docker-front:
-    if: needs.changes.outputs.front == 'true'
     environment: Api
     name: Docker Build & Push (Front)
     runs-on: ubuntu-latest
@@ -290,7 +264,6 @@ jobs:
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-front:buildcache,mode=max
 
   docker-migrate:
-    if: needs.changes.outputs.migrate == 'true'
     environment: Api
     name: Docker Build & Push (Migrate)
     runs-on: ubuntu-latest
@@ -323,7 +296,6 @@ jobs:
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:buildcache,mode=max
 
   docker-backup:
-    if: needs.changes.outputs.backup == 'true'
     environment: Api
     name: Docker Build & Push (Backup)
     runs-on: ubuntu-latest
@@ -356,7 +328,6 @@ jobs:
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:buildcache,mode=max
 
   docker-static:
-    if: needs.changes.outputs.static == 'true'
     environment: Api
     name: Docker Build & Push (Static)
     runs-on: ubuntu-latest

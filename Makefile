@@ -207,7 +207,7 @@ migrate-staging:
 		-e MARIADB_PORT=3306 \
 		-e MARIADB_DATABASE=mawster \
 		--mode replicated-job \
-		sneaxiii/mawster-migrate:latest sh migrate.sh
+		sneaxiii/mawster-migrate:staging sh migrate.sh
 	docker service logs -f mawster-migrate-staging
 	@docker service ps mawster-migrate-staging --format "{{.CurrentState}}" | grep -q "^Failed" && \
 		(docker service rm mawster-migrate-staging; exit 1) || docker service rm mawster-migrate-staging
