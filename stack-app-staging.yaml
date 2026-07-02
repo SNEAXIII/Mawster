@@ -64,7 +64,7 @@ services:
         max-file: '5'
 
   api:
-    image: sneaxiii/mawster-api:latest
+    image: sneaxiii/mawster-api:staging
     networks:
       - internal-staging
       - traefik-public
@@ -111,7 +111,7 @@ services:
         max-file: '5'
 
   front-staging:
-    image: sneaxiii/mawster-front:latest
+    image: sneaxiii/mawster-front:staging
     networks:
       - internal-staging
       - traefik-public
@@ -166,7 +166,7 @@ services:
         max-file: '5'
 
   static-staging:
-    image: sneaxiii/mawster-static:latest
+    image: sneaxiii/mawster-static:staging
     networks:
       - traefik-public
     deploy:
@@ -188,7 +188,7 @@ services:
         max-file: '3'
 
   backup:
-    image: sneaxiii/mawster-backup:latest
+    image: sneaxiii/mawster-backup:staging
     networks:
       - internal-staging
     environment:
@@ -196,6 +196,7 @@ services:
       MARIADB_USER: mawster
       MARIADB_DATABASE: mawster
       MARIADB_PORT: '3306'
+      BACKUP_PREFIX: mawster-staging
       BACKUP_CRON_ENABLED: 'false'
       BACKUP_REMOTE_ENABLED: 'false'
     secrets:
