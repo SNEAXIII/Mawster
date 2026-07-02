@@ -16,6 +16,7 @@ from src.models.War import War
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarPrefightAttacker import WarPrefightAttacker
 from src.models.ChampionUser import ChampionUser
+from src.models.AllianceVisitor import AllianceVisitor
 
 FIXTURES = Path(__file__).resolve().parents[3] / "src" / "fixtures"
 
@@ -94,3 +95,8 @@ def test_ascended_champion_users_are_ascendable(seeded_session):
     for cu in rows:
         champ = seeded_session.get(Champion, cu.champion_id)
         assert champ.is_ascendable is True
+
+
+def test_seed_has_alliance_visitor(seeded_session):
+    visitors = seeded_session.exec(select(AllianceVisitor)).all()
+    assert len(visitors) >= 1

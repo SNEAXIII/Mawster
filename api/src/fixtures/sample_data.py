@@ -1,14 +1,18 @@
 """
-Seed script: 30 users (1 super admin + 1 admin + 28 users), each with 1 game account,
-one alliance, and a deterministic roster of 20 champions.
+Seed script: 30 users (1 super admin + 1 admin + 28 users), most with 1 game
+account (a few with a second, non-primary alt account), across 3 alliances.
 
-Also seeds: season 66, alliance officers, 3 wars (1 active + 2 ended), war bans,
-war defense placements, prefight/synergy attackers, persistent defense placements,
-game account masteries, and requested upgrades.
+Champion rosters are fully deterministic (no random content) but variable —
+15 to 45 champions per account, ranks 1-5 shaped to mirror prod distribution,
+ascension only applied to ascendable champions at rank >= 4, and varied
+signatures.
 
-Champion rosters (fully deterministic, no random):
-  - 10 × 7r3  +  10 × 7r4,  signature ∈ {0, 20, 200}
-  - ~7 regular users also receive 1 × 7r5  (admins never get one)
+Also seeds: seasons 60-67 (67 active, the rest ended), alliance officers and
+invitations, 3 wars on Demo HEHE (ended vs ABI58, ended vs XMN.M, active vs
+U.KR) with defense placements, war bans, and prefight/synergy attackers,
+game account masteries, requested upgrades, and alliance visitors (war
+share-link spectators). Some users have Google identities and one user is
+disabled, to mirror real prod account states.
 
 Usage:
     make fixtures
@@ -42,6 +46,7 @@ from src.models.WarBan import WarBan
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarPrefightAttacker import WarPrefightAttacker
 from src.models.WarSynergyAttacker import WarSynergyAttacker
+from src.models.AllianceVisitor import AllianceVisitor
 from src.fixtures import sync_engine
 
 fake = Faker(locale="en")
@@ -672,16 +677,33 @@ def load_sample_data(engine=sync_engine):
                     )
                 )
 
+            # ── Alliance visitors (war share-link spectators) ─────────────────────
+            print("🚀 Creating alliance visitors...")
+            # An account from the second alliance visits Demo HEHE.
+            for visitor_ga in game_accounts[25:27]:
+                session.add(
+                    AllianceVisitor(
+                        alliance_id=alliance.id,
+                        game_account_id=visitor_ga.id,
+                        visited_at=NOW - timedelta(hours=6),
+                    )
+                )
+
             session.commit()
 
             total = len(game_accounts)
-            print(f"✅ {total} users (1 super admin + 1 admin + {total - 2} regular)")
-            print("✅ Alliance 'Demo HEHE' [DEMO] — elo 3800, tier 1")
-            print("✅ 5 officers, 2 invitations")
-            print("✅ Season 66 (active)")
-            print("✅ 3 wars — ended vs ABI58 (+33), ended vs XMN.M (+32), active vs U.KR")
+            print(
+                f"✅ {total} game accounts across "
+                f"{sum(1 for _ in (alliance, alliance2, alliance_empty))} alliances"
+            )
+            print("✅ Demo HEHE [DEMO] — elo 3800, tier 1 (full alliance, officers, wars)")
+            print("✅ Second Wave [SCND] — elo 3600, tier 2")
+            print("✅ Fresh Recruits [FRESH] — elo 0, tier 20 (empty, owner only)")
+            print("✅ Seasons 60-67 (67 active)")
+            print("✅ 3 wars — ended vs ABI58, ended vs XMN.M, active vs U.KR")
             print("✅ War bans, defense placements, prefight/synergy attackers seeded")
-            print("✅ Persistent defense placements, masteries, upgrade requests seeded")
+            print("✅ Masteries, upgrade requests, alliance visitors seeded")
+            print("✅ Some users have Google identities; 1 user disabled; 2 alt accounts")
             print("✅ Super admin: login=misterbalise2 | game=Mr DrBalise")
             print("✅ Simple admin: login=misterbalise  | game=B DrBalise")
 
