@@ -109,7 +109,7 @@ help:
 	@echo "backup-now-staging    --> declencher un backup manuel (staging, local only)"
 	@echo "backup-list           --> lister les fichiers de backup locaux"
 	@echo "backup-restore        --> restaurer depuis un backup local (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)"
-	@echo "backup-restore-staging --> restaurer un backup local dans la staging (FILE=...)"
+	@echo "backup-restore-staging --> restaurer un backup local dans la staging (FILE=mawster-staging_YYYY-MM-DD_HH-MM.sql.gz)"
 	@echo "backup-restore-remote --> restaurer depuis Google Drive (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)"
 	@echo ""
 
@@ -152,6 +152,9 @@ e2e-parallel-quiet: e2e-db ## Run E2E tests in parallel, hide server logs (N=4 b
 backup-list:
 	ls -lh backups/mawster_*.sql.gz 2>/dev/null || echo "(no local backups)"
 
+backup-list-staging:
+	ls -lh backups-staging/mawster_*.sql.gz 2>/dev/null || echo "(no local backups)"
+
 backup-restore:
 	@test -n "$(FILE)" || (echo "Usage: make backup-restore FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
 	docker exec -e MARIADB_ROOT_PASSWORD="$$(grep MARIADB_ROOT_PASSWORD db.env | cut -d= -f2)" \
@@ -162,25 +165,20 @@ backup-restore-remote:
 	docker exec -e MARIADB_ROOT_PASSWORD="$$(grep MARIADB_ROOT_PASSWORD db.env | cut -d= -f2)" \
 		$$(docker ps -q -f name=mawster_backup) /usr/local/bin/restore.sh --remote $(FILE)
 
+backup-restore-staging:
+	@test -n "$(FILE)" || (echo "Usage: make backup-restore-staging FILE=mawster-staging_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
+	docker exec $$(docker ps -q -f name=mawster-staging_backup) /usr/local/bin/restore.sh $(FILE)
+
+backup-now:
+	docker exec $$(docker ps -q -f name=mawster_backup) /usr/local/bin/backup.sh
+
+backup-now-staging:
+	docker exec $$(docker ps -q -f name=mawster-staging_backup) /usr/local/bin/backup.sh
+
 endif
 
 e2e-db:
 	docker compose -f compose-dev.yaml up mariadb-test -d
-
-# ── Backup ────────────────────────────────────────────────────────────────────
-
-## Trigger a backup immediately (runs backup.sh inside the swarm container)
-backup-now:
-	docker exec $$(docker ps -q -f name=mawster_backup) /usr/local/bin/backup.sh
-
-## Trigger a manual backup of the STAGING db (local only, no Google Drive)
-backup-now-staging:
-	docker exec $$(docker ps -q -f name=mawster-staging_backup) /usr/local/bin/backup.sh
-
-## Restore a local backup into the STAGING db (FILE=mawster-staging_YYYY-MM-DD_HH-MM.sql.gz)
-backup-restore-staging:
-	@test -n "$(FILE)" || (echo "Usage: make backup-restore-staging FILE=mawster-staging_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
-	docker exec $$(docker ps -q -f name=mawster-staging_backup) /usr/local/bin/restore.sh $(FILE)
 
 migrate:
 	docker service rm mawster-migrate 2>/dev/null || true
@@ -222,7 +220,7 @@ deploy:
 	docker pull sneaxiii/mawster-static:latest
 	docker stack deploy --with-registry-auth --resolve-image always -c stack-obs.yaml mawster-obs
 	docker stack deploy --with-registry-auth --resolve-image always -c stack-app.yaml mawster
-	docker stack rm mawster-staging
+	docker stack deploy --with-registry-auth --resolve-image always -c stack-app.yaml mawster-staging
 
 panic:
 	docker stack rm mawster
