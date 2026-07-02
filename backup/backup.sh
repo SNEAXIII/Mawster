@@ -17,8 +17,10 @@ fi
 
 # ── Config ────────────────────────────────────────────────────────────────────
 BACKUP_DIR="/backups"
+# Distinguishes environments in filenames (e.g. mawster / mawster-staging). Prod default keeps legacy names.
+BACKUP_PREFIX=${BACKUP_PREFIX:-mawster}
 TIMESTAMP=$(date '+%Y-%m-%d_%H-%M')
-FILENAME="mawster_${TIMESTAMP}.sql.gz"
+FILENAME="${BACKUP_PREFIX}_${TIMESTAMP}.sql.gz"
 MAX_LOCAL_BYTES=$((5 * 1024 * 1024 * 1024))   # 5 GB
 MAX_REMOTE_BYTES=$((3 * 1024 * 1024 * 1024))  # 3 GB
 RETENTION_DAYS=31
@@ -43,14 +45,14 @@ SIZE=$(du -sh "${BACKUP_DIR}/${FILENAME}" | cut -f1)
 echo "[backup] Dump complete — size: $SIZE"
 
 # ── 2. Local purge: by age ────────────────────────────────────────────────────
-find "${BACKUP_DIR}" -name "mawster_*.sql.gz" -mtime "+${RETENTION_DAYS}" -delete
+find "${BACKUP_DIR}" -name "${BACKUP_PREFIX}_*.sql.gz" -mtime "+${RETENTION_DAYS}" -delete
 echo "[backup] Local: purged files older than ${RETENTION_DAYS} days"
 
 # ── 3. Local purge: by size ───────────────────────────────────────────────────
 while true; do
   TOTAL=$(du -sb "${BACKUP_DIR}" 2>/dev/null | cut -f1)
   [ "${TOTAL:-0}" -le "$MAX_LOCAL_BYTES" ] && break
-  OLDEST=$(ls -t "${BACKUP_DIR}"/mawster_*.sql.gz 2>/dev/null | tail -1)
+  OLDEST=$(ls -t "${BACKUP_DIR}"/${BACKUP_PREFIX}_*.sql.gz 2>/dev/null | tail -1)
   [ -z "$OLDEST" ] && break
   echo "[backup] Local over limit ($(( TOTAL / 1024 / 1024 )) MB), deleting: $(basename "$OLDEST")"
   rm "$OLDEST"
@@ -59,11 +61,11 @@ done
 if [ "$BACKUP_REMOTE_ENABLED" = "true" ]; then
   # ── 4. Upload to remote ─────────────────────────────────────────────────────
   echo "[backup] Uploading to remote..."
-  rclone copy "${BACKUP_DIR}/" "${RCLONE_REMOTE}/" --include "mawster_*.sql.gz"
+  rclone copy "${BACKUP_DIR}/" "${RCLONE_REMOTE}/" --include "${BACKUP_PREFIX}_*.sql.gz"
   echo "[backup] Upload complete"
 
   # ── 5. Remote purge: by age ─────────────────────────────────────────────────
-  rclone delete "${RCLONE_REMOTE}/" --min-age "${RETENTION_DAYS}d" --include "mawster_*.sql.gz"
+  rclone delete "${RCLONE_REMOTE}/" --min-age "${RETENTION_DAYS}d" --include "${BACKUP_PREFIX}_*.sql.gz"
   echo "[backup] Remote: purged files older than ${RETENTION_DAYS} days"
 
   # ── 6. Remote purge: by size ────────────────────────────────────────────────
