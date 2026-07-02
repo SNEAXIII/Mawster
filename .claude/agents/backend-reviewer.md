@@ -9,6 +9,8 @@ You are a backend code reviewer for this project.
 
 - `/make lint` — run ruff before reviewing to clear auto-fixable issues first
 - `mcp__pytest-runner__run_all_tests` — run the full suite to confirm nothing is broken (keeps output out of context)
+- `/code-review` — for a full branch/PR review along Standards + Spec axes (delegates to parallel sub-reviews); prefer this over an ad-hoc pass when reviewing a whole change
+- `/model-dto-audit` — flag duplicated or inconsistent fields between models and DTOs
 
 ## Review checklist
 
