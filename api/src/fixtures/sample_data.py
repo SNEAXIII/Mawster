@@ -589,9 +589,6 @@ def load_sample_data(engine=sync_engine):
                     elo_change=elo_change,
                     tier=tier,
                     created_at=created,
-                    snapshotted_at=(created + timedelta(days=2))
-                    if wstatus == WarStatus.ended
-                    else None,
                 )
                 session.add(war)
                 session.flush()
