@@ -177,9 +177,9 @@ backup-now:
 backup-now-staging:
 	docker exec $$(docker ps -q -f name=mawster-staging_backup) /usr/local/bin/backup.sh
 
-## Restore a local backup into the STAGING db (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)
+## Restore a local backup into the STAGING db (FILE=mawster-staging_YYYY-MM-DD_HH-MM.sql.gz)
 backup-restore-staging:
-	@test -n "$(FILE)" || (echo "Usage: make backup-restore-staging FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
+	@test -n "$(FILE)" || (echo "Usage: make backup-restore-staging FILE=mawster-staging_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
 	docker exec $$(docker ps -q -f name=mawster-staging_backup) /usr/local/bin/restore.sh $(FILE)
 
 migrate:
