@@ -222,11 +222,12 @@ deploy:
 	docker pull sneaxiii/mawster-static:latest
 	docker stack deploy --with-registry-auth --resolve-image always -c stack-obs.yaml mawster-obs
 	docker stack deploy --with-registry-auth --resolve-image always -c stack-app.yaml mawster
-	docker stack deploy --with-registry-auth --resolve-image always -c stack-app-staging.yaml mawster-staging
+	docker stack rm mawster-staging
 
 panic:
 	docker stack rm mawster
 	docker stack rm mawster-obs
+	docker stack rm mawster-staging
 
 db-access:
 	docker compose -f compose-prod.yaml -f compose-prod.yaml -f compose-db-access.yaml up mariadb backup -d
