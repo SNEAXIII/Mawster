@@ -81,9 +81,12 @@ services:
       API_PORT: '8000'
       EMAIL_PEPPER_VERSION: '1'
     secrets:
-      - mawster_secret_key_staging
-      - mawster_db_password_staging
-      - mawster_email_pepper_staging
+      - source: mawster_secret_key_staging
+        target: mawster_secret_key
+      - source: mawster_db_password_staging
+        target: mawster_db_password
+      - source: mawster_email_pepper_staging
+        target: mawster_email_pepper
     volumes:
       - api_logs_staging:/app/api/logs
     command: ['sh', 'run.sh']
@@ -117,7 +120,8 @@ services:
       NEXTAUTH_URL_INTERNAL: http://front-staging:3000
       NEXT_PUBLIC_API_CLIENT_HOST: www.staging.mawster.app
     secrets:
-      - mawster_nextauth_secret_staging
+      - source: mawster_nextauth_secret_staging
+        target: mawster_nextauth_secret
       - mawster_discord_client_id
       - mawster_discord_client_secret
       - mawster_google_client_id
