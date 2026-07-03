@@ -1,21 +1,15 @@
 'use client';
 
 import { useI18n } from '@/app/i18n';
-import { type Alliance } from '@/app/services/game';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { type DefenseSummary } from '@/app/services/defense';
 import { Trash2, Camera } from 'lucide-react';
+import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector';
+import AllianceSelect from '@/app/game/_components/alliance-select';
 
 interface DefenseHeaderProps {
-  alliances: Alliance[];
+  alliances: AllianceWithVisitorFlag[];
   selectedAllianceId: string;
   onAllianceChange: (id: string) => void;
   selectedBg: number;
@@ -53,27 +47,13 @@ export default function DefenseHeader({
               <label className='text-sm font-medium whitespace-nowrap'>
                 {t.game.defense.alliance}:
               </label>
-              <Select
+              <AllianceSelect
+                alliances={alliances}
                 value={selectedAllianceId}
-                onValueChange={onAllianceChange}
-              >
-                <SelectTrigger
-                  className='w-[200px]'
-                  data-cy='defense-alliance-select'
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {alliances.map((a) => (
-                    <SelectItem
-                      key={a.id}
-                      value={a.id}
-                    >
-                      [{a.tag}] {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={onAllianceChange}
+                triggerClassName='w-[200px]'
+                dataCy='defense-alliance-select'
+              />
             </div>
           )}
 

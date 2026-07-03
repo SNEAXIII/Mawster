@@ -10,6 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import AllianceSelect from '@/app/game/_components/alliance-select';
+import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector';
 import RosterFilterBar from '@/components/roster/roster-filter-bar';
 import {
   EMPTY_FILTERS,
@@ -22,13 +24,12 @@ import { useUpgradeRequests } from '@/hooks/use-upgrade-requests';
 import {
   getAllianceRoster,
   getMyAllianceRoles,
-  type Alliance,
   type AllianceRosterEntry,
 } from '@/app/services/game';
 import AllianceChampionGroup from './alliance-champion-group';
 
 interface Props {
-  alliances: Alliance[];
+  alliances: AllianceWithVisitorFlag[];
   selectedAllianceId: string;
   onAllianceChange: (id: string) => void;
 }
@@ -104,16 +105,14 @@ export default function AllianceChampionSearchTab({
     <div className='flex flex-col gap-4'>
       <div className='flex flex-wrap items-center gap-2'>
         {alliances.length > 1 && (
-          <Select value={selectedAllianceId} onValueChange={onAllianceChange}>
-            <SelectTrigger className='w-full max-w-xs' data-cy='champion-search-alliance-select'>
-              <SelectValue placeholder={cs.selectAlliance} />
-            </SelectTrigger>
-            <SelectContent>
-              {alliances.map((a) => (
-                <SelectItem key={a.id} value={a.id}>{a.name} [{a.tag}]</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <AllianceSelect
+            alliances={alliances}
+            value={selectedAllianceId}
+            onChange={onAllianceChange}
+            triggerClassName='w-full max-w-xs'
+            dataCy='champion-search-alliance-select'
+            placeholder={cs.selectAlliance}
+          />
         )}
 
         {availableGroups.length > 1 && (

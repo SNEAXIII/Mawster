@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { useI18n } from '@/app/i18n';
-import type { Alliance, RankingHistoryPoint } from '@/app/services/game';
+import type { RankingHistoryPoint } from '@/app/services/game';
 import { fetchAllianceRankingHistory } from '@/app/services/game';
 import AllianceRankingChart from './alliance-ranking-chart';
 import type { PlayerSeasonStats } from '@/app/services/statistics';
@@ -14,6 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector';
+import AllianceSelect from '@/app/game/_components/alliance-select';
 import { AllianceStatsTable, type SortField, type SortDir } from './alliance-stats-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CollapsibleSection } from '@/components/collapsible-section';
@@ -22,7 +24,7 @@ import { ChampionDetailModal } from './champion-detail-modal';
 import { useChampionStats } from './use-champion-stats';
 
 interface AllianceStatisticsTabProps {
-  alliances: Alliance[];
+  alliances: AllianceWithVisitorFlag[];
   selectedAllianceId: string;
   onAllianceChange: (allianceId: string) => void;
   seasonStats: PlayerSeasonStats[];
@@ -140,27 +142,13 @@ export default function AllianceStatisticsTab({
   return (
     <div className='flex flex-col gap-4'>
       {alliances.length > 1 && (
-        <Select
+        <AllianceSelect
+          alliances={alliances}
           value={selectedAllianceId}
-          onValueChange={onAllianceChange}
-        >
-          <SelectTrigger
-            className='w-52'
-            data-cy='statistics-alliance-select'
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {alliances.map((a) => (
-              <SelectItem
-                key={a.id}
-                value={a.id}
-              >
-                {a.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={onAllianceChange}
+          triggerClassName='w-52'
+          dataCy='statistics-alliance-select'
+        />
       )}
 
       <CollapsibleSection title={t.game.alliances.rankingHistory} defaultOpen={false}>

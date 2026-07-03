@@ -1,15 +1,8 @@
 'use client';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Eye } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector';
+import AllianceSelect from '@/app/game/_components/alliance-select';
 
 interface WarHeaderProps {
   alliances: AllianceWithVisitorFlag[];
@@ -27,31 +20,13 @@ export default function WarHeader({
   if (alliances.length <= 1) return null;
 
   return (
-    <Select
+    <AllianceSelect
+      alliances={alliances}
       value={selectedAllianceId}
-      onValueChange={onAllianceChange}
-    >
-      <SelectTrigger
-        className='w-48'
-        data-cy='alliance-select'
-      >
-        <SelectValue placeholder={t.game.defense.alliance} />
-      </SelectTrigger>
-      <SelectContent>
-        {alliances.map((a) => (
-          <SelectItem
-            key={a.id}
-            value={a.id}
-          >
-            <span className="flex items-center gap-1.5">
-              {a.isVisitor && (
-                <Eye className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-label={t.game.war.viewOnly} data-cy="visitor-eye-icon" />
-              )}
-              [{a.tag}] {a.name}
-            </span>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+      onChange={onAllianceChange}
+      triggerClassName='w-48'
+      dataCy='alliance-select'
+      placeholder={t.game.defense.alliance}
+    />
   );
 }
