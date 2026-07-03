@@ -397,6 +397,13 @@ const fr: Translations = {
         allianceView: 'Alliance entière',
         loadingChart: 'Chargement du graphique...',
       },
+      championSearch: {
+        tabLabel: 'Recherche champion',
+        selectAlliance: 'Sélectionner une alliance',
+        ownerCount: '{count} possesseur(s)',
+        empty: 'Aucun champion dans cette alliance pour le moment.',
+        noResults: 'Aucun champion ne correspond à ces filtres.',
+      },
     },
     defense: {
       alliance: 'Alliance',

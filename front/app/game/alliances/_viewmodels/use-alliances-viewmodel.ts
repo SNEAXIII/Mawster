@@ -27,6 +27,7 @@ export enum AllianceTab {
   Alliances = 'alliances',
   Defense = 'defense',
   Statistics = 'statistics',
+  ChampionSearch = 'champion-search',
 }
 
 export function useAlliancesViewModel() {
@@ -168,7 +169,7 @@ export function useAlliancesViewModel() {
   }, [loading, activeTab, eligibleOwners]);
 
   useEffect(() => {
-    if (activeTab !== AllianceTab.Statistics) return;
+    if (activeTab !== AllianceTab.Statistics && activeTab !== AllianceTab.ChampionSearch) return;
     if (alliances.length === 0) {
       setStatsAllianceId('');
       setSeasonStats([]);
@@ -183,7 +184,9 @@ export function useAlliancesViewModel() {
       return;
     }
 
-    loadSeasonStats(targetAllianceId).catch(() => {});
+    if (activeTab === AllianceTab.Statistics) {
+      loadSeasonStats(targetAllianceId).catch(() => {});
+    }
   }, [activeTab, alliances, statsAllianceId, loadSeasonStats]);
 
   const handleStatsAllianceChange = (allianceId: string) => {
