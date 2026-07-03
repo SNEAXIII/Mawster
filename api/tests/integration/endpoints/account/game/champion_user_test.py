@@ -547,6 +547,7 @@ class TestBulkAddChampions:
                 "signature",
                 "champion_name",
                 "champion_class",
+                "alias",
                 "image_url",
                 "is_preferred_attacker",
                 "ascension",

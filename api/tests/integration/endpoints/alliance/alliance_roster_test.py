@@ -50,7 +50,7 @@ class TestAllianceRoster:
         alliance, owner_acc = await push_alliance_with_owner(
             user_id=USER_ID, game_pseudo=GAME_PSEUDO
         )
-        champ = await push_champion(name="Hercules", champion_class="Cosmic")
+        champ = await push_champion(name="Hercules", champion_class="Cosmic", alias="Herc")
         entry = await push_champion_user(owner_acc, champ, stars=7, rank=3, signature=200)
 
         response = await execute_get_request(
@@ -64,6 +64,7 @@ class TestAllianceRoster:
         assert row["game_account_id"] == str(owner_acc.id)
         assert row["game_pseudo"] == GAME_PSEUDO
         assert row["champion_name"] == "Hercules"
+        assert row["alias"] == "Herc"
         assert row["rarity"] == "7r3"
         assert row["signature"] == 200
 

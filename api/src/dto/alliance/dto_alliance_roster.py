@@ -15,6 +15,7 @@ class AllianceRosterEntryResponse(BaseModel):
     champion_id: uuid.UUID
     champion_name: str
     champion_class: str
+    alias: Optional[str] = None
     image_url: Optional[str] = None
     rarity: str
     signature: int
@@ -37,6 +38,7 @@ class AllianceRosterEntryResponse(BaseModel):
             "champion_id": data.champion_id,
             "champion_name": data.champion.name,
             "champion_class": data.champion.champion_class,
+            "alias": data.champion.alias,
             "image_url": data.champion.image_url,
             "rarity": data.rarity,
             "signature": data.signature,

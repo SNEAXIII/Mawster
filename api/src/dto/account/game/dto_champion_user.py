@@ -55,6 +55,7 @@ class ChampionUserDetailResponse(ChampionUserResponse):
     is_saga_defender: bool = False
     champion_name: str
     champion_class: str
+    alias: Optional[str] = None
     image_url: Optional[str] = None
 
     @model_validator(mode="before")
@@ -76,5 +77,6 @@ class ChampionUserDetailResponse(ChampionUserResponse):
             "is_saga_defender": data.champion.is_saga_defender,
             "champion_name": data.champion.name,
             "champion_class": data.champion.champion_class,
+            "alias": data.champion.alias,
             "image_url": data.champion.image_url,
         }
