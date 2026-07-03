@@ -52,6 +52,7 @@ export interface AllianceVisitor {
 // ─── Helpers ─────────────────────────────────────────────
 const PROXY = '/api/back';
 import { IS_DEV } from '@/app/lib/dev-mode';
+import type { RosterEntry } from '@/app/services/roster';
 
 const jsonHeaders: HeadersInit = {
   Accept: 'application/json',
@@ -135,6 +136,16 @@ export async function getMyAlliances(): Promise<Alliance[]> {
 export async function getMyVisitedAlliances(): Promise<Alliance[]> {
   const response = await debugFetch(`${PROXY}/alliances/my-visited`, { headers: jsonHeaders });
   await throwOnError(response, 'Erreur lors de la récupération des alliances visitées');
+  return response.json();
+}
+
+export type AllianceRosterEntry = RosterEntry & { game_pseudo: string };
+
+export async function getAllianceRoster(allianceId: string): Promise<AllianceRosterEntry[]> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/roster`, {
+    headers: jsonHeaders,
+  });
+  await throwOnError(response, "Erreur lors de la récupération du roster de l'alliance");
   return response.json();
 }
 
