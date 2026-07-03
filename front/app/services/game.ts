@@ -139,7 +139,10 @@ export async function getMyVisitedAlliances(): Promise<Alliance[]> {
   return response.json();
 }
 
-export type AllianceRosterEntry = RosterEntry & { game_pseudo: string };
+export type AllianceRosterEntry = RosterEntry & {
+  game_pseudo: string;
+  alliance_group: number | null;
+};
 
 export async function getAllianceRoster(allianceId: string): Promise<AllianceRosterEntry[]> {
   const response = await debugFetch(`${PROXY}/alliances/${allianceId}/roster`, {

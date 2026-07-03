@@ -399,6 +399,9 @@ const en = {
         ownerCount: '{count} owner(s)',
         empty: 'No champions in this alliance yet.',
         noResults: 'No champion matches these filters.',
+        allGroups: 'All groups',
+        groupOption: 'Group {n}',
+        noGroup: 'No group',
       },
     },
     defense: {

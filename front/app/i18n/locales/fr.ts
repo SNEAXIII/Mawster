@@ -403,6 +403,9 @@ const fr: Translations = {
         ownerCount: '{count} possesseur(s)',
         empty: 'Aucun champion dans cette alliance pour le moment.',
         noResults: 'Aucun champion ne correspond à ces filtres.',
+        allGroups: 'Tous les groupes',
+        groupOption: 'Groupe {n}',
+        noGroup: 'Sans groupe',
       },
     },
     defense: {

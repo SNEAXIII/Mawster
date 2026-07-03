@@ -44,10 +44,12 @@ export default function AllianceChampionSearchTab({
   const [loading, setLoading] = useState(false);
   const [canRequestUpgrade, setCanRequestUpgrade] = useState(false);
   const [filters, setFilters] = useState<RosterFilters>(EMPTY_FILTERS);
+  const [group, setGroup] = useState('all');
   const upgrade = useUpgradeRequests();
 
   useEffect(() => {
     if (!selectedAllianceId) return;
+    setGroup('all');
     setLoading(true);
     Promise.all([getAllianceRoster(selectedAllianceId), getMyAllianceRoles()])
       .then(([entries, roles]) => {
@@ -59,15 +61,26 @@ export default function AllianceChampionSearchTab({
       .finally(() => setLoading(false));
   }, [selectedAllianceId]);
 
+  const scopedByGroup = useMemo(() => {
+    if (group === 'all') return roster;
+    return roster.filter((e) => String(e.alliance_group ?? 'none') === group);
+  }, [roster, group]);
+
   const filtered = useMemo(
-    () => applyRosterFilters(roster, filters) as AllianceRosterEntry[],
-    [roster, filters]
+    () => applyRosterFilters(scopedByGroup, filters) as AllianceRosterEntry[],
+    [scopedByGroup, filters]
   );
 
   const availableClasses = useMemo(
     () => Array.from(new Set(roster.map((e) => e.champion_class))).sort(),
     [roster]
   );
+
+  const availableGroups = useMemo(() => {
+    const set = new Set<number | null>();
+    for (const e of roster) set.add(e.alliance_group ?? null);
+    return Array.from(set).sort((a, b) => (a ?? 99) - (b ?? 99));
+  }, [roster]);
 
   const groups = useMemo(() => {
     const byChampion = new Map<string, AllianceRosterEntry[]>();
@@ -89,18 +102,36 @@ export default function AllianceChampionSearchTab({
 
   return (
     <div className='flex flex-col gap-4'>
-      {alliances.length > 1 && (
-        <Select value={selectedAllianceId} onValueChange={onAllianceChange}>
-          <SelectTrigger className='w-full max-w-xs' data-cy='champion-search-alliance-select'>
-            <SelectValue placeholder={cs.selectAlliance} />
-          </SelectTrigger>
-          <SelectContent>
-            {alliances.map((a) => (
-              <SelectItem key={a.id} value={a.id}>{a.name} [{a.tag}]</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
+      <div className='flex flex-wrap items-center gap-2'>
+        {alliances.length > 1 && (
+          <Select value={selectedAllianceId} onValueChange={onAllianceChange}>
+            <SelectTrigger className='w-full max-w-xs' data-cy='champion-search-alliance-select'>
+              <SelectValue placeholder={cs.selectAlliance} />
+            </SelectTrigger>
+            <SelectContent>
+              {alliances.map((a) => (
+                <SelectItem key={a.id} value={a.id}>{a.name} [{a.tag}]</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        {availableGroups.length > 1 && (
+          <Select value={group} onValueChange={setGroup}>
+            <SelectTrigger className='h-8 w-40 text-xs' data-cy='champion-search-group-select'>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='all'>{cs.allGroups}</SelectItem>
+              {availableGroups.map((g) => (
+                <SelectItem key={g ?? 'none'} value={String(g ?? 'none')}>
+                  {g === null ? cs.noGroup : cs.groupOption.replace('{n}', String(g))}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
 
       <RosterFilterBar
         filters={filters}
@@ -118,17 +149,18 @@ export default function AllianceChampionSearchTab({
           {isFilterActive(filters) ? cs.noResults : cs.empty}
         </p>
       ) : (
-        <div className='grid gap-3 sm:grid-cols-2'>
+        <div className='columns-3xs gap-3' data-cy='champion-search-results'>
           {groups.map((g) => (
-            <AllianceChampionGroup
-              key={g.championId}
-              championName={g.championName}
-              championClass={g.championClass}
-              imageUrl={g.imageUrl}
-              entries={g.entries}
-              canRequestUpgrade={canRequestUpgrade}
-              onRequestUpgrade={upgrade.initiateUpgrade}
-            />
+            <div key={g.championId} className='mb-3 break-inside-avoid'>
+              <AllianceChampionGroup
+                championName={g.championName}
+                championClass={g.championClass}
+                imageUrl={g.imageUrl}
+                entries={g.entries}
+                canRequestUpgrade={canRequestUpgrade}
+                onRequestUpgrade={upgrade.initiateUpgrade}
+              />
+            </div>
           ))}
         </div>
       )}

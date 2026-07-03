@@ -12,6 +12,7 @@ class AllianceRosterEntryResponse(BaseModel):
     id: uuid.UUID
     game_account_id: uuid.UUID
     game_pseudo: str
+    alliance_group: Optional[int] = None
     champion_id: uuid.UUID
     champion_name: str
     champion_class: str
@@ -35,6 +36,7 @@ class AllianceRosterEntryResponse(BaseModel):
             "id": data.id,
             "game_account_id": data.game_account_id,
             "game_pseudo": data.game_account.game_pseudo,
+            "alliance_group": data.game_account.alliance_group,
             "champion_id": data.champion_id,
             "champion_name": data.champion.name,
             "champion_class": data.champion.champion_class,
