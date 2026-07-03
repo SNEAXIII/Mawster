@@ -256,10 +256,10 @@ describe('War – WarAttackerSelector rarity filter', () => {
   });
 
   // =========================================================================
-  // Default: 6★ hidden, 7★ shown (no stored preference)
+  // 6★ attackers are hidden and no longer offer a reveal toggle (7★ only)
   // =========================================================================
 
-  it('hides 6-star attackers by default and reveals them when the tier is toggled on', () => {
+  it('hides 6-star attackers and offers no toggle to reveal them', () => {
     setupAttackerScenario('atk-rar-def').then(({ adminToken, memberData, ownerData, memberAccId }) => {
       // Member already has Wolverine 7r3; add a 6r5 champion
       cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
@@ -270,14 +270,16 @@ describe('War – WarAttackerSelector rarity filter', () => {
       cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
       cy.getByCy('war-attacker-search').should('be.visible');
 
-      // Default: 7★ Wolverine visible, 6★ Storm hidden
+      // 7★ Wolverine visible, 6★ Storm hidden
       cy.getByCy('attacker-card-Wolverine').should('be.visible');
       cy.getByCy('attacker-card-Storm').should('not.exist');
 
-      // Toggle 6r5 on → Storm appears
-      cy.getByCy('war-attacker-rarity-6r5').click();
-      cy.getByCy('attacker-card-Storm').should('be.visible');
-      cy.getByCy('attacker-card-Wolverine').should('be.visible');
+      // The rarity filter only exposes 7★ tiers — no 6★ toggle exists, so the
+      // 6★ attacker cannot be revealed.
+      cy.getByCy('war-attacker-rarity-6r4').should('not.exist');
+      cy.getByCy('war-attacker-rarity-6r5').should('not.exist');
+      cy.getByCy('war-attacker-rarity-7r3').should('be.visible');
+      cy.getByCy('attacker-card-Storm').should('not.exist');
     });
   });
 
@@ -313,21 +315,24 @@ describe('War – WarAttackerSelector rarity filter', () => {
 
   it('persists the rarity preference across reopen and is untouched by Reset', () => {
     setupAttackerScenario('atk-rar-persist').then(({ adminToken, memberData, ownerData, memberAccId }) => {
+      // Member has Wolverine 7r3; add Storm at 7r5
       cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '6r5');
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r5');
       });
 
       goToAttackersMode(ownerData.user_id);
       cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
       cy.getByCy('war-attacker-search').should('be.visible');
 
-      // Enable 6r5 → Storm visible
-      cy.getByCy('war-attacker-rarity-6r5').click();
+      // Turn 7r3 off → Wolverine (7r3) hidden, Storm (7r5) stays
+      cy.getByCy('war-attacker-rarity-7r3').click();
+      cy.getByCy('attacker-card-Wolverine').should('not.exist');
       cy.getByCy('attacker-card-Storm').should('be.visible');
 
       // Activate then Reset a normal filter — rarity must survive
       cy.getByCy('selector-toggle-saga').click();
       cy.getByCy('selector-reset-filters').click();
+      cy.getByCy('attacker-card-Wolverine').should('not.exist');
       cy.getByCy('attacker-card-Storm').should('be.visible');
 
       // Close and reopen the dialog — preference persisted via localStorage
@@ -335,6 +340,7 @@ describe('War – WarAttackerSelector rarity filter', () => {
       cy.getByCy('war-attacker-search').should('not.exist');
       cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
       cy.getByCy('war-attacker-search').should('be.visible');
+      cy.getByCy('attacker-card-Wolverine').should('not.exist');
       cy.getByCy('attacker-card-Storm').should('be.visible');
     });
   });
