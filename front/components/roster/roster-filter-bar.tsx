@@ -17,7 +17,7 @@ import {
   RANK_OPTIONS,
   ASCENSION_OPTIONS,
   isFilterActive,
-} from '../_viewmodels/roster-filters';
+} from './roster-filters';
 import FilterToggleGroup from './filter-toggle-group';
 
 interface RosterFilterBarProps {
