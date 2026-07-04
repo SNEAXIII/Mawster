@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { FullPageSpinner } from '@/components/full-page-spinner';
 import {
@@ -27,6 +27,9 @@ import {
   type AllianceRosterEntry,
 } from '@/app/services/game';
 import AllianceChampionGroup from './alliance-champion-group';
+
+/** How many champion groups to mount per batch while scrolling. */
+const PAGE_SIZE = 24;
 
 interface Props {
   alliances: AllianceWithVisitorFlag[];
@@ -101,6 +104,34 @@ export default function AllianceChampionSearchTab({
       .sort((a, b) => a.championName.localeCompare(b.championName));
   }, [filtered]);
 
+  // Only mount a batch of groups at a time; reveal more as the user scrolls.
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // Reset the window whenever the result set changes (filter / alliance / group).
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [groups]);
+
+  const visibleGroups = groups.slice(0, visibleCount);
+  const hasMore = visibleCount < groups.length;
+
+  // Grow the window as the sentinel enters the viewport (with a margin so the
+  // next batch is ready before the user reaches the bottom).
+  useEffect(() => {
+    if (!hasMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) setVisibleCount((c) => c + PAGE_SIZE);
+      },
+      { rootMargin: '600px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, visibleCount]);
+
   return (
     <div className='flex flex-col gap-4'>
       <div className='flex flex-wrap items-center gap-2'>
@@ -147,20 +178,23 @@ export default function AllianceChampionSearchTab({
           {isFilterActive(filters) ? cs.noResults : cs.empty}
         </p>
       ) : (
-        <div className='columns-3xs gap-3' data-cy='champion-search-results'>
-          {groups.map((g) => (
-            <div key={g.championId} className='mb-3 break-inside-avoid'>
-              <AllianceChampionGroup
-                championName={g.championName}
-                championClass={g.championClass}
-                imageUrl={g.imageUrl}
-                entries={g.entries}
-                canRequestUpgrade={canRequestUpgrade}
-                onRequestUpgrade={upgrade.initiateUpgrade}
-              />
-            </div>
-          ))}
-        </div>
+        <>
+          <div className='columns-3xs gap-3' data-cy='champion-search-results'>
+            {visibleGroups.map((g) => (
+              <div key={g.championId} className='mb-3 break-inside-avoid'>
+                <AllianceChampionGroup
+                  championName={g.championName}
+                  championClass={g.championClass}
+                  imageUrl={g.imageUrl}
+                  entries={g.entries}
+                  canRequestUpgrade={canRequestUpgrade}
+                  onRequestUpgrade={upgrade.initiateUpgrade}
+                />
+              </div>
+            ))}
+          </div>
+          {hasMore && <div ref={sentinelRef} aria-hidden className='h-4' />}
+        </>
       )}
 
       <UpgradeRequestDialogs upgrade={upgrade} />
