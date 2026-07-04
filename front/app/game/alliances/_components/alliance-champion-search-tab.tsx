@@ -53,16 +53,28 @@ export default function AllianceChampionSearchTab({
 
   useEffect(() => {
     if (!selectedAllianceId) return;
+    // Guard against out-of-order responses: if the alliance changes while a
+    // fetch is in flight, ignore the stale result so it can't clobber the
+    // roster of the now-selected alliance.
+    let active = true;
     setGroup('all');
     setLoading(true);
     Promise.all([getAllianceRoster(selectedAllianceId), getMyAllianceRoles()])
       .then(([entries, roles]) => {
+        if (!active) return;
         setRoster(entries);
         const role = roles.roles[selectedAllianceId];
         setCanRequestUpgrade(!!role && (role.is_officer || role.is_owner));
       })
-      .catch(() => setRoster([]))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (active) setRoster([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [selectedAllianceId]);
 
   const scopedByGroup = useMemo(() => {
