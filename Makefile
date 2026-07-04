@@ -175,6 +175,52 @@ backup-now:
 backup-now-staging:
 	docker exec $$(docker ps -q -f name=mawster-staging_backup) /usr/local/bin/backup.sh
 
+# ===== Tier dev public (stack Swarm mawster-dev) =====
+.PHONY: dev-build dev-up dev-down dev-migrate dev-seed dev-reset dev-nuke dev-logs
+DEV_STACK := mawster-dev
+DEV_ENV   := stack-app-dev.env
+DEV_NET   := $(DEV_STACK)_internal-dev
+
+dev-build:
+	docker build -t mawster-api-dev:local -f api/api.Dockerfile api
+	docker build -t mawster-migrate-dev:local -f api/migrate.Dockerfile api
+	docker build -t mawster-front-dev:local -f front/front.Dockerfile front
+	docker build -t mawster-static-dev:local -f static-assets/static.Dockerfile .
+
+dev-up: dev-build
+	set -a; . ./$(DEV_ENV); set +a; \
+	docker stack deploy --resolve-image never -c stack-app-dev.yaml $(DEV_STACK)
+
+dev-down:
+	docker stack rm $(DEV_STACK)
+
+dev-migrate:
+	set -a; . ./$(DEV_ENV); set +a; \
+	docker service rm $(DEV_STACK)-migrate 2>/dev/null || true; \
+	docker service create --name $(DEV_STACK)-migrate --network $(DEV_NET) \
+	  -e MARIADB_USER=mawster -e MARIADB_PORT=3306 -e MARIADB_DATABASE=mawster \
+	  -e MARIADB_PASSWORD="$$MARIADB_PASSWORD" \
+	  --mode replicated-job mawster-migrate-dev:local sh migrate.sh; \
+	docker service logs $(DEV_STACK)-migrate; \
+	docker service rm $(DEV_STACK)-migrate
+
+# Repopulate complet (wipe + seed), équivalent du `repopulate-db` de api/Makefile.
+dev-seed:
+	docker exec $$(docker ps -q -f name=$(DEV_STACK)_api | head -n1) \
+	  sh -c 'uv run --no-sync python -m src.fixtures.reset_db && \
+	         uv run --no-sync python -m src.fixtures.load_champions && \
+	         uv run --no-sync python -m src.fixtures.load_masteries && \
+	         uv run --no-sync python -m src.fixtures.sample_data'
+
+dev-reset: dev-seed
+
+dev-nuke: dev-down
+	@echo "Attente du retrait du stack..."; sleep 5
+	docker volume rm $(DEV_STACK)_data_db_dev 2>/dev/null || true
+
+dev-logs:
+	docker service logs -f $(DEV_STACK)_api
+
 endif
 
 e2e-db:
