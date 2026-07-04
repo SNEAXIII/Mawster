@@ -23,7 +23,12 @@ import {
   MasteryEntry,
   MasteryUpsertItem,
 } from '@/app/services/masteries';
-import { RosterFilters, EMPTY_FILTERS, applyRosterFilters, isFilterActive } from './roster-filters';
+import {
+  RosterFilters,
+  EMPTY_FILTERS,
+  applyRosterFilters,
+  isFilterActive,
+} from '@/components/roster/roster-filters';
 
 export enum RosterTab {
   Roster = 'roster',

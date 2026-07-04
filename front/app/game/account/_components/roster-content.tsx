@@ -16,7 +16,7 @@ import TabBar, { type TabItem } from '@/components/tab-bar';
 import GameAccountsSection from '@/components/profile/game-accounts-section';
 import AddChampionForm from './add-champion-form';
 import RosterGrid from './roster-grid';
-import RosterFilterBar from './roster-filter-bar';
+import RosterFilterBar from '@/components/roster/roster-filter-bar';
 import RosterUpgradeSection from './roster-upgrade-section';
 import { useRosterViewModel, RosterTab } from '../_viewmodels/use-roster-viewmodel';
 import MasteryTab from './mastery-tab';

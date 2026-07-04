@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - release
+      - staging
   pull_request:
     branches:
       - main
@@ -177,39 +178,27 @@ jobs:
           path: front/cypress/results
 
   changes:
-    if: github.ref_name == 'release'
-    name: Detect changed paths
+    if: github.ref_name == 'release' || github.ref_name == 'staging'
+    name: Compute deploy metadata
     runs-on: ubuntu-latest
     needs: e2e
     outputs:
-      api: ${{ steps.filter.outputs.api }}
-      front: ${{ steps.filter.outputs.front }}
-      backup: ${{ steps.filter.outputs.backup }}
-      static: ${{ steps.filter.outputs.static }}
-      migrate: ${{ steps.filter.outputs.migrate }}
+      moving_tag: ${{ steps.meta.outputs.moving_tag }}
+      tag_prefix: ${{ steps.meta.outputs.tag_prefix }}
+      also_staging: ${{ github.ref_name == 'release' && contains(github.event.head_commit.message, '[sync-staging]') }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - name: Detect changes
-        id: filter
+      - name: Compute deploy metadata
+        id: meta
         run: |
-          BEFORE="${{ github.event.before }}"
-          SHA="${{ github.sha }}"
-          API=$(git diff --name-only "${BEFORE}...${SHA}" -- api/ | wc -l | tr -d ' ')
-          FRONT=$(git diff --name-only "${BEFORE}...${SHA}" -- front/ | wc -l | tr -d ' ')
-          BACKUP=$(git diff --name-only "${BEFORE}...${SHA}" -- backup/ | wc -l | tr -d ' ')
-          STATIC=$(git diff --name-only "${BEFORE}...${SHA}" -- static-assets/ | wc -l | tr -d ' ')
-          MIGRATE=$(git diff --name-only "${BEFORE}...${SHA}" -- api/migrations/ api/migrate.Dockerfile api/migrate.sh api/pyproject.toml api/uv.lock | wc -l | tr -d ' ')
-          echo "api=$([ "$API" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "front=$([ "$FRONT" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "backup=$([ "$BACKUP" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "static=$([ "$STATIC" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "migrate=$([ "$MIGRATE" -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          if [ "${{ github.ref_name }}" = "release" ]; then
+            echo "moving_tag=latest" >> "$GITHUB_OUTPUT"
+            echo "tag_prefix=" >> "$GITHUB_OUTPUT"
+          else
+            echo "moving_tag=staging" >> "$GITHUB_OUTPUT"
+            echo "tag_prefix=staging-" >> "$GITHUB_OUTPUT"
+          fi
 
   docker-api:
-    if: needs.changes.outputs.api == 'true'
     environment: Api
     name: Docker Build & Push (API)
     runs-on: ubuntu-latest
@@ -235,13 +224,13 @@ jobs:
           file: ./api/api.Dockerfile
           push: true
           tags: |
-            ${{ vars.DOCKERHUB_USERNAME }}/mawster-api:latest
-            ${{ vars.DOCKERHUB_USERNAME }}/mawster-api:${{ env.TAG }}
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-api:${{ needs.changes.outputs.moving_tag }}
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-api:${{ needs.changes.outputs.tag_prefix }}${{ env.TAG }}
+            ${{ needs.changes.outputs.also_staging == 'true' && format('{0}/mawster-api:staging', vars.DOCKERHUB_USERNAME) || '' }}
           cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-api:buildcache
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-api:buildcache,mode=max
 
   docker-front:
-    if: needs.changes.outputs.front == 'true'
     environment: Api
     name: Docker Build & Push (Front)
     runs-on: ubuntu-latest
@@ -268,13 +257,13 @@ jobs:
           push: true
           # Host-agnostic image: NEXT_PUBLIC_API_CLIENT_HOST is applied at runtime by run.sh (stack env).
           tags: |
-            ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:latest
-            ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:${{ env.TAG }}
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:${{ needs.changes.outputs.moving_tag }}
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:${{ needs.changes.outputs.tag_prefix }}${{ env.TAG }}
+            ${{ needs.changes.outputs.also_staging == 'true' && format('{0}/mawster-front:staging', vars.DOCKERHUB_USERNAME) || '' }}
           cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-front:buildcache
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-front:buildcache,mode=max
 
   docker-migrate:
-    if: needs.changes.outputs.migrate == 'true'
     environment: Api
     name: Docker Build & Push (Migrate)
     runs-on: ubuntu-latest
@@ -300,13 +289,13 @@ jobs:
           file: ./api/migrate.Dockerfile
           push: true
           tags: |
-            ${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:latest
-            ${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:${{ env.TAG }}
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:${{ needs.changes.outputs.moving_tag }}
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:${{ needs.changes.outputs.tag_prefix }}${{ env.TAG }}
+            ${{ needs.changes.outputs.also_staging == 'true' && format('{0}/mawster-migrate:staging', vars.DOCKERHUB_USERNAME) || '' }}
           cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:buildcache
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:buildcache,mode=max
 
   docker-backup:
-    if: needs.changes.outputs.backup == 'true'
     environment: Api
     name: Docker Build & Push (Backup)
     runs-on: ubuntu-latest
@@ -332,13 +321,13 @@ jobs:
           file: ./backup/Dockerfile
           push: true
           tags: |
-            ${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:latest
-            ${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:${{ env.TAG }}
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:${{ needs.changes.outputs.moving_tag }}
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:${{ needs.changes.outputs.tag_prefix }}${{ env.TAG }}
+            ${{ needs.changes.outputs.also_staging == 'true' && format('{0}/mawster-backup:staging', vars.DOCKERHUB_USERNAME) || '' }}
           cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:buildcache
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:buildcache,mode=max
 
   docker-static:
-    if: needs.changes.outputs.static == 'true'
     environment: Api
     name: Docker Build & Push (Static)
     runs-on: ubuntu-latest
@@ -364,8 +353,9 @@ jobs:
           file: ./static-assets/static.Dockerfile
           push: true
           tags: |
-            ${{ vars.DOCKERHUB_USERNAME }}/mawster-static:latest
-            ${{ vars.DOCKERHUB_USERNAME }}/mawster-static:${{ env.TAG }}
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-static:${{ needs.changes.outputs.moving_tag }}
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-static:${{ needs.changes.outputs.tag_prefix }}${{ env.TAG }}
+            ${{ needs.changes.outputs.also_staging == 'true' && format('{0}/mawster-static:staging', vars.DOCKERHUB_USERNAME) || '' }}
           cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-static:buildcache
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-static:buildcache,mode=max
 
@@ -373,9 +363,13 @@ jobs:
     name: Deploy to production
     runs-on: ubuntu-latest
     environment: Api
-    needs: [docker-api, docker-migrate, docker-front, docker-backup, docker-static]
+    concurrency:
+      group: mawster-deploy
+      cancel-in-progress: false
+    needs: [changes, docker-api, docker-migrate, docker-front, docker-backup, docker-static]
     if: |
       always() &&
+      github.ref_name == 'release' &&
       (needs.docker-api.result == 'success' || needs.docker-migrate.result == 'success' || needs.docker-front.result == 'success' || needs.docker-backup.result == 'success' || needs.docker-static.result == 'success') &&
       needs.docker-api.result != 'failure' &&
       needs.docker-migrate.result != 'failure' &&
@@ -390,7 +384,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
             cd /home/mawster/Mawster
+            git config --global --add safe.directory /home/mawster/Mawster
 
             git pull origin release
 
@@ -426,3 +422,67 @@ jobs:
               --resolve-image always \
               -c stack-app.yaml \
               mawster
+
+  deploy-staging:
+    name: Deploy to staging
+    runs-on: ubuntu-latest
+    environment: Api
+    concurrency:
+      group: mawster-deploy
+      cancel-in-progress: false
+    needs: [changes, docker-api, docker-migrate, docker-front, docker-backup, docker-static]
+    if: |
+      always() &&
+      (github.ref_name == 'staging' || needs.changes.outputs.also_staging == 'true') &&
+      (needs.docker-api.result == 'success' || needs.docker-migrate.result == 'success' || needs.docker-front.result == 'success' || needs.docker-backup.result == 'success' || needs.docker-static.result == 'success') &&
+      needs.docker-api.result != 'failure' &&
+      needs.docker-migrate.result != 'failure' &&
+      needs.docker-front.result != 'failure' &&
+      needs.docker-backup.result != 'failure' &&
+      needs.docker-static.result != 'failure'
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /home/mawster/Mawster
+            git config --global --add safe.directory /home/mawster/Mawster
+
+            git pull origin ${{ github.ref_name }}
+
+            make backup-now-staging
+
+            docker pull sneaxiii/mawster-api:staging
+            docker pull sneaxiii/mawster-migrate:staging
+            docker pull sneaxiii/mawster-front:staging
+            docker pull sneaxiii/mawster-backup:staging
+            docker pull sneaxiii/mawster-static:staging
+
+            docker service rm mawster-staging-migrate 2>/dev/null || true
+
+            docker service create \
+              --name mawster-staging-migrate \
+              --network internal-staging \
+              --secret source=mawster_db_password_staging,target=mawster_db_password \
+              --secret source=mawster_db_root_password_staging,target=mawster_db_root_password \
+              -e MARIADB_USER=mawster \
+              -e MARIADB_PORT=3306 \
+              -e MARIADB_DATABASE=mawster \
+              --mode replicated-job \
+              sneaxiii/mawster-migrate:staging sh migrate.sh
+
+            docker service logs mawster-staging-migrate
+            if docker service ps mawster-staging-migrate --format "{{.CurrentState}}" | grep -q "^Failed"; then
+              docker service rm mawster-staging-migrate; exit 1
+            fi
+            docker service rm mawster-staging-migrate
+
+            docker stack deploy \
+              --with-registry-auth \
+              --resolve-image always \
+              -c stack-app-staging.yaml \
+              mawster-staging

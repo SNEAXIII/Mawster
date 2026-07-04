@@ -1,0 +1,6 @@
+[submodule "mcoc-vision"]
+	path = mcoc-vision
+	url = https://github.com/SNEAXIII/mcoc-vision.git
+[submodule "mawster-notes"]
+	path = mawster-notes
+	url = https://github.com/SNEAXIII/mawster-notes.git

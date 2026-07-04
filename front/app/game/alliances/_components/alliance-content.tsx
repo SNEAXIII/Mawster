@@ -10,6 +10,7 @@ import AllianceRosterDialog from './alliance-roster-dialog';
 import InvitationsSection from './invitations-section';
 import AlliancesTab from './alliances-tab';
 import AllianceStatisticsTab from './alliance-statistics-tab';
+import AllianceChampionSearchTab from './alliance-champion-search-tab';
 import { useAlliancesViewModel, AllianceTab } from '../_viewmodels/use-alliances-viewmodel';
 
 const DefensePageContent = dynamic(() => import('../../defense/_components/defense-content'), {
@@ -31,6 +32,11 @@ export default function AllianceContent() {
       value: AllianceTab.Statistics,
       label: t.game.alliances.statistics.tabLabel,
       cy: 'tab-statistics',
+    },
+    {
+      value: AllianceTab.ChampionSearch,
+      label: t.game.alliances.championSearch.tabLabel,
+      cy: 'tab-champion-search',
     },
     { value: AllianceTab.Defense, label: t.nav.defense, cy: 'tab-defense' },
   ];
@@ -107,6 +113,14 @@ export default function AllianceContent() {
             statsLoading={vm.statsLoading}
             statsError={vm.statsError}
             onRetry={vm.handleRefreshStatistics}
+          />
+        )}
+
+        {vm.activeTab === AllianceTab.ChampionSearch && (
+          <AllianceChampionSearchTab
+            alliances={vm.alliances}
+            selectedAllianceId={vm.statsAllianceId}
+            onAllianceChange={vm.handleStatsAllianceChange}
           />
         )}
 

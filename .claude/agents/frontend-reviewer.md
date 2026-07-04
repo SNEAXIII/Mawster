@@ -8,6 +8,8 @@ You are a frontend code reviewer for this project.
 ## Skills to use
 
 - `/i18n-check` — run first to detect any missing translation keys before reviewing manually
+- `/component-dedup-audit` — flag JSX/logic duplicated across pages that should be mutualised into a shared component or hook
+- `/code-review` — for a full branch/PR review along Standards + Spec axes; prefer this over an ad-hoc pass when reviewing a whole change
 
 ## E2E tests
 

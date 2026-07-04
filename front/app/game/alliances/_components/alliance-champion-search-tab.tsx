@@ -1,0 +1,204 @@
+'use client';
+
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useI18n } from '@/app/i18n';
+import { FullPageSpinner } from '@/components/full-page-spinner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import AllianceSelect from '@/app/game/_components/alliance-select';
+import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector';
+import RosterFilterBar from '@/components/roster/roster-filter-bar';
+import {
+  EMPTY_FILTERS,
+  RosterFilters,
+  applyRosterFilters,
+  isFilterActive,
+} from '@/components/roster/roster-filters';
+import UpgradeRequestDialogs from '@/components/upgrade-request-dialogs';
+import { useUpgradeRequests } from '@/hooks/use-upgrade-requests';
+import {
+  getAllianceRoster,
+  getMyAllianceRoles,
+  type AllianceRosterEntry,
+} from '@/app/services/game';
+import AllianceChampionGroup from './alliance-champion-group';
+
+/** How many champion groups to mount per batch while scrolling. */
+const PAGE_SIZE = 24;
+
+interface Props {
+  alliances: AllianceWithVisitorFlag[];
+  selectedAllianceId: string;
+  onAllianceChange: (id: string) => void;
+}
+
+export default function AllianceChampionSearchTab({
+  alliances,
+  selectedAllianceId,
+  onAllianceChange,
+}: Readonly<Props>) {
+  const { t } = useI18n();
+  const cs = t.game.alliances.championSearch;
+  const [roster, setRoster] = useState<AllianceRosterEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [canRequestUpgrade, setCanRequestUpgrade] = useState(false);
+  const [filters, setFilters] = useState<RosterFilters>(EMPTY_FILTERS);
+  const [group, setGroup] = useState('all');
+  const upgrade = useUpgradeRequests();
+
+  useEffect(() => {
+    if (!selectedAllianceId) return;
+    setGroup('all');
+    setLoading(true);
+    Promise.all([getAllianceRoster(selectedAllianceId), getMyAllianceRoles()])
+      .then(([entries, roles]) => {
+        setRoster(entries);
+        const role = roles.roles[selectedAllianceId];
+        setCanRequestUpgrade(!!role && (role.is_officer || role.is_owner));
+      })
+      .catch(() => setRoster([]))
+      .finally(() => setLoading(false));
+  }, [selectedAllianceId]);
+
+  const scopedByGroup = useMemo(() => {
+    if (group === 'all') return roster;
+    return roster.filter((e) => String(e.alliance_group ?? 'none') === group);
+  }, [roster, group]);
+
+  const filtered = useMemo(
+    () => applyRosterFilters(scopedByGroup, filters) as AllianceRosterEntry[],
+    [scopedByGroup, filters]
+  );
+
+  const availableClasses = useMemo(
+    () => Array.from(new Set(roster.map((e) => e.champion_class))).sort(),
+    [roster]
+  );
+
+  const availableGroups = useMemo(() => {
+    const set = new Set<number | null>();
+    for (const e of roster) set.add(e.alliance_group ?? null);
+    return Array.from(set).sort((a, b) => (a ?? 99) - (b ?? 99));
+  }, [roster]);
+
+  const groups = useMemo(() => {
+    const byChampion = new Map<string, AllianceRosterEntry[]>();
+    for (const e of filtered) {
+      const list = byChampion.get(e.champion_id) ?? [];
+      list.push(e);
+      byChampion.set(e.champion_id, list);
+    }
+    return Array.from(byChampion.values())
+      .map((entries) => ({
+        championId: entries[0].champion_id,
+        championName: entries[0].champion_name,
+        championClass: entries[0].champion_class,
+        imageUrl: entries[0].image_url,
+        entries,
+      }))
+      .sort((a, b) => a.championName.localeCompare(b.championName));
+  }, [filtered]);
+
+  // Only mount a batch of groups at a time; reveal more as the user scrolls.
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // Reset the window whenever the result set changes (filter / alliance / group).
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [groups]);
+
+  const visibleGroups = groups.slice(0, visibleCount);
+  const hasMore = visibleCount < groups.length;
+
+  // Grow the window as the sentinel enters the viewport (with a margin so the
+  // next batch is ready before the user reaches the bottom).
+  useEffect(() => {
+    if (!hasMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) setVisibleCount((c) => c + PAGE_SIZE);
+      },
+      { rootMargin: '600px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, visibleCount]);
+
+  const groupSelect = availableGroups.length > 1 && (
+    <Select value={group} onValueChange={setGroup}>
+      <SelectTrigger className='h-8 w-40 text-xs' data-cy='champion-search-group-select'>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value='all'>{cs.allGroups}</SelectItem>
+        {availableGroups.map((g) => (
+          <SelectItem key={g ?? 'none'} value={String(g ?? 'none')}>
+            {g === null ? cs.noGroup : cs.groupOption.replace('{n}', String(g))}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
+  return (
+    <div className='flex flex-col gap-4'>
+      {alliances.length > 1 && (
+        <div className='flex flex-wrap items-center gap-2'>
+          <AllianceSelect
+            alliances={alliances}
+            value={selectedAllianceId}
+            onChange={onAllianceChange}
+            dataCy='champion-search-alliance-select'
+            placeholder={cs.selectAlliance}
+          />
+        </div>
+      )}
+
+      <RosterFilterBar
+        filters={filters}
+        onChange={(patch) => setFilters((f) => ({ ...f, ...patch }))}
+        onReset={() => setFilters(EMPTY_FILTERS)}
+        availableClasses={availableClasses}
+        filteredCount={filtered.length}
+        totalCount={roster.length}
+        leading={groupSelect}
+      />
+
+      {loading ? (
+        <FullPageSpinner />
+      ) : groups.length === 0 ? (
+        <p className='text-muted-foreground py-8 text-center' data-cy='champion-search-empty'>
+          {isFilterActive(filters) ? cs.noResults : cs.empty}
+        </p>
+      ) : (
+        <>
+          <div className='columns-3xs gap-3' data-cy='champion-search-results'>
+            {visibleGroups.map((g) => (
+              <div key={g.championId} className='mb-3 break-inside-avoid'>
+                <AllianceChampionGroup
+                  championName={g.championName}
+                  championClass={g.championClass}
+                  imageUrl={g.imageUrl}
+                  entries={g.entries}
+                  canRequestUpgrade={canRequestUpgrade}
+                  onRequestUpgrade={upgrade.initiateUpgrade}
+                />
+              </div>
+            ))}
+          </div>
+          {hasMore && <div ref={sentinelRef} aria-hidden className='h-4' />}
+        </>
+      )}
+
+      <UpgradeRequestDialogs upgrade={upgrade} />
+    </div>
+  );
+}
