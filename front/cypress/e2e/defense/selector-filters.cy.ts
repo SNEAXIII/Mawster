@@ -286,10 +286,10 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
   });
 
   // =========================================================================
-  // Default: 6★ hidden, 7★ shown (no stored preference)
+  // 6★ champions are hidden and no longer offer a reveal toggle (7★ only)
   // =========================================================================
 
-  it('hides 6-star champions by default and reveals them when the tier is toggled on', () => {
+  it('hides 6-star champions and offers no toggle to reveal them', () => {
     setupDefenseOwner('def-rar-def', 'RarDefPlyr', 'RarDefAll', 'RD').then(
       ({ adminData, ownerData, ownerAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
@@ -304,14 +304,16 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
 
-        // Default: 7★ Spider-Man visible, 6★ Wolverine hidden
+        // 7★ Spider-Man visible, 6★ Wolverine hidden
         cy.getByCy('champion-card-Spider-Man').should('be.visible');
         cy.getByCy('champion-card-Wolverine').should('not.exist');
 
-        // Toggle 6r5 on → Wolverine appears
-        cy.getByCy('defense-rarity-6r5').click();
-        cy.getByCy('champion-card-Wolverine').should('be.visible');
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
+        // The rarity filter only exposes 7★ tiers — no 6★ toggle exists, so the
+        // 6★ champion cannot be revealed.
+        cy.getByCy('defense-rarity-6r4').should('not.exist');
+        cy.getByCy('defense-rarity-6r5').should('not.exist');
+        cy.getByCy('defense-rarity-7r3').should('be.visible');
+        cy.getByCy('champion-card-Wolverine').should('not.exist');
       },
     );
   });
@@ -352,9 +354,13 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
   it('persists the rarity preference across reopen and is untouched by Reset', () => {
     setupDefenseOwner('def-rar-persist', 'RarPersPlyr', 'RarPersAll', 'RP').then(
       ({ adminData, ownerData, ownerAccId }) => {
+        // Spider-Man 7r3 and Wolverine 7r5 (saga defender)
+        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+        });
         cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant', { is_saga_defender: true }).then(
           (champs) => {
-            cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '6r5');
+            cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5');
           },
         );
 
@@ -363,19 +369,22 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
 
-        // Enable 6r5 → Wolverine visible
-        cy.getByCy('defense-rarity-6r5').click();
+        // Turn 7r3 off → Spider-Man (7r3) hidden, Wolverine (7r5) stays
+        cy.getByCy('defense-rarity-7r3').click();
+        cy.getByCy('champion-card-Spider-Man').should('not.exist');
         cy.getByCy('champion-card-Wolverine').should('be.visible');
 
         // Activate then Reset a normal filter — rarity must survive
         cy.getByCy('selector-toggle-saga').click();
         cy.getByCy('selector-reset-filters').click();
+        cy.getByCy('champion-card-Spider-Man').should('not.exist');
         cy.getByCy('champion-card-Wolverine').should('be.visible');
 
         // Close and reopen the dialog — preference persisted via localStorage
         cy.get('body').type('{esc}');
         cy.getByCy('champion-card-Wolverine').should('not.exist');
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        cy.getByCy('champion-card-Spider-Man').should('not.exist');
         cy.getByCy('champion-card-Wolverine').should('be.visible');
       },
     );

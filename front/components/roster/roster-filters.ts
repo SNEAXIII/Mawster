@@ -44,7 +44,12 @@ export function isFilterActive(f: RosterFilters): boolean {
 export function applyRosterFilters(roster: RosterEntry[], f: RosterFilters): RosterEntry[] {
   const q = f.name.trim().toLowerCase();
   return roster.filter((e) => {
-    if (q && !e.champion_name.toLowerCase().includes(q)) return false;
+    if (
+      q &&
+      !e.champion_name.toLowerCase().includes(q) &&
+      !(e.alias?.toLowerCase().includes(q) ?? false)
+    )
+      return false;
     if (f.ranks.length > 0 && !f.ranks.includes(e.rarity)) return false;
     if (f.ascensions.length > 0 && !f.ascensions.includes(e.ascension)) return false;
     if (f.championClass && e.champion_class !== f.championClass) return false;

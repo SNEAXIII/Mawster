@@ -12,19 +12,24 @@ import {
   getMyInvitations,
   getAllianceInvitations,
 } from '@/app/services/game';
+import { type AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector';
 
 const CACHE_KEY = 'alliance_cache';
 
-function readCache(): Alliance[] {
+function readCache(): AllianceWithVisitorFlag[] {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
-    return raw ? (JSON.parse(raw) as Alliance[]) : [];
+    if (!raw) return [];
+    return (JSON.parse(raw) as AllianceWithVisitorFlag[]).map((a) => ({
+      ...a,
+      isVisitor: a.isVisitor ?? false,
+    }));
   } catch {
     return [];
   }
 }
 
-function writeCache(alliances: Alliance[]) {
+function writeCache(alliances: AllianceWithVisitorFlag[]) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(alliances));
   } catch (_) {
@@ -34,7 +39,7 @@ function writeCache(alliances: Alliance[]) {
 
 interface AllianceContextValue {
   // Alliances
-  alliances: Alliance[];
+  alliances: AllianceWithVisitorFlag[];
   hasAlliance: boolean;
   loading: boolean;
   // Roles
@@ -77,7 +82,7 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
   const { data: session, status } = useSession();
   const isAuthenticated = !!(session && !session.error && session.user);
 
-  const [alliances, setAlliances] = useState<Alliance[]>(() => readCache());
+  const [alliances, setAlliances] = useState<AllianceWithVisitorFlag[]>(() => readCache());
   const [loading, setLoading] = useState(status === 'loading');
   const [roles, setRoles] = useState<Record<string, AllianceRoleEntry>>({});
   const [myAccountIds, setMyAccountIds] = useState<string[]>([]);
@@ -123,9 +128,11 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
         getMyInvitations(),
       ]);
 
-      const merged = [
-        ...memberResult,
-        ...visitedResult.filter((v) => !memberResult.some((m) => m.id === v.id)),
+      const merged: AllianceWithVisitorFlag[] = [
+        ...memberResult.map((a) => ({ ...a, isVisitor: false })),
+        ...visitedResult
+          .filter((v) => !memberResult.some((m) => m.id === v.id))
+          .map((a) => ({ ...a, isVisitor: true })),
       ];
       setAlliances(merged);
       writeCache(merged);

@@ -23,14 +23,11 @@ export default function RarityFilterToggles({
   return (
     <div className='flex flex-wrap items-center gap-1'>
       <span className='mr-1 text-[11px] font-medium text-muted-foreground'>{label}</span>
-      {RARITY_TIERS.map((tier, i) => {
+      {RARITY_TIERS.filter((tier) => tier.startsWith('7')).map((tier, i) => {
         const active = activeTiers.has(tier);
-        // Small gap between the 6★ block and the 7★ block.
-        const startsSevenStar = tier === '7r1';
         return (
           <span
             key={tier}
-            className={cn(startsSevenStar && i > 0 && 'ml-2')}
           >
             <Button
               variant='outline'
