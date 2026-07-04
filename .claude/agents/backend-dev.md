@@ -16,6 +16,9 @@ FastAPI + SQLModel + MariaDB async, Python 3.12, uv.
 - `mcp__pytest-runner__run_all_tests` — run full pytest suite (keeps output out of context)
 - `mcp__pytest-runner__run_failing_tests` — re-run only failing tests
 - `/server-dev` — start dev servers if needed
+- `/model-dto-audit` — before adding a model or DTO, check for field drift/duplication; factor shared fields into a mixin (single source of truth)
+- `/codebase-design` — when designing a service interface or deciding where a seam goes (deep-module vocabulary)
+- `/diagnosing-bugs` — when a test fails or behavior is unexpected and the cause isn't obvious; run the diagnosis loop before guessing at a fix
 
 ## Implementation rules
 

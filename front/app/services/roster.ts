@@ -126,6 +126,7 @@ export interface RosterEntry {
   signature: number;
   champion_name: string;
   champion_class: string;
+  alias: string | null;
   image_url: string | null;
   is_preferred_attacker: boolean;
   ascension: number;

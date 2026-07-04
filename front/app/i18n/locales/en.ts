@@ -393,6 +393,16 @@ const en = {
         allianceView: 'Whole alliance',
         loadingChart: 'Loading chart...',
       },
+      championSearch: {
+        tabLabel: 'Champion search',
+        selectAlliance: 'Select an alliance',
+        ownerCount: '{count} owner(s)',
+        empty: 'No champions in this alliance yet.',
+        noResults: 'No champion matches these filters.',
+        allGroups: 'All groups',
+        groupOption: 'Group {n}',
+        noGroup: 'No group',
+      },
     },
     defense: {
       alliance: 'Alliance',

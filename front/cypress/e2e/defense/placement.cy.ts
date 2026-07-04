@@ -78,12 +78,12 @@ describe('Defense – Placement via UI', () => {
         champ: { name: 'Wolverine', cls: 'Mutant', rarity: '7r4', options: { signature: 0 } },
       },
       {
-        prefix: 'def-pl-6star',
-        pseudo: 'SixPlyr',
-        tag: '6S',
+        prefix: 'def-pl-lowsig',
+        pseudo: 'LowSigPlyr',
+        tag: 'LS',
         node: 7,
         expected: 'R5·20',
-        champ: { name: 'Hulk', cls: 'Science', rarity: '6r5', options: { signature: 20 } },
+        champ: { name: 'Hulk', cls: 'Science', rarity: '7r5', options: { signature: 20 } },
       },
     ] as const
   ).forEach(({ prefix, pseudo, tag, node, expected, champ }) => {
@@ -93,10 +93,6 @@ describe('Defense – Placement via UI', () => {
         cy.navTo('defense');
 
         cy.getByCy(`war-node-${node}`).scrollIntoView().click({ force: true });
-        // 6★ are hidden by default — enable the tier so the card is visible.
-        if (champ.rarity.startsWith('6')) {
-          cy.getByCy(`defense-rarity-${champ.rarity}`).click();
-        }
         cy.getByCy(`champion-card-${champ.name.replace(/ /g, '-')}`).click();
 
         cy.getByCy(`war-node-${node}`).should('contain', expected);
