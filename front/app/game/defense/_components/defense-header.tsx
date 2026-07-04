@@ -51,7 +51,6 @@ export default function DefenseHeader({
                 alliances={alliances}
                 value={selectedAllianceId}
                 onChange={onAllianceChange}
-                triggerClassName='w-[200px]'
                 dataCy='defense-alliance-select'
               />
             </div>

@@ -146,7 +146,6 @@ export default function AllianceStatisticsTab({
           alliances={alliances}
           value={selectedAllianceId}
           onChange={onAllianceChange}
-          triggerClassName='w-52'
           dataCy='statistics-alliance-select'
         />
       )}

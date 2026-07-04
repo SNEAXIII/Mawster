@@ -24,7 +24,6 @@ export default function WarHeader({
       alliances={alliances}
       value={selectedAllianceId}
       onChange={onAllianceChange}
-      triggerClassName='w-48'
       dataCy='alliance-select'
       placeholder={t.game.defense.alliance}
     />

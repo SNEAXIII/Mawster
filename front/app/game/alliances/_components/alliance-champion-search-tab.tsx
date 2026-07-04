@@ -109,7 +109,6 @@ export default function AllianceChampionSearchTab({
             alliances={alliances}
             value={selectedAllianceId}
             onChange={onAllianceChange}
-            triggerClassName='w-full max-w-xs'
             dataCy='champion-search-alliance-select'
             placeholder={cs.selectAlliance}
           />

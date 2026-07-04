@@ -29,7 +29,7 @@ export default function AllianceSelect({
   alliances,
   value,
   onChange,
-  triggerClassName,
+  triggerClassName = 'w-56',
   placeholder,
   dataCy,
 }: Readonly<AllianceSelectProps>) {
