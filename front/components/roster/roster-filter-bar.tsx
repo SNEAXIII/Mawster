@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +28,8 @@ interface RosterFilterBarProps {
   availableClasses: string[];
   filteredCount: number;
   totalCount: number;
+  /** Optional control rendered at the start of the filter row (e.g. a group selector). */
+  leading?: ReactNode;
 }
 
 export default function RosterFilterBar({
@@ -36,6 +39,7 @@ export default function RosterFilterBar({
   availableClasses,
   filteredCount,
   totalCount,
+  leading,
 }: Readonly<RosterFilterBarProps>) {
   const { t } = useI18n();
   const f = t.roster.filter;
@@ -60,6 +64,7 @@ export default function RosterFilterBar({
   return (
     <div className='mb-4 space-y-2'>
       <div className='flex flex-wrap items-center gap-3'>
+        {leading}
         {/* Left: name + class */}
         <Input
           value={filters.name}

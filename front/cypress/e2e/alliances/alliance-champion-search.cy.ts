@@ -60,4 +60,71 @@ describe('Alliance champion search', () => {
       cy.getByCy('champion-group-Doctor Doom').should('not.exist');
     });
   });
+
+  // ── Battlegroup filter: only shown with >1 group, scopes the roster ─────────
+
+  it('filters champions by battlegroup when the alliance spans several groups', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'cs-grp-admin', role: 'admin' },
+      {
+        discord_token: 'cs-grp-owner',
+        game_pseudo: 'CsGrpOwner',
+        create_alliance: { name: 'CsGrpAlliance', tag: 'CSG' },
+        battlegroup: 1,
+      },
+      {
+        discord_token: 'cs-grp-member',
+        game_pseudo: 'CsGrpMember',
+        join_alliance_token: 'cs-grp-owner',
+        battlegroup: 2,
+      },
+    ]).then((users) => {
+      const adminToken = users['cs-grp-admin'].access_token;
+      const ownerToken = users['cs-grp-owner'].access_token;
+      const ownerAccId = users['cs-grp-owner'].account_id!;
+      const memberToken = users['cs-grp-member'].access_token;
+      const memberAccId = users['cs-grp-member'].account_id!;
+
+      // Owner (BG1) rosters Iron Man, member (BG2) rosters Wolverine.
+      cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs) =>
+        cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs[0].id, '7r1'),
+      );
+      cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then((champs) =>
+        cy.apiAddChampionToRoster(memberToken, memberAccId, champs[0].id, '7r1'),
+      );
+
+      cy.apiLogin(users['cs-grp-owner'].user_id);
+      cy.navTo('alliances');
+      cy.getByCy('tab-champion-search').click();
+
+      // No group filter: both champions listed.
+      cy.getByCy('champion-group-Iron Man').should('be.visible');
+      cy.getByCy('champion-group-Wolverine').should('be.visible');
+
+      // Group 1 → only the owner's Iron Man.
+      cy.getByCy('champion-search-group-select').click();
+      cy.contains('Group 1').click();
+      cy.getByCy('champion-group-Iron Man').should('be.visible');
+      cy.getByCy('champion-group-Wolverine').should('not.exist');
+
+      // Group 2 → only the member's Wolverine.
+      cy.getByCy('champion-search-group-select').click();
+      cy.contains('Group 2').click();
+      cy.getByCy('champion-group-Wolverine').should('be.visible');
+      cy.getByCy('champion-group-Iron Man').should('not.exist');
+    });
+  });
+
+  // ── Battlegroup filter: hidden when the alliance has a single group ─────────
+
+  it('hides the battlegroup selector when the alliance spans a single group', () => {
+    setupAllianceWithMember('cs-onegrp', 'Iron Man', 'Tech').then(({ ownerData }) => {
+      cy.apiLogin(ownerData.user_id);
+      cy.navTo('alliances');
+      cy.getByCy('tab-champion-search').click();
+
+      cy.getByCy('champion-group-Iron Man').should('be.visible');
+      cy.getByCy('champion-search-group-select').should('not.exist');
+    });
+  });
 });

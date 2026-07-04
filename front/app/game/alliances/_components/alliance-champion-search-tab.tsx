@@ -132,10 +132,26 @@ export default function AllianceChampionSearchTab({
     return () => observer.disconnect();
   }, [hasMore, visibleCount]);
 
+  const groupSelect = availableGroups.length > 1 && (
+    <Select value={group} onValueChange={setGroup}>
+      <SelectTrigger className='h-8 w-40 text-xs' data-cy='champion-search-group-select'>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value='all'>{cs.allGroups}</SelectItem>
+        {availableGroups.map((g) => (
+          <SelectItem key={g ?? 'none'} value={String(g ?? 'none')}>
+            {g === null ? cs.noGroup : cs.groupOption.replace('{n}', String(g))}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
   return (
     <div className='flex flex-col gap-4'>
-      <div className='flex flex-wrap items-center gap-2'>
-        {alliances.length > 1 && (
+      {alliances.length > 1 && (
+        <div className='flex flex-wrap items-center gap-2'>
           <AllianceSelect
             alliances={alliances}
             value={selectedAllianceId}
@@ -143,24 +159,8 @@ export default function AllianceChampionSearchTab({
             dataCy='champion-search-alliance-select'
             placeholder={cs.selectAlliance}
           />
-        )}
-
-        {availableGroups.length > 1 && (
-          <Select value={group} onValueChange={setGroup}>
-            <SelectTrigger className='h-8 w-40 text-xs' data-cy='champion-search-group-select'>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='all'>{cs.allGroups}</SelectItem>
-              {availableGroups.map((g) => (
-                <SelectItem key={g ?? 'none'} value={String(g ?? 'none')}>
-                  {g === null ? cs.noGroup : cs.groupOption.replace('{n}', String(g))}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      </div>
+        </div>
+      )}
 
       <RosterFilterBar
         filters={filters}
@@ -169,6 +169,7 @@ export default function AllianceChampionSearchTab({
         availableClasses={availableClasses}
         filteredCount={filtered.length}
         totalCount={roster.length}
+        leading={groupSelect}
       />
 
       {loading ? (
