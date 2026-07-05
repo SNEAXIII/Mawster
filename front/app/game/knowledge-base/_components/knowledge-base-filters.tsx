@@ -10,12 +10,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import SeasonSelect from '@/app/components/season-select';
 import ChampionFilterSelect from './champion-filter-select';
-import type {
-  Season,
-  AccessibleAlliance,
-  FightRecordSource,
-} from '@/app/services/fight-records';
+import type { Season, AccessibleAlliance, FightRecordSource } from '@/app/services/fight-records';
 
 interface Filters {
   champion_id: string | null;
@@ -44,9 +41,21 @@ interface Props {
 }
 
 export default function KnowledgeBaseFilters({
-  filters, planningErrorOnly, seasonSelector, seasonId, seasons,
-  allianceId, accessibleAlliances, source,
-  onChange, onTogglePlanningError, onSeasonSelectorChange, onSeasonIdChange, onAllianceChange, onSourceChange, onClear,
+  filters,
+  planningErrorOnly,
+  seasonSelector,
+  seasonId,
+  seasons,
+  allianceId,
+  accessibleAlliances,
+  source,
+  onChange,
+  onTogglePlanningError,
+  onSeasonSelectorChange,
+  onSeasonIdChange,
+  onAllianceChange,
+  onSourceChange,
+  onClear,
 }: Props) {
   const { t } = useI18n();
   const kb = t.game.knowledgeBase;
@@ -98,13 +107,19 @@ export default function KnowledgeBaseFilters({
           onValueChange={(v) => onAllianceChange(v === 'all' ? null : v)}
           data-cy='filter-alliance'
         >
-          <SelectTrigger className='w-44' data-cy='filter-alliance-trigger'>
+          <SelectTrigger
+            className='w-44'
+            data-cy='filter-alliance-trigger'
+          >
             <SelectValue placeholder={kb.filterAlliance} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value='all'>{kb.allAlliances}</SelectItem>
             {accessibleAlliances.map((a) => (
-              <SelectItem key={a.id} value={a.id}>
+              <SelectItem
+                key={a.id}
+                value={a.id}
+              >
                 [{a.tag}] {a.name}
               </SelectItem>
             ))}
@@ -117,7 +132,10 @@ export default function KnowledgeBaseFilters({
         onValueChange={onSeasonSelectorChange}
         data-cy='filter-season-selector'
       >
-        <SelectTrigger className='w-44' data-cy='filter-season-selector-trigger'>
+        <SelectTrigger
+          className='w-44'
+          data-cy='filter-season-selector-trigger'
+        >
           <SelectValue placeholder={kb.filterSeason} />
         </SelectTrigger>
         <SelectContent>
@@ -130,32 +148,46 @@ export default function KnowledgeBaseFilters({
       </Select>
 
       {seasonSelector === 'specific' && seasons.length > 0 && (
-        <Select
-          value={seasonId ?? ''}
-          onValueChange={(v) => onSeasonIdChange(v || null)}
+        <SeasonSelect
+          seasons={seasons}
+          value={seasonId}
+          onChange={(v) => onSeasonIdChange(v || null)}
+          placeholder={kb.filterSeason}
+          getLabel={(s) => kb.seasonLabel.replace('{number}', String(s.number))}
           data-cy='filter-season-id'
-        >
-          <SelectTrigger className='w-36' data-cy='filter-season-id-trigger'>
-            <SelectValue placeholder={kb.filterSeason} />
-          </SelectTrigger>
-          <SelectContent>
-            {seasons.map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                {kb.seasonLabel.replace('{number}', String(s.number))}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        />
       )}
 
-      <Select value={source} onValueChange={onSourceChange} data-cy='filter-source'>
-        <SelectTrigger className='w-36' data-cy='filter-source-trigger'>
+      <Select
+        value={source}
+        onValueChange={onSourceChange}
+        data-cy='filter-source'
+      >
+        <SelectTrigger
+          className='w-36'
+          data-cy='filter-source-trigger'
+        >
           <SelectValue placeholder={kb.sourceFilter} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value='non_imported' data-cy='filter-source-non-imported'>{kb.sourceNonImported}</SelectItem>
-          <SelectItem value='all' data-cy='filter-source-all'>{kb.sourceAll}</SelectItem>
-          <SelectItem value='imported' data-cy='filter-source-imported'>{kb.sourceImported}</SelectItem>
+          <SelectItem
+            value='non_imported'
+            data-cy='filter-source-non-imported'
+          >
+            {kb.sourceNonImported}
+          </SelectItem>
+          <SelectItem
+            value='all'
+            data-cy='filter-source-all'
+          >
+            {kb.sourceAll}
+          </SelectItem>
+          <SelectItem
+            value='imported'
+            data-cy='filter-source-imported'
+          >
+            {kb.sourceImported}
+          </SelectItem>
         </SelectContent>
       </Select>
 
@@ -168,7 +200,11 @@ export default function KnowledgeBaseFilters({
         <AlertTriangle className='h-3.5 w-3.5' />
         {kb.filterPlanningError}
       </Button>
-      <Button variant='outline' onClick={onClear} data-cy='filter-clear'>
+      <Button
+        variant='outline'
+        onClick={onClear}
+        data-cy='filter-clear'
+      >
         {kb.clearFilters}
       </Button>
     </div>
