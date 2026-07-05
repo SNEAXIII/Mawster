@@ -558,17 +558,10 @@ def load_sample_data(engine=sync_engine):
             # ── Wars for Demo HEHE (2 ended + 1 active) ───────────────────────────
             print("🚀 Creating wars...")
             demo_roster_gas = [ga for ga in demo_members]
-            # champion_users of the alliance, grouped for saga-aware picking
             alliance_cus = [cu for ga in demo_roster_gas for cu in all_rosters.get(ga.id, [])]
             champ_by_id = {c.id: c for c in champions_list}
-            saga_def_cus = [
-                cu for cu in alliance_cus if champ_by_id[cu.champion_id].is_saga_defender
-            ]
-            saga_atk_cus = [
-                cu for cu in alliance_cus if champ_by_id[cu.champion_id].is_saga_attacker
-            ]
-            defender_pool = saga_def_cus or alliance_cus
-            attacker_pool = saga_atk_cus or alliance_cus
+            defender_pool = alliance_cus
+            attacker_pool = alliance_cus
 
             war_specs = [
                 # (opponent, status, season, win, elo_change, tier, days_ago, layout)

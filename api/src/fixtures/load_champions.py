@@ -35,7 +35,7 @@ sync_engine = create_engine(
 
 DEFAULT_JSON_PATH = Path(__file__).parent.parent.parent / "src" / "fixtures" / "champions.json"
 
-FLAG_FIELDS = ("is_ascendable", "has_prefight", "is_saga_attacker", "is_saga_defender")
+FLAG_FIELDS = ("is_ascendable", "has_prefight")
 CAPABILITIES_JSON_PATH = Path(__file__).parent / "champions_capabilities.json"
 
 

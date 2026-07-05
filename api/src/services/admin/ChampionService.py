@@ -42,8 +42,6 @@ class ChampionService:
         search: Optional[str] = None,
         is_ascendable: Optional[bool] = None,
         has_prefight: Optional[bool] = None,
-        is_saga_attacker: Optional[bool] = None,
-        is_saga_defender: Optional[bool] = None,
     ) -> Any:
         if champion_class:
             sql = sql.where(Champion.champion_class == champion_class)
@@ -59,10 +57,6 @@ class ChampionService:
             sql = sql.where(Champion.is_ascendable == is_ascendable)
         if has_prefight is not None:
             sql = sql.where(Champion.has_prefight == has_prefight)
-        if is_saga_attacker is not None:
-            sql = sql.where(Champion.is_saga_attacker == is_saga_attacker)
-        if is_saga_defender is not None:
-            sql = sql.where(Champion.is_saga_defender == is_saga_defender)
         return sql
 
     @classmethod
@@ -73,8 +67,6 @@ class ChampionService:
         search: Optional[str] = None,
         is_ascendable: Optional[bool] = None,
         has_prefight: Optional[bool] = None,
-        is_saga_attacker: Optional[bool] = None,
-        is_saga_defender: Optional[bool] = None,
     ) -> int:
         sql = select(func.count()).select_from(Champion)
         sql = cls._apply_filters(
@@ -83,8 +75,6 @@ class ChampionService:
             search,
             is_ascendable,
             has_prefight,
-            is_saga_attacker,
-            is_saga_defender,
         )
         result = await session.exec(sql)
         return result.one()
@@ -99,8 +89,6 @@ class ChampionService:
         search: Optional[str] = None,
         is_ascendable: Optional[bool] = None,
         has_prefight: Optional[bool] = None,
-        is_saga_attacker: Optional[bool] = None,
-        is_saga_defender: Optional[bool] = None,
     ) -> list[Champion]:
         sql = select(Champion).order_by(Champion.name)
         sql = cls._apply_filters(
@@ -109,8 +97,6 @@ class ChampionService:
             search,
             is_ascendable,
             has_prefight,
-            is_saga_attacker,
-            is_saga_defender,
         )
         offset = (page - 1) * size
         sql = sql.offset(offset).limit(size)
@@ -127,8 +113,6 @@ class ChampionService:
         search: Optional[str] = None,
         is_ascendable: Optional[bool] = None,
         has_prefight: Optional[bool] = None,
-        is_saga_attacker: Optional[bool] = None,
-        is_saga_defender: Optional[bool] = None,
     ) -> ChampionPaginatedResponse:
         total = await cls.get_total_champions(
             session,
@@ -136,8 +120,6 @@ class ChampionService:
             search,
             is_ascendable,
             has_prefight,
-            is_saga_attacker,
-            is_saga_defender,
         )
         champions = await cls.get_champions_paginated(
             session,
@@ -147,8 +129,6 @@ class ChampionService:
             search,
             is_ascendable,
             has_prefight,
-            is_saga_attacker,
-            is_saga_defender,
         )
         total_pages = (total + size - 1) // size
         mapped = [ChampionResponse.model_validate(c) for c in champions]
@@ -189,24 +169,6 @@ class ChampionService:
         return champion
 
     @classmethod
-    async def toggle_saga_attacker(cls, session: SessionDep, champion_id: uuid.UUID) -> Champion:
-        champion = await cls.get_champion_by_id(session, champion_id)
-        champion.is_saga_attacker = not champion.is_saga_attacker
-        session.add(champion)
-        await session.commit()
-        await session.refresh(champion)
-        return champion
-
-    @classmethod
-    async def toggle_saga_defender(cls, session: SessionDep, champion_id: uuid.UUID) -> Champion:
-        champion = await cls.get_champion_by_id(session, champion_id)
-        champion.is_saga_defender = not champion.is_saga_defender
-        session.add(champion)
-        await session.commit()
-        await session.refresh(champion)
-        return champion
-
-    @classmethod
     async def load_champions(
         cls, session: SessionDep, champions_data: list[ChampionLoadRequest]
     ) -> dict:
@@ -232,10 +194,6 @@ class ChampionService:
                     existing.is_ascendable = data.is_ascendable
                 if data.has_prefight is not None:
                     existing.has_prefight = data.has_prefight
-                if data.is_saga_attacker is not None:
-                    existing.is_saga_attacker = data.is_saga_attacker
-                if data.is_saga_defender is not None:
-                    existing.is_saga_defender = data.is_saga_defender
                 session.add(existing)
                 updated += 1
             else:
@@ -247,8 +205,6 @@ class ChampionService:
                     is_7_star=False,
                     is_ascendable=data.is_ascendable or False,
                     has_prefight=data.has_prefight or False,
-                    is_saga_attacker=data.is_saga_attacker or False,
-                    is_saga_defender=data.is_saga_defender or False,
                 )
                 session.add(new_champion)
                 created += 1

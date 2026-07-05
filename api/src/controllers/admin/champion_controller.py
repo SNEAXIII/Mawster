@@ -13,8 +13,6 @@ from src.Messages.champion_messages import (
     CHAMPION_ALIAS_UPDATED,
     CHAMPION_ASCENDABLE_UPDATED,
     CHAMPION_PREFIGHT_UPDATED,
-    CHAMPION_SAGA_ATTACKER_UPDATED,
-    CHAMPION_SAGA_DEFENDER_UPDATED,
     CHAMPION_DELETED,
     CHAMPION_LOAD_SUCCESS,
 )
@@ -51,8 +49,6 @@ async def get_champions(
     search: Optional[str] = None,
     is_ascendable: Optional[bool] = None,
     has_prefight: Optional[bool] = None,
-    is_saga_attacker: Optional[bool] = None,
-    is_saga_defender: Optional[bool] = None,
 ):
     return await ChampionService.get_champions_with_pagination(
         session,
@@ -62,8 +58,6 @@ async def get_champions(
         search,
         is_ascendable,
         has_prefight,
-        is_saga_attacker,
-        is_saga_defender,
     )
 
 
@@ -99,30 +93,6 @@ async def toggle_champion_prefight(
 ):
     champion = await ChampionService.toggle_prefight(session, champion_id)
     return {"message": CHAMPION_PREFIGHT_UPDATED, "has_prefight": champion.has_prefight}
-
-
-@champion_controller.patch("/{champion_id}/saga-attacker", status_code=200)
-async def toggle_champion_saga_attacker(
-    session: SessionDep,
-    champion_id: uuid.UUID,
-):
-    champion = await ChampionService.toggle_saga_attacker(session, champion_id)
-    return {
-        "message": CHAMPION_SAGA_ATTACKER_UPDATED,
-        "is_saga_attacker": champion.is_saga_attacker,
-    }
-
-
-@champion_controller.patch("/{champion_id}/saga-defender", status_code=200)
-async def toggle_champion_saga_defender(
-    session: SessionDep,
-    champion_id: uuid.UUID,
-):
-    champion = await ChampionService.toggle_saga_defender(session, champion_id)
-    return {
-        "message": CHAMPION_SAGA_DEFENDER_UPDATED,
-        "is_saga_defender": champion.is_saga_defender,
-    }
 
 
 @champion_controller.post("/load", status_code=200)
