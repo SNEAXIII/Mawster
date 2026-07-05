@@ -840,8 +840,8 @@ const en = {
     searchPlaceholder: 'Search by name or alias...',
     ascendableFilter: 'Ascendable',
     prefightFilter: 'Pre-fight',
-    sagaAttackerFilter: 'Saga Attacker',
-    sagaDefenderFilter: 'Saga Defender',
+    sagaSeasonPlaceholder: 'Select a season',
+    seasonLabel: 'Season {number}',
     empty: 'No champions found.',
     tableHeaders: {
       image: 'Image',

@@ -7,8 +7,6 @@ export interface Champion {
   is_7_star: boolean;
   is_ascendable: boolean;
   has_prefight: boolean;
-  is_saga_attacker: boolean;
-  is_saga_defender: boolean;
   alias: string | null;
 }
 
@@ -70,17 +68,13 @@ export const getChampions = async (
   championClass: string | null = null,
   search: string | null = null,
   isAscendable: string | null = null,
-  hasPrefight: string | null = null,
-  isSagaAttacker: string | null = null,
-  isSagaDefender: string | null = null,
+  hasPrefight: string | null = null
 ): Promise<FetchChampionsResponse> => {
   const qs = new URLSearchParams({ page: String(page), size: String(size) });
   if (championClass && championClass !== 'all') qs.set('champion_class', championClass);
   if (search?.trim()) qs.set('search', search.trim());
   if (isAscendable && isAscendable !== 'all') qs.set('is_ascendable', isAscendable);
   if (hasPrefight && hasPrefight !== 'all') qs.set('has_prefight', hasPrefight);
-  if (isSagaAttacker && isSagaAttacker !== 'all') qs.set('is_saga_attacker', isSagaAttacker);
-  if (isSagaDefender && isSagaDefender !== 'all') qs.set('is_saga_defender', isSagaDefender);
 
   const response = await fetch(`${PROXY}/champions?${qs}`, { headers: jsonHeaders });
   await throwOnError(response, 'Erreur lors de la récupération des champions');
@@ -107,8 +101,6 @@ export const loadChampions = async (
     alias?: string | null;
     is_ascendable?: boolean;
     has_prefight?: boolean;
-    is_saga_attacker?: boolean;
-    is_saga_defender?: boolean;
   }[]
 ): Promise<{ message: string; created: number; updated: number; skipped: number }> => {
   const response = await fetch(`${PROXY}/admin/champions/load`, {
@@ -128,8 +120,6 @@ export const exportAllChampions = async (): Promise<
     alias: string | null;
     is_ascendable: boolean;
     has_prefight: boolean;
-    is_saga_attacker: boolean;
-    is_saga_defender: boolean;
   }[]
 > => {
   const response = await fetch(`${PROXY}/champions?page=1&size=9999`, {
@@ -144,8 +134,6 @@ export const exportAllChampions = async (): Promise<
     alias: c.alias,
     is_ascendable: c.is_ascendable,
     has_prefight: c.has_prefight,
-    is_saga_attacker: c.is_saga_attacker,
-    is_saga_defender: c.is_saga_defender,
   }));
 };
 
@@ -179,25 +167,25 @@ export const toggleChampionPrefight = async (
   return response.json();
 };
 
-export const toggleChampionSagaAttacker = async (
-  championId: string
-): Promise<{ is_saga_attacker: boolean }> => {
-  const response = await fetch(`${PROXY}/admin/champions/${championId}/saga-attacker`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-  });
-  await throwOnError(response, 'Erreur lors du basculement saga attaquant');
+export const getSeasonSagaRoles = async (
+  seasonId: string
+): Promise<{ champion_id: string; is_saga_attacker: boolean; is_saga_defender: boolean }[]> => {
+  const response = await fetch(`${PROXY}/admin/seasons/${seasonId}/saga`);
+  await throwOnError(response, 'Erreur lors du chargement des rôles saga');
   return response.json();
 };
 
-export const toggleChampionSagaDefender = async (
-  championId: string
-): Promise<{ is_saga_defender: boolean }> => {
-  const response = await fetch(`${PROXY}/admin/champions/${championId}/saga-defender`, {
-    method: 'PATCH',
+export const setChampionSagaRole = async (
+  seasonId: string,
+  championId: string,
+  body: { is_saga_attacker: boolean; is_saga_defender: boolean }
+): Promise<{ is_saga_attacker: boolean; is_saga_defender: boolean }> => {
+  const response = await fetch(`${PROXY}/admin/seasons/${seasonId}/saga/${championId}`, {
+    method: 'PUT',
     headers: jsonHeaders,
+    body: JSON.stringify(body),
   });
-  await throwOnError(response, 'Erreur lors du basculement saga défenseur');
+  await throwOnError(response, 'Erreur lors de la mise à jour du rôle saga');
   return response.json();
 };
 
