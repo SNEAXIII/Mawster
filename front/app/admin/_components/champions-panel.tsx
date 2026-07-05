@@ -117,8 +117,9 @@ export default function ChampionsPanel() {
         setSelectedSeasonId(current?.id ?? list[0]?.id ?? null);
       })
       .catch(() => {
-        // ignore
+        setError(t.champions.errors.loadError);
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -126,8 +127,10 @@ export default function ChampionsPanel() {
       setSagaRoles(new Map());
       return;
     }
+    let ignore = false;
     getSeasonSagaRoles(selectedSeasonId)
       .then((roles) => {
+        if (ignore) return;
         const map = new Map<string, { att: boolean; def: boolean }>();
         for (const r of roles) {
           map.set(r.champion_id, { att: r.is_saga_attacker, def: r.is_saga_defender });
@@ -135,9 +138,12 @@ export default function ChampionsPanel() {
         setSagaRoles(map);
       })
       .catch(() => {
-        // ignore
+        if (!ignore) setError(t.champions.errors.loadError);
       });
-  }, [selectedSeasonId]);
+    return () => {
+      ignore = true;
+    };
+  }, [selectedSeasonId, t.champions.errors.loadError]);
 
   function resetPagination() {
     setPerPage(BASE_SIZE);
