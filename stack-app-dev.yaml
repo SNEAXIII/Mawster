@@ -1,0 +1,149 @@
+networks:
+  traefik-public:
+    external: true
+  internal-dev:
+    driver: overlay
+    attachable: true
+
+services:
+  mariadb:
+    image: mariadb:11.4
+    networks:
+      - internal-dev
+    ports:
+      - target: 3306
+        published: 3308
+        protocol: tcp
+        mode: host
+    environment:
+      MARIADB_USER: mawster
+      MARIADB_DATABASE: mawster
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+    volumes:
+      - data_db_dev:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '5'
+
+  api:
+    image: mawster-api-dev:local
+    networks:
+      - internal-dev
+      - traefik-public
+    environment:
+      MODE: prod
+      CONTAINER: '1'
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: '60'
+      REFRESH_TOKEN_EXPIRE_DAYS: '7'
+      MARIADB_USER: mawster
+      MARIADB_PORT: '3306'
+      MARIADB_DATABASE: mawster
+      ALLOWED_ORIGINS: https://www.dev.mawster.app
+      API_PORT: '8000'
+      EMAIL_PEPPER_VERSION: '1'
+      SECRET_KEY: ${SECRET_KEY}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      EMAIL_PEPPER: ${EMAIL_PEPPER}
+    command: ['sh', 'run.sh']
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '5'
+
+  front-dev:
+    image: mawster-front-dev:local
+    networks:
+      - internal-dev
+      - traefik-public
+    environment:
+      NEXTAUTH_URL: https://www.dev.mawster.app
+      NEXTAUTH_URL_INTERNAL: http://front-dev:3000
+      NEXT_PUBLIC_API_CLIENT_HOST: www.dev.mawster.app
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+    command: ['sh', 'run.sh']
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.front-dev.rule=Host(`www.dev.mawster.app`)
+        - traefik.http.routers.front-dev.entrypoints=websecure
+        - traefik.http.routers.front-dev.tls.certresolver=letsencrypt
+        - traefik.http.routers.front-dev.service=front-dev
+        - traefik.http.services.front-dev.loadbalancer.server.port=3000
+        - traefik.http.routers.front-dev.middlewares=security-headers-dev
+        - traefik.http.middlewares.security-headers-dev.headers.frameDeny=true
+        - traefik.http.middlewares.security-headers-dev.headers.contentTypeNosniff=true
+        - traefik.http.middlewares.security-headers-dev.headers.referrerPolicy=strict-origin-when-cross-origin
+        - traefik.http.middlewares.security-headers-dev.headers.customResponseHeaders.Server=
+        - traefik.http.routers.apex-redirect-dev.rule=Host(`dev.mawster.app`)
+        - traefik.http.routers.apex-redirect-dev.entrypoints=websecure
+        - traefik.http.routers.apex-redirect-dev.tls.certresolver=letsencrypt
+        - traefik.http.routers.apex-redirect-dev.middlewares=apex-to-www-dev
+        - traefik.http.middlewares.apex-to-www-dev.redirectregex.regex=^https://dev.mawster.app/(.*)
+        - traefik.http.middlewares.apex-to-www-dev.redirectregex.replacement=https://www.dev.mawster.app/$${1}
+        - traefik.http.middlewares.apex-to-www-dev.redirectregex.permanent=true
+        - traefik.docker.network=traefik-public
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '5'
+
+  static-dev:
+    image: mawster-static-dev:local
+    networks:
+      - traefik-public
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.static-dev.rule=Host(`www.dev.mawster.app`) && PathPrefix(`/static/`)
+        - traefik.http.routers.static-dev.entrypoints=websecure
+        - traefik.http.routers.static-dev.tls.certresolver=letsencrypt
+        - traefik.http.routers.static-dev.service=static-dev
+        - traefik.http.services.static-dev.loadbalancer.server.port=80
+        - traefik.docker.network=traefik-public
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: '3'
+
+volumes:
+  data_db_dev:
