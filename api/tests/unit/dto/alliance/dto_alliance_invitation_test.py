@@ -35,8 +35,6 @@ def _make_champion(**overrides):
         "is_7_star": True,
         "is_ascendable": True,
         "has_prefight": False,
-        "is_saga_attacker": False,
-        "is_saga_defender": False,
         "alias": "spidey;peter",
     }
     defaults.update(overrides)
@@ -125,9 +123,11 @@ class TestDefensePlacementResponseModelValidate:
         assert dto.placed_by_id is None
         assert dto.placed_by_pseudo is None
 
-    def test_saga_defender(self):
-        champ = _make_champion(is_saga_attacker=True, is_saga_defender=True)
-        cu = _make_champion_user(champion=champ)
+    def test_saga_defaults_false_and_is_not_read_from_champion(self):
+        """Saga flags are resolved per-season by the controller (SagaService), not
+        from the (now-removed) champion-level columns. model_validate must never
+        read them off `.champion_user.champion`, and must always default to False."""
+        cu = _make_champion_user()
         placement = _ns(
             id=uuid.uuid4(),
             alliance_id=uuid.uuid4(),
@@ -142,6 +142,27 @@ class TestDefensePlacementResponseModelValidate:
             created_at=datetime.now(),
         )
         dto = DefensePlacementResponse.model_validate(placement)
+        assert dto.is_saga_attacker is False
+        assert dto.is_saga_defender is False
+
+    def test_saga_fields_settable_after_validation(self):
+        """The controller sets these post-validation from SagaService.resolve_current."""
+        cu = _make_champion_user()
+        placement = _ns(
+            id=uuid.uuid4(),
+            alliance_id=uuid.uuid4(),
+            battlegroup=1,
+            node_number=5,
+            champion_user_id=cu.id,
+            game_account_id=cu.game_account_id,
+            game_account=_ns(game_pseudo="P"),
+            champion_user=cu,
+            placed_by_id=None,
+            placed_by=None,
+            created_at=datetime.now(),
+        )
+        dto = DefensePlacementResponse.model_validate(placement)
+        dto.is_saga_attacker, dto.is_saga_defender = True, True
         assert dto.is_saga_attacker is True
         assert dto.is_saga_defender is True
 

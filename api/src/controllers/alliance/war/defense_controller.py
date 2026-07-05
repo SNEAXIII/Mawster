@@ -13,6 +13,7 @@ from src.models import User
 from src.services.alliance.AllianceService import AllianceService
 from src.services.auth.AuthService import AuthService
 from src.services.alliance.war.DefensePlacementService import DefensePlacementService
+from src.services.admin.SagaService import SagaService
 from src.utils.db import SessionDep
 from src.utils.path_params import BattlegroupPath
 
@@ -25,8 +26,11 @@ defense_controller = APIRouter(
 )
 
 
-def _to_placement_response(p) -> DefensePlacementResponse:
-    return DefensePlacementResponse.model_validate(p)
+def _to_placement_response(p, saga: dict) -> DefensePlacementResponse:
+    dto = DefensePlacementResponse.model_validate(p)
+    att, dfn = saga.get(p.champion_user.champion_id, (False, False))
+    dto.is_saga_attacker, dto.is_saga_defender = att, dfn
+    return dto
 
 
 @defense_controller.get(
@@ -43,6 +47,7 @@ async def get_defense(
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
 
     placements = await DefensePlacementService.get_defense(session, alliance_id, battlegroup)
+    saga = await SagaService.resolve_current(session)
 
     member_counts: dict[str, int] = {}
     for p in placements:
@@ -52,7 +57,7 @@ async def get_defense(
     return DefenseSummaryResponse(
         alliance_id=alliance_id,
         battlegroup=battlegroup,
-        placements=[_to_placement_response(p) for p in placements],
+        placements=[_to_placement_response(p, saga) for p in placements],
         member_defender_counts=member_counts,
     )
 
@@ -93,7 +98,8 @@ async def place_defender(
         placed_by_id=my_account.id,
     )
 
-    return _to_placement_response(placement)
+    saga = await SagaService.resolve_current(session)
+    return _to_placement_response(placement, saga)
 
 
 @defense_controller.delete(
