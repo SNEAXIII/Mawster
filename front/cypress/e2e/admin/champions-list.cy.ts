@@ -82,6 +82,9 @@ describe('Admin — champions list & filters', () => {
       cy.getByCy('filter-class').click();
       cy.contains('[role="menuitemradio"]', 'Tech').click();
       cy.getByCy('champion-row-Wolverine').should('not.exist');
+      // Wait for the Radix menu to fully close before reopening — reopening
+      // mid-exit-animation swallows the toggle and the content never remounts.
+      cy.get('[role="menu"]').should('not.exist');
       cy.getByCy('filter-class').click();
       cy.contains('[role="menuitemradio"]', 'All').click({ force: true });
       cy.getByCy('champion-row-Iron Man').should('be.visible');
