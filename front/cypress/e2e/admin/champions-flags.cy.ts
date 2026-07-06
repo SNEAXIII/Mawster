@@ -54,45 +54,6 @@ describe('Admin — champion flag toggles', () => {
     });
   });
 
-  it('toggle saga attacker off→on shows Yes, persists on reload', () => {
-    cy.apiLoadChampion(adminToken, 'Thor', 'Cosmic').then(() => {
-      cy.goToAdminChampionsTab();
-      cy.getByCy('toggle-saga-attacker-Thor').should('contain.text', 'No');
-      cy.getByCy('toggle-saga-attacker-Thor').click();
-      cy.getByCy('toggle-saga-attacker-Thor').should('contain.text', 'Yes');
-      cy.reload();
-      cy.getByCy('tab-champions').click();
-      cy.getByCy('toggle-saga-attacker-Thor').should('contain.text', 'Yes');
-    });
-  });
-
-  it('toggle saga attacker on→off shows No', () => {
-    cy.apiLoadChampion(adminToken, 'Thor', 'Cosmic', { is_saga_attacker: true }).then(() => {
-      cy.goToAdminChampionsTab();
-      cy.getByCy('toggle-saga-attacker-Thor').should('contain.text', 'Yes');
-      cy.getByCy('toggle-saga-attacker-Thor').click();
-      cy.getByCy('toggle-saga-attacker-Thor').should('contain.text', 'No');
-    });
-  });
-
-  it('toggle saga defender off→on shows Yes, persists on reload', () => {
-    cy.apiLoadChampion(adminToken, 'Hulk', 'Science').then(() => {
-      cy.goToAdminChampionsTab();
-      cy.getByCy('toggle-saga-defender-Hulk').should('contain.text', 'No');
-      cy.getByCy('toggle-saga-defender-Hulk').click();
-      cy.getByCy('toggle-saga-defender-Hulk').should('contain.text', 'Yes');
-      cy.reload();
-      cy.getByCy('tab-champions').click();
-      cy.getByCy('toggle-saga-defender-Hulk').should('contain.text', 'Yes');
-    });
-  });
-
-  it('toggle saga defender on→off shows No', () => {
-    cy.apiLoadChampion(adminToken, 'Hulk', 'Science', { is_saga_defender: true }).then(() => {
-      cy.goToAdminChampionsTab();
-      cy.getByCy('toggle-saga-defender-Hulk').should('contain.text', 'Yes');
-      cy.getByCy('toggle-saga-defender-Hulk').click();
-      cy.getByCy('toggle-saga-defender-Hulk').should('contain.text', 'No');
-    });
-  });
+  // Saga attacker/defender toggles are now scoped to a selected season
+  // (see admin/saga-per-season.cy.ts).
 });

@@ -73,8 +73,6 @@ class ChampionUserDetailResponse(ChampionUserResponse):
             "is_preferred_attacker": data.is_preferred_attacker,
             "ascension": data.ascension,
             "is_ascendable": data.champion.is_ascendable,
-            "is_saga_attacker": data.champion.is_saga_attacker,
-            "is_saga_defender": data.champion.is_saga_defender,
             "champion_name": data.champion.name,
             "champion_class": data.champion.champion_class,
             "alias": data.champion.alias,

@@ -5,7 +5,7 @@ FIXTURES = Path(__file__).resolve().parents[3] / "src" / "fixtures"
 CAPS_JSON = FIXTURES / "champions_capabilities.json"
 CHAMPIONS_JSON = FIXTURES / "champions.json"
 
-FLAG_KEYS = ("is_ascendable", "has_prefight", "is_saga_attacker", "is_saga_defender")
+FLAG_KEYS = ("is_ascendable", "has_prefight")
 
 
 def _caps():
@@ -25,8 +25,6 @@ def test_flag_counts_match_prod_distribution():
     counts = {k: sum(1 for f in caps.values() if f.get(k)) for k in FLAG_KEYS}
     assert counts["is_ascendable"] >= 60
     assert counts["has_prefight"] >= 12
-    assert counts["is_saga_attacker"] >= 25
-    assert counts["is_saga_defender"] >= 22
 
 
 def test_capability_names_exist_in_pure_catalogue():

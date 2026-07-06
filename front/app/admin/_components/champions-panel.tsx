@@ -8,12 +8,14 @@ import {
   exportAllChampions,
   toggleChampionAscendable,
   toggleChampionPrefight,
-  toggleChampionSagaAttacker,
-  toggleChampionSagaDefender,
+  getSeasonSagaRoles,
+  setChampionSagaRole,
   Champion,
   championClasses,
   boolFilterOptions,
 } from '@/app/services/champions';
+import { listSeasons, getCurrentSeason, type Season } from '@/app/services/season';
+import SeasonSelect from '@/app/components/season-select';
 import PaginationControls from '@/components/dashboard/pagination/pagination-controls';
 import DropdownRadioMenu from '@/components/dashboard/pagination/dropdown-radio-menu';
 import { Button } from '@/components/ui/button';
@@ -41,11 +43,15 @@ export default function ChampionsPanel() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAscendable, setFilterAscendable] = useState(BASE_BOOL);
   const [filterPrefight, setFilterPrefight] = useState(BASE_BOOL);
-  const [filterSagaAttacker, setFilterSagaAttacker] = useState(BASE_BOOL);
-  const [filterSagaDefender, setFilterSagaDefender] = useState(BASE_BOOL);
   const [error, setError] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [canReset, setCanReset] = useState(false);
+
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
+  const [sagaRoles, setSagaRoles] = useState<Map<string, { att: boolean; def: boolean }>>(
+    new Map()
+  );
 
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -66,9 +72,7 @@ export default function ChampionsPanel() {
         selectedClass,
         searchQuery || null,
         filterAscendable,
-        filterPrefight,
-        filterSagaAttacker,
-        filterSagaDefender,
+        filterPrefight
       );
       setChampions(data.champions);
       setCurrentPage(Math.min(currentPage, data.total_pages || 1));
@@ -81,18 +85,18 @@ export default function ChampionsPanel() {
       );
     } finally {
       setIsLoading(false);
-      setCanReset(!(
-        perPage === BASE_SIZE &&
-        selectedClass === BASE_CLASS &&
-        searchQuery === '' &&
-        filterAscendable === BASE_BOOL &&
-        filterPrefight === BASE_BOOL &&
-        filterSagaAttacker === BASE_BOOL &&
-        filterSagaDefender === BASE_BOOL
-      ));
+      setCanReset(
+        !(
+          perPage === BASE_SIZE &&
+          selectedClass === BASE_CLASS &&
+          searchQuery === '' &&
+          filterAscendable === BASE_BOOL &&
+          filterPrefight === BASE_BOOL
+        )
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, perPage, selectedClass, searchQuery, filterAscendable, filterPrefight, filterSagaAttacker, filterSagaDefender]);
+  }, [currentPage, perPage, selectedClass, searchQuery, filterAscendable, filterPrefight]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -103,7 +107,43 @@ export default function ChampionsPanel() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, perPage, selectedClass, searchQuery, filterAscendable, filterPrefight, filterSagaAttacker, filterSagaDefender]);
+  }, [currentPage, perPage, selectedClass, searchQuery, filterAscendable, filterPrefight]);
+
+  useEffect(() => {
+    listSeasons()
+      .then(async (list) => {
+        setSeasons(list);
+        const current = await getCurrentSeason();
+        setSelectedSeasonId(current?.id ?? list[0]?.id ?? null);
+      })
+      .catch(() => {
+        setError(t.champions.errors.loadError);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!selectedSeasonId) {
+      setSagaRoles(new Map());
+      return;
+    }
+    let ignore = false;
+    getSeasonSagaRoles(selectedSeasonId)
+      .then((roles) => {
+        if (ignore) return;
+        const map = new Map<string, { att: boolean; def: boolean }>();
+        for (const r of roles) {
+          map.set(r.champion_id, { att: r.is_saga_attacker, def: r.is_saga_defender });
+        }
+        setSagaRoles(map);
+      })
+      .catch(() => {
+        if (!ignore) setError(t.champions.errors.loadError);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [selectedSeasonId, t.champions.errors.loadError]);
 
   function resetPagination() {
     setPerPage(BASE_SIZE);
@@ -111,8 +151,6 @@ export default function ChampionsPanel() {
     setSearchQuery('');
     setFilterAscendable(BASE_BOOL);
     setFilterPrefight(BASE_BOOL);
-    setFilterSagaAttacker(BASE_BOOL);
-    setFilterSagaDefender(BASE_BOOL);
     setCurrentPage(BASE_PAGE);
   }
 
@@ -163,28 +201,38 @@ export default function ChampionsPanel() {
   }
 
   async function handleToggleSagaAttacker(champion: Champion) {
+    if (!selectedSeasonId) return;
+    const current = sagaRoles.get(champion.id) ?? { att: false, def: false };
     try {
-      const result = await toggleChampionSagaAttacker(champion.id);
-      setChampions((prev) =>
-        prev.map((c) =>
-          c.id === champion.id ? { ...c, is_saga_attacker: result.is_saga_attacker } : c
-        )
-      );
+      const result = await setChampionSagaRole(selectedSeasonId, champion.id, {
+        is_saga_attacker: !current.att,
+        is_saga_defender: current.def,
+      });
+      setSagaRoles((prev) => {
+        const next = new Map(prev);
+        next.set(champion.id, { att: result.is_saga_attacker, def: result.is_saga_defender });
+        return next;
+      });
     } catch {
-      // ignore
+      setError(t.champions.errors.loadError);
     }
   }
 
   async function handleToggleSagaDefender(champion: Champion) {
+    if (!selectedSeasonId) return;
+    const current = sagaRoles.get(champion.id) ?? { att: false, def: false };
     try {
-      const result = await toggleChampionSagaDefender(champion.id);
-      setChampions((prev) =>
-        prev.map((c) =>
-          c.id === champion.id ? { ...c, is_saga_defender: result.is_saga_defender } : c
-        )
-      );
+      const result = await setChampionSagaRole(selectedSeasonId, champion.id, {
+        is_saga_attacker: current.att,
+        is_saga_defender: !current.def,
+      });
+      setSagaRoles((prev) => {
+        const next = new Map(prev);
+        next.set(champion.id, { att: result.is_saga_attacker, def: result.is_saga_defender });
+        return next;
+      });
     } catch {
-      // ignore
+      setError(t.champions.errors.loadError);
     }
   }
 
@@ -216,8 +264,6 @@ export default function ChampionsPanel() {
         alias?: string | null;
         is_ascendable?: boolean;
         has_prefight?: boolean;
-        is_saga_attacker?: boolean;
-        is_saga_defender?: boolean;
       }[];
       if (!Array.isArray(data)) throw new Error('Invalid JSON: expected an array');
       await loadChampions(
@@ -228,8 +274,6 @@ export default function ChampionsPanel() {
           alias: c.alias ?? null,
           is_ascendable: c.is_ascendable,
           has_prefight: c.has_prefight,
-          is_saga_attacker: c.is_saga_attacker,
-          is_saga_defender: c.is_saga_defender,
         }))
       );
       await loadChampionsList();
@@ -306,7 +350,10 @@ export default function ChampionsPanel() {
           possibleValues={boolFilterOptions}
           selectedValue={filterAscendable}
           showSelected
-          setValue={(val) => { setFilterAscendable(val); setCurrentPage(1); }}
+          setValue={(val) => {
+            setFilterAscendable(val);
+            setCurrentPage(1);
+          }}
           data-cy='filter-ascendable'
         />
         <DropdownRadioMenu
@@ -315,26 +362,19 @@ export default function ChampionsPanel() {
           possibleValues={boolFilterOptions}
           selectedValue={filterPrefight}
           showSelected
-          setValue={(val) => { setFilterPrefight(val); setCurrentPage(1); }}
+          setValue={(val) => {
+            setFilterPrefight(val);
+            setCurrentPage(1);
+          }}
           data-cy='filter-prefight'
         />
-        <DropdownRadioMenu
-          labelButton={t.champions.sagaAttackerFilter}
-          labelDescription={t.champions.sagaAttackerFilter}
-          possibleValues={boolFilterOptions}
-          selectedValue={filterSagaAttacker}
-          showSelected
-          setValue={(val) => { setFilterSagaAttacker(val); setCurrentPage(1); }}
-          data-cy='filter-saga-attacker'
-        />
-        <DropdownRadioMenu
-          labelButton={t.champions.sagaDefenderFilter}
-          labelDescription={t.champions.sagaDefenderFilter}
-          possibleValues={boolFilterOptions}
-          selectedValue={filterSagaDefender}
-          showSelected
-          setValue={(val) => { setFilterSagaDefender(val); setCurrentPage(1); }}
-          data-cy='filter-saga-defender'
+        <SeasonSelect
+          seasons={seasons}
+          value={selectedSeasonId}
+          onChange={setSelectedSeasonId}
+          placeholder={t.champions.sagaSeasonPlaceholder}
+          getLabel={(s) => t.champions.seasonLabel.replace('{number}', String(s.number))}
+          data-cy='admin-saga-season-select'
         />
         <SearchInput
           placeholder={t.champions.searchPlaceholder}
@@ -360,7 +400,10 @@ export default function ChampionsPanel() {
       ) : champions.length === 0 ? (
         <div className='text-center py-8 text-muted-foreground'>{t.champions.empty}</div>
       ) : (
-        <div className='overflow-x-auto' data-cy='champions-list'>
+        <div
+          className='overflow-x-auto'
+          data-cy='champions-list'
+        >
           <table className='w-full text-sm border-collapse'>
             <thead>
               <tr className='border-b bg-muted/50'>
@@ -398,6 +441,9 @@ export default function ChampionsPanel() {
                   onTogglePrefight={handleTogglePrefight}
                   onToggleSagaAttacker={handleToggleSagaAttacker}
                   onToggleSagaDefender={handleToggleSagaDefender}
+                  sagaAttacker={sagaRoles.get(champion.id)?.att ?? false}
+                  sagaDefender={sagaRoles.get(champion.id)?.def ?? false}
+                  sagaDisabled={!selectedSeasonId}
                 />
               ))}
             </tbody>

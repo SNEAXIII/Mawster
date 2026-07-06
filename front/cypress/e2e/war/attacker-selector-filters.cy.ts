@@ -50,7 +50,7 @@ describe('War – WarAttackerSelector filters', () => {
 
   it('saga attacker toggle shows only saga attackers', () => {
     setupAttackerScenario('atk-flt-saga').then(({ adminToken, ownerData, memberData, memberAccId }) => {
-      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant', { is_saga_attacker: true }).then((champs) => {
+      cy.apiLoadChampionWithSaga(adminToken, 'Storm', 'Mutant', { is_saga_attacker: true }).then((champs) => {
         cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3');
       });
 
@@ -195,7 +195,7 @@ describe('War – WarAttackerSelector filters', () => {
 
   it('reset button clears all active filters and restores all attackers', () => {
     setupAttackerScenario('atk-flt-reset').then(({ adminToken, ownerData, memberData, memberAccId }) => {
-      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant', { is_saga_attacker: true }).then((champs) => {
+      cy.apiLoadChampionWithSaga(adminToken, 'Storm', 'Mutant', { is_saga_attacker: true }).then((champs) => {
         cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3');
       });
 
@@ -221,12 +221,12 @@ describe('War – WarAttackerSelector filters', () => {
 
   it('saga and preferred filters combine to narrow results', () => {
     setupAttackerScenario('atk-flt-comb').then(({ adminToken, ownerData, memberData, memberAccId }) => {
-      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant', { is_saga_attacker: true }).then((champs) => {
+      cy.apiLoadChampionWithSaga(adminToken, 'Storm', 'Mutant', { is_saga_attacker: true }).then((champs) => {
         cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
           is_preferred_attacker: true,
         });
       });
-      cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant', { is_saga_attacker: true }).then((champs) => {
+      cy.apiLoadChampionWithSaga(adminToken, 'Deadpool', 'Mutant', { is_saga_attacker: true }).then((champs) => {
         cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
           is_preferred_attacker: false,
         });
@@ -369,11 +369,7 @@ describe('War – WarAttackerSelector rarity filter', () => {
       // Expected order: Deadpool (preferred) → Storm (7r5) → Wolverine (7r3)
       cy.get('[data-cy^="attacker-card-"]').then(($cards) => {
         const order = [...$cards].map((el) => el.getAttribute('data-cy'));
-        expect(order).to.deep.equal([
-          'attacker-card-Deadpool',
-          'attacker-card-Storm',
-          'attacker-card-Wolverine',
-        ]);
+        expect(order).to.deep.equal(['attacker-card-Deadpool', 'attacker-card-Storm', 'attacker-card-Wolverine']);
       });
     });
   });

@@ -1,476 +1,318 @@
 {
   "Abomination (Immortal)": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Absorbing Man": {
     "has_prefight": true,
-    "is_ascendable": false,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": false
   },
   "Adam Warlock": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "America Chavez": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Arcade": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Arnim Zola": {
     "has_prefight": true,
-    "is_ascendable": false,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": false
   },
   "Attuma": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Baron Zemo": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Bishop": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Black Panther (Civil War)": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Blade (Stellar-Forged)": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Blue Marvel": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Captain America (Sam Wilson)": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Corvus Glaive": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Dani Moonstar": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Deadpool": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Doctor Bong": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Doctor Strange": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Dust": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Emma Frost": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Galan": {
     "has_prefight": true,
-    "is_ascendable": false,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": false
   },
   "Gentle": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Ghost Rider": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Gorr": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "High Evolutionary": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Hit-Monkey": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Howard the Duck": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Human Torch": {
     "has_prefight": true,
-    "is_ascendable": false,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": false
   },
   "Iron Man": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Iron Man (Infamous)": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Ironheart": {
     "has_prefight": true,
-    "is_ascendable": false,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": false
   },
   "Jabari Panther": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Kate Bishop": {
     "has_prefight": true,
-    "is_ascendable": false,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": false
   },
   "Kindred": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Knull": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Korg": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Lady Deathstrike": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Lizard": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "M'Baku": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Madelyne Pryor": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Maestro (Cosmic)": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Magneto (House of X)": {
     "has_prefight": true,
-    "is_ascendable": false,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": false
   },
   "Man-Thing": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Mister Fantastic": {
     "has_prefight": true,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Mister Negative": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Mojo": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Moondragon": {
     "has_prefight": true,
-    "is_ascendable": false,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": false
   },
   "Nico Minoru": {
     "has_prefight": true,
-    "is_ascendable": false,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": false
   },
   "Nova": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Odin": {
     "has_prefight": true,
-    "is_ascendable": false,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": false
   },
   "Patriot": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Peni Parker": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Phyla-Vell": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Pixie": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Ruby Thursday": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Sandman": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Sasquatch": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Scarlet Witch": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Scorpion": {
     "has_prefight": true,
-    "is_ascendable": false,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": false
   },
   "Sersi": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Shathra": {
     "has_prefight": true,
-    "is_ascendable": false,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": false
   },
   "Shatterstar": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Spider-Ham": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Spider-Man (Pavitr Prabhakar)": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Spider-Punk": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Spider-Slayer (J. Jonah Jameson)": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Spiral": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Spot": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Star-Lord (Stellar-Forged)": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Storm (Pyramid X)": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "The Destroyer": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "The Maker": {
     "has_prefight": true,
-    "is_ascendable": false,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": false
   },
   "Thor (Ragnarok)": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Toad": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "Vision (Aarkus)": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "War Machine": {
     "has_prefight": true,
-    "is_ascendable": false,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": false
   },
   "Warlock": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": false
+    "is_ascendable": true
   },
   "Wave": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": false,
-    "is_saga_defender": true
+    "is_ascendable": true
   },
   "White Tiger": {
     "has_prefight": false,
-    "is_ascendable": true,
-    "is_saga_attacker": true,
-    "is_saga_defender": false
+    "is_ascendable": true
   }
 }

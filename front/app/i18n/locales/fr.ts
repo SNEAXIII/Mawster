@@ -851,8 +851,8 @@ const fr: Translations = {
     searchPlaceholder: 'Rechercher par nom ou alias...',
     ascendableFilter: 'Ascentionnable',
     prefightFilter: 'Précombat',
-    sagaAttackerFilter: 'Attaquant Saga',
-    sagaDefenderFilter: 'Défenseur Saga',
+    sagaSeasonPlaceholder: 'Sélectionner une saison',
+    seasonLabel: 'Saison {number}',
     empty: 'Aucun champion trouvé.',
     tableHeaders: {
       image: 'Image',

@@ -4,6 +4,7 @@ from src.models.GameAccount import GameAccount  # noqa: F401
 from src.models.Alliance import Alliance  # noqa: F401
 from src.models.Champion import Champion  # noqa: F401
 from src.models.ChampionUser import ChampionUser  # noqa: F401
+from src.models.ChampionSagaRole import ChampionSagaRole  # noqa: F401
 from src.models.AllianceOfficer import AllianceOfficer  # noqa: F401
 from src.models.AllianceInvitation import AllianceInvitation  # noqa: F401
 from src.models.AllianceVisitor import AllianceVisitor  # noqa: F401

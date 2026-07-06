@@ -22,6 +22,7 @@ from src.Messages.defense_messages import (
     node_exceeds_map,
     player_max_defenders_reached,
 )
+from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
 from src.services.alliance.war.WarFormatConfig import for_format
 from src.utils.db import SessionDep
@@ -310,6 +311,9 @@ class DefensePlacementService:
         # Get defender counts per player
         defender_counts = await cls._get_defender_counts(session, alliance_id, battlegroup)
 
+        # Resolve saga attacker/defender flags for the current season
+        saga = await SagaService.resolve_current(session)
+
         # Group by champion_id
         champion_groups: dict[uuid.UUID, dict] = {}
         for cu in all_roster:
@@ -322,13 +326,14 @@ class DefensePlacementService:
 
             champ_id = cu.champion_id
             if champ_id not in champion_groups:
+                is_saga_attacker, is_saga_defender = saga.get(champ_id, (False, False))
                 champion_groups[champ_id] = {
                     "champion_id": str(champ_id),
                     "champion_name": cu.champion.name,
                     "champion_alias": cu.champion.alias,
                     "champion_class": cu.champion.champion_class,
-                    "is_saga_attacker": cu.champion.is_saga_attacker,
-                    "is_saga_defender": cu.champion.is_saga_defender,
+                    "is_saga_attacker": is_saga_attacker,
+                    "is_saga_defender": is_saga_defender,
                     "image_url": cu.champion.image_url,
                     "owners": [],
                 }

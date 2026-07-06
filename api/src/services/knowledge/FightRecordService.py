@@ -29,6 +29,7 @@ from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightPrefight import WarFightPrefight
 from src.models.WarFightNote import WarFightNote
 from src.services.admin.ModerationService import AUTO_BLOCK_THRESHOLD, ModerationService
+from src.services.admin.SagaService import SagaService
 from src.models.WarFightRecord import WarFightRecord
 from src.models.WarFightRecordImport import WarFightRecordImport
 from src.models.WarFightSynergy import WarFightSynergy
@@ -62,6 +63,8 @@ class FightRecordService:
         result = await session.exec(stmt)
         placements = result.all()
 
+        saga = await SagaService.get_roles_for_season(session, war.season_id)
+
         for placement in placements:
             attacker_cu: ChampionUser = placement.attacker_champion_user
             attacker_champ: Champion = attacker_cu.champion
@@ -79,12 +82,12 @@ class FightRecordService:
                 stars=attacker_cu.stars,
                 rank=attacker_cu.rank,
                 ascension=attacker_cu.ascension,
-                is_saga_attacker=attacker_champ.is_saga_attacker,
+                is_saga_attacker=saga.get(attacker_champ.id, (False, False))[0],
                 defender_champion_id=defender_champ.id,
                 defender_stars=placement.stars,
                 defender_rank=placement.rank,
                 defender_ascension=placement.ascension,
-                defender_is_saga_defender=defender_champ.is_saga_defender,
+                defender_is_saga_defender=saga.get(defender_champ.id, (False, False))[1],
                 ko_count=placement.ko_count,
                 is_planning_error=placement.is_planning_error,
                 assisted=placement.assist_champion_user_id is not None,

@@ -47,6 +47,4 @@ class AllianceRosterEntryResponse(BaseModel):
             "ascension": data.ascension,
             "is_preferred_attacker": data.is_preferred_attacker,
             "is_ascendable": data.champion.is_ascendable,
-            "is_saga_attacker": data.champion.is_saga_attacker,
-            "is_saga_defender": data.champion.is_saga_defender,
         }

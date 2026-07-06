@@ -16,8 +16,6 @@ class ChampionResponse(BaseModel):
     is_7_star: bool = False
     is_ascendable: bool = False
     has_prefight: bool = False
-    is_saga_attacker: bool = False
-    is_saga_defender: bool = False
     alias: Optional[str] = None
 
 
@@ -44,6 +42,4 @@ class ChampionLoadRequest(BaseModel):
     image_url: Optional[str] = Field(default=None, max_length=500)
     is_ascendable: Optional[bool] = None
     has_prefight: Optional[bool] = None
-    is_saga_attacker: Optional[bool] = None
-    is_saga_defender: Optional[bool] = None
     alias: Optional[str] = Field(default=None, max_length=500)

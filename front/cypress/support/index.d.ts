@@ -57,7 +57,7 @@ declare global {
         adminToken: string,
         name: string,
         championClass: string,
-        options?: { is_ascendable?: boolean; alias?: string; is_saga_attacker?: boolean; is_saga_defender?: boolean },
+        options?: { is_ascendable?: boolean; alias?: string },
       ): Chainable<any>;
 
       /**
@@ -105,7 +105,12 @@ declare global {
       /**
        * Invite a game account to an alliance via backend API.
        */
-      apiInviteMember(token: string, allianceId: string, gameAccountId: string, type?: 'member' | 'visitor'): Chainable<any>;
+      apiInviteMember(
+        token: string,
+        allianceId: string,
+        gameAccountId: string,
+        type?: 'member' | 'visitor',
+      ): Chainable<any>;
 
       /**
        * Force a user to join an alliance via dev endpoint (bypasses invitations).
@@ -321,6 +326,25 @@ declare global {
 
       /** Create a season via admin backend API. */
       apiCreateSeason(token: string, number: number): Chainable<Cypress.Response<any>>;
+
+      /** Set a champion's saga attacker/defender flags for a season via admin backend API. */
+      apiSetSagaRole(
+        token: string,
+        seasonId: string,
+        championId: string,
+        body: { is_saga_attacker: boolean; is_saga_defender: boolean },
+      ): Chainable<Cypress.Response<any>>;
+
+      /**
+       * Load a champion and flag it saga attacker/defender for the current season
+       * (finds or creates the non-ended season). Returns the loaded champions.
+       */
+      apiLoadChampionWithSaga(
+        adminToken: string,
+        name: string,
+        championClass: string,
+        saga: { is_saga_attacker?: boolean; is_saga_defender?: boolean },
+      ): Chainable<any>;
 
       /** Import fight records for an alliance via backend API. */
       apiImportFightRecords(token: string, allianceId: string, rows: object[]): Chainable<Cypress.Response<any>>;

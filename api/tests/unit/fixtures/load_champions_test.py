@@ -4,7 +4,7 @@ from src.fixtures.load_champions import _process_champion_item, _load_capabiliti
 from src.models.Champion import Champion
 
 CAPS = {
-    "Hercules": {"is_ascendable": True, "has_prefight": True, "is_saga_attacker": True},
+    "Hercules": {"is_ascendable": True, "has_prefight": True},
 }
 
 
@@ -22,8 +22,6 @@ def test_new_champion_gets_flags_from_capabilities():
     champ = session.exec(select(Champion).where(Champion.name == "Hercules")).one()
     assert champ.is_ascendable is True
     assert champ.has_prefight is True
-    assert champ.is_saga_attacker is True
-    assert champ.is_saga_defender is False  # absent from caps -> default False
 
 
 def test_champion_without_capabilities_defaults_false():

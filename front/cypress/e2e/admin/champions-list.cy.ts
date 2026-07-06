@@ -58,31 +58,8 @@ describe('Admin — champions list & filters', () => {
     });
   });
 
-  it('filter by is_saga_attacker=Yes shows only saga attackers', () => {
-    cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech', { is_saga_attacker: true }).then(() => {
-      cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then(() => {
-        cy.navTo('admin');
-        cy.getByCy('tab-champions').click();
-        cy.getByCy('filter-saga-attacker').click();
-        cy.contains('[role="menuitemradio"]', 'Yes').click();
-        cy.getByCy('champion-row-Iron Man').should('be.visible');
-        cy.getByCy('champion-row-Wolverine').should('not.exist');
-      });
-    });
-  });
-
-  it('filter by is_saga_defender=Yes shows only saga defenders', () => {
-    cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech', { is_saga_defender: true }).then(() => {
-      cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then(() => {
-        cy.navTo('admin');
-        cy.getByCy('tab-champions').click();
-        cy.getByCy('filter-saga-defender').click();
-        cy.contains('[role="menuitemradio"]', 'Yes').click();
-        cy.getByCy('champion-row-Iron Man').should('be.visible');
-        cy.getByCy('champion-row-Wolverine').should('not.exist');
-      });
-    });
-  });
+  // Saga attacker/defender filters were removed — saga roles are now
+  // scoped to a selected season (see admin/saga-per-season.cy.ts).
 
   it('search by name filters to matching champion', () => {
     cy.apiLoadChampions(adminToken, [
@@ -105,6 +82,9 @@ describe('Admin — champions list & filters', () => {
       cy.getByCy('filter-class').click();
       cy.contains('[role="menuitemradio"]', 'Tech').click();
       cy.getByCy('champion-row-Wolverine').should('not.exist');
+      // Wait for the Radix menu to fully close before reopening — reopening
+      // mid-exit-animation swallows the toggle and the content never remounts.
+      cy.get('[role="menu"]').should('not.exist');
       cy.getByCy('filter-class').click();
       cy.contains('[role="menuitemradio"]', 'All').click({ force: true });
       cy.getByCy('champion-row-Iron Man').should('be.visible');
