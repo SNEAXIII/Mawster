@@ -72,7 +72,7 @@ async def _setup_war_with_fight():
     )
 
     defender_champ = Champion(name="Thanos", champion_class="Cosmic")
-    attacker_champ = Champion(name="Spider-Man", champion_class="Science", is_saga_attacker=True)
+    attacker_champ = Champion(name="Spider-Man", champion_class="Science")
     attacker_cu = ChampionUser(
         game_account_id=member.id,
         champion_id=attacker_champ.id,
@@ -139,11 +139,55 @@ class TestWarFightRecordSnapshot:
         assert r.champion_id == data["attacker_champ"].id
         assert r.stars == 7
         assert r.rank == 4
-        assert r.is_saga_attacker is True
+        assert r.is_saga_attacker is False
         assert r.defender_champion_id == data["defender_champ"].id
         assert r.defender_stars == 6
         assert r.ko_count == 1
         assert r.alliance_id == data["alliance"].id
+
+    @pytest.mark.asyncio
+    async def test_end_war_snapshot_uses_war_season_saga_role(self, session):
+        """WarFightRecord.is_saga_attacker/defender_is_saga_defender must be sourced from the
+        ChampionSagaRole set for the WAR'S OWN season — not any other season, and not a
+        champion-level attribute."""
+        from src.models.Season import Season
+        from src.services.admin.SagaService import SagaService
+
+        data = await _setup_war_with_fight()
+
+        season = Season(number=901)
+        other_season = Season(number=902)
+        await load_objects([season, other_season])
+
+        war = await session.get(War, data["war"].id)
+        war.season_id = season.id
+        session.add(war)
+        await session.commit()
+
+        # Role set for the war's own season -> must be picked up.
+        await SagaService.upsert_role(session, season.id, data["attacker_champ"].id, True, False)
+        # Role set for a DIFFERENT season -> must NOT leak into this snapshot.
+        await SagaService.upsert_role(
+            session, other_season.id, data["defender_champ"].id, False, True
+        )
+
+        headers = create_auth_headers(user_id=str(USER_ID))
+        response = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True, "elo_change": 50},
+            headers=headers,
+        )
+        assert response.status_code == 200
+
+        records = (
+            await session.exec(
+                select(WarFightRecord).where(WarFightRecord.war_id == data["war"].id)
+            )
+        ).all()
+        assert len(records) == 1
+        r = records[0]
+        assert r.is_saga_attacker is True
+        assert r.defender_is_saga_defender is False
 
     @pytest.mark.asyncio
     async def test_end_war_skips_node_without_attacker(self, session):
@@ -318,7 +362,7 @@ class TestListFightRecords:
         assert record["champion_id"] == str(data["attacker_champ"].id)
         assert record["stars"] == 7
         assert record["rank"] == 4
-        assert record["is_saga_attacker"] is True
+        assert record["is_saga_attacker"] is False
         assert record["defender_champion_id"] == str(data["defender_champ"].id)
         assert record["ko_count"] == 1
         assert record["alliance_name"] is not None

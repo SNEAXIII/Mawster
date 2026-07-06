@@ -18,6 +18,7 @@ from src.services.auth.AuthService import AuthService
 from src.services.alliance.AllianceService import AllianceService
 from src.services.account.game.ChampionUserService import ChampionUserService
 from src.services.account.game.GameAccountService import GameAccountService
+from src.services.admin.SagaService import SagaService
 from src.utils.db import SessionDep
 
 champion_user_controller = APIRouter(
@@ -101,7 +102,12 @@ async def bulk_add_champions(
     entries = await ChampionUserService.bulk_add_champions(
         session=session, game_account_id=body.game_account_id, champions=champions_data
     )
-    return [ChampionUserDetailResponse.model_validate(e) for e in entries]
+    saga = await SagaService.resolve_current(session)
+    responses = [ChampionUserDetailResponse.model_validate(e) for e in entries]
+    for dto, e in zip(responses, entries):
+        att, dfn = saga.get(e.champion_id, (False, False))
+        dto.is_saga_attacker, dto.is_saga_defender = att, dfn
+    return responses
 
 
 @champion_user_controller.get(
@@ -123,7 +129,12 @@ async def get_roster_by_game_account(
                 detail="You can only view your own roster or rosters of alliance members",
             )
     entries = await ChampionUserService.get_roster_by_game_account(session, game_account_id)
-    return [ChampionUserDetailResponse.model_validate(e) for e in entries]
+    saga = await SagaService.resolve_current(session)
+    responses = [ChampionUserDetailResponse.model_validate(e) for e in entries]
+    for dto, e in zip(responses, entries):
+        att, dfn = saga.get(e.champion_id, (False, False))
+        dto.is_saga_attacker, dto.is_saga_defender = att, dfn
+    return responses
 
 
 @champion_user_controller.patch(

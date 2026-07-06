@@ -4,9 +4,11 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, Depends
 from starlette import status
 
+from src.dto.admin.dto_saga import SagaRoleResponse, SagaRoleUpsertRequest
 from src.dto.admin.dto_season import SeasonCreateRequest, SeasonResponse
 from src.models import User
 from src.services.auth.AuthService import AuthService
+from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
 from src.services.knowledge.FightRecordService import FightRecordService
 from src.utils.db import SessionDep
@@ -72,6 +74,34 @@ async def close_season(
 ):
     """Close a season (active -> ended). Admin only."""
     return await SeasonService.close_season(session, season_id)
+
+
+@season_admin_controller.get("/{season_id}/saga", response_model=list[SagaRoleResponse])
+async def list_saga_roles(season_id: uuid.UUID, session: SessionDep):
+    """List champion saga roles for a season. Admin only."""
+    roles = await SagaService.get_roles_for_season(session, season_id)
+    return [
+        SagaRoleResponse(
+            season_id=season_id,
+            champion_id=champion_id,
+            is_saga_attacker=att,
+            is_saga_defender=dfn,
+        )
+        for champion_id, (att, dfn) in roles.items()
+    ]
+
+
+@season_admin_controller.put("/{season_id}/saga/{champion_id}", response_model=SagaRoleResponse)
+async def upsert_saga_role(
+    season_id: uuid.UUID,
+    champion_id: uuid.UUID,
+    body: SagaRoleUpsertRequest,
+    session: SessionDep,
+):
+    """Set a champion's saga attacker/defender flags for a season. Admin only."""
+    return await SagaService.upsert_role(
+        session, season_id, champion_id, body.is_saga_attacker, body.is_saga_defender
+    )
 
 
 @season_public_controller.get("", response_model=list[SeasonResponse])

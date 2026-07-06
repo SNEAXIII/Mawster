@@ -22,6 +22,9 @@ interface ChampionTableRowProps {
   onTogglePrefight: (champion: Champion) => void;
   onToggleSagaAttacker: (champion: Champion) => void;
   onToggleSagaDefender: (champion: Champion) => void;
+  sagaAttacker: boolean;
+  sagaDefender: boolean;
+  sagaDisabled?: boolean;
 }
 
 export default function ChampionTableRow({
@@ -38,10 +41,16 @@ export default function ChampionTableRow({
   onTogglePrefight,
   onToggleSagaAttacker,
   onToggleSagaDefender,
+  sagaAttacker,
+  sagaDefender,
+  sagaDisabled,
 }: Readonly<ChampionTableRowProps>) {
   const { t } = useI18n();
   return (
-    <tr className='border-b hover:bg-accent/50' data-cy={`champion-row-${champion.name}`}>
+    <tr
+      className='border-b hover:bg-accent/50'
+      data-cy={`champion-row-${champion.name}`}
+    >
       {/* Image */}
       <td className='p-3'>
         {champion.image_url ? (
@@ -138,14 +147,15 @@ export default function ChampionTableRow({
       <td className='p-3'>
         <button
           onClick={() => onToggleSagaAttacker(champion)}
+          disabled={sagaDisabled}
           data-cy={`toggle-saga-attacker-${champion.name}`}
-          className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-            champion.is_saga_attacker
+          className={`px-2 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            sagaAttacker
               ? 'bg-primary/10 text-primary hover:bg-primary/20'
               : 'bg-muted text-muted-foreground hover:bg-muted/80'
           }`}
         >
-          {champion.is_saga_attacker ? t.common.yes : t.common.no}
+          {sagaAttacker ? t.common.yes : t.common.no}
         </button>
       </td>
 
@@ -153,14 +163,15 @@ export default function ChampionTableRow({
       <td className='p-3'>
         <button
           onClick={() => onToggleSagaDefender(champion)}
+          disabled={sagaDisabled}
           data-cy={`toggle-saga-defender-${champion.name}`}
-          className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-            champion.is_saga_defender
+          className={`px-2 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            sagaDefender
               ? 'bg-primary/10 text-primary hover:bg-primary/20'
               : 'bg-muted text-muted-foreground hover:bg-muted/80'
           }`}
         >
-          {champion.is_saga_defender ? t.common.yes : t.common.no}
+          {sagaDefender ? t.common.yes : t.common.no}
         </button>
       </td>
 

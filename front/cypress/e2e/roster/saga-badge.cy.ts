@@ -7,7 +7,7 @@ describe('Roster – Saga Badge (sagaMode all)', () => {
 
   it('shows saga badge when champion is_saga_attacker', () => {
     setupRosterUser('rst-saga-atk', 'SagaAtkPlayer').then(({ adminData, userData, accountId }) => {
-      cy.apiLoadChampion(adminData.access_token, 'SagaAttacker', 'Mutant', {
+      cy.apiLoadChampionWithSaga(adminData.access_token, 'SagaAttacker', 'Mutant', {
         is_saga_attacker: true,
       }).then((champs: { id: string }[]) => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r3');
@@ -22,7 +22,7 @@ describe('Roster – Saga Badge (sagaMode all)', () => {
 
   it('shows saga badge when champion is_saga_defender', () => {
     setupRosterUser('rst-saga-def', 'SagaDefPlayer').then(({ adminData, userData, accountId }) => {
-      cy.apiLoadChampion(adminData.access_token, 'SagaDefender', 'Cosmic', {
+      cy.apiLoadChampionWithSaga(adminData.access_token, 'SagaDefender', 'Cosmic', {
         is_saga_defender: true,
       }).then((champs: { id: string }[]) => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r3');

@@ -178,7 +178,6 @@ class TestWarResponseDTO:
 
         assert len(dto.banned_champions) == 2
         assert dto.banned_champions[0].name == "Doom"
-        assert dto.banned_champions[0].is_saga_attacker is True
         assert dto.banned_champions[1].name == "Quake"
         assert dto.banned_champions[1].has_prefight is True
         assert dto.banned_champions[1].alias == "shaker"
@@ -248,8 +247,10 @@ class TestWarPlacementResponseDTO:
         p = _make_placement(champion=defender, attacker=attacker, ko_count=2)
         dto = WarPlacementResponse.model_validate(p)
 
-        # Defender fields
-        assert dto.is_saga_defender is True
+        # Saga flags are no longer sourced from the champion by this validator — they are
+        # injected by the service layer from the season's ChampionSagaRole. The validator
+        # must leave them at their defaults.
+        assert dto.is_saga_defender is False
         assert dto.ko_count == 2
 
         # Attacker fields
@@ -262,15 +263,18 @@ class TestWarPlacementResponseDTO:
         assert dto.attacker_rarity == "7r3"
         assert dto.attacker_ascension == 1
         assert dto.attacker_is_preferred_attacker is True
-        assert dto.attacker_is_saga_attacker is True
-        assert dto.attacker_is_saga_defender is False
+        assert dto.attacker_is_saga_attacker is None
+        assert dto.attacker_is_saga_defender is None
 
-    def test_placement_saga_defender_champion(self):
+    def test_placement_ignores_champion_saga_attributes(self):
+        """The validator must NOT read is_saga_attacker/defender off the champion — that
+        responsibility moved to WarService, which injects season-sourced values after
+        model_validate. Even a champion carrying saga attributes must not leak them here."""
         champ = _make_champion(is_saga_attacker=True, is_saga_defender=True)
         p = _make_placement(champion=champ)
         dto = WarPlacementResponse.model_validate(p)
-        assert dto.is_saga_attacker is True
-        assert dto.is_saga_defender is True
+        assert dto.is_saga_attacker is False
+        assert dto.is_saga_defender is False
 
     def test_from_dict_passthrough(self):
         data = {
@@ -353,7 +357,9 @@ class TestWarPrefightResponseDTO:
         dto = WarPrefightResponse.model_validate(obj)
         assert dto.target_node_number == 42
 
-    def test_prefight_saga_champion(self):
+    def test_prefight_ignores_champion_saga_attributes(self):
+        """Same as placements/synergies — saga flags come from WarService's season-sourced
+        injection, not from reading the champion here."""
         champ = _make_champion(name="Doom", champion_class="Mystic", is_saga_attacker=True)
         cu = _ns(champion=champ, rarity="6r4", ascension=2)
         obj = _make_prefight(champion_user=cu)
@@ -362,7 +368,7 @@ class TestWarPrefightResponseDTO:
         assert dto.champion_name == "Doom"
         assert dto.rarity == "6r4"
         assert dto.ascension == 2
-        assert dto.is_saga_attacker is True
+        assert dto.is_saga_attacker is False
         assert dto.is_saga_defender is False
 
     def test_from_dict_passthrough(self):
@@ -405,14 +411,16 @@ class TestWarSynergyResponseDTO:
         assert dto.target_champion_name == "Quake"
         assert dto.game_pseudo == "SynergyPlayer"
 
-    def test_synergy_saga_champion(self):
+    def test_synergy_ignores_champion_saga_attributes(self):
+        """Same as placements/prefights — saga flags come from WarService's season-sourced
+        injection, not from reading the champion here."""
         champ = _make_champion(is_saga_attacker=True, is_saga_defender=True)
         cu = _ns(champion=champ, rarity="7r3", ascension=0)
         obj = _make_synergy(champion_user=cu)
         dto = WarSynergyResponse.model_validate(obj)
 
-        assert dto.is_saga_attacker is True
-        assert dto.is_saga_defender is True
+        assert dto.is_saga_attacker is False
+        assert dto.is_saga_defender is False
 
     def test_from_dict_passthrough(self):
         data = {

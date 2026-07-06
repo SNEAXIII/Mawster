@@ -15,6 +15,7 @@ from src.models.WarBan import WarBan
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightNote import WarFightNote
 from src.services.admin.ModerationService import AUTO_BLOCK_THRESHOLD, ModerationService
+from src.services.admin.SagaService import SagaService
 from src.models.WarSynergyAttacker import WarSynergyAttacker
 from src.models.WarPrefightAttacker import WarPrefightAttacker
 from src.dto.alliance.war.dto_war import (
@@ -265,7 +266,7 @@ class WarService:
         return WarDefenseSummaryResponse(
             war_id=war_id,
             battlegroup=battlegroup,
-            placements=[WarPlacementResponse.model_validate(p) for p in placements],
+            placements=await cls._placement_dtos(session, placements),
         )
 
     @classmethod
@@ -331,6 +332,39 @@ class WarService:
         return result.one()
 
     @classmethod
+    async def _placement_dto(
+        cls, session: SessionDep, placement: WarDefensePlacement
+    ) -> WarPlacementResponse:
+        saga = await SagaService.resolve_current(session)
+        return cls._apply_placement_saga(
+            WarPlacementResponse.model_validate(placement), placement, saga
+        )
+
+    @classmethod
+    async def _placement_dtos(
+        cls, session: SessionDep, placements: list[WarDefensePlacement]
+    ) -> list[WarPlacementResponse]:
+        saga = await SagaService.resolve_current(session)
+        return [
+            cls._apply_placement_saga(WarPlacementResponse.model_validate(p), p, saga)
+            for p in placements
+        ]
+
+    @staticmethod
+    def _apply_placement_saga(
+        dto: WarPlacementResponse,
+        placement: WarDefensePlacement,
+        saga: dict[uuid.UUID, tuple[bool, bool]],
+    ) -> WarPlacementResponse:
+        dto.is_saga_attacker, dto.is_saga_defender = saga.get(placement.champion_id, (False, False))
+        attacker = placement.attacker_champion_user
+        if attacker is not None:
+            dto.attacker_is_saga_attacker, dto.attacker_is_saga_defender = saga.get(
+                attacker.champion_id, (False, False)
+            )
+        return dto
+
+    @classmethod
     async def _get_placement_by_node(
         cls,
         session: SessionDep,
@@ -392,7 +426,7 @@ class WarService:
         await session.commit()
         await session.refresh(placement)
 
-        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement.id))
+        return await cls._placement_dto(session, await cls._load_placement(session, placement.id))
 
     @classmethod
     async def remove_defender(
@@ -535,6 +569,7 @@ class WarService:
         banned_champion_ids: set[uuid.UUID] = (
             {ban.champion_id for ban in war.bans} if war else set()
         )
+        saga = await SagaService.resolve_current(session)
         result: list[AvailableAttackerResponse] = []
         for game_account in members:
             all_attackers_ids: set[uuid.UUID] = set()
@@ -601,6 +636,7 @@ class WarService:
                     and champion_user.id not in all_attackers_ids
                 ):
                     continue
+                att, dfn = saga.get(champion_user.champion_id, (False, False))
                 result.append(
                     AvailableAttackerResponse(
                         champion_user_id=champion_user.id,
@@ -615,8 +651,8 @@ class WarService:
                         ascension=champion_user.ascension,
                         signature=champion_user.signature,
                         is_preferred_attacker=champion_user.is_preferred_attacker,
-                        is_saga_attacker=champion_user.champion.is_saga_attacker,
-                        is_saga_defender=champion_user.champion.is_saga_defender,
+                        is_saga_attacker=att,
+                        is_saga_defender=dfn,
                     )
                 )
         return result
@@ -658,24 +694,28 @@ class WarService:
             stmt = stmt.where(ChampionUser.champion_id.not_in(banned_champion_ids))  # type: ignore[union-attr]
 
         rows = (await session.exec(stmt)).all()  # type: ignore[arg-type]
-        return [
-            AvailablePrefightAttackerResponse(
-                champion_user_id=cu.id,
-                game_account_id=ga.id,
-                game_pseudo=ga.game_pseudo,
-                champion_id=cu.champion_id,
-                champion_name=champ.name,
-                champion_alias=champ.alias,
-                champion_class=champ.champion_class,
-                image_url=champ.image_url,
-                rarity=cu.rarity,
-                ascension=cu.ascension,
-                is_preferred_attacker=cu.is_preferred_attacker,
-                is_saga_attacker=champ.is_saga_attacker,
-                is_saga_defender=champ.is_saga_defender,
+        saga = await SagaService.resolve_current(session)
+        result: list[AvailablePrefightAttackerResponse] = []
+        for cu, ga, champ in rows:
+            att, dfn = saga.get(cu.champion_id, (False, False))
+            result.append(
+                AvailablePrefightAttackerResponse(
+                    champion_user_id=cu.id,
+                    game_account_id=ga.id,
+                    game_pseudo=ga.game_pseudo,
+                    champion_id=cu.champion_id,
+                    champion_name=champ.name,
+                    champion_alias=champ.alias,
+                    champion_class=champ.champion_class,
+                    image_url=champ.image_url,
+                    rarity=cu.rarity,
+                    ascension=cu.ascension,
+                    is_preferred_attacker=cu.is_preferred_attacker,
+                    is_saga_attacker=att,
+                    is_saga_defender=dfn,
+                )
             )
-            for cu, ga, champ in rows
-        ]
+        return result
 
     @classmethod
     async def assign_attacker(
@@ -812,7 +852,7 @@ class WarService:
         await session.commit()
         session.expire(placement)
 
-        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement_id))
+        return await cls._placement_dto(session, await cls._load_placement(session, placement_id))
 
     @classmethod
     async def remove_attacker(
@@ -898,7 +938,7 @@ class WarService:
         if prefights_to_delete:
             await session.commit()
 
-        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement.id))
+        return await cls._placement_dto(session, await cls._load_placement(session, placement.id))
 
     @classmethod
     async def update_ko(
@@ -927,7 +967,7 @@ class WarService:
         session.add(placement)
         await session.commit()
 
-        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement.id))
+        return await cls._placement_dto(session, await cls._load_placement(session, placement.id))
 
     @classmethod
     async def toggle_combat_completed(
@@ -950,7 +990,7 @@ class WarService:
         session.add(placement)
         await session.commit()
 
-        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement.id))
+        return await cls._placement_dto(session, await cls._load_placement(session, placement.id))
 
     @classmethod
     async def toggle_fight_not_done(
@@ -981,7 +1021,7 @@ class WarService:
         placement.is_fight_not_done = not placement.is_fight_not_done
         session.add(placement)
         await session.commit()
-        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement.id))
+        return await cls._placement_dto(session, await cls._load_placement(session, placement.id))
 
     @classmethod
     async def toggle_planning_error(
@@ -1002,7 +1042,7 @@ class WarService:
         placement.is_planning_error = not placement.is_planning_error
         session.add(placement)
         await session.commit()
-        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement.id))
+        return await cls._placement_dto(session, await cls._load_placement(session, placement.id))
 
     @classmethod
     async def assign_assist(
@@ -1055,7 +1095,7 @@ class WarService:
         session.add(placement)
         await session.commit()
         session.expire(placement)
-        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement_id))
+        return await cls._placement_dto(session, await cls._load_placement(session, placement_id))
 
     @classmethod
     async def remove_assist(
@@ -1076,7 +1116,7 @@ class WarService:
         session.add(placement)
         await session.commit()
         session.expire(placement)
-        return WarPlacementResponse.model_validate(await cls._load_placement(session, placement_id))
+        return await cls._placement_dto(session, await cls._load_placement(session, placement_id))
 
     # ─── Synergy endpoints ────────────────────────────────────────────────────
 
@@ -1095,6 +1135,31 @@ class WarService:
         )
         result = await session.exec(stmt)
         return result.one()
+
+    @classmethod
+    async def _synergy_dto(
+        cls, session: SessionDep, synergy: WarSynergyAttacker
+    ) -> WarSynergyResponse:
+        saga = await SagaService.resolve_current(session)
+        dto = WarSynergyResponse.model_validate(synergy)
+        dto.is_saga_attacker, dto.is_saga_defender = saga.get(
+            synergy.champion_user.champion_id, (False, False)
+        )
+        return dto
+
+    @classmethod
+    async def _synergy_dtos(
+        cls, session: SessionDep, synergies: list[WarSynergyAttacker]
+    ) -> list[WarSynergyResponse]:
+        saga = await SagaService.resolve_current(session)
+        dtos = []
+        for s in synergies:
+            dto = WarSynergyResponse.model_validate(s)
+            dto.is_saga_attacker, dto.is_saga_defender = saga.get(
+                s.champion_user.champion_id, (False, False)
+            )
+            dtos.append(dto)
+        return dtos
 
     @classmethod
     async def get_synergy_attackers(
@@ -1120,7 +1185,7 @@ class WarService:
             )
         )
         result = await session.exec(stmt)
-        return [WarSynergyResponse.model_validate(s) for s in result.all()]
+        return await cls._synergy_dtos(session, result.all())
 
     @classmethod
     async def add_synergy_attacker(
@@ -1281,7 +1346,7 @@ class WarService:
                 detail=CHAMPION_ALREADY_SYNERGY_PROVIDER,
             )
 
-        return WarSynergyResponse.model_validate(await cls._load_synergy(session, synergy.id))
+        return await cls._synergy_dto(session, await cls._load_synergy(session, synergy.id))
 
     @classmethod
     async def remove_synergy_attacker(
@@ -1325,6 +1390,31 @@ class WarService:
         return (await session.exec(stmt)).one()
 
     @classmethod
+    async def _prefight_dto(
+        cls, session: SessionDep, prefight: WarPrefightAttacker
+    ) -> WarPrefightResponse:
+        saga = await SagaService.resolve_current(session)
+        dto = WarPrefightResponse.model_validate(prefight)
+        dto.is_saga_attacker, dto.is_saga_defender = saga.get(
+            prefight.champion_user.champion_id, (False, False)
+        )
+        return dto
+
+    @classmethod
+    async def _prefight_dtos(
+        cls, session: SessionDep, prefights: list[WarPrefightAttacker]
+    ) -> list[WarPrefightResponse]:
+        saga = await SagaService.resolve_current(session)
+        dtos = []
+        for p in prefights:
+            dto = WarPrefightResponse.model_validate(p)
+            dto.is_saga_attacker, dto.is_saga_defender = saga.get(
+                p.champion_user.champion_id, (False, False)
+            )
+            dtos.append(dto)
+        return dtos
+
+    @classmethod
     async def get_prefight_attackers(
         cls,
         session: SessionDep,
@@ -1345,7 +1435,7 @@ class WarService:
             )
         )
         result = await session.exec(stmt)
-        return [WarPrefightResponse.model_validate(p) for p in result.all()]
+        return await cls._prefight_dtos(session, result.all())
 
     @classmethod
     async def add_prefight_attacker(
@@ -1502,7 +1592,7 @@ class WarService:
                 detail=CHAMPION_ALREADY_PREFIGHT_ON_NODE,
             )
 
-        return WarPrefightResponse.model_validate(await cls._load_prefight(session, prefight.id))
+        return await cls._prefight_dto(session, await cls._load_prefight(session, prefight.id))
 
     @classmethod
     async def remove_prefight_attacker(

@@ -28,6 +28,7 @@ from src.services.account.game.GameAccountService import GameAccountService
 from src.services.alliance.AllianceService import AllianceService
 from src.services.auth.JWTService import JWTService
 from src.services.account.UserService import UserService
+from src.services.admin.SagaService import SagaService
 from src.utils.db import SessionDep
 
 logger = logging.getLogger(__name__)
@@ -449,6 +450,8 @@ async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session
     attacker_champ = champions[0]
     defender_champ = champions[1]
 
+    saga = await SagaService.get_roles_for_season(session, body.season_id) if body.season_id else {}
+
     for node in range(1, body.count + 1):
         # Alternate attacker/defender so champion filters return subsets
         if node % 2 == 1:
@@ -467,12 +470,12 @@ async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session
             stars=7,
             rank=3,
             ascension=0,
-            is_saga_attacker=atk.is_saga_attacker,
+            is_saga_attacker=saga.get(atk.id, (False, False))[0],
             defender_champion_id=dfn.id,
             defender_stars=7,
             defender_rank=3,
             defender_ascension=0,
-            defender_is_saga_defender=dfn.is_saga_defender,
+            defender_is_saga_defender=saga.get(dfn.id, (False, False))[1],
             ko_count=node,
         )
         session.add(record)

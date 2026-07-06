@@ -33,8 +33,6 @@ def _make_champion(**overrides):
         "is_7_star": True,
         "is_ascendable": True,
         "has_prefight": False,
-        "is_saga_attacker": False,
-        "is_saga_defender": False,
         "alias": "spidey;peter",
     }
     defaults.update(overrides)
@@ -97,7 +95,6 @@ class TestChampionUserDetailResponseModelValidate:
             name="Doom",
             champion_class="Mystic",
             is_ascendable=True,
-            is_saga_attacker=True,
         )
         cu = _make_champion_user(champion=champ)
         dto = ChampionUserDetailResponse.model_validate(cu)
@@ -113,8 +110,6 @@ class TestChampionUserDetailResponseModelValidate:
         assert dto.champion_name == "Doom"
         assert dto.champion_class == "Mystic"
         assert dto.is_ascendable is True
-        assert dto.is_saga_attacker is True
-        assert dto.is_saga_defender is False
         assert dto.image_url == champ.image_url
 
     def test_inherits_from_champion_user_response(self):
@@ -127,10 +122,22 @@ class TestChampionUserDetailResponseModelValidate:
 
         assert dto.is_ascendable is False
 
-    def test_saga_champion(self):
-        champ = _make_champion(is_saga_attacker=True, is_saga_defender=True)
+    def test_saga_defaults_false_and_is_not_read_from_champion(self):
+        """Saga flags are resolved per-season by the controller (SagaService), not
+        from the (now-removed) champion-level columns. model_validate must never
+        read them off `.champion`, and must always default to False."""
+        champ = _make_champion()
         cu = _make_champion_user(champion=champ)
         dto = ChampionUserDetailResponse.model_validate(cu)
+
+        assert dto.is_saga_attacker is False
+        assert dto.is_saga_defender is False
+
+    def test_saga_fields_settable_after_validation(self):
+        """The controller sets these post-validation from SagaService.resolve_current."""
+        cu = _make_champion_user()
+        dto = ChampionUserDetailResponse.model_validate(cu)
+        dto.is_saga_attacker, dto.is_saga_defender = True, True
 
         assert dto.is_saga_attacker is True
         assert dto.is_saga_defender is True

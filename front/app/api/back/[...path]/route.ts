@@ -11,21 +11,24 @@ import { getServerApiUrl } from '@/app/lib/serverApiUrl';
  * callback — no manual refresh or cookie encoding needed here.
  */
 async function proxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
-  const session = await auth();
+  const { path } = await params;
+  const backendPath = path.join('/');
+  const isPublicPath = backendPath === 'stats/public';
 
-  if (!session?.accessToken || session.error === 'TokenExpiredError') {
+  const session = isPublicPath ? null : await auth();
+
+  if (!isPublicPath && (!session?.accessToken || session.error === 'TokenExpiredError')) {
     const message = session?.error === 'TokenExpiredError' ? 'Session expired' : 'Unauthenticated';
     return NextResponse.json({ message }, { status: 401 });
   }
 
-  const { path } = await params;
-  const backendPath = path.join('/');
   const url = new URL(req.url);
   const backendUrl = `${getServerApiUrl()}/${backendPath}${url.search}`;
 
-  const headers: HeadersInit = {
-    Authorization: `Bearer ${session.accessToken}`,
-  };
+  const headers: HeadersInit = {};
+  if (!isPublicPath && session?.accessToken) {
+    headers.Authorization = `Bearer ${session.accessToken}`;
+  }
 
   const contentType = req.headers.get('content-type');
   if (contentType) {

@@ -14,19 +14,21 @@ describe('War – Saga & Ascension Badges (sagaMode attacker)', () => {
   ) {
     return setupAttackerScenario(prefix).then(
       ({ adminToken, memberData, ownerData, allianceId, memberAccId, warId }) => {
-        cy.apiLoadChampion(adminToken, champName, champClass, { ...sagaOpts, is_ascendable: ascension > 0 }).then(
-          (champs: { id: string }[]) => {
-            cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
-              ascension,
-            }).then((cu: { id: string }) => {
-              cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, cu.id);
+        const hasSaga = sagaOpts.is_saga_attacker || sagaOpts.is_saga_defender;
+        const loadChamp = hasSaga
+          ? cy.apiLoadChampionWithSaga(adminToken, champName, champClass, sagaOpts)
+          : cy.apiLoadChampion(adminToken, champName, champClass, { is_ascendable: ascension > 0 });
+        loadChamp.then((champs: { id: string }[]) => {
+          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
+            ascension,
+          }).then((cu: { id: string }) => {
+            cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, cu.id);
 
-              cy.apiLogin(ownerData.user_id);
-              cy.navTo('war');
-              cy.getByCy('war-mode-attackers').click();
-            });
-          },
-        );
+            cy.apiLogin(ownerData.user_id);
+            cy.navTo('war');
+            cy.getByCy('war-mode-attackers').click();
+          });
+        });
       },
     );
   }
