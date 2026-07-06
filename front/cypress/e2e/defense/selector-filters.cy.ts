@@ -69,9 +69,11 @@ describe('Defense – AllianceDefenseSelector filters', () => {
 
   it('saga defender toggle shows only saga defenders', () => {
     setupDefenseOwner('def-flt-saga', 'SagaFltPlyr', 'SagaAll', 'SF').then(({ adminData, ownerData, ownerAccId }) => {
-      cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic', { is_saga_defender: true }).then((champs) => {
-        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-      });
+      cy.apiLoadChampionWithSaga(adminData.access_token, 'Spider-Man', 'Cosmic', { is_saga_defender: true }).then(
+        (champs) => {
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+        },
+      );
       cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
         cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
       });
@@ -156,7 +158,7 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   it('reset button clears all active filters and restores all champions', () => {
     setupDefenseOwner('def-flt-reset', 'ResetFltPlyr', 'ResetAll', 'RF').then(
       ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic', { is_saga_defender: true }).then(
+        cy.apiLoadChampionWithSaga(adminData.access_token, 'Spider-Man', 'Cosmic', { is_saga_defender: true }).then(
           (champs) => {
             cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
           },
@@ -250,12 +252,16 @@ describe('Defense – AllianceDefenseSelector filters', () => {
 
   it('class and saga filters combine to narrow results', () => {
     setupDefenseOwner('def-flt-comb', 'CombFltPlyr', 'CombAll', 'CB').then(({ adminData, ownerData, ownerAccId }) => {
-      cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic', { is_saga_defender: true }).then((champs) => {
-        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-      });
-      cy.apiLoadChampion(adminData.access_token, 'Iron Man', 'Tech', { is_saga_defender: true }).then((champs) => {
-        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-      });
+      cy.apiLoadChampionWithSaga(adminData.access_token, 'Spider-Man', 'Cosmic', { is_saga_defender: true }).then(
+        (champs) => {
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+        },
+      );
+      cy.apiLoadChampionWithSaga(adminData.access_token, 'Iron Man', 'Tech', { is_saga_defender: true }).then(
+        (champs) => {
+          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+        },
+      );
       cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
         cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
       });
@@ -290,32 +296,30 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
   // =========================================================================
 
   it('hides 6-star champions and offers no toggle to reveal them', () => {
-    setupDefenseOwner('def-rar-def', 'RarDefPlyr', 'RarDefAll', 'RD').then(
-      ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '6r5');
-        });
+    setupDefenseOwner('def-rar-def', 'RarDefPlyr', 'RarDefAll', 'RD').then(({ adminData, ownerData, ownerAccId }) => {
+      cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
+      });
+      cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
+        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '6r5');
+      });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id);
+      cy.navTo('defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
 
-        // 7★ Spider-Man visible, 6★ Wolverine hidden
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
-        cy.getByCy('champion-card-Wolverine').should('not.exist');
+      // 7★ Spider-Man visible, 6★ Wolverine hidden
+      cy.getByCy('champion-card-Spider-Man').should('be.visible');
+      cy.getByCy('champion-card-Wolverine').should('not.exist');
 
-        // The rarity filter only exposes 7★ tiers — no 6★ toggle exists, so the
-        // 6★ champion cannot be revealed.
-        cy.getByCy('defense-rarity-6r4').should('not.exist');
-        cy.getByCy('defense-rarity-6r5').should('not.exist');
-        cy.getByCy('defense-rarity-7r3').should('be.visible');
-        cy.getByCy('champion-card-Wolverine').should('not.exist');
-      },
-    );
+      // The rarity filter only exposes 7★ tiers — no 6★ toggle exists, so the
+      // 6★ champion cannot be revealed.
+      cy.getByCy('defense-rarity-6r4').should('not.exist');
+      cy.getByCy('defense-rarity-6r5').should('not.exist');
+      cy.getByCy('defense-rarity-7r3').should('be.visible');
+      cy.getByCy('champion-card-Wolverine').should('not.exist');
+    });
   });
 
   // =========================================================================
@@ -358,7 +362,7 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
         });
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant', { is_saga_defender: true }).then(
+        cy.apiLoadChampionWithSaga(adminData.access_token, 'Wolverine', 'Mutant', { is_saga_defender: true }).then(
           (champs) => {
             cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5');
           },

@@ -102,7 +102,13 @@ Cypress.Commands.add(
     cy.request({
       method: 'POST',
       url: `${BACKEND}/dev/bulk-create-fight-records`,
-      body: { war_id: warId, alliance_id: allianceId, game_account_id: gameAccountId, count, season_id: seasonId ?? null },
+      body: {
+        war_id: warId,
+        alliance_id: allianceId,
+        game_account_id: gameAccountId,
+        count,
+        season_id: seasonId ?? null,
+      },
     }).then((res) => {
       expect(res.status).to.eq(201);
       return res.body;
@@ -159,7 +165,7 @@ Cypress.Commands.add(
     adminToken: string,
     name: string,
     championClass: string,
-    options: { is_ascendable?: boolean; alias?: string; is_saga_attacker?: boolean; is_saga_defender?: boolean } = {},
+    options: { is_ascendable?: boolean; alias?: string } = {},
   ) => {
     cy.request({
       method: 'POST',
@@ -183,27 +189,7 @@ Cypress.Commands.add(
         })
         .then((getRes) => {
           const champs = getRes.body.champions.filter((c: { name: string }) => c.name === name);
-          const champId = champs[0].id;
-          let chain: Cypress.Chainable = cy.wrap(null);
-          if (options.is_saga_attacker) {
-            chain = chain.then(() =>
-              cy.request({
-                method: 'PATCH',
-                url: `${BACKEND}/admin/champions/${champId}/saga-attacker`,
-                headers: { Authorization: `Bearer ${adminToken}` },
-              }),
-            );
-          }
-          if (options.is_saga_defender) {
-            chain = chain.then(() =>
-              cy.request({
-                method: 'PATCH',
-                url: `${BACKEND}/admin/champions/${champId}/saga-defender`,
-                headers: { Authorization: `Bearer ${adminToken}` },
-              }),
-            );
-          }
-          return chain.then(() => cy.wrap(champs));
+          return cy.wrap(champs);
         });
     });
   },
@@ -489,7 +475,9 @@ export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
             ])
             .then((champMap) =>
               addIronManToRoster(atkData.access_token, attackerAccId, champMap)
-                .then((cuIronMan) => addCaptainAmericaToRoster(atkData.access_token, attackerAccId, champMap, cuIronMan))
+                .then((cuIronMan) =>
+                  addCaptainAmericaToRoster(atkData.access_token, attackerAccId, champMap, cuIronMan),
+                )
                 .then((data) => addSpiderManToRoster(atkData.access_token, attackerAccId, champMap, data))
                 .then((data) => addAbsorbingManToRoster(atkData.access_token, attackerAccId, champMap, data))
                 .then((data) =>
@@ -654,6 +642,59 @@ Cypress.Commands.add('apiCreateSeason', (token: string, number: number) => {
     body: { number },
   });
 });
+
+Cypress.Commands.add(
+  'apiSetSagaRole',
+  (
+    token: string,
+    seasonId: string,
+    championId: string,
+    body: { is_saga_attacker: boolean; is_saga_defender: boolean },
+  ) => {
+    return cy.request({
+      method: 'PUT',
+      url: `${BACKEND}/admin/seasons/${seasonId}/saga/${championId}`,
+      headers: { Authorization: `Bearer ${token}` },
+      body,
+    });
+  },
+);
+
+// Load a champion and flag it saga attacker/defender for the CURRENT season
+// (finds the non-ended season, or creates one), then returns the loaded champs.
+// Drop-in replacement for the old apiLoadChampion saga options, now that saga is
+// per-season. `adminToken` must be an admin token.
+Cypress.Commands.add(
+  'apiLoadChampionWithSaga',
+  (
+    adminToken: string,
+    name: string,
+    championClass: string,
+    saga: { is_saga_attacker?: boolean; is_saga_defender?: boolean },
+  ) => {
+    return cy.apiLoadChampion(adminToken, name, championClass).then((champs) => {
+      const championId = (champs as { id: string }[])[0].id;
+      return cy
+        .request({
+          method: 'GET',
+          url: `${BACKEND}/admin/seasons`,
+          headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        .then((res) => {
+          const existing = (res.body as { id: string; status: string }[]).find((s) => s.status !== 'ended');
+          if (existing) return cy.wrap(existing.id);
+          return cy.apiCreateSeason(adminToken, 1).then((r) => r.body.id as string);
+        })
+        .then((seasonId) =>
+          cy.apiSetSagaRole(adminToken, seasonId as string, championId, {
+            is_saga_attacker: saga.is_saga_attacker ?? false,
+            is_saga_defender: saga.is_saga_defender ?? false,
+          }),
+        )
+        .then(() => champs);
+    });
+  },
+);
 
 // ── Fight records import API command ─────────────────────────────────────────
 
