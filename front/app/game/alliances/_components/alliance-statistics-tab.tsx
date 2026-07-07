@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { useI18n } from '@/app/i18n';
-import type { RankingHistoryPoint } from '@/app/services/game';
+import type { RankingHistoryPoint, SeasonStatus } from '@/app/services/game';
 import { fetchAllianceRankingHistory } from '@/app/services/game';
 import AllianceRankingChart from './alliance-ranking-chart';
 import type { PlayerSeasonStats } from '@/app/services/statistics';
@@ -56,7 +56,7 @@ export default function AllianceStatisticsTab({
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [rankingPoints, setRankingPoints] = useState<RankingHistoryPoint[]>([]);
   const [rankingSeasonNumber, setRankingSeasonNumber] = useState<number | null>(null);
-  const [rankingSeasonStatus, setRankingSeasonStatus] = useState<string | null>(null);
+  const [rankingSeasonStatus, setRankingSeasonStatus] = useState<SeasonStatus | null>(null);
 
   useEffect(() => {
     if (!selectedAllianceId) return;
