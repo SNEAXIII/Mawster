@@ -28,7 +28,7 @@ async def get_current_season_statistics(
     alliance_id: uuid.UUID,
 ):
     """Get the current season statistics."""
-    return await StatisticService.get_active_season_statistics(session, current_user, alliance_id)
+    return await StatisticService.get_display_season_statistics(session, current_user, alliance_id)
 
 
 @statistics_controller.get(

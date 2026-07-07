@@ -40,9 +40,9 @@ async def _base_setup():
     return {"alliance": alliance, "owner": owner, "champ": champ}
 
 
-async def _setup_with_active_season():
+async def _setup_with_active_season(status=SeasonStatus.active):
     data = await _base_setup()
-    season = Season(number=64, status=SeasonStatus.active)
+    season = Season(number=64, status=status)
     war = War(
         id=uuid.uuid4(),
         alliance_id=data["alliance"].id,
@@ -136,6 +136,28 @@ class TestGetCurrentSeasonStatistics:
         assert p["total_fights"] == 2
         assert p["total_kos"] == 1
         assert p["ratio"] == 50  # (1 - 1/2) * 100
+
+    @pytest.mark.anyio
+    async def test_preseason_returns_previous_ended_season_stats(self):
+        # No active season exists; the ended season should be used as a fallback.
+        data = await _setup_with_active_season(status=SeasonStatus.ended)
+        await _add_placement(
+            data["war"].id,
+            data["cu"].id,
+            data["champ"].id,
+            node_number=10,
+            battlegroup=1,
+            ko_count=1,
+        )
+
+        response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
+        assert response.status_code == 200
+        stats = response.json()
+        assert len(stats) == 1
+        p = stats[0]
+        assert p["game_pseudo"] == data["owner"].game_pseudo
+        assert p["total_fights"] == 1
+        assert p["total_kos"] == 1
 
     @pytest.mark.anyio
     async def test_not_done_fight_counts_as_three_kos_in_ratio(self):
