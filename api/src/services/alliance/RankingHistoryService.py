@@ -6,11 +6,10 @@ from starlette import status
 
 from src.dto.alliance.war.dto_ranking_history import RankingHistoryPoint, RankingHistoryResponse
 from src.models.Alliance import Alliance
-from src.models.Season import Season
-from src.enums.SeasonStatus import SeasonStatus
 from src.models.User import User
 from src.models.War import War, WarStatus
 from src.services.alliance.AllianceService import AllianceService
+from src.services.SeasonService import SeasonService
 from src.utils.db import SessionDep
 
 
@@ -51,19 +50,17 @@ class RankingHistoryService:
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
 
-        active_season = (
-            await session.exec(select(Season).where(Season.status == SeasonStatus.active))
-        ).first()
+        display_season = await SeasonService.get_display_season(session)
 
-        if active_season is None:
-            return RankingHistoryResponse(season_number=None, points=[])
+        if display_season is None:
+            return RankingHistoryResponse(season_number=None, season_status=None, points=[])
 
         wars = (
             await session.exec(
                 select(War)
                 .where(
                     War.alliance_id == alliance_id,
-                    War.season_id == active_season.id,
+                    War.season_id == display_season.id,
                     War.status == WarStatus.ended,
                 )
                 .order_by(War.created_at)
@@ -71,4 +68,8 @@ class RankingHistoryService:
         ).all()
 
         points = cls._reconstruct_elo(list(wars), alliance.elo)
-        return RankingHistoryResponse(season_number=active_season.number, points=points)
+        return RankingHistoryResponse(
+            season_number=display_season.number,
+            season_status=display_season.status,
+            points=points,
+        )

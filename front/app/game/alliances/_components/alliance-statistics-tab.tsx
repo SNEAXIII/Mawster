@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { useI18n } from '@/app/i18n';
-import type { RankingHistoryPoint } from '@/app/services/game';
+import type { RankingHistoryPoint, SeasonStatus } from '@/app/services/game';
 import { fetchAllianceRankingHistory } from '@/app/services/game';
 import AllianceRankingChart from './alliance-ranking-chart';
 import type { PlayerSeasonStats } from '@/app/services/statistics';
@@ -56,15 +56,18 @@ export default function AllianceStatisticsTab({
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [rankingPoints, setRankingPoints] = useState<RankingHistoryPoint[]>([]);
   const [rankingSeasonNumber, setRankingSeasonNumber] = useState<number | null>(null);
+  const [rankingSeasonStatus, setRankingSeasonStatus] = useState<SeasonStatus | null>(null);
 
   useEffect(() => {
     if (!selectedAllianceId) return;
     setRankingPoints([]);
     setRankingSeasonNumber(null);
+    setRankingSeasonStatus(null);
     fetchAllianceRankingHistory(selectedAllianceId)
       .then((data) => {
         setRankingPoints(data.points);
         setRankingSeasonNumber(data.season_number);
+        setRankingSeasonStatus(data.season_status);
       })
       .catch(() => {});
   }, [selectedAllianceId]);
@@ -141,6 +144,14 @@ export default function AllianceStatisticsTab({
 
   return (
     <div className='flex flex-col gap-4'>
+      {rankingSeasonStatus === 'ended' && rankingSeasonNumber !== null && (
+        <span
+          data-cy='statistics-season-badge'
+          className='self-start rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground'
+        >
+          {stat.seasonBadgeEnded.replace('{number}', String(rankingSeasonNumber))}
+        </span>
+      )}
       {alliances.length > 1 && (
         <AllianceSelect
           alliances={alliances}

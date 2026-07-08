@@ -17,6 +17,36 @@ export function createAndActivateSeason(adminToken: string) {
     );
 }
 
+// Create + open a season and yield its id (needed to close it later).
+export function createOpenSeason(adminToken: string, number = 64): Cypress.Chainable<string> {
+  return cy
+    .request({
+      method: 'POST',
+      url: `${BACKEND}/admin/seasons`,
+      body: { number },
+      headers: { Authorization: `Bearer ${adminToken}` },
+    })
+    .then((res) => {
+      const seasonId = (res.body as { id: string }).id;
+      return cy
+        .request({
+          method: 'PATCH',
+          url: `${BACKEND}/admin/seasons/${seasonId}/open`,
+          headers: { Authorization: `Bearer ${adminToken}` },
+        })
+        .then(() => seasonId);
+    });
+}
+
+// Close a season (active -> ended), leaving no active season (pre-season state).
+export function closeSeason(adminToken: string, seasonId: string) {
+  return cy.request({
+    method: 'PATCH',
+    url: `${BACKEND}/admin/seasons/${seasonId}/close`,
+    headers: { Authorization: `Bearer ${adminToken}` },
+  });
+}
+
 export function setupEndedAssistWar(opts: {
   adminToken: string;
   ownerToken: string;

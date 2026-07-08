@@ -348,6 +348,7 @@ const en = {
       statistics: {
         tabLabel: 'Statistics',
         title: 'Season Statistics',
+        seasonBadgeEnded: 'Season {number} — ended',
         alliance: 'Alliance',
         ratioMin: 'Minimum ratio',
         ratioAll: 'All ratios',

@@ -197,8 +197,11 @@ export interface RankingHistoryPoint {
   win: boolean | null;
 }
 
+export type SeasonStatus = 'upcoming' | 'active' | 'ended';
+
 export interface RankingHistoryResponse {
   season_number: number | null;
+  season_status: SeasonStatus | null;
   points: RankingHistoryPoint[];
 }
 
