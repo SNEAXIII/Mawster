@@ -317,3 +317,118 @@ class TestGetPlayerStats:
             assert result.card.ratio == 100
             assert result.evolution == []
             assert result.alliances == []
+
+
+async def _push_fight_record(
+    war, alliance_id, game_account_id, champion, defender_champion, ko_count=0
+):
+    from src.models.WarFightRecord import WarFightRecord as _WFR
+
+    record = _WFR(
+        war_id=war.id,
+        alliance_id=alliance_id,
+        season_id=war.season_id,
+        game_account_id=game_account_id,
+        battlegroup=1,
+        node_number=1,
+        tier=7,
+        champion_id=champion.id,
+        stars=7,
+        rank=3,
+        ascension=0,
+        is_saga_attacker=False,
+        defender_champion_id=defender_champion.id,
+        defender_stars=7,
+        defender_rank=3,
+        defender_ascension=0,
+        defender_is_saga_defender=False,
+        ko_count=ko_count,
+    )
+    await load_objects([record])
+    return record
+
+
+class TestGetPlayerChampionUsage:
+    @pytest.mark.anyio
+    async def test_attacker_usage(self):
+        data = await _setup_with_ended_season_war()
+        defender = await push_champion(name="Venom", champion_class="Cosmic")
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender
+        )
+        owner_user = get_generic_user(is_base_id=True)
+
+        async for session in get_test_session():
+            result = await PlayerStatsService.get_player_champion_usage(
+                session, owner_user, data["owner"].id, season_id=data["season"].id
+            )
+            assert len(result) == 1
+            assert result[0].champion_name == "Spider-Man"
+            assert result[0].fight_count == 1
+
+    @pytest.mark.anyio
+    async def test_defender_perspective(self):
+        data = await _setup_with_ended_season_war()
+        defender = await push_champion(name="Venom", champion_class="Cosmic")
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender
+        )
+        owner_user = get_generic_user(is_base_id=True)
+
+        async for session in get_test_session():
+            result = await PlayerStatsService.get_player_champion_usage(
+                session,
+                owner_user,
+                data["owner"].id,
+                season_id=data["season"].id,
+                perspective="defender",
+            )
+            assert len(result) == 1
+            assert result[0].champion_name == "Venom"
+
+    @pytest.mark.anyio
+    async def test_season_filter_excludes_other_season(self):
+        data = await _setup_with_ended_season_war()
+        defender = await push_champion(name="Venom", champion_class="Cosmic")
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender
+        )
+        # a second season + war with a different attacker champion
+        iron = await push_champion(name="IronMan", champion_class="Tech")
+        season2 = Season(number=60, status=SeasonStatus.ended)
+        war2 = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name="Enemy2",
+            created_by_id=data["owner"].id,
+            season_id=season2.id,
+            status=WarStatus.ended,
+        )
+        await load_objects([season2, war2])
+        await _push_fight_record(war2, data["alliance"].id, data["owner"].id, iron, defender)
+        owner_user = get_generic_user(is_base_id=True)
+
+        async for session in get_test_session():
+            filtered = await PlayerStatsService.get_player_champion_usage(
+                session, owner_user, data["owner"].id, season_id=data["season"].id
+            )
+            assert {r.champion_name for r in filtered} == {"Spider-Man"}
+
+            all_seasons = await PlayerStatsService.get_player_champion_usage(
+                session, owner_user, data["owner"].id, season_id=None
+            )
+            assert {r.champion_name for r in all_seasons} == {"Spider-Man", "IronMan"}
+
+    @pytest.mark.anyio
+    async def test_denies_other_user(self):
+        data = await _setup_with_ended_season_war()
+        await push_user2()
+        other_user = get_generic_user(login="user2", email="user2@gmail.com")
+        other_user.id = USER2_ID
+
+        async for session in get_test_session():
+            with pytest.raises(HTTPException) as exc:
+                await PlayerStatsService.get_player_champion_usage(
+                    session, other_user, data["owner"].id
+                )
+            assert exc.value.status_code == 404
