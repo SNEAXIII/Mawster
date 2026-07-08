@@ -151,7 +151,7 @@ class TestCreateUpgradeRequest:
         mock_result_cu = mocker.MagicMock()
         mock_result_cu.first.return_value = cu
         mock_result_dup = mocker.MagicMock()
-        mock_result_dup.first.return_value = existing_req
+        mock_result_dup.all.return_value = [existing_req]
         session.exec.side_effect = [mock_result_cu, mock_result_dup]
 
         with pytest.raises(HTTPException) as exc:
@@ -161,6 +161,29 @@ class TestCreateUpgradeRequest:
         assert exc.value.status_code == 409
 
     @pytest.mark.asyncio
+    async def test_different_rarity_retargets_existing(self, mocker):
+        """A pending request for another rarity is updated in place (latest wins),
+        not duplicated."""
+        session = _mock_session(mocker)
+        cu = _make_champion_user(rarity="7r1")
+        existing_req = _make_upgrade_request(rarity="7r2")
+
+        mock_result_cu = mocker.MagicMock()
+        mock_result_cu.first.return_value = cu
+        mock_result_pending = mocker.MagicMock()
+        mock_result_pending.all.return_value = [existing_req]
+        session.exec.side_effect = [mock_result_cu, mock_result_pending]
+
+        result = await UpgradeRequestService.create_upgrade_request(
+            session, CHAMPION_USER_ID, REQUESTER_ACCOUNT_ID, "7r3"
+        )
+        assert result is existing_req
+        assert existing_req.requested_rarity == "7r3"
+        assert existing_req.requester_game_account_id == REQUESTER_ACCOUNT_ID
+        assert session.commit.called
+        session.delete.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_create_ok(self, mocker):
         session = _mock_session(mocker)
         cu = _make_champion_user(rarity="7r1")
@@ -168,7 +191,7 @@ class TestCreateUpgradeRequest:
         mock_result_cu = mocker.MagicMock()
         mock_result_cu.first.return_value = cu
         mock_result_no_dup = mocker.MagicMock()
-        mock_result_no_dup.first.return_value = None
+        mock_result_no_dup.all.return_value = []
         session.exec.side_effect = [mock_result_cu, mock_result_no_dup]
 
         await UpgradeRequestService.create_upgrade_request(
