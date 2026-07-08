@@ -30,7 +30,7 @@ export function ProfileRatioEvolutionChart({ points }: Readonly<Props>) {
             <ComposedChart data={points}>
               <CartesianGrid vertical={false} />
               <XAxis dataKey='label' tickLine={false} axisLine={false} fontSize={11} />
-              <YAxis yAxisId='left' tickLine={false} axisLine={false} fontSize={11} allowDecimals={false} />
+              <YAxis yAxisId='left' domain={[ 0, 10]}tickLine={false} axisLine={false} fontSize={11} allowDecimals={false}/>
               <YAxis
                 yAxisId='right'
                 orientation='right'

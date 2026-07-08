@@ -31,14 +31,16 @@ export default function ProfilePage() {
 
   return (
     <div className='max-w-5xl mx-auto px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
-      <ProfileHeader name={user?.name} role={user?.role} />
       <TabBar tabs={tabs} value={activeTab} onChange={setActiveTab} />
       {activeTab === 'infos' && (
-        <div className='space-y-4 sm:space-y-6'>
-          <AccountInfoCard name={user?.name} createdAt={user?.created_at} />
-          <GameAccountsSection />
-          <SignOutButton />
-        </div>
+        <>
+          <ProfileHeader name={user?.name} role={user?.role} />
+          <div className='space-y-4 sm:space-y-6'>
+            <AccountInfoCard name={user?.name} createdAt={user?.created_at} />
+            <GameAccountsSection />
+            <SignOutButton />
+          </div>
+        </>
       )}
       {activeTab === 'stats' && <ProfileStatsTab />}
     </div>

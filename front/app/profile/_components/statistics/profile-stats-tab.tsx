@@ -42,9 +42,9 @@ export function ProfileStatsTab() {
         onSeasonChange={vm.setSeasonId}
       />
 
-      {vm.loading ? (
+      {vm.loading && !vm.stats ? (
         <p className='text-sm text-muted-foreground py-6 text-center'>{s.loading}</p>
-      ) : vm.error ? (
+      ) : vm.error && !vm.stats ? (
         <div className='flex flex-col items-center gap-2 py-6'>
           <p className='text-sm text-destructive'>{s.error}</p>
           <Button size='sm' variant='outline' onClick={vm.retry}>
@@ -53,9 +53,12 @@ export function ProfileStatsTab() {
         </div>
       ) : vm.stats ? (
         <>
-          <ProfileStatsCard stats={vm.stats.card} alliances={vm.stats.alliances} />
-          <div className='flex flex-col lg:flex-row gap-6'>
-            <div className='flex-1 min-w-0'>
+          <div
+            className={`flex flex-col lg:flex-row gap-6 transition-opacity ${vm.loading ? 'opacity-60' : ''}`}
+            aria-busy={vm.loading}
+          >
+            <div className='flex flex-col flex-1 min-w-0  gap-6'>
+              <ProfileStatsCard stats={vm.stats.card} alliances={vm.stats.alliances} />
               <ProfileRatioEvolutionChart points={vm.stats.evolution} />
             </div>
             <div className='w-full lg:w-80 shrink-0'>
@@ -71,7 +74,7 @@ export function ProfileStatsTab() {
                     perspective={vm.perspective}
                     onPerspectiveChange={vm.setPerspective}
                     onViewDetail={() => vm.setDetailOpen(true)}
-                    loading={vm.loading}
+                    loading={vm.chartLoading}
                     playerName={currentName}
                   />
                 </CardContent>

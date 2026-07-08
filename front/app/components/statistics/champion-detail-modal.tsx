@@ -19,12 +19,13 @@ import {
 import { useI18n } from '@/app/i18n';
 import type { ChampionUsageItem } from '@/app/services/statistics';
 import { getChampionImageUrl } from '@/app/services/champions';
+import { Metric } from './member-champion-chart';
 
 interface ChampionDetailModalProps {
   open: boolean;
   onClose: () => void;
   data: ChampionUsageItem[];
-  metric: 'all' | 'kos' | 'deathless';
+  metric: Metric;
   playerName: string | null;
 }
 

@@ -1,4 +1,5 @@
 import type { ChampionUsageItem } from '@/app/services/statistics';
+import { Perspective } from '@/app/components/statistics/member-champion-chart';
 
 const PROXY = '/api/back';
 const jsonHeaders: HeadersInit = { Accept: 'application/json' };
@@ -63,7 +64,7 @@ export async function getPlayerChampionUsage(
   accountId: string,
   seasonId?: string,
   deathless?: boolean,
-  perspective?: 'attacker' | 'defender'
+  perspective?: Perspective
 ): Promise<ChampionUsageItem[]> {
   const params = new URLSearchParams();
   if (seasonId) params.set('season_id', seasonId);

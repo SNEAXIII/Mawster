@@ -1,18 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getChampionUsage, type ChampionUsageItem } from '@/app/services/statistics';
+import { getChampionUsage } from '@/app/services/statistics';
 import { getWars, type War } from '@/app/services/war';
+import { useChampionUsageChart } from '@/app/components/statistics/use-champion-usage-chart';
 
 export function useChampionStats(allianceId: string, selectedGroup = 'all') {
   const [selectedGameAccountId, setSelectedGameAccountId] = useState<string | null>(null);
   const [selectedWarId, setSelectedWarId] = useState<string | null>(null);
-  const [championUsage, setChampionUsage] = useState<ChampionUsageItem[]>([]);
-  const [chartMetric, setChartMetric] = useState<'all' | 'kos' | 'deathless'>('deathless');
-  const [chartPerspective, setChartPerspective] = useState<'attacker' | 'defender'>('attacker');
-  const [detailOpen, setDetailOpen] = useState(false);
   const [wars, setWars] = useState<War[]>([]);
-  const [chartLoading, setChartLoading] = useState(false);
 
   useEffect(() => {
     if (!allianceId) return;
@@ -21,22 +17,22 @@ export function useChampionStats(allianceId: string, selectedGroup = 'all') {
       .catch(console.error);
   }, [allianceId]);
 
-  useEffect(() => {
-    if (!allianceId) return;
-    setChartLoading(true);
-    const groupNum = selectedGroup !== 'all' && selectedGroup !== 'none' ? Number(selectedGroup) : undefined;
-    getChampionUsage(
-      allianceId,
-      selectedGameAccountId ?? undefined,
-      selectedWarId ?? undefined,
-      groupNum,
-      chartMetric === 'deathless',
-      chartPerspective,
-    )
-      .then(setChampionUsage)
-      .catch(console.error)
-      .finally(() => setChartLoading(false));
-  }, [allianceId, selectedGameAccountId, selectedWarId, selectedGroup, chartMetric, chartPerspective]);
+  const groupNum =
+    selectedGroup !== 'all' && selectedGroup !== 'none' ? Number(selectedGroup) : undefined;
+
+  const chart = useChampionUsageChart(
+    (deathless, perspective) =>
+      getChampionUsage(
+        allianceId,
+        selectedGameAccountId ?? undefined,
+        selectedWarId ?? undefined,
+        groupNum,
+        deathless,
+        perspective,
+      ),
+    [allianceId, selectedGameAccountId, selectedWarId, selectedGroup],
+    Boolean(allianceId),
+  );
 
   const handleRowClick = (gameAccountId: string) => {
     setSelectedGameAccountId((prev) => (prev === gameAccountId ? null : gameAccountId));
@@ -47,15 +43,15 @@ export function useChampionStats(allianceId: string, selectedGroup = 'all') {
     setSelectedGameAccountId,
     selectedWarId,
     setSelectedWarId,
-    championUsage,
-    chartMetric,
-    setChartMetric,
-    chartPerspective,
-    setChartPerspective,
-    detailOpen,
-    setDetailOpen,
+    championUsage: chart.usage,
+    chartMetric: chart.metric,
+    setChartMetric: chart.setMetric,
+    chartPerspective: chart.perspective,
+    setChartPerspective: chart.setPerspective,
+    detailOpen: chart.detailOpen,
+    setDetailOpen: chart.setDetailOpen,
     wars,
-    chartLoading,
+    chartLoading: chart.chartLoading,
     handleRowClick,
   };
 }

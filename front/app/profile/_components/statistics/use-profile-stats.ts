@@ -1,6 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { useI18n } from '@/app/i18n';
 import { getMyGameAccounts, type GameAccount } from '@/app/services/game';
 import {
   getPlayerSeasons,
@@ -9,21 +11,17 @@ import {
   type PlayerStats,
   type PlayerSeasonOption,
 } from '@/app/services/player-stats';
-import type { ChampionUsageItem } from '@/app/services/statistics';
-
-type Metric = 'all' | 'kos' | 'deathless';
+import { useChampionUsageChart } from '@/app/components/statistics/use-champion-usage-chart';
 
 export function useProfileStats() {
+  const { t } = useI18n();
+  const hasStatsRef = useRef(false);
   const [accounts, setAccounts] = useState<GameAccount[]>([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
   const [accountId, setAccountId] = useState('');
   const [seasons, setSeasons] = useState<PlayerSeasonOption[]>([]);
   const [seasonId, setSeasonId] = useState<string | undefined>(undefined);
   const [stats, setStats] = useState<PlayerStats | null>(null);
-  const [usage, setUsage] = useState<ChampionUsageItem[]>([]);
-  const [metric, setMetric] = useState<Metric>('all');
-  const [perspective, setPerspective] = useState<'attacker' | 'defender'>('attacker');
-  const [detailOpen, setDetailOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -50,27 +48,33 @@ export function useProfileStats() {
       });
   }, [accountId]);
 
-  const load = useCallback(async () => {
+  // Stats card + ratio evolution — reload only on account/season change.
+  const loadStats = useCallback(async () => {
     if (!accountId) return;
     setLoading(true);
     setError('');
     try {
-      const [st, us] = await Promise.all([
-        getPlayerStats(accountId, seasonId),
-        getPlayerChampionUsage(accountId, seasonId, metric === 'deathless', perspective),
-      ]);
-      setStats(st);
-      setUsage(us);
+      setStats(await getPlayerStats(accountId, seasonId));
+      hasStatsRef.current = true;
     } catch {
       setError('error');
+      // Background refetch (stats already on screen): keep them, warn via toast.
+      if (hasStatsRef.current) toast.error(t.profile.statistics.error);
     } finally {
       setLoading(false);
     }
-  }, [accountId, seasonId, metric, perspective]);
+  }, [accountId, seasonId, t]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    loadStats();
+  }, [loadStats]);
+
+  // Champion usage pie — shared chart hook, refetches on its own chartLoading.
+  const chart = useChampionUsageChart(
+    (deathless, perspective) => getPlayerChampionUsage(accountId, seasonId, deathless, perspective),
+    [accountId, seasonId],
+    Boolean(accountId),
+  );
 
   return {
     accounts,
@@ -81,15 +85,16 @@ export function useProfileStats() {
     seasonId,
     setSeasonId,
     stats,
-    usage,
-    metric,
-    setMetric,
-    perspective,
-    setPerspective,
-    detailOpen,
-    setDetailOpen,
+    usage: chart.usage,
+    metric: chart.metric,
+    setMetric: chart.setMetric,
+    perspective: chart.perspective,
+    setPerspective: chart.setPerspective,
+    detailOpen: chart.detailOpen,
+    setDetailOpen: chart.setDetailOpen,
     loading,
+    chartLoading: chart.chartLoading,
     error,
-    retry: load,
+    retry: loadStats,
   };
 }
