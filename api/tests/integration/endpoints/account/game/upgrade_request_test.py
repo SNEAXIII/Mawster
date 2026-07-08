@@ -152,6 +152,61 @@ class TestCreateUpgradeRequest:
         )
         assert response.status_code == 404
 
+    @pytest.mark.asyncio
+    async def test_second_request_different_rarity_updates_in_place(self):
+        """Targeting another rarity for the same champion updates the pending request
+        instead of creating a second one."""
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion()
+        entry = await _push_champion_user(acc.id, champ.id, "6r4")
+
+        first = await execute_post_request(
+            UPGRADE_REQUESTS_ROUTE,
+            payload={"champion_user_id": str(entry.id), "requested_rarity": "7r1"},
+            headers=HEADERS,
+        )
+        assert first.status_code == 201
+
+        second = await execute_post_request(
+            UPGRADE_REQUESTS_ROUTE,
+            payload={"champion_user_id": str(entry.id), "requested_rarity": "7r2"},
+            headers=HEADERS,
+        )
+        assert second.status_code == 201
+        # Same underlying request, retargeted — not a new row.
+        assert second.json()["id"] == first.json()["id"]
+        assert second.json()["requested_rarity"] == "7r2"
+
+        listing = await execute_get_request(
+            f"{UPGRADE_REQUESTS_ROUTE}/by-account/{acc.id}", headers=HEADERS
+        )
+        body = listing.json()
+        assert len(body) == 1
+        assert body[0]["requested_rarity"] == "7r2"
+
+    @pytest.mark.asyncio
+    async def test_second_request_same_rarity_returns_409(self):
+        """Re-requesting the rarity that is already pending is a conflict."""
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        champ = await push_champion()
+        entry = await _push_champion_user(acc.id, champ.id, "6r4")
+
+        first = await execute_post_request(
+            UPGRADE_REQUESTS_ROUTE,
+            payload={"champion_user_id": str(entry.id), "requested_rarity": "7r1"},
+            headers=HEADERS,
+        )
+        assert first.status_code == 201
+
+        second = await execute_post_request(
+            UPGRADE_REQUESTS_ROUTE,
+            payload={"champion_user_id": str(entry.id), "requested_rarity": "7r1"},
+            headers=HEADERS,
+        )
+        assert second.status_code == 409
+
 
 class TestGetUpgradeRequestsByAccount:
     """GET /champion-users/upgrade-requests/by-account/{game_account_id}"""

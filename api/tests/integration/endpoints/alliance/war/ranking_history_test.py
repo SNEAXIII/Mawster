@@ -34,8 +34,10 @@ async def _base_setup():
     return alliance, owner
 
 
-async def _setup_wars(alliance, owner, elo_changes: list[int | None]):
-    season = Season(number=64, status=SeasonStatus.active)
+async def _setup_wars(
+    alliance, owner, elo_changes: list[int | None], season_status=SeasonStatus.active
+):
+    season = Season(number=64, status=season_status)
     await load_objects([season])
     wars = []
     for i, change in enumerate(elo_changes):
@@ -118,6 +120,7 @@ class TestRankingHistoryData:
         resp = await execute_get_request(_url(alliance.id), headers=OWNER_HEADERS)
         data = resp.json()
         assert data["season_number"] == 64
+        assert data["season_status"] == "active"
         points = data["points"]
         assert len(points) == 2
         assert points[0]["war_number"] == 1
@@ -143,3 +146,14 @@ class TestRankingHistoryData:
         resp = await execute_get_request(_url(alliance.id), headers=OWNER_HEADERS)
         data = resp.json()
         assert data["points"] == []
+
+    @pytest.mark.anyio
+    async def test_preseason_returns_ended_season_number_and_status(self):
+        alliance, owner = await _base_setup()
+        await _setup_wars(alliance, owner, [50, -30], season_status=SeasonStatus.ended)
+        resp = await execute_get_request(_url(alliance.id), headers=OWNER_HEADERS)
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["season_number"] == 64
+        assert body["season_status"] == "ended"
+        assert len(body["points"]) == 2

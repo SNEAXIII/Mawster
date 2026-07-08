@@ -186,6 +186,25 @@ class TestVisitorPermissions:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
+    async def test_outsider_cannot_access_visitor_list(self):
+        """Regression (V1): a user who is neither member nor visitor must get 403.
+
+        The guard used to call the boolean AllianceService.is_visitor() and discard
+        its result, so any authenticated user could read any alliance's visitor list.
+        It now calls require_visitor(), which raises 403.
+        """
+        await _setup_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        # USER3 is a real player but has no account in — and no visit to — this alliance.
+        await push_game_account(user_id=USER3_ID, game_pseudo="outsider")
+
+        response = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/visitors",
+            headers=HEADERS_USER3,
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
     async def test_visitor_cannot_invite_members(self):
         await _setup_users()
         alliance, owner_acc = await push_alliance_with_owner(

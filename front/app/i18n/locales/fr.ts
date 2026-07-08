@@ -352,6 +352,7 @@ const fr: Translations = {
       statistics: {
         tabLabel: 'Statistiques',
         title: 'Statistiques de saison',
+        seasonBadgeEnded: 'Saison {number} — terminée',
         alliance: 'Alliance',
         ratioMin: 'Ratio minimum',
         ratioAll: 'Tous les ratios',

@@ -28,7 +28,7 @@ async def get_alliance_visitors(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Get all current visitors of an alliance."""
-    await AllianceService.is_visitor(session, alliance_id, current_user.id)
+    await AllianceService.require_visitor(session, alliance_id, current_user.id)
     visitors = await AllianceVisitorService.get_visitors(session, alliance_id)
     return [AllianceVisitorResponse.model_validate(v) for v in visitors]
 
