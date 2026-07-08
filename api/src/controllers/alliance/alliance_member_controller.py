@@ -122,6 +122,9 @@ async def set_member_group(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     """Set the group (1, 2, 3 or null) for a member. Only the owner or an officer can manage groups."""
+    alliance = await AllianceService.get_alliance(session, alliance_id)
+    if alliance is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     await AllianceService.require_officer(session, alliance_id, current_user.id)
     updated = await AllianceService.set_member_group(
         session=session,
