@@ -20,31 +20,17 @@ from src.dto.alliance.war.dto_statistic import (
 )
 from src.services.alliance.AllianceService import AllianceService
 from src.services.SeasonService import SeasonService
+from src.services.alliance.war._stat_expressions import (
+    is_normal,
+    miniboss_case,
+    boss_case,
+    is_assisted,
+    total_kos,
+    total_fights,
+    total_weighted_fights,
+    total_not_fought,
+)
 from src.utils.db import SessionDep
-
-_is_normal = and_(
-    WarDefensePlacement.is_fight_not_done == False,  # noqa: E712
-    WarDefensePlacement.is_planning_error == False,  # noqa: E712
-)
-_is_not_done = and_(
-    WarDefensePlacement.is_fight_not_done == True,  # noqa: E712
-    WarDefensePlacement.is_planning_error == False,  # noqa: E712
-)
-_miniboss_case = case(
-    (and_(_is_normal, WarDefensePlacement.node_number.between(37, 49)), 1), else_=0
-)
-_boss_case = case((and_(_is_normal, WarDefensePlacement.node_number == 50), 1), else_=0)
-_is_assisted = WarDefensePlacement.assist_champion_user_id.is_not(None)
-_fight_weight = case((_is_normal, 1.0), else_=0)
-_weighted_fight_weight = case(
-    (and_(_is_normal, _is_assisted), 0.5),
-    (and_(_is_normal, ~_is_assisted), 1.0),
-    else_=0,
-)
-_total_kos = func.sum(case((_is_normal, WarDefensePlacement.ko_count), else_=0))
-_total_fights = func.sum(_fight_weight)
-_total_weighted_fights = func.sum(_weighted_fight_weight)
-_total_not_fought = func.sum(case((_is_not_done, 1), else_=0))
 
 
 class StatisticService:
@@ -83,13 +69,13 @@ class StatisticService:
         attacker_sq = (
             select(
                 GameAccount.id.label("game_account_id"),
-                cast(_total_kos, Integer).label("total_kos"),
-                cast(_total_fights, Float).label("attack_fights"),
-                cast(_total_weighted_fights, Float).label("attack_weighted_fights"),
-                cast(func.sum(_miniboss_case), Integer).label("total_miniboss"),
-                cast(func.sum(_boss_case), Integer).label("total_boss"),
-                cast(_total_not_fought, Integer).label("total_not_fought"),
-                cast(func.sum(case((and_(_is_normal, _is_assisted), 1), else_=0)), Integer).label(
+                cast(total_kos, Integer).label("total_kos"),
+                cast(total_fights, Float).label("attack_fights"),
+                cast(total_weighted_fights, Float).label("attack_weighted_fights"),
+                cast(func.sum(miniboss_case), Integer).label("total_miniboss"),
+                cast(func.sum(boss_case), Integer).label("total_boss"),
+                cast(total_not_fought, Integer).label("total_not_fought"),
+                cast(func.sum(case((and_(is_normal, is_assisted), 1), else_=0)), Integer).label(
                     "total_times_helped"
                 ),
             )
