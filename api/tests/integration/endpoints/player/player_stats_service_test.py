@@ -1,6 +1,8 @@
 """Integration tests for PlayerStatsService (ownership check + seasons list)."""
 
 import uuid
+from datetime import datetime, timezone, timedelta
+
 import pytest
 from fastapi import HTTPException
 
@@ -317,6 +319,42 @@ class TestGetPlayerStats:
             assert result.card.ratio == 100
             assert result.evolution == []
             assert result.alliances == []
+
+    @pytest.mark.anyio
+    async def test_evolution_orders_wars_chronologically_not_alphabetically(self):
+        data = await _base_setup()
+        season = Season(number=64, status=SeasonStatus.ended)
+        base = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        # "Zeta" happens first, "Alpha" second: chronological != alphabetical
+        war_z = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name="Zeta",
+            created_by_id=data["owner"].id,
+            season_id=season.id,
+            status=WarStatus.ended,
+            created_at=base,
+        )
+        war_a = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name="Alpha",
+            created_by_id=data["owner"].id,
+            season_id=season.id,
+            status=WarStatus.ended,
+            created_at=base + timedelta(hours=1),
+        )
+        await load_objects([season, war_z, war_a])
+        cu = await push_champion_user(data["owner"], data["champ"])
+        await _add_placement(war_z.id, cu.id, data["champ"].id, node_number=10)
+        await _add_placement(war_a.id, cu.id, data["champ"].id, node_number=11)
+        owner_user = get_generic_user(is_base_id=True)
+
+        async for session in get_test_session():
+            result = await PlayerStatsService.get_player_stats(
+                session, owner_user, data["owner"].id, season_id=season.id
+            )
+            assert [p.label for p in result.evolution] == ["Zeta", "Alpha"]
 
 
 async def _push_fight_record(

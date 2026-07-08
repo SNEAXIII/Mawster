@@ -196,10 +196,13 @@ class PlayerStatsService:
         )
 
         # --- evolution: attacker-based, by war (season given) or by season (all) ---
+        # War mode orders chronologically (min created_at per war) so the timeline
+        # reads left-to-right by when each war happened, not alphabetically by
+        # opponent. Season mode is already chronological by ascending number.
         if season_id is not None:
             label_col = War.opponent_name
             group_cols = [War.id, War.opponent_name]
-            order_col = War.opponent_name
+            order_col = func.min(War.created_at)
         else:
             label_col = Season.number
             group_cols = [Season.id, Season.number]
