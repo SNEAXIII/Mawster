@@ -60,9 +60,11 @@ describe('Profile statistics tab', () => {
       cy.apiLogin(users['prof-nav'].user_id);
       cy.visit('/profile');
       cy.getByCy('profile-tab-stats').click();
-      cy.getByCy('profile-stats-tab').should('exist');
+      // bare user (no game account) → stats tab renders the empty state
+      cy.getByCy('profile-stats-empty').should('exist');
       cy.getByCy('profile-tab-infos').click();
-      cy.getByCy('profile-tab-infos').should('exist');
+      cy.getByCy('username-row').should('exist');
+      cy.getByCy('profile-stats-empty').should('not.exist');
     });
   });
 });
