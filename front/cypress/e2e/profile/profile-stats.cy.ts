@@ -67,4 +67,34 @@ describe('Profile statistics tab', () => {
       cy.getByCy('profile-stats-empty').should('not.exist');
     });
   });
+
+  it('deep-links to the stats tab via ?tab=stats', () => {
+    cy.apiBatchSetup([{ discord_token: 'prof-url', role: 'user' }]).then((users) => {
+      cy.apiLogin(users['prof-url'].user_id);
+      cy.visit('/profile?tab=stats');
+      // stats tab active on load without any click (bare user → empty state)
+      cy.getByCy('profile-stats-empty').should('exist');
+      cy.getByCy('username-row').should('not.exist');
+    });
+  });
+
+  it('reflects the active tab in the URL when switching', () => {
+    cy.apiBatchSetup([{ discord_token: 'prof-url2', role: 'user' }]).then((users) => {
+      cy.apiLogin(users['prof-url2'].user_id);
+      cy.visit('/profile');
+      cy.getByCy('profile-tab-stats').click();
+      cy.location('search').should('include', 'tab=stats');
+      cy.getByCy('profile-tab-infos').click();
+      cy.location('search').should('include', 'tab=infos');
+    });
+  });
+
+  it('falls back to the info tab for an unknown ?tab value', () => {
+    cy.apiBatchSetup([{ discord_token: 'prof-url3', role: 'user' }]).then((users) => {
+      cy.apiLogin(users['prof-url3'].user_id);
+      cy.visit('/profile?tab=bogus');
+      cy.getByCy('username-row').should('exist');
+      cy.getByCy('profile-stats-empty').should('not.exist');
+    });
+  });
 });
