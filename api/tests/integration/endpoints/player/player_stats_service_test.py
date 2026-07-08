@@ -17,6 +17,7 @@ from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
     push_champion_user,
+    push_member,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 
@@ -173,6 +174,34 @@ class TestGetPlayerSeasons:
                 session, owner_user, data["owner"].id
             )
             assert result == []
+
+    @pytest.mark.anyio
+    async def test_get_player_seasons_includes_assist_only_season(self):
+        """A season where the account only assisted (never attacked) must still show up."""
+        data = await _setup_with_ended_season_war()
+        await push_user2()
+        other_acc = await push_member(data["alliance"], user_id=USER2_ID, game_pseudo="Other")
+        other_cu = await push_champion_user(other_acc, data["champ"])
+        placement = WarDefensePlacement(
+            war_id=data["war"].id,
+            battlegroup=1,
+            node_number=10,
+            champion_id=data["champ"].id,
+            stars=7,
+            rank=3,
+            attacker_champion_user_id=other_cu.id,
+            assist_champion_user_id=data["cu"].id,
+        )
+        await load_objects([placement])
+
+        owner_user = get_generic_user(is_base_id=True)
+
+        async for session in get_test_session():
+            result = await PlayerStatsService.get_player_seasons(
+                session, owner_user, data["owner"].id
+            )
+            assert len(result) == 1
+            assert result[0].number == 64
 
     @pytest.mark.anyio
     async def test_get_player_seasons_unknown_account_raises_404(self):
