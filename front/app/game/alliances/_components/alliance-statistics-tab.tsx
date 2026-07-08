@@ -19,8 +19,8 @@ import AllianceSelect from '@/app/game/_components/alliance-select';
 import { AllianceStatsTable, type SortField, type SortDir } from './alliance-stats-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CollapsibleSection } from '@/components/collapsible-section';
-import { MemberChampionChart } from './member-champion-chart';
-import { ChampionDetailModal } from './champion-detail-modal';
+import { MemberChampionChart } from '@/app/components/statistics/member-champion-chart';
+import { ChampionDetailModal } from '@/app/components/statistics/champion-detail-modal';
 import { useChampionStats } from './use-champion-stats';
 
 interface AllianceStatisticsTabProps {
