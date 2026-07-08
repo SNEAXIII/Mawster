@@ -62,21 +62,38 @@ class UpgradeRequestService:
                 detail=requested_rarity_must_be_higher(requested_rarity, current),
             )
 
-        # Check if a pending request already exists for this champion_user + rarity
-        existing = await session.exec(
-            select(RequestedUpgrade).where(
-                and_(
-                    RequestedUpgrade.champion_user_id == champion_user_id,
-                    RequestedUpgrade.requested_rarity == requested_rarity,
-                    RequestedUpgrade.done_at.is_(None),  # type: ignore[union-attr]
+        # A champion should carry at most one pending upgrade request: the target
+        # rarity, not one row per rarity ever aimed at. If a pending request already
+        # exists, retarget it (latest request wins) instead of creating a new one.
+        existing_pending = (
+            await session.exec(
+                select(RequestedUpgrade).where(
+                    and_(
+                        RequestedUpgrade.champion_user_id == champion_user_id,
+                        RequestedUpgrade.done_at.is_(None),  # type: ignore[union-attr]
+                    )
                 )
             )
-        )
-        if existing.first() is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=UPGRADE_REQUEST_ALREADY_EXISTS,
-            )
+        ).all()
+
+        if existing_pending:
+            # Re-requesting the rarity that is already pending is a conflict.
+            if any(req.requested_rarity == requested_rarity for req in existing_pending):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=UPGRADE_REQUEST_ALREADY_EXISTS,
+                )
+            # Retarget the first pending request and drop any stale duplicates so the
+            # invariant "one pending request per champion" holds even for legacy rows.
+            primary, *duplicates = existing_pending
+            primary.requested_rarity = requested_rarity
+            primary.requester_game_account_id = requester_game_account_id
+            session.add(primary)
+            for stale in duplicates:
+                await session.delete(stale)
+            await session.commit()
+            await session.refresh(primary)
+            return primary
 
         upgrade_request = RequestedUpgrade(
             champion_user_id=champion_user_id,
