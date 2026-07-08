@@ -9,7 +9,7 @@ import {
   type SortField,
   type SortDir,
 } from '@/app/game/alliances/_components/alliance-stats-table';
-import { MemberChampionChart } from '@/app/game/alliances/_components/member-champion-chart';
+import { MemberChampionChart } from '@/app/components/statistics/member-champion-chart';
 import {
   MOCK_SEASON_STATS,
   MOCK_CHAMPION_USAGE,

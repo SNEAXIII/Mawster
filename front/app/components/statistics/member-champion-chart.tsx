@@ -16,12 +16,15 @@ import { getChampionImageUrl } from '@/app/services/champions';
 const COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#a855f7', '#f97316', '#06b6d4', '#eab308', '#ec4899', '#84cc16', '#f43f5e'];
 const OTHERS_COLOR = '#64748b';
 
+export type Metric = 'all' | 'kos' | 'deathless';
+export type Perspective = 'attacker' | 'defender'
+
 interface MemberChampionChartProps {
   data: ChampionUsageItem[];
-  metric: 'all' | 'kos' | 'deathless';
-  onMetricChange: (m: 'all' | 'kos' | 'deathless') => void;
-  perspective: 'attacker' | 'defender';
-  onPerspectiveChange: (p: 'attacker' | 'defender') => void;
+  metric: Metric;
+  onMetricChange: (m: Metric) => void;
+  perspective: Perspective;
+  onPerspectiveChange: (p: Perspective) => void;
   onViewDetail: () => void;
   loading: boolean;
   playerName: string | null;
