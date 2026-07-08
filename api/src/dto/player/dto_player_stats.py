@@ -8,6 +8,7 @@ class PlayerStatsCardResponse(BaseModel):
     total_kos: int
     total_not_fought: int
     total_fights: float
+    total_assists: int = 0
     wars_participated: int
 
 

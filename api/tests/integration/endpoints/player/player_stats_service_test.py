@@ -11,7 +11,7 @@ from src.enums.SeasonStatus import SeasonStatus
 from src.models.War import War, WarStatus
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.utils.db import get_session
-from tests.utils.utils_constant import USER_ID, USER2_ID
+from tests.utils.utils_constant import USER_ID, USER2_ID, ALLIANCE_TAG
 from tests.utils.utils_db import get_test_session, load_objects
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
@@ -212,3 +212,108 @@ class TestGetPlayerSeasons:
             with pytest.raises(HTTPException) as exc:
                 await PlayerStatsService.get_player_seasons(session, owner_user, uuid.uuid4())
             assert exc.value.status_code == 404
+
+
+class TestGetPlayerStats:
+    @pytest.mark.anyio
+    async def test_card_evolution_alliances_specific_season(self):
+        data = await _setup_with_ended_season_war()
+        # one normal fight with 1 KO, one skipped (not-done) node
+        await load_objects(
+            [
+                WarDefensePlacement(
+                    war_id=data["war"].id,
+                    battlegroup=1,
+                    node_number=10,
+                    champion_id=data["champ"].id,
+                    stars=7,
+                    rank=3,
+                    attacker_champion_user_id=data["cu"].id,
+                    ko_count=1,
+                ),
+                WarDefensePlacement(
+                    war_id=data["war"].id,
+                    battlegroup=1,
+                    node_number=11,
+                    champion_id=data["champ"].id,
+                    stars=7,
+                    rank=3,
+                    attacker_champion_user_id=data["cu"].id,
+                    is_fight_not_done=True,
+                ),
+            ]
+        )
+        owner_user = get_generic_user(is_base_id=True)
+
+        async for session in get_test_session():
+            result = await PlayerStatsService.get_player_stats(
+                session, owner_user, data["owner"].id, season_id=data["season"].id
+            )
+            assert result.card.total_kos == 1
+            assert result.card.total_not_fought == 1
+            assert result.card.total_fights == 1.0
+            assert result.card.wars_participated == 1
+            assert len(result.evolution) == 1
+            assert result.evolution[0].label == "Enemy"
+            assert result.evolution[0].fights == 1.0
+            assert result.alliances[0].tag == ALLIANCE_TAG
+
+    @pytest.mark.anyio
+    async def test_evolution_labels_by_season_when_all(self):
+        data = await _setup_with_ended_season_war()
+        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=10)
+        owner_user = get_generic_user(is_base_id=True)
+
+        async for session in get_test_session():
+            result = await PlayerStatsService.get_player_stats(
+                session, owner_user, data["owner"].id, season_id=None
+            )
+            assert len(result.evolution) == 1
+            assert result.evolution[0].label == "S64"
+
+    @pytest.mark.anyio
+    async def test_assist_only_counts_participation_not_kos(self):
+        data = await _setup_with_ended_season_war()
+        await push_user2()
+        other_acc = await push_member(data["alliance"], user_id=USER2_ID, game_pseudo="Other")
+        other_cu = await push_champion_user(other_acc, data["champ"])
+        await load_objects(
+            [
+                WarDefensePlacement(
+                    war_id=data["war"].id,
+                    battlegroup=1,
+                    node_number=10,
+                    champion_id=data["champ"].id,
+                    stars=7,
+                    rank=3,
+                    attacker_champion_user_id=other_cu.id,
+                    assist_champion_user_id=data["cu"].id,
+                    ko_count=2,
+                )
+            ]
+        )
+        owner_user = get_generic_user(is_base_id=True)
+
+        async for session in get_test_session():
+            result = await PlayerStatsService.get_player_stats(
+                session, owner_user, data["owner"].id, season_id=data["season"].id
+            )
+            assert result.card.wars_participated == 1
+            assert result.card.total_assists == 1
+            assert result.card.total_kos == 0
+            assert result.evolution == []
+
+    @pytest.mark.anyio
+    async def test_empty_when_no_participation(self):
+        data = await _setup_with_ended_season_war()
+        owner_user = get_generic_user(is_base_id=True)
+
+        async for session in get_test_session():
+            result = await PlayerStatsService.get_player_stats(
+                session, owner_user, data["owner"].id, season_id=data["season"].id
+            )
+            assert result.card.wars_participated == 0
+            assert result.card.total_kos == 0
+            assert result.card.ratio == 100
+            assert result.evolution == []
+            assert result.alliances == []
