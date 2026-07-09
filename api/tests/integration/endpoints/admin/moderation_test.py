@@ -688,6 +688,7 @@ async def test_get_revisions_exposes_editor_user_id(session):
     data = await _setup_note_and_reporter(session)
     note = data["note"]
     owner = data["owner"]
+    await _push_pending_report(session, note.id, data["reporter"])
     admin = await _push_admin(session)
     admin_headers = create_auth_headers(user_id=str(admin.id), role=Roles.ADMIN)
 
@@ -697,6 +698,37 @@ async def test_get_revisions_exposes_editor_user_id(session):
     assert len(revisions) == 1
     assert revisions[0]["edited_by_user_id"] == str(owner.user_id)
     assert revisions[0]["edited_by_pseudo"] is not None
+
+
+@pytest.mark.asyncio
+async def test_get_revisions_rejects_never_reported_note(session):
+    data = await _setup_note_and_reporter(session)
+    note = data["note"]
+    admin = await _push_admin(session)
+    admin_headers = create_auth_headers(user_id=str(admin.id), role=Roles.ADMIN)
+
+    res = await execute_get_request(f"/admin/notes/{note.id}/revisions", headers=admin_headers)
+    # 404, not 403: an unreported note must not be confirmed to exist.
+    assert res.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_get_revisions_stays_readable_after_report_dismissed(session):
+    data = await _setup_note_and_reporter(session)
+    note = data["note"]
+    report = await _push_pending_report(session, note.id, data["reporter"])
+    admin = await _push_admin(session)
+    await ModerationService.resolve_report(
+        session,
+        report_id=report.id,
+        admin_user_id=admin.id,
+        body=ReportResolveRequest(action="dismiss"),
+    )
+    admin_headers = create_auth_headers(user_id=str(admin.id), role=Roles.ADMIN)
+
+    res = await execute_get_request(f"/admin/notes/{note.id}/revisions", headers=admin_headers)
+    assert res.status_code == 200
+    assert len(res.json()) == 1
 
 
 @pytest.mark.asyncio

@@ -252,6 +252,15 @@ class ModerationService:
 
     @classmethod
     async def get_revisions(cls, session, note_id):
+        # A note is only readable by moderators once someone reported it. Any report
+        # status counts (pending, resolved, dismissed) and the access never expires.
+        reported = (
+            await session.exec(select(NoteReport.id).where(NoteReport.note_id == note_id))
+        ).first()
+        if reported is None:
+            # 404 rather than 403: do not confirm that an unreported note exists.
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
+
         admin = aliased(User)
         rows = (
             await session.exec(
