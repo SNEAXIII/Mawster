@@ -86,7 +86,7 @@ const fr: Translations = {
       'Remplis tout ton roster en vingt minutes maximum — et ne le retape plus jamais dans un tableur.',
     featPrivacyTitle: 'Vos données restent privées',
     featPrivacyDesc:
-      'Même les admins du site ne voient pas le contenu de votre alliance — rosters, guerres et plans restent dans votre alliance.',
+      "Aucun écran d'administration n'expose vos rosters, vos guerres ni vos plans : ils restent dans votre alliance. Une seule exception, et elle est assumée — une note signalée est lue par un modérateur, avec son historique d'édition.",
 
     featNew: 'Nouveau',
     featNotesTitle: 'Notes sur les plans, avec modération',

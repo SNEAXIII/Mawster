@@ -84,7 +84,7 @@ const en = {
       'Fill your entire roster in twenty minutes, tops — then never type it into a spreadsheet again.',
     featPrivacyTitle: 'Your data stays private',
     featPrivacyDesc:
-      'Even site admins cannot read your alliance content — rosters, wars and plans stay inside your alliance.',
+      'No admin screen exposes your rosters, wars or plans — they stay inside your alliance. One exception, stated up front: a reported note is read by a moderator, along with its edit history.',
 
     featNew: 'New',
     featNotesTitle: 'Plan notes with moderation',
