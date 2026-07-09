@@ -51,7 +51,7 @@ describe('Mobile Settings Sheet', () => {
     });
   });
 
-  it('signs out when the sign out button is clicked', () => {
+  it('signs out and lands on the home page', () => {
     setupUser('modal-settings-signout').then(({ user_id }) => {
       cy.apiLogin(user_id);
       cy.navTo('profile');
@@ -60,7 +60,8 @@ describe('Mobile Settings Sheet', () => {
       cy.getByCy('modal-settings-content').should('be.visible');
       cy.getByCy('modal-settings-sign-out').click();
 
-      cy.url().should('include', '/login?callbackUrl=/profile');
+      cy.url().should('eq', `${Cypress.config('baseUrl')}/`);
+      cy.getByCy('nav-sign-in').should('be.visible');
     });
   });
 

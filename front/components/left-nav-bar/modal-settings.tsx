@@ -1,6 +1,6 @@
 'use client';
 
-import { LogOut, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -9,26 +9,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import LanguageSwitcher from '@/components/language-switcher';
-import ThemePicker from '@/components/theme-picker';
+import SettingsContent from './settings-content';
 import { useI18n } from '@/app/i18n';
-import { useRouter } from 'next/dist/client/components/navigation';
-import { signOut } from 'next-auth/react';
+import { cn } from '@/app/lib/utils';
 
-export default function ModalSettings() {
+interface ModalSettingsProps {
+  isAuthenticated: boolean;
+}
+
+export default function ModalSettings({ isAuthenticated }: Readonly<ModalSettingsProps>) {
   const { t } = useI18n();
-  const router = useRouter();
-
-  const handleSignOut = async () => {
-    try {
-      await signOut({ redirect: false });
-      router.push('/');
-      router.refresh();
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
-  };
 
   return (
     <Dialog>
@@ -36,7 +26,11 @@ export default function ModalSettings() {
         <Button
           data-cy='modal-settings-trigger'
           variant='ghost'
-          className='flex h-12 min-w-12 items-center justify-center rounded-md p-3'
+          className={cn(
+            'flex h-12 min-w-12 shrink-0 items-center justify-center rounded-md p-3',
+            // Signed in, the gear is alone on its row and can span the sidenav.
+            isAuthenticated && 'md:w-full'
+          )}
           aria-label={t.nav.settings}
         >
           <Settings className='h-5 w-5' />
@@ -46,31 +40,7 @@ export default function ModalSettings() {
         <DialogHeader>
           <DialogTitle>{t.nav.settings}</DialogTitle>
         </DialogHeader>
-        <div className='mt-4 space-y-4'>
-          <div className='flex items-center justify-between'>
-            <span className='text-sm font-medium'>{t.nav.language}</span>
-            <LanguageSwitcher />
-          </div>
-          <Separator />
-          <div className='flex items-center justify-between'>
-            <span className='text-sm font-medium'>{t.nav.theme}</span>
-            <ThemePicker />
-          </div>
-          <Separator />
-          <div className='flex items-center justify-between'>
-            <span className='text-sm font-medium'>{t.nav.signOut}</span>
-            <Button
-              type='button'
-              variant='destructive'
-              onClick={handleSignOut}
-              className='px-2 hover:bg-destructive/30 hover:text-destructive'
-              aria-label={t.nav.signOut}
-              data-cy='modal-settings-sign-out'
-            >
-              <LogOut className='h-5 w-5' />
-            </Button>
-          </div>
-        </div>
+        <SettingsContent isAuthenticated={isAuthenticated} />
       </DialogContent>
     </Dialog>
   );
