@@ -50,12 +50,14 @@ const en = {
 
     eyebrow: 'Alliance War manager',
     evolving: 'Evolving · Open source',
-    heroTitle: 'Wars are won in the planning.',
+    heroTitle: 'Win your wars with a real plan.',
     heroSubtitle:
       'Mawster turns Alliance War into one clear plan — defense, attack, synergies and stats in one place. No more screenshots or Excel sheets to manage your teammates rosters.',
-    heroCtaPrimary: 'Get started for free',
+    heroCtaPrimary: 'Create an account',
     heroCtaSecondary: 'See features',
     heroNote: 'Discord & Google login · Line and more coming soon',
+    heroContactQuestion: 'Any concern? Reach me on',
+    heroContactJoin: 'join the community',
 
     mapDefenseLabel: 'Defense',
     mapAttackLabel: 'Attack',
@@ -158,6 +160,7 @@ const en = {
     soonEyebrow: 'Roadmap',
     soonTitle: 'Roadmap',
     soonBadge: 'Soon',
+    inDevBadge: 'In development',
     soonBotTitle: 'Discord bot',
     soonBotDesc:
       'Run Mawster straight from Discord — check placements, post war plans and ping your battlegroups without leaving the server.',
@@ -166,9 +169,9 @@ const en = {
       'Drop a screenshot of your champions and let Mawster read it to fill your roster automatically — no more manual entry.',
 
     openSourceEyebrow: 'Open source',
-    openSourceTitle: 'Built in the open, with the community.',
+    openSourceTitle: 'Contribute with the community',
     openSourceDesc:
-      'Mawster is free and open source, and it keeps growing. Read the code, open an issue, or come talk strategy on Discord.',
+      'The core of Mawster is open source and free to use, and it keeps growing. Read the code, open an issue, or come talk strategy on Discord.',
     linkRepo: 'View the code',
     linkSupport: 'Support on Discord',
     contactLabel: 'Reach the maker',
