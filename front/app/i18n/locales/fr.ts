@@ -52,12 +52,14 @@ const fr: Translations = {
 
     eyebrow: "Gestion de Guerre d'Alliance",
     evolving: 'En évolution · Open source',
-    heroTitle: 'La guerre se gagne lors de la planification.',
+    heroTitle: 'Gagne tes guerres avec un vrai plan.',
     heroSubtitle:
       "Mawster transforme la Guerre d'Alliance en un plan clair — défense, attaque, synergies et stats au même endroit. Fini les screenshots et les fichiers Excel pour gérer les rosters de tes équipiers.",
-    heroCtaPrimary: 'Commencer gratuitement',
+    heroCtaPrimary: 'Créez un compte',
     heroCtaSecondary: 'Voir les fonctionnalités',
     heroNote: 'Connexion Discord & Google · Line et plus à venir',
+    heroContactQuestion: 'Une question ? Contacte-moi sur',
+    heroContactJoin: 'rejoins la communauté',
 
     mapDefenseLabel: 'Défense',
     mapAttackLabel: 'Attaque',
@@ -84,7 +86,7 @@ const fr: Translations = {
       'Remplis tout ton roster en vingt minutes maximum — et ne le retape plus jamais dans un tableur.',
     featPrivacyTitle: 'Vos données restent privées',
     featPrivacyDesc:
-      'Même les admins du site ne voient pas le contenu de votre alliance — rosters, guerres et plans restent dans votre alliance.',
+      "Aucun écran d'administration n'expose vos rosters, vos guerres ni vos plans : ils restent dans votre alliance. Une seule exception, et elle est assumée — une note signalée est lue par un modérateur, avec son historique d'édition.",
 
     featNew: 'Nouveau',
     featNotesTitle: 'Notes sur les plans, avec modération',
@@ -160,6 +162,7 @@ const fr: Translations = {
     soonEyebrow: 'Roadmap',
     soonTitle: 'Roadmap',
     soonBadge: 'Bientôt',
+    inDevBadge: 'En développement',
     soonBotTitle: 'Bot Discord',
     soonBotDesc:
       'Pilotez Mawster directement depuis Discord — consultez les placements, publiez les plans de guerre et pinguez vos battlegroups sans quitter le serveur.',
@@ -168,9 +171,9 @@ const fr: Translations = {
       'Envoyez une capture de vos champions et laissez Mawster la lire pour remplir votre roster automatiquement — fini la saisie manuelle.',
 
     openSourceEyebrow: 'Open source',
-    openSourceTitle: 'Construit en public, avec la communauté.',
+    openSourceTitle: 'Contribue avec la communauté',
     openSourceDesc:
-      "Mawster est gratuit et open source, et il ne cesse d'évoluer. Lis le code, ouvre une issue, ou viens parler stratégie sur Discord.",
+      "Le cœur de Mawster est open source et gratuit, et il ne cesse d'évoluer. Lis le code, ouvre une issue, ou viens parler stratégie sur Discord.",
     linkRepo: 'Voir le code',
     linkSupport: 'Support sur Discord',
     contactLabel: 'Contacter le créateur',

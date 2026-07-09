@@ -325,6 +325,11 @@
     "image_url": "/static/champions/deadpool_x-force.png"
   },
   {
+    "name": "Symbioid",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/symbioid.png"
+  },
+  {
     "name": "Goldpool",
     "champion_class": "Mutant",
     "image_url": "/static/champions/goldpool.png"
@@ -1485,11 +1490,6 @@
     "image_url": "/static/champions/high_evolutionary.png"
   },
   {
-    "name": "Doombot",
-    "champion_class": "Cosmic",
-    "image_url": "/static/champions/doombot.png"
-  },
-  {
     "name": "Solvarch",
     "champion_class": "Tech",
     "image_url": "/static/champions/solvarch.png"
@@ -1510,6 +1510,11 @@
     "image_url": "/static/champions/mr_knight.png"
   },
   {
+    "name": "Anti-Venomoid",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/anti-venomoid.png"
+  },
+  {
     "name": "Dracula",
     "champion_class": "Mystic",
     "image_url": "/static/champions/dracula.png"
@@ -1523,6 +1528,11 @@
     "name": "Rocket Raccoon",
     "champion_class": "Tech",
     "image_url": "/static/champions/rocket_raccoon.png"
+  },
+  {
+    "name": "Sentinelbot",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/sentinelbot.png"
   },
   {
     "name": "Sentry",
@@ -1628,5 +1638,15 @@
     "name": "Shatterstar",
     "champion_class": "Mutant",
     "image_url": "/static/champions/shatterstar.png"
+  },
+  {
+    "name": "Hobgoblin (Phil Urich)",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/hobgoblin_phil_urich.png"
+  },
+  {
+    "name": "Black Tarantula",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/black_tarantula.png"
   }
 ]

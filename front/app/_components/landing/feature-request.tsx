@@ -20,7 +20,7 @@ export function FeatureRequest() {
       className='px-6 py-12 md:px-12'
       data-cy='landing-feature-request'
     >
-      <div className='mx-auto max-w-5xl'>
+      <div className='mx-auto max-w-6xl'>
         <h2 className='text-3xl font-bold sm:text-4xl'>{t.landing.requestTitle}</h2>
         <p className='mt-4 max-w-2xl leading-relaxed text-muted-foreground'>
           {t.landing.requestDesc}

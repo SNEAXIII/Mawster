@@ -13,8 +13,8 @@ import { useAllianceContext } from '@/app/contexts/alliance-context';
 export default function SideNavBar() {
   const { data: session } = useSession();
   const { t } = useI18n();
-  const isAuthenticated = session && !session.error && session.user;
-  const userRole: Role = (isAuthenticated ? (session.user.role as Role) : null) || Role.all;
+  const isAuthenticated = Boolean(session && !session.error && session.user);
+  const userRole: Role = (isAuthenticated ? (session?.user.role as Role) : null) || Role.all;
   const { hasAlliance } = useAllianceContext();
 
   return (
@@ -43,20 +43,22 @@ export default function SideNavBar() {
           aria-hidden='true'
         />
         <Separator className='hidden md:block' />
-        {isAuthenticated ? (
-          <ModalSettings />
-        ) : (
-          <Link
-            href='/login'
-            className='
-            flex items-center justify-center gap-2 rounded-md p-3 text-sm font-medium md:justify-start h-12 min-w-12
-            bg-primary text-primary-foreground transition hover:bg-primary/90 md:px-3'
-            aria-label={t.nav.signIn}
-          >
-            <LogIn className='h-5 w-5' />
-            <span className='hidden md:block'>{t.nav.signIn}</span>
-          </Link>
-        )}
+        <div className='flex shrink-0 flex-row items-center gap-1 md:w-full md:gap-2'>
+          {!isAuthenticated && (
+            <Link
+              href='/login'
+              data-cy='nav-sign-in'
+              className='
+              flex grow items-center justify-center gap-2 rounded-md p-3 text-sm font-medium md:justify-start h-12 min-w-12
+              bg-primary text-primary-foreground transition hover:bg-primary/90 md:px-3'
+              aria-label={t.nav.signIn}
+            >
+              <LogIn className='h-5 w-5' />
+              <span className='hidden md:block'>{t.nav.signIn}</span>
+            </Link>
+          )}
+          <ModalSettings isAuthenticated={isAuthenticated} />
+        </div>
       </div>
     </div>
   );

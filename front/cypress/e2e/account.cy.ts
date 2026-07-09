@@ -45,12 +45,13 @@ describe('Login & Profile – UI', () => {
     });
   });
 
-  it('signs out and redirects to login', () => {
+  it('signs out and redirects to the home page', () => {
     setupUser('signout-token').then(({ user_id }) => {
       cy.apiLogin(user_id);
       cy.navTo('profile');
       cy.getByCy('sign-out-btn').click();
-      cy.url().should('include', '/login');
+      cy.url().should('eq', `${Cypress.config('baseUrl')}/`);
+      cy.getByCy('nav-sign-in').should('be.visible');
     });
   });
 

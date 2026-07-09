@@ -16,9 +16,9 @@ export default function Page() {
       <StatStrip />
       <FeatureGrid />
       <Testimonials />
+      <ComingSoon />
       <FeatureRequest />
       <StatsShowcase />
-      <ComingSoon />
       <Community />
       <Faq />
       <Cta />

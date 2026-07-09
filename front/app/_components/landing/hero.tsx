@@ -2,11 +2,13 @@
 
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { FaDiscord, FaLine } from 'react-icons/fa6';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AllianceRankingChart from '@/app/game/alliances/_components/alliance-ranking-chart';
 import { MOCK_RANKING_POINTS, MOCK_RANKING_SEASON } from './stats-mock-data';
+import { LANDING_LINKS } from './links';
 
 export function Hero() {
   const { t } = useI18n();
@@ -51,6 +53,31 @@ export function Hero() {
 
         <p className='mt-5 text-xs uppercase tracking-wider text-muted-foreground'>
           {t.landing.heroNote}
+        </p>
+
+        <p
+          className='mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground'
+          data-cy='hero-contact'
+        >
+          <span>{t.landing.heroContactQuestion}</span>
+          <span className='inline-flex items-center gap-1.5 text-foreground'>
+            <FaDiscord className='h-3.5 w-3.5' />
+            {LANDING_LINKS.discordHandle}
+          </span>
+          <span className='inline-flex items-center gap-1.5 text-foreground'>
+            <FaLine className='h-3.5 w-3.5' />
+            {LANDING_LINKS.lineHandle}
+          </span>
+          <a
+            href={LANDING_LINKS.discordSupport}
+            target='_blank'
+            rel='noopener noreferrer'
+            className='inline-flex items-center gap-1.5 text-foreground hover:underline'
+            data-cy='hero-contact-join'
+          >
+            <FaDiscord/>
+            {t.landing.heroContactJoin}
+          </a>
         </p>
       </div>
 
