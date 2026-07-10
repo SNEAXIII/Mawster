@@ -12,17 +12,6 @@ export default function HistoryTab() {
 
   return (
     <div className='flex flex-col gap-4'>
-      {vm.canImport && (
-        <div className='flex justify-end'>
-          <Link
-            href='/game/knowledge-base/import'
-            className='inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground'
-            data-cy='import-records-link'
-          >
-            {t.game.knowledgeBase.importRecords}
-          </Link>
-        </div>
-      )}
       {vm.data && (
         <PaginationControls
           currentPage={vm.page}
@@ -43,23 +32,34 @@ export default function HistoryTab() {
           }}
         />
       )}
-      <KnowledgeBaseFilters
-        filters={vm.filters}
-        planningErrorOnly={vm.planningErrorOnly}
-        seasonSelector={vm.seasonSelector}
-        seasonId={vm.seasonId}
-        seasons={vm.seasons}
-        allianceId={vm.allianceId}
-        accessibleAlliances={vm.accessibleAlliances}
-        onChange={vm.handleFilterChange}
-        onTogglePlanningError={vm.handleTogglePlanningError}
-        onSeasonSelectorChange={vm.handleSeasonSelectorChange}
-        onSeasonIdChange={vm.handleSeasonIdChange}
-        onAllianceChange={vm.handleAllianceChange}
-        source={vm.source}
-        onSourceChange={vm.handleSourceChange}
-        onClear={vm.handleClearFilters}
-      />
+      <div className='flex flex-wrap items-center gap-2'>
+        <KnowledgeBaseFilters
+          filters={vm.filters}
+          planningErrorOnly={vm.planningErrorOnly}
+          seasonSelector={vm.seasonSelector}
+          seasonId={vm.seasonId}
+          seasons={vm.seasons}
+          allianceId={vm.allianceId}
+          accessibleAlliances={vm.accessibleAlliances}
+          onChange={vm.handleFilterChange}
+          onTogglePlanningError={vm.handleTogglePlanningError}
+          onSeasonSelectorChange={vm.handleSeasonSelectorChange}
+          onSeasonIdChange={vm.handleSeasonIdChange}
+          onAllianceChange={vm.handleAllianceChange}
+          source={vm.source}
+          onSourceChange={vm.handleSourceChange}
+          onClear={vm.handleClearFilters}
+        />
+        {vm.canImport && (
+          <Link
+            href='/game/knowledge-base/import'
+            className='ml-auto inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground'
+            data-cy='import-records-link'
+          >
+            {t.game.knowledgeBase.importRecords}
+          </Link>
+        )}
+      </div>
 
       {vm.data && (
         <KnowledgeBaseTable
