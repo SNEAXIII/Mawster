@@ -14,10 +14,15 @@ from src.dto.alliance.dto_matchup import (
     MatchupUpsertRequest,
 )
 from src.enums.MatchupTargetType import MatchupTargetType
-from src.Messages.matchup_messages import CHAMPION_NOT_FOUND, MATCHUP_NOT_FOUND
+from src.Messages.matchup_messages import (
+    CHAMPION_NOT_FOUND,
+    GAME_ACCOUNT_NOT_IN_ALLIANCE,
+    MATCHUP_NOT_FOUND,
+)
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.DefensePlacement import DefensePlacement
+from src.models.GameAccount import GameAccount
 from src.models.MatchupRating import MatchupRating
 from src.models.MatchupSynergy import MatchupSynergy
 from src.models.Base import utcnow
@@ -198,6 +203,9 @@ class MatchupService:
         purpose, and so is the output. When ``game_account_id`` is given, each row also says
         whether that player can actually take the fight.
         """
+        if game_account_id is not None:
+            await cls._assert_game_account_in_alliance(session, alliance_id, game_account_id)
+
         ratings = await cls._ratings_for_targets(
             session, alliance_id, defender_champion_id, node_number, champion_id
         )
@@ -259,6 +267,30 @@ class MatchupService:
     def _instance_strength(entry: ChampionUser) -> tuple[int, int, int, int]:
         """Order two instances of the same champion, strongest last."""
         return (entry.stars, entry.rank, entry.ascension, entry.signature)
+
+    @staticmethod
+    async def _assert_game_account_in_alliance(
+        session: SessionDep, alliance_id: uuid.UUID, game_account_id: uuid.UUID
+    ) -> None:
+        """Refuse to evaluate against a roster that does not belong to this alliance.
+
+        `game_account_id` is a caller-supplied query parameter. Without this check, any member
+        or visitor of alliance A could read the private roster of a player in alliance B —
+        which champions they own, and each instance's exact label. The frontend only ever offers
+        in-alliance accounts, but a selector is not an authorization boundary.
+
+        The guard lives in the service, not the controller, so every caller inherits it — the v2
+        war-assignment code will reuse `evaluate` directly.
+
+        A uniform 404 keeps "no such account" and "not in this alliance" indistinguishable.
+        """
+        account = (
+            await session.exec(select(GameAccount).where(GameAccount.id == game_account_id))
+        ).first()
+        if account is None or account.alliance_id != alliance_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_IN_ALLIANCE
+            )
 
     @classmethod
     async def _roster_context(

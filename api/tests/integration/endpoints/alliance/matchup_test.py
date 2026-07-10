@@ -617,6 +617,82 @@ async def test_upsert_rejects_an_unknown_synergy_champion():
 
 
 @pytest.mark.asyncio
+async def test_evaluation_rejects_a_game_account_from_another_alliance():
+    """A member of alliance A must not be able to read alliance B's private roster.
+
+    Regression test for a leak where `game_account_id` was passed straight through to the
+    roster query with no check that the account belongs to `alliance_id`.
+    """
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    route = f"/alliances/{alliance.id}/matchups"
+    await execute_post_request(route, _defender_payload(attacker.id, defender.id), HEADERS_OWNER)
+
+    other_owner_id = uuid.uuid4()
+    other_owner_user = get_generic_user(login="other_owner", email="other_owner@test.com")
+    other_owner_user.id = other_owner_id
+    other_owner_user.discord_id = "discord_other_owner"
+    await load_objects([other_owner_user])
+    _other_alliance, other_owner = await push_alliance_with_owner(
+        user_id=other_owner_id,
+        game_pseudo="OtherOwnerPseudo",
+        alliance_name="Other Alliance",
+        alliance_tag="OTHR",
+    )
+    await push_champion_user(other_owner, attacker, stars=7, rank=5, signature=200, ascension=2)
+
+    response = await execute_get_request(
+        f"{route}/evaluation?defender_champion_id={defender.id}&game_account_id={other_owner.id}",
+        HEADERS_OWNER,
+    )
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_evaluation_rejects_an_unknown_game_account():
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    route = f"/alliances/{alliance.id}/matchups"
+    await execute_post_request(route, _defender_payload(attacker.id, defender.id), HEADERS_OWNER)
+
+    response = await execute_get_request(
+        f"{route}/evaluation?defender_champion_id={defender.id}&game_account_id={uuid.uuid4()}",
+        HEADERS_OWNER,
+    )
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_plain_member_cannot_delete():
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    synergy = await push_champion(name="Mister Fantastic", champion_class="Science")
+    route = f"/alliances/{alliance.id}/matchups"
+    created = await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "good",
+                    "synergies": [{"champion_id": str(synergy.id), "is_required": True}],
+                }
+            ],
+        },
+        HEADERS_OWNER,
+    )
+    rating_id = created.json()[0]["id"]
+
+    member = get_generic_user(login="member", email="member@test.com")
+    member.id = MEMBER_ID
+    member.discord_id = "discord_member"
+    await load_objects([member])
+    await push_member(alliance, MEMBER_ID, game_pseudo="MemberPseudo")
+
+    response = await execute_delete_request(f"{route}/{rating_id}", HEADERS_MEMBER)
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_upsert_can_resubmit_an_unchanged_synergy():
     """Guards the `flush()` between deleting stale synergies and re-inserting them.
 
