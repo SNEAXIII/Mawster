@@ -68,6 +68,10 @@ class MatchupService:
                     updated_by_game_account_id=author_game_account_id,
                 )
                 session.add(existing)
+                # TODO(task-6): likely unnecessary. `UUIDBase.id` comes from a client-side
+                # `default_factory=uuid.uuid4`, so the synergy rows already know their parent id,
+                # and SQLAlchemy orders parent inserts before children by FK dependency anyway.
+                # Drop it once the integration tests are un-skipped and can prove it.
                 await session.flush()
             else:
                 existing.verdict = target.verdict
