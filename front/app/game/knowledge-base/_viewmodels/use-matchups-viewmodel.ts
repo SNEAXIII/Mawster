@@ -4,8 +4,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAllianceSelector } from '@/hooks/use-alliance-selector';
 import { getMyAllianceRoles, type AllianceMyRoles } from '@/app/services/game';
 import {
+  deleteMatchup,
   evaluateMatchups,
+  getMatchups,
+  upsertMatchup,
   type MatchupEvaluationRow,
+  type MatchupRating,
+  type MatchupUpsertBody,
 } from '@/app/services/matchups';
 
 export interface MatchupFiltersState {
@@ -66,6 +71,42 @@ export function useMatchupsViewModel() {
 
   const clearFilters = useCallback(() => setFilters(EMPTY_FILTERS), []);
 
+  const [ratings, setRatings] = useState<MatchupRating[]>([]);
+
+  const loadRatings = useCallback(async () => {
+    if (!selectedAllianceId) {
+      setRatings([]);
+      return;
+    }
+    try {
+      setRatings(await getMatchups(selectedAllianceId));
+    } catch {
+      setError('load-failed');
+    }
+  }, [selectedAllianceId]);
+
+  useEffect(() => {
+    void loadRatings();
+  }, [loadRatings]);
+
+  const saveMatchup = useCallback(
+    async (body: MatchupUpsertBody) => {
+      if (!selectedAllianceId) return;
+      await upsertMatchup(selectedAllianceId, body);
+      await Promise.all([loadRatings(), reload()]);
+    },
+    [selectedAllianceId, loadRatings, reload]
+  );
+
+  const removeMatchup = useCallback(
+    async (ratingId: string) => {
+      if (!selectedAllianceId) return;
+      await deleteMatchup(selectedAllianceId, ratingId);
+      await Promise.all([loadRatings(), reload()]);
+    },
+    [selectedAllianceId, loadRatings, reload]
+  );
+
   const [roles, setRoles] = useState<AllianceMyRoles['roles']>({});
   useEffect(() => {
     getMyAllianceRoles()
@@ -91,5 +132,8 @@ export function useMatchupsViewModel() {
     error,
     reload,
     canEdit,
+    ratings,
+    saveMatchup,
+    removeMatchup,
   };
 }

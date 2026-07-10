@@ -6,6 +6,8 @@ import { getAllianceRoster } from '@/app/services/game';
 import { useMatchupsViewModel } from '../_viewmodels/use-matchups-viewmodel';
 import MatchupEvaluationFilters from './matchup-evaluation-filters';
 import MatchupEvaluationTable from './matchup-evaluation-table';
+import MatchupForm from './matchup-form';
+import MatchupTable from './matchup-table';
 
 export default function MatchupsTab() {
   const { t } = useI18n();
@@ -31,6 +33,12 @@ export default function MatchupsTab() {
 
   return (
     <div className='flex flex-col gap-4' data-cy='matchups-tab'>
+      {vm.canEdit && (
+        <>
+          <MatchupForm onSubmit={vm.saveMatchup} />
+          <MatchupTable ratings={vm.ratings} onDelete={vm.removeMatchup} />
+        </>
+      )}
       <MatchupEvaluationFilters
         alliances={vm.alliances}
         allianceId={vm.allianceId}
