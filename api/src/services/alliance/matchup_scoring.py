@@ -67,6 +67,9 @@ def resolve_missing_champions(
 
     The rated champion itself and its *required* synergies. Recommended synergies never
     appear here, and the prefight is never checked — anyone can field a prefight champion.
+
+    Result is deduplicated and preserves first-seen order. This matters when a caller merges
+    synergies from multiple ratings (e.g., defender + node) that overlap by construction.
     """
-    needed = [champion_id, *required_synergy_ids]
+    needed = dict.fromkeys([champion_id, *required_synergy_ids])
     return [needed_id for needed_id in needed if needed_id not in owned_champion_ids]

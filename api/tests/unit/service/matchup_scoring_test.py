@@ -76,3 +76,27 @@ def test_resolve_missing_champions_reports_unowned_required_synergy():
 def test_resolve_missing_champions_returns_empty_when_everything_owned():
     champ, synergy = uuid.uuid4(), uuid.uuid4()
     assert resolve_missing_champions(champ, [synergy], {champ, synergy}) == []
+
+
+def test_resolve_missing_champions_deduplicates_champion_in_synergies():
+    """Champion appearing in its own required synergies list yields it once, not twice."""
+    champ = uuid.uuid4()
+    result = resolve_missing_champions(champ, [champ], set())
+    assert result == [champ]
+    assert len(result) == 1
+
+
+def test_resolve_missing_champions_deduplicates_repeated_synergies():
+    """Repeated synergy ids in the input yield it once, not multiple times."""
+    champ, synergy = uuid.uuid4(), uuid.uuid4()
+    result = resolve_missing_champions(champ, [synergy, synergy], {champ})
+    assert result == [synergy]
+    assert len(result) == 1
+
+
+def test_resolve_missing_champions_preserves_first_seen_order():
+    """Result preserves first-seen order when deduplicating."""
+    champ = uuid.uuid4()
+    synergy_a, synergy_b = uuid.uuid4(), uuid.uuid4()
+    result = resolve_missing_champions(champ, [synergy_a, synergy_b], set())
+    assert result == [champ, synergy_a, synergy_b]
