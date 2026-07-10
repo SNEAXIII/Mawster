@@ -43,6 +43,8 @@ export default function PlayerFilterSelect({
           <SelectItem
             key={player}
             value={player}
+            data-cy={`${dataCy}-item`}
+            data-cy-player={player}
           >
             {player}
           </SelectItem>
