@@ -11,10 +11,12 @@ import pytest
 from main import app
 from src.enums.MatchupTargetType import MatchupTargetType
 from src.enums.MatchupVerdict import MatchupVerdict
+from src.models.DefensePlacement import DefensePlacement
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
+    push_champion_user,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user
 from tests.utils.utils_client import (
@@ -113,3 +115,229 @@ async def test_upsert_rejects_three_synergies():
         f"/alliances/{alliance.id}/matchups", payload, HEADERS_OWNER
     )
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_evaluation_sums_both_verdicts_and_sorts_best_first():
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    weak = await push_champion(name="Kamala Khan", champion_class="Cosmic")
+    route = f"/alliances/{alliance.id}/matchups"
+
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "good",
+                },
+                {"target_type": "node", "node_number": 23, "verdict": "good"},
+            ],
+        },
+        HEADERS_OWNER,
+    )
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(weak.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "ok",
+                }
+            ],
+        },
+        HEADERS_OWNER,
+    )
+
+    response = await execute_get_request(
+        f"{route}/evaluation?defender_champion_id={defender.id}&node_number=23", HEADERS_OWNER
+    )
+    rows = response.json()
+    assert [row["champion"]["champion_name"] for row in rows] == ["Doctor Doom", "Kamala Khan"]
+    assert rows[0]["score"] == 4
+    assert rows[1]["score"] == 1
+
+
+@pytest.mark.asyncio
+async def test_evaluation_reports_discouraged_without_a_score_and_sorts_it_last():
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    good = await push_champion(name="Hercules", champion_class="Cosmic")
+    route = f"/alliances/{alliance.id}/matchups"
+
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "good",
+                },
+                {"target_type": "node", "node_number": 23, "verdict": "discouraged"},
+            ],
+        },
+        HEADERS_OWNER,
+    )
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(good.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "ok",
+                }
+            ],
+        },
+        HEADERS_OWNER,
+    )
+
+    response = await execute_get_request(
+        f"{route}/evaluation?defender_champion_id={defender.id}&node_number=23", HEADERS_OWNER
+    )
+    rows = response.json()
+    assert rows[0]["champion"]["champion_name"] == "Hercules"
+    assert rows[-1]["champion"]["champion_name"] == "Doctor Doom"
+    assert rows[-1]["is_discouraged"] is True
+    assert rows[-1]["score"] is None
+
+
+@pytest.mark.asyncio
+async def test_evaluation_marks_unowned_champion_as_not_playable():
+    alliance, owner, attacker, defender = await _setup_alliance_with_champions()
+    route = f"/alliances/{alliance.id}/matchups"
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "good",
+                }
+            ],
+        },
+        HEADERS_OWNER,
+    )
+
+    response = await execute_get_request(
+        f"{route}/evaluation?defender_champion_id={defender.id}&game_account_id={owner.id}",
+        HEADERS_OWNER,
+    )
+    row = response.json()[0]
+    assert row["is_playable"] is False
+    assert [c["champion_name"] for c in row["missing_champions"]] == ["Doctor Doom"]
+    assert row["instance_label"] is None
+
+
+@pytest.mark.asyncio
+async def test_evaluation_reports_the_owned_instance_label():
+    alliance, owner, attacker, defender = await _setup_alliance_with_champions()
+    await push_champion_user(owner, attacker, stars=7, rank=5, signature=200, ascension=2)
+    route = f"/alliances/{alliance.id}/matchups"
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "good",
+                }
+            ],
+        },
+        HEADERS_OWNER,
+    )
+
+    response = await execute_get_request(
+        f"{route}/evaluation?defender_champion_id={defender.id}&game_account_id={owner.id}",
+        HEADERS_OWNER,
+    )
+    row = response.json()[0]
+    assert row["is_playable"] is True
+    assert row["instance_label"] == "7r5 a2 sig 200"
+    assert row["is_on_defense"] is False
+
+
+@pytest.mark.asyncio
+async def test_evaluation_greys_a_missing_required_synergy_but_not_a_recommended_one():
+    alliance, owner, attacker, defender = await _setup_alliance_with_champions()
+    await push_champion_user(owner, attacker)
+    required = await push_champion(name="Mister Fantastic", champion_class="Science")
+    recommended = await push_champion(name="Invisible Woman", champion_class="Science")
+    route = f"/alliances/{alliance.id}/matchups"
+
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "good",
+                    "synergies": [
+                        {"champion_id": str(required.id), "is_required": True},
+                        {"champion_id": str(recommended.id), "is_required": False},
+                    ],
+                }
+            ],
+        },
+        HEADERS_OWNER,
+    )
+
+    response = await execute_get_request(
+        f"{route}/evaluation?defender_champion_id={defender.id}&game_account_id={owner.id}",
+        HEADERS_OWNER,
+    )
+    row = response.json()[0]
+    assert row["is_playable"] is False
+    assert [c["champion_name"] for c in row["missing_champions"]] == ["Mister Fantastic"]
+
+
+@pytest.mark.asyncio
+async def test_evaluation_warns_when_the_instance_is_placed_on_defense():
+    alliance, owner, attacker, defender = await _setup_alliance_with_champions()
+    champion_user = await push_champion_user(owner, attacker)
+    await load_objects(
+        [
+            DefensePlacement(
+                alliance_id=alliance.id,
+                battlegroup=1,
+                node_number=5,
+                champion_user_id=champion_user.id,
+                game_account_id=owner.id,
+            )
+        ]
+    )
+    route = f"/alliances/{alliance.id}/matchups"
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "good",
+                }
+            ],
+        },
+        HEADERS_OWNER,
+    )
+
+    response = await execute_get_request(
+        f"{route}/evaluation?defender_champion_id={defender.id}&game_account_id={owner.id}",
+        HEADERS_OWNER,
+    )
+    row = response.json()[0]
+    assert row["is_playable"] is True
+    assert row["is_on_defense"] is True
