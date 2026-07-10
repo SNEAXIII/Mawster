@@ -661,6 +661,8 @@ const en = {
       allChampions: 'All',
       noChampionFound: 'No champion found.',
       title: 'Knowledge Base',
+      tabHistory: 'History',
+      tabMatchups: 'Matchups',
       attacker: 'Attacker',
       defender: 'Defender',
       node: 'Node',

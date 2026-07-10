@@ -669,6 +669,8 @@ const fr: Translations = {
       allChampions: 'Tous',
       noChampionFound: 'Aucun champion trouvé.',
       title: 'Base de connaissances',
+      tabHistory: 'Historique',
+      tabMatchups: 'Matchups',
       attacker: 'Attaquant',
       defender: 'Défenseur',
       node: 'Node',
