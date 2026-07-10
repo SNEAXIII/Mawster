@@ -21,6 +21,8 @@ from src.models.WarFightPrefight import WarFightPrefight  # noqa: F401
 from src.models.WarFightRecordImport import WarFightRecordImport  # noqa: F401
 from src.models.WarFightNote import WarFightNote  # noqa: F401
 from src.models.WarFightNoteRevision import WarFightNoteRevision  # noqa: F401
+from src.models.MatchupRating import MatchupRating  # noqa: F401
+from src.models.MatchupSynergy import MatchupSynergy  # noqa: F401
 from src.models.Season import Season  # noqa: F401
 from src.models.Mastery import Mastery  # noqa: F401
 from src.models.GameAccountMastery import GameAccountMastery  # noqa: F401
