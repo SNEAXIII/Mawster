@@ -195,8 +195,17 @@ class MatchupService:
             cls._build_row(targets, owned, on_defense, game_account_id)
             for targets in by_champion.values()
         ]
+        # `score` is None exactly when `is_discouraged`, so the first key already segregates them.
+        # Sorting on `score is None` next makes that dependency explicit instead of leaning on
+        # `or 0`, which would read as "no score == zero score" — the one conflation this feature
+        # exists to prevent.
         rows.sort(
-            key=lambda row: (row.is_discouraged, -(row.score or 0), row.champion.champion_name)
+            key=lambda row: (
+                row.is_discouraged,
+                row.score is None,
+                -(row.score or 0),
+                row.champion.champion_name,
+            )
         )
         return rows
 
@@ -209,11 +218,15 @@ class MatchupService:
         node_number: Optional[int],
         champion_id: Optional[uuid.UUID],
     ) -> list[MatchupRating]:
+        # Always go through build_target_key: it is the single source of truth for this format,
+        # and a hand-rolled f-string here would silently return zero rows if the format changed.
         target_keys = []
         if defender_champion_id is not None:
-            target_keys.append(f"def:{defender_champion_id}")
+            target_keys.append(
+                build_target_key(MatchupTargetType.DEFENDER, defender_champion_id, None)
+            )
         if node_number is not None:
-            target_keys.append(f"node:{node_number}")
+            target_keys.append(build_target_key(MatchupTargetType.NODE, None, node_number))
         if not target_keys:
             return []
 
@@ -227,13 +240,22 @@ class MatchupService:
         return list(result.all())
 
     @staticmethod
-    async def _roster_context(
-        session: SessionDep, alliance_id: uuid.UUID, game_account_id: Optional[uuid.UUID]
-    ) -> tuple[dict[uuid.UUID, ChampionUser], set[uuid.UUID]]:
-        """Return (champion_id -> owned instance, champion ids placed on our own defense).
+    def _instance_strength(entry: ChampionUser) -> tuple[int, int, int, int]:
+        """Order two instances of the same champion, strongest last."""
+        return (entry.stars, entry.rank, entry.ascension, entry.signature)
 
-        ``DefensePlacement`` stores ``champion_user_id`` — the exact instance — so this maps
-        back to champion ids through the player's roster.
+    @classmethod
+    async def _roster_context(
+        cls, session: SessionDep, alliance_id: uuid.UUID, game_account_id: Optional[uuid.UUID]
+    ) -> tuple[dict[uuid.UUID, ChampionUser], set[uuid.UUID]]:
+        """Return (champion_id -> strongest owned instance, champion ids whose best is on defense).
+
+        A player can own several instances of one champion — a 6-star and a 7-star Doom are an
+        ordinary roster, because `ChampionUserService` deduplicates on champion *and stars*. We
+        surface the strongest, and warn only when that instance is the one placed on defense.
+
+        `DefensePlacement` stores `champion_user_id` — the exact instance — so it maps back to a
+        champion id through the player's roster.
         """
         if game_account_id is None:
             return {}, set()
@@ -243,7 +265,11 @@ class MatchupService:
                 select(ChampionUser).where(ChampionUser.game_account_id == game_account_id)
             )
         ).all()
-        owned = {entry.champion_id: entry for entry in roster}
+        owned: dict[uuid.UUID, ChampionUser] = {}
+        for entry in roster:
+            best = owned.get(entry.champion_id)
+            if best is None or cls._instance_strength(entry) > cls._instance_strength(best):
+                owned[entry.champion_id] = entry
 
         placements = (
             await session.exec(
@@ -254,7 +280,7 @@ class MatchupService:
             )
         ).all()
         placed = {placement.champion_user_id for placement in placements}
-        on_defense = {entry.champion_id for entry in roster if entry.id in placed}
+        on_defense = {champion_id for champion_id, entry in owned.items() if entry.id in placed}
         return owned, on_defense
 
     @staticmethod

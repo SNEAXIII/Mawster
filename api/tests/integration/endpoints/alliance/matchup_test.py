@@ -341,3 +341,120 @@ async def test_evaluation_warns_when_the_instance_is_placed_on_defense():
     row = response.json()[0]
     assert row["is_playable"] is True
     assert row["is_on_defense"] is True
+
+
+@pytest.mark.asyncio
+async def test_evaluation_merges_a_synergy_rated_on_both_sides_as_required():
+    """The unified form attaches the same synergies to both ratings, so they overlap.
+
+    Merging must key on champion_id and let `required` win over `recommended`, whichever side
+    carries which. Concatenating would list the champion twice.
+    """
+    alliance, owner, attacker, defender = await _setup_alliance_with_champions()
+    await push_champion_user(owner, attacker)
+    synergy = await push_champion(name="Mister Fantastic", champion_class="Science")
+    route = f"/alliances/{alliance.id}/matchups"
+
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "good",
+                    "synergies": [{"champion_id": str(synergy.id), "is_required": False}],
+                },
+                {
+                    "target_type": "node",
+                    "node_number": 23,
+                    "verdict": "good",
+                    "synergies": [{"champion_id": str(synergy.id), "is_required": True}],
+                },
+            ],
+        },
+        HEADERS_OWNER,
+    )
+
+    response = await execute_get_request(
+        f"{route}/evaluation?defender_champion_id={defender.id}&node_number=23"
+        f"&game_account_id={owner.id}",
+        HEADERS_OWNER,
+    )
+    row = response.json()[0]
+    assert len(row["synergies"]) == 1
+    assert row["synergies"][0]["is_required"] is True
+    assert [c["champion_name"] for c in row["missing_champions"]] == ["Mister Fantastic"]
+
+
+@pytest.mark.asyncio
+async def test_evaluation_surfaces_the_strongest_owned_instance():
+    """A 6-star and a 7-star of the same champion is an ordinary roster."""
+    alliance, owner, attacker, defender = await _setup_alliance_with_champions()
+    await push_champion_user(owner, attacker, stars=6, rank=5, signature=0, ascension=0)
+    await push_champion_user(owner, attacker, stars=7, rank=3, signature=20, ascension=0)
+    route = f"/alliances/{alliance.id}/matchups"
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "good",
+                }
+            ],
+        },
+        HEADERS_OWNER,
+    )
+
+    response = await execute_get_request(
+        f"{route}/evaluation?defender_champion_id={defender.id}&game_account_id={owner.id}",
+        HEADERS_OWNER,
+    )
+    row = response.json()[0]
+    assert row["instance_label"] == "7r3 sig 20"
+
+
+@pytest.mark.asyncio
+async def test_evaluation_only_warns_when_the_strongest_instance_is_on_defense():
+    """The weaker instance sitting on defense must not warn about the stronger, free one."""
+    alliance, owner, attacker, defender = await _setup_alliance_with_champions()
+    weak = await push_champion_user(owner, attacker, stars=6, rank=5)
+    await push_champion_user(owner, attacker, stars=7, rank=3)
+    await load_objects(
+        [
+            DefensePlacement(
+                alliance_id=alliance.id,
+                battlegroup=1,
+                node_number=5,
+                champion_user_id=weak.id,
+                game_account_id=owner.id,
+            )
+        ]
+    )
+    route = f"/alliances/{alliance.id}/matchups"
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "good",
+                }
+            ],
+        },
+        HEADERS_OWNER,
+    )
+
+    response = await execute_get_request(
+        f"{route}/evaluation?defender_champion_id={defender.id}&game_account_id={owner.id}",
+        HEADERS_OWNER,
+    )
+    row = response.json()[0]
+    assert row["is_on_defense"] is False
+    assert row["instance_label"] == "7r3 sig 0"
