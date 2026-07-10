@@ -5,7 +5,11 @@ import uuid
 import pytest
 from pydantic import ValidationError
 
-from src.dto.alliance.dto_matchup import MatchupTargetInput, MatchupUpsertRequest
+from src.dto.alliance.dto_matchup import (
+    MatchupEvaluationRow,
+    MatchupTargetInput,
+    MatchupUpsertRequest,
+)
 from src.enums.MatchupTargetType import MatchupTargetType
 from src.enums.MatchupVerdict import MatchupVerdict
 
@@ -70,3 +74,43 @@ def test_upsert_accepts_one_defender_and_one_node():
         ],
     )
     assert len(request.targets) == 2
+
+
+def test_upsert_rejects_two_node_targets():
+    node = {"target_type": MatchupTargetType.NODE, "verdict": MatchupVerdict.OK}
+    with pytest.raises(ValidationError):
+        MatchupUpsertRequest(
+            champion_id=uuid.uuid4(),
+            targets=[
+                MatchupTargetInput(**node, node_number=1),
+                MatchupTargetInput(**node, node_number=2),
+            ],
+        )
+
+
+def _champion_ref() -> dict:
+    return {
+        "champion_id": uuid.uuid4(),
+        "champion_name": "Doctor Doom",
+        "champion_class": "Mystic",
+    }
+
+
+def test_evaluation_row_rejects_a_score_on_a_discouraged_fight():
+    with pytest.raises(ValidationError):
+        MatchupEvaluationRow(champion=_champion_ref(), is_discouraged=True, score=4)
+
+
+def test_evaluation_row_rejects_a_missing_score_when_not_discouraged():
+    with pytest.raises(ValidationError):
+        MatchupEvaluationRow(champion=_champion_ref(), is_discouraged=False, score=None)
+
+
+def test_evaluation_row_accepts_discouraged_without_a_score():
+    row = MatchupEvaluationRow(champion=_champion_ref(), is_discouraged=True)
+    assert row.score is None
+
+
+def test_evaluation_row_accepts_a_zero_score_when_not_discouraged():
+    row = MatchupEvaluationRow(champion=_champion_ref(), is_discouraged=False, score=0)
+    assert row.score == 0

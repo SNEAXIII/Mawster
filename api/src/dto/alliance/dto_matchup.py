@@ -6,7 +6,12 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.enums.MatchupTargetType import MatchupTargetType
 from src.enums.MatchupVerdict import MatchupVerdict
-from src.Messages.matchup_messages import DUPLICATE_TARGET_TYPE, SINGLE_TARGET_REQUIRED
+from src.Messages.matchup_messages import (
+    DISCOURAGED_HAS_NO_SCORE,
+    DUPLICATE_TARGET_TYPE,
+    SCORE_REQUIRED_WHEN_NOT_DISCOURAGED,
+    SINGLE_TARGET_REQUIRED,
+)
 
 
 class MatchupSynergyInput(BaseModel):
@@ -95,3 +100,17 @@ class MatchupEvaluationRow(BaseModel):
     instance_label: Optional[str] = None
     missing_champions: list[ChampionRef] = Field(default_factory=list)
     is_on_defense: Optional[bool] = None
+
+    @model_validator(mode="after")
+    def score_absent_iff_discouraged(self) -> "MatchupEvaluationRow":
+        """Keep the two representations of a discouraged fight from drifting apart.
+
+        A discouraged fight has no score — it is not a fight worth zero points. The service
+        builds this row by hand, so without this check a stale score could ride alongside a
+        discouraged verdict and the UI would render a number where it must render a word.
+        """
+        if self.is_discouraged and self.score is not None:
+            raise ValueError(DISCOURAGED_HAS_NO_SCORE)
+        if not self.is_discouraged and self.score is None:
+            raise ValueError(SCORE_REQUIRED_WHEN_NOT_DISCOURAGED)
+        return self
