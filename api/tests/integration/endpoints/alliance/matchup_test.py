@@ -8,25 +8,25 @@ import uuid
 
 import pytest
 
-# TODO(task-6): delete this marker and its `pytestmark` use once the controller is registered.
-pytestmark = pytest.mark.skip(reason="TODO(task-6): matchup_controller not registered yet")
-
-from main import app  # noqa: E402
-from src.enums.MatchupTargetType import MatchupTargetType  # noqa: E402
-from src.enums.MatchupVerdict import MatchupVerdict  # noqa: E402
-from src.utils.db import get_session  # noqa: E402
-from tests.integration.endpoints.setup.game_setup import (  # noqa: E402
+from main import app
+from src.enums.MatchupTargetType import MatchupTargetType
+from src.enums.MatchupVerdict import MatchupVerdict
+from src.utils.db import get_session
+from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
 )
-from tests.integration.endpoints.setup.user_setup import get_generic_user  # noqa: E402
-from tests.utils.utils_client import (  # noqa: E402
+from tests.integration.endpoints.setup.user_setup import get_generic_user
+from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
     execute_post_request,
 )
-from tests.utils.utils_constant import USER_ID  # noqa: E402
-from tests.utils.utils_db import get_test_session, load_objects  # noqa: E402
+from tests.utils.utils_constant import USER_ID
+from tests.utils.utils_db import get_test_session, load_objects
+
+# TODO(task-6): delete this marker once matchup_controller is registered in the router list.
+pytestmark = pytest.mark.skip(reason="TODO(task-6): matchup_controller not registered yet")
 
 app.dependency_overrides[get_session] = get_test_session
 
