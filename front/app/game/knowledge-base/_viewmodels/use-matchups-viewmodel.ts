@@ -35,6 +35,14 @@ export function useMatchupsViewModel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Preselect the first alliance once they load, like the defense and war pages do.
+  useEffect(() => {
+    if (alliances.length > 0 && !selectedAllianceId) {
+      setSelectedAllianceId(alliances[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alliances]);
+
   const hasTarget = filters.defenderChampionId !== null || filters.nodeNumber !== '';
 
   const reload = useCallback(async () => {
