@@ -1,8 +1,4 @@
-"""Integration tests for the matchup rating endpoints.
-
-Every test here is skipped until Task 6 wires `matchup_controller` into the router list.
-They are written now, while the behaviour is fresh, and switched on in one move later.
-"""
+"""Integration tests for the matchup rating endpoints."""
 
 import uuid
 
@@ -17,18 +13,19 @@ from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
     push_champion_user,
+    push_member,
+    push_officer,
+    push_visitor,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user
 from tests.utils.utils_client import (
     create_auth_headers,
+    execute_delete_request,
     execute_get_request,
     execute_post_request,
 )
 from tests.utils.utils_constant import USER_ID
 from tests.utils.utils_db import get_test_session, load_objects
-
-# TODO(task-6): delete this marker once matchup_controller is registered in the router list.
-pytestmark = pytest.mark.skip(reason="TODO(task-6): matchup_controller not registered yet")
 
 app.dependency_overrides[get_session] = get_test_session
 
@@ -458,3 +455,198 @@ async def test_evaluation_only_warns_when_the_strongest_instance_is_on_defense()
     row = response.json()[0]
     assert row["is_on_defense"] is False
     assert row["instance_label"] == "7r3 sig 0"
+
+
+OUTSIDER_ID = uuid.uuid4()
+HEADERS_OUTSIDER = create_auth_headers(user_id=str(OUTSIDER_ID))
+VISITOR_ID = uuid.uuid4()
+HEADERS_VISITOR = create_auth_headers(user_id=str(VISITOR_ID))
+MEMBER_ID = uuid.uuid4()
+HEADERS_MEMBER = create_auth_headers(user_id=str(MEMBER_ID))
+
+
+def _defender_payload(attacker_id, defender_id) -> dict:
+    return {
+        "champion_id": str(attacker_id),
+        "targets": [
+            {
+                "target_type": "defender",
+                "defender_champion_id": str(defender_id),
+                "verdict": "good",
+            }
+        ],
+    }
+
+
+@pytest.mark.asyncio
+async def test_outsider_cannot_read_matchups():
+    alliance, _owner, _attacker, _defender = await _setup_alliance_with_champions()
+    outsider = get_generic_user(login="outsider", email="outsider@test.com")
+    outsider.id = OUTSIDER_ID
+    outsider.discord_id = "discord_outsider"
+    await load_objects([outsider])
+
+    response = await execute_get_request(f"/alliances/{alliance.id}/matchups", HEADERS_OUTSIDER)
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_visitor_can_read_but_not_write():
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    visitor = get_generic_user(login="visitor", email="visitor@test.com")
+    visitor.id = VISITOR_ID
+    visitor.discord_id = "discord_visitor"
+    await load_objects([visitor])
+    await push_visitor(alliance, VISITOR_ID)
+
+    read = await execute_get_request(f"/alliances/{alliance.id}/matchups", HEADERS_VISITOR)
+    assert read.status_code == 200
+
+    write = await execute_post_request(
+        f"/alliances/{alliance.id}/matchups",
+        _defender_payload(attacker.id, defender.id),
+        HEADERS_VISITOR,
+    )
+    assert write.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_plain_member_can_read_but_not_write():
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    member = get_generic_user(login="member", email="member@test.com")
+    member.id = MEMBER_ID
+    member.discord_id = "discord_member"
+    await load_objects([member])
+    await push_member(alliance, MEMBER_ID, game_pseudo="MemberPseudo")
+
+    read = await execute_get_request(f"/alliances/{alliance.id}/matchups", HEADERS_MEMBER)
+    assert read.status_code == 200
+
+    write = await execute_post_request(
+        f"/alliances/{alliance.id}/matchups",
+        _defender_payload(attacker.id, defender.id),
+        HEADERS_MEMBER,
+    )
+    assert write.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_officer_can_write():
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    officer_user = get_generic_user(login="officer", email="officer@test.com")
+    officer_user.id = MEMBER_ID
+    officer_user.discord_id = "discord_officer"
+    await load_objects([officer_user])
+    officer_account = await push_member(alliance, MEMBER_ID, game_pseudo="OfficerPseudo")
+    await push_officer(alliance, officer_account)
+
+    response = await execute_post_request(
+        f"/alliances/{alliance.id}/matchups",
+        _defender_payload(attacker.id, defender.id),
+        HEADERS_MEMBER,
+    )
+    assert response.status_code == 201
+
+
+@pytest.mark.asyncio
+async def test_delete_removes_the_rating_and_its_synergies():
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    synergy = await push_champion(name="Mister Fantastic", champion_class="Science")
+    route = f"/alliances/{alliance.id}/matchups"
+    created = await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "good",
+                    "synergies": [{"champion_id": str(synergy.id), "is_required": True}],
+                }
+            ],
+        },
+        HEADERS_OWNER,
+    )
+    rating_id = created.json()[0]["id"]
+
+    deleted = await execute_delete_request(f"{route}/{rating_id}", HEADERS_OWNER)
+    assert deleted.status_code == 204
+
+    listing = await execute_get_request(route, HEADERS_OWNER)
+    assert listing.json() == []
+
+
+@pytest.mark.asyncio
+async def test_upsert_rejects_an_unknown_champion():
+    alliance, _owner, _attacker, defender = await _setup_alliance_with_champions()
+    payload = {
+        "champion_id": str(uuid.uuid4()),
+        "targets": [
+            {
+                "target_type": "defender",
+                "defender_champion_id": str(defender.id),
+                "verdict": "good",
+            }
+        ],
+    }
+    response = await execute_post_request(
+        f"/alliances/{alliance.id}/matchups", payload, HEADERS_OWNER
+    )
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_upsert_rejects_an_unknown_synergy_champion():
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    payload = {
+        "champion_id": str(attacker.id),
+        "targets": [
+            {
+                "target_type": "defender",
+                "defender_champion_id": str(defender.id),
+                "verdict": "good",
+                "synergies": [{"champion_id": str(uuid.uuid4()), "is_required": True}],
+            }
+        ],
+    }
+    response = await execute_post_request(
+        f"/alliances/{alliance.id}/matchups", payload, HEADERS_OWNER
+    )
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_upsert_can_resubmit_an_unchanged_synergy():
+    """Guards the `flush()` between deleting stale synergies and re-inserting them.
+
+    Without it SQLAlchemy emits the re-insert before the delete in one flush batch, and the
+    unchanged synergy champion collides on `uq_matchup_synergy_champion`.
+    """
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    synergy = await push_champion(name="Mister Fantastic", champion_class="Science")
+    route = f"/alliances/{alliance.id}/matchups"
+
+    def payload(verdict: str) -> dict:
+        return {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": verdict,
+                    "synergies": [{"champion_id": str(synergy.id), "is_required": True}],
+                }
+            ],
+        }
+
+    first = await execute_post_request(route, payload("ok"), HEADERS_OWNER)
+    assert first.status_code == 201
+    second = await execute_post_request(route, payload("good"), HEADERS_OWNER)
+    assert second.status_code == 201
+
+    listing = await execute_get_request(route, HEADERS_OWNER)
+    body = listing.json()
+    assert len(body) == 1
+    assert body[0]["verdict"] == "good"
+    assert len(body[0]["synergies"]) == 1

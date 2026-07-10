@@ -17,6 +17,7 @@ from src.controllers.alliance.alliance_core_controller import alliance_core_cont
 from src.controllers.alliance.alliance_member_controller import alliance_member_controller
 from src.controllers.alliance.alliance_visitor_controller import alliance_visitor_controller
 from src.controllers.alliance.alliance_roster_controller import alliance_roster_controller
+from src.controllers.alliance.matchup_controller import matchup_controller
 from src.controllers.alliance.war.defense_controller import defense_controller
 from src.controllers.alliance.war.statistic_controller import statistics_controller
 from src.controllers.alliance.war.war_core_controller import war_core_controller
@@ -48,6 +49,7 @@ routers = [
     alliance_member_controller,
     alliance_visitor_controller,
     alliance_roster_controller,
+    matchup_controller,
     defense_controller,
     war_core_controller,
     war_placement_controller,

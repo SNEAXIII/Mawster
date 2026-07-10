@@ -14,7 +14,7 @@ from src.dto.alliance.dto_matchup import (
     MatchupUpsertRequest,
 )
 from src.enums.MatchupTargetType import MatchupTargetType
-from src.Messages.matchup_messages import MATCHUP_NOT_FOUND
+from src.Messages.matchup_messages import CHAMPION_NOT_FOUND, MATCHUP_NOT_FOUND
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.DefensePlacement import DefensePlacement
@@ -54,6 +54,8 @@ class MatchupService:
         against a defender and a node together, and a half-written pair would be worse than
         no rating at all.
         """
+        await cls._assert_champions_exist(session, request)
+
         ratings: list[MatchupRating] = []
         for target in request.targets:
             target_key = build_target_key(
@@ -83,11 +85,6 @@ class MatchupService:
                     updated_by_game_account_id=author_game_account_id,
                 )
                 session.add(existing)
-                # TODO(task-6): likely unnecessary. `UUIDBase.id` comes from a client-side
-                # `default_factory=uuid.uuid4`, so the synergy rows already know their parent id,
-                # and SQLAlchemy orders parent inserts before children by FK dependency anyway.
-                # Drop it once the integration tests are un-skipped and can prove it.
-                await session.flush()
             else:
                 existing.verdict = target.verdict
                 existing.prefight_champion_id = target.prefight_champion_id
@@ -118,6 +115,25 @@ class MatchupService:
 
         await session.commit()
         return await cls._reload(session, [rating.id for rating in ratings])
+
+    @staticmethod
+    async def _assert_champions_exist(session: SessionDep, request: MatchupUpsertRequest) -> None:
+        """Reject unknown champion ids with a 404 rather than a raw IntegrityError.
+
+        Four fields carry champion ids — the attacker, the defender, the prefight, and each
+        synergy. A stale id from a client would otherwise surface as a 500 at commit time.
+        """
+        referenced = {request.champion_id}
+        for target in request.targets:
+            if target.defender_champion_id is not None:
+                referenced.add(target.defender_champion_id)
+            if target.prefight_champion_id is not None:
+                referenced.add(target.prefight_champion_id)
+            referenced.update(synergy.champion_id for synergy in target.synergies)
+
+        found = (await session.exec(select(Champion.id).where(Champion.id.in_(referenced)))).all()
+        if len(set(found)) != len(referenced):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_NOT_FOUND)
 
     @classmethod
     async def list_ratings(
