@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import ChampionFilterSelect from './champion-filter-select';
-import MatchupVerdictSelect from './matchup-verdict-select';
-import MatchupSynergyField, { type SynergyDraft } from './matchup-synergy-field';
+import MatchupFormDefenderColumn from './matchup-form-defender-column';
+import MatchupFormNodeColumn from './matchup-form-node-column';
+import type { SynergyDraft } from './matchup-synergy-field';
 import type { MatchupTargetInput, MatchupUpsertBody, MatchupVerdict } from '@/app/services/matchups';
 
 interface Props {
@@ -79,66 +79,37 @@ export default function MatchupForm({ onSubmit }: Readonly<Props>) {
   }
 
   return (
-    <div
-      className='rounded-md border bg-card p-4 flex flex-wrap gap-3 items-end'
-      data-cy='matchup-form'
-    >
+    <div className='rounded-md border bg-card p-4 flex flex-col gap-4' data-cy='matchup-form'>
       <ChampionFilterSelect
         value={attackerId}
         onChange={setAttackerId}
         placeholder={kb.formAttacker}
         data-cy='matchup-form-attacker'
       />
-      <ChampionFilterSelect
-        value={defenderId}
-        onChange={setDefenderId}
-        placeholder={kb.filterDefender}
-        data-cy='matchup-form-defender'
-      />
-      {defenderId !== null && (
-        <MatchupVerdictSelect
-          value={defenderVerdict}
-          onChange={setDefenderVerdict}
-          data-cy='matchup-form-defender-verdict'
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+        <MatchupFormDefenderColumn
+          defenderId={defenderId}
+          onDefenderChange={setDefenderId}
+          defenderVerdict={defenderVerdict}
+          onDefenderVerdictChange={setDefenderVerdict}
+          synergies={synergies}
+          onSynergyChange={updateSynergy}
+          prefightId={prefightId}
+          onPrefightChange={setPrefightId}
         />
-      )}
-      <Input
-        className='w-24'
-        type='number'
-        min={1}
-        max={50}
-        placeholder={kb.filterNode}
-        value={nodeNumber}
-        onChange={(e) => setNodeNumber(e.target.value)}
-        data-cy='matchup-form-node'
-      />
-      {nodeNumber !== '' && (
-        <MatchupVerdictSelect
-          value={nodeVerdict}
-          onChange={setNodeVerdict}
-          data-cy='matchup-form-node-verdict'
+        <MatchupFormNodeColumn
+          nodeNumber={nodeNumber}
+          onNodeChange={setNodeNumber}
+          nodeVerdict={nodeVerdict}
+          onNodeVerdictChange={setNodeVerdict}
         />
-      )}
-      {synergies.map((synergy, index) => (
-        <MatchupSynergyField
-          key={index}
-          index={index}
-          synergy={synergy}
-          onChange={updateSynergy}
-        />
-      ))}
-      <ChampionFilterSelect
-        value={prefightId}
-        onChange={setPrefightId}
-        placeholder={kb.formPrefight}
-        data-cy='matchup-form-prefight'
-      />
-      <Button onClick={handleSubmit} disabled={!canSubmit} data-cy='matchup-form-submit'>
-        {kb.formSubmit}
-      </Button>
-      {!hasTarget && (
-        <p className='text-muted-foreground text-xs w-full'>{kb.formNeedsTarget}</p>
-      )}
+      </div>
+      <div className='flex items-center gap-3'>
+        <Button onClick={handleSubmit} disabled={!canSubmit} data-cy='matchup-form-submit'>
+          {kb.formSubmit}
+        </Button>
+        {!hasTarget && <p className='text-muted-foreground text-xs'>{kb.formNeedsTarget}</p>}
+      </div>
     </div>
   );
 }

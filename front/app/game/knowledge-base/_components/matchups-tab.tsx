@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useI18n } from '@/app/i18n';
+import { CollapsibleSection } from '@/components/collapsible-section';
 import { getAllianceRoster } from '@/app/services/game';
 import { useMatchupsViewModel } from '../_viewmodels/use-matchups-viewmodel';
 import MatchupEvaluationFilters from './matchup-evaluation-filters';
@@ -35,10 +36,12 @@ export default function MatchupsTab() {
   return (
     <div className='flex flex-col gap-4' data-cy='matchups-tab'>
       {vm.canEdit && (
-        <>
-          <MatchupForm onSubmit={vm.saveMatchup} />
-          <MatchupTable ratings={vm.ratings} onDelete={vm.removeMatchup} />
-        </>
+        <CollapsibleSection title={t.game.knowledgeBase.addSectionTitle} defaultOpen={false}>
+          <div className='flex flex-col gap-4'>
+            <MatchupForm onSubmit={vm.saveMatchup} />
+            <MatchupTable ratings={vm.ratings} onDelete={vm.removeMatchup} />
+          </div>
+        </CollapsibleSection>
       )}
       <MatchupEvaluationFilters
         alliances={vm.alliances}
