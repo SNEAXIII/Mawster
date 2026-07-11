@@ -3,15 +3,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAllianceSelector } from '@/hooks/use-alliance-selector';
 import { getMyAllianceRoles, type AllianceMyRoles } from '@/app/services/game';
-import {
-  deleteMatchup,
-  evaluateMatchups,
-  getMatchups,
-  upsertMatchup,
-  type MatchupEvaluationRow,
-  type MatchupRating,
-  type MatchupUpsertBody,
-} from '@/app/services/matchups';
+import { evaluateMatchups, type MatchupEvaluationRow } from '@/app/services/matchups';
+import { useMatchupGrid } from './use-matchup-grid';
+import { useMatchupRatings } from './use-matchup-ratings';
 
 export interface MatchupFiltersState {
   championId: string | null;
@@ -43,6 +37,10 @@ export function useMatchupsViewModel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alliances]);
 
+  // Attacker picked alone (no defender/node target): mutually exclusive with hasTarget below,
+  // since it requires both defenderChampionId and nodeNumber to be empty.
+  const showGrid =
+    filters.championId !== null && filters.defenderChampionId === null && filters.nodeNumber === '';
   const hasTarget = filters.defenderChampionId !== null || filters.nodeNumber !== '';
 
   const reload = useCallback(async () => {
@@ -71,6 +69,13 @@ export function useMatchupsViewModel() {
     void reload();
   }, [reload]);
 
+  const {
+    grid,
+    loading: gridLoading,
+    error: gridError,
+    reload: reloadGrid,
+  } = useMatchupGrid(selectedAllianceId, showGrid, filters.championId, filters.gameAccountId);
+
   const setFilter = useCallback(
     <K extends keyof MatchupFiltersState>(key: K, value: MatchupFiltersState[K]) =>
       setFilters((current) => ({ ...current, [key]: value })),
@@ -79,40 +84,14 @@ export function useMatchupsViewModel() {
 
   const clearFilters = useCallback(() => setFilters(EMPTY_FILTERS), []);
 
-  const [ratings, setRatings] = useState<MatchupRating[]>([]);
-
-  const loadRatings = useCallback(async () => {
-    if (!selectedAllianceId) {
-      setRatings([]);
-      return;
-    }
-    try {
-      setRatings(await getMatchups(selectedAllianceId));
-    } catch {
-      setError('load-failed');
-    }
-  }, [selectedAllianceId]);
-
-  useEffect(() => {
-    void loadRatings();
-  }, [loadRatings]);
-
-  const saveMatchup = useCallback(
-    async (body: MatchupUpsertBody) => {
-      if (!selectedAllianceId) return;
-      await upsertMatchup(selectedAllianceId, body);
-      await Promise.all([loadRatings(), reload()]);
-    },
-    [selectedAllianceId, loadRatings, reload]
+  // Officers editing ratings need both read views refreshed, whichever one is on screen.
+  const reloadActive = useCallback(
+    async () => void (await Promise.all([reload(), reloadGrid()])),
+    [reload, reloadGrid]
   );
-
-  const removeMatchup = useCallback(
-    async (ratingId: string) => {
-      if (!selectedAllianceId) return;
-      await deleteMatchup(selectedAllianceId, ratingId);
-      await Promise.all([loadRatings(), reload()]);
-    },
-    [selectedAllianceId, loadRatings, reload]
+  const { ratings, saveMatchup, removeMatchup } = useMatchupRatings(
+    selectedAllianceId,
+    reloadActive
   );
 
   const [roles, setRoles] = useState<AllianceMyRoles['roles']>({});
@@ -135,9 +114,11 @@ export function useMatchupsViewModel() {
     setFilter,
     clearFilters,
     hasTarget,
+    showGrid,
+    grid,
     rows,
-    loading,
-    error,
+    loading: showGrid ? gridLoading : loading,
+    error: showGrid ? gridError : error,
     reload,
     canEdit,
     ratings,

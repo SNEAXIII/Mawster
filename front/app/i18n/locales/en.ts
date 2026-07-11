@@ -744,6 +744,8 @@ const en = {
       formRequiredSwitch: 'Required',
       formSubmit: 'Save',
       formNeedsTarget: 'Pick a defender or a node.',
+      gridNotOwned: 'You do not own this champion.',
+      gridEmpty: 'No matchup rated yet for this attacker.',
     },
   },
 

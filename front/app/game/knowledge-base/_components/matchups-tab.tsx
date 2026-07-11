@@ -7,6 +7,7 @@ import { useMatchupsViewModel } from '../_viewmodels/use-matchups-viewmodel';
 import MatchupEvaluationFilters from './matchup-evaluation-filters';
 import MatchupEvaluationTable from './matchup-evaluation-table';
 import MatchupForm from './matchup-form';
+import MatchupGridTable from './matchup-grid-table';
 import MatchupTable from './matchup-table';
 
 export default function MatchupsTab() {
@@ -52,12 +53,15 @@ export default function MatchupsTab() {
         }
         onClear={vm.clearFilters}
       />
-      {!vm.hasTarget && (
+      {vm.showGrid && <MatchupGridTable grid={vm.grid} loading={vm.loading} />}
+      {!vm.showGrid && !vm.hasTarget && (
         <p className='text-muted-foreground text-sm' data-cy='matchup-hint'>
           {t.game.knowledgeBase.selectTargetHint}
         </p>
       )}
-      {vm.hasTarget && <MatchupEvaluationTable rows={vm.rows} loading={vm.loading} />}
+      {!vm.showGrid && vm.hasTarget && (
+        <MatchupEvaluationTable rows={vm.rows} loading={vm.loading} />
+      )}
     </div>
   );
 }

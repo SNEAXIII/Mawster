@@ -752,6 +752,8 @@ const fr: Translations = {
       formRequiredSwitch: 'Obligatoire',
       formSubmit: 'Enregistrer',
       formNeedsTarget: 'Choisis un défenseur ou un node.',
+      gridNotOwned: 'Vous ne possédez pas ce champion.',
+      gridEmpty: 'Aucun matchup renseigné pour cet attaquant.',
     },
   },
 
