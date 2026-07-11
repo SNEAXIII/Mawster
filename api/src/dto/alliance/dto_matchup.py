@@ -114,3 +114,38 @@ class MatchupEvaluationRow(BaseModel):
         if not self.is_discouraged and self.score is None:
             raise ValueError(SCORE_REQUIRED_WHEN_NOT_DISCOURAGED)
         return self
+
+
+class MatchupGridAxisEntry(BaseModel):
+    """One rated axis value for the attacker: a defender, or a node."""
+
+    defender: Optional[ChampionRef] = None
+    node_number: Optional[int] = None
+    verdict: MatchupVerdict
+    synergies: list[MatchupSynergyResponse] = Field(default_factory=list)
+    prefight: Optional[ChampionRef] = None
+
+
+class MatchupGridCell(BaseModel):
+    defender_champion_id: uuid.UUID
+    node_number: int
+    is_discouraged: bool
+    score: Optional[int] = None
+
+    @model_validator(mode="after")
+    def score_absent_iff_discouraged(self) -> "MatchupGridCell":
+        if self.is_discouraged and self.score is not None:
+            raise ValueError(DISCOURAGED_HAS_NO_SCORE)
+        if not self.is_discouraged and self.score is None:
+            raise ValueError(SCORE_REQUIRED_WHEN_NOT_DISCOURAGED)
+        return self
+
+
+class MatchupGridResponse(BaseModel):
+    attacker: ChampionRef
+    is_owned: Optional[bool] = None
+    instance_label: Optional[str] = None
+    is_on_defense: Optional[bool] = None
+    defenders: list[MatchupGridAxisEntry] = Field(default_factory=list)
+    nodes: list[MatchupGridAxisEntry] = Field(default_factory=list)
+    cells: list[MatchupGridCell] = Field(default_factory=list)

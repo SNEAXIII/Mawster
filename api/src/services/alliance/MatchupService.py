@@ -10,6 +10,9 @@ from fastapi import HTTPException, status
 from src.dto.alliance.dto_matchup import (
     ChampionRef,
     MatchupEvaluationRow,
+    MatchupGridAxisEntry,
+    MatchupGridCell,
+    MatchupGridResponse,
     MatchupSynergyResponse,
     MatchupUpsertRequest,
 )
@@ -232,6 +235,104 @@ class MatchupService:
             )
         )
         return rows
+
+    @classmethod
+    async def evaluate_grid(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        champion_id: uuid.UUID,
+        game_account_id: Optional[uuid.UUID] = None,
+    ) -> MatchupGridResponse:
+        """Build the attacker-centric grid: every rated defender x every rated node.
+
+        Player-awareness (`is_owned`, `instance_label`, `is_on_defense`) is reported for the
+        attacker only — per-cell required-synergy greying is deliberately out of scope here.
+        """
+        champion = (await session.exec(select(Champion).where(Champion.id == champion_id))).first()
+        if champion is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_NOT_FOUND)
+
+        if game_account_id is not None:
+            await cls._assert_game_account_in_alliance(session, alliance_id, game_account_id)
+
+        ratings = (
+            await session.exec(
+                select(MatchupRating)
+                .where(
+                    MatchupRating.alliance_id == alliance_id,
+                    MatchupRating.champion_id == champion_id,
+                )
+                .options(*cls._RATING_RELATIONS)
+            )
+        ).all()
+
+        defender_ratings = [r for r in ratings if r.target_type is MatchupTargetType.DEFENDER]
+        node_ratings = [r for r in ratings if r.target_type is MatchupTargetType.NODE]
+        # A champion carries zero ratings the first time it is opened from the grid — fall
+        # back to a direct fetch so the attacker ref still renders against empty axes.
+        attacker_champion = ratings[0].champion if ratings else champion
+
+        cells: list[MatchupGridCell] = []
+        for defender_rating in defender_ratings:
+            for node_rating in node_ratings:
+                is_discouraged, score = combine_verdicts(
+                    defender_rating.verdict, node_rating.verdict
+                )
+                cells.append(
+                    MatchupGridCell(
+                        defender_champion_id=defender_rating.defender_champion_id,
+                        node_number=node_rating.node_number,
+                        is_discouraged=is_discouraged,
+                        score=score,
+                    )
+                )
+
+        owned, on_defense = await cls._roster_context(session, alliance_id, game_account_id)
+        is_owned: Optional[bool] = None
+        instance_label: Optional[str] = None
+        is_on_defense: Optional[bool] = None
+        if game_account_id is not None:
+            is_owned = champion_id in owned
+            instance = owned.get(champion_id)
+            instance_label = (
+                format_instance_label(
+                    instance.stars, instance.rank, instance.ascension, instance.signature
+                )
+                if instance
+                else None
+            )
+            is_on_defense = champion_id in on_defense
+
+        return MatchupGridResponse(
+            attacker=cls.champion_ref(attacker_champion),
+            is_owned=is_owned,
+            instance_label=instance_label,
+            is_on_defense=is_on_defense,
+            defenders=[cls._grid_axis_entry(rating) for rating in defender_ratings],
+            nodes=[cls._grid_axis_entry(rating) for rating in node_ratings],
+            cells=cells,
+        )
+
+    @classmethod
+    def _grid_axis_entry(cls, rating: MatchupRating) -> MatchupGridAxisEntry:
+        return MatchupGridAxisEntry(
+            defender=(
+                cls.champion_ref(rating.defender_champion) if rating.defender_champion else None
+            ),
+            node_number=rating.node_number,
+            verdict=rating.verdict,
+            synergies=[
+                MatchupSynergyResponse(
+                    **cls.champion_ref(synergy.champion).model_dump(),
+                    is_required=synergy.is_required,
+                )
+                for synergy in rating.synergies
+            ],
+            prefight=(
+                cls.champion_ref(rating.prefight_champion) if rating.prefight_champion else None
+            ),
+        )
 
     @classmethod
     async def _ratings_for_targets(

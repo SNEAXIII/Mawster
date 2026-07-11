@@ -693,6 +693,220 @@ async def test_plain_member_cannot_delete():
 
 
 @pytest.mark.asyncio
+async def test_grid_returns_cells_with_combined_scores():
+    alliance, _owner, attacker, defender1 = await _setup_alliance_with_champions()
+    defender2 = await push_champion(name="Hercules", champion_class="Cosmic")
+    route = f"/alliances/{alliance.id}/matchups"
+
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender1.id),
+                    "verdict": "good",
+                }
+            ],
+        },
+        HEADERS_OWNER,
+    )
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender2.id),
+                    "verdict": "ok",
+                }
+            ],
+        },
+        HEADERS_OWNER,
+    )
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [{"target_type": "node", "node_number": 1, "verdict": "good"}],
+        },
+        HEADERS_OWNER,
+    )
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [{"target_type": "node", "node_number": 2, "verdict": "ok"}],
+        },
+        HEADERS_OWNER,
+    )
+
+    response = await execute_get_request(f"{route}/grid?champion_id={attacker.id}", HEADERS_OWNER)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["attacker"]["champion_name"] == "Doctor Doom"
+    assert len(body["defenders"]) == 2
+    assert len(body["nodes"]) == 2
+    assert len(body["cells"]) == 4
+
+    def _score(defender_id, node_number):
+        cell = next(
+            c
+            for c in body["cells"]
+            if c["defender_champion_id"] == str(defender_id) and c["node_number"] == node_number
+        )
+        return cell["score"], cell["is_discouraged"]
+
+    assert _score(defender1.id, 1) == (4, False)
+    assert _score(defender1.id, 2) == (3, False)
+    assert _score(defender2.id, 1) == (3, False)
+    assert _score(defender2.id, 2) == (2, False)
+
+
+@pytest.mark.asyncio
+async def test_grid_short_circuits_discouraged_per_cell():
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    route = f"/alliances/{alliance.id}/matchups"
+
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "good",
+                }
+            ],
+        },
+        HEADERS_OWNER,
+    )
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [{"target_type": "node", "node_number": 1, "verdict": "discouraged"}],
+        },
+        HEADERS_OWNER,
+    )
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [{"target_type": "node", "node_number": 2, "verdict": "ok"}],
+        },
+        HEADERS_OWNER,
+    )
+
+    response = await execute_get_request(f"{route}/grid?champion_id={attacker.id}", HEADERS_OWNER)
+    body = response.json()
+    cells_by_node = {c["node_number"]: c for c in body["cells"]}
+    assert cells_by_node[1]["is_discouraged"] is True
+    assert cells_by_node[1]["score"] is None
+    assert cells_by_node[2]["is_discouraged"] is False
+    assert cells_by_node[2]["score"] == 3
+
+
+@pytest.mark.asyncio
+async def test_grid_rejects_an_unknown_champion():
+    alliance, _owner, _attacker, _defender = await _setup_alliance_with_champions()
+    response = await execute_get_request(
+        f"/alliances/{alliance.id}/matchups/grid?champion_id={uuid.uuid4()}", HEADERS_OWNER
+    )
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_grid_rejects_a_game_account_from_another_alliance():
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    route = f"/alliances/{alliance.id}/matchups"
+    await execute_post_request(route, _defender_payload(attacker.id, defender.id), HEADERS_OWNER)
+
+    other_owner_id = uuid.uuid4()
+    other_owner_user = get_generic_user(login="other_owner", email="other_owner@test.com")
+    other_owner_user.id = other_owner_id
+    other_owner_user.discord_id = "discord_other_owner"
+    await load_objects([other_owner_user])
+    _other_alliance, other_owner = await push_alliance_with_owner(
+        user_id=other_owner_id,
+        game_pseudo="OtherOwnerPseudo",
+        alliance_name="Other Alliance",
+        alliance_tag="OTHR",
+    )
+
+    response = await execute_get_request(
+        f"{route}/grid?champion_id={attacker.id}&game_account_id={other_owner.id}",
+        HEADERS_OWNER,
+    )
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_grid_reports_the_strongest_instance_label_and_defense_placement():
+    alliance, owner, attacker, defender = await _setup_alliance_with_champions()
+    weak = await push_champion_user(owner, attacker, stars=6, rank=5, signature=0, ascension=0)
+    await push_champion_user(owner, attacker, stars=7, rank=3, signature=20, ascension=0)
+    await load_objects(
+        [
+            DefensePlacement(
+                alliance_id=alliance.id,
+                battlegroup=1,
+                node_number=5,
+                champion_user_id=weak.id,
+                game_account_id=owner.id,
+            )
+        ]
+    )
+    route = f"/alliances/{alliance.id}/matchups"
+    await execute_post_request(route, _defender_payload(attacker.id, defender.id), HEADERS_OWNER)
+
+    response = await execute_get_request(
+        f"{route}/grid?champion_id={attacker.id}&game_account_id={owner.id}",
+        HEADERS_OWNER,
+    )
+    body = response.json()
+    assert body["is_owned"] is True
+    assert body["instance_label"] == "7r3 sig 20"
+    assert body["is_on_defense"] is False
+
+
+@pytest.mark.asyncio
+async def test_grid_with_only_defenders_axis():
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    route = f"/alliances/{alliance.id}/matchups"
+    await execute_post_request(route, _defender_payload(attacker.id, defender.id), HEADERS_OWNER)
+
+    response = await execute_get_request(f"{route}/grid?champion_id={attacker.id}", HEADERS_OWNER)
+    body = response.json()
+    assert len(body["defenders"]) == 1
+    assert body["nodes"] == []
+    assert body["cells"] == []
+
+
+@pytest.mark.asyncio
+async def test_grid_with_only_nodes_axis():
+    alliance, _owner, attacker, _defender = await _setup_alliance_with_champions()
+    route = f"/alliances/{alliance.id}/matchups"
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [{"target_type": "node", "node_number": 3, "verdict": "good"}],
+        },
+        HEADERS_OWNER,
+    )
+
+    response = await execute_get_request(f"{route}/grid?champion_id={attacker.id}", HEADERS_OWNER)
+    body = response.json()
+    assert body["defenders"] == []
+    assert len(body["nodes"]) == 1
+    assert body["cells"] == []
+
+
+@pytest.mark.asyncio
 async def test_upsert_can_resubmit_an_unchanged_synergy():
     """Guards the `flush()` between deleting stale synergies and re-inserting them.
 
