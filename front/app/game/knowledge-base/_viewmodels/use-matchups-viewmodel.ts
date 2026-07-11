@@ -89,8 +89,12 @@ export function useMatchupsViewModel() {
     async () => void (await Promise.all([reload(), reloadGrid()])),
     [reload, reloadGrid]
   );
-  const { ratings, saveMatchup, removeMatchup } = useMatchupRatings(
+  // Shared with MatchupForm so the officer add-zone's rating list reacts as they pick an
+  // attacker in the entry form, instead of dumping every rating in the alliance.
+  const [matchupAttackerId, setMatchupAttackerId] = useState<string | null>(null);
+  const { ratings: similarRatings, saveMatchup, removeMatchup } = useMatchupRatings(
     selectedAllianceId,
+    matchupAttackerId,
     reloadActive
   );
 
@@ -121,7 +125,9 @@ export function useMatchupsViewModel() {
     error: showGrid ? gridError : error,
     reload,
     canEdit,
-    ratings,
+    similarRatings,
+    matchupAttackerId,
+    setMatchupAttackerId,
     saveMatchup,
     removeMatchup,
   };

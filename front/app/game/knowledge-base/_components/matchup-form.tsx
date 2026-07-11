@@ -11,6 +11,8 @@ import type { MatchupTargetInput, MatchupUpsertBody, MatchupVerdict } from '@/ap
 
 interface Props {
   onSubmit: (body: MatchupUpsertBody) => Promise<void>;
+  attackerId: string | null;
+  onAttackerChange: (championId: string | null) => void;
 }
 
 const EMPTY_SYNERGIES: SynergyDraft[] = [
@@ -18,11 +20,14 @@ const EMPTY_SYNERGIES: SynergyDraft[] = [
   { championId: null, isRequired: true },
 ];
 
-export default function MatchupForm({ onSubmit }: Readonly<Props>) {
+export default function MatchupForm({
+  onSubmit,
+  attackerId,
+  onAttackerChange,
+}: Readonly<Props>) {
   const { t } = useI18n();
   const kb = t.game.knowledgeBase;
 
-  const [attackerId, setAttackerId] = useState<string | null>(null);
   const [defenderId, setDefenderId] = useState<string | null>(null);
   const [defenderVerdict, setDefenderVerdict] = useState<MatchupVerdict>('ok');
   const [nodeNumber, setNodeNumber] = useState('');
@@ -82,7 +87,7 @@ export default function MatchupForm({ onSubmit }: Readonly<Props>) {
     <div className='rounded-md border bg-card p-4 flex flex-col gap-4' data-cy='matchup-form'>
       <ChampionFilterSelect
         value={attackerId}
-        onChange={setAttackerId}
+        onChange={onAttackerChange}
         placeholder={kb.formAttacker}
         data-cy='matchup-form-attacker'
       />

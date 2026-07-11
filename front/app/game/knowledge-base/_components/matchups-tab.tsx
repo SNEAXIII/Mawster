@@ -38,8 +38,16 @@ export default function MatchupsTab() {
       {vm.canEdit && (
         <CollapsibleSection title={t.game.knowledgeBase.addSectionTitle} defaultOpen={false}>
           <div className='flex flex-col gap-4'>
-            <MatchupForm onSubmit={vm.saveMatchup} />
-            <MatchupTable ratings={vm.ratings} onDelete={vm.removeMatchup} />
+            <MatchupForm
+              onSubmit={vm.saveMatchup}
+              attackerId={vm.matchupAttackerId}
+              onAttackerChange={vm.setMatchupAttackerId}
+            />
+            <MatchupTable
+              ratings={vm.similarRatings}
+              attackerId={vm.matchupAttackerId}
+              onDelete={vm.removeMatchup}
+            />
           </div>
         </CollapsibleSection>
       )}
