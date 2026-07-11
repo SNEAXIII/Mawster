@@ -68,6 +68,31 @@ export interface MatchupEvaluationParams extends MatchupFilters {
   game_account_id?: string | null;
 }
 
+export interface MatchupGridAxisEntry {
+  defender: ChampionRef | null;
+  node_number: number | null;
+  verdict: MatchupVerdict;
+  synergies: MatchupSynergy[];
+  prefight: ChampionRef | null;
+}
+
+export interface MatchupGridCell {
+  defender_champion_id: string;
+  node_number: number;
+  is_discouraged: boolean;
+  score: number | null;
+}
+
+export interface MatchupGridResponse {
+  attacker: ChampionRef;
+  is_owned: boolean | null;
+  instance_label: string | null;
+  is_on_defense: boolean | null;
+  defenders: MatchupGridAxisEntry[];
+  nodes: MatchupGridAxisEntry[];
+  cells: MatchupGridCell[];
+}
+
 function toQuery(params: Record<string, any>): string {
   const search = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
@@ -121,4 +146,20 @@ export async function deleteMatchup(allianceId: string, ratingId: string): Promi
     headers: jsonHeaders,
   });
   if (!res.ok) throw new Error('Failed to delete matchup');
+}
+
+export async function getMatchupGrid(
+  allianceId: string,
+  championId: string,
+  gameAccountId?: string | null
+): Promise<MatchupGridResponse> {
+  const res = await fetch(
+    `${PROXY}/alliances/${allianceId}/matchups/grid${toQuery({
+      champion_id: championId,
+      game_account_id: gameAccountId,
+    })}`,
+    { headers: jsonHeaders }
+  );
+  if (!res.ok) throw new Error('Failed to load matchup grid');
+  return res.json();
 }
