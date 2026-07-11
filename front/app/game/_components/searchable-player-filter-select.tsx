@@ -44,7 +44,7 @@ export default function SearchablePlayerFilterSelect({
           variant='outline'
           role='combobox'
           aria-expanded={open}
-          className='h-7 w-24 justify-between text-xs'
+          className='h-full w-36 justify-between text-xs'
           data-cy={dataCy}
         >
           <span className='truncate'>{displayLabel}</span>
