@@ -18,6 +18,7 @@ export default function HistoryTab() {
           totalPage={vm.data.pages}
           usersPerPage={vm.size}
           canReset={vm.page !== 1 || vm.hasActiveFilters}
+          canImport={vm.canImport}
           onUserPerPageChange={(v) => {
             vm.setSize(Number(v));
             vm.setPage(1);
@@ -50,15 +51,6 @@ export default function HistoryTab() {
           onSourceChange={vm.handleSourceChange}
           onClear={vm.handleClearFilters}
         />
-        {vm.canImport && (
-          <Link
-            href='/game/knowledge-base/import'
-            className='ml-auto inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground'
-            data-cy='import-records-link'
-          >
-            {t.game.knowledgeBase.importRecords}
-          </Link>
-        )}
       </div>
 
       {vm.data && (

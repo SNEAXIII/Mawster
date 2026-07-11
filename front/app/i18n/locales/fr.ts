@@ -670,7 +670,6 @@ const fr: Translations = {
       searchChampion: 'Rechercher un champion...',
       allChampions: 'Tous',
       noChampionFound: 'Aucun champion trouvé.',
-      title: 'Base de connaissances',
       tabHistory: 'Historique',
       tabMatchups: 'Matchups',
       attacker: 'Attaquant',

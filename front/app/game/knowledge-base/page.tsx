@@ -40,7 +40,6 @@ function KnowledgeBaseContent() {
 
   return (
     <div className='px-3 py-4 sm:p-6 flex flex-col gap-4'>
-      <h1 className='text-2xl font-bold'>{kb.title}</h1>
       <TabBar tabs={tabs} value={activeTab} onChange={setActiveTab} />
       {activeTab === 'history' && <HistoryTab />}
       {activeTab === 'matchups' && <MatchupsTab />}

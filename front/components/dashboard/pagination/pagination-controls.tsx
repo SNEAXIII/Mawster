@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, RotateCcw } from 'lucide-react';
+import Link from 'next/link';
 import PageNumberSelector from '@/components/dashboard/pagination/page-number-selector';
 import { useI18n } from '@/app/i18n';
 
@@ -10,6 +11,7 @@ interface PaginationControlsProps {
   totalPage: number;
   usersPerPage: number;
   canReset: boolean;
+  canImport?: boolean;
   onUserPerPageChange: (value: string) => void;
   onFirstPage: () => void;
   onPreviousPage: () => void;
@@ -23,6 +25,7 @@ export default function PaginationControls({
   totalPage,
   usersPerPage,
   canReset,
+  canImport,
   onUserPerPageChange,
   onFirstPage,
   onPreviousPage,
@@ -84,6 +87,15 @@ export default function PaginationControls({
           {t.dashboard.pagination.resetFilters} <RotateCcw className='h-4 w-4' />
         </Button>
       </div>
+      {canImport && (
+        <Link
+          href='/game/knowledge-base/import'
+          className='ml-auto inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground'
+          data-cy='import-records-link'
+        >
+          {t.game.knowledgeBase.importRecords}
+        </Link>
+      )}
     </div>
   );
 }
