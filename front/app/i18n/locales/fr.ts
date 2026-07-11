@@ -468,6 +468,8 @@ const fr: Translations = {
       rankFilter: 'Rang',
       playerFilter: 'Joueur',
       allFilter: 'Tous',
+      searchPlayer: 'Rechercher un joueur...',
+      noPlayerFound: 'Aucun joueur trouvé.',
     },
     war: {
       title: "Guerre d'Alliance",

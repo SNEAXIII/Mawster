@@ -8,12 +8,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import SearchablePlayerFilterSelect from './searchable-player-filter-select';
 
 interface PlayerFilterSelectProps {
   players: string[];
   value: string;
   onChange: (v: string) => void;
   dataCy?: string;
+  searchable?: boolean;
 }
 
 export default function PlayerFilterSelect({
@@ -21,10 +23,22 @@ export default function PlayerFilterSelect({
   value,
   onChange,
   dataCy = 'player-filter',
+  searchable = false,
 }: Readonly<PlayerFilterSelectProps>) {
   const { t } = useI18n();
 
   if (players.length === 0) return null;
+
+  if (searchable) {
+    return (
+      <SearchablePlayerFilterSelect
+        players={players}
+        value={value}
+        onChange={onChange}
+        dataCy={dataCy}
+      />
+    );
+  }
 
   return (
     <Select

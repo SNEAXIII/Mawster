@@ -44,6 +44,7 @@ export default function MatchupEvaluationFilters({
         value={filters.gameAccountId}
         onChange={(v) => onChange('gameAccountId', v)}
         dataCy='matchup-filter-player'
+        searchable
       />
       <ChampionFilterSelect
         value={filters.championId}

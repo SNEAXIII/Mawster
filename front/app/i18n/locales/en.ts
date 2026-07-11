@@ -463,6 +463,8 @@ const en = {
       rankFilter: 'Rank',
       playerFilter: 'Player',
       allFilter: 'All',
+      searchPlayer: 'Search player...',
+      noPlayerFound: 'No player found.',
     },
     war: {
       title: 'Alliance War',
