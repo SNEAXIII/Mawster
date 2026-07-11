@@ -735,7 +735,6 @@ const en = {
       noMatchups: 'No matchup rated yet.',
       selectAttackerHint: 'Pick an attacker to see its rated matchups.',
       selectTargetHint: 'Pick a defender and/or a node to evaluate.',
-      addMatchup: 'Rate a matchup',
       addSectionTitle: 'Rate a matchup',
       editMatchup: 'Edit',
       deleteMatchup: 'Delete',

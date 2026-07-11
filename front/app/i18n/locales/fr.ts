@@ -743,7 +743,6 @@ const fr: Translations = {
       noMatchups: 'Aucun matchup renseigné.',
       selectAttackerHint: 'Choisis un attaquant pour voir ses matchups renseignés.',
       selectTargetHint: 'Choisis un défenseur et/ou un node pour évaluer.',
-      addMatchup: 'Noter un matchup',
       addSectionTitle: 'Noter un matchup',
       editMatchup: 'Modifier',
       deleteMatchup: 'Supprimer',

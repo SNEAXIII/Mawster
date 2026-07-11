@@ -117,7 +117,13 @@ class MatchupEvaluationRow(BaseModel):
 
 
 class MatchupGridAxisEntry(BaseModel):
-    """One rated axis value for the attacker: a defender, or a node."""
+    """One rated axis value for the attacker: a defender, or a node.
+
+    ``synergies`` and ``prefight`` carry the rating's full detail. The current
+    grid UI renders only ``verdict``/score, but these are the exact inputs the
+    (deferred) per-cell required-synergy greying will consume, so they are
+    surfaced here rather than recomputed later.
+    """
 
     defender: Optional[ChampionRef] = None
     node_number: Optional[int] = None
