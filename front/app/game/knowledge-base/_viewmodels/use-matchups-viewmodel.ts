@@ -5,6 +5,7 @@ import { useAllianceSelector } from '@/hooks/use-alliance-selector';
 import { getMyAllianceRoles, type AllianceMyRoles } from '@/app/services/game';
 import { evaluateMatchups, type MatchupEvaluationRow } from '@/app/services/matchups';
 import { useMatchupGrid } from './use-matchup-grid';
+import { useMatchupDefenderGrid } from './use-matchup-defender-grid';
 import { useMatchupRatings } from './use-matchup-ratings';
 
 export interface MatchupFiltersState {
@@ -41,10 +42,14 @@ export function useMatchupsViewModel() {
   // since it requires both defenderChampionId and nodeNumber to be empty.
   const showGrid =
     filters.championId !== null && filters.defenderChampionId === null && filters.nodeNumber === '';
+  // Mirror of showGrid: a defender picked alone yields the attacker x nodes grid instead.
+  const showDefenderGrid =
+    filters.defenderChampionId !== null && filters.championId === null && filters.nodeNumber === '';
   const hasTarget = filters.defenderChampionId !== null || filters.nodeNumber !== '';
+  const showEvaluation = hasTarget && !showDefenderGrid;
 
   const reload = useCallback(async () => {
-    if (!selectedAllianceId || !hasTarget) {
+    if (!selectedAllianceId || !showEvaluation) {
       setRows([]);
       return;
     }
@@ -63,7 +68,7 @@ export function useMatchupsViewModel() {
     } finally {
       setLoading(false);
     }
-  }, [selectedAllianceId, hasTarget, filters]);
+  }, [selectedAllianceId, showEvaluation, filters]);
 
   useEffect(() => {
     void reload();
@@ -76,6 +81,18 @@ export function useMatchupsViewModel() {
     reload: reloadGrid,
   } = useMatchupGrid(selectedAllianceId, showGrid, filters.championId, filters.gameAccountId);
 
+  const {
+    grid: defenderGrid,
+    loading: defenderGridLoading,
+    error: defenderGridError,
+    reload: reloadDefenderGrid,
+  } = useMatchupDefenderGrid(
+    selectedAllianceId,
+    showDefenderGrid,
+    filters.defenderChampionId,
+    filters.gameAccountId
+  );
+
   const setFilter = useCallback(
     <K extends keyof MatchupFiltersState>(key: K, value: MatchupFiltersState[K]) =>
       setFilters((current) => ({ ...current, [key]: value })),
@@ -86,8 +103,8 @@ export function useMatchupsViewModel() {
 
   // Officers editing ratings need both read views refreshed, whichever one is on screen.
   const reloadActive = useCallback(
-    async () => void (await Promise.all([reload(), reloadGrid()])),
-    [reload, reloadGrid]
+    async () => void (await Promise.all([reload(), reloadGrid(), reloadDefenderGrid()])),
+    [reload, reloadGrid, reloadDefenderGrid]
   );
   // Shared with MatchupForm so the officer add-zone's rating list reacts as they pick an
   // attacker in the entry form, instead of dumping every rating in the alliance.
@@ -119,10 +136,12 @@ export function useMatchupsViewModel() {
     clearFilters,
     hasTarget,
     showGrid,
+    showDefenderGrid,
     grid,
+    defenderGrid,
     rows,
-    loading: showGrid ? gridLoading : loading,
-    error: showGrid ? gridError : error,
+    loading: showGrid ? gridLoading : showDefenderGrid ? defenderGridLoading : loading,
+    error: showGrid ? gridError : showDefenderGrid ? defenderGridError : error,
     reload,
     canEdit,
     similarRatings,

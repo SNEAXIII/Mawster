@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { ShieldAlert } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import { useI18n } from '@/app/i18n';
@@ -7,6 +8,8 @@ import { getChampionImageUrl } from '@/app/services/champions';
 import type { MatchupGridResponse } from '@/app/services/matchups';
 import MatchupGridAxisList from './matchup-grid-axis-list';
 import MatchupGridMatrix from './matchup-grid-matrix';
+import MatchupGridNodeFilters from './matchup-grid-node-filters';
+import { visibleNodes } from './node-filters';
 
 interface Props {
   grid: MatchupGridResponse | null;
@@ -20,6 +23,7 @@ interface Props {
 export default function MatchupGridTable({ grid, loading }: Readonly<Props>) {
   const { t } = useI18n();
   const kb = t.game.knowledgeBase;
+  const [nodeFilter, setNodeFilter] = useState('all');
 
   if (!loading && !grid) {
     return (
@@ -33,6 +37,7 @@ export default function MatchupGridTable({ grid, loading }: Readonly<Props>) {
   const { attacker, is_owned, instance_label, is_on_defense, defenders, nodes, cells } = grid;
   const isEmpty = defenders.length === 0 && nodes.length === 0;
   const hasBothAxes = defenders.length > 0 && nodes.length > 0;
+  const columns = visibleNodes(nodeFilter);
 
   return (
     <div className='flex flex-col gap-2' data-cy='matchup-grid-container'>
@@ -65,6 +70,9 @@ export default function MatchupGridTable({ grid, loading }: Readonly<Props>) {
           {kb.gridNotOwned}
         </p>
       )}
+      {!isEmpty && hasBothAxes && (
+        <MatchupGridNodeFilters value={nodeFilter} onChange={setNodeFilter} />
+      )}
       <div className={cn('overflow-x-auto', is_owned === false && 'opacity-50')}>
         {isEmpty && (
           <p className='text-muted-foreground text-sm' data-cy='matchup-empty'>
@@ -72,7 +80,7 @@ export default function MatchupGridTable({ grid, loading }: Readonly<Props>) {
           </p>
         )}
         {!isEmpty && hasBothAxes && (
-          <MatchupGridMatrix defenders={defenders} nodes={nodes} cells={cells} />
+          <MatchupGridMatrix defenders={defenders} cells={cells} columns={columns} />
         )}
         {!isEmpty && !hasBothAxes && (
           <MatchupGridAxisList

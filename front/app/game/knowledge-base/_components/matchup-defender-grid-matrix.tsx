@@ -3,36 +3,30 @@
 import { X } from 'lucide-react';
 import { useI18n } from '@/app/i18n';
 import { getChampionImageUrl } from '@/app/services/champions';
-import type { MatchupGridAxisEntry, MatchupGridCell } from '@/app/services/matchups';
+import type { MatchupDefenderGridCell, MatchupDefenderGridRow } from '@/app/services/matchups';
 import { SCORE_BADGE_CLASS, scoreClass } from './grid-score';
 
 interface Props {
-  defenders: MatchupGridAxisEntry[];
-  cells: MatchupGridCell[];
+  attackers: MatchupDefenderGridRow[];
+  cells: MatchupDefenderGridCell[];
   columns: number[];
 }
 
-// Full two-axis matrix: defenders as rows, nodes as columns, `cells` looked up by pair.
-// `columns` is the visible node set (filtered by section/path upstream); cells with no
-// rating stay blank.
-export default function MatchupGridMatrix({ defenders, cells, columns }: Readonly<Props>) {
+// Mirror of MatchupGridMatrix, centered on a defender: attackers as rows, the visible nodes
+// (filtered by section/path upstream) as columns, `cells` looked up by (attacker, node).
+// Cells with no rating stay blank.
+export default function MatchupDefenderGridMatrix({ attackers, cells, columns }: Readonly<Props>) {
   const { t } = useI18n();
   const kb = t.game.knowledgeBase;
 
-  const rows = defenders.filter((d) => d.defender !== null);
-
-  const cellFor = (defenderId: string, node: number): MatchupGridCell | null =>
-    cells.find((c) => c.defender_champion_id === defenderId && c.node_number === node) ?? null;
+  const cellFor = (attackerId: string, node: number): MatchupDefenderGridCell | null =>
+    cells.find((c) => c.attacker_champion_id === attackerId && c.node_number === node) ?? null;
 
   return (
-    <table className='w-full text-sm' data-cy='matchup-grid'>
+    <table className='w-full text-sm' data-cy='matchup-defender-grid'>
       <thead className='text-muted-foreground'>
         <tr>
-          <th rowSpan={2} className='text-left py-2 align-bottom'>
-            {kb.defender}
-          </th>
-        </tr>
-        <tr>
+          <th className='text-left py-2'>{kb.attacker}</th>
           {columns.map((node) => (
             <th key={node} className='text-left px-2 font-normal'>
               #{node}
@@ -41,28 +35,28 @@ export default function MatchupGridMatrix({ defenders, cells, columns }: Readonl
         </tr>
       </thead>
       <tbody>
-        {rows.map((row) => (
-          <tr key={row.defender!.champion_id} className='border-t'>
+        {attackers.map((row) => (
+          <tr key={row.attacker.champion_id} className='border-t'>
             <td className='py-2'>
               <span className='flex items-center gap-2'>
-                {row.defender!.image_url && (
+                {row.attacker.image_url && (
                   <img
-                    src={getChampionImageUrl(row.defender!.image_url, 32) ?? ''}
-                    alt={row.defender!.champion_name}
+                    src={getChampionImageUrl(row.attacker.image_url, 32) ?? ''}
+                    alt={row.attacker.champion_name}
                     className='w-8 h-8 object-contain'
                   />
                 )}
-                <span>{row.defender!.champion_name}</span>
+                <span>{row.attacker.champion_name}</span>
               </span>
             </td>
             {columns.map((node) => {
-              const cell = cellFor(row.defender!.champion_id, node);
+              const cell = cellFor(row.attacker.champion_id, node);
               return (
                 <td
                   key={node}
                   className='px-2'
-                  data-cy='matchup-grid-cell'
-                  data-cy-defender={row.defender!.champion_id}
+                  data-cy='matchup-defender-grid-cell'
+                  data-cy-attacker={row.attacker.champion_id}
                   data-cy-node={String(node)}
                 >
                   {!cell ? (

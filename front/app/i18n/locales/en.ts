@@ -750,6 +750,13 @@ const en = {
       formNeedsTarget: 'Pick a defender or a node.',
       gridNotOwned: 'You do not own this champion.',
       gridEmpty: 'No matchup rated yet for this attacker.',
+      defenderGridEmpty: 'No attacker rated against this defender yet.',
+      tier1: 'Tier 1',
+      tier2: 'Tier 2',
+      miniBoss: 'Mini boss',
+      boss: 'Boss',
+      pathLabel: 'Path',
+      allNodes: 'All nodes',
     },
   },
 

@@ -758,6 +758,13 @@ const fr: Translations = {
       formNeedsTarget: 'Choisis un défenseur ou un node.',
       gridNotOwned: 'Vous ne possédez pas ce champion.',
       gridEmpty: 'Aucun matchup renseigné pour cet attaquant.',
+      defenderGridEmpty: 'Aucun attaquant noté contre ce défenseur.',
+      tier1: 'Tier 1',
+      tier2: 'Tier 2',
+      miniBoss: 'Mini-boss',
+      boss: 'Boss',
+      pathLabel: 'Chemin',
+      allNodes: 'Tous les nodes',
     },
   },
 

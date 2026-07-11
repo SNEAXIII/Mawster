@@ -93,6 +93,27 @@ export interface MatchupGridResponse {
   cells: MatchupGridCell[];
 }
 
+// Mirror of the attacker grid, centered on a defender: rows = attackers rated against it.
+export interface MatchupDefenderGridRow {
+  attacker: ChampionRef;
+  verdict: MatchupVerdict;
+  synergies: MatchupSynergy[];
+  prefight: ChampionRef | null;
+}
+
+export interface MatchupDefenderGridCell {
+  attacker_champion_id: string;
+  node_number: number;
+  is_discouraged: boolean;
+  score: number | null;
+}
+
+export interface MatchupDefenderGridResponse {
+  defender: ChampionRef;
+  attackers: MatchupDefenderGridRow[];
+  cells: MatchupDefenderGridCell[];
+}
+
 function toQuery(params: Record<string, any>): string {
   const search = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
@@ -161,5 +182,21 @@ export async function getMatchupGrid(
     { headers: jsonHeaders }
   );
   if (!res.ok) throw new Error('Failed to load matchup grid');
+  return res.json();
+}
+
+export async function getMatchupDefenderGrid(
+  allianceId: string,
+  defenderChampionId: string,
+  gameAccountId?: string | null
+): Promise<MatchupDefenderGridResponse> {
+  const res = await fetch(
+    `${PROXY}/alliances/${allianceId}/matchups/grid-by-defender${toQuery({
+      defender_champion_id: defenderChampionId,
+      game_account_id: gameAccountId,
+    })}`,
+    { headers: jsonHeaders }
+  );
+  if (!res.ok) throw new Error('Failed to load defender matchup grid');
   return res.json();
 }

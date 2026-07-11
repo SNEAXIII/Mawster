@@ -21,6 +21,11 @@ export default function MatchupGridAxisList({ entries, axis }: Readonly<Props>) 
     return kb.verdictOk;
   };
 
+  const sortedEntries =
+    axis === 'node'
+      ? [...entries].sort((a, b) => (a.node_number ?? 0) - (b.node_number ?? 0))
+      : entries;
+
   return (
     <table className='w-full text-sm' data-cy='matchup-grid'>
       <thead className='text-muted-foreground'>
@@ -30,7 +35,7 @@ export default function MatchupGridAxisList({ entries, axis }: Readonly<Props>) 
         </tr>
       </thead>
       <tbody>
-        {entries.map((entry) => (
+        {sortedEntries.map((entry) => (
           <tr
             key={axis === 'defender' ? entry.defender?.champion_id : entry.node_number}
             className='border-t'
@@ -51,7 +56,7 @@ export default function MatchupGridAxisList({ entries, axis }: Readonly<Props>) 
                   <span>{entry.defender?.champion_name}</span>
                 </span>
               ) : (
-                entry.node_number
+                `#${entry.node_number}`
               )}
             </td>
             <td>
