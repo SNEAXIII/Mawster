@@ -4,6 +4,7 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, Query, status
 
 from src.dto.alliance.dto_matchup import (
+    MatchupDefenderGridResponse,
     MatchupEvaluationRow,
     MatchupGridResponse,
     MatchupRatingResponse,
@@ -71,6 +72,23 @@ async def evaluate_matchup_grid(
     """Attacker-centric grid: every rated defender x every rated node for one champion."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
     return await MatchupService.evaluate_grid(session, alliance_id, champion_id, game_account_id)
+
+
+@matchup_controller.get(
+    "/{alliance_id}/matchups/grid-by-defender", response_model=MatchupDefenderGridResponse
+)
+async def evaluate_matchup_defender_grid(
+    alliance_id: uuid.UUID,
+    defender_champion_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    game_account_id: Optional[uuid.UUID] = None,
+):
+    """Defender-centric grid: every rated attacker x each attacker's rated nodes for one defender."""
+    await AllianceService.require_visitor(session, alliance_id, current_user.id)
+    return await MatchupService.evaluate_defender_grid(
+        session, alliance_id, defender_champion_id, game_account_id
+    )
 
 
 @matchup_controller.post(

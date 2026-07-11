@@ -155,3 +155,33 @@ class MatchupGridResponse(BaseModel):
     defenders: list[MatchupGridAxisEntry] = Field(default_factory=list)
     nodes: list[MatchupGridAxisEntry] = Field(default_factory=list)
     cells: list[MatchupGridCell] = Field(default_factory=list)
+
+
+class MatchupDefenderGridRow(BaseModel):
+    """One attacker rated against the selected defender (a grid row)."""
+
+    attacker: ChampionRef
+    verdict: MatchupVerdict
+    synergies: list[MatchupSynergyResponse] = Field(default_factory=list)
+    prefight: Optional[ChampionRef] = None
+
+
+class MatchupDefenderGridCell(BaseModel):
+    attacker_champion_id: uuid.UUID
+    node_number: int
+    is_discouraged: bool
+    score: Optional[int] = None
+
+    @model_validator(mode="after")
+    def score_absent_iff_discouraged(self) -> "MatchupDefenderGridCell":
+        if self.is_discouraged and self.score is not None:
+            raise ValueError(DISCOURAGED_HAS_NO_SCORE)
+        if not self.is_discouraged and self.score is None:
+            raise ValueError(SCORE_REQUIRED_WHEN_NOT_DISCOURAGED)
+        return self
+
+
+class MatchupDefenderGridResponse(BaseModel):
+    defender: ChampionRef
+    attackers: list[MatchupDefenderGridRow] = Field(default_factory=list)
+    cells: list[MatchupDefenderGridCell] = Field(default_factory=list)

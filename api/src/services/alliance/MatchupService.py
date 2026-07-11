@@ -9,6 +9,9 @@ from fastapi import HTTPException, status
 
 from src.dto.alliance.dto_matchup import (
     ChampionRef,
+    MatchupDefenderGridCell,
+    MatchupDefenderGridResponse,
+    MatchupDefenderGridRow,
     MatchupEvaluationRow,
     MatchupGridAxisEntry,
     MatchupGridCell,
@@ -321,6 +324,99 @@ class MatchupService:
                 cls.champion_ref(rating.defender_champion) if rating.defender_champion else None
             ),
             node_number=rating.node_number,
+            verdict=rating.verdict,
+            synergies=[
+                MatchupSynergyResponse(
+                    **cls.champion_ref(synergy.champion).model_dump(),
+                    is_required=synergy.is_required,
+                )
+                for synergy in rating.synergies
+            ],
+            prefight=(
+                cls.champion_ref(rating.prefight_champion) if rating.prefight_champion else None
+            ),
+        )
+
+    @classmethod
+    async def evaluate_defender_grid(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        defender_champion_id: uuid.UUID,
+        game_account_id: Optional[uuid.UUID] = None,
+    ) -> MatchupDefenderGridResponse:
+        """Build the defender-centric grid: every rated attacker x each attacker's rated nodes.
+
+        Mirrors `evaluate_grid`, but the fixed axis is the defender instead of the attacker.
+        Node columns 1..50 are rendered by the frontend, and per-row ownership is out of scope
+        for v1 — `game_account_id` is accepted and validated for signature symmetry only.
+        """
+        defender_champion = (
+            await session.exec(select(Champion).where(Champion.id == defender_champion_id))
+        ).first()
+        if defender_champion is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_NOT_FOUND)
+
+        if game_account_id is not None:
+            await cls._assert_game_account_in_alliance(session, alliance_id, game_account_id)
+
+        defender_ratings = (
+            await session.exec(
+                select(MatchupRating)
+                .where(
+                    MatchupRating.alliance_id == alliance_id,
+                    MatchupRating.target_type == MatchupTargetType.DEFENDER,
+                    MatchupRating.defender_champion_id == defender_champion_id,
+                )
+                .options(*cls._RATING_RELATIONS)
+            )
+        ).all()
+
+        attacker_ids = [rating.champion_id for rating in defender_ratings]
+        node_ratings: list[MatchupRating] = []
+        if attacker_ids:
+            node_ratings = list(
+                (
+                    await session.exec(
+                        select(MatchupRating)
+                        .where(
+                            MatchupRating.alliance_id == alliance_id,
+                            MatchupRating.target_type == MatchupTargetType.NODE,
+                            MatchupRating.champion_id.in_(attacker_ids),
+                        )
+                        .options(*cls._RATING_RELATIONS)
+                    )
+                ).all()
+            )
+        nodes_by_attacker: dict[uuid.UUID, list[MatchupRating]] = defaultdict(list)
+        for node_rating in node_ratings:
+            nodes_by_attacker[node_rating.champion_id].append(node_rating)
+
+        cells: list[MatchupDefenderGridCell] = []
+        for defender_rating in defender_ratings:
+            for node_rating in nodes_by_attacker.get(defender_rating.champion_id, []):
+                is_discouraged, score = combine_verdicts(
+                    defender_rating.verdict, node_rating.verdict
+                )
+                cells.append(
+                    MatchupDefenderGridCell(
+                        attacker_champion_id=defender_rating.champion_id,
+                        node_number=node_rating.node_number,
+                        is_discouraged=is_discouraged,
+                        score=score,
+                    )
+                )
+
+        return MatchupDefenderGridResponse(
+            defender=cls.champion_ref(defender_champion),
+            attackers=[cls._defender_grid_row(rating) for rating in defender_ratings],
+            cells=cells,
+        )
+
+    @classmethod
+    def _defender_grid_row(cls, rating: MatchupRating) -> MatchupDefenderGridRow:
+        return MatchupDefenderGridRow(
+            attacker=cls.champion_ref(rating.champion),
             verdict=rating.verdict,
             synergies=[
                 MatchupSynergyResponse(
