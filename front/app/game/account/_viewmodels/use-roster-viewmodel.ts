@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { redirect, usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -47,22 +47,19 @@ export function useRosterViewModel() {
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [loadingAccounts, setLoadingAccounts] = useState(true);
 
-  const initialTab = (searchParams.get('tab') as RosterTab) || RosterTab.Roster;
-  const [activeTab, setActiveTab] = useState<RosterTab>(
-    Object.values(RosterTab).includes(initialTab) ? initialTab : RosterTab.Roster
-  );
+  const activeTab = useMemo(() => {
+    const tab = searchParams.get('tab') as RosterTab | null;
+    return tab && Object.values(RosterTab).includes(tab) ? tab : RosterTab.Roster;
+  }, [searchParams]);
 
-  const isFirstRender = useRef(true);
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('tab', activeTab);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
+  const setActiveTab = useCallback(
+    (tab: RosterTab) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('tab', tab);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, pathname, router]
+  );
 
   const [masteries, setMasteries] = useState<MasteryEntry[]>([]);
   const [masteryForm, setMasteryForm] = useState<MasteryUpsertItem[]>([]);
@@ -89,13 +86,15 @@ export function useRosterViewModel() {
     getMyGameAccounts()
       .then((accs) => {
         setAccounts(accs);
-        const primary = accs.find((a) => a.is_primary);
-        setSelectedAccountId(primary?.id ?? accs[0]?.id ?? null);
+        setSelectedAccountId((current) => {
+          if (current && accs.some((a) => a.id === current)) return current;
+          return accs.find((a) => a.is_primary)?.id ?? accs[0]?.id ?? null;
+        });
         if (accs.length === 0) setActiveTab(RosterTab.Accounts);
       })
       .catch(() => setError(t.roster.errors.loadAccounts))
       .finally(() => setLoadingAccounts(false));
-  }, [t]);
+  }, [t, setActiveTab]);
 
   useEffect(() => {
     if (authStatus !== 'authenticated') return;
