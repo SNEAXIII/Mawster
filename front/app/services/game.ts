@@ -144,8 +144,37 @@ export type AllianceRosterEntry = RosterEntry & {
   alliance_group: number | null;
 };
 
-export async function getAllianceRoster(allianceId: string): Promise<AllianceRosterEntry[]> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/roster`, {
+export interface AllianceRosterQuery {
+  name?: string;
+  championClass?: string;
+  ranks?: string[];
+  ascensions?: number[];
+  sagaAttacker?: boolean;
+  sagaDefender?: boolean;
+  preferredAttacker?: boolean;
+  allianceGroup?: number;
+  noGroup?: boolean;
+  distinctChampionLimit?: number;
+}
+
+export async function getAllianceRoster(
+  allianceId: string,
+  query?: AllianceRosterQuery
+): Promise<AllianceRosterEntry[]> {
+  const qs = new URLSearchParams();
+  if (query?.name?.trim()) qs.set('name', query.name.trim());
+  if (query?.championClass) qs.set('champion_class', query.championClass);
+  for (const r of query?.ranks ?? []) qs.append('ranks', r);
+  for (const a of query?.ascensions ?? []) qs.append('ascensions', String(a));
+  if (query?.sagaAttacker) qs.set('saga_attacker', 'true');
+  if (query?.sagaDefender) qs.set('saga_defender', 'true');
+  if (query?.preferredAttacker) qs.set('preferred_attacker', 'true');
+  if (query?.allianceGroup != null) qs.set('alliance_group', String(query.allianceGroup));
+  if (query?.noGroup) qs.set('no_group', 'true');
+  if (query?.distinctChampionLimit != null)
+    qs.set('distinct_champion_limit', String(query.distinctChampionLimit));
+  const suffix = qs.toString() ? `?${qs.toString()}` : '';
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/roster${suffix}`, {
     headers: jsonHeaders,
   });
   await throwOnError(response, "Erreur lors de la récupération du roster de l'alliance");

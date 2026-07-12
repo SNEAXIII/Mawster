@@ -1,14 +1,17 @@
 'use client';
 
-import { type Alliance, type GameAccount, type AllianceInvitation } from '@/app/services/game';
+import { useEffect, useState } from 'react';
+import { type GameAccount, type AllianceInvitation } from '@/app/services/game';
 import { Card, CardContent } from '@/components/ui/card';
 import { useI18n } from '@/app/i18n';
 import { Shield } from 'lucide-react';
+import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector';
+import AllianceSelect from '@/app/game/_components/alliance-select';
 
 import AllianceCard from './alliance-card';
 
 interface AlliancesTabProps {
-  alliances: Alliance[];
+  alliances: AllianceWithVisitorFlag[];
   locale: string;
   memberAllianceId: string | null;
   memberAccountId: string;
@@ -45,6 +48,17 @@ export default function AlliancesTab({
   onCancelInvitation,
 }: Readonly<AlliancesTabProps>) {
   const { t } = useI18n();
+  const [selectedAllianceId, setSelectedAllianceId] = useState('');
+
+  useEffect(() => {
+    if (alliances.length === 0) {
+      setSelectedAllianceId('');
+      return;
+    }
+    if (!alliances.some((a) => a.id === selectedAllianceId)) {
+      setSelectedAllianceId(alliances[0].id);
+    }
+  }, [alliances, selectedAllianceId]);
 
   if (alliances.length === 0) {
     return (
@@ -58,29 +72,38 @@ export default function AlliancesTab({
     );
   }
 
+  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId) ?? alliances[0];
+
   return (
     <div className='flex flex-col gap-4'>
-      {alliances.map((alliance) => (
-        <AllianceCard
-          key={alliance.id}
-          alliance={alliance}
-          locale={locale}
-          memberAllianceId={memberAllianceId}
-          memberAccountId={memberAccountId}
-          eligibleMembers={eligibleMembers}
-          eligibleVisitors={eligibleVisitors}
-          inviteType={inviteType}
-          onInviteTypeChange={onInviteTypeChange}
-          onMemberAccountChange={onMemberAccountChange}
-          onOpenInviteMember={onOpenInviteMember}
-          onCloseInviteMember={onCloseInviteMember}
-          onInviteMember={onInviteMember}
-          onRefresh={onRefresh}
-          onViewRoster={onViewRoster}
-          pendingInvitations={pendingInvitations[alliance.id] ?? []}
-          onCancelInvitation={onCancelInvitation}
+      {alliances.length > 1 && (
+        <AllianceSelect
+          alliances={alliances}
+          value={selectedAlliance.id}
+          onChange={setSelectedAllianceId}
+          dataCy='alliances-alliance-select'
         />
-      ))}
+      )}
+
+      <AllianceCard
+        key={selectedAlliance.id}
+        alliance={selectedAlliance}
+        locale={locale}
+        memberAllianceId={memberAllianceId}
+        memberAccountId={memberAccountId}
+        eligibleMembers={eligibleMembers}
+        eligibleVisitors={eligibleVisitors}
+        inviteType={inviteType}
+        onInviteTypeChange={onInviteTypeChange}
+        onMemberAccountChange={onMemberAccountChange}
+        onOpenInviteMember={onOpenInviteMember}
+        onCloseInviteMember={onCloseInviteMember}
+        onInviteMember={onInviteMember}
+        onRefresh={onRefresh}
+        onViewRoster={onViewRoster}
+        pendingInvitations={pendingInvitations[selectedAlliance.id] ?? []}
+        onCancelInvitation={onCancelInvitation}
+      />
     </div>
   );
 }
