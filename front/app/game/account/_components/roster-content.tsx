@@ -50,31 +50,48 @@ export default function RosterContent() {
           onChange={vm.setActiveTab}
         />
 
-        {vm.activeTab !== RosterTab.Accounts && vm.accounts.length > 1 && (
-          <div className='mb-6'>
-            <label className='block text-sm font-medium mb-2'>{t.roster.selectAccount}</label>
-            <Select
-              value={vm.selectedAccountId || ''}
-              onValueChange={(val) => vm.setSelectedAccountId(val || null)}
-            >
-              <SelectTrigger
-                className='w-full max-w-xs'
-                data-cy='roster-account-select'
-              >
-                <SelectValue placeholder={t.roster.chooseAccount} />
-              </SelectTrigger>
-              <SelectContent>
-                {vm.accounts.map((acc) => (
-                  <SelectItem
-                    key={acc.id}
-                    value={acc.id}
+        {vm.activeTab !== RosterTab.Accounts && (
+          <div className='flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6'>
+            {vm.accounts.length > 1 && (
+              <div className='w-full max-w-xs'>
+                <label className='block text-sm font-medium mb-2'>{t.roster.selectAccount}</label>
+                <Select
+                  value={vm.selectedAccountId || ''}
+                  onValueChange={(val) => vm.setSelectedAccountId(val || null)}
+                >
+                  <SelectTrigger
+                    className='w-full'
+                    data-cy='roster-account-select'
                   >
-                    {acc.game_pseudo}
-                    {acc.is_primary ? ` (${t.game.accounts.isPrimary})` : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                    <SelectValue placeholder={t.roster.chooseAccount} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vm.accounts.map((acc) => (
+                      <SelectItem
+                        key={acc.id}
+                        value={acc.id}
+                      >
+                        {acc.game_pseudo}
+                        {acc.is_primary ? ` (${t.game.accounts.isPrimary})` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {vm.activeTab === RosterTab.Roster && vm.selectedAccountId && (
+              <div className='sm:ml-auto'>
+                <RosterImportExport
+                  roster={vm.roster}
+                  selectedAccountId={vm.selectedAccountId}
+                  selectedAccountName={
+                    vm.accounts.find((a) => a.id === vm.selectedAccountId)?.game_pseudo ?? ''
+                  }
+                  onRosterUpdated={(updated) => vm.handleFormSuccess(updated)}
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -84,19 +101,6 @@ export default function RosterContent() {
               <p className='text-muted-foreground'>{t.roster.noAccounts}</p>
             ) : (
               <>
-                <div className='flex flex-col sm:flex-row sm:items-center sm:justify-end mb-4 gap-2'>
-                  {vm.selectedAccountId && (
-                    <RosterImportExport
-                      roster={vm.roster}
-                      selectedAccountId={vm.selectedAccountId}
-                      selectedAccountName={
-                        vm.accounts.find((a) => a.id === vm.selectedAccountId)?.game_pseudo ?? ''
-                      }
-                      onRosterUpdated={(updated) => vm.handleFormSuccess(updated)}
-                    />
-                  )}
-                </div>
-
                 {vm.error && (
                   <ErrorBanner
                     message={vm.error}
