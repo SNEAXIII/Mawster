@@ -67,7 +67,6 @@ services:
     image: sneaxiii/mawster-api:staging
     networks:
       - internal-staging
-      - traefik-public
     environment:
       MODE: prod
       CONTAINER: '1'
@@ -101,9 +100,6 @@ services:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-      labels:
-        - traefik.enable=true
-        - traefik.docker.network=traefik-public
     logging:
       driver: json-file
       options:

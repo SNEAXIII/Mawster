@@ -266,7 +266,7 @@ deploy:
 	docker pull sneaxiii/mawster-static:latest
 	docker stack deploy --with-registry-auth --resolve-image always -c stack-obs.yaml mawster-obs
 	docker stack deploy --with-registry-auth --resolve-image always -c stack-app.yaml mawster
-	docker stack deploy --with-registry-auth --resolve-image always -c stack-app.yaml mawster-staging
+	docker stack deploy --with-registry-auth --resolve-image always -c stack-app-staging.yaml mawster-staging
 
 panic:
 	docker stack rm mawster

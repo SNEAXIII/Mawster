@@ -1,9 +1,10 @@
 'use client';
 
-import { SessionProvider, useSession, signOut } from 'next-auth/react';
+import { SessionProvider, useSession } from 'next-auth/react';
 import { ThemeProvider } from 'next-themes';
 import { I18nProvider } from '@/app/i18n';
 import { AllianceProvider } from '@/app/contexts/alliance-context';
+import { signOutAndRedirect } from '@/app/lib/sign-out';
 import { useEffect } from 'react';
 
 function SessionWatcher() {
@@ -11,7 +12,7 @@ function SessionWatcher() {
 
   useEffect(() => {
     if (session?.error === 'TokenExpiredError') {
-      signOut({ callbackUrl: '/login' });
+      signOutAndRedirect('/login');
     }
   }, [session?.error]);
 
