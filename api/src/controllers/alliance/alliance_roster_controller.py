@@ -1,7 +1,7 @@
 import uuid
-from typing import Annotated
+from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from src.dto.alliance.dto_alliance_roster import AllianceRosterEntryResponse
 from src.models import User
@@ -25,11 +25,39 @@ async def get_alliance_roster(
     alliance_id: uuid.UUID,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    name: Optional[str] = None,
+    champion_class: Optional[str] = None,
+    ranks: Annotated[Optional[list[str]], Query()] = None,
+    ascensions: Annotated[Optional[list[int]], Query()] = None,
+    saga_attacker: bool = False,
+    saga_defender: bool = False,
+    preferred_attacker: bool = False,
+    alliance_group: Optional[int] = None,
+    no_group: bool = False,
+    distinct_champion_limit: Optional[int] = None,
 ):
-    """Get every champion owned across the whole alliance. Members, officers, owner or visitors."""
+    """Get every champion owned across the whole alliance. Members, officers, owner or visitors.
+
+    All filter params are optional; with none supplied the full roster is returned.
+    """
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
-    entries = await AllianceRosterService.get_alliance_roster(session, alliance_id)
     saga = await SagaService.resolve_current(session)
+    saga_attacker_ids = {cid for cid, (att, _) in saga.items() if att} if saga_attacker else None
+    saga_defender_ids = {cid for cid, (_, dfn) in saga.items() if dfn} if saga_defender else None
+    entries = await AllianceRosterService.get_alliance_roster(
+        session,
+        alliance_id,
+        name=name,
+        champion_class=champion_class,
+        ranks=ranks,
+        ascensions=ascensions,
+        preferred_attacker=preferred_attacker,
+        alliance_group=alliance_group,
+        no_group=no_group,
+        saga_attacker_ids=saga_attacker_ids,
+        saga_defender_ids=saga_defender_ids,
+        distinct_champion_limit=distinct_champion_limit,
+    )
     responses = [AllianceRosterEntryResponse.model_validate(e) for e in entries]
     for dto, e in zip(responses, entries):
         att, dfn = saga.get(e.champion_id, (False, False))

@@ -115,16 +115,18 @@ describe('Alliance champion search', () => {
     });
   });
 
-  // ── Battlegroup filter: hidden when the alliance has a single group ─────────
+  // ── Battlegroup filter: static options, always shown ───────────────────────
 
-  it('hides the battlegroup selector when the alliance spans a single group', () => {
+  it('always shows the battlegroup selector with static group options', () => {
     setupAllianceWithMember('cs-onegrp', 'Iron Man', 'Tech').then(({ ownerData }) => {
       cy.apiLogin(ownerData.user_id);
       cy.navTo('alliances');
       cy.getByCy('tab-champion-search').click();
 
       cy.getByCy('champion-group-Iron Man').should('be.visible');
-      cy.getByCy('champion-search-group-select').should('not.exist');
+      // Options are now hardcoded (BG1/BG2/BG3 + no-group), so the selector is
+      // always present even when the alliance spans a single group.
+      cy.getByCy('champion-search-group-select').should('be.visible');
     });
   });
 });

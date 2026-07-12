@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import {
   type Alliance,
@@ -89,6 +89,7 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
   const [rolesLoading, setRolesLoading] = useState(true);
   const [myInvitations, setMyInvitations] = useState<AllianceInvitation[]>([]);
   const [pendingInvitations, setPendingInvitations] = useState<Record<string, AllianceInvitation[]>>({});
+  const hasLoadedRef = useRef(false);
 
   const refreshRoles = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -106,6 +107,7 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
 
   const refresh = useCallback(async () => {
     if (!isAuthenticated) {
+      hasLoadedRef.current = false;
       setAlliances([]);
       writeCache([]);
       setLoading(false);
@@ -117,8 +119,12 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
       return;
     }
 
-    setLoading(true);
-    setRolesLoading(true);
+    // Only the first load blocks the UI. Refreshes triggered by an action
+    // (invite, kick, accept…) update in place so the page never flashes a spinner.
+    if (!hasLoadedRef.current) {
+      setLoading(true);
+      setRolesLoading(true);
+    }
 
     try {
       const [memberResult, visitedResult, rolesResult, invitationsResult] = await Promise.all([
@@ -155,6 +161,7 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
         })
       );
       setPendingInvitations(pending);
+      hasLoadedRef.current = true;
     } catch {
       setAlliances([]);
     } finally {
