@@ -50,42 +50,41 @@ export default function RosterContent() {
           onChange={vm.setActiveTab}
         />
 
+        {vm.activeTab !== RosterTab.Accounts && vm.accounts.length > 1 && (
+          <div className='mb-6'>
+            <label className='block text-sm font-medium mb-2'>{t.roster.selectAccount}</label>
+            <Select
+              value={vm.selectedAccountId || ''}
+              onValueChange={(val) => vm.setSelectedAccountId(val || null)}
+            >
+              <SelectTrigger
+                className='w-full max-w-xs'
+                data-cy='roster-account-select'
+              >
+                <SelectValue placeholder={t.roster.chooseAccount} />
+              </SelectTrigger>
+              <SelectContent>
+                {vm.accounts.map((acc) => (
+                  <SelectItem
+                    key={acc.id}
+                    value={acc.id}
+                  >
+                    {acc.game_pseudo}
+                    {acc.is_primary ? ` (${t.game.accounts.isPrimary})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         {vm.activeTab === RosterTab.Roster && (
           <>
             {vm.accounts.length === 0 ? (
               <p className='text-muted-foreground'>{t.roster.noAccounts}</p>
             ) : (
               <>
-                <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2'>
-                  {vm.accounts.length > 1 && (
-                    <div className='mb-6'>
-                      <label className='block text-sm font-medium mb-2'>
-                        {t.roster.selectAccount}
-                      </label>
-                      <Select
-                        value={vm.selectedAccountId || ''}
-                        onValueChange={(val) => vm.setSelectedAccountId(val || null)}
-                      >
-                        <SelectTrigger
-                          className='w-full max-w-xs'
-                          data-cy='roster-account-select'
-                        >
-                          <SelectValue placeholder={t.roster.chooseAccount} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {vm.accounts.map((acc) => (
-                            <SelectItem
-                              key={acc.id}
-                              value={acc.id}
-                            >
-                              {acc.game_pseudo}
-                              {acc.is_primary ? ` (${t.game.accounts.isPrimary})` : ''}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
+                <div className='flex flex-col sm:flex-row sm:items-center sm:justify-end mb-4 gap-2'>
                   {vm.selectedAccountId && (
                     <RosterImportExport
                       roster={vm.roster}
