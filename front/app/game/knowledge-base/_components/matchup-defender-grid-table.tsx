@@ -18,7 +18,8 @@ interface Props {
 export default function MatchupDefenderGridTable({ grid, loading }: Readonly<Props>) {
   const { t } = useI18n();
   const kb = t.game.knowledgeBase;
-  const [nodeFilter, setNodeFilter] = useState('all');
+  const [section, setSection] = useState<number | null>(null);
+  const [path, setPath] = useState<number | null>(null);
 
   if (!loading && !grid) {
     return (
@@ -30,7 +31,7 @@ export default function MatchupDefenderGridTable({ grid, loading }: Readonly<Pro
   if (!grid) return null;
 
   const { defender, attackers, cells } = grid;
-  const columns = visibleNodes(nodeFilter);
+  const columns = visibleNodes(section, path);
 
   return (
     <div className='flex flex-col gap-2' data-cy='matchup-defender-grid-container'>
@@ -45,7 +46,12 @@ export default function MatchupDefenderGridTable({ grid, loading }: Readonly<Pro
         <span className='font-medium'>{defender.champion_name}</span>
       </div>
       {attackers.length > 0 && (
-        <MatchupGridNodeFilters value={nodeFilter} onChange={setNodeFilter} />
+        <MatchupGridNodeFilters
+          section={section}
+          path={path}
+          onSection={setSection}
+          onPath={setPath}
+        />
       )}
       <div className='overflow-x-auto'>
         {attackers.length === 0 ? (

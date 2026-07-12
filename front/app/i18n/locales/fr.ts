@@ -764,7 +764,8 @@ const fr: Translations = {
       miniBoss: 'Mini-boss',
       boss: 'Boss',
       pathLabel: 'Chemin',
-      allNodes: 'Tous les nodes',
+      allTiers: 'Tous les tiers',
+      allPaths: 'Tous les chemins',
     },
   },
 

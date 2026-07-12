@@ -8,15 +8,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PATHS, SECTIONS } from './node-filters';
+import { PATHS, SECTIONS, pathsAvailable } from './node-filters';
 
 interface Props {
-  value: string;
-  onChange: (value: string) => void;
+  section: number | null;
+  path: number | null;
+  onSection: (value: number | null) => void;
+  onPath: (value: number | null) => void;
 }
 
-// One merged client-side column filter for the grids: 'all', a war-map section, or a path.
-export default function MatchupGridNodeFilters({ value, onChange }: Readonly<Props>) {
+// Client-side column filters for the grids: a war-map tier, plus a path that is only offered
+// for tiers 1-2 (or no tier), since paths do not run through the miniboss/boss tiers.
+export default function MatchupGridNodeFilters({ section, path, onSection, onPath }: Readonly<Props>) {
   const { t } = useI18n();
   const kb = t.game.knowledgeBase;
   const sectionLabels: Record<number, string> = {
@@ -26,24 +29,45 @@ export default function MatchupGridNodeFilters({ value, onChange }: Readonly<Pro
     4: kb.boss,
   };
 
+  const handleSection = (value: string) => {
+    const next = value === 'all' ? null : Number(value);
+    onSection(next);
+    if (!pathsAvailable(next)) onPath(null);
+  };
+
   return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className='h-7 w-40 text-xs' data-cy='matchup-grid-node-filter'>
-        <SelectValue placeholder={kb.allNodes} />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value='all'>{kb.allNodes}</SelectItem>
-        {SECTIONS.map((s) => (
-          <SelectItem key={`section-${s}`} value={`section-${s}`} data-cy={`matchup-grid-section-${s}`}>
-            {sectionLabels[s]}
-          </SelectItem>
-        ))}
-        {PATHS.map((p) => (
-          <SelectItem key={`path-${p}`} value={`path-${p}`} data-cy={`matchup-grid-path-${p}`}>
-            {kb.pathLabel} {p}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div className='flex flex-wrap gap-2 items-center'>
+      <Select value={section === null ? 'all' : String(section)} onValueChange={handleSection}>
+        <SelectTrigger className='h-7 w-32 text-xs' data-cy='matchup-grid-section'>
+          <SelectValue placeholder={kb.allTiers} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value='all'>{kb.allTiers}</SelectItem>
+          {SECTIONS.map((s) => (
+            <SelectItem key={s} value={String(s)} data-cy={`matchup-grid-section-${s}`}>
+              {sectionLabels[s]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {pathsAvailable(section) && (
+        <Select
+          value={path === null ? 'all' : String(path)}
+          onValueChange={(v) => onPath(v === 'all' ? null : Number(v))}
+        >
+          <SelectTrigger className='h-7 w-32 text-xs' data-cy='matchup-grid-path'>
+            <SelectValue placeholder={kb.allPaths} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='all'>{kb.allPaths}</SelectItem>
+            {PATHS.map((p) => (
+              <SelectItem key={p} value={String(p)} data-cy={`matchup-grid-path-${p}`}>
+                {kb.pathLabel} {p}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+    </div>
   );
 }

@@ -756,7 +756,8 @@ const en = {
       miniBoss: 'Mini boss',
       boss: 'Boss',
       pathLabel: 'Path',
-      allNodes: 'All nodes',
+      allTiers: 'All tiers',
+      allPaths: 'All paths',
     },
   },
 
