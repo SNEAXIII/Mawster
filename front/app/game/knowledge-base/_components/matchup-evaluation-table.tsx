@@ -1,19 +1,25 @@
 'use client';
 
+import { useState } from 'react';
 import { AlertTriangle, ShieldAlert } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import { useI18n } from '@/app/i18n';
 import { getChampionImageUrl } from '@/app/services/champions';
 import type { MatchupEvaluationRow, MatchupVerdict } from '@/app/services/matchups';
+import MatchupCellDetail from './matchup-cell-detail';
 
 interface Props {
   rows: MatchupEvaluationRow[];
   loading: boolean;
 }
 
+// The node (and defender+node) view. Unlike the two grids this is a ranked list, not a matrix,
+// but a row is the same thing a grid cell is — one attacker's fight against the selected
+// target(s) — so it opens the same detail dialog. A row rated on one side shows that side alone.
 export default function MatchupEvaluationTable({ rows, loading }: Readonly<Props>) {
   const { t } = useI18n();
   const kb = t.game.knowledgeBase;
+  const [selected, setSelected] = useState<MatchupEvaluationRow | null>(null);
 
   const verdictLabel = (verdict: MatchupVerdict | null): string => {
     if (verdict === 'discouraged') return kb.verdictDiscouraged;
@@ -31,7 +37,8 @@ export default function MatchupEvaluationTable({ rows, loading }: Readonly<Props
   }
 
   return (
-    <table className='w-full text-sm' data-cy='matchup-evaluation-table'>
+    <>
+      <table className='w-full text-sm' data-cy='matchup-evaluation-table'>
       <thead className='text-muted-foreground'>
         <tr>
           <th className='text-left py-2'>{kb.attacker}</th>
@@ -49,7 +56,11 @@ export default function MatchupEvaluationTable({ rows, loading }: Readonly<Props
             data-cy='matchup-row'
             data-cy-champion={row.champion.champion_name}
             data-cy-playable={String(row.is_playable ?? true)}
-            className={cn('border-t', row.is_playable === false && 'opacity-50')}
+            className={cn(
+              'border-t cursor-pointer hover:bg-muted/50',
+              row.is_playable === false && 'opacity-50'
+            )}
+            onClick={() => setSelected(row)}
           >
             <td className='py-2'>
               <span className='flex items-center gap-2'>
@@ -84,8 +95,8 @@ export default function MatchupEvaluationTable({ rows, loading }: Readonly<Props
                 </span>
               )}
             </td>
-            <td>{verdictLabel(row.defender_verdict)}</td>
-            <td>{verdictLabel(row.node_verdict)}</td>
+            <td>{verdictLabel(row.defender?.verdict ?? null)}</td>
+            <td>{verdictLabel(row.node?.verdict ?? null)}</td>
             <td data-cy='matchup-score'>
               {row.is_discouraged ? (
                 <span className='text-destructive font-medium'>{kb.verdictDiscouraged}</span>
@@ -108,6 +119,17 @@ export default function MatchupEvaluationTable({ rows, loading }: Readonly<Props
           </tr>
         ))}
       </tbody>
-    </table>
+      </table>
+      <MatchupCellDetail
+        open={selected !== null}
+        onOpenChange={(o) => {
+          if (!o) setSelected(null);
+        }}
+        attacker={selected?.champion ?? null}
+        defender={selected?.defender ?? null}
+        node={selected?.node ?? null}
+        cell={selected ?? null}
+      />
+    </>
   );
 }

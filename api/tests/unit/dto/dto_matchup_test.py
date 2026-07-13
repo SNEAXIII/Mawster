@@ -6,6 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from src.dto.alliance.dto_matchup import (
+    MatchupDefenderGridCell,
     MatchupEvaluationRow,
     MatchupTargetInput,
     MatchupUpsertRequest,
@@ -114,3 +115,31 @@ def test_evaluation_row_accepts_discouraged_without_a_score():
 def test_evaluation_row_accepts_a_zero_score_when_not_discouraged():
     row = MatchupEvaluationRow(champion=_champion_ref(), is_discouraged=False, score=0)
     assert row.score == 0
+
+
+def _node_side(node_number: int) -> dict:
+    return {"node_number": node_number, "verdict": MatchupVerdict.OK}
+
+
+def _defender_grid_cell(**overrides) -> dict:
+    payload = {
+        "attacker_champion_id": uuid.uuid4(),
+        "node_number": 7,
+        "is_discouraged": False,
+        "score": 3,
+        "node": _node_side(7),
+    }
+    payload.update(overrides)
+    return payload
+
+
+def test_defender_grid_cell_rejects_a_node_detail_from_another_node():
+    """The coordinate and the detail are two views of one node; a mismatch would open the
+    detail of a fight the user never clicked."""
+    with pytest.raises(ValidationError):
+        MatchupDefenderGridCell(**_defender_grid_cell(node=_node_side(8)))
+
+
+def test_defender_grid_cell_accepts_a_node_detail_on_the_same_node():
+    cell = MatchupDefenderGridCell(**_defender_grid_cell())
+    assert cell.node.node_number == cell.node_number

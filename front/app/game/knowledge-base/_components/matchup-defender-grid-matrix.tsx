@@ -1,29 +1,69 @@
 'use client';
 
+import { useState } from 'react';
 import { X } from 'lucide-react';
+import { cn } from '@/app/lib/utils';
 import { useI18n } from '@/app/i18n';
 import { getChampionImageUrl } from '@/app/services/champions';
-import type { MatchupDefenderGridCell, MatchupDefenderGridRow } from '@/app/services/matchups';
+import type {
+  ChampionRef,
+  MatchupDefenderGridCell,
+  MatchupDefenderGridRow,
+  MatchupGridAxisEntry,
+} from '@/app/services/matchups';
 import { SCORE_BADGE_CLASS, scoreClass } from './grid-score';
+import MatchupCellDetail from './matchup-cell-detail';
 
 interface Props {
+  defender: ChampionRef;
   attackers: MatchupDefenderGridRow[];
   cells: MatchupDefenderGridCell[];
   columns: number[];
 }
 
+interface Selected {
+  attacker: ChampionRef;
+  defender: MatchupGridAxisEntry;
+  node: MatchupGridAxisEntry;
+  cell: MatchupDefenderGridCell;
+}
+
 // Mirror of MatchupGridMatrix, centered on a defender: attackers as rows, the visible nodes
 // (filtered by section/path upstream) as columns, `cells` looked up by (attacker, node).
-// Cells with no rating stay blank.
-export default function MatchupDefenderGridMatrix({ attackers, cells, columns }: Readonly<Props>) {
+// Cells with no rating stay blank. Clicking a rated cell opens its fight detail.
+export default function MatchupDefenderGridMatrix({
+  defender,
+  attackers,
+  cells,
+  columns,
+}: Readonly<Props>) {
   const { t } = useI18n();
   const kb = t.game.knowledgeBase;
+  const [selected, setSelected] = useState<Selected | null>(null);
 
   const cellFor = (attackerId: string, node: number): MatchupDefenderGridCell | null =>
     cells.find((c) => c.attacker_champion_id === attackerId && c.node_number === node) ?? null;
 
+  // The row carries the "vs defender" side of every fight in it — the defender is fixed here, so
+  // that rating does not change from one node to the next. The cell carries the "vs node" side,
+  // which does. Together they are the two halves the dialog renders.
+  const openDetail = (row: MatchupDefenderGridRow, cell: MatchupDefenderGridCell) =>
+    setSelected({
+      attacker: row.attacker,
+      defender: {
+        defender,
+        node_number: null,
+        verdict: row.verdict,
+        synergies: row.synergies,
+        prefight: row.prefight,
+      },
+      node: cell.node,
+      cell,
+    });
+
   return (
-    <table className='w-full text-sm' data-cy='matchup-defender-grid'>
+    <>
+      <table className='w-full text-sm' data-cy='matchup-defender-grid'>
       <thead className='text-muted-foreground'>
         <tr>
           <th className='text-left py-2'>{kb.attacker}</th>
@@ -54,10 +94,11 @@ export default function MatchupDefenderGridMatrix({ attackers, cells, columns }:
               return (
                 <td
                   key={node}
-                  className='px-2'
+                  className={cn('px-2', cell && 'cursor-pointer hover:bg-muted/50')}
                   data-cy='matchup-defender-grid-cell'
                   data-cy-attacker={row.attacker.champion_id}
                   data-cy-node={String(node)}
+                  onClick={() => cell && openDetail(row, cell)}
                 >
                   {!cell ? (
                     ''
@@ -74,6 +115,17 @@ export default function MatchupDefenderGridMatrix({ attackers, cells, columns }:
           </tr>
         ))}
       </tbody>
-    </table>
+      </table>
+      <MatchupCellDetail
+        open={selected !== null}
+        onOpenChange={(o) => {
+          if (!o) setSelected(null);
+        }}
+        attacker={selected?.attacker ?? null}
+        defender={selected?.defender ?? null}
+        node={selected?.node ?? null}
+        cell={selected?.cell ?? null}
+      />
+    </>
   );
 }
