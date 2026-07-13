@@ -1,14 +1,6 @@
 'use client'
 
-import {
-  BarChart3,
-  ScrollText,
-  Shield,
-  Lock,
-  Timer,
-  ShieldCheck,
-  MessagesSquare,
-} from 'lucide-react'
+import { BarChart3, ScrollText, Shield, Timer, ShieldCheck, MessagesSquare } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
 import { Card, CardContent } from '@/components/ui/card'
 

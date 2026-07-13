@@ -23,7 +23,7 @@ export default function RarityFilterToggles({
   return (
     <div className='flex flex-wrap items-center gap-1'>
       <span className='mr-1 text-[11px] font-medium text-muted-foreground'>{label}</span>
-      {RARITY_TIERS.filter((tier) => tier.startsWith('7')).map((tier, i) => {
+      {RARITY_TIERS.filter((tier) => tier.startsWith('7')).map((tier) => {
         const active = activeTiers.has(tier)
         return (
           <span key={tier}>

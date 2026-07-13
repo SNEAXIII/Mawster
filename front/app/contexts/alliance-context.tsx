@@ -32,7 +32,7 @@ function readCache(): AllianceWithVisitorFlag[] {
 function writeCache(alliances: AllianceWithVisitorFlag[]) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(alliances))
-  } catch (_) {
+  } catch {
     // localStorage unavailable (SSR, private browsing)
   }
 }

@@ -5,7 +5,6 @@ import { usePathname, useSearchParams, useRouter } from 'next/navigation'
 import { useI18n } from '@/app/i18n'
 import { toast } from 'sonner'
 import {
-  type Alliance,
   type GameAccount,
   getMyGameAccounts,
   getEligibleOwners,

@@ -28,6 +28,19 @@ export default tseslint.config(
     },
   },
   {
+    // Build config files run in Node, not in the browser: they legitimately reach for `module`
+    // and `process`, which the base config knows nothing about.
+    files: ['*.config.js', '*.config.mjs', '*.config.ts'],
+    languageOptions: {
+      globals: {
+        module: 'writable',
+        require: 'readonly',
+        process: 'readonly',
+        __dirname: 'readonly',
+      },
+    },
+  },
+  {
     ignores: [
       '.next/**',
       '.next-3001/**',

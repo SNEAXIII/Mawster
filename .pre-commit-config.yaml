@@ -6,10 +6,21 @@ repos:
         args: [--fix]
       - id: ruff-format
 
-  # Prettier runs from the project's own node_modules rather than a pinned mirror, so the hook
-  # and `npm run format` can never format the same file differently.
+  # Both run from the project's own node_modules rather than a pinned mirror, so a hook and its
+  # npm script counterpart can never disagree on the same file.
+  #
+  # eslint --fix runs before prettier so that formatting has the last word. It has to `cd front`
+  # first: eslint 9 resolves its flat config from the working directory, and the repo root has
+  # none — hence the prefix stripping on the staged paths pre-commit hands over.
   - repo: local
     hooks:
+      - id: eslint
+        name: eslint (front)
+        entry: "bash -c 'cd front && exec node_modules/.bin/eslint --fix --no-warn-ignored \"${@#front/}\"' --"
+        language: system
+        files: ^front/.*\.(ts|tsx|js|jsx|mjs|cjs)$
+        exclude: ^front/(node_modules|\.next)/
+
       - id: prettier
         name: prettier (front)
         entry: front/node_modules/.bin/prettier --write --ignore-path front/.prettierignore

@@ -1,13 +1,10 @@
 'use client'
-import Link from 'next/link'
-import { useI18n } from '@/app/i18n'
 import { useKnowledgeBaseViewModel } from '../_viewmodels/use-knowledge-base-viewmodel'
 import KnowledgeBaseFilters from './knowledge-base-filters'
 import KnowledgeBaseTable from './knowledge-base-table'
 import PaginationControls from '@/components/dashboard/pagination/pagination-controls'
 
 export default function HistoryTab() {
-  const { t } = useI18n()
   const vm = useKnowledgeBaseViewModel()
 
   return (
