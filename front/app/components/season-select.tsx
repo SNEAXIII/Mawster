@@ -1,20 +1,20 @@
-'use client';
+'use client'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select'
 
 interface SeasonSelectProps {
-  seasons: { id: string; number: number }[];
-  value: string | null;
-  onChange: (seasonId: string) => void;
-  placeholder: string;
-  getLabel: (season: { id: string; number: number }) => string;
-  className?: string;
-  'data-cy'?: string;
+  seasons: { id: string; number: number }[]
+  value: string | null
+  onChange: (seasonId: string) => void
+  placeholder: string
+  getLabel: (season: { id: string; number: number }) => string
+  className?: string
+  'data-cy'?: string
 }
 
 export default function SeasonSelect({
@@ -49,5 +49,5 @@ export default function SeasonSelect({
         ))}
       </SelectContent>
     </Select>
-  );
+  )
 }

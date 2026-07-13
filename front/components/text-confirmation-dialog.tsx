@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,32 +10,32 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader } from 'lucide-react';
-import { useI18n } from '@/app/i18n';
+} from '@/components/ui/alert-dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Loader } from 'lucide-react'
+import { useI18n } from '@/app/i18n'
 
 type TextConfirmationDialogProps = Readonly<{
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  description: string;
-  onConfirm: () => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  title: string
+  description: string
+  onConfirm: () => void
   /** The word the user must type to enable the confirm button */
-  confirmationWord: string;
+  confirmationWord: string
   /** Label displayed above the input field */
-  inputLabel?: string;
+  inputLabel?: string
   /** Placeholder for the input (defaults to confirmationWord) */
-  inputPlaceholder?: string;
-  confirmText?: string;
-  cancelText?: string;
-  variant?: 'default' | 'destructive';
+  inputPlaceholder?: string
+  confirmText?: string
+  cancelText?: string
+  variant?: 'default' | 'destructive'
   /** Show a loading spinner inside the confirm button */
-  isLoading?: boolean;
+  isLoading?: boolean
   /** Error message to display below the input */
-  error?: string;
-}>;
+  error?: string
+}>
 
 export function TextConfirmationDialog({
   open,
@@ -52,23 +52,23 @@ export function TextConfirmationDialog({
   isLoading = false,
   error,
 }: TextConfirmationDialogProps) {
-  const { t } = useI18n();
-  const [inputValue, setInputValue] = useState('');
+  const { t } = useI18n()
+  const [inputValue, setInputValue] = useState('')
 
   // Reset input when dialog opens/closes
   useEffect(() => {
     if (!open) {
-      setInputValue('');
+      setInputValue('')
     }
-  }, [open]);
+  }, [open])
 
-  const isMatch = inputValue.toLowerCase() === confirmationWord.toLowerCase();
+  const isMatch = inputValue.toLowerCase() === confirmationWord.toLowerCase()
 
   return (
     <AlertDialog
       open={open}
       onOpenChange={(v) => {
-        if (!isLoading) onOpenChange(v);
+        if (!isLoading) onOpenChange(v)
       }}
     >
       <AlertDialogContent>
@@ -117,5 +117,5 @@ export function TextConfirmationDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

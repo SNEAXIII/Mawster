@@ -1,13 +1,13 @@
-import type { SeasonFormat } from '@/app/services/season';
+import type { SeasonFormat } from '@/app/services/season'
 
 export interface MapSection {
-  label: string;
-  color: string;
-  borderColor: string;
-  nodeColor: string;
-  nodeHoverColor: string;
+  label: string
+  color: string
+  borderColor: string
+  nodeColor: string
+  nodeHoverColor: string
   // 0 = spacer placeholder
-  rows: number[][];
+  rows: number[][]
 }
 
 // Regular 50-node AW map (boss at top → start at bottom).
@@ -53,7 +53,7 @@ export const REGULAR_MAP_SECTIONS: MapSection[] = [
       [1, 2, 3, 0, 4, 5, 6, 0, 7, 8, 9],
     ],
   },
-];
+]
 
 // Big Thing: a simple flat grid of nodes 1..10, no boss/mini-boss zones.
 export const BIG_THING_MAP_SECTIONS: MapSection[] = [
@@ -71,7 +71,7 @@ export const BIG_THING_MAP_SECTIONS: MapSection[] = [
     borderColor: 'border-purple-600',
     nodeColor: 'border-purple-500 bg-purple-950/40',
     nodeHoverColor: 'hover:bg-purple-900/60',
-    rows: [[5, 6,  0, 0, 7, 8]],
+    rows: [[5, 6, 0, 0, 7, 8]],
   },
   {
     label: 'Tier 1',
@@ -81,8 +81,8 @@ export const BIG_THING_MAP_SECTIONS: MapSection[] = [
     nodeHoverColor: 'hover:bg-red-900/60',
     rows: [[1, 2, 0, 0, 3, 4]],
   },
-];
+]
 
 export function mapSectionsForFormat(format: SeasonFormat): MapSection[] {
-  return format === 'regular' ? REGULAR_MAP_SECTIONS : BIG_THING_MAP_SECTIONS;
+  return format === 'regular' ? REGULAR_MAP_SECTIONS : BIG_THING_MAP_SECTIONS
 }

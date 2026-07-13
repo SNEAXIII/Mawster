@@ -1,21 +1,21 @@
-'use client';
+'use client'
 
-import { Download, Upload } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { RosterEntry } from '@/app/services/roster';
-import ImportPreviewDialog from '@/components/roster/import-preview-dialog';
-import ImportReportDialog from '@/components/roster/import-report-dialog';
-import { useRosterImportExport } from './use-roster-import-export';
-import { useI18n } from '@/app/i18n';
+import { Download, Upload } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { RosterEntry } from '@/app/services/roster'
+import ImportPreviewDialog from '@/components/roster/import-preview-dialog'
+import ImportReportDialog from '@/components/roster/import-report-dialog'
+import { useRosterImportExport } from './use-roster-import-export'
+import { useI18n } from '@/app/i18n'
 
-export type { RosterExportEntry } from './use-roster-import-export';
+export type { RosterExportEntry } from './use-roster-import-export'
 
 // ─── Props ───────────────────────────────────────────────
 interface RosterImportExportProps {
-  roster: RosterEntry[];
-  selectedAccountId: string;
-  selectedAccountName: string;
-  onRosterUpdated: (roster: RosterEntry[]) => void;
+  roster: RosterEntry[]
+  selectedAccountId: string
+  selectedAccountName: string
+  onRosterUpdated: (roster: RosterEntry[]) => void
 }
 
 export default function RosterImportExport({
@@ -24,7 +24,7 @@ export default function RosterImportExport({
   selectedAccountName,
   onRosterUpdated,
 }: Readonly<RosterImportExportProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
   const {
     fileInputRef,
     previewOpen,
@@ -37,7 +37,7 @@ export default function RosterImportExport({
     handleExport,
     handleFileSelected,
     executeImport,
-  } = useRosterImportExport({ roster, selectedAccountId, selectedAccountName, onRosterUpdated });
+  } = useRosterImportExport({ roster, selectedAccountId, selectedAccountName, onRosterUpdated })
 
   return (
     <>
@@ -84,5 +84,5 @@ export default function RosterImportExport({
         results={importResults}
       />
     </>
-  );
+  )
 }

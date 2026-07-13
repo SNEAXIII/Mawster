@@ -1,9 +1,9 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { useI18n } from '@/app/i18n';
-import { Check, X, AlertTriangle, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from 'react'
+import { useI18n } from '@/app/i18n'
+import { Check, X, AlertTriangle, ArrowRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -11,28 +11,28 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog';
-import ChampionPortrait from '@/components/champion-portrait';
-import { shortenChampionName, getClassColors, RARITY_LABELS } from '@/app/services/roster';
+} from '@/components/ui/dialog'
+import ChampionPortrait from '@/components/champion-portrait'
+import { shortenChampionName, getClassColors, RARITY_LABELS } from '@/app/services/roster'
 
 export interface ImportResult {
-  champion_name: string;
-  success: boolean;
-  isNew: boolean;
-  isSkipped: boolean;
-  champion_class: string | null;
-  image_url: string | null;
-  newRarity: string;
-  newSignature: number;
-  oldRarity: string | null;
-  oldSignature: number | null;
-  error?: string;
+  champion_name: string
+  success: boolean
+  isNew: boolean
+  isSkipped: boolean
+  champion_class: string | null
+  image_url: string | null
+  newRarity: string
+  newSignature: number
+  oldRarity: string | null
+  oldSignature: number | null
+  error?: string
 }
 
 interface ImportReportDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  results: ImportResult[];
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  results: ImportResult[]
 }
 
 export default function ImportReportDialog({
@@ -40,12 +40,12 @@ export default function ImportReportDialog({
   onOpenChange,
   results,
 }: Readonly<ImportReportDialogProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
-  const addedCount = results.filter((r) => r.success && r.isNew).length;
-  const updatedCount = results.filter((r) => r.success && !r.isNew && !r.isSkipped).length;
-  const skippedCount = results.filter((r) => r.success && r.isSkipped).length;
-  const failCount = results.filter((r) => !r.success).length;
+  const addedCount = results.filter((r) => r.success && r.isNew).length
+  const updatedCount = results.filter((r) => r.success && !r.isNew && !r.isSkipped).length
+  const skippedCount = results.filter((r) => r.success && r.isSkipped).length
+  const failCount = results.filter((r) => !r.success).length
 
   return (
     <Dialog
@@ -84,11 +84,11 @@ export default function ImportReportDialog({
 
         <div className='flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700 px-2'>
           {results.map((result, idx) => {
-            const classColors = getClassColors(result.champion_class ?? 'Unknown');
+            const classColors = getClassColors(result.champion_class ?? 'Unknown')
             const hasRarityChange =
-              result.oldRarity !== null && result.oldRarity !== result.newRarity;
+              result.oldRarity !== null && result.oldRarity !== result.newRarity
             const hasSigChange =
-              result.oldSignature !== null && result.oldSignature !== result.newSignature;
+              result.oldSignature !== null && result.oldSignature !== result.newSignature
 
             return (
               <div
@@ -188,7 +188,7 @@ export default function ImportReportDialog({
                   )}
                 </div>
               </div>
-            );
+            )
           })}
         </div>
 
@@ -197,5 +197,5 @@ export default function ImportReportDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

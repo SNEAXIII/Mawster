@@ -1,25 +1,28 @@
-import { TableRow } from '@/components/ui/table';
-import { User } from '@/app/services/users';
+import { TableRow } from '@/components/ui/table'
+import { User } from '@/app/services/users'
 import {
   RowUserCreatedAt,
   RowUserLastLoginDate,
   RowUserLogin,
   RowUserRole,
   UserStatusBadge,
-} from '@/components/dashboard/table/user-cells';
-import { UserActions } from '@/components/dashboard/actions/user-actions';
+} from '@/components/dashboard/table/user-cells'
+import { UserActions } from '@/components/dashboard/actions/user-actions'
 
 interface UserRowProps {
-  readonly user: Readonly<User>;
-  readonly loadUsers: () => void;
-  readonly currentUserRole?: string;
+  readonly user: Readonly<User>
+  readonly loadUsers: () => void
+  readonly currentUserRole?: string
 }
 
 export function UserRow({ user, loadUsers, currentUserRole }: UserRowProps) {
   return (
     <TableRow data-cy={`user-row-${user.login}`}>
       <RowUserLogin login={user.login} />
-      <RowUserRole role={user.role} login={user.login} />
+      <RowUserRole
+        role={user.role}
+        login={user.login}
+      />
       <RowUserCreatedAt created_at={user.created_at} />
       <RowUserLastLoginDate lastLoginDate={user.last_login_date} />
       <UserStatusBadge
@@ -37,5 +40,5 @@ export function UserRow({ user, loadUsers, currentUserRole }: UserRowProps) {
         loadUsers={loadUsers}
       />
     </TableRow>
-  );
+  )
 }

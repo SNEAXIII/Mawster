@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector';
-import AllianceSelect from '@/app/game/_components/alliance-select';
+import { useI18n } from '@/app/i18n'
+import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
+import AllianceSelect from '@/app/game/_components/alliance-select'
 
 interface WarHeaderProps {
-  alliances: AllianceWithVisitorFlag[];
-  selectedAllianceId: string;
-  onAllianceChange: (id: string) => void;
+  alliances: AllianceWithVisitorFlag[]
+  selectedAllianceId: string
+  onAllianceChange: (id: string) => void
 }
 
 export default function WarHeader({
@@ -15,9 +15,9 @@ export default function WarHeader({
   selectedAllianceId,
   onAllianceChange,
 }: Readonly<WarHeaderProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
-  if (alliances.length <= 1) return null;
+  if (alliances.length <= 1) return null
 
   return (
     <AllianceSelect
@@ -27,5 +27,5 @@ export default function WarHeader({
       dataCy='alliance-select'
       placeholder={t.game.defense.alliance}
     />
-  );
+  )
 }

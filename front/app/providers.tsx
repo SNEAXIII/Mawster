@@ -1,22 +1,22 @@
-'use client';
+'use client'
 
-import { SessionProvider, useSession } from 'next-auth/react';
-import { ThemeProvider } from 'next-themes';
-import { I18nProvider } from '@/app/i18n';
-import { AllianceProvider } from '@/app/contexts/alliance-context';
-import { signOutAndRedirect } from '@/app/lib/sign-out';
-import { useEffect } from 'react';
+import { SessionProvider, useSession } from 'next-auth/react'
+import { ThemeProvider } from 'next-themes'
+import { I18nProvider } from '@/app/i18n'
+import { AllianceProvider } from '@/app/contexts/alliance-context'
+import { signOutAndRedirect } from '@/app/lib/sign-out'
+import { useEffect } from 'react'
 
 function SessionWatcher() {
-  const { data: session } = useSession();
+  const { data: session } = useSession()
 
   useEffect(() => {
     if (session?.error === 'TokenExpiredError') {
-      signOutAndRedirect('/login');
+      signOutAndRedirect('/login')
     }
-  }, [session?.error]);
+  }, [session?.error])
 
-  return null;
+  return null
 }
 
 export function Providers({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -36,5 +36,5 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
         </I18nProvider>
       </SessionProvider>
     </ThemeProvider>
-  );
+  )
 }

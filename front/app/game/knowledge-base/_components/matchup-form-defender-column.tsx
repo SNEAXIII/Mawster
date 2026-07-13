@@ -1,20 +1,20 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import ChampionFilterSelect from './champion-filter-select';
-import MatchupVerdictSelect from './matchup-verdict-select';
-import MatchupSynergyField, { type SynergyDraft } from './matchup-synergy-field';
-import type { MatchupVerdict } from '@/app/services/matchups';
+import { useI18n } from '@/app/i18n'
+import ChampionFilterSelect from './champion-filter-select'
+import MatchupVerdictSelect from './matchup-verdict-select'
+import MatchupSynergyField, { type SynergyDraft } from './matchup-synergy-field'
+import type { MatchupVerdict } from '@/app/services/matchups'
 
 interface Props {
-  defenderId: string | null;
-  onDefenderChange: (id: string | null) => void;
-  defenderVerdict: MatchupVerdict;
-  onDefenderVerdictChange: (verdict: MatchupVerdict) => void;
-  synergies: SynergyDraft[];
-  onSynergyChange: (index: number, synergy: SynergyDraft) => void;
-  prefightId: string | null;
-  onPrefightChange: (id: string | null) => void;
+  defenderId: string | null
+  onDefenderChange: (id: string | null) => void
+  defenderVerdict: MatchupVerdict
+  onDefenderVerdictChange: (verdict: MatchupVerdict) => void
+  synergies: SynergyDraft[]
+  onSynergyChange: (index: number, synergy: SynergyDraft) => void
+  prefightId: string | null
+  onPrefightChange: (id: string | null) => void
 }
 
 export default function MatchupFormDefenderColumn({
@@ -27,11 +27,14 @@ export default function MatchupFormDefenderColumn({
   prefightId,
   onPrefightChange,
 }: Readonly<Props>) {
-  const { t } = useI18n();
-  const kb = t.game.knowledgeBase;
+  const { t } = useI18n()
+  const kb = t.game.knowledgeBase
 
   return (
-    <div className='flex flex-col gap-3' data-cy='matchup-form-defender-column'>
+    <div
+      className='flex flex-col gap-3'
+      data-cy='matchup-form-defender-column'
+    >
       <h3 className='text-sm font-medium text-muted-foreground'>{kb.vsDefender}</h3>
       <ChampionFilterSelect
         value={defenderId}
@@ -63,5 +66,5 @@ export default function MatchupFormDefenderColumn({
         data-cy='matchup-form-prefight'
       />
     </div>
-  );
+  )
 }

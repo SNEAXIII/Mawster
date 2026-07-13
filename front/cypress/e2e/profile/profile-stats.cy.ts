@@ -29,29 +29,22 @@ describe('Profile statistics tab', () => {
       const allianceId = users['prof-owner'].alliance_id!;
       const ownerAccId = users['prof-owner'].account_id!;
 
-      withWarScenario(
-        adminToken,
-        ownerToken,
-        allianceId,
-        ownerAccId,
-        'Enemy',
-        ({ champId, cuId, warId }) => {
-          addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, 1);
-          cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
+      withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Enemy', ({ champId, cuId, warId }) => {
+        addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, 1);
+        cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
 
-          cy.apiLogin(users['prof-owner'].user_id);
-          cy.visit('/profile');
-          cy.getByCy('profile-tab-stats').click();
+        cy.apiLogin(users['prof-owner'].user_id);
+        cy.visit('/profile');
+        cy.getByCy('profile-tab-stats').click();
 
-          cy.getByCy('profile-stats-tab').should('exist');
-          cy.getByCy('profile-stats-card').should('exist');
-          cy.getByCy('profile-season-select').should('exist');
-          cy.getByCy('profile-evolution-chart').should('exist');
-          // one ended war → the season appears in the selector
-          cy.getByCy('profile-season-select').click();
-          cy.getByCy('profile-season-64').should('exist');
-        },
-      );
+        cy.getByCy('profile-stats-tab').should('exist');
+        cy.getByCy('profile-stats-card').should('exist');
+        cy.getByCy('profile-season-select').should('exist');
+        cy.getByCy('profile-evolution-chart').should('exist');
+        // one ended war → the season appears in the selector
+        cy.getByCy('profile-season-select').click();
+        cy.getByCy('profile-season-64').should('exist');
+      });
     });
   });
 

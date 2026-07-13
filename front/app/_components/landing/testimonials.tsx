@@ -1,11 +1,11 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import { Card, CardContent } from '@/components/ui/card';
-import { TESTIMONIALS } from './testimonials-data';
+import { useI18n } from '@/app/i18n'
+import { Card, CardContent } from '@/components/ui/card'
+import { TESTIMONIALS } from './testimonials-data'
 
 export function Testimonials() {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <section className='px-6 py-12 md:px-12'>
@@ -30,5 +30,5 @@ export function Testimonials() {
         </div>
       </div>
     </section>
-  );
+  )
 }

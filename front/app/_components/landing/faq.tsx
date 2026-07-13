@@ -1,11 +1,11 @@
-'use client';
+'use client'
 
-import { ChevronDown } from 'lucide-react';
-import { useI18n } from '@/app/i18n';
-import { Card } from '@/components/ui/card';
+import { ChevronDown } from 'lucide-react'
+import { useI18n } from '@/app/i18n'
+import { Card } from '@/components/ui/card'
 
 export function Faq() {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <section
@@ -36,5 +36,5 @@ export function Faq() {
         </div>
       </div>
     </section>
-  );
+  )
 }

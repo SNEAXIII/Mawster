@@ -1,17 +1,22 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { Eye, X, UserPlus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useI18n } from '@/app/i18n';
-import { type AllianceVisitor, getAllianceVisitors, kickVisitor, inviteMember } from '@/app/services/game';
-import { ConfirmationDialog } from '@/components/confirmation-dialog';
+import { useEffect, useState } from 'react'
+import { Eye, X, UserPlus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useI18n } from '@/app/i18n'
+import {
+  type AllianceVisitor,
+  getAllianceVisitors,
+  kickVisitor,
+  inviteMember,
+} from '@/app/services/game'
+import { ConfirmationDialog } from '@/components/confirmation-dialog'
 
 interface AllianceVisitorsSectionProps {
-  allianceId: string;
-  canManage: boolean;
-  onViewRoster: (gameAccountId: string, pseudo: string) => void;
-  onRefresh: () => Promise<void>;
+  allianceId: string
+  canManage: boolean
+  onViewRoster: (gameAccountId: string, pseudo: string) => void
+  onRefresh: () => Promise<void>
 }
 
 export default function AllianceVisitorsSection({
@@ -20,32 +25,32 @@ export default function AllianceVisitorsSection({
   onViewRoster,
   onRefresh,
 }: Readonly<AllianceVisitorsSectionProps>) {
-  const { t } = useI18n();
-  const [visitors, setVisitors] = useState<AllianceVisitor[]>([]);
-  const [kickTarget, setKickTarget] = useState<AllianceVisitor | null>(null);
+  const { t } = useI18n()
+  const [visitors, setVisitors] = useState<AllianceVisitor[]>([])
+  const [kickTarget, setKickTarget] = useState<AllianceVisitor | null>(null)
 
   useEffect(() => {
-    if (!allianceId) return;
+    if (!allianceId) return
     getAllianceVisitors(allianceId)
       .then(setVisitors)
-      .catch(() => setVisitors([]));
-  }, [allianceId]);
+      .catch(() => setVisitors([]))
+  }, [allianceId])
 
   async function handleKickConfirm() {
-    if (!kickTarget) return;
-    const target = kickTarget;
-    setKickTarget(null);
-    await kickVisitor(allianceId, target.game_account_id);
-    setVisitors((prev) => prev.filter((v) => v.id !== target.id));
-    await onRefresh();
+    if (!kickTarget) return
+    const target = kickTarget
+    setKickTarget(null)
+    await kickVisitor(allianceId, target.game_account_id)
+    setVisitors((prev) => prev.filter((v) => v.id !== target.id))
+    await onRefresh()
   }
 
   async function handleInviteAsMember(visitor: AllianceVisitor) {
-    await inviteMember(allianceId, visitor.game_account_id);
-    await onRefresh();
+    await inviteMember(allianceId, visitor.game_account_id)
+    await onRefresh()
   }
 
-  if (visitors.length === 0) return null;
+  if (visitors.length === 0) return null
 
   return (
     <div className='border-t pt-3 flex flex-col gap-2'>
@@ -100,7 +105,7 @@ export default function AllianceVisitorsSection({
       <ConfirmationDialog
         open={!!kickTarget}
         onOpenChange={(open) => {
-          if (!open) setKickTarget(null);
+          if (!open) setKickTarget(null)
         }}
         onConfirm={handleKickConfirm}
         title={t.game.alliances.kickVisitor}
@@ -108,5 +113,5 @@ export default function AllianceVisitorsSection({
         variant='destructive'
       />
     </div>
-  );
+  )
 }

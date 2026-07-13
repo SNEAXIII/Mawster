@@ -1,66 +1,66 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Calendar } from 'lucide-react';
-import { FaDiscord } from 'react-icons/fa';
-import { FiEdit2, FiCheck, FiX } from 'react-icons/fi';
-import { useI18n } from '@/app/i18n';
-import { formatDateLong } from '@/app/lib/utils';
-import { InfoRow } from './info-row';
-import { updateLogin } from '@/app/services/users';
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { User, Calendar } from 'lucide-react'
+import { FaDiscord } from 'react-icons/fa'
+import { FiEdit2, FiCheck, FiX } from 'react-icons/fi'
+import { useI18n } from '@/app/i18n'
+import { formatDateLong } from '@/app/lib/utils'
+import { InfoRow } from './info-row'
+import { updateLogin } from '@/app/services/users'
 
-const LOGIN_REGEX = /^[a-zA-Z0-9]{3,30}$/;
+const LOGIN_REGEX = /^[a-zA-Z0-9]{3,30}$/
 
 const iconBtn =
-  'inline-flex items-center justify-center rounded p-1 transition-colors disabled:opacity-50 cursor-pointer';
+  'inline-flex items-center justify-center rounded p-1 transition-colors disabled:opacity-50 cursor-pointer'
 
 export function AccountInfoCard({
   name,
   createdAt,
 }: Readonly<{
-  name?: string | null;
-  createdAt?: string | null;
+  name?: string | null
+  createdAt?: string | null
 }>) {
-  const { locale, t } = useI18n();
-  const router = useRouter();
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(name ?? '');
-  const [displayName, setDisplayName] = useState(name ?? '');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const { locale, t } = useI18n()
+  const router = useRouter()
+  const [editing, setEditing] = useState(false)
+  const [value, setValue] = useState(name ?? '')
+  const [displayName, setDisplayName] = useState(name ?? '')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const handleEdit = () => {
-    setValue(displayName);
-    setError(null);
-    setEditing(true);
-  };
+    setValue(displayName)
+    setError(null)
+    setEditing(true)
+  }
 
   const handleCancel = () => {
-    setEditing(false);
-    setError(null);
-  };
+    setEditing(false)
+    setError(null)
+  }
 
   const handleSubmit = async () => {
     if (!LOGIN_REGEX.test(value)) {
-      setError(t.profile.editUsernameInvalid);
-      return;
+      setError(t.profile.editUsernameInvalid)
+      return
     }
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     try {
-      await updateLogin(value);
-      setDisplayName(value);
-      setEditing(false);
-      router.refresh();
+      await updateLogin(value)
+      setDisplayName(value)
+      setEditing(false)
+      router.refresh()
     } catch (err) {
-      const e = err as Error & { status?: number };
-      setError(e.status === 409 ? t.profile.editUsernameTaken : t.profile.editUsernameError);
+      const e = err as Error & { status?: number }
+      setError(e.status === 409 ? t.profile.editUsernameTaken : t.profile.editUsernameError)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <Card>
@@ -69,7 +69,10 @@ export function AccountInfoCard({
       </CardHeader>
       <CardContent className='flex flex-col gap-4'>
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-          <div className='flex flex-col gap-1' data-cy='username-row'>
+          <div
+            className='flex flex-col gap-1'
+            data-cy='username-row'
+          >
             <div className='flex items-center gap-2'>
               <User className='size-4 text-muted-foreground' />
               <span className='text-xs text-muted-foreground'>{t.profile.username}</span>
@@ -86,8 +89,8 @@ export function AccountInfoCard({
                     autoFocus
                     data-cy='edit-username-input'
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleSubmit();
-                      if (e.key === 'Escape') handleCancel();
+                      if (e.key === 'Enter') handleSubmit()
+                      if (e.key === 'Escape') handleCancel()
                     }}
                   />
                   <button
@@ -111,7 +114,10 @@ export function AccountInfoCard({
               </div>
             ) : (
               <div className='flex items-center gap-2'>
-                <span className='text-sm font-medium' data-cy='username-value'>
+                <span
+                  className='text-sm font-medium'
+                  data-cy='username-value'
+                >
                   {displayName || t.common.notAvailable}
                 </span>
                 <button
@@ -136,5 +142,5 @@ export function AccountInfoCard({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

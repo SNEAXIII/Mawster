@@ -1,40 +1,40 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Shield, UserPlus, Users, X, Pencil, Check, Eye } from 'lucide-react';
-import InviteMemberCombo from './alliance-invite-member-combo';
-import { type Alliance, type GameAccount, type AllianceInvitation } from '@/app/services/game';
-import { formatDateMedium } from '@/app/lib/utils';
-import { useAllianceRole } from '@/hooks/use-alliance-role';
-import { CollapsibleSection } from '@/components/collapsible-section';
-import AllianceMemberRow from './alliance-member-row';
-import UsernameEnriched from '@/components/username-enriched';
-import { patchAllianceElo, patchAllianceTier } from '@/app/services/game';
-import { toast } from 'sonner';
-import AllianceVisitorsSection from './alliance-visitors-section';
+import { useState } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Shield, UserPlus, Users, X, Pencil, Check, Eye } from 'lucide-react'
+import InviteMemberCombo from './alliance-invite-member-combo'
+import { type Alliance, type GameAccount, type AllianceInvitation } from '@/app/services/game'
+import { formatDateMedium } from '@/app/lib/utils'
+import { useAllianceRole } from '@/hooks/use-alliance-role'
+import { CollapsibleSection } from '@/components/collapsible-section'
+import AllianceMemberRow from './alliance-member-row'
+import UsernameEnriched from '@/components/username-enriched'
+import { patchAllianceElo, patchAllianceTier } from '@/app/services/game'
+import { toast } from 'sonner'
+import AllianceVisitorsSection from './alliance-visitors-section'
 
 interface AllianceCardProps {
-  alliance: Alliance;
-  locale: string;
+  alliance: Alliance
+  locale: string
   /** Currently open invite-member form alliance id */
-  memberAllianceId: string | null;
-  memberAccountId: string;
-  eligibleMembers: GameAccount[];
-  eligibleVisitors: GameAccount[];
-  inviteType: 'member' | 'visitor';
-  onInviteTypeChange: (type: 'member' | 'visitor') => void;
-  onMemberAccountChange: (value: string) => void;
-  onOpenInviteMember: (allianceId: string) => void;
-  onCloseInviteMember: () => void;
-  onInviteMember: (allianceId: string) => void;
-  onRefresh: () => Promise<void>;
-  onViewRoster: (gameAccountId: string, pseudo: string, canRequestUpgrade: boolean) => void;
-  pendingInvitations?: AllianceInvitation[];
-  onCancelInvitation?: (allianceId: string, invitationId: string) => void;
+  memberAllianceId: string | null
+  memberAccountId: string
+  eligibleMembers: GameAccount[]
+  eligibleVisitors: GameAccount[]
+  inviteType: 'member' | 'visitor'
+  onInviteTypeChange: (type: 'member' | 'visitor') => void
+  onMemberAccountChange: (value: string) => void
+  onOpenInviteMember: (allianceId: string) => void
+  onCloseInviteMember: () => void
+  onInviteMember: (allianceId: string) => void
+  onRefresh: () => Promise<void>
+  onViewRoster: (gameAccountId: string, pseudo: string, canRequestUpgrade: boolean) => void
+  pendingInvitations?: AllianceInvitation[]
+  onCancelInvitation?: (allianceId: string, invitationId: string) => void
 }
 
 export default function AllianceCard({
@@ -55,67 +55,67 @@ export default function AllianceCard({
   pendingInvitations = [],
   onCancelInvitation,
 }: Readonly<AllianceCardProps>) {
-  const { t } = useI18n();
-  const { canManage } = useAllianceRole();
-  const userCanManage = canManage(alliance);
-  const officerCount = alliance.officers.length;
-  const [editingElo, setEditingElo] = useState(false);
-  const [editingTier, setEditingTier] = useState(false);
-  const [eloDraft, setEloDraft] = useState('');
-  const [tierDraft, setTierDraft] = useState('');
+  const { t } = useI18n()
+  const { canManage } = useAllianceRole()
+  const userCanManage = canManage(alliance)
+  const officerCount = alliance.officers.length
+  const [editingElo, setEditingElo] = useState(false)
+  const [editingTier, setEditingTier] = useState(false)
+  const [eloDraft, setEloDraft] = useState('')
+  const [tierDraft, setTierDraft] = useState('')
 
   function startEditElo() {
-    setEloDraft(String(alliance.elo));
-    setEditingElo(true);
+    setEloDraft(String(alliance.elo))
+    setEditingElo(true)
   }
 
   async function saveElo() {
-    const val = Number(eloDraft);
+    const val = Number(eloDraft)
     if (!Number.isNaN(val) && val >= 0 && val <= 4500) {
       try {
-        await patchAllianceElo(alliance.id, val);
-        await onRefresh();
-        toast.success(t.game.war.eloUpdateSuccess);
+        await patchAllianceElo(alliance.id, val)
+        await onRefresh()
+        toast.success(t.game.war.eloUpdateSuccess)
       } catch (err: unknown) {
-        toast.error((err as Error).message || t.game.war.eloUpdateError);
+        toast.error((err as Error).message || t.game.war.eloUpdateError)
       }
     }
-    setEditingElo(false);
+    setEditingElo(false)
   }
 
   function startEditTier() {
-    setTierDraft(String(alliance.tier));
-    setEditingTier(true);
+    setTierDraft(String(alliance.tier))
+    setEditingTier(true)
   }
 
   async function saveTier() {
-    const val = Number(tierDraft);
+    const val = Number(tierDraft)
     if (!Number.isNaN(val) && val >= 1 && val <= 20) {
       try {
-        await patchAllianceTier(alliance.id, val);
-        await onRefresh();
-        toast.success(t.game.war.tierUpdateSuccess);
+        await patchAllianceTier(alliance.id, val)
+        await onRefresh()
+        toast.success(t.game.war.tierUpdateSuccess)
       } catch (err: unknown) {
-        toast.error((err as Error).message || t.game.war.tierUpdateError);
+        toast.error((err as Error).message || t.game.war.tierUpdateError)
       }
     }
-    setEditingTier(false);
+    setEditingTier(false)
   }
 
-  const GROUPS = [1, 2, 3, null] as const;
+  const GROUPS = [1, 2, 3, null] as const
   const membersByGroup = GROUPS.map((group) => ({
     group,
     members: [...alliance.members]
       .filter((m) => m.alliance_group === group)
       .sort((a, b) => {
         const rank = (m: typeof a) => {
-          if (m.is_owner) return 0;
-          if (m.is_officer) return 1;
-          return 2;
-        };
-        return rank(a) - rank(b);
+          if (m.is_owner) return 0
+          if (m.is_officer) return 1
+          return 2
+        }
+        return rank(a) - rank(b)
       }),
-  }));
+  }))
 
   return (
     <Card data-cy={`alliance-card-${alliance.name}`}>
@@ -169,8 +169,8 @@ export default function AllianceCard({
                       value={eloDraft}
                       onChange={(e) => setEloDraft(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') void saveElo();
-                        if (e.key === 'Escape') setEditingElo(false);
+                        if (e.key === 'Enter') void saveElo()
+                        if (e.key === 'Escape') setEditingElo(false)
                       }}
                       autoFocus
                       data-cy='alliance-elo-input'
@@ -219,8 +219,8 @@ export default function AllianceCard({
                       value={tierDraft}
                       onChange={(e) => setTierDraft(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') void saveTier();
-                        if (e.key === 'Escape') setEditingTier(false);
+                        if (e.key === 'Enter') void saveTier()
+                        if (e.key === 'Escape') setEditingTier(false)
                       }}
                       autoFocus
                       data-cy='alliance-tier-input'
@@ -424,10 +424,12 @@ export default function AllianceCard({
         <AllianceVisitorsSection
           allianceId={alliance.id}
           canManage={userCanManage}
-          onViewRoster={(gameAccountId, pseudo) => onViewRoster(gameAccountId, pseudo, userCanManage)}
+          onViewRoster={(gameAccountId, pseudo) =>
+            onViewRoster(gameAccountId, pseudo, userCanManage)
+          }
           onRefresh={onRefresh}
         />
       </CardContent>
     </Card>
-  );
+  )
 }

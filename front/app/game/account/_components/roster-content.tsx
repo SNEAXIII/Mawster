@@ -1,36 +1,36 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import RosterImportExport from '@/components/roster-import-export';
-import { ErrorBanner } from '@/components/error-banner';
+import { useI18n } from '@/app/i18n'
+import RosterImportExport from '@/components/roster-import-export'
+import { ErrorBanner } from '@/components/error-banner'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { AllianceRoleProvider } from '@/hooks/use-alliance-role';
-import { RosterDialogs } from './roster-dialogs';
-import TabBar, { type TabItem } from '@/components/tab-bar';
-import GameAccountsSection from '@/components/profile/game-accounts-section';
-import AddChampionForm from './add-champion-form';
-import RosterGrid from './roster-grid';
-import RosterFilterBar from '@/components/roster/roster-filter-bar';
-import RosterUpgradeSection from './roster-upgrade-section';
-import { useRosterViewModel, RosterTab } from '../_viewmodels/use-roster-viewmodel';
-import MasteryTab from './mastery-tab';
+} from '@/components/ui/select'
+import { AllianceRoleProvider } from '@/hooks/use-alliance-role'
+import { RosterDialogs } from './roster-dialogs'
+import TabBar, { type TabItem } from '@/components/tab-bar'
+import GameAccountsSection from '@/components/profile/game-accounts-section'
+import AddChampionForm from './add-champion-form'
+import RosterGrid from './roster-grid'
+import RosterFilterBar from '@/components/roster/roster-filter-bar'
+import RosterUpgradeSection from './roster-upgrade-section'
+import { useRosterViewModel, RosterTab } from '../_viewmodels/use-roster-viewmodel'
+import MasteryTab from './mastery-tab'
 
 export default function RosterContent() {
-  const vm = useRosterViewModel();
-  const { t } = useI18n();
+  const vm = useRosterViewModel()
+  const { t } = useI18n()
 
   if (vm.authStatus === 'loading' || vm.loadingAccounts) {
     return (
       <div className='flex items-center justify-center h-64'>
         <p className='text-muted-foreground'>{t.common.loading}</p>
       </div>
-    );
+    )
   }
 
   const tabs: TabItem<RosterTab>[] = [
@@ -39,7 +39,7 @@ export default function RosterContent() {
       : []),
     { value: RosterTab.Mastery, label: t.mastery.tabLabel, cy: 'tab-mastery' },
     { value: RosterTab.Accounts, label: t.roster.manageTab, cy: 'tab-manage' },
-  ];
+  ]
 
   return (
     <AllianceRoleProvider>
@@ -183,5 +183,5 @@ export default function RosterContent() {
         />
       </div>
     </AllianceRoleProvider>
-  );
+  )
 }

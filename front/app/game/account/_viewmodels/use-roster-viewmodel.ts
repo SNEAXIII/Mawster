@@ -1,11 +1,11 @@
-'use client';
+'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { redirect, usePathname, useSearchParams, useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { useI18n } from '@/app/i18n';
-import { getMyGameAccounts, GameAccount } from '@/app/services/game';
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { redirect, usePathname, useSearchParams, useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { useI18n } from '@/app/i18n'
+import { getMyGameAccounts, GameAccount } from '@/app/services/game'
 import {
   getRoster,
   deleteRosterEntry,
@@ -16,19 +16,19 @@ import {
   getNextRarity,
   togglePreferredAttacker,
   ascendChampion,
-} from '@/app/services/roster';
+} from '@/app/services/roster'
 import {
   getMasteries,
   saveMasteries,
   MasteryEntry,
   MasteryUpsertItem,
-} from '@/app/services/masteries';
+} from '@/app/services/masteries'
 import {
   RosterFilters,
   EMPTY_FILTERS,
   applyRosterFilters,
   isFilterActive,
-} from '@/components/roster/roster-filters';
+} from '@/components/roster/roster-filters'
 
 export enum RosterTab {
   Roster = 'roster',
@@ -37,89 +37,89 @@ export enum RosterTab {
 }
 
 export function useRosterViewModel() {
-  const { status: authStatus } = useSession();
-  const { t } = useI18n();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const router = useRouter();
+  const { status: authStatus } = useSession()
+  const { t } = useI18n()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const router = useRouter()
 
-  const [accounts, setAccounts] = useState<GameAccount[]>([]);
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
-  const [loadingAccounts, setLoadingAccounts] = useState(true);
+  const [accounts, setAccounts] = useState<GameAccount[]>([])
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null)
+  const [loadingAccounts, setLoadingAccounts] = useState(true)
 
   const activeTab = useMemo(() => {
-    const tab = searchParams.get('tab') as RosterTab | null;
-    return tab && Object.values(RosterTab).includes(tab) ? tab : RosterTab.Roster;
-  }, [searchParams]);
+    const tab = searchParams.get('tab') as RosterTab | null
+    return tab && Object.values(RosterTab).includes(tab) ? tab : RosterTab.Roster
+  }, [searchParams])
 
   const setActiveTab = useCallback(
     (tab: RosterTab) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set('tab', tab);
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      const params = new URLSearchParams(searchParams.toString())
+      params.set('tab', tab)
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false })
     },
     [searchParams, pathname, router]
-  );
+  )
 
-  const [masteries, setMasteries] = useState<MasteryEntry[]>([]);
-  const [masteryForm, setMasteryForm] = useState<MasteryUpsertItem[]>([]);
-  const [loadingMasteries, setLoadingMasteries] = useState(false);
-  const [savingMasteries, setSavingMasteries] = useState(false);
+  const [masteries, setMasteries] = useState<MasteryEntry[]>([])
+  const [masteryForm, setMasteryForm] = useState<MasteryUpsertItem[]>([])
+  const [loadingMasteries, setLoadingMasteries] = useState(false)
+  const [savingMasteries, setSavingMasteries] = useState(false)
 
-  const [roster, setRoster] = useState<RosterEntry[]>([]);
-  const [loadingRoster, setLoadingRoster] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editEntry, setEditEntry] = useState<RosterEntry | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<RosterEntry | null>(null);
-  const [upgradeTarget, setUpgradeTarget] = useState<RosterEntry | null>(null);
-  const [ascendTarget, setAscendTarget] = useState<RosterEntry | null>(null);
-  const [upgradeRefreshKey, setUpgradeRefreshKey] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<RosterFilters>(EMPTY_FILTERS);
+  const [roster, setRoster] = useState<RosterEntry[]>([])
+  const [loadingRoster, setLoadingRoster] = useState(false)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [editEntry, setEditEntry] = useState<RosterEntry | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<RosterEntry | null>(null)
+  const [upgradeTarget, setUpgradeTarget] = useState<RosterEntry | null>(null)
+  const [ascendTarget, setAscendTarget] = useState<RosterEntry | null>(null)
+  const [upgradeRefreshKey, setUpgradeRefreshKey] = useState(0)
+  const [error, setError] = useState<string | null>(null)
+  const [filters, setFilters] = useState<RosterFilters>(EMPTY_FILTERS)
 
   useEffect(() => {
-    if (authStatus === 'unauthenticated') redirect('/login');
-  }, [authStatus]);
+    if (authStatus === 'unauthenticated') redirect('/login')
+  }, [authStatus])
 
   const fetchAccounts = useCallback(() => {
-    setLoadingAccounts(true);
+    setLoadingAccounts(true)
     getMyGameAccounts()
       .then((accs) => {
-        setAccounts(accs);
+        setAccounts(accs)
         setSelectedAccountId((current) => {
-          if (current && accs.some((a) => a.id === current)) return current;
-          return accs.find((a) => a.is_primary)?.id ?? accs[0]?.id ?? null;
-        });
-        if (accs.length === 0) setActiveTab(RosterTab.Accounts);
+          if (current && accs.some((a) => a.id === current)) return current
+          return accs.find((a) => a.is_primary)?.id ?? accs[0]?.id ?? null
+        })
+        if (accs.length === 0) setActiveTab(RosterTab.Accounts)
       })
       .catch(() => setError(t.roster.errors.loadAccounts))
-      .finally(() => setLoadingAccounts(false));
-  }, [t, setActiveTab]);
+      .finally(() => setLoadingAccounts(false))
+  }, [t, setActiveTab])
 
   useEffect(() => {
-    if (authStatus !== 'authenticated') return;
-    fetchAccounts();
+    if (authStatus !== 'authenticated') return
+    fetchAccounts()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authStatus]);
+  }, [authStatus])
 
   useEffect(() => {
-    if (activeTab === RosterTab.Roster && authStatus === 'authenticated') fetchAccounts();
+    if (activeTab === RosterTab.Roster && authStatus === 'authenticated') fetchAccounts()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
+  }, [activeTab])
 
   useEffect(() => {
-    setFilters(EMPTY_FILTERS);
+    setFilters(EMPTY_FILTERS)
     if (!selectedAccountId) {
-      setRoster([]);
-      return;
+      setRoster([])
+      return
     }
-    setLoadingRoster(true);
+    setLoadingRoster(true)
     getRoster(selectedAccountId)
       .then(setRoster)
       .catch(() => setError(t.roster.errors.loadRoster))
-      .finally(() => setLoadingRoster(false));
+      .finally(() => setLoadingRoster(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAccountId]);
+  }, [selectedAccountId])
 
   const updateMasteryField = useCallback(
     (
@@ -128,33 +128,33 @@ export function useRosterViewModel() {
       value: number,
       masteryMaxValue: number
     ) => {
-      if (value < 0) return;
+      if (value < 0) return
       setMasteryForm((prev) => {
-        const current = prev.find((item) => item.mastery_id === masteryId);
-        const maxValue = field === 'unlocked' ? masteryMaxValue : (current?.unlocked ?? 0);
-        const clamped = Math.min(value, maxValue);
+        const current = prev.find((item) => item.mastery_id === masteryId)
+        const maxValue = field === 'unlocked' ? masteryMaxValue : (current?.unlocked ?? 0)
+        const clamped = Math.min(value, maxValue)
         return prev.map((item) => {
-          if (item.mastery_id !== masteryId) return item;
+          if (item.mastery_id !== masteryId) return item
           if (field === 'unlocked') {
             return {
               ...item,
               unlocked: clamped,
               attack: Math.min(item.attack, clamped),
               defense: Math.min(item.defense, clamped),
-            };
+            }
           }
-          return { ...item, [field]: clamped };
-        });
-      });
+          return { ...item, [field]: clamped }
+        })
+      })
     },
     []
-  );
+  )
 
   const fetchMasteries = useCallback(async (accountId: string) => {
-    setLoadingMasteries(true);
+    setLoadingMasteries(true)
     try {
-      const data = await getMasteries(accountId);
-      setMasteries(data);
+      const data = await getMasteries(accountId)
+      setMasteries(data)
       setMasteryForm(
         data.map((m) => ({
           mastery_id: m.mastery_id,
@@ -162,135 +162,135 @@ export function useRosterViewModel() {
           attack: m.attack,
           defense: m.defense,
         }))
-      );
+      )
     } catch {
-      toast.error(t.mastery.saveError);
+      toast.error(t.mastery.saveError)
     } finally {
-      setLoadingMasteries(false);
+      setLoadingMasteries(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [])
 
   const handleSaveMasteries = useCallback(async () => {
-    if (!selectedAccountId) return;
-    setSavingMasteries(true);
+    if (!selectedAccountId) return
+    setSavingMasteries(true)
     try {
-      const updated = await saveMasteries(selectedAccountId, masteryForm);
-      setMasteries(updated);
-      toast.success(t.mastery.saveSuccess);
+      const updated = await saveMasteries(selectedAccountId, masteryForm)
+      setMasteries(updated)
+      toast.success(t.mastery.saveSuccess)
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : t.mastery.saveError);
+      toast.error(e instanceof Error ? e.message : t.mastery.saveError)
     } finally {
-      setSavingMasteries(false);
+      setSavingMasteries(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAccountId, masteryForm]);
+  }, [selectedAccountId, masteryForm])
 
   const handleFormSuccess = useCallback((updated: RosterEntry[]) => {
-    setRoster(updated);
-    setUpgradeRefreshKey((k) => k + 1);
-  }, []);
+    setRoster(updated)
+    setUpgradeRefreshKey((k) => k + 1)
+  }, [])
 
   const confirmDelete = useCallback(async () => {
-    if (!deleteTarget || !selectedAccountId) return;
-    const name = deleteTarget.champion_name;
+    if (!deleteTarget || !selectedAccountId) return
+    const name = deleteTarget.champion_name
     try {
-      await deleteRosterEntry(deleteTarget.id);
-      setRoster(await getRoster(selectedAccountId));
-      toast.success(t.roster.removeSuccess.replace('{name}', name));
+      await deleteRosterEntry(deleteTarget.id)
+      setRoster(await getRoster(selectedAccountId))
+      toast.success(t.roster.removeSuccess.replace('{name}', name))
     } catch (e: unknown) {
-      const msg = (e as Error).message || t.roster.errors.deleteError;
-      toast.error(msg);
-      setError(msg);
+      const msg = (e as Error).message || t.roster.errors.deleteError
+      toast.error(msg)
+      setError(msg)
     } finally {
-      setDeleteTarget(null);
+      setDeleteTarget(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deleteTarget, selectedAccountId]);
+  }, [deleteTarget, selectedAccountId])
 
   const startEditEntry = useCallback((entry: RosterEntry) => {
-    setEditEntry(entry);
-    setShowAddForm(true);
-  }, []);
+    setEditEntry(entry)
+    setShowAddForm(true)
+  }, [])
 
   const confirmUpgrade = useCallback(async () => {
-    if (!upgradeTarget || !selectedAccountId) return;
-    const nextRarity = getNextRarity(upgradeTarget.rarity);
-    if (!nextRarity) return;
+    if (!upgradeTarget || !selectedAccountId) return
+    const nextRarity = getNextRarity(upgradeTarget.rarity)
+    if (!nextRarity) return
     try {
-      await upgradeChampionRank(upgradeTarget.id);
-      setRoster(await getRoster(selectedAccountId));
-      setUpgradeRefreshKey((k) => k + 1);
+      await upgradeChampionRank(upgradeTarget.id)
+      setRoster(await getRoster(selectedAccountId))
+      setUpgradeRefreshKey((k) => k + 1)
       toast.success(
         t.roster.upgradeSuccess
           .replace('{name}', upgradeTarget.champion_name)
           .replace('{rarity}', RARITY_LABELS[nextRarity] ?? nextRarity)
-      );
+      )
     } catch (e: unknown) {
-      toast.error((e as Error).message || t.roster.errors.upgradeError);
+      toast.error((e as Error).message || t.roster.errors.upgradeError)
     } finally {
-      setUpgradeTarget(null);
+      setUpgradeTarget(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [upgradeTarget, selectedAccountId]);
+  }, [upgradeTarget, selectedAccountId])
 
   const handleTogglePreferredAttacker = useCallback(
     async (entry: RosterEntry) => {
       try {
-        await togglePreferredAttacker(entry.id);
-        if (selectedAccountId) setRoster(await getRoster(selectedAccountId));
+        await togglePreferredAttacker(entry.id)
+        if (selectedAccountId) setRoster(await getRoster(selectedAccountId))
       } catch (e: unknown) {
-        toast.error((e as Error).message || t.roster.preferredAttackerToggle);
+        toast.error((e as Error).message || t.roster.preferredAttackerToggle)
       }
     },
     [selectedAccountId]
-  );
+  )
 
   const confirmAscend = useCallback(async () => {
-    if (!ascendTarget || !selectedAccountId) return;
+    if (!ascendTarget || !selectedAccountId) return
     try {
-      await ascendChampion(ascendTarget.id);
-      setRoster(await getRoster(selectedAccountId));
-      toast.success(t.roster.ascendSuccess.replace('{name}', ascendTarget.champion_name));
+      await ascendChampion(ascendTarget.id)
+      setRoster(await getRoster(selectedAccountId))
+      toast.success(t.roster.ascendSuccess.replace('{name}', ascendTarget.champion_name))
     } catch (e: unknown) {
-      toast.error((e as Error).message || t.roster.ascendError);
+      toast.error((e as Error).message || t.roster.ascendError)
     } finally {
-      setAscendTarget(null);
+      setAscendTarget(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ascendTarget, selectedAccountId]);
+  }, [ascendTarget, selectedAccountId])
 
-  const filteredRoster = useMemo(() => applyRosterFilters(roster, filters), [roster, filters]);
+  const filteredRoster = useMemo(() => applyRosterFilters(roster, filters), [roster, filters])
 
   const availableClasses = useMemo(
     () =>
       Array.from(new Set(roster.map((r) => r.champion_class))).sort((a, b) => a.localeCompare(b)),
     [roster]
-  );
+  )
 
   const groupedRoster = useMemo(() => {
-    const groups: Record<string, RosterEntry[]> = {};
+    const groups: Record<string, RosterEntry[]> = {}
     for (const rarity of [...RARITIES].reverse()) {
-      const entries = filteredRoster.filter((r) => r.rarity === rarity);
-      if (entries.length > 0) groups[rarity] = entries;
+      const entries = filteredRoster.filter((r) => r.rarity === rarity)
+      if (entries.length > 0) groups[rarity] = entries
     }
-    return Object.entries(groups);
-  }, [filteredRoster]);
+    return Object.entries(groups)
+  }, [filteredRoster])
 
   const setFilterPatch = useCallback(
     (patch: Partial<RosterFilters>) => setFilters((prev) => ({ ...prev, ...patch })),
     []
-  );
-  const resetFilters = useCallback(() => setFilters(EMPTY_FILTERS), []);
+  )
+  const resetFilters = useCallback(() => setFilters(EMPTY_FILTERS), [])
 
   useEffect(() => {
     if (activeTab === RosterTab.Mastery && selectedAccountId) {
-      fetchMasteries(selectedAccountId);
+      fetchMasteries(selectedAccountId)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, selectedAccountId]);
+  }, [activeTab, selectedAccountId])
 
-  const clearError = useCallback(() => setError(null), []);
+  const clearError = useCallback(() => setError(null), [])
 
   return {
     roster,
@@ -335,5 +335,5 @@ export function useRosterViewModel() {
     savingMasteries,
     updateMasteryField,
     handleSaveMasteries,
-  };
+  }
 }

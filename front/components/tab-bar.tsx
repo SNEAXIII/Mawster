@@ -1,17 +1,17 @@
-'use client';
+'use client'
 
-import clsx from 'clsx';
+import clsx from 'clsx'
 
 export interface TabItem<T extends string | number> {
-  value: T;
-  label: string;
-  cy?: string;
+  value: T
+  label: string
+  cy?: string
 }
 
 interface TabBarProps<T extends string | number> {
-  tabs: TabItem<T>[];
-  value: T;
-  onChange: (tab: T) => void;
+  tabs: TabItem<T>[]
+  value: T
+  onChange: (tab: T) => void
 }
 
 export default function TabBar<T extends string | number>({
@@ -39,5 +39,5 @@ export default function TabBar<T extends string | number>({
         ))}
       </nav>
     </div>
-  );
+  )
 }

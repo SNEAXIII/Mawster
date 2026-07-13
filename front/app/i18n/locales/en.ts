@@ -1068,13 +1068,13 @@ const en = {
       9: 'Unfazed',
     },
   },
-} as const;
+} as const
 
-export default en;
+export default en
 
 // Recursively convert literal string types to string
 type DeepStringify<T> = {
-  [K in keyof T]: T[K] extends string ? string : DeepStringify<T[K]>;
-};
+  [K in keyof T]: T[K] extends string ? string : DeepStringify<T[K]>
+}
 
-export type Translations = DeepStringify<typeof en>;
+export type Translations = DeepStringify<typeof en>

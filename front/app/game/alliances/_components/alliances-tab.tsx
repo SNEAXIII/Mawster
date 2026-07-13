@@ -1,32 +1,32 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { type GameAccount, type AllianceInvitation } from '@/app/services/game';
-import { Card, CardContent } from '@/components/ui/card';
-import { useI18n } from '@/app/i18n';
-import { Shield } from 'lucide-react';
-import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector';
-import AllianceSelect from '@/app/game/_components/alliance-select';
+import { useEffect, useState } from 'react'
+import { type GameAccount, type AllianceInvitation } from '@/app/services/game'
+import { Card, CardContent } from '@/components/ui/card'
+import { useI18n } from '@/app/i18n'
+import { Shield } from 'lucide-react'
+import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
+import AllianceSelect from '@/app/game/_components/alliance-select'
 
-import AllianceCard from './alliance-card';
+import AllianceCard from './alliance-card'
 
 interface AlliancesTabProps {
-  alliances: AllianceWithVisitorFlag[];
-  locale: string;
-  memberAllianceId: string | null;
-  memberAccountId: string;
-  eligibleMembers: GameAccount[];
-  eligibleVisitors: GameAccount[];
-  pendingInvitations: Record<string, AllianceInvitation[]>;
-  inviteType: 'member' | 'visitor';
-  onInviteTypeChange: (type: 'member' | 'visitor') => void;
-  onMemberAccountChange: (id: string) => void;
-  onOpenInviteMember: (allianceId: string) => void;
-  onCloseInviteMember: () => void;
-  onInviteMember: (allianceId: string) => Promise<void>;
-  onRefresh: () => Promise<void>;
-  onViewRoster: (gameAccountId: string, pseudo: string, canReq: boolean) => void;
-  onCancelInvitation: (allianceId: string, invitationId: string) => Promise<void>;
+  alliances: AllianceWithVisitorFlag[]
+  locale: string
+  memberAllianceId: string | null
+  memberAccountId: string
+  eligibleMembers: GameAccount[]
+  eligibleVisitors: GameAccount[]
+  pendingInvitations: Record<string, AllianceInvitation[]>
+  inviteType: 'member' | 'visitor'
+  onInviteTypeChange: (type: 'member' | 'visitor') => void
+  onMemberAccountChange: (id: string) => void
+  onOpenInviteMember: (allianceId: string) => void
+  onCloseInviteMember: () => void
+  onInviteMember: (allianceId: string) => Promise<void>
+  onRefresh: () => Promise<void>
+  onViewRoster: (gameAccountId: string, pseudo: string, canReq: boolean) => void
+  onCancelInvitation: (allianceId: string, invitationId: string) => Promise<void>
 }
 
 export default function AlliancesTab({
@@ -47,18 +47,18 @@ export default function AlliancesTab({
   onViewRoster,
   onCancelInvitation,
 }: Readonly<AlliancesTabProps>) {
-  const { t } = useI18n();
-  const [selectedAllianceId, setSelectedAllianceId] = useState('');
+  const { t } = useI18n()
+  const [selectedAllianceId, setSelectedAllianceId] = useState('')
 
   useEffect(() => {
     if (alliances.length === 0) {
-      setSelectedAllianceId('');
-      return;
+      setSelectedAllianceId('')
+      return
     }
     if (!alliances.some((a) => a.id === selectedAllianceId)) {
-      setSelectedAllianceId(alliances[0].id);
+      setSelectedAllianceId(alliances[0].id)
     }
-  }, [alliances, selectedAllianceId]);
+  }, [alliances, selectedAllianceId])
 
   if (alliances.length === 0) {
     return (
@@ -69,10 +69,10 @@ export default function AlliancesTab({
           <p data-cy='alliance-empty-text'>{t.game.alliances.empty}</p>
         </CardContent>
       </Card>
-    );
+    )
   }
 
-  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId) ?? alliances[0];
+  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId) ?? alliances[0]
 
   return (
     <div className='flex flex-col gap-4'>
@@ -105,5 +105,5 @@ export default function AlliancesTab({
         onCancelInvitation={onCancelInvitation}
       />
     </div>
-  );
+  )
 }

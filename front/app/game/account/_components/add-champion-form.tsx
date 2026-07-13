@@ -1,26 +1,26 @@
-'use client';
+'use client'
 
-import { useEffect } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { SearchInput } from '@/components/search-input';
-import { CollapsibleSection } from '@/components/collapsible-section';
-import { getChampionImageUrl } from '@/app/services/champions';
-import { RosterEntry, RARITIES, RARITY_LABELS, SIGNATURE_PRESETS } from '@/app/services/roster';
-import { useAddChampionForm } from '@/hooks/use-add-champion-form';
+import { useEffect } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { SearchInput } from '@/components/search-input'
+import { CollapsibleSection } from '@/components/collapsible-section'
+import { getChampionImageUrl } from '@/app/services/champions'
+import { RosterEntry, RARITIES, RARITY_LABELS, SIGNATURE_PRESETS } from '@/app/services/roster'
+import { useAddChampionForm } from '@/hooks/use-add-champion-form'
 
 interface AddChampionFormProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  selectedAccountId: string | null;
-  roster: RosterEntry[];
-  initialEntry?: RosterEntry | null;
-  onSuccess: (updatedRoster: RosterEntry[]) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  selectedAccountId: string | null
+  roster: RosterEntry[]
+  initialEntry?: RosterEntry | null
+  onSuccess: (updatedRoster: RosterEntry[]) => void
 }
 
 export default function AddChampionForm({
@@ -31,7 +31,7 @@ export default function AddChampionForm({
   initialEntry,
   onSuccess,
 }: Readonly<AddChampionFormProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
   const {
     championSearch,
     searchResults,
@@ -52,32 +52,32 @@ export default function AddChampionForm({
     prefillFromEntry,
     searchInputRef,
     formRef,
-  } = useAddChampionForm(selectedAccountId);
+  } = useAddChampionForm(selectedAccountId)
 
   // Pre-fill when opening for an existing entry, reset when closing
   useEffect(() => {
     if (open && initialEntry) {
-      prefillFromEntry(initialEntry);
+      prefillFromEntry(initialEntry)
       setTimeout(() => {
-        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        searchInputRef.current?.focus();
-      }, 100);
+        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        searchInputRef.current?.focus()
+      }, 100)
     } else if (open) {
-      requestAnimationFrame(() => searchInputRef.current?.focus());
+      requestAnimationFrame(() => searchInputRef.current?.focus())
     } else {
-      reset();
+      reset()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initialEntry]);
+  }, [open, initialEntry])
 
   const existingEntries = selectedChampion
     ? roster.filter((r) => r.champion_id === selectedChampion.id)
-    : [];
+    : []
 
   const submit = async () => {
-    const updated = await handleSubmit();
-    if (updated) onSuccess(updated);
-  };
+    const updated = await handleSubmit()
+    if (updated) onSuccess(updated)
+  }
 
   return (
     <div
@@ -157,9 +157,7 @@ export default function AddChampionForm({
                       <span className='font-semibold text-amber-500'>
                         {RARITY_LABELS[entry.rarity] ?? entry.rarity}
                       </span>
-                      <span className='text-amber-500'>
-                        · sig {entry.signature}
-                      </span>
+                      <span className='text-amber-500'>· sig {entry.signature}</span>
                     </div>
                   ))}
                 </div>
@@ -175,7 +173,7 @@ export default function AddChampionForm({
             type='single'
             value={selectedRarity}
             onValueChange={(val) => {
-              if (val) setSelectedRarity(val);
+              if (val) setSelectedRarity(val)
             }}
             variant='outline'
             className='flex flex-wrap justify-start gap-1'
@@ -202,14 +200,16 @@ export default function AddChampionForm({
               min={0}
               className='w-24'
               value={signatureValue}
-              onChange={(e) => setSignatureValue(Math.min(200, Math.max(0, parseInt(e.target.value) || 0)))}
+              onChange={(e) =>
+                setSignatureValue(Math.min(200, Math.max(0, parseInt(e.target.value) || 0)))
+              }
               data-cy='sig-input'
             />
             <ToggleGroup
               type='single'
               value={String(signatureValue)}
               onValueChange={(val) => {
-                if (val) setSignatureValue(Number(val));
+                if (val) setSignatureValue(Number(val))
               }}
               variant='outline'
               size='sm'
@@ -256,14 +256,14 @@ export default function AddChampionForm({
             type='single'
             value={String(ascension)}
             onValueChange={(val) => {
-              if (val) setAscension(Number(val));
+              if (val) setAscension(Number(val))
             }}
             variant='outline'
             className='flex justify-start gap-1'
           >
             {[0, 1, 2].map((level) => {
-              const isAscendable = selectedChampion?.is_ascendable ?? false;
-              const disabled = !isAscendable && level > 0;
+              const isAscendable = selectedChampion?.is_ascendable ?? false
+              const disabled = !isAscendable && level > 0
               return (
                 <ToggleGroupItem
                   key={level}
@@ -274,7 +274,7 @@ export default function AddChampionForm({
                 >
                   {level === 0 ? 'None' : `A${level}`}
                 </ToggleGroupItem>
-              );
+              )
             })}
           </ToggleGroup>
           {selectedChampion && !selectedChampion.is_ascendable && (
@@ -294,5 +294,5 @@ export default function AddChampionForm({
         </div>
       </CollapsibleSection>
     </div>
-  );
+  )
 }

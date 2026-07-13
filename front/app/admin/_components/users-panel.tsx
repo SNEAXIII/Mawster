@@ -1,42 +1,42 @@
-'use client';
-import { useEffect, useRef, useState } from 'react';
-import { getUsers, User } from '@/app/services/users';
-import Loading from '@/app/admin/dashboard/loading';
-import RenderUserDashboard from '@/components/dashboard/table/render-user-dashboard';
-import PaginationControls from '@/components/dashboard/pagination/pagination-controls';
-import { SearchInput } from '@/components/search-input';
-import { possibleRoles, possibleStatus } from '@/app/lib/constants';
-import { useI18n } from '@/app/i18n';
+'use client'
+import { useEffect, useRef, useState } from 'react'
+import { getUsers, User } from '@/app/services/users'
+import Loading from '@/app/admin/dashboard/loading'
+import RenderUserDashboard from '@/components/dashboard/table/render-user-dashboard'
+import PaginationControls from '@/components/dashboard/pagination/pagination-controls'
+import { SearchInput } from '@/components/search-input'
+import { possibleRoles, possibleStatus } from '@/app/lib/constants'
+import { useI18n } from '@/app/i18n'
 
-const BASE_CURRENT_PAGE = 1;
-const BASE_TOTAL_PAGE = 1;
-const BASE_USERS_PER_PAGE = 10;
-const BASE_SELECTED_STATUS = possibleStatus[0].value;
-const BASE_SELECTED_ROLE = possibleRoles[0].value;
+const BASE_CURRENT_PAGE = 1
+const BASE_TOTAL_PAGE = 1
+const BASE_USERS_PER_PAGE = 10
+const BASE_SELECTED_STATUS = possibleStatus[0].value
+const BASE_SELECTED_ROLE = possibleRoles[0].value
 
 interface UsersPanelProps {
-  currentUserRole: string | undefined;
+  currentUserRole: string | undefined
 }
 
 export default function UsersPanel({ currentUserRole }: Readonly<UsersPanelProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(BASE_CURRENT_PAGE);
-  const [totalPage, setTotalPage] = useState(BASE_TOTAL_PAGE);
-  const [usersPerPage, setUsersPerPage] = useState(BASE_USERS_PER_PAGE);
-  const [selectedStatus, setSelectedStatus] = useState(BASE_SELECTED_STATUS);
-  const [selectedRole, setSelectedRole] = useState(BASE_SELECTED_ROLE);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [canReset, setCanReset] = useState(false);
-  const [fetchUsersError, setFetchUsersError] = useState('');
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [users, setUsers] = useState<User[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(BASE_CURRENT_PAGE)
+  const [totalPage, setTotalPage] = useState(BASE_TOTAL_PAGE)
+  const [usersPerPage, setUsersPerPage] = useState(BASE_USERS_PER_PAGE)
+  const [selectedStatus, setSelectedStatus] = useState(BASE_SELECTED_STATUS)
+  const [selectedRole, setSelectedRole] = useState(BASE_SELECTED_ROLE)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [canReset, setCanReset] = useState(false)
+  const [fetchUsersError, setFetchUsersError] = useState('')
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const loadUsers = async () => {
-    setCanReset(false);
-    setFetchUsersError('');
-    if (!users.length) setIsLoading(true);
+    setCanReset(false)
+    setFetchUsersError('')
+    if (!users.length) setIsLoading(true)
     try {
       const data = await getUsers(
         Math.max(currentPage, 1),
@@ -44,17 +44,17 @@ export default function UsersPanel({ currentUserRole }: Readonly<UsersPanelProps
         selectedStatus,
         selectedRole,
         searchQuery
-      );
-      setUsers(data.users);
-      setCurrentPage(Math.min(currentPage, data.total_pages));
-      setTotalPage(data.total_pages);
+      )
+      setUsers(data.users)
+      setCurrentPage(Math.min(currentPage, data.total_pages))
+      setTotalPage(data.total_pages)
     } catch (error) {
-      const err = error as Error & { status?: number };
+      const err = error as Error & { status?: number }
       setFetchUsersError(
         err.status === 401 ? t.dashboard.errors.unauthorized : t.dashboard.errors.loadError
-      );
+      )
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
       setCanReset(
         !(
           usersPerPage === BASE_USERS_PER_PAGE &&
@@ -62,31 +62,31 @@ export default function UsersPanel({ currentUserRole }: Readonly<UsersPanelProps
           selectedRole === BASE_SELECTED_ROLE &&
           searchQuery === ''
         )
-      );
+      )
     }
-  };
+  }
 
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      loadUsers();
-    }, 300);
+      loadUsers()
+    }, 300)
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, usersPerPage, selectedStatus, selectedRole, searchQuery]);
+  }, [currentPage, usersPerPage, selectedStatus, selectedRole, searchQuery])
 
   function resetPagination() {
-    setUsersPerPage(BASE_USERS_PER_PAGE);
-    setSelectedStatus(BASE_SELECTED_STATUS);
-    setSelectedRole(BASE_SELECTED_ROLE);
-    setSearchQuery('');
-    setCurrentPage(BASE_CURRENT_PAGE);
+    setUsersPerPage(BASE_USERS_PER_PAGE)
+    setSelectedStatus(BASE_SELECTED_STATUS)
+    setSelectedRole(BASE_SELECTED_ROLE)
+    setSearchQuery('')
+    setCurrentPage(BASE_CURRENT_PAGE)
   }
 
   function goToPage1() {
-    setCurrentPage(1);
+    setCurrentPage(1)
   }
 
   return (
@@ -96,8 +96,8 @@ export default function UsersPanel({ currentUserRole }: Readonly<UsersPanelProps
           placeholder={t.dashboard.searchPlaceholder}
           value={searchQuery}
           onChange={(val) => {
-            setSearchQuery(val);
-            goToPage1();
+            setSearchQuery(val)
+            goToPage1()
           }}
           className='w-full sm:w-72'
         />
@@ -107,8 +107,8 @@ export default function UsersPanel({ currentUserRole }: Readonly<UsersPanelProps
           usersPerPage={usersPerPage}
           canReset={canReset}
           onUserPerPageChange={(val) => {
-            setUsersPerPage(Number(val));
-            goToPage1();
+            setUsersPerPage(Number(val))
+            goToPage1()
           }}
           onFirstPage={() => setCurrentPage(1)}
           onPreviousPage={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -126,17 +126,17 @@ export default function UsersPanel({ currentUserRole }: Readonly<UsersPanelProps
           status={selectedStatus}
           fetchUsersError={fetchUsersError}
           onRoleChange={(val) => {
-            setSelectedRole(val);
-            goToPage1();
+            setSelectedRole(val)
+            goToPage1()
           }}
           onStatusChange={(val) => {
-            setSelectedStatus(val);
-            goToPage1();
+            setSelectedStatus(val)
+            goToPage1()
           }}
           loadUsers={loadUsers}
           currentUserRole={currentUserRole}
         />
       )}
     </>
-  );
+  )
 }

@@ -1,7 +1,7 @@
-import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import prettierConfig from 'eslint-config-prettier';
-import reactHooks from 'eslint-plugin-react-hooks';
+import js from '@eslint/js'
+import tseslint from 'typescript-eslint'
+import prettierConfig from 'eslint-config-prettier'
+import reactHooks from 'eslint-plugin-react-hooks'
 
 export default tseslint.config(
   js.configs.recommended,
@@ -37,4 +37,4 @@ export default tseslint.config(
       'postcss.config.js',
     ],
   }
-);
+)

@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,23 +11,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Input } from '@/components/ui/input';
-import { useI18n } from '@/app/i18n';
+} from '@/components/ui/alert-dialog'
+import { Input } from '@/components/ui/input'
+import { useI18n } from '@/app/i18n'
 
 type ConfirmationDialogProps = Readonly<{
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  description: string;
-  onConfirm: () => void;
-  confirmText?: string;
-  cancelText?: string;
-  variant?: 'default' | 'destructive';
-  children?: ReactNode;
-  trigger?: ReactNode;
-  requireConfirmText?: string;
-}>;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  title: string
+  description: string
+  onConfirm: () => void
+  confirmText?: string
+  cancelText?: string
+  variant?: 'default' | 'destructive'
+  children?: ReactNode
+  trigger?: ReactNode
+  requireConfirmText?: string
+}>
 
 export function ConfirmationDialog({
   open,
@@ -42,15 +42,15 @@ export function ConfirmationDialog({
   trigger,
   requireConfirmText,
 }: ConfirmationDialogProps) {
-  const { t } = useI18n();
-  const [typedValue, setTypedValue] = useState('');
+  const { t } = useI18n()
+  const [typedValue, setTypedValue] = useState('')
 
   function handleOpenChange(next: boolean) {
-    if (!next) setTypedValue('');
-    onOpenChange(next);
+    if (!next) setTypedValue('')
+    onOpenChange(next)
   }
 
-  const canConfirm = !requireConfirmText || typedValue === requireConfirmText;
+  const canConfirm = !requireConfirmText || typedValue === requireConfirmText
 
   return (
     <AlertDialog
@@ -89,5 +89,5 @@ export function ConfirmationDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

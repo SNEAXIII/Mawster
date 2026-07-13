@@ -1,11 +1,11 @@
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { LogOut } from 'lucide-react';
-import { useI18n } from '@/app/i18n';
-import { signOutAndRedirect } from '@/app/lib/sign-out';
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { LogOut } from 'lucide-react'
+import { useI18n } from '@/app/i18n'
+import { signOutAndRedirect } from '@/app/lib/sign-out'
 
 export function SignOutButton() {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <>
@@ -20,5 +20,5 @@ export function SignOutButton() {
         {t.profile.signOut}
       </Button>
     </>
-  );
+  )
 }

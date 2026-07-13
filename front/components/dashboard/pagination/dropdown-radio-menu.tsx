@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
-import * as React from 'react';
+import * as React from 'react'
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,17 +11,17 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { ChevronDown } from 'lucide-react';
+} from '@/components/ui/dropdown-menu'
+import { ChevronDown } from 'lucide-react'
 
 interface DropdownRadioMenu {
-  labelButton: string;
-  labelDescription: string;
-  possibleValues: Record<string, string>[];
-  selectedValue: string;
-  setValue: (value: string) => void;
-  showSelected?: boolean;
-  'data-cy'?: string;
+  labelButton: string
+  labelDescription: string
+  possibleValues: Record<string, string>[]
+  selectedValue: string
+  setValue: (value: string) => void
+  showSelected?: boolean
+  'data-cy'?: string
 }
 
 export default function DropdownRadioMenu({
@@ -33,8 +33,8 @@ export default function DropdownRadioMenu({
   showSelected = false,
   'data-cy': dataCy,
 }: Readonly<DropdownRadioMenu>) {
-  const selectedLabel = possibleValues.find((v) => v.value === selectedValue)?.label;
-  const isFiltered = showSelected && selectedLabel && selectedLabel !== possibleValues[0]?.label;
+  const selectedLabel = possibleValues.find((v) => v.value === selectedValue)?.label
+  const isFiltered = showSelected && selectedLabel && selectedLabel !== possibleValues[0]?.label
 
   return (
     <DropdownMenu>
@@ -67,5 +67,5 @@ export default function DropdownRadioMenu({
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

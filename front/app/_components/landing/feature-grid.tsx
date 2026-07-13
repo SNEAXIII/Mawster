@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import {
   BarChart3,
@@ -8,12 +8,12 @@ import {
   Timer,
   ShieldCheck,
   MessagesSquare,
-} from 'lucide-react';
-import { useI18n } from '@/app/i18n';
-import { Card, CardContent } from '@/components/ui/card';
+} from 'lucide-react'
+import { useI18n } from '@/app/i18n'
+import { Card, CardContent } from '@/components/ui/card'
 
 export function FeatureGrid() {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   const features = [
     {
@@ -27,7 +27,7 @@ export function FeatureGrid() {
     { icon: ScrollText, title: t.landing.featHistoryTitle, desc: t.landing.featHistoryDesc },
     { icon: Shield, title: t.landing.featWarTitle, desc: t.landing.featWarDesc },
     { icon: Timer, title: t.landing.featOnboardingTitle, desc: t.landing.featOnboardingDesc },
-  ];
+  ]
 
   return (
     <section
@@ -39,7 +39,7 @@ export function FeatureGrid() {
 
         <div className='mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
           {features.map((f) => {
-            const Icon = f.icon;
+            const Icon = f.icon
             return (
               <Card
                 key={f.title}
@@ -60,10 +60,10 @@ export function FeatureGrid() {
                   <p className='mt-3 text-sm leading-relaxed text-muted-foreground'>{f.desc}</p>
                 </CardContent>
               </Card>
-            );
+            )
           })}
         </div>
       </div>
     </section>
-  );
+  )
 }

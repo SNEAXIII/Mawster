@@ -1,19 +1,19 @@
-'use client';
+'use client'
 
-import { MessageSquarePlus, Users, Hammer, Crown } from 'lucide-react';
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { LANDING_LINKS } from './links';
+import { MessageSquarePlus, Users, Hammer, Crown } from 'lucide-react'
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { LANDING_LINKS } from './links'
 
 export function FeatureRequest() {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   const steps = [
     { icon: MessageSquarePlus, label: t.landing.requestStep1 },
     { icon: Users, label: t.landing.requestStep2 },
     { icon: Hammer, label: t.landing.requestStep3 },
-  ];
+  ]
 
   return (
     <section
@@ -28,7 +28,7 @@ export function FeatureRequest() {
 
         <ol className='mt-10 grid gap-6 sm:grid-cols-3'>
           {steps.map((step, i) => {
-            const Icon = step.icon;
+            const Icon = step.icon
             return (
               <li
                 key={step.label}
@@ -42,7 +42,7 @@ export function FeatureRequest() {
                 </span>
                 <p className='text-sm font-medium leading-relaxed'>{step.label}</p>
               </li>
-            );
+            )
           })}
         </ol>
 
@@ -74,5 +74,5 @@ export function FeatureRequest() {
         </Card>
       </div>
     </section>
-  );
+  )
 }

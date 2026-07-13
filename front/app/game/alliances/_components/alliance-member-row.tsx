@@ -1,36 +1,36 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { toast } from 'sonner';
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react'
+import { toast } from 'sonner'
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Eye } from 'lucide-react';
-import { type Alliance, setMemberGroup } from '@/app/services/game';
-import { useAllianceRole } from '@/hooks/use-alliance-role';
-import UsernameEnriched, { getMemberRole } from '@/components/username-enriched';
-import { AllianceMemberActions } from './alliance-member-actions';
+} from '@/components/ui/select'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Eye } from 'lucide-react'
+import { type Alliance, setMemberGroup } from '@/app/services/game'
+import { useAllianceRole } from '@/hooks/use-alliance-role'
+import UsernameEnriched, { getMemberRole } from '@/components/username-enriched'
+import { AllianceMemberActions } from './alliance-member-actions'
 
 interface AllianceMember {
-  id: string;
-  game_pseudo: string;
-  is_owner: boolean;
-  is_officer: boolean;
-  alliance_group: number | null;
+  id: string
+  game_pseudo: string
+  is_owner: boolean
+  is_officer: boolean
+  alliance_group: number | null
 }
 
 interface AllianceMemberRowProps {
-  member: AllianceMember;
-  alliance: Alliance;
-  onRefresh: () => void;
-  onViewRoster: (gameAccountId: string, pseudo: string) => void;
+  member: AllianceMember
+  alliance: Alliance
+  onRefresh: () => void
+  onViewRoster: (gameAccountId: string, pseudo: string) => void
 }
 
 export default function AllianceMemberRow({
@@ -39,41 +39,41 @@ export default function AllianceMemberRow({
   onRefresh,
   onViewRoster,
 }: AllianceMemberRowProps) {
-  const { t } = useI18n();
-  const { isMine: isMineCheck, canManage } = useAllianceRole();
+  const { t } = useI18n()
+  const { isMine: isMineCheck, canManage } = useAllianceRole()
 
-  const memberIsMine = isMineCheck(member.id);
-  const userCanManage = canManage(alliance);
-  const allianceId = alliance.id;
+  const memberIsMine = isMineCheck(member.id)
+  const userCanManage = canManage(alliance)
+  const allianceId = alliance.id
 
-  const [isChangingGroup, setIsChangingGroup] = useState(false);
+  const [isChangingGroup, setIsChangingGroup] = useState(false)
 
-  const MAX_PER_GROUP = 10;
+  const MAX_PER_GROUP = 10
   const groupCounts = alliance.members.reduce<Record<number, number>>((acc, m) => {
-    if (m.alliance_group !== null) acc[m.alliance_group] = (acc[m.alliance_group] ?? 0) + 1;
-    return acc;
-  }, {});
+    if (m.alliance_group !== null) acc[m.alliance_group] = (acc[m.alliance_group] ?? 0) + 1
+    return acc
+  }, {})
   const isGroupFull = (g: number) =>
-    (groupCounts[g] ?? 0) >= MAX_PER_GROUP && member.alliance_group !== g;
+    (groupCounts[g] ?? 0) >= MAX_PER_GROUP && member.alliance_group !== g
 
   const handleSetGroup = async (val: string) => {
-    const group = val === 'none' ? null : parseInt(val);
-    setIsChangingGroup(true);
+    const group = val === 'none' ? null : parseInt(val)
+    setIsChangingGroup(true)
     try {
-      await setMemberGroup(allianceId, member.id, group);
-      const groupLabel = group ? `${t.game.alliances.group} ${group}` : t.game.alliances.noGroup;
+      await setMemberGroup(allianceId, member.id, group)
+      const groupLabel = group ? `${t.game.alliances.group} ${group}` : t.game.alliances.noGroup
       toast.success(
         t.game.alliances.groupSetSuccess
           .replace('{pseudo}', member.game_pseudo)
           .replace('{group}', groupLabel)
-      );
-      onRefresh();
+      )
+      onRefresh()
     } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.alliances.groupSetError);
+      toast.error((err as Error).message || t.game.alliances.groupSetError)
     } finally {
-      setIsChangingGroup(false);
+      setIsChangingGroup(false)
     }
-  };
+  }
 
   return (
     <div
@@ -139,5 +139,5 @@ export default function AllianceMemberRow({
         </div>
       </div>
     </div>
-  );
+  )
 }

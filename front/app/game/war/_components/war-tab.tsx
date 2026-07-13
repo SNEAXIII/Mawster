@@ -1,29 +1,29 @@
-'use client';
+'use client'
 
-import dynamic from 'next/dynamic';
-import { ReactNode, useState, useEffect, useRef } from 'react';
-import { snapdom } from '@zumer/snapdom';
-import { Button } from '@/components/ui/button';
-import { Shield, Swords, Trash2, Pencil, Camera, Link2 } from 'lucide-react';
-import { cn } from '@/app/lib/utils';
-import { useI18n } from '@/app/i18n';
-import { toast } from 'sonner';
-import { FullPageSpinner } from '@/components/full-page-spinner';
-import ChampionPortrait from '@/components/champion-portrait';
-import { WarMode } from './war-types';
-import { useWar } from '@/app/contexts/war-context';
-import { useCurrentSeason } from '@/hooks/use-current-season';
-import SeasonBanner from './season-banner';
-import ExportHeader from '@/app/game/_components/export-header';
+import dynamic from 'next/dynamic'
+import { ReactNode, useState, useEffect, useRef } from 'react'
+import { snapdom } from '@zumer/snapdom'
+import { Button } from '@/components/ui/button'
+import { Shield, Swords, Trash2, Pencil, Camera, Link2 } from 'lucide-react'
+import { cn } from '@/app/lib/utils'
+import { useI18n } from '@/app/i18n'
+import { toast } from 'sonner'
+import { FullPageSpinner } from '@/components/full-page-spinner'
+import ChampionPortrait from '@/components/champion-portrait'
+import { WarMode } from './war-types'
+import { useWar } from '@/app/contexts/war-context'
+import { useCurrentSeason } from '@/hooks/use-current-season'
+import SeasonBanner from './season-banner'
+import ExportHeader from '@/app/game/_components/export-header'
 
 type ToggleButtonProps = {
-  active: boolean;
-  onClick: () => void;
-  dataCy?: string;
-  children: ReactNode;
-};
+  active: boolean
+  onClick: () => void
+  dataCy?: string
+  children: ReactNode
+}
 
-export type fightStateFilter = 'all' | 'done' | 'todo';
+export type fightStateFilter = 'all' | 'done' | 'todo'
 
 function ToggleButton({ active, onClick, dataCy, children }: Readonly<ToggleButtonProps>) {
   return (
@@ -37,19 +37,19 @@ function ToggleButton({ active, onClick, dataCy, children }: Readonly<ToggleButt
     >
       {children}
     </button>
-  );
+  )
 }
 
 const WarDefenseMap = dynamic(() => import('./war-defense-map'), {
   loading: () => <FullPageSpinner />,
-});
+})
 
 const WarAttackerPanel = dynamic(() => import('./war-attacker-panel'), {
   loading: () => <FullPageSpinner />,
-});
+})
 
 export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
-  const { t } = useI18n();
+  const { t } = useI18n()
   const {
     currentWar,
     selectedBg,
@@ -66,78 +66,78 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
     setShowEndConfirm,
     alliances,
     selectedAllianceId,
-  } = useWar();
+  } = useWar()
 
-  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId) ?? null;
-  const currentSeason = useCurrentSeason();
+  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId) ?? null
+  const currentSeason = useCurrentSeason()
 
-  const [playerFilter, setPlayerFilter] = useState('');
-  const [combatFilter, setCombatFilter] = useState<fightStateFilter>('todo');
-  const [exporting, setExporting] = useState(false);
+  const [playerFilter, setPlayerFilter] = useState('')
+  const [combatFilter, setCombatFilter] = useState<fightStateFilter>('todo')
+  const [exporting, setExporting] = useState(false)
 
-  const exportMapRef = useRef<HTMLDivElement>(null);
-  const exportAttackersRef = useRef<HTMLDivElement>(null);
+  const exportMapRef = useRef<HTMLDivElement>(null)
+  const exportAttackersRef = useRef<HTMLDivElement>(null)
 
   const exportImage = async (target: 'map' | 'attackers') => {
-    const ref = target === 'map' ? exportMapRef : exportAttackersRef;
-    if (!exportMapRef.current || !exportAttackersRef.current) return;
-    const previousMode = warMode;
-    setWarMode(WarMode.Export);
-    setExporting(true);
+    const ref = target === 'map' ? exportMapRef : exportAttackersRef
+    if (!exportMapRef.current || !exportAttackersRef.current) return
+    const previousMode = warMode
+    setWarMode(WarMode.Export)
+    setExporting(true)
     await new Promise<void>((resolve) =>
       requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
-    );
+    )
     try {
-      if (!ref.current) return;
-      const png = await snapdom.toPng(ref.current, { scale: 1, embedFonts: true });
-      const allianceName = selectedAlliance?.name ?? 'alliance';
-      const date = new Date().toISOString().split('T')[0];
-      const link = document.createElement('a');
-      link.download = `war-${target}-bg${selectedBg}-${allianceName}-${date}.png`;
-      link.href = png.src;
-      link.click();
+      if (!ref.current) return
+      const png = await snapdom.toPng(ref.current, { scale: 1, embedFonts: true })
+      const allianceName = selectedAlliance?.name ?? 'alliance'
+      const date = new Date().toISOString().split('T')[0]
+      const link = document.createElement('a')
+      link.download = `war-${target}-bg${selectedBg}-${allianceName}-${date}.png`
+      link.href = png.src
+      link.click()
     } finally {
-      setExporting(false);
-      setWarMode(previousMode);
+      setExporting(false)
+      setWarMode(previousMode)
     }
-  };
+  }
 
-  const handleExportMap = () => exportImage('map');
-  const handleExportList = () => exportImage('attackers');
+  const handleExportMap = () => exportImage('map')
+  const handleExportList = () => exportImage('attackers')
 
   const handleCopyShareLink = async () => {
-    const url = `${window.location.origin}/game/war?alliance=${selectedAllianceId}&bg=${selectedBg}`;
-    await navigator.clipboard.writeText(url);
-    toast.success(t.game.war.shareLinkCopied);
-  };
+    const url = `${window.location.origin}/game/war?alliance=${selectedAllianceId}&bg=${selectedBg}`
+    await navigator.clipboard.writeText(url)
+    toast.success(t.game.war.shareLinkCopied)
+  }
 
   useEffect(() => {
-    setPlayerFilter('');
-    setCombatFilter('todo');
-  }, [selectedBg]);
+    setPlayerFilter('')
+    setCombatFilter('todo')
+  }, [selectedBg])
 
-  const prefightNodes = new Set(prefights.map((pf) => pf.target_node_number));
-  const noteNodes = new Set(placements.filter((p) => p.note).map((p) => p.node_number));
+  const prefightNodes = new Set(prefights.map((pf) => pf.target_node_number))
+  const noteNodes = new Set(placements.filter((p) => p.note).map((p) => p.node_number))
 
   const dimmedNodes = (() => {
-    const dimmed = new Set<number>();
+    const dimmed = new Set<number>()
     for (const p of placements) {
-      let shouldDim = false;
+      let shouldDim = false
       if (playerFilter) {
-        const isMyAttacker = p.attacker_pseudo === playerFilter;
+        const isMyAttacker = p.attacker_pseudo === playerFilter
         const isMyPrefight = prefights.some(
           (pf) => pf.target_node_number === p.node_number && pf.game_pseudo === playerFilter
-        );
-        if (!isMyAttacker && !isMyPrefight) shouldDim = true;
+        )
+        if (!isMyAttacker && !isMyPrefight) shouldDim = true
       }
       if (!shouldDim && combatFilter !== 'all' && p.attacker_champion_user_id) {
-        if (combatFilter === 'todo' && p.is_combat_completed) shouldDim = true;
-        if (combatFilter === 'done' && !p.is_combat_completed) shouldDim = true;
+        if (combatFilter === 'todo' && p.is_combat_completed) shouldDim = true
+        if (combatFilter === 'done' && !p.is_combat_completed) shouldDim = true
       }
-      if (shouldDim) dimmed.add(p.node_number);
+      if (shouldDim) dimmed.add(p.node_number)
     }
-    return dimmed.size > 0 ? dimmed : undefined;
-  })();
+    return dimmed.size > 0 ? dimmed : undefined
+  })()
 
   return (
     <div className='flex flex-col gap-4'>
@@ -374,5 +374,5 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
         </div>
       )}
     </div>
-  );
+  )
 }

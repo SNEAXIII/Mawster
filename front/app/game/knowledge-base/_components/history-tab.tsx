@@ -1,14 +1,14 @@
-'use client';
-import Link from 'next/link';
-import { useI18n } from '@/app/i18n';
-import { useKnowledgeBaseViewModel } from '../_viewmodels/use-knowledge-base-viewmodel';
-import KnowledgeBaseFilters from './knowledge-base-filters';
-import KnowledgeBaseTable from './knowledge-base-table';
-import PaginationControls from '@/components/dashboard/pagination/pagination-controls';
+'use client'
+import Link from 'next/link'
+import { useI18n } from '@/app/i18n'
+import { useKnowledgeBaseViewModel } from '../_viewmodels/use-knowledge-base-viewmodel'
+import KnowledgeBaseFilters from './knowledge-base-filters'
+import KnowledgeBaseTable from './knowledge-base-table'
+import PaginationControls from '@/components/dashboard/pagination/pagination-controls'
 
 export default function HistoryTab() {
-  const { t } = useI18n();
-  const vm = useKnowledgeBaseViewModel();
+  const { t } = useI18n()
+  const vm = useKnowledgeBaseViewModel()
 
   return (
     <div className='flex flex-col gap-4'>
@@ -20,16 +20,16 @@ export default function HistoryTab() {
           canReset={vm.page !== 1 || vm.hasActiveFilters}
           canImport={vm.canImport}
           onUserPerPageChange={(v) => {
-            vm.setSize(Number(v));
-            vm.setPage(1);
+            vm.setSize(Number(v))
+            vm.setPage(1)
           }}
           onFirstPage={() => vm.setPage(1)}
           onPreviousPage={() => vm.setPage((p) => Math.max(1, p - 1))}
           onNextPage={() => vm.setPage((p) => Math.min(vm.data!.pages, p + 1))}
           onLastPage={() => vm.setPage(vm.data!.pages)}
           onResetPagination={() => {
-            vm.setPage(1);
-            vm.handleClearFilters();
+            vm.setPage(1)
+            vm.handleClearFilters()
           }}
         />
       )}
@@ -64,5 +64,5 @@ export default function HistoryTab() {
       )}
       {vm.error && <p className='text-destructive text-sm'>{vm.error}</p>}
     </div>
-  );
+  )
 }

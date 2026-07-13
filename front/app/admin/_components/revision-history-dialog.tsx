@@ -1,78 +1,71 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
-import { FiVolumeX, FiAlertTriangle, FiTrash2 } from 'react-icons/fi';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { useI18n } from '@/app/i18n';
-import {
-  getRevisions,
-  muteUser,
-  warnUser,
-  type NoteRevision,
-} from '@/app/services/moderation';
-import UserModerationDialog, { type ModerationKind } from './user-moderation-dialog';
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { FiVolumeX, FiAlertTriangle, FiTrash2 } from 'react-icons/fi'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { useI18n } from '@/app/i18n'
+import { getRevisions, muteUser, warnUser, type NoteRevision } from '@/app/services/moderation'
+import UserModerationDialog, { type ModerationKind } from './user-moderation-dialog'
 
 type RevisionHistoryDialogProps = Readonly<{
-  noteId: string | null;
-  onClose: () => void;
-  onActionDone?: () => void;
-}>;
+  noteId: string | null
+  onClose: () => void
+  onActionDone?: () => void
+}>
 
-type Target = { userId: string; userLogin: string };
+type Target = { userId: string; userLogin: string }
 
 export default function RevisionHistoryDialog({
   noteId,
   onClose,
   onActionDone,
 }: RevisionHistoryDialogProps) {
-  const { t } = useI18n();
-  const m = t.moderation;
-  const [revisions, setRevisions] = useState<NoteRevision[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [dialogKind, setDialogKind] = useState<ModerationKind | null>(null);
-  const [dialogTarget, setDialogTarget] = useState<Target | null>(null);
+  const { t } = useI18n()
+  const m = t.moderation
+  const [revisions, setRevisions] = useState<NoteRevision[]>([])
+  const [loading, setLoading] = useState(false)
+  const [dialogKind, setDialogKind] = useState<ModerationKind | null>(null)
+  const [dialogTarget, setDialogTarget] = useState<Target | null>(null)
 
   useEffect(() => {
-    if (!noteId) return;
-    setLoading(true);
+    if (!noteId) return
+    setLoading(true)
     getRevisions(noteId)
       .then(setRevisions)
       .catch(() => setRevisions([]))
-      .finally(() => setLoading(false));
-  }, [noteId]);
+      .finally(() => setLoading(false))
+  }, [noteId])
 
   const openDialog = (kind: ModerationKind, target: Target) => {
-    setDialogTarget(target);
-    setDialogKind(kind);
-  };
+    setDialogTarget(target)
+    setDialogKind(kind)
+  }
 
   const onSubmit = async (reason: string, expiresAt: string | null) => {
-    if (!dialogTarget || !dialogKind) return;
-    const kind = dialogKind;
-    setDialogKind(null);
+    if (!dialogTarget || !dialogKind) return
+    const kind = dialogKind
+    setDialogKind(null)
     try {
       if (kind === 'mute') {
-        await muteUser(dialogTarget.userId, reason, expiresAt);
-        toast.success(m.muteSuccess);
+        await muteUser(dialogTarget.userId, reason, expiresAt)
+        toast.success(m.muteSuccess)
       } else {
-        await warnUser(dialogTarget.userId, reason);
-        toast.success(m.warnSuccess);
+        await warnUser(dialogTarget.userId, reason)
+        toast.success(m.warnSuccess)
       }
-      onActionDone?.();
+      onActionDone?.()
     } catch (err) {
-      toast.error((err as Error).message || (kind === 'mute' ? m.muteError : m.warnError));
+      toast.error((err as Error).message || (kind === 'mute' ? m.muteError : m.warnError))
     }
-  };
+  }
 
   return (
-    <Dialog open={!!noteId} onOpenChange={(open) => !open && onClose()}>
+    <Dialog
+      open={!!noteId}
+      onOpenChange={(open) => !open && onClose()}
+    >
       <DialogContent data-cy='moderation-revisions-dialog'>
         <DialogHeader>
           <DialogTitle>{m.revisionsTitle}</DialogTitle>
@@ -97,11 +90,11 @@ export default function RevisionHistoryDialog({
                       {new Date(rev.edited_at).toLocaleString()}
                     </span>
                   </li>
-                );
+                )
               }
               const author: Target | null = rev.edited_by_user_id
                 ? { userId: rev.edited_by_user_id, userLogin: rev.edited_by_pseudo ?? '—' }
-                : null;
+                : null
               return (
                 <li
                   key={rev.id}
@@ -137,7 +130,7 @@ export default function RevisionHistoryDialog({
                     </div>
                   </div>
                 </li>
-              );
+              )
             })}
           </ul>
         )}
@@ -150,5 +143,5 @@ export default function RevisionHistoryDialog({
         />
       </DialogContent>
     </Dialog>
-  );
+  )
 }

@@ -1,151 +1,151 @@
 // ─── War Service ─────────────────────────────────────────
 
 export interface BannedChampion {
-  id: string;
-  name: string;
-  champion_class: string;
-  image_url: string | null;
-  rarity: string | null;
-  alias: string | null;
-  is_saga_attacker: boolean;
-  is_saga_defender: boolean;
+  id: string
+  name: string
+  champion_class: string
+  image_url: string | null
+  rarity: string | null
+  alias: string | null
+  is_saga_attacker: boolean
+  is_saga_defender: boolean
 }
 
 export interface War {
-  id: string;
-  alliance_id: string;
-  opponent_name: string;
-  status: 'active' | 'ended';
-  created_by_pseudo: string;
-  created_at: string;
-  banned_champions: BannedChampion[];
-  season_id: string | null;
-  season_number: number | null;
-  win: boolean | null;
-  elo_change: number | null;
-  tier: number | null;
+  id: string
+  alliance_id: string
+  opponent_name: string
+  status: 'active' | 'ended'
+  created_by_pseudo: string
+  created_at: string
+  banned_champions: BannedChampion[]
+  season_id: string | null
+  season_number: number | null
+  win: boolean | null
+  elo_change: number | null
+  tier: number | null
 }
 
 export interface WarPlacement {
-  id: string;
-  war_id: string;
-  battlegroup: number;
-  node_number: number;
-  champion_id: string;
-  champion_name: string;
-  champion_class: string;
-  image_url: string | null;
-  rarity: string;
-  ascension: number;
-  placed_by_pseudo: string | null;
-  created_at: string;
-  ko_count: number;
-  is_combat_completed: boolean;
-  is_fight_not_done: boolean;
-  is_planning_error: boolean;
-  attacker_champion_user_id: string | null;
-  attacker_game_account_id: string | null;
-  attacker_pseudo: string | null;
-  attacker_champion_name: string | null;
-  attacker_champion_class: string | null;
-  attacker_image_url: string | null;
-  attacker_rarity: string | null;
-  attacker_is_preferred_attacker: boolean | null;
-  is_saga_attacker: boolean;
-  is_saga_defender: boolean;
-  attacker_ascension: number | null;
-  attacker_is_saga_attacker: boolean | null;
-  attacker_is_saga_defender: boolean | null;
-  is_assisted: boolean;
-  assistor_champion_user_id: string | null;
-  assistor_game_account_id: string | null;
-  assistor_pseudo: string | null;
-  assistor_champion_name: string | null;
-  assistor_champion_class: string | null;
-  assistor_image_url: string | null;
-  assistor_rarity: string | null;
-  assistor_ascension: number | null;
-  note?: string | null;
-  note_id?: string | null;
-  note_blocked?: boolean;
+  id: string
+  war_id: string
+  battlegroup: number
+  node_number: number
+  champion_id: string
+  champion_name: string
+  champion_class: string
+  image_url: string | null
+  rarity: string
+  ascension: number
+  placed_by_pseudo: string | null
+  created_at: string
+  ko_count: number
+  is_combat_completed: boolean
+  is_fight_not_done: boolean
+  is_planning_error: boolean
+  attacker_champion_user_id: string | null
+  attacker_game_account_id: string | null
+  attacker_pseudo: string | null
+  attacker_champion_name: string | null
+  attacker_champion_class: string | null
+  attacker_image_url: string | null
+  attacker_rarity: string | null
+  attacker_is_preferred_attacker: boolean | null
+  is_saga_attacker: boolean
+  is_saga_defender: boolean
+  attacker_ascension: number | null
+  attacker_is_saga_attacker: boolean | null
+  attacker_is_saga_defender: boolean | null
+  is_assisted: boolean
+  assistor_champion_user_id: string | null
+  assistor_game_account_id: string | null
+  assistor_pseudo: string | null
+  assistor_champion_name: string | null
+  assistor_champion_class: string | null
+  assistor_image_url: string | null
+  assistor_rarity: string | null
+  assistor_ascension: number | null
+  note?: string | null
+  note_id?: string | null
+  note_blocked?: boolean
 }
 
 export interface WarDefenseSummary {
-  war_id: string;
-  battlegroup: number;
-  placements: WarPlacement[];
+  war_id: string
+  battlegroup: number
+  placements: WarPlacement[]
 }
 
 export interface AvailableAttacker {
-  champion_user_id: string;
-  game_account_id: string;
-  game_pseudo: string;
-  champion_id: string;
-  champion_name: string;
-  champion_alias: string | null;
-  champion_class: string;
-  image_url: string | null;
-  rarity: string;
-  ascension: number;
-  signature: number;
-  is_preferred_attacker: boolean;
-  is_saga_attacker: boolean;
-  is_saga_defender: boolean;
+  champion_user_id: string
+  game_account_id: string
+  game_pseudo: string
+  champion_id: string
+  champion_name: string
+  champion_alias: string | null
+  champion_class: string
+  image_url: string | null
+  rarity: string
+  ascension: number
+  signature: number
+  is_preferred_attacker: boolean
+  is_saga_attacker: boolean
+  is_saga_defender: boolean
 }
 
 export interface WarSynergy {
-  id: string;
-  war_id: string;
-  battlegroup: number;
-  game_account_id: string;
-  champion_user_id: string;
-  target_champion_user_id: string;
-  champion_name: string;
-  champion_class: string;
-  image_url: string | null;
-  rarity: string;
-  ascension: number;
-  is_saga_attacker: boolean;
-  is_saga_defender: boolean;
-  target_champion_name: string;
-  game_pseudo: string;
-  created_at: string;
+  id: string
+  war_id: string
+  battlegroup: number
+  game_account_id: string
+  champion_user_id: string
+  target_champion_user_id: string
+  champion_name: string
+  champion_class: string
+  image_url: string | null
+  rarity: string
+  ascension: number
+  is_saga_attacker: boolean
+  is_saga_defender: boolean
+  target_champion_name: string
+  game_pseudo: string
+  created_at: string
 }
 
 export interface WarPrefight {
-  id: string;
-  war_id: string;
-  battlegroup: number;
-  game_account_id: string;
-  champion_user_id: string;
-  target_node_number: number;
-  champion_name: string;
-  champion_class: string;
-  image_url: string | null;
-  rarity: string;
-  ascension: number;
-  is_saga_attacker: boolean;
-  is_saga_defender: boolean;
-  game_pseudo: string;
-  created_at: string;
+  id: string
+  war_id: string
+  battlegroup: number
+  game_account_id: string
+  champion_user_id: string
+  target_node_number: number
+  champion_name: string
+  champion_class: string
+  image_url: string | null
+  rarity: string
+  ascension: number
+  is_saga_attacker: boolean
+  is_saga_defender: boolean
+  game_pseudo: string
+  created_at: string
 }
 
 // ─── Helpers ─────────────────────────────────────────────
 
-const PROXY = '/api/back';
+const PROXY = '/api/back'
 
 const jsonHeaders: HeadersInit = {
   Accept: 'application/json',
   'Content-Type': 'application/json',
-};
+}
 
 async function throwOnError(response: Response, fallback: string) {
-  if (response.ok) return;
-  const data = await response.json().catch(() => ({}));
-  const msg = data.message ?? data.detail ?? fallback;
-  const err = new Error(`Erreur ${response.status}: ${msg}`);
-  (err as Error & { status: number }).status = response.status;
-  throw err;
+  if (response.ok) return
+  const data = await response.json().catch(() => ({}))
+  const msg = data.message ?? data.detail ?? fallback
+  const err = new Error(`Erreur ${response.status}: ${msg}`)
+  ;(err as Error & { status: number }).status = response.status
+  throw err
 }
 
 // ─── War API ─────────────────────────────────────────────
@@ -153,17 +153,17 @@ async function throwOnError(response: Response, fallback: string) {
 export async function getWars(allianceId: string): Promise<War[]> {
   const response = await fetch(`${PROXY}/alliances/${allianceId}/wars`, {
     headers: jsonHeaders,
-  });
-  await throwOnError(response, 'Failed to load wars');
-  return response.json();
+  })
+  await throwOnError(response, 'Failed to load wars')
+  return response.json()
 }
 
 export async function getCurrentWar(allianceId: string): Promise<War> {
   const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/current`, {
     headers: jsonHeaders,
-  });
-  await throwOnError(response, 'Failed to load current war');
-  return response.json();
+  })
+  await throwOnError(response, 'Failed to load current war')
+  return response.json()
 }
 
 export async function createWar(
@@ -175,9 +175,9 @@ export async function createWar(
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify({ opponent_name: opponentName, banned_champion_ids: bannedChampionIds }),
-  });
-  await throwOnError(response, 'Failed to create war');
-  return response.json();
+  })
+  await throwOnError(response, 'Failed to create war')
+  return response.json()
 }
 
 export async function updateWar(
@@ -190,9 +190,9 @@ export async function updateWar(
     method: 'PATCH',
     headers: jsonHeaders,
     body: JSON.stringify({ opponent_name: opponentName, banned_champion_ids: bannedChampionIds }),
-  });
-  await throwOnError(response, 'Failed to update war');
-  return response.json();
+  })
+  await throwOnError(response, 'Failed to update war')
+  return response.json()
 }
 
 export async function getWarDefense(
@@ -202,9 +202,9 @@ export async function getWarDefense(
 ): Promise<WarDefenseSummary> {
   const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}`, {
     headers: jsonHeaders,
-  });
-  await throwOnError(response, 'Failed to load war defense');
-  return response.json();
+  })
+  await throwOnError(response, 'Failed to load war defense')
+  return response.json()
 }
 
 export async function placeWarDefender(
@@ -230,9 +230,9 @@ export async function placeWarDefender(
         ascension,
       }),
     }
-  );
-  await throwOnError(response, 'Failed to place defender');
-  return response.json();
+  )
+  await throwOnError(response, 'Failed to place defender')
+  return response.json()
 }
 
 export async function removeWarDefender(
@@ -244,8 +244,8 @@ export async function removeWarDefender(
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}`,
     { method: 'DELETE', headers: jsonHeaders }
-  );
-  await throwOnError(response, 'Failed to remove defender');
+  )
+  await throwOnError(response, 'Failed to remove defender')
 }
 
 export async function endWar(
@@ -258,9 +258,9 @@ export async function endWar(
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify({ win, elo_change: eloChange }),
-  });
-  await throwOnError(response, 'Failed to end war');
-  return response.json();
+  })
+  await throwOnError(response, 'Failed to end war')
+  return response.json()
 }
 
 export async function clearWarBg(
@@ -271,8 +271,8 @@ export async function clearWarBg(
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/clear`,
     { method: 'DELETE', headers: jsonHeaders }
-  );
-  await throwOnError(response, 'Failed to clear war battlegroup');
+  )
+  await throwOnError(response, 'Failed to clear war battlegroup')
 }
 
 // ─── Attacker API ─────────────────────────────────────────
@@ -284,16 +284,16 @@ export async function getAvailableAttackers(
   targetGameAccountId?: string,
   nodeNumber?: number
 ): Promise<AvailableAttacker[]> {
-  const params = new URLSearchParams();
-  if (targetGameAccountId) params.set('attacker_id', targetGameAccountId);
-  if (nodeNumber !== undefined) params.set('node_number', String(nodeNumber));
-  const suffix = params.toString() ? `?${params}` : '';
+  const params = new URLSearchParams()
+  if (targetGameAccountId) params.set('attacker_id', targetGameAccountId)
+  if (nodeNumber !== undefined) params.set('node_number', String(nodeNumber))
+  const suffix = params.toString() ? `?${params}` : ''
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-attackers${suffix}`,
     { headers: jsonHeaders }
-  );
-  await throwOnError(response, 'Failed to load available attackers');
-  return response.json();
+  )
+  await throwOnError(response, 'Failed to load available attackers')
+  return response.json()
 }
 
 export async function assignWarAttacker(
@@ -310,9 +310,9 @@ export async function assignWarAttacker(
       headers: jsonHeaders,
       body: JSON.stringify({ champion_user_id: championUserId }),
     }
-  );
-  await throwOnError(response, 'Failed to assign attacker');
-  return response.json();
+  )
+  await throwOnError(response, 'Failed to assign attacker')
+  return response.json()
 }
 
 export async function removeWarAttacker(
@@ -324,9 +324,9 @@ export async function removeWarAttacker(
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/attacker`,
     { method: 'DELETE', headers: jsonHeaders }
-  );
-  await throwOnError(response, 'Failed to remove attacker');
-  return response.json();
+  )
+  await throwOnError(response, 'Failed to remove attacker')
+  return response.json()
 }
 
 export async function updateWarKo(
@@ -343,9 +343,9 @@ export async function updateWarKo(
       headers: jsonHeaders,
       body: JSON.stringify({ ko_count: koCount }),
     }
-  );
-  await throwOnError(response, 'Failed to update KO count');
-  return response.json();
+  )
+  await throwOnError(response, 'Failed to update KO count')
+  return response.json()
 }
 
 export async function toggleCombatCompleted(
@@ -357,9 +357,9 @@ export async function toggleCombatCompleted(
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/complete`,
     { method: 'PATCH', headers: jsonHeaders }
-  );
-  await throwOnError(response, 'Failed to toggle combat completion');
-  return response.json();
+  )
+  await throwOnError(response, 'Failed to toggle combat completion')
+  return response.json()
 }
 
 export async function toggleFightNotDone(
@@ -371,9 +371,9 @@ export async function toggleFightNotDone(
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/fight-not-done`,
     { method: 'PATCH', headers: jsonHeaders }
-  );
-  await throwOnError(response, 'Failed to toggle fight not done');
-  return response.json();
+  )
+  await throwOnError(response, 'Failed to toggle fight not done')
+  return response.json()
 }
 
 export async function togglePlanningError(
@@ -385,9 +385,9 @@ export async function togglePlanningError(
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/planning-error`,
     { method: 'PATCH', headers: jsonHeaders }
-  );
-  await throwOnError(response, 'Failed to toggle planning error');
-  return response.json();
+  )
+  await throwOnError(response, 'Failed to toggle planning error')
+  return response.json()
 }
 
 // ─── Assist API ───────────────────────────────────────────
@@ -406,9 +406,9 @@ export async function assignWarAssist(
       headers: jsonHeaders,
       body: JSON.stringify({ champion_user_id: championUserId }),
     }
-  );
-  await throwOnError(response, 'Failed to assign assist');
-  return response.json();
+  )
+  await throwOnError(response, 'Failed to assign assist')
+  return response.json()
 }
 
 export async function removeWarAssist(
@@ -420,9 +420,9 @@ export async function removeWarAssist(
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/assist`,
     { method: 'DELETE', headers: jsonHeaders }
-  );
-  await throwOnError(response, 'Failed to remove assist');
-  return response.json();
+  )
+  await throwOnError(response, 'Failed to remove assist')
+  return response.json()
 }
 
 // ─── Synergy API ──────────────────────────────────────────
@@ -435,9 +435,9 @@ export async function getWarSynergies(
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy`,
     { headers: jsonHeaders }
-  );
-  await throwOnError(response, 'Failed to load synergy attackers');
-  return response.json();
+  )
+  await throwOnError(response, 'Failed to load synergy attackers')
+  return response.json()
 }
 
 export async function addWarSynergy(
@@ -457,9 +457,9 @@ export async function addWarSynergy(
         target_champion_user_id: targetChampionUserId,
       }),
     }
-  );
-  await throwOnError(response, 'Failed to add synergy attacker');
-  return response.json();
+  )
+  await throwOnError(response, 'Failed to add synergy attacker')
+  return response.json()
 }
 
 export async function removeWarSynergy(
@@ -471,8 +471,8 @@ export async function removeWarSynergy(
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy/${championUserId}`,
     { method: 'DELETE', headers: jsonHeaders }
-  );
-  await throwOnError(response, 'Failed to remove synergy attacker');
+  )
+  await throwOnError(response, 'Failed to remove synergy attacker')
 }
 
 // ─── Available Prefight Attackers API ─────────────────────
@@ -485,9 +485,9 @@ export async function getAvailablePrefightAttackers(
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-prefight-attackers`,
     { headers: jsonHeaders }
-  );
-  await throwOnError(response, 'Failed to load available pre-fight attackers');
-  return response.json();
+  )
+  await throwOnError(response, 'Failed to load available pre-fight attackers')
+  return response.json()
 }
 
 // ─── Prefight API ─────────────────────────────────────────
@@ -500,9 +500,9 @@ export async function getWarPrefights(
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight`,
     { headers: jsonHeaders }
-  );
-  await throwOnError(response, 'Failed to load pre-fight attackers');
-  return response.json();
+  )
+  await throwOnError(response, 'Failed to load pre-fight attackers')
+  return response.json()
 }
 
 export async function addWarPrefight(
@@ -522,9 +522,9 @@ export async function addWarPrefight(
         target_node_number: targetNodeNumber,
       }),
     }
-  );
-  await throwOnError(response, 'Failed to add pre-fight attacker');
-  return response.json();
+  )
+  await throwOnError(response, 'Failed to add pre-fight attacker')
+  return response.json()
 }
 
 export async function removeWarPrefight(
@@ -536,6 +536,6 @@ export async function removeWarPrefight(
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight/${championUserId}`,
     { method: 'DELETE', headers: jsonHeaders }
-  );
-  await throwOnError(response, 'Failed to remove pre-fight attacker');
+  )
+  await throwOnError(response, 'Failed to remove pre-fight attacker')
 }

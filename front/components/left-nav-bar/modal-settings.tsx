@@ -1,24 +1,24 @@
-'use client';
+'use client'
 
-import { Settings } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Settings } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import SettingsContent from './settings-content';
-import { useI18n } from '@/app/i18n';
-import { cn } from '@/app/lib/utils';
+} from '@/components/ui/dialog'
+import SettingsContent from './settings-content'
+import { useI18n } from '@/app/i18n'
+import { cn } from '@/app/lib/utils'
 
 interface ModalSettingsProps {
-  isAuthenticated: boolean;
+  isAuthenticated: boolean
 }
 
 export default function ModalSettings({ isAuthenticated }: Readonly<ModalSettingsProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <Dialog>
@@ -43,5 +43,5 @@ export default function ModalSettings({ isAuthenticated }: Readonly<ModalSetting
         <SettingsContent isAuthenticated={isAuthenticated} />
       </DialogContent>
     </Dialog>
-  );
+  )
 }

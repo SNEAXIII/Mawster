@@ -1,129 +1,143 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { AlertTriangle, ShieldAlert } from 'lucide-react';
-import { cn } from '@/app/lib/utils';
-import { useI18n } from '@/app/i18n';
-import { getChampionImageUrl } from '@/app/services/champions';
-import type { MatchupEvaluationRow, MatchupVerdict } from '@/app/services/matchups';
-import MatchupCellDetail from './matchup-cell-detail';
+import { useState } from 'react'
+import { AlertTriangle, ShieldAlert } from 'lucide-react'
+import { cn } from '@/app/lib/utils'
+import { useI18n } from '@/app/i18n'
+import { getChampionImageUrl } from '@/app/services/champions'
+import type { MatchupEvaluationRow, MatchupVerdict } from '@/app/services/matchups'
+import MatchupCellDetail from './matchup-cell-detail'
 
 interface Props {
-  rows: MatchupEvaluationRow[];
-  loading: boolean;
+  rows: MatchupEvaluationRow[]
+  loading: boolean
 }
 
 // The node (and defender+node) view. Unlike the two grids this is a ranked list, not a matrix,
 // but a row is the same thing a grid cell is — one attacker's fight against the selected
 // target(s) — so it opens the same detail dialog. A row rated on one side shows that side alone.
 export default function MatchupEvaluationTable({ rows, loading }: Readonly<Props>) {
-  const { t } = useI18n();
-  const kb = t.game.knowledgeBase;
-  const [selected, setSelected] = useState<MatchupEvaluationRow | null>(null);
+  const { t } = useI18n()
+  const kb = t.game.knowledgeBase
+  const [selected, setSelected] = useState<MatchupEvaluationRow | null>(null)
 
   const verdictLabel = (verdict: MatchupVerdict | null): string => {
-    if (verdict === 'discouraged') return kb.verdictDiscouraged;
-    if (verdict === 'good') return kb.verdictGood;
-    if (verdict === 'ok') return kb.verdictOk;
-    return '—';
-  };
+    if (verdict === 'discouraged') return kb.verdictDiscouraged
+    if (verdict === 'good') return kb.verdictGood
+    if (verdict === 'ok') return kb.verdictOk
+    return '—'
+  }
 
   if (!loading && rows.length === 0) {
     return (
-      <p className='text-muted-foreground text-sm' data-cy='matchup-empty'>
+      <p
+        className='text-muted-foreground text-sm'
+        data-cy='matchup-empty'
+      >
         {kb.noMatchups}
       </p>
-    );
+    )
   }
 
   return (
     <>
-      <table className='w-full text-sm' data-cy='matchup-evaluation-table'>
-      <thead className='text-muted-foreground'>
-        <tr>
-          <th className='text-left py-2'>{kb.attacker}</th>
-          <th className='text-left'>{kb.defender}</th>
-          <th className='text-left'>{kb.node}</th>
-          <th className='text-left'>{kb.score}</th>
-          <th className='text-left'>{kb.synergies}</th>
-          <th className='text-left'>{kb.prefight}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row) => (
-          <tr
-            key={row.champion.champion_id}
-            data-cy='matchup-row'
-            data-cy-champion={row.champion.champion_name}
-            data-cy-playable={String(row.is_playable ?? true)}
-            className={cn(
-              'border-t cursor-pointer hover:bg-muted/50',
-              row.is_playable === false && 'opacity-50'
-            )}
-            onClick={() => setSelected(row)}
-          >
-            <td className='py-2'>
-              <span className='flex items-center gap-2'>
-                {row.champion.image_url && (
-                  <img
-                    src={getChampionImageUrl(row.champion.image_url, 32) ?? ''}
-                    alt={row.champion.champion_name}
-                    className='w-8 h-8 object-contain'
-                  />
-                )}
-                <span>{row.champion.champion_name}</span>
-                {row.instance_label && (
-                  <span className='text-muted-foreground' data-cy='matchup-instance'>
-                    {row.instance_label}
-                  </span>
-                )}
-                {row.is_on_defense && (
-                  <span
-                    className='flex items-center gap-1 text-amber-500'
-                    data-cy='matchup-on-defense'
-                  >
-                    <ShieldAlert className='h-3.5 w-3.5' />
-                    {kb.onDefenseWarning}
-                  </span>
-                )}
-              </span>
-              {row.missing_champions.length > 0 && (
-                <span className='flex items-center gap-1 text-destructive' data-cy='matchup-missing'>
-                  <AlertTriangle className='h-3.5 w-3.5' />
-                  {kb.notPlayable}:{' '}
-                  {row.missing_champions.map((c) => c.champion_name).join(', ')}
-                </span>
-              )}
-            </td>
-            <td>{verdictLabel(row.defender?.verdict ?? null)}</td>
-            <td>{verdictLabel(row.node?.verdict ?? null)}</td>
-            <td data-cy='matchup-score'>
-              {row.is_discouraged ? (
-                <span className='text-destructive font-medium'>{kb.verdictDiscouraged}</span>
-              ) : (
-                row.score
-              )}
-            </td>
-            <td>
-              {row.synergies.map((s) => (
-                <span key={s.champion_id} className='mr-2'>
-                  {s.champion_name}
-                  <span className='text-muted-foreground'>
-                    {' '}
-                    ({s.is_required ? kb.requiredSynergy : kb.recommendedSynergy})
-                  </span>
-                </span>
-              ))}
-            </td>
-            <td>{row.prefight?.champion_name ?? '—'}</td>
+      <table
+        className='w-full text-sm'
+        data-cy='matchup-evaluation-table'
+      >
+        <thead className='text-muted-foreground'>
+          <tr>
+            <th className='text-left py-2'>{kb.attacker}</th>
+            <th className='text-left'>{kb.defender}</th>
+            <th className='text-left'>{kb.node}</th>
+            <th className='text-left'>{kb.score}</th>
+            <th className='text-left'>{kb.synergies}</th>
+            <th className='text-left'>{kb.prefight}</th>
           </tr>
-        ))}
-      </tbody>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr
+              key={row.champion.champion_id}
+              data-cy='matchup-row'
+              data-cy-champion={row.champion.champion_name}
+              data-cy-playable={String(row.is_playable ?? true)}
+              className={cn(
+                'border-t cursor-pointer hover:bg-muted/50',
+                row.is_playable === false && 'opacity-50'
+              )}
+              onClick={() => setSelected(row)}
+            >
+              <td className='py-2'>
+                <span className='flex items-center gap-2'>
+                  {row.champion.image_url && (
+                    <img
+                      src={getChampionImageUrl(row.champion.image_url, 32) ?? ''}
+                      alt={row.champion.champion_name}
+                      className='w-8 h-8 object-contain'
+                    />
+                  )}
+                  <span>{row.champion.champion_name}</span>
+                  {row.instance_label && (
+                    <span
+                      className='text-muted-foreground'
+                      data-cy='matchup-instance'
+                    >
+                      {row.instance_label}
+                    </span>
+                  )}
+                  {row.is_on_defense && (
+                    <span
+                      className='flex items-center gap-1 text-amber-500'
+                      data-cy='matchup-on-defense'
+                    >
+                      <ShieldAlert className='h-3.5 w-3.5' />
+                      {kb.onDefenseWarning}
+                    </span>
+                  )}
+                </span>
+                {row.missing_champions.length > 0 && (
+                  <span
+                    className='flex items-center gap-1 text-destructive'
+                    data-cy='matchup-missing'
+                  >
+                    <AlertTriangle className='h-3.5 w-3.5' />
+                    {kb.notPlayable}: {row.missing_champions.map((c) => c.champion_name).join(', ')}
+                  </span>
+                )}
+              </td>
+              <td>{verdictLabel(row.defender?.verdict ?? null)}</td>
+              <td>{verdictLabel(row.node?.verdict ?? null)}</td>
+              <td data-cy='matchup-score'>
+                {row.is_discouraged ? (
+                  <span className='text-destructive font-medium'>{kb.verdictDiscouraged}</span>
+                ) : (
+                  row.score
+                )}
+              </td>
+              <td>
+                {row.synergies.map((s) => (
+                  <span
+                    key={s.champion_id}
+                    className='mr-2'
+                  >
+                    {s.champion_name}
+                    <span className='text-muted-foreground'>
+                      {' '}
+                      ({s.is_required ? kb.requiredSynergy : kb.recommendedSynergy})
+                    </span>
+                  </span>
+                ))}
+              </td>
+              <td>{row.prefight?.champion_name ?? '—'}</td>
+            </tr>
+          ))}
+        </tbody>
       </table>
       <MatchupCellDetail
         open={selected !== null}
         onOpenChange={(o) => {
-          if (!o) setSelected(null);
+          if (!o) setSelected(null)
         }}
         attacker={selected?.champion ?? null}
         defender={selected?.defender ?? null}
@@ -131,5 +145,5 @@ export default function MatchupEvaluationTable({ rows, loading }: Readonly<Props
         cell={selected ?? null}
       />
     </>
-  );
+  )
 }

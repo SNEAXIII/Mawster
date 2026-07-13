@@ -1,4 +1,4 @@
-import { Translations } from './en';
+import { Translations } from './en'
 
 const fr: Translations = {
   // Common
@@ -1079,6 +1079,6 @@ const fr: Translations = {
       9: 'Impassible',
     },
   },
-} as const;
+} as const
 
-export default fr;
+export default fr

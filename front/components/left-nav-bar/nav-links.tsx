@@ -1,9 +1,9 @@
-'use client';
-import { Home, User, Sword, Shield, Swords, UserStar, BookOpen } from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useI18n } from '@/app/i18n';
-import { cn } from '@/app/lib/utils';
+'use client'
+import { Home, User, Sword, Shield, Swords, UserStar, BookOpen } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useI18n } from '@/app/i18n'
+import { cn } from '@/app/lib/utils'
 
 export enum Role {
   all = 'all',
@@ -16,15 +16,15 @@ const roleHierarchy: Record<Role, Role[]> = {
   [Role.user]: [Role.all, Role.user],
   [Role.admin]: [Role.all, Role.user, Role.admin],
   [Role.superAdmin]: [Role.all, Role.user, Role.admin, Role.superAdmin],
-};
+}
 interface NavLinksProps {
-  userRole: Role;
-  hasAlliance: boolean;
+  userRole: Role
+  hasAlliance: boolean
 }
 
 export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksProps>) {
-  const pathname = usePathname();
-  const { t } = useI18n();
+  const pathname = usePathname()
+  const { t } = useI18n()
 
   const links = [
     { name: t.nav.home, href: '/', icon: Home, role: Role.all, cy: 'nav-home' },
@@ -60,20 +60,20 @@ export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksPro
       role: Role.admin,
       cy: 'nav-administration',
     },
-  ];
+  ]
 
   return (
     <>
       {links.map((link) => {
-        const LinkIcon = link.icon;
+        const LinkIcon = link.icon
         if (!roleHierarchy[userRole]?.includes(link.role)) {
-          return null;
+          return null
         }
         if (link.requiresAlliance && !hasAlliance) {
-          return null;
+          return null
         }
         const isActive =
-          (pathname.startsWith(link.href) && link.href !== '/') || pathname === link.href;
+          (pathname.startsWith(link.href) && link.href !== '/') || pathname === link.href
         return (
           <Link
             key={link.name}
@@ -87,8 +87,8 @@ export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksPro
             <LinkIcon className='h-5 w-5 shrink-0' />
             <p className='hidden md:block'>{link.name}</p>
           </Link>
-        );
+        )
       })}
     </>
-  );
+  )
 }

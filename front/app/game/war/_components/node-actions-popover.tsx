@@ -1,27 +1,27 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { StickyNote } from 'lucide-react';
-import { useI18n } from '@/app/i18n';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import ChampionPortrait from '@/components/champion-portrait';
-import PrefightSelectorDialog from './prefight-selector';
-import AssistSelectorDialog from './assist-selector';
-import WarNoteEditor from './war-note-editor';
-import { useWar } from '@/app/contexts/war-context';
+import { useState } from 'react'
+import { StickyNote } from 'lucide-react'
+import { useI18n } from '@/app/i18n'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import ChampionPortrait from '@/components/champion-portrait'
+import PrefightSelectorDialog from './prefight-selector'
+import AssistSelectorDialog from './assist-selector'
+import WarNoteEditor from './war-note-editor'
+import { useWar } from '@/app/contexts/war-context'
 
 interface NodeActionsPopoverProps {
-  nodeNumber: number;
-  gameAccountId: string;
-  championName: string;
-  imageUrl: string | null;
-  rarity: string;
-  size?: number;
-  isPreferred?: boolean;
-  ascension?: number;
-  is_saga_attacker?: boolean;
-  is_saga_defender?: boolean;
-  canManage?: boolean;
+  nodeNumber: number
+  gameAccountId: string
+  championName: string
+  imageUrl: string | null
+  rarity: string
+  size?: number
+  isPreferred?: boolean
+  ascension?: number
+  is_saga_attacker?: boolean
+  is_saga_defender?: boolean
+  canManage?: boolean
 }
 
 export default function NodeActionsPopover({
@@ -37,16 +37,15 @@ export default function NodeActionsPopover({
   is_saga_defender = false,
   canManage = true,
 }: Readonly<NodeActionsPopoverProps>) {
-  const { t } = useI18n();
-  const { prefights, handleRemovePrefight, placements, handleRemoveAssist, canManageWar } =
-    useWar();
-  const [open, setOpen] = useState(false);
-  const [selectorOpen, setSelectorOpen] = useState(false);
-  const [assistSelectorOpen, setAssistSelectorOpen] = useState(false);
+  const { t } = useI18n()
+  const { prefights, handleRemovePrefight, placements, handleRemoveAssist, canManageWar } = useWar()
+  const [open, setOpen] = useState(false)
+  const [selectorOpen, setSelectorOpen] = useState(false)
+  const [assistSelectorOpen, setAssistSelectorOpen] = useState(false)
 
   // prefights targeting this specific node
-  const boundPrefights = prefights.filter((p) => p.target_node_number === nodeNumber);
-  const placement = placements.find((p) => p.node_number === nodeNumber);
+  const boundPrefights = prefights.filter((p) => p.target_node_number === nodeNumber)
+  const placement = placements.find((p) => p.node_number === nodeNumber)
 
   return (
     <>
@@ -117,8 +116,8 @@ export default function NodeActionsPopover({
                     data-cy={`prefight-revoke-${p.champion_name.replaceAll(/\s+/g, '-')}`}
                     disabled={!canManage}
                     onClick={async () => {
-                      setOpen(false);
-                      await handleRemovePrefight(p.champion_user_id);
+                      setOpen(false)
+                      await handleRemovePrefight(p.champion_user_id)
                     }}
                   >
                     {t.game.war.prefight.revoke}
@@ -132,8 +131,8 @@ export default function NodeActionsPopover({
             data-cy={`prefight-add-node-${nodeNumber}`}
             disabled={!canManage}
             onClick={() => {
-              setOpen(false);
-              setSelectorOpen(true);
+              setOpen(false)
+              setSelectorOpen(true)
             }}
           >
             {t.game.war.prefight.add}
@@ -154,7 +153,9 @@ export default function NodeActionsPopover({
                   sagaMode='attacker'
                 />
                 <div className='flex flex-col flex-1 min-w-0'>
-                  <span className='text-xs font-medium truncate'>{placement.assistor_champion_name}</span>
+                  <span className='text-xs font-medium truncate'>
+                    {placement.assistor_champion_name}
+                  </span>
                   <span className='text-[10px] text-muted-foreground truncate'>
                     {placement.assistor_pseudo}
                   </span>
@@ -164,8 +165,8 @@ export default function NodeActionsPopover({
                   data-cy={`assist-revoke-node-${nodeNumber}`}
                   disabled={!canManage}
                   onClick={async () => {
-                    setOpen(false);
-                    await handleRemoveAssist(nodeNumber);
+                    setOpen(false)
+                    await handleRemoveAssist(nodeNumber)
                   }}
                 >
                   {t.game.war.assist.revoke}
@@ -177,8 +178,8 @@ export default function NodeActionsPopover({
                 data-cy={`assist-add-node-${nodeNumber}`}
                 disabled={!canManage}
                 onClick={() => {
-                  setOpen(false);
-                  setAssistSelectorOpen(true);
+                  setOpen(false)
+                  setAssistSelectorOpen(true)
                 }}
               >
                 {t.game.war.assist.add}
@@ -209,5 +210,5 @@ export default function NodeActionsPopover({
         attackerGameAccountId={placement?.attacker_game_account_id ?? null}
       />
     </>
-  );
+  )
 }

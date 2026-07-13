@@ -1,43 +1,38 @@
-'use client';
+'use client'
 
-import type { ReactNode } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import type { ReactNode } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { cn } from '@/app/lib/utils';
-import { RARITY_LABELS } from '@/app/services/roster';
-import {
-  RosterFilters,
-  RANK_OPTIONS,
-  ASCENSION_OPTIONS,
-  isFilterActive,
-} from './roster-filters';
-import FilterToggleGroup from './filter-toggle-group';
+} from '@/components/ui/select'
+import { cn } from '@/app/lib/utils'
+import { RARITY_LABELS } from '@/app/services/roster'
+import { RosterFilters, RANK_OPTIONS, ASCENSION_OPTIONS, isFilterActive } from './roster-filters'
+import FilterToggleGroup from './filter-toggle-group'
 
 interface RosterFilterBarProps {
-  filters: RosterFilters;
-  onChange: (patch: Partial<RosterFilters>) => void;
-  onReset: () => void;
-  availableClasses: string[];
+  filters: RosterFilters
+  onChange: (patch: Partial<RosterFilters>) => void
+  onReset: () => void
+  availableClasses: string[]
   /** Only read when `showCount` is on. */
-  filteredCount?: number;
+  filteredCount?: number
   /** Only read when `showCount` is on. */
-  totalCount?: number;
+  totalCount?: number
   /** Optional control rendered at the start of the filter row (e.g. a group selector). */
-  leading?: ReactNode;
+  leading?: ReactNode
   /** Show the "awakened" toggle. Default true. */
-  showAwakened?: boolean;
+  showAwakened?: boolean
   /** Show the minimum-signature input. Default true. */
-  showMinSig?: boolean;
+  showMinSig?: boolean
   /** Show the "{filtered} / {total}" count line. Default true. */
-  showCount?: boolean;
+  showCount?: boolean
 }
 
 export default function RosterFilterBar({
@@ -52,8 +47,8 @@ export default function RosterFilterBar({
   showMinSig = true,
   showCount = true,
 }: Readonly<RosterFilterBarProps>) {
-  const { t } = useI18n();
-  const f = t.roster.filter;
+  const { t } = useI18n()
+  const f = t.roster.filter
 
   const boolToggle = (
     key: 'sagaAttacker' | 'sagaDefender' | 'preferredAttacker' | 'awakened',
@@ -70,7 +65,7 @@ export default function RosterFilterBar({
     >
       {label}
     </Button>
-  );
+  )
 
   return (
     <div className='mb-4 space-y-2'>
@@ -137,8 +132,8 @@ export default function RosterFilterBar({
             max={200}
             value={filters.minSignature}
             onChange={(e) => {
-              const n = Number(e.target.value);
-              onChange({ minSignature: Number.isNaN(n) ? 0 : Math.min(200, Math.max(0, n)) });
+              const n = Number(e.target.value)
+              onChange({ minSignature: Number.isNaN(n) ? 0 : Math.min(200, Math.max(0, n)) })
             }}
             className='h-8 w-20 text-xs'
             placeholder={f.minSignature}
@@ -169,5 +164,5 @@ export default function RosterFilterBar({
         </p>
       )}
     </div>
-  );
+  )
 }

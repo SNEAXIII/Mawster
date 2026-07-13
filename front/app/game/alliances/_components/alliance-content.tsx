@@ -1,27 +1,27 @@
-'use client';
+'use client'
 
-import dynamic from 'next/dynamic';
-import { useI18n } from '@/app/i18n';
-import { FullPageSpinner } from '@/components/full-page-spinner';
-import { AllianceRoleProvider } from '@/hooks/use-alliance-role';
-import TabBar, { type TabItem } from '@/components/tab-bar';
-import CreateAllianceForm from './create-alliance-form';
-import AllianceRosterDialog from './alliance-roster-dialog';
-import InvitationsSection from './invitations-section';
-import AlliancesTab from './alliances-tab';
-import AllianceStatisticsTab from './alliance-statistics-tab';
-import AllianceChampionSearchTab from './alliance-champion-search-tab';
-import { useAlliancesViewModel, AllianceTab } from '../_viewmodels/use-alliances-viewmodel';
+import dynamic from 'next/dynamic'
+import { useI18n } from '@/app/i18n'
+import { FullPageSpinner } from '@/components/full-page-spinner'
+import { AllianceRoleProvider } from '@/hooks/use-alliance-role'
+import TabBar, { type TabItem } from '@/components/tab-bar'
+import CreateAllianceForm from './create-alliance-form'
+import AllianceRosterDialog from './alliance-roster-dialog'
+import InvitationsSection from './invitations-section'
+import AlliancesTab from './alliances-tab'
+import AllianceStatisticsTab from './alliance-statistics-tab'
+import AllianceChampionSearchTab from './alliance-champion-search-tab'
+import { useAlliancesViewModel, AllianceTab } from '../_viewmodels/use-alliances-viewmodel'
 
 const DefensePageContent = dynamic(() => import('../../defense/_components/defense-content'), {
   loading: () => <FullPageSpinner />,
-});
+})
 
 export default function AllianceContent() {
-  const vm = useAlliancesViewModel();
-  const { t } = useI18n();
+  const vm = useAlliancesViewModel()
+  const { t } = useI18n()
 
-  if (vm.status === 'loading' || vm.loading) return <FullPageSpinner />;
+  if (vm.status === 'loading' || vm.loading) return <FullPageSpinner />
 
   const tabs: TabItem<AllianceTab>[] = [
     ...(vm.eligibleOwners.length > 0
@@ -39,7 +39,7 @@ export default function AllianceContent() {
       cy: 'tab-champion-search',
     },
     { value: AllianceTab.Defense, label: t.nav.defense, cy: 'tab-defense' },
-  ];
+  ]
 
   return (
     <AllianceRoleProvider>
@@ -127,7 +127,7 @@ export default function AllianceContent() {
         <AllianceRosterDialog
           open={!!vm.rosterTarget}
           onOpenChange={(open) => {
-            if (!open) vm.setRosterTarget(null);
+            if (!open) vm.setRosterTarget(null)
           }}
           gameAccountId={vm.rosterTarget?.gameAccountId ?? null}
           gamePseudo={vm.rosterTarget?.pseudo ?? ''}
@@ -135,5 +135,5 @@ export default function AllianceContent() {
         />
       </div>
     </AllianceRoleProvider>
-  );
+  )
 }

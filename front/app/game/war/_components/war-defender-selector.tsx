@@ -1,33 +1,33 @@
-'use client';
+'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { SearchInput } from '@/components/search-input';
-import ChampionPortrait from '@/components/champion-portrait';
-import { cn } from '@/app/lib/utils';
-import { getClassColors, shortenChampionName } from '@/app/services/roster';
-import { type WarPlacement } from '@/app/services/war';
-import { Separator } from '@/components/ui/separator';
-import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import AttackerEntryRow from './attacker-entry-row';
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { SearchInput } from '@/components/search-input'
+import ChampionPortrait from '@/components/champion-portrait'
+import { cn } from '@/app/lib/utils'
+import { getClassColors, shortenChampionName } from '@/app/services/roster'
+import { type WarPlacement } from '@/app/services/war'
+import { Separator } from '@/components/ui/separator'
+import { ConfirmationDialog } from '@/components/confirmation-dialog'
+import AttackerEntryRow from './attacker-entry-row'
 
-const PROXY = '/api/back';
+const PROXY = '/api/back'
 
 interface ChampionEntry {
-  id: string;
-  name: string;
-  champion_class: string;
-  image_url: string | null;
-  is_ascendable: boolean;
-  is_saga_attacker: boolean;
-  is_saga_defender: boolean;
+  id: string
+  name: string
+  champion_class: string
+  image_url: string | null
+  is_ascendable: boolean
+  is_saga_attacker: boolean
+  is_saga_defender: boolean
 }
 
 interface SelectedRarity {
-  stars: number;
-  rank: number;
+  stars: number
+  rank: number
 }
 
 const WAR_RARITIES: { label: string; stars: number; rank: number }[] = [
@@ -39,20 +39,20 @@ const WAR_RARITIES: { label: string; stars: number; rank: number }[] = [
   { label: '7R4', stars: 7, rank: 4 },
   { label: '7R5', stars: 7, rank: 5 },
   { label: '7R6', stars: 7, rank: 6 },
-];
+]
 
 interface WarDefenderSelectorProps {
-  open: boolean;
-  onClose: () => void;
-  nodeNumber: number;
-  currentPlacement?: WarPlacement;
+  open: boolean
+  onClose: () => void
+  nodeNumber: number
+  currentPlacement?: WarPlacement
   onSelect: (
     championId: string,
     championName: string,
     stars: number,
     rank: number,
     ascension: number
-  ) => void;
+  ) => void
 }
 
 export default function WarDefenderSelector({
@@ -62,71 +62,71 @@ export default function WarDefenderSelector({
   currentPlacement,
   onSelect,
 }: Readonly<WarDefenderSelectorProps>) {
-  const { t } = useI18n();
-  const [champions, setChampions] = useState<ChampionEntry[]>([]);
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const { t } = useI18n()
+  const [champions, setChampions] = useState<ChampionEntry[]>([])
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [loading, setLoading] = useState(false)
 
   // Selection state
-  const [selected, setSelected] = useState<ChampionEntry | null>(null);
-  const [selectedRarity, setSelectedRarity] = useState<SelectedRarity>({ stars: 7, rank: 3 });
-  const [ascension, setAscension] = useState(0);
-  const [showReplaceConfirm, setShowReplaceConfirm] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [selected, setSelected] = useState<ChampionEntry | null>(null)
+  const [selectedRarity, setSelectedRarity] = useState<SelectedRarity>({ stars: 7, rank: 3 })
+  const [ascension, setAscension] = useState(0)
+  const [showReplaceConfirm, setShowReplaceConfirm] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const fetchChampions = useCallback(async (q: string, p: number) => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const params = new URLSearchParams({ page: String(p), size: '60' });
-      if (q) params.set('search', q);
+      const params = new URLSearchParams({ page: String(p), size: '60' })
+      if (q) params.set('search', q)
       const res = await fetch(`${PROXY}/champions?${params}`, {
         headers: { Accept: 'application/json' },
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      setChampions(p === 1 ? data.champions : (prev) => [...prev, ...data.champions]);
-      setTotalPages(data.total_pages);
-      setPage(p);
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      setChampions(p === 1 ? data.champions : (prev) => [...prev, ...data.champions])
+      setTotalPages(data.total_pages)
+      setPage(p)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
     if (open) {
-      fetchChampions(search, 1);
+      fetchChampions(search, 1)
     }
-  }, [open, search, fetchChampions]);
+  }, [open, search, fetchChampions])
 
   useEffect(() => {
     if (!open) {
-      setSelected(null);
-      setSearch('');
-      setPage(1);
+      setSelected(null)
+      setSearch('')
+      setPage(1)
     }
-  }, [open]);
+  }, [open])
 
   const handleChampionClick = (champ: ChampionEntry) => {
-    setSelected(champ);
-    setAscension(0);
-  };
+    setSelected(champ)
+    setAscension(0)
+  }
 
   const handleConfirm = () => {
-    if (!selected) return;
+    if (!selected) return
     if (currentPlacement?.attacker_champion_user_id) {
-      setShowReplaceConfirm(true);
-      return;
+      setShowReplaceConfirm(true)
+      return
     }
-    doSelect();
-  };
+    doSelect()
+  }
 
   const doSelect = () => {
-    if (!selected) return;
-    onSelect(selected.id, selected.name, selectedRarity.stars, selectedRarity.rank, ascension);
-    onClose();
-  };
+    if (!selected) return
+    onSelect(selected.id, selected.name, selectedRarity.stars, selectedRarity.rank, ascension)
+    onClose()
+  }
 
   return (
     <>
@@ -183,8 +183,8 @@ export default function WarDefenderSelector({
           className='max-w-2xl max-h-[90vh] overflow-hidden flex flex-col gap-0 p-0'
           data-cy='war-defender-search'
           onOpenAutoFocus={(e) => {
-            e.preventDefault();
-            searchInputRef.current?.focus();
+            e.preventDefault()
+            searchInputRef.current?.focus()
           }}
         >
           <DialogHeader className='px-4 py-4 border-b'>
@@ -225,37 +225,36 @@ export default function WarDefenderSelector({
                 ) : (
                   <>
                     <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2'>
-                      {champions
-                        .map((champ) => {
-                          const classColors = getClassColors(champ.champion_class);
-                          return (
-                            <button
-                              key={champ.id}
-                              className={cn(
-                                'flex flex-col items-center gap-1 p-2 rounded-lg border transition-all',
-                                'hover:ring-2 hover:ring-primary/60 hover:border-primary/60'
-                              )}
-                              onClick={() => handleChampionClick(champ)}
-                              data-cy={`war-champion-card-${champ.name.replaceAll(/\s+/g, '-')}`}
-                            >
-                              <ChampionPortrait
-                                imageUrl={champ.image_url}
-                                name={champ.name}
-                                rarity='7r3'
-                                size={48}
-                                is_saga_attacker={champ.is_saga_attacker}
-                                is_saga_defender={champ.is_saga_defender}
-                                sagaMode='defender'
-                              />
-                              <span className='text-[10px] text-center truncate w-full leading-tight'>
-                                {shortenChampionName(champ.name)}
-                              </span>
-                              <span className={cn('text-[9px] font-medium', classColors.label)}>
-                                {champ.champion_class}
-                              </span>
-                            </button>
-                          );
-                        })}
+                      {champions.map((champ) => {
+                        const classColors = getClassColors(champ.champion_class)
+                        return (
+                          <button
+                            key={champ.id}
+                            className={cn(
+                              'flex flex-col items-center gap-1 p-2 rounded-lg border transition-all',
+                              'hover:ring-2 hover:ring-primary/60 hover:border-primary/60'
+                            )}
+                            onClick={() => handleChampionClick(champ)}
+                            data-cy={`war-champion-card-${champ.name.replaceAll(/\s+/g, '-')}`}
+                          >
+                            <ChampionPortrait
+                              imageUrl={champ.image_url}
+                              name={champ.name}
+                              rarity='7r3'
+                              size={48}
+                              is_saga_attacker={champ.is_saga_attacker}
+                              is_saga_defender={champ.is_saga_defender}
+                              sagaMode='defender'
+                            />
+                            <span className='text-[10px] text-center truncate w-full leading-tight'>
+                              {shortenChampionName(champ.name)}
+                            </span>
+                            <span className={cn('text-[9px] font-medium', classColors.label)}>
+                              {champ.champion_class}
+                            </span>
+                          </button>
+                        )
+                      })}
                     </div>
                     {page < totalPages && (
                       <div className='text-center mt-4'>
@@ -363,5 +362,5 @@ export default function WarDefenderSelector({
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }

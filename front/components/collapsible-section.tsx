@@ -1,19 +1,19 @@
-'use client';
+'use client'
 
-import React, { ReactNode, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { cn } from '@/app/lib/utils';
+import React, { ReactNode, useState } from 'react'
+import { ChevronDown } from 'lucide-react'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { cn } from '@/app/lib/utils'
 
 type CollapsibleSectionProps = Readonly<{
-  title: string;
-  children: ReactNode;
-  defaultOpen?: boolean;
+  title: string
+  children: ReactNode
+  defaultOpen?: boolean
   /** Controlled mode — when provided, overrides internal state */
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  className?: string;
-}>;
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  className?: string
+}>
 
 export function CollapsibleSection({
   title,
@@ -23,12 +23,12 @@ export function CollapsibleSection({
   onOpenChange,
   className = '',
 }: CollapsibleSectionProps) {
-  const [internalOpen, setInternalOpen] = useState(defaultOpen);
-  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const [internalOpen, setInternalOpen] = useState(defaultOpen)
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen
 
   function handleOpenChange(nextOpen: boolean) {
-    setInternalOpen(nextOpen);
-    onOpenChange?.(nextOpen);
+    setInternalOpen(nextOpen)
+    onOpenChange?.(nextOpen)
   }
 
   return (
@@ -56,5 +56,5 @@ export function CollapsibleSection({
         <div className='p-4'>{children}</div>
       </CollapsibleContent>
     </Collapsible>
-  );
+  )
 }

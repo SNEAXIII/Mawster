@@ -1,23 +1,23 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import { Switch } from '@/components/ui/switch';
-import ChampionFilterSelect from './champion-filter-select';
+import { useI18n } from '@/app/i18n'
+import { Switch } from '@/components/ui/switch'
+import ChampionFilterSelect from './champion-filter-select'
 
 export interface SynergyDraft {
-  championId: string | null;
-  isRequired: boolean;
+  championId: string | null
+  isRequired: boolean
 }
 
 interface Props {
-  index: number;
-  synergy: SynergyDraft;
-  onChange: (index: number, synergy: SynergyDraft) => void;
+  index: number
+  synergy: SynergyDraft
+  onChange: (index: number, synergy: SynergyDraft) => void
 }
 
 export default function MatchupSynergyField({ index, synergy, onChange }: Readonly<Props>) {
-  const { t } = useI18n();
-  const kb = t.game.knowledgeBase;
+  const { t } = useI18n()
+  const kb = t.game.knowledgeBase
 
   return (
     <span className='flex items-center gap-2'>
@@ -34,5 +34,5 @@ export default function MatchupSynergyField({ index, synergy, onChange }: Readon
         aria-label={kb.formRequiredSwitch}
       />
     </span>
-  );
+  )
 }

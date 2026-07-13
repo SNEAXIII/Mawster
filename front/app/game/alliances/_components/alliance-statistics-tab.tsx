@@ -1,44 +1,44 @@
-'use client';
+'use client'
 
-import { useMemo, useState, useEffect } from 'react';
-import { useI18n } from '@/app/i18n';
-import type { RankingHistoryPoint, SeasonStatus } from '@/app/services/game';
-import { fetchAllianceRankingHistory } from '@/app/services/game';
-import AllianceRankingChart from './alliance-ranking-chart';
-import type { PlayerSeasonStats } from '@/app/services/statistics';
-import { Button } from '@/components/ui/button';
+import { useMemo, useState, useEffect } from 'react'
+import { useI18n } from '@/app/i18n'
+import type { RankingHistoryPoint, SeasonStatus } from '@/app/services/game'
+import { fetchAllianceRankingHistory } from '@/app/services/game'
+import AllianceRankingChart from './alliance-ranking-chart'
+import type { PlayerSeasonStats } from '@/app/services/statistics'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector';
-import AllianceSelect from '@/app/game/_components/alliance-select';
-import { AllianceStatsTable, type SortField, type SortDir } from './alliance-stats-table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CollapsibleSection } from '@/components/collapsible-section';
-import { MemberChampionChart } from '@/app/components/statistics/member-champion-chart';
-import { ChampionDetailModal } from '@/app/components/statistics/champion-detail-modal';
-import { useChampionStats } from './use-champion-stats';
+} from '@/components/ui/select'
+import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
+import AllianceSelect from '@/app/game/_components/alliance-select'
+import { AllianceStatsTable, type SortField, type SortDir } from './alliance-stats-table'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CollapsibleSection } from '@/components/collapsible-section'
+import { MemberChampionChart } from '@/app/components/statistics/member-champion-chart'
+import { ChampionDetailModal } from '@/app/components/statistics/champion-detail-modal'
+import { useChampionStats } from './use-champion-stats'
 
 interface AllianceStatisticsTabProps {
-  alliances: AllianceWithVisitorFlag[];
-  selectedAllianceId: string;
-  onAllianceChange: (allianceId: string) => void;
-  seasonStats: PlayerSeasonStats[];
-  statsLoading: boolean;
-  statsError: string;
-  onRetry: () => Promise<void>;
+  alliances: AllianceWithVisitorFlag[]
+  selectedAllianceId: string
+  onAllianceChange: (allianceId: string) => void
+  seasonStats: PlayerSeasonStats[]
+  statsLoading: boolean
+  statsError: string
+  onRetry: () => Promise<void>
 }
 
-type MemberFilter = 'current' | 'all' | 'former';
+type MemberFilter = 'current' | 'all' | 'former'
 
-const RATIO_OPTIONS = [-Infinity, 0, 50, 60, 70, 80, 90];
+const RATIO_OPTIONS = [-Infinity, 0, 50, 60, 70, 80, 90]
 
 function toGroupValue(group: number | null): string {
-  return group === null ? 'none' : String(group);
+  return group === null ? 'none' : String(group)
 }
 
 export default function AllianceStatisticsTab({
@@ -50,30 +50,30 @@ export default function AllianceStatisticsTab({
   statsError,
   onRetry,
 }: Readonly<AllianceStatisticsTabProps>) {
-  const { t } = useI18n();
-  const stat = t.game.alliances.statistics;
-  const [ratioMin, setRatioMin] = useState(-Infinity);
-  const [selectedGroup, setSelectedGroup] = useState('all');
-  const [rankingPoints, setRankingPoints] = useState<RankingHistoryPoint[]>([]);
-  const [rankingSeasonNumber, setRankingSeasonNumber] = useState<number | null>(null);
-  const [rankingSeasonStatus, setRankingSeasonStatus] = useState<SeasonStatus | null>(null);
+  const { t } = useI18n()
+  const stat = t.game.alliances.statistics
+  const [ratioMin, setRatioMin] = useState(-Infinity)
+  const [selectedGroup, setSelectedGroup] = useState('all')
+  const [rankingPoints, setRankingPoints] = useState<RankingHistoryPoint[]>([])
+  const [rankingSeasonNumber, setRankingSeasonNumber] = useState<number | null>(null)
+  const [rankingSeasonStatus, setRankingSeasonStatus] = useState<SeasonStatus | null>(null)
 
   useEffect(() => {
-    if (!selectedAllianceId) return;
-    setRankingPoints([]);
-    setRankingSeasonNumber(null);
-    setRankingSeasonStatus(null);
+    if (!selectedAllianceId) return
+    setRankingPoints([])
+    setRankingSeasonNumber(null)
+    setRankingSeasonStatus(null)
     fetchAllianceRankingHistory(selectedAllianceId)
       .then((data) => {
-        setRankingPoints(data.points);
-        setRankingSeasonNumber(data.season_number);
-        setRankingSeasonStatus(data.season_status);
+        setRankingPoints(data.points)
+        setRankingSeasonNumber(data.season_number)
+        setRankingSeasonStatus(data.season_status)
       })
-      .catch(() => {});
-  }, [selectedAllianceId]);
-  const [memberFilter, setMemberFilter] = useState<MemberFilter>('current');
-  const [sortField, setSortField] = useState<SortField>('ratio');
-  const [sortDir, setSortDir] = useState<SortDir>('desc');
+      .catch(() => {})
+  }, [selectedAllianceId])
+  const [memberFilter, setMemberFilter] = useState<MemberFilter>('current')
+  const [sortField, setSortField] = useState<SortField>('ratio')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
 
   const {
     selectedGameAccountId,
@@ -90,48 +90,48 @@ export default function AllianceStatisticsTab({
     wars,
     chartLoading,
     handleRowClick,
-  } = useChampionStats(selectedAllianceId, selectedGroup);
+  } = useChampionStats(selectedAllianceId, selectedGroup)
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
     } else {
-      setSortField(field);
-      setSortDir('desc');
+      setSortField(field)
+      setSortDir('desc')
     }
-  };
+  }
 
   const availableGroups = useMemo(
     () =>
       Array.from(new Set(seasonStats.map((row) => toGroupValue(row.alliance_group)))).sort(
         (a, b) => {
-          if (a === 'none') return 1;
-          if (b === 'none') return -1;
-          return Number(a) - Number(b);
+          if (a === 'none') return 1
+          if (b === 'none') return -1
+          return Number(a) - Number(b)
         }
       ),
     [seasonStats]
-  );
+  )
 
   const filteredStats = useMemo(() => {
-    let rows = seasonStats;
-    if (memberFilter === 'current') rows = rows.filter((r) => r.is_current_member);
-    if (memberFilter === 'former') rows = rows.filter((r) => !r.is_current_member);
-    if (ratioMin !== -Infinity) rows = rows.filter((r) => r.ratio >= ratioMin);
+    let rows = seasonStats
+    if (memberFilter === 'current') rows = rows.filter((r) => r.is_current_member)
+    if (memberFilter === 'former') rows = rows.filter((r) => !r.is_current_member)
+    if (ratioMin !== -Infinity) rows = rows.filter((r) => r.ratio >= ratioMin)
     if (selectedGroup !== 'all') {
-      rows = rows.filter((r) => toGroupValue(r.alliance_group) === selectedGroup);
+      rows = rows.filter((r) => toGroupValue(r.alliance_group) === selectedGroup)
     }
     return [...rows].sort((a, b) => {
-      const av = a[sortField as keyof typeof a] as number;
-      const bv = b[sortField as keyof typeof b] as number;
-      return sortDir === 'asc' ? av - bv : bv - av;
-    });
-  }, [seasonStats, memberFilter, ratioMin, selectedGroup, sortField, sortDir]);
+      const av = a[sortField as keyof typeof a] as number
+      const bv = b[sortField as keyof typeof b] as number
+      return sortDir === 'asc' ? av - bv : bv - av
+    })
+  }, [seasonStats, memberFilter, ratioMin, selectedGroup, sortField, sortDir])
 
   const selectedPlayer = useMemo(
     () => seasonStats.find((s) => s.id === selectedGameAccountId) ?? null,
     [seasonStats, selectedGameAccountId]
-  );
+  )
 
   const hasFilters =
     memberFilter !== 'current' ||
@@ -140,7 +140,7 @@ export default function AllianceStatisticsTab({
     sortField !== 'ratio' ||
     sortDir !== 'desc' ||
     selectedGameAccountId !== null ||
-    selectedWarId !== null;
+    selectedWarId !== null
 
   return (
     <div className='flex flex-col gap-4'>
@@ -161,8 +161,14 @@ export default function AllianceStatisticsTab({
         />
       )}
 
-      <CollapsibleSection title={t.game.alliances.rankingHistory} defaultOpen={false}>
-        <AllianceRankingChart points={rankingPoints} seasonNumber={rankingSeasonNumber} />
+      <CollapsibleSection
+        title={t.game.alliances.rankingHistory}
+        defaultOpen={false}
+      >
+        <AllianceRankingChart
+          points={rankingPoints}
+          seasonNumber={rankingSeasonNumber}
+        />
       </CollapsibleSection>
 
       {statsLoading ? (
@@ -170,10 +176,21 @@ export default function AllianceStatisticsTab({
       ) : statsError ? (
         <div className='flex flex-col items-center gap-2 py-6'>
           <p className='text-sm text-destructive'>{statsError}</p>
-          <Button size='sm' variant='outline' onClick={onRetry}>{stat.retry}</Button>
+          <Button
+            size='sm'
+            variant='outline'
+            onClick={onRetry}
+          >
+            {stat.retry}
+          </Button>
         </div>
       ) : seasonStats.length === 0 ? (
-        <p className='text-sm text-muted-foreground py-6 text-center' data-cy='statistics-empty'>{stat.empty}</p>
+        <p
+          className='text-sm text-muted-foreground py-6 text-center'
+          data-cy='statistics-empty'
+        >
+          {stat.empty}
+        </p>
       ) : (
         <>
           <div className='flex flex-wrap items-center gap-3'>
@@ -278,13 +295,13 @@ export default function AllianceStatisticsTab({
                 variant='ghost'
                 size='sm'
                 onClick={() => {
-                  setMemberFilter('current');
-                  setRatioMin(-Infinity);
-                  setSelectedGroup('all');
-                  setSortField('ratio');
-                  setSortDir('desc');
-                  setSelectedGameAccountId(null);
-                  setSelectedWarId(null);
+                  setMemberFilter('current')
+                  setRatioMin(-Infinity)
+                  setSelectedGroup('all')
+                  setSortField('ratio')
+                  setSortDir('desc')
+                  setSelectedGameAccountId(null)
+                  setSelectedWarId(null)
                 }}
                 data-cy='statistics-reset-filters'
               >
@@ -296,7 +313,10 @@ export default function AllianceStatisticsTab({
           <div className='flex flex-col lg:flex-row gap-6'>
             <div className='flex-1 min-w-0'>
               {filteredStats.length === 0 ? (
-                <p className='text-sm text-muted-foreground py-4 text-center' data-cy='statistics-empty-filtered'>
+                <p
+                  className='text-sm text-muted-foreground py-4 text-center'
+                  data-cy='statistics-empty-filtered'
+                >
                   {stat.noFilteredResults}
                 </p>
               ) : (
@@ -342,5 +362,5 @@ export default function AllianceStatisticsTab({
         playerName={selectedPlayer?.game_pseudo ?? null}
       />
     </div>
-  );
+  )
 }

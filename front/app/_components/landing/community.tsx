@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import { FaGithub, FaDiscord } from 'react-icons/fa6';
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { LANDING_LINKS } from './links';
+import { FaGithub, FaDiscord } from 'react-icons/fa6'
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { LANDING_LINKS } from './links'
 
 export function Community() {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <section className='px-6 py-12 md:px-12'>
@@ -56,5 +56,5 @@ export function Community() {
         </CardContent>
       </Card>
     </section>
-  );
+  )
 }

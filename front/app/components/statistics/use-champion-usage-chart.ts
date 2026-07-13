@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import type { ChampionUsageItem } from '@/app/services/statistics';
-import { Metric, Perspective } from '@/app/components/statistics/member-champion-chart';
+import { useEffect, useState } from 'react'
+import type { ChampionUsageItem } from '@/app/services/statistics'
+import { Metric, Perspective } from '@/app/components/statistics/member-champion-chart'
 
 /**
  * Shared champion-usage chart logic (profile + alliance).
@@ -17,34 +17,34 @@ import { Metric, Perspective } from '@/app/components/statistics/member-champion
 export function useChampionUsageChart(
   fetcher: (deathless: boolean, perspective: Perspective) => Promise<ChampionUsageItem[]>,
   deps: readonly unknown[],
-  enabled = true,
+  enabled = true
 ) {
-  const [usage, setUsage] = useState<ChampionUsageItem[]>([]);
-  const [metric, setMetric] = useState<Metric>('deathless');
-  const [perspective, setPerspective] = useState<Perspective>('attacker');
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [chartLoading, setChartLoading] = useState(false);
+  const [usage, setUsage] = useState<ChampionUsageItem[]>([])
+  const [metric, setMetric] = useState<Metric>('deathless')
+  const [perspective, setPerspective] = useState<Perspective>('attacker')
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [chartLoading, setChartLoading] = useState(false)
 
   useEffect(() => {
-    if (!enabled) return;
-    let cancelled = false;
-    setChartLoading(true);
+    if (!enabled) return
+    let cancelled = false
+    setChartLoading(true)
     fetcher(metric === 'deathless', perspective)
       .then((u) => {
-        if (!cancelled) setUsage(u);
+        if (!cancelled) setUsage(u)
       })
       .catch(() => {
-        if (!cancelled) setUsage([]);
+        if (!cancelled) setUsage([])
       })
       .finally(() => {
-        if (!cancelled) setChartLoading(false);
-      });
+        if (!cancelled) setChartLoading(false)
+      })
     return () => {
-      cancelled = true;
-    };
+      cancelled = true
+    }
     // fetcher is re-created each render on purpose; refetch is driven by deps + selection
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, metric, perspective, ...deps]);
+  }, [enabled, metric, perspective, ...deps])
 
   return {
     usage,
@@ -55,5 +55,5 @@ export function useChampionUsageChart(
     detailOpen,
     setDetailOpen,
     chartLoading,
-  };
+  }
 }

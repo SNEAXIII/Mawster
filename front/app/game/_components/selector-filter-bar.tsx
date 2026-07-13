@@ -1,33 +1,33 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { cn } from '@/app/lib/utils';
+} from '@/components/ui/select'
+import { cn } from '@/app/lib/utils'
 
 export interface ToggleConfig {
-  key: string;
-  label: string;
-  active: boolean;
-  onToggle: (v: boolean) => void;
+  key: string
+  label: string
+  active: boolean
+  onToggle: (v: boolean) => void
 }
 
 interface SelectorFilterBarProps {
-  classes: string[];
-  classFilter: string;
-  onClassChange: (v: string) => void;
-  players?: string[];
-  playerFilter?: string;
-  onPlayerChange?: (v: string) => void;
-  toggles: ToggleConfig[];
-  canReset: boolean;
-  onReset: () => void;
+  classes: string[]
+  classFilter: string
+  onClassChange: (v: string) => void
+  players?: string[]
+  playerFilter?: string
+  onPlayerChange?: (v: string) => void
+  toggles: ToggleConfig[]
+  canReset: boolean
+  onReset: () => void
 }
 
 export default function SelectorFilterBar({
@@ -41,7 +41,7 @@ export default function SelectorFilterBar({
   canReset,
   onReset,
 }: Readonly<SelectorFilterBarProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <div className='flex flex-wrap items-center gap-2'>
@@ -123,5 +123,5 @@ export default function SelectorFilterBar({
         </Button>
       )}
     </div>
-  );
+  )
 }

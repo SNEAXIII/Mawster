@@ -1,26 +1,26 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useI18n } from '@/app/i18n';
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useI18n } from '@/app/i18n'
 
-export type ModerationKind = 'mute' | 'warn';
+export type ModerationKind = 'mute' | 'warn'
 
 type UserModerationDialogProps = Readonly<{
-  kind: ModerationKind | null;
-  userLogin: string | null;
-  onClose: () => void;
-  onSubmit: (reason: string, expiresAt: string | null) => void;
-}>;
+  kind: ModerationKind | null
+  userLogin: string | null
+  onClose: () => void
+  onSubmit: (reason: string, expiresAt: string | null) => void
+}>
 
 export default function UserModerationDialog({
   kind,
@@ -28,26 +28,29 @@ export default function UserModerationDialog({
   onClose,
   onSubmit,
 }: UserModerationDialogProps) {
-  const { t } = useI18n();
-  const m = t.moderation;
-  const [reason, setReason] = useState('');
-  const [expiresAt, setExpiresAt] = useState('');
+  const { t } = useI18n()
+  const m = t.moderation
+  const [reason, setReason] = useState('')
+  const [expiresAt, setExpiresAt] = useState('')
 
   useEffect(() => {
     if (kind) {
-      setReason('');
-      setExpiresAt('');
+      setReason('')
+      setExpiresAt('')
     }
-  }, [kind]);
+  }, [kind])
 
-  const isMute = kind === 'mute';
-  const title = isMute ? m.muteTitle : m.warnTitle;
-  const description = isMute ? m.muteDescription : m.warnDescription;
-  const confirmCy = isMute ? 'moderation-mute-confirm' : 'moderation-warn-confirm';
-  const canSubmit = reason.trim().length > 0;
+  const isMute = kind === 'mute'
+  const title = isMute ? m.muteTitle : m.warnTitle
+  const description = isMute ? m.muteDescription : m.warnDescription
+  const confirmCy = isMute ? 'moderation-mute-confirm' : 'moderation-warn-confirm'
+  const canSubmit = reason.trim().length > 0
 
   return (
-    <Dialog open={!!kind} onOpenChange={(open) => !open && onClose()}>
+    <Dialog
+      open={!!kind}
+      onOpenChange={(open) => !open && onClose()}
+    >
       <DialogContent data-cy='user-moderation-dialog'>
         <DialogHeader>
           <DialogTitle>
@@ -82,7 +85,11 @@ export default function UserModerationDialog({
           </div>
         )}
         <DialogFooter>
-          <Button variant='outline' onClick={onClose} data-cy='user-moderation-cancel'>
+          <Button
+            variant='outline'
+            onClick={onClose}
+            data-cy='user-moderation-cancel'
+          >
             {t.common.cancel}
           </Button>
           <Button
@@ -100,5 +107,5 @@ export default function UserModerationDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
