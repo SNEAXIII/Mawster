@@ -5,3 +5,14 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
+
+  # Prettier runs from the project's own node_modules rather than a pinned mirror, so the hook
+  # and `npm run format` can never format the same file differently.
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier (front)
+        entry: front/node_modules/.bin/prettier --write --ignore-path front/.prettierignore
+        language: system
+        files: ^front/.*\.(ts|tsx|js|jsx|mjs|cjs|css|json|md)$
+        exclude: ^front/(node_modules|\.next)/
