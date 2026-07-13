@@ -9,6 +9,7 @@ from src.enums.MatchupVerdict import MatchupVerdict
 from src.Messages.matchup_messages import (
     DISCOURAGED_HAS_NO_SCORE,
     DUPLICATE_TARGET_TYPE,
+    NODE_DETAIL_MISMATCH,
     SCORE_REQUIRED_WHEN_NOT_DISCOURAGED,
     SINGLE_TARGET_REQUIRED,
 )
@@ -82,18 +83,66 @@ class MatchupRatingResponse(BaseModel):
     updated_at: datetime
 
 
-class MatchupEvaluationRow(BaseModel):
+class MatchupRatedSide(BaseModel):
+    """The content of one rating: how the fight goes, and what it costs to take it.
+
+    A rating always targets a single side of a fight — the attacker against a defender, or
+    against a node, never both (see ``MatchupTargetInput.exactly_one_target``). A full fight is
+    therefore always the composition of two ratings, and this is the half the UI shows of each.
+    """
+
+    verdict: MatchupVerdict
+    synergies: list[MatchupSynergyResponse] = Field(default_factory=list)
+    prefight: Optional[ChampionRef] = None
+
+
+class MatchupScoredFight(BaseModel):
+    """The combined outcome of a whole fight: discouraged, or a score.
+
+    ``score`` is ``None`` exactly when ``is_discouraged`` is True — a discouraged fight is not a
+    fight worth zero points, and the UI must render a word where there is no number. The service
+    builds these by hand, so the invariant is enforced once here for every shape that carries an
+    outcome (both grids' cells, an evaluation row) instead of being restated in each.
+    """
+
+    is_discouraged: bool
+    score: Optional[int] = None
+
+    @model_validator(mode="after")
+    def score_absent_iff_discouraged(self) -> "MatchupScoredFight":
+        if self.is_discouraged and self.score is not None:
+            raise ValueError(DISCOURAGED_HAS_NO_SCORE)
+        if not self.is_discouraged and self.score is None:
+            raise ValueError(SCORE_REQUIRED_WHEN_NOT_DISCOURAGED)
+        return self
+
+
+class MatchupGridAxisEntry(MatchupRatedSide):
+    """A rated side, named by what it was rated against: a defender, or a node.
+
+    It is the axis of the attacker grid, and it is also what the fight-detail dialog renders as
+    one of its two panels — so it doubles as the per-side payload of the defender grid
+    (``MatchupDefenderGridCell.node``) and of the evaluation list (``MatchupEvaluationRow``).
+    """
+
+    defender: Optional[ChampionRef] = None
+    node_number: Optional[int] = None
+
+
+class MatchupEvaluationRow(MatchupScoredFight):
     """One attacker champion evaluated against the selected defender and/or node.
 
-    ``score`` is ``None`` exactly when ``is_discouraged`` is True.
     The player-aware fields are ``None`` when no game account was requested.
+
+    ``defender`` and ``node`` carry each rated side in full, so a row opens as a fight detail
+    exactly like a grid cell does. ``synergies`` and ``prefight`` stay the *merged* view of both
+    sides — that is what the list columns show and what playability is computed from — while the
+    two sides keep their own, unmerged detail.
     """
 
     champion: ChampionRef
-    defender_verdict: Optional[MatchupVerdict] = None
-    node_verdict: Optional[MatchupVerdict] = None
-    is_discouraged: bool
-    score: Optional[int] = None
+    defender: Optional[MatchupGridAxisEntry] = None
+    node: Optional[MatchupGridAxisEntry] = None
     synergies: list[MatchupSynergyResponse] = Field(default_factory=list)
     prefight: Optional[ChampionRef] = None
     is_playable: Optional[bool] = None
@@ -101,50 +150,17 @@ class MatchupEvaluationRow(BaseModel):
     missing_champions: list[ChampionRef] = Field(default_factory=list)
     is_on_defense: Optional[bool] = None
 
-    @model_validator(mode="after")
-    def score_absent_iff_discouraged(self) -> "MatchupEvaluationRow":
-        """Keep the two representations of a discouraged fight from drifting apart.
 
-        A discouraged fight has no score — it is not a fight worth zero points. The service
-        builds this row by hand, so without this check a stale score could ride alongside a
-        discouraged verdict and the UI would render a number where it must render a word.
-        """
-        if self.is_discouraged and self.score is not None:
-            raise ValueError(DISCOURAGED_HAS_NO_SCORE)
-        if not self.is_discouraged and self.score is None:
-            raise ValueError(SCORE_REQUIRED_WHEN_NOT_DISCOURAGED)
-        return self
+class MatchupGridCell(MatchupScoredFight):
+    """One (defender, node) fight for the grid's fixed attacker.
 
-
-class MatchupGridAxisEntry(BaseModel):
-    """One rated axis value for the attacker: a defender, or a node.
-
-    ``synergies`` and ``prefight`` carry the rating's full detail. The current
-    grid UI renders only ``verdict``/score, but these are the exact inputs the
-    (deferred) per-cell required-synergy greying will consume, so they are
-    surfaced here rather than recomputed later.
+    Both sides of the fight are on the grid's axes — the attacker is fixed, so its rating against
+    each defender and each node is a list shared by every cell. The cell only has to say how the
+    pair combines.
     """
 
-    defender: Optional[ChampionRef] = None
-    node_number: Optional[int] = None
-    verdict: MatchupVerdict
-    synergies: list[MatchupSynergyResponse] = Field(default_factory=list)
-    prefight: Optional[ChampionRef] = None
-
-
-class MatchupGridCell(BaseModel):
     defender_champion_id: uuid.UUID
     node_number: int
-    is_discouraged: bool
-    score: Optional[int] = None
-
-    @model_validator(mode="after")
-    def score_absent_iff_discouraged(self) -> "MatchupGridCell":
-        if self.is_discouraged and self.score is not None:
-            raise ValueError(DISCOURAGED_HAS_NO_SCORE)
-        if not self.is_discouraged and self.score is None:
-            raise ValueError(SCORE_REQUIRED_WHEN_NOT_DISCOURAGED)
-        return self
 
 
 class MatchupGridResponse(BaseModel):
@@ -157,27 +173,38 @@ class MatchupGridResponse(BaseModel):
     cells: list[MatchupGridCell] = Field(default_factory=list)
 
 
-class MatchupDefenderGridRow(BaseModel):
-    """One attacker rated against the selected defender (a grid row)."""
+class MatchupDefenderGridRow(MatchupRatedSide):
+    """One attacker rated against the grid's fixed defender.
+
+    This is the "vs defender" side of every fight in that row: the defender does not change from
+    one node column to the next, so neither does the rating against it.
+    """
 
     attacker: ChampionRef
-    verdict: MatchupVerdict
-    synergies: list[MatchupSynergyResponse] = Field(default_factory=list)
-    prefight: Optional[ChampionRef] = None
 
 
-class MatchupDefenderGridCell(BaseModel):
+class MatchupDefenderGridCell(MatchupScoredFight):
+    """One (attacker, node) fight against the grid's fixed defender.
+
+    ``node`` is the attacker's rating against that node — the "vs node" side of the fight; the
+    "vs defender" side lives on the row. Unlike the attacker grid, the attacker varies per row
+    here, so the node side is per (attacker, node) and cannot be a shared axis: it has to ride on
+    the cell, or a click could only ever show half the fight.
+    """
+
     attacker_champion_id: uuid.UUID
     node_number: int
-    is_discouraged: bool
-    score: Optional[int] = None
+    node: MatchupGridAxisEntry
 
     @model_validator(mode="after")
-    def score_absent_iff_discouraged(self) -> "MatchupDefenderGridCell":
-        if self.is_discouraged and self.score is not None:
-            raise ValueError(DISCOURAGED_HAS_NO_SCORE)
-        if not self.is_discouraged and self.score is None:
-            raise ValueError(SCORE_REQUIRED_WHEN_NOT_DISCOURAGED)
+    def node_detail_matches_coordinate(self) -> "MatchupDefenderGridCell":
+        """``node_number`` is the cell's coordinate and ``node.node_number`` its detail.
+
+        They are two representations of the same node, so a mismatch would put the dialog on a
+        different fight than the cell the user clicked — silently, and only for that one cell.
+        """
+        if self.node.node_number != self.node_number:
+            raise ValueError(NODE_DETAIL_MISMATCH)
         return self
 
 

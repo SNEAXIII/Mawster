@@ -30,12 +30,28 @@ export interface MatchupRating {
   updated_at: string;
 }
 
-export interface MatchupEvaluationRow {
-  champion: ChampionRef;
-  defender_verdict: MatchupVerdict | null;
-  node_verdict: MatchupVerdict | null;
+// The combined outcome of a whole fight. `score` is null exactly when `is_discouraged` — a
+// discouraged fight is not a fight worth zero points.
+export interface MatchupScoredFight {
   is_discouraged: boolean;
   score: number | null;
+}
+
+// The content of one rating: how the fight goes, and what it costs to take it. A rating targets
+// a single side (a defender, or a node), so a full fight is always two of these.
+export interface MatchupRatedSide {
+  verdict: MatchupVerdict;
+  synergies: MatchupSynergy[];
+  prefight: ChampionRef | null;
+}
+
+export interface MatchupEvaluationRow extends MatchupScoredFight {
+  champion: ChampionRef;
+  // Each rated side in full — this is what the detail dialog opens. `synergies` and `prefight`
+  // below stay the merged view of both sides, which is what the list columns show and what
+  // playability is computed from.
+  defender: MatchupGridAxisEntry | null;
+  node: MatchupGridAxisEntry | null;
   synergies: MatchupSynergy[];
   prefight: ChampionRef | null;
   is_playable: boolean | null;
@@ -68,19 +84,18 @@ export interface MatchupEvaluationParams extends MatchupFilters {
   game_account_id?: string | null;
 }
 
-export interface MatchupGridAxisEntry {
+// A rated side, named by what it was rated against. Also what the detail dialog renders as one
+// of its two panels, wherever a fight is opened from.
+export interface MatchupGridAxisEntry extends MatchupRatedSide {
   defender: ChampionRef | null;
   node_number: number | null;
-  verdict: MatchupVerdict;
-  synergies: MatchupSynergy[];
-  prefight: ChampionRef | null;
 }
 
-export interface MatchupGridCell {
+// Both sides are on the grid's axes here (the attacker is fixed), so the cell only says how the
+// pair combines.
+export interface MatchupGridCell extends MatchupScoredFight {
   defender_champion_id: string;
   node_number: number;
-  is_discouraged: boolean;
-  score: number | null;
 }
 
 export interface MatchupGridResponse {
@@ -93,19 +108,18 @@ export interface MatchupGridResponse {
   cells: MatchupGridCell[];
 }
 
-// Mirror of the attacker grid, centered on a defender: rows = attackers rated against it.
-export interface MatchupDefenderGridRow {
+// Mirror of the attacker grid, centered on a defender: rows = attackers rated against it. The
+// row is the "vs defender" side of every fight in it — that rating is the same for every node.
+export interface MatchupDefenderGridRow extends MatchupRatedSide {
   attacker: ChampionRef;
-  verdict: MatchupVerdict;
-  synergies: MatchupSynergy[];
-  prefight: ChampionRef | null;
 }
 
-export interface MatchupDefenderGridCell {
+// The attacker varies per row here, so the "vs node" side is per (attacker, node) and cannot be
+// a shared axis: it rides on the cell.
+export interface MatchupDefenderGridCell extends MatchupScoredFight {
   attacker_champion_id: string;
   node_number: number;
-  is_discouraged: boolean;
-  score: number | null;
+  node: MatchupGridAxisEntry;
 }
 
 export interface MatchupDefenderGridResponse {

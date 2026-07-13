@@ -59,7 +59,12 @@ export default function MatchupDefenderGridTable({ grid, loading }: Readonly<Pro
             {kb.defenderGridEmpty}
           </p>
         ) : (
-          <MatchupDefenderGridMatrix attackers={attackers} cells={cells} columns={columns} />
+          <MatchupDefenderGridMatrix
+            defender={defender}
+            attackers={attackers}
+            cells={cells}
+            columns={columns}
+          />
         )}
       </div>
     </div>

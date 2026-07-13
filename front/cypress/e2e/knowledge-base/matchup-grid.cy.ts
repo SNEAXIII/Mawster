@@ -196,4 +196,44 @@ describe('Knowledge Base — matchup defender grid (mirror)', () => {
       ).should('exist');
     });
   });
+
+  it('opens the cell-detail dialog when a rated cell is clicked', () => {
+    seedMatchups('mu-defd').then(({ ownerData, attackerId }) => {
+      openMatchupsTab(ownerData.user_id);
+      pickDefender(DEF1);
+
+      cy.get(
+        `[data-cy="matchup-defender-grid-cell"][data-cy-attacker="${attackerId}"][data-cy-node="25"]`,
+      )
+        .should('exist')
+        .click();
+
+      // Both halves of the fight: the "vs defender" side comes from the row, the "vs node" side
+      // from the cell — the payload gap this dialog used to have no way to fill.
+      cy.getByCy('matchup-cell-detail').should('be.visible');
+      cy.getByCy('matchup-cell-detail').should('contain', ATTACKER);
+      cy.getByCy('matchup-cell-detail').should('contain', DEF1);
+    });
+  });
+});
+
+describe('Knowledge Base — matchup node evaluation list', () => {
+  beforeEach(() => {
+    cy.truncateDb();
+  });
+
+  it('opens the cell-detail dialog when a rated row is clicked', () => {
+    seedMatchups('mu-node').then(({ ownerData }) => {
+      openMatchupsTab(ownerData.user_id);
+      cy.getByCy('matchup-filter-node').type('25');
+
+      cy.getByCy('matchup-evaluation-table').should('be.visible');
+      cy.get('[data-cy="matchup-row"]').first().click();
+
+      // Only a node was targeted, so the dialog opens on the node side alone.
+      cy.getByCy('matchup-cell-detail').should('be.visible');
+      cy.getByCy('matchup-cell-detail').should('contain', ATTACKER);
+      cy.getByCy('matchup-cell-detail').should('contain', '#25');
+    });
+  });
 });

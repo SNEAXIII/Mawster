@@ -386,6 +386,93 @@ async def test_evaluation_merges_a_synergy_rated_on_both_sides_as_required():
 
 
 @pytest.mark.asyncio
+async def test_evaluation_rows_carry_each_rated_side_unmerged():
+    """A row is clickable and opens the same two-sided fight detail as a grid cell.
+
+    The merged `synergies` answer "can this player take the fight". The two sides answer "what
+    does each half of the fight ask for" — a different question, and merging them there would
+    lose which requirement comes from the node and which from the defender.
+    """
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    defender_synergy = await push_champion(name="Mister Fantastic", champion_class="Science")
+    node_synergy = await push_champion(name="Invisible Woman", champion_class="Science")
+    prefight = await push_champion(name="Heimdall", champion_class="Cosmic")
+    route = f"/alliances/{alliance.id}/matchups"
+
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "good",
+                    "synergies": [{"champion_id": str(defender_synergy.id), "is_required": True}],
+                },
+                {
+                    "target_type": "node",
+                    "node_number": 23,
+                    "verdict": "ok",
+                    "prefight_champion_id": str(prefight.id),
+                    "synergies": [{"champion_id": str(node_synergy.id), "is_required": False}],
+                },
+            ],
+        },
+        HEADERS_OWNER,
+    )
+
+    response = await execute_get_request(
+        f"{route}/evaluation?defender_champion_id={defender.id}&node_number=23", HEADERS_OWNER
+    )
+    row = response.json()[0]
+
+    assert row["defender"]["verdict"] == "good"
+    assert row["defender"]["defender"]["champion_name"] == "Korg"
+    assert [s["champion_name"] for s in row["defender"]["synergies"]] == ["Mister Fantastic"]
+    assert row["defender"]["prefight"] is None
+
+    assert row["node"]["verdict"] == "ok"
+    assert row["node"]["node_number"] == 23
+    assert [s["champion_name"] for s in row["node"]["synergies"]] == ["Invisible Woman"]
+    assert row["node"]["prefight"]["champion_name"] == "Heimdall"
+
+    assert {s["champion_name"] for s in row["synergies"]} == {
+        "Mister Fantastic",
+        "Invisible Woman",
+    }
+
+
+@pytest.mark.asyncio
+async def test_evaluation_row_omits_the_side_that_was_not_targeted():
+    """Only a defender was selected, so there is no node half to open — the side stays null."""
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    route = f"/alliances/{alliance.id}/matchups"
+
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "good",
+                }
+            ],
+        },
+        HEADERS_OWNER,
+    )
+
+    response = await execute_get_request(
+        f"{route}/evaluation?defender_champion_id={defender.id}", HEADERS_OWNER
+    )
+    row = response.json()[0]
+    assert row["defender"]["verdict"] == "good"
+    assert row["node"] is None
+
+
+@pytest.mark.asyncio
 async def test_evaluation_surfaces_the_strongest_owned_instance():
     """A 6-star and a 7-star of the same champion is an ordinary roster."""
     alliance, owner, attacker, defender = await _setup_alliance_with_champions()
@@ -1047,6 +1134,58 @@ async def test_defender_grid_short_circuits_discouraged_per_cell():
     assert cells_by_attacker[str(attacker1.id)]["score"] is None
     assert cells_by_attacker[str(attacker2.id)]["is_discouraged"] is True
     assert cells_by_attacker[str(attacker2.id)]["score"] is None
+
+
+@pytest.mark.asyncio
+async def test_defender_grid_cells_carry_the_node_side_of_the_fight():
+    """The attacker varies per row here, so the node side cannot live on a shared axis.
+
+    The row already carries the "vs defender" side — it is the same for every node in that row.
+    The "vs node" side is per (attacker, node), so it rides on the cell. Without it the grid
+    would know a cell's combined score but nothing of what makes it up, and a click could only
+    ever show half the fight.
+    """
+    alliance, _owner, attacker, defender = await _setup_alliance_with_champions()
+    synergy = await push_champion(name="Mister Fantastic", champion_class="Science")
+    prefight = await push_champion(name="Heimdall", champion_class="Cosmic")
+    route = f"/alliances/{alliance.id}/matchups"
+
+    await execute_post_request(
+        route,
+        {
+            "champion_id": str(attacker.id),
+            "targets": [
+                {
+                    "target_type": "defender",
+                    "defender_champion_id": str(defender.id),
+                    "verdict": "good",
+                },
+                {
+                    "target_type": "node",
+                    "node_number": 7,
+                    "verdict": "ok",
+                    "prefight_champion_id": str(prefight.id),
+                    "synergies": [{"champion_id": str(synergy.id), "is_required": True}],
+                },
+            ],
+        },
+        HEADERS_OWNER,
+    )
+
+    response = await execute_get_request(
+        f"{route}/grid-by-defender?defender_champion_id={defender.id}", HEADERS_OWNER
+    )
+    assert response.status_code == 200
+    body = response.json()
+
+    assert body["attackers"][0]["verdict"] == "good"
+
+    cell = body["cells"][0]
+    assert cell["node_number"] == 7
+    assert cell["node"]["node_number"] == 7
+    assert cell["node"]["verdict"] == "ok"
+    assert [s["champion_name"] for s in cell["node"]["synergies"]] == ["Mister Fantastic"]
+    assert cell["node"]["prefight"]["champion_name"] == "Heimdall"
 
 
 @pytest.mark.asyncio

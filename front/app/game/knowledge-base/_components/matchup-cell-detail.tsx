@@ -8,7 +8,7 @@ import { getChampionImageUrl } from '@/app/services/champions';
 import type {
   ChampionRef,
   MatchupGridAxisEntry,
-  MatchupGridCell,
+  MatchupScoredFight,
   MatchupVerdict,
 } from '@/app/services/matchups';
 import { SCORE_BADGE_CLASS, scoreClass } from './grid-score';
@@ -16,9 +16,14 @@ import { SCORE_BADGE_CLASS, scoreClass } from './grid-score';
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  // The attacker grid fixes one attacker and names it above the table, so it passes none here.
+  // The defender grid and the evaluation list vary the attacker per row, so they must name it.
+  attacker?: ChampionRef | null;
   defender: MatchupGridAxisEntry | null;
   node: MatchupGridAxisEntry | null;
-  cell: MatchupGridCell | null;
+  // Only the fight's combined outcome is read, which both grids' cells and an evaluation row all
+  // carry — the dialog does not care which of the three opened it.
+  cell: MatchupScoredFight | null;
 }
 
 function ChampionChip({ champion, required }: Readonly<{ champion: ChampionRef; required?: boolean }>) {
@@ -36,10 +41,18 @@ function ChampionChip({ champion, required }: Readonly<{ champion: ChampionRef; 
   );
 }
 
-// Visual detail of one grid "fight": the two rated sides (attacker vs the defender, and vs the
-// node) that combine into the cell score, each with a colored verdict pill, synergy portraits
-// (gold ring = required) and prefight.
-export default function MatchupCellDetail({ open, onOpenChange, defender, node, cell }: Readonly<Props>) {
+// Visual detail of one "fight": the rated sides (attacker vs the defender, and vs the node) that
+// combine into the score, each with a colored verdict pill, synergy portraits (gold ring =
+// required) and prefight. Opened from either grid or from the evaluation list; a side the user
+// did not target is simply absent, so the dialog renders whichever sides it is given.
+export default function MatchupCellDetail({
+  open,
+  onOpenChange,
+  attacker,
+  defender,
+  node,
+  cell,
+}: Readonly<Props>) {
   const { t } = useI18n();
   const kb = t.game.knowledgeBase;
 
@@ -102,8 +115,12 @@ export default function MatchupCellDetail({ open, onOpenChange, defender, node, 
       <DialogContent data-cy='matchup-cell-detail' className='sm:max-w-2xl'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
-            <span>{defender?.defender?.champion_name}</span>
-            <span className='text-muted-foreground'>· #{node?.node_number}</span>
+            <span>
+              {[attacker?.champion_name, defender?.defender?.champion_name]
+                .filter(Boolean)
+                .join(' · ')}
+            </span>
+            {node && <span className='text-muted-foreground'>· #{node.node_number}</span>}
             {cell &&
               (cell.is_discouraged ? (
                 <X className='h-5 w-5 text-destructive' />
