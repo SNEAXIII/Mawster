@@ -273,10 +273,16 @@ class PlayerStatsService:
         Scoped by `game_account_id` (cross-alliance). `perspective='attacker'`
         aggregates the champions the account used; `'defender'` the champions it
         faced. `season_id=None` aggregates across all seasons.
+
+        Planning-error fights are excluded, as in the ratio stats, so the chart
+        totals stay consistent with the stats card.
         """
         await cls.assert_can_view_account(session, current_user, game_account_id)
 
-        conditions = [WarFightRecord.game_account_id == game_account_id]
+        conditions = [
+            WarFightRecord.game_account_id == game_account_id,
+            WarFightRecord.is_planning_error == False,  # noqa: E712
+        ]
         if season_id is not None:
             conditions.append(WarFightRecord.season_id == season_id)
         if deathless is True:

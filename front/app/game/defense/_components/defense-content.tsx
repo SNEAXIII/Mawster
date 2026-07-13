@@ -43,7 +43,7 @@ export default function DefensePageContent({
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     try {
       if (!ref.current) return;
-      const png = await snapdom.toPng(ref.current, { scale: 1, embedFonts: false });
+      const png = await snapdom.toPng(ref.current, { scale: 1, embedFonts: true });
       const allianceName = selectedAlliance?.name ?? 'alliance';
       const date = new Date().toISOString().split('T')[0];
       const link = document.createElement('a');

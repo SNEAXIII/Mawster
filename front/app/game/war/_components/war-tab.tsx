@@ -89,7 +89,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
     );
     try {
       if (!ref.current) return;
-      const png = await snapdom.toPng(ref.current, { scale: 1, embedFonts: false });
+      const png = await snapdom.toPng(ref.current, { scale: 1, embedFonts: true });
       const allianceName = selectedAlliance?.name ?? 'alliance';
       const date = new Date().toISOString().split('T')[0];
       const link = document.createElement('a');

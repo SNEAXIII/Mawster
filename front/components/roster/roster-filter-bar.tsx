@@ -26,10 +26,18 @@ interface RosterFilterBarProps {
   onChange: (patch: Partial<RosterFilters>) => void;
   onReset: () => void;
   availableClasses: string[];
-  filteredCount: number;
-  totalCount: number;
+  /** Only read when `showCount` is on. */
+  filteredCount?: number;
+  /** Only read when `showCount` is on. */
+  totalCount?: number;
   /** Optional control rendered at the start of the filter row (e.g. a group selector). */
   leading?: ReactNode;
+  /** Show the "awakened" toggle. Default true. */
+  showAwakened?: boolean;
+  /** Show the minimum-signature input. Default true. */
+  showMinSig?: boolean;
+  /** Show the "{filtered} / {total}" count line. Default true. */
+  showCount?: boolean;
 }
 
 export default function RosterFilterBar({
@@ -37,9 +45,12 @@ export default function RosterFilterBar({
   onChange,
   onReset,
   availableClasses,
-  filteredCount,
-  totalCount,
+  filteredCount = 0,
+  totalCount = 0,
   leading,
+  showAwakened = true,
+  showMinSig = true,
+  showCount = true,
 }: Readonly<RosterFilterBarProps>) {
   const { t } = useI18n();
   const f = t.roster.filter;
@@ -118,20 +129,22 @@ export default function RosterFilterBar({
         {boolToggle('sagaAttacker', f.sagaAttacker, 'roster-filter-saga-attacker')}
         {boolToggle('sagaDefender', f.sagaDefender, 'roster-filter-saga-defender')}
         {boolToggle('preferredAttacker', f.preferred, 'roster-filter-preferred')}
-        {boolToggle('awakened', f.awakened, 'roster-filter-awakened')}
-        <Input
-          type='number'
-          min={0}
-          max={200}
-          value={filters.minSignature}
-          onChange={(e) => {
-            const n = Number(e.target.value);
-            onChange({ minSignature: Number.isNaN(n) ? 0 : Math.min(200, Math.max(0, n)) });
-          }}
-          className='h-8 w-20 text-xs'
-          placeholder={f.minSignature}
-          data-cy='roster-filter-min-sig'
-        />
+        {showAwakened && boolToggle('awakened', f.awakened, 'roster-filter-awakened')}
+        {showMinSig && (
+          <Input
+            type='number'
+            min={0}
+            max={200}
+            value={filters.minSignature}
+            onChange={(e) => {
+              const n = Number(e.target.value);
+              onChange({ minSignature: Number.isNaN(n) ? 0 : Math.min(200, Math.max(0, n)) });
+            }}
+            className='h-8 w-20 text-xs'
+            placeholder={f.minSignature}
+            data-cy='roster-filter-min-sig'
+          />
+        )}
         {isFilterActive(filters) && (
           <Button
             type='button'
@@ -145,14 +158,16 @@ export default function RosterFilterBar({
           </Button>
         )}
       </div>
-      <p
-        className='text-xs text-muted-foreground'
-        data-cy='roster-filter-count'
-      >
-        {f.count
-          .replace('{filtered}', String(filteredCount))
-          .replace('{total}', String(totalCount))}
-      </p>
+      {showCount && (
+        <p
+          className='text-xs text-muted-foreground'
+          data-cy='roster-filter-count'
+        >
+          {f.count
+            .replace('{filtered}', String(filteredCount))
+            .replace('{total}', String(totalCount))}
+        </p>
+      )}
     </div>
   );
 }

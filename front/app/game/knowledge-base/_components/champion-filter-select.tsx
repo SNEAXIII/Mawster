@@ -98,6 +98,7 @@ export default function ChampionFilterSelect({
                   value={champ.name}
                   onSelect={() => handleSelect(champ.id)}
                   data-cy={dataCy ? `${dataCy}-item` : undefined}
+                  data-cy-champion={champ.name}
                 >
                   {champ.image_url && (
                     <img

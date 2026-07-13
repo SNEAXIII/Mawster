@@ -51,6 +51,8 @@ export default function AllianceSelect({
           <SelectItem
             key={a.id}
             value={a.id}
+            data-cy={dataCy ? `${dataCy}-item` : undefined}
+            data-cy-alliance={a.tag}
           >
             <span className='flex items-center gap-1.5'>
               {a.isVisitor && (
