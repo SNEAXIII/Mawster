@@ -358,7 +358,13 @@ class TestGetPlayerStats:
 
 
 async def _push_fight_record(
-    war, alliance_id, game_account_id, champion, defender_champion, ko_count=0
+    war,
+    alliance_id,
+    game_account_id,
+    champion,
+    defender_champion,
+    ko_count=0,
+    is_planning_error=False,
 ):
     from src.models.WarFightRecord import WarFightRecord as _WFR
 
@@ -381,6 +387,7 @@ async def _push_fight_record(
         defender_ascension=0,
         defender_is_saga_defender=False,
         ko_count=ko_count,
+        is_planning_error=is_planning_error,
     )
     await load_objects([record])
     return record
@@ -456,6 +463,53 @@ class TestGetPlayerChampionUsage:
                 session, owner_user, data["owner"].id, season_id=None
             )
             assert {r.champion_name for r in all_seasons} == {"Spider-Man", "IronMan"}
+
+    @pytest.mark.anyio
+    async def test_planning_error_fights_are_excluded(self):
+        data = await _setup_with_ended_season_war()
+        defender = await push_champion(name="Venom", champion_class="Cosmic")
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender, ko_count=1
+        )
+        await _push_fight_record(
+            data["war"],
+            data["alliance"].id,
+            data["owner"].id,
+            data["champ"],
+            defender,
+            ko_count=3,
+            is_planning_error=True,
+        )
+        owner_user = get_generic_user(is_base_id=True)
+
+        async for session in get_test_session():
+            result = await PlayerStatsService.get_player_champion_usage(
+                session, owner_user, data["owner"].id, season_id=data["season"].id
+            )
+            assert len(result) == 1
+            assert result[0].fight_count == 1
+            assert result[0].total_kos == 1
+
+    @pytest.mark.anyio
+    async def test_planning_error_only_returns_no_usage(self):
+        data = await _setup_with_ended_season_war()
+        defender = await push_champion(name="Venom", champion_class="Cosmic")
+        await _push_fight_record(
+            data["war"],
+            data["alliance"].id,
+            data["owner"].id,
+            data["champ"],
+            defender,
+            ko_count=2,
+            is_planning_error=True,
+        )
+        owner_user = get_generic_user(is_base_id=True)
+
+        async for session in get_test_session():
+            result = await PlayerStatsService.get_player_champion_usage(
+                session, owner_user, data["owner"].id, season_id=data["season"].id
+            )
+            assert result == []
 
     @pytest.mark.anyio
     async def test_denies_other_user(self):
