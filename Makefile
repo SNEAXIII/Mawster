@@ -228,6 +228,7 @@ e2e-db:
 
 vision-up:
 	docker compose -f compose-dev.yaml up -d rabbitmq rustfs
+	docker compose -f compose-dev.yaml run --rm rustfs-init
 
 vision-down:
 	docker compose -f compose-dev.yaml stop rabbitmq rustfs

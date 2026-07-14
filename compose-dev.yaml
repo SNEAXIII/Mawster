@@ -81,6 +81,31 @@ services:
       - RUSTFS_ACCESS_KEY=mawster
       - RUSTFS_SECRET_KEY=mawsterpassword
       - RUSTFS_CONSOLE_ENABLE=true
+  # One-shot: RustFS starts with no buckets, and nothing in the API creates them.
+  # Without this, a fresh `make vision-up` yields a working store whose first
+  # upload fails with NoSuchBucket.
+  rustfs-init:
+    image: amazon/aws-cli:latest
+    container_name: rustfs-init
+    networks:
+      - internal-dev
+    depends_on:
+      - rustfs
+    environment:
+      - AWS_ACCESS_KEY_ID=mawster
+      - AWS_SECRET_ACCESS_KEY=mawsterpassword
+      - AWS_DEFAULT_REGION=us-east-1
+    entrypoint:
+      - sh
+      - -c
+      - |
+        until aws --endpoint-url http://rustfs:9000 s3 ls > /dev/null 2>&1; do
+          echo "waiting for rustfs..."; sleep 2;
+        done
+        aws --endpoint-url http://rustfs:9000 s3 mb s3://vision  2>/dev/null || true
+        aws --endpoint-url http://rustfs:9000 s3 mb s3://dataset 2>/dev/null || true
+        aws --endpoint-url http://rustfs:9000 s3 ls
+    restart: 'no'
     volumes:
       - ./db/rustfs-data:/data
   static:
