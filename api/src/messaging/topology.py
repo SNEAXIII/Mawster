@@ -25,6 +25,12 @@ async def declare_topology(channel: AbstractChannel) -> AbstractExchange:
     dead_queue = await channel.declare_queue(QUEUE_DEAD, durable=True)
     await dead_queue.bind(dlx, routing_key=ROUTING_KEY_DEAD)
 
+    # NOTE: declare_queue is idempotent only while these arguments stay byte-identical
+    # to what is already declared on the broker. If the dead-letter arguments below
+    # ever change, RabbitMQ answers PRECONDITION_FAILED (406) and closes the channel
+    # for every process that connects (this API and the vision worker). Recovering
+    # requires manually deleting the existing "vision.jobs" queue on the broker first
+    # (check for unprocessed messages before doing so) and then redeploying.
     jobs_queue = await channel.declare_queue(
         QUEUE_JOBS,
         durable=True,

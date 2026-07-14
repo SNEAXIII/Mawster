@@ -1,3 +1,4 @@
+import asyncio
 import json
 import uuid
 
@@ -18,14 +19,29 @@ class VisionPublisher:
     def __init__(self) -> None:
         self._connection: AbstractRobustConnection | None = None
         self._exchange: AbstractExchange | None = None
+        self._connect_lock = asyncio.Lock()
+
+    def _is_connected(self) -> bool:
+        return (
+            self._connection is not None
+            and not self._connection.is_closed
+            and self._exchange is not None
+        )
 
     async def _ensure_exchange(self) -> AbstractExchange:
-        if self._exchange is not None and self._connection is not None:
+        # Fast path: no lock needed once a live connection/exchange exists.
+        if self._is_connected():
             return self._exchange
-        self._connection = await connect_robust(SECRET.RABBITMQ_URL)
-        channel = await self._connection.channel()
-        self._exchange = await declare_topology(channel)
-        return self._exchange
+        async with self._connect_lock:
+            # Re-check inside the lock: another task may have connected while
+            # we were waiting (or the connection we saw as dead may have been
+            # replaced already).
+            if self._is_connected():
+                return self._exchange
+            self._connection = await connect_robust(SECRET.RABBITMQ_URL)
+            channel = await self._connection.channel()
+            self._exchange = await declare_topology(channel)
+            return self._exchange
 
     async def publish_job(
         self,
