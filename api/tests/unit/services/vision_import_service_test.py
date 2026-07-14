@@ -6,8 +6,9 @@ import pytest
 from fastapi import HTTPException
 from starlette.datastructures import Headers, UploadFile
 
-from src.models.VisionImport import VisionImportStatus
-from src.models.VisionJob import VisionJobStatus
+from src.models.VisionImport import VisionImport, VisionImportStatus
+from src.models.VisionJob import VisionJob, VisionJobStatus
+from src.models.VisionPrediction import VisionPrediction
 from src.services.account.game.VisionImportService import (
     MAX_SCREEN_BYTES,
     MAX_SCREENS_PER_IMPORT,
@@ -17,15 +18,26 @@ from src.storage.base import import_prefix
 
 
 class FakeStorage:
-    """In-memory Storage. Keeps the service tests free of RustFS."""
+    """In-memory Storage. Keeps the service tests free of RustFS.
 
-    def __init__(self):
+    `shared_calls`, when given, is the same list passed to FakeSession /
+    FakePublisher so cross-collaborator ordering (e.g. commit vs.
+    delete_prefix) can be asserted on a single timeline."""
+
+    def __init__(self, fail_delete: bool = False, shared_calls: list[str] | None = None):
         self.puts: list[tuple[str, str, bytes]] = []
         self.deleted_prefixes: list[str] = []
         self.calls: list[str] = []
+        self.fail_delete = fail_delete
+        self._shared_calls = shared_calls
+
+    def _record(self, call: str) -> None:
+        self.calls.append(call)
+        if self._shared_calls is not None:
+            self._shared_calls.append(call)
 
     async def put_bytes(self, bucket: str, key: str, data: bytes, content_type: str) -> None:
-        self.calls.append("put_bytes")
+        self._record("put_bytes")
         self.puts.append((bucket, key, data))
 
     async def get_bytes(self, bucket: str, key: str) -> bytes:  # pragma: no cover
@@ -35,19 +47,22 @@ class FakeStorage:
         raise NotImplementedError
 
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
-        self.calls.append("delete_prefix")
+        self._record("delete_prefix")
+        if self.fail_delete:
+            raise ConnectionError("RustFS unreachable")
         self.deleted_prefixes.append(prefix)
         self.puts = [(b, k, d) for (b, k, d) in self.puts if not k.startswith(prefix)]
 
 
 class FakeSession:
-    """Records commit() calls (and their ordering relative to other mocks) without
-    needing a real DB. add()/refresh() are no-ops: the objects are already
-    populated by the service before being added."""
+    """Records commit()/delete() calls (and their ordering relative to other
+    mocks) without needing a real DB. add()/refresh() are no-ops: the objects
+    are already populated by the service before being added."""
 
     def __init__(self, calls: list[str]):
         self._calls = calls
         self.added = []
+        self.deleted = []
 
     def add(self, obj) -> None:
         self.added.append(obj)
@@ -57,6 +72,12 @@ class FakeSession:
 
     async def refresh(self, obj) -> None:
         pass
+
+    async def delete(self, obj) -> None:
+        # Recorded by type name so ordering assertions can distinguish
+        # predictions from jobs from the import itself.
+        self._calls.append(f"delete:{type(obj).__name__}")
+        self.deleted.append(obj)
 
 
 class FakePublisher:
@@ -281,3 +302,79 @@ async def test_create_import_deletes_written_objects_on_later_validation_failure
 async def test_import_prefix_matches_screen_key_layout():
     import_id = uuid.uuid4()
     assert import_prefix(import_id) == f"imports/{import_id}/"
+
+
+def _build_import_with_jobs_and_predictions() -> VisionImport:
+    """Two jobs, each with one prediction, wired up the way get_import's
+    selectinload would leave them (vision_import.jobs / job.predictions
+    populated in memory)."""
+    vision_import = VisionImport(game_account_id=uuid.uuid4(), screens_total=2)
+    jobs = []
+    for _ in range(2):
+        job = VisionJob(import_id=vision_import.id, object_key="imports/x/y")
+        prediction = VisionPrediction(job_id=job.id, champion_name="Doctor Doom")
+        job.predictions = [prediction]
+        jobs.append(job)
+    vision_import.jobs = jobs
+    return vision_import
+
+
+@pytest.mark.asyncio
+async def test_delete_import_deletes_predictions_before_jobs_before_import():
+    """Load-bearing order: vision_prediction.job_id has no ON DELETE CASCADE,
+    so deleting a job that still has predictions would raise IntegrityError in
+    a real DB. A reordered implementation must fail this test."""
+    calls: list[str] = []
+    session = FakeSession(calls)
+    storage = FakeStorage()
+    vision_import = _build_import_with_jobs_and_predictions()
+
+    await VisionImportService.delete_import(
+        session=session, storage=storage, vision_import=vision_import
+    )
+
+    delete_calls = [c for c in calls if c.startswith("delete:")]
+    last_prediction_index = max(
+        i for i, c in enumerate(delete_calls) if c == "delete:VisionPrediction"
+    )
+    first_job_index = min(i for i, c in enumerate(delete_calls) if c == "delete:VisionJob")
+    import_index = next(i for i, c in enumerate(delete_calls) if c == "delete:VisionImport")
+
+    assert last_prediction_index < first_job_index
+    assert first_job_index < import_index
+
+
+@pytest.mark.asyncio
+async def test_delete_import_deletes_storage_prefix_after_commit():
+    calls: list[str] = []
+    session = FakeSession(calls)
+    storage = FakeStorage(shared_calls=calls)
+    vision_import = _build_import_with_jobs_and_predictions()
+
+    await VisionImportService.delete_import(
+        session=session, storage=storage, vision_import=vision_import
+    )
+
+    assert "commit" in calls
+    assert "delete_prefix" in calls
+    assert calls.index("commit") < calls.index("delete_prefix")
+    assert storage.deleted_prefixes == [import_prefix(vision_import.id)]
+
+
+@pytest.mark.asyncio
+async def test_delete_import_survives_storage_failure():
+    """If RustFS is unreachable after the DB rows are already committed gone,
+    the delete must still be reported as successful: the objects are orphaned
+    but the `vision` bucket's retention policy reaps them after 7 days, and
+    raising here would report a failure for a deletion that already
+    committed."""
+    session = FakeSession([])
+    storage = FakeStorage(fail_delete=True)
+    vision_import = _build_import_with_jobs_and_predictions()
+
+    await VisionImportService.delete_import(
+        session=session, storage=storage, vision_import=vision_import
+    )
+
+    assert "delete_prefix" in storage.calls
+    assert storage.deleted_prefixes == []

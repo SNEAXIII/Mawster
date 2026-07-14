@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from fastapi import HTTPException, UploadFile
@@ -23,6 +24,8 @@ from src.utils.db import SessionDep
 MAX_SCREENS_PER_IMPORT = 40
 MAX_SCREEN_BYTES = 8 * 1024 * 1024
 ALLOWED_CONTENT_TYPES = {"image/png", "image/jpeg", "image/webp"}
+
+logger = logging.getLogger(__name__)
 
 
 class VisionImportService:
@@ -172,4 +175,19 @@ class VisionImportService:
             await session.delete(job)
         await session.delete(vision_import)
         await session.commit()
-        await storage.delete_prefix(SECRET.RUSTFS_BUCKET_VISION, import_prefix(vision_import.id))
+        try:
+            await storage.delete_prefix(
+                SECRET.RUSTFS_BUCKET_VISION, import_prefix(vision_import.id)
+            )
+        except Exception:  # noqa: BLE001
+            # The DB rows are already committed gone at this point, so raising here
+            # would report a failure for a deletion that already succeeded. The
+            # `vision` bucket has a retention policy that purges objects after 7
+            # days, so an orphaned object here is reaped automatically rather than
+            # leaking forever — letting the delete succeed is safe, not sloppy.
+            logger.warning(
+                "Failed to delete RustFS objects for vision import %s (prefix %s)",
+                vision_import.id,
+                import_prefix(vision_import.id),
+                exc_info=True,
+            )
