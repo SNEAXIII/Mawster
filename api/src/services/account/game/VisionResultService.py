@@ -22,17 +22,19 @@ class VisionResultService:
         if job is None:
             # The import was deleted while the worker was still working on it.
             # Ignore rather than raise: a raise would nack and loop forever.
-            logger.info("vision result for unknown job %s — ignoring", message.job_id)
+            logger.warning("vision result for unknown job %s — ignoring", message.job_id)
             return
-        if job.status == VisionJobStatus.DONE:
-            # AMQP is at-least-once: a redelivery will happen one day. Without
-            # this guard it would duplicate every prediction of the screenshot.
-            logger.info("vision result for already-done job %s — ignoring", job.id)
+        if job.status in (VisionJobStatus.DONE, VisionJobStatus.FAILED):
+            # AMQP is at-least-once: a redelivery will happen one day. Without this
+            # guard, redelivering a terminal job would duplicate every prediction of
+            # the screenshot (DONE) or double-count screens_done (FAILED). The retry
+            # path is unaffected: it puts the job back to PENDING before requeueing it.
+            logger.info("vision result for already-terminal job %s — ignoring", job.id)
             return
 
         vision_import = await session.get(VisionImport, message.import_id)
         if vision_import is None:
-            logger.info("vision result for unknown import %s — ignoring", message.import_id)
+            logger.warning("vision result for unknown import %s — ignoring", message.import_id)
             return
 
         job.attempts += 1
@@ -63,7 +65,6 @@ class VisionResultService:
         job.status = VisionJobStatus.DONE
         job.result_key = message.result_key
         job.error = None
-        session.add(job)
 
     @classmethod
     def _fail(cls, session: SessionDep, job: VisionJob, message: VisionResultMessage) -> None:
@@ -76,7 +77,6 @@ class VisionResultService:
         """
         job.status = VisionJobStatus.FAILED
         job.error = message.error
-        session.add(job)
         logger.warning("vision job %s failed: %s", job.id, job.error)
 
     @classmethod
@@ -88,4 +88,3 @@ class VisionResultService:
             vision_import.status = VisionImportStatus.DONE
         else:
             vision_import.status = VisionImportStatus.RUNNING
-        session.add(vision_import)

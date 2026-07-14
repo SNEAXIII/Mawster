@@ -104,6 +104,23 @@ async def test_redelivery_of_an_already_done_job_is_ignored():
 
 
 @pytest.mark.asyncio
+async def test_redelivery_of_an_already_failed_job_is_ignored():
+    """AMQP is at-least-once. Without this guard a redelivery of a terminal FAILED
+    job would double-count screens_done and increment attempts again."""
+    job, vision_import = _job(status=VisionJobStatus.FAILED, attempts=1), _import(total=2, done=1)
+    session = FakeSession(job, vision_import)
+    message = VisionResultMessage(
+        job_id=job.id, import_id=vision_import.id, status="failed", error="ocr blew up"
+    )
+
+    await VisionResultService.handle(session, message)
+
+    assert session.added == []
+    assert vision_import.screens_done == 1
+    assert job.attempts == 1
+
+
+@pytest.mark.asyncio
 async def test_result_for_a_deleted_job_is_ignored():
     """The user can delete the import while the worker is still chewing on it."""
     vision_import = _import()
