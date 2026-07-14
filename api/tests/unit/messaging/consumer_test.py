@@ -7,14 +7,13 @@ import pytest
 from src.messaging.consumer import VisionResultConsumer
 
 
-def _message(body: bytes) -> MagicMock:
+def _message(body: bytes, redelivered: bool = False) -> MagicMock:
     message = MagicMock()
     message.body = body
+    message.redelivered = redelivered
     message.reject = AsyncMock()
-    process = MagicMock()
-    process.__aenter__ = AsyncMock(return_value=None)
-    process.__aexit__ = AsyncMock(return_value=None)
-    message.process = MagicMock(return_value=process)
+    message.nack = AsyncMock()
+    message.ack = AsyncMock()
     return message
 
 
@@ -25,6 +24,38 @@ async def test_valid_message_is_handed_to_the_service(mocker):
     )
     mocker.patch("src.messaging.consumer.Session", MagicMock())
     consumer = VisionResultConsumer()
+    job_id = str(uuid.uuid4())
+    import_id = str(uuid.uuid4())
+    payload = {
+        "job_id": job_id,
+        "import_id": import_id,
+        "status": "done",
+        "predictions": [],
+    }
+
+    message = _message(json.dumps(payload).encode())
+    await consumer._on_message(message)
+
+    handle.assert_awaited_once()
+    handled_result = handle.await_args.args[1]
+    assert str(handled_result.job_id) == job_id
+    assert str(handled_result.import_id) == import_id
+    message.ack.assert_awaited_once()
+    message.nack.assert_not_awaited()
+    message.reject.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_handle_failure_not_yet_redelivered_is_nacked_for_one_retry(mocker):
+    """handle() is idempotent, so a single replay is safe insurance against a
+    transient failure (DB blip, deadlock)."""
+    mocker.patch(
+        "src.messaging.consumer.VisionResultService.handle",
+        new_callable=AsyncMock,
+        side_effect=RuntimeError("boom"),
+    )
+    mocker.patch("src.messaging.consumer.Session", MagicMock())
+    consumer = VisionResultConsumer()
     payload = {
         "job_id": str(uuid.uuid4()),
         "import_id": str(uuid.uuid4()),
@@ -32,9 +63,38 @@ async def test_valid_message_is_handed_to_the_service(mocker):
         "predictions": [],
     }
 
-    await consumer._on_message(_message(json.dumps(payload).encode()))
+    message = _message(json.dumps(payload).encode(), redelivered=False)
+    await consumer._on_message(message)
 
-    handle.assert_awaited_once()
+    message.nack.assert_awaited_once_with(requeue=True)
+    message.reject.assert_not_awaited()
+    message.ack.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_handle_failure_already_redelivered_is_rejected_without_requeue(mocker):
+    """The replay also failed: this looks deterministic, not transient. Give up
+    rather than hot-loop, since this queue has no DLQ to catch the drop."""
+    mocker.patch(
+        "src.messaging.consumer.VisionResultService.handle",
+        new_callable=AsyncMock,
+        side_effect=RuntimeError("boom"),
+    )
+    mocker.patch("src.messaging.consumer.Session", MagicMock())
+    consumer = VisionResultConsumer()
+    payload = {
+        "job_id": str(uuid.uuid4()),
+        "import_id": str(uuid.uuid4()),
+        "status": "done",
+        "predictions": [],
+    }
+
+    message = _message(json.dumps(payload).encode(), redelivered=True)
+    await consumer._on_message(message)
+
+    message.reject.assert_awaited_once_with(requeue=False)
+    message.nack.assert_not_awaited()
+    message.ack.assert_not_awaited()
 
 
 @pytest.mark.asyncio

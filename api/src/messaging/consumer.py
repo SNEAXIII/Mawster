@@ -63,15 +63,43 @@ class VisionResultConsumer:
             payload = json.loads(message.body)
             result = VisionResultMessage.model_validate(payload)
         except (json.JSONDecodeError, ValidationError):
-            # Permanently broken: no amount of retrying will parse it. Send it to
-            # the DLQ. Requeuing would spin this consumer forever.
-            logger.exception("undecodable vision result, sending to the dead-letter queue")
+            # Broken message: no amount of retrying will parse it. Reject without
+            # requeue. Requeuing would spin this consumer at 100% CPU forever.
+            # `vision.results` has no dead-letter exchange, so this just drops it.
+            logger.exception("undecodable vision result, rejecting without requeue")
             await message.reject(requeue=False)
             return
 
-        async with message.process():
+        try:
             async with Session() as session:
                 await VisionResultService.handle(session, result)
+        except Exception:  # noqa: BLE001
+            # Unlike a broken payload, we don't know whether this is transient
+            # (DB blip, deadlock) or deterministic. handle() is idempotent — it
+            # short-circuits on jobs already DONE/FAILED — so one replay is safe
+            # and cheap insurance against a transient failure.
+            if not message.redelivered:
+                logger.error(
+                    "vision result handling failed for job_id=%s, requeueing for one retry",
+                    result.job_id,
+                    exc_info=True,
+                )
+                await message.nack(requeue=True)
+            else:
+                # The retry also failed: this looks deterministic, not transient.
+                # Give up rather than hot-loop. There is no DLQ on this queue, so
+                # this message is gone for good — log loudly, this needs a human.
+                logger.error(
+                    "DROPPING vision result after retry failed: job_id=%s "
+                    "import_id=%s - no DLQ on this queue, result is LOST",
+                    result.job_id,
+                    result.import_id,
+                    exc_info=True,
+                )
+                await message.reject(requeue=False)
+            return
+
+        await message.ack()
 
     async def stop(self) -> None:
         if self._task is not None:
