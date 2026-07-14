@@ -29,4 +29,8 @@ from src.models.GameAccountMastery import GameAccountMastery  # noqa: F401
 from src.models.NoteReport import NoteReport  # noqa: F401
 from src.models.UserMute import UserMute  # noqa: F401
 from src.models.UserWarn import UserWarn  # noqa: F401
+from src.models.VisionImport import VisionImport  # noqa: F401
+from src.models.VisionJob import VisionJob  # noqa: F401
+from src.models.VisionPrediction import VisionPrediction  # noqa: F401
+from src.models.VisionSample import VisionSample  # noqa: F401
 from sqlmodel import SQLModel  # noqa: F401
