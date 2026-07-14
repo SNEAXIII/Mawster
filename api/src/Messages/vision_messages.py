@@ -1,0 +1,7 @@
+VISION_IMPORT_NOT_FOUND = "Vision import not found"
+NOT_YOUR_VISION_IMPORT = "This import does not belong to you"
+NO_SCREENS_PROVIDED = "At least one screenshot is required"
+TOO_MANY_SCREENS = "Too many screenshots: {count} provided, {maximum} allowed"
+SCREEN_TOO_LARGE = "Screenshot '{filename}' is too large ({size} bytes, max {maximum})"
+UNSUPPORTED_SCREEN_TYPE = "Screenshot '{filename}' has unsupported type '{content_type}'"
+BROKER_UNAVAILABLE = "The vision service is unavailable, please retry in a moment"
