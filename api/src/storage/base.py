@@ -17,6 +17,14 @@ def crop_key(import_id: uuid.UUID, job_id: uuid.UUID, index: int) -> str:
     return f"imports/{import_id}/{job_id}/crops/{index}.png"
 
 
+def import_prefix(import_id: uuid.UUID) -> str:
+    """Prefix covering every object of an import, across all its jobs.
+
+    Cross-repo contract with the vision worker: do not change this layout.
+    """
+    return f"imports/{import_id}/"
+
+
 class Storage(Protocol):
     """Object storage seam. The S3 implementation is the only one in prod, but
     tests swap in a fake so they never need a running RustFS."""
@@ -26,3 +34,5 @@ class Storage(Protocol):
     async def get_bytes(self, bucket: str, key: str) -> bytes: ...
 
     async def presign_get(self, bucket: str, key: str, expires_in: int) -> str: ...
+
+    async def delete_prefix(self, bucket: str, prefix: str) -> None: ...

@@ -38,3 +38,18 @@ class S3Storage(Storage):
                 Params={"Bucket": bucket, "Key": key},
                 ExpiresIn=expires_in,
             )
+
+    async def delete_prefix(self, bucket: str, prefix: str) -> None:
+        async with self._client() as client:
+            continuation_token = None
+            while True:
+                kwargs = {"Bucket": bucket, "Prefix": prefix}
+                if continuation_token is not None:
+                    kwargs["ContinuationToken"] = continuation_token
+                response = await client.list_objects_v2(**kwargs)
+                keys = [{"Key": obj["Key"]} for obj in response.get("Contents", [])]
+                if keys:
+                    await client.delete_objects(Bucket=bucket, Delete={"Objects": keys})
+                if not response.get("IsTruncated"):
+                    break
+                continuation_token = response.get("NextContinuationToken")
