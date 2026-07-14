@@ -34,6 +34,17 @@ class Settings(BaseSettings):
     API_PORT: int = Field(... if IS_PROD else 8000)
     EMAIL_PEPPER: str = Field(... if IS_PROD else "dev-email-pepper")
     EMAIL_PEPPER_VERSION: int = Field(default=1)
+    # --- Vision (roster import) ---------------------------------------------
+    RABBITMQ_URL: str = Field(... if IS_PROD else "amqp://mawster:mawster@localhost:5672/")
+    RUSTFS_ENDPOINT: str = Field(... if IS_PROD else "http://localhost:9000")
+    RUSTFS_ACCESS_KEY: str = Field(... if IS_PROD else "mawster")
+    RUSTFS_SECRET_KEY: str = Field(... if IS_PROD else "mawsterpassword")
+    RUSTFS_BUCKET_VISION: str = Field("vision")
+    RUSTFS_BUCKET_DATASET: str = Field("dataset")
+    # Le consumer AMQP est branché dans un plan ultérieur ; désactivé par défaut pour que
+    # les tests et la CI ne dépendent pas d'un broker.
+    VISION_CONSUMER_ENABLED: bool = Field(default=False)
+    VISION_PRESIGN_EXPIRE_SECONDS: int = Field(default=300)
     model_config = SettingsConfigDict(env_file=api_file)
 
 
