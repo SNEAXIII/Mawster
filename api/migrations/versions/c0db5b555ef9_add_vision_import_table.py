@@ -1,8 +1,8 @@
-"""add_vision_import_tables
+"""add_vision_import_table
 
-Revision ID: 002387460f60
-Revises: 5e7dadb0ba03
-Create Date: 2026-07-14 12:44:13.553830
+Revision ID: c0db5b555ef9
+Revises: f1e8de91f46f
+Create Date: 2026-07-14 17:12:28.891296
 
 """
 
@@ -14,8 +14,8 @@ import sqlmodel  # noqa: F401
 
 
 # revision identifiers, used by Alembic.
-revision: str = "002387460f60"
-down_revision: Union[str, None] = "5e7dadb0ba03"
+revision: str = "c0db5b555ef9"
+down_revision: Union[str, None] = "f1e8de91f46f"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
