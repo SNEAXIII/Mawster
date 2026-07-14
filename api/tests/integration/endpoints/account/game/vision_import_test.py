@@ -168,6 +168,31 @@ async def test_get_import_of_another_user_is_forbidden(fake_infra):
 
 
 @pytest.mark.asyncio
+async def test_delete_import_of_another_user_is_forbidden(fake_infra):
+    await push_one_user()
+    await push_user2()
+    owner_account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+    created = await _post_import(
+        create_auth_headers(str(USER_ID)), owner_account.id, [_png("a.png")]
+    )
+    import_id = created.json()["id"]
+
+    async with get_test_client() as client:
+        deleted = await client.delete(
+            f"/vision/imports/{import_id}", headers=create_auth_headers(str(USER2_ID))
+        )
+        # Verify the import still exists by checking the owner can still GET it
+        still_exists = await client.get(
+            f"/vision/imports/{import_id}", headers=create_auth_headers(str(USER_ID))
+        )
+
+    assert deleted.status_code == 403
+    assert still_exists.status_code == 200
+
+
+@pytest.mark.asyncio
 async def test_get_unknown_import_is_404(fake_infra):
     await push_one_user()
 
