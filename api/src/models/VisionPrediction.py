@@ -15,12 +15,17 @@ class VisionPrediction(UUIDBase, table=True):
     The numeric fields are deliberately unconstrained: they hold what the model
     read, which may be wrong. Bounds are enforced when the user confirms the
     import and a real ChampionUser is written.
+
+    champion_name is nullable: CLIP can fail to recognise a champion. That row
+    still matters — the user fixes it in the review screen, and the correction is
+    the most valuable ground truth we can collect.
     """
 
     __tablename__ = "vision_prediction"
 
     job_id: uuid.UUID = Field(foreign_key="vision_job.id")
-    champion_name: str = Field(max_length=100)
+    champion_name: Optional[str] = Field(default=None, max_length=100)
+    champion_class: Optional[str] = Field(default=None, max_length=50)
     stars: int = 0
     rank: int = 0
     signature: int = 0

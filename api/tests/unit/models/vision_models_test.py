@@ -34,3 +34,20 @@ def test_vision_prediction_accepts_out_of_range_values():
     )
     assert prediction.stars == 2
     assert prediction.rank == 9
+
+
+def test_vision_prediction_accepts_unknown_champion():
+    """CLIP can fail to recognise a champion. That row must still be storable —
+    it is the most valuable dataset sample there is."""
+    prediction = VisionPrediction(
+        job_id=uuid.uuid4(),
+        champion_name=None,
+        champion_class=None,
+        stars=7,
+        rank=3,
+        signature=0,
+        ascension=0,
+        confidence=0.11,
+    )
+    assert prediction.champion_name is None
+    assert prediction.champion_class is None
