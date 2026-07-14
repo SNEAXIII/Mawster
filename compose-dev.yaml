@@ -53,6 +53,36 @@ services:
       - PMA_PORT=3306
     depends_on:
       - mariadb-test
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq-dev
+    networks:
+      - internal-dev
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      - RABBITMQ_DEFAULT_USER=mawster
+      - RABBITMQ_DEFAULT_PASS=mawster
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: rustfs-dev
+    networks:
+      - internal-dev
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      - RUSTFS_ACCESS_KEY=mawster
+      - RUSTFS_SECRET_KEY=mawsterpassword
+      - RUSTFS_CONSOLE_ENABLE=true
+    volumes:
+      - ./db/rustfs-data:/data
   static:
     build:
       context: .
