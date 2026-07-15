@@ -20,7 +20,12 @@ class WarFightNote(UUIDBase, TimestampMixin, table=True):
         sa.UniqueConstraint("war_id", "battlegroup", "node_number", name="uq_war_fight_note_node"),
     )
 
-    war_defense_placement_id: uuid.UUID = Field(foreign_key="war_defense_placement.id")
+    # Nullable + SET NULL: removing/replacing a defender must not destroy the node's note.
+    # This column is provenance only (written once at creation, never read back), so losing
+    # the link when the placement is deleted is safe; the note stays keyed on its node.
+    war_defense_placement_id: Optional[uuid.UUID] = Field(
+        default=None, foreign_key="war_defense_placement.id", ondelete="SET NULL"
+    )
     war_id: uuid.UUID = Field(foreign_key="war.id")
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
     battlegroup: Battlegroup

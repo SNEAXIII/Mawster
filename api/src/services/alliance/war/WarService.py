@@ -429,6 +429,80 @@ class WarService:
         return await cls._placement_dto(session, await cls._load_placement(session, placement.id))
 
     @classmethod
+    async def _cleanup_attacker_associations(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        battlegroup: int,
+        node_number: int,
+        attacker_champion_user_id: Optional[uuid.UUID],
+    ) -> None:
+        """Remove the synergy + prefight rows tied to a node/attacker.
+
+        Shared by ``remove_attacker`` (attacker detached from the placement) and
+        ``remove_defender`` (the whole placement deleted). Must be called *after*
+        the attacker is detached / the placement deleted so the "remaining nodes"
+        check no longer counts the current node.
+        """
+        if attacker_champion_user_id is not None:
+            # If this was the attacker's last node in this war+BG, remove their synergy entry
+            remaining = await session.exec(
+                select(WarDefensePlacement).where(
+                    and_(
+                        WarDefensePlacement.war_id == war_id,
+                        WarDefensePlacement.battlegroup == battlegroup,
+                        WarDefensePlacement.attacker_champion_user_id == attacker_champion_user_id,
+                    )
+                )
+            )
+            if not remaining.first():
+                synergy_result = await session.exec(
+                    select(WarSynergyAttacker).where(
+                        and_(
+                            WarSynergyAttacker.war_id == war_id,
+                            WarSynergyAttacker.battlegroup == battlegroup,
+                            WarSynergyAttacker.champion_user_id == attacker_champion_user_id,
+                        )
+                    )
+                )
+                synergy = synergy_result.first()
+                if synergy:
+                    await session.delete(synergy)
+                    await session.commit()
+
+                # Clean up synergy entries where the removed attacker was the target
+                target_synergy_result = await session.exec(
+                    select(WarSynergyAttacker).where(
+                        and_(
+                            WarSynergyAttacker.war_id == war_id,
+                            WarSynergyAttacker.battlegroup == battlegroup,
+                            WarSynergyAttacker.target_champion_user_id == attacker_champion_user_id,
+                        )
+                    )
+                )
+                target_synergies = target_synergy_result.all()
+                for ts in target_synergies:
+                    await session.delete(ts)
+                if target_synergies:
+                    await session.commit()
+
+        # Clean up prefight entries targeting this node
+        prefight_cleanup_result = await session.exec(
+            select(WarPrefightAttacker).where(
+                and_(
+                    WarPrefightAttacker.war_id == war_id,
+                    WarPrefightAttacker.battlegroup == battlegroup,
+                    WarPrefightAttacker.target_node_number == node_number,
+                )
+            )
+        )
+        prefights_to_delete = prefight_cleanup_result.all()
+        for pf in prefights_to_delete:
+            await session.delete(pf)
+        if prefights_to_delete:
+            await session.commit()
+
+    @classmethod
     async def remove_defender(
         cls,
         session: SessionDep,
@@ -451,8 +525,15 @@ class WarService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=NO_DEFENDER_ON_NODE,
             )
+        # Removing the defender tears down the node's whole attack plan: detach the
+        # attacker and drop its synergy/prefight rows (they don't FK the placement, so
+        # they would otherwise be orphaned). The note survives via its SET NULL FK.
+        attacker_champion_user_id = placement.attacker_champion_user_id
         await session.delete(placement)
         await session.commit()
+        await cls._cleanup_attacker_associations(
+            session, war_id, battlegroup, node_number, attacker_champion_user_id
+        )
 
     @classmethod
     async def end_war(
@@ -881,62 +962,9 @@ class WarService:
         session.add(placement)
         await session.commit()
 
-        # If this was the attacker's last node in this war+BG, remove their synergy entry
-        remaining = await session.exec(
-            select(WarDefensePlacement).where(
-                and_(
-                    WarDefensePlacement.war_id == war_id,
-                    WarDefensePlacement.battlegroup == battlegroup,
-                    WarDefensePlacement.attacker_champion_user_id == removed_champion_user_id,
-                )
-            )
+        await cls._cleanup_attacker_associations(
+            session, war_id, battlegroup, node_number, removed_champion_user_id
         )
-        if not remaining.first():
-            synergy_result = await session.exec(
-                select(WarSynergyAttacker).where(
-                    and_(
-                        WarSynergyAttacker.war_id == war_id,
-                        WarSynergyAttacker.battlegroup == battlegroup,
-                        WarSynergyAttacker.champion_user_id == removed_champion_user_id,
-                    )
-                )
-            )
-            synergy = synergy_result.first()
-            if synergy:
-                await session.delete(synergy)
-                await session.commit()
-
-            # Clean up synergy entries where the removed attacker was the target
-            target_synergy_result = await session.exec(
-                select(WarSynergyAttacker).where(
-                    and_(
-                        WarSynergyAttacker.war_id == war_id,
-                        WarSynergyAttacker.battlegroup == battlegroup,
-                        WarSynergyAttacker.target_champion_user_id == removed_champion_user_id,
-                    )
-                )
-            )
-            target_synergies = target_synergy_result.all()
-            for ts in target_synergies:
-                await session.delete(ts)
-            if target_synergies:
-                await session.commit()
-
-        # Clean up prefight entries targeting this node
-        prefight_cleanup_result = await session.exec(
-            select(WarPrefightAttacker).where(
-                and_(
-                    WarPrefightAttacker.war_id == war_id,
-                    WarPrefightAttacker.battlegroup == battlegroup,
-                    WarPrefightAttacker.target_node_number == node_number,
-                )
-            )
-        )
-        prefights_to_delete = prefight_cleanup_result.all()
-        for pf in prefights_to_delete:
-            await session.delete(pf)
-        if prefights_to_delete:
-            await session.commit()
 
         return await cls._placement_dto(session, await cls._load_placement(session, placement.id))
 
