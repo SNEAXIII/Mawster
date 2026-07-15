@@ -108,6 +108,24 @@ services:
     restart: 'no'
     volumes:
       - ./db/rustfs-data:/data
+  vision-worker:
+    build:
+      context: ./mcoc-vision
+    image: mawster-vision-worker:local
+    container_name: vision-worker
+    networks:
+      - internal-dev
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_URL=amqp://mawster:mawster@rabbitmq:5672/
+      - RUSTFS_ENDPOINT=http://rustfs:9000
+      - RUSTFS_ACCESS_KEY=mawster
+      - RUSTFS_SECRET_KEY=mawsterpassword
+      - RUSTFS_BUCKET_VISION=vision
+      - MCOC_DEVICE=cpu
+    restart: unless-stopped
   static:
     build:
       context: .

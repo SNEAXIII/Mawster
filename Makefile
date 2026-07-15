@@ -1,7 +1,7 @@
 # Root Makefile — E2E test orchestration + backup operations
 .PHONY: help e2e e2e-open e2e-parallel e2e-parallel-quiet e2e-db e2e-stop \
         backup-now backup-now-staging backup-list backup-restore backup-restore-staging backup-restore-remote deploy db \
-        migrate migrate-staging vision-up vision-down
+        migrate migrate-staging vision-up vision-down worker-up worker-logs
 
 NEXTAUTH_SECRET ?= e2e-local-nextauth-secret
 NEXTAUTH_URL    ?= http://localhost:3000
@@ -232,6 +232,12 @@ vision-up:
 
 vision-down:
 	docker compose -f compose-dev.yaml stop rabbitmq rustfs
+
+worker-up:
+	docker compose -f compose-dev.yaml up -d --build vision-worker
+
+worker-logs:
+	docker compose -f compose-dev.yaml logs -f vision-worker
 
 migrate:
 	docker service rm mawster-migrate 2>/dev/null || true
