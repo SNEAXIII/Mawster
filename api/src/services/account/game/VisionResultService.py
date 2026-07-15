@@ -1,5 +1,9 @@
 import logging
 
+from fastapi import HTTPException
+from starlette import status
+
+from src.Messages.vision_messages import BROKER_UNAVAILABLE, JOB_NEVER_QUEUED
 from src.dto.account.game.dto_vision_result import VisionResultMessage
 from src.messaging.publisher import VisionPublisher
 from src.models.VisionImport import VisionImport, VisionImportStatus
@@ -65,7 +69,6 @@ class VisionResultService:
         """
         job.status = VisionJobStatus.PENDING
         job.error = None
-        session.add(job)
 
         vision_import.screens_done = max(0, vision_import.screens_done - 1)
         vision_import.status = (
@@ -73,16 +76,32 @@ class VisionResultService:
             if vision_import.screens_done == 0
             else VisionImportStatus.RUNNING
         )
-        session.add(vision_import)
 
         await session.commit()
 
-        await publisher.publish_job(
-            job_id=job.id,
-            import_id=vision_import.id,
-            bucket=SECRET.RUSTFS_BUCKET_VISION,
-            object_key=job.object_key,
-        )
+        try:
+            await publisher.publish_job(
+                job_id=job.id,
+                import_id=vision_import.id,
+                bucket=SECRET.RUSTFS_BUCKET_VISION,
+                object_key=job.object_key,
+            )
+        except Exception as error:  # noqa: BLE001
+            # A job left PENDING but never actually queued is unreachable AND
+            # unrecoverable: only FAILED jobs are retryable (see the controller's
+            # 409), so a broker blip here would strand it forever with no worker
+            # ever picking it up and no way for the user to retry again. Revert
+            # to FAILED — the state it was in before this call — so it stays
+            # within the user's reach.
+            job.status = VisionJobStatus.FAILED
+            job.error = JOB_NEVER_QUEUED
+            vision_import.screens_done += 1
+            vision_import.status = cls._status_for_progress(vision_import)
+            await session.commit()
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=BROKER_UNAVAILABLE
+            ) from error
+
         logger.info("vision job %s relaunched by the user (attempt %s)", job.id, job.attempts)
 
     @classmethod
@@ -123,7 +142,11 @@ class VisionResultService:
         """A failed screenshot still counts as a finished one — otherwise the
         import never reaches `done` and the user watches a spinner forever."""
         vision_import.screens_done += 1
+        vision_import.status = cls._status_for_progress(vision_import)
+
+    @classmethod
+    def _status_for_progress(cls, vision_import: VisionImport) -> VisionImportStatus:
+        """DONE once every screenshot has landed (success or failure), RUNNING otherwise."""
         if vision_import.screens_done >= vision_import.screens_total:
-            vision_import.status = VisionImportStatus.DONE
-        else:
-            vision_import.status = VisionImportStatus.RUNNING
+            return VisionImportStatus.DONE
+        return VisionImportStatus.RUNNING

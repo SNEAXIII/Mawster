@@ -1,7 +1,9 @@
 import uuid
 
 import pytest
+from fastapi import HTTPException
 
+from src.Messages.vision_messages import JOB_NEVER_QUEUED
 from src.dto.account.game.dto_vision_result import VisionPredictionMessage, VisionResultMessage
 from src.models.VisionImport import VisionImport, VisionImportStatus
 from src.models.VisionJob import VisionJob, VisionJobStatus
@@ -14,6 +16,13 @@ class FakePublisher:
 
     async def publish_job(self, job_id, import_id, bucket, object_key) -> None:
         self.published.append(job_id)
+
+
+class RaisingPublisher:
+    """Simulates a broker blip: every publish attempt fails."""
+
+    async def publish_job(self, job_id, import_id, bucket, object_key) -> None:
+        raise RuntimeError("broker unavailable")
 
 
 class FakeSession:
@@ -208,3 +217,26 @@ async def test_retry_of_the_only_job_puts_the_import_back_to_pending():
 
     assert vision_import.screens_done == 0
     assert vision_import.status == VisionImportStatus.PENDING
+
+
+@pytest.mark.asyncio
+async def test_retry_reverts_to_failed_when_publish_fails():
+    """A publish failure after the rewind-commit must not strand the job: only
+    FAILED jobs are retryable, so a job left PENDING-but-unqueued would be
+    unreachable forever. The revert must restore the exact pre-retry state."""
+    job = _job(status=VisionJobStatus.FAILED, attempts=1)
+    job.error = "not a roster"
+    vision_import = _import(total=2, done=2)
+    vision_import.status = VisionImportStatus.DONE
+    session = FakeSession(job, vision_import)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await VisionResultService.retry_job(session, RaisingPublisher(), job, vision_import)
+
+    assert exc_info.value.status_code == 503
+    assert job.status == VisionJobStatus.FAILED
+    assert job.error == JOB_NEVER_QUEUED
+    assert vision_import.screens_done == 2
+    assert vision_import.status == VisionImportStatus.DONE
+    # Rewind commit + compensating revert commit.
+    assert session.commits == 2

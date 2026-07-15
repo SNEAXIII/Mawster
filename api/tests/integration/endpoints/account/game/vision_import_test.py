@@ -43,8 +43,12 @@ class FakePublisher:
 
     def __init__(self):
         self.published: list[dict] = []
+        self.fail_next = False
 
     async def publish_job(self, job_id, import_id, bucket, object_key) -> None:
+        if self.fail_next:
+            self.fail_next = False
+            raise RuntimeError("broker unavailable")
         self.published.append(
             {
                 "job_id": job_id,
@@ -297,6 +301,41 @@ async def test_retry_of_a_job_that_did_not_fail_is_rejected(fake_infra):
         response = await client.post(f"/vision/jobs/{job_id}/retry", headers=headers)
 
     assert response.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_retry_reverts_to_failed_when_publish_fails(fake_infra):
+    """A broker blip during retry must not strand the job PENDING-but-unqueued:
+    only FAILED jobs are retryable, so that state would be unrecoverable."""
+    _, publisher = fake_infra
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+
+    created = await _post_import(headers, account.id, [_png("a.png")])
+    import_id = created.json()["id"]
+    detail = await _get_import(headers, import_id)
+    job_id = detail["jobs"][0]["id"]
+
+    await _fail_job(job_id)
+    publisher.published.clear()
+    publisher.fail_next = True
+
+    async with get_test_client() as client:
+        response = await client.post(f"/vision/jobs/{job_id}/retry", headers=headers)
+
+    assert response.status_code == 503
+    assert publisher.published == []
+
+    after = await _get_import(headers, import_id)
+    assert after["jobs"][0]["status"] == "failed"
+    assert after["screens_done"] == 1
+
+    # The job is FAILED again, so it is still retryable through the normal path.
+    async with get_test_client() as client:
+        retried = await client.post(f"/vision/jobs/{job_id}/retry", headers=headers)
+
+    assert retried.status_code == 202
 
 
 @pytest.mark.asyncio
