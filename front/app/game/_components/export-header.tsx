@@ -1,11 +1,11 @@
-'use client';
+'use client'
 
 interface ExportHeaderProps {
-  allianceTag: string;
-  allianceName: string;
-  modeLabel: string;
-  bg: number;
-  opponentName?: string;
+  allianceTag: string
+  allianceName: string
+  modeLabel: string
+  bg: number
+  opponentName?: string
 }
 
 export default function ExportHeader({
@@ -25,5 +25,5 @@ export default function ExportHeader({
       <span className='font-medium'>BG {bg}</span>
       <span>{new Date().toLocaleDateString()}</span>
     </div>
-  );
+  )
 }

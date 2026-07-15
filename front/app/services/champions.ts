@@ -1,43 +1,43 @@
 // ─── Types ───────────────────────────────────────────────
 export interface Champion {
-  id: string;
-  name: string;
-  champion_class: string;
-  image_url: string | null;
-  is_7_star: boolean;
-  is_ascendable: boolean;
-  has_prefight: boolean;
-  alias: string | null;
+  id: string
+  name: string
+  champion_class: string
+  image_url: string | null
+  is_7_star: boolean
+  is_ascendable: boolean
+  has_prefight: boolean
+  alias: string | null
 }
 
 export interface FetchChampionsResponse {
-  champions: Champion[];
-  total_champions: number;
-  total_pages: number;
-  current_page: number;
+  champions: Champion[]
+  total_champions: number
+  total_pages: number
+  current_page: number
 }
 
 interface ApiError {
-  detail?: string;
-  message?: string;
-  statusCode?: number;
+  detail?: string
+  message?: string
+  statusCode?: number
 }
 
 // ─── Helpers ─────────────────────────────────────────────
-const PROXY = '/api/back';
+const PROXY = '/api/back'
 
 const jsonHeaders: HeadersInit = {
   Accept: 'application/json',
   'Content-Type': 'application/json',
-};
+}
 
 async function throwOnError(response: Response, fallback: string) {
-  if (response.ok) return;
-  const data: ApiError = await response.json().catch(() => ({}));
-  const msg = data.message ?? data.detail ?? fallback;
-  const err = new Error(`Erreur ${response.status}: ${msg}`);
-  (err as Error & { status: number }).status = response.status;
-  throw err;
+  if (response.ok) return
+  const data: ApiError = await response.json().catch(() => ({}))
+  const msg = data.message ?? data.detail ?? fallback
+  const err = new Error(`Erreur ${response.status}: ${msg}`)
+  ;(err as Error & { status: number }).status = response.status
+  throw err
 }
 
 // ─── Champion classes ────────────────────────────────────
@@ -53,14 +53,14 @@ export enum ChampionClass {
 export const championClasses = [
   { value: 'all', label: 'All' },
   ...Object.values(ChampionClass).map((c) => ({ value: c, label: c })),
-];
+]
 
 // ─── API ─────────────────────────────────────────────────
 export const boolFilterOptions = [
   { value: 'all', label: 'All' },
   { value: 'true', label: 'Yes' },
   { value: 'false', label: 'No' },
-];
+]
 
 export const getChampions = async (
   page: number = 1,
@@ -70,16 +70,16 @@ export const getChampions = async (
   isAscendable: string | null = null,
   hasPrefight: string | null = null
 ): Promise<FetchChampionsResponse> => {
-  const qs = new URLSearchParams({ page: String(page), size: String(size) });
-  if (championClass && championClass !== 'all') qs.set('champion_class', championClass);
-  if (search?.trim()) qs.set('search', search.trim());
-  if (isAscendable && isAscendable !== 'all') qs.set('is_ascendable', isAscendable);
-  if (hasPrefight && hasPrefight !== 'all') qs.set('has_prefight', hasPrefight);
+  const qs = new URLSearchParams({ page: String(page), size: String(size) })
+  if (championClass && championClass !== 'all') qs.set('champion_class', championClass)
+  if (search?.trim()) qs.set('search', search.trim())
+  if (isAscendable && isAscendable !== 'all') qs.set('is_ascendable', isAscendable)
+  if (hasPrefight && hasPrefight !== 'all') qs.set('has_prefight', hasPrefight)
 
-  const response = await fetch(`${PROXY}/champions?${qs}`, { headers: jsonHeaders });
-  await throwOnError(response, 'Erreur lors de la récupération des champions');
-  return response.json();
-};
+  const response = await fetch(`${PROXY}/champions?${qs}`, { headers: jsonHeaders })
+  await throwOnError(response, 'Erreur lors de la récupération des champions')
+  return response.json()
+}
 
 export const updateChampionAlias = async (
   championId: string,
@@ -89,44 +89,44 @@ export const updateChampionAlias = async (
     method: 'PATCH',
     headers: jsonHeaders,
     body: JSON.stringify({ alias }),
-  });
-  await throwOnError(response, "Erreur lors de la mise à jour de l'alias");
-};
+  })
+  await throwOnError(response, "Erreur lors de la mise à jour de l'alias")
+}
 
 export const loadChampions = async (
   champions: {
-    name: string;
-    champion_class: string;
-    image_url?: string | null;
-    alias?: string | null;
-    is_ascendable?: boolean;
-    has_prefight?: boolean;
+    name: string
+    champion_class: string
+    image_url?: string | null
+    alias?: string | null
+    is_ascendable?: boolean
+    has_prefight?: boolean
   }[]
 ): Promise<{ message: string; created: number; updated: number; skipped: number }> => {
   const response = await fetch(`${PROXY}/admin/champions/load`, {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify(champions),
-  });
-  await throwOnError(response, 'Erreur lors du chargement des champions');
-  return response.json();
-};
+  })
+  await throwOnError(response, 'Erreur lors du chargement des champions')
+  return response.json()
+}
 
 export const exportAllChampions = async (): Promise<
   {
-    name: string;
-    champion_class: string;
-    image_url: string | null;
-    alias: string | null;
-    is_ascendable: boolean;
-    has_prefight: boolean;
+    name: string
+    champion_class: string
+    image_url: string | null
+    alias: string | null
+    is_ascendable: boolean
+    has_prefight: boolean
   }[]
 > => {
   const response = await fetch(`${PROXY}/champions?page=1&size=9999`, {
     headers: jsonHeaders,
-  });
-  await throwOnError(response, "Erreur lors de l'export des champions");
-  const data: FetchChampionsResponse = await response.json();
+  })
+  await throwOnError(response, "Erreur lors de l'export des champions")
+  const data: FetchChampionsResponse = await response.json()
   return data.champions.map((c) => ({
     name: c.name,
     champion_class: c.champion_class,
@@ -134,16 +134,16 @@ export const exportAllChampions = async (): Promise<
     alias: c.alias,
     is_ascendable: c.is_ascendable,
     has_prefight: c.has_prefight,
-  }));
-};
+  }))
+}
 
 export const deleteChampion = async (championId: string): Promise<void> => {
   const response = await fetch(`${PROXY}/admin/champions/${championId}`, {
     method: 'DELETE',
     headers: jsonHeaders,
-  });
-  await throwOnError(response, 'Erreur lors de la suppression du champion');
-};
+  })
+  await throwOnError(response, 'Erreur lors de la suppression du champion')
+}
 
 export const toggleChampionAscendable = async (
   championId: string
@@ -151,10 +151,10 @@ export const toggleChampionAscendable = async (
   const response = await fetch(`${PROXY}/admin/champions/${championId}/ascendable`, {
     method: 'PATCH',
     headers: jsonHeaders,
-  });
-  await throwOnError(response, "Erreur lors du basculement de l'ascension");
-  return response.json();
-};
+  })
+  await throwOnError(response, "Erreur lors du basculement de l'ascension")
+  return response.json()
+}
 
 export const toggleChampionPrefight = async (
   championId: string
@@ -162,20 +162,20 @@ export const toggleChampionPrefight = async (
   const response = await fetch(`${PROXY}/admin/champions/${championId}/prefight`, {
     method: 'PATCH',
     headers: jsonHeaders,
-  });
-  await throwOnError(response, 'Erreur lors du basculement du précombat');
-  return response.json();
-};
+  })
+  await throwOnError(response, 'Erreur lors du basculement du précombat')
+  return response.json()
+}
 
 export const getSeasonSagaRoles = async (
   seasonId: string
 ): Promise<{ champion_id: string; is_saga_attacker: boolean; is_saga_defender: boolean }[]> => {
   const response = await fetch(`${PROXY}/admin/seasons/${seasonId}/saga`, {
     headers: jsonHeaders,
-  });
-  await throwOnError(response, 'Erreur lors du chargement des rôles saga');
-  return response.json();
-};
+  })
+  await throwOnError(response, 'Erreur lors du chargement des rôles saga')
+  return response.json()
+}
 
 export const setChampionSagaRole = async (
   seasonId: string,
@@ -186,10 +186,10 @@ export const setChampionSagaRole = async (
     method: 'PUT',
     headers: jsonHeaders,
     body: JSON.stringify(body),
-  });
-  await throwOnError(response, 'Erreur lors de la mise à jour du rôle saga');
-  return response.json();
-};
+  })
+  await throwOnError(response, 'Erreur lors de la mise à jour du rôle saga')
+  return response.json()
+}
 
 /**
  * Build a sized champion image URL.
@@ -201,10 +201,10 @@ export function getChampionImageUrl(
   imageUrl: string | null | undefined,
   size?: number
 ): string | null {
-  if (!imageUrl) return null;
-  if (!size) return imageUrl;
+  if (!imageUrl) return null
+  if (!size) return imageUrl
   // Insert _NxN before the file extension
-  const dotIndex = imageUrl.lastIndexOf('.');
-  if (dotIndex === -1) return `${imageUrl}_${size}x${size}.png`;
-  return `${imageUrl.substring(0, dotIndex)}_${size}x${size}${imageUrl.substring(dotIndex)}`;
+  const dotIndex = imageUrl.lastIndexOf('.')
+  if (dotIndex === -1) return `${imageUrl}_${size}x${size}.png`
+  return `${imageUrl.substring(0, dotIndex)}_${size}x${size}${imageUrl.substring(dotIndex)}`
 }

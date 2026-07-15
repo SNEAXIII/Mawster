@@ -1,30 +1,30 @@
-'use client';
+'use client'
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Check, Pencil, Trash2, X } from 'lucide-react';
-import { ClassBadge } from '@/components/class-badge';
-import { ActionIconButton } from '@/components/action-icon-button';
-import { Champion, getChampionImageUrl } from '@/app/services/champions';
-import { useI18n } from '@/app/i18n';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Check, Pencil, Trash2, X } from 'lucide-react'
+import { ClassBadge } from '@/components/class-badge'
+import { ActionIconButton } from '@/components/action-icon-button'
+import { Champion, getChampionImageUrl } from '@/app/services/champions'
+import { useI18n } from '@/app/i18n'
 
 interface ChampionTableRowProps {
-  champion: Champion;
-  isEditing: boolean;
-  editingAlias: string;
-  savingAlias: boolean;
-  onStartEdit: (champion: Champion) => void;
-  onCancelEdit: () => void;
-  onSaveAlias: (championId: string) => void;
-  onAliasChange: (value: string) => void;
-  onDelete: (champion: Champion) => void;
-  onToggleAscendable: (champion: Champion) => void;
-  onTogglePrefight: (champion: Champion) => void;
-  onToggleSagaAttacker: (champion: Champion) => void;
-  onToggleSagaDefender: (champion: Champion) => void;
-  sagaAttacker: boolean;
-  sagaDefender: boolean;
-  sagaDisabled?: boolean;
+  champion: Champion
+  isEditing: boolean
+  editingAlias: string
+  savingAlias: boolean
+  onStartEdit: (champion: Champion) => void
+  onCancelEdit: () => void
+  onSaveAlias: (championId: string) => void
+  onAliasChange: (value: string) => void
+  onDelete: (champion: Champion) => void
+  onToggleAscendable: (champion: Champion) => void
+  onTogglePrefight: (champion: Champion) => void
+  onToggleSagaAttacker: (champion: Champion) => void
+  onToggleSagaDefender: (champion: Champion) => void
+  sagaAttacker: boolean
+  sagaDefender: boolean
+  sagaDisabled?: boolean
 }
 
 export default function ChampionTableRow({
@@ -45,7 +45,7 @@ export default function ChampionTableRow({
   sagaDefender,
   sagaDisabled,
 }: Readonly<ChampionTableRowProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
   return (
     <tr
       className='border-b hover:bg-accent/50'
@@ -59,7 +59,7 @@ export default function ChampionTableRow({
             alt={champion.name}
             className='size-10 rounded object-cover'
             onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
+              ;(e.target as HTMLImageElement).style.display = 'none'
             }}
           />
         ) : (
@@ -193,5 +193,5 @@ export default function ChampionTableRow({
         </div>
       </td>
     </tr>
-  );
+  )
 }

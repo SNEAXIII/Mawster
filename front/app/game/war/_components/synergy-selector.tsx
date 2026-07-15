@@ -1,22 +1,22 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import ChampionPortrait from '@/components/champion-portrait';
-import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
-import { type AvailableAttacker, getAvailableAttackers } from '@/app/services/war';
-import { useWar } from '@/app/contexts/war-context';
-import { cn } from '@/app/lib/utils';
-import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils';
+import { useState, useEffect } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import ChampionPortrait from '@/components/champion-portrait'
+import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
+import { type AvailableAttacker, getAvailableAttackers } from '@/app/services/war'
+import { useWar } from '@/app/contexts/war-context'
+import { cn } from '@/app/lib/utils'
+import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils'
 
 interface SynergySelectorDialogProps {
-  open: boolean;
-  onClose: () => void;
-  targetChampionUserId: string;
-  targetGameAccountId: string;
-  targetChampionName: string;
+  open: boolean
+  onClose: () => void
+  targetChampionUserId: string
+  targetGameAccountId: string
+  targetChampionName: string
 }
 
 export default function SynergySelectorDialog({
@@ -26,37 +26,37 @@ export default function SynergySelectorDialog({
   targetGameAccountId,
   targetChampionName,
 }: Readonly<SynergySelectorDialogProps>) {
-  const { t } = useI18n();
-  const { selectedAllianceId, activeWarId, selectedBg, handleAddSynergy, synergies } = useWar();
-  const [attackers, setAttackers] = useState<AvailableAttacker[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState('');
+  const { t } = useI18n()
+  const { selectedAllianceId, activeWarId, selectedBg, handleAddSynergy, synergies } = useWar()
+  const [attackers, setAttackers] = useState<AvailableAttacker[]>([])
+  const [loading, setLoading] = useState(false)
+  const [query, setQuery] = useState('')
   useEffect(() => {
     if (!open) {
-      setQuery('');
-      return;
+      setQuery('')
+      return
     }
-    if (!selectedAllianceId || !activeWarId) return;
-    setLoading(true);
+    if (!selectedAllianceId || !activeWarId) return
+    setLoading(true)
     getAvailableAttackers(selectedAllianceId, activeWarId, selectedBg, targetGameAccountId)
       .then(setAttackers)
       .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [open, selectedAllianceId, activeWarId, selectedBg, targetGameAccountId]);
+      .finally(() => setLoading(false))
+  }, [open, selectedAllianceId, activeWarId, selectedBg, targetGameAccountId])
 
-  const usedSynergyIds = new Set(synergies.map((s) => s.champion_user_id));
+  const usedSynergyIds = new Set(synergies.map((s) => s.champion_user_id))
   const available = attackers.filter(
     (a) => !usedSynergyIds.has(a.champion_user_id) && a.champion_user_id !== targetChampionUserId
-  );
+  )
   const filtered = query
     ? available.filter((a) => {
-        const q = query.toLowerCase();
+        const q = query.toLowerCase()
         return (
           a.champion_name.toLowerCase().includes(q) ||
           (a.champion_alias ?? '').toLowerCase().includes(q)
-        );
+        )
       })
-    : available;
+    : available
 
   return (
     <Dialog
@@ -94,8 +94,8 @@ export default function SynergySelectorDialog({
                   className='flex flex-col items-center gap-1 p-2 rounded-lg border hover:ring-2 hover:ring-primary/60 transition-all'
                   data-cy={`synergy-pick-${a.champion_name.replaceAll(/\s+/g, '-')}`}
                   onClick={async () => {
-                    onClose();
-                    await handleAddSynergy(a.champion_user_id, targetChampionUserId);
+                    onClose()
+                    await handleAddSynergy(a.champion_user_id, targetChampionUserId)
                   }}
                 >
                   <ChampionPortrait
@@ -124,5 +124,5 @@ export default function SynergySelectorDialog({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

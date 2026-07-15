@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import {
   type Alliance,
   type AllianceRoleEntry,
@@ -11,53 +11,53 @@ import {
   getMyAllianceRoles,
   getMyInvitations,
   getAllianceInvitations,
-} from '@/app/services/game';
-import { type AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector';
+} from '@/app/services/game'
+import { type AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
 
-const CACHE_KEY = 'alliance_cache';
+const CACHE_KEY = 'alliance_cache'
 
 function readCache(): AllianceWithVisitorFlag[] {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return [];
+    const raw = localStorage.getItem(CACHE_KEY)
+    if (!raw) return []
     return (JSON.parse(raw) as AllianceWithVisitorFlag[]).map((a) => ({
       ...a,
       isVisitor: a.isVisitor ?? false,
-    }));
+    }))
   } catch {
-    return [];
+    return []
   }
 }
 
 function writeCache(alliances: AllianceWithVisitorFlag[]) {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(alliances));
-  } catch (_) {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(alliances))
+  } catch {
     // localStorage unavailable (SSR, private browsing)
   }
 }
 
 interface AllianceContextValue {
   // Alliances
-  alliances: AllianceWithVisitorFlag[];
-  hasAlliance: boolean;
-  loading: boolean;
+  alliances: AllianceWithVisitorFlag[]
+  hasAlliance: boolean
+  loading: boolean
   // Roles
-  roles: Record<string, AllianceRoleEntry>;
-  myAccountIds: Set<string>;
-  isMine: (gameAccountId: string) => boolean;
-  isOwner: (alliance: Alliance) => boolean;
-  canManage: (alliance: Alliance) => boolean;
-  getRoleFor: (allianceId: string) => AllianceRoleEntry | undefined;
-  rolesLoading: boolean;
+  roles: Record<string, AllianceRoleEntry>
+  myAccountIds: Set<string>
+  isMine: (gameAccountId: string) => boolean
+  isOwner: (alliance: Alliance) => boolean
+  canManage: (alliance: Alliance) => boolean
+  getRoleFor: (allianceId: string) => AllianceRoleEntry | undefined
+  rolesLoading: boolean
   // Invitations
-  myInvitations: AllianceInvitation[];
-  pendingInvitations: Record<string, AllianceInvitation[]>;
+  myInvitations: AllianceInvitation[]
+  pendingInvitations: Record<string, AllianceInvitation[]>
   // Actions
-  refresh: () => Promise<void>;
-  refreshRoles: () => Promise<void>;
+  refresh: () => Promise<void>
+  refreshRoles: () => Promise<void>
   /** @deprecated use refresh() */
-  refreshHasAlliance: () => Promise<void>;
+  refreshHasAlliance: () => Promise<void>
 }
 
 const AllianceContext = createContext<AllianceContextValue>({
@@ -76,54 +76,56 @@ const AllianceContext = createContext<AllianceContextValue>({
   refresh: async () => {},
   refreshRoles: async () => {},
   refreshHasAlliance: async () => {},
-});
+})
 
 export function AllianceProvider({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { data: session, status } = useSession();
-  const isAuthenticated = !!(session && !session.error && session.user);
+  const { data: session, status } = useSession()
+  const isAuthenticated = !!(session && !session.error && session.user)
 
-  const [alliances, setAlliances] = useState<AllianceWithVisitorFlag[]>(() => readCache());
-  const [loading, setLoading] = useState(status === 'loading');
-  const [roles, setRoles] = useState<Record<string, AllianceRoleEntry>>({});
-  const [myAccountIds, setMyAccountIds] = useState<string[]>([]);
-  const [rolesLoading, setRolesLoading] = useState(true);
-  const [myInvitations, setMyInvitations] = useState<AllianceInvitation[]>([]);
-  const [pendingInvitations, setPendingInvitations] = useState<Record<string, AllianceInvitation[]>>({});
-  const hasLoadedRef = useRef(false);
+  const [alliances, setAlliances] = useState<AllianceWithVisitorFlag[]>(() => readCache())
+  const [loading, setLoading] = useState(status === 'loading')
+  const [roles, setRoles] = useState<Record<string, AllianceRoleEntry>>({})
+  const [myAccountIds, setMyAccountIds] = useState<string[]>([])
+  const [rolesLoading, setRolesLoading] = useState(true)
+  const [myInvitations, setMyInvitations] = useState<AllianceInvitation[]>([])
+  const [pendingInvitations, setPendingInvitations] = useState<
+    Record<string, AllianceInvitation[]>
+  >({})
+  const hasLoadedRef = useRef(false)
 
   const refreshRoles = useCallback(async () => {
-    if (!isAuthenticated) return;
-    setRolesLoading(true);
+    if (!isAuthenticated) return
+    setRolesLoading(true)
     try {
-      const data = await getMyAllianceRoles();
-      setRoles(data.roles);
-      setMyAccountIds(data.my_account_ids);
+      const data = await getMyAllianceRoles()
+      setRoles(data.roles)
+      setMyAccountIds(data.my_account_ids)
     } catch {
       // silent
     } finally {
-      setRolesLoading(false);
+      setRolesLoading(false)
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated])
 
   const refresh = useCallback(async () => {
     if (!isAuthenticated) {
-      hasLoadedRef.current = false;
-      setAlliances([]);
-      writeCache([]);
-      setLoading(false);
-      setRoles({});
-      setMyAccountIds([]);
-      setRolesLoading(false);
-      setMyInvitations([]);
-      setPendingInvitations({});
-      return;
+      hasLoadedRef.current = false
+      setAlliances([])
+      writeCache([])
+      setLoading(false)
+      setRoles({})
+      setMyAccountIds([])
+      setRolesLoading(false)
+      setMyInvitations([])
+      setPendingInvitations({})
+      return
     }
 
     // Only the first load blocks the UI. Refreshes triggered by an action
     // (invite, kick, accept…) update in place so the page never flashes a spinner.
     if (!hasLoadedRef.current) {
-      setLoading(true);
-      setRolesLoading(true);
+      setLoading(true)
+      setRolesLoading(true)
     }
 
     try {
@@ -132,50 +134,50 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
         getMyVisitedAlliances(),
         getMyAllianceRoles(),
         getMyInvitations(),
-      ]);
+      ])
 
       const merged: AllianceWithVisitorFlag[] = [
         ...memberResult.map((a) => ({ ...a, isVisitor: false })),
         ...visitedResult
           .filter((v) => !memberResult.some((m) => m.id === v.id))
           .map((a) => ({ ...a, isVisitor: true })),
-      ];
-      setAlliances(merged);
-      writeCache(merged);
+      ]
+      setAlliances(merged)
+      writeCache(merged)
 
-      setRoles(rolesResult.roles);
-      setMyAccountIds(rolesResult.my_account_ids);
-      setMyInvitations(invitationsResult);
+      setRoles(rolesResult.roles)
+      setMyAccountIds(rolesResult.my_account_ids)
+      setMyInvitations(invitationsResult)
 
       // Fetch pending invitations only for alliances the user can manage
-      const manageable = merged.filter((a) => rolesResult.roles[a.id]?.can_manage);
-      const pending: Record<string, AllianceInvitation[]> = {};
+      const manageable = merged.filter((a) => rolesResult.roles[a.id]?.can_manage)
+      const pending: Record<string, AllianceInvitation[]> = {}
       await Promise.all(
         manageable.map(async (alliance) => {
           try {
-            const items = await getAllianceInvitations(alliance.id);
-            if (items.length > 0) pending[alliance.id] = items;
+            const items = await getAllianceInvitations(alliance.id)
+            if (items.length > 0) pending[alliance.id] = items
           } catch {
             // ignore per-alliance failure
           }
         })
-      );
-      setPendingInvitations(pending);
-      hasLoadedRef.current = true;
+      )
+      setPendingInvitations(pending)
+      hasLoadedRef.current = true
     } catch {
-      setAlliances([]);
+      setAlliances([])
     } finally {
-      setLoading(false);
-      setRolesLoading(false);
+      setLoading(false)
+      setRolesLoading(false)
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated])
 
   useEffect(() => {
-    if (status === 'loading') return;
-    refresh();
-  }, [refresh, status]);
+    if (status === 'loading') return
+    refresh()
+  }, [refresh, status])
 
-  const accountIdSet = useMemo(() => new Set(myAccountIds), [myAccountIds]);
+  const accountIdSet = useMemo(() => new Set(myAccountIds), [myAccountIds])
 
   const contextValue = useMemo<AllianceContextValue>(
     () => ({
@@ -195,12 +197,22 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
       refreshRoles,
       refreshHasAlliance: refresh,
     }),
-    [alliances, loading, roles, accountIdSet, rolesLoading, myInvitations, pendingInvitations, refresh, refreshRoles]
-  );
+    [
+      alliances,
+      loading,
+      roles,
+      accountIdSet,
+      rolesLoading,
+      myInvitations,
+      pendingInvitations,
+      refresh,
+      refreshRoles,
+    ]
+  )
 
-  return <AllianceContext.Provider value={contextValue}>{children}</AllianceContext.Provider>;
+  return <AllianceContext.Provider value={contextValue}>{children}</AllianceContext.Provider>
 }
 
 export function useAllianceContext() {
-  return useContext(AllianceContext);
+  return useContext(AllianceContext)
 }

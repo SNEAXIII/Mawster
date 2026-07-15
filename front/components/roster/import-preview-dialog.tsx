@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
+import React from 'react'
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -10,15 +10,15 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog';
-import ImportPreviewRow, { type PreviewRow } from './import-preview-row';
+} from '@/components/ui/dialog'
+import ImportPreviewRow, { type PreviewRow } from './import-preview-row'
 
 interface ImportPreviewDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  previewRows: PreviewRow[];
-  importing: boolean;
-  onImport: () => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  previewRows: PreviewRow[]
+  importing: boolean
+  onImport: () => void
 }
 
 export default function ImportPreviewDialog({
@@ -28,11 +28,11 @@ export default function ImportPreviewDialog({
   importing,
   onImport,
 }: ImportPreviewDialogProps) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
-  const newCount = previewRows.filter((r) => r.isNew).length;
-  const changeCount = previewRows.filter((r) => !r.isNew && r.hasChanges).length;
-  const unchangedCount = previewRows.filter((r) => !r.isNew && !r.hasChanges).length;
+  const newCount = previewRows.filter((r) => r.isNew).length
+  const changeCount = previewRows.filter((r) => !r.isNew && r.hasChanges).length
+  const unchangedCount = previewRows.filter((r) => !r.isNew && !r.hasChanges).length
 
   return (
     <Dialog
@@ -90,5 +90,5 @@ export default function ImportPreviewDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

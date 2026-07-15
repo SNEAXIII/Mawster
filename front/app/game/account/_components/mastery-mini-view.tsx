@@ -1,33 +1,33 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useI18n } from '@/app/i18n';
-import { MasteryEntry } from '@/app/services/masteries';
+import { useState } from 'react'
+import { useI18n } from '@/app/i18n'
+import { MasteryEntry } from '@/app/services/masteries'
 
-export type MasteryMode = 'all' | 'offense' | 'defense';
+export type MasteryMode = 'all' | 'offense' | 'defense'
 
 interface MasteryMiniViewProps {
-  masteries: MasteryEntry[];
-  defaultMode?: MasteryMode;
+  masteries: MasteryEntry[]
+  defaultMode?: MasteryMode
 }
 
 function valueColor(value: number, max: number) {
-  if (max === 0 || value === 0) return 'text-muted-foreground';
-  if (value >= max) return 'text-amber-400 font-semibold';
-  return 'text-blue-400';
+  if (max === 0 || value === 0) return 'text-muted-foreground'
+  if (value >= max) return 'text-amber-400 font-semibold'
+  return 'text-blue-400'
 }
 
 export default function MasteryMiniView({
   masteries,
   defaultMode = 'all',
 }: Readonly<MasteryMiniViewProps>) {
-  const { t } = useI18n();
-  const [mode, setMode] = useState<MasteryMode>(defaultMode);
+  const { t } = useI18n()
+  const [mode, setMode] = useState<MasteryMode>(defaultMode)
 
-  const modes: MasteryMode[] = ['all', 'offense', 'defense'];
+  const modes: MasteryMode[] = ['all', 'offense', 'defense']
 
   if (masteries.length === 0) {
-    return <p className='text-sm text-muted-foreground'>{t.mastery.noMasteries}</p>;
+    return <p className='text-sm text-muted-foreground'>{t.mastery.noMasteries}</p>
   }
 
   return (
@@ -57,8 +57,8 @@ export default function MasteryMiniView({
       <div className='flex flex-col gap-1'>
         {masteries.map((m) => {
           const name =
-            t.mastery.names[m.mastery_order as keyof typeof t.mastery.names] ?? m.mastery_name;
-          const cyKey = m.mastery_name.toLowerCase().replaceAll(/\s+/g, '-');
+            t.mastery.names[m.mastery_order as keyof typeof t.mastery.names] ?? m.mastery_name
+          const cyKey = m.mastery_name.toLowerCase().replaceAll(/\s+/g, '-')
           return (
             <div
               key={m.mastery_id}
@@ -90,9 +90,9 @@ export default function MasteryMiniView({
                 )}
               </div>
             </div>
-          );
+          )
         })}
       </div>
     </div>
-  );
+  )
 }

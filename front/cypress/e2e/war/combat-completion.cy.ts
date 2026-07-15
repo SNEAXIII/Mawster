@@ -100,15 +100,17 @@ describe('War – Combat completion', () => {
   });
 
   it('filter "todo" shows entries that are not completed', () => {
-    setupAttackerScenario('cc-filter-todo-visible').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      cy.goToWarMode(ownerData.user_id, 'attackers');
+    setupAttackerScenario('cc-filter-todo-visible').then(
+      ({ memberData, ownerData, allianceId, warId, championUserId }) => {
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+        cy.goToWarMode(ownerData.user_id, 'attackers');
 
-      cy.getByCy('war-combat-filter').click({ force: true });
-      cy.contains('To do').click({ force: true });
+        cy.getByCy('war-combat-filter').click({ force: true });
+        cy.contains('To do').click({ force: true });
 
-      cy.getByCy('attacker-entry-node-10').should('be.visible');
-    });
+        cy.getByCy('attacker-entry-node-10').should('be.visible');
+      },
+    );
   });
 
   it('filter "todo" does not dim todo entries', () => {

@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import { cn } from '@/app/lib/utils';
-import { Flame } from 'lucide-react';
+import { cn } from '@/app/lib/utils'
+import { Flame } from 'lucide-react'
 
 export default function PrefightBadge({
   additionalClasses = '',
@@ -15,5 +15,5 @@ export default function PrefightBadge({
     >
       <Flame className='w-2.5 h-2.5' />
     </div>
-  );
+  )
 }

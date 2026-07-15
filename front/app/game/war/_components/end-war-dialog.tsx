@@ -1,10 +1,10 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -12,14 +12,14 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { useI18n } from '@/app/i18n';
+} from '@/components/ui/dialog'
+import { useI18n } from '@/app/i18n'
 
 interface EndWarDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  hasSeason: boolean;
-  onConfirm: (win: boolean, eloChange: number | null) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  hasSeason: boolean
+  onConfirm: (win: boolean, eloChange: number | null) => void
 }
 
 export default function EndWarDialog({
@@ -28,27 +28,27 @@ export default function EndWarDialog({
   hasSeason,
   onConfirm,
 }: Readonly<EndWarDialogProps>) {
-  const { t } = useI18n();
-  const [win, setWin] = useState(true);
-  const [eloInput, setEloInput] = useState('');
-  const [confirmInput, setConfirmInput] = useState('');
+  const { t } = useI18n()
+  const [win, setWin] = useState(true)
+  const [eloInput, setEloInput] = useState('')
+  const [confirmInput, setConfirmInput] = useState('')
 
-  const parsedElo = eloInput === '' ? null : Number(eloInput);
+  const parsedElo = eloInput === '' ? null : Number(eloInput)
   const eloValid =
     !hasSeason ||
     (parsedElo !== null &&
       !isNaN(parsedElo) &&
       parsedElo !== 0 &&
-      (win ? parsedElo > 0 : parsedElo < 0));
-  const confirmed = confirmInput.trim().toLowerCase() === 'confirm';
+      (win ? parsedElo > 0 : parsedElo < 0))
+  const confirmed = confirmInput.trim().toLowerCase() === 'confirm'
 
   function handleConfirm() {
-    if (!eloValid || !confirmed) return;
-    onConfirm(win, hasSeason ? parsedElo : null);
-    onOpenChange(false);
-    setEloInput('');
-    setConfirmInput('');
-    setWin(true);
+    if (!eloValid || !confirmed) return
+    onConfirm(win, hasSeason ? parsedElo : null)
+    onOpenChange(false)
+    setEloInput('')
+    setConfirmInput('')
+    setWin(true)
   }
 
   return (
@@ -79,8 +79,8 @@ export default function EndWarDialog({
               <Switch
                 checked={!win}
                 onCheckedChange={(checked) => {
-                  setWin(!checked);
-                  setEloInput('');
+                  setWin(!checked)
+                  setEloInput('')
                 }}
                 data-cy='end-war-win-switch'
               />
@@ -143,5 +143,5 @@ export default function EndWarDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

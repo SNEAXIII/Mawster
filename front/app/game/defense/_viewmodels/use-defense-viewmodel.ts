@@ -1,14 +1,14 @@
-'use client';
+'use client'
 
-import { useEffect } from 'react';
-import { useAllianceRole } from '@/hooks/use-alliance-role';
-import { useAllianceSelector } from '@/hooks/use-alliance-selector';
-import { useDefenseActions } from '../_hooks/use-defense-actions';
+import { useEffect } from 'react'
+import { useAllianceRole } from '@/hooks/use-alliance-role'
+import { useAllianceSelector } from '@/hooks/use-alliance-selector'
+import { useDefenseActions } from '../_hooks/use-defense-actions'
 
 interface UseDefenseViewModelOptions {
-  onStateChange?: (allianceId: string, bg: number) => void;
-  initialAllianceId?: string;
-  initialBg?: number;
+  onStateChange?: (allianceId: string, bg: number) => void
+  initialAllianceId?: string
+  initialBg?: number
 }
 
 export function useDefenseViewModel({
@@ -16,7 +16,7 @@ export function useDefenseViewModel({
   initialAllianceId,
   initialBg,
 }: UseDefenseViewModelOptions = {}) {
-  const { canManage, isOwner } = useAllianceRole();
+  const { canManage, isOwner } = useAllianceRole()
 
   const {
     alliances,
@@ -25,39 +25,39 @@ export function useDefenseViewModel({
     selectedBg,
     setSelectedBg,
     loading,
-  } = useAllianceSelector({ initialAllianceId, initialBg });
+  } = useAllianceSelector({ initialAllianceId, initialBg })
 
-  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId);
+  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId)
   const userCanManage = selectedAlliance
     ? canManage(selectedAlliance) || isOwner(selectedAlliance)
-    : false;
+    : false
 
-  const defenseActions = useDefenseActions(selectedAllianceId, selectedBg);
+  const defenseActions = useDefenseActions(selectedAllianceId, selectedBg)
 
   useEffect(() => {
     if (alliances.length > 0 && !selectedAllianceId) {
-      const firstId = alliances[0].id;
-      setSelectedAllianceId(firstId);
-      onStateChange?.(firstId, selectedBg);
+      const firstId = alliances[0].id
+      setSelectedAllianceId(firstId)
+      onStateChange?.(firstId, selectedBg)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [alliances]);
+  }, [alliances])
 
   const handleNodeClick = (nodeNumber: number) => {
-    if (!userCanManage) return;
-    defenseActions.setSelectorNode(nodeNumber);
-  };
+    if (!userCanManage) return
+    defenseActions.setSelectorNode(nodeNumber)
+  }
 
   const handleBgChange = (bg: number) => {
-    setSelectedBg(bg);
-    if (selectedAllianceId) onStateChange?.(selectedAllianceId, bg);
-  };
+    setSelectedBg(bg)
+    if (selectedAllianceId) onStateChange?.(selectedAllianceId, bg)
+  }
 
   const handleAllianceChange = (allianceId: string) => {
-    setSelectedAllianceId(allianceId);
-    setSelectedBg(1);
-    onStateChange?.(allianceId, 1);
-  };
+    setSelectedAllianceId(allianceId)
+    setSelectedBg(1)
+    onStateChange?.(allianceId, 1)
+  }
 
   return {
     alliances,
@@ -69,5 +69,5 @@ export function useDefenseViewModel({
     handleNodeClick,
     handleBgChange,
     handleAllianceChange,
-  };
+  }
 }

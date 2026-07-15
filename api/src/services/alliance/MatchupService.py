@@ -318,6 +318,20 @@ class MatchupService:
         )
 
     @classmethod
+    def _synergy_refs(cls, rating: MatchupRating) -> list[MatchupSynergyResponse]:
+        return [
+            MatchupSynergyResponse(
+                **cls.champion_ref(synergy.champion).model_dump(),
+                is_required=synergy.is_required,
+            )
+            for synergy in rating.synergies
+        ]
+
+    @classmethod
+    def _prefight_ref(cls, rating: MatchupRating) -> Optional[ChampionRef]:
+        return cls.champion_ref(rating.prefight_champion) if rating.prefight_champion else None
+
+    @classmethod
     def _grid_axis_entry(cls, rating: MatchupRating) -> MatchupGridAxisEntry:
         return MatchupGridAxisEntry(
             defender=(
@@ -325,16 +339,8 @@ class MatchupService:
             ),
             node_number=rating.node_number,
             verdict=rating.verdict,
-            synergies=[
-                MatchupSynergyResponse(
-                    **cls.champion_ref(synergy.champion).model_dump(),
-                    is_required=synergy.is_required,
-                )
-                for synergy in rating.synergies
-            ],
-            prefight=(
-                cls.champion_ref(rating.prefight_champion) if rating.prefight_champion else None
-            ),
+            synergies=cls._synergy_refs(rating),
+            prefight=cls._prefight_ref(rating),
         )
 
     @classmethod
@@ -404,6 +410,7 @@ class MatchupService:
                         node_number=node_rating.node_number,
                         is_discouraged=is_discouraged,
                         score=score,
+                        node=cls._grid_axis_entry(node_rating),
                     )
                 )
 
@@ -418,16 +425,8 @@ class MatchupService:
         return MatchupDefenderGridRow(
             attacker=cls.champion_ref(rating.champion),
             verdict=rating.verdict,
-            synergies=[
-                MatchupSynergyResponse(
-                    **cls.champion_ref(synergy.champion).model_dump(),
-                    is_required=synergy.is_required,
-                )
-                for synergy in rating.synergies
-            ],
-            prefight=(
-                cls.champion_ref(rating.prefight_champion) if rating.prefight_champion else None
-            ),
+            synergies=cls._synergy_refs(rating),
+            prefight=cls._prefight_ref(rating),
         )
 
     @classmethod
@@ -563,23 +562,20 @@ class MatchupService:
         for rating in (defender_rating, node_rating):
             if rating is None:
                 continue
-            for synergy in rating.synergies:
+            for synergy in cls._synergy_refs(rating):
                 seen = merged.get(synergy.champion_id)
                 if seen is None:
-                    merged[synergy.champion_id] = MatchupSynergyResponse(
-                        **cls.champion_ref(synergy.champion).model_dump(),
-                        is_required=synergy.is_required,
-                    )
+                    merged[synergy.champion_id] = synergy
                 elif synergy.is_required:
                     seen.is_required = True
-            if rating.prefight_champion is not None and prefight is None:
-                prefight = cls.champion_ref(rating.prefight_champion)
+            if prefight is None:
+                prefight = cls._prefight_ref(rating)
         synergies = list(merged.values())
 
         row = MatchupEvaluationRow(
             champion=cls.champion_ref(any_rating.champion),
-            defender_verdict=defender_rating.verdict if defender_rating else None,
-            node_verdict=node_rating.verdict if node_rating else None,
+            defender=cls._grid_axis_entry(defender_rating) if defender_rating else None,
+            node=cls._grid_axis_entry(node_rating) if node_rating else None,
             is_discouraged=is_discouraged,
             score=score,
             synergies=synergies,

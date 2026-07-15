@@ -1,17 +1,17 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import ChampionPortrait from '@/components/champion-portrait';
-import { cn } from '@/app/lib/utils';
-import { X, Flame } from 'lucide-react';
-import { type WarPrefight, type WarPlacement } from '@/app/services/war';
-import { useWar } from '@/app/contexts/war-context';
+import { useI18n } from '@/app/i18n'
+import ChampionPortrait from '@/components/champion-portrait'
+import { cn } from '@/app/lib/utils'
+import { X, Flame } from 'lucide-react'
+import { type WarPrefight, type WarPlacement } from '@/app/services/war'
+import { useWar } from '@/app/contexts/war-context'
 
 interface PrefightEntryRowProps {
-  prefight: WarPrefight;
-  targetPlacement: WarPlacement | undefined;
-  mode?: 'compact' | 'full';
-  readonly?: boolean;
+  prefight: WarPrefight
+  targetPlacement: WarPlacement | undefined
+  mode?: 'compact' | 'full'
+  readonly?: boolean
 }
 
 export default function PrefightEntryRow({
@@ -20,14 +20,14 @@ export default function PrefightEntryRow({
   mode = 'compact',
   readonly = false,
 }: Readonly<PrefightEntryRowProps>) {
-  const { t } = useI18n();
-  const { handleRemovePrefight } = useWar();
+  const { t } = useI18n()
+  const { handleRemovePrefight } = useWar()
 
-  const isFull = mode === 'full';
-  const portraitSize = isFull ? 55 : 40;
-  const btnSize = isFull ? 'w-7 h-7' : 'w-5 h-5';
-  const iconSize = isFull ? 'w-3.5 h-3.5' : 'w-2.5 h-2.5';
-  const boxPaddingSize = isFull ? 'px-7 py-2' : 'px-2 py-1.5';
+  const isFull = mode === 'full'
+  const portraitSize = isFull ? 55 : 40
+  const btnSize = isFull ? 'w-7 h-7' : 'w-5 h-5'
+  const iconSize = isFull ? 'w-3.5 h-3.5' : 'w-2.5 h-2.5'
+  const boxPaddingSize = isFull ? 'px-7 py-2' : 'px-2 py-1.5'
 
   return (
     <div
@@ -98,5 +98,5 @@ export default function PrefightEntryRow({
         </button>
       )}
     </div>
-  );
+  )
 }

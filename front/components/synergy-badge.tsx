@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import { cn } from '@/app/lib/utils';
-import { Zap } from 'lucide-react';
+import { cn } from '@/app/lib/utils'
+import { Zap } from 'lucide-react'
 
 export default function SynergyBadge({
   additionalClasses = '',
@@ -15,5 +15,5 @@ export default function SynergyBadge({
     >
       <Zap className='w-2.5 h-2.5' />
     </div>
-  );
+  )
 }

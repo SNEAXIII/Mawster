@@ -1,49 +1,49 @@
-'use client';
+'use client'
 
-import { useMemo, useState } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import AllianceRankingChart from '@/app/game/alliances/_components/alliance-ranking-chart';
+import { useMemo, useState } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import AllianceRankingChart from '@/app/game/alliances/_components/alliance-ranking-chart'
 import {
   AllianceStatsTable,
   type SortField,
   type SortDir,
-} from '@/app/game/alliances/_components/alliance-stats-table';
-import { MemberChampionChart } from '@/app/components/statistics/member-champion-chart';
+} from '@/app/game/alliances/_components/alliance-stats-table'
+import { MemberChampionChart } from '@/app/components/statistics/member-champion-chart'
 import {
   MOCK_SEASON_STATS,
   MOCK_CHAMPION_USAGE,
   MOCK_RANKING_POINTS,
   MOCK_RANKING_SEASON,
-} from './stats-mock-data';
+} from './stats-mock-data'
 
-const noop = () => {};
+const noop = () => {}
 
 export function StatsShowcase() {
-  const { t } = useI18n();
-  const s = t.landing.statsShowcase;
+  const { t } = useI18n()
+  const s = t.landing.statsShowcase
 
-  const [sortField, setSortField] = useState<SortField>('ratio');
-  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [sortField, setSortField] = useState<SortField>('ratio')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
 
   const toggleSort = (field: SortField) => {
     if (field === sortField) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
     } else {
-      setSortField(field);
-      setSortDir('desc');
+      setSortField(field)
+      setSortDir('desc')
     }
-  };
+  }
 
   const sortedRows = useMemo(
     () =>
       [...MOCK_SEASON_STATS].sort((a, b) => {
-        const av = a[sortField] as number;
-        const bv = b[sortField] as number;
-        return sortDir === 'asc' ? av - bv : bv - av;
+        const av = a[sortField] as number
+        const bv = b[sortField] as number
+        return sortDir === 'asc' ? av - bv : bv - av
       }),
     [sortField, sortDir]
-  );
+  )
 
   return (
     <section
@@ -113,5 +113,5 @@ export function StatsShowcase() {
         </div>
       </div>
     </section>
-  );
+  )
 }

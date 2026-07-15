@@ -1,83 +1,83 @@
-'use client';
+'use client'
 
-import { signIn } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
-import { useState, useEffect, Suspense } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Loader, AlertCircle } from 'lucide-react';
-import { FcGoogle } from 'react-icons/fc';
-import { FaDiscord } from 'react-icons/fa';
-import { useI18n } from '@/app/i18n';
+import { signIn } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Loader, AlertCircle } from 'lucide-react'
+import { FcGoogle } from 'react-icons/fc'
+import { FaDiscord } from 'react-icons/fa'
+import { useI18n } from '@/app/i18n'
 
-import { IS_DEV } from '@/app/lib/dev-mode';
-import { MawsterLogo } from '@/components/MawsterLogo';
+import { IS_DEV } from '@/app/lib/dev-mode'
+import { MawsterLogo } from '@/components/MawsterLogo'
 
 interface DevUser {
-  id: string;
-  login: string;
-  email: string;
-  role: string;
+  id: string
+  login: string
+  email: string
+  role: string
 }
 
 function LoginPageContent() {
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') ?? '/';
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [devUsers, setDevUsers] = useState<DevUser[]>([]);
-  const [devLoading, setDevLoading] = useState(false);
-  const { t } = useI18n();
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') ?? '/'
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [devUsers, setDevUsers] = useState<DevUser[]>([])
+  const [devLoading, setDevLoading] = useState(false)
+  const { t } = useI18n()
 
   // In dev mode, fetch the user list from the backend
   useEffect(() => {
-    if (!IS_DEV) return;
-    setDevLoading(true);
+    if (!IS_DEV) return
+    setDevLoading(true)
     fetch('/api/dev/users')
       .then((res) => (res.ok ? res.json() : []))
       .then((users: DevUser[]) => setDevUsers(users))
       .catch(() => setDevUsers([]))
-      .finally(() => setDevLoading(false));
-  }, []);
+      .finally(() => setDevLoading(false))
+  }, [])
 
   const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
     try {
-      await signIn('google', { callbackUrl });
+      await signIn('google', { callbackUrl })
     } catch (error) {
-      console.error('Google login error:', error);
-      setError(t.login.errorGeneric);
-      setIsLoading(false);
+      console.error('Google login error:', error)
+      setError(t.login.errorGeneric)
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleDiscordLogin = async () => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
     try {
-      await signIn('discord', { callbackUrl });
+      await signIn('discord', { callbackUrl })
     } catch (error) {
-      console.error('Login error:', error);
-      setError(t.login.errorGeneric);
-      setIsLoading(false);
+      console.error('Login error:', error)
+      setError(t.login.errorGeneric)
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleDevLogin = async (userId: string) => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
     try {
-      await signIn('dev-login', { user_id: userId, callbackUrl });
+      await signIn('dev-login', { user_id: userId, callbackUrl })
     } catch (error) {
-      console.error('Dev login error:', error);
-      setError(t.login.errorGeneric);
-      setIsLoading(false);
+      console.error('Dev login error:', error)
+      setError(t.login.errorGeneric)
+      setIsLoading(false)
     }
-  };
+  }
 
   const renderDevUserPicker = () => {
     if (devLoading) {
@@ -85,10 +85,10 @@ function LoginPageContent() {
         <div className='flex justify-center py-2'>
           <Loader className='size-5 animate-spin text-muted-foreground' />
         </div>
-      );
+      )
     }
     if (devUsers.length === 0) {
-      return <p className='text-xs text-muted-foreground text-center'>{t.login.devNoUsers}</p>;
+      return <p className='text-xs text-muted-foreground text-center'>{t.login.devNoUsers}</p>
     }
     return (
       <div
@@ -114,8 +114,8 @@ function LoginPageContent() {
           </button>
         ))}
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <div className='min-h-full flex items-center justify-center bg-gradient-to-br from-background to-muted p-4 sm:p-6'>
@@ -186,12 +186,12 @@ function LoginPageContent() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
 export default function LoginPage() {
   return (
     <Suspense>
       <LoginPageContent />
     </Suspense>
-  );
+  )
 }

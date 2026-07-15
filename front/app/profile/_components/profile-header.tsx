@@ -1,27 +1,27 @@
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Shield } from 'lucide-react';
-import { useI18n } from '@/app/i18n';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { Shield } from 'lucide-react'
+import { useI18n } from '@/app/i18n'
 
 function getInitials(name: string | undefined | null): string {
-  if (!name) return '?';
+  if (!name) return '?'
   return name
     .split(/[\s_-]+/)
     .map((w) => w[0])
     .join('')
     .toUpperCase()
-    .slice(0, 2);
+    .slice(0, 2)
 }
 
 export function ProfileHeader({
   name,
   role,
 }: Readonly<{
-  name?: string | null;
-  role?: string | null;
+  name?: string | null
+  role?: string | null
 }>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <Card>
@@ -45,5 +45,5 @@ export function ProfileHeader({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

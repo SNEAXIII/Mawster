@@ -1,26 +1,26 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { TextConfirmationDialog } from '@/components/text-confirmation-dialog';
-import { Crown, MoreHorizontal, ShieldCheck, ShieldMinus, UserMinus } from 'lucide-react';
+} from '@/components/ui/dropdown-menu'
+import { ConfirmationDialog } from '@/components/confirmation-dialog'
+import { TextConfirmationDialog } from '@/components/text-confirmation-dialog'
+import { Crown, MoreHorizontal, ShieldCheck, ShieldMinus, UserMinus } from 'lucide-react'
 import {
   type Alliance,
   addOfficer,
   removeOfficer,
   removeMember,
   transferOwnership,
-} from '@/app/services/game';
-import { useAllianceRole } from '@/hooks/use-alliance-role';
+} from '@/app/services/game'
+import { useAllianceRole } from '@/hooks/use-alliance-role'
 
 const AllianceMemberAction = {
   PROMOTE: 'promote',
@@ -28,31 +28,31 @@ const AllianceMemberAction = {
   REMOVE: 'remove',
   LEAVE: 'leave',
   TRANSFER_OWNER: 'transfer_owner',
-} as const;
+} as const
 
-type AllianceMemberAction = (typeof AllianceMemberAction)[keyof typeof AllianceMemberAction];
+type AllianceMemberAction = (typeof AllianceMemberAction)[keyof typeof AllianceMemberAction]
 
 interface AllianceMember {
-  id: string;
-  game_pseudo: string;
-  is_owner: boolean;
-  is_officer: boolean;
+  id: string
+  game_pseudo: string
+  is_owner: boolean
+  is_officer: boolean
 }
 
 interface AllianceMemberActionsProps {
-  member: AllianceMember;
-  alliance: Alliance;
-  onRefresh: () => void;
+  member: AllianceMember
+  alliance: Alliance
+  onRefresh: () => void
 }
 
 export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceMemberActionsProps) {
-  const { t } = useI18n();
-  const { isMine: isMineCheck, isOwner, canManage } = useAllianceRole();
+  const { t } = useI18n()
+  const { isMine: isMineCheck, isOwner, canManage } = useAllianceRole()
 
-  const memberIsMine = isMineCheck(member.id);
-  const userIsOwner = isOwner(alliance);
-  const userCanManage = canManage(alliance);
-  const allianceId = alliance.id;
+  const memberIsMine = isMineCheck(member.id)
+  const userIsOwner = isOwner(alliance)
+  const userCanManage = canManage(alliance)
+  const allianceId = alliance.id
 
   const [isLoading, setIsLoading] = useState<Record<AllianceMemberAction, boolean>>({
     promote: false,
@@ -60,46 +60,46 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
     remove: false,
     leave: false,
     transfer_owner: false,
-  });
-  const [isPromoteDialogOpen, setIsPromoteDialogOpen] = useState(false);
-  const [isExcludeDialogOpen, setIsExcludeDialogOpen] = useState(false);
-  const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
-  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
+  })
+  const [isPromoteDialogOpen, setIsPromoteDialogOpen] = useState(false)
+  const [isExcludeDialogOpen, setIsExcludeDialogOpen] = useState(false)
+  const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false)
+  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false)
 
   const handleAction = async (action: AllianceMemberAction) => {
-    setIsLoading((prev) => ({ ...prev, [action]: true }));
+    setIsLoading((prev) => ({ ...prev, [action]: true }))
     try {
       switch (action) {
         case AllianceMemberAction.PROMOTE:
-          await addOfficer(allianceId, member.id);
-          toast.success(t.game.alliances.officerAddSuccess);
-          setIsPromoteDialogOpen(false);
-          break;
+          await addOfficer(allianceId, member.id)
+          toast.success(t.game.alliances.officerAddSuccess)
+          setIsPromoteDialogOpen(false)
+          break
         case AllianceMemberAction.DEMOTE:
-          await removeOfficer(allianceId, member.id);
-          toast.success(t.game.alliances.officerRemoveSuccess);
-          break;
+          await removeOfficer(allianceId, member.id)
+          toast.success(t.game.alliances.officerRemoveSuccess)
+          break
         case AllianceMemberAction.REMOVE:
-          await removeMember(allianceId, member.id);
-          toast.success(t.game.alliances.memberRemoveSuccess);
-          setIsExcludeDialogOpen(false);
-          break;
+          await removeMember(allianceId, member.id)
+          toast.success(t.game.alliances.memberRemoveSuccess)
+          setIsExcludeDialogOpen(false)
+          break
         case AllianceMemberAction.LEAVE:
-          await removeMember(allianceId, member.id);
-          toast.success(t.game.alliances.memberRemoveSuccess);
-          setIsLeaveDialogOpen(false);
-          break;
+          await removeMember(allianceId, member.id)
+          toast.success(t.game.alliances.memberRemoveSuccess)
+          setIsLeaveDialogOpen(false)
+          break
         case AllianceMemberAction.TRANSFER_OWNER:
-          await transferOwnership(allianceId, member.id);
+          await transferOwnership(allianceId, member.id)
           toast.success(
-            t.game.alliances.transferOwnerSuccess.replace('{pseudo}', member.game_pseudo),
-          );
-          setIsTransferDialogOpen(false);
-          break;
+            t.game.alliances.transferOwnerSuccess.replace('{pseudo}', member.game_pseudo)
+          )
+          setIsTransferDialogOpen(false)
+          break
       }
-      onRefresh();
+      onRefresh()
     } catch (err: unknown) {
-      console.error(err);
+      console.error(err)
       const errorMsg =
         action === AllianceMemberAction.PROMOTE
           ? t.game.alliances.officerAddError
@@ -107,21 +107,21 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
             ? t.game.alliances.officerRemoveError
             : action === AllianceMemberAction.TRANSFER_OWNER
               ? t.game.alliances.transferOwnerError
-              : t.game.alliances.memberRemoveError;
-      const errMessage = err instanceof Error ? err.message : undefined;
-      toast.error(errMessage || errorMsg);
+              : t.game.alliances.memberRemoveError
+      const errMessage = err instanceof Error ? err.message : undefined
+      toast.error(errMessage || errorMsg)
     } finally {
-      setIsLoading((prev) => ({ ...prev, [action]: false }));
+      setIsLoading((prev) => ({ ...prev, [action]: false }))
     }
-  };
+  }
 
-  const canPromote = userIsOwner && !member.is_owner && !member.is_officer;
-  const canDemote = userIsOwner && !member.is_owner && member.is_officer;
-  const canLeave = !member.is_owner && memberIsMine;
-  const canExclude = !member.is_owner && !memberIsMine && userCanManage;
-  const canTransferOwner = userIsOwner && member.is_officer && !member.is_owner;
+  const canPromote = userIsOwner && !member.is_owner && !member.is_officer
+  const canDemote = userIsOwner && !member.is_owner && member.is_officer
+  const canLeave = !member.is_owner && memberIsMine
+  const canExclude = !member.is_owner && !memberIsMine && userCanManage
+  const canTransferOwner = userIsOwner && member.is_officer && !member.is_owner
 
-  if (!canPromote && !canDemote && !canLeave && !canExclude && !canTransferOwner) return null;
+  if (!canPromote && !canDemote && !canLeave && !canExclude && !canTransferOwner) return null
 
   return (
     <>
@@ -239,5 +239,5 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
         confirmText={t.game.alliances.transferOwner}
       />
     </>
-  );
+  )
 }

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/app/api/auth/[...nextauth]/route';
-import { getServerApiUrl } from '@/app/lib/serverApiUrl';
+import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/app/api/auth/[...nextauth]/route'
+import { getServerApiUrl } from '@/app/lib/serverApiUrl'
 
 /**
  * Catch-all proxy: every request to /api/back/<path>
@@ -11,34 +11,34 @@ import { getServerApiUrl } from '@/app/lib/serverApiUrl';
  * callback — no manual refresh or cookie encoding needed here.
  */
 async function proxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
-  const { path } = await params;
-  const backendPath = path.join('/');
-  const isPublicPath = backendPath === 'stats/public';
+  const { path } = await params
+  const backendPath = path.join('/')
+  const isPublicPath = backendPath === 'stats/public'
 
-  const session = isPublicPath ? null : await auth();
+  const session = isPublicPath ? null : await auth()
 
   if (!isPublicPath && (!session?.accessToken || session.error === 'TokenExpiredError')) {
-    const message = session?.error === 'TokenExpiredError' ? 'Session expired' : 'Unauthenticated';
-    return NextResponse.json({ message }, { status: 401 });
+    const message = session?.error === 'TokenExpiredError' ? 'Session expired' : 'Unauthenticated'
+    return NextResponse.json({ message }, { status: 401 })
   }
 
-  const url = new URL(req.url);
-  const backendUrl = `${getServerApiUrl()}/${backendPath}${url.search}`;
+  const url = new URL(req.url)
+  const backendUrl = `${getServerApiUrl()}/${backendPath}${url.search}`
 
-  const headers: HeadersInit = {};
+  const headers: HeadersInit = {}
   if (!isPublicPath && session?.accessToken) {
-    headers.Authorization = `Bearer ${session.accessToken}`;
+    headers.Authorization = `Bearer ${session.accessToken}`
   }
 
-  const contentType = req.headers.get('content-type');
+  const contentType = req.headers.get('content-type')
   if (contentType) {
-    headers['Content-Type'] = contentType;
+    headers['Content-Type'] = contentType
   }
 
-  let body: string | undefined;
+  let body: string | undefined
   if (!['GET', 'HEAD'].includes(req.method)) {
     try {
-      body = await req.text();
+      body = await req.text()
     } catch {
       // no body
     }
@@ -49,28 +49,28 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
       method: req.method,
       headers,
       body: body || undefined,
-    });
+    })
 
     if (res.status === 204) {
-      return new NextResponse(null, { status: 204 });
+      return new NextResponse(null, { status: 204 })
     }
 
-    const data = await res.text();
+    const data = await res.text()
 
     return new NextResponse(data || null, {
       status: res.status,
       headers: {
         'Content-Type': res.headers.get('content-type') ?? 'application/json',
       },
-    });
+    })
   } catch (error) {
-    console.error(`[proxy] ${req.method} ${backendUrl} →`, error);
-    return NextResponse.json({ message: 'Internal proxy error' }, { status: 502 });
+    console.error(`[proxy] ${req.method} ${backendUrl} →`, error)
+    return NextResponse.json({ message: 'Internal proxy error' }, { status: 502 })
   }
 }
 
-export const GET = proxy;
-export const POST = proxy;
-export const PUT = proxy;
-export const PATCH = proxy;
-export const DELETE = proxy;
+export const GET = proxy
+export const POST = proxy
+export const PUT = proxy
+export const PATCH = proxy
+export const DELETE = proxy

@@ -1,16 +1,16 @@
-'use client';
+'use client'
 
-import { createContext, useContext } from 'react';
-import type { useDefenseActions } from '@/app/game/defense/_hooks/use-defense-actions';
+import { createContext, useContext } from 'react'
+import type { useDefenseActions } from '@/app/game/defense/_hooks/use-defense-actions'
 
-type DefenseActionsContextValue = ReturnType<typeof useDefenseActions>;
+type DefenseActionsContextValue = ReturnType<typeof useDefenseActions>
 
-const DefenseActionsContext = createContext<DefenseActionsContextValue | null>(null);
+const DefenseActionsContext = createContext<DefenseActionsContextValue | null>(null)
 
-export const DefenseActionsProvider = DefenseActionsContext.Provider;
+export const DefenseActionsProvider = DefenseActionsContext.Provider
 
 export function useDefenseActionsContext(): DefenseActionsContextValue {
-  const ctx = useContext(DefenseActionsContext);
-  if (!ctx) throw new Error('useDefenseActionsContext must be used within DefenseActionsProvider');
-  return ctx;
+  const ctx = useContext(DefenseActionsContext)
+  if (!ctx) throw new Error('useDefenseActionsContext must be used within DefenseActionsProvider')
+  return ctx
 }

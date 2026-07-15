@@ -1,31 +1,31 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { useI18n } from '@/app/i18n';
-import { ArrowRight } from 'lucide-react';
-import ChampionPortrait from '@/components/champion-portrait';
-import { RARITY_LABELS, shortenChampionName, getClassColors } from '@/app/services/roster';
+import React from 'react'
+import { useI18n } from '@/app/i18n'
+import { ArrowRight } from 'lucide-react'
+import ChampionPortrait from '@/components/champion-portrait'
+import { RARITY_LABELS, shortenChampionName, getClassColors } from '@/app/services/roster'
 
 export interface PreviewRow {
-  champion_name: string;
-  champion_class: string | null;
-  image_url: string | null;
-  newRarity: string;
-  newSignature: number;
-  oldRarity: string | null;
-  oldSignature: number | null;
-  isNew: boolean;
-  hasChanges: boolean;
-  is_preferred_attacker?: boolean;
-  ascension?: number;
+  champion_name: string
+  champion_class: string | null
+  image_url: string | null
+  newRarity: string
+  newSignature: number
+  oldRarity: string | null
+  oldSignature: number | null
+  isNew: boolean
+  hasChanges: boolean
+  is_preferred_attacker?: boolean
+  ascension?: number
 }
 
 interface ImportPreviewRowProps {
-  row: PreviewRow;
+  row: PreviewRow
 }
 
 export default function ImportPreviewRow({ row }: ImportPreviewRowProps) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <div
@@ -100,5 +100,5 @@ export default function ImportPreviewRow({ row }: ImportPreviewRowProps) {
         )}
       </div>
     </div>
-  );
+  )
 }

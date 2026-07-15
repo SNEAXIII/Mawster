@@ -1,23 +1,23 @@
-'use client';
+'use client'
 
-import { Eye } from 'lucide-react';
+import { Eye } from 'lucide-react'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { useI18n } from '@/app/i18n';
-import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector';
+} from '@/components/ui/select'
+import { useI18n } from '@/app/i18n'
+import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
 
 interface AllianceSelectProps {
-  alliances: AllianceWithVisitorFlag[];
-  value: string;
-  onChange: (id: string) => void;
-  triggerClassName?: string;
-  placeholder?: string;
-  dataCy?: string;
+  alliances: AllianceWithVisitorFlag[]
+  value: string
+  onChange: (id: string) => void
+  triggerClassName?: string
+  placeholder?: string
+  dataCy?: string
 }
 
 /**
@@ -33,7 +33,7 @@ export default function AllianceSelect({
   placeholder,
   dataCy,
 }: Readonly<AllianceSelectProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <Select
@@ -68,5 +68,5 @@ export default function AllianceSelect({
         ))}
       </SelectContent>
     </Select>
-  );
+  )
 }

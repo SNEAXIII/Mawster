@@ -1,17 +1,17 @@
-'use client';
+'use client'
 
-import React, { forwardRef } from 'react';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/app/lib/utils';
+import React, { forwardRef } from 'react'
+import { Search } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { cn } from '@/app/lib/utils'
 
 type SearchInputProps = Readonly<{
-  placeholder?: string;
-  value: string;
-  onChange: (value: string) => void;
-  className?: string;
-  'data-cy'?: string;
-}>;
+  placeholder?: string
+  value: string
+  onChange: (value: string) => void
+  className?: string
+  'data-cy'?: string
+}>
 
 export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
   ({ placeholder = 'Search...', value, onChange, className = '', 'data-cy': dataCy }, ref) => {
@@ -27,8 +27,8 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           data-cy={dataCy}
         />
       </div>
-    );
+    )
   }
-);
+)
 
-SearchInput.displayName = 'SearchInput';
+SearchInput.displayName = 'SearchInput'

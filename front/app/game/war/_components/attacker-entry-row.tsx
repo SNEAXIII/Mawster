@@ -1,21 +1,30 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useI18n } from '@/app/i18n';
-import ChampionPortrait from '@/components/champion-portrait';
-import { cn } from '@/app/lib/utils';
-import { X, Minus, Plus, Swords, CircleQuestionMark, CheckCircle, Ban, AlertTriangle } from 'lucide-react';
-import { type WarPlacement } from '@/app/services/war';
-import { useWar } from '@/app/contexts/war-context';
-import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import NodeActionsPopover from './node-actions-popover';
+import { useState } from 'react'
+import { useI18n } from '@/app/i18n'
+import ChampionPortrait from '@/components/champion-portrait'
+import { cn } from '@/app/lib/utils'
+import {
+  X,
+  Minus,
+  Plus,
+  Swords,
+  CircleQuestionMark,
+  CheckCircle,
+  Ban,
+  AlertTriangle,
+} from 'lucide-react'
+import { type WarPlacement } from '@/app/services/war'
+import { useWar } from '@/app/contexts/war-context'
+import { ConfirmationDialog } from '@/components/confirmation-dialog'
+import NodeActionsPopover from './node-actions-popover'
 
 interface AttackerEntryRowProps {
-  placement: WarPlacement;
+  placement: WarPlacement
   /** compact: small portraits, hollow frames, no labels — full: large portraits, star frames, player name + node */
-  mode?: 'compact' | 'full';
+  mode?: 'compact' | 'full'
   /** readonly: hides KO controls and remove button */
-  readonly?: boolean;
+  readonly?: boolean
 }
 
 export default function AttackerEntryRow({
@@ -23,20 +32,31 @@ export default function AttackerEntryRow({
   mode = 'compact',
   readonly = false,
 }: Readonly<AttackerEntryRowProps>) {
-  const { t } = useI18n();
-  const { handleRemoveAttacker, handleUpdateKo, handleToggleCombatCompleted, handleToggleFightNotDone, handleTogglePlanningError, canManageWar, isVisitor, isMine, prefights } = useWar();
+  const { t } = useI18n()
+  const {
+    handleRemoveAttacker,
+    handleUpdateKo,
+    handleToggleCombatCompleted,
+    handleToggleFightNotDone,
+    handleTogglePlanningError,
+    canManageWar,
+    isVisitor,
+    isMine,
+    prefights,
+  } = useWar()
   // When assisted, only the assistor (or an officer) can toggle combat complete
-  const assistorCanManage = placement.is_assisted && isMine(placement.assistor_game_account_id ?? '');
-  const canToggleComplete = !placement.is_assisted || canManageWar || assistorCanManage;
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const nodePrefights = prefights.filter((p) => p.target_node_number === placement.node_number);
+  const assistorCanManage =
+    placement.is_assisted && isMine(placement.assistor_game_account_id ?? '')
+  const canToggleComplete = !placement.is_assisted || canManageWar || assistorCanManage
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const nodePrefights = prefights.filter((p) => p.target_node_number === placement.node_number)
 
-  const isFull = mode === 'full';
-  const portraitSize = isFull ? 55 : 40;
-  const btnSize = isFull ? 'w-7 h-7' : 'w-5 h-5';
-  const iconSize = isFull ? 'w-3.5 h-3.5' : 'w-2.5 h-2.5';
-  const swordsSize = isFull ? 'w-6 h-6' : 'w-3 h-3';
-  const boxPaddingSize = isFull ? 'px-7 py-2' : 'px-2 py-1.5';
+  const isFull = mode === 'full'
+  const portraitSize = isFull ? 55 : 40
+  const btnSize = isFull ? 'w-7 h-7' : 'w-5 h-5'
+  const iconSize = isFull ? 'w-3.5 h-3.5' : 'w-2.5 h-2.5'
+  const swordsSize = isFull ? 'w-6 h-6' : 'w-3 h-3'
+  const boxPaddingSize = isFull ? 'px-7 py-2' : 'px-2 py-1.5'
 
   return (
     <div
@@ -134,15 +154,12 @@ export default function AttackerEntryRow({
       </div>
 
       {placement.attacker_champion_user_id && (readonly || isVisitor) && (
-        <span
-          className={cn('font-mono text-muted-foreground', isFull ? 'text-sm' : 'text-xs')}
-        >
+        <span className={cn('font-mono text-muted-foreground', isFull ? 'text-sm' : 'text-xs')}>
           {placement.ko_count} KO
         </span>
       )}
       {placement.attacker_champion_user_id && !readonly && !isVisitor && (
         <>
-        
           {canToggleComplete && (
             <button
               type='button'
@@ -154,7 +171,11 @@ export default function AttackerEntryRow({
                 btnSize
               )}
               onClick={() => handleToggleCombatCompleted(placement.node_number)}
-              title={placement.is_combat_completed ? t.game.war.markCombatUndone : t.game.war.markCombatDone}
+              title={
+                placement.is_combat_completed
+                  ? t.game.war.markCombatUndone
+                  : t.game.war.markCombatDone
+              }
               data-cy={`combat-complete-node-${placement.node_number}`}
             >
               {placement.is_combat_completed ? (
@@ -209,7 +230,10 @@ export default function AttackerEntryRow({
 
           {placement.is_combat_completed && (
             <span
-              className={cn('font-mono text-center text-green-400', isFull ? 'text-sm w-5' : 'text-xs w-4')}
+              className={cn(
+                'font-mono text-center text-green-400',
+                isFull ? 'text-sm w-5' : 'text-xs w-4'
+              )}
               data-cy={`ko-value-node-${placement.node_number}`}
             >
               {placement.ko_count}
@@ -227,8 +251,14 @@ export default function AttackerEntryRow({
                 btnSize,
                 placement.is_planning_error && 'opacity-40 cursor-not-allowed'
               )}
-              onClick={() => !placement.is_planning_error && handleToggleFightNotDone(placement.node_number)}
-              title={placement.is_fight_not_done ? t.game.war.unmarkFightNotDone : t.game.war.markFightNotDone}
+              onClick={() =>
+                !placement.is_planning_error && handleToggleFightNotDone(placement.node_number)
+              }
+              title={
+                placement.is_fight_not_done
+                  ? t.game.war.unmarkFightNotDone
+                  : t.game.war.markFightNotDone
+              }
               data-cy={`fight-not-done-node-${placement.node_number}`}
             >
               <Ban className={cn(iconSize)} />
@@ -246,8 +276,14 @@ export default function AttackerEntryRow({
                 btnSize,
                 placement.is_fight_not_done && 'opacity-40 cursor-not-allowed'
               )}
-              onClick={() => !placement.is_fight_not_done && handleTogglePlanningError(placement.node_number)}
-              title={placement.is_planning_error ? t.game.war.unmarkPlanningError : t.game.war.markPlanningError}
+              onClick={() =>
+                !placement.is_fight_not_done && handleTogglePlanningError(placement.node_number)
+              }
+              title={
+                placement.is_planning_error
+                  ? t.game.war.unmarkPlanningError
+                  : t.game.war.markPlanningError
+              }
               data-cy={`planning-error-node-${placement.node_number}`}
             >
               <AlertTriangle className={cn(iconSize)} />
@@ -281,5 +317,5 @@ export default function AttackerEntryRow({
         </>
       )}
     </div>
-  );
+  )
 }

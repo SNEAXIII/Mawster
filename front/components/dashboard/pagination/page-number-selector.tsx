@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import React from 'react';
-import DropdownRadioMenu from '@/components/dashboard/pagination/dropdown-radio-menu';
-import { useI18n } from '@/app/i18n';
+import React from 'react'
+import DropdownRadioMenu from '@/components/dashboard/pagination/dropdown-radio-menu'
+import { useI18n } from '@/app/i18n'
 
 interface PageNumberSelectorProps {
-  usersPerPage: number;
-  onValueChange: (value: string) => void;
-  defaultSize?: number;
+  usersPerPage: number
+  onValueChange: (value: string) => void
+  defaultSize?: number
 }
 
 export default function PageNumberSelector({
@@ -15,13 +15,13 @@ export default function PageNumberSelector({
   onValueChange,
   defaultSize = 10,
 }: PageNumberSelectorProps) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
-  const sizes = [5, 10, 20, 50, 100];
+  const sizes = [5, 10, 20, 50, 100]
   const options = sizes.map((s) => ({
     value: String(s),
     label: s === defaultSize ? `${s} ${t.dashboard.pagination.default}` : String(s),
-  }));
+  }))
 
   return (
     <DropdownRadioMenu
@@ -31,5 +31,5 @@ export default function PageNumberSelector({
       selectedValue={String(usersPerPage)}
       setValue={onValueChange}
     />
-  );
+  )
 }

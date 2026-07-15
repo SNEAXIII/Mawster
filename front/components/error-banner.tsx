@@ -1,16 +1,16 @@
-'use client';
+'use client'
 
-import { AlertCircle, X } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { cn } from '@/app/lib/utils';
+import { AlertCircle, X } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { cn } from '@/app/lib/utils'
 
 type ErrorBannerProps = Readonly<{
-  message: string;
-  onDismiss?: () => void;
+  message: string
+  onDismiss?: () => void
   /** 'inline' = small red text, 'banner' = full red box (default) */
-  variant?: 'inline' | 'banner';
-  className?: string;
-}>;
+  variant?: 'inline' | 'banner'
+  className?: string
+}>
 
 export function ErrorBanner({
   message,
@@ -18,7 +18,7 @@ export function ErrorBanner({
   variant = 'banner',
   className = '',
 }: ErrorBannerProps) {
-  if (!message) return null;
+  if (!message) return null
 
   if (variant === 'inline') {
     return (
@@ -35,7 +35,7 @@ export function ErrorBanner({
           </button>
         )}
       </p>
-    );
+    )
   }
 
   return (
@@ -57,5 +57,5 @@ export function ErrorBanner({
         </button>
       )}
     </Alert>
-  );
+  )
 }

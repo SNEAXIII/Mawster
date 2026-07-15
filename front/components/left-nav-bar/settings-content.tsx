@@ -1,19 +1,19 @@
-'use client';
+'use client'
 
-import { LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import LanguageSwitcher from '@/components/language-switcher';
-import ThemePicker from '@/components/theme-picker';
-import { useI18n } from '@/app/i18n';
-import { signOutAndRedirect } from '@/app/lib/sign-out';
+import { LogOut } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import LanguageSwitcher from '@/components/language-switcher'
+import ThemePicker from '@/components/theme-picker'
+import { useI18n } from '@/app/i18n'
+import { signOutAndRedirect } from '@/app/lib/sign-out'
 
 interface SettingsContentProps {
-  isAuthenticated: boolean;
+  isAuthenticated: boolean
 }
 
 export default function SettingsContent({ isAuthenticated }: Readonly<SettingsContentProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <div className='mt-4 space-y-4'>
@@ -45,5 +45,5 @@ export default function SettingsContent({ isAuthenticated }: Readonly<SettingsCo
         </>
       )}
     </div>
-  );
+  )
 }

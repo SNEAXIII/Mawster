@@ -1,23 +1,23 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MemberChampionChart } from '@/app/components/statistics/member-champion-chart';
-import { ChampionDetailModal } from '@/app/components/statistics/champion-detail-modal';
-import { useProfileStats } from './use-profile-stats';
-import { ProfileAccountSeasonBar } from './profile-account-season-bar';
-import { ProfileStatsCard } from './profile-stats-card';
-import { ProfileRatioEvolutionChart } from './profile-ratio-evolution-chart';
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { MemberChampionChart } from '@/app/components/statistics/member-champion-chart'
+import { ChampionDetailModal } from '@/app/components/statistics/champion-detail-modal'
+import { useProfileStats } from './use-profile-stats'
+import { ProfileAccountSeasonBar } from './profile-account-season-bar'
+import { ProfileStatsCard } from './profile-stats-card'
+import { ProfileRatioEvolutionChart } from './profile-ratio-evolution-chart'
 
 export function ProfileStatsTab() {
-  const { t } = useI18n();
-  const s = t.profile.statistics;
-  const vm = useProfileStats();
-  const currentName = vm.accounts.find((a) => a.id === vm.accountId)?.game_pseudo ?? null;
+  const { t } = useI18n()
+  const s = t.profile.statistics
+  const vm = useProfileStats()
+  const currentName = vm.accounts.find((a) => a.id === vm.accountId)?.game_pseudo ?? null
 
   if (vm.accountsLoading) {
-    return <p className='text-sm text-muted-foreground py-6 text-center'>{s.loading}</p>;
+    return <p className='text-sm text-muted-foreground py-6 text-center'>{s.loading}</p>
   }
 
   if (vm.accounts.length === 0) {
@@ -28,11 +28,14 @@ export function ProfileStatsTab() {
       >
         {s.empty}
       </p>
-    );
+    )
   }
 
   return (
-    <div className='flex flex-col gap-4' data-cy='profile-stats-tab'>
+    <div
+      className='flex flex-col gap-4'
+      data-cy='profile-stats-tab'
+    >
       <ProfileAccountSeasonBar
         accounts={vm.accounts}
         accountId={vm.accountId}
@@ -47,7 +50,11 @@ export function ProfileStatsTab() {
       ) : vm.error && !vm.stats ? (
         <div className='flex flex-col items-center gap-2 py-6'>
           <p className='text-sm text-destructive'>{s.error}</p>
-          <Button size='sm' variant='outline' onClick={vm.retry}>
+          <Button
+            size='sm'
+            variant='outline'
+            onClick={vm.retry}
+          >
             {s.retry}
           </Button>
         </div>
@@ -58,7 +65,10 @@ export function ProfileStatsTab() {
             aria-busy={vm.loading}
           >
             <div className='flex flex-col flex-1 min-w-0  gap-6'>
-              <ProfileStatsCard stats={vm.stats.card} alliances={vm.stats.alliances} />
+              <ProfileStatsCard
+                stats={vm.stats.card}
+                alliances={vm.stats.alliances}
+              />
               <ProfileRatioEvolutionChart points={vm.stats.evolution} />
             </div>
             <div className='w-full lg:w-80 shrink-0'>
@@ -91,5 +101,5 @@ export function ProfileStatsTab() {
         </>
       ) : null}
     </div>
-  );
+  )
 }

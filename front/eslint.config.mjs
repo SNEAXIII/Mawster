@@ -1,7 +1,7 @@
-import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import prettierConfig from 'eslint-config-prettier';
-import reactHooks from 'eslint-plugin-react-hooks';
+import js from '@eslint/js'
+import tseslint from 'typescript-eslint'
+import prettierConfig from 'eslint-config-prettier'
+import reactHooks from 'eslint-plugin-react-hooks'
 
 export default tseslint.config(
   js.configs.recommended,
@@ -28,6 +28,19 @@ export default tseslint.config(
     },
   },
   {
+    // Build config files run in Node, not in the browser: they legitimately reach for `module`
+    // and `process`, which the base config knows nothing about.
+    files: ['*.config.js', '*.config.mjs', '*.config.ts'],
+    languageOptions: {
+      globals: {
+        module: 'writable',
+        require: 'readonly',
+        process: 'readonly',
+        __dirname: 'readonly',
+      },
+    },
+  },
+  {
     ignores: [
       '.next/**',
       '.next-3001/**',
@@ -37,4 +50,4 @@ export default tseslint.config(
       'postcss.config.js',
     ],
   }
-);
+)

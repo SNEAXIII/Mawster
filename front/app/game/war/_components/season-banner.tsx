@@ -1,17 +1,17 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import { Badge } from '@/components/ui/badge';
-import type { Season } from '@/app/services/season';
+import { useI18n } from '@/app/i18n'
+import { Badge } from '@/components/ui/badge'
+import type { Season } from '@/app/services/season'
 
 interface Props {
-  season: Season | null | undefined;
+  season: Season | null | undefined
 }
 
 export default function SeasonBanner({ season }: Readonly<Props>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
-  if (season === undefined) return null;
+  if (season === undefined) return null
 
   return (
     <div
@@ -42,5 +42,5 @@ export default function SeasonBanner({ season }: Readonly<Props>) {
         </Badge>
       )}
     </div>
-  );
+  )
 }

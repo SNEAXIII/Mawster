@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react'
 import {
   deleteMatchup,
   getMatchups,
   upsertMatchup,
   type MatchupRating,
   type MatchupUpsertBody,
-} from '@/app/services/matchups';
+} from '@/app/services/matchups'
 
 /**
  * Saved matchup ratings CRUD (used by the officer edit form/table). Split out of
@@ -23,42 +23,42 @@ export function useMatchupRatings(
   championId: string | null,
   onMutated: () => Promise<void>
 ) {
-  const [ratings, setRatings] = useState<MatchupRating[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [ratings, setRatings] = useState<MatchupRating[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   const loadRatings = useCallback(async () => {
     if (!allianceId || !championId) {
-      setRatings([]);
-      return;
+      setRatings([])
+      return
     }
     try {
-      setRatings(await getMatchups(allianceId, { champion_id: championId }));
+      setRatings(await getMatchups(allianceId, { champion_id: championId }))
     } catch {
-      setError('load-failed');
+      setError('load-failed')
     }
-  }, [allianceId, championId]);
+  }, [allianceId, championId])
 
   useEffect(() => {
-    void loadRatings();
-  }, [loadRatings]);
+    void loadRatings()
+  }, [loadRatings])
 
   const saveMatchup = useCallback(
     async (body: MatchupUpsertBody) => {
-      if (!allianceId) return;
-      await upsertMatchup(allianceId, body);
-      await Promise.all([loadRatings(), onMutated()]);
+      if (!allianceId) return
+      await upsertMatchup(allianceId, body)
+      await Promise.all([loadRatings(), onMutated()])
     },
     [allianceId, loadRatings, onMutated]
-  );
+  )
 
   const removeMatchup = useCallback(
     async (ratingId: string) => {
-      if (!allianceId) return;
-      await deleteMatchup(allianceId, ratingId);
-      await Promise.all([loadRatings(), onMutated()]);
+      if (!allianceId) return
+      await deleteMatchup(allianceId, ratingId)
+      await Promise.all([loadRatings(), onMutated()])
     },
     [allianceId, loadRatings, onMutated]
-  );
+  )
 
-  return { ratings, ratingsError: error, saveMatchup, removeMatchup };
+  return { ratings, ratingsError: error, saveMatchup, removeMatchup }
 }

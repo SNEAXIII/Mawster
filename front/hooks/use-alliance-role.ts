@@ -1,37 +1,39 @@
-'use client';
+'use client'
 
-import React, { useEffect } from 'react';
-import { useAllianceContext } from '@/app/contexts/alliance-context';
-import type { Alliance } from '@/app/services/game';
+import React, { useEffect } from 'react'
+import { useAllianceContext } from '@/app/contexts/alliance-context'
+import type { Alliance } from '@/app/services/game'
 
 export interface AllianceRoleAPI {
-  myAccountIds: Set<string>;
-  isMine: (gameAccountId: string) => boolean;
-  isOwner: (alliance: Alliance) => boolean;
-  canManage: (alliance: Alliance) => boolean;
-  getRoleFor: (allianceId: string) => ReturnType<ReturnType<typeof useAllianceContext>['getRoleFor']>;
-  loading: boolean;
-  refresh: () => Promise<void>;
+  myAccountIds: Set<string>
+  isMine: (gameAccountId: string) => boolean
+  isOwner: (alliance: Alliance) => boolean
+  canManage: (alliance: Alliance) => boolean
+  getRoleFor: (
+    allianceId: string
+  ) => ReturnType<ReturnType<typeof useAllianceContext>['getRoleFor']>
+  loading: boolean
+  refresh: () => Promise<void>
 }
 
 export function AllianceRoleProvider({
   children,
   refreshKey = 0,
 }: {
-  children: React.ReactNode;
-  refreshKey?: number;
+  children: React.ReactNode
+  refreshKey?: number
 }) {
-  const { refreshRoles } = useAllianceContext();
+  const { refreshRoles } = useAllianceContext()
 
   useEffect(() => {
-    if (refreshKey > 0) refreshRoles();
-  }, [refreshKey, refreshRoles]);
+    if (refreshKey > 0) refreshRoles()
+  }, [refreshKey, refreshRoles])
 
-  return React.createElement(React.Fragment, null, children);
+  return React.createElement(React.Fragment, null, children)
 }
 
 export function useAllianceRole(): AllianceRoleAPI {
-  const ctx = useAllianceContext();
+  const ctx = useAllianceContext()
   return {
     myAccountIds: ctx.myAccountIds,
     isMine: ctx.isMine,
@@ -40,5 +42,5 @@ export function useAllianceRole(): AllianceRoleAPI {
     getRoleFor: ctx.getRoleFor,
     loading: ctx.rolesLoading,
     refresh: ctx.refreshRoles,
-  };
+  }
 }

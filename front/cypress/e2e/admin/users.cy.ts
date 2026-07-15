@@ -8,9 +8,7 @@ describe('Admin — users panel', () => {
 
   beforeEach(() => {
     cy.truncateDb();
-    cy.apiBatchSetup([
-      { discord_token: 'users-super-admin', role: 'super_admin' },
-    ]).then((users) => {
+    cy.apiBatchSetup([{ discord_token: 'users-super-admin', role: 'super_admin' }]).then((users) => {
       superAdminToken = users['users-super-admin'].access_token;
       superAdminUserId = users['users-super-admin'].user_id;
       setupUser('users-regular-user').then(({ user_id, login }) => {

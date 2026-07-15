@@ -1,24 +1,24 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { getChampionUsage } from '@/app/services/statistics';
-import { getWars, type War } from '@/app/services/war';
-import { useChampionUsageChart } from '@/app/components/statistics/use-champion-usage-chart';
+import { useEffect, useState } from 'react'
+import { getChampionUsage } from '@/app/services/statistics'
+import { getWars, type War } from '@/app/services/war'
+import { useChampionUsageChart } from '@/app/components/statistics/use-champion-usage-chart'
 
 export function useChampionStats(allianceId: string, selectedGroup = 'all') {
-  const [selectedGameAccountId, setSelectedGameAccountId] = useState<string | null>(null);
-  const [selectedWarId, setSelectedWarId] = useState<string | null>(null);
-  const [wars, setWars] = useState<War[]>([]);
+  const [selectedGameAccountId, setSelectedGameAccountId] = useState<string | null>(null)
+  const [selectedWarId, setSelectedWarId] = useState<string | null>(null)
+  const [wars, setWars] = useState<War[]>([])
 
   useEffect(() => {
-    if (!allianceId) return;
+    if (!allianceId) return
     getWars(allianceId)
       .then((all) => setWars(all.filter((w) => w.season_id !== null && w.status === 'ended')))
-      .catch(console.error);
-  }, [allianceId]);
+      .catch(console.error)
+  }, [allianceId])
 
   const groupNum =
-    selectedGroup !== 'all' && selectedGroup !== 'none' ? Number(selectedGroup) : undefined;
+    selectedGroup !== 'all' && selectedGroup !== 'none' ? Number(selectedGroup) : undefined
 
   const chart = useChampionUsageChart(
     (deathless, perspective) =>
@@ -28,15 +28,15 @@ export function useChampionStats(allianceId: string, selectedGroup = 'all') {
         selectedWarId ?? undefined,
         groupNum,
         deathless,
-        perspective,
+        perspective
       ),
     [allianceId, selectedGameAccountId, selectedWarId, selectedGroup],
-    Boolean(allianceId),
-  );
+    Boolean(allianceId)
+  )
 
   const handleRowClick = (gameAccountId: string) => {
-    setSelectedGameAccountId((prev) => (prev === gameAccountId ? null : gameAccountId));
-  };
+    setSelectedGameAccountId((prev) => (prev === gameAccountId ? null : gameAccountId))
+  }
 
   return {
     selectedGameAccountId,
@@ -53,5 +53,5 @@ export function useChampionStats(allianceId: string, selectedGroup = 'all') {
     wars,
     chartLoading: chart.chartLoading,
     handleRowClick,
-  };
+  }
 }

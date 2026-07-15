@@ -1,15 +1,15 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import { Input } from '@/components/ui/input';
-import MatchupVerdictSelect from './matchup-verdict-select';
-import type { MatchupVerdict } from '@/app/services/matchups';
+import { useI18n } from '@/app/i18n'
+import { Input } from '@/components/ui/input'
+import MatchupVerdictSelect from './matchup-verdict-select'
+import type { MatchupVerdict } from '@/app/services/matchups'
 
 interface Props {
-  nodeNumber: string;
-  onNodeChange: (value: string) => void;
-  nodeVerdict: MatchupVerdict;
-  onNodeVerdictChange: (verdict: MatchupVerdict) => void;
+  nodeNumber: string
+  onNodeChange: (value: string) => void
+  nodeVerdict: MatchupVerdict
+  onNodeVerdictChange: (verdict: MatchupVerdict) => void
 }
 
 export default function MatchupFormNodeColumn({
@@ -18,11 +18,14 @@ export default function MatchupFormNodeColumn({
   nodeVerdict,
   onNodeVerdictChange,
 }: Readonly<Props>) {
-  const { t } = useI18n();
-  const kb = t.game.knowledgeBase;
+  const { t } = useI18n()
+  const kb = t.game.knowledgeBase
 
   return (
-    <div className='flex flex-col gap-3' data-cy='matchup-form-node-column'>
+    <div
+      className='flex flex-col gap-3'
+      data-cy='matchup-form-node-column'
+    >
       <h3 className='text-sm font-medium text-muted-foreground'>{kb.vsNode}</h3>
       <Input
         className='w-24'
@@ -42,5 +45,5 @@ export default function MatchupFormNodeColumn({
         />
       )}
     </div>
-  );
+  )
 }
