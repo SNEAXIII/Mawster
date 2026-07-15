@@ -8,6 +8,7 @@ from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
     execute_post_request,
+    execute_put_request,
     execute_delete_request,
     execute_patch_request,
 )
@@ -333,6 +334,38 @@ class TestRemoveWarDefender:
         )
         response = await execute_delete_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10",
+            headers=headers,
+        )
+        assert response.status_code == 204
+
+    @pytest.mark.asyncio
+    async def test_remove_defender_with_note_succeeds(self):
+        """A fight note references the placement via a SET NULL FK, so removing the
+        defender must not fail on a foreign-key constraint (the bug returned a 500)."""
+        data = await _setup_war()
+        headers = create_auth_headers(user_id=str(USER_ID))
+        base = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}"
+
+        await execute_post_request(
+            f"{base}/bg/1/place",
+            payload={
+                "node_number": 10,
+                "champion_id": str(data["champ"].id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
+            headers=headers,
+        )
+        note_response = await execute_put_request(
+            f"{base}/nodes/1/10/note",
+            payload={"content": "bait the special, then unstoppable"},
+            headers=headers,
+        )
+        assert note_response.status_code == 200
+
+        response = await execute_delete_request(
+            f"{base}/bg/1/node/10",
             headers=headers,
         )
         assert response.status_code == 204
