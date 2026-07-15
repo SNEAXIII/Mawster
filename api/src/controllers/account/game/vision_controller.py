@@ -5,7 +5,12 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from starlette import status
 
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND
-from src.Messages.vision_messages import NOT_YOUR_VISION_IMPORT, VISION_IMPORT_NOT_FOUND
+from src.Messages.vision_messages import (
+    JOB_NOT_RETRYABLE,
+    NOT_YOUR_VISION_IMPORT,
+    VISION_IMPORT_NOT_FOUND,
+    VISION_JOB_NOT_FOUND,
+)
 from src.dto.account.game.dto_vision import (
     VisionImportDetailResponse,
     VisionImportResponse,
@@ -14,8 +19,10 @@ from src.messaging import get_publisher
 from src.messaging.publisher import VisionPublisher
 from src.models import User
 from src.models.VisionImport import VisionImport
+from src.models.VisionJob import VisionJob, VisionJobStatus
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.account.game.VisionImportService import VisionImportService
+from src.services.account.game.VisionResultService import VisionResultService
 from src.services.auth.AuthService import AuthService
 from src.storage import get_storage
 from src.storage.base import Storage
@@ -95,3 +102,26 @@ async def delete_vision_import(
     because their job row is gone (see the idempotency check in plan 2)."""
     vision_import = await _get_own_import(session, import_id, current_user.id)
     await VisionImportService.delete_import(session, storage, vision_import)
+
+
+@vision_controller.post("/jobs/{job_id}/retry", status_code=status.HTTP_202_ACCEPTED)
+async def retry_vision_job(
+    session: SessionDep,
+    job_id: uuid.UUID,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    publisher: Annotated[VisionPublisher, Depends(get_publisher)],
+):
+    """Relaunch a screenshot the pipeline could not read.
+
+    There is no automatic retry: a failed screenshot usually fails for a
+    deterministic reason, and only the user knows whether the image was worth
+    anything. This is that decision.
+    """
+    job = await session.get(VisionJob, job_id)
+    if job is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=VISION_JOB_NOT_FOUND)
+    # Reuses the plan-1 ownership chain: import -> game_account -> user.
+    vision_import = await _get_own_import(session, job.import_id, current_user.id)
+    if job.status != VisionJobStatus.FAILED:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=JOB_NOT_RETRYABLE)
+    await VisionResultService.retry_job(session, publisher, job, vision_import)

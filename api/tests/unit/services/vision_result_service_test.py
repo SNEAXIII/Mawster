@@ -8,6 +8,14 @@ from src.models.VisionJob import VisionJob, VisionJobStatus
 from src.services.account.game.VisionResultService import VisionResultService
 
 
+class FakePublisher:
+    def __init__(self):
+        self.published: list[uuid.UUID] = []
+
+    async def publish_job(self, job_id, import_id, bucket, object_key) -> None:
+        self.published.append(job_id)
+
+
 class FakeSession:
     """Records what the service persists, without a database."""
 
@@ -166,3 +174,37 @@ async def test_a_failed_last_job_still_completes_the_import():
     await VisionResultService.handle(session, message)
 
     assert vision_import.status == VisionImportStatus.DONE
+
+
+@pytest.mark.asyncio
+async def test_retry_requeues_the_job_and_rewinds_the_progress():
+    """The failed job already counted as finished. Relaunching it must undo that,
+    or the import ends up `done` with a job still running, and screens_done
+    overshoots screens_total when the result comes back."""
+    job = _job(status=VisionJobStatus.FAILED, attempts=1)
+    job.error = "not a roster"
+    vision_import = _import(total=2, done=2)
+    vision_import.status = VisionImportStatus.DONE
+    session = FakeSession(job, vision_import)
+    publisher = FakePublisher()
+
+    await VisionResultService.retry_job(session, publisher, job, vision_import)
+
+    assert publisher.published == [job.id]
+    assert job.status == VisionJobStatus.PENDING
+    assert job.error is None
+    assert vision_import.screens_done == 1
+    assert vision_import.status == VisionImportStatus.RUNNING
+
+
+@pytest.mark.asyncio
+async def test_retry_of_the_only_job_puts_the_import_back_to_pending():
+    job = _job(status=VisionJobStatus.FAILED, attempts=1)
+    vision_import = _import(total=1, done=1)
+    vision_import.status = VisionImportStatus.DONE
+    session = FakeSession(job, vision_import)
+
+    await VisionResultService.retry_job(session, FakePublisher(), job, vision_import)
+
+    assert vision_import.screens_done == 0
+    assert vision_import.status == VisionImportStatus.PENDING

@@ -80,6 +80,34 @@ async def _post_import(headers, game_account_id, files, share_dataset: str = "fa
         )
 
 
+async def _get_import(headers, import_id) -> dict:
+    async with get_test_client() as client:
+        response = await client.get(f"/vision/imports/{import_id}", headers=headers)
+        return response.json()
+
+
+async def _fail_job(job_id: str) -> None:
+    """Drive a job into FAILED through the real service, exactly as a worker
+    failure would — rather than poking the row by hand."""
+    from src.dto.account.game.dto_vision_result import VisionResultMessage
+    from src.models.VisionJob import VisionJob
+    from src.services.account.game.VisionResultService import VisionResultService
+    from tests.utils.utils_db import get_test_session
+
+    async for session in get_test_session():
+        job = await session.get(VisionJob, uuid.UUID(job_id))
+        await VisionResultService.handle(
+            session,
+            VisionResultMessage(
+                job_id=job.id,
+                import_id=job.import_id,
+                status="failed",
+                error="not a roster",
+            ),
+        )
+        break
+
+
 @pytest.mark.asyncio
 async def test_create_import_stores_screens_and_publishes_one_job_each(fake_infra):
     storage, publisher = fake_infra
@@ -227,3 +255,67 @@ async def test_import_requires_authentication(fake_infra):
         response = await client.post("/vision/imports", files=[_png("a.png")])
 
     assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_retry_of_a_failed_job_requeues_it(fake_infra):
+    _, publisher = fake_infra
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+
+    created = await _post_import(headers, account.id, [_png("a.png")])
+    import_id = created.json()["id"]
+    detail = await _get_import(headers, import_id)
+    job_id = detail["jobs"][0]["id"]
+
+    await _fail_job(job_id)  # helper below
+    publisher.published.clear()
+
+    async with get_test_client() as client:
+        response = await client.post(f"/vision/jobs/{job_id}/retry", headers=headers)
+
+    assert response.status_code == 202
+    assert len(publisher.published) == 1
+
+    after = await _get_import(headers, import_id)
+    assert after["jobs"][0]["status"] == "pending"
+    assert after["screens_done"] == 0
+
+
+@pytest.mark.asyncio
+async def test_retry_of_a_job_that_did_not_fail_is_rejected(fake_infra):
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+
+    created = await _post_import(headers, account.id, [_png("a.png")])
+    detail = await _get_import(headers, created.json()["id"])
+    job_id = detail["jobs"][0]["id"]
+
+    async with get_test_client() as client:
+        response = await client.post(f"/vision/jobs/{job_id}/retry", headers=headers)
+
+    assert response.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_retry_of_another_users_job_is_forbidden(fake_infra):
+    await push_one_user()
+    await push_user2()
+    owner_account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+    created = await _post_import(
+        create_auth_headers(str(USER_ID)), owner_account.id, [_png("a.png")]
+    )
+    detail = await _get_import(create_auth_headers(str(USER_ID)), created.json()["id"])
+    job_id = detail["jobs"][0]["id"]
+    await _fail_job(job_id)
+
+    async with get_test_client() as client:
+        response = await client.post(
+            f"/vision/jobs/{job_id}/retry", headers=create_auth_headers(str(USER2_ID))
+        )
+
+    assert response.status_code == 403

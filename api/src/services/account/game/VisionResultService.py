@@ -1,9 +1,11 @@
 import logging
 
 from src.dto.account.game.dto_vision_result import VisionResultMessage
+from src.messaging.publisher import VisionPublisher
 from src.models.VisionImport import VisionImport, VisionImportStatus
 from src.models.VisionJob import VisionJob, VisionJobStatus
 from src.models.VisionPrediction import VisionPrediction
+from src.security.secrets import SECRET
 from src.utils.db import SessionDep
 
 logger = logging.getLogger(__name__)
@@ -45,6 +47,43 @@ class VisionResultService:
         cls._advance(session, vision_import)
 
         await session.commit()
+
+    @classmethod
+    async def retry_job(
+        cls,
+        session: SessionDep,
+        publisher: VisionPublisher,
+        job: VisionJob,
+        vision_import: VisionImport,
+    ) -> None:
+        """Put a failed screenshot back on the queue, at the user's request.
+
+        The failed job already counted towards `screens_done` (a dead screenshot
+        is a finished one). Relaunching it has to rewind that, or the import sits
+        at `done` with a job still running, and `screens_done` overshoots
+        `screens_total` when the second result lands.
+        """
+        job.status = VisionJobStatus.PENDING
+        job.error = None
+        session.add(job)
+
+        vision_import.screens_done = max(0, vision_import.screens_done - 1)
+        vision_import.status = (
+            VisionImportStatus.PENDING
+            if vision_import.screens_done == 0
+            else VisionImportStatus.RUNNING
+        )
+        session.add(vision_import)
+
+        await session.commit()
+
+        await publisher.publish_job(
+            job_id=job.id,
+            import_id=vision_import.id,
+            bucket=SECRET.RUSTFS_BUCKET_VISION,
+            object_key=job.object_key,
+        )
+        logger.info("vision job %s relaunched by the user (attempt %s)", job.id, job.attempts)
 
     @classmethod
     def _succeed(cls, session: SessionDep, job: VisionJob, message: VisionResultMessage) -> None:
