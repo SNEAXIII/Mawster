@@ -1,7 +1,7 @@
 # Root Makefile — E2E test orchestration + backup operations
 .PHONY: help e2e e2e-open e2e-parallel e2e-parallel-quiet e2e-db e2e-stop \
         backup-now backup-now-staging backup-list backup-restore backup-restore-staging backup-restore-remote deploy db \
-        migrate migrate-staging vision-up vision-down worker-up worker-logs
+        migrate migrate-staging vision-up vision-down worker-up worker-logs db-dev
 
 NEXTAUTH_SECRET ?= e2e-local-nextauth-secret
 NEXTAUTH_URL    ?= http://localhost:3000
@@ -289,7 +289,9 @@ panic:
 db-access:
 	docker compose -f compose-prod.yaml -f compose-prod.yaml -f compose-db-access.yaml up mariadb backup -d
 
-db-dev:
+# Depends on vision-up so a single `make db-dev` brings up the full dev stack:
+# rabbitmq + rustfs (+ rustfs-init to create the buckets) then mariadb + static.
+db-dev: vision-up
 	docker compose -f compose-dev.yaml up -d --build mariadb-dev static
 
 db-dev-all:
