@@ -228,7 +228,7 @@ services:
       MARIADB_USER: mawster
       MARIADB_DATABASE: mawster
       MARIADB_PORT: '3306'
-      BACKUP_INTERVAL: '3600'
+      BACKUP_INTERVAL: '7200'
     secrets:
       - mawster_db_root_password
       - mawster_rclone_conf
