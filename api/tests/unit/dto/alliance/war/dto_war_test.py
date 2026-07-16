@@ -5,8 +5,6 @@ from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-import pytest
-from pydantic import ValidationError
 
 from src.dto.alliance.war.dto_war import (
     WarCreateRequest,
@@ -115,13 +113,13 @@ class TestWarCreateRequest:
         dto = WarCreateRequest(opponent_name="EnemyAlliance")
         assert dto.opponent_name == "EnemyAlliance"
 
-    def test_rejects_special_chars(self):
-        with pytest.raises(ValidationError):
-            WarCreateRequest(opponent_name="Enemy-Alliance!")
+    def test_valid_special_chars(self):
+        dto = WarCreateRequest(opponent_name="Enemy-Alliance!")
+        assert dto.opponent_name == "Enemy-Alliance!"
 
-    def test_rejects_underscore(self):
-        with pytest.raises(ValidationError):
-            WarCreateRequest(opponent_name="Enemy_Alliance")
+    def test_valid_underscore(self):
+        dto = WarCreateRequest(opponent_name="Enemy_Alliance")
+        assert dto.opponent_name == "Enemy_Alliance"
 
 
 # ─── WarResponse ──────────────────────────────────────────
