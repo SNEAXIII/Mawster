@@ -370,7 +370,7 @@ jobs:
     needs: [changes, docker-api, docker-migrate, docker-front, docker-backup, docker-static]
     if: |
       always() &&
-      github.ref_name == 'release' &&
+      github.event_name == 'push' && github.ref_name == 'release' &&
       (needs.docker-api.result == 'success' || needs.docker-migrate.result == 'success' || needs.docker-front.result == 'success' || needs.docker-backup.result == 'success' || needs.docker-static.result == 'success') &&
       needs.docker-api.result != 'failure' &&
       needs.docker-migrate.result != 'failure' &&
@@ -389,7 +389,9 @@ jobs:
             cd /home/mawster/Mawster
             git config --global --add safe.directory /home/mawster/Mawster
 
-            git pull origin release
+            git fetch origin release
+            git checkout --detach
+            git reset --hard origin/release
 
             make backup-now
 
