@@ -65,10 +65,11 @@ services:
       - RABBITMQ_DEFAULT_USER=mawster
       - RABBITMQ_DEFAULT_PASS=mawster
     healthcheck:
-      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
-      interval: 10s
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'check_port_connectivity']
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
   rustfs:
     image: rustfs/rustfs:latest
     container_name: rustfs-dev
