@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -178,19 +179,19 @@ jobs:
           path: front/cypress/results
 
   changes:
-    if: github.ref_name == 'release' || github.ref_name == 'staging'
+    if: github.ref_name == 'release' || github.ref_name == 'staging' || github.event_name == 'workflow_dispatch'
     name: Compute deploy metadata
     runs-on: ubuntu-latest
     needs: e2e
     outputs:
       moving_tag: ${{ steps.meta.outputs.moving_tag }}
       tag_prefix: ${{ steps.meta.outputs.tag_prefix }}
-      also_staging: ${{ github.ref_name == 'release' && contains(github.event.head_commit.message, '[sync-staging]') }}
+      also_staging: ${{ github.event_name == 'push' && github.ref_name == 'release' }}
     steps:
       - name: Compute deploy metadata
         id: meta
         run: |
-          if [ "${{ github.ref_name }}" = "release" ]; then
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref_name }}" = "release" ]; then
             echo "moving_tag=latest" >> "$GITHUB_OUTPUT"
             echo "tag_prefix=" >> "$GITHUB_OUTPUT"
           else
