@@ -390,8 +390,10 @@ jobs:
             git config --global --add safe.directory /home/mawster/Mawster
 
             git fetch origin release
-            git checkout --detach
+            # reset first: checkout --detach refuses to run on an unmerged index,
+            # which past cross-merging pulls may have left behind.
             git reset --hard origin/release
+            git checkout --detach
 
             make backup-now
 
