@@ -41,9 +41,9 @@ class Settings(BaseSettings):
     RUSTFS_SECRET_KEY: str = Field(... if IS_PROD else "mawsterpassword")
     RUSTFS_BUCKET_VISION: str = Field("vision")
     RUSTFS_BUCKET_DATASET: str = Field("dataset")
-    # Le consumer AMQP est branché dans un plan ultérieur ; désactivé par défaut pour que
-    # les tests et la CI ne dépendent pas d'un broker.
-    VISION_CONSUMER_ENABLED: bool = Field(default=False)
+    # Le consumer AMQP tourne en dev et en prod ; désactivé uniquement en MODE=testing
+    # pour que la CI et la suite de tests ne dépendent jamais d'un broker.
+    VISION_CONSUMER_ENABLED: bool = Field(default=not IS_TESTING)
     VISION_PRESIGN_EXPIRE_SECONDS: int = Field(default=300)
     model_config = SettingsConfigDict(env_file=api_file)
 
