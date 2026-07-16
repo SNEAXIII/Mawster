@@ -23,7 +23,7 @@ TIMESTAMP=$(date '+%Y-%m-%d_%H-%M')
 FILENAME="${BACKUP_PREFIX}_${TIMESTAMP}.sql.gz"
 MAX_LOCAL_BYTES=$((5 * 1024 * 1024 * 1024))   # 5 GB
 MAX_REMOTE_BYTES=$((3 * 1024 * 1024 * 1024))  # 3 GB
-RETENTION_DAYS=31
+RETENTION_DAYS=14
 RCLONE_REMOTE="gdrive-crypt:mawster"
 
 # ── 1. Dump ───────────────────────────────────────────────────────────────────

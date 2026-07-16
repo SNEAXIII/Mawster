@@ -708,7 +708,12 @@ const en = {
       importUploadLabel: 'Select CSV file',
       importUploadHint: 'Format: attacker,defender,node,season,ko_count',
       importResolveTitle: 'Resolve unknown champions',
+      importResolveHint:
+        '{count} name(s) in your file match no champion. Map each one to a champion to enable the import.',
       importUnknown: 'Unknown: {name}',
+      importUnmappedBadge: 'To map',
+      importBlockedUnresolved: '{count} champion name(s) still need to be mapped above.',
+      importBlockedAlliance: 'Select an alliance to enable the import.',
       importAllianceLabel: 'Alliance',
       importConfirmBtn: 'Import {count} rows',
       importSuccess: 'Imported {count} fight records',

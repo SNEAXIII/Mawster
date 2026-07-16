@@ -16,6 +16,8 @@ FROM python:3.12-alpine
 
 LABEL maintainer="SNEAXIII <misterbalise2@gmail.com>"
 
+ENV PYTHONUNBUFFERED=1
+
 RUN apk add --no-cache bash && pip install uv
 
 WORKDIR /app

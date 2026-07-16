@@ -1,10 +1,9 @@
 'use client'
-import { Suspense } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import CsvImportForm from './_components/csv-import-form'
 
-function ImportContent() {
+export default function ImportPage() {
   const { t } = useI18n()
   return (
     <div className='px-3 py-4 sm:p-6'>
@@ -17,13 +16,5 @@ function ImportContent() {
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-export default function ImportPage() {
-  return (
-    <Suspense>
-      <ImportContent />
-    </Suspense>
   )
 }
