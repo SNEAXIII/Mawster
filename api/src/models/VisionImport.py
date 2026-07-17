@@ -16,6 +16,7 @@ class VisionImportStatus(str, Enum):
     RUNNING = "running"
     DONE = "done"
     FAILED = "failed"
+    CONFIRMED = "confirmed"
 
 
 class VisionImport(UUIDBase, TimestampMixin, table=True):

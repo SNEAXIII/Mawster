@@ -51,3 +51,23 @@ def test_vision_prediction_accepts_unknown_champion():
     )
     assert prediction.champion_name is None
     assert prediction.champion_class is None
+
+
+def test_vision_sample_construction():
+    from src.models.VisionSample import VisionSample
+
+    sample = VisionSample(
+        import_id=uuid.uuid4(),
+        game_account_id=uuid.uuid4(),
+        screen_key="imports/a/b/screen.png",
+        pred_json='{"champion_name": null}',
+        truth_json='{"champion_name": "Hulk"}',
+    )
+    assert sample.dataset_key is None
+    assert sample.screen_key.endswith("screen.png")
+
+
+def test_vision_import_has_confirmed_status():
+    from src.models.VisionImport import VisionImportStatus
+
+    assert VisionImportStatus.CONFIRMED.value == "confirmed"
