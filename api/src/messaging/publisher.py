@@ -63,7 +63,11 @@ class VisionPublisher:
             delivery_mode=DeliveryMode.PERSISTENT,
             message_id=str(job_id),
         )
-        await exchange.publish(message, routing_key=ROUTING_KEY_JOB)
+        # mandatory=True: if the message routes to no queue (topology gap, a
+        # deleted queue), the broker RETURNS it and aio-pika raises DeliveryError
+        # instead of silently dropping it. The caller (create_import / retry_job)
+        # already compensates a failed publish by marking the job JOB_NEVER_QUEUED.
+        await exchange.publish(message, routing_key=ROUTING_KEY_JOB, mandatory=True)
 
     async def close(self) -> None:
         if self._connection is not None:
