@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from pydantic import BaseModel
 from starlette import status
 
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND
@@ -21,12 +22,13 @@ from src.messaging.publisher import VisionPublisher
 from src.models import User
 from src.models.VisionImport import VisionImport
 from src.models.VisionJob import VisionJob, VisionJobStatus
+from src.security.secrets import SECRET
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.account.game.VisionImportService import VisionImportService
 from src.services.account.game.VisionResultService import VisionResultService
 from src.services.auth.AuthService import AuthService
 from src.storage import get_storage
-from src.storage.base import Storage
+from src.storage.base import Storage, crop_key
 from src.utils.db import SessionDep
 
 vision_controller = APIRouter(
@@ -34,6 +36,10 @@ vision_controller = APIRouter(
     tags=["Vision"],
     dependencies=[Depends(AuthService.get_current_user_in_jwt)],
 )
+
+
+class PresignedUrlResponse(BaseModel):
+    url: str
 
 
 async def _get_own_import(
@@ -102,6 +108,29 @@ async def get_vision_predictions(
     await _get_own_import(session, import_id, current_user.id)
     predictions = await VisionImportService.list_predictions(session, import_id)
     return VisionPredictionsResponse(import_id=import_id, predictions=predictions)
+
+
+@vision_controller.get(
+    "/imports/{import_id}/jobs/{job_id}/crops/{index}",
+    response_model=PresignedUrlResponse,
+)
+async def get_crop_url(
+    session: SessionDep,
+    import_id: uuid.UUID,
+    job_id: uuid.UUID,
+    index: int,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    storage: Annotated[Storage, Depends(get_storage)],
+):
+    """Short-lived presigned URL for one champion crop. The object key is rebuilt
+    server-side from ids whose ownership is verified — a client-supplied key would
+    let anyone read another user's screenshots by guessing."""
+    await _get_own_import(session, import_id, current_user.id)
+    key = crop_key(import_id, job_id, index)
+    url = await storage.presign_get(
+        SECRET.RUSTFS_BUCKET_VISION, key, SECRET.VISION_PRESIGN_EXPIRE_SECONDS
+    )
+    return PresignedUrlResponse(url=url)
 
 
 @vision_controller.delete("/imports/{import_id}", status_code=status.HTTP_204_NO_CONTENT)

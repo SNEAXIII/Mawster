@@ -413,6 +413,47 @@ async def test_predictions_endpoint_of_another_user_is_forbidden(fake_infra):
 
 
 @pytest.mark.asyncio
+async def test_crop_presigned_url_for_owner(fake_infra):
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    created = await _post_import(headers, account.id, [_png("a.png")])
+    import_id = created.json()["id"]
+    detail = await _get_import(headers, import_id)
+    job_id = detail["jobs"][0]["id"]
+
+    async with get_test_client() as client:
+        response = await client.get(
+            f"/vision/imports/{import_id}/jobs/{job_id}/crops/0", headers=headers
+        )
+
+    assert response.status_code == 200
+    assert response.json()["url"].startswith("http")
+
+
+@pytest.mark.asyncio
+async def test_crop_presigned_url_forbidden_for_non_owner(fake_infra):
+    await push_one_user()
+    await push_user2()
+    owner_account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+    created = await _post_import(
+        create_auth_headers(str(USER_ID)), owner_account.id, [_png("a.png")]
+    )
+    import_id = created.json()["id"]
+    detail = await _get_import(create_auth_headers(str(USER_ID)), import_id)
+    job_id = detail["jobs"][0]["id"]
+
+    async with get_test_client() as client:
+        response = await client.get(
+            f"/vision/imports/{import_id}/jobs/{job_id}/crops/0",
+            headers=create_auth_headers(str(USER2_ID)),
+        )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_retry_of_another_users_job_is_forbidden(fake_infra):
     await push_one_user()
     await push_user2()
