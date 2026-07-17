@@ -15,6 +15,7 @@ from src.dto.account.game.dto_vision import (
     VisionImportDetailResponse,
     VisionImportResponse,
 )
+from src.dto.account.game.dto_vision_predictions import VisionPredictionsResponse
 from src.messaging import get_publisher
 from src.messaging.publisher import VisionPublisher
 from src.models import User
@@ -89,6 +90,18 @@ async def get_vision_import(
 ):
     """Progress of an import. The front polls this while the batch runs."""
     return await _get_own_import(session, import_id, current_user.id)
+
+
+@vision_controller.get("/imports/{import_id}/predictions", response_model=VisionPredictionsResponse)
+async def get_vision_predictions(
+    session: SessionDep,
+    import_id: uuid.UUID,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """All predictions of an import, feeding the review screen's preview rows."""
+    await _get_own_import(session, import_id, current_user.id)
+    predictions = await VisionImportService.list_predictions(session, import_id)
+    return VisionPredictionsResponse(import_id=import_id, predictions=predictions)
 
 
 @vision_controller.delete("/imports/{import_id}", status_code=status.HTTP_204_NO_CONTENT)

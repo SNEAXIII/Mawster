@@ -339,6 +339,80 @@ async def test_retry_reverts_to_failed_when_publish_fails(fake_infra):
 
 
 @pytest.mark.asyncio
+async def test_predictions_endpoint_returns_staged_rows(fake_infra):
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    created = await _post_import(headers, account.id, [_png("a.png")])
+    import_id = created.json()["id"]
+    detail = await _get_import(headers, import_id)
+    job_id = detail["jobs"][0]["id"]
+
+    # Drive the job to done with one prediction through the real service.
+    from src.dto.account.game.dto_vision_result import (
+        VisionPredictionMessage,
+        VisionResultMessage,
+    )
+    from src.models.VisionJob import VisionJob
+    from src.services.account.game.VisionResultService import VisionResultService
+
+    async for session in get_test_session():
+        job = await session.get(VisionJob, uuid.UUID(job_id))
+        await VisionResultService.handle(
+            session,
+            VisionResultMessage(
+                job_id=job.id,
+                import_id=job.import_id,
+                status="done",
+                result_key="imports/a/b/result.json",
+                predictions=[
+                    VisionPredictionMessage(
+                        champion_name="Hulk",
+                        champion_class="Science",
+                        stars=7,
+                        rank=3,
+                        signature=200,
+                        ascension=1,
+                        confidence=0.9,
+                        crop_key="imports/a/b/crops/0.png",
+                    )
+                ],
+            ),
+        )
+        break
+
+    async with get_test_client() as client:
+        response = await client.get(f"/vision/imports/{import_id}/predictions", headers=headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["predictions"]) == 1
+    assert body["predictions"][0]["champion_name"] == "Hulk"
+    assert body["predictions"][0]["crop_index"] == 0
+
+
+@pytest.mark.asyncio
+async def test_predictions_endpoint_of_another_user_is_forbidden(fake_infra):
+    await push_one_user()
+    await push_user2()
+    owner_account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+    created = await _post_import(
+        create_auth_headers(str(USER_ID)), owner_account.id, [_png("a.png")]
+    )
+    import_id = created.json()["id"]
+
+    async with get_test_client() as client:
+        response = await client.get(
+            f"/vision/imports/{import_id}/predictions",
+            headers=create_auth_headers(str(USER2_ID)),
+        )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_retry_of_another_users_job_is_forbidden(fake_infra):
     await push_one_user()
     await push_user2()

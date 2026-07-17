@@ -1,5 +1,6 @@
 import logging
 import uuid
+from typing import TYPE_CHECKING
 
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import selectinload
@@ -20,6 +21,9 @@ from src.models.VisionJob import VisionJob, VisionJobStatus
 from src.security.secrets import SECRET
 from src.storage.base import Storage, import_prefix, screen_key
 from src.utils.db import SessionDep
+
+if TYPE_CHECKING:
+    from src.dto.account.game.dto_vision_predictions import VisionPredictionResponse
 
 MAX_SCREENS_PER_IMPORT = 40
 MAX_SCREEN_BYTES = 8 * 1024 * 1024
@@ -156,6 +160,61 @@ class VisionImportService:
             .options(selectinload(VisionImport.jobs).selectinload(VisionJob.predictions))
         )
         return result.first()
+
+    @classmethod
+    async def list_predictions(
+        cls, session: SessionDep, import_id: uuid.UUID
+    ) -> list["VisionPredictionResponse"]:
+        """All predictions of an import, ordered by job then id, carrying the crop
+        index parsed out of the stored crop_key and a stable per-import job index."""
+        from src.dto.account.game.dto_vision_predictions import VisionPredictionResponse
+        from src.models.VisionPrediction import VisionPrediction
+
+        jobs = (
+            await session.exec(
+                select(VisionJob)
+                .where(VisionJob.import_id == import_id)
+                .order_by(VisionJob.created_at)
+            )
+        ).all()
+        job_index = {job.id: i for i, job in enumerate(jobs)}
+
+        rows: list[VisionPredictionResponse] = []
+        for job in jobs:
+            preds = (
+                await session.exec(
+                    select(VisionPrediction)
+                    .where(VisionPrediction.job_id == job.id)
+                    .order_by(VisionPrediction.id)
+                )
+            ).all()
+            for pred in preds:
+                rows.append(
+                    VisionPredictionResponse(
+                        id=pred.id,
+                        job_id=job.id,
+                        champion_name=pred.champion_name,
+                        champion_class=pred.champion_class,
+                        stars=pred.stars,
+                        rank=pred.rank,
+                        signature=pred.signature,
+                        ascension=pred.ascension,
+                        confidence=pred.confidence,
+                        crop_index=cls._crop_index(pred.crop_key),
+                        job_index=job_index[job.id],
+                    )
+                )
+        return rows
+
+    @staticmethod
+    def _crop_index(crop_key: str | None) -> int | None:
+        """Parse the trailing crops/{n}.png index out of a stored crop key."""
+        if not crop_key:
+            return None
+        try:
+            return int(crop_key.rsplit("/", 1)[-1].removesuffix(".png"))
+        except ValueError:
+            return None
 
     @classmethod
     async def delete_import(
