@@ -39,6 +39,19 @@ if not IS_PROD:
 async def lifespan(_: FastAPI):
     consumer = get_consumer()
     await consumer.start()
+
+    # Recover jobs stranded in PENDING by a crash between commit and publish.
+    from src.messaging import get_publisher
+    from src.messaging.consumer import Session  # the lifespan sessionmaker
+    from src.services.account.game.VisionReaperService import VisionReaperService
+
+    if SECRET.VISION_CONSUMER_ENABLED:
+        try:
+            async with Session() as session:
+                await VisionReaperService.requeue_pending(session, get_publisher())
+        except Exception:  # noqa: BLE001
+            logger.exception("vision reaper failed at startup")
+
     yield
     await consumer.stop()
 
