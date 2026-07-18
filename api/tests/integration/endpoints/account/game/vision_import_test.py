@@ -720,6 +720,140 @@ async def test_confirm_of_another_users_import_is_forbidden(fake_infra):
     assert response.status_code == 403
 
 
+async def _get_current(headers, game_account_id):
+    async with get_test_client() as client:
+        return await client.get(
+            "/vision/imports/current",
+            params={"game_account_id": str(game_account_id)},
+            headers=headers,
+        )
+
+
+@pytest.mark.asyncio
+async def test_current_returns_204_when_nothing_awaits(fake_infra):
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+    response = await _get_current(create_auth_headers(str(USER_ID)), account.id)
+
+    assert response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_current_excludes_an_import_whose_images_expired(fake_infra):
+    """Past the retention window the screenshots and crops are gone, so there is
+    nothing left to check the predictions against."""
+    from datetime import datetime, timedelta, timezone
+
+    from src.models.VisionImport import VisionImport
+    from src.security.secrets import SECRET
+    from tests.utils.utils_db import get_test_session
+
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    created = await _post_import(headers, account.id, [_png("a.png")])
+
+    async for session in get_test_session():
+        row = await session.get(VisionImport, uuid.UUID(created.json()["id"]))
+        row.created_at = datetime.now(timezone.utc) - timedelta(
+            days=SECRET.VISION_RETENTION_DAYS + 1
+        )
+        session.add(row)
+        await session.commit()
+        break
+
+    response = await _get_current(headers, account.id)
+
+    assert response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_current_returns_an_unconfirmed_done_import_with_predictions_count(fake_infra):
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    created = await _post_import(headers, account.id, [_png("a.png")])
+    import_id = created.json()["id"]
+    detail = await _get_import(headers, import_id)
+    job_id = detail["jobs"][0]["id"]
+    await _drive_job_done_with_prediction(job_id)
+
+    response = await _get_current(headers, account.id)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == import_id
+    assert body["status"] == "done"
+    assert body["predictions_count"] == 1
+
+
+@pytest.mark.asyncio
+async def test_current_excludes_a_confirmed_import(fake_infra):
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    created = await _post_import(headers, account.id, [_png("a.png")])
+    import_id = created.json()["id"]
+    detail = await _get_import(headers, import_id)
+    job_id = detail["jobs"][0]["id"]
+    await _drive_job_done_with_prediction(job_id)
+
+    async with get_test_client() as client:
+        confirmed = await client.post(
+            f"/vision/imports/{import_id}/confirm", headers=headers, json={"rows": []}
+        )
+    assert confirmed.status_code == 200
+
+    response = await _get_current(headers, account.id)
+
+    assert response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_current_excludes_a_cancelled_import(fake_infra):
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    created = await _post_import(headers, account.id, [_png("a.png")])
+    import_id = created.json()["id"]
+
+    async with get_test_client() as client:
+        cancelled = await client.delete(f"/vision/imports/{import_id}", headers=headers)
+    assert cancelled.status_code == 204
+
+    response = await _get_current(headers, account.id)
+
+    assert response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_current_returns_the_most_recent_candidate(fake_infra):
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    await _post_import(headers, account.id, [_png("a.png")])
+    newest = await _post_import(headers, account.id, [_png("b.png")])
+    newest_id = newest.json()["id"]
+
+    response = await _get_current(headers, account.id)
+
+    assert response.status_code == 200
+    assert response.json()["id"] == newest_id
+
+
+@pytest.mark.asyncio
+async def test_current_of_another_users_game_account_is_forbidden(fake_infra):
+    await push_one_user()
+    await push_user2()
+    owner_account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+    response = await _get_current(create_auth_headers(str(USER2_ID)), owner_account.id)
+
+    assert response.status_code == 403
+
+
 @pytest.mark.asyncio
 async def test_retry_of_another_users_job_is_forbidden(fake_infra):
     await push_one_user()

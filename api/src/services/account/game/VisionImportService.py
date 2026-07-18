@@ -1,10 +1,11 @@
 import logging
 import uuid
-from typing import TYPE_CHECKING
+from datetime import datetime, timedelta, timezone
+from typing import Optional, TYPE_CHECKING
 
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import selectinload
-from sqlmodel import select
+from sqlmodel import func, select
 from starlette import status
 
 from src.Messages.vision_messages import (
@@ -161,6 +162,44 @@ class VisionImportService:
             .options(selectinload(VisionImport.jobs).selectinload(VisionJob.predictions))
         )
         return result.first()
+
+    @classmethod
+    async def get_current(
+        cls, session: SessionDep, game_account_id: uuid.UUID
+    ) -> Optional[VisionImport]:
+        """The single import that still needs attention for this game account.
+
+        CONFIRMED and CANCELLED are done with. Imports older than the retention
+        window have lost their screenshots and crops to the bucket lifecycle, so
+        validating them would mean approving data whose evidence is gone.
+        """
+        cutoff = datetime.now(timezone.utc) - timedelta(days=SECRET.VISION_RETENTION_DAYS)
+        statement = (
+            select(VisionImport)
+            .where(
+                VisionImport.game_account_id == game_account_id,
+                VisionImport.status.notin_(
+                    [VisionImportStatus.CONFIRMED, VisionImportStatus.CANCELLED]
+                ),
+                VisionImport.created_at > cutoff,
+            )
+            .order_by(VisionImport.created_at.desc(), VisionImport.id.desc())
+            .limit(1)
+        )
+        return (await session.exec(statement)).first()
+
+    @classmethod
+    async def count_predictions(cls, session: SessionDep, import_id: uuid.UUID) -> int:
+        """How many champions were read across every job of this import."""
+        from src.models.VisionJob import VisionJob
+        from src.models.VisionPrediction import VisionPrediction
+
+        statement = (
+            select(func.count(VisionPrediction.id))
+            .join(VisionJob, VisionJob.id == VisionPrediction.job_id)
+            .where(VisionJob.import_id == import_id)
+        )
+        return (await session.exec(statement)).one()
 
     @classmethod
     async def list_predictions(
