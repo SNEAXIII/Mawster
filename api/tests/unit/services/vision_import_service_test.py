@@ -43,9 +43,6 @@ class FakeStorage:
     async def get_bytes(self, bucket: str, key: str) -> bytes:  # pragma: no cover
         raise NotImplementedError
 
-    async def presign_get(self, bucket: str, key: str, expires_in: int) -> str:  # pragma: no cover
-        raise NotImplementedError
-
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
         self._record("delete_prefix")
         if self.fail_delete:

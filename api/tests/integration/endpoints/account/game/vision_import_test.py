@@ -39,9 +39,6 @@ class FakeStorage:
             )
         return self.objects[key]
 
-    async def presign_get(self, bucket: str, key: str, expires_in: int) -> str:
-        return f"http://fake/{key}"
-
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
         for key in [key for key in self.objects if key.startswith(prefix)]:
             del self.objects[key]

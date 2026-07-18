@@ -15,10 +15,9 @@ class S3Storage(Storage):
     def __init__(self) -> None:
         self._session = aioboto3.Session()
 
-    # RustFS only validates presigned URLs signed with SigV4. Without this,
-    # botocore falls back to SigV2 here and every presigned crop URL comes back
-    # 403 SignatureDoesNotMatch — while plain get/put still succeed, so the
-    # breakage only shows up in the browser.
+    # Sign with SigV4. Botocore otherwise falls back to SigV2 against a custom
+    # endpoint, which is long deprecated and which RustFS rejects outright on
+    # some request shapes.
     _CONFIG = Config(signature_version="s3v4")
 
     def _client(self):
@@ -38,14 +37,6 @@ class S3Storage(Storage):
         async with self._client() as client:
             response = await client.get_object(Bucket=bucket, Key=key)
             return await response["Body"].read()
-
-    async def presign_get(self, bucket: str, key: str, expires_in: int) -> str:
-        async with self._client() as client:
-            return await client.generate_presigned_url(
-                "get_object",
-                Params={"Bucket": bucket, "Key": key},
-                ExpiresIn=expires_in,
-            )
 
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
         async with self._client() as client:

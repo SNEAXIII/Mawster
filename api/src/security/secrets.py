@@ -44,7 +44,6 @@ class Settings(BaseSettings):
     # Le consumer AMQP tourne en dev et en prod ; désactivé uniquement en MODE=testing
     # pour que la CI et la suite de tests ne dépendent jamais d'un broker.
     VISION_CONSUMER_ENABLED: bool = Field(default=not IS_TESTING)
-    VISION_PRESIGN_EXPIRE_SECONDS: int = Field(default=300)
     model_config = SettingsConfigDict(env_file=api_file)
 
 
