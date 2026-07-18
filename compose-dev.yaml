@@ -105,6 +105,13 @@ services:
         done
         aws --endpoint-url http://rustfs:9000 s3 mb s3://vision  2>/dev/null || true
         aws --endpoint-url http://rustfs:9000 s3 mb s3://dataset 2>/dev/null || true
+        # imports/ crops and screenshots are transient working data — expire after
+        # 7 days. put-bucket-lifecycle-configuration replaces wholesale, so this is
+        # idempotent by nature. dataset holds opt-in training samples and must stay
+        # permanent — no lifecycle rule is applied to it.
+        aws --endpoint-url http://rustfs:9000 s3api put-bucket-lifecycle-configuration \
+          --bucket vision \
+          --lifecycle-configuration '{"Rules":[{"ID":"expire-imports-7d","Status":"Enabled","Filter":{"Prefix":"imports/"},"Expiration":{"Days":7}}]}'
         aws --endpoint-url http://rustfs:9000 s3 ls
     restart: 'no'
     volumes:
