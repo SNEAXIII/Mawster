@@ -76,7 +76,9 @@ export default function ImportPreviewDialog({
         <div className='flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700 px-2'>
           {previewRows.map((row, index) => (
             <ImportPreviewRow
-              key={`${row.champion_name}_${row.newRarity}`}
+              // Keyed on fields the user cannot edit: newRarity is editable, and
+              // keying on it remounts the row on every rarity change, dropping focus.
+              key={row.prediction_id ?? `${row.champion_name}_${index}`}
               row={row}
               index={index}
               onRowChange={onRowChange}
