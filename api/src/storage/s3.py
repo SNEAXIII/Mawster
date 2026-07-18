@@ -1,4 +1,5 @@
 import aioboto3
+from botocore.config import Config
 
 from src.security.secrets import SECRET
 from src.storage.base import Storage
@@ -14,12 +15,19 @@ class S3Storage(Storage):
     def __init__(self) -> None:
         self._session = aioboto3.Session()
 
+    # RustFS only validates presigned URLs signed with SigV4. Without this,
+    # botocore falls back to SigV2 here and every presigned crop URL comes back
+    # 403 SignatureDoesNotMatch — while plain get/put still succeed, so the
+    # breakage only shows up in the browser.
+    _CONFIG = Config(signature_version="s3v4")
+
     def _client(self):
         return self._session.client(
             "s3",
             endpoint_url=SECRET.RUSTFS_ENDPOINT,
             aws_access_key_id=SECRET.RUSTFS_ACCESS_KEY,
             aws_secret_access_key=SECRET.RUSTFS_SECRET_KEY,
+            config=self._CONFIG,
         )
 
     async def put_bytes(self, bucket: str, key: str, data: bytes, content_type: str) -> None:
