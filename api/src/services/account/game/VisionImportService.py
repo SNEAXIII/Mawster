@@ -19,6 +19,7 @@ from src.messaging.publisher import VisionPublisher
 from src.models.VisionImport import VisionImport, VisionImportStatus
 from src.models.VisionJob import VisionJob, VisionJobStatus
 from src.security.secrets import SECRET
+from src.services.account.game.VisionDatasetService import ConfirmedRow, VisionDatasetService
 from src.storage.base import Storage, import_prefix, screen_key
 from src.utils.db import SessionDep
 
@@ -250,3 +251,23 @@ class VisionImportService:
                 import_prefix(vision_import.id),
                 exc_info=True,
             )
+
+    @classmethod
+    async def confirm(
+        cls,
+        session: SessionDep,
+        storage: Storage,
+        vision_import: VisionImport,
+        rows: list[ConfirmedRow],
+    ) -> int:
+        """Archive the dataset (if opted in) and mark the import confirmed.
+
+        The roster itself is written by the frontend via bulkUpdateRoster —
+        this does NOT touch ChampionUser, to keep a single writer of roster
+        truth.
+        """
+        archived = await VisionDatasetService.archive(session, storage, vision_import, rows)
+        vision_import.status = VisionImportStatus.CONFIRMED
+        session.add(vision_import)
+        await session.commit()
+        return archived

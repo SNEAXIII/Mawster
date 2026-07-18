@@ -24,6 +24,7 @@ from src.models.VisionImport import VisionImport
 from src.models.VisionJob import VisionJob, VisionJobStatus
 from src.security.secrets import SECRET
 from src.services.account.game.GameAccountService import GameAccountService
+from src.services.account.game.VisionDatasetService import ConfirmedRow
 from src.services.account.game.VisionImportService import VisionImportService
 from src.services.account.game.VisionResultService import VisionResultService
 from src.services.auth.AuthService import AuthService
@@ -40,6 +41,14 @@ vision_controller = APIRouter(
 
 class PresignedUrlResponse(BaseModel):
     url: str
+
+
+class VisionConfirmRequest(BaseModel):
+    rows: list[ConfirmedRow]
+
+
+class VisionConfirmResponse(BaseModel):
+    samples_archived: int
 
 
 async def _get_own_import(
@@ -108,6 +117,22 @@ async def get_vision_predictions(
     await _get_own_import(session, import_id, current_user.id)
     predictions = await VisionImportService.list_predictions(session, import_id)
     return VisionPredictionsResponse(import_id=import_id, predictions=predictions)
+
+
+@vision_controller.post("/imports/{import_id}/confirm", response_model=VisionConfirmResponse)
+async def confirm_vision_import(
+    session: SessionDep,
+    import_id: uuid.UUID,
+    body: VisionConfirmRequest,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    storage: Annotated[Storage, Depends(get_storage)],
+):
+    """Archive the dataset (if opted in) and mark the import confirmed. The roster
+    write happens on the frontend via the existing bulk endpoint — this route does
+    not touch the roster."""
+    vision_import = await _get_own_import(session, import_id, current_user.id)
+    archived = await VisionImportService.confirm(session, storage, vision_import, body.rows)
+    return VisionConfirmResponse(samples_archived=archived)
 
 
 @vision_controller.get(
