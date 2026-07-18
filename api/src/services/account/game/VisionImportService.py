@@ -265,7 +265,15 @@ class VisionImportService:
         The roster itself is written by the frontend via bulkUpdateRoster —
         this does NOT touch ChampionUser, to keep a single writer of roster
         truth.
+
+        Idempotent: a retry (network timeout, double-click) on an import that
+        is already CONFIRMED is a no-op — no new samples archived, nothing
+        written to storage, no status rewrite. Without this guard, a retry
+        would re-archive the same samples into the permanent dataset bucket,
+        leaving duplicates there forever.
         """
+        if vision_import.status == VisionImportStatus.CONFIRMED:
+            return 0
         archived = await VisionDatasetService.archive(session, storage, vision_import, rows)
         vision_import.status = VisionImportStatus.CONFIRMED
         session.add(vision_import)

@@ -533,6 +533,60 @@ async def test_confirm_archives_one_sample_per_row_when_opted_in(fake_infra):
 
 
 @pytest.mark.asyncio
+async def test_confirming_twice_is_idempotent(fake_infra):
+    """A retry (network timeout, double-click) must not re-archive samples: the
+    second confirm is a no-op, and only ONE sample object ever lands in storage."""
+    storage, _ = fake_infra
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+
+    created = await _post_import(headers, account.id, [_png("a.png")], share_dataset="true")
+    import_id = created.json()["id"]
+    detail = await _get_import(headers, import_id)
+    job_id = detail["jobs"][0]["id"]
+    await _drive_job_done_with_prediction(job_id)
+
+    async with get_test_client() as client:
+        predictions = await client.get(f"/vision/imports/{import_id}/predictions", headers=headers)
+    prediction_id = predictions.json()["predictions"][0]["id"]
+
+    confirm_body = {
+        "rows": [
+            {
+                "champion_name": "Hulk",
+                "rarity": "7r3",
+                "signature": 200,
+                "ascension": 1,
+                "is_preferred_attacker": False,
+                "prediction_id": prediction_id,
+            }
+        ]
+    }
+
+    async with get_test_client() as client:
+        first = await client.post(
+            f"/vision/imports/{import_id}/confirm", headers=headers, json=confirm_body
+        )
+
+    assert first.status_code == 200
+    assert first.json()["samples_archived"] == 1
+    sample_keys_after_first = {key for key in storage.objects if key.startswith("samples/")}
+    assert len(sample_keys_after_first) == 1
+
+    async with get_test_client() as client:
+        second = await client.post(
+            f"/vision/imports/{import_id}/confirm", headers=headers, json=confirm_body
+        )
+
+    assert second.status_code == 200
+    assert second.json()["samples_archived"] == 0
+    sample_keys_after_second = {key for key in storage.objects if key.startswith("samples/")}
+    # Still only the one sample object written by the first call.
+    assert sample_keys_after_second == sample_keys_after_first
+
+
+@pytest.mark.asyncio
 async def test_confirm_archives_nothing_without_opt_in(fake_infra):
     storage, _ = fake_infra
     await push_one_user()
