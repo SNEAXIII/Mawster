@@ -6,6 +6,7 @@ def test_vision_settings_have_dev_defaults():
     assert SECRET.RUSTFS_ENDPOINT.startswith("http://")
     assert SECRET.RUSTFS_BUCKET_VISION == "vision"
     assert SECRET.RUSTFS_BUCKET_DATASET == "dataset"
+    assert SECRET.VISION_RETENTION_DAYS == 7
 
 
 def test_vision_consumer_follows_the_testing_mode():

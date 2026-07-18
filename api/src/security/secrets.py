@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     # Le consumer AMQP tourne en dev et en prod ; désactivé uniquement en MODE=testing
     # pour que la CI et la suite de tests ne dépendent jamais d'un broker.
     VISION_CONSUMER_ENABLED: bool = Field(default=not IS_TESTING)
+    # Fenêtre de rétention des objets d'import. DOIT rester alignée sur la règle
+    # de lifecycle posée sur le bucket vision par rustfs-init : au-delà, les
+    # images n'existent plus et un import ne peut plus être validé honnêtement.
+    VISION_RETENTION_DAYS: int = Field(default=7)
     model_config = SettingsConfigDict(env_file=api_file)
 
 
