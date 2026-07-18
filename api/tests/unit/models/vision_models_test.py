@@ -60,8 +60,6 @@ def test_vision_sample_construction():
         import_id=uuid.uuid4(),
         game_account_id=uuid.uuid4(),
         screen_key="imports/a/b/screen.png",
-        pred_json='{"champion_name": null}',
-        truth_json='{"champion_name": "Hulk"}',
     )
     assert sample.dataset_key is None
     assert sample.screen_key.endswith("screen.png")
