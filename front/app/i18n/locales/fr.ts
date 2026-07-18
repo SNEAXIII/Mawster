@@ -1028,6 +1028,8 @@ const fr: Translations = {
         uploadError: "Échec de l'envoi des captures d'écran.",
         pollFailed: "L'import a échoué. Veuillez réessayer.",
         pollTimeout: "L'import prend trop de temps. Veuillez réessayer.",
+        datasetArchiveFailed:
+          "Roster importé. La contribution au dataset n'a pas pu être enregistrée.",
       },
     },
     errors: {

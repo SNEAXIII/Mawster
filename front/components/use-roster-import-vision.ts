@@ -208,9 +208,12 @@ export function useRosterImportVision({
     try {
       await confirmVisionImport(importId, rows)
     } catch {
-      // Archiving the dataset is best-effort — the roster write already succeeded.
+      // Archiving the dataset is best-effort — the roster write already succeeded,
+      // so this must not fail the import. Still, silently swallowing it left the
+      // user with no signal their "contribute to the dataset" opt-in did nothing.
+      toast.warning(t.roster.importExport.vision.datasetArchiveFailed)
     }
-  }, [importId, core.previewRows])
+  }, [importId, core.previewRows, t])
 
   return {
     visionInputRef,

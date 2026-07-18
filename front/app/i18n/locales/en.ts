@@ -1017,6 +1017,7 @@ const en = {
         uploadError: 'Failed to upload the screenshots.',
         pollFailed: 'The import failed. Please try again.',
         pollTimeout: 'The import is taking too long. Please try again.',
+        datasetArchiveFailed: 'Roster imported. Your dataset contribution could not be saved.',
       },
     },
     errors: {
