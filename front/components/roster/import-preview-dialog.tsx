@@ -111,6 +111,7 @@ export default function ImportPreviewDialog({
           <Button
             onClick={onImport}
             disabled={importing || newCount + changeCount === 0}
+            data-cy='import-preview-confirm-button'
           >
             {importing
               ? t.roster.importExport.importing
