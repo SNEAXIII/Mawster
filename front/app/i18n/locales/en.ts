@@ -1012,6 +1012,12 @@ const en = {
       badgeSkipped: 'SKIPPED',
       badgeError: 'ERROR',
       close: 'Close',
+      importVision: 'AI Import',
+      visionUploading: 'Uploading…',
+      visionProcessing: 'Processing…',
+      visionFailed: 'The AI import failed.',
+      visionNoChampions: 'No champions were detected in these images.',
+      editHint: 'Review the detected champions below and correct any mistake before importing.',
       vision: {
         noImagesSelected: 'Please select at least one image.',
         uploadError: 'Failed to upload the screenshots.',

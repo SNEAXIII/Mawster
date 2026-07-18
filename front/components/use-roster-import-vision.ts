@@ -11,7 +11,7 @@ import {
   type VisionPrediction,
   type ConfirmedRow,
 } from '@/app/services/vision'
-import { type PreviewRow } from '@/components/roster/import-preview-row'
+import { type PreviewRow, type PreviewRowPatch } from '@/components/roster/import-preview-row'
 import {
   useRosterImportCore,
   buildPreviewRow,
@@ -115,6 +115,9 @@ export function useRosterImportVision({
             confidence: rarityValid ? prediction.confidence : 0,
             cropUrl,
             prediction_id: prediction.id,
+            // Vision predictions always go through the editable review row —
+            // unlike JSON rows, which are trusted as-is.
+            editable: true,
           }
         })
       )
@@ -146,6 +149,10 @@ export function useRosterImportVision({
                 predictionsRes.predictions
               )
               setUploading(false)
+              if (rows.length === 0) {
+                toast.error(t.roster.importExport.visionNoChampions)
+                return
+              }
               core.openPreview(rows)
               return
             }
@@ -193,6 +200,28 @@ export function useRosterImportVision({
     [selectedAccountId, shareDataset, pollImport, finishWithError, t]
   )
 
+  // ── Manual corrections from the editable review row ─────
+  const onRowChange = useCallback(
+    (index: number, patch: PreviewRowPatch) => {
+      core.setPreviewRows((prev) =>
+        prev.map((row, i) => {
+          if (i !== index) return row
+          const updated = { ...row, ...patch }
+          return {
+            ...updated,
+            // Recompute the diff so a manually corrected row still counts
+            // toward the import (isNew rows always do).
+            hasChanges:
+              updated.isNew ||
+              updated.oldRarity !== updated.newRarity ||
+              updated.oldSignature !== updated.newSignature,
+          }
+        })
+      )
+    },
+    [core.setPreviewRows]
+  )
+
   // ── Archive the confirmed dataset (best-effort) ─────────
   const onConfirmed = useCallback(async () => {
     if (importId == null) return
@@ -228,6 +257,7 @@ export function useRosterImportVision({
     setReportOpen: core.setReportOpen,
     importResults: core.importResults,
     executeImport: core.executeImport,
+    onRowChange,
     onConfirmed,
   }
 }

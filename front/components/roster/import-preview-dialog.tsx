@@ -68,6 +68,10 @@ export default function ImportPreviewDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {editable && (
+          <p className='text-xs text-muted-foreground'>{t.roster.importExport.editHint}</p>
+        )}
+
         {/* Scrollable list */}
         <div className='flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700 px-2'>
           {previewRows.map((row, index) => (

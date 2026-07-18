@@ -1023,6 +1023,12 @@ const fr: Translations = {
       badgeSkipped: 'IGNORÉ',
       badgeError: 'ERREUR',
       close: 'Fermer',
+      importVision: 'Import IA',
+      visionUploading: 'Envoi en cours…',
+      visionProcessing: 'Analyse en cours…',
+      visionFailed: "L'import IA a échoué.",
+      visionNoChampions: 'Aucun champion détecté sur ces images.',
+      editHint: 'Vérifiez les champions détectés ci-dessous et corrigez les erreurs avant import.',
       vision: {
         noImagesSelected: 'Veuillez sélectionner au moins une image.',
         uploadError: "Échec de l'envoi des captures d'écran.",
