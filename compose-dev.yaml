@@ -134,6 +134,31 @@ services:
       - RUSTFS_BUCKET_VISION=vision
       - MCOC_DEVICE=cpu
     restart: unless-stopped
+  # Model-free stand-in for vision-worker, used by the E2E suite to exercise
+  # the front -> API -> RabbitMQ -> worker -> API -> preview wiring without
+  # the real worker's ~3.5 GB of ML models. Gated behind `profiles: [e2e]` so
+  # a plain `docker compose up` never starts it — it consumes the SAME
+  # `vision.jobs` queue as vision-worker, and running both at once would make
+  # message delivery non-deterministic. Start with:
+  #   docker compose -f compose-dev.yaml --profile e2e up -d fake-vision-worker
+  fake-vision-worker:
+    build:
+      context: ./fake-worker
+    image: mawster-fake-vision-worker:local
+    container_name: fake-vision-worker
+    profiles: [e2e]
+    networks:
+      - internal-dev
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_URL=amqp://mawster:mawster@rabbitmq:5672/
+      - RUSTFS_ENDPOINT=http://rustfs:9000
+      - RUSTFS_ACCESS_KEY=mawster
+      - RUSTFS_SECRET_KEY=mawsterpassword
+      - RUSTFS_BUCKET_VISION=vision
+    restart: unless-stopped
   static:
     build:
       context: .
