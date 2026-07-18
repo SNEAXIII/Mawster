@@ -94,6 +94,7 @@ export function buildPreviewRow(
     newSignature: entry.signature,
     oldRarity: existing?.rarity ?? null,
     oldSignature: existing?.signature ?? null,
+    oldAscension: existing?.ascension ?? null,
     isNew,
     hasChanges,
     is_preferred_attacker: entry.is_preferred_attacker,

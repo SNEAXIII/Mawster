@@ -210,11 +210,15 @@ export function useRosterImportVision({
           return {
             ...updated,
             // Recompute the diff so a manually corrected row still counts
-            // toward the import (isNew rows always do).
+            // toward the import (isNew rows always do). Ascension is included
+            // alongside rarity/signature — otherwise an ascension-only fix
+            // flips hasChanges to false and the row silently gets dropped
+            // from the import.
             hasChanges:
               updated.isNew ||
               updated.oldRarity !== updated.newRarity ||
-              updated.oldSignature !== updated.newSignature,
+              updated.oldSignature !== updated.newSignature ||
+              (updated.oldAscension ?? 0) !== (updated.ascension ?? 0),
           }
         })
       )

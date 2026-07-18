@@ -19,6 +19,9 @@ export interface PreviewRow {
   hasChanges: boolean
   is_preferred_attacker?: boolean
   ascension?: number
+  // Original ascension, so manual edits can be diffed against it — optional
+  // because JSON-import rows never populated it before this field existed.
+  oldAscension?: number | null
   confidence?: number
   cropUrl?: string | null
   prediction_id?: string | null
