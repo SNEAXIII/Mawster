@@ -87,6 +87,16 @@ export default function RosterImportExport({
         <Button
           variant='outline'
           size='sm'
+          onClick={() => vision.visionInputRef.current?.click()}
+          disabled={vision.uploading}
+          data-cy='import-vision-button'
+        >
+          <ScanLine className='mr-1.5 h-3.5 w-3.5' />
+          {visionLabel}
+        </Button>
+        <Button
+          variant='outline'
+          size='sm'
           onClick={handleExport}
           data-cy='export-json-button'
         >
@@ -101,16 +111,6 @@ export default function RosterImportExport({
         >
           <Upload className='mr-1.5 h-3.5 w-3.5' />
           {t.roster.importExport.importJson}
-        </Button>
-        <Button
-          variant='outline'
-          size='sm'
-          onClick={() => vision.visionInputRef.current?.click()}
-          disabled={vision.uploading}
-          data-cy='import-vision-button'
-        >
-          <ScanLine className='mr-1.5 h-3.5 w-3.5' />
-          {visionLabel}
         </Button>
       </div>
 
