@@ -202,7 +202,7 @@ export function useRosterImportExport({
         toast.error((err as Error).message || t.roster.importExport.fileReadError)
       }
     },
-    [roster, t, core]
+    [roster, t, core.openPreview]
   )
 
   return {
