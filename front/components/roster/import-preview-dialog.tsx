@@ -3,6 +3,8 @@
 import React from 'react'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
@@ -11,7 +13,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
-import ImportPreviewRow, { type PreviewRow } from './import-preview-row'
+import ImportPreviewRow, { type PreviewRow, type PreviewRowPatch } from './import-preview-row'
 
 interface ImportPreviewDialogProps {
   open: boolean
@@ -19,6 +21,10 @@ interface ImportPreviewDialogProps {
   previewRows: PreviewRow[]
   importing: boolean
   onImport: () => void
+  editable?: boolean
+  onRowChange?: (index: number, patch: PreviewRowPatch) => void
+  shareDataset?: boolean
+  onShareDatasetChange?: (checked: boolean) => void
 }
 
 export default function ImportPreviewDialog({
@@ -27,6 +33,10 @@ export default function ImportPreviewDialog({
   previewRows,
   importing,
   onImport,
+  editable = false,
+  onRowChange,
+  shareDataset = false,
+  onShareDatasetChange,
 }: ImportPreviewDialogProps) {
   const { t } = useI18n()
 
@@ -60,13 +70,29 @@ export default function ImportPreviewDialog({
 
         {/* Scrollable list */}
         <div className='flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700 px-2'>
-          {previewRows.map((row) => (
+          {previewRows.map((row, index) => (
             <ImportPreviewRow
               key={`${row.champion_name}_${row.newRarity}`}
               row={row}
+              index={index}
+              onRowChange={onRowChange}
             />
           ))}
         </div>
+
+        {editable && (
+          <div className='flex items-center gap-2 pt-2'>
+            <Checkbox
+              id='import-preview-share-dataset'
+              checked={shareDataset}
+              onCheckedChange={(checked) => onShareDatasetChange?.(checked === true)}
+              data-cy='import-share-dataset-checkbox'
+            />
+            <Label htmlFor='import-preview-share-dataset'>
+              {t.roster.importExport.vision.shareDataset}
+            </Label>
+          </div>
+        )}
 
         <DialogFooter className='pt-3 border-t'>
           <Button

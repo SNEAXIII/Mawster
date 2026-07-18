@@ -1030,6 +1030,10 @@ const fr: Translations = {
         pollTimeout: "L'import prend trop de temps. Veuillez réessayer.",
         datasetArchiveFailed:
           "Roster importé. La contribution au dataset n'a pas pu être enregistrée.",
+        confidenceLow: 'Confiance faible',
+        confidenceMedium: 'Confiance moyenne',
+        confidenceHigh: 'Confiance élevée',
+        shareDataset: "Contribuer au dataset d'entraînement",
       },
     },
     errors: {

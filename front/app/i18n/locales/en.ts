@@ -1018,6 +1018,10 @@ const en = {
         pollFailed: 'The import failed. Please try again.',
         pollTimeout: 'The import is taking too long. Please try again.',
         datasetArchiveFailed: 'Roster imported. Your dataset contribution could not be saved.',
+        confidenceLow: 'Low confidence',
+        confidenceMedium: 'Medium confidence',
+        confidenceHigh: 'High confidence',
+        shareDataset: 'Contribute to the training dataset',
       },
     },
     errors: {

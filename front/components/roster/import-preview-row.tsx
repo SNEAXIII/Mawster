@@ -5,6 +5,7 @@ import { useI18n } from '@/app/i18n'
 import { ArrowRight } from 'lucide-react'
 import ChampionPortrait from '@/components/champion-portrait'
 import { RARITY_LABELS, shortenChampionName, getClassColors } from '@/app/services/roster'
+import ImportPreviewRowEdit from './import-preview-row-edit'
 
 export interface PreviewRow {
   champion_name: string
@@ -21,14 +22,29 @@ export interface PreviewRow {
   confidence?: number
   cropUrl?: string | null
   prediction_id?: string | null
+  editable?: boolean
 }
+
+export type PreviewRowPatch = Partial<Pick<PreviewRow, 'newRarity' | 'newSignature' | 'ascension'>>
 
 interface ImportPreviewRowProps {
   row: PreviewRow
+  index: number
+  onRowChange?: (index: number, patch: PreviewRowPatch) => void
 }
 
-export default function ImportPreviewRow({ row }: ImportPreviewRowProps) {
+export default function ImportPreviewRow({ row, index, onRowChange }: ImportPreviewRowProps) {
   const { t } = useI18n()
+
+  if (row.editable) {
+    return (
+      <ImportPreviewRowEdit
+        row={row}
+        index={index}
+        onRowChange={onRowChange}
+      />
+    )
+  }
 
   return (
     <div
