@@ -1023,6 +1023,12 @@ const fr: Translations = {
       badgeSkipped: 'IGNORÉ',
       badgeError: 'ERREUR',
       close: 'Fermer',
+      vision: {
+        noImagesSelected: 'Veuillez sélectionner au moins une image.',
+        uploadError: "Échec de l'envoi des captures d'écran.",
+        pollFailed: "L'import a échoué. Veuillez réessayer.",
+        pollTimeout: "L'import prend trop de temps. Veuillez réessayer.",
+      },
     },
     errors: {
       loadAccounts: 'Une erreur est survenue lors du chargement de vos comptes de jeu',

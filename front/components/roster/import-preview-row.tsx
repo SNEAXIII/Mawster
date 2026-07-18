@@ -18,6 +18,9 @@ export interface PreviewRow {
   hasChanges: boolean
   is_preferred_attacker?: boolean
   ascension?: number
+  confidence?: number
+  cropUrl?: string | null
+  prediction_id?: string | null
 }
 
 interface ImportPreviewRowProps {

@@ -1012,6 +1012,12 @@ const en = {
       badgeSkipped: 'SKIPPED',
       badgeError: 'ERROR',
       close: 'Close',
+      vision: {
+        noImagesSelected: 'Please select at least one image.',
+        uploadError: 'Failed to upload the screenshots.',
+        pollFailed: 'The import failed. Please try again.',
+        pollTimeout: 'The import is taking too long. Please try again.',
+      },
     },
     errors: {
       loadAccounts: 'An error occurred while loading your game accounts',
