@@ -1,7 +1,8 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from botocore.exceptions import ClientError
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
 from pydantic import BaseModel
 from starlette import status
 
@@ -9,6 +10,7 @@ from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND
 from src.Messages.vision_messages import (
     JOB_NOT_RETRYABLE,
     NOT_YOUR_VISION_IMPORT,
+    VISION_CROP_NOT_FOUND,
     VISION_IMPORT_NOT_FOUND,
     VISION_JOB_NOT_FOUND,
 )
@@ -37,10 +39,6 @@ vision_controller = APIRouter(
     tags=["Vision"],
     dependencies=[Depends(AuthService.get_current_user_in_jwt)],
 )
-
-
-class PresignedUrlResponse(BaseModel):
-    url: str
 
 
 class VisionConfirmRequest(BaseModel):
@@ -135,10 +133,7 @@ async def confirm_vision_import(
     return VisionConfirmResponse(samples_archived=archived)
 
 
-@vision_controller.get(
-    "/imports/{import_id}/jobs/{job_id}/crops/{index}",
-    response_model=PresignedUrlResponse,
-)
+@vision_controller.get("/imports/{import_id}/jobs/{job_id}/crops/{index}")
 async def get_crop_url(
     session: SessionDep,
     import_id: uuid.UUID,
@@ -147,15 +142,26 @@ async def get_crop_url(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     storage: Annotated[Storage, Depends(get_storage)],
 ):
-    """Short-lived presigned URL for one champion crop. The object key is rebuilt
-    server-side from ids whose ownership is verified — a client-supplied key would
-    let anyone read another user's screenshots by guessing."""
+    """Bytes of one champion crop. The object key is rebuilt server-side from ids
+    whose ownership is verified — a client-supplied key would let anyone read
+    another user's screenshots by guessing.
+
+    Served through the API (rather than a presigned RustFS URL) because in this
+    deployment only the Next.js frontend is publicly reachable — the browser
+    never talks to RustFS or the API directly, only to the Next proxy."""
     await _get_own_import(session, import_id, current_user.id)
     key = crop_key(import_id, job_id, index)
-    url = await storage.presign_get(
-        SECRET.RUSTFS_BUCKET_VISION, key, SECRET.VISION_PRESIGN_EXPIRE_SECONDS
-    )
-    return PresignedUrlResponse(url=url)
+    try:
+        data = await storage.get_bytes(SECRET.RUSTFS_BUCKET_VISION, key)
+    except ClientError as exc:
+        error_code = exc.response.get("Error", {}).get("Code")
+        http_status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+        if error_code in ("NoSuchKey", "404") or http_status == 404:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=VISION_CROP_NOT_FOUND
+            ) from exc
+        raise
+    return Response(content=data, media_type="image/png")
 
 
 @vision_controller.delete("/imports/{import_id}", status_code=status.HTTP_204_NO_CONTENT)

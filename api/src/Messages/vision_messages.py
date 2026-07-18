@@ -8,3 +8,4 @@ BROKER_UNAVAILABLE = "The vision service is unavailable, please retry in a momen
 JOB_NEVER_QUEUED = "This job was never queued: publishing failed for the batch"
 VISION_JOB_NOT_FOUND = "Vision job not found"
 JOB_NOT_RETRYABLE = "Only a failed screenshot can be relaunched"
+VISION_CROP_NOT_FOUND = "Crop not found"

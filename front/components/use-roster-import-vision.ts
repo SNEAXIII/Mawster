@@ -94,33 +94,29 @@ export function useRosterImportVision({
         roster
       )
 
-      return Promise.all(
-        predictions.map(async (prediction, idx) => {
-          const { entry, rarityValid } = built[idx]
-          const row = buildPreviewRow(entry, roster, lookup)
+      return predictions.map((prediction, idx) => {
+        const { entry, rarityValid } = built[idx]
+        const row = buildPreviewRow(entry, roster, lookup)
 
-          let cropUrl: string | null = null
-          if (prediction.crop_index != null) {
-            try {
-              cropUrl = await getCropUrl(currentImportId, prediction.job_id, prediction.crop_index)
-            } catch {
-              cropUrl = null
-            }
-          }
+        // getCropUrl is a plain URL builder (no request) — the browser fetches
+        // it lazily via the <img> tag, through the same-origin proxy.
+        const cropUrl =
+          prediction.crop_index != null
+            ? getCropUrl(currentImportId, prediction.job_id, prediction.crop_index)
+            : null
 
-          return {
-            ...row,
-            // Force low confidence on out-of-range rarities so the review
-            // screen flags the row instead of silently trusting a bad guess.
-            confidence: rarityValid ? prediction.confidence : 0,
-            cropUrl,
-            prediction_id: prediction.id,
-            // Vision predictions always go through the editable review row —
-            // unlike JSON rows, which are trusted as-is.
-            editable: true,
-          }
-        })
-      )
+        return {
+          ...row,
+          // Force low confidence on out-of-range rarities so the review
+          // screen flags the row instead of silently trusting a bad guess.
+          confidence: rarityValid ? prediction.confidence : 0,
+          cropUrl,
+          prediction_id: prediction.id,
+          // Vision predictions always go through the editable review row —
+          // unlike JSON rows, which are trusted as-is.
+          editable: true,
+        }
+      })
     },
     [roster]
   )

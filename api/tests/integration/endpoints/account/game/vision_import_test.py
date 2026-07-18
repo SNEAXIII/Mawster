@@ -4,6 +4,7 @@ import io
 import uuid
 
 import pytest
+from botocore.exceptions import ClientError
 from main import app
 
 from src.messaging import get_publisher
@@ -28,6 +29,14 @@ class FakeStorage:
         self.objects[key] = data
 
     async def get_bytes(self, bucket: str, key: str) -> bytes:
+        if key not in self.objects:
+            # Real shape of a missing-object error from aioboto3/botocore, so the
+            # controller's `except ClientError` branch sees the same thing it
+            # would against real RustFS.
+            raise ClientError(
+                {"Error": {"Code": "NoSuchKey"}, "ResponseMetadata": {"HTTPStatusCode": 404}},
+                "GetObject",
+            )
         return self.objects[key]
 
     async def presign_get(self, bucket: str, key: str, expires_in: int) -> str:
@@ -413,7 +422,8 @@ async def test_predictions_endpoint_of_another_user_is_forbidden(fake_infra):
 
 
 @pytest.mark.asyncio
-async def test_crop_presigned_url_for_owner(fake_infra):
+async def test_crop_bytes_for_owner(fake_infra):
+    storage, _ = fake_infra
     await push_one_user()
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
     headers = create_auth_headers(str(USER_ID))
@@ -422,17 +432,23 @@ async def test_crop_presigned_url_for_owner(fake_infra):
     detail = await _get_import(headers, import_id)
     job_id = detail["jobs"][0]["id"]
 
+    from src.storage.base import crop_key
+
+    crop_bytes = b"\x89PNG\r\n\x1a\n" + b"crop-bytes"
+    storage.objects[crop_key(uuid.UUID(import_id), uuid.UUID(job_id), 0)] = crop_bytes
+
     async with get_test_client() as client:
         response = await client.get(
             f"/vision/imports/{import_id}/jobs/{job_id}/crops/0", headers=headers
         )
 
     assert response.status_code == 200
-    assert response.json()["url"].startswith("http")
+    assert response.headers["content-type"] == "image/png"
+    assert response.content == crop_bytes
 
 
 @pytest.mark.asyncio
-async def test_crop_presigned_url_forbidden_for_non_owner(fake_infra):
+async def test_crop_bytes_forbidden_for_non_owner(fake_infra):
     await push_one_user()
     await push_user2()
     owner_account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -451,6 +467,25 @@ async def test_crop_presigned_url_forbidden_for_non_owner(fake_infra):
         )
 
     assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_crop_bytes_missing_object_is_404(fake_infra):
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    created = await _post_import(headers, account.id, [_png("a.png")])
+    import_id = created.json()["id"]
+    detail = await _get_import(headers, import_id)
+    job_id = detail["jobs"][0]["id"]
+
+    # No crop was ever written to storage for this job/index.
+    async with get_test_client() as client:
+        response = await client.get(
+            f"/vision/imports/{import_id}/jobs/{job_id}/crops/0", headers=headers
+        )
+
+    assert response.status_code == 404
 
 
 async def _drive_job_done_with_prediction(job_id: str) -> None:

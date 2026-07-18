@@ -60,9 +60,13 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
       return new NextResponse(null, { status: 204 })
     }
 
-    const data = await res.text()
+    // Read the response as raw bytes, never as text: res.text() decodes as UTF-8,
+    // which replaces every byte that isn't valid UTF-8 with U+FFFD. That would
+    // destroy a binary response (e.g. a PNG crop) the same way it did on the
+    // request side (see the comment above on req.arrayBuffer()).
+    const data = await res.arrayBuffer()
 
-    return new NextResponse(data || null, {
+    return new NextResponse(data.byteLength > 0 ? data : null, {
       status: res.status,
       headers: {
         'Content-Type': res.headers.get('content-type') ?? 'application/json',

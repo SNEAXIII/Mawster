@@ -39,10 +39,6 @@ export interface ConfirmedRow {
   prediction_id: string | null
 }
 
-interface CropUrlResponse {
-  url: string
-}
-
 interface ApiError {
   detail?: string
   message?: string
@@ -103,18 +99,12 @@ export const getVisionPredictions = async (
   return response.json()
 }
 
-export const getCropUrl = async (
-  importId: string,
-  jobId: string,
-  index: number
-): Promise<string> => {
-  const response = await fetch(`${PROXY}/vision/imports/${importId}/jobs/${jobId}/crops/${index}`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors de la récupération du crop')
-  const data: CropUrlResponse = await response.json()
-  return data.url
-}
+// The API now serves the crop's raw bytes at this path (behind the same-origin
+// proxy), so this is a plain URL builder — no request, no round-trip. See
+// front/app/api/back/[...path]/route.ts, which forwards binary responses
+// unchanged, and api/src/controllers/account/game/vision_controller.py.
+export const getCropUrl = (importId: string, jobId: string, index: number): string =>
+  `${PROXY}/vision/imports/${importId}/jobs/${jobId}/crops/${index}`
 
 export const confirmVisionImport = async (
   importId: string,
