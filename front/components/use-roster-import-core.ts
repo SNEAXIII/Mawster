@@ -131,11 +131,16 @@ export function useRosterImportCore({
   }, [])
 
   // ── Execute import via bulk API ────────────────────────
-  const executeImport = useCallback(async () => {
-    if (previewRows.length === 0) return
+  // Returns whether the roster write actually succeeded — additive to the
+  // previous void return, so callers that ignore it (JSON import) are
+  // unaffected. Callers that archive data derived from this import (vision)
+  // must check `success` before doing so.
+  const executeImport = useCallback(async (): Promise<{ success: boolean }> => {
+    if (previewRows.length === 0) return { success: true }
     setImporting(true)
 
     const results: ImportResult[] = []
+    let success = true
 
     try {
       // Only send entries that are new or have changes
@@ -145,7 +150,7 @@ export function useRosterImportCore({
         toast.info(t.roster.importExport.noChanges)
         setPreviewOpen(false)
         setImporting(false)
-        return
+        return { success: true }
       }
 
       const champions: BulkChampionEntry[] = toSend.map((r) => ({
@@ -192,6 +197,7 @@ export function useRosterImportCore({
         }
       } catch (err) {
         // Bulk failed entirely
+        success = false
         for (const row of previewRows) {
           results.push({
             champion_name: row.champion_name,
@@ -223,6 +229,8 @@ export function useRosterImportCore({
       setImportResults(results)
       setReportOpen(true)
     }
+
+    return { success }
   }, [previewRows, selectedAccountId, onRosterUpdated, t])
 
   return {

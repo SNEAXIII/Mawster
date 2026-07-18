@@ -46,8 +46,13 @@ export default function RosterImportExport({
   const vision = useRosterImportVision({ roster, selectedAccountId, shareDataset, onRosterUpdated })
 
   const executeVisionImport = async () => {
-    await vision.executeImport()
-    await vision.onConfirmed()
+    const { success } = await vision.executeImport()
+    // Only archive the dataset when the roster write actually succeeded —
+    // otherwise we'd claim corrections as training data that never made it
+    // into any roster.
+    if (success) {
+      await vision.onConfirmed()
+    }
   }
 
   const visionLabel = !vision.uploading
