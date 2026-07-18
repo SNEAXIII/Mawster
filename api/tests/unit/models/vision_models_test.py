@@ -69,3 +69,9 @@ def test_vision_import_has_confirmed_status():
     from src.models.VisionImport import VisionImportStatus
 
     assert VisionImportStatus.CONFIRMED.value == "confirmed"
+
+
+def test_vision_import_has_cancelled_status():
+    from src.models.VisionImport import VisionImportStatus
+
+    assert VisionImportStatus.CANCELLED.value == "cancelled"
