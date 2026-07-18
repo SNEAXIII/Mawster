@@ -96,6 +96,10 @@ services:
       - AWS_ACCESS_KEY_ID=mawster
       - AWS_SECRET_ACCESS_KEY=mawsterpassword
       - AWS_DEFAULT_REGION=us-east-1
+      # Doit rester égal à SECRET.VISION_RETENTION_DAYS (api/src/security/secrets.py).
+      # L'API tourne hors Docker en dev, donc les deux ne peuvent pas partager cette
+      # ligne : si elles divergent, l'UI propose des imports dont les images sont
+      # déjà purgées, et l'utilisateur valide des données invérifiables.
       - VISION_RETENTION_DAYS=7
     entrypoint:
       - sh
@@ -112,7 +116,7 @@ services:
         # samples and must stay permanent — no lifecycle rule is applied to it.
         aws --endpoint-url http://rustfs:9000 s3api put-bucket-lifecycle-configuration \
           --bucket vision \
-          --lifecycle-configuration "{\"Rules\":[{\"ID\":\"expire-imports-7d\",\"Status\":\"Enabled\",\"Filter\":{\"Prefix\":\"imports/\"},\"Expiration\":{\"Days\":$${VISION_RETENTION_DAYS}}}]}"
+          --lifecycle-configuration "{\"Rules\":[{\"ID\":\"expire-imports\",\"Status\":\"Enabled\",\"Filter\":{\"Prefix\":\"imports/\"},\"Expiration\":{\"Days\":$${VISION_RETENTION_DAYS}}}]}"
         aws --endpoint-url http://rustfs:9000 s3 ls
     restart: 'no'
     volumes:
