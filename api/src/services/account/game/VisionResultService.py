@@ -42,6 +42,16 @@ class VisionResultService:
         if vision_import is None:
             logger.warning("vision result for unknown import %s — ignoring", message.import_id)
             return
+        if vision_import.status == VisionImportStatus.CANCELLED:
+            # Cancelling a RUNNING import cannot interrupt the worker — there is
+            # no cancellation channel — so its result arrives afterwards anyway.
+            # Drop it rather than resurrect the import or duplicate writes.
+            logger.info(
+                "dropping result for cancelled import %s (job %s)",
+                vision_import.id,
+                message.job_id,
+            )
+            return
 
         job.attempts += 1
         if message.status == "failed":

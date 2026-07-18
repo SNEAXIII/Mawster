@@ -243,7 +243,7 @@ async def test_get_unknown_import_is_404(fake_infra):
 
 
 @pytest.mark.asyncio
-async def test_delete_import_removes_it(fake_infra):
+async def test_delete_import_cancels_it_without_deleting_the_row(fake_infra):
     await push_one_user()
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
     headers = create_auth_headers(str(USER_ID))
@@ -256,7 +256,48 @@ async def test_delete_import_removes_it(fake_infra):
         after = await client.get(f"/vision/imports/{import_id}", headers=headers)
 
     assert deleted.status_code == 204
-    assert after.status_code == 404
+    assert after.status_code == 200
+    assert after.json()["status"] == "cancelled"
+
+
+@pytest.mark.asyncio
+async def test_cancel_keeps_the_row_so_the_quota_still_counts_it(fake_infra):
+    """The hourly quota counts rows. If cancelling deleted them, create -> cancel
+    -> create would slip under the limit forever."""
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    created = await _post_import(headers, account.id, [_png("a.png")])
+    import_id = created.json()["id"]
+
+    async with get_test_client() as client:
+        response = await client.delete(f"/vision/imports/{import_id}", headers=headers)
+
+    assert response.status_code == 204
+
+    from src.models.VisionImport import VisionImport, VisionImportStatus
+    from tests.utils.utils_db import get_test_session
+
+    async for session in get_test_session():
+        row = await session.get(VisionImport, uuid.UUID(import_id))
+        assert row is not None, "cancelling must NOT delete the row"
+        assert row.status == VisionImportStatus.CANCELLED
+        break
+
+
+@pytest.mark.asyncio
+async def test_cancel_purges_the_bucket_objects(fake_infra):
+    storage, _ = fake_infra
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    created = await _post_import(headers, account.id, [_png("a.png")])
+    import_id = created.json()["id"]
+
+    async with get_test_client() as client:
+        await client.delete(f"/vision/imports/{import_id}", headers=headers)
+
+    assert storage.objects == {}
 
 
 @pytest.mark.asyncio

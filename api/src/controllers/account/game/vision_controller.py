@@ -171,10 +171,13 @@ async def delete_vision_import(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     storage: Annotated[Storage, Depends(get_storage)],
 ):
-    """Abandon an import. Queued jobs still in flight are ignored by the worker
-    because their job row is gone (see the idempotency check in plan 2)."""
+    """Cancel an import without deleting it. Its row and predictions are kept —
+    the hourly quota counts rows, so deleting on cancel would let create ->
+    cancel -> create slip under the limit forever — but its RustFS objects are
+    purged. Queued jobs still in flight are ignored by the worker (see the
+    cancelled-import guard in VisionResultService.handle)."""
     vision_import = await _get_own_import(session, import_id, current_user.id)
-    await VisionImportService.delete_import(session, storage, vision_import)
+    await VisionImportService.cancel_import(session, storage, vision_import)
 
 
 @vision_controller.post("/jobs/{job_id}/retry", status_code=status.HTTP_202_ACCEPTED)

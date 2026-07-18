@@ -218,39 +218,29 @@ class VisionImportService:
             return None
 
     @classmethod
-    async def delete_import(
+    async def cancel_import(
         cls, session: SessionDep, storage: Storage, vision_import: VisionImport
     ) -> None:
-        """Delete an import, its jobs, their predictions and the RustFS objects.
+        """Cancel an import: purge its RustFS objects, keep the row.
 
-        There is no DB-level cascade from vision_prediction to vision_job (kept
-        out of the migration deliberately), so predictions must be deleted before
-        their parent jobs or the FK raises IntegrityError. Callers must fetch
-        vision_import via get_import, which eager-loads jobs and predictions.
+        The row is kept on purpose. The hourly quota counts rows, so deleting on
+        cancel would let create -> cancel -> create slip under the limit forever.
+        A row costs nothing; the objects are what cost, and those are purged.
+        The predictions are kept too — they are the record of what the server was
+        asked to do, and they are what makes the quota honest.
         """
-        for job in vision_import.jobs:
-            for prediction in job.predictions:
-                await session.delete(prediction)
-        for job in vision_import.jobs:
-            await session.delete(job)
-        await session.delete(vision_import)
+        vision_import.status = VisionImportStatus.CANCELLED
+        session.add(vision_import)
         await session.commit()
         try:
             await storage.delete_prefix(
                 SECRET.RUSTFS_BUCKET_VISION, import_prefix(vision_import.id)
             )
         except Exception:  # noqa: BLE001
-            # The DB rows are already committed gone at this point, so raising here
-            # would report a failure for a deletion that already succeeded. The
-            # `vision` bucket has a retention policy that purges objects after 7
-            # days, so an orphaned object here is reaped automatically rather than
-            # leaking forever — letting the delete succeed is safe, not sloppy.
-            logger.warning(
-                "Failed to delete RustFS objects for vision import %s (prefix %s)",
-                vision_import.id,
-                import_prefix(vision_import.id),
-                exc_info=True,
-            )
+            # The status is already committed, so raising here would report a
+            # failure for an import that IS cancelled. The bucket's J+7 retention
+            # reaps whatever is left behind.
+            logger.warning("could not purge objects for cancelled import %s", vision_import.id)
 
     @classmethod
     async def confirm(

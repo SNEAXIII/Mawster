@@ -317,38 +317,32 @@ def _build_import_with_jobs_and_predictions() -> VisionImport:
 
 
 @pytest.mark.asyncio
-async def test_delete_import_deletes_predictions_before_jobs_before_import():
-    """Load-bearing order: vision_prediction.job_id has no ON DELETE CASCADE,
-    so deleting a job that still has predictions would raise IntegrityError in
-    a real DB. A reordered implementation must fail this test."""
+async def test_cancel_import_marks_it_cancelled_without_deleting_anything():
+    """The row (and its jobs/predictions) must survive cancellation: the hourly
+    quota counts rows, so deleting them here would let create -> cancel ->
+    create slip under the limit forever."""
     calls: list[str] = []
     session = FakeSession(calls)
     storage = FakeStorage()
     vision_import = _build_import_with_jobs_and_predictions()
 
-    await VisionImportService.delete_import(
+    await VisionImportService.cancel_import(
         session=session, storage=storage, vision_import=vision_import
     )
 
-    delete_calls = [c for c in calls if c.startswith("delete:")]
-    last_prediction_index = max(
-        i for i, c in enumerate(delete_calls) if c == "delete:VisionPrediction"
-    )
-    first_job_index = min(i for i, c in enumerate(delete_calls) if c == "delete:VisionJob")
-    import_index = next(i for i, c in enumerate(delete_calls) if c == "delete:VisionImport")
-
-    assert last_prediction_index < first_job_index
-    assert first_job_index < import_index
+    assert vision_import.status == VisionImportStatus.CANCELLED
+    assert session.deleted == []
+    assert vision_import in session.added
 
 
 @pytest.mark.asyncio
-async def test_delete_import_deletes_storage_prefix_after_commit():
+async def test_cancel_import_deletes_storage_prefix_after_commit():
     calls: list[str] = []
     session = FakeSession(calls)
     storage = FakeStorage(shared_calls=calls)
     vision_import = _build_import_with_jobs_and_predictions()
 
-    await VisionImportService.delete_import(
+    await VisionImportService.cancel_import(
         session=session, storage=storage, vision_import=vision_import
     )
 
@@ -359,17 +353,16 @@ async def test_delete_import_deletes_storage_prefix_after_commit():
 
 
 @pytest.mark.asyncio
-async def test_delete_import_survives_storage_failure():
-    """If RustFS is unreachable after the DB rows are already committed gone,
-    the delete must still be reported as successful: the objects are orphaned
-    but the `vision` bucket's retention policy reaps them after 7 days, and
-    raising here would report a failure for a deletion that already
-    committed."""
+async def test_cancel_import_survives_storage_failure():
+    """If RustFS is unreachable after the status is already committed, the
+    cancel must still be reported as successful: the objects are orphaned but
+    the `vision` bucket's retention policy reaps them after 7 days, and raising
+    here would report a failure for a cancellation that already committed."""
     session = FakeSession([])
     storage = FakeStorage(fail_delete=True)
     vision_import = _build_import_with_jobs_and_predictions()
 
-    await VisionImportService.delete_import(
+    await VisionImportService.cancel_import(
         session=session, storage=storage, vision_import=vision_import
     )
 

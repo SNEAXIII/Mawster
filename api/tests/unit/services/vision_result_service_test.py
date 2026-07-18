@@ -152,6 +152,21 @@ async def test_result_for_a_deleted_job_is_ignored():
 
 
 @pytest.mark.asyncio
+async def test_result_for_a_cancelled_import_is_dropped():
+    """Cancelling a RUNNING import cannot interrupt the worker — there is no
+    cancellation channel — so its result arrives after the fact anyway. It must
+    not resurrect the import or write anything."""
+    job, vision_import = _job(), _import()
+    vision_import.status = VisionImportStatus.CANCELLED
+    session = FakeSession(job, vision_import)
+
+    await VisionResultService.handle(session, _done_message(job, vision_import))
+
+    assert session.added == []
+    assert job.status == VisionJobStatus.PENDING
+
+
+@pytest.mark.asyncio
 async def test_failure_is_terminal_and_never_requeues():
     """A screenshot that fails does so deterministically — a blurry image will be
     blurry again. No automatic retry: the job dies with its error, and the user
