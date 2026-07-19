@@ -398,6 +398,10 @@ def start_backend(worker: int, base_env: dict, quiet: bool = False) -> subproces
         "MARIADB_PORT": str(MARIADB_PORT),
         "PORT": str(api_port),
         "PYTHONIOENCODING": "utf-8",
+        # Without this, print() is block-buffered into a pipe and lost when the
+        # process is killed on timeout — including reset_db's "Attempt N failed"
+        # lines, which are the only place the real startup error is reported.
+        "PYTHONUNBUFFERED": "1",
     }
     log(f"Worker {worker}: starting backend  — PORT={api_port}  DB={db}  MODE=testing")
     log_dir = worker_log_dir(worker)
