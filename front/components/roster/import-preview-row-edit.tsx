@@ -33,6 +33,19 @@ const CONFIDENCE_CLASSES: Record<'low' | 'medium' | 'high', string> = {
   high: 'bg-green-600 text-white border-transparent',
 }
 
+// isNew wins over hasChanges: the row-change handler forces hasChanges to true on
+// new rows so they always count toward the import, so the two are not exclusive.
+function rowStatus(row: PreviewRow): 'new' | 'updated' | 'unchanged' {
+  if (row.isNew) return 'new'
+  return row.hasChanges ? 'updated' : 'unchanged'
+}
+
+const STATUS_CLASSES: Record<'new' | 'updated' | 'unchanged', string> = {
+  new: 'bg-green-600 text-white border-transparent',
+  updated: 'bg-blue-600 text-white border-transparent',
+  unchanged: 'bg-transparent text-muted-foreground border-border italic',
+}
+
 export default function ImportPreviewRowEdit({
   row,
   index,
@@ -46,6 +59,13 @@ export default function ImportPreviewRowEdit({
     low: t.roster.importExport.vision.confidenceLow,
     medium: t.roster.importExport.vision.confidenceMedium,
     high: t.roster.importExport.vision.confidenceHigh,
+  }
+
+  const status = rowStatus(row)
+  const statusLabels: Record<'new' | 'updated' | 'unchanged', string> = {
+    new: t.roster.importExport.badgeNew,
+    updated: t.roster.importExport.badgeUpdated,
+    unchanged: t.roster.importExport.badgeUnchanged,
   }
 
   return (
@@ -79,14 +99,24 @@ export default function ImportPreviewRowEdit({
         <p className={`text-xs ${getClassColors(row.champion_class ?? 'Unknown').label}`}>
           {row.champion_class ?? 'Unknown'}
         </p>
-        {level != null && (
+        <div className='mt-1 flex items-center gap-1'>
+          {level != null && (
+            <Badge
+              className={`text-[10px] px-1.5 py-0 ${CONFIDENCE_CLASSES[level]}`}
+              data-cy={`preview-row-confidence-badge-${index}`}
+            >
+              {confidenceLabels[level]}
+            </Badge>
+          )}
           <Badge
-            className={`mt-1 text-[10px] px-1.5 py-0 ${CONFIDENCE_CLASSES[level]}`}
-            data-cy={`preview-row-confidence-badge-${index}`}
+            variant='outline'
+            className={`text-[10px] px-1.5 py-0 ${STATUS_CLASSES[status]}`}
+            data-cy={`preview-row-status-badge-${index}`}
+            data-status={status}
           >
-            {confidenceLabels[level]}
+            {statusLabels[status]}
           </Badge>
-        )}
+        </div>
       </div>
 
       <div className='shrink-0 flex items-center gap-1.5'>
