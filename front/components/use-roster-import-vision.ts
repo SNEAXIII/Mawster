@@ -121,6 +121,24 @@ export function useRosterImportVision({
     [roster]
   )
 
+  // ── Resume the review from an import id ─────────────────
+  // Shared tail of the upload flow: also the entry point a banner can call
+  // directly once it already knows the importId, without re-running upload/poll.
+  const resume = useCallback(
+    async (currentImportId: string) => {
+      setImportId(currentImportId)
+      const predictionsRes = await getVisionPredictions(currentImportId)
+      const rows = await buildRowsFromPredictions(currentImportId, predictionsRes.predictions)
+      setUploading(false)
+      if (rows.length === 0) {
+        toast.error(t.roster.importExport.visionNoChampions)
+        return
+      }
+      core.openPreview(rows)
+    },
+    [buildRowsFromPredictions, core.openPreview, t]
+  )
+
   // ── Polling ──────────────────────────────────────────────
   const pollImport = useCallback(
     (currentImportId: string) => {
@@ -139,17 +157,7 @@ export function useRosterImportVision({
 
             if (status.status === 'done') {
               clearPoll()
-              const predictionsRes = await getVisionPredictions(currentImportId)
-              const rows = await buildRowsFromPredictions(
-                currentImportId,
-                predictionsRes.predictions
-              )
-              setUploading(false)
-              if (rows.length === 0) {
-                toast.error(t.roster.importExport.visionNoChampions)
-                return
-              }
-              core.openPreview(rows)
+              await resume(currentImportId)
               return
             }
 
@@ -169,7 +177,7 @@ export function useRosterImportVision({
         })()
       }, POLL_INTERVAL_MS)
     },
-    [clearPoll, buildRowsFromPredictions, core.openPreview, finishWithError, t]
+    [clearPoll, resume, finishWithError, t]
   )
 
   // ── Upload ───────────────────────────────────────────────
@@ -249,6 +257,7 @@ export function useRosterImportVision({
     handleVisionFilesSelected,
     uploading,
     importId,
+    resume,
     previewOpen: core.previewOpen,
     setPreviewOpen: core.setPreviewOpen,
     previewRows: core.previewRows,
