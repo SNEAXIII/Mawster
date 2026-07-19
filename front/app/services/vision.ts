@@ -39,6 +39,15 @@ export interface ConfirmedRow {
   prediction_id: string | null
 }
 
+export interface CurrentVisionImport {
+  id: string
+  status: string
+  screens_total: number
+  screens_done: number
+  created_at: string
+  predictions_count: number
+}
+
 interface ApiError {
   detail?: string
   message?: string
@@ -117,4 +126,23 @@ export const confirmVisionImport = async (
   })
   await throwOnError(response, "Erreur lors de la confirmation de l'import")
   return response.json()
+}
+
+export const getCurrentVisionImport = async (
+  gameAccountId: string
+): Promise<CurrentVisionImport | null> => {
+  const response = await fetch(`${PROXY}/vision/imports/current?game_account_id=${gameAccountId}`, {
+    headers: jsonHeaders,
+  })
+  await throwOnError(response, "Erreur lors de la récupération de l'import en cours")
+  if (response.status === 204) return null
+  return response.json()
+}
+
+export const cancelVisionImport = async (importId: string): Promise<void> => {
+  const response = await fetch(`${PROXY}/vision/imports/${importId}`, {
+    method: 'DELETE',
+    headers: jsonHeaders,
+  })
+  await throwOnError(response, "Erreur lors de l'annulation de l'import")
 }
