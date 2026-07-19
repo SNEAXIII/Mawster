@@ -5,11 +5,6 @@
       "command": "cmd",
       "args": ["/c", "cd mcp && npx tsx server-runner/index.ts"]
     },
-    "cypress-runner": {
-      "type": "stdio",
-      "command": "cmd",
-      "args": ["/c", "cd mcp && npx tsx cypress-runner/index.ts"]
-    },
     "pytest-runner": {
       "type": "stdio",
       "command": "cmd",

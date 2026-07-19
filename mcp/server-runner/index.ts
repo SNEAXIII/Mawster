@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { z } from 'zod';
 import { spawn, execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -390,13 +391,24 @@ server.registerTool(
 
 server.registerTool(
   'run_e2e',
-  { description: 'Démarre les serveurs en mode test si nécessaire, puis lance tous les tests Cypress E2E et retourne le résumé + les détails des échecs.' },
-  async () => {
+  {
+    description:
+      'Démarre les serveurs en mode test si nécessaire, puis lance les tests Cypress E2E (toutes les specs, ou seulement celles demandées) et retourne le résumé + les détails des échecs.',
+    inputSchema: {
+      spec_files: z
+        .array(z.string())
+        .optional()
+        .describe(
+          'Specs à lancer, en chemins relatifs à front/cypress/e2e/ (ex: "roster/foo.cy.ts"). Omis = toutes les specs.'
+        ),
+    },
+  },
+  async ({ spec_files }: { spec_files?: string[] }) => {
     const testState = readState('test');
     if (!testState || !isAlive(testState.pids.api) || !isAlive(testState.pids.front)) {
       await startTest();
     }
-    const results = runCypress();
+    const results = runCypress(spec_files?.map((s) => `cypress/e2e/${s}`));
     return {
       content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
     };

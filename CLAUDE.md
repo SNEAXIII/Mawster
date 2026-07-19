@@ -19,7 +19,7 @@ Format: `uvx ruff format`
 
 **Frontend** (`front/`): `npm run dev` / `npm run build` (run build to catch TS errors)
 
-**E2E**: Always use the `/test-e2e` skill — **never** call `mcp__cypress-runner__run_parallel` directly. Pass `spec_files=["roster/foo.cy.ts"]` for targeted runs. Requires Docker (mariadb-test on port 3307).
+**E2E**: Always use the `/test-e2e` skill — **never** call `mcp__server-runner__run_e2e` directly. Pass `spec_files=["roster/foo.cy.ts"]` for targeted runs. Requires Docker (mariadb-test on port 3307).
 
 **Migrations**: use `/db-migrate` skill — never touch dev DB directly.
 
@@ -97,7 +97,7 @@ Project agents live in `.claude/agents/`. They are **not auto-dispatched** — c
 - Admin endpoints → always `adminData.access_token` / `adminToken`, never `ownerData.access_token`
 - Load champions: `cy.apiLoadChampion(adminToken, name, class)` → returns array, chain `.then(champs => ...)`
 - Assign attacker: `cy.apiAssignWarAttacker(token, allianceId, warId, battlegroup, nodeNumber, championUserId)`
-- After fixes: re-run only failing specs with `mcp__cypress-runner__run_parallel spec_files=[...]`
+- After fixes: re-run only failing specs with `mcp__server-runner__run_e2e spec_files=[...]`
 
 ---
 
@@ -139,9 +139,8 @@ Tools: `ctx_batch_execute` (research) → `ctx_search` (follow-up) → `ctx_exec
 > After any MCP server modification (new tool, param, schema): tell user to **restart Claude Code**.
 
 - **context-mode**: keeps output out of context window
-- **cypress-runner**: `mcp__cypress-runner__run_parallel`
 - **pytest-runner**: `mcp__pytest-runner__run_all_tests` / `mcp__pytest-runner__run_failing_tests`
-- **server-runner**: `start_dev` / `start_test` / `stop` / `status`
+- **server-runner**: `start_dev` / `start_test` / `stop` / `status` / `run_e2e`
 - **github**: `mcp__github__*` — requires `GITHUB_PERSONAL_ACCESS_TOKEN`
 
 ---
