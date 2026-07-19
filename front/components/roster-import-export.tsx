@@ -1,13 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Download, ScanLine, Upload } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { RosterEntry } from '@/app/services/roster'
 import ImportPreviewDialog from '@/components/roster/import-preview-dialog'
 import ImportReportDialog from '@/components/roster/import-report-dialog'
+import RosterImportButtons from '@/components/roster/roster-import-buttons'
+import VisionImportBlockedDialog from '@/components/roster/vision-import-blocked-dialog'
+import VisionImportBanner from '@/app/game/account/_components/vision-import-banner'
 import { useRosterImportExport } from './use-roster-import-export'
 import { useRosterImportVision } from './use-roster-import-vision'
+import { useVisionImportGuard } from './use-vision-import-guard'
 import { useI18n } from '@/app/i18n'
 
 export type { RosterExportEntry } from './use-roster-import-export'
@@ -28,6 +30,7 @@ export default function RosterImportExport({
 }: Readonly<RosterImportExportProps>) {
   const { t } = useI18n()
   const [shareDataset, setShareDataset] = useState(false)
+  const [bannerRefreshKey, setBannerRefreshKey] = useState(0)
 
   const {
     fileInputRef,
@@ -45,6 +48,12 @@ export default function RosterImportExport({
 
   const vision = useRosterImportVision({ roster, selectedAccountId, shareDataset, onRosterUpdated })
 
+  const guard = useVisionImportGuard({
+    selectedAccountId,
+    resume: vision.resume,
+    onOpenFilePicker: () => vision.visionInputRef.current?.click(),
+  })
+
   const executeVisionImport = async () => {
     const { success } = await vision.executeImport()
     // Only archive the dataset when the roster write actually succeeded —
@@ -53,6 +62,9 @@ export default function RosterImportExport({
     if (success) {
       await vision.onConfirmed()
     }
+    // The import is now confirmed (or still sitting at "done" if the roster
+    // write failed) — either way the banner's cached status is stale.
+    setBannerRefreshKey((key) => key + 1)
   }
 
   const visionLabel = !vision.uploading
@@ -63,6 +75,11 @@ export default function RosterImportExport({
 
   return (
     <>
+      <VisionImportBanner
+        gameAccountId={selectedAccountId}
+        onResume={vision.resume}
+        refreshSignal={bannerRefreshKey}
+      />
       {/* Hidden file inputs */}
       <input
         ref={fileInputRef}
@@ -82,37 +99,13 @@ export default function RosterImportExport({
         data-cy='vision-input'
       />
 
-      {/* Export / Import buttons */}
-      <div className='flex gap-2'>
-        <Button
-          variant='outline'
-          size='sm'
-          onClick={() => vision.visionInputRef.current?.click()}
-          disabled={vision.uploading}
-          data-cy='import-vision-button'
-        >
-          <ScanLine className='mr-1.5 h-3.5 w-3.5' />
-          {visionLabel}
-        </Button>
-        <Button
-          variant='outline'
-          size='sm'
-          onClick={handleExport}
-          data-cy='export-json-button'
-        >
-          <Download className='mr-1.5 h-3.5 w-3.5' />
-          {t.roster.importExport.exportJson}
-        </Button>
-        <Button
-          variant='outline'
-          size='sm'
-          onClick={() => fileInputRef.current?.click()}
-          data-cy='import-json-button'
-        >
-          <Upload className='mr-1.5 h-3.5 w-3.5' />
-          {t.roster.importExport.importJson}
-        </Button>
-      </div>
+      <RosterImportButtons
+        visionLabel={visionLabel}
+        visionUploading={vision.uploading}
+        onVisionClick={() => void guard.guardedOpen()}
+        onExport={handleExport}
+        onImportJson={() => fileInputRef.current?.click()}
+      />
 
       <ImportPreviewDialog
         open={previewOpen}
@@ -144,6 +137,13 @@ export default function RosterImportExport({
         open={vision.reportOpen}
         onOpenChange={vision.setReportOpen}
         results={vision.importResults}
+      />
+
+      <VisionImportBlockedDialog
+        open={guard.dialogOpen}
+        onOpenChange={guard.setDialogOpen}
+        onResume={guard.resumeBlocked}
+        onDiscard={guard.discardBlocked}
       />
     </>
   )

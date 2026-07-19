@@ -4,11 +4,18 @@ export interface VisionImport {
   screens_total: number
 }
 
+export interface VisionJobDetail {
+  id: string
+  status: string
+  error: string | null
+}
+
 export interface VisionImportStatus {
   id: string
   status: string
   screens_total: number
   screens_done: number
+  jobs?: VisionJobDetail[]
 }
 
 export interface VisionPrediction {
@@ -145,4 +152,16 @@ export const cancelVisionImport = async (importId: string): Promise<void> => {
     headers: jsonHeaders,
   })
   await throwOnError(response, "Erreur lors de l'annulation de l'import")
+}
+
+// Relaunches one screenshot the pipeline could not read. There is no
+// import-wide retry: the banner calls this once per failed job (see
+// VisionResultService.retry_job on the backend for why a failure is terminal
+// until the user explicitly asks again).
+export const retryVisionJob = async (jobId: string): Promise<void> => {
+  const response = await fetch(`${PROXY}/vision/jobs/${jobId}/retry`, {
+    method: 'POST',
+    headers: jsonHeaders,
+  })
+  await throwOnError(response, 'Erreur lors de la relance de la capture')
 }
