@@ -829,17 +829,28 @@ async def test_current_excludes_a_cancelled_import(fake_infra):
 
 @pytest.mark.asyncio
 async def test_current_returns_the_most_recent_candidate(fake_infra):
+    """Two simultaneous candidates can no longer be produced through the
+    endpoint (the 409 guard forbids a second import while one is pending), so
+    the second row is inserted directly to exercise get_current's tie-break
+    ordering on its own."""
+    from src.models.VisionImport import VisionImport
+    from tests.utils.utils_db import get_test_session
+
     await push_one_user()
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
     headers = create_auth_headers(str(USER_ID))
     await _post_import(headers, account.id, [_png("a.png")])
-    newest = await _post_import(headers, account.id, [_png("b.png")])
-    newest_id = newest.json()["id"]
+
+    newest_id = uuid.uuid4()
+    async for session in get_test_session():
+        session.add(VisionImport(id=newest_id, game_account_id=account.id, screens_total=1))
+        await session.commit()
+        break
 
     response = await _get_current(headers, account.id)
 
     assert response.status_code == 200
-    assert response.json()["id"] == newest_id
+    assert response.json()["id"] == str(newest_id)
 
 
 @pytest.mark.asyncio
@@ -874,3 +885,34 @@ async def test_retry_of_another_users_job_is_forbidden(fake_infra):
         )
 
     assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_second_import_while_one_is_pending_is_409(fake_infra):
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    first = await _post_import(headers, account.id, [_png("a.png")])
+
+    second = await _post_import(headers, account.id, [_png("b.png")])
+
+    assert second.status_code == 409
+    # The blocking id must come back, so the UI can offer to cancel it instead
+    # of just showing a wall.
+    assert first.json()["id"] in second.text
+
+
+@pytest.mark.asyncio
+async def test_eleventh_import_in_an_hour_is_429(fake_infra):
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    # Cancel each one so the 409 rule never fires — only the quota should.
+    for _ in range(10):
+        created = await _post_import(headers, account.id, [_png("a.png")])
+        async with get_test_client() as client:
+            await client.delete(f"/vision/imports/{created.json()['id']}", headers=headers)
+
+    eleventh = await _post_import(headers, account.id, [_png("a.png")])
+
+    assert eleventh.status_code == 429

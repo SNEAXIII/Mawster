@@ -8,6 +8,8 @@ from starlette import status
 
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND, NOT_YOUR_GAME_ACCOUNT
 from src.Messages.vision_messages import (
+    IMPORT_ALREADY_PENDING,
+    IMPORT_QUOTA_EXCEEDED,
     JOB_NOT_RETRYABLE,
     NOT_YOUR_VISION_IMPORT,
     VISION_CROP_NOT_FOUND,
@@ -41,6 +43,8 @@ vision_controller = APIRouter(
     tags=["Vision"],
     dependencies=[Depends(AuthService.get_current_user_in_jwt)],
 )
+
+MAX_IMPORTS_PER_HOUR = 10
 
 
 class VisionConfirmRequest(BaseModel):
@@ -101,6 +105,21 @@ async def create_vision_import(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only import screenshots into your own game accounts",
         )
+
+    # Quota first: a user blocked by the 409 below must still learn they are
+    # also over quota, rather than being stuck behind a wall that never
+    # mentions it.
+    recent = await VisionImportService.count_recent_imports(session, current_user.id)
+    if recent >= MAX_IMPORTS_PER_HOUR:
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, IMPORT_QUOTA_EXCEEDED)
+
+    blocking = await VisionImportService.get_current(session, game_account_id)
+    if blocking is not None:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            f"{IMPORT_ALREADY_PENDING}: {blocking.id}",
+        )
+
     return await VisionImportService.create_import(
         session=session,
         storage=storage,

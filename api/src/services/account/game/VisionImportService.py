@@ -189,6 +189,28 @@ class VisionImportService:
         return (await session.exec(statement)).first()
 
     @classmethod
+    async def count_recent_imports(
+        cls, session: SessionDep, user_id: uuid.UUID, hours: int = 1
+    ) -> int:
+        """Imports this user created in the last `hours`, across all their game
+        accounts and whatever their status.
+
+        Counted in the DB on purpose: an in-process limiter (slowapi) is per
+        worker, so two uvicorn workers would double the real limit and a restart
+        would reset it. Cancelled imports count too — the quota measures work
+        asked of the server, not work kept.
+        """
+        from src.models.GameAccount import GameAccount
+
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        statement = (
+            select(func.count(VisionImport.id))
+            .join(GameAccount, GameAccount.id == VisionImport.game_account_id)
+            .where(GameAccount.user_id == user_id, VisionImport.created_at > cutoff)
+        )
+        return (await session.exec(statement)).one()
+
+    @classmethod
     async def count_predictions(cls, session: SessionDep, import_id: uuid.UUID) -> int:
         """How many champions were read across every job of this import."""
         from src.models.VisionJob import VisionJob
