@@ -69,3 +69,31 @@ def test_result_message_accepts_a_failure_with_no_predictions():
 def test_result_message_rejects_an_unknown_status():
     with pytest.raises(ValidationError):
         VisionResultMessage.model_validate(_payload(status="in_progress"))
+
+
+def test_prediction_message_parses_candidates():
+    from src.dto.account.game.dto_vision_result import VisionPredictionMessage
+
+    message = VisionPredictionMessage.model_validate(
+        {
+            "champion_name": "Gladiator",
+            "confidence": 0.79,
+            "candidates": [
+                {"name": "Gladiator", "score": 0.79},
+                {"name": "Gorr", "score": 0.78},
+            ],
+        }
+    )
+
+    assert len(message.candidates) == 2
+    assert message.candidates[1].name == "Gorr"
+    assert message.candidates[1].score == 0.78
+
+
+def test_prediction_message_without_candidates_stays_valid():
+    """An older worker sends no candidates at all. It must keep working."""
+    from src.dto.account.game.dto_vision_result import VisionPredictionMessage
+
+    message = VisionPredictionMessage.model_validate({"champion_name": "Hulk", "confidence": 0.91})
+
+    assert message.candidates == []
