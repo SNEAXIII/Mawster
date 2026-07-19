@@ -227,7 +227,14 @@ async def get_crop_url(
                 status_code=status.HTTP_404_NOT_FOUND, detail=VISION_CROP_NOT_FOUND
             ) from exc
         raise
-    return Response(content=data, media_type="image/png")
+    # Crops are immutable once written: the key embeds the import and job ids, and
+    # nothing ever rewrites that object. Cached privately so re-renders of the
+    # review list stop refetching all 48 of them.
+    return Response(
+        content=data,
+        media_type="image/png",
+        headers={"Cache-Control": "private, max-age=3600, immutable"},
+    )
 
 
 @vision_controller.delete("/imports/{import_id}", status_code=status.HTTP_204_NO_CONTENT)

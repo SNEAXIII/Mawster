@@ -55,6 +55,7 @@ export default function ImportPreviewRowEdit({
           <img
             src={row.cropUrl}
             alt={row.champion_name}
+            loading='lazy'
             className='h-24 w-24 rounded object-cover border border-border'
             data-cy={`preview-row-crop-${index}`}
           />
