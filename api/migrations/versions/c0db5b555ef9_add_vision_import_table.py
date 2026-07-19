@@ -1,7 +1,7 @@
 """add_vision_import_table
 
 Revision ID: c0db5b555ef9
-Revises: f1e8de91f46f
+Revises: 8be10426cec1
 Create Date: 2026-07-14 17:12:28.891296
 
 """
@@ -15,7 +15,7 @@ import sqlmodel  # noqa: F401
 
 # revision identifiers, used by Alembic.
 revision: str = "c0db5b555ef9"
-down_revision: Union[str, None] = "f1e8de91f46f"
+down_revision: Union[str, None] = "8be10426cec1"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
