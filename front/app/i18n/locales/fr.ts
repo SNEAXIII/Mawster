@@ -716,7 +716,12 @@ const fr: Translations = {
       importUploadLabel: 'Sélectionner un fichier CSV',
       importUploadHint: 'Format : attaquant,défenseur,node,saison,ko_count',
       importResolveTitle: 'Résoudre les champions inconnus',
+      importResolveHint:
+        "{count} nom(s) de votre fichier ne correspondent à aucun champion. Associez chacun à un champion pour activer l'import.",
       importUnknown: 'Inconnu : {name}',
+      importUnmappedBadge: 'À associer',
+      importBlockedUnresolved: '{count} nom(s) de champion restent à associer ci-dessus.',
+      importBlockedAlliance: "Sélectionnez une alliance pour activer l'import.",
       importAllianceLabel: 'Alliance',
       importConfirmBtn: 'Importer {count} combats',
       importSuccess: '{count} combats importés',

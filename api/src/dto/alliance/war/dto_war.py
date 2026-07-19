@@ -11,7 +11,7 @@ MAX_BANNED_CHAMPIONS = 7
 
 
 class WarCreateRequest(BaseModel):
-    opponent_name: str = Field(..., max_length=100, min_length=1, pattern=r"^[a-zA-Z0-9 ]+$")
+    opponent_name: str = Field(..., max_length=100, min_length=1)
     banned_champion_ids: List[uuid.UUID] = Field(
         default_factory=list,
         max_length=MAX_BANNED_CHAMPIONS,

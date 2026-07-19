@@ -1,4 +1,5 @@
 'use client'
+import { AlertTriangle } from 'lucide-react'
 import { useState, useRef } from 'react'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
@@ -29,6 +30,10 @@ interface RawRow {
   koCount: number
 }
 
+function normalizeName(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
 function parseCSV(text: string): RawRow[] {
   let lines = text.trim().split('\n')
   // Skip header row only if present (3rd column is not a numeric node)
@@ -55,6 +60,16 @@ function parseCSV(text: string): RawRow[] {
     })
 }
 
+function NameCell({ name, resolved }: { name: string; resolved: boolean }) {
+  if (resolved) return <span>{name}</span>
+  return (
+    <span className='inline-flex items-center gap-1.5 font-medium text-amber-500'>
+      <AlertTriangle className='size-3.5 shrink-0' />
+      {name}
+    </span>
+  )
+}
+
 export default function CsvImportForm() {
   const { t } = useI18n()
   const kb = t.game.knowledgeBase
@@ -65,6 +80,7 @@ export default function CsvImportForm() {
   const [selectedAllianceId, setSelectedAllianceId] = useState<string | null>(null)
   const [rows, setRows] = useState<RawRow[]>([])
   const [nameMap, setNameMap] = useState<Record<string, string | null>>({})
+  const [unknownLabels, setUnknownLabels] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [resourcesLoaded, setResourcesLoaded] = useState(false)
 
@@ -107,18 +123,22 @@ export default function CsvImportForm() {
       setRows(parsed)
 
       const unknownMap: Record<string, null> = {}
+      const labels: Record<string, string> = {}
       const seen = new Set<string>()
       for (const r of parsed) {
         for (const name of [r.attackerName, r.defenderName]) {
-          const lower = name.toLowerCase()
-          if (!seen.has(lower)) {
-            seen.add(lower)
-            const match = champs.find((c) => c.name.toLowerCase() === lower)
-            if (!match) unknownMap[name] = null
+          const key = normalizeName(name)
+          if (seen.has(key)) continue
+          seen.add(key)
+          const match = champs.find((c) => normalizeName(c.name) === key)
+          if (!match) {
+            unknownMap[key] = null
+            labels[key] = name.trim()
           }
         }
       }
       setNameMap(unknownMap)
+      setUnknownLabels(labels)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : kb.importError
       toast.error(message)
@@ -126,15 +146,15 @@ export default function CsvImportForm() {
   }
 
   const resolveId = (name: string, champs: Champion[]): string | null => {
-    const lower = name.toLowerCase()
-    const direct = champs.find((c) => c.name.toLowerCase() === lower)
+    const key = normalizeName(name)
+    const direct = champs.find((c) => normalizeName(c.name) === key)
     if (direct) return direct.id
-    return nameMap[name] ?? null
+    return nameMap[key] ?? null
   }
 
-  const allResolved =
-    rows.length > 0 &&
-    rows.every((r) => resolveId(r.attackerName, champions) && resolveId(r.defenderName, champions))
+  const unknownKeys = Object.keys(nameMap)
+  const pendingCount = unknownKeys.filter((key) => !nameMap[key]).length
+  const allResolved = rows.length > 0 && pendingCount === 0
 
   const handleImport = async () => {
     if (!selectedAllianceId) return
@@ -152,6 +172,7 @@ export default function CsvImportForm() {
       if (res.skipped > 0) toast.info(kb.importSkipped.replace('{count}', String(res.skipped)))
       setRows([])
       setNameMap({})
+      setUnknownLabels({})
       if (fileRef.current) fileRef.current.value = ''
     } catch {
       toast.error(kb.importError)
@@ -160,7 +181,11 @@ export default function CsvImportForm() {
     }
   }
 
-  const unknownNames = Object.keys(nameMap)
+  const blockedReason = !selectedAllianceId
+    ? kb.importBlockedAlliance
+    : pendingCount > 0
+      ? kb.importBlockedUnresolved.replace('{count}', String(pendingCount))
+      : null
 
   return (
     <div className='space-y-6'>
@@ -199,28 +224,44 @@ export default function CsvImportForm() {
         </Select>
       )}
 
-      {unknownNames.length > 0 && (
-        <div className='space-y-2'>
-          <p
-            className='font-medium text-sm'
-            data-cy='import-resolve-title'
-          >
-            {kb.importResolveTitle}
-          </p>
-          {unknownNames.map((name) => (
+      {unknownKeys.length > 0 && (
+        <div
+          className='space-y-3 rounded-lg border border-amber-500/50 bg-amber-500/10 p-4'
+          data-cy='import-resolve-panel'
+        >
+          <div className='flex items-start gap-2'>
+            <AlertTriangle className='mt-0.5 size-4 shrink-0 text-amber-500' />
+            <div className='space-y-1'>
+              <p
+                className='font-medium text-sm'
+                data-cy='import-resolve-title'
+              >
+                {kb.importResolveTitle}
+              </p>
+              <p className='text-sm text-muted-foreground'>
+                {kb.importResolveHint.replace('{count}', String(unknownKeys.length))}
+              </p>
+            </div>
+          </div>
+          {unknownKeys.map((key) => (
             <div
-              key={name}
-              className='flex items-center gap-3'
+              key={key}
+              className='flex flex-wrap items-center gap-3'
             >
-              <span className='text-sm text-muted-foreground w-36 truncate'>
-                {kb.importUnknown.replace('{name}', name)}
+              <span className='w-36 shrink-0 truncate text-sm'>
+                {kb.importUnknown.replace('{name}', unknownLabels[key] ?? key)}
               </span>
               <ChampionFilterSelect
-                value={nameMap[name]}
-                onChange={(id) => setNameMap((m) => ({ ...m, [name]: id }))}
+                value={nameMap[key]}
+                onChange={(id) => setNameMap((m) => ({ ...m, [key]: id }))}
                 placeholder={kb.selectChampion}
-                data-cy={`champion-map-${name}`}
+                data-cy={`champion-map-${key}`}
               />
+              {!nameMap[key] && (
+                <span className='rounded-full bg-amber-500/20 px-2 py-0.5 font-medium text-amber-500 text-xs'>
+                  {kb.importUnmappedBadge}
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -249,17 +290,21 @@ export default function CsvImportForm() {
                   return (
                     <tr
                       key={i}
-                      className='border-t'
+                      className={`border-t ${!attackerOk || !defenderOk ? 'bg-amber-500/10' : ''}`}
+                      data-cy={`import-row-${i}`}
+                      data-unresolved={!attackerOk || !defenderOk}
                     >
-                      <td
-                        className={`px-3 py-1.5 ${!attackerOk ? 'text-destructive font-medium' : ''}`}
-                      >
-                        {row.attackerName}
+                      <td className='px-3 py-1.5'>
+                        <NameCell
+                          name={row.attackerName}
+                          resolved={attackerOk}
+                        />
                       </td>
-                      <td
-                        className={`px-3 py-1.5 ${!defenderOk ? 'text-destructive font-medium' : ''}`}
-                      >
-                        {row.defenderName}
+                      <td className='px-3 py-1.5'>
+                        <NameCell
+                          name={row.defenderName}
+                          resolved={defenderOk}
+                        />
                       </td>
                       <td className='px-3 py-1.5 text-muted-foreground'>{row.node}</td>
                       <td className='px-3 py-1.5 text-muted-foreground'>{row.seasonName}</td>
@@ -270,13 +315,24 @@ export default function CsvImportForm() {
               </tbody>
             </table>
           </div>
-          <Button
-            onClick={handleImport}
-            disabled={loading || !allResolved || !selectedAllianceId}
-            data-cy='import-confirm-btn'
-          >
-            {kb.importConfirmBtn.replace('{count}', String(rows.length))}
-          </Button>
+          <div className='space-y-2'>
+            {blockedReason && (
+              <p
+                className='flex items-center gap-1.5 text-amber-500 text-sm'
+                data-cy='import-blocked-reason'
+              >
+                <AlertTriangle className='size-3.5 shrink-0' />
+                {blockedReason}
+              </p>
+            )}
+            <Button
+              onClick={handleImport}
+              disabled={loading || !allResolved || !selectedAllianceId}
+              data-cy='import-confirm-btn'
+            >
+              {kb.importConfirmBtn.replace('{count}', String(rows.length))}
+            </Button>
+          </div>
         </div>
       )}
     </div>
