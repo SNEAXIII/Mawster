@@ -178,7 +178,14 @@ async function startTest(): Promise<State> {
 
   execSync('docker compose -f compose-dev.yaml up mariadb-test phpmyadmin-test -d', { cwd: ROOT, stdio: 'pipe' });
 
-  const apiPid = spawnDetached(['uv', 'run', 'app_testing.py'], API_DIR);
+  // app_testing.py forces MODE=testing, which defaults VISION_CONSUMER_ENABLED
+  // to false so the unit and integration suites never need a broker. E2E is the
+  // opposite case: a vision spec that does not cross RabbitMQ tests scenery, not
+  // the import loop. Settings is a pydantic BaseSettings, so this env var wins
+  // over the computed default without touching secrets.py.
+  const apiPid = spawnDetached(['uv', 'run', 'app_testing.py'], API_DIR, {
+    VISION_CONSUMER_ENABLED: 'true',
+  });
   const frontPid = spawnDetached(['npm', 'run', 'testing'], FRONT_DIR, {
     NEXTAUTH_SECRET: 'e2e-local-nextauth-secret',
   });

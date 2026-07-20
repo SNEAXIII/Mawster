@@ -494,9 +494,30 @@ def start_frontend(
     return proc
 
 
-def get_spec_files() -> list[Path]:
-    """Return all Cypress spec files sorted by path."""
-    return sorted((FRONT_DIR / "cypress" / "e2e").rglob("*.cy.ts"))
+# Specs whose filename contains this marker exercise the vision import loop:
+# front -> API -> RabbitMQ -> worker -> API -> preview. They need RabbitMQ,
+# RustFS and a vision worker running, and only ONE worker may consume
+# `vision.jobs` at a time or message delivery stops being deterministic.
+#
+# Ordinary runners have none of that, so they are excluded by default and opted
+# into with --include-vision. They are meant to land on a single dedicated
+# runner with the full stack, never spread across the parallel matrix.
+VISION_SPEC_MARKER = "vision"
+
+
+def is_vision_spec(spec: Path) -> bool:
+    return VISION_SPEC_MARKER in spec.name
+
+
+def get_spec_files(include_vision: bool = False) -> list[Path]:
+    """Return Cypress spec files sorted by path.
+
+    Vision specs are excluded unless asked for: see VISION_SPEC_MARKER.
+    """
+    specs = sorted((FRONT_DIR / "cypress" / "e2e").rglob("*.cy.ts"))
+    if include_vision:
+        return specs
+    return [s for s in specs if not is_vision_spec(s)]
 
 
 def count_tests(spec: Path) -> int:
@@ -636,13 +657,17 @@ def kill_probably_used_ports(worker_number: int) -> None:
     kill_ports(ports_to_free)
 
 
-def plan(runners: int) -> None:
+def plan(runners: int, include_vision: bool = False) -> None:
     """Print a GitHub Actions matrix JSON and exit.
 
     Each entry is {"runner": "N", "specs": "path1,path2,..."}
     with paths relative to FRONT_DIR (forward-slash, cross-platform).
+
+    Vision specs are left out of the matrix: they need a broker, object storage
+    and a single vision worker, which the parallel runners do not have. Spread
+    across the matrix they would also put two consumers on the same queue.
     """
-    specs = get_spec_files()
+    specs = get_spec_files(include_vision=include_vision)
     buckets = distribute_specs(specs, runners)
     matrix = [
         {
@@ -698,10 +723,19 @@ def main() -> None:
         action="store_true",
         help="Skip the Next.js build step; assume .next-e2e already exists.",
     )
+    parser.add_argument(
+        "--include-vision",
+        action="store_true",
+        help=(
+            "Include the vision specs, excluded by default. They need RabbitMQ, "
+            "RustFS and exactly one vision worker consuming vision.jobs; without "
+            "that stack they time out rather than fail cleanly."
+        ),
+    )
     args = parser.parse_args()
 
     if args.plan:
-        plan(args.runners)
+        plan(args.runners, include_vision=args.include_vision)
     quiet = args.quiet
 
     resolved_specs: set[Path] = set()
@@ -849,10 +883,12 @@ def main() -> None:
             f"Running {len(specs)} spec(s): {[str(s.relative_to(FRONT_DIR)) for s in specs]}"
         )
     else:
-        specs = get_spec_files()
+        specs = get_spec_files(include_vision=args.include_vision)
         log(
             f"Found {len(specs)} spec file(s) to distribute across {worker_number} worker(s)."
         )
+        if not args.include_vision:
+            log("Vision specs excluded — pass --include-vision to run them.")
     spec_buckets = distribute_specs(specs, worker_number)
     results: list[int] = [0] * worker_number
     worker_stats: list[dict] = [{} for _ in range(worker_number)]
