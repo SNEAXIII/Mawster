@@ -16,7 +16,7 @@ services:
       - MARIADB_PASSWORD=password
       - MARIADB_ROOT_PASSWORD=rootpassword
     volumes:
-      - ./db/mawster-db:/var/lib/mysql
+      - /mawster-db-dev:/var/lib/mysql
   phpmyadmin-dev:
     image: phpmyadmin/phpmyadmin
     ports:
