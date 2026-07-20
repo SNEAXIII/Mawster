@@ -26,6 +26,7 @@ from src.utils.db import SessionDep
 
 if TYPE_CHECKING:
     from src.dto.account.game.dto_vision_predictions import VisionPredictionResponse
+    from src.models.VisionPredictionCandidate import VisionPredictionCandidate
 
 MAX_SCREENS_PER_IMPORT = 40
 MAX_SCREEN_BYTES = 8 * 1024 * 1024
@@ -229,7 +230,10 @@ class VisionImportService:
     ) -> list["VisionPredictionResponse"]:
         """All predictions of an import, ordered by job then id, carrying the crop
         index parsed out of the stored crop_key and a stable per-import job index."""
-        from src.dto.account.game.dto_vision_predictions import VisionPredictionResponse
+        from src.dto.account.game.dto_vision_predictions import (
+            VisionCandidateResponse,
+            VisionPredictionResponse,
+        )
         from src.models.VisionPrediction import VisionPrediction
 
         jobs = (
@@ -247,6 +251,10 @@ class VisionImportService:
                 await session.exec(
                     select(VisionPrediction)
                     .where(VisionPrediction.job_id == job.id)
+                    # Without this, a 48-row review fires 48 extra queries — and
+                    # on AsyncSession lazy loading raises rather than merely
+                    # being slow, so the review would break outright.
+                    .options(selectinload(VisionPrediction.candidates))
                     .order_by(VisionPrediction.id)
                 )
             ).all()
@@ -264,9 +272,30 @@ class VisionImportService:
                         confidence=pred.confidence,
                         crop_index=cls._crop_index(pred.crop_key),
                         job_index=job_index[job.id],
+                        candidates=[
+                            VisionCandidateResponse(name=c.name, score=c.score)
+                            for c in pred.candidates
+                        ],
+                        margin=cls._margin(pred.candidates),
                     )
                 )
         return rows
+
+    @staticmethod
+    def _margin(candidates: list["VisionPredictionCandidate"]) -> float | None:
+        """Gap between the two best CLIP guesses, or None when there is no gap.
+
+        This is the real confidence signal. Measured on ground truth, both
+        misreads scored 0.79 — high enough for a score-based threshold to paint
+        them green — while sitting 0.01 ahead of the right answer. The absolute
+        score says almost nothing; this gap says whether the model actually knew.
+
+        Assumes `candidates` is ordered by `position`. The relationship declares
+        that ordering, and every query that loads it must preserve it.
+        """
+        if len(candidates) < 2:
+            return None
+        return candidates[0].score - candidates[1].score
 
     @staticmethod
     def _crop_index(crop_key: str | None) -> int | None:
