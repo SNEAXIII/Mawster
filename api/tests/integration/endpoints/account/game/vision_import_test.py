@@ -422,6 +422,10 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
                         ascension=1,
                         confidence=0.9,
                         crop_key="imports/a/b/crops/0.png",
+                        candidates=[
+                            {"name": "Hulk", "score": 0.90},
+                            {"name": "Red Hulk", "score": 0.62},
+                        ],
                     )
                 ],
             ),
@@ -436,6 +440,16 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
     assert len(body["predictions"]) == 1
     assert body["predictions"][0]["champion_name"] == "Hulk"
     assert body["predictions"][0]["crop_index"] == 0
+
+    # The candidates survive the whole round trip — worker message, child table,
+    # eager load, response — and come back best first. The unit test for _margin
+    # proves the arithmetic; only this proves the wiring under it.
+    row = body["predictions"][0]
+    assert [(c["name"], c["score"]) for c in row["candidates"]] == [
+        ("Hulk", 0.90),
+        ("Red Hulk", 0.62),
+    ]
+    assert row["margin"] == pytest.approx(0.28)
 
 
 @pytest.mark.asyncio
