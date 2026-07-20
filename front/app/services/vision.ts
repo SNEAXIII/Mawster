@@ -30,6 +30,10 @@ export interface VisionPrediction {
   confidence: number
   crop_index: number | null
   job_index: number
+  // CLIP alternatives, best first, top-1 included.
+  candidates: { name: string; score: number }[]
+  // score[0] - score[1]. null when the model gave fewer than two candidates.
+  margin: number | null
 }
 
 export interface VisionPredictionsResponse {

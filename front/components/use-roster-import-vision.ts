@@ -110,6 +110,11 @@ export function useRosterImportVision({
           // Force low confidence on out-of-range rarities so the review
           // screen flags the row instead of silently trusting a bad guess.
           confidence: rarityValid ? prediction.confidence : 0,
+          candidates: prediction.candidates ?? [],
+          // The badge reads the margin, not the score, so the out-of-range
+          // safeguard above has to be mirrored here or it stops working: a bad
+          // rarity with a confident name would otherwise badge green.
+          margin: rarityValid ? prediction.margin : null,
           cropUrl,
           prediction_id: prediction.id,
           // Vision predictions always go through the editable review row —

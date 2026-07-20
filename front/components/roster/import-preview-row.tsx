@@ -26,9 +26,18 @@ export interface PreviewRow {
   cropUrl?: string | null
   prediction_id?: string | null
   editable?: boolean
+  // CLIP alternatives, best first, top-1 included. Absent on JSON imports.
+  candidates?: { name: string; score: number }[]
+  // score[0] - score[1]. null when the model gave fewer than two candidates.
+  margin?: number | null
+  // Set once the user picks a champion by hand. The model's margin no longer
+  // describes this row, so the badge stops showing it.
+  corrected?: boolean
 }
 
-export type PreviewRowPatch = Partial<Pick<PreviewRow, 'newRarity' | 'newSignature' | 'ascension'>>
+export type PreviewRowPatch = Partial<
+  Pick<PreviewRow, 'newRarity' | 'newSignature' | 'ascension' | 'champion_name'>
+>
 
 interface ImportPreviewRowProps {
   row: PreviewRow

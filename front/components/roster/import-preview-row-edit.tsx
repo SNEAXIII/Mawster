@@ -21,13 +21,24 @@ interface ImportPreviewRowEditProps {
   onRowChange?: (index: number, patch: PreviewRowPatch) => void
 }
 
-function confidenceLevel(confidence: number): 'low' | 'medium' | 'high' {
-  if (confidence < 0.5) return 'low'
-  if (confidence < 0.75) return 'medium'
+// Unmeasured estimates, deliberately named so they are cheap to tune. Ground
+// truth: mean margin 0.067, and both observed misreads sat at 0.01.
+const MARGIN_AMBIGUOUS = 0.05
+const MARGIN_UNCERTAIN = 0.15
+
+// The gap to the runner-up, not the absolute score. Both real misreads scored
+// 0.79 — high enough for a score-based threshold to paint them green — while
+// sitting 0.01 ahead of the right answer. No margin at all means fewer than two
+// candidates, which usually means the portrait crop failed and the row has no
+// name: the case needing the most attention, so it takes the loudest badge.
+function marginLevel(margin: number | null | undefined): 'low' | 'medium' | 'high' {
+  if (margin == null) return 'low'
+  if (margin < MARGIN_AMBIGUOUS) return 'low'
+  if (margin < MARGIN_UNCERTAIN) return 'medium'
   return 'high'
 }
 
-const CONFIDENCE_CLASSES: Record<'low' | 'medium' | 'high', string> = {
+const MARGIN_CLASSES: Record<'low' | 'medium' | 'high', string> = {
   low: 'bg-red-600 text-white border-transparent',
   medium: 'bg-orange-500 text-white border-transparent',
   high: 'bg-green-600 text-white border-transparent',
@@ -54,11 +65,11 @@ export default function ImportPreviewRowEdit({
   const { t } = useI18n()
   const emit = (patch: PreviewRowPatch) => onRowChange?.(index, patch)
 
-  const level = row.confidence != null ? confidenceLevel(row.confidence) : null
-  const confidenceLabels: Record<'low' | 'medium' | 'high', string> = {
-    low: t.roster.importExport.vision.confidenceLow,
-    medium: t.roster.importExport.vision.confidenceMedium,
-    high: t.roster.importExport.vision.confidenceHigh,
+  const level = marginLevel(row.margin)
+  const marginLabels: Record<'low' | 'medium' | 'high', string> = {
+    low: t.roster.importExport.vision.marginAmbiguous,
+    medium: t.roster.importExport.vision.marginUncertain,
+    high: t.roster.importExport.vision.marginClear,
   }
 
   const status = rowStatus(row)
@@ -100,12 +111,21 @@ export default function ImportPreviewRowEdit({
           {row.champion_class ?? 'Unknown'}
         </p>
         <div className='mt-1 flex items-center gap-1'>
-          {level != null && (
+          {row.corrected ? (
             <Badge
-              className={`text-[10px] px-1.5 py-0 ${CONFIDENCE_CLASSES[level]}`}
-              data-cy={`preview-row-confidence-badge-${index}`}
+              className='text-[10px] px-1.5 py-0 bg-sky-600 text-white border-transparent'
+              data-cy={`preview-row-margin-badge-${index}`}
+              data-level='corrected'
             >
-              {confidenceLabels[level]}
+              {t.roster.importExport.vision.marginCorrected}
+            </Badge>
+          ) : (
+            <Badge
+              className={`text-[10px] px-1.5 py-0 ${MARGIN_CLASSES[level]}`}
+              data-cy={`preview-row-margin-badge-${index}`}
+              data-level={level}
+            >
+              {marginLabels[level]}
             </Badge>
           )}
           <Badge
