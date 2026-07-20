@@ -14,6 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { RARITIES, RARITY_LABELS, shortenChampionName, getClassColors } from '@/app/services/roster'
 import type { PreviewRow, PreviewRowPatch } from './import-preview-row'
+import ImportPreviewChampionPicker from './import-preview-champion-picker'
 
 interface ImportPreviewRowEditProps {
   row: PreviewRow
@@ -101,12 +102,12 @@ export default function ImportPreviewRowEdit({
       </div>
 
       <div className='min-w-0 flex-1'>
-        <p
-          className='text-sm font-semibold truncate'
-          title={row.champion_name}
-        >
-          {shortenChampionName(row.champion_name)}
-        </p>
+        <ImportPreviewChampionPicker
+          index={index}
+          championName={shortenChampionName(row.champion_name)}
+          candidates={row.candidates ?? []}
+          onPick={(name) => emit({ champion_name: name })}
+        />
         <p className={`text-xs ${getClassColors(row.champion_class ?? 'Unknown').label}`}>
           {row.champion_class ?? 'Unknown'}
         </p>

@@ -102,6 +102,45 @@ export function buildPreviewRow(
   }
 }
 
+/**
+ * Re-run the roster diff for a row whose champion changed.
+ *
+ * Correcting the name changes which roster entry the row corresponds to, so
+ * oldRarity / oldSignature / oldAscension / isNew / hasChanges all have to be
+ * recomputed — they were derived against the *previous* name. Skipping this
+ * makes the row claim "new" for a champion already owned, and the import then
+ * writes the wrong rarity to the roster.
+ */
+export function rediffRow(
+  row: PreviewRow,
+  roster: RosterEntry[],
+  championLookup: Map<string, { champion_class: string; image_url: string | null }>
+): PreviewRow {
+  const rebuilt = buildPreviewRow(
+    {
+      champion_name: row.champion_name,
+      rarity: row.newRarity,
+      signature: row.newSignature,
+      ascension: row.ascension ?? 0,
+      is_preferred_attacker: row.is_preferred_attacker ?? false,
+    } as RosterImportEntry,
+    roster,
+    championLookup
+  )
+  // Keep the vision-only fields: they describe the model's reading, which the
+  // roster diff knows nothing about.
+  return {
+    ...rebuilt,
+    confidence: row.confidence,
+    cropUrl: row.cropUrl,
+    prediction_id: row.prediction_id,
+    editable: row.editable,
+    candidates: row.candidates,
+    margin: row.margin,
+    corrected: row.corrected,
+  }
+}
+
 // ─── Hook ─────────────────────────────────────────────────
 
 export interface UseRosterImportCoreProps {

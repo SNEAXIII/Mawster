@@ -16,6 +16,7 @@ import {
   useRosterImportCore,
   buildPreviewRow,
   fetchChampionLookup,
+  rediffRow,
   type RosterImportEntry,
 } from '@/components/use-roster-import-core'
 
@@ -66,6 +67,13 @@ export function useRosterImportVision({
   const pollCountRef = useRef(0)
   const pollBusyRef = useRef(false)
 
+  // Kept around so a later manual correction can re-diff without a second
+  // catalogue fetch — the diff cannot be recomputed without it, and reaching
+  // for a second copy would be the bug this ref exists to prevent.
+  const championLookupRef = useRef<
+    Map<string, { champion_class: string; image_url: string | null }>
+  >(new Map())
+
   const clearPoll = useCallback(() => {
     if (pollTimerRef.current != null) {
       clearInterval(pollTimerRef.current)
@@ -93,6 +101,7 @@ export function useRosterImportVision({
         built.map((b) => b.entry),
         roster
       )
+      championLookupRef.current = lookup
 
       return predictions.map((prediction, idx) => {
         const { entry, rarityValid } = built[idx]
@@ -216,23 +225,30 @@ export function useRosterImportVision({
         prev.map((row, i) => {
           if (i !== index) return row
           const updated = { ...row, ...patch }
+          const renamed = patch.champion_name != null && patch.champion_name !== row.champion_name
+          const base = renamed
+            ? {
+                ...rediffRow(updated, roster, championLookupRef.current),
+                corrected: true,
+              }
+            : updated
           return {
-            ...updated,
+            ...base,
             // Recompute the diff so a manually corrected row still counts
             // toward the import (isNew rows always do). Ascension is included
             // alongside rarity/signature — otherwise an ascension-only fix
             // flips hasChanges to false and the row silently gets dropped
             // from the import.
             hasChanges:
-              updated.isNew ||
-              updated.oldRarity !== updated.newRarity ||
-              updated.oldSignature !== updated.newSignature ||
-              (updated.oldAscension ?? 0) !== (updated.ascension ?? 0),
+              base.isNew ||
+              base.oldRarity !== base.newRarity ||
+              base.oldSignature !== base.newSignature ||
+              (base.oldAscension ?? 0) !== (base.ascension ?? 0),
           }
         })
       )
     },
-    [core.setPreviewRows]
+    [core.setPreviewRows, roster]
   )
 
   // ── Archive the confirmed dataset (best-effort) ─────────
