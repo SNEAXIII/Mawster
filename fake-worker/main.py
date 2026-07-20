@@ -49,8 +49,12 @@ RUSTFS_ENDPOINT = os.environ.get("RUSTFS_ENDPOINT", "http://localhost:9000")
 RUSTFS_ACCESS_KEY = os.environ.get("RUSTFS_ACCESS_KEY", "mawster")
 RUSTFS_SECRET_KEY = os.environ.get("RUSTFS_SECRET_KEY", "mawsterpassword")
 
-# --- Deterministic fixture. T14's E2E asserts on these exact values --------
-# crop_key stays None: no thumbnails are uploaded. T14's spec must match this.
+# --- Deterministic fixture. vision-margin.cy.ts asserts on these exact
+# values, including the `candidates` list each prediction carries.
+# crop_key stays None: no thumbnails are uploaded, and the spec matches this.
+# Two margins are load-bearing: Hulk's 0.51 gap must badge green ("high"), and
+# Iron Man's 0.01 gap must badge red ("low") despite its 0.79 score — the
+# exact shape of two real misreads that a score-only threshold painted green.
 PREDICTIONS = [
     {
         "champion_name": "Hulk",
@@ -61,6 +65,11 @@ PREDICTIONS = [
         "ascension": 1,
         "confidence": 0.91,
         "crop_key": None,
+        # margin 0.51 -> the badge must be green
+        "candidates": [
+            {"name": "Hulk", "score": 0.91},
+            {"name": "Thor", "score": 0.40},
+        ],
     },
     {
         "champion_name": "Iron Man",
@@ -69,8 +78,14 @@ PREDICTIONS = [
         "rank": 5,
         "signature": 0,
         "ascension": 0,
-        "confidence": 0.42,
+        "confidence": 0.79,
         "crop_key": None,
+        # margin 0.01 at a high absolute score -> the exact shape of the two
+        # real misreads, and what the old score-based badge painted green.
+        "candidates": [
+            {"name": "Iron Man", "score": 0.79},
+            {"name": "War Machine", "score": 0.78},
+        ],
     },
 ]
 
