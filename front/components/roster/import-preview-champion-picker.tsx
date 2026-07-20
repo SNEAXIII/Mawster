@@ -82,7 +82,7 @@ export default function ImportPreviewChampionPicker({
                     data-cy={`preview-row-candidate-${index}-${c.name}`}
                   >
                     <span className='flex-1 truncate'>{c.name}</span>
-                    <span className='text-xs text-muted-foreground'>{c.score.toFixed(2)}</span>
+                    <span className='text-xs text-muted-foreground'>{c.score.toFixed(4)}</span>
                   </CommandItem>
                 ))}
               </CommandGroup>

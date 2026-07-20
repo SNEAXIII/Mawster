@@ -24,15 +24,17 @@ interface ImportPreviewRowEditProps {
 
 // Unmeasured estimates, deliberately named so they are cheap to tune. Ground
 // truth: mean margin 0.067, and both observed misreads sat at 0.01.
-const MARGIN_AMBIGUOUS = 0.05
-const MARGIN_UNCERTAIN = 0.15
+const MARGIN_AMBIGUOUS = 0.008
+const MARGIN_UNCERTAIN = 0.02
 
 // The gap to the runner-up, not the absolute score. Both real misreads scored
 // 0.79 — high enough for a score-based threshold to paint them green — while
 // sitting 0.01 ahead of the right answer. No margin at all means fewer than two
 // candidates, which usually means the portrait crop failed and the row has no
 // name: the case needing the most attention, so it takes the loudest badge.
-function marginLevel(margin: number | null | undefined): 'low' | 'medium' | 'high' {
+export type MarginLevel = 'low' | 'medium' | 'high'
+
+export function marginLevel(margin: number | null | undefined): MarginLevel {
   if (margin == null) return 'low'
   if (margin < MARGIN_AMBIGUOUS) return 'low'
   if (margin < MARGIN_UNCERTAIN) return 'medium'
@@ -88,7 +90,7 @@ export default function ImportPreviewRowEdit({
             src={row.cropUrl}
             alt={row.champion_name}
             loading='lazy'
-            className='h-24 w-24 rounded object-cover border border-border'
+            className='h-20 w-20 rounded object-cover border border-border'
             data-cy={`preview-row-crop-${index}`}
           />
         ) : (
