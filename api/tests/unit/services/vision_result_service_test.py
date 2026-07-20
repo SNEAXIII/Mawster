@@ -1,7 +1,6 @@
 import uuid
 
 import pytest
-import pytest_asyncio
 from fastapi import HTTPException
 from sqlmodel import select
 
@@ -11,17 +10,6 @@ from src.models.VisionImport import VisionImport, VisionImportStatus
 from src.models.VisionJob import VisionJob, VisionJobStatus
 from src.models.VisionPredictionCandidate import VisionPredictionCandidate
 from src.services.account.game.VisionResultService import VisionResultService
-from tests.utils.utils_db import Session, reset_test_db
-
-
-@pytest_asyncio.fixture
-async def session():
-    """Real async DB session — the persistence test below needs SQLAlchemy to
-    actually insert the candidate children and assign `prediction_id`, which a
-    FakeSession (used by the other tests in this file) cannot exercise."""
-    reset_test_db()
-    async with Session() as session:
-        yield session
 
 
 async def _make_job(session) -> VisionJob:

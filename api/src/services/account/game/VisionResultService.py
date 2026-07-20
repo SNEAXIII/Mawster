@@ -1,17 +1,24 @@
 import logging
+from typing import TYPE_CHECKING
 
 from fastapi import HTTPException
 from starlette import status
 
 from src.Messages.vision_messages import BROKER_UNAVAILABLE, JOB_NEVER_QUEUED
 from src.dto.account.game.dto_vision_result import VisionResultMessage
-from src.messaging.publisher import VisionPublisher
 from src.models.VisionImport import VisionImport, VisionImportStatus
 from src.models.VisionJob import VisionJob, VisionJobStatus
 from src.models.VisionPrediction import VisionPrediction
 from src.models.VisionPredictionCandidate import VisionPredictionCandidate
 from src.security.secrets import SECRET
 from src.utils.db import SessionDep
+
+if TYPE_CHECKING:
+    # Deferred: src.messaging imports this module (consumer.py calls
+    # VisionResultService.handle at runtime), so importing VisionPublisher
+    # at module level here would close the cycle. It is only ever used as a
+    # type below, so TYPE_CHECKING-only is enough.
+    from src.messaging.publisher import VisionPublisher
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +74,7 @@ class VisionResultService:
     async def retry_job(
         cls,
         session: SessionDep,
-        publisher: VisionPublisher,
+        publisher: "VisionPublisher",
         job: VisionJob,
         vision_import: VisionImport,
     ) -> None:
