@@ -9,6 +9,7 @@ from src.messaging.publisher import VisionPublisher
 from src.models.VisionImport import VisionImport, VisionImportStatus
 from src.models.VisionJob import VisionJob, VisionJobStatus
 from src.models.VisionPrediction import VisionPrediction
+from src.models.VisionPredictionCandidate import VisionPredictionCandidate
 from src.security.secrets import SECRET
 from src.utils.db import SessionDep
 
@@ -128,6 +129,12 @@ class VisionResultService:
                     ascension=predicted.ascension,
                     confidence=predicted.confidence,
                     crop_key=predicted.crop_key,
+                    candidates=[
+                        VisionPredictionCandidate(
+                            name=candidate.name, score=candidate.score, position=position
+                        )
+                        for position, candidate in enumerate(predicted.candidates)
+                    ],
                 )
             )
         job.status = VisionJobStatus.DONE

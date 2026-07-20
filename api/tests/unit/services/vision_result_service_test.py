@@ -1,13 +1,37 @@
 import uuid
 
 import pytest
+import pytest_asyncio
 from fastapi import HTTPException
+from sqlmodel import select
 
 from src.Messages.vision_messages import JOB_NEVER_QUEUED
 from src.dto.account.game.dto_vision_result import VisionPredictionMessage, VisionResultMessage
 from src.models.VisionImport import VisionImport, VisionImportStatus
 from src.models.VisionJob import VisionJob, VisionJobStatus
+from src.models.VisionPredictionCandidate import VisionPredictionCandidate
 from src.services.account.game.VisionResultService import VisionResultService
+from tests.utils.utils_db import Session, reset_test_db
+
+
+@pytest_asyncio.fixture
+async def session():
+    """Real async DB session — the persistence test below needs SQLAlchemy to
+    actually insert the candidate children and assign `prediction_id`, which a
+    FakeSession (used by the other tests in this file) cannot exercise."""
+    reset_test_db()
+    async with Session() as session:
+        yield session
+
+
+async def _make_job(session) -> VisionJob:
+    vision_import = VisionImport(game_account_id=uuid.uuid4(), screens_total=1)
+    session.add(vision_import)
+    await session.commit()
+    job = VisionJob(import_id=vision_import.id, object_key="imports/a/b/screen.png")
+    session.add(job)
+    await session.commit()
+    return job
 
 
 class FakePublisher:
@@ -255,3 +279,41 @@ async def test_retry_reverts_to_failed_when_publish_fails():
     assert vision_import.status == VisionImportStatus.DONE
     # Rewind commit + compensating revert commit.
     assert session.commits == 2
+
+
+@pytest.mark.asyncio
+async def test_succeed_persists_candidates(session):
+    from src.dto.account.game.dto_vision_result import VisionResultMessage
+    from src.services.account.game.VisionResultService import VisionResultService
+
+    job = await _make_job(session)
+    message = VisionResultMessage.model_validate(
+        {
+            "job_id": str(job.id),
+            "import_id": str(job.import_id),
+            "status": "done",
+            "predictions": [
+                {
+                    "champion_name": "Gladiator",
+                    "confidence": 0.79,
+                    "candidates": [
+                        {"name": "Gladiator", "score": 0.79},
+                        {"name": "Gorr", "score": 0.78},
+                    ],
+                }
+            ],
+        }
+    )
+
+    VisionResultService._succeed(session, job, message)
+    await session.commit()
+
+    stored = (
+        await session.exec(
+            select(VisionPredictionCandidate).order_by(VisionPredictionCandidate.position)
+        )
+    ).all()
+    assert [(c.name, c.score, c.position) for c in stored] == [
+        ("Gladiator", 0.79, 0),
+        ("Gorr", 0.78, 1),
+    ]

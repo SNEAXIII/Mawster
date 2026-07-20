@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 
 from sqlmodel import Field, Relationship
 
@@ -7,6 +7,7 @@ from src.models.Base import UUIDBase
 
 if TYPE_CHECKING:
     from src.models.VisionJob import VisionJob
+    from src.models.VisionPredictionCandidate import VisionPredictionCandidate
 
 
 class VisionPrediction(UUIDBase, table=True):
@@ -34,3 +35,7 @@ class VisionPrediction(UUIDBase, table=True):
     crop_key: Optional[str] = Field(default=None, max_length=255)
 
     job: "VisionJob" = Relationship(back_populates="predictions")
+    candidates: List["VisionPredictionCandidate"] = Relationship(
+        back_populates="prediction",
+        sa_relationship_kwargs={"order_by": "VisionPredictionCandidate.position"},
+    )

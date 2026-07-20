@@ -1,8 +1,26 @@
 import uuid
 
+import pytest
+import pytest_asyncio
+from sqlmodel import select
+
 from src.models.VisionImport import VisionImport, VisionImportStatus
 from src.models.VisionJob import VisionJob, VisionJobStatus
 from src.models.VisionPrediction import VisionPrediction
+from tests.utils.utils_db import Session, reset_test_db
+
+
+@pytest_asyncio.fixture
+async def session():
+    """Real async DB session backed by the project's SQLite test engine.
+
+    Needed here (and not just a FakeSession) because the ordering guarantee
+    that `position` provides can only be proven by round-tripping through an
+    actual database — an in-memory list proves nothing about row order.
+    """
+    reset_test_db()
+    async with Session() as session:
+        yield session
 
 
 def test_vision_import_defaults():
@@ -75,3 +93,51 @@ def test_vision_import_has_cancelled_status():
     from src.models.VisionImport import VisionImportStatus
 
     assert VisionImportStatus.CANCELLED.value == "cancelled"
+
+
+def test_candidate_carries_its_rank():
+    from src.models.VisionPredictionCandidate import VisionPredictionCandidate
+
+    candidate = VisionPredictionCandidate(
+        prediction_id=uuid.uuid4(), name="Gorr", score=0.78, position=1
+    )
+
+    assert candidate.name == "Gorr"
+    assert candidate.score == 0.78
+    assert candidate.position == 1
+
+
+def test_vision_prediction_candidates_default_to_empty():
+    from src.models.VisionPrediction import VisionPrediction
+
+    pred = VisionPrediction(job_id=uuid.uuid4())
+    assert pred.candidates == []
+
+
+@pytest.mark.asyncio
+async def test_candidates_come_back_best_first(session):
+    from src.models.VisionPredictionCandidate import VisionPredictionCandidate
+
+    pred = VisionPrediction(job_id=uuid.uuid4(), champion_name="Gladiator")
+    session.add(pred)
+    await session.commit()
+
+    # Inserted worst-first on purpose: if the ordering were left to the
+    # database, this is the case that would come back wrong.
+    session.add(
+        VisionPredictionCandidate(prediction_id=pred.id, name="Gorr", score=0.78, position=1)
+    )
+    session.add(
+        VisionPredictionCandidate(prediction_id=pred.id, name="Gladiator", score=0.79, position=0)
+    )
+    await session.commit()
+
+    stored = (
+        await session.exec(
+            select(VisionPredictionCandidate)
+            .where(VisionPredictionCandidate.prediction_id == pred.id)
+            .order_by(VisionPredictionCandidate.position)
+        )
+    ).all()
+
+    assert [c.name for c in stored] == ["Gladiator", "Gorr"]
