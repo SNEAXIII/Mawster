@@ -110,15 +110,14 @@ export default function RosterImportExport({
         data-cy='vision-input'
       />
 
-      <RosterImportButtons
-        visionLabel={visionLabel}
-        visionUploading={vision.uploading}
-        onVisionClick={() => void guard.guardedOpen()}
-        onExport={handleExport}
-        onImportJson={() => fileInputRef.current?.click()}
-      />
-
-      <div className='mt-2 flex justify-end'>
+      <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+        <RosterImportButtons
+          visionLabel={visionLabel}
+          visionUploading={vision.uploading}
+          onVisionClick={() => void guard.guardedOpen()}
+          onExport={handleExport}
+          onImportJson={() => fileInputRef.current?.click()}
+        />
         <VisionBetaNotice />
       </div>
 

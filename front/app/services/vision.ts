@@ -128,12 +128,13 @@ export const getCropUrl = (importId: string, jobId: string, index: number): stri
 
 export const confirmVisionImport = async (
   importId: string,
-  rows: ConfirmedRow[]
+  rows: ConfirmedRow[],
+  shareDataset: boolean
 ): Promise<{ samples_archived: number }> => {
   const response = await fetch(`${PROXY}/vision/imports/${importId}/confirm`, {
     method: 'POST',
     headers: jsonHeaders,
-    body: JSON.stringify({ rows }),
+    body: JSON.stringify({ rows, share_dataset: shareDataset }),
   })
   await throwOnError(response, "Erreur lors de la confirmation de l'import")
   return response.json()

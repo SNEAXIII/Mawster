@@ -49,6 +49,9 @@ MAX_IMPORTS_PER_HOUR = 10
 
 class VisionConfirmRequest(BaseModel):
     rows: list[ConfirmedRow]
+    # The opt-in is decided in the review screen, so it rides the confirm — not
+    # the upload, which happens before the checkbox is ever shown.
+    share_dataset: bool = False
 
 
 class VisionConfirmResponse(BaseModel):
@@ -195,7 +198,9 @@ async def confirm_vision_import(
     write happens on the frontend via the existing bulk endpoint — this route does
     not touch the roster."""
     vision_import = await _get_own_import(session, import_id, current_user.id)
-    archived = await VisionImportService.confirm(session, storage, vision_import, body.rows)
+    archived = await VisionImportService.confirm(
+        session, storage, vision_import, body.rows, body.share_dataset
+    )
     return VisionConfirmResponse(samples_archived=archived)
 
 

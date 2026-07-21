@@ -339,6 +339,7 @@ class VisionImportService:
         storage: Storage,
         vision_import: VisionImport,
         rows: list[ConfirmedRow],
+        share_dataset: bool,
     ) -> int:
         """Archive the dataset (if opted in) and mark the import confirmed.
 
@@ -354,6 +355,9 @@ class VisionImportService:
         """
         if vision_import.status == VisionImportStatus.CONFIRMED:
             return 0
+        # The review-screen opt-in is authoritative: it overrides whatever was
+        # (never) set at upload, so archive() reads the user's actual choice.
+        vision_import.share_dataset = share_dataset
         archived = await VisionDatasetService.archive(session, storage, vision_import, rows)
         vision_import.status = VisionImportStatus.CONFIRMED
         session.add(vision_import)

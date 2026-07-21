@@ -583,7 +583,10 @@ async def test_confirm_archives_one_sample_per_row_when_opted_in(fake_infra):
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
     headers = create_auth_headers(str(USER_ID))
 
-    created = await _post_import(headers, account.id, [_png("a.png")], share_dataset="true")
+    # Upload with the opt-in OFF: the choice is made in the review screen, so
+    # it must ride the confirm — this is exactly the bug where checking the box
+    # after upload archived nothing.
+    created = await _post_import(headers, account.id, [_png("a.png")], share_dataset="false")
     import_id = created.json()["id"]
     detail = await _get_import(headers, import_id)
     job_id = detail["jobs"][0]["id"]
@@ -598,6 +601,7 @@ async def test_confirm_archives_one_sample_per_row_when_opted_in(fake_infra):
             f"/vision/imports/{import_id}/confirm",
             headers=headers,
             json={
+                "share_dataset": True,
                 "rows": [
                     {
                         "champion_name": "Hulk",
@@ -607,7 +611,7 @@ async def test_confirm_archives_one_sample_per_row_when_opted_in(fake_infra):
                         "is_preferred_attacker": False,
                         "prediction_id": prediction_id,
                     }
-                ]
+                ],
             },
         )
 
@@ -639,6 +643,7 @@ async def test_confirming_twice_is_idempotent(fake_infra):
     prediction_id = predictions.json()["predictions"][0]["id"]
 
     confirm_body = {
+        "share_dataset": True,
         "rows": [
             {
                 "champion_name": "Hulk",
@@ -648,7 +653,7 @@ async def test_confirming_twice_is_idempotent(fake_infra):
                 "is_preferred_attacker": False,
                 "prediction_id": prediction_id,
             }
-        ]
+        ],
     }
 
     async with get_test_client() as client:
@@ -680,7 +685,9 @@ async def test_confirm_archives_nothing_without_opt_in(fake_infra):
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
     headers = create_auth_headers(str(USER_ID))
 
-    created = await _post_import(headers, account.id, [_png("a.png")], share_dataset="false")
+    # Upload opted IN, but the review screen opted back OUT: the confirm is
+    # authoritative, so no sample is archived.
+    created = await _post_import(headers, account.id, [_png("a.png")], share_dataset="true")
     import_id = created.json()["id"]
     detail = await _get_import(headers, import_id)
     job_id = detail["jobs"][0]["id"]
@@ -691,6 +698,7 @@ async def test_confirm_archives_nothing_without_opt_in(fake_infra):
             f"/vision/imports/{import_id}/confirm",
             headers=headers,
             json={
+                "share_dataset": False,
                 "rows": [
                     {
                         "champion_name": "Hulk",
@@ -700,7 +708,7 @@ async def test_confirm_archives_nothing_without_opt_in(fake_infra):
                         "is_preferred_attacker": False,
                         "prediction_id": None,
                     }
-                ]
+                ],
             },
         )
 
