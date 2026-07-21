@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { RosterEntry } from '@/app/services/roster'
 import ImportPreviewDialog from '@/components/roster/import-preview-dialog'
 import ImportReportDialog from '@/components/roster/import-report-dialog'
 import RosterImportButtons from '@/components/roster/roster-import-buttons'
 import VisionImportBlockedDialog from '@/components/roster/vision-import-blocked-dialog'
 import VisionImportBanner from '@/app/game/account/_components/vision-import-banner'
+import VisionBetaNotice from '@/components/roster/vision-beta-notice'
 import { useRosterImportExport } from './use-roster-import-export'
 import { useRosterImportVision } from './use-roster-import-vision'
 import { useVisionImportGuard } from './use-vision-import-guard'
@@ -53,6 +54,16 @@ export default function RosterImportExport({
     resume: vision.resume,
     onOpenFilePicker: () => vision.visionInputRef.current?.click(),
   })
+
+  // When an upload creates an import, tell the banner to re-fetch: it only
+  // reloads on mount and on this signal, so without the bump it would stay
+  // blank through processing and only appear once the popup is closed. This
+  // makes the "reading in progress" banner show as soon as the job is queued.
+  useEffect(() => {
+    if (vision.importId != null) {
+      setBannerRefreshKey((key) => key + 1)
+    }
+  }, [vision.importId])
 
   const executeVisionImport = async () => {
     const { success } = await vision.executeImport()
@@ -106,6 +117,10 @@ export default function RosterImportExport({
         onExport={handleExport}
         onImportJson={() => fileInputRef.current?.click()}
       />
+
+      <div className='mt-2 flex justify-end'>
+        <VisionBetaNotice />
+      </div>
 
       <ImportPreviewDialog
         open={previewOpen}
