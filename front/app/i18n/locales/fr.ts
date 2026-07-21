@@ -1034,6 +1034,9 @@ const fr: Translations = {
       visionFailed: "L'import IA a échoué.",
       visionNoChampions: 'Aucun champion détecté sur ces images.',
       editHint: 'Vérifiez les champions détectés ci-dessous et corrigez les erreurs avant import.',
+      rarityLabel: 'Rareté',
+      sigLabel: 'Sig',
+      ascLabel: 'Asc',
       vision: {
         noImagesSelected: 'Veuillez sélectionner au moins une image.',
         uploadError: "Échec de l'envoi des captures d'écran.",
@@ -1045,6 +1048,8 @@ const fr: Translations = {
         marginUncertain: 'Incertain',
         marginClear: 'Net',
         marginCorrected: 'Corrigé',
+        betaBadge: 'Bêta',
+        betaNotice: 'L’import IA est en bêta — écrivez-nous pour toute aide ou remarque :',
         pickChampionTitle: 'Autres candidats',
         pickChampionSearch: 'Rechercher un champion…',
         pickChampionEmpty: 'Aucun champion trouvé.',

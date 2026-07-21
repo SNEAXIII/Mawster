@@ -1023,6 +1023,9 @@ const en = {
       visionFailed: 'The AI import failed.',
       visionNoChampions: 'No champions were detected in these images.',
       editHint: 'Review the detected champions below and correct any mistake before importing.',
+      rarityLabel: 'Rarity',
+      sigLabel: 'Sig',
+      ascLabel: 'Asc',
       vision: {
         noImagesSelected: 'Please select at least one image.',
         uploadError: 'Failed to upload the screenshots.',
@@ -1033,6 +1036,8 @@ const en = {
         marginUncertain: 'Uncertain',
         marginClear: 'Clear match',
         marginCorrected: 'Corrected',
+        betaBadge: 'Beta',
+        betaNotice: 'AI import is in beta — reach out for help or feedback:',
         pickChampionTitle: 'Other candidates',
         pickChampionSearch: 'Search a champion…',
         pickChampionEmpty: 'No champion found.',
