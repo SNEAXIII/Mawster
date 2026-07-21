@@ -1,5 +1,6 @@
 'use client'
 
+import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/app/i18n'
 
@@ -52,7 +53,9 @@ export default function VisionImportBannerActions({
         onClick={onCancel}
         disabled={busy}
         data-cy='vision-banner-cancel'
+        className='text-destructive hover:text-destructive hover:bg-destructive/10'
       >
+        <Trash2 className='size-4' />
         {t.roster.importExport.vision.bannerCancel}
       </Button>
     </div>
