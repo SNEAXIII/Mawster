@@ -141,17 +141,9 @@ services:
       - mawster_rustfs_secret_key
     volumes:
       - api_logs:/app/api/logs
-    # SECRET.RABBITMQ_URL / RUSTFS_ACCESS_KEY / RUSTFS_SECRET_KEY are required in
-    # prod (Field(...)), so the API won't boot without them. Build them from the
-    # mounted secret files, then hand off to the normal start script.
-    command:
-      - sh
-      - -c
-      - |
-        export RABBITMQ_URL="amqp://mawster:$$(cat /run/secrets/mawster_rabbitmq_pass)@rabbitmq:5672/"
-        export RUSTFS_ACCESS_KEY="$$(cat /run/secrets/mawster_rustfs_access_key)"
-        export RUSTFS_SECRET_KEY="$$(cat /run/secrets/mawster_rustfs_secret_key)"
-        exec sh run.sh
+    # run.sh reads the vision secrets from /run/secrets (same as the db/pepper
+    # secrets) and exports RABBITMQ_URL / RUSTFS_* before starting the API.
+    command: ['sh', 'run.sh']
     deploy:
       replicas: 2
       update_config:
@@ -390,17 +382,8 @@ services:
       - mawster_rabbitmq_pass
       - mawster_rustfs_access_key
       - mawster_rustfs_secret_key
-    # Shim: build the broker URL + object-store keys from the secret files, then
-    # exec the worker (image ENV already pins MCOC_*_BACKEND=onnx). Keeps the
-    # single-string RABBITMQ_URL out of the committed stack, no code change.
-    entrypoint:
-      - sh
-      - -c
-      - |
-        export RABBITMQ_URL="amqp://mawster:$$(cat /run/secrets/mawster_rabbitmq_pass)@rabbitmq:5672/"
-        export RUSTFS_ACCESS_KEY="$$(cat /run/secrets/mawster_rustfs_access_key)"
-        export RUSTFS_SECRET_KEY="$$(cat /run/secrets/mawster_rustfs_secret_key)"
-        exec python -m worker
+    # The image's worker/entrypoint.sh reads these secrets from /run/secrets and
+    # exports RABBITMQ_URL / RUSTFS_* before starting the worker.
     deploy:
       replicas: 1
       restart_policy:
