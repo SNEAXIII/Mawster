@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from time import perf_counter
 import asyncio
 import logging
@@ -11,6 +12,7 @@ from fastapi.openapi.utils import get_openapi
 from starlette.middleware.base import _StreamingResponse
 from src.Messages.validators_messages import VALIDATION_ERROR
 from src.controllers import routers
+from src.messaging import get_consumer
 from src.security import IS_PROD, IS_TESTING
 from starlette import status
 from starlette.requests import Request
@@ -32,7 +34,29 @@ logger = logging.getLogger(__name__)
 if not IS_PROD:
     logger.info("Starting Mawster API — database: %s", SECRET.MARIADB_DATABASE)
 
-app = FastAPI(title="Mawster", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    consumer = get_consumer()
+    await consumer.start()
+
+    # Recover jobs stranded in PENDING by a crash between commit and publish.
+    from src.messaging import get_publisher
+    from src.messaging.consumer import Session  # the lifespan sessionmaker
+    from src.services.account.game.VisionReaperService import VisionReaperService
+
+    if SECRET.VISION_CONSUMER_ENABLED:
+        try:
+            async with Session() as session:
+                await VisionReaperService.requeue_pending(session, get_publisher())
+        except Exception:  # noqa: BLE001
+            logger.exception("vision reaper failed at startup")
+
+    yield
+    await consumer.stop()
+
+
+app = FastAPI(title="Mawster", version="1.0.0", lifespan=lifespan)
 Instrumentator().instrument(app)
 
 # Rate limiter (utilise l'IP du client — X-Forwarded-For si disponible, sinon connexion directe)

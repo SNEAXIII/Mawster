@@ -65,7 +65,7 @@ if [ "$BACKUP_REMOTE_ENABLED" = "true" ]; then
   echo "[backup] Upload complete"
 
   # ── 5. Remote purge: by age ─────────────────────────────────────────────────
-  rclone delete "${RCLONE_REMOTE}/" --min-age "${RETENTION_DAYS}d" --include "${BACKUP_PREFIX}_*.sql.gz"
+  rclone delete "${RCLONE_REMOTE}/" --min-age "${RETENTION_DAYS}d" --include "${BACKUP_PREFIX}_*.sql.gz" --drive-use-trash=false
   echo "[backup] Remote: purged files older than ${RETENTION_DAYS} days"
 
   # ── 6. Remote purge: by size ────────────────────────────────────────────────
@@ -75,7 +75,7 @@ if [ "$BACKUP_REMOTE_ENABLED" = "true" ]; then
       | sort | head -1 | cut -d'|' -f2)
     [ -z "$OLDEST_REMOTE" ] && break
     echo "[backup] Remote over limit ($(( REMOTE_SIZE / 1024 / 1024 )) MB), deleting: $OLDEST_REMOTE"
-    rclone deletefile "${RCLONE_REMOTE}/${OLDEST_REMOTE}"
+    rclone deletefile "${RCLONE_REMOTE}/${OLDEST_REMOTE}" --drive-use-trash=false
     REMOTE_SIZE=$(rclone size "${RCLONE_REMOTE}/" --json 2>/dev/null | grep -o '"bytes":[0-9]*' | cut -d: -f2)
   done
 else

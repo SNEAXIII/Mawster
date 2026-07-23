@@ -21,12 +21,18 @@ type ConfirmationDialogProps = Readonly<{
   title: string
   description: string
   onConfirm: () => void
+  // Fires when the user explicitly clicks the Cancel button — unlike
+  // onOpenChange(false), which also fires on Esc/overlay dismissal. Lets a
+  // caller give the "safe" default action real behavior (e.g. "resume")
+  // without treating every dismissal as that action.
+  onCancelClick?: () => void
   confirmText?: string
   cancelText?: string
   variant?: 'default' | 'destructive'
   children?: ReactNode
   trigger?: ReactNode
   requireConfirmText?: string
+  dataCy?: string
 }>
 
 export function ConfirmationDialog({
@@ -35,12 +41,14 @@ export function ConfirmationDialog({
   title,
   description,
   onConfirm,
+  onCancelClick,
   confirmText,
   cancelText,
   variant = 'default',
   children,
   trigger,
   requireConfirmText,
+  dataCy,
 }: ConfirmationDialogProps) {
   const { t } = useI18n()
   const [typedValue, setTypedValue] = useState('')
@@ -58,7 +66,7 @@ export function ConfirmationDialog({
       onOpenChange={handleOpenChange}
     >
       {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
-      <AlertDialogContent>
+      <AlertDialogContent data-cy={dataCy}>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
@@ -73,7 +81,10 @@ export function ConfirmationDialog({
           />
         )}
         <AlertDialogFooter>
-          <AlertDialogCancel data-cy='confirmation-dialog-cancel'>
+          <AlertDialogCancel
+            onClick={onCancelClick}
+            data-cy='confirmation-dialog-cancel'
+          >
             {cancelText ?? t.common.cancel}
           </AlertDialogCancel>
           <AlertDialogAction

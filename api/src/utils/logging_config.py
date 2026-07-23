@@ -135,6 +135,12 @@ def setup_logging(level: int = logging.INFO) -> None:
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
     logging.getLogger("watchfiles.main").setLevel(logging.WARNING)
+    # These libraries narrate every low-level step at DEBUG and drown the app's
+    # own output: botocore/aiobotocore sign every S3 call (~40 lines per crop),
+    # aio_pika/aiormq log every AMQP frame. INFO keeps their meaningful lines
+    # (the consumer's "listening on ..." survives) without the frame-by-frame noise.
+    for noisy in ("botocore", "aiobotocore", "boto3", "aio_pika", "aiormq"):
+        logging.getLogger(noisy).setLevel(logging.INFO)
 
 
 # ---------------------------------------------------------------------------

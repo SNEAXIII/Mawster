@@ -12,6 +12,7 @@ from src.controllers.account.me_moderation_controller import me_moderation_contr
 from src.controllers.account.game.game_account_controller import game_account_controller
 from src.controllers.account.game.champion_user_controller import champion_user_controller
 from src.controllers.account.game.upgrade_request_controller import upgrade_request_controller
+from src.controllers.account.game.vision_controller import vision_controller
 from src.controllers.alliance.alliance_invitation_controller import alliance_invitation_controller
 from src.controllers.alliance.alliance_core_controller import alliance_core_controller
 from src.controllers.alliance.alliance_member_controller import alliance_member_controller
@@ -42,6 +43,7 @@ routers = [
     game_account_controller,
     champion_user_controller,
     upgrade_request_controller,
+    vision_controller,
     champion_controller,
     champion_read_controller,
     alliance_invitation_controller,
