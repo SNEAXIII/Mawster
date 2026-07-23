@@ -12,6 +12,11 @@ repos:
   # eslint --fix runs before prettier so that formatting has the last word. It has to `cd front`
   # first: eslint 9 resolves its flat config from the working directory, and the repo root has
   # none — hence the prefix stripping on the staged paths pre-commit hands over.
+  #
+  # prettier is invoked through `node` on its real entry point rather than node_modules/.bin/prettier:
+  # that wrapper is a `#!/bin/sh` script, and a pre-commit running under a native Windows Python
+  # cannot resolve that shebang ("Executable /bin/sh not found"). Going through node works the same
+  # on Windows and in CI.
   - repo: local
     hooks:
       - id: eslint
@@ -23,7 +28,7 @@ repos:
 
       - id: prettier
         name: prettier (front)
-        entry: front/node_modules/.bin/prettier --write --ignore-path front/.prettierignore
+        entry: node front/node_modules/prettier/bin/prettier.cjs --write --ignore-path front/.prettierignore
         language: system
         files: ^front/.*\.(ts|tsx|js|jsx|mjs|cjs|css|json|md)$
         exclude: ^front/(node_modules|\.next)/

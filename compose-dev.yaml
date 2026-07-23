@@ -16,7 +16,7 @@ services:
       - MARIADB_PASSWORD=password
       - MARIADB_ROOT_PASSWORD=rootpassword
     volumes:
-      - ./db/mawster-db:/var/lib/mysql
+      - /mawster-db-dev:/var/lib/mysql
   phpmyadmin-dev:
     image: phpmyadmin/phpmyadmin
     ports:
@@ -53,6 +53,117 @@ services:
       - PMA_PORT=3306
     depends_on:
       - mariadb-test
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq-dev
+    networks:
+      - internal-dev
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      - RABBITMQ_DEFAULT_USER=mawster
+      - RABBITMQ_DEFAULT_PASS=mawster
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'check_port_connectivity']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: rustfs-dev
+    networks:
+      - internal-dev
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      - RUSTFS_ACCESS_KEY=mawster
+      - RUSTFS_SECRET_KEY=mawsterpassword
+      - RUSTFS_CONSOLE_ENABLE=true
+  # One-shot: RustFS starts with no buckets, and nothing in the API creates them.
+  # Without this, a fresh `make vision-up` yields a working store whose first
+  # upload fails with NoSuchBucket.
+  rustfs-init:
+    image: amazon/aws-cli:latest
+    container_name: rustfs-init
+    networks:
+      - internal-dev
+    depends_on:
+      - rustfs
+    environment:
+      - AWS_ACCESS_KEY_ID=mawster
+      - AWS_SECRET_ACCESS_KEY=mawsterpassword
+      - AWS_DEFAULT_REGION=us-east-1
+      # Doit rester égal à SECRET.VISION_RETENTION_DAYS (api/src/security/secrets.py).
+      # L'API tourne hors Docker en dev, donc les deux ne peuvent pas partager cette
+      # ligne : si elles divergent, l'UI propose des imports dont les images sont
+      # déjà purgées, et l'utilisateur valide des données invérifiables.
+      - VISION_RETENTION_DAYS=7
+    entrypoint:
+      - sh
+      - -c
+      - |
+        until aws --endpoint-url http://rustfs:9000 s3 ls > /dev/null 2>&1; do
+          echo "waiting for rustfs..."; sleep 2;
+        done
+        aws --endpoint-url http://rustfs:9000 s3 mb s3://vision  2>/dev/null || true
+        aws --endpoint-url http://rustfs:9000 s3 mb s3://dataset 2>/dev/null || true
+        # imports/ crops and screenshots are transient working data — expire after
+        # VISION_RETENTION_DAYS days. put-bucket-lifecycle-configuration replaces
+        # wholesale, so this is idempotent by nature. dataset holds opt-in training
+        # samples and must stay permanent — no lifecycle rule is applied to it.
+        aws --endpoint-url http://rustfs:9000 s3api put-bucket-lifecycle-configuration \
+          --bucket vision \
+          --lifecycle-configuration "{\"Rules\":[{\"ID\":\"expire-imports\",\"Status\":\"Enabled\",\"Filter\":{\"Prefix\":\"imports/\"},\"Expiration\":{\"Days\":$${VISION_RETENTION_DAYS}}}]}"
+        aws --endpoint-url http://rustfs:9000 s3 ls
+    restart: 'no'
+    volumes:
+      - ./db/rustfs-data:/data
+  vision-worker:
+    build:
+      context: ./mcoc-vision
+    image: mawster-vision-worker:local
+    container_name: vision-worker
+    networks:
+      - internal-dev
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_URL=amqp://mawster:mawster@rabbitmq:5672/
+      - RUSTFS_ENDPOINT=http://rustfs:9000
+      - RUSTFS_ACCESS_KEY=mawster
+      - RUSTFS_SECRET_KEY=mawsterpassword
+      - RUSTFS_BUCKET_VISION=vision
+      - MCOC_DEVICE=cpu
+    restart: unless-stopped
+  # Model-free stand-in for vision-worker, used by the E2E suite to exercise
+  # the front -> API -> RabbitMQ -> worker -> API -> preview wiring without
+  # the real worker's ~3.5 GB of ML models. Gated behind `profiles: [e2e]` so
+  # a plain `docker compose up` never starts it — it consumes the SAME
+  # `vision.jobs` queue as vision-worker, and running both at once would make
+  # message delivery non-deterministic. Start with:
+  #   docker compose -f compose-dev.yaml --profile e2e up -d fake-vision-worker
+  fake-vision-worker:
+    build:
+      context: ./fake-worker
+    image: mawster-fake-vision-worker:local
+    container_name: fake-vision-worker
+    profiles: [e2e]
+    networks:
+      - internal-dev
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_URL=amqp://mawster:mawster@rabbitmq:5672/
+      - RUSTFS_ENDPOINT=http://rustfs:9000
+      - RUSTFS_ACCESS_KEY=mawster
+      - RUSTFS_SECRET_KEY=mawsterpassword
+      - RUSTFS_BUCKET_VISION=vision
+    restart: unless-stopped
   static:
     build:
       context: .

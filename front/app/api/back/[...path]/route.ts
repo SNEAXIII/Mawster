@@ -35,10 +35,15 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
     headers['Content-Type'] = contentType
   }
 
-  let body: string | undefined
+  // Read the body as raw bytes, never as text: req.text() decodes as UTF-8, which
+  // replaces every byte that isn't valid UTF-8 with U+FFFD. That silently destroys
+  // any binary upload (a screenshot's PNG bytes) while leaving JSON untouched, so
+  // the corruption only shows up far downstream.
+  let body: ArrayBuffer | undefined
   if (!['GET', 'HEAD'].includes(req.method)) {
     try {
-      body = await req.text()
+      const raw = await req.arrayBuffer()
+      body = raw.byteLength > 0 ? raw : undefined
     } catch {
       // no body
     }
@@ -48,16 +53,20 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
     const res = await fetch(backendUrl, {
       method: req.method,
       headers,
-      body: body || undefined,
+      body,
     })
 
     if (res.status === 204) {
       return new NextResponse(null, { status: 204 })
     }
 
-    const data = await res.text()
+    // Read the response as raw bytes, never as text: res.text() decodes as UTF-8,
+    // which replaces every byte that isn't valid UTF-8 with U+FFFD. That would
+    // destroy a binary response (e.g. a PNG crop) the same way it did on the
+    // request side (see the comment above on req.arrayBuffer()).
+    const data = await res.arrayBuffer()
 
-    return new NextResponse(data || null, {
+    return new NextResponse(data.byteLength > 0 ? data : null, {
       status: res.status,
       headers: {
         'Content-Type': res.headers.get('content-type') ?? 'application/json',

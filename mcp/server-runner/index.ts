@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { z } from 'zod';
 import { spawn, execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -177,7 +178,14 @@ async function startTest(): Promise<State> {
 
   execSync('docker compose -f compose-dev.yaml up mariadb-test phpmyadmin-test -d', { cwd: ROOT, stdio: 'pipe' });
 
-  const apiPid = spawnDetached(['uv', 'run', 'app_testing.py'], API_DIR);
+  // app_testing.py forces MODE=testing, which defaults VISION_CONSUMER_ENABLED
+  // to false so the unit and integration suites never need a broker. E2E is the
+  // opposite case: a vision spec that does not cross RabbitMQ tests scenery, not
+  // the import loop. Settings is a pydantic BaseSettings, so this env var wins
+  // over the computed default without touching secrets.py.
+  const apiPid = spawnDetached(['uv', 'run', 'app_testing.py'], API_DIR, {
+    VISION_CONSUMER_ENABLED: 'true',
+  });
   const frontPid = spawnDetached(['npm', 'run', 'testing'], FRONT_DIR, {
     NEXTAUTH_SECRET: 'e2e-local-nextauth-secret',
   });
@@ -390,13 +398,24 @@ server.registerTool(
 
 server.registerTool(
   'run_e2e',
-  { description: 'Démarre les serveurs en mode test si nécessaire, puis lance tous les tests Cypress E2E et retourne le résumé + les détails des échecs.' },
-  async () => {
+  {
+    description:
+      'Démarre les serveurs en mode test si nécessaire, puis lance les tests Cypress E2E (toutes les specs, ou seulement celles demandées) et retourne le résumé + les détails des échecs.',
+    inputSchema: {
+      spec_files: z
+        .array(z.string())
+        .optional()
+        .describe(
+          'Specs à lancer, en chemins relatifs à front/cypress/e2e/ (ex: "roster/foo.cy.ts"). Omis = toutes les specs.'
+        ),
+    },
+  },
+  async ({ spec_files }: { spec_files?: string[] }) => {
     const testState = readState('test');
     if (!testState || !isAlive(testState.pids.api) || !isAlive(testState.pids.front)) {
       await startTest();
     }
-    const results = runCypress();
+    const results = runCypress(spec_files?.map((s) => `cypress/e2e/${s}`));
     return {
       content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
     };

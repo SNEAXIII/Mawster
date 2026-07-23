@@ -193,7 +193,12 @@ export default function ImportReportDialog({
         </div>
 
         <DialogFooter className='pt-3 border-t'>
-          <Button onClick={() => onOpenChange(false)}>{t.roster.importExport.close}</Button>
+          <Button
+            onClick={() => onOpenChange(false)}
+            data-cy='import-report-close-button'
+          >
+            {t.roster.importExport.close}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

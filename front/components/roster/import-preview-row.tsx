@@ -5,6 +5,7 @@ import { useI18n } from '@/app/i18n'
 import { ArrowRight } from 'lucide-react'
 import ChampionPortrait from '@/components/champion-portrait'
 import { RARITY_LABELS, shortenChampionName, getClassColors } from '@/app/services/roster'
+import ImportPreviewRowEdit from './import-preview-row-edit'
 
 export interface PreviewRow {
   champion_name: string
@@ -18,14 +19,44 @@ export interface PreviewRow {
   hasChanges: boolean
   is_preferred_attacker?: boolean
   ascension?: number
+  // Original ascension, so manual edits can be diffed against it — optional
+  // because JSON-import rows never populated it before this field existed.
+  oldAscension?: number | null
+  confidence?: number
+  cropUrl?: string | null
+  prediction_id?: string | null
+  editable?: boolean
+  // CLIP alternatives, best first, top-1 included. Absent on JSON imports.
+  candidates?: { name: string; score: number }[]
+  // score[0] - score[1]. null when the model gave fewer than two candidates.
+  margin?: number | null
+  // Set once the user picks a champion by hand. The model's margin no longer
+  // describes this row, so the badge stops showing it.
+  corrected?: boolean
 }
+
+export type PreviewRowPatch = Partial<
+  Pick<PreviewRow, 'newRarity' | 'newSignature' | 'ascension' | 'champion_name'>
+>
 
 interface ImportPreviewRowProps {
   row: PreviewRow
+  index: number
+  onRowChange?: (index: number, patch: PreviewRowPatch) => void
 }
 
-export default function ImportPreviewRow({ row }: ImportPreviewRowProps) {
+export default function ImportPreviewRow({ row, index, onRowChange }: ImportPreviewRowProps) {
   const { t } = useI18n()
+
+  if (row.editable) {
+    return (
+      <ImportPreviewRowEdit
+        row={row}
+        index={index}
+        onRowChange={onRowChange}
+      />
+    )
+  }
 
   return (
     <div
