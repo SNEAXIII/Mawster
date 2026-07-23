@@ -26,6 +26,12 @@ secrets:
     external: true
   mawster_rclone_conf:
     external: true
+  mawster_rabbitmq_pass:
+    external: true
+  mawster_rustfs_access_key:
+    external: true
+  mawster_rustfs_secret_key:
+    external: true
 
 services:
   traefik:
@@ -119,13 +125,33 @@ services:
       ALLOWED_ORIGINS: https://www.mawster.app
       API_PORT: '8000'
       EMAIL_PEPPER_VERSION: '1'
+      # Vision: the API publishes jobs to RabbitMQ and reads crops/results from
+      # RustFS. Bucket names + retention are plain config; the broker URL and the
+      # store keys are injected from secret files by the command shim below.
+      RUSTFS_ENDPOINT: http://rustfs:9000
+      RUSTFS_BUCKET_VISION: vision
+      RUSTFS_BUCKET_DATASET: dataset
+      VISION_RETENTION_DAYS: '7'
     secrets:
       - mawster_secret_key
       - mawster_db_password
       - mawster_email_pepper
+      - mawster_rabbitmq_pass
+      - mawster_rustfs_access_key
+      - mawster_rustfs_secret_key
     volumes:
       - api_logs:/app/api/logs
-    command: ['sh', 'run.sh']
+    # SECRET.RABBITMQ_URL / RUSTFS_ACCESS_KEY / RUSTFS_SECRET_KEY are required in
+    # prod (Field(...)), so the API won't boot without them. Build them from the
+    # mounted secret files, then hand off to the normal start script.
+    command:
+      - sh
+      - -c
+      - |
+        export RABBITMQ_URL="amqp://mawster:$$(cat /run/secrets/mawster_rabbitmq_pass)@rabbitmq:5672/"
+        export RUSTFS_ACCESS_KEY="$$(cat /run/secrets/mawster_rustfs_access_key)"
+        export RUSTFS_SECRET_KEY="$$(cat /run/secrets/mawster_rustfs_secret_key)"
+        exec sh run.sh
     deploy:
       replicas: 2
       update_config:
@@ -249,7 +275,152 @@ services:
         max-size: 5m
         max-file: '3'
 
+  # --- Vision stack: broker + object store + the private ONNX worker ----------
+  # Internal network only (never traefik-public): the queue and the store are
+  # reachable by the API and the worker, never from the web.
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    hostname: rabbitmq  # stable node name so the mnesia dir survives restarts
+    networks:
+      - internal
+    environment:
+      RABBITMQ_DEFAULT_USER: mawster
+      RABBITMQ_DEFAULT_PASS_FILE: /run/secrets/mawster_rabbitmq_pass
+    secrets:
+      - mawster_rabbitmq_pass
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'check_port_connectivity']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '5'
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    networks:
+      - internal
+    environment:
+      RUSTFS_CONSOLE_ENABLE: 'false'
+      # rustfs's own entrypoint reads *_FILE creds natively
+      # (validate_credential_source), so the keys stay in Swarm secret files and
+      # never appear in the committed stack or `docker service inspect`.
+      RUSTFS_ACCESS_KEY_FILE: /run/secrets/mawster_rustfs_access_key
+      RUSTFS_SECRET_KEY_FILE: /run/secrets/mawster_rustfs_secret_key
+    secrets:
+      - mawster_rustfs_access_key
+      - mawster_rustfs_secret_key
+    volumes:
+      - rustfs_data:/data
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '5'
+
+  # One-shot: create the buckets + the imports/ retention rule, then exit. Swarm
+  # keeps re-running condition:none tasks off; it converges once rustfs is up.
+  rustfs-init:
+    image: amazon/aws-cli:latest
+    networks:
+      - internal
+    secrets:
+      - mawster_rustfs_access_key
+      - mawster_rustfs_secret_key
+    environment:
+      AWS_DEFAULT_REGION: us-east-1
+      # Must equal SECRET.VISION_RETENTION_DAYS (api/src/security/secrets.py):
+      # a mismatch offers imports whose images are already purged.
+      VISION_RETENTION_DAYS: '7'
+    entrypoint:
+      - sh
+      - -c
+      - |
+        export AWS_ACCESS_KEY_ID="$$(cat /run/secrets/mawster_rustfs_access_key)"
+        export AWS_SECRET_ACCESS_KEY="$$(cat /run/secrets/mawster_rustfs_secret_key)"
+        until aws --endpoint-url http://rustfs:9000 s3 ls > /dev/null 2>&1; do
+          echo "waiting for rustfs..."; sleep 2;
+        done
+        aws --endpoint-url http://rustfs:9000 s3 mb s3://vision  2>/dev/null || true
+        aws --endpoint-url http://rustfs:9000 s3 mb s3://dataset 2>/dev/null || true
+        aws --endpoint-url http://rustfs:9000 s3api put-bucket-lifecycle-configuration \
+          --bucket vision \
+          --lifecycle-configuration "{\"Rules\":[{\"ID\":\"expire-imports\",\"Status\":\"Enabled\",\"Filter\":{\"Prefix\":\"imports/\"},\"Expiration\":{\"Days\":$${VISION_RETENTION_DAYS}}}]}"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: none
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: '3'
+
+  # The private, torch-free ONNX worker. Image lives in a PRIVATE registry repo
+  # (built + pushed by mcoc-vision's own CI), so the worker source never leaks.
+  vision-worker:
+    image: sneaxiii/mawster-vision-worker:latest
+    networks:
+      - internal
+    environment:
+      RUSTFS_ENDPOINT: http://rustfs:9000
+      RUSTFS_BUCKET_VISION: vision
+      MCOC_DEVICE: cpu
+    secrets:
+      - mawster_rabbitmq_pass
+      - mawster_rustfs_access_key
+      - mawster_rustfs_secret_key
+    # Shim: build the broker URL + object-store keys from the secret files, then
+    # exec the worker (image ENV already pins MCOC_*_BACKEND=onnx). Keeps the
+    # single-string RABBITMQ_URL out of the committed stack, no code change.
+    entrypoint:
+      - sh
+      - -c
+      - |
+        export RABBITMQ_URL="amqp://mawster:$$(cat /run/secrets/mawster_rabbitmq_pass)@rabbitmq:5672/"
+        export RUSTFS_ACCESS_KEY="$$(cat /run/secrets/mawster_rustfs_access_key)"
+        export RUSTFS_SECRET_KEY="$$(cat /run/secrets/mawster_rustfs_secret_key)"
+        exec python -m worker
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      resources:
+        reservations:
+          memory: 2G
+        limits:
+          cpus: '1.5'
+          memory: 4G
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '5'
+
 volumes:
   data_db:
   traefik_data:
   api_logs:
+  rabbitmq_data:
+  rustfs_data:
