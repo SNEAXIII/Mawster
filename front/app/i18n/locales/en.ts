@@ -1055,6 +1055,23 @@ const en = {
           'You already have a screenshot import waiting to be reviewed. Resume it, or discard it and start over.',
         blockedResume: 'Resume it',
         blockedDiscard: 'Discard and start over',
+        howto: {
+          title: 'Prepare your screenshot',
+          intro: 'Three steps, and the AI reads your roster.',
+          step1: 'Open the game and go to Battlegrounds mode.',
+          step2: 'Clear your deck so your whole roster shows up.',
+          step3: 'Take a screenshot of the grid.',
+          warningTitle: 'Only the first two rows are read.',
+          warningBody:
+            'On a small screen the bottom of the third-row cards is cut off. Without it the AI can read neither the rank nor the signature, so those champions are skipped. Take one screenshot per pair of rows.',
+          detailsLabel: 'Why?',
+          detailsBody:
+            'No zoom, no cropping: the AI locates the cards on its own. You can send several screenshots at once — they are read together.',
+          confirm: 'Choose my screenshots',
+          dontShowAgain: 'Do not show this again',
+          helpLabel: 'How do I prepare my screenshot?',
+          exampleAlt: 'Example Battlegrounds screenshot with the first two rows framed',
+        },
       },
     },
     errors: {
