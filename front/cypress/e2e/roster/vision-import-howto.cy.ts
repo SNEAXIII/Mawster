@@ -19,10 +19,18 @@ describe('Roster – Vision import how-to dialog', () => {
   it('explains the procedure before opening the file picker', () => {
     visitRoster('vision-howto', 'HowtoPlayer');
 
+    // The picker input is always in the DOM — spying on its click proves
+    // the dialog's confirm actually opens the file picker, not just that
+    // the dialog itself closes.
+    cy.get('[data-cy="vision-input"]').then(($el) => {
+      cy.spy($el[0], 'click').as('picker');
+    });
+
     cy.getByCy('import-vision-button').click();
     cy.getByCy('vision-import-howto-dialog').should('be.visible');
     cy.getByCy('confirmation-dialog-confirm').click();
     cy.getByCy('vision-import-howto-dialog').should('not.exist');
+    cy.get('@picker').should('have.been.calledOnce');
   });
 
   it('stops showing the dialog once "do not show again" is ticked', () => {
@@ -34,8 +42,13 @@ describe('Roster – Vision import how-to dialog', () => {
     cy.getByCy('vision-import-howto-dialog').should('not.exist');
 
     // Second click goes straight to the (native, invisible) file picker.
+    // Install the spy right before this click so the count is unambiguous.
+    cy.get('[data-cy="vision-input"]').then(($el) => {
+      cy.spy($el[0], 'click').as('picker');
+    });
     cy.getByCy('import-vision-button').click();
     cy.getByCy('vision-import-howto-dialog').should('not.exist');
+    cy.get('@picker').should('have.been.calledOnce');
   });
 
   it('reopens the dialog from the help icon, even after opting out', () => {
@@ -45,11 +58,18 @@ describe('Roster – Vision import how-to dialog', () => {
     cy.getByCy('vision-howto-dont-show').click();
     cy.getByCy('confirmation-dialog-confirm').click();
 
+    // Spy installed after the first (real) import, so it isolates whether
+    // the help-icon dismiss path below triggers the picker.
+    cy.get('[data-cy="vision-input"]').then(($el) => {
+      cy.spy($el[0], 'click').as('picker');
+    });
+
     cy.getByCy('vision-howto-help').click();
     cy.getByCy('vision-import-howto-dialog').should('be.visible');
     // The help icon informs only: dismissing it must not start an import.
     cy.getByCy('confirmation-dialog-cancel').click();
     cy.getByCy('vision-import-howto-dialog').should('not.exist');
+    cy.get('@picker').should('not.have.been.called');
   });
 
   it('still reads the screenshot once the dialog is confirmed', () => {
