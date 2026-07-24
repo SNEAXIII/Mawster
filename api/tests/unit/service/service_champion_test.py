@@ -430,4 +430,4 @@ class TestDeleteChampion:
 class TestValidClasses:
     def test_all_classes_present(self):
         expected = {"Science", "Cosmic", "Mutant", "Skill", "Tech", "Mystic"}
-        assert VALID_CLASSES == expected
+        assert expected == VALID_CLASSES

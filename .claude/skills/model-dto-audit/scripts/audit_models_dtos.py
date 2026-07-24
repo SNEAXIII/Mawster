@@ -62,8 +62,9 @@ class FieldInfo:
 
     def signature(self) -> tuple:
         """Structural identity used for mixin / drift comparison."""
-        return (self.annotation,) + tuple(
-            (k, self.kwargs.get(k)) for k in STRUCTURAL_KWARGS if k in self.kwargs
+        return (
+            self.annotation,
+            *tuple((k, self.kwargs.get(k)) for k in STRUCTURAL_KWARGS if k in self.kwargs),
         )
 
     def constraint_repr(self) -> str:
@@ -114,9 +115,7 @@ def parse_file(path: Path, repo_root: Path) -> list[FieldInfo]:
         is_table = _class_is_table(node)
         for stmt in node.body:
             # Annotated assignment: `name: Type` or `name: Type = Field(...)`.
-            if not isinstance(stmt, ast.AnnAssign) or not isinstance(
-                stmt.target, ast.Name
-            ):
+            if not isinstance(stmt, ast.AnnAssign) or not isinstance(stmt.target, ast.Name):
                 continue
             name = stmt.target.id
             try:
@@ -160,9 +159,7 @@ def collect(repo_root: Path) -> tuple[list[FieldInfo], list[FieldInfo]]:
     return model_fields, dto_fields
 
 
-def report_mixin_candidates(
-    model_fields: list[FieldInfo], min_repeat: int
-) -> list[str]:
+def report_mixin_candidates(model_fields: list[FieldInfo], min_repeat: int) -> list[str]:
     by_sig: dict[tuple, list[FieldInfo]] = defaultdict(list)
     for f in model_fields:
         by_sig[(f.name, f.signature())].append(f)
@@ -176,8 +173,7 @@ def report_mixin_candidates(
         found = True
         sample = group[0]
         lines.append(
-            f"- **`{name}`** ({sample.annotation}) — {len(owners)} models: "
-            f"{', '.join(owners)}"
+            f"- **`{name}`** ({sample.annotation}) — {len(owners)} models: {', '.join(owners)}"
         )
         lines.append(f"  - signature: `{sample.constraint_repr()}`")
     if not found:
@@ -192,9 +188,7 @@ def report_field_drift(model_fields: list[FieldInfo]) -> list[str]:
     by_name: dict[str, list[FieldInfo]] = defaultdict(list)
     for f in model_fields:
         by_name[f.name].append(f)
-    lines = [
-        "\n## 2. Already-drifted duplicates (same field, divergent across models)\n"
-    ]
+    lines = ["\n## 2. Already-drifted duplicates (same field, divergent across models)\n"]
     found = False
     for name in sorted(by_name):
         if name in NAMING_DEBT:
@@ -207,8 +201,7 @@ def report_field_drift(model_fields: list[FieldInfo]) -> list[str]:
             continue
         found = True
         lines.append(
-            f"- **`{name}`** defined {len(owners)} times with "
-            f"{len(variants)} different signatures:"
+            f"- **`{name}`** defined {len(owners)} times with {len(variants)} different signatures:"
         )
         seen: set[tuple] = set()
         for f in group:
@@ -216,10 +209,7 @@ def report_field_drift(model_fields: list[FieldInfo]) -> list[str]:
             if key in seen:
                 continue
             seen.add(key)
-            lines.append(
-                f"  - {f.owner}: `{f.annotation}` "
-                f"({f.constraint_repr()}) — {f.location}"
-            )
+            lines.append(f"  - {f.owner}: `{f.annotation}` ({f.constraint_repr()}) — {f.location}")
     if not found:
         lines.append("_No drifted duplicates - repeated fields are consistent._")
     return lines
@@ -234,14 +224,12 @@ def _is_input_dto(owner: str) -> bool:
     low = owner.lower()
     # "Response"/"...Result" are outputs even when the domain noun contains
     # "request" (e.g. UpgradeRequestResponse). Suffix wins over substring.
-    if low.endswith("response") or low.endswith("result"):
+    if low.endswith(("response", "result")):
         return False
     return any(m in low for m in INPUT_DTO_MARKERS)
 
 
-def report_model_dto_drift(
-    model_fields: list[FieldInfo], dto_fields: list[FieldInfo]
-) -> list[str]:
+def report_model_dto_drift(model_fields: list[FieldInfo], dto_fields: list[FieldInfo]) -> list[str]:
     # A field name only has a single canonical model definition when every model
     # that declares it agrees. Names that disagree across models (section 2) have
     # no canonical source, so comparing a DTO to an arbitrary one is meaningless.
@@ -272,13 +260,10 @@ def report_model_dto_drift(
             findings.append(f"  - type: model `{m.annotation}` vs DTO `{d.annotation}`")
         if lost:
             findings.append(
-                f"  - drops model guard(s): {', '.join(lost)} "
-                f"(model: {m.constraint_repr()})"
+                f"  - drops model guard(s): {', '.join(lost)} (model: {m.constraint_repr()})"
             )
 
-    lines = [
-        "\n## 3. Input-DTO validation gaps (Request/Create/Update drops a model guard)\n"
-    ]
+    lines = ["\n## 3. Input-DTO validation gaps (Request/Create/Update drops a model guard)\n"]
     lines += findings or ["_None — input DTOs match their model columns._"]
     return lines
 
@@ -298,8 +283,10 @@ def main() -> None:
     model_fields, dto_fields = collect(repo_root)
     out: list[str] = [
         "# Model / DTO consistency audit\n",
-        f"_Models scanned: {len({f.owner for f in model_fields})} | "
-        f"model fields: {len(model_fields)} | DTO fields: {len(dto_fields)}_\n",
+        (
+            f"_Models scanned: {len({f.owner for f in model_fields})} | "
+            f"model fields: {len(model_fields)} | DTO fields: {len(dto_fields)}_\n"
+        ),
     ]
     out += report_mixin_candidates(model_fields, args.min_repeat)
     out += report_field_drift(model_fields)

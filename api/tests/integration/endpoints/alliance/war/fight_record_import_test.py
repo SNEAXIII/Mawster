@@ -40,7 +40,7 @@ async def _setup_two_users():
 class TestImportFightRecords:
     @pytest.mark.asyncio
     async def test_officer_can_import(self, officer_with_champions):
-        alliance_id, officer_acc_id, champ_id, defender_id, season_id = officer_with_champions
+        alliance_id, _officer_acc_id, champ_id, defender_id, _season_id = officer_with_champions
         payload = {
             "rows": [
                 {
@@ -59,7 +59,7 @@ class TestImportFightRecords:
 
     @pytest.mark.asyncio
     async def test_owner_can_import(self, owner_with_champions):
-        alliance_id, champ_id, defender_id, season_id = owner_with_champions
+        alliance_id, champ_id, defender_id, _season_id = owner_with_champions
         payload = {
             "rows": [
                 {
@@ -77,7 +77,7 @@ class TestImportFightRecords:
 
     @pytest.mark.asyncio
     async def test_member_cannot_import(self, member_with_champions):
-        alliance_id, champ_id, defender_id, season_id = member_with_champions
+        alliance_id, champ_id, defender_id, _season_id = member_with_champions
         payload = {
             "rows": [
                 {
@@ -95,7 +95,7 @@ class TestImportFightRecords:
 
     @pytest.mark.asyncio
     async def test_unknown_season_returns_422(self, officer_with_champions):
-        alliance_id, officer_acc_id, champ_id, defender_id, season_id = officer_with_champions
+        alliance_id, _officer_acc_id, champ_id, defender_id, _season_id = officer_with_champions
         payload = {
             "rows": [
                 {
@@ -114,7 +114,7 @@ class TestImportFightRecords:
     @pytest.mark.asyncio
     async def test_wrong_alliance_returns_403(self, officer_with_champions):
         other_alliance_id = uuid.uuid4()
-        alliance_id, officer_acc_id, champ_id, defender_id, season_id = officer_with_champions
+        _alliance_id, _officer_acc_id, champ_id, defender_id, _season_id = officer_with_champions
         payload = {
             "rows": [
                 {
@@ -275,7 +275,7 @@ async def owner_with_champions():
     from src.models.Season import Season
 
     await load_objects([get_generic_user(is_base_id=True)])
-    alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
+    alliance, _owner_acc = await push_alliance_with_owner(user_id=USER_ID)
     season = Season(number=1, is_active=True)
     champ = Champion(
         name="Magik", champion_class="Mystic", is_saga_attacker=False, is_saga_defender=False

@@ -52,7 +52,7 @@ async def _push_champion_user(
     rarity: str = "6r4",
     signature: int = 0,
 ) -> ChampionUser:
-    stars = int(rarity.split("r")[0])
+    stars = int(rarity.split("r", maxsplit=1)[0])
     rank = int(rarity.split("r")[1])
     entry = ChampionUser(
         id=uuid.uuid4(),

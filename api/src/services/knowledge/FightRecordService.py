@@ -1,6 +1,5 @@
 import math
 import uuid
-from datetime import datetime
 
 from fastapi import HTTPException
 from sqlalchemy import func, literal, null, union_all
@@ -19,6 +18,7 @@ from src.enums.SeasonSelectorType import SeasonSelectorType
 from src.enums.SeasonStatus import SeasonStatus
 from src.models.Alliance import Alliance
 from src.models.AllianceVisitor import AllianceVisitor
+from src.models.Base import utcnow
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
@@ -159,7 +159,7 @@ class FightRecordService:
         await session.commit()
 
         await session.refresh(war)
-        war.snapshotted_at = datetime.now()
+        war.snapshotted_at = utcnow()
         session.add(war)
         await session.commit()
 
@@ -510,7 +510,7 @@ class FightRecordService:
                         )
                     )
                 ).all()
-                pseudo_by_account = {acc_id: pseudo for acc_id, pseudo in editor_accounts}
+                pseudo_by_account = dict(editor_accounts)
             author_by_record = {
                 n.war_fight_record_id: pseudo_by_account.get(n.updated_by_game_account_id)
                 for n in notes

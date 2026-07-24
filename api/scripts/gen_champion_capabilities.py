@@ -89,7 +89,7 @@ def main(sql_path: str) -> None:
     seg = seg[: seg.index(";\n")]
     caps = {}
     for row in _split_rows(seg):
-        rec = dict(zip(cols, row))
+        rec = dict(zip(cols, row, strict=False))
         flags = {f: rec.get(f, "0") == "1" for f in FLAGS}
         if any(flags.values()):
             caps[_unquote(rec["name"])] = flags

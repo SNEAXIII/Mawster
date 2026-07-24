@@ -54,7 +54,7 @@ class TestInviteVisitor:
     @pytest.mark.asyncio
     async def test_officer_can_invite_visitor(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(
+        alliance, _owner_acc = await push_alliance_with_owner(
             user_id=USER_ID, game_pseudo=GAME_PSEUDO
         )
         visitor_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -72,7 +72,7 @@ class TestInviteVisitor:
     @pytest.mark.asyncio
     async def test_cannot_invite_visitor_when_max_reached(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(
+        alliance, _owner_acc = await push_alliance_with_owner(
             user_id=USER_ID, game_pseudo=GAME_PSEUDO
         )
         from src.models.AllianceVisitor import AllianceVisitor
@@ -100,7 +100,7 @@ class TestInviteVisitor:
     @pytest.mark.asyncio
     async def test_random_user_cannot_invite_visitor(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(
+        alliance, _owner_acc = await push_alliance_with_owner(
             user_id=USER_ID, game_pseudo=GAME_PSEUDO
         )
         visitor_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -118,7 +118,7 @@ class TestAcceptVisitorInvitation:
     @pytest.mark.asyncio
     async def test_accept_visitor_invitation_creates_visitor_record(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(
+        alliance, _owner_acc = await push_alliance_with_owner(
             user_id=USER_ID, game_pseudo=GAME_PSEUDO
         )
         visitor_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -149,7 +149,7 @@ class TestAcceptVisitorInvitation:
     @pytest.mark.asyncio
     async def test_visitor_game_account_alliance_id_unchanged(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(
+        alliance, _owner_acc = await push_alliance_with_owner(
             user_id=USER_ID, game_pseudo=GAME_PSEUDO
         )
         visitor_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -209,7 +209,7 @@ class TestVisitorPermissions:
     @pytest.mark.asyncio
     async def test_visitor_cannot_invite_members(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(
+        alliance, _owner_acc = await push_alliance_with_owner(
             user_id=USER_ID, game_pseudo=GAME_PSEUDO
         )
         await push_visitor(alliance=alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -227,7 +227,7 @@ class TestKickVisitor:
     @pytest.mark.asyncio
     async def test_officer_can_kick_visitor(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(
+        alliance, _owner_acc = await push_alliance_with_owner(
             user_id=USER_ID, game_pseudo=GAME_PSEUDO
         )
         visitor_acc = await push_visitor(
@@ -248,7 +248,7 @@ class TestKickVisitor:
     @pytest.mark.asyncio
     async def test_visitor_can_leave(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(
+        alliance, _owner_acc = await push_alliance_with_owner(
             user_id=USER_ID, game_pseudo=GAME_PSEUDO
         )
         await push_visitor(alliance=alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
@@ -264,7 +264,7 @@ class TestVisitorConvertToMember:
     @pytest.mark.asyncio
     async def test_accepting_member_invitation_removes_visitor_record(self):
         await _setup_users()
-        alliance, owner_acc = await push_alliance_with_owner(
+        alliance, _owner_acc = await push_alliance_with_owner(
             user_id=USER_ID, game_pseudo=GAME_PSEUDO
         )
         visitor_acc = await push_visitor(

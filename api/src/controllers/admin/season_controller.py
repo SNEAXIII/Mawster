@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from starlette import status
@@ -114,7 +114,7 @@ async def list_seasons_public(
     return await SeasonService.get_all_seasons(session)
 
 
-@season_public_controller.get("/current", response_model=Optional[SeasonResponse])
+@season_public_controller.get("/current", response_model=SeasonResponse | None)
 async def get_current_season(session: SessionDep):
     """Return the current (non-ended) season, or null if none exists."""
     return await SeasonService.get_current_season(session)

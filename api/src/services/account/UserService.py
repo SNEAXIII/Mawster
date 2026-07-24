@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 
 from sqlmodel import select
 
@@ -11,6 +10,7 @@ from src.Messages.user_messages import (
     USER_IS_DISABLED,
 )
 from src.models import User
+from src.models.Base import utcnow
 from src.utils.db import SessionDep
 
 
@@ -46,7 +46,7 @@ class UserService:
         try:
             uid = uuid.UUID(user_id)
         except (ValueError, AttributeError):
-            raise USER_DOESNT_EXISTS
+            raise USER_DOESNT_EXISTS from None
         user = await UserService.get_user(session, uid)
         if user is None:
             raise USER_DOESNT_EXISTS
@@ -75,6 +75,6 @@ class UserService:
         if current_user.deleted_at:
             # If user already deleted, raise the specific 'already deleted' error
             raise TARGET_USER_IS_ALREADY_DELETED
-        current_user.deleted_at = datetime.now()
+        current_user.deleted_at = utcnow()
         await session.commit()
         return True

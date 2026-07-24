@@ -90,18 +90,18 @@ class AllianceRosterService:
         distinct champions — the first N alphabetically by name — with every
         matching instance of those champions.
         """
-        filter_kwargs = dict(
-            alliance_id=alliance_id,
-            name=name,
-            champion_class=champion_class,
-            ranks=ranks,
-            ascensions=ascensions,
-            preferred_attacker=preferred_attacker,
-            alliance_group=alliance_group,
-            no_group=no_group,
-            saga_attacker_ids=saga_attacker_ids,
-            saga_defender_ids=saga_defender_ids,
-        )
+        filter_kwargs = {
+            "alliance_id": alliance_id,
+            "name": name,
+            "champion_class": champion_class,
+            "ranks": ranks,
+            "ascensions": ascensions,
+            "preferred_attacker": preferred_attacker,
+            "alliance_group": alliance_group,
+            "no_group": no_group,
+            "saga_attacker_ids": saga_attacker_ids,
+            "saga_defender_ids": saga_defender_ids,
+        }
 
         stmt = cls._apply_filters(select(ChampionUser), **filter_kwargs)
 

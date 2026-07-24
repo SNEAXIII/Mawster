@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 from unittest.mock import MagicMock
 
 from src.dto.admin.dto_fight_record import (
@@ -7,6 +6,7 @@ from src.dto.admin.dto_fight_record import (
     WarFightRecordResponse,
     WarFightSynergyResponse,
 )
+from src.models.Base import utcnow
 
 
 def _make_champion(name="Wolverine", champion_class="Mutant", image_url=None):
@@ -68,7 +68,7 @@ def test_fight_record_response_flattens_all():
     record.ko_count = 2
     record.synergies = []
     record.prefights = []
-    record.created_at = datetime.now()
+    record.created_at = utcnow()
 
     result = WarFightRecordResponse.model_validate(record)
     assert result.game_account_pseudo == "PlayerOne"

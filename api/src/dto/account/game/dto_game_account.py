@@ -37,7 +37,8 @@ class GameAccountResponse(BaseModel):
             return data
         try:
             alliance = getattr(data, "alliance", None)
-        except Exception:
+        except Exception:  # noqa: BLE001 — an unloaded relationship raises driver-specific
+            # errors (MissingGreenlet, DetachedInstanceError, …); any of them means "no alliance".
             alliance = None
         return {
             "id": data.id,

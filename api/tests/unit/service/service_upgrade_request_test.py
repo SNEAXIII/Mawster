@@ -1,11 +1,11 @@
 """Unit tests for UpgradeRequestService using mocked sessions."""
 
 import uuid
-from datetime import datetime
 
 import pytest
 from fastapi import HTTPException
 
+from src.models.Base import utcnow
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
@@ -78,7 +78,7 @@ def _make_upgrade_request(
         champion_user_id=champion_user_id,
         requester_game_account_id=requester_id,
         requested_rarity=rarity,
-        created_at=datetime.now(),
+        created_at=utcnow(),
         done_at=done_at,
     )
 

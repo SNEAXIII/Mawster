@@ -167,7 +167,8 @@ async def check_user_role(
                 options={"verify_exp": False},
             )
             user_id = payload.get("user_id", "anonymous")
-        except Exception:
+        except jwt.PyJWTError:
+            # An unreadable token is not an error here: the request is audited as anonymous.
             pass
         audit_log(f"{method} {uri}", user_id=user_id, detail=f"status={response.status_code}")
     return response

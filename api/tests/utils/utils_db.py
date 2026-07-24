@@ -38,20 +38,19 @@ _schema_ready = False
 
 def delete_db(retries: int = 20, delay: float = 0.2):
     """Delete the DB file on disk (opt-in via TEST_DELETE_DB env var)."""
-    if os.getenv("TEST_DELETE_DB") in ("1", "true", "True"):
-        if os.path.exists(DB_NAME):
-            for _ in range(retries):
-                try:
-                    os.remove(DB_NAME)
-                    return
-                except PermissionError:
-                    time.sleep(delay)
-            os.remove(DB_NAME)
+    if os.getenv("TEST_DELETE_DB") in ("1", "true", "True") and os.path.exists(DB_NAME):
+        for _ in range(retries):
+            try:
+                os.remove(DB_NAME)
+                return
+            except PermissionError:
+                time.sleep(delay)
+        os.remove(DB_NAME)
 
 
 def ensure_schema():
     """Create all tables once per process (idempotent)."""
-    global _schema_ready
+    global _schema_ready  # noqa: PLW0603 — process-wide "schema created" memo, by design
     if not _schema_ready:
         SQLModel.metadata.create_all(sqlite_sync_engine)
         _schema_ready = True

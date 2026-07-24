@@ -308,8 +308,19 @@ services:
     image: rustfs/rustfs:latest
     networks:
       - internal
+    # Web console only, served at http://localhost:9001/rustfs/console/ (the
+    # port's root path answers as the S3 API, so `/` returns AccessDenied).
+    # The S3 API port (9000) stays internal — api/worker reach it via
+    # http://rustfs:9000 on the overlay network. Published in host mode on the
+    # manager node. No Traefik route on purpose: keep it behind SSH/loopback.
+    ports:
+      - target: 9001
+        published: 9001
+        protocol: tcp
+        mode: host
     environment:
-      RUSTFS_CONSOLE_ENABLE: 'false'
+      RUSTFS_CONSOLE_ENABLE: 'true'
+      RUSTFS_CONSOLE_ADDRESS: ':9001'
       # rustfs's own entrypoint reads *_FILE creds natively
       # (validate_credential_source), so the keys stay in Swarm secret files and
       # never appear in the committed stack or `docker service inspect`.

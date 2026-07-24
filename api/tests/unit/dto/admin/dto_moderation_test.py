@@ -1,7 +1,6 @@
 """Unit tests for the moderation DTO fields added with the deletion-history feature."""
 
 import uuid
-from datetime import datetime
 
 from src.dto.admin.dto_moderation import (
     MuteResponse,
@@ -10,10 +9,11 @@ from src.dto.admin.dto_moderation import (
     WarnResponse,
 )
 from src.enums.NoteReportStatus import NoteReportStatus
+from src.models.Base import utcnow
 
 
 def test_note_revision_response_defaults():
-    rev = NoteRevisionResponse(id=uuid.uuid4(), content="hi", edited_at=datetime.now())
+    rev = NoteRevisionResponse(id=uuid.uuid4(), content="hi", edited_at=utcnow())
     assert rev.is_deletion is False
     assert rev.edited_by_user_id is None
     assert rev.edited_by_pseudo is None
@@ -25,7 +25,7 @@ def test_note_revision_response_deletion_entry():
         content="snapshot",
         edited_by_pseudo="modadmin",
         is_deletion=True,
-        edited_at=datetime.now(),
+        edited_at=utcnow(),
     )
     assert rev.is_deletion is True
     assert rev.edited_by_pseudo == "modadmin"
@@ -38,7 +38,7 @@ def test_mute_response_admin_login_default_none():
         id=uuid.uuid4(),
         user_id=uuid.uuid4(),
         reason="spam",
-        created_at=datetime.now(),
+        created_at=utcnow(),
     )
     assert mute.muted_by_login is None
 
@@ -48,7 +48,7 @@ def test_warn_response_admin_login_default_none():
         id=uuid.uuid4(),
         user_id=uuid.uuid4(),
         reason="be nice",
-        created_at=datetime.now(),
+        created_at=utcnow(),
     )
     assert warn.warned_by_login is None
 
@@ -62,7 +62,7 @@ def test_note_report_response_note_deleted_default_false():
         node_number=5,
         note_content="content",
         status=NoteReportStatus.pending,
-        created_at=datetime.now(),
+        created_at=utcnow(),
     )
     assert report.note_deleted is False
 

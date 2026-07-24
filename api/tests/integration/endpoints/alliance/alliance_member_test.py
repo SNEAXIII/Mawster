@@ -251,7 +251,7 @@ class TestSetMemberGroup:
     )
     async def test_owner_can_set_group(self, session, group):
         await _setup_2_users()
-        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        alliance, _owner = await push_alliance_with_owner(user_id=USER_ID)
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_patch_request(
@@ -264,7 +264,7 @@ class TestSetMemberGroup:
     @pytest.mark.asyncio
     async def test_regular_member_cannot_set_group(self):
         await _setup_2_users()
-        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        alliance, _owner = await push_alliance_with_owner(user_id=USER_ID)
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_patch_request(

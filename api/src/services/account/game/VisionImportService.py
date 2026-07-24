@@ -258,27 +258,26 @@ class VisionImportService:
                     .order_by(VisionPrediction.id)
                 )
             ).all()
-            for pred in preds:
-                rows.append(
-                    VisionPredictionResponse(
-                        id=pred.id,
-                        job_id=job.id,
-                        champion_name=pred.champion_name,
-                        champion_class=pred.champion_class,
-                        stars=pred.stars,
-                        rank=pred.rank,
-                        signature=pred.signature,
-                        ascension=pred.ascension,
-                        confidence=pred.confidence,
-                        crop_index=cls._crop_index(pred.crop_key),
-                        job_index=job_index[job.id],
-                        candidates=[
-                            VisionCandidateResponse(name=c.name, score=c.score)
-                            for c in pred.candidates
-                        ],
-                        margin=cls._margin(pred.candidates),
-                    )
+            rows.extend(
+                VisionPredictionResponse(
+                    id=pred.id,
+                    job_id=job.id,
+                    champion_name=pred.champion_name,
+                    champion_class=pred.champion_class,
+                    stars=pred.stars,
+                    rank=pred.rank,
+                    signature=pred.signature,
+                    ascension=pred.ascension,
+                    confidence=pred.confidence,
+                    crop_index=cls._crop_index(pred.crop_key),
+                    job_index=job_index[job.id],
+                    candidates=[
+                        VisionCandidateResponse(name=c.name, score=c.score) for c in pred.candidates
+                    ],
+                    margin=cls._margin(pred.candidates),
                 )
+                for pred in preds
+            )
         return rows
 
     @staticmethod

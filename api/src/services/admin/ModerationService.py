@@ -1,6 +1,5 @@
 import math
 import uuid
-from datetime import datetime
 
 from fastapi import HTTPException
 from sqlalchemy import func
@@ -17,6 +16,7 @@ from src.dto.admin.dto_moderation import (
 )
 from src.enums.NoteReportStatus import NoteReportStatus
 from src.models.Alliance import Alliance
+from src.models.Base import utcnow
 from src.models.GameAccount import GameAccount
 from src.models.NoteReport import NoteReport
 from src.models.User import User
@@ -32,7 +32,7 @@ AUTO_BLOCK_THRESHOLD = 3
 class ModerationService:
     @classmethod
     async def is_user_muted(cls, session: SessionDep, user_id: uuid.UUID) -> bool:
-        now = datetime.now()
+        now = utcnow()
         mute = (
             await session.exec(
                 select(UserMute).where(
@@ -100,7 +100,7 @@ class ModerationService:
         note = (
             await session.exec(select(WarFightNote).where(WarFightNote.id == report.note_id))
         ).first()
-        now = datetime.now()
+        now = utcnow()
 
         if body.action == "delete":
             note.deleted_at = now
@@ -156,7 +156,7 @@ class ModerationService:
 
     @classmethod
     async def lift_mute(cls, session, user_id, admin_user_id, commit=True):
-        now = datetime.now()
+        now = utcnow()
         actives = (
             await session.exec(
                 select(UserMute).where(
@@ -201,7 +201,7 @@ class ModerationService:
                 .group_by(NoteReport.note_id)
             )
         ).all()
-        return {nid: cnt for nid, cnt in rows}
+        return dict(rows)
 
     @classmethod
     async def list_reports(cls, session, status=None, alliance_id=None, page=1, size=20):
@@ -297,7 +297,7 @@ class ModerationService:
         admin = aliased(User)
         conds = []
         if active_only:
-            now = datetime.now()
+            now = utcnow()
             conds += [
                 UserMute.lifted_at.is_(None),
                 or_(UserMute.expires_at.is_(None), UserMute.expires_at > now),
@@ -349,7 +349,7 @@ class ModerationService:
 
     @classmethod
     async def get_active_mute(cls, session, user_id):
-        now = datetime.now()
+        now = utcnow()
         return (
             await session.exec(
                 select(UserMute).where(

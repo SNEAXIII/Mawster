@@ -79,22 +79,20 @@ class VisionResultConsumer:
             # short-circuits on jobs already DONE/FAILED — so one replay is safe
             # and cheap insurance against a transient failure.
             if not message.redelivered:
-                logger.error(
+                logger.exception(
                     "vision result handling failed for job_id=%s, requeueing for one retry",
                     result.job_id,
-                    exc_info=True,
                 )
                 await message.nack(requeue=True)
             else:
                 # The retry also failed: this looks deterministic, not transient.
                 # Give up rather than hot-loop. There is no DLQ on this queue, so
                 # this message is gone for good — log loudly, this needs a human.
-                logger.error(
+                logger.exception(
                     "DROPPING vision result after retry failed: job_id=%s "
                     "import_id=%s - no DLQ on this queue, result is LOST",
                     result.job_id,
                     result.import_id,
-                    exc_info=True,
                 )
                 await message.reject(requeue=False)
             return

@@ -641,7 +641,7 @@ class TestPlaceDefenderEdgeCases:
             push_champion_user,
         )
 
-        other_alliance, other_owner = await push_alliance_with_owner(
+        _other_alliance, other_owner = await push_alliance_with_owner(
             user_id=other_user_id,
             game_pseudo="OtherPseudo88",
             alliance_name="Other Alliance",

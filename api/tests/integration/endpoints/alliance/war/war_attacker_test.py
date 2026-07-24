@@ -817,7 +817,7 @@ class TestBigThingFormat:
 
         # Create 3 attacker champion_users for member
         attacker_cus = []
-        for i, (name, cls) in enumerate(
+        for _i, (name, cls) in enumerate(
             [("Attacker A", "Science"), ("Attacker B", "Mutant"), ("Attacker C", "Skill")]
         ):
             ac = await push_champion(name=name, champion_class=cls)

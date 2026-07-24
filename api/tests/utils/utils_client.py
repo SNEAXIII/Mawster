@@ -18,7 +18,7 @@ async def get_test_client() -> AsyncClient:
     This allows tests to reuse a single client per test (via a fixture) while
     keeping a fallback for callers that don't rely on the fixture.
     """
-    global _SHARED_CLIENT
+    # `global` is not needed: this function only reads the module-level client.
     if _SHARED_CLIENT is not None:
         yield _SHARED_CLIENT
         return

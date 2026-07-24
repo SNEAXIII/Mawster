@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 
 from sqlalchemy import func
 from sqlmodel import select
@@ -18,6 +17,7 @@ from src.Messages.user_messages import (
     TARGET_USER_IS_SUPER_ADMIN,
 )
 from src.models import User
+from src.models.Base import utcnow
 from src.services.account.UserService import UserService
 from src.utils.db import SessionDep
 
@@ -51,7 +51,7 @@ class UserAdminService:
     async def admin_patch_disable_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> True:
         user: User | None = await UserService.get_user(session, user_uuid)
         cls._validate_target_user_for_action(user, require_disabled=False, forbid_admin=True)
-        user.disabled_at = datetime.now()
+        user.disabled_at = utcnow()
         await session.commit()
         return True
 
@@ -71,7 +71,7 @@ class UserAdminService:
         if user.deleted_at:
             raise TARGET_USER_IS_ALREADY_DELETED
         cls._validate_target_user_for_action(user, require_disabled=None, forbid_admin=True)
-        user.deleted_at = datetime.now()
+        user.deleted_at = utcnow()
         await session.commit()
         return True
 

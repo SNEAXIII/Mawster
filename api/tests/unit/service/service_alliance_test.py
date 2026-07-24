@@ -201,10 +201,7 @@ class TestAssertCanRemoveMember:
             caller_accounts = [_make_account(user_id=caller_id)]
 
         # Determine target
-        if target_role == "officer":
-            target_id = officer2_acc.id
-        else:
-            target_id = regular_acc.id
+        target_id = officer2_acc.id if target_role == "officer" else regular_acc.id
 
         result_mock = mocker.MagicMock()
         result_mock.all.return_value = caller_accounts
@@ -505,10 +502,7 @@ class TestSetMemberGroup:
         alliance_id = uuid.uuid4()
         ga_id = uuid.uuid4()
 
-        if member_found:
-            acc = _make_account(account_id=ga_id, alliance_id=alliance_id)
-        else:
-            acc = None
+        acc = _make_account(account_id=ga_id, alliance_id=alliance_id) if member_found else None
 
         session.get.return_value = acc
 

@@ -806,7 +806,7 @@ class TestAssistStatistics:
         await _add_assisted_placement(
             data["war"].id, data["cu"].id, data["assistor_cu"].id, data["champ"].id, node_number=10
         )
-        other_alliance, other_owner = await push_alliance_with_owner(user_id=USER_ID)
+        other_alliance, _other_owner = await push_alliance_with_owner(user_id=USER_ID)
         response = await execute_get_request(f"{STATS_URL}/{other_alliance.id}", USER_HEADERS)
         assert response.status_code == 200
         assert response.json() == []

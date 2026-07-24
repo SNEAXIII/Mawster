@@ -104,7 +104,7 @@ async def bulk_add_champions(
     )
     saga = await SagaService.resolve_current(session)
     responses = [ChampionUserDetailResponse.model_validate(e) for e in entries]
-    for dto, e in zip(responses, entries):
+    for dto, e in zip(responses, entries, strict=False):
         att, dfn = saga.get(e.champion_id, (False, False))
         dto.is_saga_attacker, dto.is_saga_defender = att, dfn
     return responses
@@ -122,16 +122,17 @@ async def get_roster_by_game_account(
     game_account = await GameAccountService.get_game_account(session, game_account_id)
     if game_account is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
-    if game_account.user_id != current_user.id:
-        if not await AllianceService.can_view_roster(session, current_user.id, game_account):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You can only view your own roster or rosters of alliance members",
-            )
+    if game_account.user_id != current_user.id and not await AllianceService.can_view_roster(
+        session, current_user.id, game_account
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only view your own roster or rosters of alliance members",
+        )
     entries = await ChampionUserService.get_roster_by_game_account(session, game_account_id)
     saga = await SagaService.resolve_current(session)
     responses = [ChampionUserDetailResponse.model_validate(e) for e in entries]
-    for dto, e in zip(responses, entries):
+    for dto, e in zip(responses, entries, strict=False):
         att, dfn = saga.get(e.champion_id, (False, False))
         dto.is_saga_attacker, dto.is_saga_defender = att, dfn
     return responses

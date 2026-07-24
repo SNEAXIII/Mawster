@@ -59,7 +59,7 @@ async def get_alliance_roster(
         distinct_champion_limit=distinct_champion_limit,
     )
     responses = [AllianceRosterEntryResponse.model_validate(e) for e in entries]
-    for dto, e in zip(responses, entries):
+    for dto, e in zip(responses, entries, strict=False):
         att, dfn = saga.get(e.champion_id, (False, False))
         dto.is_saga_attacker, dto.is_saga_defender = att, dfn
     return responses

@@ -30,5 +30,5 @@ def correct_email_validator(email: str) -> str:
     try:
         email_validator.validate_email(email)
     except EmailSyntaxError:
-        raise EmailSyntaxError(EMAIL_INVALID)
+        raise EmailSyntaxError(EMAIL_INVALID) from None
     return email

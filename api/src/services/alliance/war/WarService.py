@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from sqlmodel import and_, select
 from starlette import status
@@ -1366,12 +1367,13 @@ class WarService:
         session.add(synergy)
         try:
             await session.commit()
-        except Exception:
+        except IntegrityError as exc:
+            # Unique constraint: this champion already provides a synergy on that war.
             await session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=CHAMPION_ALREADY_SYNERGY_PROVIDER,
-            )
+            ) from exc
 
         return await cls._synergy_dto(session, await cls._load_synergy(session, synergy.id))
 
@@ -1612,12 +1614,13 @@ class WarService:
         session.add(prefight)
         try:
             await session.commit()
-        except Exception:
+        except IntegrityError as exc:
+            # Unique constraint: this champion is already a prefight on that node.
             await session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=CHAMPION_ALREADY_PREFIGHT_ON_NODE,
-            )
+            ) from exc
 
         return await cls._prefight_dto(session, await cls._load_prefight(session, prefight.id))
 

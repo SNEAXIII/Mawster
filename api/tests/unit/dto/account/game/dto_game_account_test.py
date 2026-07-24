@@ -1,13 +1,13 @@
 """Unit tests for GameAccountResponse DTO model_validate with from_attributes."""
 
 import uuid
-from datetime import datetime
 from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
 
 from src.dto.account.game.dto_game_account import GameAccountCreateRequest, GameAccountResponse
+from src.models.Base import utcnow
 
 # ---------------------------------------------------------------------------
 # Helpers — lightweight namespace objects that mimic ORM models
@@ -50,7 +50,7 @@ class TestGameAccountCreateRequest:
 
 class TestGameAccountResponseModelValidate:
     def test_with_alliance(self):
-        now = datetime.now()
+        now = utcnow()
         alliance = _ns(tag="TST", name=TEST_ALLIANCE_NAME)
         account = _ns(
             id=uuid.uuid4(),
@@ -70,7 +70,7 @@ class TestGameAccountResponseModelValidate:
         assert dto.is_primary is True
 
     def test_without_alliance(self):
-        now = datetime.now()
+        now = utcnow()
         account = _ns(
             id=uuid.uuid4(),
             user_id=uuid.uuid4(),

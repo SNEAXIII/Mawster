@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 
 from fastapi import HTTPException
 from sqlalchemy import func
@@ -23,6 +22,7 @@ from src.Messages.invitation_messages import (
 from src.Messages.visitor_messages import ALREADY_A_VISITOR, alliance_max_visitors_reached
 from src.models.Alliance import Alliance
 from src.models.AllianceInvitation import AllianceInvitation
+from src.models.Base import utcnow
 from src.models.GameAccount import GameAccount
 from src.services.alliance.AllianceVisitorService import (
     MAX_VISITORS_PER_ALLIANCE,
@@ -214,7 +214,7 @@ class AllianceInvitationService:
             )
             session.add(visitor)
             invitation.status = InvitationStatus.ACCEPTED
-            invitation.responded_at = datetime.now()
+            invitation.responded_at = utcnow()
             session.add(invitation)
             await session.commit()
             await session.refresh(invitation)
@@ -248,7 +248,7 @@ class AllianceInvitationService:
         game_account.alliance_id = invitation.alliance_id
         session.add(game_account)
         invitation.status = InvitationStatus.ACCEPTED
-        invitation.responded_at = datetime.now()
+        invitation.responded_at = utcnow()
         session.add(invitation)
         # Cancel other pending MEMBER invitations for this game account
         other_pending = await session.exec(
@@ -261,7 +261,7 @@ class AllianceInvitationService:
         )
         for other in other_pending.all():
             other.status = InvitationStatus.DECLINED
-            other.responded_at = datetime.now()
+            other.responded_at = utcnow()
             session.add(other)
         await session.commit()
         await session.refresh(invitation)
@@ -290,7 +290,7 @@ class AllianceInvitationService:
                 detail=INVITATION_NOT_FOR_YOUR_GAME_ACCOUNT,
             )
         invitation.status = InvitationStatus.DECLINED
-        invitation.responded_at = datetime.now()
+        invitation.responded_at = utcnow()
         session.add(invitation)
         await session.commit()
         await session.refresh(invitation)

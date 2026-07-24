@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import httpx
 from fastapi import HTTPException
 from sqlmodel import select
@@ -12,6 +10,7 @@ from src.Messages.google_auth_messages import (
     GOOGLE_TOKEN_INVALID,
 )
 from src.models import LoginLog, User
+from src.models.Base import utcnow
 from src.security.secrets import SECRET
 from src.services.auth.OAuthService import OAuthService
 from src.utils.db import SessionDep
@@ -53,8 +52,8 @@ class GoogleAuthService(OAuthService):
                     GOOGLE_USERINFO_URL,
                     headers={"Authorization": f"Bearer {access_token}"},
                 )
-        except httpx.RequestError:
-            raise GOOGLE_API_ERROR_EXCEPTION
+        except httpx.RequestError as exc:
+            raise GOOGLE_API_ERROR_EXCEPTION from exc
 
         if response.status_code == 401:
             raise GOOGLE_TOKEN_INVALID_EXCEPTION
@@ -82,7 +81,7 @@ class GoogleAuthService(OAuthService):
         existing_user = result.first()
 
         if existing_user:
-            existing_user.set_last_login_date(datetime.now())
+            existing_user.set_last_login_date(utcnow())
             if existing_user.email_hash_version != SECRET.EMAIL_PEPPER_VERSION:
                 existing_user.email_hash = hash_email(email)
                 existing_user.email_hash_version = SECRET.EMAIL_PEPPER_VERSION
@@ -108,7 +107,7 @@ class GoogleAuthService(OAuthService):
             google_id=google_id,
             role=Roles.USER,
         )
-        new_user.set_last_login_date(datetime.now())
+        new_user.set_last_login_date(utcnow())
         login_log = LoginLog(user=new_user)
         session.add(new_user)
         session.add(login_log)

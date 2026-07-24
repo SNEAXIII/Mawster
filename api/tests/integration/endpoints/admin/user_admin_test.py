@@ -1,12 +1,12 @@
 """Integration tests for /admin endpoints — user management with parametrized access control."""
 
 import uuid
-from datetime import datetime
 
 import pytest
 
 from main import app
 from src.enums.Roles import Roles
+from src.models.Base import utcnow
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.user_setup import (
     get_generic_user,
@@ -179,10 +179,10 @@ class TestDisableUser:
         await push_one_admin()
 
         if scenario == "already_disabled":
-            user = await _setup_user(disabled_at=datetime.now())
+            user = await _setup_user(disabled_at=utcnow())
             target_id = user.id
         elif scenario == "deleted":
-            user = await _setup_user(deleted_at=datetime.now())
+            user = await _setup_user(deleted_at=utcnow())
             target_id = user.id
         elif scenario == "is_admin":
             user = await _setup_user(
@@ -219,7 +219,7 @@ class TestEnableUser:
     @pytest.mark.asyncio
     async def test_enable_ok(self):
         await push_one_admin()
-        user = await _setup_user(disabled_at=datetime.now())
+        user = await _setup_user(disabled_at=utcnow())
 
         response = await execute_patch_request(
             f"/admin/users/enable/{user.id}", {}, headers=ADMIN_HEADERS
@@ -243,7 +243,7 @@ class TestEnableUser:
             user = await _setup_user()
             target_id = user.id
         elif scenario == "deleted":
-            user = await _setup_user(deleted_at=datetime.now())
+            user = await _setup_user(deleted_at=utcnow())
             target_id = user.id
         else:
             target_id = uuid.uuid4()
@@ -284,7 +284,7 @@ class TestAdminDeleteUser:
         await push_one_admin()
 
         if scenario == "already_deleted":
-            user = await _setup_user(deleted_at=datetime.now())
+            user = await _setup_user(deleted_at=utcnow())
             target_id = user.id
         elif scenario == "is_admin":
             user = await _setup_user(
@@ -355,7 +355,7 @@ class TestPromoteUser:
             )
             target_id = user.id
         elif scenario == "deleted":
-            user = await _setup_user(deleted_at=datetime.now())
+            user = await _setup_user(deleted_at=utcnow())
             target_id = user.id
         else:
             target_id = uuid.uuid4()
@@ -430,7 +430,7 @@ class TestPromoteUserDisabled:
     async def test_promote_disabled_user_ok(self):
         """Promoting a disabled user succeeds and clears disabled_at (line 175)."""
         await push_one_super_admin()
-        user = await _setup_user(disabled_at=datetime.now())
+        user = await _setup_user(disabled_at=utcnow())
 
         response = await execute_patch_request(
             f"/admin/users/promote/{user.id}", {}, headers=SUPER_ADMIN_HEADERS
@@ -495,7 +495,7 @@ class TestDemoteUser:
             user = await _setup_user()
             target_id = user.id
         elif scenario == "deleted":
-            user = await _setup_user(deleted_at=datetime.now())
+            user = await _setup_user(deleted_at=utcnow())
             target_id = user.id
         else:
             target_id = uuid.uuid4()

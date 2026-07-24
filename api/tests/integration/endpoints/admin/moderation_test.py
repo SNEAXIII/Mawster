@@ -1,7 +1,6 @@
 """Integration tests for moderation gating on war fight note editing."""
 
 import uuid
-from datetime import datetime
 
 import pytest
 from fastapi import HTTPException
@@ -16,6 +15,7 @@ from src.dto.admin.dto_moderation import (
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
 from src.enums.NoteReportStatus import NoteReportStatus
 from src.enums.Roles import Roles
+from src.models.Base import utcnow
 from src.models.NoteReport import NoteReport
 from src.models.User import User
 from src.models.UserMute import UserMute
@@ -173,7 +173,7 @@ async def test_report_refused_when_whitelisted(session):
     note = data["note"]
     reporter = data["reporter"]
 
-    note.whitelisted_at = datetime.now()
+    note.whitelisted_at = utcnow()
     session.add(note)
     await session.commit()
 
@@ -230,7 +230,7 @@ async def test_edit_clears_whitelist_but_keeps_reports_pending(session):
         body=NoteReportCreateRequest(reason="bad"),
     )
 
-    note.whitelisted_at = datetime.now()
+    note.whitelisted_at = utcnow()
     session.add(note)
     await session.commit()
 

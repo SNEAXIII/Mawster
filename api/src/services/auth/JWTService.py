@@ -78,18 +78,17 @@ class JWTService:
                 algorithms=[SECRET.ALGORITHM],
             )
         except ExpiredSignatureError:
-            raise EXPIRED_EXCEPTION
+            raise EXPIRED_EXCEPTION from None
         except (InvalidSignatureError, InvalidAlgorithmError, DecodeError):
-            raise INVALID_TOKEN_EXCEPTION
+            raise INVALID_TOKEN_EXCEPTION from None
         if data.get("user_id") is None:
             raise CANT_FIND_USER_TOKEN_EXCEPTION
         # Only validate role for access tokens (refresh tokens don't carry role)
         token_type = data.get("type", "access")
         if data.get("type") not in Token.__members__.values():
             raise INVALID_TOKEN_EXCEPTION
-        if token_type == Token.ACCESS:
-            if data.get("role") not in Roles.__members__.values():
-                raise INVALID_ROLE_EXCEPTION
+        if token_type == Token.ACCESS and data.get("role") not in Roles.__members__.values():
+            raise INVALID_ROLE_EXCEPTION
         return data
 
     @classmethod
