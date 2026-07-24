@@ -2,10 +2,10 @@ from collections.abc import AsyncGenerator
 from typing import Annotated
 
 from fastapi import Depends
-from sqlmodel import create_engine, Session
 from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.orm import sessionmaker
+from sqlmodel import Session, create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.security.secrets import SECRET

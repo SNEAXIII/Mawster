@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship
 
@@ -16,7 +16,7 @@ class WarFightRecordImport(UUIDBase, TimestampMixin, table=True):
     __tablename__ = "war_fight_record_import"
 
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
-    season_id: Optional[uuid.UUID] = Field(default=None, foreign_key="season.id")
+    season_id: uuid.UUID | None = Field(default=None, foreign_key="season.id")
     node_number: NodeNumber
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
     defender_champion_id: uuid.UUID = Field(foreign_key="champion.id")

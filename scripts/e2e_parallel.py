@@ -11,24 +11,23 @@ Each worker N gets:
   - Cypress instance with split=total,splitIndex=N
 """
 
-import urllib.request
-import urllib.error
-import shutil
-import json
-import socket
 import argparse
 import atexit
+import json
 import os
 import platform as _platform
 import re
+import shutil
 import signal
+import socket
 import subprocess
 import sys
 import threading
 import time
+import urllib.error
+import urllib.request
+from dataclasses import asdict, dataclass
 from pathlib import Path
-
-from dataclasses import dataclass, asdict
 
 # Force UTF-8 stdout on Windows to handle Cypress box-drawing characters (┌─┐│)
 # Without this, print() raises UnicodeEncodeError on cp1252 systems, killing pipe_output.
@@ -36,22 +35,29 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 sys.path.insert(0, str(Path(__file__).parent))
-from config import (  # noqa: E402  # pylint: disable=import-error,wrong-import-position
-    ROOT,
+import contextlib
+
+from config import (  # pylint: disable=import-error,wrong-import-position
     API_DIR,
-    FRONT_DIR,
     BASE_API_PORT,
     BASE_FRONT_PORT,
     DB_PREFIX,
+    FRONT_DIR,
+    HEALTH_TIMEOUT,
+    MARIADB_CONTAINER,
     MARIADB_HOST,
     MARIADB_PORT,
     MARIADB_ROOT_PASSWORD,
-    MARIADB_CONTAINER,
-    HEALTH_TIMEOUT,
+    ROOT,
 )
-from linux_model import LinuxModel, LinuxHeadlessModel  # noqa: E402  # pylint: disable=import-error,wrong-import-position
-from windows_model import WindowsModel  # noqa: E402  # pylint: disable=import-error,wrong-import-position
-from IOsModel import IOsModel  # noqa: E402  # pylint: disable=import-error,wrong-import-position
+from IOsModel import IOsModel  # pylint: disable=import-error,wrong-import-position
+from linux_model import (  # pylint: disable=import-error,wrong-import-position
+    LinuxHeadlessModel,
+    LinuxModel,
+)
+from windows_model import (
+    WindowsModel,  # pylint: disable=import-error,wrong-import-position
+)
 
 # Matches the final summary line printed by Cypress after all specs:
 #   "  √  All specs passed!                        01:39   60   54    -    6    -"
@@ -105,18 +111,21 @@ def _run_sql(sql: str) -> subprocess.CompletedProcess:
     Falls back to 'docker exec' if the binary is not found (local dev).
     """
     root_args = ["-uroot", f"-p{MARIADB_ROOT_PASSWORD}", "-e", sql]
+    # check=False: callers inspect returncode/stderr themselves.
     try:
         return subprocess.run(
-            ["mariadb", "-h", MARIADB_HOST, "-P", str(MARIADB_PORT)] + root_args,
+            ["mariadb", "-h", MARIADB_HOST, "-P", str(MARIADB_PORT), *root_args],
             capture_output=True,
             text=True,
+            check=False,
         )
     except FileNotFoundError:
         container = MARIADB_CONTAINER
         return subprocess.run(
-            ["docker", "exec", container, "mariadb"] + root_args,
+            ["docker", "exec", container, "mariadb", *root_args],
             capture_output=True,
             text=True,
+            check=False,
         )
 
 
@@ -435,9 +444,7 @@ def build_frontend(base_env: dict) -> None:
     env = {
         **base_env,
         "PORT": "3000",
-        "API_PORT": str(
-            BASE_API_PORT
-        ),  # placeholder — rewrites are runtime-read anyway
+        "API_PORT": str(BASE_API_PORT),  # placeholder — rewrites are runtime-read anyway
         "API_SERVER_HOST": "localhost",
         "NEXT_PUBLIC_DEV_MODE": "true",
         "NEXT_DIST_DIR": ".next-e2e",
@@ -448,15 +455,14 @@ def build_frontend(base_env: dict) -> None:
         [NPX, "next", "build"],
         cwd=str(FRONT_DIR),
         env=env,
+        check=False,  # the returncode is checked right below, with a clearer message
     )
     if result.returncode != 0:
         raise RuntimeError("next build failed")
     log("Frontend build complete.")
 
 
-def start_frontend(
-    worker: int, base_env: dict, quiet: bool = False
-) -> subprocess.Popen:
+def start_frontend(worker: int, base_env: dict, quiet: bool = False) -> subprocess.Popen:
     api_port = BASE_API_PORT + worker
     front_port = BASE_FRONT_PORT + worker
     env = {
@@ -530,9 +536,7 @@ def count_tests(spec: Path) -> int:
 
 def distribute_specs(specs: list[Path], n: int) -> list[list[Path]]:
     """Greedy bin-packing: assign heaviest specs first to the lightest bucket."""
-    weighted = sorted(
-        ((s, count_tests(s)) for s in specs), key=lambda x: x[1], reverse=True
-    )
+    weighted = sorted(((s, count_tests(s)) for s in specs), key=lambda x: x[1], reverse=True)
     buckets: list[list[Path]] = [[] for _ in range(n)]
     totals = [0] * n
     for spec, w in weighted:
@@ -602,9 +606,7 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     log(f"Worker {worker}: Cypress finished with exit code {proc.returncode}")
 
     if proc.returncode != 0:
-        log(
-            f"Worker {worker}: full logs → front/cypress/results/workers/worker-{worker}/"
-        )
+        log(f"Worker {worker}: full logs → front/cypress/results/workers/worker-{worker}/")
 
     return proc.returncode
 
@@ -672,9 +674,7 @@ def plan(runners: int, include_vision: bool = False) -> None:
     matrix = [
         {
             "runner": str(i),
-            "specs": ",".join(
-                str(s.relative_to(FRONT_DIR)).replace("\\", "/") for s in bucket
-            ),
+            "specs": ",".join(str(s.relative_to(FRONT_DIR)).replace("\\", "/") for s in bucket),
         }
         for i, bucket in enumerate(buckets)
         if bucket
@@ -742,12 +742,8 @@ def main() -> None:
     worker_number = args.workers
     if args.spec:
         resolved_specs = set(resolve_spec_paths(args.spec))
-        log(
-            f"--spec provided: {len(resolved_specs)} spec(s), using {worker_number} worker(s)"
-        )
-    worker_number = (
-        min(worker_number, len(resolved_specs)) if resolved_specs else args.workers
-    )
+        log(f"--spec provided: {len(resolved_specs)} spec(s), using {worker_number} worker(s)")
+    worker_number = min(worker_number, len(resolved_specs)) if resolved_specs else args.workers
 
     start_time = time.time()
     log(f"Starting E2E parallel run with {worker_number} worker(s)...")
@@ -764,18 +760,14 @@ def main() -> None:
     def cleanup() -> None:
         log("Shutting down all servers...")
         for p in procs:
-            try:
+            with contextlib.suppress(Exception):
                 OS.terminate_proc(p)
-            except Exception:
-                pass
         for p in procs:
             try:
                 p.wait(timeout=5)
             except subprocess.TimeoutExpired:
-                try:
+                with contextlib.suppress(Exception):
                     OS.kill_proc(p)
-                except Exception:
-                    pass
         # Remove the shared e2e build dir (only if we built it)
         if not args.skip_build:
             next_dir = FRONT_DIR / ".next-e2e"
@@ -831,9 +823,7 @@ def main() -> None:
             with lock:
                 errors.append(f"Worker {worker}: {exc}")
 
-    all_threads = [
-        threading.Thread(target=setup_worker, args=(i,)) for i in range(worker_number)
-    ]
+    all_threads = [threading.Thread(target=setup_worker, args=(i,)) for i in range(worker_number)]
     if not args.skip_build:
         all_threads.append(threading.Thread(target=run_build))
     run_parallel(all_threads)
@@ -865,8 +855,7 @@ def main() -> None:
                 health_errors.append(str(exc))
 
     health_threads = [
-        threading.Thread(target=health_check_worker, args=(i,))
-        for i in range(worker_number)
+        threading.Thread(target=health_check_worker, args=(i,)) for i in range(worker_number)
     ]
     run_parallel(health_threads)
 
@@ -879,14 +868,10 @@ def main() -> None:
     log("All servers ready. Launching Cypress workers...")
     if resolved_specs:
         specs = resolved_specs
-        log(
-            f"Running {len(specs)} spec(s): {[str(s.relative_to(FRONT_DIR)) for s in specs]}"
-        )
+        log(f"Running {len(specs)} spec(s): {[str(s.relative_to(FRONT_DIR)) for s in specs]}")
     else:
         specs = get_spec_files(include_vision=args.include_vision)
-        log(
-            f"Found {len(specs)} spec file(s) to distribute across {worker_number} worker(s)."
-        )
+        log(f"Found {len(specs)} spec file(s) to distribute across {worker_number} worker(s).")
         if not args.include_vision:
             log("Vision specs excluded — pass --include-vision to run them.")
     spec_buckets = distribute_specs(specs, worker_number)
@@ -894,9 +879,7 @@ def main() -> None:
     worker_stats: list[dict] = [{} for _ in range(worker_number)]
 
     def cypress_worker(worker: int) -> None:
-        results[worker] = run_cypress(
-            worker, spec_buckets[worker], worker_stats[worker]
-        )
+        results[worker] = run_cypress(worker, spec_buckets[worker], worker_stats[worker])
 
     cypress_threads = [
         threading.Thread(target=cypress_worker, args=(i,)) for i in range(worker_number)

@@ -1,11 +1,11 @@
 from time import sleep
 
 import pymysql
-
-import src.models  # noqa: F401
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import text
+
+import src.models  # noqa: F401
 from src.fixtures import sync_engine as engine
 
 alembic_cfg = Config("alembic.ini")

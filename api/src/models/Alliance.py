@@ -1,15 +1,16 @@
 import uuid
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
+
 import sqlalchemy as sa
 from sqlmodel import Field, Relationship
 
 from src.models.Base import TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
-    from src.models.GameAccount import GameAccount
-    from src.models.AllianceOfficer import AllianceOfficer
     from src.models.AllianceInvitation import AllianceInvitation
+    from src.models.AllianceOfficer import AllianceOfficer
     from src.models.AllianceVisitor import AllianceVisitor
+    from src.models.GameAccount import GameAccount
 
 
 class Alliance(UUIDBase, TimestampMixin, table=True):
@@ -32,13 +33,13 @@ class Alliance(UUIDBase, TimestampMixin, table=True):
         back_populates="owned_alliance",
         sa_relationship_kwargs={"foreign_keys": "[Alliance.owner_id]"},
     )
-    members: List["GameAccount"] = Relationship(
+    members: list["GameAccount"] = Relationship(
         back_populates="alliance",
         sa_relationship_kwargs={"foreign_keys": "[GameAccount.alliance_id]"},
     )
-    officers: List["AllianceOfficer"] = Relationship(back_populates="alliance")
-    invitations: List["AllianceInvitation"] = Relationship(
+    officers: list["AllianceOfficer"] = Relationship(back_populates="alliance")
+    invitations: list["AllianceInvitation"] = Relationship(
         back_populates="alliance",
         sa_relationship_kwargs={"foreign_keys": "[AllianceInvitation.alliance_id]"},
     )
-    visitors: List["AllianceVisitor"] = Relationship(back_populates="alliance")
+    visitors: list["AllianceVisitor"] = Relationship(back_populates="alliance")

@@ -1,15 +1,14 @@
 from contextlib import asynccontextmanager
-from typing import Optional
 
-from httpx import AsyncClient, ASGITransport, Response
+from httpx import ASGITransport, AsyncClient, Response
+
 from main import app
-
 from src.enums.Roles import Roles
 from src.services.auth.JWTService import JWTService
 from tests.utils.utils_constant import USER_ID
 
 # Module-level shared client set by a fixture to avoid recreating AsyncClient per request
-_SHARED_CLIENT: Optional[AsyncClient] = None
+_SHARED_CLIENT: AsyncClient | None = None
 
 
 @asynccontextmanager
@@ -19,7 +18,7 @@ async def get_test_client() -> AsyncClient:
     This allows tests to reuse a single client per test (via a fixture) while
     keeping a fallback for callers that don't rely on the fixture.
     """
-    global _SHARED_CLIENT
+    # `global` is not needed: this function only reads the module-level client.
     if _SHARED_CLIENT is not None:
         yield _SHARED_CLIENT
         return
@@ -42,27 +41,27 @@ def create_auth_headers(
     return {"Authorization": f"Bearer {token}"}
 
 
-async def execute_get_request(route: str, headers: Optional[dict[str, str]] = None) -> Response:
+async def execute_get_request(route: str, headers: dict[str, str] | None = None) -> Response:
     async with get_test_client() as client:
         return await client.get(route, headers=headers)
 
 
 async def execute_post_request(
-    route: str, payload: dict, headers: Optional[dict[str, str]] = None
+    route: str, payload: dict, headers: dict[str, str] | None = None
 ) -> Response:
     async with get_test_client() as client:
         return await client.post(route, json=payload, headers=headers)
 
 
 async def execute_put_request(
-    route: str, payload: dict, headers: Optional[dict[str, str]] = None
+    route: str, payload: dict, headers: dict[str, str] | None = None
 ) -> Response:
     async with get_test_client() as client:
         return await client.put(route, json=payload, headers=headers)
 
 
 async def execute_patch_request(
-    route: str, payload: dict, headers: Optional[dict[str, str]] = None
+    route: str, payload: dict, headers: dict[str, str] | None = None
 ) -> Response:
     async with get_test_client() as client:
         return await client.patch(route, json=payload, headers=headers)
@@ -70,8 +69,8 @@ async def execute_patch_request(
 
 async def execute_delete_request(
     route: str,
-    headers: Optional[dict[str, str]] = None,
-    payload: Optional[dict] = None,
+    headers: dict[str, str] | None = None,
+    payload: dict | None = None,
 ) -> Response:
     async with get_test_client() as client:
         if payload is not None:

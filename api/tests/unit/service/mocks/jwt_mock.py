@@ -1,9 +1,9 @@
 import jwt
-from typing import Optional
+
 from src.services.auth.JWTService import JWTService
 
 
-def decode_module_mock(mocker, return_value: Optional[dict[str, str]]):
+def decode_module_mock(mocker, return_value: dict[str, str] | None):
     return mocker.patch.object(
         jwt,
         "decode",
@@ -11,7 +11,7 @@ def decode_module_mock(mocker, return_value: Optional[dict[str, str]]):
     )
 
 
-def decode_service_mock(mocker, return_value: Optional[dict[str, str]]):
+def decode_service_mock(mocker, return_value: dict[str, str] | None):
     return mocker.patch.object(
         JWTService,
         "decode_jwt",

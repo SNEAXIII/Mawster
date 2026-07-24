@@ -1,19 +1,11 @@
 import uuid
-from typing import Optional
 
 from fastapi import HTTPException
-from sqlmodel import select
-from sqlalchemy.orm import selectinload
 from sqlalchemy import func
+from sqlalchemy.orm import selectinload
+from sqlmodel import select
 from starlette import status
 
-from src.services.alliance.AllianceVisitorService import AllianceVisitorService
-from src.models.AllianceVisitor import AllianceVisitor
-from src.models.GameAccount import GameAccount
-from src.models.User import User
-from src.models.Alliance import Alliance
-from src.models.AllianceInvitation import AllianceInvitation
-from src.models.AllianceOfficer import AllianceOfficer
 from src.enums.InvitationStatus import InvitationStatus
 from src.enums.InvitationType import InvitationType
 from src.Messages.alliance_messages import (
@@ -35,6 +27,13 @@ from src.Messages.alliance_messages import (
     alliance_max_members_reached,
     group_max_members_reached,
 )
+from src.models.Alliance import Alliance
+from src.models.AllianceInvitation import AllianceInvitation
+from src.models.AllianceOfficer import AllianceOfficer
+from src.models.AllianceVisitor import AllianceVisitor
+from src.models.GameAccount import GameAccount
+from src.models.User import User
+from src.services.alliance.AllianceVisitorService import AllianceVisitorService
 from src.utils.db import SessionDep
 
 MAX_MEMBERS_PER_GROUP = 10
@@ -109,7 +108,7 @@ class AllianceService:
 
     @staticmethod
     async def assert_is_alliance_member(
-        session: SessionDep, account: Optional[GameAccount | User], alliance_id: uuid.UUID
+        session: SessionDep, account: GameAccount | User | None, alliance_id: uuid.UUID
     ) -> None:
         """Raise 404 if the account is None or not a member of the given alliance."""
         if isinstance(account, User):
@@ -125,7 +124,7 @@ class AllianceService:
     @classmethod
     async def _load_alliance_with_relations(
         cls, session: SessionDep, alliance_id: uuid.UUID
-    ) -> Optional[Alliance]:
+    ) -> Alliance | None:
         """Load an alliance with owner, members and officers eagerly loaded."""
         sql = (
             select(Alliance)
@@ -409,7 +408,7 @@ class AllianceService:
         return await cls._load_alliance_with_relations(session, alliance.id)
 
     @classmethod
-    async def get_alliance(cls, session: SessionDep, alliance_id: uuid.UUID) -> Optional[Alliance]:
+    async def get_alliance(cls, session: SessionDep, alliance_id: uuid.UUID) -> Alliance | None:
         return await cls._load_alliance_with_relations(session, alliance_id)
 
     @classmethod
@@ -764,7 +763,7 @@ class AllianceService:
         session: SessionDep,
         alliance_id: uuid.UUID,
         game_account_id: uuid.UUID,
-        group: Optional[int],
+        group: int | None,
     ) -> Alliance:
         """Set the group (1, 2, 3 or None) for a member. Max 10 members per group."""
         game_account = await session.get(GameAccount, game_account_id)
@@ -883,7 +882,7 @@ class AllianceService:
         """Get game accounts of the user that are NOT already in an alliance (eligible to create one)."""
         sql = select(GameAccount).where(
             GameAccount.user_id == user_id,
-            GameAccount.alliance_id == None,  # noqa: E711
+            GameAccount.alliance_id.is_(None),
         )
         result = await session.exec(sql)
         return result.all()
@@ -916,7 +915,7 @@ class AllianceService:
         pending_ids = set(pending_ids_result.all())
 
         sql = select(GameAccount).where(
-            GameAccount.alliance_id == None,  # noqa: E711
+            GameAccount.alliance_id.is_(None),
         )
         if pending_ids:
             sql = sql.where(GameAccount.id.notin_(pending_ids))  # type: ignore[union-attr]

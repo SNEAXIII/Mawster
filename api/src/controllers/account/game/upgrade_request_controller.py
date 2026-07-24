@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from starlette import status
 
@@ -12,13 +13,12 @@ from src.models import User
 from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
 from src.models.RequestedUpgrade import RequestedUpgrade
-from src.services.auth.AuthService import AuthService
-from src.services.alliance.AllianceService import AllianceService
 from src.services.account.game.ChampionUserService import ChampionUserService
 from src.services.account.game.GameAccountService import GameAccountService
+from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.UpgradeRequestService import UpgradeRequestService
+from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
-from sqlalchemy.orm import selectinload
 
 upgrade_request_controller = APIRouter(
     prefix="/champion-users",
@@ -108,12 +108,13 @@ async def get_upgrade_requests_by_account(
     if game_account is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
 
-    if game_account.user_id != current_user.id:
-        if not await AllianceService.can_view_roster(session, current_user.id, game_account):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to view these upgrade requests",
-            )
+    if game_account.user_id != current_user.id and not await AllianceService.can_view_roster(
+        session, current_user.id, game_account
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view these upgrade requests",
+        )
 
     requests = await UpgradeRequestService.get_pending_by_game_account(session, game_account_id)
     return [UpgradeRequestResponse.model_validate(r) for r in requests]

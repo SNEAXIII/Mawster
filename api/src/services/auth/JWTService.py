@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from fastapi import Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt.exceptions import (
     DecodeError,
     ExpiredSignatureError,
@@ -11,15 +10,15 @@ from jwt.exceptions import (
     InvalidSignatureError,
 )
 
+from src.enums.Roles import Roles
+from src.enums.Token import Token
 from src.Messages.jwt_messages import (
-    EXPIRED_EXCEPTION,
-    CREDENTIALS_EXCEPTION,
     CANT_FIND_USER_TOKEN_EXCEPTION,
+    CREDENTIALS_EXCEPTION,
+    EXPIRED_EXCEPTION,
     INVALID_ROLE_EXCEPTION,
     INVALID_TOKEN_EXCEPTION,
 )
-from src.enums.Roles import Roles
-from src.enums.Token import Token
 from src.models import User
 from src.security.secrets import SECRET
 
@@ -32,18 +31,18 @@ async def oauth2_scheme(credentials: HTTPAuthorizationCredentials = Depends(_htt
 
 class JWTService:
     @classmethod
-    def create_token(cls, data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    def create_token(cls, data: dict, expires_delta: timedelta | None = None) -> str:
         """Create a JWT token. If expires_delta is None, use default from settings."""
         to_encode = data.copy()
         if expires_delta is None:
             expires_delta = timedelta(minutes=SECRET.ACCESS_TOKEN_EXPIRE_MINUTES)
-        expire = datetime.now(tz=timezone.utc) + expires_delta
+        expire = datetime.now(tz=UTC) + expires_delta
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, SECRET.SECRET_KEY, algorithm=SECRET.ALGORITHM)
         return encoded_jwt
 
     @classmethod
-    def create_access_token(cls, user: Optional[User]) -> str:
+    def create_access_token(cls, user: User | None) -> str:
         if not user:
             raise CREDENTIALS_EXCEPTION
         access_token_expires = timedelta(minutes=SECRET.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -57,7 +56,7 @@ class JWTService:
         )
 
     @classmethod
-    def create_refresh_token(cls, user: Optional[User]) -> str:
+    def create_refresh_token(cls, user: User | None) -> str:
         """Create a long-lived refresh token containing only user_id."""
         if not user:
             raise CREDENTIALS_EXCEPTION
@@ -79,18 +78,17 @@ class JWTService:
                 algorithms=[SECRET.ALGORITHM],
             )
         except ExpiredSignatureError:
-            raise EXPIRED_EXCEPTION
+            raise EXPIRED_EXCEPTION from None
         except (InvalidSignatureError, InvalidAlgorithmError, DecodeError):
-            raise INVALID_TOKEN_EXCEPTION
+            raise INVALID_TOKEN_EXCEPTION from None
         if data.get("user_id") is None:
             raise CANT_FIND_USER_TOKEN_EXCEPTION
         # Only validate role for access tokens (refresh tokens don't carry role)
         token_type = data.get("type", "access")
         if data.get("type") not in Token.__members__.values():
             raise INVALID_TOKEN_EXCEPTION
-        if token_type == Token.ACCESS:
-            if data.get("role") not in Roles.__members__.values():
-                raise INVALID_ROLE_EXCEPTION
+        if token_type == Token.ACCESS and data.get("role") not in Roles.__members__.values():
+            raise INVALID_ROLE_EXCEPTION
         return data
 
     @classmethod

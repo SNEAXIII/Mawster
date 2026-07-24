@@ -1,18 +1,18 @@
 """Unit tests for WarResponse DTO – model_validate / flatten_relations."""
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-
 from src.dto.alliance.war.dto_war import (
     WarCreateRequest,
-    WarResponse,
     WarPlacementResponse,
     WarPrefightResponse,
+    WarResponse,
     WarSynergyResponse,
 )
+from src.models.Base import utcnow
 
 
 def _ns(**kwargs):
@@ -37,7 +37,7 @@ def _make_war(**overrides):
         "alliance_id": uuid.uuid4(),
         "opponent_name": "Enemy Alliance",
         "status": "active",
-        "created_at": datetime(2025, 1, 1, 12, 0, 0),
+        "created_at": datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC),
         "created_by": _ns(game_pseudo="OwnerPlayer"),
         "bans": [],
         "season_id": None,
@@ -63,7 +63,7 @@ def _make_placement(champion=None, attacker=None, **overrides):
         "rank": 3,
         "ascension": 0,
         "placed_by": _ns(game_pseudo="OfficerPlayer"),
-        "created_at": datetime(2025, 1, 1, 12, 0, 0),
+        "created_at": datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC),
         "ko_count": 0,
         "is_combat_completed": False,
         "is_fight_not_done": False,
@@ -188,7 +188,7 @@ class TestWarResponseDTO:
             "opponent_name": "Enemy",
             "status": "active",
             "created_by_pseudo": "Someone",
-            "created_at": datetime(2025, 1, 1),
+            "created_at": datetime(2025, 1, 1, tzinfo=UTC),
         }
         dto = WarResponse.model_validate(data)
         assert dto.opponent_name == "Enemy"
@@ -285,7 +285,7 @@ class TestWarPlacementResponseDTO:
             "champion_class": "Mystic",
             "rarity": "7r3",
             "ascension": 0,
-            "created_at": datetime(2025, 1, 1),
+            "created_at": datetime(2025, 1, 1, tzinfo=UTC),
         }
         dto = WarPlacementResponse.model_validate(data)
         assert dto.champion_name == "Doom"
@@ -308,7 +308,7 @@ def _make_prefight(**overrides):
         "target_node_number": 5,
         "champion_user": cu,
         "game_account": _ns(game_pseudo="Player1"),
-        "created_at": datetime(2025, 1, 1, 12, 0, 0),
+        "created_at": datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC),
     }
     defaults.update(overrides)
     return _ns(**defaults)
@@ -329,7 +329,7 @@ def _make_synergy(**overrides):
         "champion_user": cu,
         "target_champion_user": target_cu,
         "game_account": _ns(game_pseudo="SynergyPlayer"),
-        "created_at": datetime(2025, 1, 1, 12, 0, 0),
+        "created_at": datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC),
     }
     defaults.update(overrides)
     return _ns(**defaults)
@@ -381,7 +381,7 @@ class TestWarPrefightResponseDTO:
             "champion_class": "Science",
             "rarity": "7r3",
             "game_pseudo": "Player1",
-            "created_at": datetime(2025, 1, 1),
+            "created_at": datetime(2025, 1, 1, tzinfo=UTC),
         }
         dto = WarPrefightResponse.model_validate(data)
         assert dto.champion_name == "Quake"
@@ -433,7 +433,7 @@ class TestWarSynergyResponseDTO:
             "rarity": "7r3",
             "target_champion_name": "Quake",
             "game_pseudo": "Player1",
-            "created_at": datetime(2025, 1, 1),
+            "created_at": datetime(2025, 1, 1, tzinfo=UTC),
         }
         dto = WarSynergyResponse.model_validate(data)
         assert dto.champion_name == "Nick Fury"
@@ -447,7 +447,7 @@ def test_war_response_includes_win_elo_change_tier():
     war.opponent_name = "Enemy"
     war.status = "ended"
     war.created_by = MagicMock(game_pseudo="player")
-    war.created_at = datetime.now()
+    war.created_at = utcnow()
     war.bans = []
     war.season_id = None
     war.season = None

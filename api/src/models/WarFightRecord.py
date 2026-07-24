@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship
 
@@ -29,7 +29,7 @@ class WarFightRecord(UUIDBase, TimestampMixin, table=True):
 
     war_id: uuid.UUID = Field(foreign_key="war.id")
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
-    season_id: Optional[uuid.UUID] = Field(default=None, foreign_key="season.id")
+    season_id: uuid.UUID | None = Field(default=None, foreign_key="season.id")
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     battlegroup: Battlegroup
     node_number: NodeNumber
@@ -70,5 +70,5 @@ class WarFightRecord(UUIDBase, TimestampMixin, table=True):
             "overlaps": "champion",
         }
     )
-    synergies: List["WarFightSynergy"] = Relationship(back_populates="fight_record")
-    prefights: List["WarFightPrefight"] = Relationship(back_populates="fight_record")
+    synergies: list["WarFightSynergy"] = Relationship(back_populates="fight_record")
+    prefights: list["WarFightPrefight"] = Relationship(back_populates="fight_record")

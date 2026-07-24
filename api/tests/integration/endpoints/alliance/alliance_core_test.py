@@ -6,32 +6,32 @@ import pytest
 
 from main import app
 from src.utils.db import get_session
-from tests.integration.endpoints.setup.user_setup import get_generic_user
 from tests.integration.endpoints.setup.game_setup import (
-    push_game_account,
     push_alliance_with_owner,
+    push_game_account,
     push_member,
     push_officer,
     push_visitor,
 )
+from tests.integration.endpoints.setup.user_setup import get_generic_user
 from tests.utils.utils_client import (
     create_auth_headers,
+    execute_delete_request,
     execute_get_request,
+    execute_patch_request,
     execute_post_request,
     execute_put_request,
-    execute_patch_request,
-    execute_delete_request,
 )
 from tests.utils.utils_constant import (
-    USER_ID,
-    USER2_ID,
-    USER2_LOGIN,
-    USER2_EMAIL,
+    ALLIANCE_NAME,
+    ALLIANCE_TAG,
     DISCORD_ID_2,
     GAME_PSEUDO,
     GAME_PSEUDO_2,
-    ALLIANCE_NAME,
-    ALLIANCE_TAG,
+    USER2_EMAIL,
+    USER2_ID,
+    USER2_LOGIN,
+    USER_ID,
 )
 from tests.utils.utils_db import get_test_session, load_objects
 

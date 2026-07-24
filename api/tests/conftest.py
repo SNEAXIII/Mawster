@@ -1,8 +1,9 @@
 import pytest
-from datetime import datetime
+
+from src.models.Base import utcnow
 
 
 @pytest.fixture(scope="function")
 def use_time_machine(time_machine):
-    time_machine.move_to(datetime.now(), tick=False)
+    time_machine.move_to(utcnow(), tick=False)
     yield time_machine

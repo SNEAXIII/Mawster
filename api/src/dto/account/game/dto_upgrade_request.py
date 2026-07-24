@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -25,9 +25,9 @@ class UpgradeRequestResponse(BaseModel):
     current_rarity: str
     champion_name: str
     champion_class: str
-    image_url: Optional[str] = None
+    image_url: str | None = None
     created_at: datetime
-    done_at: Optional[datetime] = None
+    done_at: datetime | None = None
 
     @model_validator(mode="before")
     @classmethod

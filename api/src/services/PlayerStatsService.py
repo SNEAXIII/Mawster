@@ -1,33 +1,32 @@
 import uuid
-from typing import Optional
 
 from fastapi import HTTPException
-from starlette import status
-from sqlalchemy import union, and_, cast, func, Integer, Float
+from sqlalchemy import Float, Integer, and_, cast, func, union
 from sqlmodel import select
+from starlette import status
 
-from src.models.User import User
-from src.models.GameAccount import GameAccount
-from src.models.ChampionUser import ChampionUser
-from src.models.War import War, WarStatus
-from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.Season import Season
-from src.models.Alliance import Alliance
-from src.models.Champion import Champion
-from src.models.WarFightRecord import WarFightRecord
-from src.enums.SeasonStatus import SeasonStatus
-from src.services.alliance.war._stat_expressions import (
-    total_kos,
-    total_fights,
-    total_not_fought,
-)
 from src.dto.alliance.war.dto_statistic import NOT_FOUGHT_KOS, ChampionUsageResponse
 from src.dto.player.dto_player_stats import (
-    PlayerSeasonOption,
-    PlayerStatsResponse,
-    PlayerStatsCardResponse,
-    RatioEvolutionPoint,
     PlayerSeasonAllianceResponse,
+    PlayerSeasonOption,
+    PlayerStatsCardResponse,
+    PlayerStatsResponse,
+    RatioEvolutionPoint,
+)
+from src.enums.SeasonStatus import SeasonStatus
+from src.models.Alliance import Alliance
+from src.models.Champion import Champion
+from src.models.ChampionUser import ChampionUser
+from src.models.GameAccount import GameAccount
+from src.models.Season import Season
+from src.models.User import User
+from src.models.War import War, WarStatus
+from src.models.WarDefensePlacement import WarDefensePlacement
+from src.models.WarFightRecord import WarFightRecord
+from src.services.alliance.war._stat_expressions import (
+    total_fights,
+    total_kos,
+    total_not_fought,
 )
 from src.utils.db import SessionDep
 
@@ -95,7 +94,7 @@ class PlayerStatsService:
         session: SessionDep,
         current_user: User,
         game_account_id: uuid.UUID,
-        season_id: Optional[uuid.UUID] = None,
+        season_id: uuid.UUID | None = None,
     ) -> PlayerStatsResponse:
         """Composite personal stats for one game account.
 
@@ -264,8 +263,8 @@ class PlayerStatsService:
         session: SessionDep,
         current_user: User,
         game_account_id: uuid.UUID,
-        season_id: Optional[uuid.UUID] = None,
-        deathless: Optional[bool] = None,
+        season_id: uuid.UUID | None = None,
+        deathless: bool | None = None,
         perspective: str = "attacker",
     ) -> list[ChampionUsageResponse]:
         """Champion usage for one game account, from its war fight records.
@@ -281,7 +280,7 @@ class PlayerStatsService:
 
         conditions = [
             WarFightRecord.game_account_id == game_account_id,
-            WarFightRecord.is_planning_error == False,  # noqa: E712
+            WarFightRecord.is_planning_error.is_(False),
         ]
         if season_id is not None:
             conditions.append(WarFightRecord.season_id == season_id)

@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 
 from sqlmodel import Field, SQLModel
@@ -24,7 +24,7 @@ def utcnow() -> datetime:
     Use as ``Field(default_factory=utcnow)`` for every timestamp column so values are
     comparable regardless of the host timezone (never use the naive ``datetime.now``).
     """
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class UUIDBase(SQLModel):

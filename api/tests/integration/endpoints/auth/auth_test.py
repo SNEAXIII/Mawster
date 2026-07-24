@@ -8,28 +8,28 @@ Covers:
 """
 
 import re
-from datetime import datetime
 
 import jwt as pyjwt
 import pytest
 
 from main import app
 from src.enums.Roles import Roles
+from src.models import User
+from src.models.Base import utcnow
 from src.security.secrets import SECRET
 from src.services.auth.JWTService import JWTService
 from src.utils.db import get_session
-from tests.integration.endpoints.setup.user_setup import (
-    push_one_user,
-    get_generic_user,
-)
 from src.utils.email_hash import hash_email
-from src.models import User
+from tests.integration.endpoints.setup.user_setup import (
+    get_generic_user,
+    push_one_user,
+)
 from tests.utils.utils_client import (
+    create_auth_headers,
     execute_get_request,
     execute_post_request,
-    create_auth_headers,
 )
-from tests.utils.utils_constant import USER_LOGIN, USER_ID
+from tests.utils.utils_constant import USER_ID, USER_LOGIN
 from tests.utils.utils_db import get_test_session, load_objects
 
 app.dependency_overrides[get_session] = get_test_session
@@ -105,7 +105,7 @@ class TestGetSession:
     @pytest.mark.asyncio
     async def test_token_for_deleted_user_returns_error(self):
         """A valid token for a soft-deleted user must not return 200."""
-        user = get_generic_user(is_base_id=True, deleted_at=datetime.now())
+        user = get_generic_user(is_base_id=True, deleted_at=utcnow())
         await load_objects([user])
         headers = create_auth_headers()
         response = await execute_get_request(ENDPOINT_SESSION, headers=headers)
@@ -114,7 +114,7 @@ class TestGetSession:
     @pytest.mark.asyncio
     async def test_token_for_disabled_user_returns_error(self):
         """A valid token for a disabled user must not return 200."""
-        user = get_generic_user(is_base_id=True, disabled_at=datetime.now())
+        user = get_generic_user(is_base_id=True, disabled_at=utcnow())
         await load_objects([user])
         headers = create_auth_headers()
         response = await execute_get_request(ENDPOINT_SESSION, headers=headers)
@@ -162,7 +162,7 @@ class TestPostSession:
 
     @pytest.mark.asyncio
     async def test_deleted_user_token_returns_error(self):
-        user = get_generic_user(is_base_id=True, deleted_at=datetime.now())
+        user = get_generic_user(is_base_id=True, deleted_at=utcnow())
         await load_objects([user])
         token = _create_jwt()
         response = await execute_post_request(ENDPOINT_DEV_SESSION, payload={"token": token})
@@ -170,7 +170,7 @@ class TestPostSession:
 
     @pytest.mark.asyncio
     async def test_disabled_user_token_returns_error(self):
-        user = get_generic_user(is_base_id=True, disabled_at=datetime.now())
+        user = get_generic_user(is_base_id=True, disabled_at=utcnow())
         await load_objects([user])
         token = _create_jwt()
         response = await execute_post_request(ENDPOINT_DEV_SESSION, payload={"token": token})
@@ -326,7 +326,7 @@ class TestRefreshToken:
 
     @pytest.mark.asyncio
     async def test_refresh_for_deleted_user_returns_error(self):
-        user = get_generic_user(is_base_id=True, deleted_at=datetime.now())
+        user = get_generic_user(is_base_id=True, deleted_at=utcnow())
         await load_objects([user])
         refresh_token = JWTService.create_refresh_token(user)
         response = await execute_post_request(
@@ -389,7 +389,7 @@ class TestDevEndpoints:
     @pytest.mark.asyncio
     async def test_dev_login_deleted_user(self):
         """Dev login with a deleted user should fail."""
-        user = get_generic_user(is_base_id=True, deleted_at=datetime.now())
+        user = get_generic_user(is_base_id=True, deleted_at=utcnow())
         await load_objects([user])
         response = await execute_post_request(ENDPOINT_DEV_LOGIN, payload={"user_id": str(USER_ID)})
         assert response.status_code == 401

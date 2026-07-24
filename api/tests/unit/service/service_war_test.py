@@ -3,9 +3,9 @@
 import uuid
 
 import pytest
+from pydantic import ValidationError
 
 from src.dto.alliance.war.dto_war import WarPlacementCreateRequest, WarSynergyCreateRequest
-
 
 # ─── WarPlacementCreateRequest validation ─────────────────
 
@@ -51,7 +51,7 @@ class TestWarPlacementCreateRequest:
         assert req.node_number == 50
 
     def test_node_number_too_low_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             WarPlacementCreateRequest(
                 node_number=0,
                 champion_id=uuid.uuid4(),
@@ -60,7 +60,7 @@ class TestWarPlacementCreateRequest:
             )
 
     def test_node_number_too_high_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             WarPlacementCreateRequest(
                 node_number=56,
                 champion_id=uuid.uuid4(),
@@ -69,7 +69,7 @@ class TestWarPlacementCreateRequest:
             )
 
     def test_stars_below_6_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             WarPlacementCreateRequest(
                 node_number=10,
                 champion_id=uuid.uuid4(),
@@ -78,7 +78,7 @@ class TestWarPlacementCreateRequest:
             )
 
     def test_stars_above_7_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             WarPlacementCreateRequest(
                 node_number=10,
                 champion_id=uuid.uuid4(),
@@ -87,7 +87,7 @@ class TestWarPlacementCreateRequest:
             )
 
     def test_rank_below_1_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             WarPlacementCreateRequest(
                 node_number=10,
                 champion_id=uuid.uuid4(),
@@ -96,7 +96,7 @@ class TestWarPlacementCreateRequest:
             )
 
     def test_rank_above_6_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             WarPlacementCreateRequest(
                 node_number=10,
                 champion_id=uuid.uuid4(),
@@ -124,7 +124,7 @@ class TestWarPlacementCreateRequest:
         assert req.ascension == 2
 
     def test_ascension_above_2_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             WarPlacementCreateRequest(
                 node_number=10,
                 champion_id=uuid.uuid4(),
@@ -147,11 +147,11 @@ class TestWarSynergyCreateRequest:
         assert req.target_champion_user_id is not None
 
     def test_missing_champion_user_id_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             WarSynergyCreateRequest(target_champion_user_id=uuid.uuid4())  # type: ignore[call-arg]
 
     def test_missing_target_raises(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             WarSynergyCreateRequest(champion_user_id=uuid.uuid4())  # type: ignore[call-arg]
 
 

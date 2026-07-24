@@ -10,12 +10,12 @@ from tests.integration.endpoints.setup.game_setup import (
 from tests.integration.endpoints.setup.user_setup import get_generic_user
 from tests.utils.utils_client import create_auth_headers, execute_get_request
 from tests.utils.utils_constant import (
-    USER_ID,
-    USER2_ID,
-    USER2_LOGIN,
-    USER2_EMAIL,
     DISCORD_ID_2,
     GAME_PSEUDO_2,
+    USER2_EMAIL,
+    USER2_ID,
+    USER2_LOGIN,
+    USER_ID,
 )
 from tests.utils.utils_db import load_objects
 

@@ -7,11 +7,10 @@ from fastapi import HTTPException
 
 from src.models.GameAccount import GameAccount
 from src.services.account.game.GameAccountService import (
-    GameAccountService,
     MAX_GAME_ACCOUNTS_PER_USER,
+    GameAccountService,
 )
-from tests.utils.utils_constant import USER_ID, GAME_PSEUDO, GAME_PSEUDO_2
-
+from tests.utils.utils_constant import GAME_PSEUDO, GAME_PSEUDO_2, USER_ID
 
 # ---------------------------------------------------------------------------
 # Helpers

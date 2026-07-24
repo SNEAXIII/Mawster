@@ -1,30 +1,27 @@
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from src.enums.Roles import Roles
 from src.models import User
 from src.utils.email_hash import hash_email
-from tests.utils.utils_db import load_objects
-
-
 from tests.utils.utils_constant import (
-    DISCORD_ID,
-    USER_LOGIN,
-    USER_EMAIL,
-    ADMIN_LOGIN,
     ADMIN_EMAIL,
+    ADMIN_LOGIN,
+    DISCORD_ID,
+    USER_EMAIL,
     USER_ID,
+    USER_LOGIN,
 )
+from tests.utils.utils_db import load_objects
 
 
 def get_generic_user(
     is_base_id: bool = False,
-    login: Optional[str] = None,
-    email: Optional[str] = None,
-    role: Optional[Roles] = None,
-    disabled_at: Optional[datetime] = None,
-    deleted_at: Optional[datetime] = None,
+    login: str | None = None,
+    email: str | None = None,
+    role: Roles | None = None,
+    disabled_at: datetime | None = None,
+    deleted_at: datetime | None = None,
 ) -> User:
     raw_email = email or USER_EMAIL
     return User(
@@ -39,15 +36,15 @@ def get_generic_user(
 
 
 def get_user(
-    disabled_at: Optional[datetime] = None,
-    deleted_at: Optional[datetime] = None,
+    disabled_at: datetime | None = None,
+    deleted_at: datetime | None = None,
 ) -> User:
     return get_generic_user(is_base_id=True, disabled_at=disabled_at, deleted_at=deleted_at)
 
 
 def get_admin(
-    disabled_at: Optional[datetime] = None,
-    deleted_at: Optional[datetime] = None,
+    disabled_at: datetime | None = None,
+    deleted_at: datetime | None = None,
 ) -> User:
     return get_generic_user(
         is_base_id=True,
@@ -69,7 +66,7 @@ async def push_one_user():
 
 async def push_user2():
     """Insert the second standard test user (USER2_*)."""
-    from tests.utils.utils_constant import USER2_ID, USER2_LOGIN, USER2_EMAIL, DISCORD_ID_2
+    from tests.utils.utils_constant import DISCORD_ID_2, USER2_EMAIL, USER2_ID, USER2_LOGIN
 
     user2 = get_generic_user(
         login=USER2_LOGIN, email=USER2_EMAIL, role=Roles.USER
@@ -84,8 +81,8 @@ async def push_one_admin():
 
 
 def get_super_admin(
-    disabled_at: Optional[datetime] = None,
-    deleted_at: Optional[datetime] = None,
+    disabled_at: datetime | None = None,
+    deleted_at: datetime | None = None,
 ) -> User:
     return get_generic_user(
         is_base_id=True,

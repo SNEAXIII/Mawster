@@ -1,5 +1,4 @@
 import uuid
-from typing import Optional
 
 from sqlmodel import Field
 
@@ -20,4 +19,4 @@ class VisionSample(UUIDBase, TimestampMixin, table=True):
     import_id: uuid.UUID = Field(index=True)
     game_account_id: uuid.UUID = Field(index=True)
     screen_key: str = Field(max_length=255)
-    dataset_key: Optional[str] = Field(default=None, max_length=255)
+    dataset_key: str | None = Field(default=None, max_length=255)

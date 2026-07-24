@@ -12,11 +12,5 @@ dependencies = [
 package = false
 
 [tool.ruff]
-line-length = 100
-indent-width = 4
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-skip-magic-trailing-comma = false
-line-ending = "auto"
+# See the repo-wide ruff.toml — rules and formatter settings are defined once there.
+extend = "../ruff.toml"

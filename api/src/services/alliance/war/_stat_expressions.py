@@ -1,16 +1,17 @@
 """Shared SQL expressions for war stats. Single source of truth for the ratio
 formula so alliance and player stats never diverge."""
 
-from sqlalchemy import and_, func, case
+from sqlalchemy import and_, case, func
+
 from src.models.WarDefensePlacement import WarDefensePlacement
 
 is_normal = and_(
-    WarDefensePlacement.is_fight_not_done == False,  # noqa: E712
-    WarDefensePlacement.is_planning_error == False,  # noqa: E712
+    WarDefensePlacement.is_fight_not_done.is_(False),
+    WarDefensePlacement.is_planning_error.is_(False),
 )
 is_not_done = and_(
-    WarDefensePlacement.is_fight_not_done == True,  # noqa: E712
-    WarDefensePlacement.is_planning_error == False,  # noqa: E712
+    WarDefensePlacement.is_fight_not_done.is_(True),
+    WarDefensePlacement.is_planning_error.is_(False),
 )
 miniboss_case = case((and_(is_normal, WarDefensePlacement.node_number.between(37, 49)), 1), else_=0)
 boss_case = case((and_(is_normal, WarDefensePlacement.node_number == 50), 1), else_=0)

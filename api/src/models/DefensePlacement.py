@@ -1,5 +1,6 @@
 import uuid
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
+
 import sqlalchemy as sa
 from sqlmodel import Field, Relationship
 
@@ -7,8 +8,8 @@ from src.models.Base import Battlegroup, NodeNumber, TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.Alliance import Alliance
-    from src.models.GameAccount import GameAccount
     from src.models.ChampionUser import ChampionUser
+    from src.models.GameAccount import GameAccount
 
 
 class DefensePlacement(UUIDBase, TimestampMixin, table=True):
@@ -22,7 +23,7 @@ class DefensePlacement(UUIDBase, TimestampMixin, table=True):
     node_number: NodeNumber
     champion_user_id: uuid.UUID = Field(foreign_key="champion_user.id")
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
-    placed_by_id: Optional[uuid.UUID] = Field(default=None, foreign_key="game_account.id")
+    placed_by_id: uuid.UUID | None = Field(default=None, foreign_key="game_account.id")
 
     # Relations
     alliance: "Alliance" = Relationship(

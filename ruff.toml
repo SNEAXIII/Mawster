@@ -1,0 +1,86 @@
+# Shared ruff configuration for the whole repository.
+#
+# Why this file exists: ruff's *implicit* default rule set widens with every release
+# (0.16 enables ~415 rules where older versions enabled ~60). Leaving `select` implicit
+# meant `uvx ruff check` and the pre-commit hook could disagree with the code the repo
+# was written against, and a plain version bump could break every commit. The set is
+# pinned explicitly here instead, and sub-projects `extend` this file so a rule is
+# defined once for api/, scripts/, static-assets/ and fake-worker/.
+
+line-length = 100
+indent-width = 4
+target-version = "py312"
+
+extend-exclude = [
+    "node_modules",
+    "front",
+    "mawster-notes",
+    "mcoc-vision", # separate repo (git submodule) — owns its own ruff.toml
+]
+
+[lint]
+select = [
+    "F", # pyflakes
+    "E4", # pycodestyle: imports
+    "E7", # pycodestyle: statements
+    "E9", # pycodestyle: runtime errors
+    "W", # pycodestyle warnings
+    "I", # isort
+    "N", # pep8-naming
+    "UP", # pyupgrade
+    "B", # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "DTZ", # flake8-datetimez — timezone-aware datetimes only
+    "G", # flake8-logging-format
+    "ISC", # implicit string concatenation
+    "PIE", # flake8-pie
+    "SIM", # flake8-simplify
+    "PERF", # perflint
+    "FURB", # refurb
+    "PLC", # pylint conventions
+    "PLE", # pylint errors
+    "PLW", # pylint warnings
+    "RUF", # ruff-specific
+    "BLE001", # blind `except Exception`
+    "TRY004", # raise TypeError for type checks
+    "EXE001", # shebang on a non-executable file
+    "S110", # try/except/pass swallowing errors
+]
+
+ignore = [
+    # Modules are named after the class they export (ChampionClass.py, WarService.py).
+    # This is the project-wide convention for models/services/enums/DTOs — renaming ~90
+    # files would churn every import for no behavioural gain.
+    "N999",
+    # `Depends(...)`, `Query(...)` and `File(...)` in parameter defaults is *the* FastAPI
+    # idiom; bugbear's "no function call in default argument" does not apply.
+    "B008",
+    # Function-level imports are deliberate here: they break SQLModel/service import
+    # cycles and keep heavy optional deps (boto3, aio_pika) out of module import time.
+    "PLC0415",
+    # `class X(str, Enum)` is kept over `StrEnum`: it changes what `str(X.A)` returns,
+    # which leaks into Pydantic serialisation and stored values.
+    "UP042",
+    # Local aliases of classes (`AV = AllianceVisitor`) and in-function constants are a
+    # readability device in long services and tests, not a naming mistake.
+    "N806",
+    "N814",
+    "N817",
+    # En dashes and `×` in comments/docstrings are intentional typography, not typos.
+    "RUF001",
+    "RUF002",
+    "RUF003",
+]
+
+[lint.per-file-ignores]
+# Local tooling: best-effort scripts where a catch-all except is deliberate — they must
+# keep running (and print a diagnostic) whatever a subprocess or a scraped page throws.
+".claude/**" = ["BLE001", "S110"]
+"scripts/**" = ["BLE001", "S110"]
+"static-assets/**" = ["BLE001", "S110"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

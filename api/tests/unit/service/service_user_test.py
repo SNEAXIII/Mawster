@@ -1,11 +1,12 @@
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 import pytest
 
 from src.dto.auth.dto_utilisateurs import UserAdminViewSingleUser
 from src.enums.Roles import Roles
 from src.Messages.user_messages import (
+    LOGIN_ALREADY_TAKEN,
     TARGET_USER_DOESNT_EXISTS,
     TARGET_USER_IS_ADMIN,
     TARGET_USER_IS_ALREADY_DELETED,
@@ -17,30 +18,29 @@ from src.Messages.user_messages import (
     USER_DOESNT_EXISTS,
     USER_IS_DELETED,
     USER_IS_DISABLED,
-    LOGIN_ALREADY_TAKEN,
     UserAdminError,
     UserLoginError,
 )
 from src.models import User
+from src.models.Base import utcnow
 from src.services.account.UserService import UserService
 from src.services.admin.UserAdminService import UserAdminService
 from tests.unit.service.mocks.session_mock import session_mock
 from tests.unit.service.mocks.users_mock import (
-    get_user_by_login_mock,
-    get_users_paginated_mock,
     get_total_users_mock,
+    get_user_by_login_mock,
     get_user_mock,
+    get_users_paginated_mock,
 )
-
 from tests.utils.utils_constant import (
     DISCORD_ID,
-    LOGIN,
-    ROLE,
-    USER_ID,
     EMAIL,
+    LOGIN,
+    PAGE,
+    ROLE,
     SIZE,
     STATUS,
-    PAGE,
+    USER_ID,
 )
 
 
@@ -144,7 +144,7 @@ async def test_get_user_by_login_with_validity_check_success(mocker):
     "fake_user,expected_error",
     [
         (None, USER_DOESNT_EXISTS),
-        (User(login=LOGIN, deleted_at=datetime.now()), USER_IS_DELETED),
+        (User(login=LOGIN, deleted_at=utcnow()), USER_IS_DELETED),
         (User(login=LOGIN, disabled_at=True), USER_IS_DISABLED),
     ],
     ids=["user_doesnt_exists", "deleted", "disabled"],
@@ -175,7 +175,7 @@ async def test_patch_disable_user_success(mocker, use_time_machine):
 
     # Assert
     assert result is True
-    assert fake_user.disabled_at == datetime.now()
+    assert fake_user.disabled_at == utcnow()
     mock_get_user.assert_called_once_with(mock_session, USER_ID)
     mock_session.commit.assert_called_once_with()
 
@@ -185,7 +185,7 @@ async def test_patch_disable_user_success(mocker, use_time_machine):
     "fake_user,expected_error",
     [
         (None, TARGET_USER_DOESNT_EXISTS),
-        (User(login=LOGIN, deleted_at=datetime.now()), TARGET_USER_IS_DELETED),
+        (User(login=LOGIN, deleted_at=utcnow()), TARGET_USER_IS_DELETED),
         (User(login=LOGIN, role=Roles.ADMIN), TARGET_USER_IS_ADMIN),
         (User(login=LOGIN, disabled_at=True), TARGET_USER_IS_ALREADY_DISABLED),
     ],
@@ -209,7 +209,7 @@ async def test_patch_disable_user_error(mocker, fake_user, expected_error):
 @pytest.mark.asyncio
 async def test_self_delete_success(mocker, use_time_machine):
     # Arrange
-    current_time = datetime.now()
+    current_time = utcnow()
     current_user = User(id=USER_ID, login=LOGIN, email=EMAIL, discord_id=DISCORD_ID)
     mock_session = session_mock(mocker)
 
@@ -225,7 +225,7 @@ async def test_self_delete_success(mocker, use_time_machine):
 @pytest.mark.asyncio
 async def test_self_delete_already_deleted(mocker):
     # Arrange
-    deleted_at = datetime(2023, 1, 1, 12, 0, 0)
+    deleted_at = datetime(2023, 1, 1, 12, 0, 0, tzinfo=UTC)
     current_user = User(
         id=USER_ID,
         login=LOGIN,
@@ -267,7 +267,7 @@ async def test_patch_enable_user_success(mocker):
     "fake_user,expected_error",
     [
         (None, TARGET_USER_DOESNT_EXISTS),
-        (User(login=LOGIN, deleted_at=datetime.now()), TARGET_USER_IS_DELETED),
+        (User(login=LOGIN, deleted_at=utcnow()), TARGET_USER_IS_DELETED),
         (User(login=LOGIN), TARGET_USER_IS_ALREADY_ENABLED),
     ],
     ids=["user_doesnt_exists", "user_is_deleted", "user_is_disabled"],
@@ -299,7 +299,7 @@ async def test_delete_user_success(mocker, use_time_machine):
 
     # Assert
     assert result is True
-    assert fake_user.deleted_at == datetime.now()
+    assert fake_user.deleted_at == utcnow()
     mock_get_user.assert_called_once_with(mock_session, USER_ID)
     mock_session.commit.assert_called_once_with()
 
@@ -309,7 +309,7 @@ async def test_delete_user_success(mocker, use_time_machine):
     "fake_user,expected_error",
     [
         (None, TARGET_USER_DOESNT_EXISTS),
-        (User(login=LOGIN, deleted_at=datetime.now()), TARGET_USER_IS_ALREADY_DELETED),
+        (User(login=LOGIN, deleted_at=utcnow()), TARGET_USER_IS_ALREADY_DELETED),
         (User(login=LOGIN, role=Roles.ADMIN), TARGET_USER_IS_ADMIN),
     ],
     ids=["user_doesnt_exists", "user_is_already_deleted", "user_is_an_admin"],
@@ -413,7 +413,7 @@ async def test_get_user_by_id_with_validity_check_user_not_found(mocker):
 async def test_get_user_by_id_with_validity_check_deleted(mocker):
     """Deleted user hits line 74."""
     mock_session = session_mock(mocker)
-    get_user_mock(mocker, User(login=LOGIN, deleted_at=datetime.now()))
+    get_user_mock(mocker, User(login=LOGIN, deleted_at=utcnow()))
     with pytest.raises(UserLoginError) as exc:
         await UserService.get_user_by_id_with_validity_check(mock_session, str(USER_ID))
     assert exc.value.detail == str(USER_IS_DELETED)
@@ -423,7 +423,7 @@ async def test_get_user_by_id_with_validity_check_deleted(mocker):
 async def test_get_user_by_id_with_validity_check_disabled(mocker):
     """Disabled user hits lines 75-76."""
     mock_session = session_mock(mocker)
-    fake_user = User(login=LOGIN, disabled_at=datetime.now())
+    fake_user = User(login=LOGIN, disabled_at=utcnow())
     get_user_mock(mocker, fake_user)
     with pytest.raises(UserLoginError) as exc:
         await UserService.get_user_by_id_with_validity_check(mock_session, str(USER_ID))
@@ -448,7 +448,7 @@ async def test_get_user_by_id_with_validity_check_success(mocker):
 @pytest.mark.asyncio
 async def test_promote_user_success(mocker):
     """Promoting a user sets role=ADMIN and clears disabled_at (line 175)."""
-    fake_user = User(login=LOGIN, disabled_at=datetime.now())
+    fake_user = User(login=LOGIN, disabled_at=utcnow())
     mock_session = session_mock(mocker)
     get_user_mock(mocker, fake_user)
 
@@ -465,7 +465,7 @@ async def test_promote_user_success(mocker):
     "fake_user,expected_error",
     [
         (None, TARGET_USER_DOESNT_EXISTS),
-        (User(login=LOGIN, deleted_at=datetime.now()), TARGET_USER_IS_DELETED),
+        (User(login=LOGIN, deleted_at=utcnow()), TARGET_USER_IS_DELETED),
         (User(login=LOGIN, role=Roles.SUPER_ADMIN), TARGET_USER_IS_SUPER_ADMIN),
         # forbid_admin=True in _validate_target_user_for_action raises TARGET_USER_IS_ADMIN
         (User(login=LOGIN, role=Roles.ADMIN), TARGET_USER_IS_ADMIN),
@@ -508,7 +508,7 @@ async def test_demote_user_success(mocker):
     "fake_user,expected_error",
     [
         (None, TARGET_USER_DOESNT_EXISTS),
-        (User(login=LOGIN, deleted_at=datetime.now()), TARGET_USER_IS_DELETED),
+        (User(login=LOGIN, deleted_at=utcnow()), TARGET_USER_IS_DELETED),
         (User(login=LOGIN, role=Roles.SUPER_ADMIN), TARGET_USER_IS_SUPER_ADMIN),
         (User(login=LOGIN, role=Roles.USER), TARGET_USER_IS_NOT_ADMIN),
     ],
@@ -534,6 +534,7 @@ async def test_demote_user_errors(mocker, fake_user, expected_error):
 def test_build_status_filter_deleted():
     """status='deleted' adds deleted_at != None filter (line 197)."""
     from sqlmodel import select
+
     from src.models import User
 
     sql = select(User)

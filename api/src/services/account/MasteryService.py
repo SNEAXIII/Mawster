@@ -4,18 +4,18 @@ from fastapi import HTTPException
 from sqlmodel import select
 from starlette import status
 
-from src.models.Mastery import Mastery
-from src.models.GameAccountMastery import GameAccountMastery
+from src.dto.account.game.dto_mastery import (
+    GameAccountMasteryResponse,
+    GameAccountMasteryUpsertItem,
+)
 from src.Messages.mastery_messages import (
-    MASTERY_NOT_FOUND,
-    MASTERY_VALUE_EXCEEDS_MAX,
     MASTERY_ATTACK_EXCEEDS_UNLOCKED,
     MASTERY_DEFENSE_EXCEEDS_UNLOCKED,
+    MASTERY_NOT_FOUND,
+    MASTERY_VALUE_EXCEEDS_MAX,
 )
-from src.dto.account.game.dto_mastery import (
-    GameAccountMasteryUpsertItem,
-    GameAccountMasteryResponse,
-)
+from src.models.GameAccountMastery import GameAccountMastery
+from src.models.Mastery import Mastery
 from src.utils.db import SessionDep
 
 

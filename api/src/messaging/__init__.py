@@ -1,5 +1,5 @@
-from src.messaging.consumer import VisionResultConsumer  # noqa: F401
-from src.messaging.publisher import VisionPublisher  # noqa: F401
+from src.messaging.consumer import VisionResultConsumer
+from src.messaging.publisher import VisionPublisher
 from src.messaging.topology import (  # noqa: F401
     EXCHANGE_NAME,
     MAX_ATTEMPTS,

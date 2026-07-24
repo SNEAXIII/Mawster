@@ -6,6 +6,12 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, Upl
 from pydantic import BaseModel
 from starlette import status
 
+from src.dto.account.game.dto_vision import (
+    VisionImportDetailResponse,
+    VisionImportResponse,
+)
+from src.dto.account.game.dto_vision_current import CurrentVisionImportResponse
+from src.dto.account.game.dto_vision_predictions import VisionPredictionsResponse
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND, NOT_YOUR_GAME_ACCOUNT
 from src.Messages.vision_messages import (
     IMPORT_ALREADY_PENDING,
@@ -16,12 +22,6 @@ from src.Messages.vision_messages import (
     VISION_IMPORT_NOT_FOUND,
     VISION_JOB_NOT_FOUND,
 )
-from src.dto.account.game.dto_vision import (
-    VisionImportDetailResponse,
-    VisionImportResponse,
-)
-from src.dto.account.game.dto_vision_current import CurrentVisionImportResponse
-from src.dto.account.game.dto_vision_predictions import VisionPredictionsResponse
 from src.messaging import get_publisher
 from src.messaging.publisher import VisionPublisher
 from src.models import User

@@ -1,6 +1,7 @@
 """Integration tests for POST /alliances/{alliance_id}/fight-records/import."""
 
 import uuid
+
 import pytest
 
 from tests.integration.endpoints.setup.game_setup import (
@@ -15,12 +16,12 @@ from tests.utils.utils_client import (
     execute_post_request,
 )
 from tests.utils.utils_constant import (
-    USER_ID,
-    USER2_ID,
-    USER2_LOGIN,
-    USER2_EMAIL,
     DISCORD_ID_2,
     GAME_PSEUDO,
+    USER2_EMAIL,
+    USER2_ID,
+    USER2_LOGIN,
+    USER_ID,
 )
 from tests.utils.utils_db import load_objects
 
@@ -39,7 +40,7 @@ async def _setup_two_users():
 class TestImportFightRecords:
     @pytest.mark.asyncio
     async def test_officer_can_import(self, officer_with_champions):
-        alliance_id, officer_acc_id, champ_id, defender_id, season_id = officer_with_champions
+        alliance_id, _officer_acc_id, champ_id, defender_id, _season_id = officer_with_champions
         payload = {
             "rows": [
                 {
@@ -58,7 +59,7 @@ class TestImportFightRecords:
 
     @pytest.mark.asyncio
     async def test_owner_can_import(self, owner_with_champions):
-        alliance_id, champ_id, defender_id, season_id = owner_with_champions
+        alliance_id, champ_id, defender_id, _season_id = owner_with_champions
         payload = {
             "rows": [
                 {
@@ -76,7 +77,7 @@ class TestImportFightRecords:
 
     @pytest.mark.asyncio
     async def test_member_cannot_import(self, member_with_champions):
-        alliance_id, champ_id, defender_id, season_id = member_with_champions
+        alliance_id, champ_id, defender_id, _season_id = member_with_champions
         payload = {
             "rows": [
                 {
@@ -94,7 +95,7 @@ class TestImportFightRecords:
 
     @pytest.mark.asyncio
     async def test_unknown_season_returns_422(self, officer_with_champions):
-        alliance_id, officer_acc_id, champ_id, defender_id, season_id = officer_with_champions
+        alliance_id, _officer_acc_id, champ_id, defender_id, _season_id = officer_with_champions
         payload = {
             "rows": [
                 {
@@ -113,7 +114,7 @@ class TestImportFightRecords:
     @pytest.mark.asyncio
     async def test_wrong_alliance_returns_403(self, officer_with_champions):
         other_alliance_id = uuid.uuid4()
-        alliance_id, officer_acc_id, champ_id, defender_id, season_id = officer_with_champions
+        _alliance_id, _officer_acc_id, champ_id, defender_id, _season_id = officer_with_champions
         payload = {
             "rows": [
                 {
@@ -270,11 +271,11 @@ class TestImportMultipleRows:
 
 @pytest.fixture
 async def owner_with_champions():
-    from src.models.Season import Season
     from src.models.Champion import Champion
+    from src.models.Season import Season
 
     await load_objects([get_generic_user(is_base_id=True)])
-    alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
+    alliance, _owner_acc = await push_alliance_with_owner(user_id=USER_ID)
     season = Season(number=1, is_active=True)
     champ = Champion(
         name="Magik", champion_class="Mystic", is_saga_attacker=False, is_saga_defender=False
@@ -289,8 +290,8 @@ async def owner_with_champions():
 @pytest.fixture
 async def owner_with_mixed_records():
     """Alliance owner with one regular war fight record (tier + pseudo) and one imported record."""
-    from src.models.Season import Season
     from src.models.Champion import Champion
+    from src.models.Season import Season
     from src.models.War import War
     from src.models.WarFightRecord import WarFightRecord
     from src.models.WarFightRecordImport import WarFightRecordImport
@@ -384,8 +385,8 @@ class TestFightRecordFiltersExcludeImported:
 
 @pytest.fixture
 async def officer_with_champions():
-    from src.models.Season import Season
     from src.models.Champion import Champion
+    from src.models.Season import Season
 
     await _setup_two_users()
     alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
@@ -404,8 +405,8 @@ async def officer_with_champions():
 
 @pytest.fixture
 async def member_with_champions():
-    from src.models.Season import Season
     from src.models.Champion import Champion
+    from src.models.Season import Season
 
     await _setup_two_users()
     alliance, _ = await push_alliance_with_owner(user_id=USER_ID)

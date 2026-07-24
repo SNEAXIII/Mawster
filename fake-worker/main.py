@@ -175,7 +175,7 @@ class FakeVisionWorker:
 
         try:
             result = await self._process(job_id, import_id, bucket, object_key)
-        except Exception as error:  # noqa: BLE001
+        except Exception as error:
             # Mirrors the real worker: report a "failed" result and let the
             # API own the retry, rather than requeue a deterministic failure.
             logger.exception("fake vision job %s failed", job_id)
@@ -190,7 +190,7 @@ class FakeVisionWorker:
 
         try:
             await self._publish(result)
-        except Exception:  # noqa: BLE001
+        except Exception:
             # A publish failure is transient (broker blip), unlike a pipeline
             # failure — requeue so a fresh delivery gets another shot.
             logger.exception(

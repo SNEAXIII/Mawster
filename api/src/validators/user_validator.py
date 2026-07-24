@@ -1,5 +1,6 @@
 import email_validator
 from email_validator import EmailSyntaxError
+
 from src.Messages.user_messages import (
     EMAIL_INVALID,
     LOGIN_NON_ALPHANUM,
@@ -29,5 +30,5 @@ def correct_email_validator(email: str) -> str:
     try:
         email_validator.validate_email(email)
     except EmailSyntaxError:
-        raise EmailSyntaxError(EMAIL_INVALID)
+        raise EmailSyntaxError(EMAIL_INVALID) from None
     return email

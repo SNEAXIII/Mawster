@@ -1,5 +1,4 @@
 import uuid
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, computed_field
 
@@ -17,7 +16,7 @@ class PlayerSeasonStatsResponse(BaseModel):
 
     id: uuid.UUID
     game_pseudo: str
-    alliance_group: Optional[int] = None
+    alliance_group: int | None = None
     total_kos: int
     total_fights: float
     total_fights_weighted: float = 0.0
@@ -54,4 +53,4 @@ class ChampionUsageResponse(BaseModel):
     champion_name: str
     fight_count: int
     total_kos: int
-    image_url: Optional[str] = None
+    image_url: str | None = None

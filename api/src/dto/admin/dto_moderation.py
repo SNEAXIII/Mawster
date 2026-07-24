@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -20,7 +19,7 @@ def _sanitize_optional(value):
 
 
 class NoteReportCreateRequest(BaseModel):
-    reason: Optional[str] = Field(default=None, max_length=500)
+    reason: str | None = Field(default=None, max_length=500)
 
     _clean_reason = field_validator("reason", mode="before")(_sanitize_optional)
 
@@ -30,8 +29,8 @@ class NoteRevisionResponse(BaseModel):
 
     id: uuid.UUID
     content: str
-    edited_by_user_id: Optional[uuid.UUID] = None
-    edited_by_pseudo: Optional[str] = None
+    edited_by_user_id: uuid.UUID | None = None
+    edited_by_pseudo: str | None = None
     is_deletion: bool = False
     edited_at: datetime
 
@@ -42,19 +41,19 @@ class NoteReportResponse(BaseModel):
     id: uuid.UUID
     note_id: uuid.UUID
     alliance_id: uuid.UUID
-    alliance_name: Optional[str] = None
+    alliance_name: str | None = None
     battlegroup: int
     node_number: int
     note_content: str
     note_deleted: bool = False
-    reporter_pseudo: Optional[str] = None
-    reason: Optional[str] = None
+    reporter_pseudo: str | None = None
+    reason: str | None = None
     status: NoteReportStatus
     created_at: datetime
 
 
 class PaginatedNoteReports(BaseModel):
-    items: List[NoteReportResponse]
+    items: list[NoteReportResponse]
     total: int
     page: int
     size: int
@@ -67,7 +66,7 @@ class ReportResolveRequest(BaseModel):
 
 class MuteCreateRequest(BaseModel):
     reason: str = Field(..., min_length=1, max_length=500)
-    expires_at: Optional[datetime] = None
+    expires_at: datetime | None = None
 
     _clean_reason = field_validator("reason", mode="before")(_sanitize_required)
 
@@ -77,12 +76,12 @@ class MuteResponse(BaseModel):
 
     id: uuid.UUID
     user_id: uuid.UUID
-    user_login: Optional[str] = None
+    user_login: str | None = None
     reason: str
     created_at: datetime
-    expires_at: Optional[datetime] = None
-    lifted_at: Optional[datetime] = None
-    muted_by_login: Optional[str] = None
+    expires_at: datetime | None = None
+    lifted_at: datetime | None = None
+    muted_by_login: str | None = None
 
 
 class WarnCreateRequest(BaseModel):
@@ -96,7 +95,7 @@ class WarnResponse(BaseModel):
 
     id: uuid.UUID
     user_id: uuid.UUID
-    user_login: Optional[str] = None
+    user_login: str | None = None
     reason: str
     created_at: datetime
-    warned_by_login: Optional[str] = None
+    warned_by_login: str | None = None

@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime
-from typing import Optional
 
 import sqlalchemy as sa
 from sqlmodel import Field
@@ -14,7 +13,7 @@ class NoteReport(UUIDBase, TimestampMixin, table=True):
 
     note_id: uuid.UUID = Field(foreign_key="war_fight_note.id")
     reporter_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
-    reason: Optional[str] = Field(default=None, sa_column=sa.Column(sa.Text, nullable=True))
+    reason: str | None = Field(default=None, sa_column=sa.Column(sa.Text, nullable=True))
     status: NoteReportStatus = Field(default=NoteReportStatus.pending)
-    resolved_by_id: Optional[uuid.UUID] = Field(default=None, foreign_key="user.id")
-    resolved_at: Optional[datetime] = Field(default=None)
+    resolved_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
+    resolved_at: datetime | None = Field(default=None)

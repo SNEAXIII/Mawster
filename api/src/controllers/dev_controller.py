@@ -5,30 +5,30 @@ import logging
 import os
 import uuid
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
+
 from fastapi import APIRouter, Form, HTTPException
-from typing import Annotated
 from pydantic import BaseModel, Field
 from sqlalchemy import text
-from sqlmodel import select, SQLModel
+from sqlmodel import SQLModel, select
 from starlette import status as http_status
 
 from src.dto.auth.dto_token import LoginResponse, TokenBody
 from src.dto.auth.dto_utilisateurs import UserProfile
 from src.enums.Roles import Roles
-from src.models import User, GameAccount
+from src.models import GameAccount, User
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
+from src.models.Mastery import Mastery
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightRecord import WarFightRecord
-from src.models.Mastery import Mastery
 from src.security.secrets import SECRET
-from src.services.auth.DiscordAuthService import DiscordAuthService
 from src.services.account.game.GameAccountService import GameAccountService
-from src.services.alliance.AllianceService import AllianceService
-from src.services.auth.JWTService import JWTService
 from src.services.account.UserService import UserService
 from src.services.admin.SagaService import SagaService
+from src.services.alliance.AllianceService import AllianceService
+from src.services.auth.DiscordAuthService import DiscordAuthService
+from src.services.auth.JWTService import JWTService
 from src.utils.db import SessionDep
 
 logger = logging.getLogger(__name__)

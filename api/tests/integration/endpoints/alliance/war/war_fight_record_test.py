@@ -1,45 +1,46 @@
 """Integration tests for war fight record snapshot and knowledge base."""
 
 import uuid
-import pytest
 
-from tests.utils.utils_client import (
-    create_auth_headers,
-    execute_post_request,
-    execute_patch_request,
-    execute_get_request,
-)
-from tests.utils.utils_constant import (
-    USER_ID,
-    USER2_ID,
-    GAME_PSEUDO,
-    GAME_PSEUDO_2,
-    ALLIANCE_NAME,
-    ALLIANCE_TAG,
-)
+import pytest
+from sqlmodel import and_, select
+from sqlmodel.ext.asyncio.session import AsyncSession
+
 from src.enums.Roles import Roles
+from src.enums.SeasonStatus import SeasonStatus
+from src.models.Champion import Champion
+from src.models.ChampionUser import ChampionUser
+from src.models.Season import Season
+from src.models.War import War
+from src.models.WarDefensePlacement import WarDefensePlacement
+from src.models.WarFightPrefight import WarFightPrefight
+from src.models.WarFightRecord import WarFightRecord
+from src.models.WarFightSynergy import WarFightSynergy
+from src.models.WarPrefightAttacker import WarPrefightAttacker
+from src.models.WarSynergyAttacker import WarSynergyAttacker
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
+    push_champion,
     push_member,
     push_officer,
-    push_champion,
     push_visitor,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
-from sqlmodel.ext.asyncio.session import AsyncSession
+from tests.utils.utils_client import (
+    create_auth_headers,
+    execute_get_request,
+    execute_patch_request,
+    execute_post_request,
+)
+from tests.utils.utils_constant import (
+    ALLIANCE_NAME,
+    ALLIANCE_TAG,
+    GAME_PSEUDO,
+    GAME_PSEUDO_2,
+    USER2_ID,
+    USER_ID,
+)
 from tests.utils.utils_db import load_objects, sqlite_async_engine
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.War import War
-from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.WarFightRecord import WarFightRecord
-from src.models.WarFightPrefight import WarFightPrefight
-from src.models.WarFightSynergy import WarFightSynergy
-from src.models.Season import Season
-from src.enums.SeasonStatus import SeasonStatus
-from src.models.WarPrefightAttacker import WarPrefightAttacker
-from src.models.WarSynergyAttacker import WarSynergyAttacker
-from sqlmodel import and_, select
 
 OPPONENT = "Enemy Alliance"
 
@@ -234,10 +235,10 @@ class TestWarFightRecordSnapshot:
     @pytest.mark.asyncio
     async def test_snapshot_links_note_to_fight_record(self, session):
         """A WarFightNote on a snapshotted node must be linked to its WarFightRecord."""
-        from src.services.knowledge.FightRecordService import FightRecordService
-        from src.services.alliance.war.WarFightNoteService import WarFightNoteService
         from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
         from src.models.WarFightNote import WarFightNote
+        from src.services.alliance.war.WarFightNoteService import WarFightNoteService
+        from src.services.knowledge.FightRecordService import FightRecordService
 
         data = await _setup_war_with_fight()
 
@@ -278,9 +279,9 @@ class TestWarFightRecordSnapshot:
     @pytest.mark.asyncio
     async def test_fight_record_row_includes_note(self, session):
         """A knowledge-base fight-record row must surface the linked note content."""
-        from src.services.knowledge.FightRecordService import FightRecordService
-        from src.services.alliance.war.WarFightNoteService import WarFightNoteService
         from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
+        from src.services.alliance.war.WarFightNoteService import WarFightNoteService
+        from src.services.knowledge.FightRecordService import FightRecordService
 
         data = await _setup_war_with_fight()
 

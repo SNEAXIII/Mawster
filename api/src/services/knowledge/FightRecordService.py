@@ -1,7 +1,5 @@
 import math
 import uuid
-from datetime import datetime
-from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import func, literal, null, union_all
@@ -11,30 +9,31 @@ from starlette import status
 
 from src.dto.admin.dto_fight_record import (
     PaginatedFightRecordsResponse,
+    WarFightPrefightResponse,
     WarFightRecordResponse,
     WarFightSynergyResponse,
-    WarFightPrefightResponse,
 )
 from src.enums.FightRecordSource import FightRecordSource
 from src.enums.SeasonSelectorType import SeasonSelectorType
+from src.enums.SeasonStatus import SeasonStatus
 from src.models.Alliance import Alliance
 from src.models.AllianceVisitor import AllianceVisitor
+from src.models.Base import utcnow
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
-from src.enums.SeasonStatus import SeasonStatus
 from src.models.Season import Season
 from src.models.War import War
 from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.WarFightPrefight import WarFightPrefight
 from src.models.WarFightNote import WarFightNote
-from src.services.admin.ModerationService import AUTO_BLOCK_THRESHOLD, ModerationService
-from src.services.admin.SagaService import SagaService
+from src.models.WarFightPrefight import WarFightPrefight
 from src.models.WarFightRecord import WarFightRecord
 from src.models.WarFightRecordImport import WarFightRecordImport
 from src.models.WarFightSynergy import WarFightSynergy
 from src.models.WarPrefightAttacker import WarPrefightAttacker
 from src.models.WarSynergyAttacker import WarSynergyAttacker
+from src.services.admin.ModerationService import AUTO_BLOCK_THRESHOLD, ModerationService
+from src.services.admin.SagaService import SagaService
 from src.utils.db import SessionDep
 
 
@@ -50,7 +49,7 @@ class FightRecordService:
                 and_(
                     WarDefensePlacement.war_id == war.id,
                     WarDefensePlacement.attacker_champion_user_id.isnot(None),
-                    WarDefensePlacement.is_fight_not_done == False,  # noqa: E712
+                    WarDefensePlacement.is_fight_not_done.is_(False),
                 )
             )
             .options(
@@ -160,7 +159,7 @@ class FightRecordService:
         await session.commit()
 
         await session.refresh(war)
-        war.snapshotted_at = datetime.now()
+        war.snapshotted_at = utcnow()
         session.add(war)
         await session.commit()
 
@@ -234,16 +233,16 @@ class FightRecordService:
         session: SessionDep,
         accessible_alliance_ids: list[uuid.UUID],
         source: FightRecordSource = FightRecordSource.NonImported,
-        champion_id: Optional[uuid.UUID] = None,
-        defender_champion_id: Optional[uuid.UUID] = None,
-        node_number: Optional[int] = None,
-        tier: Optional[int] = None,
-        season_selector: Optional[SeasonSelectorType] = None,
-        season_id: Optional[uuid.UUID] = None,
-        alliance_id: Optional[uuid.UUID] = None,
-        battlegroup: Optional[int] = None,
-        game_account_pseudo: Optional[str] = None,
-        planning_error_only: Optional[bool] = None,
+        champion_id: uuid.UUID | None = None,
+        defender_champion_id: uuid.UUID | None = None,
+        node_number: int | None = None,
+        tier: int | None = None,
+        season_selector: SeasonSelectorType | None = None,
+        season_id: uuid.UUID | None = None,
+        alliance_id: uuid.UUID | None = None,
+        battlegroup: int | None = None,
+        game_account_pseudo: str | None = None,
+        planning_error_only: bool | None = None,
         page: int = 1,
         size: int = 20,
         sort_by: str = "created_at",
@@ -511,7 +510,7 @@ class FightRecordService:
                         )
                     )
                 ).all()
-                pseudo_by_account = {acc_id: pseudo for acc_id, pseudo in editor_accounts}
+                pseudo_by_account = dict(editor_accounts)
             author_by_record = {
                 n.war_fight_record_id: pseudo_by_account.get(n.updated_by_game_account_id)
                 for n in notes

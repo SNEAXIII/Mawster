@@ -1,14 +1,11 @@
 import re
 import uuid
-from typing import Optional
 
 from fastapi import HTTPException
-from sqlmodel import select, and_
 from sqlalchemy.orm import selectinload
+from sqlmodel import and_, select
 from starlette import status
 
-from src.services.admin.ChampionService import ChampionService
-from src.services.alliance.UpgradeRequestService import UpgradeRequestService
 from src.enums.ChampionRarity import ChampionRarity
 from src.Messages.champion_user_messages import (
     CHAMPION_CANNOT_BE_ASCENDED,
@@ -21,9 +18,11 @@ from src.Messages.champion_user_messages import (
     invalid_rarity,
     invalid_rarity_format,
 )
-from src.models.GameAccount import GameAccount
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
+from src.models.GameAccount import GameAccount
+from src.services.admin.ChampionService import ChampionService
+from src.services.alliance.UpgradeRequestService import UpgradeRequestService
 from src.utils.db import SessionDep
 
 VALID_RARITIES = {r.value for r in ChampionRarity}
@@ -256,7 +255,7 @@ class ChampionUserService:
     @classmethod
     async def get_champion_user(
         cls, session: SessionDep, champion_user_id: uuid.UUID
-    ) -> Optional[ChampionUser]:
+    ) -> ChampionUser | None:
         return await session.get(ChampionUser, champion_user_id)
 
     @classmethod

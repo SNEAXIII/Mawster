@@ -1,12 +1,11 @@
 import uuid
-from datetime import datetime
-from typing import Optional
 
 from fastapi import HTTPException
 from sqlmodel import and_, select
 from starlette import status
 
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
+from src.models.Base import utcnow
 from src.models.War import War, WarStatus
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarFightNote import WarFightNote
@@ -80,7 +79,7 @@ class WarFightNoteService:
             )
         ).first()
 
-        now = datetime.now()
+        now = utcnow()
         if note is None:
             note = WarFightNote(
                 war_defense_placement_id=placement.id,
@@ -160,7 +159,7 @@ class WarFightNoteService:
         if note is None:
             raise NOTE_NOT_FOUND
 
-        now = datetime.now()
+        now = utcnow()
         note.deleted_at = now
         note.deleted_by_id = editor_user_id
         session.add(note)
@@ -178,7 +177,7 @@ class WarFightNoteService:
     @classmethod
     async def get_note_for_node(
         cls, session: SessionDep, war_id: uuid.UUID, battlegroup: int, node_number: int
-    ) -> Optional[WarFightNote]:
+    ) -> WarFightNote | None:
         return (
             await session.exec(
                 select(WarFightNote).where(

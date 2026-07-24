@@ -1,5 +1,3 @@
-from typing import Optional
-
 from src.models import User
 from src.services.account.UserService import UserService
 from src.services.admin.UserAdminService import UserAdminService
@@ -29,7 +27,7 @@ def get_user_mock(mocker, return_value: User):
     )
 
 
-def get_user_with_validity_check_mock(mocker, return_value: Optional[User]):
+def get_user_with_validity_check_mock(mocker, return_value: User | None):
     return mocker.patch.object(
         UserService,
         "get_user_by_id_with_validity_check",

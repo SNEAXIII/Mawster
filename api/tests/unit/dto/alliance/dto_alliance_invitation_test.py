@@ -1,19 +1,18 @@
 """Unit tests for alliance-related DTO model_validate with from_attributes."""
 
 import uuid
-from datetime import datetime
 from types import SimpleNamespace
 
-from src.dto.alliance.war.dto_defense import DefensePlacementResponse
 from src.dto.alliance.dto_alliance import (
     AllianceMemberResponse,
     AllianceOfficerResponse,
     AllianceResponse,
 )
 from src.dto.alliance.dto_invitation import AllianceInvitationResponse
+from src.dto.alliance.war.dto_defense import DefensePlacementResponse
 from src.enums.InvitationStatus import InvitationStatus
 from src.enums.InvitationType import InvitationType
-
+from src.models.Base import utcnow
 
 # ---------------------------------------------------------------------------
 # Helpers — lightweight namespace objects that mimic ORM models
@@ -67,7 +66,7 @@ def _make_champion_user(champion=None, **overrides):
 
 class TestDefensePlacementResponseModelValidate:
     def test_maps_all_fields(self):
-        now = datetime.now()
+        now = utcnow()
         champ = _make_champion(name="Corvus", champion_class="Cosmic", alias="glaive")
         cu = _make_champion_user(
             champion=champ, stars=6, rank=4, ascension=0, signature=150, is_preferred_attacker=True
@@ -104,7 +103,7 @@ class TestDefensePlacementResponseModelValidate:
         assert dto.is_saga_defender is False
 
     def test_placed_by_none(self):
-        now = datetime.now()
+        now = utcnow()
         cu = _make_champion_user()
         placement = _ns(
             id=uuid.uuid4(),
@@ -139,7 +138,7 @@ class TestDefensePlacementResponseModelValidate:
             champion_user=cu,
             placed_by_id=None,
             placed_by=None,
-            created_at=datetime.now(),
+            created_at=utcnow(),
         )
         dto = DefensePlacementResponse.model_validate(placement)
         assert dto.is_saga_attacker is False
@@ -159,7 +158,7 @@ class TestDefensePlacementResponseModelValidate:
             champion_user=cu,
             placed_by_id=None,
             placed_by=None,
-            created_at=datetime.now(),
+            created_at=utcnow(),
         )
         dto = DefensePlacementResponse.model_validate(placement)
         dto.is_saga_attacker, dto.is_saga_defender = True, True
@@ -178,7 +177,7 @@ class TestDefensePlacementResponseModelValidate:
             "champion_name": "Doom",
             "champion_class": "Mystic",
             "rarity": "7r3",
-            "created_at": datetime.now(),
+            "created_at": utcnow(),
         }
         dto = DefensePlacementResponse.model_validate(data)
         assert dto.champion_name == "Doom"
@@ -192,7 +191,7 @@ class TestDefensePlacementResponseModelValidate:
 
 class TestAllianceOfficerResponseModelValidate:
     def test_maps_all_fields(self):
-        now = datetime.now()
+        now = utcnow()
         officer = _ns(
             id=uuid.uuid4(),
             game_account_id=uuid.uuid4(),
@@ -263,7 +262,7 @@ class TestAllianceMemberResponseModelValidate:
 
 class TestAllianceResponseModelValidate:
     def test_maps_full_alliance(self):
-        now = datetime.now()
+        now = utcnow()
         owner_id = uuid.uuid4()
         officer_ga_id = uuid.uuid4()
 
@@ -314,7 +313,7 @@ class TestAllianceResponseModelValidate:
         assert officer_dto.is_officer is True
 
     def test_empty_alliance(self):
-        now = datetime.now()
+        now = utcnow()
         alliance = _ns(
             id=uuid.uuid4(),
             name="Empty",
@@ -341,7 +340,7 @@ class TestAllianceResponseModelValidate:
 
 class TestAllianceInvitationResponseModelValidate:
     def test_maps_all_fields(self):
-        now = datetime.now()
+        now = utcnow()
         inv = _ns(
             id=uuid.uuid4(),
             alliance_id=uuid.uuid4(),
@@ -366,7 +365,7 @@ class TestAllianceInvitationResponseModelValidate:
         assert dto.responded_at is None
 
     def test_accepted_invitation(self):
-        now = datetime.now()
+        now = utcnow()
         inv = _ns(
             id=uuid.uuid4(),
             alliance_id=uuid.uuid4(),

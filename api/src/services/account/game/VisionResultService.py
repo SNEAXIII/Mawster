@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 from fastapi import HTTPException
 from starlette import status
 
-from src.Messages.vision_messages import BROKER_UNAVAILABLE, JOB_NEVER_QUEUED
 from src.dto.account.game.dto_vision_result import VisionResultMessage
+from src.Messages.vision_messages import BROKER_UNAVAILABLE, JOB_NEVER_QUEUED
 from src.models.VisionImport import VisionImport, VisionImportStatus
 from src.models.VisionJob import VisionJob, VisionJobStatus
 from src.models.VisionPrediction import VisionPrediction
@@ -104,7 +104,7 @@ class VisionResultService:
                 bucket=SECRET.RUSTFS_BUCKET_VISION,
                 object_key=job.object_key,
             )
-        except Exception as error:  # noqa: BLE001
+        except Exception as error:
             # A job left PENDING but never actually queued is unreachable AND
             # unrecoverable: only FAILED jobs are retryable (see the controller's
             # 409), so a broker blip here would strand it forever with no worker

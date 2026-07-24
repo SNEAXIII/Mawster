@@ -1,6 +1,5 @@
 import re
 import uuid
-from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import tuple_
@@ -15,7 +14,7 @@ from src.utils.db import SessionDep
 
 class FightRecordImportService:
     @staticmethod
-    def _parse_season_number(season_name: str) -> Optional[int]:
+    def _parse_season_number(season_name: str) -> int | None:
         cleaned = re.sub(r"^[Ss]", "", season_name.strip())
         try:
             return int(cleaned)

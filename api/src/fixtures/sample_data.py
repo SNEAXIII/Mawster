@@ -20,23 +20,25 @@ Usage:
     python -m src.fixtures.sample_data
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from faker import Faker
 from sqlmodel import Session, select
 
 from src.enums.InvitationStatus import InvitationStatus
 from src.enums.Roles import Roles
-from src.enums.SeasonStatus import SeasonStatus
 from src.enums.SeasonFormat import SeasonFormat
-from src.models import User, LoginLog
-from src.utils.email_hash import hash_email
-from src.models.GameAccount import GameAccount
+from src.enums.SeasonStatus import SeasonStatus
+from src.fixtures import sync_engine
+from src.models import LoginLog, User
 from src.models.Alliance import Alliance
-from src.models.AllianceOfficer import AllianceOfficer
 from src.models.AllianceInvitation import AllianceInvitation
+from src.models.AllianceOfficer import AllianceOfficer
+from src.models.AllianceVisitor import AllianceVisitor
+from src.models.Base import utcnow
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
+from src.models.GameAccount import GameAccount
 from src.models.GameAccountMastery import GameAccountMastery
 from src.models.Mastery import Mastery
 from src.models.RequestedUpgrade import RequestedUpgrade
@@ -46,11 +48,10 @@ from src.models.WarBan import WarBan
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.models.WarPrefightAttacker import WarPrefightAttacker
 from src.models.WarSynergyAttacker import WarSynergyAttacker
-from src.models.AllianceVisitor import AllianceVisitor
-from src.fixtures import sync_engine
+from src.utils.email_hash import hash_email
 
 fake = Faker(locale="en")
-NOW = datetime.now()
+NOW = utcnow()
 
 GAME_PSEUDOS = [
     "CosmicFlop",
@@ -557,7 +558,7 @@ def load_sample_data(engine=sync_engine):
 
             # ── Wars for Demo HEHE (2 ended + 1 active) ───────────────────────────
             print("🚀 Creating wars...")
-            demo_roster_gas = [ga for ga in demo_members]
+            demo_roster_gas = list(demo_members)
             alliance_cus = [cu for ga in demo_roster_gas for cu in all_rosters.get(ga.id, [])]
             champ_by_id = {c.id: c for c in champions_list}
             defender_pool = alliance_cus

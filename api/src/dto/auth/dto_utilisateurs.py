@@ -1,9 +1,7 @@
 import uuid
-from typing import Optional
-
+from datetime import datetime
 
 from pydantic import BaseModel, Field
-from datetime import datetime
 
 from src.enums.Roles import Roles
 
@@ -14,16 +12,16 @@ class UserBaseResponse(BaseModel):
 
 
 class UserProfile(UserBaseResponse):
-    last_login_date: Optional[datetime] = Field(default=None)
+    last_login_date: datetime | None = Field(default=None)
     created_at: datetime = Field()
 
 
 class UserAdminViewSingleUser(UserBaseResponse):
     id: uuid.UUID
     created_at: datetime
-    last_login_date: Optional[datetime] = Field(default=None)
-    disabled_at: Optional[datetime] = None
-    deleted_at: Optional[datetime] = None
+    last_login_date: datetime | None = Field(default=None)
+    disabled_at: datetime | None = None
+    deleted_at: datetime | None = None
 
 
 class UserAdminViewAllUsers(BaseModel):
