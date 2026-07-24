@@ -1,19 +1,18 @@
 from datetime import datetime
-from typing import Optional
 
 import httpx
 from fastapi import HTTPException
 from sqlmodel import select
 from starlette import status
 
-from src.security.secrets import SECRET
 from src.enums.Roles import Roles
 from src.Messages.discord_auth_messages import (
     DISCORD_API_ERROR,
     DISCORD_TOKEN_INVALID,
     EMAIL_CONFLICT,
 )
-from src.models import User, LoginLog
+from src.models import LoginLog, User
+from src.security.secrets import SECRET
 from src.services.auth.OAuthService import OAuthService
 from src.utils.db import SessionDep
 from src.utils.email_hash import hash_email
@@ -65,7 +64,7 @@ class DiscordAuthService(OAuthService):
         return response.json()
 
     @classmethod
-    async def _get_user_by_discord_id(cls, session: SessionDep, discord_id: str) -> Optional[User]:
+    async def _get_user_by_discord_id(cls, session: SessionDep, discord_id: str) -> User | None:
         sql = select(User).where(User.discord_id == discord_id)
         result = await session.exec(sql)
         return result.first()

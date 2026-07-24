@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 
 from src.dto.admin.dto_fight_record import AllianceSnapshotStatResponse, ForceSnapshotResponse
-from src.services.auth.AuthService import AuthService
 from src.services.admin.FightRecordAdminService import FightRecordAdminService
+from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
 
 war_admin_controller = APIRouter(

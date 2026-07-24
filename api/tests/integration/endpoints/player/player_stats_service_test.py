@@ -1,20 +1,18 @@
 """Integration tests for PlayerStatsService (ownership check + seasons list)."""
 
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi import HTTPException
 
 from main import app
-from src.services.PlayerStatsService import PlayerStatsService
-from src.models.Season import Season
 from src.enums.SeasonStatus import SeasonStatus
+from src.models.Season import Season
 from src.models.War import War, WarStatus
 from src.models.WarDefensePlacement import WarDefensePlacement
+from src.services.PlayerStatsService import PlayerStatsService
 from src.utils.db import get_session
-from tests.utils.utils_constant import USER_ID, USER2_ID, ALLIANCE_TAG
-from tests.utils.utils_db import get_test_session, load_objects
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -22,6 +20,8 @@ from tests.integration.endpoints.setup.game_setup import (
     push_member,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
+from tests.utils.utils_constant import ALLIANCE_TAG, USER2_ID, USER_ID
+from tests.utils.utils_db import get_test_session, load_objects
 
 app.dependency_overrides[get_session] = get_test_session
 
@@ -324,7 +324,7 @@ class TestGetPlayerStats:
     async def test_evolution_orders_wars_chronologically_not_alphabetically(self):
         data = await _base_setup()
         season = Season(number=64, status=SeasonStatus.ended)
-        base = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        base = datetime(2026, 1, 1, tzinfo=UTC)
         # "Zeta" happens first, "Alpha" second: chronological != alphabetical
         war_z = War(
             id=uuid.uuid4(),

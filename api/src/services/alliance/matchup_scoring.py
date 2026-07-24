@@ -5,7 +5,6 @@ reused verbatim when v2 wires them into war attacker assignment.
 """
 
 import uuid
-from typing import Optional
 
 from src.enums.MatchupTargetType import MatchupTargetType
 from src.enums.MatchupVerdict import MatchupVerdict
@@ -13,8 +12,8 @@ from src.enums.MatchupVerdict import MatchupVerdict
 
 def build_target_key(
     target_type: MatchupTargetType,
-    defender_champion_id: Optional[uuid.UUID],
-    node_number: Optional[int],
+    defender_champion_id: uuid.UUID | None,
+    node_number: int | None,
 ) -> str:
     """Build the denormalised uniqueness key for a rating's target.
 
@@ -38,9 +37,9 @@ VERDICT_POINTS: dict[MatchupVerdict, int] = {
 
 
 def combine_verdicts(
-    defender_verdict: Optional[MatchupVerdict],
-    node_verdict: Optional[MatchupVerdict],
-) -> tuple[bool, Optional[int]]:
+    defender_verdict: MatchupVerdict | None,
+    node_verdict: MatchupVerdict | None,
+) -> tuple[bool, int | None]:
     """Combine the defender and node verdicts into ``(is_discouraged, score)``.
 
     A single ``DISCOURAGED`` on either side wins outright and suppresses the score: the fight

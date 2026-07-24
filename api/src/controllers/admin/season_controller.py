@@ -7,9 +7,9 @@ from starlette import status
 from src.dto.admin.dto_saga import SagaRoleResponse, SagaRoleUpsertRequest
 from src.dto.admin.dto_season import SeasonCreateRequest, SeasonResponse
 from src.models import User
-from src.services.auth.AuthService import AuthService
 from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
+from src.services.auth.AuthService import AuthService
 from src.services.knowledge.FightRecordService import FightRecordService
 from src.utils.db import SessionDep
 

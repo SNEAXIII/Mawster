@@ -1,27 +1,27 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from jwt import ExpiredSignatureError
 
+from src.enums.Roles import Roles
 from src.Messages.jwt_messages import (
-    JwtError,
-    EXPIRED_EXCEPTION,
     CANT_FIND_USER_TOKEN_EXCEPTION,
+    CREDENTIALS_EXCEPTION,
+    EXPIRED_EXCEPTION,
     INVALID_ROLE_EXCEPTION,
     INVALID_TOKEN_EXCEPTION,
     JwtCredentialsError,
-    CREDENTIALS_EXCEPTION,
+    JwtError,
 )
-from src.enums.Roles import Roles
 from src.models import User
 from src.security.secrets import SECRET
 from src.services.auth.JWTService import JWTService
 from tests.unit.service.mocks.jwt_mock import (
+    create_token_mock,
     decode_module_mock,
     encode_mock,
-    create_token_mock,
 )
-from tests.utils.utils_constant import FAKE_TOKEN, DISCORD_ID, LOGIN, EMAIL
+from tests.utils.utils_constant import DISCORD_ID, EMAIL, FAKE_TOKEN, LOGIN
 
 
 def get_user():
@@ -153,7 +153,7 @@ def test_create_token_success(mocker, use_time_machine):
     input_data = {"user_id": "some-uuid", "role": Roles.USER.value, "type": "access"}
     mock_encode_mock = encode_mock(mocker)
     expected_expires_delta = timedelta(minutes=SECRET.ACCESS_TOKEN_EXPIRE_MINUTES)
-    expected_expires_date_time = datetime.now(tz=timezone.utc) + expected_expires_delta
+    expected_expires_date_time = datetime.now(tz=UTC) + expected_expires_delta
     expected_data = {**input_data, "exp": expected_expires_date_time}
 
     # Act

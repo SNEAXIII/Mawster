@@ -1,18 +1,17 @@
 import uuid
-from typing import Optional
 
 from fastapi import HTTPException
-from sqlmodel import select
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload
+from sqlmodel import select
 from starlette import status
 
-from src.models.AllianceVisitor import AllianceVisitor
 from src.Messages.visitor_messages import (
     ALREADY_A_VISITOR,
     NOT_A_VISITOR,
     alliance_max_visitors_reached,
 )
+from src.models.AllianceVisitor import AllianceVisitor
 from src.utils.db import SessionDep
 
 MAX_VISITORS_PER_ALLIANCE = 10
@@ -29,7 +28,7 @@ class AllianceVisitorService:
     @staticmethod
     async def find_visitor(
         session: SessionDep, alliance_id: uuid.UUID, game_account_id: uuid.UUID
-    ) -> Optional[AllianceVisitor]:
+    ) -> AllianceVisitor | None:
         result = await session.exec(
             select(AllianceVisitor).where(
                 AllianceVisitor.alliance_id == alliance_id,

@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
+
 from sqlmodel import Field, Relationship
 
 from src.models.Base import TimestampMixin, UUIDBase
@@ -27,11 +28,11 @@ class War(UUIDBase, TimestampMixin, table=True):
     opponent_name: str = Field(max_length=100)
     status: WarStatus = Field(default=WarStatus.active)
     created_by_id: uuid.UUID = Field(foreign_key="game_account.id")
-    season_id: Optional[uuid.UUID] = Field(default=None, foreign_key="season.id")
-    win: Optional[bool] = Field(default=None)
-    elo_change: Optional[int] = Field(default=None)
-    tier: Optional[int] = Field(default=None)
-    snapshotted_at: Optional[datetime] = Field(default=None)
+    season_id: uuid.UUID | None = Field(default=None, foreign_key="season.id")
+    win: bool | None = Field(default=None)
+    elo_change: int | None = Field(default=None)
+    tier: int | None = Field(default=None)
+    snapshotted_at: datetime | None = Field(default=None)
 
     # Relations
     alliance: "Alliance" = Relationship(
@@ -40,8 +41,8 @@ class War(UUIDBase, TimestampMixin, table=True):
     created_by: "GameAccount" = Relationship(
         sa_relationship_kwargs={"foreign_keys": "[War.created_by_id]"},
     )
-    placements: List["WarDefensePlacement"] = Relationship(back_populates="war")
-    bans: List["WarBan"] = Relationship(
+    placements: list["WarDefensePlacement"] = Relationship(back_populates="war")
+    bans: list["WarBan"] = Relationship(
         sa_relationship_kwargs={"foreign_keys": "[WarBan.war_id]"},
     )
     season: Optional["Season"] = Relationship(

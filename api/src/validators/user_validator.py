@@ -1,5 +1,6 @@
 import email_validator
 from email_validator import EmailSyntaxError
+
 from src.Messages.user_messages import (
     EMAIL_INVALID,
     LOGIN_NON_ALPHANUM,

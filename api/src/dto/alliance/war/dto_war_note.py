@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -26,5 +25,5 @@ class WarFightNoteResponse(BaseModel):
     battlegroup: int
     node_number: int
     content: str
-    updated_by_pseudo: Optional[str] = None
+    updated_by_pseudo: str | None = None
     updated_at: datetime

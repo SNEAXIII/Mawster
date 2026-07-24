@@ -1,16 +1,10 @@
 import uuid
-from typing import Optional
 
 from fastapi import HTTPException
-from sqlmodel import select, and_
 from sqlalchemy.orm import selectinload
+from sqlmodel import and_, select
 from starlette import status
 
-from src.models.Alliance import Alliance
-from src.models.AllianceOfficer import AllianceOfficer
-from src.models.ChampionUser import ChampionUser
-from src.models.DefensePlacement import DefensePlacement
-from src.models.GameAccount import GameAccount
 from src.Messages.defense_messages import (
     CHAMPION_ALREADY_PLACED_OTHER_NODE,
     CHAMPION_NOT_BELONG_TO_PLAYER,
@@ -22,6 +16,11 @@ from src.Messages.defense_messages import (
     node_exceeds_map,
     player_max_defenders_reached,
 )
+from src.models.Alliance import Alliance
+from src.models.AllianceOfficer import AllianceOfficer
+from src.models.ChampionUser import ChampionUser
+from src.models.DefensePlacement import DefensePlacement
+from src.models.GameAccount import GameAccount
 from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
 from src.services.alliance.war.WarFormatConfig import for_format
@@ -63,7 +62,7 @@ class DefensePlacementService:
         node_number: int,
         champion_user_id: uuid.UUID,
         game_account_id: uuid.UUID,
-        placed_by_id: Optional[uuid.UUID] = None,
+        placed_by_id: uuid.UUID | None = None,
     ) -> DefensePlacement:
         """Place a defender on a node. Validates all business rules."""
         # 0. Resolve format params from the active season

@@ -1,14 +1,13 @@
 import uuid
-from typing import Optional
 
 from fastapi import HTTPException
-from sqlmodel import select
 from sqlalchemy.orm import selectinload
+from sqlmodel import select
 from starlette import status
 
 from src.Messages.game_account_messages import (
-    max_game_accounts_reached,
     GAME_ACCOUNT_IS_ALLIANCE_OWNER,
+    max_game_accounts_reached,
 )
 from src.models.Alliance import Alliance
 from src.models.GameAccount import GameAccount
@@ -27,7 +26,7 @@ class GameAccountService:
             select(GameAccount).where(
                 GameAccount.user_id == user_id,
                 GameAccount.id != primary_id,
-                GameAccount.is_primary == True,  # noqa: E712
+                GameAccount.is_primary.is_(True),
             )
         )
         for acc in result.all():
@@ -81,7 +80,7 @@ class GameAccountService:
     @classmethod
     async def get_game_account(
         cls, session: SessionDep, game_account_id: uuid.UUID
-    ) -> Optional[GameAccount]:
+    ) -> GameAccount | None:
         return await session.get(GameAccount, game_account_id)
 
     @classmethod

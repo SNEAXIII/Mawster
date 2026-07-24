@@ -4,36 +4,36 @@ import uuid
 
 import pytest
 
+from src.enums.Roles import Roles
+from src.enums.SeasonStatus import SeasonStatus
+from src.models import User
+from src.models.Champion import Champion
+from src.models.Season import Season
+from src.models.War import War
+from tests.integration.endpoints.setup.game_setup import (
+    get_game_account,
+    push_alliance_with_owner,
+    push_champion,
+    push_champion_user,
+    push_member,
+    push_officer,
+)
+from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
-    execute_post_request,
     execute_patch_request,
+    execute_post_request,
 )
 from tests.utils.utils_constant import (
-    USER_ID,
-    USER2_ID,
-    GAME_PSEUDO,
-    GAME_PSEUDO_2,
     ALLIANCE_NAME,
     ALLIANCE_TAG,
+    GAME_PSEUDO,
+    GAME_PSEUDO_2,
+    USER2_ID,
+    USER_ID,
 )
-from tests.integration.endpoints.setup.game_setup import (
-    push_alliance_with_owner,
-    push_member,
-    push_officer,
-    push_champion,
-    push_champion_user,
-    get_game_account,
-)
-from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 from tests.utils.utils_db import load_objects
-from src.models import User
-from src.models.Champion import Champion
-from src.models.War import War
-from src.models.Season import Season
-from src.enums.SeasonStatus import SeasonStatus
-from src.enums.Roles import Roles
 
 USER3_ID = uuid.UUID("00000000-0000-0000-0000-000000000003")
 

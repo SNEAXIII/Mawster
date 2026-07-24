@@ -13,13 +13,13 @@ from src.dto.admin.dto_moderation import (
     ReportResolveRequest,
     WarnCreateRequest,
 )
-from src.enums.Roles import Roles
-from src.models.User import User
-from src.models.UserWarn import UserWarn
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
 from src.enums.NoteReportStatus import NoteReportStatus
+from src.enums.Roles import Roles
 from src.models.NoteReport import NoteReport
+from src.models.User import User
 from src.models.UserMute import UserMute
+from src.models.UserWarn import UserWarn
 from src.models.War import War
 from src.models.WarDefensePlacement import WarDefensePlacement
 from src.services.admin.ModerationService import ModerationService
@@ -31,6 +31,12 @@ from tests.integration.endpoints.setup.game_setup import (
     push_officer,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
+from tests.utils.utils_client import (
+    create_auth_headers,
+    execute_delete_request,
+    execute_get_request,
+    execute_post_request,
+)
 from tests.utils.utils_constant import (
     ALLIANCE_NAME,
     ALLIANCE_TAG,
@@ -38,12 +44,6 @@ from tests.utils.utils_constant import (
     GAME_PSEUDO_2,
     USER2_ID,
     USER_ID,
-)
-from tests.utils.utils_client import (
-    create_auth_headers,
-    execute_delete_request,
-    execute_get_request,
-    execute_post_request,
 )
 from tests.utils.utils_db import load_objects
 

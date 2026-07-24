@@ -14,11 +14,11 @@ from src.Messages.champion_user_messages import CHAMPION_USER_NOT_FOUND, NOT_YOU
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND
 from src.models import User
 from src.models.ChampionUser import ChampionUser
-from src.services.auth.AuthService import AuthService
-from src.services.alliance.AllianceService import AllianceService
 from src.services.account.game.ChampionUserService import ChampionUserService
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.admin.SagaService import SagaService
+from src.services.alliance.AllianceService import AllianceService
+from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
 
 champion_user_controller = APIRouter(

@@ -1,28 +1,30 @@
-import uuid
 import math
+import uuid
 from datetime import datetime
-from sqlalchemy import func
 
-from sqlmodel import and_, or_, select
 from fastapi import HTTPException
-from starlette import status
+from sqlalchemy import func
 from sqlalchemy.orm import aliased
+from sqlmodel import and_, or_, select
+from starlette import status
 
-from src.utils.db import SessionDep
-
-from src.dto.admin.dto_moderation import WarnResponse, NoteRevisionResponse, MuteResponse
-from src.dto.admin.dto_moderation import NoteReportResponse, PaginatedNoteReports
-from src.models.User import User
-from src.models.UserWarn import UserWarn
-
+from src.dto.admin.dto_moderation import (
+    MuteResponse,
+    NoteReportResponse,
+    NoteRevisionResponse,
+    PaginatedNoteReports,
+    WarnResponse,
+)
 from src.enums.NoteReportStatus import NoteReportStatus
-from src.models.NoteReport import NoteReport
-from src.models.WarFightNote import WarFightNote
-from src.models.GameAccount import GameAccount
-from src.models.WarFightNoteRevision import WarFightNoteRevision
-from src.models.UserMute import UserMute
 from src.models.Alliance import Alliance
-
+from src.models.GameAccount import GameAccount
+from src.models.NoteReport import NoteReport
+from src.models.User import User
+from src.models.UserMute import UserMute
+from src.models.UserWarn import UserWarn
+from src.models.WarFightNote import WarFightNote
+from src.models.WarFightNoteRevision import WarFightNoteRevision
+from src.utils.db import SessionDep
 
 AUTO_BLOCK_THRESHOLD = 3
 

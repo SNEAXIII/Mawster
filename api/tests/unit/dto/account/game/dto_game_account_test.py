@@ -9,7 +9,6 @@ from pydantic import ValidationError
 
 from src.dto.account.game.dto_game_account import GameAccountCreateRequest, GameAccountResponse
 
-
 # ---------------------------------------------------------------------------
 # Helpers — lightweight namespace objects that mimic ORM models
 # ---------------------------------------------------------------------------

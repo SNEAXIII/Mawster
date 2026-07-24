@@ -1,6 +1,7 @@
 """Unit tests for RankingHistoryService._reconstruct_elo logic."""
 
 import uuid
+
 from src.models.War import War, WarStatus
 from src.services.alliance.RankingHistoryService import RankingHistoryService
 

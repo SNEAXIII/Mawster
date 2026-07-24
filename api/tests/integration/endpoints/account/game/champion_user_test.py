@@ -1,6 +1,7 @@
 """Integration tests for /champion-users endpoints (CRUD, roster, upgrade, ascend, preferred attacker, alliance visibility)."""
 
 import uuid
+
 import pytest
 
 from main import app
@@ -8,27 +9,27 @@ from src.enums.Roles import Roles
 from src.models.AllianceVisitor import AllianceVisitor
 from src.models.ChampionUser import ChampionUser
 from src.utils.db import get_session
-from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2
 from tests.integration.endpoints.setup.game_setup import (
-    push_game_account,
-    push_champion,
     push_alliance_with_owner,
+    push_champion,
+    push_game_account,
     push_member,
 )
+from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2
 from tests.utils.utils_client import (
     create_auth_headers,
+    execute_delete_request,
     execute_get_request,
+    execute_patch_request,
     execute_post_request,
     execute_put_request,
-    execute_delete_request,
-    execute_patch_request,
     execute_request,
 )
 from tests.utils.utils_constant import (
-    USER_ID,
-    USER2_ID,
     GAME_PSEUDO,
     GAME_PSEUDO_2,
+    USER2_ID,
+    USER_ID,
 )
 from tests.utils.utils_db import get_test_session, load_objects
 

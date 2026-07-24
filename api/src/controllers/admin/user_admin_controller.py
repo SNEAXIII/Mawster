@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
@@ -13,8 +13,8 @@ from src.Messages.user_messages import (
     TARGET_USER_PROMOTED_SUCCESSFULLY,
 )
 from src.models import User
-from src.services.auth.AuthService import AuthService
 from src.services.admin.UserAdminService import UserAdminService
+from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
 
 user_admin_controller = APIRouter(
@@ -32,9 +32,9 @@ async def get_users(
     session: SessionDep,
     page: Annotated[int, Query(ge=1)] = 1,
     size: Annotated[int, Query(ge=1)] = 10,
-    status: Optional[str] = None,
-    role: Optional[Roles] = None,
-    search: Optional[str] = None,
+    status: str | None = None,
+    role: Roles | None = None,
+    search: str | None = None,
 ):
     result = await UserAdminService.get_users_with_pagination_role_search(
         session, page, size, status, role, search

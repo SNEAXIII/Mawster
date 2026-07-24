@@ -4,8 +4,8 @@ import pytest
 from fastapi import HTTPException
 from sqlmodel import select
 
-from src.Messages.vision_messages import JOB_NEVER_QUEUED
 from src.dto.account.game.dto_vision_result import VisionPredictionMessage, VisionResultMessage
+from src.Messages.vision_messages import JOB_NEVER_QUEUED
 from src.models.VisionImport import VisionImport, VisionImportStatus
 from src.models.VisionJob import VisionJob, VisionJobStatus
 from src.models.VisionPredictionCandidate import VisionPredictionCandidate

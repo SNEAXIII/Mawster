@@ -5,14 +5,14 @@ from fastapi import HTTPException
 from sqlmodel import select
 from starlette import status
 
-from src.security.secrets import SECRET
 from src.enums.Roles import Roles
 from src.Messages.google_auth_messages import (
+    EMAIL_CONFLICT,
     GOOGLE_API_ERROR,
     GOOGLE_TOKEN_INVALID,
-    EMAIL_CONFLICT,
 )
-from src.models import User, LoginLog
+from src.models import LoginLog, User
+from src.security.secrets import SECRET
 from src.services.auth.OAuthService import OAuthService
 from src.utils.db import SessionDep
 from src.utils.email_hash import hash_email

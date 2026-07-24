@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
+from src.controllers.alliance.war.war_deps import WarDep
 from src.dto.alliance.war.dto_war import (
     AvailableAttackerResponse,
     AvailablePrefightAttackerResponse,
@@ -12,11 +13,10 @@ from src.dto.alliance.war.dto_war import (
 )
 from src.models import User
 from src.services.alliance.AllianceService import AllianceService
-from src.services.auth.AuthService import AuthService
 from src.services.alliance.war.WarService import WarService
+from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
 from src.utils.path_params import BattlegroupPath
-from src.controllers.alliance.war.war_deps import WarDep
 
 war_attacker_controller = APIRouter(
     prefix="/alliances/{alliance_id}/wars",

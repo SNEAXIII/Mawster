@@ -1,12 +1,12 @@
 from typing import Annotated
+
 from fastapi import Depends
 
-from src.Messages.jwt_messages import INSUFFISANT_ROLE_EXCEPTION
 from src.enums.Roles import Roles
-
+from src.Messages.jwt_messages import INSUFFISANT_ROLE_EXCEPTION
 from src.models import User
-from src.services.auth.JWTService import JWTService, oauth2_scheme
 from src.services.account.UserService import UserService
+from src.services.auth.JWTService import JWTService, oauth2_scheme
 from src.utils.db import SessionDep
 
 

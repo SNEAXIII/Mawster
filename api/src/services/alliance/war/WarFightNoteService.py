@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from fastapi import HTTPException
 from sqlmodel import and_, select
@@ -178,7 +177,7 @@ class WarFightNoteService:
     @classmethod
     async def get_note_for_node(
         cls, session: SessionDep, war_id: uuid.UUID, battlegroup: int, node_number: int
-    ) -> Optional[WarFightNote]:
+    ) -> WarFightNote | None:
         return (
             await session.exec(
                 select(WarFightNote).where(

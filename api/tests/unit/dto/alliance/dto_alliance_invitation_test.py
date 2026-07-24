@@ -4,16 +4,15 @@ import uuid
 from datetime import datetime
 from types import SimpleNamespace
 
-from src.dto.alliance.war.dto_defense import DefensePlacementResponse
 from src.dto.alliance.dto_alliance import (
     AllianceMemberResponse,
     AllianceOfficerResponse,
     AllianceResponse,
 )
 from src.dto.alliance.dto_invitation import AllianceInvitationResponse
+from src.dto.alliance.war.dto_defense import DefensePlacementResponse
 from src.enums.InvitationStatus import InvitationStatus
 from src.enums.InvitationType import InvitationType
-
 
 # ---------------------------------------------------------------------------
 # Helpers — lightweight namespace objects that mimic ORM models

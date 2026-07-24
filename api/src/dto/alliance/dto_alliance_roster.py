@@ -1,5 +1,5 @@
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
@@ -12,12 +12,12 @@ class AllianceRosterEntryResponse(BaseModel):
     id: uuid.UUID
     game_account_id: uuid.UUID
     game_pseudo: str
-    alliance_group: Optional[int] = None
+    alliance_group: int | None = None
     champion_id: uuid.UUID
     champion_name: str
     champion_class: str
-    alias: Optional[str] = None
-    image_url: Optional[str] = None
+    alias: str | None = None
+    image_url: str | None = None
     rarity: str
     signature: int
     ascension: int = 0

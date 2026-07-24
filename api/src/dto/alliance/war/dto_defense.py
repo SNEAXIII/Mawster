@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -32,17 +32,17 @@ class DefensePlacementResponse(BaseModel):
     game_account_id: uuid.UUID
     game_pseudo: str
     champion_name: str
-    champion_alias: Optional[str] = None
+    champion_alias: str | None = None
     champion_class: str
-    champion_image_url: Optional[str] = None
+    champion_image_url: str | None = None
     rarity: str
     signature: int = 0
     is_preferred_attacker: bool = False
     ascension: int = 0
     is_saga_attacker: bool = False
     is_saga_defender: bool = False
-    placed_by_id: Optional[uuid.UUID] = None
-    placed_by_pseudo: Optional[str] = None
+    placed_by_id: uuid.UUID | None = None
+    placed_by_pseudo: str | None = None
     created_at: datetime
 
     @model_validator(mode="before")
@@ -93,6 +93,6 @@ class DefenderAssignmentResponse(BaseModel):
     champion_id: uuid.UUID
     champion_name: str
     champion_class: str
-    champion_image_url: Optional[str] = None
+    champion_image_url: str | None = None
     game_account_id: uuid.UUID
     game_pseudo: str

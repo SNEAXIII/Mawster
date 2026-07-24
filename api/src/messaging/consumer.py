@@ -51,7 +51,7 @@ class VisionResultConsumer:
                 await queue.consume(self._on_message)
                 logger.info("vision consumer listening on %s", QUEUE_RESULTS)
                 return
-            except Exception:  # noqa: BLE001
+            except Exception:
                 logger.exception(
                     "vision consumer could not connect, retrying in %ss",
                     RECONNECT_DELAY_SECONDS,
@@ -73,7 +73,7 @@ class VisionResultConsumer:
         try:
             async with Session() as session:
                 await VisionResultService.handle(session, result)
-        except Exception:  # noqa: BLE001
+        except Exception:
             # Unlike a broken payload, we don't know whether this is transient
             # (DB blip, deadlock) or deterministic. handle() is idempotent — it
             # short-circuits on jobs already DONE/FAILED — so one replay is safe

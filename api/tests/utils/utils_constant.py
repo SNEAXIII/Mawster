@@ -1,6 +1,5 @@
 import uuid
 
-
 # User
 USER_ID = uuid.uuid4()
 LOGIN = "login"

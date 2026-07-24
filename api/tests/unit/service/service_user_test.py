@@ -6,6 +6,7 @@ import pytest
 from src.dto.auth.dto_utilisateurs import UserAdminViewSingleUser
 from src.enums.Roles import Roles
 from src.Messages.user_messages import (
+    LOGIN_ALREADY_TAKEN,
     TARGET_USER_DOESNT_EXISTS,
     TARGET_USER_IS_ADMIN,
     TARGET_USER_IS_ALREADY_DELETED,
@@ -17,7 +18,6 @@ from src.Messages.user_messages import (
     USER_DOESNT_EXISTS,
     USER_IS_DELETED,
     USER_IS_DISABLED,
-    LOGIN_ALREADY_TAKEN,
     UserAdminError,
     UserLoginError,
 )
@@ -26,21 +26,20 @@ from src.services.account.UserService import UserService
 from src.services.admin.UserAdminService import UserAdminService
 from tests.unit.service.mocks.session_mock import session_mock
 from tests.unit.service.mocks.users_mock import (
-    get_user_by_login_mock,
-    get_users_paginated_mock,
     get_total_users_mock,
+    get_user_by_login_mock,
     get_user_mock,
+    get_users_paginated_mock,
 )
-
 from tests.utils.utils_constant import (
     DISCORD_ID,
-    LOGIN,
-    ROLE,
-    USER_ID,
     EMAIL,
+    LOGIN,
+    PAGE,
+    ROLE,
     SIZE,
     STATUS,
-    PAGE,
+    USER_ID,
 )
 
 
@@ -534,6 +533,7 @@ async def test_demote_user_errors(mocker, fake_user, expected_error):
 def test_build_status_filter_deleted():
     """status='deleted' adds deleted_at != None filter (line 197)."""
     from sqlmodel import select
+
     from src.models import User
 
     sql = select(User)

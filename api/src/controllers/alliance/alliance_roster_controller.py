@@ -1,13 +1,13 @@
 import uuid
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
 from src.dto.alliance.dto_alliance_roster import AllianceRosterEntryResponse
 from src.models import User
-from src.services.alliance.AllianceService import AllianceService
-from src.services.alliance.AllianceRosterService import AllianceRosterService
 from src.services.admin.SagaService import SagaService
+from src.services.alliance.AllianceRosterService import AllianceRosterService
+from src.services.alliance.AllianceService import AllianceService
 from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
 
@@ -25,16 +25,16 @@ async def get_alliance_roster(
     alliance_id: uuid.UUID,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
-    name: Optional[str] = None,
-    champion_class: Optional[str] = None,
-    ranks: Annotated[Optional[list[str]], Query()] = None,
-    ascensions: Annotated[Optional[list[int]], Query()] = None,
+    name: str | None = None,
+    champion_class: str | None = None,
+    ranks: Annotated[list[str] | None, Query()] = None,
+    ascensions: Annotated[list[int] | None, Query()] = None,
     saga_attacker: bool = False,
     saga_defender: bool = False,
     preferred_attacker: bool = False,
-    alliance_group: Optional[int] = None,
+    alliance_group: int | None = None,
     no_group: bool = False,
-    distinct_champion_limit: Optional[int] = None,
+    distinct_champion_limit: int | None = None,
 ):
     """Get every champion owned across the whole alliance. Members, officers, owner or visitors.
 

@@ -8,7 +8,6 @@ from fastapi import HTTPException
 from src.models.AllianceVisitor import AllianceVisitor
 from src.services.alliance.AllianceVisitorService import AllianceVisitorService
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

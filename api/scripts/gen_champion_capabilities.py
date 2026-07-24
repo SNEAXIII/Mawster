@@ -82,8 +82,8 @@ def _unquote(s: str) -> str:
 
 def main(sql_path: str) -> None:
     data = Path(sql_path).read_text(errors="replace")
-    m = re.search(r"CREATE TABLE `champion` \(([^;]*?)\n\) ENGINE", data, re.S)
-    cols = re.findall(r"^\s*`([a-z_0-9]+)`", m.group(1), re.M)
+    m = re.search(r"CREATE TABLE `champion` \(([^;]*?)\n\) ENGINE", data, re.DOTALL)
+    cols = re.findall(r"^\s*`([a-z_0-9]+)`", m.group(1), re.MULTILINE)
     ins = re.search(r"INSERT INTO `champion`(?:\s*\([^)]*\))?\s+VALUES\s+", data)
     seg = data[ins.end() :]
     seg = seg[: seg.index(";\n")]

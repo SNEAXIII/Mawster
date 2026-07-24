@@ -9,19 +9,18 @@ from src.models.Alliance import Alliance
 from src.models.AllianceOfficer import AllianceOfficer
 from src.models.GameAccount import GameAccount
 from src.services.alliance.AllianceService import (
-    AllianceService,
-    MAX_MEMBERS_PER_GROUP,
     MAX_MEMBERS_PER_ALLIANCE,
+    MAX_MEMBERS_PER_GROUP,
+    AllianceService,
 )
 from tests.utils.utils_constant import (
-    USER_ID,
-    USER2_ID,
-    GAME_PSEUDO,
-    GAME_PSEUDO_2,
     ALLIANCE_NAME,
     ALLIANCE_TAG,
+    GAME_PSEUDO,
+    GAME_PSEUDO_2,
+    USER2_ID,
+    USER_ID,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers

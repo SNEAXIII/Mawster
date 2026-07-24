@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, status
 
@@ -30,9 +30,9 @@ async def list_matchups(
     alliance_id: uuid.UUID,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
-    champion_id: Optional[uuid.UUID] = None,
-    defender_champion_id: Optional[uuid.UUID] = None,
-    node_number: Optional[int] = Query(default=None, ge=1, le=50),
+    champion_id: uuid.UUID | None = None,
+    defender_champion_id: uuid.UUID | None = None,
+    node_number: int | None = Query(default=None, ge=1, le=50),
 ):
     """List the alliance's matchup ratings. Members, officers, owner or visitors."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
@@ -49,10 +49,10 @@ async def evaluate_matchups(
     alliance_id: uuid.UUID,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
-    defender_champion_id: Optional[uuid.UUID] = None,
-    node_number: Optional[int] = Query(default=None, ge=1, le=50),
-    champion_id: Optional[uuid.UUID] = None,
-    game_account_id: Optional[uuid.UUID] = None,
+    defender_champion_id: uuid.UUID | None = None,
+    node_number: int | None = Query(default=None, ge=1, le=50),
+    champion_id: uuid.UUID | None = None,
+    game_account_id: uuid.UUID | None = None,
 ):
     """Rank rated attackers against the selected defender and/or node."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
@@ -67,7 +67,7 @@ async def evaluate_matchup_grid(
     champion_id: uuid.UUID,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
-    game_account_id: Optional[uuid.UUID] = None,
+    game_account_id: uuid.UUID | None = None,
 ):
     """Attacker-centric grid: every rated defender x every rated node for one champion."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
@@ -82,7 +82,7 @@ async def evaluate_matchup_defender_grid(
     defender_champion_id: uuid.UUID,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
-    game_account_id: Optional[uuid.UUID] = None,
+    game_account_id: uuid.UUID | None = None,
 ):
     """Defender-centric grid: every rated attacker x each attacker's rated nodes for one defender."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)

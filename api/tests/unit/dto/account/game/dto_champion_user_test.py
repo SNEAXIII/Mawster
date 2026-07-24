@@ -14,7 +14,6 @@ from src.dto.account.game.dto_champion_user import (
 )
 from src.dto.account.game.dto_upgrade_request import UpgradeRequestResponse
 
-
 # ---------------------------------------------------------------------------
 # Helpers — lightweight namespace objects that mimic ORM models
 # ---------------------------------------------------------------------------

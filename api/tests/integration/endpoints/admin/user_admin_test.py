@@ -15,17 +15,17 @@ from tests.integration.endpoints.setup.user_setup import (
 )
 from tests.utils.utils_client import (
     create_auth_headers,
+    execute_delete_request,
     execute_get_request,
     execute_patch_request,
-    execute_delete_request,
     execute_request,
 )
 from tests.utils.utils_constant import (
-    USER_ID,
+    DISCORD_ID_2,
+    USER2_EMAIL,
     USER2_ID,
     USER2_LOGIN,
-    USER2_EMAIL,
-    DISCORD_ID_2,
+    USER_ID,
 )
 from tests.utils.utils_db import get_test_session, load_objects
 

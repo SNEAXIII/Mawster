@@ -1,7 +1,8 @@
 from sqlmodel import Session
+
 from src.enums.Roles import Roles
-from src.models import User
 from src.fixtures import sync_engine
+from src.models import User
 from src.utils.email_hash import hash_email
 
 master_account = "misterbalise"

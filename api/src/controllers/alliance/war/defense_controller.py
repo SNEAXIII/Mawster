@@ -10,10 +10,10 @@ from src.dto.alliance.war.dto_defense import (
     DefenseSummaryResponse,
 )
 from src.models import User
-from src.services.alliance.AllianceService import AllianceService
-from src.services.auth.AuthService import AuthService
-from src.services.alliance.war.DefensePlacementService import DefensePlacementService
 from src.services.admin.SagaService import SagaService
+from src.services.alliance.AllianceService import AllianceService
+from src.services.alliance.war.DefensePlacementService import DefensePlacementService
+from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
 from src.utils.path_params import BattlegroupPath
 

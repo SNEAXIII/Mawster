@@ -1,6 +1,7 @@
 """Integration tests for POST /alliances/{alliance_id}/fight-records/import."""
 
 import uuid
+
 import pytest
 
 from tests.integration.endpoints.setup.game_setup import (
@@ -15,12 +16,12 @@ from tests.utils.utils_client import (
     execute_post_request,
 )
 from tests.utils.utils_constant import (
-    USER_ID,
-    USER2_ID,
-    USER2_LOGIN,
-    USER2_EMAIL,
     DISCORD_ID_2,
     GAME_PSEUDO,
+    USER2_EMAIL,
+    USER2_ID,
+    USER2_LOGIN,
+    USER_ID,
 )
 from tests.utils.utils_db import load_objects
 
@@ -270,8 +271,8 @@ class TestImportMultipleRows:
 
 @pytest.fixture
 async def owner_with_champions():
-    from src.models.Season import Season
     from src.models.Champion import Champion
+    from src.models.Season import Season
 
     await load_objects([get_generic_user(is_base_id=True)])
     alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
@@ -289,8 +290,8 @@ async def owner_with_champions():
 @pytest.fixture
 async def owner_with_mixed_records():
     """Alliance owner with one regular war fight record (tier + pseudo) and one imported record."""
-    from src.models.Season import Season
     from src.models.Champion import Champion
+    from src.models.Season import Season
     from src.models.War import War
     from src.models.WarFightRecord import WarFightRecord
     from src.models.WarFightRecordImport import WarFightRecordImport
@@ -384,8 +385,8 @@ class TestFightRecordFiltersExcludeImported:
 
 @pytest.fixture
 async def officer_with_champions():
-    from src.models.Season import Season
     from src.models.Champion import Champion
+    from src.models.Season import Season
 
     await _setup_two_users()
     alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
@@ -404,8 +405,8 @@ async def officer_with_champions():
 
 @pytest.fixture
 async def member_with_champions():
-    from src.models.Season import Season
     from src.models.Champion import Champion
+    from src.models.Season import Season
 
     await _setup_two_users()
     alliance, _ = await push_alliance_with_owner(user_id=USER_ID)

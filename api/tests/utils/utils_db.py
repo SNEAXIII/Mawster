@@ -1,13 +1,11 @@
 import os
 import time
-from typing import List
 
-from sqlmodel import SQLModel, create_engine
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import text
-
+from sqlmodel import SQLModel, create_engine
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 IS_ECHO = False
 IS_ECHO_ASYNC = False
@@ -93,7 +91,7 @@ async def get_test_session() -> AsyncSession:
         yield session
 
 
-async def load_objects(objects: List[SQLModel]) -> None:
+async def load_objects(objects: list[SQLModel]) -> None:
     async with AsyncSession(
         sqlite_async_engine,
         expire_on_commit=False,

@@ -11,14 +11,14 @@ import pytest
 from main import app
 from src.enums.Roles import Roles
 from src.utils.db import get_session
-from tests.integration.endpoints.setup.user_setup import push_one_admin, push_one_user
 from tests.integration.endpoints.setup.game_setup import push_champion
+from tests.integration.endpoints.setup.user_setup import push_one_admin, push_one_user
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
-    execute_put_request,
-    execute_post_request,
     execute_patch_request,
+    execute_post_request,
+    execute_put_request,
 )
 from tests.utils.utils_constant import USER_ID
 from tests.utils.utils_db import get_test_session

@@ -6,7 +6,6 @@ import pytest
 
 from src.dto.alliance.war.dto_war import WarPlacementCreateRequest, WarSynergyCreateRequest
 
-
 # ─── WarPlacementCreateRequest validation ─────────────────
 
 

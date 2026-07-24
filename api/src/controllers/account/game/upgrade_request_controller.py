@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from starlette import status
 
@@ -12,13 +13,12 @@ from src.models import User
 from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
 from src.models.RequestedUpgrade import RequestedUpgrade
-from src.services.auth.AuthService import AuthService
-from src.services.alliance.AllianceService import AllianceService
 from src.services.account.game.ChampionUserService import ChampionUserService
 from src.services.account.game.GameAccountService import GameAccountService
+from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.UpgradeRequestService import UpgradeRequestService
+from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
-from sqlalchemy.orm import selectinload
 
 upgrade_request_controller = APIRouter(
     prefix="/champion-users",

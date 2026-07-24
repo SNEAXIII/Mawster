@@ -10,8 +10,8 @@ from tests.utils.utils_client import (
     execute_delete_request,
     execute_patch_request,
 )
-from tests.utils.utils_db import get_test_session
 from tests.utils.utils_constant import USER2_LOGIN
+from tests.utils.utils_db import get_test_session
 
 app.dependency_overrides[get_session] = get_test_session
 

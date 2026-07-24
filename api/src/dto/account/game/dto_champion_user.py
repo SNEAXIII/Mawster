@@ -1,5 +1,5 @@
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -55,8 +55,8 @@ class ChampionUserDetailResponse(ChampionUserResponse):
     is_saga_defender: bool = False
     champion_name: str
     champion_class: str
-    alias: Optional[str] = None
-    image_url: Optional[str] = None
+    alias: str | None = None
+    image_url: str | None = None
 
     @model_validator(mode="before")
     @classmethod

@@ -5,16 +5,16 @@ import pytest
 from main import app
 from src.enums.Roles import Roles
 from src.utils.db import get_session
+from tests.integration.endpoints.setup.game_setup import push_alliance_with_owner
+from tests.integration.endpoints.setup.user_setup import get_admin, get_generic_user
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
-    execute_post_request,
     execute_patch_request,
+    execute_post_request,
 )
-from tests.utils.utils_constant import USER_ID, GAME_PSEUDO, ALLIANCE_NAME, ALLIANCE_TAG
+from tests.utils.utils_constant import ALLIANCE_NAME, ALLIANCE_TAG, GAME_PSEUDO, USER_ID
 from tests.utils.utils_db import get_test_session, load_objects
-from tests.integration.endpoints.setup.game_setup import push_alliance_with_owner
-from tests.integration.endpoints.setup.user_setup import get_admin, get_generic_user
 
 app.dependency_overrides[get_session] = get_test_session
 

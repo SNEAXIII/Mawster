@@ -1,27 +1,28 @@
 """Integration tests for /game-accounts endpoints."""
 
 import uuid
+
 import pytest
 
 from main import app
 from src.utils.db import get_session
-from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2
 from tests.integration.endpoints.setup.game_setup import (
-    push_game_account,
     push_alliance_with_owner,
+    push_game_account,
 )
+from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2
 from tests.utils.utils_client import (
     create_auth_headers,
+    execute_delete_request,
     execute_get_request,
     execute_post_request,
     execute_put_request,
-    execute_delete_request,
 )
 from tests.utils.utils_constant import (
-    USER_ID,
-    USER2_ID,
     GAME_PSEUDO,
     GAME_PSEUDO_2,
+    USER2_ID,
+    USER_ID,
 )
 from tests.utils.utils_db import get_test_session
 

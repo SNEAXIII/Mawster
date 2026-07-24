@@ -5,12 +5,11 @@ from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-
 from src.dto.alliance.war.dto_war import (
     WarCreateRequest,
-    WarResponse,
     WarPlacementResponse,
     WarPrefightResponse,
+    WarResponse,
     WarSynergyResponse,
 )
 

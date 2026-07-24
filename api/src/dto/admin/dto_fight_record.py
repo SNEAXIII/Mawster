@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
@@ -11,7 +11,7 @@ class ChampionUserSnapshotResponse(BaseModel):
     champion_id: uuid.UUID
     champion_name: str
     champion_class: str
-    image_url: Optional[str] = None
+    image_url: str | None = None
     stars: int
     ascension: int
 
@@ -40,40 +40,40 @@ class WarFightRecordResponse(BaseModel):
 
     id: uuid.UUID
     is_imported: bool = False
-    war_id: Optional[uuid.UUID] = None
+    war_id: uuid.UUID | None = None
     alliance_id: uuid.UUID
-    season_id: Optional[uuid.UUID] = None
-    game_account_pseudo: Optional[str] = None
-    battlegroup: Optional[int] = None
+    season_id: uuid.UUID | None = None
+    game_account_pseudo: str | None = None
+    battlegroup: int | None = None
     node_number: int
-    tier: Optional[int] = None
+    tier: int | None = None
     alliance_name: str
     champion_id: uuid.UUID
     champion_name: str
     champion_class: str
-    image_url: Optional[str] = None
-    stars: Optional[int] = None
-    rank: Optional[int] = None
-    ascension: Optional[int] = None
-    is_saga_attacker: Optional[bool] = None
+    image_url: str | None = None
+    stars: int | None = None
+    rank: int | None = None
+    ascension: int | None = None
+    is_saga_attacker: bool | None = None
     defender_champion_id: uuid.UUID
     defender_champion_name: str
     defender_champion_class: str
-    defender_image_url: Optional[str] = None
-    defender_stars: Optional[int] = None
-    defender_rank: Optional[int] = None
-    defender_ascension: Optional[int] = None
-    defender_is_saga_defender: Optional[bool] = None
+    defender_image_url: str | None = None
+    defender_stars: int | None = None
+    defender_rank: int | None = None
+    defender_ascension: int | None = None
+    defender_is_saga_defender: bool | None = None
     ko_count: int
     is_planning_error: bool = False
     assisted: bool = False
     synergies: list[WarFightSynergyResponse] = []
     prefights: list[WarFightPrefightResponse] = []
-    created_at: Optional[datetime] = None
-    note: Optional[str] = None
-    note_id: Optional[uuid.UUID] = None
+    created_at: datetime | None = None
+    note: str | None = None
+    note_id: uuid.UUID | None = None
     note_blocked: bool = False
-    note_author: Optional[str] = None
+    note_author: str | None = None
 
     @model_validator(mode="before")
     @classmethod

@@ -1,6 +1,7 @@
 import random
 import string
 from abc import ABC, abstractmethod
+
 from sqlmodel import select
 
 from src.models import User

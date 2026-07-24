@@ -15,21 +15,21 @@ import pytest
 
 from main import app
 from src.enums.Roles import Roles
+from src.models import User
 from src.security.secrets import SECRET
 from src.services.auth.JWTService import JWTService
 from src.utils.db import get_session
-from tests.integration.endpoints.setup.user_setup import (
-    push_one_user,
-    get_generic_user,
-)
 from src.utils.email_hash import hash_email
-from src.models import User
+from tests.integration.endpoints.setup.user_setup import (
+    get_generic_user,
+    push_one_user,
+)
 from tests.utils.utils_client import (
+    create_auth_headers,
     execute_get_request,
     execute_post_request,
-    create_auth_headers,
 )
-from tests.utils.utils_constant import USER_LOGIN, USER_ID
+from tests.utils.utils_constant import USER_ID, USER_LOGIN
 from tests.utils.utils_db import get_test_session, load_objects
 
 app.dependency_overrides[get_session] = get_test_session

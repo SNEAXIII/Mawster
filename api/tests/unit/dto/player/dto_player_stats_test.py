@@ -1,9 +1,9 @@
 from src.dto.player.dto_player_stats import (
-    PlayerStatsCardResponse,
-    RatioEvolutionPoint,
     PlayerSeasonAllianceResponse,
-    PlayerStatsResponse,
     PlayerSeasonOption,
+    PlayerStatsCardResponse,
+    PlayerStatsResponse,
+    RatioEvolutionPoint,
 )
 
 
