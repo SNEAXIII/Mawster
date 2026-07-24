@@ -1,3 +1,5 @@
+'use client'
+
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
 import TableHeaderUsers from '@/components/dashboard/table/table-header'
 import { MoreHorizontal } from 'lucide-react'
