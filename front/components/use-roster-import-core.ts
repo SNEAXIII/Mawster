@@ -12,11 +12,17 @@ import { type ImportResult } from '@/components/roster/import-report-dialog'
 import { type PreviewRow } from '@/components/roster/import-preview-row'
 
 // ─── Shared entry shape consumed by the preview builders ──
+// `is_preferred_attacker` is optional on purpose: `undefined` means "this
+// source has no opinion on the flag, keep whatever the roster already holds".
+// A vision import reads a game screenshot, where the flag simply does not
+// exist — sending `false` there would silently un-prefer every champion the
+// import touches. A JSON import, which round-trips an export, always carries a
+// real boolean and stays authoritative.
 export interface RosterImportEntry {
   champion_name: string
   rarity: string
   signature: number
-  is_preferred_attacker: boolean
+  is_preferred_attacker?: boolean
   ascension: number
 }
 
@@ -61,24 +67,39 @@ export async function fetchChampionLookup(
   return championLookup
 }
 
+/**
+ * The roster entry an import row lands on, if any.
+ *
+ * A roster is unique per champion + star level, so a 6★ row and a 7★ row of the
+ * same champion are two different entries. The preview diff and the payload
+ * built at import time must agree on this rule, hence the single helper.
+ */
+export function findRosterMatch(
+  roster: RosterEntry[],
+  championName: string,
+  rarity: string
+): RosterEntry | undefined {
+  const stars = rarity.charAt(0)
+  return roster.find(
+    (r) =>
+      r.champion_name.toLowerCase() === championName.toLowerCase() && r.rarity.startsWith(stars)
+  )
+}
+
 export function buildPreviewRow(
   entry: RosterImportEntry,
   roster: RosterEntry[],
   championLookup: Map<string, { champion_class: string; image_url: string | null }>
 ): PreviewRow {
-  const stars = entry.rarity.charAt(0)
-  const existing = roster.find(
-    (r) =>
-      r.champion_name.toLowerCase() === entry.champion_name.toLowerCase() &&
-      r.rarity.startsWith(stars)
-  )
+  const existing = findRosterMatch(roster, entry.champion_name, entry.rarity)
 
   const isNew = !existing
   const hasChanges =
     existing != null &&
     (existing.rarity !== entry.rarity ||
       existing.signature !== entry.signature ||
-      existing.is_preferred_attacker !== entry.is_preferred_attacker ||
+      (entry.is_preferred_attacker != null &&
+        existing.is_preferred_attacker !== entry.is_preferred_attacker) ||
       (existing.ascension ?? 0) !== entry.ascension)
 
   const rosterMatch = roster.find(
@@ -122,7 +143,7 @@ export function rediffRow(
       rarity: row.newRarity,
       signature: row.newSignature,
       ascension: row.ascension ?? 0,
-      is_preferred_attacker: row.is_preferred_attacker ?? false,
+      is_preferred_attacker: row.is_preferred_attacker,
     } as RosterImportEntry,
     roster,
     championLookup
@@ -150,6 +171,7 @@ export interface UseRosterImportCoreProps {
 }
 
 export function useRosterImportCore({
+  roster,
   selectedAccountId,
   onRosterUpdated,
 }: UseRosterImportCoreProps) {
@@ -192,11 +214,18 @@ export function useRosterImportCore({
         return { success: true }
       }
 
+      // The bulk endpoint overwrites `is_preferred_attacker` with whatever it
+      // receives, so a row with no opinion (vision) has to re-send the value
+      // the roster already holds. Falling back to `false` here is what used to
+      // strip the flag off every champion a vision import updated.
       const champions: BulkChampionEntry[] = toSend.map((r) => ({
         champion_name: r.champion_name,
         rarity: r.newRarity,
         signature: r.newSignature,
-        is_preferred_attacker: r.is_preferred_attacker ?? false,
+        is_preferred_attacker:
+          r.is_preferred_attacker ??
+          findRosterMatch(roster, r.champion_name, r.newRarity)?.is_preferred_attacker ??
+          false,
         ascension: r.ascension ?? 0,
       }))
 
@@ -270,7 +299,7 @@ export function useRosterImportCore({
     }
 
     return { success }
-  }, [previewRows, selectedAccountId, onRosterUpdated, t])
+  }, [previewRows, roster, selectedAccountId, onRosterUpdated, t])
 
   return {
     previewOpen,

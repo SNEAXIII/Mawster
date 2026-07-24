@@ -37,7 +37,9 @@ function predictionToEntry(prediction: VisionPrediction): {
       rarity,
       signature: prediction.signature,
       ascension: prediction.ascension,
-      is_preferred_attacker: false,
+      // Deliberately absent: a screenshot cannot show whether the player made
+      // this champion a preferred attacker, so the import must not claim it is
+      // `false` — that claim would erase the flag on every updated champion.
     },
     rarityValid: /^[67]r[1-5]$/.test(rarity),
   }
