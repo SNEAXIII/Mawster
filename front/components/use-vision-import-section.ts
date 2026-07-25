@@ -31,6 +31,9 @@ export function useVisionImportSection({
     selectedAccountId,
     resume: vision.resume,
     onOpenFilePicker: () => howto.request(() => vision.visionInputRef.current?.click()),
+    // Skips the how-to on purpose: see the comment on onDiscardFilePicker in
+    // use-vision-import-guard.ts.
+    onDiscardFilePicker: () => vision.visionInputRef.current?.click(),
   })
 
   // When an upload creates an import, tell the banner to re-fetch: it only
