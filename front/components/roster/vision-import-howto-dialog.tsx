@@ -44,7 +44,7 @@ export default function VisionImportHowtoDialog({
       onConfirm={onConfirm}
       dataCy='vision-import-howto-dialog'
     >
-      <div className='space-y-3 text-left text-sm'>
+      <div className='max-h-[60vh] space-y-3 overflow-y-auto text-left text-sm'>
         <ol className='list-decimal space-y-1 pl-5 text-muted-foreground'>
           <li>{howto.step1}</li>
           <li>{howto.step2}</li>
