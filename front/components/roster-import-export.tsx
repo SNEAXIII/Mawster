@@ -62,6 +62,7 @@ export default function RosterImportExport({
           visionLabel={visionSection.visionLabel}
           visionUploading={visionSection.vision.uploading}
           onVisionClick={visionSection.onVisionClick}
+          onVisionHelpClick={visionSection.howto.reopen}
           onExport={handleExport}
           onImportJson={() => fileInputRef.current?.click()}
         />
