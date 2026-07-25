@@ -1,17 +1,17 @@
 """Unit tests for GoogleAuthService."""
 
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import httpx
 import pytest
 from fastapi import HTTPException
 
-from src.security.secrets import SECRET
-from src.services.auth.GoogleAuthService import GoogleAuthService
 from src.enums.Roles import Roles
 from src.models import User
+from src.security.secrets import SECRET
+from src.services.auth.GoogleAuthService import GoogleAuthService
 from src.utils.email_hash import hash_email
-from tests.utils.utils_constant import USER_ID, USER_LOGIN, USER_EMAIL
+from tests.utils.utils_constant import USER_EMAIL, USER_ID, USER_LOGIN
 
 GOOGLE_ID = "google_123456"
 

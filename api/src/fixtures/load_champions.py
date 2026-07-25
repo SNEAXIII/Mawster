@@ -24,7 +24,7 @@ import json
 import sys
 from pathlib import Path
 
-from sqlmodel import create_engine, Session, select
+from sqlmodel import Session, create_engine, select
 
 from src.models.Champion import Champion
 from src.security.secrets import SECRET

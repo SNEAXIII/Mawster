@@ -2,19 +2,18 @@ import pytest
 from email_validator import EmailSyntaxError
 
 from src.Messages.user_messages import (
-    NOT_STR,
     EMAIL_INVALID,
-    LOGIN_WRONG_SIZE,
     LOGIN_NON_ALPHANUM,
+    LOGIN_WRONG_SIZE,
+    NOT_STR,
 )
-
 from src.validators.user_validator import (
+    MAX_LOGIN_LENGHT,
+    MIN_LOGIN_LENGHT,
     correct_email_validator,
     login_validator,
-    MIN_LOGIN_LENGHT,
-    MAX_LOGIN_LENGHT,
 )
-from tests.utils.utils_constant import LOGIN, EMAIL
+from tests.utils.utils_constant import EMAIL, LOGIN
 
 # For login tests
 login_wrong_size = LOGIN_WRONG_SIZE % (MIN_LOGIN_LENGHT, MAX_LOGIN_LENGHT)

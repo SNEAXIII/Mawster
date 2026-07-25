@@ -7,9 +7,9 @@ from starlette import status
 from src.dto.alliance.dto_visitor import AllianceVisitorResponse
 from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.models import User
-from src.services.auth.AuthService import AuthService
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.AllianceVisitorService import AllianceVisitorService
+from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
 
 alliance_visitor_controller = APIRouter(

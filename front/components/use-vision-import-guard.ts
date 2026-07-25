@@ -9,6 +9,13 @@ export interface UseVisionImportGuardProps {
   selectedAccountId: string
   resume: (importId: string) => void | Promise<void>
   onOpenFilePicker: () => void
+  // Called after a successful discard instead of onOpenFilePicker. Must open
+  // the picker directly (no how-to): the blocked dialog is still animating
+  // out at that point, and routing through another AlertDialog there risks
+  // stacking two Radix dialogs mid-transition (stuck `pointer-events: none`
+  // on body). The user also just confirmed "discard and start over" — they
+  // do not need the procedure re-explained.
+  onDiscardFilePicker: () => void
 }
 
 // Guards the "Import IA" button: a click that would 409 (an import is
@@ -20,6 +27,7 @@ export function useVisionImportGuard({
   selectedAccountId,
   resume,
   onOpenFilePicker,
+  onDiscardFilePicker,
 }: UseVisionImportGuardProps) {
   const [blockedImport, setBlockedImport] = useState<CurrentVisionImport | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -41,8 +49,8 @@ export function useVisionImportGuard({
 
   const discardBlocked = useCallback(() => {
     if (blockedImport == null) return
-    void cancelVisionImport(blockedImport.id).then(onOpenFilePicker)
-  }, [blockedImport, onOpenFilePicker])
+    void cancelVisionImport(blockedImport.id).then(onDiscardFilePicker)
+  }, [blockedImport, onDiscardFilePicker])
 
   return { dialogOpen, setDialogOpen, guardedOpen, resumeBlocked, discardBlocked }
 }

@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship
 
@@ -25,17 +25,17 @@ class VisionPrediction(UUIDBase, table=True):
     __tablename__ = "vision_prediction"
 
     job_id: uuid.UUID = Field(foreign_key="vision_job.id")
-    champion_name: Optional[str] = Field(default=None, max_length=100)
-    champion_class: Optional[str] = Field(default=None, max_length=50)
+    champion_name: str | None = Field(default=None, max_length=100)
+    champion_class: str | None = Field(default=None, max_length=50)
     stars: int = 0
     rank: int = 0
     signature: int = 0
     ascension: int = 0
     confidence: float = Field(default=0.0)
-    crop_key: Optional[str] = Field(default=None, max_length=255)
+    crop_key: str | None = Field(default=None, max_length=255)
 
     job: "VisionJob" = Relationship(back_populates="predictions")
-    candidates: List["VisionPredictionCandidate"] = Relationship(
+    candidates: list["VisionPredictionCandidate"] = Relationship(
         back_populates="prediction",
         sa_relationship_kwargs={"order_by": "VisionPredictionCandidate.position"},
     )

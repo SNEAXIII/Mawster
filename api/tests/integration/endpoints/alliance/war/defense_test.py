@@ -5,31 +5,31 @@ import uuid
 import pytest
 
 from src.enums.Roles import Roles
+from src.models import User
+from src.models.ChampionUser import ChampionUser
+from tests.integration.endpoints.setup.game_setup import (
+    push_alliance_with_owner,
+    push_champion,
+    push_member,
+    push_officer,
+)
+from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 from tests.utils.utils_client import (
     create_auth_headers,
+    execute_delete_request,
     execute_get_request,
     execute_patch_request,
     execute_post_request,
-    execute_delete_request,
 )
 from tests.utils.utils_constant import (
-    USER_ID,
-    USER2_ID,
-    GAME_PSEUDO,
-    GAME_PSEUDO_2,
     ALLIANCE_NAME,
     ALLIANCE_TAG,
+    GAME_PSEUDO,
+    GAME_PSEUDO_2,
+    USER2_ID,
+    USER_ID,
 )
-from tests.integration.endpoints.setup.game_setup import (
-    push_alliance_with_owner,
-    push_member,
-    push_officer,
-    push_champion,
-)
-from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
 from tests.utils.utils_db import load_objects
-from src.models import User
-from src.models.ChampionUser import ChampionUser
 
 IRON_MAN = "Iron Man"
 
@@ -641,7 +641,7 @@ class TestPlaceDefenderEdgeCases:
             push_champion_user,
         )
 
-        other_alliance, other_owner = await push_alliance_with_owner(
+        _other_alliance, other_owner = await push_alliance_with_owner(
             user_id=other_user_id,
             game_pseudo="OtherPseudo88",
             alliance_name="Other Alliance",

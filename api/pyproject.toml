@@ -36,19 +36,17 @@ omit = ["tests/*", "migrations/*", "scripts/*"]
 concurrency = ["greenlet", "thread"]
 
 [tool.ruff]
+# Rules, formatter settings and ignores live in the repo-wide ruff.toml so that the
+# hook, the CLI and CI can never disagree. Only api-specific overrides belong here.
+extend = "../ruff.toml"
 
-line-length = 100
-indent-width = 4
-
-[tool.ruff.format]
-# Like Black, use double quotes for strings.
-quote-style = "double"
-
-indent-style = "space"
-
-skip-magic-trailing-comma = false
-
-line-ending = "auto"
+[tool.ruff.lint.per-file-ignores]
+# Local DB scripts: the retry loops must swallow *any* driver/ORM error and try again,
+# which is the point — they run against a database that may not be up yet.
+"src/fixtures/*_db.py" = ["BLE001"]
+# Pydantic field validators must raise ValueError: it is the only exception Pydantic
+# turns into a 422. A TypeError (what TRY004 asks for) escapes as a 500 instead.
+"src/validators/*.py" = ["TRY004"]
 
 [dependency-groups]
 migrate = [

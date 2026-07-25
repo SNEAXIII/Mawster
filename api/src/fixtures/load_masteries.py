@@ -13,7 +13,7 @@ import json
 import sys
 from pathlib import Path
 
-from sqlmodel import create_engine, Session, select
+from sqlmodel import Session, create_engine, select
 
 from src.models.Mastery import Mastery
 from src.security.secrets import SECRET
@@ -45,7 +45,7 @@ def _process_mastery_item(session: Session, item: dict) -> str:
     """Process a single mastery item. Returns 'added', 'updated', or 'skipped'."""
     name: str = item.get("name", "").strip()
     max_value: int = item.get("max_value", 0)
-    order: None | int = item.get("order", None)
+    order: int | None = item.get("order")
 
     if not name or max_value == 0 or order is None:
         return "skipped"

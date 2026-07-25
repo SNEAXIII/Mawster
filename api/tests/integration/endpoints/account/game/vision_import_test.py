@@ -2,11 +2,12 @@
 
 import io
 import uuid
+from datetime import UTC
 
 import pytest
 from botocore.exceptions import ClientError
-from main import app
 
+from main import app
 from src.messaging import get_publisher
 from src.storage import get_storage
 from src.utils.db import get_session
@@ -765,7 +766,7 @@ async def test_current_returns_204_when_nothing_awaits(fake_infra):
 async def test_current_excludes_an_import_whose_images_expired(fake_infra):
     """Past the retention window the screenshots and crops are gone, so there is
     nothing left to check the predictions against."""
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
     from src.models.VisionImport import VisionImport
     from src.security.secrets import SECRET
@@ -778,9 +779,7 @@ async def test_current_excludes_an_import_whose_images_expired(fake_infra):
 
     async for session in get_test_session():
         row = await session.get(VisionImport, uuid.UUID(created.json()["id"]))
-        row.created_at = datetime.now(timezone.utc) - timedelta(
-            days=SECRET.VISION_RETENTION_DAYS + 1
-        )
+        row.created_at = datetime.now(UTC) - timedelta(days=SECRET.VISION_RETENTION_DAYS + 1)
         session.add(row)
         await session.commit()
         break
@@ -881,7 +880,7 @@ async def test_current_breaks_a_timestamp_tie_on_id(fake_infra):
     """Identical created_at is possible under a bulk insert, and without the id
     tie-break the winner would vary between requests. Both rows are inserted with
     the same timestamp so only the secondary sort can decide."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from src.models.VisionImport import VisionImport
     from tests.utils.utils_db import get_test_session
@@ -890,7 +889,7 @@ async def test_current_breaks_a_timestamp_tie_on_id(fake_infra):
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
     headers = create_auth_headers(str(USER_ID))
 
-    same_moment = datetime.now(timezone.utc)
+    same_moment = datetime.now(UTC)
     lower_id = uuid.UUID("00000000-0000-4000-8000-000000000001")
     higher_id = uuid.UUID("ffffffff-0000-4000-8000-000000000002")
     async for session in get_test_session():

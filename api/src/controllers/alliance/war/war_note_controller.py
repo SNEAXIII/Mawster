@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
+from src.controllers.alliance.war.war_deps import WarDep
 from src.dto.alliance.war.dto_war_note import (
     WarFightNoteResponse,
     WarFightNoteUpsertRequest,
@@ -13,7 +14,6 @@ from src.services.alliance.war.WarFightNoteService import WarFightNoteService
 from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
 from src.utils.path_params import BattlegroupPath
-from src.controllers.alliance.war.war_deps import WarDep
 
 war_note_controller = APIRouter(
     prefix="/alliances/{alliance_id}/wars",

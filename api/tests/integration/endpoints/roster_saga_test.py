@@ -10,15 +10,15 @@ import pytest
 from main import app
 from src.enums.Roles import Roles
 from src.utils.db import get_session
+from tests.integration.endpoints.setup.game_setup import push_champion, push_game_account
 from tests.integration.endpoints.setup.user_setup import push_one_user
-from tests.integration.endpoints.setup.game_setup import push_game_account, push_champion
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
     execute_post_request,
     execute_put_request,
 )
-from tests.utils.utils_constant import USER_ID, GAME_PSEUDO
+from tests.utils.utils_constant import GAME_PSEUDO, USER_ID
 from tests.utils.utils_db import get_test_session
 
 app.dependency_overrides[get_session] = get_test_session

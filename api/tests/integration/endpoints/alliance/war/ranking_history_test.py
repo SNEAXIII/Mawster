@@ -1,19 +1,20 @@
 """Integration tests for GET /alliances/{id}/ranking-history."""
 
 import uuid
+
 import pytest
 
 from main import app
 from src.enums.Roles import Roles
-from src.models.Season import Season
 from src.enums.SeasonStatus import SeasonStatus
+from src.models.Season import Season
 from src.models.War import War, WarStatus
 from src.utils.db import get_session
-from tests.utils.utils_client import create_auth_headers, execute_get_request
-from tests.utils.utils_constant import USER_ID, USER2_ID
-from tests.utils.utils_db import get_test_session, load_objects
 from tests.integration.endpoints.setup.game_setup import push_alliance_with_owner, push_visitor
 from tests.integration.endpoints.setup.user_setup import get_generic_user
+from tests.utils.utils_client import create_auth_headers, execute_get_request
+from tests.utils.utils_constant import USER2_ID, USER_ID
+from tests.utils.utils_db import get_test_session, load_objects
 
 app.dependency_overrides[get_session] = get_test_session
 

@@ -1,18 +1,18 @@
 import uuid
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from src.Messages.war_messages import BANNED_CHAMPION_LIST_TOO_LONG
 from src.dto.admin.dto_champion import ChampionResponse
+from src.Messages.war_messages import BANNED_CHAMPION_LIST_TOO_LONG
 
 MAX_BANNED_CHAMPIONS = 7
 
 
 class WarCreateRequest(BaseModel):
     opponent_name: str = Field(..., max_length=100, min_length=1)
-    banned_champion_ids: List[uuid.UUID] = Field(
+    banned_champion_ids: list[uuid.UUID] = Field(
         default_factory=list,
         max_length=MAX_BANNED_CHAMPIONS,
         description=BANNED_CHAMPION_LIST_TOO_LONG,
@@ -28,12 +28,12 @@ class WarResponse(BaseModel):
     status: str
     created_by_pseudo: str
     created_at: datetime
-    banned_champions: List[ChampionResponse] = []
-    season_id: Optional[uuid.UUID] = None
-    season_number: Optional[int] = None
-    win: Optional[bool] = None
-    elo_change: Optional[int] = None
-    tier: Optional[int] = None
+    banned_champions: list[ChampionResponse] = []
+    season_id: uuid.UUID | None = None
+    season_number: int | None = None
+    win: bool | None = None
+    elo_change: int | None = None
+    tier: int | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -74,40 +74,40 @@ class WarPlacementResponse(BaseModel):
     champion_id: uuid.UUID
     champion_name: str
     champion_class: str
-    image_url: Optional[str] = None
+    image_url: str | None = None
     rarity: str
     ascension: int
-    placed_by_pseudo: Optional[str] = None
+    placed_by_pseudo: str | None = None
     created_at: datetime
-    note: Optional[str] = None
-    note_id: Optional[uuid.UUID] = None
+    note: str | None = None
+    note_id: uuid.UUID | None = None
     note_blocked: bool = False
     ko_count: int = 0
     is_combat_completed: bool = False
     is_fight_not_done: bool = False
     is_planning_error: bool = False
-    attacker_champion_user_id: Optional[uuid.UUID] = None
-    attacker_game_account_id: Optional[uuid.UUID] = None
-    attacker_pseudo: Optional[str] = None
-    attacker_champion_name: Optional[str] = None
-    attacker_champion_class: Optional[str] = None
-    attacker_image_url: Optional[str] = None
-    attacker_rarity: Optional[str] = None
-    attacker_is_preferred_attacker: Optional[bool] = None
+    attacker_champion_user_id: uuid.UUID | None = None
+    attacker_game_account_id: uuid.UUID | None = None
+    attacker_pseudo: str | None = None
+    attacker_champion_name: str | None = None
+    attacker_champion_class: str | None = None
+    attacker_image_url: str | None = None
+    attacker_rarity: str | None = None
+    attacker_is_preferred_attacker: bool | None = None
     is_saga_attacker: bool = False
     is_saga_defender: bool = False
-    attacker_ascension: Optional[int] = None
-    attacker_is_saga_attacker: Optional[bool] = None
-    attacker_is_saga_defender: Optional[bool] = None
+    attacker_ascension: int | None = None
+    attacker_is_saga_attacker: bool | None = None
+    attacker_is_saga_defender: bool | None = None
     is_assisted: bool = False
-    assistor_champion_user_id: Optional[uuid.UUID] = None
-    assistor_game_account_id: Optional[uuid.UUID] = None
-    assistor_pseudo: Optional[str] = None
-    assistor_champion_name: Optional[str] = None
-    assistor_champion_class: Optional[str] = None
-    assistor_image_url: Optional[str] = None
-    assistor_rarity: Optional[str] = None
-    assistor_ascension: Optional[int] = None
+    assistor_champion_user_id: uuid.UUID | None = None
+    assistor_game_account_id: uuid.UUID | None = None
+    assistor_pseudo: str | None = None
+    assistor_champion_name: str | None = None
+    assistor_champion_class: str | None = None
+    assistor_image_url: str | None = None
+    assistor_rarity: str | None = None
+    assistor_ascension: int | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -177,9 +177,9 @@ class AvailableAttackerResponse(BaseModel):
     game_pseudo: str
     champion_id: uuid.UUID
     champion_name: str
-    champion_alias: Optional[str] = None
+    champion_alias: str | None = None
     champion_class: str
-    image_url: Optional[str] = None
+    image_url: str | None = None
     rarity: str
     ascension: int
     signature: int
@@ -195,9 +195,9 @@ class AvailablePrefightAttackerResponse(BaseModel):
     game_pseudo: str
     champion_id: uuid.UUID
     champion_name: str
-    champion_alias: Optional[str] = None
+    champion_alias: str | None = None
     champion_class: str
-    image_url: Optional[str] = None
+    image_url: str | None = None
     rarity: str
     ascension: int = 0
     is_preferred_attacker: bool = False
@@ -221,7 +221,7 @@ class WarSynergyResponse(BaseModel):
     target_champion_user_id: uuid.UUID
     champion_name: str
     champion_class: str
-    image_url: Optional[str] = None
+    image_url: str | None = None
     rarity: str
     ascension: int = 0
     is_saga_attacker: bool = False
@@ -257,7 +257,7 @@ class WarSynergyResponse(BaseModel):
 
 class WarUpdateRequest(BaseModel):
     opponent_name: str = Field(..., max_length=100, min_length=1, pattern=r"^[a-zA-Z0-9 ]+$")
-    banned_champion_ids: List[uuid.UUID] = Field(
+    banned_champion_ids: list[uuid.UUID] = Field(
         default_factory=list,
         max_length=MAX_BANNED_CHAMPIONS,
         description=BANNED_CHAMPION_LIST_TOO_LONG,
@@ -266,7 +266,7 @@ class WarUpdateRequest(BaseModel):
 
 class WarEndRequest(BaseModel):
     win: bool
-    elo_change: Optional[int] = None
+    elo_change: int | None = None
 
 
 class WarPrefightCreateRequest(BaseModel):
@@ -285,7 +285,7 @@ class WarPrefightResponse(BaseModel):
     target_node_number: int
     champion_name: str
     champion_class: str
-    image_url: Optional[str] = None
+    image_url: str | None = None
     rarity: str
     ascension: int = 0
     is_saga_attacker: bool = False

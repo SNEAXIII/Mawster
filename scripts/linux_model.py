@@ -1,6 +1,7 @@
 import os
 import signal
 import subprocess
+
 from IOsModel import IOsModel  # pylint: disable=import-error
 
 
@@ -17,9 +18,12 @@ class LinuxModel(IOsModel):
         return cmd
 
     def kill_port(self, port: int) -> None:
-        result = subprocess.run(["lsof", "-ti", f":{port}"], capture_output=True, text=True)
+        # check=False: no listener on the port is the normal case, not a failure.
+        result = subprocess.run(
+            ["lsof", "-ti", f":{port}"], capture_output=True, text=True, check=False
+        )
         for pid in result.stdout.strip().splitlines():
-            subprocess.run(["kill", "-9", pid.strip()], capture_output=True)
+            subprocess.run(["kill", "-9", pid.strip()], capture_output=True, check=False)
 
     @property
     def start_new_session(self) -> bool:
@@ -34,4 +38,4 @@ class LinuxModel(IOsModel):
 
 class LinuxHeadlessModel(LinuxModel):
     def cypress_cmd(self, cmd: list[str]) -> list[str]:
-        return ["xvfb-run", "-a"] + cmd
+        return ["xvfb-run", "-a", *cmd]

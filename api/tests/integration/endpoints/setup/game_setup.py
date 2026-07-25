@@ -1,7 +1,6 @@
 """Setup helpers to create game accounts, alliances, officers and members for integration tests."""
 
 import uuid
-from typing import Optional
 
 from src.models.Alliance import Alliance
 from src.models.AllianceOfficer import AllianceOfficer
@@ -11,14 +10,13 @@ from src.models.ChampionUser import ChampionUser
 from src.models.GameAccount import GameAccount
 from src.models.Mastery import Mastery
 from tests.utils.utils_constant import (
-    GAME_PSEUDO,
-    GAME_PSEUDO_2,
     ALLIANCE_NAME,
     ALLIANCE_TAG,
+    GAME_PSEUDO,
+    GAME_PSEUDO_2,
     USER_ID,
 )
 from tests.utils.utils_db import load_objects
-
 
 # ---------------------------------------------------------------------------
 # Game Accounts
@@ -29,9 +27,9 @@ def get_game_account(
     user_id: uuid.UUID = USER_ID,
     game_pseudo: str = GAME_PSEUDO,
     is_primary: bool = False,
-    alliance_id: Optional[uuid.UUID] = None,
-    alliance_group: Optional[int] = None,
-    account_id: Optional[uuid.UUID] = None,
+    alliance_id: uuid.UUID | None = None,
+    alliance_group: int | None = None,
+    account_id: uuid.UUID | None = None,
 ) -> GameAccount:
     return GameAccount(
         id=account_id or uuid.uuid4(),
@@ -52,7 +50,7 @@ def get_alliance(
     owner_id: uuid.UUID,
     name: str = ALLIANCE_NAME,
     tag: str = ALLIANCE_TAG,
-    alliance_id: Optional[uuid.UUID] = None,
+    alliance_id: uuid.UUID | None = None,
 ) -> Alliance:
     return Alliance(
         id=alliance_id or uuid.uuid4(),
@@ -82,7 +80,7 @@ async def push_game_account(
     user_id: uuid.UUID = USER_ID,
     game_pseudo: str = GAME_PSEUDO,
     is_primary: bool = False,
-    alliance_id: Optional[uuid.UUID] = None,
+    alliance_id: uuid.UUID | None = None,
 ) -> GameAccount:
     """Insert a single game account into the test DB and return it."""
     acc = get_game_account(

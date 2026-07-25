@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import sqlalchemy as sa
 from sqlmodel import Field, Relationship
@@ -40,14 +40,14 @@ class MatchupRating(UUIDBase, TimestampMixin, table=True):
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
     target_type: MatchupTargetType
-    defender_champion_id: Optional[uuid.UUID] = Field(default=None, foreign_key="champion.id")
-    node_number: Optional[NodeNumber] = Field(default=None)
+    defender_champion_id: uuid.UUID | None = Field(default=None, foreign_key="champion.id")
+    node_number: NodeNumber | None = Field(default=None)
     # Denormalised target discriminant — see services/alliance/matchup_scoring.build_target_key.
     target_key: str = Field(max_length=64)
     verdict: MatchupVerdict
-    prefight_champion_id: Optional[uuid.UUID] = Field(default=None, foreign_key="champion.id")
+    prefight_champion_id: uuid.UUID | None = Field(default=None, foreign_key="champion.id")
     # Never written in v1. NULL means "applies to every season".
-    season_id: Optional[uuid.UUID] = Field(default=None, foreign_key="season.id")
+    season_id: uuid.UUID | None = Field(default=None, foreign_key="season.id")
     created_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     updated_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     updated_at: datetime = Field(default_factory=utcnow)
@@ -70,4 +70,4 @@ class MatchupRating(UUIDBase, TimestampMixin, table=True):
             "overlaps": "champion,defender_champion",
         }
     )
-    synergies: List["MatchupSynergy"] = Relationship(back_populates="rating", cascade_delete=True)
+    synergies: list["MatchupSynergy"] = Relationship(back_populates="rating", cascade_delete=True)

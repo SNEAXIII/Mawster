@@ -39,7 +39,7 @@ REVISION_LATEST = "/revision/latest"
 def clean_image_url(url: str) -> str:
     """Strip Fandom's thumbnail suffixes to get the original full-size image."""
     if REVISION_LATEST in url:
-        return f"{url.split(REVISION_LATEST)[0]}{REVISION_LATEST}"
+        return f"{url.split(REVISION_LATEST, maxsplit=1)[0]}{REVISION_LATEST}"
     return url
 
 
@@ -52,8 +52,9 @@ def sanitize_filename(name: str) -> str:
 
 def _save_clean_png(data: bytes, filepath: Path) -> None:
     """Re-save PNG via PIL to strip non-deterministic metadata chunks."""
-    from PIL import Image
     import io
+
+    from PIL import Image
 
     with Image.open(io.BytesIO(data)) as img:
         img.save(filepath, format="PNG", optimize=False)
@@ -101,7 +102,7 @@ def _find_champion_tables(soup):
         return tables
 
     # Strategy 3: any table with class containing "wiki"
-    tables = soup.find_all("table", class_=re.compile(r"wiki|article|fandom", re.I))
+    tables = soup.find_all("table", class_=re.compile(r"wiki|article|fandom", re.IGNORECASE))
     print(f"  [DEBUG] Tables with wiki/article/fandom class: {len(tables)}")
     return tables
 
@@ -187,8 +188,8 @@ def _parse_champion_row(cells, seen_names, champions, row_idx):
 
 def scrape_champions_list() -> list[dict]:
     """Scrape the wiki and return a list of champion dicts."""
-    from curl_cffi import requests as cffi_requests
     from bs4 import BeautifulSoup
+    from curl_cffi import requests as cffi_requests
 
     print(f"Fetching {WIKI_URL} ...")
     resp = cffi_requests.get(WIKI_URL, impersonate="chrome", timeout=60)
@@ -301,9 +302,7 @@ def _resize_to_size(size: int, champions_data: list[dict], force: bool = False) 
             print(f"  [ERROR] Failed to resize {source_path.name}: {e}")
             error_count += 1
 
-    print(
-        f"Done! Resized: {resized_count}, Skipped: {skipped_count}, Errors: {error_count}"
-    )
+    print(f"Done! Resized: {resized_count}, Skipped: {skipped_count}, Errors: {error_count}")
 
 
 def action_resize(force: bool = False):
@@ -324,7 +323,7 @@ def action_resize(force: bool = False):
         print("No resize_sizes configured in [tool.scraper] of pyproject.toml.")
         return
 
-    with open(JSON_OUTPUT, "r", encoding="utf-8") as f:
+    with open(JSON_OUTPUT, encoding="utf-8") as f:
         champions_data = json.load(f)
 
     for size in sizes:

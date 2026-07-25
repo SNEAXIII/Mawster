@@ -1,9 +1,8 @@
 import uuid
-from typing import Optional
 
-from sqlmodel import select, or_, and_
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql.expression import Select
+from sqlmodel import and_, or_, select
 
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
@@ -18,15 +17,15 @@ class AllianceRosterService:
         stmt: Select,
         *,
         alliance_id: uuid.UUID,
-        name: Optional[str],
-        champion_class: Optional[str],
-        ranks: Optional[list[str]],
-        ascensions: Optional[list[int]],
+        name: str | None,
+        champion_class: str | None,
+        ranks: list[str] | None,
+        ascensions: list[int] | None,
         preferred_attacker: bool,
-        alliance_group: Optional[int],
+        alliance_group: int | None,
         no_group: bool,
-        saga_attacker_ids: Optional[set[uuid.UUID]],
-        saga_defender_ids: Optional[set[uuid.UUID]],
+        saga_attacker_ids: set[uuid.UUID] | None,
+        saga_defender_ids: set[uuid.UUID] | None,
     ) -> Select:
         """Apply the champion-search filters at the instance level."""
         stmt = (
@@ -73,16 +72,16 @@ class AllianceRosterService:
         session: SessionDep,
         alliance_id: uuid.UUID,
         *,
-        name: Optional[str] = None,
-        champion_class: Optional[str] = None,
-        ranks: Optional[list[str]] = None,
-        ascensions: Optional[list[int]] = None,
+        name: str | None = None,
+        champion_class: str | None = None,
+        ranks: list[str] | None = None,
+        ascensions: list[int] | None = None,
         preferred_attacker: bool = False,
-        alliance_group: Optional[int] = None,
+        alliance_group: int | None = None,
         no_group: bool = False,
-        saga_attacker_ids: Optional[set[uuid.UUID]] = None,
-        saga_defender_ids: Optional[set[uuid.UUID]] = None,
-        distinct_champion_limit: Optional[int] = None,
+        saga_attacker_ids: set[uuid.UUID] | None = None,
+        saga_defender_ids: set[uuid.UUID] | None = None,
+        distinct_champion_limit: int | None = None,
     ) -> list[ChampionUser]:
         """Return alliance-wide champion entries, optionally filtered.
 
@@ -91,18 +90,18 @@ class AllianceRosterService:
         distinct champions — the first N alphabetically by name — with every
         matching instance of those champions.
         """
-        filter_kwargs = dict(
-            alliance_id=alliance_id,
-            name=name,
-            champion_class=champion_class,
-            ranks=ranks,
-            ascensions=ascensions,
-            preferred_attacker=preferred_attacker,
-            alliance_group=alliance_group,
-            no_group=no_group,
-            saga_attacker_ids=saga_attacker_ids,
-            saga_defender_ids=saga_defender_ids,
-        )
+        filter_kwargs = {
+            "alliance_id": alliance_id,
+            "name": name,
+            "champion_class": champion_class,
+            "ranks": ranks,
+            "ascensions": ascensions,
+            "preferred_attacker": preferred_attacker,
+            "alliance_group": alliance_group,
+            "no_group": no_group,
+            "saga_attacker_ids": saga_attacker_ids,
+            "saga_defender_ids": saga_defender_ids,
+        }
 
         stmt = cls._apply_filters(select(ChampionUser), **filter_kwargs)
 

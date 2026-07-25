@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, List, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -14,7 +14,7 @@ me_moderation_controller = APIRouter(tags=["Moderation"])
 
 class MyMuteInfo(BaseModel):
     reason: str
-    expires_at: Optional[datetime] = None
+    expires_at: datetime | None = None
 
 
 class MyWarnInfo(BaseModel):
@@ -23,8 +23,8 @@ class MyWarnInfo(BaseModel):
 
 
 class MyModerationResponse(BaseModel):
-    mute: Optional[MyMuteInfo] = None
-    warns: List[MyWarnInfo] = []
+    mute: MyMuteInfo | None = None
+    warns: list[MyWarnInfo] = []
 
 
 @me_moderation_controller.get("/me/moderation", response_model=MyModerationResponse)

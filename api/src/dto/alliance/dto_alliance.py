@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -23,7 +23,7 @@ class AllianceMemberResponse(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID
     game_pseudo: str
-    alliance_group: Optional[int] = None
+    alliance_group: int | None = None
     is_owner: bool = False
     is_officer: bool = False
 
@@ -122,7 +122,7 @@ class AllianceAddMemberRequest(BaseModel):
 class AllianceSetGroupRequest(BaseModel):
     """DTO to assign a member to a group (1, 2, 3) or remove from group (null)."""
 
-    group: Optional[int] = Field(None, ge=1, le=3, examples=[1])
+    group: int | None = Field(None, ge=1, le=3, examples=[1])
 
 
 class AllianceRoleEntry(BaseModel):

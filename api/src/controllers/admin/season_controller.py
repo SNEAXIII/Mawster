@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from starlette import status
@@ -7,9 +7,9 @@ from starlette import status
 from src.dto.admin.dto_saga import SagaRoleResponse, SagaRoleUpsertRequest
 from src.dto.admin.dto_season import SeasonCreateRequest, SeasonResponse
 from src.models import User
-from src.services.auth.AuthService import AuthService
 from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
+from src.services.auth.AuthService import AuthService
 from src.services.knowledge.FightRecordService import FightRecordService
 from src.utils.db import SessionDep
 
@@ -114,7 +114,7 @@ async def list_seasons_public(
     return await SeasonService.get_all_seasons(session)
 
 
-@season_public_controller.get("/current", response_model=Optional[SeasonResponse])
+@season_public_controller.get("/current", response_model=SeasonResponse | None)
 async def get_current_season(session: SessionDep):
     """Return the current (non-ended) season, or null if none exists."""
     return await SeasonService.get_current_season(session)

@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from sqlmodel import Field, Relationship
@@ -23,7 +23,7 @@ class WarFightNote(UUIDBase, TimestampMixin, table=True):
     # Nullable + SET NULL: removing/replacing a defender must not destroy the node's note.
     # This column is provenance only (written once at creation, never read back), so losing
     # the link when the placement is deleted is safe; the note stays keyed on its node.
-    war_defense_placement_id: Optional[uuid.UUID] = Field(
+    war_defense_placement_id: uuid.UUID | None = Field(
         default=None, foreign_key="war_defense_placement.id", ondelete="SET NULL"
     )
     war_id: uuid.UUID = Field(foreign_key="war.id")
@@ -34,13 +34,11 @@ class WarFightNote(UUIDBase, TimestampMixin, table=True):
     created_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     updated_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     updated_at: datetime = Field(default_factory=utcnow)
-    war_fight_record_id: Optional[uuid.UUID] = Field(
-        default=None, foreign_key="war_fight_record.id"
-    )
+    war_fight_record_id: uuid.UUID | None = Field(default=None, foreign_key="war_fight_record.id")
     # Moderation columns (used by a later plan; created now to avoid a second migration churn).
-    whitelisted_at: Optional[datetime] = Field(default=None)
-    whitelisted_by_id: Optional[uuid.UUID] = Field(default=None, foreign_key="user.id")
-    deleted_at: Optional[datetime] = Field(default=None)
-    deleted_by_id: Optional[uuid.UUID] = Field(default=None, foreign_key="user.id")
+    whitelisted_at: datetime | None = Field(default=None)
+    whitelisted_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
+    deleted_at: datetime | None = Field(default=None)
+    deleted_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
 
-    revisions: List["WarFightNoteRevision"] = Relationship(back_populates="note")
+    revisions: list["WarFightNoteRevision"] = Relationship(back_populates="note")

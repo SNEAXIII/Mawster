@@ -1,5 +1,5 @@
 from src.storage.base import Storage, crop_key, result_key, screen_key  # noqa: F401
-from src.storage.s3 import S3Storage  # noqa: F401
+from src.storage.s3 import S3Storage
 
 _storage: Storage = S3Storage()
 

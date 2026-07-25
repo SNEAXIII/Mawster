@@ -1,13 +1,13 @@
 """Unit tests for alliance DTOs."""
 
 import uuid
-from datetime import datetime
 from unittest.mock import MagicMock
 
 import pytest
 from pydantic import ValidationError
 
 from src.dto.alliance.dto_alliance import AllianceCreateRequest, AllianceResponse
+from src.models.Base import utcnow
 
 
 class TestAllianceCreateRequest:
@@ -39,7 +39,7 @@ def _make_alliance(elo: int = 1500, tier: int = 8):
     a.name = "TestAlliance"
     a.tag = "TEST"
     a.owner_id = uuid.uuid4()
-    a.created_at = datetime.now()
+    a.created_at = utcnow()
     a.elo = elo
     a.tier = tier
     a.owner = MagicMock(game_pseudo="owner")

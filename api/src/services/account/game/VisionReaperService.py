@@ -44,7 +44,7 @@ class VisionReaperService:
                     object_key=job.object_key,
                 )
                 count += 1
-            except Exception:  # noqa: BLE001
+            except Exception:
                 logger.exception("reaper failed to requeue job %s", job.id)
         if count:
             logger.info("reaper requeued %s pending vision job(s)", count)

@@ -1,4 +1,5 @@
 import subprocess
+
 from IOsModel import IOsModel  # pylint: disable=import-error
 
 
@@ -15,14 +16,15 @@ class WindowsModel(IOsModel):
         return cmd
 
     def kill_port(self, port: int) -> None:
-        result = subprocess.run(["netstat", "-ano"], capture_output=True, text=True)
+        # check=False: no listener on the port is the normal case, not a failure.
+        result = subprocess.run(["netstat", "-ano"], capture_output=True, text=True, check=False)
         pids: set[str] = set()
         for line in result.stdout.splitlines():
             if "LISTENING" in line and f":{port} " in line:
                 parts = line.split()
                 pids.add(parts[-1])
         for pid in pids:
-            subprocess.run(["taskkill", "/F", "/PID", pid], capture_output=True)
+            subprocess.run(["taskkill", "/F", "/PID", pid], capture_output=True, check=False)
 
     @property
     def start_new_session(self) -> bool:

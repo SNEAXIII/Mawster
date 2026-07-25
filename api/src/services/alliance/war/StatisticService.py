@@ -1,35 +1,32 @@
 import uuid
-from typing import Optional
 
 from fastapi import HTTPException
-from starlette import status
-
-from src.models import User
-from src.models import ChampionUser, War, WarDefensePlacement, GameAccount
-from src.models.Alliance import Alliance
-from src.models.Champion import Champion
-from src.models.War import WarStatus
-from src.models.WarFightRecord import WarFightRecord
-from sqlalchemy import and_, func, cast, Integer, Float, case, union
+from sqlalchemy import Float, Integer, and_, case, cast, func, union
 from sqlmodel import select
+from starlette import status
 
 from src.dto.alliance.war.dto_statistic import (
     NOT_FOUGHT_KOS,
     ChampionUsageResponse,
     PlayerSeasonStatsResponse,
 )
+from src.models import ChampionUser, GameAccount, User, War, WarDefensePlacement
+from src.models.Alliance import Alliance
+from src.models.Champion import Champion
+from src.models.War import WarStatus
+from src.models.WarFightRecord import WarFightRecord
 from src.services.alliance.AllianceService import AllianceService
-from src.services.SeasonService import SeasonService
 from src.services.alliance.war._stat_expressions import (
-    is_normal,
-    miniboss_case,
     boss_case,
     is_assisted,
-    total_kos,
+    is_normal,
+    miniboss_case,
     total_fights,
-    total_weighted_fights,
+    total_kos,
     total_not_fought,
+    total_weighted_fights,
 )
+from src.services.SeasonService import SeasonService
 from src.utils.db import SessionDep
 
 
@@ -186,10 +183,10 @@ class StatisticService:
         session: SessionDep,
         current_user: User,
         alliance_id: uuid.UUID,
-        game_account_id: Optional[uuid.UUID] = None,
-        war_id: Optional[uuid.UUID] = None,
-        alliance_group: Optional[int] = None,
-        deathless: Optional[bool] = None,
+        game_account_id: uuid.UUID | None = None,
+        war_id: uuid.UUID | None = None,
+        alliance_group: int | None = None,
+        deathless: bool | None = None,
         perspective: str = "attacker",
     ) -> list[ChampionUsageResponse]:
         alliance = await session.get(Alliance, alliance_id)

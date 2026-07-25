@@ -1,7 +1,7 @@
 import logging
 import uuid
-from datetime import datetime, timedelta, timezone
-from typing import Optional, TYPE_CHECKING
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import selectinload
@@ -135,7 +135,7 @@ class VisionImportService:
                     object_key=job.object_key,
                 )
                 published_count += 1
-        except Exception as error:  # noqa: BLE001
+        except Exception as error:
             # Jobs already published are live in the broker and keep running to
             # completion; their predictions landing on a FAILED import is harmless
             # because predictions are staging data the user never confirms. Only
@@ -167,14 +167,14 @@ class VisionImportService:
     @classmethod
     async def get_current(
         cls, session: SessionDep, game_account_id: uuid.UUID
-    ) -> Optional[VisionImport]:
+    ) -> VisionImport | None:
         """The single import that still needs attention for this game account.
 
         CONFIRMED and CANCELLED are done with. Imports older than the retention
         window have lost their screenshots and crops to the bucket lifecycle, so
         validating them would mean approving data whose evidence is gone.
         """
-        cutoff = datetime.now(timezone.utc) - timedelta(days=SECRET.VISION_RETENTION_DAYS)
+        cutoff = datetime.now(UTC) - timedelta(days=SECRET.VISION_RETENTION_DAYS)
         statement = (
             select(VisionImport)
             .where(
@@ -203,7 +203,7 @@ class VisionImportService:
         """
         from src.models.GameAccount import GameAccount
 
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cutoff = datetime.now(UTC) - timedelta(hours=hours)
         statement = (
             select(func.count(VisionImport.id))
             .join(GameAccount, GameAccount.id == VisionImport.game_account_id)
@@ -258,27 +258,26 @@ class VisionImportService:
                     .order_by(VisionPrediction.id)
                 )
             ).all()
-            for pred in preds:
-                rows.append(
-                    VisionPredictionResponse(
-                        id=pred.id,
-                        job_id=job.id,
-                        champion_name=pred.champion_name,
-                        champion_class=pred.champion_class,
-                        stars=pred.stars,
-                        rank=pred.rank,
-                        signature=pred.signature,
-                        ascension=pred.ascension,
-                        confidence=pred.confidence,
-                        crop_index=cls._crop_index(pred.crop_key),
-                        job_index=job_index[job.id],
-                        candidates=[
-                            VisionCandidateResponse(name=c.name, score=c.score)
-                            for c in pred.candidates
-                        ],
-                        margin=cls._margin(pred.candidates),
-                    )
+            rows.extend(
+                VisionPredictionResponse(
+                    id=pred.id,
+                    job_id=job.id,
+                    champion_name=pred.champion_name,
+                    champion_class=pred.champion_class,
+                    stars=pred.stars,
+                    rank=pred.rank,
+                    signature=pred.signature,
+                    ascension=pred.ascension,
+                    confidence=pred.confidence,
+                    crop_index=cls._crop_index(pred.crop_key),
+                    job_index=job_index[job.id],
+                    candidates=[
+                        VisionCandidateResponse(name=c.name, score=c.score) for c in pred.candidates
+                    ],
+                    margin=cls._margin(pred.candidates),
                 )
+                for pred in preds
+            )
         return rows
 
     @staticmethod

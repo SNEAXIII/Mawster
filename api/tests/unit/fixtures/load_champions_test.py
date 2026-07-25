@@ -1,6 +1,6 @@
 from sqlmodel import Session, SQLModel, create_engine, select
 
-from src.fixtures.load_champions import _process_champion_item, _load_capabilities
+from src.fixtures.load_champions import _load_capabilities, _process_champion_item
 from src.models.Champion import Champion
 
 CAPS = {

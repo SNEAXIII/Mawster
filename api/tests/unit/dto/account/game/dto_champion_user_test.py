@@ -1,10 +1,10 @@
 """Unit tests for champion-related DTO model_validate with from_attributes."""
 
 import uuid
-from datetime import datetime
 from types import SimpleNamespace
 
 import pytest
+from pydantic import ValidationError
 
 from src.dto.account.game.dto_champion_user import (
     ChampionUserBulkEntry,
@@ -13,7 +13,7 @@ from src.dto.account.game.dto_champion_user import (
     ChampionUserResponse,
 )
 from src.dto.account.game.dto_upgrade_request import UpgradeRequestResponse
-
+from src.models.Base import utcnow
 
 # ---------------------------------------------------------------------------
 # Helpers — lightweight namespace objects that mimic ORM models
@@ -166,7 +166,7 @@ class TestChampionUserDetailResponseModelValidate:
 
 class TestUpgradeRequestResponseModelValidate:
     def test_maps_all_fields(self):
-        now = datetime.now()
+        now = utcnow()
         champ = _make_champion(name="Hercules", champion_class="Cosmic")
         cu = _make_champion_user(champion=champ, stars=7, rank=2)
         requester = _ns(game_pseudo="DrBalise")
@@ -193,7 +193,7 @@ class TestUpgradeRequestResponseModelValidate:
         assert dto.done_at is None
 
     def test_done_request(self):
-        now = datetime.now()
+        now = utcnow()
         champ = _make_champion()
         cu = _make_champion_user(champion=champ)
         req = _ns(
@@ -236,11 +236,11 @@ class TestChampionUserCreateRequestSignature:
         assert dto.signature == 100
 
     def test_sig_above_max_rejected(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             ChampionUserCreateRequest(**_BASE_CREATE, signature=201)
 
     def test_sig_negative_rejected(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             ChampionUserCreateRequest(**_BASE_CREATE, signature=-1)
 
     def test_sig_default_is_zero(self):
@@ -266,11 +266,11 @@ class TestChampionUserBulkEntrySignature:
         assert dto.signature == 200
 
     def test_sig_above_max_rejected(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             ChampionUserBulkEntry(**_BASE_BULK, signature=201)
 
     def test_sig_negative_rejected(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             ChampionUserBulkEntry(**_BASE_BULK, signature=-1)
 
     def test_sig_default_is_zero(self):

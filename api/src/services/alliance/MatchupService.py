@@ -1,11 +1,9 @@
 import uuid
 from collections import defaultdict
-from typing import Optional
-
-from sqlalchemy.orm import selectinload
-from sqlmodel import select
 
 from fastapi import HTTPException, status
+from sqlalchemy.orm import selectinload
+from sqlmodel import select
 
 from src.dto.alliance.dto_matchup import (
     ChampionRef,
@@ -25,13 +23,13 @@ from src.Messages.matchup_messages import (
     GAME_ACCOUNT_NOT_IN_ALLIANCE,
     MATCHUP_NOT_FOUND,
 )
+from src.models.Base import utcnow
 from src.models.Champion import Champion
 from src.models.ChampionUser import ChampionUser
 from src.models.DefensePlacement import DefensePlacement
 from src.models.GameAccount import GameAccount
 from src.models.MatchupRating import MatchupRating
 from src.models.MatchupSynergy import MatchupSynergy
-from src.models.Base import utcnow
 from src.services.alliance.matchup_scoring import (
     build_target_key,
     combine_verdicts,
@@ -151,9 +149,9 @@ class MatchupService:
         cls,
         session: SessionDep,
         alliance_id: uuid.UUID,
-        champion_id: Optional[uuid.UUID] = None,
-        defender_champion_id: Optional[uuid.UUID] = None,
-        node_number: Optional[int] = None,
+        champion_id: uuid.UUID | None = None,
+        defender_champion_id: uuid.UUID | None = None,
+        node_number: int | None = None,
     ) -> list[MatchupRating]:
         """List an alliance's ratings, optionally narrowed to one attacker or one target."""
         sql = select(MatchupRating).where(MatchupRating.alliance_id == alliance_id)
@@ -198,10 +196,10 @@ class MatchupService:
         cls,
         session: SessionDep,
         alliance_id: uuid.UUID,
-        defender_champion_id: Optional[uuid.UUID] = None,
-        node_number: Optional[int] = None,
-        champion_id: Optional[uuid.UUID] = None,
-        game_account_id: Optional[uuid.UUID] = None,
+        defender_champion_id: uuid.UUID | None = None,
+        node_number: int | None = None,
+        champion_id: uuid.UUID | None = None,
+        game_account_id: uuid.UUID | None = None,
     ) -> list[MatchupEvaluationRow]:
         """Rank the alliance's rated attackers against the selected defender and/or node.
 
@@ -245,7 +243,7 @@ class MatchupService:
         session: SessionDep,
         alliance_id: uuid.UUID,
         champion_id: uuid.UUID,
-        game_account_id: Optional[uuid.UUID] = None,
+        game_account_id: uuid.UUID | None = None,
     ) -> MatchupGridResponse:
         """Build the attacker-centric grid: every rated defender x every rated node.
 
@@ -292,9 +290,9 @@ class MatchupService:
                 )
 
         owned, on_defense = await cls._roster_context(session, alliance_id, game_account_id)
-        is_owned: Optional[bool] = None
-        instance_label: Optional[str] = None
-        is_on_defense: Optional[bool] = None
+        is_owned: bool | None = None
+        instance_label: str | None = None
+        is_on_defense: bool | None = None
         if game_account_id is not None:
             is_owned = champion_id in owned
             instance = owned.get(champion_id)
@@ -328,7 +326,7 @@ class MatchupService:
         ]
 
     @classmethod
-    def _prefight_ref(cls, rating: MatchupRating) -> Optional[ChampionRef]:
+    def _prefight_ref(cls, rating: MatchupRating) -> ChampionRef | None:
         return cls.champion_ref(rating.prefight_champion) if rating.prefight_champion else None
 
     @classmethod
@@ -349,7 +347,7 @@ class MatchupService:
         session: SessionDep,
         alliance_id: uuid.UUID,
         defender_champion_id: uuid.UUID,
-        game_account_id: Optional[uuid.UUID] = None,
+        game_account_id: uuid.UUID | None = None,
     ) -> MatchupDefenderGridResponse:
         """Build the defender-centric grid: every rated attacker x each attacker's rated nodes.
 
@@ -434,9 +432,9 @@ class MatchupService:
         cls,
         session: SessionDep,
         alliance_id: uuid.UUID,
-        defender_champion_id: Optional[uuid.UUID],
-        node_number: Optional[int],
-        champion_id: Optional[uuid.UUID],
+        defender_champion_id: uuid.UUID | None,
+        node_number: int | None,
+        champion_id: uuid.UUID | None,
     ) -> list[MatchupRating]:
         # Always go through build_target_key: it is the single source of truth for this format,
         # and a hand-rolled f-string here would silently return zero rows if the format changed.
@@ -490,7 +488,7 @@ class MatchupService:
 
     @classmethod
     async def _roster_context(
-        cls, session: SessionDep, alliance_id: uuid.UUID, game_account_id: Optional[uuid.UUID]
+        cls, session: SessionDep, alliance_id: uuid.UUID, game_account_id: uuid.UUID | None
     ) -> tuple[dict[uuid.UUID, ChampionUser], set[uuid.UUID]]:
         """Return (champion_id -> strongest owned instance, champion ids whose best is on defense).
 
@@ -543,7 +541,7 @@ class MatchupService:
         targets: dict[MatchupTargetType, MatchupRating],
         owned: dict[uuid.UUID, ChampionUser],
         on_defense: set[uuid.UUID],
-        game_account_id: Optional[uuid.UUID],
+        game_account_id: uuid.UUID | None,
     ) -> MatchupEvaluationRow:
         defender_rating = targets.get(MatchupTargetType.DEFENDER)
         node_rating = targets.get(MatchupTargetType.NODE)
@@ -558,7 +556,7 @@ class MatchupService:
         # rating, so the two sides overlap by construction. Merge on champion_id, and let
         # `required` win over `recommended` — a synergy demanded by either side is demanded.
         merged: dict[uuid.UUID, MatchupSynergyResponse] = {}
-        prefight: Optional[ChampionRef] = None
+        prefight: ChampionRef | None = None
         for rating in (defender_rating, node_rating):
             if rating is None:
                 continue
@@ -605,8 +603,8 @@ class MatchupService:
 
     @staticmethod
     def _champions_by_id(
-        defender_rating: Optional[MatchupRating],
-        node_rating: Optional[MatchupRating],
+        defender_rating: MatchupRating | None,
+        node_rating: MatchupRating | None,
         attacker: Champion,
     ) -> dict[uuid.UUID, Champion]:
         champions = {attacker.id: attacker}

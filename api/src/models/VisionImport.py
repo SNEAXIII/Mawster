@@ -1,6 +1,6 @@
 import uuid
 from enum import Enum
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship
 
@@ -32,4 +32,4 @@ class VisionImport(UUIDBase, TimestampMixin, table=True):
     game_account: "GameAccount" = Relationship(
         sa_relationship_kwargs={"foreign_keys": "[VisionImport.game_account_id]"}
     )
-    jobs: List["VisionJob"] = Relationship(back_populates="vision_import")
+    jobs: list["VisionJob"] = Relationship(back_populates="vision_import")

@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -24,10 +23,10 @@ class MatchupTargetInput(BaseModel):
     """One rating to write. Exactly one of defender/node is set."""
 
     target_type: MatchupTargetType
-    defender_champion_id: Optional[uuid.UUID] = None
-    node_number: Optional[int] = Field(default=None, ge=1, le=50)
+    defender_champion_id: uuid.UUID | None = None
+    node_number: int | None = Field(default=None, ge=1, le=50)
     verdict: MatchupVerdict
-    prefight_champion_id: Optional[uuid.UUID] = None
+    prefight_champion_id: uuid.UUID | None = None
     synergies: list[MatchupSynergyInput] = Field(default_factory=list, max_length=2)
 
     @model_validator(mode="after")
@@ -62,7 +61,7 @@ class ChampionRef(BaseModel):
     champion_id: uuid.UUID
     champion_name: str
     champion_class: str
-    image_url: Optional[str] = None
+    image_url: str | None = None
 
 
 class MatchupSynergyResponse(ChampionRef):
@@ -75,10 +74,10 @@ class MatchupRatingResponse(BaseModel):
     id: uuid.UUID
     champion: ChampionRef
     target_type: MatchupTargetType
-    defender: Optional[ChampionRef] = None
-    node_number: Optional[int] = None
+    defender: ChampionRef | None = None
+    node_number: int | None = None
     verdict: MatchupVerdict
-    prefight: Optional[ChampionRef] = None
+    prefight: ChampionRef | None = None
     synergies: list[MatchupSynergyResponse] = Field(default_factory=list)
     updated_at: datetime
 
@@ -93,7 +92,7 @@ class MatchupRatedSide(BaseModel):
 
     verdict: MatchupVerdict
     synergies: list[MatchupSynergyResponse] = Field(default_factory=list)
-    prefight: Optional[ChampionRef] = None
+    prefight: ChampionRef | None = None
 
 
 class MatchupScoredFight(BaseModel):
@@ -106,7 +105,7 @@ class MatchupScoredFight(BaseModel):
     """
 
     is_discouraged: bool
-    score: Optional[int] = None
+    score: int | None = None
 
     @model_validator(mode="after")
     def score_absent_iff_discouraged(self) -> "MatchupScoredFight":
@@ -125,8 +124,8 @@ class MatchupGridAxisEntry(MatchupRatedSide):
     (``MatchupDefenderGridCell.node``) and of the evaluation list (``MatchupEvaluationRow``).
     """
 
-    defender: Optional[ChampionRef] = None
-    node_number: Optional[int] = None
+    defender: ChampionRef | None = None
+    node_number: int | None = None
 
 
 class MatchupEvaluationRow(MatchupScoredFight):
@@ -141,14 +140,14 @@ class MatchupEvaluationRow(MatchupScoredFight):
     """
 
     champion: ChampionRef
-    defender: Optional[MatchupGridAxisEntry] = None
-    node: Optional[MatchupGridAxisEntry] = None
+    defender: MatchupGridAxisEntry | None = None
+    node: MatchupGridAxisEntry | None = None
     synergies: list[MatchupSynergyResponse] = Field(default_factory=list)
-    prefight: Optional[ChampionRef] = None
-    is_playable: Optional[bool] = None
-    instance_label: Optional[str] = None
+    prefight: ChampionRef | None = None
+    is_playable: bool | None = None
+    instance_label: str | None = None
     missing_champions: list[ChampionRef] = Field(default_factory=list)
-    is_on_defense: Optional[bool] = None
+    is_on_defense: bool | None = None
 
 
 class MatchupGridCell(MatchupScoredFight):
@@ -165,9 +164,9 @@ class MatchupGridCell(MatchupScoredFight):
 
 class MatchupGridResponse(BaseModel):
     attacker: ChampionRef
-    is_owned: Optional[bool] = None
-    instance_label: Optional[str] = None
-    is_on_defense: Optional[bool] = None
+    is_owned: bool | None = None
+    instance_label: str | None = None
+    is_on_defense: bool | None = None
     defenders: list[MatchupGridAxisEntry] = Field(default_factory=list)
     nodes: list[MatchupGridAxisEntry] = Field(default_factory=list)
     cells: list[MatchupGridCell] = Field(default_factory=list)

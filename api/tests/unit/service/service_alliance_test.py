@@ -9,19 +9,18 @@ from src.models.Alliance import Alliance
 from src.models.AllianceOfficer import AllianceOfficer
 from src.models.GameAccount import GameAccount
 from src.services.alliance.AllianceService import (
-    AllianceService,
-    MAX_MEMBERS_PER_GROUP,
     MAX_MEMBERS_PER_ALLIANCE,
+    MAX_MEMBERS_PER_GROUP,
+    AllianceService,
 )
 from tests.utils.utils_constant import (
-    USER_ID,
-    USER2_ID,
-    GAME_PSEUDO,
-    GAME_PSEUDO_2,
     ALLIANCE_NAME,
     ALLIANCE_TAG,
+    GAME_PSEUDO,
+    GAME_PSEUDO_2,
+    USER2_ID,
+    USER_ID,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -202,10 +201,7 @@ class TestAssertCanRemoveMember:
             caller_accounts = [_make_account(user_id=caller_id)]
 
         # Determine target
-        if target_role == "officer":
-            target_id = officer2_acc.id
-        else:
-            target_id = regular_acc.id
+        target_id = officer2_acc.id if target_role == "officer" else regular_acc.id
 
         result_mock = mocker.MagicMock()
         result_mock.all.return_value = caller_accounts
@@ -506,10 +502,7 @@ class TestSetMemberGroup:
         alliance_id = uuid.uuid4()
         ga_id = uuid.uuid4()
 
-        if member_found:
-            acc = _make_account(account_id=ga_id, alliance_id=alliance_id)
-        else:
-            acc = None
+        acc = _make_account(account_id=ga_id, alliance_id=alliance_id) if member_found else None
 
         session.get.return_value = acc
 

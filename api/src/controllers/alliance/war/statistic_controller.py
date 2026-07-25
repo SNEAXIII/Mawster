@@ -1,15 +1,15 @@
 import uuid
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
 from src.dto.alliance.war.dto_statistic import ChampionUsageResponse, PlayerSeasonStatsResponse
-from src.dto.player.dto_player_stats import PlayerStatsResponse, PlayerSeasonOption
+from src.dto.player.dto_player_stats import PlayerSeasonOption, PlayerStatsResponse
 from src.models import User
-from src.utils.db import SessionDep
 from src.services.alliance.war.StatisticService import StatisticService
-from src.services.PlayerStatsService import PlayerStatsService
 from src.services.auth.AuthService import AuthService
+from src.services.PlayerStatsService import PlayerStatsService
+from src.utils.db import SessionDep
 
 statistics_controller = APIRouter(
     prefix="/statistics",
@@ -41,10 +41,10 @@ async def get_champion_usage(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     alliance_id: uuid.UUID,
-    game_account_id: Optional[uuid.UUID] = Query(default=None),
-    war_id: Optional[uuid.UUID] = Query(default=None),
-    alliance_group: Optional[int] = Query(default=None),
-    deathless: Optional[bool] = Query(default=None),
+    game_account_id: uuid.UUID | None = Query(default=None),
+    war_id: uuid.UUID | None = Query(default=None),
+    alliance_group: int | None = Query(default=None),
+    deathless: bool | None = Query(default=None),
     perspective: str = Query(default="attacker", pattern="^(attacker|defender)$"),
 ):
     """Get champion usage aggregated for an alliance in the active season."""
@@ -65,7 +65,7 @@ async def get_player_stats(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     game_account_id: uuid.UUID,
-    season_id: Optional[uuid.UUID] = Query(default=None),
+    season_id: uuid.UUID | None = Query(default=None),
 ):
     """Composite personal stats for one game account (owner only)."""
     return await PlayerStatsService.get_player_stats(
@@ -81,8 +81,8 @@ async def get_player_champion_usage(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     game_account_id: uuid.UUID,
-    season_id: Optional[uuid.UUID] = Query(default=None),
-    deathless: Optional[bool] = Query(default=None),
+    season_id: uuid.UUID | None = Query(default=None),
+    deathless: bool | None = Query(default=None),
     perspective: str = Query(default="attacker", pattern="^(attacker|defender)$"),
 ):
     """Champion usage for one game account (owner only)."""

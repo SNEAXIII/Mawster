@@ -1,5 +1,6 @@
 import uuid
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
+
 import sqlalchemy as sa
 from sqlmodel import Field, Relationship
 
@@ -15,10 +16,10 @@ from src.models.Base import (
 )
 
 if TYPE_CHECKING:
-    from src.models.War import War
     from src.models.Champion import Champion
-    from src.models.GameAccount import GameAccount
     from src.models.ChampionUser import ChampionUser
+    from src.models.GameAccount import GameAccount
+    from src.models.War import War
 
 
 class WarDefensePlacement(UUIDBase, TimestampMixin, table=True):
@@ -34,13 +35,11 @@ class WarDefensePlacement(UUIDBase, TimestampMixin, table=True):
     stars: Stars
     rank: Rank
     ascension: Ascension = 0
-    placed_by_id: Optional[uuid.UUID] = Field(default=None, foreign_key="game_account.id")
-    attacker_champion_user_id: Optional[uuid.UUID] = Field(
+    placed_by_id: uuid.UUID | None = Field(default=None, foreign_key="game_account.id")
+    attacker_champion_user_id: uuid.UUID | None = Field(
         default=None, foreign_key="champion_user.id"
     )
-    assist_champion_user_id: Optional[uuid.UUID] = Field(
-        default=None, foreign_key="champion_user.id"
-    )
+    assist_champion_user_id: uuid.UUID | None = Field(default=None, foreign_key="champion_user.id")
     ko_count: KoCount = 0
     is_combat_completed: bool = Field(default=False)
     is_fight_not_done: bool = Field(default=False)

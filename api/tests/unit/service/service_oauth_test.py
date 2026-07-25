@@ -1,7 +1,8 @@
 """Unit tests for OAuthService shared logic."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from src.services.auth.OAuthService import OAuthService
 

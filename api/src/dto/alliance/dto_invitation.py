@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -31,7 +31,7 @@ class AllianceInvitationResponse(BaseModel):
     status: InvitationStatus
     type: InvitationType
     created_at: datetime
-    responded_at: Optional[datetime] = None
+    responded_at: datetime | None = None
 
     @model_validator(mode="before")
     @classmethod

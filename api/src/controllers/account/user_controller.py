@@ -4,13 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from starlette import status
 
+from src.dto.auth.dto_utilisateurs import UpdateLoginRequest, UserProfile
 from src.Messages.user_messages import (
     TARGET_USER_DELETED_SUCCESSFULLY,
 )
 from src.models import User
-from src.dto.auth.dto_utilisateurs import UpdateLoginRequest, UserProfile
-from src.services.auth.AuthService import AuthService
 from src.services.account.UserService import UserService
+from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
 
 user_controller = APIRouter(
