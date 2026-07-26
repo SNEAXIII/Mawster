@@ -16,7 +16,7 @@ services:
       - MARIADB_PASSWORD=password
       - MARIADB_ROOT_PASSWORD=rootpassword
     volumes:
-      - /mawster-db-dev:/var/lib/mysql
+      - ./db/dev:/var/lib/mysql
   phpmyadmin-dev:
     image: phpmyadmin/phpmyadmin
     ports:
@@ -120,7 +120,7 @@ services:
         aws --endpoint-url http://rustfs:9000 s3 ls
     restart: 'no'
     volumes:
-      - ./db/rustfs-data:/data
+      - ./db/rustfs:/data
   vision-worker:
     build:
       context: ./mcoc-vision
