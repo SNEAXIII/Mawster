@@ -35,7 +35,7 @@ from src.services.account.game.VisionImportService import VisionImportService
 from src.services.account.game.VisionResultService import VisionResultService
 from src.services.auth.AuthService import AuthService
 from src.storage import get_storage
-from src.storage.base import Storage, crop_key
+from src.storage.base import Storage, crop_key, sprite_key
 from src.utils.db import SessionDep
 
 vision_controller = APIRouter(
@@ -202,6 +202,42 @@ async def confirm_vision_import(
         session, storage, vision_import, body.rows, body.share_dataset
     )
     return VisionConfirmResponse(samples_archived=archived)
+
+
+@vision_controller.get("/imports/{import_id}/jobs/{job_id}/crops/sprite")
+async def get_crop_sprite(
+    session: SessionDep,
+    import_id: uuid.UUID,
+    job_id: uuid.UUID,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    storage: Annotated[Storage, Depends(get_storage)],
+):
+    """Every thumbnail of one screenshot, as a single sheet the front slices.
+
+    Declared before `/crops/{index}` so the literal path wins over the int one.
+    The object key is rebuilt server-side from ids whose ownership is verified —
+    a client-supplied key would let anyone read another user's screenshots by
+    guessing.
+    """
+    await _get_own_import(session, import_id, current_user.id)
+    key = sprite_key(import_id, job_id)
+    try:
+        data = await storage.get_bytes(SECRET.RUSTFS_BUCKET_VISION, key)
+    except ClientError as exc:
+        error_code = exc.response.get("Error", {}).get("Code")
+        http_status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+        if error_code in ("NoSuchKey", "404") or http_status == 404:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=VISION_CROP_NOT_FOUND
+            ) from exc
+        raise
+    # Immutable once written: the key embeds the import and job ids, and nothing
+    # ever rewrites that object.
+    return Response(
+        content=data,
+        media_type="image/webp",
+        headers={"Cache-Control": "private, max-age=3600, immutable"},
+    )
 
 
 @vision_controller.get("/imports/{import_id}/jobs/{job_id}/crops/{index}")

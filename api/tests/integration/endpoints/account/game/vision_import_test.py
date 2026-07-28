@@ -541,6 +541,72 @@ async def test_crop_bytes_missing_object_is_404(fake_infra):
     assert response.status_code == 404
 
 
+@pytest.mark.asyncio
+async def test_sprite_bytes_for_owner(fake_infra):
+    storage, _ = fake_infra
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    created = await _post_import(headers, account.id, [_png("a.png")])
+    import_id = created.json()["id"]
+    detail = await _get_import(headers, import_id)
+    job_id = detail["jobs"][0]["id"]
+
+    from src.storage.base import sprite_key
+
+    sheet = b"RIFF____WEBPVP8 sheet-bytes"
+    storage.objects[sprite_key(uuid.UUID(import_id), uuid.UUID(job_id))] = sheet
+
+    async with get_test_client() as client:
+        response = await client.get(
+            f"/vision/imports/{import_id}/jobs/{job_id}/crops/sprite", headers=headers
+        )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "image/webp"
+    assert response.content == sheet
+
+
+@pytest.mark.asyncio
+async def test_sprite_bytes_forbidden_for_non_owner(fake_infra):
+    await push_one_user()
+    await push_user2()
+    owner_account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+    created = await _post_import(
+        create_auth_headers(str(USER_ID)), owner_account.id, [_png("a.png")]
+    )
+    import_id = created.json()["id"]
+    detail = await _get_import(create_auth_headers(str(USER_ID)), import_id)
+    job_id = detail["jobs"][0]["id"]
+
+    async with get_test_client() as client:
+        response = await client.get(
+            f"/vision/imports/{import_id}/jobs/{job_id}/crops/sprite",
+            headers=create_auth_headers(str(USER2_ID)),
+        )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_sprite_missing_object_is_404(fake_infra):
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    created = await _post_import(headers, account.id, [_png("a.png")])
+    import_id = created.json()["id"]
+    detail = await _get_import(headers, import_id)
+    job_id = detail["jobs"][0]["id"]
+
+    async with get_test_client() as client:
+        response = await client.get(
+            f"/vision/imports/{import_id}/jobs/{job_id}/crops/sprite", headers=headers
+        )
+
+    assert response.status_code == 404
+
+
 async def _drive_job_done_with_prediction(job_id: str) -> None:
     """Drive a job to DONE with one prediction through the real service, exactly
     as the vision worker would report a successful read."""

@@ -17,6 +17,16 @@ def crop_key(import_id: uuid.UUID, job_id: uuid.UUID, index: int) -> str:
     return f"imports/{import_id}/{job_id}/crops/{index}.png"
 
 
+def sprite_key(import_id: uuid.UUID, job_id: uuid.UUID) -> str:
+    """Object key of the sheet holding every thumbnail of one screenshot.
+
+    Cross-repo contract with the vision worker (mcoc-vision/worker/crops.py):
+    do not change this layout on one side only. Versioned so that changing the
+    cell geometry ships as a new key instead of a stale cached image.
+    """
+    return f"imports/{import_id}/{job_id}/crops/sprite_v1.webp"
+
+
 def import_prefix(import_id: uuid.UUID) -> str:
     """Prefix covering every object of an import, across all its jobs.
 
