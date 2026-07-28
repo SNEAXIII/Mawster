@@ -95,14 +95,14 @@ export default function ImportPreviewRowEdit({
   }
 
   return (
-    <div className='py-2.5 flex items-center gap-3'>
+    <div className='flex gap-3 py-3'>
       <div className='shrink-0'>
         {row.cropUrl ? (
           <img
             src={row.cropUrl}
             alt={row.champion_name}
             loading='lazy'
-            className='h-20 w-20 rounded object-cover border border-border'
+            className='h-24 w-24 rounded-md object-cover border border-border'
             data-cy={`preview-row-crop-${index}`}
           />
         ) : (
@@ -115,18 +115,19 @@ export default function ImportPreviewRowEdit({
         )}
       </div>
 
-      <div className='min-w-0 flex-1'>
-        <ImportPreviewChampionPicker
-          index={index}
-          championName={shortenChampionName(row.champion_name)}
-          championImageUrl={row.image_url}
-          candidates={row.candidates ?? []}
-          onPick={(name) => emit({ champion_name: name })}
-        />
-        <p className={`text-xs ${getClassColors(row.champion_class ?? 'Unknown').label}`}>
-          {row.champion_class ?? 'Unknown'}
-        </p>
-        <div className='mt-1 flex items-center gap-1'>
+      <div className='min-w-0 flex-1 space-y-1.5'>
+        {/* Identity: name, class and the two badges on one wrapping line */}
+        <div className='flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1'>
+          <ImportPreviewChampionPicker
+            index={index}
+            championName={shortenChampionName(row.champion_name)}
+            championImageUrl={row.image_url}
+            candidates={row.candidates ?? []}
+            onPick={(name) => emit({ champion_name: name })}
+          />
+          <span className={`text-xs ${getClassColors(row.champion_class ?? 'Unknown').label}`}>
+            {row.champion_class ?? 'Unknown'}
+          </span>
           {row.corrected ? (
             <Badge
               className='text-[10px] px-1.5 py-0 bg-sky-600 text-white border-transparent'
@@ -153,64 +154,63 @@ export default function ImportPreviewRowEdit({
             {statusLabels[status]}
           </Badge>
         </div>
-      </div>
-
-      <div className='shrink-0 flex items-end gap-1.5'>
-        <div className='flex flex-col gap-0.5'>
-          <span className='text-[10px] text-muted-foreground'>
-            {t.roster.importExport.rarityLabel}
-          </span>
-          <Select
-            value={row.newRarity}
-            onValueChange={(value) => emit({ newRarity: value })}
-          >
-            <SelectTrigger
-              className='h-8 w-[4.5rem] text-xs px-2'
-              data-cy={`preview-row-rarity-select-${index}`}
+        <div className='flex flex-row gap-6'>
+          <label className='flex min-w-0 flex-col gap-0.5'>
+            <span className='text-[10px] uppercase tracking-wide text-muted-foreground'>
+              {t.roster.importExport.rarityLabel}
+            </span>
+            <Select
+              value={row.newRarity}
+              onValueChange={(value) => emit({ newRarity: value })}
             >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {RARITIES.map((rarity) => (
-                <SelectItem
-                  key={rarity}
-                  value={rarity}
-                >
-                  {RARITY_LABELS[rarity] ?? rarity}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+              <SelectTrigger
+                className='h-8 w-full text-xs px-2'
+                data-cy={`preview-row-rarity-select-${index}`}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RARITIES.map((rarity) => (
+                  <SelectItem
+                    key={rarity}
+                    value={rarity}
+                  >
+                    {RARITY_LABELS[rarity] ?? rarity}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </label>
 
-        <div className='flex flex-col gap-0.5'>
-          <span className='text-[10px] text-muted-foreground'>
-            {t.roster.importExport.sigLabel}
-          </span>
-          <Input
-            type='number'
-            min={0}
-            max={MAX_SIGNATURE}
-            className='h-8 w-14 text-xs px-2'
-            value={row.newSignature}
-            onChange={(e) => emit({ newSignature: clamp(e.target.value, MAX_SIGNATURE) })}
-            data-cy={`preview-row-signature-input-${index}`}
-          />
-        </div>
+          <label className='flex flex-col gap-0.5'>
+            <span className='text-[10px] uppercase tracking-wide text-muted-foreground'>
+              {t.roster.importExport.sigLabel}
+            </span>
+            <Input
+              type='number'
+              min={0}
+              max={MAX_SIGNATURE}
+              className='h-8 w-full text-xs px-2'
+              value={row.newSignature}
+              onChange={(e) => emit({ newSignature: clamp(e.target.value, MAX_SIGNATURE) })}
+              data-cy={`preview-row-signature-input-${index}`}
+            />
+          </label>
 
-        <div className='flex flex-col gap-0.5'>
-          <span className='text-[10px] text-muted-foreground'>
-            {t.roster.importExport.ascLabel}
-          </span>
-          <Input
-            type='number'
-            min={0}
-            max={MAX_ASCENSION}
-            className='h-8 w-14 text-xs px-2'
-            value={row.ascension ?? 0}
-            onChange={(e) => emit({ ascension: clamp(e.target.value, MAX_ASCENSION) })}
-            data-cy={`preview-row-ascension-input-${index}`}
-          />
+          <label className='flex flex-col gap-0.5'>
+            <span className='text-[10px] uppercase tracking-wide text-muted-foreground'>
+              {t.roster.importExport.ascLabel}
+            </span>
+            <Input
+              type='number'
+              min={0}
+              max={MAX_ASCENSION}
+              className='h-8 w-full text-xs px-2'
+              value={row.ascension ?? 0}
+              onChange={(e) => emit({ ascension: clamp(e.target.value, MAX_ASCENSION) })}
+              data-cy={`preview-row-ascension-input-${index}`}
+            />
+          </label>
         </div>
       </div>
     </div>
