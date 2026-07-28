@@ -1,16 +1,16 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import ChampionPortrait from '@/components/champion-portrait';
-import { cn } from '@/app/lib/utils';
-import { X, Swords, CheckCircle } from 'lucide-react';
-import { type WarPlacement } from '@/app/services/war';
-import { useWar } from '@/app/contexts/war-context';
+import { useI18n } from '@/app/i18n'
+import ChampionPortrait from '@/components/champion-portrait'
+import { cn } from '@/app/lib/utils'
+import { X, Swords, CheckCircle } from 'lucide-react'
+import { type WarPlacement } from '@/app/services/war'
+import { useWar } from '@/app/contexts/war-context'
 
 interface AssistAssignmentRowProps {
-  placement: WarPlacement;
-  mode?: 'compact' | 'full';
-  readonly?: boolean;
+  placement: WarPlacement
+  mode?: 'compact' | 'full'
+  readonly?: boolean
 }
 
 export default function AssistAssignmentRow({
@@ -18,20 +18,20 @@ export default function AssistAssignmentRow({
   mode = 'compact',
   readonly = false,
 }: Readonly<AssistAssignmentRowProps>) {
-  const { t } = useI18n();
-  const { handleRemoveAssist, handleToggleCombatCompleted, isVisitor } = useWar();
+  const { t } = useI18n()
+  const { handleRemoveAssist, handleToggleCombatCompleted, isVisitor } = useWar()
 
-  const isFull = mode === 'full';
-  const portraitSize = isFull ? 55 : 40;
-  const btnSize = isFull ? 'w-7 h-7' : 'w-5 h-5';
-  const iconSize = isFull ? 'w-3.5 h-3.5' : 'w-2.5 h-2.5';
-  const boxPaddingSize = isFull ? 'px-7 py-2' : 'px-2 py-1.5';
+  const isFull = mode === 'full'
+  const portraitSize = isFull ? 55 : 40
+  const btnSize = isFull ? 'w-7 h-7' : 'w-5 h-5'
+  const iconSize = isFull ? 'w-3.5 h-3.5' : 'w-2.5 h-2.5'
+  const boxPaddingSize = isFull ? 'px-7 py-2' : 'px-2 py-1.5'
 
   return (
     <div
       className={cn(
         'flex items-center gap-2 rounded-md border bg-amber-950/30 border-amber-800/30',
-        boxPaddingSize,
+        boxPaddingSize
       )}
       data-cy={`assist-assignment-node-${placement.node_number}`}
     >
@@ -82,10 +82,14 @@ export default function AssistAssignmentRow({
               placement.is_combat_completed
                 ? 'bg-red-700/80 hover:bg-red-700 text-white'
                 : 'bg-green-700 text-muted-foreground hover:text-white',
-              btnSize,
+              btnSize
             )}
             onClick={() => handleToggleCombatCompleted(placement.node_number)}
-            title={placement.is_combat_completed ? t.game.war.markCombatUndone : t.game.war.markCombatDone}
+            title={
+              placement.is_combat_completed
+                ? t.game.war.markCombatUndone
+                : t.game.war.markCombatDone
+            }
             data-cy={`assist-combat-complete-node-${placement.node_number}`}
           >
             {placement.is_combat_completed ? (
@@ -99,7 +103,7 @@ export default function AssistAssignmentRow({
             type='button'
             className={cn(
               'rounded-full bg-amber-500/80 hover:bg-amber-500 text-white flex items-center justify-center flex-shrink-0',
-              btnSize,
+              btnSize
             )}
             onClick={() => handleRemoveAssist(placement.node_number)}
             title={t.game.war.assist.revoke}
@@ -110,5 +114,5 @@ export default function AssistAssignmentRow({
         </>
       )}
     </div>
-  );
+  )
 }

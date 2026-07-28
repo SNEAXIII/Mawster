@@ -1,33 +1,36 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import { getChampionImageUrl } from '@/app/services/champions';
-import type { MatchupGridAxisEntry, MatchupVerdict } from '@/app/services/matchups';
+import { useI18n } from '@/app/i18n'
+import { getChampionImageUrl } from '@/app/services/champions'
+import type { MatchupGridAxisEntry, MatchupVerdict } from '@/app/services/matchups'
 
 interface Props {
-  entries: MatchupGridAxisEntry[];
-  axis: 'defender' | 'node';
+  entries: MatchupGridAxisEntry[]
+  axis: 'defender' | 'node'
 }
 
 // Single-axis fallback used when the grid has no nodes (or no defenders) recorded yet:
 // one column of verdicts instead of a two-axis score matrix.
 export default function MatchupGridAxisList({ entries, axis }: Readonly<Props>) {
-  const { t } = useI18n();
-  const kb = t.game.knowledgeBase;
+  const { t } = useI18n()
+  const kb = t.game.knowledgeBase
 
   const verdictLabel = (verdict: MatchupVerdict): string => {
-    if (verdict === 'discouraged') return kb.verdictDiscouraged;
-    if (verdict === 'good') return kb.verdictGood;
-    return kb.verdictOk;
-  };
+    if (verdict === 'discouraged') return kb.verdictDiscouraged
+    if (verdict === 'good') return kb.verdictGood
+    return kb.verdictOk
+  }
 
   const sortedEntries =
     axis === 'node'
       ? [...entries].sort((a, b) => (a.node_number ?? 0) - (b.node_number ?? 0))
-      : entries;
+      : entries
 
   return (
-    <table className='w-full text-sm' data-cy='matchup-grid'>
+    <table
+      className='w-full text-sm'
+      data-cy='matchup-grid'
+    >
       <thead className='text-muted-foreground'>
         <tr>
           <th className='text-left py-2'>{axis === 'defender' ? kb.defender : kb.node}</th>
@@ -70,5 +73,5 @@ export default function MatchupGridAxisList({ entries, axis }: Readonly<Props>) 
         ))}
       </tbody>
     </table>
-  );
+  )
 }

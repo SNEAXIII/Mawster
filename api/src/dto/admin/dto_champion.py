@@ -1,5 +1,4 @@
 import uuid
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -12,11 +11,11 @@ class ChampionResponse(BaseModel):
     id: uuid.UUID
     name: str
     champion_class: str
-    image_url: Optional[str] = None
+    image_url: str | None = None
     is_7_star: bool = False
     is_ascendable: bool = False
     has_prefight: bool = False
-    alias: Optional[str] = None
+    alias: str | None = None
 
 
 class ChampionPaginatedResponse(BaseModel):
@@ -31,7 +30,7 @@ class ChampionPaginatedResponse(BaseModel):
 class ChampionUpdateAliasRequest(BaseModel):
     """DTO to update alias of a champion."""
 
-    alias: Optional[str] = Field(default=None, max_length=500, examples=["spidey;peter;spider"])
+    alias: str | None = Field(default=None, max_length=500, examples=["spidey;peter;spider"])
 
 
 class ChampionLoadRequest(BaseModel):
@@ -39,7 +38,7 @@ class ChampionLoadRequest(BaseModel):
 
     name: str = Field(..., max_length=100)
     champion_class: str = Field(..., max_length=20)
-    image_url: Optional[str] = Field(default=None, max_length=500)
-    is_ascendable: Optional[bool] = None
-    has_prefight: Optional[bool] = None
-    alias: Optional[str] = Field(default=None, max_length=500)
+    image_url: str | None = Field(default=None, max_length=500)
+    is_ascendable: bool | None = None
+    has_prefight: bool | None = None
+    alias: str | None = Field(default=None, max_length=500)

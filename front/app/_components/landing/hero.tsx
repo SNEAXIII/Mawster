@@ -1,17 +1,17 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
-import { FaDiscord, FaLine } from 'react-icons/fa6';
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import AllianceRankingChart from '@/app/game/alliances/_components/alliance-ranking-chart';
-import { MOCK_RANKING_POINTS, MOCK_RANKING_SEASON } from './stats-mock-data';
-import { LANDING_LINKS } from './links';
+import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
+import { FaDiscord, FaLine } from 'react-icons/fa6'
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import AllianceRankingChart from '@/app/game/alliances/_components/alliance-ranking-chart'
+import { MOCK_RANKING_POINTS, MOCK_RANKING_SEASON } from './stats-mock-data'
+import { LANDING_LINKS } from './links'
 
 export function Hero() {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <section className='grid items-center gap-12 px-6 pb-20 pt-16 md:grid-cols-2 md:gap-10 md:px-12 md:pt-24'>
@@ -75,7 +75,7 @@ export function Hero() {
             className='inline-flex items-center gap-1.5 text-foreground hover:underline'
             data-cy='hero-contact-join'
           >
-            <FaDiscord/>
+            <FaDiscord />
             {t.landing.heroContactJoin}
           </a>
         </p>
@@ -101,5 +101,5 @@ export function Hero() {
         </p>
       </div>
     </section>
-  );
+  )
 }

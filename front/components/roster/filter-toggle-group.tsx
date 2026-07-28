@@ -1,14 +1,14 @@
-'use client';
+'use client'
 
-import { Button } from '@/components/ui/button';
-import { cn } from '@/app/lib/utils';
+import { Button } from '@/components/ui/button'
+import { cn } from '@/app/lib/utils'
 
 interface FilterToggleGroupProps<T extends string | number> {
-  options: readonly T[];
-  selected: T[];
-  onChange: (next: T[]) => void;
-  labelFor: (o: T) => string;
-  cyPrefix: string;
+  options: readonly T[]
+  selected: T[]
+  onChange: (next: T[]) => void
+  labelFor: (o: T) => string
+  cyPrefix: string
 }
 
 export default function FilterToggleGroup<T extends string | number>({
@@ -19,13 +19,13 @@ export default function FilterToggleGroup<T extends string | number>({
   cyPrefix,
 }: Readonly<FilterToggleGroupProps<T>>) {
   const toggle = (o: T) => {
-    onChange(selected.includes(o) ? selected.filter((s) => s !== o) : [...selected, o]);
-  };
+    onChange(selected.includes(o) ? selected.filter((s) => s !== o) : [...selected, o])
+  }
 
   return (
     <div className='flex flex-wrap gap-1'>
       {options.map((o) => {
-        const active = selected.includes(o);
+        const active = selected.includes(o)
         return (
           <Button
             key={String(o)}
@@ -38,8 +38,8 @@ export default function FilterToggleGroup<T extends string | number>({
           >
             {labelFor(o)}
           </Button>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

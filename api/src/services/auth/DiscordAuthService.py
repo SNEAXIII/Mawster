@@ -1,19 +1,17 @@
-from datetime import datetime
-from typing import Optional
-
 import httpx
 from fastapi import HTTPException
 from sqlmodel import select
 from starlette import status
 
-from src.security.secrets import SECRET
 from src.enums.Roles import Roles
 from src.Messages.discord_auth_messages import (
     DISCORD_API_ERROR,
     DISCORD_TOKEN_INVALID,
     EMAIL_CONFLICT,
 )
-from src.models import User, LoginLog
+from src.models import LoginLog, User
+from src.models.Base import utcnow
+from src.security.secrets import SECRET
 from src.services.auth.OAuthService import OAuthService
 from src.utils.db import SessionDep
 from src.utils.email_hash import hash_email
@@ -54,8 +52,8 @@ class DiscordAuthService(OAuthService):
                     f"{DISCORD_API_URL}/users/@me",
                     headers={"Authorization": f"Bearer {access_token}"},
                 )
-        except httpx.RequestError:
-            raise DISCORD_API_ERROR_EXCEPTION
+        except httpx.RequestError as exc:
+            raise DISCORD_API_ERROR_EXCEPTION from exc
 
         if response.status_code == 401:
             raise DISCORD_TOKEN_INVALID_EXCEPTION
@@ -65,7 +63,7 @@ class DiscordAuthService(OAuthService):
         return response.json()
 
     @classmethod
-    async def _get_user_by_discord_id(cls, session: SessionDep, discord_id: str) -> Optional[User]:
+    async def _get_user_by_discord_id(cls, session: SessionDep, discord_id: str) -> User | None:
         sql = select(User).where(User.discord_id == discord_id)
         result = await session.exec(sql)
         return result.first()
@@ -86,7 +84,7 @@ class DiscordAuthService(OAuthService):
         # 1. Recherche par discord_id
         existing_user = await cls._get_user_by_discord_id(session, discord_id)
         if existing_user:
-            existing_user.set_last_login_date(datetime.now())
+            existing_user.set_last_login_date(utcnow())
             if existing_user.email_hash_version != SECRET.EMAIL_PEPPER_VERSION:
                 existing_user.email_hash = hash_email(email)
                 existing_user.email_hash_version = SECRET.EMAIL_PEPPER_VERSION
@@ -112,7 +110,7 @@ class DiscordAuthService(OAuthService):
             discord_id=discord_id,
             role=Roles.USER,
         )
-        new_user.set_last_login_date(datetime.now())
+        new_user.set_last_login_date(utcnow())
         login_log = LoginLog(user=new_user)
         session.add(new_user)
         session.add(login_log)

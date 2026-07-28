@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,23 +11,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Input } from '@/components/ui/input';
-import { useI18n } from '@/app/i18n';
+} from '@/components/ui/alert-dialog'
+import { Input } from '@/components/ui/input'
+import { useI18n } from '@/app/i18n'
 
 type ConfirmationDialogProps = Readonly<{
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  description: string;
-  onConfirm: () => void;
-  confirmText?: string;
-  cancelText?: string;
-  variant?: 'default' | 'destructive';
-  children?: ReactNode;
-  trigger?: ReactNode;
-  requireConfirmText?: string;
-}>;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  title: string
+  description: string
+  onConfirm: () => void
+  // Fires when the user explicitly clicks the Cancel button — unlike
+  // onOpenChange(false), which also fires on Esc/overlay dismissal. Lets a
+  // caller give the "safe" default action real behavior (e.g. "resume")
+  // without treating every dismissal as that action.
+  onCancelClick?: () => void
+  confirmText?: string
+  cancelText?: string
+  variant?: 'default' | 'destructive'
+  children?: ReactNode
+  trigger?: ReactNode
+  requireConfirmText?: string
+  dataCy?: string
+}>
 
 export function ConfirmationDialog({
   open,
@@ -35,22 +41,24 @@ export function ConfirmationDialog({
   title,
   description,
   onConfirm,
+  onCancelClick,
   confirmText,
   cancelText,
   variant = 'default',
   children,
   trigger,
   requireConfirmText,
+  dataCy,
 }: ConfirmationDialogProps) {
-  const { t } = useI18n();
-  const [typedValue, setTypedValue] = useState('');
+  const { t } = useI18n()
+  const [typedValue, setTypedValue] = useState('')
 
   function handleOpenChange(next: boolean) {
-    if (!next) setTypedValue('');
-    onOpenChange(next);
+    if (!next) setTypedValue('')
+    onOpenChange(next)
   }
 
-  const canConfirm = !requireConfirmText || typedValue === requireConfirmText;
+  const canConfirm = !requireConfirmText || typedValue === requireConfirmText
 
   return (
     <AlertDialog
@@ -58,7 +66,7 @@ export function ConfirmationDialog({
       onOpenChange={handleOpenChange}
     >
       {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
-      <AlertDialogContent>
+      <AlertDialogContent data-cy={dataCy}>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
@@ -73,7 +81,10 @@ export function ConfirmationDialog({
           />
         )}
         <AlertDialogFooter>
-          <AlertDialogCancel data-cy='confirmation-dialog-cancel'>
+          <AlertDialogCancel
+            onClick={onCancelClick}
+            data-cy='confirmation-dialog-cancel'
+          >
             {cancelText ?? t.common.cancel}
           </AlertDialogCancel>
           <AlertDialogAction
@@ -89,5 +100,5 @@ export function ConfirmationDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

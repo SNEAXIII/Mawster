@@ -1,34 +1,34 @@
-'use client';
+'use client'
 
-import { useEffect, useMemo, useState } from 'react';
-import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { useI18n } from '@/app/i18n';
+import { useEffect, useMemo, useState } from 'react'
+import { ConfirmationDialog } from '@/components/confirmation-dialog'
+import { useI18n } from '@/app/i18n'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { FiX } from 'react-icons/fi';
-import { type Champion, getChampions } from '@/app/services/champions';
-import ChampionPortrait from '@/components/champion-portrait';
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { FiX } from 'react-icons/fi'
+import { type Champion, getChampions } from '@/app/services/champions'
+import ChampionPortrait from '@/components/champion-portrait'
 
 // todo max ban automatique
-const MAX_BANS = 7;
+const MAX_BANS = 7
 
-let championsCache: Champion[] | null = null;
+let championsCache: Champion[] | null = null
 
 interface WarFormDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onConfirm: (opponentName: string, bannedChampionIds: string[]) => Promise<void>;
-  mode?: 'create' | 'edit';
-  initialOpponentName?: string;
-  initialBannedIds?: string[];
+  open: boolean
+  onClose: () => void
+  onConfirm: (opponentName: string, bannedChampionIds: string[]) => Promise<void>
+  mode?: 'create' | 'edit'
+  initialOpponentName?: string
+  initialBannedIds?: string[]
 }
 
 export default function WarFormDialog({
@@ -39,85 +39,88 @@ export default function WarFormDialog({
   initialOpponentName = '',
   initialBannedIds = [],
 }: WarFormDialogProps) {
-  const { t } = useI18n();
-  const [opponentName, setOpponentName] = useState(initialOpponentName);
-  const [loading, setLoading] = useState(false);
-  const [champions, setChampions] = useState<Champion[]>([]);
-  const [search, setSearch] = useState('');
-  const [bannedIds, setBannedIds] = useState<string[]>(initialBannedIds);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { t } = useI18n()
+  const [opponentName, setOpponentName] = useState(initialOpponentName)
+  const [loading, setLoading] = useState(false)
+  const [champions, setChampions] = useState<Champion[]>([])
+  const [search, setSearch] = useState('')
+  const [bannedIds, setBannedIds] = useState<string[]>(initialBannedIds)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   useEffect(() => {
-    if (!open) return;
-    setOpponentName(initialOpponentName);
-    setBannedIds(initialBannedIds);
+    if (!open) return
+    setOpponentName(initialOpponentName)
+    setBannedIds(initialBannedIds)
     if (championsCache) {
-      setChampions(championsCache);
+      setChampions(championsCache)
     } else {
       getChampions(1, 9999)
-        .then((res) => { championsCache = res.champions; setChampions(res.champions); })
-        .catch(() => {});
+        .then((res) => {
+          championsCache = res.champions
+          setChampions(res.champions)
+        })
+        .catch(() => {})
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
-  const bannedSet = useMemo(() => new Set(bannedIds), [bannedIds]);
+  const bannedSet = useMemo(() => new Set(bannedIds), [bannedIds])
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return [];
+    const q = search.trim().toLowerCase()
+    if (!q) return []
     return champions.filter((c) => {
-      if (c.name.toLowerCase().includes(q)) return true;
-      if (!c.alias) return false;
-      return c.alias.split(';').some((a) => a.trim().toLowerCase().includes(q));
-    });
-  }, [search, champions]);
+      if (c.name.toLowerCase().includes(q)) return true
+      if (!c.alias) return false
+      return c.alias.split(';').some((a) => a.trim().toLowerCase().includes(q))
+    })
+  }, [search, champions])
 
   const bannedChampions = useMemo(
     () => champions.filter((c) => bannedSet.has(c.id)),
     [champions, bannedSet]
-  );
+  )
 
   const toggleBan = (id: string) => {
     setBannedIds((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= MAX_BANS) return prev;
-      return [...prev, id];
-    });
-  };
+      if (prev.includes(id)) return prev.filter((x) => x !== id)
+      if (prev.length >= MAX_BANS) return prev
+      return [...prev, id]
+    })
+  }
 
   const handleClose = () => {
-    setOpponentName('');
-    setBannedIds([]);
-    setSearch('');
-    onClose();
-  };
+    setOpponentName('')
+    setBannedIds([])
+    setSearch('')
+    onClose()
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!opponentName.trim()) return;
+    e.preventDefault()
+    if (!opponentName.trim()) return
     if (mode === 'create') {
-      setConfirmOpen(true);
+      setConfirmOpen(true)
     } else {
-      doConfirm();
+      doConfirm()
     }
-  };
+  }
 
   const doConfirm = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      await onConfirm(opponentName.trim(), bannedIds);
-      setOpponentName('');
-      setBannedIds([]);
-      setSearch('');
-      onClose();
+      await onConfirm(opponentName.trim(), bannedIds)
+      setOpponentName('')
+      setBannedIds([])
+      setSearch('')
+      onClose()
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const isCreate = mode === 'create';
-  const title = isCreate ? t.game.war.declareWar : t.game.war.editWar;
+  const isCreate = mode === 'create'
+  const title = isCreate ? t.game.war.declareWar : t.game.war.editWar
 
   return (
     <>
@@ -127,11 +130,17 @@ export default function WarFormDialog({
           onOpenChange={setConfirmOpen}
           title={t.game.war.declareWar}
           description={t.game.war.declareWarConfirmDesc.replace('{name}', opponentName.trim())}
-          onConfirm={() => { setConfirmOpen(false); doConfirm(); }}
+          onConfirm={() => {
+            setConfirmOpen(false)
+            doConfirm()
+          }}
           requireConfirmText='confirm'
         />
       )}
-      <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+      <Dialog
+        open={open}
+        onOpenChange={(o) => !o && handleClose()}
+      >
         <DialogContent className='sm:max-w-md'>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
@@ -196,15 +205,15 @@ export default function WarFormDialog({
                 {filtered.length > 0 && (
                   <div className='border rounded-md mt-1 max-h-48 overflow-y-auto bg-popover'>
                     {filtered.slice(0, 5).map((c) => {
-                      const selected = bannedSet.has(c.id);
+                      const selected = bannedSet.has(c.id)
                       return (
                         <button
                           key={c.id}
                           type='button'
                           className={`w-full text-left px-2 py-1 text-sm hover:bg-accent flex items-center gap-2 ${selected ? 'bg-accent/50' : ''}`}
                           onClick={() => {
-                            toggleBan(c.id);
-                            setSearch('');
+                            toggleBan(c.id)
+                            setSearch('')
                           }}
                           data-cy={`ban-option-${c.id}`}
                         >
@@ -219,7 +228,7 @@ export default function WarFormDialog({
                             {c.champion_class}
                           </span>
                         </button>
-                      );
+                      )
                     })}
                   </div>
                 )}
@@ -227,7 +236,11 @@ export default function WarFormDialog({
             </div>
 
             <DialogFooter>
-              <Button type='button' variant='outline' onClick={handleClose}>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={handleClose}
+              >
                 {t.common.cancel}
               </Button>
               <Button
@@ -242,5 +255,5 @@ export default function WarFormDialog({
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }

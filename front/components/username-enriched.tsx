@@ -1,19 +1,19 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { Crown, Shield } from 'lucide-react';
-import { cn } from '@/app/lib/utils';
+import React from 'react'
+import { Crown, Shield } from 'lucide-react'
+import { cn } from '@/app/lib/utils'
 
-export type MemberRole = 'owner' | 'officer' | 'member';
+export type MemberRole = 'owner' | 'officer' | 'member'
 
 interface UsernameEnrichedProps {
-  pseudo: string;
-  role?: MemberRole;
-  group?: number | null;
-  isMine?: boolean;
-  className?: string;
+  pseudo: string
+  role?: MemberRole
+  group?: number | null
+  isMine?: boolean
+  className?: string
   /** Text size class override — defaults to text-sm */
-  textSize?: string;
+  textSize?: string
 }
 
 /**
@@ -53,14 +53,14 @@ export default function UsernameEnriched({
       {role === 'officer' && <Shield className='h-3 w-3 text-purple-500 shrink-0' />}
       <span className='truncate'>{pseudo}</span>
     </span>
-  );
+  )
 }
 
 /**
  * Helper to derive MemberRole from boolean flags.
  */
 export function getMemberRole(isOwner: boolean, isOfficer: boolean): MemberRole {
-  if (isOwner) return 'owner';
-  if (isOfficer) return 'officer';
-  return 'member';
+  if (isOwner) return 'owner'
+  if (isOfficer) return 'officer'
+  return 'member'
 }

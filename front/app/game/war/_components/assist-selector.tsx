@@ -1,23 +1,23 @@
-'use client';
+'use client'
 
-import { useCallback } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import { SearchInput } from '@/components/search-input';
-import ChampionPortrait from '@/components/champion-portrait';
-import { cn } from '@/app/lib/utils';
-import { getClassColors, shortenChampionName } from '@/app/services/roster';
-import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils';
-import { getAvailableAttackers } from '@/app/services/war';
-import { useWar } from '@/app/contexts/war-context';
-import { useAvailableAttackers } from './use-available-attackers';
+import { useCallback } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Separator } from '@/components/ui/separator'
+import { SearchInput } from '@/components/search-input'
+import ChampionPortrait from '@/components/champion-portrait'
+import { cn } from '@/app/lib/utils'
+import { getClassColors, shortenChampionName } from '@/app/services/roster'
+import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils'
+import { getAvailableAttackers } from '@/app/services/war'
+import { useWar } from '@/app/contexts/war-context'
+import { useAvailableAttackers } from './use-available-attackers'
 
 interface AssistSelectorDialogProps {
-  open: boolean;
-  onClose: () => void;
-  nodeNumber: number;
-  attackerGameAccountId: string | null;
+  open: boolean
+  onClose: () => void
+  nodeNumber: number
+  attackerGameAccountId: string | null
 }
 
 export default function AssistSelectorDialog({
@@ -26,14 +26,14 @@ export default function AssistSelectorDialog({
   nodeNumber,
   attackerGameAccountId,
 }: Readonly<AssistSelectorDialogProps>) {
-  const { t } = useI18n();
-  const { selectedAllianceId, activeWarId, selectedBg, handleAssignAssist } = useWar();
+  const { t } = useI18n()
+  const { selectedAllianceId, activeWarId, selectedBg, handleAssignAssist } = useWar()
 
   const fetchFn = useCallback(
     () => getAvailableAttackers(selectedAllianceId!, activeWarId!, selectedBg),
     [selectedAllianceId, activeWarId, selectedBg]
-  );
-  const guardedFetch = selectedAllianceId && activeWarId ? fetchFn : null;
+  )
+  const guardedFetch = selectedAllianceId && activeWarId ? fetchFn : null
 
   const {
     available,
@@ -45,28 +45,28 @@ export default function AssistSelectorDialog({
     error,
     filterBySearch,
     buildGroups,
-  } = useAvailableAttackers(open, guardedFetch);
+  } = useAvailableAttackers(open, guardedFetch)
 
   const filtered = filterBySearch(
     available.filter(
       (a) => attackerGameAccountId === null || a.game_account_id !== attackerGameAccountId
     )
-  );
-  const groups = buildGroups(filtered);
+  )
+  const groups = buildGroups(filtered)
 
-  let content: React.ReactNode;
+  let content: React.ReactNode
   if (loading) {
-    content = <div className='text-center text-muted-foreground py-8'>{t.common.loading}</div>;
+    content = <div className='text-center text-muted-foreground py-8'>{t.common.loading}</div>
   } else if (error) {
     content = (
       <div className='text-center text-destructive py-8'>{t.game.war.availableAttackersError}</div>
-    );
+    )
   } else if (groups.length === 0) {
     content = (
       <div className='text-center text-muted-foreground py-8'>
         {t.game.war.assist.noneAvailable}
       </div>
-    );
+    )
   } else {
     content = groups.map((group) => (
       <div key={group.gameAccountId}>
@@ -75,7 +75,7 @@ export default function AssistSelectorDialog({
         </div>
         <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2'>
           {group.attackers.map((a) => {
-            const classColors = getClassColors(a.champion_class);
+            const classColors = getClassColors(a.champion_class)
             return (
               <button
                 key={a.champion_user_id}
@@ -84,8 +84,8 @@ export default function AssistSelectorDialog({
                   'hover:ring-2 hover:ring-primary/60'
                 )}
                 onClick={() => {
-                  void handleAssignAssist(nodeNumber, a.champion_user_id);
-                  onClose();
+                  void handleAssignAssist(nodeNumber, a.champion_user_id)
+                  onClose()
                 }}
                 data-cy={`assist-pick-${a.champion_name.replaceAll(/\s+/g, '-')}`}
               >
@@ -112,11 +112,11 @@ export default function AssistSelectorDialog({
                   {a.champion_class}
                 </span>
               </button>
-            );
+            )
           })}
         </div>
       </div>
-    ));
+    ))
   }
 
   return (
@@ -152,5 +152,5 @@ export default function AssistSelectorDialog({
         <div className='overflow-y-auto flex-1 p-3 flex flex-col gap-4'>{content}</div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

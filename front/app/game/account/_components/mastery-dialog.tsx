@@ -1,17 +1,17 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { getMasteries, MasteryEntry } from '@/app/services/masteries';
-import { useI18n } from '@/app/i18n';
-import MasteryMiniView, { MasteryMode } from './mastery-mini-view';
+import { useEffect, useState } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { getMasteries, MasteryEntry } from '@/app/services/masteries'
+import { useI18n } from '@/app/i18n'
+import MasteryMiniView, { MasteryMode } from './mastery-mini-view'
 
 interface MasteryDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  gameAccountId: string;
-  pseudo: string;
-  defaultMode?: MasteryMode;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  gameAccountId: string
+  pseudo: string
+  defaultMode?: MasteryMode
 }
 
 export default function MasteryDialog({
@@ -21,18 +21,18 @@ export default function MasteryDialog({
   pseudo,
   defaultMode = 'all',
 }: Readonly<MasteryDialogProps>) {
-  const { t } = useI18n();
-  const [masteries, setMasteries] = useState<MasteryEntry[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { t } = useI18n()
+  const [masteries, setMasteries] = useState<MasteryEntry[]>([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!open || !gameAccountId) return;
-    setLoading(true);
+    if (!open || !gameAccountId) return
+    setLoading(true)
     getMasteries(gameAccountId)
       .then(setMasteries)
       .catch(() => setMasteries([]))
-      .finally(() => setLoading(false));
-  }, [open, gameAccountId]);
+      .finally(() => setLoading(false))
+  }, [open, gameAccountId])
 
   return (
     <Dialog
@@ -55,5 +55,5 @@ export default function MasteryDialog({
         )}
       </DialogContent>
     </Dialog>
-  );
+  )
 }

@@ -1,28 +1,28 @@
-from time import perf_counter
 import asyncio
 import logging
+from contextlib import asynccontextmanager
+from time import perf_counter
 
 import jwt
-
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
-from starlette.middleware.base import _StreamingResponse
-from src.Messages.validators_messages import VALIDATION_ERROR
-from src.controllers import routers
-from src.security import IS_PROD, IS_TESTING
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+from prometheus_fastapi_instrumentator import Instrumentator
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from starlette import status
+from starlette.middleware.base import _StreamingResponse
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from prometheus_fastapi_instrumentator import Instrumentator
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
-
+from src.controllers import routers
+from src.Messages.validators_messages import VALIDATION_ERROR
+from src.messaging import get_consumer
+from src.security import IS_PROD, IS_TESTING
 from src.security.secrets import SECRET
-from src.utils.logging_config import setup_logging, audit_log
+from src.utils.logging_config import audit_log, setup_logging
 from src.utils.rate_limiter import limiter
 
 # Initialize logging before anything else
@@ -32,7 +32,29 @@ logger = logging.getLogger(__name__)
 if not IS_PROD:
     logger.info("Starting Mawster API — database: %s", SECRET.MARIADB_DATABASE)
 
-app = FastAPI(title="Mawster", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    consumer = get_consumer()
+    await consumer.start()
+
+    # Recover jobs stranded in PENDING by a crash between commit and publish.
+    from src.messaging import get_publisher
+    from src.messaging.consumer import Session  # the lifespan sessionmaker
+    from src.services.account.game.VisionReaperService import VisionReaperService
+
+    if SECRET.VISION_CONSUMER_ENABLED:
+        try:
+            async with Session() as session:
+                await VisionReaperService.requeue_pending(session, get_publisher())
+        except Exception:
+            logger.exception("vision reaper failed at startup")
+
+    yield
+    await consumer.stop()
+
+
+app = FastAPI(title="Mawster", version="1.0.0", lifespan=lifespan)
 Instrumentator().instrument(app)
 
 # Rate limiter (utilise l'IP du client — X-Forwarded-For si disponible, sinon connexion directe)
@@ -59,9 +81,10 @@ if not IS_PROD:
 
 if IS_TESTING:
     import hashlib
+
     from src.services.auth.DiscordAuthService import (
-        DiscordAuthService,
         DISCORD_TOKEN_INVALID_EXCEPTION,
+        DiscordAuthService,
     )
 
     async def _fake_verify(cls, access_token: str) -> dict:
@@ -144,7 +167,8 @@ async def check_user_role(
                 options={"verify_exp": False},
             )
             user_id = payload.get("user_id", "anonymous")
-        except Exception:
+        except jwt.PyJWTError:
+            # An unreadable token is not an error here: the request is audited as anonymous.
             pass
         audit_log(f"{method} {uri}", user_id=user_id, detail=f"status={response.status_code}")
     return response

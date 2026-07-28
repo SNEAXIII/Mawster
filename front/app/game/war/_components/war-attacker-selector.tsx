@@ -1,44 +1,44 @@
-'use client';
+'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useI18n } from '@/app/i18n';
-import { useWar } from '@/app/contexts/war-context';
-import { ChevronRight } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import { SearchInput } from '@/components/search-input';
-import ChampionPortrait from '@/components/champion-portrait';
-import { cn } from '@/app/lib/utils';
-import { getClassColors, shortenChampionName } from '@/app/services/roster';
-import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useI18n } from '@/app/i18n'
+import { useWar } from '@/app/contexts/war-context'
+import { ChevronRight } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Separator } from '@/components/ui/separator'
+import { SearchInput } from '@/components/search-input'
+import ChampionPortrait from '@/components/champion-portrait'
+import { cn } from '@/app/lib/utils'
+import { getClassColors, shortenChampionName } from '@/app/services/roster'
+import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils'
 import {
   type AvailableAttacker,
   type WarPlacement,
   getAvailableAttackers,
-} from '@/app/services/war';
-import AttackerEntryRow from './attacker-entry-row';
-import WarNoteEditor from './war-note-editor';
-import SelectorFilterBar from '@/app/game/_components/selector-filter-bar';
-import RarityFilterToggles from '@/app/game/_components/rarity-filter-toggles';
-import { useRarityFilter, rarityWeight } from '@/app/game/_components/use-rarity-filter';
-import { useCurrentSeason } from '@/hooks/use-current-season';
+} from '@/app/services/war'
+import AttackerEntryRow from './attacker-entry-row'
+import WarNoteEditor from './war-note-editor'
+import SelectorFilterBar from '@/app/game/_components/selector-filter-bar'
+import RarityFilterToggles from '@/app/game/_components/rarity-filter-toggles'
+import { useRarityFilter, rarityWeight } from '@/app/game/_components/use-rarity-filter'
+import { useCurrentSeason } from '@/hooks/use-current-season'
 
 interface WarAttackerSelectorProps {
-  open: boolean;
-  onClose: () => void;
-  nodeNumber: number;
-  allianceId: string;
-  warId: string;
-  battlegroup: number;
-  placements: WarPlacement[];
-  onSelect: (attacker: AvailableAttacker) => void;
+  open: boolean
+  onClose: () => void
+  nodeNumber: number
+  allianceId: string
+  warId: string
+  battlegroup: number
+  placements: WarPlacement[]
+  onSelect: (attacker: AvailableAttacker) => void
 }
 
 interface GroupedAttackers {
-  pseudo: string;
-  gameAccountId: string;
-  attackers: AvailableAttacker[];
-  assignedCount: number;
+  pseudo: string
+  gameAccountId: string
+  attackers: AvailableAttacker[]
+  assignedCount: number
 }
 
 export default function WarAttackerSelector({
@@ -51,29 +51,29 @@ export default function WarAttackerSelector({
   placements,
   onSelect,
 }: Readonly<WarAttackerSelectorProps>) {
-  const { t } = useI18n();
-  const { canManageWar } = useWar();
-  const currentSeason = useCurrentSeason();
-  const maxAttackers = currentSeason?.max_attackers_per_member ?? 3;
-  const searchRef = useRef<HTMLInputElement>(null);
-  const [showNote, setShowNote] = useState(false);
-  const [available, setAvailable] = useState<AvailableAttacker[]>([]);
-  const [playerFilter, setPlayerFilter] = useState('');
-  const [championSearch, setChampionSearch] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-  const [classFilter, setClassFilter] = useState('');
-  const [sagaFilter, setSagaFilter] = useState(false);
-  const [preferredFilter, setPreferredFilter] = useState(false);
+  const { t } = useI18n()
+  const { canManageWar } = useWar()
+  const currentSeason = useCurrentSeason()
+  const maxAttackers = currentSeason?.max_attackers_per_member ?? 3
+  const searchRef = useRef<HTMLInputElement>(null)
+  const [showNote, setShowNote] = useState(false)
+  const [available, setAvailable] = useState<AvailableAttacker[]>([])
+  const [playerFilter, setPlayerFilter] = useState('')
+  const [championSearch, setChampionSearch] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
+  const [classFilter, setClassFilter] = useState('')
+  const [sagaFilter, setSagaFilter] = useState(false)
+  const [preferredFilter, setPreferredFilter] = useState(false)
   const {
     activeTiers,
     toggleTier,
     matches: matchRarity,
-  } = useRarityFilter('mawster:war-attacker-rarity-tiers');
+  } = useRarityFilter('mawster:war-attacker-rarity-tiers')
 
   const fetchAvailable = useCallback(async () => {
-    setLoading(true);
-    setError(false);
+    setLoading(true)
+    setError(false)
     try {
       const data = await getAvailableAttackers(
         allianceId,
@@ -81,35 +81,35 @@ export default function WarAttackerSelector({
         battlegroup,
         undefined,
         nodeNumber
-      );
-      setAvailable(data);
+      )
+      setAvailable(data)
     } catch {
-      setError(true);
+      setError(true)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [allianceId, warId, battlegroup, nodeNumber]);
+  }, [allianceId, warId, battlegroup, nodeNumber])
 
   useEffect(() => {
     if (open) {
-      fetchAvailable();
-      setPlayerFilter('');
-      setChampionSearch('');
-      setClassFilter('');
-      setSagaFilter(false);
-      setPreferredFilter(false);
+      fetchAvailable()
+      setPlayerFilter('')
+      setChampionSearch('')
+      setClassFilter('')
+      setSagaFilter(false)
+      setPreferredFilter(false)
       // Unfold the note when one already exists, fold it otherwise.
-      const existingNote = placements.find((p) => p.node_number === nodeNumber)?.note;
-      setShowNote(!!existingNote);
+      const existingNote = placements.find((p) => p.node_number === nodeNumber)?.note
+      setShowNote(!!existingNote)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, fetchAvailable]);
+  }, [open, fetchAvailable])
 
   // Count already-assigned attackers per pseudo from current placements
-  const assignedByPseudo = new Map<string, number>();
+  const assignedByPseudo = new Map<string, number>()
   for (const p of placements) {
     if (p.attacker_pseudo) {
-      assignedByPseudo.set(p.attacker_pseudo, (assignedByPseudo.get(p.attacker_pseudo) ?? 0) + 1);
+      assignedByPseudo.set(p.attacker_pseudo, (assignedByPseudo.get(p.attacker_pseudo) ?? 0) + 1)
     }
   }
 
@@ -119,82 +119,82 @@ export default function WarAttackerSelector({
         a.localeCompare(b)
       ),
     [available]
-  );
+  )
 
   const availablePlayers = useMemo(
     () =>
       Array.from(new Set(available.map((a) => a.game_pseudo))).sort((a, b) => a.localeCompare(b)),
     [available]
-  );
+  )
 
   const canReset =
     playerFilter !== '' ||
     championSearch !== '' ||
     classFilter !== '' ||
     sagaFilter ||
-    preferredFilter;
+    preferredFilter
 
   const handleReset = () => {
-    setPlayerFilter('');
-    setChampionSearch('');
-    setClassFilter('');
-    setSagaFilter(false);
-    setPreferredFilter(false);
-  };
+    setPlayerFilter('')
+    setChampionSearch('')
+    setClassFilter('')
+    setSagaFilter(false)
+    setPreferredFilter(false)
+  }
 
   const filtered = available.filter((a) => {
-    const matchPlayer = !playerFilter || a.game_pseudo === playerFilter;
-    const alias = (a.champion_alias ?? '').toLowerCase();
+    const matchPlayer = !playerFilter || a.game_pseudo === playerFilter
+    const alias = (a.champion_alias ?? '').toLowerCase()
     const matchChampion =
       !championSearch ||
       a.champion_name.toLowerCase().includes(championSearch.toLowerCase()) ||
-      alias.includes(championSearch.toLowerCase());
-    const matchClass = !classFilter || a.champion_class === classFilter;
-    const matchSaga = !sagaFilter || a.is_saga_attacker;
-    const matchPreferred = !preferredFilter || a.is_preferred_attacker;
-    const matchTier = matchRarity(a.rarity);
-    return matchPlayer && matchChampion && matchClass && matchSaga && matchPreferred && matchTier;
-  });
+      alias.includes(championSearch.toLowerCase())
+    const matchClass = !classFilter || a.champion_class === classFilter
+    const matchSaga = !sagaFilter || a.is_saga_attacker
+    const matchPreferred = !preferredFilter || a.is_preferred_attacker
+    const matchTier = matchRarity(a.rarity)
+    return matchPlayer && matchChampion && matchClass && matchSaga && matchPreferred && matchTier
+  })
 
   // Group by member
-  const groupMap = new Map<string, GroupedAttackers>();
+  const groupMap = new Map<string, GroupedAttackers>()
   for (const a of filtered) {
-    let group = groupMap.get(a.game_account_id);
+    let group = groupMap.get(a.game_account_id)
     if (!group) {
       group = {
         pseudo: a.game_pseudo,
         gameAccountId: a.game_account_id,
         attackers: [],
         assignedCount: assignedByPseudo.get(a.game_pseudo) ?? 0,
-      };
-      groupMap.set(a.game_account_id, group);
+      }
+      groupMap.set(a.game_account_id, group)
     }
-    group.attackers.push(a);
+    group.attackers.push(a)
   }
-  const groups = Array.from(groupMap.values());
+  const groups = Array.from(groupMap.values())
   // Sort each member's champions: preferred first, then rarity descending.
   for (const group of groups) {
     group.attackers.sort((a, b) => {
       if (a.is_preferred_attacker !== b.is_preferred_attacker) {
-        return a.is_preferred_attacker ? -1 : 1;
+        return a.is_preferred_attacker ? -1 : 1
       }
-      return rarityWeight(b.rarity) - rarityWeight(a.rarity);
-    });
+      return rarityWeight(b.rarity) - rarityWeight(a.rarity)
+    })
   }
 
-  let content: React.ReactNode;
+  let content: React.ReactNode
   if (loading) {
-    content = <div className='text-center text-muted-foreground py-8'>{t.common.loading}</div>;
+    content = <div className='text-center text-muted-foreground py-8'>{t.common.loading}</div>
   } else if (error) {
     content = (
       <div className='text-center text-destructive py-8'>{t.game.war.availableAttackersError}</div>
-    );
+    )
   } else if (groups.length === 0) {
     content = (
       <div className='text-center text-muted-foreground py-8'>
         {t.game.war.noAvailableAttackers}
       </div>
-    );
+    )
   } else {
     content = groups.map((group) => (
       <div key={group.gameAccountId}>
@@ -208,7 +208,7 @@ export default function WarAttackerSelector({
         </div>
         <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2'>
           {group.attackers.map((a) => {
-            const classColors = getClassColors(a.champion_class);
+            const classColors = getClassColors(a.champion_class)
             return (
               <button
                 key={a.champion_user_id}
@@ -217,8 +217,8 @@ export default function WarAttackerSelector({
                   'hover:ring-2 hover:ring-primary/60'
                 )}
                 onClick={() => {
-                  onSelect(a);
-                  onClose();
+                  onSelect(a)
+                  onClose()
                 }}
                 data-cy={`attacker-card-${a.champion_name.replaceAll(/\s+/g, '-')}`}
               >
@@ -245,14 +245,14 @@ export default function WarAttackerSelector({
                   {a.champion_class}
                 </span>
               </button>
-            );
+            )
           })}
         </div>
       </div>
-    ));
+    ))
   }
 
-  const currentPlacement = placements.find((p) => p.node_number === nodeNumber);
+  const currentPlacement = placements.find((p) => p.node_number === nodeNumber)
 
   return (
     <Dialog
@@ -264,8 +264,8 @@ export default function WarAttackerSelector({
         data-cy='war-attacker-search'
         onOpenAutoFocus={(e) => {
           // Default focus the champion search instead of the note textarea
-          e.preventDefault();
-          searchRef.current?.focus();
+          e.preventDefault()
+          searchRef.current?.focus()
         }}
       >
         <DialogHeader className='px-6 py-4'>
@@ -357,5 +357,5 @@ export default function WarAttackerSelector({
         <div className='overflow-y-auto flex-1 min-h-0 p-3 flex flex-col gap-4'>{content}</div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

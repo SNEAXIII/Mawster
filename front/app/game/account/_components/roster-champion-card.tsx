@@ -1,28 +1,28 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import { cn } from '@/app/lib/utils';
-import ChampionPortrait from '@/components/champion-portrait';
+import { useI18n } from '@/app/i18n'
+import { cn } from '@/app/lib/utils'
+import ChampionPortrait from '@/components/champion-portrait'
 import {
   RosterEntry,
   getClassColors,
   shortenChampionName,
   getNextRarity,
-} from '@/app/services/roster';
-import { Trash2, Pencil, ArrowUp, X, Star } from 'lucide-react';
+} from '@/app/services/roster'
+import { Trash2, Pencil, ArrowUp, X, Star } from 'lucide-react'
 
 interface RosterChampionCardProps {
-  entry: RosterEntry;
-  onEdit?: (entry: RosterEntry) => void;
-  onDelete?: (entry: RosterEntry) => void;
-  onUpgrade?: (entry: RosterEntry) => void;
-  onTogglePreferredAttacker?: (entry: RosterEntry) => void;
-  onAscend?: (entry: RosterEntry) => void;
-  readOnly?: boolean;
+  entry: RosterEntry
+  onEdit?: (entry: RosterEntry) => void
+  onDelete?: (entry: RosterEntry) => void
+  onUpgrade?: (entry: RosterEntry) => void
+  onTogglePreferredAttacker?: (entry: RosterEntry) => void
+  onAscend?: (entry: RosterEntry) => void
+  readOnly?: boolean
   /** If set, this champion has a pending upgrade request */
-  pendingRequestId?: string;
+  pendingRequestId?: string
   /** Callback to cancel a pending upgrade request */
-  onCancelRequest?: (requestId: string) => void;
+  onCancelRequest?: (requestId: string) => void
 }
 
 export default function RosterChampionCard({
@@ -36,9 +36,9 @@ export default function RosterChampionCard({
   pendingRequestId,
   onCancelRequest,
 }: RosterChampionCardProps) {
-  const { t } = useI18n();
-  const classColors = getClassColors(entry.champion_class);
-  const nextRarity = getNextRarity(entry.rarity);
+  const { t } = useI18n()
+  const classColors = getClassColors(entry.champion_class)
+  const nextRarity = getNextRarity(entry.rarity)
 
   return (
     <div
@@ -169,5 +169,5 @@ export default function RosterChampionCard({
         )}
       </div>
     </div>
-  );
+  )
 }

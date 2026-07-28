@@ -1,21 +1,21 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { FiFlag, FiTrash2 } from 'react-icons/fi';
-import { AlertTriangle } from 'lucide-react';
-import { useI18n } from '@/app/i18n';
-import { useWar } from '@/app/contexts/war-context';
-import { useMyModeration } from '@/app/contexts/moderation-context';
-import { reportNote } from '@/app/services/moderation';
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { FiFlag, FiTrash2 } from 'react-icons/fi'
+import { AlertTriangle } from 'lucide-react'
+import { useI18n } from '@/app/i18n'
+import { useWar } from '@/app/contexts/war-context'
+import { useMyModeration } from '@/app/contexts/moderation-context'
+import { reportNote } from '@/app/services/moderation'
 
 interface WarNoteEditorProps {
-  nodeNumber: number;
-  note: string | null;
-  noteId?: string | null;
-  noteBlocked?: boolean;
-  canManage: boolean;
-  onSaved?: () => void;
+  nodeNumber: number
+  note: string | null
+  noteId?: string | null
+  noteBlocked?: boolean
+  canManage: boolean
+  onSaved?: () => void
 }
 
 export default function WarNoteEditor({
@@ -26,13 +26,13 @@ export default function WarNoteEditor({
   canManage,
   onSaved,
 }: Readonly<WarNoteEditorProps>) {
-  const { t } = useI18n();
-  const { handleSaveNote, handleDeleteNote } = useWar();
-  const { mute } = useMyModeration();
-  const [value, setValue] = useState(note ?? '');
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [reported, setReported] = useState(false);
+  const { t } = useI18n()
+  const { handleSaveNote, handleDeleteNote } = useWar()
+  const { mute } = useMyModeration()
+  const [value, setValue] = useState(note ?? '')
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [reported, setReported] = useState(false)
 
   const muteNotice = mute && (
     <div
@@ -41,9 +41,7 @@ export default function WarNoteEditor({
     >
       <AlertTriangle className='h-3.5 w-3.5 shrink-0 mt-0.5' />
       <div className='flex flex-col'>
-        <span className='font-semibold'>
-          {t.moderation.muted}
-        </span>
+        <span className='font-semibold'>{t.moderation.muted}</span>
         <span>{mute.reason}</span>
         <span>
           {t.moderation.muteExpires}:{' '}
@@ -51,18 +49,18 @@ export default function WarNoteEditor({
         </span>
       </div>
     </div>
-  );
+  )
 
   const onReport = async () => {
-    if (!noteId) return;
+    if (!noteId) return
     try {
-      await reportNote(noteId);
-      setReported(true);
-      toast.success(t.moderation.reportSuccess);
+      await reportNote(noteId)
+      setReported(true)
+      toast.success(t.moderation.reportSuccess)
     } catch (err) {
-      toast.error((err as Error).message || t.moderation.reportError);
+      toast.error((err as Error).message || t.moderation.reportError)
     }
-  };
+  }
 
   const reportButton = noteId && !noteBlocked && (
     <button
@@ -74,7 +72,7 @@ export default function WarNoteEditor({
       <FiFlag className='h-3 w-3' />
       {reported ? t.moderation.reported : t.moderation.report}
     </button>
-  );
+  )
 
   const blockedPlaceholder = (
     <p
@@ -83,10 +81,10 @@ export default function WarNoteEditor({
     >
       {t.moderation.noteBlocked}
     </p>
-  );
+  )
 
   if (!canManage) {
-    if (!note && !noteBlocked) return null;
+    if (!note && !noteBlocked) return null
     return (
       <div className='border-t border-border/40 pt-2 flex flex-col gap-1'>
         <p className='text-[10px] text-muted-foreground'>{t.game.war.noteLabel}</p>
@@ -103,29 +101,29 @@ export default function WarNoteEditor({
         )}
         {reportButton}
       </div>
-    );
+    )
   }
 
   const onSave = async () => {
-    setSaving(true);
+    setSaving(true)
     try {
-      await handleSaveNote(nodeNumber, value);
-      onSaved?.();
+      await handleSaveNote(nodeNumber, value)
+      onSaved?.()
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   const onDelete = async () => {
-    setDeleting(true);
+    setDeleting(true)
     try {
-      await handleDeleteNote(nodeNumber);
-      setValue('');
-      onSaved?.();
+      await handleDeleteNote(nodeNumber)
+      setValue('')
+      onSaved?.()
     } finally {
-      setDeleting(false);
+      setDeleting(false)
     }
-  };
+  }
 
   return (
     <div className='border-t border-border/40 pt-2 flex flex-col gap-1'>
@@ -163,5 +161,5 @@ export default function WarNoteEditor({
       )}
       {reportButton}
     </div>
-  );
+  )
 }

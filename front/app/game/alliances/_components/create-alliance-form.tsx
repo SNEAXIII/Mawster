@@ -1,32 +1,32 @@
-'use client';
+'use client'
 
-import type React from 'react';
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import type React from 'react'
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Loader } from 'lucide-react';
-import { type GameAccount } from '@/app/services/game';
+} from '@/components/ui/select'
+import { Loader } from 'lucide-react'
+import { type GameAccount } from '@/app/services/game'
 
 interface CreateAllianceFormProps {
-  hasAnyAccounts: boolean;
-  eligibleOwners: GameAccount[];
-  name: string;
-  tag: string;
-  ownerId: string;
-  creating: boolean;
-  onNameChange: (value: string) => void;
-  onTagChange: (value: string) => void;
-  onOwnerChange: (value: string) => void;
-  onSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => void;
+  hasAnyAccounts: boolean
+  eligibleOwners: GameAccount[]
+  name: string
+  tag: string
+  ownerId: string
+  creating: boolean
+  onNameChange: (value: string) => void
+  onTagChange: (value: string) => void
+  onOwnerChange: (value: string) => void
+  onSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => void
 }
 
 export default function CreateAllianceForm({
@@ -41,7 +41,7 @@ export default function CreateAllianceForm({
   onOwnerChange,
   onSubmit,
 }: CreateAllianceFormProps) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <Card>
@@ -118,5 +118,5 @@ export default function CreateAllianceForm({
         </form>
       </CardContent>
     </Card>
-  );
+  )
 }

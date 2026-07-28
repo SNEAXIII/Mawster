@@ -1,9 +1,9 @@
 from time import sleep
 
 import pymysql
+from sqlalchemy import text
 
 import src.models  # noqa: F401
-from sqlalchemy import text
 from src.fixtures import sync_engine as engine
 
 

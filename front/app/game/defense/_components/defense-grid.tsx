@@ -1,38 +1,38 @@
-'use client';
+'use client'
 
-import dynamic from 'next/dynamic';
-import { useState, type RefObject } from 'react';
-import { useI18n } from '@/app/i18n';
-import { cn } from '@/app/lib/utils';
-import { FullPageSpinner } from '@/components/full-page-spinner';
-import { Card, CardContent } from '@/components/ui/card';
-import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { useDefenseActionsContext } from '@/app/contexts/defense-actions-context';
-import ExportHeader from '@/app/game/_components/export-header';
-import type { SeasonFormat } from '@/app/services/season';
+import dynamic from 'next/dynamic'
+import { useState, type RefObject } from 'react'
+import { useI18n } from '@/app/i18n'
+import { cn } from '@/app/lib/utils'
+import { FullPageSpinner } from '@/components/full-page-spinner'
+import { Card, CardContent } from '@/components/ui/card'
+import { ConfirmationDialog } from '@/components/confirmation-dialog'
+import { useDefenseActionsContext } from '@/app/contexts/defense-actions-context'
+import ExportHeader from '@/app/game/_components/export-header'
+import type { SeasonFormat } from '@/app/services/season'
 
 const WarMap = dynamic(() => import('./war-map'), {
   loading: () => <FullPageSpinner />,
-});
+})
 
 const AllianceDefenseSelector = dynamic(() => import('./alliance-defense-selector'), {
   loading: () => null,
-});
+})
 
 const DefenseSidePanel = dynamic(() => import('./defense-side-panel'), {
   loading: () => <FullPageSpinner />,
-});
+})
 
 interface DefenseGridProps {
-  onNodeClick: (node: number) => void;
-  canManage: boolean;
-  exportDefenseMapRef?: RefObject<HTMLDivElement | null>;
-  exportDefenseAssignementsRef?: RefObject<HTMLDivElement | null>;
-  exporting?: boolean;
-  selectedAllianceTag?: string;
-  selectedAllianceName?: string;
-  selectedBg?: number;
-  format?: SeasonFormat;
+  onNodeClick: (node: number) => void
+  canManage: boolean
+  exportDefenseMapRef?: RefObject<HTMLDivElement | null>
+  exportDefenseAssignementsRef?: RefObject<HTMLDivElement | null>
+  exporting?: boolean
+  selectedAllianceTag?: string
+  selectedAllianceName?: string
+  selectedBg?: number
+  format?: SeasonFormat
 }
 
 export default function DefenseGrid({
@@ -46,8 +46,8 @@ export default function DefenseGrid({
   selectedBg,
   format = 'regular',
 }: Readonly<DefenseGridProps>) {
-  const { t } = useI18n();
-  const [playerFilter, setPlayerFilter] = useState('');
+  const { t } = useI18n()
+  const [playerFilter, setPlayerFilter] = useState('')
   const {
     defenseSummary,
     availableChampions,
@@ -60,7 +60,7 @@ export default function DefenseGrid({
     handlePlaceDefender,
     handleRemoveDefender,
     handleClearDefense,
-  } = useDefenseActionsContext();
+  } = useDefenseActionsContext()
 
   const dimmedNodes = playerFilter
     ? new Set(
@@ -68,9 +68,9 @@ export default function DefenseGrid({
           .filter((p) => p.game_pseudo !== playerFilter)
           .map((p) => p.node_number)
       )
-    : undefined;
+    : undefined
 
-  if (defenseLoading) return <FullPageSpinner />;
+  if (defenseLoading) return <FullPageSpinner />
 
   return (
     <>
@@ -101,7 +101,7 @@ export default function DefenseGrid({
         </div>
 
         {/* Side panel */}
-        <div className={cn('shrink-0', exporting ? 'w-80': 'w-full lg:w-72 xl:w-80')}>
+        <div className={cn('shrink-0', exporting ? 'w-80' : 'w-full lg:w-72 xl:w-80')}>
           <Card ref={exportDefenseAssignementsRef}>
             <CardContent className='p-3'>
               <DefenseSidePanel
@@ -140,5 +140,5 @@ export default function DefenseGrid({
         variant='destructive'
       />
     </>
-  );
+  )
 }

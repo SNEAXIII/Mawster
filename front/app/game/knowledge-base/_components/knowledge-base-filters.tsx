@@ -1,43 +1,43 @@
-'use client';
-import { AlertTriangle } from 'lucide-react';
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+'use client'
+import { AlertTriangle } from 'lucide-react'
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import SeasonSelect from '@/app/components/season-select';
-import ChampionFilterSelect from './champion-filter-select';
-import type { Season, AccessibleAlliance, FightRecordSource } from '@/app/services/fight-records';
+} from '@/components/ui/select'
+import SeasonSelect from '@/app/components/season-select'
+import ChampionFilterSelect from './champion-filter-select'
+import type { Season, AccessibleAlliance, FightRecordSource } from '@/app/services/fight-records'
 
 interface Filters {
-  champion_id: string | null;
-  defender_champion_id: string | null;
-  node_number: string;
-  tier: string;
-  game_account_pseudo: string;
+  champion_id: string | null
+  defender_champion_id: string | null
+  node_number: string
+  tier: string
+  game_account_pseudo: string
 }
 
 interface Props {
-  filters: Filters;
-  planningErrorOnly: boolean | null;
-  seasonSelector: string;
-  seasonId: string | null;
-  seasons: Season[];
-  onChange: (key: keyof Filters, value: string | null) => void;
-  onTogglePlanningError: () => void;
-  onSeasonSelectorChange: (value: string) => void;
-  onSeasonIdChange: (value: string | null) => void;
-  allianceId: string | null;
-  accessibleAlliances: AccessibleAlliance[];
-  onAllianceChange: (value: string | null) => void;
-  source: FightRecordSource;
-  onSourceChange: (v: string) => void;
-  onClear: () => void;
+  filters: Filters
+  planningErrorOnly: boolean | null
+  seasonSelector: string
+  seasonId: string | null
+  seasons: Season[]
+  onChange: (key: keyof Filters, value: string | null) => void
+  onTogglePlanningError: () => void
+  onSeasonSelectorChange: (value: string) => void
+  onSeasonIdChange: (value: string | null) => void
+  allianceId: string | null
+  accessibleAlliances: AccessibleAlliance[]
+  onAllianceChange: (value: string | null) => void
+  source: FightRecordSource
+  onSourceChange: (v: string) => void
+  onClear: () => void
 }
 
 export default function KnowledgeBaseFilters({
@@ -57,8 +57,8 @@ export default function KnowledgeBaseFilters({
   onSourceChange,
   onClear,
 }: Props) {
-  const { t } = useI18n();
-  const kb = t.game.knowledgeBase;
+  const { t } = useI18n()
+  const kb = t.game.knowledgeBase
 
   return (
     <div className='flex flex-wrap gap-2 items-center'>
@@ -208,5 +208,5 @@ export default function KnowledgeBaseFilters({
         {kb.clearFilters}
       </Button>
     </div>
-  );
+  )
 }

@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { signOut } from 'next-auth/react';
+import { signOut } from 'next-auth/react'
 
 /**
  * Single sign-out path for the whole app.
@@ -12,8 +12,8 @@ import { signOut } from 'next-auth/react';
  */
 export async function signOutAndRedirect(redirectTo = '/') {
   try {
-    await signOut({ redirectTo });
+    await signOut({ redirectTo })
   } catch (error) {
-    console.error('Sign out error:', error);
+    console.error('Sign out error:', error)
   }
 }

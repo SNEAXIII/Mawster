@@ -1,7 +1,7 @@
 # Root Makefile — E2E test orchestration + backup operations
 .PHONY: help e2e e2e-open e2e-parallel e2e-parallel-quiet e2e-db e2e-stop \
         backup-now backup-now-staging backup-list backup-restore backup-restore-staging backup-restore-remote deploy db \
-        migrate migrate-staging
+        migrate migrate-staging vision-up vision-down worker-up worker-logs db-dev
 
 NEXTAUTH_SECRET ?= e2e-local-nextauth-secret
 NEXTAUTH_URL    ?= http://localhost:3000
@@ -226,6 +226,19 @@ endif
 e2e-db:
 	docker compose -f compose-dev.yaml up mariadb-test -d
 
+vision-up:
+	docker compose -f compose-dev.yaml up -d rabbitmq rustfs
+	docker compose -f compose-dev.yaml run --rm rustfs-init
+
+vision-down:
+	docker compose -f compose-dev.yaml stop rabbitmq rustfs
+
+worker-up:
+	docker compose -f compose-dev.yaml up -d --build vision-worker
+
+worker-logs:
+	docker compose -f compose-dev.yaml logs -f vision-worker
+
 migrate:
 	docker service rm mawster-migrate 2>/dev/null || true
 	docker service create \
@@ -264,9 +277,10 @@ deploy:
 	docker pull sneaxiii/mawster-front:latest
 	docker pull sneaxiii/mawster-backup:latest
 	docker pull sneaxiii/mawster-static:latest
-	docker stack deploy --with-registry-auth --resolve-image always -c stack-obs.yaml mawster-obs
+	docker pull sneaxiii/mawster-vision-worker:latest
+# 	docker stack deploy --with-registry-auth --resolve-image always -c stack-obs.yaml mawster-obs
 	docker stack deploy --with-registry-auth --resolve-image always -c stack-app.yaml mawster
-	docker stack deploy --with-registry-auth --resolve-image always -c stack-app-staging.yaml mawster-staging
+# 	docker stack deploy --with-registry-auth --resolve-image always -c stack-app-staging.yaml mawster-staging
 
 panic:
 	docker stack rm mawster
@@ -276,7 +290,9 @@ panic:
 db-access:
 	docker compose -f compose-prod.yaml -f compose-prod.yaml -f compose-db-access.yaml up mariadb backup -d
 
-db-dev:
+# Depends on vision-up so a single `make db-dev` brings up the full dev stack:
+# rabbitmq + rustfs (+ rustfs-init to create the buckets) then mariadb + static.
+db-dev: vision-up
 	docker compose -f compose-dev.yaml up -d --build mariadb-dev static
 
 db-dev-all:

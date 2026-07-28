@@ -1,4 +1,5 @@
 from sqlmodel import create_engine
+
 from src.security.secrets import SECRET
 
 sync_engine = create_engine(

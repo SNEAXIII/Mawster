@@ -11,9 +11,9 @@ from src.dto.alliance.dto_invitation import (
 from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.models import User
 from src.models.AllianceInvitation import AllianceInvitation
-from src.services.auth.AuthService import AuthService
-from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.AllianceInvitationService import AllianceInvitationService
+from src.services.alliance.AllianceService import AllianceService
+from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
 
 alliance_invitation_controller = APIRouter(

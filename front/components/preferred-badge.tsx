@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import { cn } from '@/app/lib/utils';
-import { Crown } from 'lucide-react';
+import { cn } from '@/app/lib/utils'
+import { Crown } from 'lucide-react'
 
 export default function PreferredBadge({
   additionalClasses = '',
@@ -16,5 +16,5 @@ export default function PreferredBadge({
     >
       <Crown className='w-2.5 h-2.5' />
     </div>
-  );
+  )
 }

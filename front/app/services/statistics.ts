@@ -1,55 +1,55 @@
-import { Perspective } from '@/app/components/statistics/member-champion-chart';
+import { Perspective } from '@/app/components/statistics/member-champion-chart'
 
-const PROXY = '/api/back';
+const PROXY = '/api/back'
 
 const jsonHeaders: HeadersInit = {
   Accept: 'application/json',
   'Content-Type': 'application/json',
-};
+}
 
 async function throwOnError(response: Response, fallback: string) {
-  if (response.ok) return;
-  const data = await response.json().catch(() => ({}));
-  const msg = data.message ?? data.detail ?? fallback;
-  const err = new Error(`Erreur ${response.status}: ${msg}`);
-  (err as Error & { status: number }).status = response.status;
-  throw err;
+  if (response.ok) return
+  const data = await response.json().catch(() => ({}))
+  const msg = data.message ?? data.detail ?? fallback
+  const err = new Error(`Erreur ${response.status}: ${msg}`)
+  ;(err as Error & { status: number }).status = response.status
+  throw err
 }
 
 export interface PlayerSeasonStats {
-  id: string;
-  game_pseudo: string;
-  alliance_group: number | null;
-  total_kos: number;
-  total_fights: number;
-  total_fights_weighted: number;
-  total_assists: number;
-  total_times_helped: number;
-  total_miniboss: number;
-  total_boss: number;
-  total_not_fought: number;
-  ratio: number;
-  score: number;
-  wars_participated: number;
-  avg_fights_per_war: number;
-  avg_boss_miniboss_per_war: number;
-  is_current_member: boolean;
+  id: string
+  game_pseudo: string
+  alliance_group: number | null
+  total_kos: number
+  total_fights: number
+  total_fights_weighted: number
+  total_assists: number
+  total_times_helped: number
+  total_miniboss: number
+  total_boss: number
+  total_not_fought: number
+  ratio: number
+  score: number
+  wars_participated: number
+  avg_fights_per_war: number
+  avg_boss_miniboss_per_war: number
+  is_current_member: boolean
 }
 
 export async function getCurrentSeasonStatistics(allianceId: string): Promise<PlayerSeasonStats[]> {
   const response = await fetch(`${PROXY}/statistics/current_season/${allianceId}`, {
     headers: jsonHeaders,
-  });
-  await throwOnError(response, 'Failed to load season statistics');
-  return response.json();
+  })
+  await throwOnError(response, 'Failed to load season statistics')
+  return response.json()
 }
 
 export interface ChampionUsageItem {
-  champion_id: string;
-  champion_name: string;
-  fight_count: number;
-  total_kos: number;
-  image_url: string | null;
+  champion_id: string
+  champion_name: string
+  fight_count: number
+  total_kos: number
+  image_url: string | null
 }
 
 export async function getChampionUsage(
@@ -58,18 +58,18 @@ export async function getChampionUsage(
   warId?: string,
   allianceGroup?: number,
   deathless?: boolean,
-  perspective?: Perspective ,
+  perspective?: Perspective
 ): Promise<ChampionUsageItem[]> {
-  const params = new URLSearchParams();
-  if (gameAccountId) params.set('game_account_id', gameAccountId);
-  if (warId) params.set('war_id', warId);
-  if (allianceGroup !== undefined) params.set('alliance_group', String(allianceGroup));
-  if (deathless) params.set('deathless', 'true');
-  if (perspective === 'defender') params.set('perspective', 'defender');
-  const query = params.toString() ? `?${params.toString()}` : '';
+  const params = new URLSearchParams()
+  if (gameAccountId) params.set('game_account_id', gameAccountId)
+  if (warId) params.set('war_id', warId)
+  if (allianceGroup !== undefined) params.set('alliance_group', String(allianceGroup))
+  if (deathless) params.set('deathless', 'true')
+  if (perspective === 'defender') params.set('perspective', 'defender')
+  const query = params.toString() ? `?${params.toString()}` : ''
   const response = await fetch(`${PROXY}/statistics/champion-usage/${allianceId}${query}`, {
     headers: jsonHeaders,
-  });
-  await throwOnError(response, 'Failed to load champion usage');
-  return response.json();
+  })
+  await throwOnError(response, 'Failed to load champion usage')
+  return response.json()
 }

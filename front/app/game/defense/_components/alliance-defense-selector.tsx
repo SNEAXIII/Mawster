@@ -1,30 +1,30 @@
-'use client';
+'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { SearchInput } from '@/components/search-input';
-import ChampionPortrait from '@/components/champion-portrait';
-import { cn } from '@/app/lib/utils';
+import { useState, useMemo, useEffect, useRef } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { SearchInput } from '@/components/search-input'
+import ChampionPortrait from '@/components/champion-portrait'
+import { cn } from '@/app/lib/utils'
 import {
   type AvailableChampion,
   type ChampionOwner,
   type DefensePlacement,
-} from '@/app/services/defense';
-import { RARITY_LABELS, getClassColors, shortenChampionName } from '@/app/services/roster';
-import { Separator } from '@/components/ui/separator';
-import SelectorFilterBar from '@/app/game/_components/selector-filter-bar';
-import RarityFilterToggles from '@/app/game/_components/rarity-filter-toggles';
-import { useRarityFilter, rarityWeight } from '@/app/game/_components/use-rarity-filter';
+} from '@/app/services/defense'
+import { RARITY_LABELS, getClassColors, shortenChampionName } from '@/app/services/roster'
+import { Separator } from '@/components/ui/separator'
+import SelectorFilterBar from '@/app/game/_components/selector-filter-bar'
+import RarityFilterToggles from '@/app/game/_components/rarity-filter-toggles'
+import { useRarityFilter, rarityWeight } from '@/app/game/_components/use-rarity-filter'
 
 interface AllianceDefenseSelectorProps {
-  open: boolean;
-  onClose: () => void;
-  nodeNumber: number;
-  availableChampions: AvailableChampion[];
-  onSelect: (championUserId: string, gameAccountId: string, championName: string) => void;
-  currentPlacement?: DefensePlacement;
+  open: boolean
+  onClose: () => void
+  nodeNumber: number
+  availableChampions: AvailableChampion[]
+  onSelect: (championUserId: string, gameAccountId: string, championName: string) => void
+  currentPlacement?: DefensePlacement
 }
 
 export default function AllianceDefenseSelector({
@@ -35,115 +35,126 @@ export default function AllianceDefenseSelector({
   onSelect,
   currentPlacement,
 }: Readonly<AllianceDefenseSelectorProps>) {
-  const { t } = useI18n();
-  const [search, setSearch] = useState('');
-  const [classFilter, setClassFilter] = useState('');
-  const [playerFilter, setPlayerFilter] = useState('');
-  const [sagaFilter, setSagaFilter] = useState(false);
-  const [notPreferredFilter, setNotPreferredFilter] = useState(false);
-  const [selectedChampion, setSelectedChampion] = useState<AvailableChampion | null>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useI18n()
+  const [search, setSearch] = useState('')
+  const [classFilter, setClassFilter] = useState('')
+  const [playerFilter, setPlayerFilter] = useState('')
+  const [sagaFilter, setSagaFilter] = useState(false)
+  const [notPreferredFilter, setNotPreferredFilter] = useState(false)
+  const [selectedChampion, setSelectedChampion] = useState<AvailableChampion | null>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const {
     activeTiers,
     toggleTier,
     matches: matchRarity,
-  } = useRarityFilter('mawster:defense-rarity-tiers');
+  } = useRarityFilter('mawster:defense-rarity-tiers')
 
   const availableClasses = useMemo(() => {
-    const classes = new Set(availableChampions.map((c) => c.champion_class));
-    return Array.from(classes).sort((a, b) => a.localeCompare(b));
-  }, [availableChampions]);
+    const classes = new Set(availableChampions.map((c) => c.champion_class))
+    return Array.from(classes).sort((a, b) => a.localeCompare(b))
+  }, [availableChampions])
 
   const availablePlayers = useMemo(() => {
     const players = new Set(
       availableChampions.flatMap((champ) => champ.owners.map((owner) => owner.game_pseudo))
-    );
-    return Array.from(players).sort((a, b) => a.localeCompare(b));
-  }, [availableChampions]);
+    )
+    return Array.from(players).sort((a, b) => a.localeCompare(b))
+  }, [availableChampions])
 
   const canReset =
-    search !== '' || classFilter !== '' || playerFilter !== '' || sagaFilter || notPreferredFilter;
+    search !== '' || classFilter !== '' || playerFilter !== '' || sagaFilter || notPreferredFilter
 
   // Preferred first, then rarity descending.
   const ownerSort = (a: ChampionOwner, b: ChampionOwner) => {
     if (a.is_preferred_attacker !== b.is_preferred_attacker) {
-      return a.is_preferred_attacker ? -1 : 1;
+      return a.is_preferred_attacker ? -1 : 1
     }
-    return rarityWeight(b.rarity) - rarityWeight(a.rarity);
-  };
+    return rarityWeight(b.rarity) - rarityWeight(a.rarity)
+  }
 
   const filtered = useMemo(() => {
-    return availableChampions
-      .map((champ) => {
-        const owners = champ.owners
-          .filter((owner) => {
-            const matchPlayer =
-              !playerFilter || owner.game_pseudo.toLowerCase().includes(playerFilter.toLowerCase());
-            const matchNotPreferred = !notPreferredFilter || !owner.is_preferred_attacker;
-            const matchTier = matchRarity(owner.rarity);
-            return matchPlayer && matchNotPreferred && matchTier;
-          })
-          .sort(ownerSort);
-        return { ...champ, owners };
-      })
-      .filter((champ) => {
-        if (champ.owners.length === 0) return false;
-        const query = search.toLowerCase();
-        const matchSearch =
-          !search.trim() ||
-          champ.champion_name.toLowerCase().includes(query) ||
-          champ.champion_class.toLowerCase().includes(query) ||
-          (champ.champion_alias ?? '').toLowerCase().includes(query);
-        const matchClass = !classFilter || champ.champion_class === classFilter;
-        const matchSaga = !sagaFilter || champ.is_saga_defender;
-        return matchSearch && matchClass && matchSaga;
-      })
-      // Order champions by their best owner: preferred first, then rank desc.
-      .sort((a, b) => ownerSort(a.owners[0], b.owners[0]));
-  }, [search, classFilter, playerFilter, sagaFilter, notPreferredFilter, matchRarity, availableChampions]);
+    return (
+      availableChampions
+        .map((champ) => {
+          const owners = champ.owners
+            .filter((owner) => {
+              const matchPlayer =
+                !playerFilter ||
+                owner.game_pseudo.toLowerCase().includes(playerFilter.toLowerCase())
+              const matchNotPreferred = !notPreferredFilter || !owner.is_preferred_attacker
+              const matchTier = matchRarity(owner.rarity)
+              return matchPlayer && matchNotPreferred && matchTier
+            })
+            .sort(ownerSort)
+          return { ...champ, owners }
+        })
+        .filter((champ) => {
+          if (champ.owners.length === 0) return false
+          const query = search.toLowerCase()
+          const matchSearch =
+            !search.trim() ||
+            champ.champion_name.toLowerCase().includes(query) ||
+            champ.champion_class.toLowerCase().includes(query) ||
+            (champ.champion_alias ?? '').toLowerCase().includes(query)
+          const matchClass = !classFilter || champ.champion_class === classFilter
+          const matchSaga = !sagaFilter || champ.is_saga_defender
+          return matchSearch && matchClass && matchSaga
+        })
+        // Order champions by their best owner: preferred first, then rank desc.
+        .sort((a, b) => ownerSort(a.owners[0], b.owners[0]))
+    )
+  }, [
+    search,
+    classFilter,
+    playerFilter,
+    sagaFilter,
+    notPreferredFilter,
+    matchRarity,
+    availableChampions,
+  ])
 
   // Defer rendering of the grid by one frame so the dialog open animation is smooth
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(false)
   useEffect(() => {
     if (open) {
-      const id = requestAnimationFrame(() => setReady(true));
-      return () => cancelAnimationFrame(id);
+      const id = requestAnimationFrame(() => setReady(true))
+      return () => cancelAnimationFrame(id)
     }
-    setReady(false);
-  }, [open]);
+    setReady(false)
+  }, [open])
 
   const handleSelectChampion = (champ: AvailableChampion) => {
     if (champ.owners.length === 1) {
-      const owner = champ.owners[0];
-      onSelect(owner.champion_user_id, owner.game_account_id, champ.champion_name);
-      handleClose();
+      const owner = champ.owners[0]
+      onSelect(owner.champion_user_id, owner.game_account_id, champ.champion_name)
+      handleClose()
     } else {
-      setSelectedChampion(champ);
+      setSelectedChampion(champ)
     }
-  };
+  }
 
   const handleSelectOwner = (owner: ChampionOwner, championName: string) => {
-    onSelect(owner.champion_user_id, owner.game_account_id, championName);
-    handleClose();
-  };
+    onSelect(owner.champion_user_id, owner.game_account_id, championName)
+    handleClose()
+  }
 
   const handleClose = () => {
-    setSearch('');
-    setClassFilter('');
-    setPlayerFilter('');
-    setSagaFilter(false);
-    setNotPreferredFilter(false);
-    setSelectedChampion(null);
-    onClose();
-  };
+    setSearch('')
+    setClassFilter('')
+    setPlayerFilter('')
+    setSagaFilter(false)
+    setNotPreferredFilter(false)
+    setSelectedChampion(null)
+    onClose()
+  }
 
   const handleReset = () => {
-    setSearch('');
-    setClassFilter('');
-    setPlayerFilter('');
-    setSagaFilter(false);
-    setNotPreferredFilter(false);
-  };
+    setSearch('')
+    setClassFilter('')
+    setPlayerFilter('')
+    setSagaFilter(false)
+    setNotPreferredFilter(false)
+  }
 
   return (
     <Dialog
@@ -153,8 +164,8 @@ export default function AllianceDefenseSelector({
       <DialogContent
         className='max-w-2xl max-h-[80vh] overflow-hidden flex flex-col'
         onOpenAutoFocus={(e) => {
-          e.preventDefault();
-          searchInputRef.current?.focus();
+          e.preventDefault()
+          searchInputRef.current?.focus()
         }}
       >
         <DialogHeader>
@@ -248,8 +259,8 @@ export default function AllianceDefenseSelector({
               ) : (
                 <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2'>
                   {filtered.map((champ) => {
-                    const classColors = getClassColors(champ.champion_class);
-                    const bestOwner = champ.owners[0];
+                    const classColors = getClassColors(champ.champion_class)
+                    const bestOwner = champ.owners[0]
                     return (
                       <button
                         key={champ.champion_id}
@@ -280,7 +291,6 @@ export default function AllianceDefenseSelector({
                           {RARITY_LABELS[bestOwner.rarity] ?? bestOwner.rarity}
                           {bestOwner.ascension > 0 && (
                             <span className='text-purple-400 font-semibold'>
-                              
                               · A{bestOwner.ascension}
                             </span>
                           )}
@@ -298,7 +308,7 @@ export default function AllianceDefenseSelector({
                           </span>
                         )}
                       </button>
-                    );
+                    )
                   })}
                 </div>
               )}
@@ -363,5 +373,5 @@ export default function AllianceDefenseSelector({
         )}
       </DialogContent>
     </Dialog>
-  );
+  )
 }

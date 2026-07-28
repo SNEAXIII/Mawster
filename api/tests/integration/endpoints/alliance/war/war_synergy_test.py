@@ -4,32 +4,32 @@ import uuid
 
 import pytest
 
-from tests.utils.utils_client import (
-    create_auth_headers,
-    execute_get_request,
-    execute_post_request,
-    execute_patch_request,
-    execute_delete_request,
-)
-from tests.utils.utils_constant import (
-    USER_ID,
-    USER2_ID,
-    GAME_PSEUDO,
-    GAME_PSEUDO_2,
-    ALLIANCE_NAME,
-    ALLIANCE_TAG,
-)
+from src.models.DefensePlacement import DefensePlacement
+from src.models.War import War
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
-    push_member,
-    push_officer,
     push_champion,
     push_champion_user,
+    push_member,
+    push_officer,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
+from tests.utils.utils_client import (
+    create_auth_headers,
+    execute_delete_request,
+    execute_get_request,
+    execute_patch_request,
+    execute_post_request,
+)
+from tests.utils.utils_constant import (
+    ALLIANCE_NAME,
+    ALLIANCE_TAG,
+    GAME_PSEUDO,
+    GAME_PSEUDO_2,
+    USER2_ID,
+    USER_ID,
+)
 from tests.utils.utils_db import load_objects
-from src.models.War import War
-from src.models.DefensePlacement import DefensePlacement
 
 OPPONENT = "Enemy Alliance"
 
@@ -584,3 +584,40 @@ class TestSynergyServiceCoverage:
             headers=data["headers_member"],
         )
         assert resp.status_code == 403
+
+
+# ─── TestRemoveDefenderCleansAssociations ─────────────────
+
+
+class TestRemoveDefenderCleansAssociations:
+    @pytest.mark.asyncio
+    async def test_remove_defender_deletes_node_attacker_synergy(self):
+        """Removing a defender must tear down the node's attack plan.
+
+        The attacker's synergy row does not FK the placement, so deleting the
+        placement alone would orphan it. remove_defender must drop it (here the
+        synergy targets the node-10 attacker, who no longer attacks any node).
+        """
+        data = await _setup_synergy_scenario()
+        url = _synergy_url(data["alliance"].id, data["war"].id)
+
+        add = await execute_post_request(
+            url,
+            payload={
+                "champion_user_id": str(data["synergy_cu"].id),
+                "target_champion_user_id": str(data["attacker_cu"].id),
+            },
+            headers=data["headers_member"],
+        )
+        assert add.status_code == 201
+        before = await execute_get_request(url, headers=data["headers_member"])
+        assert len(before.json()) == 1
+
+        removed = await execute_delete_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10",
+            headers=data["headers_owner"],
+        )
+        assert removed.status_code == 204
+
+        after = await execute_get_request(url, headers=data["headers_member"])
+        assert after.json() == []

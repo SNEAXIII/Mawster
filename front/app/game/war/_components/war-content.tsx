@@ -1,35 +1,35 @@
-'use client';
+'use client'
 
-import dynamic from 'next/dynamic';
-import { useRequiredSession } from '@/hooks/use-required-session';
-import { FullPageSpinner } from '@/components/full-page-spinner';
-import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { useI18n } from '@/app/i18n';
-import { useState } from 'react';
-import { WarProvider, useWar } from '@/app/contexts/war-context';
-import WarHeader from './war-header';
-import WarTab from './war-tab';
-import WarManagementBar from './war-management-bar';
-import WarFormDialog from './war-form-dialog';
-import AttackerEntryRow from './attacker-entry-row';
-import EndWarDialog from './end-war-dialog';
+import dynamic from 'next/dynamic'
+import { useRequiredSession } from '@/hooks/use-required-session'
+import { FullPageSpinner } from '@/components/full-page-spinner'
+import { ConfirmationDialog } from '@/components/confirmation-dialog'
+import { useI18n } from '@/app/i18n'
+import { useState } from 'react'
+import { WarProvider, useWar } from '@/app/contexts/war-context'
+import WarHeader from './war-header'
+import WarTab from './war-tab'
+import WarManagementBar from './war-management-bar'
+import WarFormDialog from './war-form-dialog'
+import AttackerEntryRow from './attacker-entry-row'
+import EndWarDialog from './end-war-dialog'
 
 const WarDefenderSelector = dynamic(() => import('./war-defender-selector'), {
   loading: () => <FullPageSpinner />,
-});
+})
 
 const WarAttackerSelector = dynamic(() => import('./war-attacker-selector'), {
   loading: () => <FullPageSpinner />,
-});
+})
 
 export default function WarContent({
   onStateChange,
   initialAllianceId,
   initialBg,
 }: Readonly<{
-  onStateChange?: (allianceId: string, bg: number) => void;
-  initialAllianceId?: string;
-  initialBg?: number;
+  onStateChange?: (allianceId: string, bg: number) => void
+  initialAllianceId?: string
+  initialBg?: number
 }>) {
   return (
     <WarProvider
@@ -39,14 +39,14 @@ export default function WarContent({
     >
       <WarLayout />
     </WarProvider>
-  );
+  )
 }
 
 function WarLayout() {
-  const { t } = useI18n();
-  useRequiredSession();
+  const { t } = useI18n()
+  useRequiredSession()
 
-  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false)
 
   const {
     alliances,
@@ -78,14 +78,14 @@ function WarLayout() {
     handleAssignAttacker,
     handleConfirmRemoveDefender,
     handleClearBg,
-  } = useWar();
+  } = useWar()
 
-  if (loading) return <FullPageSpinner />;
+  if (loading) return <FullPageSpinner />
 
   const pendingPlacement =
     pendingRemoveNode !== null
       ? placements.find((p) => p.node_number === pendingRemoveNode)
-      : undefined;
+      : undefined
 
   return (
     <div className='w-full px-3 py-4 sm:p-6 flex flex-col gap-4 sm:gap-6'>
@@ -140,7 +140,7 @@ function WarLayout() {
         onOpenChange={setShowEndConfirm}
         hasSeason={!!currentWar?.season_id}
         onConfirm={async (win, eloChange) => {
-          await handleEndWar(win, eloChange);
+          await handleEndWar(win, eloChange)
         }}
       />
 
@@ -149,7 +149,7 @@ function WarLayout() {
         open={selectorNode !== null}
         onClose={() => setSelectorNode(null)}
         nodeNumber={selectorNode ?? 0}
-currentPlacement={placements.find((p) => p.node_number === selectorNode)}
+        currentPlacement={placements.find((p) => p.node_number === selectorNode)}
         onSelect={handlePlaceDefender}
       />
 
@@ -169,7 +169,7 @@ currentPlacement={placements.find((p) => p.node_number === selectorNode)}
       <ConfirmationDialog
         open={pendingRemoveNode !== null}
         onOpenChange={(open) => {
-          if (!open) setPendingRemoveNode(null);
+          if (!open) setPendingRemoveNode(null)
         }}
         onConfirm={handleConfirmRemoveDefender}
         title={t.game.war.removeDefenderWithAttackerTitle}
@@ -192,13 +192,13 @@ currentPlacement={placements.find((p) => p.node_number === selectorNode)}
         open={showClearConfirm}
         onOpenChange={setShowClearConfirm}
         onConfirm={async () => {
-          setShowClearConfirm(false);
-          await handleClearBg();
+          setShowClearConfirm(false)
+          await handleClearBg()
         }}
         title={t.game.war.clearConfirmTitle}
         description={t.game.war.clearConfirmDesc}
         variant='destructive'
       />
     </div>
-  );
+  )
 }

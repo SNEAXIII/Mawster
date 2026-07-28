@@ -1,25 +1,25 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { type DefenseSummary } from '@/app/services/defense';
-import { Trash2, Camera } from 'lucide-react';
-import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector';
-import AllianceSelect from '@/app/game/_components/alliance-select';
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { type DefenseSummary } from '@/app/services/defense'
+import { Trash2, Camera } from 'lucide-react'
+import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
+import AllianceSelect from '@/app/game/_components/alliance-select'
 
 interface DefenseHeaderProps {
-  alliances: AllianceWithVisitorFlag[];
-  selectedAllianceId: string;
-  onAllianceChange: (id: string) => void;
-  selectedBg: number;
-  onBgChange: (bg: number) => void;
-  onClearClick: () => void;
-  canManage: boolean;
-  defenseSummary: DefenseSummary | null;
-  onExportMapClick: () => void;
-  onExportListClick: () => void;
-  exporting: boolean;
+  alliances: AllianceWithVisitorFlag[]
+  selectedAllianceId: string
+  onAllianceChange: (id: string) => void
+  selectedBg: number
+  onBgChange: (bg: number) => void
+  onClearClick: () => void
+  canManage: boolean
+  defenseSummary: DefenseSummary | null
+  onExportMapClick: () => void
+  onExportListClick: () => void
+  exporting: boolean
 }
 
 export default function DefenseHeader({
@@ -35,7 +35,7 @@ export default function DefenseHeader({
   onExportListClick,
   exporting,
 }: Readonly<DefenseHeaderProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <Card>
@@ -120,5 +120,5 @@ export default function DefenseHeader({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

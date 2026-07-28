@@ -1,15 +1,15 @@
-'use client';
+'use client'
 
-import { type AllianceInvitation } from '@/app/services/game';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useI18n } from '@/app/i18n';
-import { Mail, Check, X, Eye, Users } from 'lucide-react';
+import { type AllianceInvitation } from '@/app/services/game'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { useI18n } from '@/app/i18n'
+import { Mail, Check, X, Eye, Users } from 'lucide-react'
 
 interface InvitationsSectionProps {
-  invitations: AllianceInvitation[];
-  onAccept: (id: string) => Promise<void>;
-  onDecline: (id: string) => Promise<void>;
+  invitations: AllianceInvitation[]
+  onAccept: (id: string) => Promise<void>
+  onDecline: (id: string) => Promise<void>
 }
 
 export default function InvitationsSection({
@@ -17,7 +17,7 @@ export default function InvitationsSection({
   onAccept,
   onDecline,
 }: Readonly<InvitationsSectionProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <Card data-cy='my-invitations-section'>
@@ -88,5 +88,5 @@ export default function InvitationsSection({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

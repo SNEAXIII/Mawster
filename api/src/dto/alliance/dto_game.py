@@ -4,33 +4,30 @@
 # module when possible.
 # ──────────────────────────────────────────────────────────
 
+from src.dto.account.game.dto_champion_user import (  # noqa: F401
+    ChampionUserBulkEntry,
+    ChampionUserBulkRequest,
+    ChampionUserCreateRequest,
+    ChampionUserDetailResponse,
+    ChampionUserResponse,
+)
 from src.dto.account.game.dto_game_account import (  # noqa: F401
     GameAccountCreateRequest,
     GameAccountResponse,
 )
-
+from src.dto.admin.dto_champion import (  # noqa: F401
+    ChampionLoadRequest,
+    ChampionPaginatedResponse,
+    ChampionResponse,
+    ChampionUpdateAliasRequest,
+)
 from src.dto.alliance.dto_alliance import (  # noqa: F401
+    AllianceAddMemberRequest,
+    AllianceAddOfficerRequest,
     AllianceCreateRequest,
     AllianceMemberResponse,
     AllianceOfficerResponse,
-    AllianceResponse,
-    AllianceAddOfficerRequest,
     AllianceRemoveOfficerRequest,
-    AllianceAddMemberRequest,
+    AllianceResponse,
     AllianceSetGroupRequest,
-)
-
-from src.dto.account.game.dto_champion_user import (  # noqa: F401
-    ChampionUserCreateRequest,
-    ChampionUserBulkEntry,
-    ChampionUserBulkRequest,
-    ChampionUserResponse,
-    ChampionUserDetailResponse,
-)
-
-from src.dto.admin.dto_champion import (  # noqa: F401
-    ChampionResponse,
-    ChampionPaginatedResponse,
-    ChampionUpdateAliasRequest,
-    ChampionLoadRequest,
 )

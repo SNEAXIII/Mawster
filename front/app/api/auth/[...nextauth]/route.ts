@@ -1,19 +1,19 @@
-import NextAuth from 'next-auth';
-import Discord from 'next-auth/providers/discord';
-import Google from 'next-auth/providers/google';
-import Credentials from 'next-auth/providers/credentials';
-import jwt from 'jsonwebtoken';
-import { getServerApiUrl } from '@/app/lib/serverApiUrl';
-import { refreshBackendToken } from '@/app/lib/auth-refresh';
+import NextAuth from 'next-auth'
+import Discord from 'next-auth/providers/discord'
+import Google from 'next-auth/providers/google'
+import Credentials from 'next-auth/providers/credentials'
+import jwt from 'jsonwebtoken'
+import { getServerApiUrl } from '@/app/lib/serverApiUrl'
+import { refreshBackendToken } from '@/app/lib/auth-refresh'
 
-import { isServerDev } from '@/app/lib/dev-mode';
+import { isServerDev } from '@/app/lib/dev-mode'
 
-const IS_DEV = isServerDev();
+const IS_DEV = isServerDev()
 
 interface JwtPayload {
-  user_id: string;
-  role: string;
-  type: string;
+  user_id: string
+  role: string
+  type: string
 }
 
 export const {
@@ -49,26 +49,26 @@ export const {
               user_id: { label: 'User ID', type: 'text' },
             },
             async authorize(credentials) {
-              if (!credentials?.user_id) return null;
+              if (!credentials?.user_id) return null
 
               const res = await fetch(`${getServerApiUrl()}/dev/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_id: credentials.user_id }),
-              });
+              })
 
-              if (!res.ok) return null;
+              if (!res.ok) return null
 
-              const data = await res.json();
-              const decoded = jwt.decode(data.access_token) as JwtPayload | null;
-              if (!decoded) return null;
+              const data = await res.json()
+              const decoded = jwt.decode(data.access_token) as JwtPayload | null
+              if (!decoded) return null
 
               return {
                 id: decoded.user_id,
                 role: decoded.role,
                 accessToken: data.access_token,
                 refreshToken: data.refresh_token,
-              };
+              }
             },
           }),
         ]
@@ -87,7 +87,7 @@ export const {
           accessTokenExpires: Date.now() + 60 * 60 * 1000,
           expired: false,
           backendAuthenticated: true,
-        };
+        }
       }
 
       // Login initial via Google OAuth
@@ -97,20 +97,20 @@ export const {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ access_token: account.access_token }),
-          });
+          })
 
           if (!res.ok) {
-            const errorData = await res.json().catch(() => ({}));
-            console.error('Erreur backend Google auth:', res.status, errorData);
-            return { ...token, expired: true, backendAuthenticated: false };
+            const errorData = await res.json().catch(() => ({}))
+            console.error('Erreur backend Google auth:', res.status, errorData)
+            return { ...token, expired: true, backendAuthenticated: false }
           }
 
-          const data = await res.json();
-          const decoded = jwt.decode(data.access_token) as JwtPayload | null;
+          const data = await res.json()
+          const decoded = jwt.decode(data.access_token) as JwtPayload | null
 
           if (!decoded) {
-            console.error('Impossible de décoder le JWT backend (Google)');
-            return { ...token, expired: true, backendAuthenticated: false };
+            console.error('Impossible de décoder le JWT backend (Google)')
+            return { ...token, expired: true, backendAuthenticated: false }
           }
 
           return {
@@ -122,10 +122,10 @@ export const {
             accessTokenExpires: Date.now() + 60 * 60 * 1000,
             expired: false,
             backendAuthenticated: true,
-          };
+          }
         } catch (error) {
-          console.error("Erreur lors de l'auth Google:", error);
-          return { ...token, expired: true, backendAuthenticated: false };
+          console.error("Erreur lors de l'auth Google:", error)
+          return { ...token, expired: true, backendAuthenticated: false }
         }
       }
 
@@ -136,20 +136,20 @@ export const {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ access_token: account.access_token }),
-          });
+          })
 
           if (!res.ok) {
-            const errorData = await res.json().catch(() => ({}));
-            console.error('Erreur backend Discord auth:', res.status, errorData);
-            return { ...token, expired: true, backendAuthenticated: false };
+            const errorData = await res.json().catch(() => ({}))
+            console.error('Erreur backend Discord auth:', res.status, errorData)
+            return { ...token, expired: true, backendAuthenticated: false }
           }
 
-          const data = await res.json();
-          const decoded = jwt.decode(data.access_token) as JwtPayload | null;
+          const data = await res.json()
+          const decoded = jwt.decode(data.access_token) as JwtPayload | null
 
           if (!decoded) {
-            console.error('Impossible de décoder le JWT backend (Discord)');
-            return { ...token, expired: true, backendAuthenticated: false };
+            console.error('Impossible de décoder le JWT backend (Discord)')
+            return { ...token, expired: true, backendAuthenticated: false }
           }
 
           return {
@@ -162,20 +162,20 @@ export const {
             discordRefreshToken: account.refresh_token,
             expired: false,
             backendAuthenticated: true,
-          };
+          }
         } catch (error) {
-          console.error("Erreur lors de l'auth Discord:", error);
-          return { ...token, expired: true, backendAuthenticated: false };
+          console.error("Erreur lors de l'auth Discord:", error)
+          return { ...token, expired: true, backendAuthenticated: false }
         }
       }
 
       // Requêtes subséquentes : vérifier l'expiration du JWT backend
       if (token.accessTokenExpires && Date.now() < (token.accessTokenExpires as number)) {
-        return token;
+        return token
       }
 
       // JWT backend expiré : tenter un refresh
-      return await refreshBackendToken(token);
+      return await refreshBackendToken(token)
     },
     async session({ session, token }) {
       if (token.expired || !token.backendAuthenticated) {
@@ -183,7 +183,7 @@ export const {
           ...session,
           user: undefined,
           error: 'TokenExpiredError',
-        };
+        }
       }
 
       // Fetch full user profile from backend /auth/session
@@ -194,10 +194,10 @@ export const {
             headers: {
               Authorization: `Bearer ${token.accessToken}`,
             },
-          });
+          })
 
           if (res.ok) {
-            const userProfile = await res.json();
+            const userProfile = await res.json()
             return {
               ...session,
               accessToken: token.accessToken as string,
@@ -211,11 +211,11 @@ export const {
                 google_id: userProfile.google_id ?? null,
                 created_at: userProfile.created_at ?? token.created_at,
               },
-            };
+            }
           }
         }
       } catch (e) {
-        console.error('Erreur en synchronisant la session avec /auth/session :', e);
+        console.error('Erreur en synchronisant la session avec /auth/session :', e)
       }
 
       return {
@@ -226,7 +226,7 @@ export const {
           id: token.id,
           role: token.role,
         },
-      };
+      }
     },
   },
   pages: {
@@ -236,14 +236,14 @@ export const {
   trustHost: true,
   logger: {
     error(error: Error) {
-      console.error(error);
+      console.error(error)
     },
     warn(code: string) {
-      console.warn(code);
+      console.warn(code)
     },
     debug(message: string, metadata?: unknown) {
       if (process.env.NODE_ENV === 'development') {
-        console.debug(message, metadata);
+        console.debug(message, metadata)
       }
     },
   },
@@ -251,20 +251,20 @@ export const {
     strategy: 'jwt',
   },
   debug: process.env.NODE_ENV === 'development',
-});
+})
 
 declare module 'next-auth' {
   interface Session {
-    accessToken?: string;
+    accessToken?: string
     user: {
-      id: string;
-      name: string;
-      email: string;
-      role: string;
-      discord_id: string | null;
-      google_id: string | null;
-      created_at: string | null;
-    };
-    error?: string;
+      id: string
+      name: string
+      email: string
+      role: string
+      discord_id: string | null
+      google_id: string | null
+      created_at: string | null
+    }
+    error?: string
   }
 }

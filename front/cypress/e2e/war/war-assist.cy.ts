@@ -38,27 +38,25 @@ describe('War Assist', () => {
   });
 
   it('revokes assist via popover and badge disappears', () => {
-    setupAssistScenario('wa2').then(
-      ({ memberData, allianceId, warId, championUserId, assistorChampionUserId }) => {
-        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-        cy.request({
-          method: 'POST',
-          url: assistUrl(allianceId, warId, 10),
-          headers: { Authorization: `Bearer ${memberData.access_token}` },
-          body: { champion_user_id: assistorChampionUserId },
-        });
+    setupAssistScenario('wa2').then(({ memberData, allianceId, warId, championUserId, assistorChampionUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+      cy.request({
+        method: 'POST',
+        url: assistUrl(allianceId, warId, 10),
+        headers: { Authorization: `Bearer ${memberData.access_token}` },
+        body: { champion_user_id: assistorChampionUserId },
+      });
 
-        cy.apiLogin(memberData.user_id);
-        cy.visit('/game/war');
-        cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
-        cy.getByCy('assisted-badge-node-10').scrollIntoView().should('be.visible');
+      cy.apiLogin(memberData.user_id);
+      cy.visit('/game/war');
+      cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+      cy.getByCy('assisted-badge-node-10').scrollIntoView().should('be.visible');
 
-        cy.getByCy('node-actions-trigger-node-10').click();
-        cy.getByCy('assist-revoke-node-10').click();
+      cy.getByCy('node-actions-trigger-node-10').click();
+      cy.getByCy('assist-revoke-node-10').click();
 
-        cy.getByCy('assisted-badge-node-10').should('not.exist');
-      },
-    );
+      cy.getByCy('assisted-badge-node-10').should('not.exist');
+    });
   });
 
   it('attacker own champion is excluded from the assist selector', () => {

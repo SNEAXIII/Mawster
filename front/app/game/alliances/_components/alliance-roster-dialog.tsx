@@ -1,24 +1,24 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import RosterGrid from '@/app/game/account/_components/roster-grid';
-import UpgradeRequestsSection from '@/app/game/account/_components/upgrade-requests-section';
-import MasteryMiniView from '@/app/game/account/_components/mastery-mini-view';
-import UpgradeRequestDialogs from '@/components/upgrade-request-dialogs';
-import { getRoster, RosterEntry, RARITIES } from '@/app/services/roster';
-import { getMasteries, MasteryEntry } from '@/app/services/masteries';
-import { useUpgradeRequests } from '@/hooks/use-upgrade-requests';
+import { useEffect, useState } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import RosterGrid from '@/app/game/account/_components/roster-grid'
+import UpgradeRequestsSection from '@/app/game/account/_components/upgrade-requests-section'
+import MasteryMiniView from '@/app/game/account/_components/mastery-mini-view'
+import UpgradeRequestDialogs from '@/components/upgrade-request-dialogs'
+import { getRoster, RosterEntry, RARITIES } from '@/app/services/roster'
+import { getMasteries, MasteryEntry } from '@/app/services/masteries'
+import { useUpgradeRequests } from '@/hooks/use-upgrade-requests'
 
 interface AllianceRosterDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  gameAccountId: string | null;
-  gamePseudo: string;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  gameAccountId: string | null
+  gamePseudo: string
   /** Whether the viewer can request upgrades (officer/owner) */
-  canRequestUpgrade?: boolean;
+  canRequestUpgrade?: boolean
 }
 
 export default function AllianceRosterDialog({
@@ -28,48 +28,48 @@ export default function AllianceRosterDialog({
   gamePseudo,
   canRequestUpgrade = false,
 }: AllianceRosterDialogProps) {
-  const { t } = useI18n();
-  const [roster, setRoster] = useState<RosterEntry[]>([]);
-  const [masteries, setMasteries] = useState<MasteryEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const { t } = useI18n()
+  const [roster, setRoster] = useState<RosterEntry[]>([])
+  const [masteries, setMasteries] = useState<MasteryEntry[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const upgrade = useUpgradeRequests();
+  const upgrade = useUpgradeRequests()
   const {
     upgradeRequests,
     setUpgradeRequests,
     fetchUpgradeRequests,
     initiateUpgrade,
     initiateCancelRequest,
-  } = upgrade;
+  } = upgrade
 
   useEffect(() => {
-    if (!open || !gameAccountId) return;
-    setLoading(true);
-    setError('');
+    if (!open || !gameAccountId) return
+    setLoading(true)
+    setError('')
     Promise.all([
       getRoster(gameAccountId),
       fetchUpgradeRequests(gameAccountId),
       getMasteries(gameAccountId),
     ])
       .then(([rosterData, , masteryData]) => {
-        setRoster(rosterData);
-        setMasteries(masteryData);
+        setRoster(rosterData)
+        setMasteries(masteryData)
       })
       .catch(() => setError(t.game.alliances.rosterError))
-      .finally(() => setLoading(false));
+      .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, gameAccountId]);
+  }, [open, gameAccountId])
 
   // Group roster by rarity descending
   const groupedRoster = (() => {
-    const groups: Record<string, RosterEntry[]> = {};
+    const groups: Record<string, RosterEntry[]> = {}
     for (const rarity of [...RARITIES].reverse()) {
-      const entries = roster.filter((r) => r.rarity === rarity);
-      if (entries.length > 0) groups[rarity] = entries;
+      const entries = roster.filter((r) => r.rarity === rarity)
+      if (entries.length > 0) groups[rarity] = entries
     }
-    return Object.entries(groups) as [string, RosterEntry[]][];
-  })();
+    return Object.entries(groups) as [string, RosterEntry[]][]
+  })()
 
   return (
     <>
@@ -83,7 +83,9 @@ export default function AllianceRosterDialog({
           </DialogHeader>
 
           {loading && (
-            <p className='text-muted-foreground text-center py-8'>{t.game.alliances.loadingRoster}</p>
+            <p className='text-muted-foreground text-center py-8'>
+              {t.game.alliances.loadingRoster}
+            </p>
           )}
 
           {error && <p className='text-destructive text-center py-8'>{error}</p>}
@@ -137,5 +139,5 @@ export default function AllianceRosterDialog({
 
       <UpgradeRequestDialogs upgrade={upgrade} />
     </>
-  );
+  )
 }

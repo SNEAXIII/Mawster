@@ -1,31 +1,31 @@
-'use client';
+'use client'
 
-import { type DefensePlacement } from '@/app/services/defense';
-import ChampionPortrait from '@/components/champion-portrait';
-import { cn } from '@/app/lib/utils';
-import { X, StickyNote } from 'lucide-react';
-import { useI18n } from '@/app/i18n';
-import { rarityBadgeClass, rarityLabel, parseRarity } from './defense-utils';
-import { mapSectionsForFormat } from './war-format';
-import type { SeasonFormat } from '@/app/services/season';
+import { type DefensePlacement } from '@/app/services/defense'
+import ChampionPortrait from '@/components/champion-portrait'
+import { cn } from '@/app/lib/utils'
+import { X, StickyNote } from 'lucide-react'
+import { useI18n } from '@/app/i18n'
+import { rarityBadgeClass, rarityLabel, parseRarity } from './defense-utils'
+import { mapSectionsForFormat } from './war-format'
+import type { SeasonFormat } from '@/app/services/season'
 
 interface WarMapNodeProps {
-  nodeNumber: number;
-  placement: DefensePlacement | null;
-  onNodeClick: (nodeNumber: number) => void;
-  onRemove: (nodeNumber: number) => void;
-  canManage: boolean;
-  colorClasses: string;
-  hoverClasses: string;
-  hidePseudo?: boolean;
-  hideSig?: boolean;
-  dimmed?: boolean;
-  hasPrefight?: boolean;
-  hasNote?: boolean;
+  nodeNumber: number
+  placement: DefensePlacement | null
+  onNodeClick: (nodeNumber: number) => void
+  onRemove: (nodeNumber: number) => void
+  canManage: boolean
+  colorClasses: string
+  hoverClasses: string
+  hidePseudo?: boolean
+  hideSig?: boolean
+  dimmed?: boolean
+  hasPrefight?: boolean
+  hasNote?: boolean
 }
 
 export function WarMapPlaceHolder() {
-  return <div className='w-3'></div>;
+  return <div className='w-3'></div>
 }
 export function WarMapNode({
   nodeNumber,
@@ -41,7 +41,7 @@ export function WarMapNode({
   hasPrefight = false,
   hasNote = false,
 }: Readonly<WarMapNodeProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <div
@@ -58,7 +58,9 @@ export function WarMapNode({
         dimmed && 'opacity-25'
       )}
       onClick={() => onNodeClick(nodeNumber)}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onNodeClick(nodeNumber); }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') onNodeClick(nodeNumber)
+      }}
       title={
         placement
           ? `#${nodeNumber} – ${placement.champion_name} (${placement.game_pseudo})`
@@ -87,8 +89,8 @@ export function WarMapNode({
         <button
           className='absolute -top-2 -right-2 z-30 bg-red-600 hover:bg-red-700 text-white rounded-full w-5 h-5 flex items-center justify-center'
           onClick={(e) => {
-            e.stopPropagation();
-            onRemove(nodeNumber);
+            e.stopPropagation()
+            onRemove(nodeNumber)
           }}
           title={t.game.defense.removeDefender}
         >
@@ -116,10 +118,10 @@ export function WarMapNode({
           >
             {hideSig
               ? (() => {
-                  const { stars, rank } = parseRarity(placement.rarity);
-                  const parts = [`${stars}R${rank}`];
-                  if (placement.ascension > 0) parts.push(`A${placement.ascension}`);
-                  return parts.join('·');
+                  const { stars, rank } = parseRarity(placement.rarity)
+                  const parts = [`${stars}R${rank}`]
+                  if (placement.ascension > 0) parts.push(`A${placement.ascension}`)
+                  return parts.join('·')
                 })()
               : rarityLabel(placement.rarity, placement.signature, placement.ascension)}
           </span>
@@ -133,22 +135,22 @@ export function WarMapNode({
         <span className='text-white/40 text-xs'>+</span>
       )}
     </div>
-  );
+  )
 }
 
 // ─── War Map Grid ────────────────────────────────────────
 
 interface WarMapProps {
-  placements: DefensePlacement[];
-  onNodeClick: (nodeNumber: number) => void;
-  onRemove: (nodeNumber: number) => void;
-  canManage: boolean;
-  hidePseudo?: boolean;
-  hideSig?: boolean;
-  dimmedNodes?: Set<number>;
-  prefightNodes?: Set<number>;
-  noteNodes?: Set<number>;
-  format?: SeasonFormat;
+  placements: DefensePlacement[]
+  onNodeClick: (nodeNumber: number) => void
+  onRemove: (nodeNumber: number) => void
+  canManage: boolean
+  hidePseudo?: boolean
+  hideSig?: boolean
+  dimmedNodes?: Set<number>
+  prefightNodes?: Set<number>
+  noteNodes?: Set<number>
+  format?: SeasonFormat
 }
 
 export default function WarMap({
@@ -163,10 +165,10 @@ export default function WarMap({
   noteNodes,
   format = 'regular',
 }: Readonly<WarMapProps>) {
-  const sections = mapSectionsForFormat(format);
-  const placementMap = new Map<number, DefensePlacement>();
+  const sections = mapSectionsForFormat(format)
+  const placementMap = new Map<number, DefensePlacement>()
   for (const p of placements) {
-    placementMap.set(p.node_number, p);
+    placementMap.set(p.node_number, p)
   }
 
   return (
@@ -215,5 +217,5 @@ export default function WarMap({
         </div>
       ))}
     </div>
-  );
+  )
 }

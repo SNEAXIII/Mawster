@@ -6,13 +6,13 @@ from starlette import status as http_status
 
 from src.enums.SeasonFormat import SeasonFormat
 from src.enums.SeasonStatus import SeasonStatus
-from src.models.Season import Season
 from src.Messages.season_messages import (
     SEASON_CURRENT_EXISTS,
     SEASON_NOT_ENDED,
     SEASON_NOT_FOUND,
     SEASON_NUMBER_ALREADY_EXISTS,
 )
+from src.models.Season import Season
 from src.utils.db import SessionDep
 
 

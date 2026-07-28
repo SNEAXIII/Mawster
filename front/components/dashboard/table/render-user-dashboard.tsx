@@ -1,14 +1,14 @@
-import React from 'react';
-import { User } from '@/app/services/users';
-import { Table, TableBody } from '@/components/ui/table';
-import { UserRow } from '@/components/dashboard/table/user-row';
-import TableHeaderUsers, { AllSelectorProps } from '@/components/dashboard/table/table-header';
+import React from 'react'
+import { User } from '@/app/services/users'
+import { Table, TableBody } from '@/components/ui/table'
+import { UserRow } from '@/components/dashboard/table/user-row'
+import TableHeaderUsers, { AllSelectorProps } from '@/components/dashboard/table/table-header'
 
 interface RenderUserDashboardProps {
-  users: User[];
-  fetchUsersError: string;
-  loadUsers: () => void;
-  currentUserRole?: string;
+  users: User[]
+  fetchUsersError: string
+  loadUsers: () => void
+  currentUserRole?: string
 }
 
 export default function RenderUserDashboard({
@@ -47,5 +47,5 @@ export default function RenderUserDashboard({
         </div>
       )}
     </div>
-  );
+  )
 }

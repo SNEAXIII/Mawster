@@ -1,12 +1,12 @@
-import '@/app/ui/global.css';
-import { inter } from '@/app/ui/fonts';
-import SideNavBar from '@/components/left-nav-bar/sidenav';
-import TestModeBanner from '@/components/test-mode-banner';
-import { Providers } from './providers';
-import { Toaster } from '@/components/ui/sonner';
-import { DevInspector } from './_components/dev-inspector';
-import MyModerationProvider from './contexts/moderation-context';
-import type { Metadata } from 'next';
+import '@/app/ui/global.css'
+import { inter } from '@/app/ui/fonts'
+import SideNavBar from '@/components/left-nav-bar/sidenav'
+import TestModeBanner from '@/components/test-mode-banner'
+import { Providers } from './providers'
+import { Toaster } from '@/components/ui/sonner'
+import { DevInspector } from './_components/dev-inspector'
+import MyModerationProvider from './contexts/moderation-context'
+import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   icons: {
@@ -16,10 +16,10 @@ export const metadata: Metadata = {
     ],
     shortcut: '/favicon.ico',
   },
-};
+}
 
 interface RootLayoutProps {
-  readonly children: React.ReactNode;
+  readonly children: React.ReactNode
 }
 
 export default function RootLayout({ children }: RootLayoutProps) {
@@ -44,5 +44,5 @@ export default function RootLayout({ children }: RootLayoutProps) {
         </Providers>
       </body>
     </html>
-  );
+  )
 }

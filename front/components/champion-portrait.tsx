@@ -1,42 +1,42 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { getChampionImageUrl } from '@/app/services/champions';
-import { getStarFrameUrl } from '@/app/services/roster';
-import SynergyBadge from '@/components/synergy-badge';
-import PrefightBadge from '@/components/prefight-badge';
-import PreferredBadge from '@/components/preferred-badge';
-import SagaBadge from '@/components/saga-badge';
-import AscensionBadge from '@/components/ascension-badge';
-import { cn } from '@/app/lib/utils';
+import React from 'react'
+import { getChampionImageUrl } from '@/app/services/champions'
+import { getStarFrameUrl } from '@/app/services/roster'
+import SynergyBadge from '@/components/synergy-badge'
+import PrefightBadge from '@/components/prefight-badge'
+import PreferredBadge from '@/components/preferred-badge'
+import SagaBadge from '@/components/saga-badge'
+import AscensionBadge from '@/components/ascension-badge'
+import { cn } from '@/app/lib/utils'
 
-type mode = 'normal' | 'synergy' | 'prefight';
-type SagaMode = 'attacker' | 'defender' | 'all';
+type mode = 'normal' | 'synergy' | 'prefight'
+type SagaMode = 'attacker' | 'defender' | 'all'
 
 interface ChampionPortraitProps {
-  imageUrl: string | null;
-  name: string;
-  rarity: string;
+  imageUrl: string | null
+  name: string
+  rarity: string
   /** Outer size in px (default 56) */
-  size?: number;
+  size?: number
   /** Optional badge rendered absolutely over the portrait (bottom-right) */
-  mode?: mode;
+  mode?: mode
   /** Star badge at top-left indicating a player's preferred attacker */
-  isPreferred?: boolean;
+  isPreferred?: boolean
   /** Whether champion is a saga attacker */
-  is_saga_attacker?: boolean;
+  is_saga_attacker?: boolean
   /** Whether champion is a saga defender */
-  is_saga_defender?: boolean;
+  is_saga_defender?: boolean
   /**
    * Controls which saga flag triggers the "S" badge:
    * - 'attacker' — show if is_saga_attacker
    * - 'defender' — show if is_saga_defender
    * - 'all'      — show if either (default)
    */
-  sagaMode?: SagaMode;
+  sagaMode?: SagaMode
   /** Purple "A1"/"A2" badge at top-right for ascension level (0 = no badge) */
-  ascension?: number;
-  dataCy?: string;
+  ascension?: number
+  dataCy?: string
 }
 
 /**
@@ -61,10 +61,10 @@ export default function ChampionPortrait({
       ? is_saga_attacker
       : sagaMode === 'defender'
         ? is_saga_defender
-        : is_saga_attacker || is_saga_defender;
-  const frameUrl = getStarFrameUrl(rarity);
-  const imgSize = 60; // pre-resized thumbnails
-  const baseClass = 'absolute inset-1.5 pb-0.75 w-[calc(100%-12px)] h-[calc(100%-12px)]';
+        : is_saga_attacker || is_saga_defender
+  const frameUrl = getStarFrameUrl(rarity)
+  const imgSize = 60 // pre-resized thumbnails
+  const baseClass = 'absolute inset-1.5 pb-0.75 w-[calc(100%-12px)] h-[calc(100%-12px)]'
 
   return (
     <div
@@ -112,5 +112,5 @@ export default function ChampionPortrait({
         />
       )}
     </div>
-  );
+  )
 }

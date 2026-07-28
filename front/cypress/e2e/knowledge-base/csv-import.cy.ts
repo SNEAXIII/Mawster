@@ -46,64 +46,58 @@ describe('Knowledge Base – CSV Import', () => {
   });
 
   it('skips duplicate records on re-import and shows skipped toast', () => {
-    setupWarOwner('csv-dedup', 'DedupUser', 'DedupAlliance', 'DDP').then(
-      ({ adminData, ownerData, allianceId }) => {
-        cy.apiCreateSeason(adminData.access_token, 1).then(() => {
-          cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic').then(([attacker]) => {
-            cy.apiLoadChampion(adminData.access_token, 'Serpent', 'Cosmic').then(([defender]) => {
-              const row = {
+    setupWarOwner('csv-dedup', 'DedupUser', 'DedupAlliance', 'DDP').then(({ adminData, ownerData, allianceId }) => {
+      cy.apiCreateSeason(adminData.access_token, 1).then(() => {
+        cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic').then(([attacker]) => {
+          cy.apiLoadChampion(adminData.access_token, 'Serpent', 'Cosmic').then(([defender]) => {
+            const row = {
+              champion_id: attacker.id,
+              defender_champion_id: defender.id,
+              node_number: 15,
+              season_name: 'S1',
+              ko_count: 2,
+            };
+            // First import
+            cy.apiImportFightRecords(ownerData.access_token, allianceId, [row]).then(() => {
+              // Second import — same row, should be skipped
+              cy.apiImportFightRecords(ownerData.access_token, allianceId, [row]).then((res) => {
+                expect(res.body.imported).to.eq(0);
+                expect(res.body.skipped).to.eq(1);
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  it('filters knowledge base to imported records only', () => {
+    setupWarOwner('csv-filter', 'FilterUser', 'FilterAlliance', 'FLT').then(({ adminData, ownerData, allianceId }) => {
+      cy.apiCreateSeason(adminData.access_token, 1).then(() => {
+        cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic').then(([attacker]) => {
+          cy.apiLoadChampion(adminData.access_token, 'Serpent', 'Cosmic').then(([defender]) => {
+            cy.apiImportFightRecords(ownerData.access_token, allianceId, [
+              {
                 champion_id: attacker.id,
                 defender_champion_id: defender.id,
                 node_number: 15,
                 season_name: 'S1',
                 ko_count: 2,
-              };
-              // First import
-              cy.apiImportFightRecords(ownerData.access_token, allianceId, [row]).then(() => {
-                // Second import — same row, should be skipped
-                cy.apiImportFightRecords(ownerData.access_token, allianceId, [row]).then(
-                  (res) => {
-                    expect(res.body.imported).to.eq(0);
-                    expect(res.body.skipped).to.eq(1);
-                  },
-                );
-              });
+              },
+            ]).then(() => {
+              cy.apiLogin(ownerData.user_id);
+              cy.visit('/game/knowledge-base');
+              cy.getByCy('filter-source-trigger').click();
+              cy.getByCy('filter-source-imported').click();
+              cy.contains('Magik').should('be.visible');
+
+              cy.getByCy('filter-source-trigger').click();
+              cy.getByCy('filter-source-non-imported').click();
+              cy.contains('Magik').should('not.exist');
             });
           });
         });
-      },
-    );
-  });
-
-  it('filters knowledge base to imported records only', () => {
-    setupWarOwner('csv-filter', 'FilterUser', 'FilterAlliance', 'FLT').then(
-      ({ adminData, ownerData, allianceId }) => {
-        cy.apiCreateSeason(adminData.access_token, 1).then(() => {
-          cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic').then(([attacker]) => {
-            cy.apiLoadChampion(adminData.access_token, 'Serpent', 'Cosmic').then(([defender]) => {
-              cy.apiImportFightRecords(ownerData.access_token, allianceId, [
-                {
-                  champion_id: attacker.id,
-                  defender_champion_id: defender.id,
-                  node_number: 15,
-                  season_name: 'S1',
-                  ko_count: 2,
-                },
-              ]).then(() => {
-                cy.apiLogin(ownerData.user_id);
-                cy.visit('/game/knowledge-base');
-                cy.getByCy('filter-source-trigger').click();
-                cy.getByCy('filter-source-imported').click();
-                cy.contains('Magik').should('be.visible');
-
-                cy.getByCy('filter-source-trigger').click();
-                cy.getByCy('filter-source-non-imported').click();
-                cy.contains('Magik').should('not.exist');
-              });
-            });
-          });
-        });
-      },
-    );
+      });
+    });
   });
 });

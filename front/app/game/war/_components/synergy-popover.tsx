@@ -1,25 +1,25 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import ChampionPortrait from '@/components/champion-portrait';
-import SynergySelectorDialog from './synergy-selector';
-import { useWar } from '@/app/contexts/war-context';
+import { useState } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import ChampionPortrait from '@/components/champion-portrait'
+import SynergySelectorDialog from './synergy-selector'
+import { useWar } from '@/app/contexts/war-context'
 
 interface SynergyPopoverProps {
   /** The node attacker champion (target that benefits from synergy) */
-  championUserId: string;
-  gameAccountId: string;
-  championName: string;
-  imageUrl: string | null;
-  rarity: string;
-  size?: number;
-  isPreferred?: boolean;
-  ascension?: number;
-  is_saga_attacker?: boolean;
-  is_saga_defender?: boolean;
-  canManage?: boolean;
+  championUserId: string
+  gameAccountId: string
+  championName: string
+  imageUrl: string | null
+  rarity: string
+  size?: number
+  isPreferred?: boolean
+  ascension?: number
+  is_saga_attacker?: boolean
+  is_saga_defender?: boolean
+  canManage?: boolean
 }
 
 export default function SynergyPopover({
@@ -35,12 +35,12 @@ export default function SynergyPopover({
   is_saga_defender = false,
   canManage = true,
 }: Readonly<SynergyPopoverProps>) {
-  const { t } = useI18n();
-  const { synergies, handleRemoveSynergy } = useWar();
-  const [open, setOpen] = useState(false);
-  const [selectorOpen, setSelectorOpen] = useState(false);
+  const { t } = useI18n()
+  const { synergies, handleRemoveSynergy } = useWar()
+  const [open, setOpen] = useState(false)
+  const [selectorOpen, setSelectorOpen] = useState(false)
 
-  const boundSynergies = synergies.filter((s) => s.target_champion_user_id === championUserId);
+  const boundSynergies = synergies.filter((s) => s.target_champion_user_id === championUserId)
 
   return (
     <>
@@ -100,8 +100,8 @@ export default function SynergyPopover({
                     data-cy={`synergy-revoke-${s.champion_name.replaceAll(/\s+/g, '-')}`}
                     disabled={!canManage}
                     onClick={async () => {
-                      setOpen(false);
-                      await handleRemoveSynergy(s.champion_user_id);
+                      setOpen(false)
+                      await handleRemoveSynergy(s.champion_user_id)
                     }}
                   >
                     {t.game.war.synergy.revoke}
@@ -115,8 +115,8 @@ export default function SynergyPopover({
             data-cy={`synergy-add-${championName.replaceAll(/\s+/g, '-')}`}
             disabled={!canManage}
             onClick={() => {
-              setOpen(false);
-              setSelectorOpen(true);
+              setOpen(false)
+              setSelectorOpen(true)
             }}
           >
             {t.game.war.synergy.add}
@@ -131,5 +131,5 @@ export default function SynergyPopover({
         targetChampionName={championName}
       />
     </>
-  );
+  )
 }

@@ -54,11 +54,13 @@ describe('War – Fight Not Done', () => {
   });
 
   it('fight-not-done button is hidden after combat is completed', () => {
-    setupAttackerScenario('fnd-hidden-completed').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
-      cy.goToWarMode(ownerData.user_id, 'attackers');
-      cy.getByCy('fight-not-done-node-10').should('not.exist');
-    });
+    setupAttackerScenario('fnd-hidden-completed').then(
+      ({ memberData, ownerData, allianceId, warId, championUserId }) => {
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+        cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
+        cy.goToWarMode(ownerData.user_id, 'attackers');
+        cy.getByCy('fight-not-done-node-10').should('not.exist');
+      },
+    );
   });
 });

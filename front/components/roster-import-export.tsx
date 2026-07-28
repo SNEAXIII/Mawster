@@ -1,21 +1,22 @@
-'use client';
+'use client'
 
-import { Download, Upload } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { RosterEntry } from '@/app/services/roster';
-import ImportPreviewDialog from '@/components/roster/import-preview-dialog';
-import ImportReportDialog from '@/components/roster/import-report-dialog';
-import { useRosterImportExport } from './use-roster-import-export';
-import { useI18n } from '@/app/i18n';
+import { RosterEntry } from '@/app/services/roster'
+import ImportPreviewDialog from '@/components/roster/import-preview-dialog'
+import ImportReportDialog from '@/components/roster/import-report-dialog'
+import RosterImportButtons from '@/components/roster/roster-import-buttons'
+import VisionImportSection from '@/components/roster/vision-import-section'
+import VisionBetaNotice from '@/components/roster/vision-beta-notice'
+import { useRosterImportExport } from './use-roster-import-export'
+import { useVisionImportSection } from './use-vision-import-section'
 
-export type { RosterExportEntry } from './use-roster-import-export';
+export type { RosterExportEntry } from './use-roster-import-export'
 
 // ─── Props ───────────────────────────────────────────────
 interface RosterImportExportProps {
-  roster: RosterEntry[];
-  selectedAccountId: string;
-  selectedAccountName: string;
-  onRosterUpdated: (roster: RosterEntry[]) => void;
+  roster: RosterEntry[]
+  selectedAccountId: string
+  selectedAccountName: string
+  onRosterUpdated: (roster: RosterEntry[]) => void
 }
 
 export default function RosterImportExport({
@@ -24,7 +25,6 @@ export default function RosterImportExport({
   selectedAccountName,
   onRosterUpdated,
 }: Readonly<RosterImportExportProps>) {
-  const { t } = useI18n();
   const {
     fileInputRef,
     previewOpen,
@@ -37,37 +37,36 @@ export default function RosterImportExport({
     handleExport,
     handleFileSelected,
     executeImport,
-  } = useRosterImportExport({ roster, selectedAccountId, selectedAccountName, onRosterUpdated });
+  } = useRosterImportExport({ roster, selectedAccountId, selectedAccountName, onRosterUpdated })
+
+  const visionSection = useVisionImportSection({ roster, selectedAccountId, onRosterUpdated })
 
   return (
     <>
-      {/* Hidden file input */}
+      <VisionImportSection
+        gameAccountId={selectedAccountId}
+        state={visionSection}
+      />
+
       <input
         ref={fileInputRef}
         type='file'
         accept='.json,application/json'
         className='hidden'
         onChange={handleFileSelected}
+        data-cy='json-import-input'
       />
 
-      {/* Export / Import buttons */}
-      <div className='flex gap-2'>
-        <Button
-          variant='outline'
-          size='sm'
-          onClick={handleExport}
-        >
-          <Download className='mr-1.5 h-3.5 w-3.5' />
-          {t.roster.importExport.exportJson}
-        </Button>
-        <Button
-          variant='outline'
-          size='sm'
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <Upload className='mr-1.5 h-3.5 w-3.5' />
-          {t.roster.importExport.importJson}
-        </Button>
+      <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+        <RosterImportButtons
+          visionLabel={visionSection.visionLabel}
+          visionUploading={visionSection.vision.uploading}
+          onVisionClick={visionSection.onVisionClick}
+          onVisionHelpClick={visionSection.howto.reopen}
+          onExport={handleExport}
+          onImportJson={() => fileInputRef.current?.click()}
+        />
+        <VisionBetaNotice />
       </div>
 
       <ImportPreviewDialog
@@ -84,5 +83,5 @@ export default function RosterImportExport({
         results={importResults}
       />
     </>
-  );
+  )
 }

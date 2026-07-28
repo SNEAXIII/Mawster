@@ -223,15 +223,19 @@ describe('War note moderation', () => {
         cy.getByCy('moderation-view-history').first().click();
 
         // The deletion marker offers no mute/warn — you cannot moderate a deletion.
-        cy.getByCy('moderation-revision-deletion').should('exist').within(() => {
-          cy.getByCy('revision-mute').should('not.exist');
-          cy.getByCy('revision-warn').should('not.exist');
-        });
+        cy.getByCy('moderation-revision-deletion')
+          .should('exist')
+          .within(() => {
+            cy.getByCy('revision-mute').should('not.exist');
+            cy.getByCy('revision-warn').should('not.exist');
+          });
         // An editable revision still offers both moderation actions.
-        cy.getByCy('moderation-revision-row').first().within(() => {
-          cy.getByCy('revision-mute').should('exist');
-          cy.getByCy('revision-warn').should('exist');
-        });
+        cy.getByCy('moderation-revision-row')
+          .first()
+          .within(() => {
+            cy.getByCy('revision-mute').should('exist');
+            cy.getByCy('revision-warn').should('exist');
+          });
       });
     });
   });

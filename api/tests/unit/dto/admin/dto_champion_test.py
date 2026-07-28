@@ -3,10 +3,10 @@
 import uuid
 from types import SimpleNamespace
 
-from pydantic import ValidationError
 import pytest
+from pydantic import ValidationError
 
-from src.dto.admin.dto_champion import ChampionResponse, ChampionLoadRequest
+from src.dto.admin.dto_champion import ChampionLoadRequest, ChampionResponse
 
 
 def _ns(**kwargs):

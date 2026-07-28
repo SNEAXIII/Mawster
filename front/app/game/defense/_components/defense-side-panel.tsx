@@ -1,25 +1,25 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Card, CardContent } from '@/components/ui/card';
-import { type DefensePlacement, type BgMember } from '@/app/services/defense';
-import { cn } from '@/app/lib/utils';
-import ChampionPortrait from '@/components/champion-portrait';
-import UsernameEnriched, { getMemberRole } from '@/components/username-enriched';
-import { useAllianceRole } from '@/hooks/use-alliance-role';
-import { X, Shield } from 'lucide-react';
-import { rarityBadgeClass, rarityLabel, memberRoleOrder } from './defense-utils';
-import MasteryDialog from '@/app/game/account/_components/mastery-dialog';
-import PlayerFilterSelect from '@/app/game/_components/player-filter-select';
+import { useState } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Card, CardContent } from '@/components/ui/card'
+import { type DefensePlacement, type BgMember } from '@/app/services/defense'
+import { cn } from '@/app/lib/utils'
+import ChampionPortrait from '@/components/champion-portrait'
+import UsernameEnriched, { getMemberRole } from '@/components/username-enriched'
+import { useAllianceRole } from '@/hooks/use-alliance-role'
+import { X, Shield } from 'lucide-react'
+import { rarityBadgeClass, rarityLabel, memberRoleOrder } from './defense-utils'
+import MasteryDialog from '@/app/game/account/_components/mastery-dialog'
+import PlayerFilterSelect from '@/app/game/_components/player-filter-select'
 
 interface DefenseSidePanelProps {
-  members: BgMember[];
-  placements: DefensePlacement[];
-  onRemoveDefender: (nodeNumber: number) => void;
-  canManage: boolean;
-  playerFilter: string;
-  onPlayerChange: (v: string) => void;
+  members: BgMember[]
+  placements: DefensePlacement[]
+  onRemoveDefender: (nodeNumber: number) => void
+  canManage: boolean
+  playerFilter: string
+  onPlayerChange: (v: string) => void
 }
 
 // (rarity + role helpers imported from ./defense-utils)
@@ -32,36 +32,36 @@ export default function DefenseSidePanel({
   playerFilter,
   onPlayerChange,
 }: DefenseSidePanelProps) {
-  const { t } = useI18n();
-  const { isMine } = useAllianceRole();
+  const { t } = useI18n()
+  const { isMine } = useAllianceRole()
   const [masteryTarget, setMasteryTarget] = useState<{
-    gameAccountId: string;
-    pseudo: string;
-  } | null>(null);
+    gameAccountId: string
+    pseudo: string
+  } | null>(null)
 
   const sortedMembers = [...members].sort((a, b) => {
-    const rDiff = memberRoleOrder(a) - memberRoleOrder(b);
-    if (rDiff !== 0) return rDiff;
-    return a.game_pseudo.localeCompare(b.game_pseudo);
-  });
+    const rDiff = memberRoleOrder(a) - memberRoleOrder(b)
+    if (rDiff !== 0) return rDiff
+    return a.game_pseudo.localeCompare(b.game_pseudo)
+  })
 
   const visibleMembers = playerFilter
     ? sortedMembers.filter((m) => m.game_pseudo === playerFilter)
-    : sortedMembers;
+    : sortedMembers
 
   // Group placements by game_account_id
-  const placementsByPlayer = new Map<string, DefensePlacement[]>();
+  const placementsByPlayer = new Map<string, DefensePlacement[]>()
   for (const p of placements) {
-    const key = p.game_account_id;
+    const key = p.game_account_id
     if (!placementsByPlayer.has(key)) {
-      placementsByPlayer.set(key, []);
+      placementsByPlayer.set(key, [])
     }
-    placementsByPlayer.get(key)!.push(p);
+    placementsByPlayer.get(key)!.push(p)
   }
 
   // Sort placements by node_number per player
   for (const [, pList] of placementsByPlayer) {
-    pList.sort((a, b) => a.node_number - b.node_number);
+    pList.sort((a, b) => a.node_number - b.node_number)
   }
 
   return (
@@ -81,8 +81,8 @@ export default function DefenseSidePanel({
         <p className='text-sm text-muted-foreground'>{t.game.defense.noMembers}</p>
       ) : (
         visibleMembers.map((member) => {
-          const playerPlacements = placementsByPlayer.get(member.game_account_id) ?? [];
-          const isFull = member.defender_count >= member.max_defenders;
+          const playerPlacements = placementsByPlayer.get(member.game_account_id) ?? []
+          const isFull = member.defender_count >= member.max_defenders
           return (
             <Card
               key={member.game_account_id}
@@ -177,14 +177,14 @@ export default function DefenseSidePanel({
                 )}
               </CardContent>
             </Card>
-          );
+          )
         })
       )}
       {masteryTarget && (
         <MasteryDialog
           open={!!masteryTarget}
           onOpenChange={(open) => {
-            if (!open) setMasteryTarget(null);
+            if (!open) setMasteryTarget(null)
           }}
           gameAccountId={masteryTarget.gameAccountId}
           pseudo={masteryTarget.pseudo}
@@ -192,5 +192,5 @@ export default function DefenseSidePanel({
         />
       )}
     </div>
-  );
+  )
 }

@@ -6,29 +6,29 @@ import pytest
 
 from main import app
 from src.utils.db import get_session
-from tests.integration.endpoints.setup.user_setup import get_generic_user
 from tests.integration.endpoints.setup.game_setup import (
-    push_game_account,
     push_alliance_with_owner,
+    push_game_account,
     push_member,
     push_officer,
 )
+from tests.integration.endpoints.setup.user_setup import get_generic_user
 from tests.utils.utils_client import (
     create_auth_headers,
-    execute_get_request,
-    execute_post_request,
-    execute_patch_request,
     execute_delete_request,
+    execute_get_request,
+    execute_patch_request,
+    execute_post_request,
 )
 from tests.utils.utils_constant import (
-    USER_ID,
-    USER2_ID,
-    USER2_LOGIN,
-    USER2_EMAIL,
     DISCORD_ID_2,
     GAME_PSEUDO,
     GAME_PSEUDO_2,
     GAME_PSEUDO_3,
+    USER2_EMAIL,
+    USER2_ID,
+    USER2_LOGIN,
+    USER_ID,
 )
 from tests.utils.utils_db import get_test_session, load_objects
 
@@ -251,7 +251,7 @@ class TestSetMemberGroup:
     )
     async def test_owner_can_set_group(self, session, group):
         await _setup_2_users()
-        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        alliance, _owner = await push_alliance_with_owner(user_id=USER_ID)
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_patch_request(
@@ -264,7 +264,7 @@ class TestSetMemberGroup:
     @pytest.mark.asyncio
     async def test_regular_member_cannot_set_group(self):
         await _setup_2_users()
-        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        alliance, _owner = await push_alliance_with_owner(user_id=USER_ID)
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_patch_request(

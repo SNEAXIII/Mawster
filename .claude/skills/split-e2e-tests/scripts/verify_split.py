@@ -49,9 +49,7 @@ class C:
 
 
 def count_tests(path: Path) -> int:
-    return sum(
-        1 for ln in path.read_text(encoding="utf-8").splitlines() if IT_RE.match(ln)
-    )
+    return sum(1 for ln in path.read_text(encoding="utf-8").splitlines() if IT_RE.match(ln))
 
 
 def describe_it_pairs(path: Path) -> list[tuple[str, str]]:
@@ -110,8 +108,7 @@ def main() -> int:
     else:
         delta = actual - expected
         failures.append(
-            f"count mismatch: expected {expected}, got {actual} "
-            f"({'+' if delta > 0 else ''}{delta})"
+            f"count mismatch: expected {expected}, got {actual} ({'+' if delta > 0 else ''}{delta})"
         )
         print(C.bad(f"✗ count: expected {expected} ({src}), got {actual}"))
 

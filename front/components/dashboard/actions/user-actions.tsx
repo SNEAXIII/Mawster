@@ -1,25 +1,25 @@
-'use client';
+'use client'
 
-import { TableCell } from '@/components/ui/table';
+import { TableCell } from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Power, Trash, UserPlus, UserMinus } from 'lucide-react';
-import { useState } from 'react';
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { MoreHorizontal, Power, Trash, UserPlus, UserMinus } from 'lucide-react'
+import { useState } from 'react'
 import {
   disableUser,
   enableUser,
   deleteUser,
   promoteToAdmin,
   demoteFromAdmin,
-} from '@/app/services/users';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { useI18n } from '@/app/i18n';
+} from '@/app/services/users'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { ConfirmationDialog } from '@/components/confirmation-dialog'
+import { useI18n } from '@/app/i18n'
 
 const UserAction = {
   DISABLE: 'disable',
@@ -27,19 +27,19 @@ const UserAction = {
   DELETE: 'delete',
   PROMOTE: 'promote',
   DEMOTE: 'demote',
-} as const;
+} as const
 
-type UserAction = (typeof UserAction)[keyof typeof UserAction];
+type UserAction = (typeof UserAction)[keyof typeof UserAction]
 
 interface UserActionsProps {
-  userId: string;
-  login: string;
-  isAdmin: boolean;
-  isTargetSuperAdmin?: boolean;
-  isSuperAdmin?: boolean;
-  isDisabled?: boolean;
-  isDeleted?: boolean;
-  loadUsers: () => void;
+  userId: string
+  login: string
+  isAdmin: boolean
+  isTargetSuperAdmin?: boolean
+  isSuperAdmin?: boolean
+  isDisabled?: boolean
+  isDeleted?: boolean
+  loadUsers: () => void
 }
 
 export const UserActions: React.FC<UserActionsProps> = ({
@@ -58,56 +58,56 @@ export const UserActions: React.FC<UserActionsProps> = ({
     [UserAction.DELETE]: false,
     [UserAction.PROMOTE]: false,
     [UserAction.DEMOTE]: false,
-  } as const;
+  } as const
 
-  const [isLoading, setIsLoading] = useState<Record<UserAction, boolean>>(initialLoadingState);
-  const { t } = useI18n();
+  const [isLoading, setIsLoading] = useState<Record<UserAction, boolean>>(initialLoadingState)
+  const { t } = useI18n()
 
   const handleAction = async (action: UserAction, userId: string) => {
     try {
-      setIsLoading((prev) => ({ ...prev, [action]: true }));
+      setIsLoading((prev) => ({ ...prev, [action]: true }))
 
       switch (action) {
         case UserAction.DISABLE:
-          await disableUser(userId);
-          setIsDisableDialogOpen(false);
-          loadUsers();
-          break;
+          await disableUser(userId)
+          setIsDisableDialogOpen(false)
+          loadUsers()
+          break
         case UserAction.ENABLE:
-          await enableUser(userId);
-          setIsDisableDialogOpen(false);
-          loadUsers();
-          break;
+          await enableUser(userId)
+          setIsDisableDialogOpen(false)
+          loadUsers()
+          break
         case UserAction.DELETE:
-          await deleteUser(userId);
-          setIsDeleteDialogOpen(false);
-          loadUsers();
-          break;
+          await deleteUser(userId)
+          setIsDeleteDialogOpen(false)
+          loadUsers()
+          break
         case UserAction.PROMOTE:
-          await promoteToAdmin(userId);
-          setIsPromoteToAdminDialogOpen(false);
-          loadUsers();
-          break;
+          await promoteToAdmin(userId)
+          setIsPromoteToAdminDialogOpen(false)
+          loadUsers()
+          break
         case UserAction.DEMOTE:
-          await demoteFromAdmin(userId);
-          setIsDemoteDialogOpen(false);
-          loadUsers();
-          break;
+          await demoteFromAdmin(userId)
+          setIsDemoteDialogOpen(false)
+          loadUsers()
+          break
       }
     } catch (error) {
-      console.error(`Error during ${action} user:`, error);
-      throw error;
+      console.error(`Error during ${action} user:`, error)
+      throw error
     } finally {
-      setIsLoading((prev) => ({ ...prev, [action]: false }));
+      setIsLoading((prev) => ({ ...prev, [action]: false }))
     }
-  };
-  const [isDisableDialogOpen, setIsDisableDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isPromoteToAdminDialogOpen, setIsPromoteToAdminDialogOpen] = useState(false);
-  const [isDemoteDialogOpen, setIsDemoteDialogOpen] = useState(false);
-  const isTargetAdmin = isAdmin && !isDeleted;
+  }
+  const [isDisableDialogOpen, setIsDisableDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isPromoteToAdminDialogOpen, setIsPromoteToAdminDialogOpen] = useState(false)
+  const [isDemoteDialogOpen, setIsDemoteDialogOpen] = useState(false)
+  const isTargetAdmin = isAdmin && !isDeleted
   // Block all actions: deleted users, super_admin targets, and admins (unless current user is super_admin)
-  const isDisabledOrAdmin = isDeleted || isTargetSuperAdmin || (isAdmin && !isSuperAdmin);
+  const isDisabledOrAdmin = isDeleted || isTargetSuperAdmin || (isAdmin && !isSuperAdmin)
   if (isDisabledOrAdmin) {
     return (
       <TableCell>
@@ -131,7 +131,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
           </Tooltip>
         </TooltipProvider>
       </TableCell>
-    );
+    )
   }
 
   return (
@@ -262,5 +262,5 @@ export const UserActions: React.FC<UserActionsProps> = ({
         />
       </div>
     </TableCell>
-  );
-};
+  )
+}

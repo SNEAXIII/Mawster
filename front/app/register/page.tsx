@@ -1,17 +1,17 @@
-'use client';
+'use client'
 
-import { signIn } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserPlus } from 'lucide-react';
-import { useI18n } from '@/app/i18n';
+import { signIn } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { UserPlus } from 'lucide-react'
+import { useI18n } from '@/app/i18n'
 
 function RegisterPageContent() {
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') ?? '/';
-  const { t } = useI18n();
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') ?? '/'
+  const { t } = useI18n()
 
   return (
     <div className='h-full flex items-center justify-center bg-gradient-to-br from-background to-muted p-4 sm:p-6'>
@@ -43,7 +43,7 @@ function RegisterPageContent() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
 
 export default function RegisterPage() {
@@ -51,5 +51,5 @@ export default function RegisterPage() {
     <Suspense>
       <RegisterPageContent />
     </Suspense>
-  );
+  )
 }

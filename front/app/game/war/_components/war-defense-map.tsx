@@ -1,24 +1,24 @@
-'use client';
+'use client'
 
-import dynamic from 'next/dynamic';
-import { FullPageSpinner } from '@/components/full-page-spinner';
-import { type WarPlacement } from '@/app/services/war';
-import { type DefensePlacement } from '@/app/services/defense';
-import type { SeasonFormat } from '@/app/services/season';
+import dynamic from 'next/dynamic'
+import { FullPageSpinner } from '@/components/full-page-spinner'
+import { type WarPlacement } from '@/app/services/war'
+import { type DefensePlacement } from '@/app/services/defense'
+import type { SeasonFormat } from '@/app/services/season'
 
 const WarMap = dynamic(() => import('@/app/game/defense/_components/war-map'), {
   loading: () => <FullPageSpinner />,
-});
+})
 
 interface WarDefenseMapProps {
-  placements: WarPlacement[];
-  onNodeClick: (nodeNumber: number) => void;
-  onRemove: (nodeNumber: number) => void;
-  canManage: boolean;
-  dimmedNodes?: Set<number>;
-  prefightNodes?: Set<number>;
-  noteNodes?: Set<number>;
-  format?: SeasonFormat;
+  placements: WarPlacement[]
+  onNodeClick: (nodeNumber: number) => void
+  onRemove: (nodeNumber: number) => void
+  canManage: boolean
+  dimmedNodes?: Set<number>
+  prefightNodes?: Set<number>
+  noteNodes?: Set<number>
+  format?: SeasonFormat
 }
 
 function toDefensePlacement(p: WarPlacement): DefensePlacement {
@@ -43,7 +43,7 @@ function toDefensePlacement(p: WarPlacement): DefensePlacement {
     placed_by_id: null,
     placed_by_pseudo: p.placed_by_pseudo,
     created_at: p.created_at,
-  };
+  }
 }
 
 export default function WarDefenseMap({
@@ -56,7 +56,7 @@ export default function WarDefenseMap({
   noteNodes,
   format = 'regular',
 }: Readonly<WarDefenseMapProps>) {
-  const adapted = placements.map(toDefensePlacement);
+  const adapted = placements.map(toDefensePlacement)
   return (
     <WarMap
       placements={adapted}
@@ -70,5 +70,5 @@ export default function WarDefenseMap({
       noteNodes={noteNodes}
       format={format}
     />
-  );
+  )
 }

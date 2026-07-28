@@ -1,6 +1,6 @@
 # MCP Servers
 
-Mawster uses five MCP (Model Context Protocol) servers configured in `.mcp.json`. They extend Claude Code with project-specific tools so that Claude can start servers, run tests, manage the database, and interact with GitHub — without leaving the conversation.
+Mawster uses the MCP (Model Context Protocol) servers configured in `.mcp.json`. They extend Claude Code with project-specific tools so that Claude can start servers, run tests, manage the database, and interact with GitHub — without leaving the conversation.
 
 ---
 
@@ -9,7 +9,6 @@ Mawster uses five MCP (Model Context Protocol) servers configured in `.mcp.json`
 | Server | Source | Purpose |
 |--------|--------|---------|
 | `server-runner` | `mcp/server-runner/` | Start/stop dev & test servers |
-| `cypress-runner` | `mcp/cypress-runner/` | Run E2E tests in parallel |
 | `pytest-runner` | `mcp/pytest-runner/` | Run backend unit/integration tests |
 | `db-manager` | `mcp/db-manager/` | Reset DB, migrations, fixtures |
 | `context-mode` | Plugin (Claude Code) | Keep output out of context window |
@@ -27,39 +26,31 @@ Manages the dev and test stacks (MariaDB + FastAPI + Next.js). Each mode runs in
 | `start_test` | MariaDB-test (3307) + API (8001) + Frontend (3001) |
 | `stop` | Stops all running servers (dev + test) |
 | `status` | Returns running state of both stacks |
-| `run_e2e` | Starts test stack if needed, then runs all Cypress specs |
+| `run_e2e` | Starts test stack if needed, then runs Cypress — all specs, or `spec_files` if given |
 
-**Skills:** `/server-dev`, `/server-stop`, `/server-status`
+**Skills:** `/server-dev`, `/server-stop`, `/server-status`, `/test-e2e`
 
 State is persisted in `.server-runner-state-dev.json` / `.server-runner-state-test.json` at repo root.
 
----
+### E2E tests
 
-## cypress-runner
-
-Runs E2E tests in parallel. Each worker gets its own isolated backend + frontend + MariaDB-test instance.
+`run_e2e` is the only E2E entry point. The former `cypress-runner` server was removed:
+it ran specs in parallel across isolated workers, but served stale reports — a
+"passing" result could reflect a previous run.
 
 **Requires:** Docker with `mariadb-test` accessible on port 3307.
 
-| Tool | Key parameters | Description |
-|------|----------------|-------------|
-| `run_parallel` | `workers` (1–8, default 4), `spec_files` (optional list) | Run all or targeted specs in parallel |
-
 ```
-# All specs, 4 workers (default)
-mcp__cypress-runner__run_parallel
+# All specs
+mcp__server-runner__run_e2e
 
-# Targeted run
-mcp__cypress-runner__run_parallel spec_files=["war/operations.cy.ts", "roster/roster.cy.ts"]
-
-# Single worker (forces 1 worker per spec)
-mcp__cypress-runner__run_parallel spec_files=["war/operations.cy.ts"]
+# Targeted run — paths relative to front/cypress/e2e/
+mcp__server-runner__run_e2e spec_files=["war/operations.cy.ts", "roster/roster.cy.ts"]
 ```
 
-Results are written to `front/cypress/results/` (XML reports, videos, screenshots).
-History is stored in `runner-results/e2e-history.json`.
-
-**Skill:** `/test-e2e`, `/test-e2e-failing`
+Specs run sequentially, so a full suite is slow — prefer targeted runs locally and
+let CI do the full pass. Results are written to `front/cypress/results/` (XML
+reports, videos, screenshots); check their mtime to confirm a run actually produced them.
 
 ---
 

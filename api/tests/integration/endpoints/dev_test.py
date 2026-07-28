@@ -14,7 +14,7 @@ from tests.integration.endpoints.setup.game_setup import (
 )
 from tests.integration.endpoints.setup.user_setup import push_one_user
 from tests.utils.utils_client import execute_get_request, execute_post_request
-from tests.utils.utils_constant import USER_ID, USER_LOGIN, USER2_ID, GAME_PSEUDO
+from tests.utils.utils_constant import GAME_PSEUDO, USER2_ID, USER_ID, USER_LOGIN
 from tests.utils.utils_db import get_test_session
 
 app.dependency_overrides[get_session] = get_test_session

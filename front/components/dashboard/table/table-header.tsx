@@ -1,24 +1,24 @@
-'use client';
+'use client'
 
-import { TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import DropdownRadioMenu from '@/components/dashboard/pagination/dropdown-radio-menu';
-import React from 'react';
-import { useI18n } from '@/app/i18n';
-import { possibleStatus, possibleRoles } from '@/app/lib/constants';
+import { TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import DropdownRadioMenu from '@/components/dashboard/pagination/dropdown-radio-menu'
+import React from 'react'
+import { useI18n } from '@/app/i18n'
+import { possibleStatus, possibleRoles } from '@/app/lib/constants'
 
-export { possibleStatus, possibleRoles };
+export { possibleStatus, possibleRoles }
 
 interface StatusSelectorProps {
-  status: string;
-  onStatusChange: (value: string) => void;
+  status: string
+  onStatusChange: (value: string) => void
 }
 
 interface RoleSelectorProps {
-  role: string;
-  onRoleChange: (value: string) => void;
+  role: string
+  onRoleChange: (value: string) => void
 }
 
-export type AllSelectorProps = StatusSelectorProps & RoleSelectorProps;
+export type AllSelectorProps = StatusSelectorProps & RoleSelectorProps
 
 export default function TableHeaderUsers({
   status,
@@ -26,17 +26,17 @@ export default function TableHeaderUsers({
   role,
   onRoleChange,
 }: AllSelectorProps) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   const translatedStatus = possibleStatus.map((s) => ({
     value: s.value,
     label: t.dashboard.status[s.value as keyof typeof t.dashboard.status],
-  }));
+  }))
 
   const translatedRoles = possibleRoles.map((r) => ({
     value: r.value,
     label: t.dashboard.roles[r.value as keyof typeof t.dashboard.roles],
-  }));
+  }))
 
   return (
     <TableHeader>
@@ -65,5 +65,5 @@ export default function TableHeaderUsers({
         <TableHead className='w-[50px]'></TableHead>
       </TableRow>
     </TableHeader>
-  );
+  )
 }

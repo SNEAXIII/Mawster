@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import {
   LineChart,
@@ -9,46 +9,54 @@ import {
   Tooltip,
   ResponsiveContainer,
   Dot,
-} from 'recharts';
-import { ChartContainer } from '@/components/ui/chart';
-import { useI18n } from '@/app/i18n';
-import type { RankingHistoryPoint } from '@/app/services/game';
+} from 'recharts'
+import { ChartContainer } from '@/components/ui/chart'
+import { useI18n } from '@/app/i18n'
+import type { RankingHistoryPoint } from '@/app/services/game'
 
 interface AllianceRankingChartProps {
-  points: RankingHistoryPoint[];
-  seasonNumber: number | null;
+  points: RankingHistoryPoint[]
+  seasonNumber: number | null
 }
 
 interface CustomDotProps {
-  cx?: number;
-  cy?: number;
-  payload?: RankingHistoryPoint;
+  cx?: number
+  cy?: number
+  payload?: RankingHistoryPoint
 }
 
 function WinLossDot({ cx = 0, cy = 0, payload }: CustomDotProps) {
-  const color =
-    payload?.win === true ? '#22c55e' : payload?.win === false ? '#ef4444' : '#94a3b8';
-  return <Dot cx={cx} cy={cy} r={5} fill={color} stroke='none' />;
+  const color = payload?.win === true ? '#22c55e' : payload?.win === false ? '#ef4444' : '#94a3b8'
+  return (
+    <Dot
+      cx={cx}
+      cy={cy}
+      r={5}
+      fill={color}
+      stroke='none'
+    />
+  )
 }
 
 interface TooltipPayloadItem {
-  payload: RankingHistoryPoint;
+  payload: RankingHistoryPoint
 }
 
 interface CustomTooltipProps {
-  active?: boolean;
-  payload?: TooltipPayloadItem[];
+  active?: boolean
+  payload?: TooltipPayloadItem[]
 }
 
 function CustomTooltip({ active, payload }: CustomTooltipProps) {
-  const { t } = useI18n();
-  if (!active || !payload?.length) return null;
-  const point = payload[0].payload;
+  const { t } = useI18n()
+  if (!active || !payload?.length) return null
+  const point = payload[0].payload
   return (
     <div className='bg-popover border rounded-md p-2 text-xs shadow-md flex flex-col gap-0.5'>
       <p className='font-semibold text-foreground'>{point.opponent_name}</p>
       <p className='text-muted-foreground'>
-        {t.game.alliances.elo}: <span className='text-foreground font-medium'>{point.elo_after}</span>
+        {t.game.alliances.elo}:{' '}
+        <span className='text-foreground font-medium'>{point.elo_after}</span>
       </p>
       {point.tier !== null && (
         <p className='text-muted-foreground'>
@@ -61,34 +69,55 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
         </p>
       )}
     </div>
-  );
+  )
 }
 
-const chartConfig = { elo_after: { label: 'ELO' } };
+const chartConfig = { elo_after: { label: 'ELO' } }
 
-export default function AllianceRankingChart({ points, seasonNumber }: Readonly<AllianceRankingChartProps>) {
-  const { t } = useI18n();
+export default function AllianceRankingChart({
+  points,
+  seasonNumber,
+}: Readonly<AllianceRankingChartProps>) {
+  const { t } = useI18n()
 
   if (points.length === 0) {
     return (
-      <p className='text-xs text-muted-foreground italic py-2' data-cy='ranking-history-empty'>
+      <p
+        className='text-xs text-muted-foreground italic py-2'
+        data-cy='ranking-history-empty'
+      >
         {t.game.alliances.noWarsThisSeason}
         {seasonNumber !== null && ` (${t.game.alliances.season} ${seasonNumber})`}
       </p>
-    );
+    )
   }
 
   return (
-    <div className='flex flex-col gap-1' data-cy='ranking-history-chart'>
+    <div
+      className='flex flex-col gap-1'
+      data-cy='ranking-history-chart'
+    >
       {seasonNumber !== null && (
         <p className='text-xs text-muted-foreground'>
           {t.game.alliances.season} {seasonNumber}
         </p>
       )}
-      <ChartContainer config={chartConfig} className='h-40 w-full'>
-        <ResponsiveContainer width='100%' height='100%'>
-          <LineChart data={points} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-            <CartesianGrid strokeDasharray='3 3' className='stroke-muted' />
+      <ChartContainer
+        config={chartConfig}
+        className='h-40 w-full'
+      >
+        <ResponsiveContainer
+          width='100%'
+          height='100%'
+        >
+          <LineChart
+            data={points}
+            margin={{ top: 4, right: 8, left: -16, bottom: 0 }}
+          >
+            <CartesianGrid
+              strokeDasharray='3 3'
+              className='stroke-muted'
+            />
             <XAxis
               dataKey='war_number'
               tick={{ fontSize: 10 }}
@@ -114,5 +143,5 @@ export default function AllianceRankingChart({ points, seasonNumber }: Readonly<
         </ResponsiveContainer>
       </ChartContainer>
     </div>
-  );
+  )
 }

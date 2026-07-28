@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { encode } from '@auth/core/jwt';
-import jwt from 'jsonwebtoken';
-import { isServerDev } from '@/app/lib/dev-mode';
-import { getServerApiUrl } from '@/app/lib/serverApiUrl';
+import { NextRequest, NextResponse } from 'next/server'
+import { encode } from '@auth/core/jwt'
+import jwt from 'jsonwebtoken'
+import { isServerDev } from '@/app/lib/dev-mode'
+import { getServerApiUrl } from '@/app/lib/serverApiUrl'
 
 interface BackendJwtPayload {
-  user_id: string;
-  role: string;
+  user_id: string
+  role: string
 }
 
-const COOKIE_NAME = 'authjs.session-token';
+const COOKIE_NAME = 'authjs.session-token'
 
 /**
  * Dev-only: create a NextAuth session cookie programmatically.
@@ -18,35 +18,32 @@ const COOKIE_NAME = 'authjs.session-token';
  */
 export async function POST(req: NextRequest) {
   if (!isServerDev()) {
-    return NextResponse.json({ message: 'Not found' }, { status: 404 });
+    return NextResponse.json({ message: 'Not found' }, { status: 404 })
   }
 
   try {
-    const { user_id } = await req.json();
+    const { user_id } = await req.json()
 
     const backendRes = await fetch(`${getServerApiUrl()}/dev/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id }),
-    });
+    })
 
     if (!backendRes.ok) {
-      return NextResponse.json({ message: 'Login failed' }, { status: 401 });
+      return NextResponse.json({ message: 'Login failed' }, { status: 401 })
     }
 
-    const data = await backendRes.json();
-    const decoded = jwt.decode(data.access_token) as BackendJwtPayload | null;
+    const data = await backendRes.json()
+    const decoded = jwt.decode(data.access_token) as BackendJwtPayload | null
 
     if (!decoded) {
-      return NextResponse.json({ message: 'Invalid token' }, { status: 500 });
+      return NextResponse.json({ message: 'Invalid token' }, { status: 500 })
     }
 
-    const secret = process.env.NEXTAUTH_SECRET;
+    const secret = process.env.NEXTAUTH_SECRET
     if (!secret) {
-      return NextResponse.json(
-        { message: 'NEXTAUTH_SECRET is not set' },
-        { status: 500 },
-      );
+      return NextResponse.json({ message: 'NEXTAUTH_SECRET is not set' }, { status: 500 })
     }
 
     const sessionToken = await encode({
@@ -61,11 +58,11 @@ export async function POST(req: NextRequest) {
       },
       secret,
       salt: COOKIE_NAME,
-    });
+    })
 
-    return NextResponse.json({ sessionToken });
+    return NextResponse.json({ sessionToken })
   } catch (error) {
-    console.error('[dev/login] Error:', error);
-    return NextResponse.json({ message: 'Internal error' }, { status: 500 });
+    console.error('[dev/login] Error:', error)
+    return NextResponse.json({ message: 'Internal error' }, { status: 500 })
   }
 }

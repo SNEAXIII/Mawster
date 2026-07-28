@@ -13,8 +13,8 @@ from tests.utils.utils_constant import (
     ALLIANCE_TAG,
     GAME_PSEUDO,
     GAME_PSEUDO_2,
-    USER_ID,
     USER2_ID,
+    USER_ID,
 )
 from tests.utils.utils_db import load_objects
 

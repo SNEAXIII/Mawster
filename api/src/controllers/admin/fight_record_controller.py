@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from starlette import status as http_status
@@ -25,16 +25,16 @@ fight_record_controller = APIRouter(
 async def list_fight_records(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
-    champion_id: Optional[uuid.UUID] = Query(default=None),
-    defender_champion_id: Optional[uuid.UUID] = Query(default=None),
-    node_number: Optional[int] = Query(default=None, ge=1, le=50),
-    tier: Optional[int] = Query(default=None),
-    season_selector: Optional[SeasonSelectorType] = Query(default=None),
-    season_id: Optional[uuid.UUID] = Query(default=None),
-    alliance_id: Optional[uuid.UUID] = Query(default=None),
-    battlegroup: Optional[int] = Query(default=None, ge=1, le=3),
-    game_account_pseudo: Optional[str] = Query(default=None),
-    planning_error_only: Optional[bool] = Query(default=None),
+    champion_id: uuid.UUID | None = Query(default=None),
+    defender_champion_id: uuid.UUID | None = Query(default=None),
+    node_number: int | None = Query(default=None, ge=1, le=50),
+    tier: int | None = Query(default=None),
+    season_selector: SeasonSelectorType | None = Query(default=None),
+    season_id: uuid.UUID | None = Query(default=None),
+    alliance_id: uuid.UUID | None = Query(default=None),
+    battlegroup: int | None = Query(default=None, ge=1, le=3),
+    game_account_pseudo: str | None = Query(default=None),
+    planning_error_only: bool | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     size: int = Query(default=20, ge=1, le=100),
     source: FightRecordSource = Query(default=FightRecordSource.All),

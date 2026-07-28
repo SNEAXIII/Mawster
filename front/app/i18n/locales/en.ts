@@ -708,7 +708,12 @@ const en = {
       importUploadLabel: 'Select CSV file',
       importUploadHint: 'Format: attacker,defender,node,season,ko_count',
       importResolveTitle: 'Resolve unknown champions',
+      importResolveHint:
+        '{count} name(s) in your file match no champion. Map each one to a champion to enable the import.',
       importUnknown: 'Unknown: {name}',
+      importUnmappedBadge: 'To map',
+      importBlockedUnresolved: '{count} champion name(s) still need to be mapped above.',
+      importBlockedAlliance: 'Select an alliance to enable the import.',
       importAllianceLabel: 'Alliance',
       importConfirmBtn: 'Import {count} rows',
       importSuccess: 'Imported {count} fight records',
@@ -1012,6 +1017,62 @@ const en = {
       badgeSkipped: 'SKIPPED',
       badgeError: 'ERROR',
       close: 'Close',
+      importVision: 'AI Import',
+      visionUploading: 'Uploading…',
+      visionProcessing: 'Processing…',
+      visionFailed: 'The AI import failed.',
+      visionNoChampions: 'No champions were detected in these images.',
+      editHint: 'Review the detected champions below and correct any mistake before importing.',
+      rarityLabel: 'Rarity',
+      sigLabel: 'Sig',
+      ascLabel: 'Asc',
+      vision: {
+        noImagesSelected: 'Please select at least one image.',
+        uploadError: 'Failed to upload the screenshots.',
+        pollFailed: 'The import failed. Please try again.',
+        pollTimeout: 'The import is taking too long. Please try again.',
+        datasetArchiveFailed: 'Roster imported. Your dataset contribution could not be saved.',
+        marginAmbiguous: 'Ambiguous',
+        marginUncertain: 'Uncertain',
+        marginClear: 'Clear match',
+        marginCorrected: 'Corrected',
+        betaBadge: 'Beta',
+        betaNotice: 'AI import is in beta — reach out for help or feedback:',
+        pickChampionTitle: 'Other candidates',
+        pickChampionSearch: 'Search a champion…',
+        pickChampionEmpty: 'No champion found.',
+        shareDataset: 'Contribute to the training dataset',
+        bannerPendingTitle: 'Reading queued — {done}/{total} screenshots',
+        bannerRunningTitle: 'Reading in progress — {done}/{total} screenshots',
+        bannerDoneTitle: '{count} champions read — awaiting review',
+        bannerFailedTitle: 'The reading failed.',
+        bannerResume: 'Resume',
+        bannerCancel: 'Discard',
+        bannerRetry: 'Retry',
+        bannerCancelConfirm: 'Discard this import? Its screenshots will be deleted.',
+        blockedTitle: 'An import is already awaiting review',
+        blockedDescription:
+          'You already have a screenshot import waiting to be reviewed. Resume it, or discard it and start over.',
+        blockedResume: 'Resume it',
+        blockedDiscard: 'Discard and start over',
+        howto: {
+          title: 'Prepare your screenshot',
+          intro: 'Three steps, and the AI reads your roster.',
+          step1: 'Open the game and go to Battlegrounds mode.',
+          step2: 'Clear your deck so your whole roster shows up.',
+          step3: 'Take a screenshot of the grid.',
+          warningTitle: 'Only the first two rows are read.',
+          warningBody:
+            'On a small screen the bottom of the third-row cards is cut off. Without it the AI can read neither the rank nor the signature, so those champions are skipped. Take one screenshot per pair of rows.',
+          detailsLabel: 'Why?',
+          detailsBody:
+            'No zoom, no cropping: the AI locates the cards on its own. You can send several screenshots at once — they are read together.',
+          confirm: 'Choose my screenshots',
+          dontShowAgain: 'Do not show this again',
+          helpLabel: 'How do I prepare my screenshot?',
+          exampleAlt: 'Example Battlegrounds screenshot with the first two rows framed',
+        },
+      },
     },
     errors: {
       loadAccounts: 'An error occurred while loading your game accounts',
@@ -1068,13 +1129,13 @@ const en = {
       9: 'Unfazed',
     },
   },
-} as const;
+} as const
 
-export default en;
+export default en
 
 // Recursively convert literal string types to string
 type DeepStringify<T> = {
-  [K in keyof T]: T[K] extends string ? string : DeepStringify<T[K]>;
-};
+  [K in keyof T]: T[K] extends string ? string : DeepStringify<T[K]>
+}
 
-export type Translations = DeepStringify<typeof en>;
+export type Translations = DeepStringify<typeof en>

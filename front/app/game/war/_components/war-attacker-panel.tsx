@@ -1,43 +1,43 @@
-'use client';
+'use client'
 
-import { useState, type RefObject } from 'react';
-import { useI18n } from '@/app/i18n';
-import ChampionPortrait from '@/components/champion-portrait';
-import PlayerFilterSelect from '@/app/game/_components/player-filter-select';
+import { useState, type RefObject } from 'react'
+import { useI18n } from '@/app/i18n'
+import ChampionPortrait from '@/components/champion-portrait'
+import PlayerFilterSelect from '@/app/game/_components/player-filter-select'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { type WarPlacement } from '@/app/services/war';
-import { useWar } from '@/app/contexts/war-context';
-import PrefightEntryRow from './prefight-entry-row';
-import AssistAssignmentRow from './assist-assignment-row';
-import { WarMode } from './war-types';
-import AttackerEntryRow from './attacker-entry-row';
-import SynergyPopover from './synergy-popover';
-import MasteryDialog from '@/app/game/account/_components/mastery-dialog';
-import { Swords } from 'lucide-react';
-import { cn } from '@/app/lib/utils';
-import { fightStateFilter } from './war-tab';
-import ExportHeader from '@/app/game/_components/export-header';
+} from '@/components/ui/select'
+import { type WarPlacement } from '@/app/services/war'
+import { useWar } from '@/app/contexts/war-context'
+import PrefightEntryRow from './prefight-entry-row'
+import AssistAssignmentRow from './assist-assignment-row'
+import { WarMode } from './war-types'
+import AttackerEntryRow from './attacker-entry-row'
+import SynergyPopover from './synergy-popover'
+import MasteryDialog from '@/app/game/account/_components/mastery-dialog'
+import { Swords } from 'lucide-react'
+import { cn } from '@/app/lib/utils'
+import { fightStateFilter } from './war-tab'
+import ExportHeader from '@/app/game/_components/export-header'
 
 interface MemberGroup {
-  pseudo: string;
-  entries: WarPlacement[];
+  pseudo: string
+  entries: WarPlacement[]
 }
 
 interface WarAttackerPanelProps {
-  playerFilter: string;
-  onPlayerChange: (v: string) => void;
-  combatFilter: fightStateFilter;
-  onCombatFilterChange: (v: fightStateFilter) => void;
-  exporting?: boolean;
-  exportRef?: RefObject<HTMLDivElement | null>;
-  nodeCount?: number;
-  maxAttackers?: number;
+  playerFilter: string
+  onPlayerChange: (v: string) => void
+  combatFilter: fightStateFilter
+  onCombatFilterChange: (v: fightStateFilter) => void
+  exporting?: boolean
+  exportRef?: RefObject<HTMLDivElement | null>
+  nodeCount?: number
+  maxAttackers?: number
 }
 
 export default function WarAttackerPanel({
@@ -50,7 +50,7 @@ export default function WarAttackerPanel({
   nodeCount = 50,
   maxAttackers = 3,
 }: Readonly<WarAttackerPanelProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
   const {
     placements,
     warMode,
@@ -61,41 +61,41 @@ export default function WarAttackerPanel({
     alliances,
     selectedAllianceId,
     currentWar,
-  } = useWar();
-  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId) ?? null;
+  } = useWar()
+  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId) ?? null
   const [masteryTarget, setMasteryTarget] = useState<{
-    gameAccountId: string;
-    pseudo: string;
-  } | null>(null);
+    gameAccountId: string
+    pseudo: string
+  } | null>(null)
 
-  const assigned = placements.filter((p) => p.attacker_champion_user_id !== null);
+  const assigned = placements.filter((p) => p.attacker_champion_user_id !== null)
 
   // Group by attacker member (node attackers)
-  const groupMap = new Map<string, MemberGroup>();
+  const groupMap = new Map<string, MemberGroup>()
   for (const p of assigned) {
-    const pseudo = p.attacker_pseudo ?? '?';
+    const pseudo = p.attacker_pseudo ?? '?'
     if (!groupMap.has(pseudo)) {
-      groupMap.set(pseudo, { pseudo, entries: [] });
+      groupMap.set(pseudo, { pseudo, entries: [] })
     }
-    groupMap.get(pseudo)!.entries.push(p);
+    groupMap.get(pseudo)!.entries.push(p)
   }
   // Also include prefight-only providers (no node assignments)
   for (const pf of prefights) {
     if (!groupMap.has(pf.game_pseudo)) {
-      groupMap.set(pf.game_pseudo, { pseudo: pf.game_pseudo, entries: [] });
+      groupMap.set(pf.game_pseudo, { pseudo: pf.game_pseudo, entries: [] })
     }
   }
   // Build assist assignments grouped by assistor pseudo
-  const assistsByPseudo = new Map<string, WarPlacement[]>();
+  const assistsByPseudo = new Map<string, WarPlacement[]>()
   for (const p of placements) {
     if (p.is_assisted && p.assistor_pseudo) {
-      if (!assistsByPseudo.has(p.assistor_pseudo)) assistsByPseudo.set(p.assistor_pseudo, []);
-      assistsByPseudo.get(p.assistor_pseudo)!.push(p);
+      if (!assistsByPseudo.has(p.assistor_pseudo)) assistsByPseudo.set(p.assistor_pseudo, [])
+      assistsByPseudo.get(p.assistor_pseudo)!.push(p)
     }
   }
   // Include assistor-only members in the group map
   for (const [pseudo] of assistsByPseudo) {
-    if (!groupMap.has(pseudo)) groupMap.set(pseudo, { pseudo, entries: [] });
+    if (!groupMap.has(pseudo)) groupMap.set(pseudo, { pseudo, entries: [] })
   }
 
   const players = [
@@ -103,11 +103,11 @@ export default function WarAttackerPanel({
       ...(placements.map((p) => p.attacker_pseudo).filter(Boolean) as string[]),
       ...(placements.filter((p) => p.assistor_pseudo).map((p) => p.assistor_pseudo) as string[]),
     ]),
-  ].sort((a, b) => a.localeCompare(b));
+  ].sort((a, b) => a.localeCompare(b))
 
   const groups = Array.from(groupMap.values()).sort((a, b) =>
     exporting ? b.entries.length - a.entries.length : a.pseudo.localeCompare(b.pseudo)
-  );
+  )
 
   return (
     <div
@@ -178,16 +178,16 @@ export default function WarAttackerPanel({
               memberGroup.entries
                 .map((e) => e.attacker_champion_user_id)
                 .filter(Boolean) as string[]
-            );
+            )
 
             // Synergy champions for this member (by pseudo match)
-            const memberSynergies = synergies.filter((s) => s.game_pseudo === memberGroup.pseudo);
+            const memberSynergies = synergies.filter((s) => s.game_pseudo === memberGroup.pseudo)
             const synergyOnlyProviders = memberSynergies.filter(
               (s) => !nodeAttackerIds.has(s.champion_user_id)
-            );
+            )
 
-            const memberPrefights = prefights.filter((p) => p.game_pseudo === memberGroup.pseudo);
-            const memberAssists = assistsByPseudo.get(memberGroup.pseudo) ?? [];
+            const memberPrefights = prefights.filter((p) => p.game_pseudo === memberGroup.pseudo)
+            const memberAssists = assistsByPseudo.get(memberGroup.pseudo) ?? []
 
             const prefightOnlyProviders = [
               ...new Map(
@@ -195,13 +195,13 @@ export default function WarAttackerPanel({
                   .filter((p) => !nodeAttackerIds.has(p.champion_user_id))
                   .map((p) => [p.champion_user_id, p])
               ).values(),
-            ];
+            ]
             const totalSlots = new Set([
               ...nodeAttackerIds,
               ...memberSynergies.map((s) => s.champion_user_id),
               ...memberPrefights.map((p) => p.champion_user_id),
               ...memberAssists.map((a) => a.assistor_champion_user_id).filter(Boolean),
-            ]).size;
+            ]).size
 
             // Deduplicated node attacker portraits (unique by champion_user_id)
             const nodePortraits = memberGroup.entries.filter(
@@ -209,9 +209,9 @@ export default function WarAttackerPanel({
                 arr.findIndex(
                   (q) => q.attacker_champion_user_id === p.attacker_champion_user_id
                 ) === i
-            );
+            )
 
-            if (playerFilter && memberGroup.pseudo !== playerFilter) return null;
+            if (playerFilter && memberGroup.pseudo !== playerFilter) return null
 
             return (
               <div key={memberGroup.pseudo}>
@@ -350,7 +350,7 @@ export default function WarAttackerPanel({
                   ))}
                 </div>
               </div>
-            );
+            )
           })}
         </div>
       )}
@@ -359,7 +359,7 @@ export default function WarAttackerPanel({
         <MasteryDialog
           open={!!masteryTarget}
           onOpenChange={(open) => {
-            if (!open) setMasteryTarget(null);
+            if (!open) setMasteryTarget(null)
           }}
           gameAccountId={masteryTarget.gameAccountId}
           pseudo={masteryTarget.pseudo}
@@ -367,5 +367,5 @@ export default function WarAttackerPanel({
         />
       )}
     </div>
-  );
+  )
 }

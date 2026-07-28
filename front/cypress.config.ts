@@ -1,4 +1,4 @@
-import { defineConfig } from 'cypress';
+import { defineConfig } from 'cypress'
 
 export default defineConfig({
   e2e: {
@@ -18,4 +18,4 @@ export default defineConfig({
   reporterOptions: {
     configFile: 'cypress/reporter-config.json',
   },
-});
+})

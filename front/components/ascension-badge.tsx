@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { cn } from '@/app/lib/utils';
+import { cn } from '@/app/lib/utils'
 
 export default function AscensionBadge({
   level,
@@ -23,5 +23,5 @@ export default function AscensionBadge({
         height={size}
       />
     </div>
-  );
+  )
 }

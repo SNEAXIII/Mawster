@@ -15,7 +15,7 @@ def _caps():
 def test_caps_is_name_keyed_bool_map():
     caps = _caps()
     assert isinstance(caps, dict) and caps
-    for name, flags in caps.items():
+    for flags in caps.values():
         assert set(flags) <= set(FLAG_KEYS)
         assert all(isinstance(v, bool) for v in flags.values())
 

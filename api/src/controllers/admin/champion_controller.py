@@ -1,23 +1,23 @@
 import uuid
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
 from src.dto.admin.dto_champion import (
+    ChampionLoadRequest,
     ChampionPaginatedResponse,
     ChampionResponse,
     ChampionUpdateAliasRequest,
-    ChampionLoadRequest,
 )
 from src.Messages.champion_messages import (
     CHAMPION_ALIAS_UPDATED,
     CHAMPION_ASCENDABLE_UPDATED,
-    CHAMPION_PREFIGHT_UPDATED,
     CHAMPION_DELETED,
     CHAMPION_LOAD_SUCCESS,
+    CHAMPION_PREFIGHT_UPDATED,
 )
-from src.services.auth.AuthService import AuthService
 from src.services.admin.ChampionService import ChampionService
+from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
 
 # ── User-accessible read endpoints (/champions) ──────────
@@ -45,10 +45,10 @@ async def get_champions(
     session: SessionDep,
     page: Annotated[int, Query(ge=1)] = 1,
     size: Annotated[int, Query(ge=1)] = 20,
-    champion_class: Optional[str] = None,
-    search: Optional[str] = None,
-    is_ascendable: Optional[bool] = None,
-    has_prefight: Optional[bool] = None,
+    champion_class: str | None = None,
+    search: str | None = None,
+    is_ascendable: bool | None = None,
+    has_prefight: bool | None = None,
 ):
     return await ChampionService.get_champions_with_pagination(
         session,

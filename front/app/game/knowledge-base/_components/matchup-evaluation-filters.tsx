@@ -1,22 +1,22 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import AllianceSelect from '@/app/game/_components/alliance-select';
-import PlayerFilterSelect from '@/app/game/_components/player-filter-select';
-import ChampionFilterSelect from './champion-filter-select';
-import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector';
-import type { MatchupFiltersState } from '../_viewmodels/use-matchups-viewmodel';
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import AllianceSelect from '@/app/game/_components/alliance-select'
+import PlayerFilterSelect from '@/app/game/_components/player-filter-select'
+import ChampionFilterSelect from './champion-filter-select'
+import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
+import type { MatchupFiltersState } from '../_viewmodels/use-matchups-viewmodel'
 
 interface Props {
-  alliances: AllianceWithVisitorFlag[];
-  allianceId: string;
-  onAllianceChange: (id: string) => void;
-  players: string[];
-  filters: MatchupFiltersState;
-  onChange: <K extends keyof MatchupFiltersState>(key: K, value: MatchupFiltersState[K]) => void;
-  onClear: () => void;
+  alliances: AllianceWithVisitorFlag[]
+  allianceId: string
+  onAllianceChange: (id: string) => void
+  players: string[]
+  filters: MatchupFiltersState
+  onChange: <K extends keyof MatchupFiltersState>(key: K, value: MatchupFiltersState[K]) => void
+  onClear: () => void
 }
 
 export default function MatchupEvaluationFilters({
@@ -28,8 +28,8 @@ export default function MatchupEvaluationFilters({
   onChange,
   onClear,
 }: Readonly<Props>) {
-  const { t } = useI18n();
-  const kb = t.game.knowledgeBase;
+  const { t } = useI18n()
+  const kb = t.game.knowledgeBase
 
   return (
     <div className='flex flex-wrap gap-2 items-center'>
@@ -68,9 +68,13 @@ export default function MatchupEvaluationFilters({
         onChange={(e) => onChange('nodeNumber', e.target.value)}
         data-cy='matchup-filter-node'
       />
-      <Button variant='outline' onClick={onClear} data-cy='matchup-filter-clear'>
+      <Button
+        variant='outline'
+        onClick={onClear}
+        data-cy='matchup-filter-clear'
+      >
         {kb.clearFilters}
       </Button>
     </div>
-  );
+  )
 }

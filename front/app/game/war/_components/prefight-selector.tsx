@@ -1,23 +1,23 @@
-'use client';
+'use client'
 
-import { useCallback } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import { SearchInput } from '@/components/search-input';
-import ChampionPortrait from '@/components/champion-portrait';
-import { cn } from '@/app/lib/utils';
-import { getClassColors, shortenChampionName } from '@/app/services/roster';
-import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils';
-import { getAvailablePrefightAttackers } from '@/app/services/war';
-import { useWar } from '@/app/contexts/war-context';
-import { useAvailableAttackers } from './use-available-attackers';
+import { useCallback } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Separator } from '@/components/ui/separator'
+import { SearchInput } from '@/components/search-input'
+import ChampionPortrait from '@/components/champion-portrait'
+import { cn } from '@/app/lib/utils'
+import { getClassColors, shortenChampionName } from '@/app/services/roster'
+import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils'
+import { getAvailablePrefightAttackers } from '@/app/services/war'
+import { useWar } from '@/app/contexts/war-context'
+import { useAvailableAttackers } from './use-available-attackers'
 
 interface PrefightSelectorDialogProps {
-  open: boolean;
-  onClose: () => void;
-  targetNodeNumber: number;
-  targetGameAccountId: string;
+  open: boolean
+  onClose: () => void
+  targetNodeNumber: number
+  targetGameAccountId: string
 }
 
 export default function PrefightSelectorDialog({
@@ -25,14 +25,14 @@ export default function PrefightSelectorDialog({
   onClose,
   targetNodeNumber,
 }: Readonly<PrefightSelectorDialogProps>) {
-  const { t } = useI18n();
-  const { selectedAllianceId, activeWarId, selectedBg, handleAddPrefight, prefights } = useWar();
+  const { t } = useI18n()
+  const { selectedAllianceId, activeWarId, selectedBg, handleAddPrefight, prefights } = useWar()
 
   const fetchFn = useCallback(
     () => getAvailablePrefightAttackers(selectedAllianceId!, activeWarId!, selectedBg),
     [selectedAllianceId, activeWarId, selectedBg]
-  );
-  const guardedFetch = selectedAllianceId && activeWarId ? fetchFn : null;
+  )
+  const guardedFetch = selectedAllianceId && activeWarId ? fetchFn : null
 
   const {
     available,
@@ -44,33 +44,31 @@ export default function PrefightSelectorDialog({
     error,
     filterBySearch,
     buildGroups,
-  } = useAvailableAttackers(open, guardedFetch);
+  } = useAvailableAttackers(open, guardedFetch)
 
   // Only exclude champions already prefighting THIS specific node (same champion can prefight other nodes)
   const usedPrefightIds = new Set(
     prefights
       .filter((p) => p.target_node_number === targetNodeNumber)
       .map((p) => p.champion_user_id)
-  );
+  )
 
-  const filtered = filterBySearch(
-    available.filter((a) => !usedPrefightIds.has(a.champion_user_id))
-  );
-  const groups = buildGroups(filtered);
+  const filtered = filterBySearch(available.filter((a) => !usedPrefightIds.has(a.champion_user_id)))
+  const groups = buildGroups(filtered)
 
-  let content: React.ReactNode;
+  let content: React.ReactNode
   if (loading) {
-    content = <div className='text-center text-muted-foreground py-8'>{t.common.loading}</div>;
+    content = <div className='text-center text-muted-foreground py-8'>{t.common.loading}</div>
   } else if (error) {
     content = (
       <div className='text-center text-destructive py-8'>{t.game.war.availableAttackersError}</div>
-    );
+    )
   } else if (groups.length === 0) {
     content = (
       <div className='text-center text-muted-foreground py-8'>
         {t.game.war.prefight.noneAvailable}
       </div>
-    );
+    )
   } else {
     content = groups.map((group) => (
       <div key={group.gameAccountId}>
@@ -79,7 +77,7 @@ export default function PrefightSelectorDialog({
         </div>
         <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2'>
           {group.attackers.map((a) => {
-            const classColors = getClassColors(a.champion_class);
+            const classColors = getClassColors(a.champion_class)
             return (
               <button
                 key={a.champion_user_id}
@@ -88,8 +86,8 @@ export default function PrefightSelectorDialog({
                   'hover:ring-2 hover:ring-primary/60'
                 )}
                 onClick={() => {
-                  handleAddPrefight(a.champion_user_id, targetNodeNumber);
-                  onClose();
+                  handleAddPrefight(a.champion_user_id, targetNodeNumber)
+                  onClose()
                 }}
                 data-cy={`prefight-pick-${a.champion_name.replaceAll(/\s+/g, '-')}`}
               >
@@ -116,11 +114,11 @@ export default function PrefightSelectorDialog({
                   {a.champion_class}
                 </span>
               </button>
-            );
+            )
           })}
         </div>
       </div>
-    ));
+    ))
   }
 
   return (
@@ -157,5 +155,5 @@ export default function PrefightSelectorDialog({
         <div className='overflow-y-auto flex-1 p-3 flex flex-col gap-4'>{content}</div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

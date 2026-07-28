@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
 import {
   Command,
   CommandEmpty,
@@ -10,15 +10,15 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check, ChevronsUpDown } from 'lucide-react';
-import { type GameAccount } from '@/app/services/game';
+} from '@/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Check, ChevronsUpDown } from 'lucide-react'
+import { type GameAccount } from '@/app/services/game'
 
 interface InviteMemberComboProps {
-  eligibleMembers: GameAccount[];
-  memberAccountId: string;
-  onMemberAccountChange: (value: string) => void;
+  eligibleMembers: GameAccount[]
+  memberAccountId: string
+  onMemberAccountChange: (value: string) => void
 }
 
 export default function InviteMemberCombo({
@@ -26,8 +26,8 @@ export default function InviteMemberCombo({
   memberAccountId,
   onMemberAccountChange,
 }: Readonly<InviteMemberComboProps>) {
-  const { t } = useI18n();
-  const [open, setOpen] = useState(false);
+  const { t } = useI18n()
+  const [open, setOpen] = useState(false)
 
   return (
     <Popover
@@ -62,8 +62,8 @@ export default function InviteMemberCombo({
                   key={acc.id}
                   value={acc.game_pseudo}
                   onSelect={() => {
-                    onMemberAccountChange(acc.id);
-                    setOpen(false);
+                    onMemberAccountChange(acc.id)
+                    setOpen(false)
                   }}
                 >
                   <Check
@@ -77,5 +77,5 @@ export default function InviteMemberCombo({
         </Command>
       </PopoverContent>
     </Popover>
-  );
+  )
 }

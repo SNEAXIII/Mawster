@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useState } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   Command,
   CommandEmpty,
@@ -10,15 +10,15 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
-import { Button } from '@/components/ui/button';
-import { ChevronsUpDown, X } from 'lucide-react';
+} from '@/components/ui/command'
+import { Button } from '@/components/ui/button'
+import { ChevronsUpDown, X } from 'lucide-react'
 
 interface SearchablePlayerFilterSelectProps {
-  players: string[];
-  value: string;
-  onChange: (v: string) => void;
-  dataCy: string;
+  players: string[]
+  value: string
+  onChange: (v: string) => void
+  dataCy: string
 }
 
 export default function SearchablePlayerFilterSelect({
@@ -27,18 +27,21 @@ export default function SearchablePlayerFilterSelect({
   onChange,
   dataCy,
 }: Readonly<SearchablePlayerFilterSelectProps>) {
-  const { t } = useI18n();
-  const [open, setOpen] = useState(false);
+  const { t } = useI18n()
+  const [open, setOpen] = useState(false)
 
-  const displayLabel = value || t.game.defense.playerFilter;
+  const displayLabel = value || t.game.defense.playerFilter
 
   function handleSelect(player: string) {
-    onChange(player);
-    setOpen(false);
+    onChange(player)
+    setOpen(false)
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={setOpen}
+    >
       <PopoverTrigger asChild>
         <Button
           variant='outline'
@@ -53,8 +56,8 @@ export default function SearchablePlayerFilterSelect({
               role='button'
               data-cy={`${dataCy}-clear`}
               onClick={(e) => {
-                e.stopPropagation();
-                onChange('');
+                e.stopPropagation()
+                onChange('')
               }}
               className='ml-1 rounded-sm p-0.5 hover:bg-muted'
             >
@@ -94,5 +97,5 @@ export default function SearchablePlayerFilterSelect({
         </Command>
       </PopoverContent>
     </Popover>
-  );
+  )
 }

@@ -1,19 +1,19 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import { RARITY_LABELS, getNextRarity, RosterEntry } from '@/app/services/roster';
+import { useI18n } from '@/app/i18n'
+import { ConfirmationDialog } from '@/components/confirmation-dialog'
+import { RARITY_LABELS, getNextRarity, RosterEntry } from '@/app/services/roster'
 
 interface RosterDialogsProps {
-  deleteTarget: RosterEntry | null;
-  setDeleteTarget: (v: RosterEntry | null) => void;
-  confirmDelete: () => Promise<void>;
-  upgradeTarget: RosterEntry | null;
-  setUpgradeTarget: (v: RosterEntry | null) => void;
-  confirmUpgrade: () => Promise<void>;
-  ascendTarget: RosterEntry | null;
-  setAscendTarget: (v: RosterEntry | null) => void;
-  confirmAscend: () => Promise<void>;
+  deleteTarget: RosterEntry | null
+  setDeleteTarget: (v: RosterEntry | null) => void
+  confirmDelete: () => Promise<void>
+  upgradeTarget: RosterEntry | null
+  setUpgradeTarget: (v: RosterEntry | null) => void
+  confirmUpgrade: () => Promise<void>
+  ascendTarget: RosterEntry | null
+  setAscendTarget: (v: RosterEntry | null) => void
+  confirmAscend: () => Promise<void>
 }
 
 export function RosterDialogs({
@@ -27,7 +27,7 @@ export function RosterDialogs({
   setAscendTarget,
   confirmAscend,
 }: Readonly<RosterDialogsProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <>
@@ -78,5 +78,5 @@ export function RosterDialogs({
         onConfirm={confirmAscend}
       />
     </>
-  );
+  )
 }

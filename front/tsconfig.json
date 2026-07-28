@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -24,9 +20,7 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
   },
   "include": [
@@ -54,8 +48,5 @@
     ".next-3002/types/**/*.ts",
     ".next-3002/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "cypress"
-  ]
+  "exclude": ["node_modules", "cypress"]
 }

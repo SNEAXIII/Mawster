@@ -1,13 +1,13 @@
-import { Hero } from './_components/landing/hero';
-import { StatStrip } from './_components/landing/stat-strip';
-import { FeatureGrid } from './_components/landing/feature-grid';
-import { StatsShowcase } from './_components/landing/stats-showcase';
-import { FeatureRequest } from './_components/landing/feature-request';
-import { ComingSoon } from './_components/landing/coming-soon';
-import { Testimonials } from './_components/landing/testimonials';
-import { Faq } from './_components/landing/faq';
-import { Community } from './_components/landing/community';
-import { Cta } from './_components/landing/cta';
+import { Hero } from './_components/landing/hero'
+import { StatStrip } from './_components/landing/stat-strip'
+import { FeatureGrid } from './_components/landing/feature-grid'
+import { StatsShowcase } from './_components/landing/stats-showcase'
+import { FeatureRequest } from './_components/landing/feature-request'
+import { ComingSoon } from './_components/landing/coming-soon'
+import { Testimonials } from './_components/landing/testimonials'
+import { Faq } from './_components/landing/faq'
+import { Community } from './_components/landing/community'
+import { Cta } from './_components/landing/cta'
 
 export default function Page() {
   return (
@@ -23,5 +23,5 @@ export default function Page() {
       <Faq />
       <Cta />
     </div>
-  );
+  )
 }

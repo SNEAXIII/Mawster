@@ -1,51 +1,51 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
 import {
   getSnapshotStats,
   forceSnapshotWars,
   type AllianceSnapshotStat,
-} from '@/app/services/fight-records';
+} from '@/app/services/fight-records'
 
 export default function KnowledgeBasePanel() {
-  const { t } = useI18n();
-  const [stats, setStats] = useState<AllianceSnapshotStat[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [refreshResult, setRefreshResult] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { t } = useI18n()
+  const [stats, setStats] = useState<AllianceSnapshotStat[]>([])
+  const [loading, setLoading] = useState(false)
+  const [refreshResult, setRefreshResult] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const load = async () => {
-    setError(null);
+    setError(null)
     try {
-      setStats(await getSnapshotStats());
+      setStats(await getSnapshotStats())
     } catch {
-      setError(t.admin.knowledgeBase.loadError);
+      setError(t.admin.knowledgeBase.loadError)
     }
-  };
+  }
 
   useEffect(() => {
-    load();
-  }, []);
+    load()
+  }, [])
 
   const handleRefresh = async () => {
-    setLoading(true);
-    setRefreshResult(null);
-    setError(null);
+    setLoading(true)
+    setRefreshResult(null)
+    setError(null)
     try {
-      const result = await forceSnapshotWars();
+      const result = await forceSnapshotWars()
       const msg = t.admin.knowledgeBase.refreshResult
         .replace('{{count}}', String(result.snapshotted))
-        .replace('{{skipped}}', String(result.skipped));
-      setRefreshResult(msg);
-      await load();
+        .replace('{{skipped}}', String(result.skipped))
+      setRefreshResult(msg)
+      await load()
     } catch {
-      setError(t.admin.knowledgeBase.refreshError);
+      setError(t.admin.knowledgeBase.refreshError)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div
@@ -74,8 +74,12 @@ export default function KnowledgeBasePanel() {
         >
           <thead>
             <tr className='border-b bg-muted/50'>
-              <th className='text-left px-4 py-2 font-medium'>{t.admin.knowledgeBase.allianceColumn}</th>
-              <th className='text-left px-4 py-2 font-medium'>{t.admin.knowledgeBase.warsColumn}</th>
+              <th className='text-left px-4 py-2 font-medium'>
+                {t.admin.knowledgeBase.allianceColumn}
+              </th>
+              <th className='text-left px-4 py-2 font-medium'>
+                {t.admin.knowledgeBase.warsColumn}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -92,5 +96,5 @@ export default function KnowledgeBasePanel() {
         </table>
       )}
     </div>
-  );
+  )
 }

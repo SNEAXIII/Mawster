@@ -1,21 +1,21 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { useSession } from 'next-auth/react';
-import MainMawsterLogo from '@/components/MawsterLogo';
-import { Separator } from '@/components/ui/separator';
-import { LogIn } from 'lucide-react';
-import NavLinks, { Role } from './nav-links';
-import ModalSettings from './modal-settings';
-import { useI18n } from '@/app/i18n';
-import { useAllianceContext } from '@/app/contexts/alliance-context';
+import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import MainMawsterLogo from '@/components/MawsterLogo'
+import { Separator } from '@/components/ui/separator'
+import { LogIn } from 'lucide-react'
+import NavLinks, { Role } from './nav-links'
+import ModalSettings from './modal-settings'
+import { useI18n } from '@/app/i18n'
+import { useAllianceContext } from '@/app/contexts/alliance-context'
 
 export default function SideNavBar() {
-  const { data: session } = useSession();
-  const { t } = useI18n();
-  const isAuthenticated = Boolean(session && !session.error && session.user);
-  const userRole: Role = (isAuthenticated ? (session?.user.role as Role) : null) || Role.all;
-  const { hasAlliance } = useAllianceContext();
+  const { data: session } = useSession()
+  const { t } = useI18n()
+  const isAuthenticated = Boolean(session && !session.error && session.user)
+  const userRole: Role = (isAuthenticated ? (session?.user.role as Role) : null) || Role.all
+  const { hasAlliance } = useAllianceContext()
 
   return (
     <div className='flex h-full flex-col px-3 py-2 md:py-4 md:px-2'>
@@ -61,5 +61,5 @@ export default function SideNavBar() {
         </div>
       </div>
     </div>
-  );
+  )
 }

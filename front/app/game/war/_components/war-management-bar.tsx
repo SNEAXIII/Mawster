@@ -1,24 +1,24 @@
-'use client';
+'use client'
 
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useI18n } from '@/app/i18n';
-import { War } from '@/app/services/war';
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useI18n } from '@/app/i18n'
+import { War } from '@/app/services/war'
 
 interface WarManagementBarProps {
-  loading: boolean;
-  currentWar: War | null;
-  onClickDeclare: () => void;
+  loading: boolean
+  currentWar: War | null
+  onClickDeclare: () => void
 }
 
 export default function WarManagementBar({
   loading,
   onClickDeclare,
 }: Readonly<WarManagementBarProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   if (loading) {
-    return <Skeleton className='h-9 w-48 rounded' />;
+    return <Skeleton className='h-9 w-48 rounded' />
   }
 
   return (
@@ -33,5 +33,5 @@ export default function WarManagementBar({
         </Button>
       </div>
     </>
-  );
+  )
 }

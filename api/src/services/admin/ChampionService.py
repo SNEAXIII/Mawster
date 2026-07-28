@@ -1,21 +1,20 @@
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import func
-from sqlmodel import select, or_
+from sqlmodel import or_, select
 
+from src.dto.admin.dto_champion import (
+    ChampionLoadRequest,
+    ChampionPaginatedResponse,
+    ChampionResponse,
+)
+from src.enums.ChampionClass import ChampionClass
 from src.Messages.champion_messages import (
     CHAMPION_NOT_FOUND,
 )
-from src.dto.admin.dto_champion import (
-    ChampionPaginatedResponse,
-    ChampionResponse,
-    ChampionLoadRequest,
-)
-from src.enums.ChampionClass import ChampionClass
 from src.models.Champion import Champion
 from src.utils.db import SessionDep
-
 
 VALID_CLASSES = {c.value for c in ChampionClass}
 
@@ -29,7 +28,7 @@ class ChampionService:
         return champion
 
     @classmethod
-    async def get_champion_by_name(cls, session: SessionDep, name: str) -> Optional[Champion]:
+    async def get_champion_by_name(cls, session: SessionDep, name: str) -> Champion | None:
         sql = select(Champion).where(Champion.name == name)
         result = await session.exec(sql)
         return result.first()
@@ -38,10 +37,10 @@ class ChampionService:
     def _apply_filters(
         cls,
         sql: Any,
-        champion_class: Optional[str] = None,
-        search: Optional[str] = None,
-        is_ascendable: Optional[bool] = None,
-        has_prefight: Optional[bool] = None,
+        champion_class: str | None = None,
+        search: str | None = None,
+        is_ascendable: bool | None = None,
+        has_prefight: bool | None = None,
     ) -> Any:
         if champion_class:
             sql = sql.where(Champion.champion_class == champion_class)
@@ -63,10 +62,10 @@ class ChampionService:
     async def get_total_champions(
         cls,
         session: SessionDep,
-        champion_class: Optional[str] = None,
-        search: Optional[str] = None,
-        is_ascendable: Optional[bool] = None,
-        has_prefight: Optional[bool] = None,
+        champion_class: str | None = None,
+        search: str | None = None,
+        is_ascendable: bool | None = None,
+        has_prefight: bool | None = None,
     ) -> int:
         sql = select(func.count()).select_from(Champion)
         sql = cls._apply_filters(
@@ -85,10 +84,10 @@ class ChampionService:
         session: SessionDep,
         page: int,
         size: int,
-        champion_class: Optional[str] = None,
-        search: Optional[str] = None,
-        is_ascendable: Optional[bool] = None,
-        has_prefight: Optional[bool] = None,
+        champion_class: str | None = None,
+        search: str | None = None,
+        is_ascendable: bool | None = None,
+        has_prefight: bool | None = None,
     ) -> list[Champion]:
         sql = select(Champion).order_by(Champion.name)
         sql = cls._apply_filters(
@@ -109,10 +108,10 @@ class ChampionService:
         session: SessionDep,
         page: int,
         size: int,
-        champion_class: Optional[str] = None,
-        search: Optional[str] = None,
-        is_ascendable: Optional[bool] = None,
-        has_prefight: Optional[bool] = None,
+        champion_class: str | None = None,
+        search: str | None = None,
+        is_ascendable: bool | None = None,
+        has_prefight: bool | None = None,
     ) -> ChampionPaginatedResponse:
         total = await cls.get_total_champions(
             session,
@@ -141,7 +140,7 @@ class ChampionService:
 
     @classmethod
     async def update_alias(
-        cls, session: SessionDep, champion_id: uuid.UUID, alias: Optional[str]
+        cls, session: SessionDep, champion_id: uuid.UUID, alias: str | None
     ) -> Champion:
         champion = await cls.get_champion_by_id(session, champion_id)
         champion.alias = alias

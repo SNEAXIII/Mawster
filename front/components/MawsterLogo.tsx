@@ -1,8 +1,8 @@
-import Image from 'next/image';
-import { JSX } from 'react/jsx-dev-runtime';
+import Image from 'next/image'
+import { JSX } from 'react/jsx-dev-runtime'
 
 interface MainMawsterLogoProps {
-  className?: string;
+  className?: string
 }
 
 export function MawsterLogo(): JSX.Element {
@@ -13,7 +13,7 @@ export function MawsterLogo(): JSX.Element {
       width={40}
       height={40}
     />
-  );
+  )
 }
 export default function MainMawsterLogo({ className = '' }: Readonly<MainMawsterLogoProps>) {
   return (
@@ -24,5 +24,5 @@ export default function MainMawsterLogo({ className = '' }: Readonly<MainMawster
       <MawsterLogo />
       <p className='text-xl font-semibold md:text-xl'>Mawster</p>
     </div>
-  );
+  )
 }

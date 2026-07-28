@@ -1,20 +1,18 @@
 """Integration tests for PlayerStatsService (ownership check + seasons list)."""
 
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi import HTTPException
 
 from main import app
-from src.services.PlayerStatsService import PlayerStatsService
-from src.models.Season import Season
 from src.enums.SeasonStatus import SeasonStatus
+from src.models.Season import Season
 from src.models.War import War, WarStatus
 from src.models.WarDefensePlacement import WarDefensePlacement
+from src.services.PlayerStatsService import PlayerStatsService
 from src.utils.db import get_session
-from tests.utils.utils_constant import USER_ID, USER2_ID, ALLIANCE_TAG
-from tests.utils.utils_db import get_test_session, load_objects
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -22,6 +20,8 @@ from tests.integration.endpoints.setup.game_setup import (
     push_member,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
+from tests.utils.utils_constant import ALLIANCE_TAG, USER2_ID, USER_ID
+from tests.utils.utils_db import get_test_session, load_objects
 
 app.dependency_overrides[get_session] = get_test_session
 
@@ -324,7 +324,7 @@ class TestGetPlayerStats:
     async def test_evolution_orders_wars_chronologically_not_alphabetically(self):
         data = await _base_setup()
         season = Season(number=64, status=SeasonStatus.ended)
-        base = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        base = datetime(2026, 1, 1, tzinfo=UTC)
         # "Zeta" happens first, "Alpha" second: chronological != alphabetical
         war_z = War(
             id=uuid.uuid4(),
@@ -358,7 +358,13 @@ class TestGetPlayerStats:
 
 
 async def _push_fight_record(
-    war, alliance_id, game_account_id, champion, defender_champion, ko_count=0
+    war,
+    alliance_id,
+    game_account_id,
+    champion,
+    defender_champion,
+    ko_count=0,
+    is_planning_error=False,
 ):
     from src.models.WarFightRecord import WarFightRecord as _WFR
 
@@ -381,6 +387,7 @@ async def _push_fight_record(
         defender_ascension=0,
         defender_is_saga_defender=False,
         ko_count=ko_count,
+        is_planning_error=is_planning_error,
     )
     await load_objects([record])
     return record
@@ -456,6 +463,53 @@ class TestGetPlayerChampionUsage:
                 session, owner_user, data["owner"].id, season_id=None
             )
             assert {r.champion_name for r in all_seasons} == {"Spider-Man", "IronMan"}
+
+    @pytest.mark.anyio
+    async def test_planning_error_fights_are_excluded(self):
+        data = await _setup_with_ended_season_war()
+        defender = await push_champion(name="Venom", champion_class="Cosmic")
+        await _push_fight_record(
+            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender, ko_count=1
+        )
+        await _push_fight_record(
+            data["war"],
+            data["alliance"].id,
+            data["owner"].id,
+            data["champ"],
+            defender,
+            ko_count=3,
+            is_planning_error=True,
+        )
+        owner_user = get_generic_user(is_base_id=True)
+
+        async for session in get_test_session():
+            result = await PlayerStatsService.get_player_champion_usage(
+                session, owner_user, data["owner"].id, season_id=data["season"].id
+            )
+            assert len(result) == 1
+            assert result[0].fight_count == 1
+            assert result[0].total_kos == 1
+
+    @pytest.mark.anyio
+    async def test_planning_error_only_returns_no_usage(self):
+        data = await _setup_with_ended_season_war()
+        defender = await push_champion(name="Venom", champion_class="Cosmic")
+        await _push_fight_record(
+            data["war"],
+            data["alliance"].id,
+            data["owner"].id,
+            data["champ"],
+            defender,
+            ko_count=2,
+            is_planning_error=True,
+        )
+        owner_user = get_generic_user(is_base_id=True)
+
+        async for session in get_test_session():
+            result = await PlayerStatsService.get_player_champion_usage(
+                session, owner_user, data["owner"].id, season_id=data["season"].id
+            )
+            assert result == []
 
     @pytest.mark.anyio
     async def test_denies_other_user(self):

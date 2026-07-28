@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { cn } from '@/app/lib/utils';
+import { cn } from '@/app/lib/utils'
 
 export default function SagaBadge({
   additionalClasses = '',
@@ -22,5 +22,5 @@ export default function SagaBadge({
         height={size}
       ></img>
     </div>
-  );
+  )
 }

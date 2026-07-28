@@ -1,32 +1,32 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { useI18n } from '@/app/i18n';
-import { toast } from 'sonner';
-import { CollapsibleSection } from '@/components/collapsible-section';
-import { ConfirmationDialog } from '@/components/confirmation-dialog';
-import ChampionPortrait from '@/components/champion-portrait';
+import { useEffect, useState } from 'react'
+import { useI18n } from '@/app/i18n'
+import { toast } from 'sonner'
+import { CollapsibleSection } from '@/components/collapsible-section'
+import { ConfirmationDialog } from '@/components/confirmation-dialog'
+import ChampionPortrait from '@/components/champion-portrait'
 import {
   getUpgradeRequests,
   cancelUpgradeRequest,
   UpgradeRequest,
   RARITY_LABELS,
   getClassColors,
-} from '@/app/services/roster';
-import { X } from 'lucide-react';
+} from '@/app/services/roster'
+import { X } from 'lucide-react'
 
 interface UpgradeRequestsSectionProps {
-  gameAccountId: string | null;
+  gameAccountId: string | null
   /** Key to trigger refresh (e.g. after roster changes) */
-  refreshKey?: number;
+  refreshKey?: number
   /** Whether the current user can cancel requests (officer/owner) */
-  canCancel?: boolean;
+  canCancel?: boolean
   /** External requests — when provided, skip internal fetch */
-  externalRequests?: UpgradeRequest[];
+  externalRequests?: UpgradeRequest[]
   /** Callback when a request is cancelled externally */
-  onRequestCancelled?: (requestId: string) => void;
+  onRequestCancelled?: (requestId: string) => void
   /** When provided, clicking cancel delegates to the parent (avoids nested dialog issues) */
-  onInitiateCancel?: (requestId: string) => void;
+  onInitiateCancel?: (requestId: string) => void
 }
 
 export default function UpgradeRequestsSection({
@@ -37,48 +37,48 @@ export default function UpgradeRequestsSection({
   onRequestCancelled,
   onInitiateCancel,
 }: Readonly<UpgradeRequestsSectionProps>) {
-  const { t } = useI18n();
-  const [internalRequests, setInternalRequests] = useState<UpgradeRequest[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [cancelTarget, setCancelTarget] = useState<UpgradeRequest | null>(null);
+  const { t } = useI18n()
+  const [internalRequests, setInternalRequests] = useState<UpgradeRequest[]>([])
+  const [loading, setLoading] = useState(false)
+  const [cancelTarget, setCancelTarget] = useState<UpgradeRequest | null>(null)
 
-  const requests = externalRequests ?? internalRequests;
+  const requests = externalRequests ?? internalRequests
 
   useEffect(() => {
     // Skip fetch if using external requests
-    if (externalRequests !== undefined) return;
+    if (externalRequests !== undefined) return
     if (!gameAccountId) {
-      setInternalRequests([]);
-      return;
+      setInternalRequests([])
+      return
     }
-    setLoading(true);
+    setLoading(true)
     getUpgradeRequests(gameAccountId)
       .then(setInternalRequests)
       .catch(() => {
         /* silent */
       })
-      .finally(() => setLoading(false));
-  }, [gameAccountId, refreshKey, externalRequests]);
+      .finally(() => setLoading(false))
+  }, [gameAccountId, refreshKey, externalRequests])
 
   const confirmCancel = async () => {
-    if (!cancelTarget) return;
+    if (!cancelTarget) return
     try {
-      await cancelUpgradeRequest(cancelTarget.id);
+      await cancelUpgradeRequest(cancelTarget.id)
       if (onRequestCancelled) {
-        onRequestCancelled(cancelTarget.id);
+        onRequestCancelled(cancelTarget.id)
       } else {
-        setInternalRequests((prev) => prev.filter((r) => r.id !== cancelTarget.id));
+        setInternalRequests((prev) => prev.filter((r) => r.id !== cancelTarget.id))
       }
-      toast.success(t.roster.upgradeRequests.cancelSuccess);
+      toast.success(t.roster.upgradeRequests.cancelSuccess)
     } catch {
-      toast.error(t.roster.upgradeRequests.cancelError);
+      toast.error(t.roster.upgradeRequests.cancelError)
     } finally {
-      setCancelTarget(null);
+      setCancelTarget(null)
     }
-  };
+  }
 
   // Don't render at all if no requests
-  if (!gameAccountId || (!loading && requests.length === 0)) return null;
+  if (!gameAccountId || (!loading && requests.length === 0)) return null
 
   return (
     <div data-cy='upgrade-requests-section'>
@@ -92,7 +92,7 @@ export default function UpgradeRequestsSection({
         ) : (
           <div className='flex flex-col gap-2'>
             {requests.map((req) => {
-              const classColors = getClassColors(req.champion_class);
+              const classColors = getClassColors(req.champion_class)
               return (
                 <div
                   key={req.id}
@@ -138,7 +138,7 @@ export default function UpgradeRequestsSection({
                     </button>
                   )}
                 </div>
-              );
+              )
             })}
           </div>
         )}
@@ -146,7 +146,7 @@ export default function UpgradeRequestsSection({
         <ConfirmationDialog
           open={!!cancelTarget}
           onOpenChange={(open) => {
-            if (!open) setCancelTarget(null);
+            if (!open) setCancelTarget(null)
           }}
           title={t.roster.upgradeRequests.cancelConfirmTitle}
           description={t.roster.upgradeRequests.cancelConfirmDesc.replace(
@@ -159,5 +159,5 @@ export default function UpgradeRequestsSection({
         />
       </CollapsibleSection>
     </div>
-  );
+  )
 }

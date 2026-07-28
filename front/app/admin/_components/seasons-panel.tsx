@@ -1,17 +1,17 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { useI18n } from '@/app/i18n';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useEffect, useState } from 'react'
+import { useI18n } from '@/app/i18n'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select'
 import {
   listSeasons,
   createSeason,
@@ -20,80 +20,80 @@ import {
   revertSeason,
   type Season,
   type SeasonFormat,
-} from '@/app/services/season';
-import { ConfirmationDialog } from '@/components/confirmation-dialog';
+} from '@/app/services/season'
+import { ConfirmationDialog } from '@/components/confirmation-dialog'
 
 export default function SeasonsPanel() {
-  const { t } = useI18n();
-  const [seasons, setSeasons] = useState<Season[]>([]);
-  const [newNumber, setNewNumber] = useState('');
-  const [newFormat, setNewFormat] = useState<SeasonFormat>('regular');
-  const [error, setError] = useState<string | null>(null);
+  const { t } = useI18n()
+  const [seasons, setSeasons] = useState<Season[]>([])
+  const [newNumber, setNewNumber] = useState('')
+  const [newFormat, setNewFormat] = useState<SeasonFormat>('regular')
+  const [error, setError] = useState<string | null>(null)
   const [confirm, setConfirm] = useState<{
-    id: string;
-    action: 'open' | 'close' | 'revert';
-  } | null>(null);
+    id: string
+    action: 'open' | 'close' | 'revert'
+  } | null>(null)
 
   const load = async () => {
     try {
-      setSeasons(await listSeasons());
+      setSeasons(await listSeasons())
     } catch {
-      setError(t.game.season.admin.createError);
+      setError(t.game.season.admin.createError)
     }
-  };
+  }
 
   useEffect(() => {
-    load();
-  }, []);
+    load()
+  }, [])
 
   const handleCreate = async () => {
-    const n = parseInt(newNumber, 10);
-    if (isNaN(n)) return;
+    const n = parseInt(newNumber, 10)
+    if (isNaN(n)) return
     try {
-      await createSeason(n, newFormat);
-      setNewNumber('');
-      setNewFormat('regular');
-      await load();
+      await createSeason(n, newFormat)
+      setNewNumber('')
+      setNewFormat('regular')
+      await load()
     } catch {
-      setError(t.game.season.admin.createError);
+      setError(t.game.season.admin.createError)
     }
-  };
+  }
 
   const handleOpen = async (id: string) => {
     try {
-      await openSeason(id);
-      await load();
+      await openSeason(id)
+      await load()
     } catch {
-      setError(t.game.season.admin.openError);
+      setError(t.game.season.admin.openError)
     }
-  };
+  }
 
   const handleClose = async (id: string) => {
     try {
-      await closeSeason(id);
-      await load();
+      await closeSeason(id)
+      await load()
     } catch {
-      setError(t.game.season.admin.closeError);
+      setError(t.game.season.admin.closeError)
     }
-  };
+  }
 
   const handleRevert = async (id: string) => {
     try {
-      await revertSeason(id);
-      await load();
+      await revertSeason(id)
+      await load()
     } catch {
-      setError(t.game.season.admin.revertError);
+      setError(t.game.season.admin.revertError)
     }
-  };
+  }
 
   const runConfirm = async () => {
-    if (!confirm) return;
-    const { id, action } = confirm;
-    setConfirm(null);
-    if (action === 'open') await handleOpen(id);
-    else if (action === 'close') await handleClose(id);
-    else await handleRevert(id);
-  };
+    if (!confirm) return
+    const { id, action } = confirm
+    setConfirm(null)
+    if (action === 'open') await handleOpen(id)
+    else if (action === 'close') await handleClose(id)
+    else await handleRevert(id)
+  }
 
   return (
     <div
@@ -113,7 +113,7 @@ export default function SeasonsPanel() {
               !/^\d$/.test(e.key) &&
               !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)
             ) {
-              e.preventDefault();
+              e.preventDefault()
             }
           }}
           onChange={(e) => setNewNumber(e.target.value.replace(/\D/g, ''))}
@@ -214,7 +214,7 @@ export default function SeasonsPanel() {
       <ConfirmationDialog
         open={confirm !== null}
         onOpenChange={(next) => {
-          if (!next) setConfirm(null);
+          if (!next) setConfirm(null)
         }}
         title={
           confirm?.action === 'close'
@@ -233,5 +233,5 @@ export default function SeasonsPanel() {
         onConfirm={runConfirm}
       />
     </div>
-  );
+  )
 }

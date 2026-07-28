@@ -10,11 +10,10 @@ from src.models.Alliance import Alliance
 from src.models.AllianceInvitation import AllianceInvitation
 from src.models.GameAccount import GameAccount
 from src.services.alliance.AllianceInvitationService import (
-    AllianceInvitationService,
     MAX_MEMBERS_PER_ALLIANCE,
+    AllianceInvitationService,
 )
-from tests.utils.utils_constant import USER_ID, GAME_PSEUDO, ALLIANCE_NAME, ALLIANCE_TAG
-
+from tests.utils.utils_constant import ALLIANCE_NAME, ALLIANCE_TAG, GAME_PSEUDO, USER_ID
 
 # ---------------------------------------------------------------------------
 # Helpers

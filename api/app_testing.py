@@ -2,10 +2,10 @@ import os
 
 os.environ["MODE"] = "testing"
 
-from src.fixtures.reset_db import reset  # noqa: E402
-from src.security.secrets import SECRET  # noqa: E402
+import uvicorn
 
-import uvicorn  # noqa: E402
+from src.fixtures.reset_db import reset
+from src.security.secrets import SECRET
 
 if __name__ == "__main__":
     reset()

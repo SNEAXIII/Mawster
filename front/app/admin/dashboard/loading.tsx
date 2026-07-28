@@ -1,11 +1,13 @@
-import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import TableHeaderUsers from '@/components/dashboard/table/table-header';
-import { MoreHorizontal } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+'use client'
+
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
+import TableHeaderUsers from '@/components/dashboard/table/table-header'
+import { MoreHorizontal } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface LoadingProps {
-  usersPerPage: number;
+  usersPerPage: number
 }
 
 export default function Loading({ usersPerPage }: LoadingProps) {
@@ -37,5 +39,5 @@ export default function Loading({ usersPerPage }: LoadingProps) {
         </TableBody>
       </Table>
     </div>
-  );
+  )
 }

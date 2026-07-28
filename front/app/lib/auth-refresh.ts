@@ -1,11 +1,11 @@
-import jwt from 'jsonwebtoken';
-import type { JWT } from 'next-auth/jwt';
-import { getServerApiUrl } from '@/app/lib/serverApiUrl';
+import jwt from 'jsonwebtoken'
+import type { JWT } from 'next-auth/jwt'
+import { getServerApiUrl } from '@/app/lib/serverApiUrl'
 
 interface JwtPayload {
-  user_id: string;
-  role: string;
-  type: string;
+  user_id: string
+  role: string
+  type: string
 }
 
 /**
@@ -21,11 +21,11 @@ export async function refreshBackendToken(token: JWT): Promise<JWT> {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: token.backendRefreshToken }),
-      });
+      })
 
       if (refreshRes.ok) {
-        const data = await refreshRes.json();
-        const decoded = jwt.decode(data.access_token) as JwtPayload | null;
+        const data = await refreshRes.json()
+        const decoded = jwt.decode(data.access_token) as JwtPayload | null
 
         if (decoded) {
           return {
@@ -37,7 +37,7 @@ export async function refreshBackendToken(token: JWT): Promise<JWT> {
             accessTokenExpires: Date.now() + 60 * 60 * 1000,
             expired: false,
             backendAuthenticated: true,
-          };
+          }
         }
       }
     }
@@ -49,38 +49,38 @@ export async function refreshBackendToken(token: JWT): Promise<JWT> {
         refresh_token: token.discordRefreshToken,
         client_id: process.env.DISCORD_CLIENT_ID!,
         client_secret: process.env.DISCORD_CLIENT_SECRET!,
-      });
+      })
 
       const discordRes = await fetch('https://discord.com/api/oauth2/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params.toString(),
-      });
+      })
 
       if (!discordRes.ok) {
-        console.error('Echec du refresh Discord:', discordRes.status);
-        return { ...token, expired: true, backendAuthenticated: false };
+        console.error('Echec du refresh Discord:', discordRes.status)
+        return { ...token, expired: true, backendAuthenticated: false }
       }
 
-      const discordTokens = await discordRes.json();
+      const discordTokens = await discordRes.json()
 
       const backendRes = await fetch(`${getServerApiUrl()}/auth/discord`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ access_token: discordTokens.access_token }),
-      });
+      })
 
       if (!backendRes.ok) {
-        console.error('Echec backend apres refresh Discord:', backendRes.status);
-        return { ...token, expired: true, backendAuthenticated: false };
+        console.error('Echec backend apres refresh Discord:', backendRes.status)
+        return { ...token, expired: true, backendAuthenticated: false }
       }
 
-      const data = await backendRes.json();
-      const decoded = jwt.decode(data.access_token) as JwtPayload | null;
+      const data = await backendRes.json()
+      const decoded = jwt.decode(data.access_token) as JwtPayload | null
 
       if (!decoded) {
-        console.error('Impossible de décoder le JWT backend après refresh');
-        return { ...token, expired: true, backendAuthenticated: false };
+        console.error('Impossible de décoder le JWT backend après refresh')
+        return { ...token, expired: true, backendAuthenticated: false }
       }
 
       return {
@@ -93,12 +93,12 @@ export async function refreshBackendToken(token: JWT): Promise<JWT> {
         discordRefreshToken: discordTokens.refresh_token ?? token.discordRefreshToken,
         expired: false,
         backendAuthenticated: true,
-      };
+      }
     }
 
-    return { ...token, expired: true, backendAuthenticated: false };
+    return { ...token, expired: true, backendAuthenticated: false }
   } catch (error) {
-    console.error('Erreur lors du refresh token:', error);
-    return { ...token, expired: true, backendAuthenticated: false };
+    console.error('Erreur lors du refresh token:', error)
+    return { ...token, expired: true, backendAuthenticated: false }
   }
 }

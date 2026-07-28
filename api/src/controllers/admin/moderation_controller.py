@@ -1,5 +1,4 @@
 import uuid
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from starlette import status
@@ -28,8 +27,8 @@ moderation_controller = APIRouter(
 @moderation_controller.get("/note-reports", response_model=PaginatedNoteReports)
 async def list_note_reports(
     session: SessionDep,
-    status_filter: Optional[NoteReportStatus] = Query(default=None, alias="status"),
-    alliance_id: Optional[uuid.UUID] = None,
+    status_filter: NoteReportStatus | None = Query(default=None, alias="status"),
+    alliance_id: uuid.UUID | None = None,
     page: int = 1,
     size: int = 20,
 ):
@@ -96,5 +95,5 @@ async def list_mutes(session: SessionDep, active_only: bool = True):
 
 
 @moderation_controller.get("/warns", response_model=list[WarnResponse])
-async def list_warns(session: SessionDep, user_id: Optional[uuid.UUID] = None):
+async def list_warns(session: SessionDep, user_id: uuid.UUID | None = None):
     return await ModerationService.list_warns(session, user_id=user_id)

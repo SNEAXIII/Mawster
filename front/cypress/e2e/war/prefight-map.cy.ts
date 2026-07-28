@@ -31,7 +31,17 @@ describe('War – prefight highlight on map', () => {
 
   it('player filter keeps node visible when selected player has prefight (but not the attacker)', () => {
     setupPrefightScenario('pflt').then(
-      ({ adminToken, ownerData, memberData, allianceId, ownerAccId, memberAccId, warId, championUserId, prefightChampionUserId }) => {
+      ({
+        adminToken,
+        ownerData,
+        memberData,
+        allianceId,
+        ownerAccId,
+        memberAccId,
+        warId,
+        championUserId,
+        prefightChampionUserId,
+      }) => {
         cy.apiLoadChampion(adminToken, 'Spider-Man', 'Cosmic').then((champs) => {
           const spiderId = champs[0].id;
           // node 1: member's Wolverine as attacker (so member appears in filter dropdown)
@@ -60,7 +70,16 @@ describe('War – prefight highlight on map', () => {
 
   it('player filter dims node where selected player has no attacker and no prefight', () => {
     setupPrefightScenario('pflt2').then(
-      ({ adminToken, ownerData, memberData, allianceId, ownerAccId, warId, championUserId, prefightChampionUserId }) => {
+      ({
+        adminToken,
+        ownerData,
+        memberData,
+        allianceId,
+        ownerAccId,
+        warId,
+        championUserId,
+        prefightChampionUserId,
+      }) => {
         // member: attacker + prefight on node 10
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
         cy.apiAddWarPrefight(memberData.access_token, allianceId, warId, 1, prefightChampionUserId, 10);

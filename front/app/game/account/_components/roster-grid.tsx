@@ -1,23 +1,23 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
-import { RosterEntry, RARITY_LABELS, UpgradeRequest } from '@/app/services/roster';
-import RosterChampionCard from './roster-champion-card';
+import { useI18n } from '@/app/i18n'
+import { RosterEntry, RARITY_LABELS, UpgradeRequest } from '@/app/services/roster'
+import RosterChampionCard from './roster-champion-card'
 
 interface RosterGridProps {
-  groupedRoster: [string, RosterEntry[]][];
-  onEdit?: (entry: RosterEntry) => void;
-  onDelete?: (entry: RosterEntry) => void;
-  onUpgrade?: (entry: RosterEntry) => void;
-  onTogglePreferredAttacker?: (entry: RosterEntry) => void;
-  onAscend?: (entry: RosterEntry) => void;
-  readOnly?: boolean;
+  groupedRoster: [string, RosterEntry[]][]
+  onEdit?: (entry: RosterEntry) => void
+  onDelete?: (entry: RosterEntry) => void
+  onUpgrade?: (entry: RosterEntry) => void
+  onTogglePreferredAttacker?: (entry: RosterEntry) => void
+  onAscend?: (entry: RosterEntry) => void
+  readOnly?: boolean
   /** Pending upgrade requests — used to show cancel button instead of upgrade arrow */
-  upgradeRequests?: UpgradeRequest[];
+  upgradeRequests?: UpgradeRequest[]
   /** Callback to cancel an upgrade request */
-  onCancelRequest?: (requestId: string) => void;
+  onCancelRequest?: (requestId: string) => void
   /** True when filters are active — changes the empty-state message */
-  isFiltered?: boolean;
+  isFiltered?: boolean
 }
 
 export default function RosterGrid({
@@ -32,7 +32,7 @@ export default function RosterGrid({
   onCancelRequest,
   isFiltered = false,
 }: RosterGridProps) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   if (groupedRoster.length === 0) {
     return (
@@ -42,7 +42,7 @@ export default function RosterGrid({
       >
         {isFiltered ? t.roster.filter.noResults : t.roster.empty}
       </p>
-    );
+    )
   }
 
   return (
@@ -60,7 +60,7 @@ export default function RosterGrid({
           </h3>
           <div className='grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2'>
             {entries.map((entry) => {
-              const pending = upgradeRequests?.find((r) => r.champion_user_id === entry.id);
+              const pending = upgradeRequests?.find((r) => r.champion_user_id === entry.id)
               return (
                 <RosterChampionCard
                   key={entry.id}
@@ -74,11 +74,11 @@ export default function RosterGrid({
                   pendingRequestId={pending?.id}
                   onCancelRequest={onCancelRequest}
                 />
-              );
+              )
             })}
           </div>
         </div>
       ))}
     </div>
-  );
+  )
 }

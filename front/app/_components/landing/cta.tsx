@@ -1,12 +1,12 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { FaDiscord, FaGoogle } from 'react-icons/fa6';
-import { useI18n } from '@/app/i18n';
-import { Button } from '@/components/ui/button';
+import Link from 'next/link'
+import { FaDiscord, FaGoogle } from 'react-icons/fa6'
+import { useI18n } from '@/app/i18n'
+import { Button } from '@/components/ui/button'
 
 export function Cta() {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   return (
     <section className='px-6 py-24 md:px-12'>
@@ -47,5 +47,5 @@ export function Cta() {
         </p>
       </div>
     </section>
-  );
+  )
 }

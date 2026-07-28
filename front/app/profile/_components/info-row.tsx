@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 
 export function InfoRow({
   icon,
@@ -7,11 +7,11 @@ export function InfoRow({
   fallback = 'N/A',
   dataCy,
 }: Readonly<{
-  icon: React.ReactNode;
-  label: string;
-  value: string | null | undefined;
-  fallback?: string;
-  dataCy?: string;
+  icon: React.ReactNode
+  label: string
+  value: string | null | undefined
+  fallback?: string
+  dataCy?: string
 }>) {
   return (
     <div
@@ -24,5 +24,5 @@ export function InfoRow({
         <p className='mt-0.5 text-sm truncate'>{value ?? fallback}</p>
       </div>
     </div>
-  );
+  )
 }

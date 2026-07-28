@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
+
 from sqlmodel import Field, Relationship
 
 from src.models.Base import TimestampMixin, UUIDBase
@@ -16,7 +17,7 @@ class RequestedUpgrade(UUIDBase, TimestampMixin, table=True):
     champion_user_id: uuid.UUID = Field(foreign_key="champion_user.id")
     requester_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     requested_rarity: str = Field(max_length=10)  # e.g. "7r3"
-    done_at: Optional[datetime] = Field(default=None)
+    done_at: datetime | None = Field(default=None)
 
     # Relations
     champion_user: "ChampionUser" = Relationship(

@@ -11,12 +11,14 @@ function createAndJoinMember(prefix: string, pseudo: string, allianceId: string)
 function fillGroupOneWith9Members(allianceId: string, ownerToken: string, prefix: string) {
   Array.from({ length: 9 }, (_, i) => i).forEach((i) => {
     cy.registerUser(`${prefix}${i}`).then((extraData) => {
-      cy.apiCreateGameAccount(extraData.access_token, `${prefix.replace(/-/g, '').slice(0, 8)}Ext${i}`.slice(0, 16), true).then(
-        (extraAcc) => {
-          cy.apiForceJoinAlliance(extraAcc.id, allianceId);
-          cy.apiSetMemberGroup(ownerToken, allianceId, extraAcc.id, 1);
-        },
-      );
+      cy.apiCreateGameAccount(
+        extraData.access_token,
+        `${prefix.replace(/-/g, '').slice(0, 8)}Ext${i}`.slice(0, 16),
+        true,
+      ).then((extraAcc) => {
+        cy.apiForceJoinAlliance(extraAcc.id, allianceId);
+        cy.apiSetMemberGroup(ownerToken, allianceId, extraAcc.id, 1);
+      });
     });
   });
 }

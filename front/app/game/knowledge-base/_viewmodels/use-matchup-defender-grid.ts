@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import { useCallback, useEffect, useState } from 'react';
-import { getMatchupDefenderGrid, type MatchupDefenderGridResponse } from '@/app/services/matchups';
+import { useCallback, useEffect, useState } from 'react'
+import { getMatchupDefenderGrid, type MatchupDefenderGridResponse } from '@/app/services/matchups'
 
 /**
  * Mirror of {@link useMatchupGrid}, centered on a defender: loads the attackers rated against
@@ -14,30 +14,30 @@ export function useMatchupDefenderGrid(
   defenderChampionId: string | null,
   gameAccountId: string
 ) {
-  const [grid, setGrid] = useState<MatchupDefenderGridResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [grid, setGrid] = useState<MatchupDefenderGridResponse | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const reload = useCallback(async () => {
     if (!allianceId || !enabled || !defenderChampionId) {
-      setGrid(null);
-      return;
+      setGrid(null)
+      return
     }
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     try {
-      setGrid(await getMatchupDefenderGrid(allianceId, defenderChampionId, gameAccountId || null));
+      setGrid(await getMatchupDefenderGrid(allianceId, defenderChampionId, gameAccountId || null))
     } catch {
-      setError('load-failed');
-      setGrid(null);
+      setError('load-failed')
+      setGrid(null)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [allianceId, enabled, defenderChampionId, gameAccountId]);
+  }, [allianceId, enabled, defenderChampionId, gameAccountId])
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    void reload()
+  }, [reload])
 
-  return { grid, loading, error, reload };
+  return { grid, loading, error, reload }
 }

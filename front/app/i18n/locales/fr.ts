@@ -1,4 +1,4 @@
-import { Translations } from './en';
+import { Translations } from './en'
 
 const fr: Translations = {
   // Common
@@ -716,7 +716,12 @@ const fr: Translations = {
       importUploadLabel: 'Sélectionner un fichier CSV',
       importUploadHint: 'Format : attaquant,défenseur,node,saison,ko_count',
       importResolveTitle: 'Résoudre les champions inconnus',
+      importResolveHint:
+        "{count} nom(s) de votre fichier ne correspondent à aucun champion. Associez chacun à un champion pour activer l'import.",
       importUnknown: 'Inconnu : {name}',
+      importUnmappedBadge: 'À associer',
+      importBlockedUnresolved: '{count} nom(s) de champion restent à associer ci-dessus.',
+      importBlockedAlliance: "Sélectionnez une alliance pour activer l'import.",
       importAllianceLabel: 'Alliance',
       importConfirmBtn: 'Importer {count} combats',
       importSuccess: '{count} combats importés',
@@ -1023,6 +1028,63 @@ const fr: Translations = {
       badgeSkipped: 'IGNORÉ',
       badgeError: 'ERREUR',
       close: 'Fermer',
+      importVision: 'Import IA',
+      visionUploading: 'Envoi en cours…',
+      visionProcessing: 'Analyse en cours…',
+      visionFailed: "L'import IA a échoué.",
+      visionNoChampions: 'Aucun champion détecté sur ces images.',
+      editHint: 'Vérifiez les champions détectés ci-dessous et corrigez les erreurs avant import.',
+      rarityLabel: 'Rareté',
+      sigLabel: 'Sig',
+      ascLabel: 'Asc',
+      vision: {
+        noImagesSelected: 'Veuillez sélectionner au moins une image.',
+        uploadError: "Échec de l'envoi des captures d'écran.",
+        pollFailed: "L'import a échoué. Veuillez réessayer.",
+        pollTimeout: "L'import prend trop de temps. Veuillez réessayer.",
+        datasetArchiveFailed:
+          "Roster importé. La contribution au dataset n'a pas pu être enregistrée.",
+        marginAmbiguous: 'Ambigu',
+        marginUncertain: 'Incertain',
+        marginClear: 'Net',
+        marginCorrected: 'Corrigé',
+        betaBadge: 'Bêta',
+        betaNotice: 'L’import IA est en bêta — écrivez-nous pour toute aide ou remarque :',
+        pickChampionTitle: 'Autres candidats',
+        pickChampionSearch: 'Rechercher un champion…',
+        pickChampionEmpty: 'Aucun champion trouvé.',
+        shareDataset: "Contribuer au dataset d'entraînement",
+        bannerPendingTitle: 'Lecture en attente — {done}/{total} captures',
+        bannerRunningTitle: 'Lecture en cours — {done}/{total} captures',
+        bannerDoneTitle: '{count} champions lus — à valider',
+        bannerFailedTitle: 'La lecture a échoué.',
+        bannerResume: 'Reprendre',
+        bannerCancel: 'Abandonner',
+        bannerRetry: 'Relancer',
+        bannerCancelConfirm: 'Abandonner cet import ? Les captures seront supprimées.',
+        blockedTitle: 'Un import est déjà en attente de validation',
+        blockedDescription:
+          'Vous avez déjà un import de captures en attente de validation. Reprenez-le, ou abandonnez-le pour repartir de zéro.',
+        blockedResume: 'Le reprendre',
+        blockedDiscard: 'Abandonner et repartir',
+        howto: {
+          title: 'Préparer ta capture d’écran',
+          intro: 'Trois étapes, et l’IA lit ton roster.',
+          step1: 'Ouvre le jeu et va en mode Battleground.',
+          step2: 'Vide ton deck pour que ton roster s’affiche en entier.',
+          step3: 'Prends une capture d’écran de la grille.',
+          warningTitle: 'Seules les 2 premières rangées sont lues.',
+          warningBody:
+            'Sur petit écran, le bas des cartes de la 3e rangée est coupé. Sans lui, l’IA ne peut lire ni le rang ni la signature : ces champions sont ignorés. Fais une capture par paire de rangées.',
+          detailsLabel: 'Pourquoi ?',
+          detailsBody:
+            'Pas de zoom, pas de recadrage : l’IA repère les cartes elle-même. Tu peux envoyer plusieurs captures d’un coup, elles sont lues ensemble.',
+          confirm: 'Choisir mes captures',
+          dontShowAgain: 'Ne plus afficher ce message',
+          helpLabel: 'Comment préparer sa capture ?',
+          exampleAlt: 'Exemple de capture Battleground, les deux premières rangées encadrées',
+        },
+      },
     },
     errors: {
       loadAccounts: 'Une erreur est survenue lors du chargement de vos comptes de jeu',
@@ -1079,6 +1141,6 @@ const fr: Translations = {
       9: 'Impassible',
     },
   },
-} as const;
+} as const
 
-export default fr;
+export default fr

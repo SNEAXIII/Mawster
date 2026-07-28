@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useI18n } from '@/app/i18n';
-import { toast } from 'sonner';
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useI18n } from '@/app/i18n'
+import { toast } from 'sonner'
 import {
   type DefenseSummary,
   type AvailableChampion,
@@ -13,75 +13,72 @@ import {
   clearDefense,
   getAvailableChampions,
   getBgMembers,
-} from '@/app/services/defense';
+} from '@/app/services/defense'
 
-export function useDefenseActions(
-  selectedAllianceId: string,
-  selectedBg: number,
-) {
-  const { t } = useI18n();
+export function useDefenseActions(selectedAllianceId: string, selectedBg: number) {
+  const { t } = useI18n()
 
   // State
-  const [defenseLoading, setDefenseLoading] = useState(false);
+  const [defenseLoading, setDefenseLoading] = useState(false)
 
   // Defense data
-  const [defenseSummary, setDefenseSummary] = useState<DefenseSummary | null>(null);
-  const [availableChampions, setAvailableChampions] = useState<AvailableChampion[]>([]);
-  const [bgMembers, setBgMembers] = useState<BgMember[]>([]);
+  const [defenseSummary, setDefenseSummary] = useState<DefenseSummary | null>(null)
+  const [availableChampions, setAvailableChampions] = useState<AvailableChampion[]>([])
+  const [bgMembers, setBgMembers] = useState<BgMember[]>([])
 
   // Dialogs
-  const [selectorNode, setSelectorNode] = useState<number | null>(null);
-  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const [selectorNode, setSelectorNode] = useState<number | null>(null)
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
 
   // ─── Data fetching ─────────────────────────────────────
   const fetchDefense = useCallback(
     async (silent = false) => {
-      if (!selectedAllianceId) return;
-      if (!silent) setDefenseLoading(true);
+      if (!selectedAllianceId) return
+      if (!silent) setDefenseLoading(true)
       try {
         const [defense, champions, members] = await Promise.all([
           getDefense(selectedAllianceId, selectedBg),
           getAvailableChampions(selectedAllianceId, selectedBg),
           getBgMembers(selectedAllianceId, selectedBg),
-        ]);
-        setDefenseSummary(defense);
-        setAvailableChampions(champions);
-        setBgMembers(members);
+        ])
+        setDefenseSummary(defense)
+        setAvailableChampions(champions)
+        setBgMembers(members)
       } catch {
-        if (!silent) toast.error(t.game.defense.loadError);
+        if (!silent) toast.error(t.game.defense.loadError)
       } finally {
-        if (!silent) setDefenseLoading(false);
+        if (!silent) setDefenseLoading(false)
       }
     },
     [selectedAllianceId, selectedBg, t]
-  );
+  )
 
-  const fetchDefenseRef = useRef(fetchDefense);
+  const fetchDefenseRef = useRef(fetchDefense)
   useEffect(() => {
-    fetchDefenseRef.current = fetchDefense;
-  }, [fetchDefense]);
+    fetchDefenseRef.current = fetchDefense
+  }, [fetchDefense])
 
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const resetPollTimer = useCallback(() => {
-    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-    pollIntervalRef.current = setInterval(() => fetchDefenseRef.current(true), 10_000);
-  }, []);
+    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+    pollIntervalRef.current = setInterval(() => fetchDefenseRef.current(true), 10_000)
+  }, [])
 
   useEffect(() => {
     if (selectedAllianceId) {
-      fetchDefense();
+      fetchDefense()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAllianceId, selectedBg]);
+  }, [selectedAllianceId, selectedBg])
 
   useEffect(() => {
-    if (!selectedAllianceId) return;
-    resetPollTimer();
+    if (!selectedAllianceId) return
+    resetPollTimer()
     return () => {
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-    };
-  }, [selectedAllianceId, selectedBg, resetPollTimer]);
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+    }
+  }, [selectedAllianceId, selectedBg, resetPollTimer])
 
   // ─── Actions ───────────────────────────────────────────
   const handlePlaceDefender = async (
@@ -89,7 +86,7 @@ export function useDefenseActions(
     gameAccountId: string,
     championName: string
   ) => {
-    if (!selectedAllianceId || selectorNode === null) return;
+    if (!selectedAllianceId || selectorNode === null) return
     try {
       await placeDefender(
         selectedAllianceId,
@@ -97,43 +94,43 @@ export function useDefenseActions(
         selectorNode,
         championUserId,
         gameAccountId
-      );
+      )
       toast.success(
         t.game.defense.placeSuccess
           .replace('{name}', championName)
           .replace('{node}', String(selectorNode))
-      );
-      await fetchDefense(true);
-      resetPollTimer();
+      )
+      await fetchDefense(true)
+      resetPollTimer()
     } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.defense.placeError);
+      toast.error((err as Error).message || t.game.defense.placeError)
     }
-  };
+  }
 
   const handleRemoveDefender = async (nodeNumber: number) => {
-    if (!selectedAllianceId) return;
+    if (!selectedAllianceId) return
     try {
-      await removeDefender(selectedAllianceId, selectedBg, nodeNumber);
-      toast.success(t.game.defense.removeSuccess);
-      await fetchDefense(true);
-      resetPollTimer();
+      await removeDefender(selectedAllianceId, selectedBg, nodeNumber)
+      toast.success(t.game.defense.removeSuccess)
+      await fetchDefense(true)
+      resetPollTimer()
     } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.defense.removeError);
+      toast.error((err as Error).message || t.game.defense.removeError)
     }
-  };
+  }
 
   const handleClearDefense = async () => {
-    if (!selectedAllianceId) return;
+    if (!selectedAllianceId) return
     try {
-      await clearDefense(selectedAllianceId, selectedBg);
-      toast.success(t.game.defense.clearSuccess);
-      await fetchDefense(true);
-      resetPollTimer();
+      await clearDefense(selectedAllianceId, selectedBg)
+      toast.success(t.game.defense.clearSuccess)
+      await fetchDefense(true)
+      resetPollTimer()
     } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.defense.clearError);
+      toast.error((err as Error).message || t.game.defense.clearError)
     }
-    setClearConfirmOpen(false);
-  };
+    setClearConfirmOpen(false)
+  }
 
   return {
     defenseSummary,
@@ -147,5 +144,5 @@ export function useDefenseActions(
     handlePlaceDefender,
     handleRemoveDefender,
     handleClearDefense,
-  };
+  }
 }

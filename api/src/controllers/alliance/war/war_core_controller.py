@@ -7,13 +7,13 @@ from starlette import status
 from src.dto.alliance.war.dto_war import (
     WarCreateRequest,
     WarEndRequest,
-    WarUpdateRequest,
     WarResponse,
+    WarUpdateRequest,
 )
 from src.models import User
 from src.services.alliance.AllianceService import AllianceService
-from src.services.auth.AuthService import AuthService
 from src.services.alliance.war.WarService import WarService
+from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
 
 war_core_controller = APIRouter(

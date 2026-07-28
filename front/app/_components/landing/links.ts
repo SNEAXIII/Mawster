@@ -4,4 +4,4 @@ export const LANDING_LINKS = {
   discordSupport: 'https://discord.gg/dBJXaVq2bC',
   discordHandle: '@misterbalise',
   lineHandle: 'tippaxazer',
-} as const;
+} as const

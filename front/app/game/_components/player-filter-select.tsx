@@ -1,21 +1,21 @@
-'use client';
+'use client'
 
-import { useI18n } from '@/app/i18n';
+import { useI18n } from '@/app/i18n'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import SearchablePlayerFilterSelect from './searchable-player-filter-select';
+} from '@/components/ui/select'
+import SearchablePlayerFilterSelect from './searchable-player-filter-select'
 
 interface PlayerFilterSelectProps {
-  players: string[];
-  value: string;
-  onChange: (v: string) => void;
-  dataCy?: string;
-  searchable?: boolean;
+  players: string[]
+  value: string
+  onChange: (v: string) => void
+  dataCy?: string
+  searchable?: boolean
 }
 
 export default function PlayerFilterSelect({
@@ -25,9 +25,9 @@ export default function PlayerFilterSelect({
   dataCy = 'player-filter',
   searchable = false,
 }: Readonly<PlayerFilterSelectProps>) {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
-  if (players.length === 0) return null;
+  if (players.length === 0) return null
 
   if (searchable) {
     return (
@@ -37,7 +37,7 @@ export default function PlayerFilterSelect({
         onChange={onChange}
         dataCy={dataCy}
       />
-    );
+    )
   }
 
   return (
@@ -65,5 +65,5 @@ export default function PlayerFilterSelect({
         ))}
       </SelectContent>
     </Select>
-  );
+  )
 }

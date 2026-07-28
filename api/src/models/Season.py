@@ -1,4 +1,4 @@
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship
 
@@ -18,6 +18,6 @@ class Season(UUIDBase, table=True):
     format: SeasonFormat = Field(default=SeasonFormat.regular)
 
     # Relations
-    saga_roles: List["ChampionSagaRole"] = Relationship(
+    saga_roles: list["ChampionSagaRole"] = Relationship(
         back_populates="season", cascade_delete=True
     )

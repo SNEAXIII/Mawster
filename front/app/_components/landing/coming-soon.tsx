@@ -1,12 +1,12 @@
-'use client';
+'use client'
 
-import { Bot, ScanLine } from 'lucide-react';
-import { useI18n } from '@/app/i18n';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Bot, ScanLine } from 'lucide-react'
+import { useI18n } from '@/app/i18n'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 export function SoonBadge() {
-  const { t } = useI18n();
+  const { t } = useI18n()
   return (
     <Badge
       variant='outline'
@@ -18,7 +18,7 @@ export function SoonBadge() {
 }
 
 export function InDevBadge() {
-  const { t } = useI18n();
+  const { t } = useI18n()
   return (
     <Badge
       variant='outline'
@@ -30,12 +30,17 @@ export function InDevBadge() {
 }
 
 export function ComingSoon() {
-  const { t } = useI18n();
+  const { t } = useI18n()
 
   const features = [
-    { icon: ScanLine, title: t.landing.soonScanTitle, desc: t.landing.soonScanDesc, badge: InDevBadge},
-    { icon: Bot, title: t.landing.soonBotTitle, desc: t.landing.soonBotDesc, badge: SoonBadge},
-  ];
+    {
+      icon: ScanLine,
+      title: t.landing.soonScanTitle,
+      desc: t.landing.soonScanDesc,
+      badge: InDevBadge,
+    },
+    { icon: Bot, title: t.landing.soonBotTitle, desc: t.landing.soonBotDesc, badge: SoonBadge },
+  ]
 
   return (
     <section
@@ -47,8 +52,8 @@ export function ComingSoon() {
 
         <div className='mt-10 grid gap-4 sm:grid-cols-2'>
           {features.map((feature) => {
-            const Icon = feature.icon;
-            const Badge = feature.badge;
+            const Icon = feature.icon
+            const Badge = feature.badge
             return (
               <Card
                 key={feature.title}
@@ -59,16 +64,18 @@ export function ComingSoon() {
                     <span className='flex h-11 w-11 items-center justify-center rounded-lg bg-muted text-muted-foreground'>
                       <Icon className='h-5 w-5' />
                     </span>
-                  <Badge/>
+                    <Badge />
                   </div>
                   <h3 className='mt-5 text-lg font-semibold'>{feature.title}</h3>
-                  <p className='mt-2 text-sm leading-relaxed text-muted-foreground'>{feature.desc}</p>
+                  <p className='mt-2 text-sm leading-relaxed text-muted-foreground'>
+                    {feature.desc}
+                  </p>
                 </CardContent>
               </Card>
-            );
+            )
           })}
         </div>
       </div>
     </section>
-  );
+  )
 }
