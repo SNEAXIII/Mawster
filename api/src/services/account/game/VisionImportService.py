@@ -298,11 +298,22 @@ class VisionImportService:
 
     @staticmethod
     def _crop_index(crop_key: str | None) -> int | None:
-        """Parse the trailing crops/{n}.png index out of a stored crop key."""
+        """Parse the cell index out of a stored crop key.
+
+        Two shapes, because the index is not a column and never was: the current
+        worker writes `.../crops/sprite_v1.webp#{cell}`, and rows written before
+        the sprite sheet carry `.../crops/{n}.png`. Supporting both is what lets
+        this ship without a migration or a backfill.
+        """
         if not crop_key:
             return None
+        tail = (
+            crop_key.rsplit("#", 1)[-1]
+            if "#" in crop_key
+            else crop_key.rsplit("/", 1)[-1].removesuffix(".png")
+        )
         try:
-            return int(crop_key.rsplit("/", 1)[-1].removesuffix(".png"))
+            return int(tail)
         except ValueError:
             return None
 
