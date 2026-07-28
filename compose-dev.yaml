@@ -4,7 +4,7 @@ networks:
 
 services:
   mariadb-dev:
-    image: mariadb
+    image: mariadb:11.4
     ports:
       - 3305:3306
     container_name: mariadb-dev
@@ -30,7 +30,7 @@ services:
     depends_on:
       - mariadb-dev
   mariadb-test:
-    image: mariadb
+    image: mariadb:11.4
     ports:
       - 3307:3306
     container_name: mariadb-test
