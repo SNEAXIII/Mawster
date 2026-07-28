@@ -204,6 +204,25 @@ async def confirm_vision_import(
     return VisionConfirmResponse(samples_archived=archived)
 
 
+async def _fetch_or_404(storage: Storage, key: str) -> bytes:
+    """Fetch one object, translating a storage miss into the crop-not-found 404.
+
+    Both crop routes (sprite sheet and legacy single crop) share this mapping
+    so it cannot drift between them — a change to how a miss is detected only
+    has to be made once.
+    """
+    try:
+        return await storage.get_bytes(SECRET.RUSTFS_BUCKET_VISION, key)
+    except ClientError as exc:
+        error_code = exc.response.get("Error", {}).get("Code")
+        http_status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+        if error_code in ("NoSuchKey", "404") or http_status == 404:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=VISION_CROP_NOT_FOUND
+            ) from exc
+        raise
+
+
 @vision_controller.get("/imports/{import_id}/jobs/{job_id}/crops/sprite")
 async def get_crop_sprite(
     session: SessionDep,
@@ -221,16 +240,7 @@ async def get_crop_sprite(
     """
     await _get_own_import(session, import_id, current_user.id)
     key = sprite_key(import_id, job_id)
-    try:
-        data = await storage.get_bytes(SECRET.RUSTFS_BUCKET_VISION, key)
-    except ClientError as exc:
-        error_code = exc.response.get("Error", {}).get("Code")
-        http_status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
-        if error_code in ("NoSuchKey", "404") or http_status == 404:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=VISION_CROP_NOT_FOUND
-            ) from exc
-        raise
+    data = await _fetch_or_404(storage, key)
     # Immutable once written: the key embeds the import and job ids, and nothing
     # ever rewrites that object.
     return Response(
@@ -258,16 +268,7 @@ async def get_crop_url(
     never talks to RustFS or the API directly, only to the Next proxy."""
     await _get_own_import(session, import_id, current_user.id)
     key = crop_key(import_id, job_id, index)
-    try:
-        data = await storage.get_bytes(SECRET.RUSTFS_BUCKET_VISION, key)
-    except ClientError as exc:
-        error_code = exc.response.get("Error", {}).get("Code")
-        http_status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
-        if error_code in ("NoSuchKey", "404") or http_status == 404:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=VISION_CROP_NOT_FOUND
-            ) from exc
-        raise
+    data = await _fetch_or_404(storage, key)
     # Crops are immutable once written: the key embeds the import and job ids, and
     # nothing ever rewrites that object. Cached privately so re-renders of the
     # review list stop refetching all 48 of them.
