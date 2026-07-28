@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { RARITIES, RARITY_LABELS, shortenChampionName, getClassColors } from '@/app/services/roster'
+import { SPRITE_COLS, SPRITE_DISPLAY } from '@/app/services/vision'
 import type { PreviewRow, PreviewRowPatch } from './import-preview-row'
 import ImportPreviewChampionPicker from './import-preview-champion-picker'
 
@@ -97,12 +98,16 @@ export default function ImportPreviewRowEdit({
   return (
     <div className='flex gap-3 py-3'>
       <div className='shrink-0'>
-        {row.cropUrl ? (
-          <img
-            src={row.cropUrl}
-            alt={row.champion_name}
-            loading='lazy'
-            className='h-24 w-24 rounded-md object-cover border border-border'
+        {row.spriteUrl && row.cropIndex != null ? (
+          <div
+            role='img'
+            aria-label={row.champion_name}
+            className='h-24 w-24 rounded-md border border-border bg-no-repeat'
+            style={{
+              backgroundImage: `url(${row.spriteUrl})`,
+              backgroundSize: `${SPRITE_COLS * SPRITE_DISPLAY}px auto`,
+              backgroundPosition: `-${(row.cropIndex % SPRITE_COLS) * SPRITE_DISPLAY}px -${Math.floor(row.cropIndex / SPRITE_COLS) * SPRITE_DISPLAY}px`,
+            }}
             data-cy={`preview-row-crop-${index}`}
           />
         ) : (

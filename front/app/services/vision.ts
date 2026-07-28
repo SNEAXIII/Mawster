@@ -119,12 +119,20 @@ export const getVisionPredictions = async (
   return response.json()
 }
 
-// The API now serves the crop's raw bytes at this path (behind the same-origin
-// proxy), so this is a plain URL builder — no request, no round-trip. See
-// front/app/api/back/[...path]/route.ts, which forwards binary responses
-// unchanged, and api/src/controllers/account/game/vision_controller.py.
-export const getCropUrl = (importId: string, jobId: string, index: number): string =>
-  `${PROXY}/vision/imports/${importId}/jobs/${jobId}/crops/${index}`
+// Every thumbnail of a screenshot lives in one sheet, so this is one request for
+// the whole review screen instead of one per card. Plain URL builder — no
+// request, no round-trip. See front/app/api/back/[...path]/route.ts, which
+// forwards binary responses unchanged, and
+// api/src/controllers/account/game/vision_controller.py.
+export const getSpriteUrl = (importId: string, jobId: string): string =>
+  `${PROXY}/vision/imports/${importId}/jobs/${jobId}/crops/sprite`
+
+// Cell geometry, mirrored from mcoc-vision/worker/sprite.py (CELL = 192, COLS = 8).
+// The sheet is always SPRITE_COLS cells wide, so background-size can be derived
+// from these two numbers alone. Changing either here without changing the worker
+// puts the wrong champion's art beside a row.
+export const SPRITE_COLS = 8
+export const SPRITE_DISPLAY = 96
 
 export const confirmVisionImport = async (
   importId: string,
