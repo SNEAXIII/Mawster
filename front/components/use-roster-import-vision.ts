@@ -6,7 +6,7 @@ import {
   createVisionImport,
   getVisionImport,
   getVisionPredictions,
-  getCropUrl,
+  getSpriteUrl,
   confirmVisionImport,
   type VisionPrediction,
   type ConfirmedRow,
@@ -109,12 +109,10 @@ export function useRosterImportVision({
         const { entry, rarityValid } = built[idx]
         const row = buildPreviewRow(entry, roster, lookup)
 
-        // getCropUrl is a plain URL builder (no request) — the browser fetches
-        // it lazily via the <img> tag, through the same-origin proxy.
-        const cropUrl =
-          prediction.crop_index != null
-            ? getCropUrl(currentImportId, prediction.job_id, prediction.crop_index)
-            : null
+        // getSpriteUrl is a plain URL builder (no request). One sheet serves the
+        // whole screenshot; the row picks its cell by index.
+        const spriteUrl =
+          prediction.crop_index != null ? getSpriteUrl(currentImportId, prediction.job_id) : null
 
         return {
           ...row,
@@ -125,7 +123,8 @@ export function useRosterImportVision({
           // margin badges red. Without this a confidently-named champion at an
           // impossible rarity would look like a clean read.
           margin: rarityValid ? prediction.margin : null,
-          cropUrl,
+          spriteUrl,
+          cropIndex: prediction.crop_index,
           prediction_id: prediction.id,
           // Vision predictions always go through the editable review row —
           // unlike JSON rows, which are trusted as-is.

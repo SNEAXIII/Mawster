@@ -66,11 +66,21 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
     // request side (see the comment above on req.arrayBuffer()).
     const data = await res.arrayBuffer()
 
+    const responseHeaders: HeadersInit = {
+      'Content-Type': res.headers.get('content-type') ?? 'application/json',
+    }
+    // Forwarded, not invented: only routes serving immutable objects set it (the
+    // vision sprite sheet today). Dropping it here made the backend's caching
+    // directive dead code — every re-render refetched bytes the browser was
+    // told it could keep.
+    const cacheControl = res.headers.get('cache-control')
+    if (cacheControl) {
+      responseHeaders['Cache-Control'] = cacheControl
+    }
+
     return new NextResponse(data.byteLength > 0 ? data : null, {
       status: res.status,
-      headers: {
-        'Content-Type': res.headers.get('content-type') ?? 'application/json',
-      },
+      headers: responseHeaders,
     })
   } catch (error) {
     console.error(`[proxy] ${req.method} ${backendUrl} →`, error)

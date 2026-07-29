@@ -35,7 +35,7 @@ from src.services.account.game.VisionImportService import VisionImportService
 from src.services.account.game.VisionResultService import VisionResultService
 from src.services.auth.AuthService import AuthService
 from src.storage import get_storage
-from src.storage.base import Storage, crop_key
+from src.storage.base import Storage, sprite_key
 from src.utils.db import SessionDep
 
 vision_controller = APIRouter(
@@ -204,26 +204,15 @@ async def confirm_vision_import(
     return VisionConfirmResponse(samples_archived=archived)
 
 
-@vision_controller.get("/imports/{import_id}/jobs/{job_id}/crops/{index}")
-async def get_crop_url(
-    session: SessionDep,
-    import_id: uuid.UUID,
-    job_id: uuid.UUID,
-    index: int,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
-    storage: Annotated[Storage, Depends(get_storage)],
-):
-    """Bytes of one champion crop. The object key is rebuilt server-side from ids
-    whose ownership is verified — a client-supplied key would let anyone read
-    another user's screenshots by guessing.
+async def _fetch_or_404(storage: Storage, key: str) -> bytes:
+    """Fetch one object, translating a storage miss into the crop-not-found 404.
 
-    Served through the API (rather than a presigned RustFS URL) because in this
-    deployment only the Next.js frontend is publicly reachable — the browser
-    never talks to RustFS or the API directly, only to the Next proxy."""
-    await _get_own_import(session, import_id, current_user.id)
-    key = crop_key(import_id, job_id, index)
+    Kept as a named helper rather than inlined: the miss detection (three
+    different shapes a botocore 404 can take) is the fiddly part, and any future
+    route serving import bytes should reuse it rather than re-derive it.
+    """
     try:
-        data = await storage.get_bytes(SECRET.RUSTFS_BUCKET_VISION, key)
+        return await storage.get_bytes(SECRET.RUSTFS_BUCKET_VISION, key)
     except ClientError as exc:
         error_code = exc.response.get("Error", {}).get("Code")
         http_status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
@@ -232,12 +221,39 @@ async def get_crop_url(
                 status_code=status.HTTP_404_NOT_FOUND, detail=VISION_CROP_NOT_FOUND
             ) from exc
         raise
-    # Crops are immutable once written: the key embeds the import and job ids, and
-    # nothing ever rewrites that object. Cached privately so re-renders of the
-    # review list stop refetching all 48 of them.
+
+
+@vision_controller.get("/imports/{import_id}/jobs/{job_id}/crops/sprite")
+async def get_crop_sprite(
+    session: SessionDep,
+    import_id: uuid.UUID,
+    job_id: uuid.UUID,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    storage: Annotated[Storage, Depends(get_storage)],
+):
+    """Every thumbnail of one screenshot, as a single sheet the front slices.
+
+    The object key is rebuilt server-side from ids whose ownership is verified —
+    a client-supplied key would let anyone read another user's screenshots by
+    guessing.
+
+    Served through the API (rather than a presigned RustFS URL) because in this
+    deployment only the Next.js frontend is publicly reachable — the browser
+    never talks to RustFS or the API directly, only to the Next proxy.
+    """
+    await _get_own_import(session, import_id, current_user.id)
+    key = sprite_key(import_id, job_id)
+    data = await _fetch_or_404(storage, key)
+    # Cached privately so re-opening the review dialog stops refetching the sheet.
+    # `immutable` holds as long as a job id names one successful run: the key
+    # embeds the import and job ids, and the only thing that rewrites a job is a
+    # retry — which only failed jobs allow, and a failed job never uploaded a
+    # sheet to be cached in the first place.
+    # The Next proxy (front/app/api/back/[...path]/route.ts) forwards this header
+    # through; without that this whole block would be dead weight.
     return Response(
         content=data,
-        media_type="image/png",
+        media_type="image/webp",
         headers={"Cache-Control": "private, max-age=3600, immutable"},
     )
 
