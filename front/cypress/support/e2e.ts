@@ -58,6 +58,16 @@ Cypress.Commands.add('getByCy', (selector: string) => {
   return cy.get(`[data-cy="${selector}"]`);
 });
 
+// ── Radix Select / combobox: open a trigger and pick an option ───────────────
+// Waiting for the listbox before querying the option avoids clicking a node
+// that React detaches while the panel is still settling (flaky on CI).
+
+Cypress.Commands.add('selectOption', (trigger: string, label: string) => {
+  cy.getByCy(trigger).click();
+  cy.get('[role="listbox"]').should('be.visible');
+  cy.contains('[role="option"]', label).should('be.visible').click();
+});
+
 // ── Truncate DB (direct backend call) ────────────────────────────────────────
 
 Cypress.Commands.add('truncateDb', () => {

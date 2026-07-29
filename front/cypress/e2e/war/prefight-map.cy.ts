@@ -59,8 +59,7 @@ describe('War – prefight highlight on map', () => {
         cy.navTo('war');
 
         // filter by member: node 10 (owner attacker + member prefight) must NOT be dimmed
-        cy.getByCy('war-player-filter').click();
-        cy.contains('[role="option"]', 'pfltMember').click();
+        cy.selectOption('war-player-filter', 'pfltMember');
 
         cy.getByCy('war-node-1').should('not.have.class', 'opacity-25');
         cy.getByCy('war-node-10').should('not.have.class', 'opacity-25');
@@ -96,8 +95,7 @@ describe('War – prefight highlight on map', () => {
         cy.navTo('war');
 
         // filter by owner: node 1 (owner attacker) not dimmed, node 10 (member only) dimmed
-        cy.getByCy('war-player-filter').click();
-        cy.contains('[role="option"]', 'pflt2Owner').click();
+        cy.selectOption('war-player-filter', 'pflt2Owner');
 
         cy.getByCy('war-node-1').should('not.have.class', 'opacity-25');
         cy.getByCy('war-node-10').should('have.class', 'opacity-25');
