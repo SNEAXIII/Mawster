@@ -12,11 +12,6 @@ def result_key(import_id: uuid.UUID, job_id: uuid.UUID) -> str:
     return f"imports/{import_id}/{job_id}/result.json"
 
 
-def crop_key(import_id: uuid.UUID, job_id: uuid.UUID, index: int) -> str:
-    """Object key of a single champion crop, used by the review screen."""
-    return f"imports/{import_id}/{job_id}/crops/{index}.png"
-
-
 def sprite_key(import_id: uuid.UUID, job_id: uuid.UUID) -> str:
     """Object key of the sheet holding every thumbnail of one screenshot.
 

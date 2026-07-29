@@ -22,8 +22,9 @@ class VisionPredictionResponse(BaseModel):
     signature: int = 0
     ascension: int = 0
     confidence: float = 0.0
-    # Index of the crop within its job (imports/.../{job}/crops/{index}.png). None
-    # when the detector produced no thumbnail for this card (degenerate box).
+    # Cell of this card in its job's sprite sheet (.../crops/sprite_v1.webp#{cell}).
+    # None when there is no cell to point at: a degenerate box the detector
+    # produced no thumbnail for, or a prediction written before the sprite sheet.
     crop_index: int | None = None
     # Index of the job (screenshot) within the import, for grouping in the UI.
     job_index: int

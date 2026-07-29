@@ -298,22 +298,22 @@ class VisionImportService:
 
     @staticmethod
     def _crop_index(crop_key: str | None) -> int | None:
-        """Parse the cell index out of a stored crop key.
+        """Parse the sprite cell index out of a stored crop key.
 
-        Two shapes, because the index is not a column and never was: the current
-        worker writes `.../crops/sprite_v1.webp#{cell}`, and rows written before
-        the sprite sheet carry `.../crops/{n}.png`. Supporting both is what lets
-        this ship without a migration or a backfill.
+        One shape only: `.../crops/sprite_v1.webp#{cell}`, written by the current
+        worker. The index is not a column and never was — it rides along in the
+        key string, which is why the sprite sheet needed no migration.
+
+        A key without a `#` is a per-crop key from the pre-sprite worker. It
+        yields `None` because the object it names no longer has a route to fetch
+        it: `None` is exactly the signal the front already renders as the
+        champion portrait, so such a row degrades to the fallback instead of
+        pointing at bytes nothing can serve.
         """
-        if not crop_key:
+        if not crop_key or "#" not in crop_key:
             return None
-        tail = (
-            crop_key.rsplit("#", 1)[-1]
-            if "#" in crop_key
-            else crop_key.rsplit("/", 1)[-1].removesuffix(".png")
-        )
         try:
-            return int(tail)
+            return int(crop_key.rsplit("#", 1)[-1])
         except ValueError:
             return None
 

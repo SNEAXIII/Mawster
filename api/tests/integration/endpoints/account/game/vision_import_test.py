@@ -422,7 +422,7 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
                         signature=200,
                         ascension=1,
                         confidence=0.9,
-                        crop_key="imports/a/b/crops/0.png",
+                        crop_key="imports/a/b/crops/sprite_v1.webp#0",
                         candidates=[
                             {"name": "Hulk", "score": 0.90},
                             {"name": "Red Hulk", "score": 0.62},
@@ -472,73 +472,6 @@ async def test_predictions_endpoint_of_another_user_is_forbidden(fake_infra):
         )
 
     assert response.status_code == 403
-
-
-@pytest.mark.asyncio
-async def test_crop_bytes_for_owner(fake_infra):
-    storage, _ = fake_infra
-    await push_one_user()
-    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-    headers = create_auth_headers(str(USER_ID))
-    created = await _post_import(headers, account.id, [_png("a.png")])
-    import_id = created.json()["id"]
-    detail = await _get_import(headers, import_id)
-    job_id = detail["jobs"][0]["id"]
-
-    from src.storage.base import crop_key
-
-    crop_bytes = b"\x89PNG\r\n\x1a\n" + b"crop-bytes"
-    storage.objects[crop_key(uuid.UUID(import_id), uuid.UUID(job_id), 0)] = crop_bytes
-
-    async with get_test_client() as client:
-        response = await client.get(
-            f"/vision/imports/{import_id}/jobs/{job_id}/crops/0", headers=headers
-        )
-
-    assert response.status_code == 200
-    assert response.headers["content-type"] == "image/png"
-    assert response.content == crop_bytes
-
-
-@pytest.mark.asyncio
-async def test_crop_bytes_forbidden_for_non_owner(fake_infra):
-    await push_one_user()
-    await push_user2()
-    owner_account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-    await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
-    created = await _post_import(
-        create_auth_headers(str(USER_ID)), owner_account.id, [_png("a.png")]
-    )
-    import_id = created.json()["id"]
-    detail = await _get_import(create_auth_headers(str(USER_ID)), import_id)
-    job_id = detail["jobs"][0]["id"]
-
-    async with get_test_client() as client:
-        response = await client.get(
-            f"/vision/imports/{import_id}/jobs/{job_id}/crops/0",
-            headers=create_auth_headers(str(USER2_ID)),
-        )
-
-    assert response.status_code == 403
-
-
-@pytest.mark.asyncio
-async def test_crop_bytes_missing_object_is_404(fake_infra):
-    await push_one_user()
-    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-    headers = create_auth_headers(str(USER_ID))
-    created = await _post_import(headers, account.id, [_png("a.png")])
-    import_id = created.json()["id"]
-    detail = await _get_import(headers, import_id)
-    job_id = detail["jobs"][0]["id"]
-
-    # No crop was ever written to storage for this job/index.
-    async with get_test_client() as client:
-        response = await client.get(
-            f"/vision/imports/{import_id}/jobs/{job_id}/crops/0", headers=headers
-        )
-
-    assert response.status_code == 404
 
 
 @pytest.mark.asyncio
@@ -635,7 +568,7 @@ async def _drive_job_done_with_prediction(job_id: str) -> None:
                         signature=200,
                         ascension=1,
                         confidence=0.9,
-                        crop_key="imports/a/b/crops/0.png",
+                        crop_key="imports/a/b/crops/sprite_v1.webp#0",
                     )
                 ],
             ),

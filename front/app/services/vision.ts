@@ -128,9 +128,10 @@ export const getSpriteUrl = (importId: string, jobId: string): string =>
   `${PROXY}/vision/imports/${importId}/jobs/${jobId}/crops/sprite`
 
 // Cell geometry, mirrored from mcoc-vision/worker/sprite.py (CELL = 192, COLS = 8).
-// The sheet is always SPRITE_COLS cells wide, so background-size can be derived
-// from these two numbers alone. Changing either here without changing the worker
-// puts the wrong champion's art beside a row.
+// The sheet is always SPRITE_COLS cells wide, so scaling it to SPRITE_COLS box
+// widths makes one cell exactly one box — these two numbers are all the slicing
+// arithmetic needs. Changing either here without changing the worker puts the
+// wrong champion's art beside a row.
 export const SPRITE_COLS = 8
 export const SPRITE_DISPLAY = 96
 
