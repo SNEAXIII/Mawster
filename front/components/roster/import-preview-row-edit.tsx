@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { RARITIES, RARITY_LABELS, shortenChampionName, getClassColors } from '@/app/services/roster'
+import { SPRITE_COLS, SPRITE_DISPLAY } from '@/app/services/vision'
 import type { PreviewRow, PreviewRowPatch } from './import-preview-row'
 import ImportPreviewChampionPicker from './import-preview-champion-picker'
 
@@ -80,6 +81,12 @@ export default function ImportPreviewRowEdit({
   const { t } = useI18n()
   const emit = (patch: PreviewRowPatch) => onRowChange?.(index, patch)
 
+  // The sheet can be gone: confirming or cancelling an import purges its whole
+  // prefix, so a review dialog left open across a confirm asks for an object
+  // that no longer exists. An <img> is what makes that observable — a failed
+  // background-image is silent and would leave an empty grey box.
+  const [spriteFailed, setSpriteFailed] = React.useState(false)
+
   const level = marginLevel(row.margin)
   const marginLabels: Record<'low' | 'medium' | 'high', string> = {
     low: t.roster.importExport.vision.marginAmbiguous,
@@ -97,14 +104,37 @@ export default function ImportPreviewRowEdit({
   return (
     <div className='flex gap-3 py-3'>
       <div className='shrink-0'>
-        {row.cropUrl ? (
-          <img
-            src={row.cropUrl}
-            alt={row.champion_name}
-            loading='lazy'
-            className='h-24 w-24 rounded-md object-cover border border-border'
-            data-cy={`preview-row-crop-${index}`}
-          />
+        {row.spriteUrl && row.cropIndex != null && !spriteFailed ? (
+          // The box is sized from SPRITE_DISPLAY rather than an h-24/w-24 rem
+          // pair: rem tracks the browser's root font size, and a user who raised
+          // it would get a box larger than the pixel arithmetic slicing it, so
+          // the neighbouring cells would bleed in and a row would show two
+          // champions' art. One number drives both, so they cannot disagree.
+          <div
+            className='overflow-hidden rounded-md border border-border'
+            style={{ width: SPRITE_DISPLAY, height: SPRITE_DISPLAY }}
+          >
+            <img
+              src={row.spriteUrl}
+              alt={row.champion_name}
+              onError={() => setSpriteFailed(true)}
+              // The sheet is always SPRITE_COLS cells wide, so scaling it to
+              // SPRITE_COLS box-widths makes one cell exactly one box. Still one
+              // request for the whole screenshot, as with the background-image.
+              // Width and both offsets are percentages of the same box, so the
+              // border eating into the content width shifts nothing — and a
+              // percentage margin-top resolves against the *width* too, which is
+              // what makes the vertical step match the horizontal one on a
+              // square cell.
+              className='max-w-none'
+              style={{
+                width: `${SPRITE_COLS * 100}%`,
+                marginLeft: `${-(row.cropIndex % SPRITE_COLS) * 100}%`,
+                marginTop: `${-Math.floor(row.cropIndex / SPRITE_COLS) * 100}%`,
+              }}
+              data-cy={`preview-row-crop-${index}`}
+            />
+          </div>
         ) : (
           <ChampionPortrait
             imageUrl={row.image_url}

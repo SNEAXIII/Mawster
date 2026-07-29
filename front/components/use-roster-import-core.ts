@@ -153,7 +153,8 @@ export function rediffRow(
   return {
     ...rebuilt,
     confidence: row.confidence,
-    cropUrl: row.cropUrl,
+    spriteUrl: row.spriteUrl,
+    cropIndex: row.cropIndex,
     prediction_id: row.prediction_id,
     editable: row.editable,
     candidates: row.candidates,
