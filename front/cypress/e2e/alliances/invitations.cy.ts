@@ -21,8 +21,7 @@ describe('Alliances – Invitations', () => {
       cy.wait('@eligibleMembers');
 
       // Open combobox and select member
-      cy.getByCy('invite-member-select').click();
-      cy.contains("[role='option']", 'NewMemberAcc').click();
+      cy.selectOption('invite-member-select', 'NewMemberAcc');
 
       cy.getByCy('invite-member-submit').click();
       cy.contains('Invitation sent successfully').should('be.visible');
@@ -110,8 +109,7 @@ describe('Alliances – Invitations', () => {
         cy.getByCy('invite-member-toggle').click();
         cy.wait('@eligibleMembers');
 
-        cy.getByCy('invite-member-select').click();
-        cy.contains("[role='option']", 'PickedAcc').click();
+        cy.selectOption('invite-member-select', 'PickedAcc');
 
         cy.getByCy('invite-member-select').should('contain.text', 'PickedAcc');
         cy.getByCy('invite-member-submit').should('not.be.disabled');

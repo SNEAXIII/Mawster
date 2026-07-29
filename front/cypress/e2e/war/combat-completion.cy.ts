@@ -157,6 +157,7 @@ describe('War – Combat completion', () => {
       cy.goToWarMode(ownerData.user_id, 'attackers');
 
       cy.getByCy('war-combat-filter').click({ force: true });
+      cy.get('[role="listbox"]').should('be.visible');
       cy.contains('[role="option"]', 'All').click({ force: true });
 
       cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-60');

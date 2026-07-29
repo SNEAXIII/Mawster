@@ -179,6 +179,15 @@ declare global {
        */
       getByCy(selector: string): Chainable<JQuery<HTMLElement>>;
 
+      /**
+       * Open a Radix Select / combobox trigger and click the option matching `label`.
+       * Waits for the listbox to be visible first, so the option is queried on the
+       * settled DOM instead of a node React may detach mid-click.
+       * @param trigger - `data-cy` of the select trigger
+       * @param label - visible text of the option to pick
+       */
+      selectOption(trigger: string, label: string): Chainable<JQuery<HTMLElement>>;
+
       /** Declare a war against an opponent (direct backend call). */
       apiCreateWar(
         token: string,

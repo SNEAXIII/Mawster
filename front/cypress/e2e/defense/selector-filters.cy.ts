@@ -25,8 +25,7 @@ describe('Defense – AllianceDefenseSelector filters', () => {
       cy.getByCy('champion-card-Spider-Man').should('be.visible');
       cy.getByCy('champion-card-Wolverine').should('be.visible');
 
-      cy.getByCy('selector-class-filter').click();
-      cy.contains('[role="option"]', 'Cosmic').click();
+      cy.selectOption('selector-class-filter', 'Cosmic');
 
       cy.getByCy('champion-card-Spider-Man').should('be.visible');
       cy.getByCy('champion-card-Wolverine').should('not.exist');
@@ -54,8 +53,7 @@ describe('Defense – AllianceDefenseSelector filters', () => {
         cy.getByCy('champion-card-Spider-Man').should('be.visible');
         cy.getByCy('champion-card-Wolverine').should('be.visible');
 
-        cy.getByCy('selector-player-filter').click();
-        cy.contains('[role="option"]', 'PlyrFltOwn').click();
+        cy.selectOption('selector-player-filter', 'PlyrFltOwn');
 
         cy.getByCy('champion-card-Spider-Man').should('be.visible');
         cy.getByCy('champion-card-Wolverine').should('not.exist');
@@ -209,8 +207,7 @@ describe('Defense – AllianceDefenseSelector filters', () => {
         cy.getByCy('member-section-MPFltOwner').should('be.visible');
         cy.getByCy('member-section-MPFltMember').should('be.visible');
 
-        cy.getByCy('defense-player-filter').click();
-        cy.contains('[role="option"]', 'MPFltOwner').click();
+        cy.selectOption('defense-player-filter', 'MPFltOwner');
 
         cy.getByCy('member-section-MPFltOwner').should('be.visible');
         cy.getByCy('member-section-MPFltMember').should('not.exist');
@@ -233,12 +230,10 @@ describe('Defense – AllianceDefenseSelector filters', () => {
         cy.apiLogin(ownerData.user_id);
         cy.navTo('defense');
 
-        cy.getByCy('defense-player-filter').click();
-        cy.contains('[role="option"]', 'MPFROwner').click();
+        cy.selectOption('defense-player-filter', 'MPFROwner');
         cy.getByCy('member-section-MPFRMember').should('not.exist');
 
-        cy.getByCy('defense-player-filter').click();
-        cy.contains('[role="option"]', 'All').click();
+        cy.selectOption('defense-player-filter', 'All');
 
         cy.getByCy('member-section-MPFROwner').should('be.visible');
         cy.getByCy('member-section-MPFRMember').should('be.visible');
@@ -278,8 +273,7 @@ describe('Defense – AllianceDefenseSelector filters', () => {
       cy.getByCy('champion-card-Wolverine').should('not.exist');
 
       // Add class filter Cosmic → only Spider-Man
-      cy.getByCy('selector-class-filter').click();
-      cy.contains('[role="option"]', 'Cosmic').click();
+      cy.selectOption('selector-class-filter', 'Cosmic');
       cy.getByCy('champion-card-Spider-Man').should('be.visible');
       cy.getByCy('champion-card-Iron-Man').should('not.exist');
     });
