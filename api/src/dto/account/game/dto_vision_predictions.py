@@ -33,7 +33,13 @@ class VisionPredictionResponse(BaseModel):
     # score[0] - score[1]. None when there are fewer than two candidates — the UI
     # treats that as "needs a look", not as "confident". Derived on read, never
     # stored: a persisted derivative can drift from what it was derived from.
+    #
+    # Signed, not a magnitude: on a reranked card it is *negative*, because the
+    # winner is the candidate with the lower CLIP cosine. Read it with `reranked`
+    # — negative + reranked means the second pass corrected CLIP, which is a
+    # different thing from a near-zero margin, and worth telling the user apart.
     margin: float | None = None
+    reranked: bool = False
 
 
 class VisionPredictionsResponse(BaseModel):

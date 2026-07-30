@@ -66,6 +66,7 @@ describe('War – Combat filter map dimming', () => {
       cy.goToWarMode(ownerData.user_id, 'attackers');
 
       cy.getByCy('war-combat-filter').click({ force: true });
+      cy.get('[role="listbox"]').should('be.visible');
       cy.contains('[role="option"]', 'All').click({ force: true });
 
       cy.getByCy('war-node-10').should('not.have.class', 'opacity-25');

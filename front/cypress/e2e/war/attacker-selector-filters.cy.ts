@@ -31,14 +31,12 @@ describe('War – WarAttackerSelector filters', () => {
       cy.getByCy('attacker-card-Vision').should('be.visible');
 
       // Filter by Tech → only Vision
-      cy.getByCy('selector-class-filter').click();
-      cy.contains('[role="option"]', 'Tech').click();
+      cy.selectOption('selector-class-filter', 'Tech');
       cy.getByCy('attacker-card-Vision').should('be.visible');
       cy.getByCy('attacker-card-Wolverine').should('not.exist');
 
       // Filter by Mutant → only Wolverine
-      cy.getByCy('selector-class-filter').click();
-      cy.contains('[role="option"]', 'Mutant').click();
+      cy.selectOption('selector-class-filter', 'Mutant');
       cy.getByCy('attacker-card-Wolverine').should('be.visible');
       cy.getByCy('attacker-card-Vision').should('not.exist');
     });
@@ -122,14 +120,12 @@ describe('War – WarAttackerSelector filters', () => {
       cy.getByCy('attacker-card-Wolverine').scrollIntoView().should('be.visible');
 
       // Filter by member → only Wolverine
-      cy.getByCy('selector-player-filter').click();
-      cy.contains('[role="option"]', memberPseudo).click();
+      cy.selectOption('selector-player-filter', memberPseudo);
       cy.getByCy('attacker-card-Wolverine').should('be.visible');
       cy.getByCy('attacker-card-Storm').should('not.exist');
 
       // Switch to owner → only Storm
-      cy.getByCy('selector-player-filter').click();
-      cy.contains('[role="option"]', ownerPseudo).click();
+      cy.selectOption('selector-player-filter', ownerPseudo);
       cy.getByCy('attacker-card-Storm').should('be.visible');
       cy.getByCy('attacker-card-Wolverine').should('not.exist');
     });
@@ -153,10 +149,8 @@ describe('War – WarAttackerSelector filters', () => {
       cy.getByCy('war-attacker-search').should('be.visible');
 
       // Filter by owner + Mutant → only Storm (Vision excluded by class, Wolverine excluded by player)
-      cy.getByCy('selector-player-filter').click();
-      cy.contains('[role="option"]', ownerPseudo).click();
-      cy.getByCy('selector-class-filter').click();
-      cy.contains('[role="option"]', 'Mutant').click();
+      cy.selectOption('selector-player-filter', ownerPseudo);
+      cy.selectOption('selector-class-filter', 'Mutant');
 
       cy.getByCy('attacker-card-Storm').should('be.visible');
       cy.getByCy('attacker-card-Vision').should('not.exist');
@@ -177,8 +171,7 @@ describe('War – WarAttackerSelector filters', () => {
       cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
       cy.getByCy('war-attacker-search').should('be.visible');
 
-      cy.getByCy('selector-player-filter').click();
-      cy.contains('[role="option"]', ownerPseudo).click();
+      cy.selectOption('selector-player-filter', ownerPseudo);
       cy.getByCy('attacker-card-Wolverine').should('not.exist');
 
       cy.getByCy('selector-reset-filters').click();

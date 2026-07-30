@@ -1,7 +1,7 @@
 # Root Makefile — E2E test orchestration + backup operations
 .PHONY: help e2e e2e-open e2e-parallel e2e-parallel-quiet e2e-db e2e-stop \
-        backup-now backup-now-staging backup-list backup-restore backup-restore-staging backup-restore-remote deploy db \
-        migrate migrate-staging vision-up vision-down worker-up worker-logs db-dev
+        backup-now backup-now-staging backup-list backup-list-staging backup-restore backup-restore-staging backup-restore-remote deploy db \
+        migrate migrate-staging vision-up vision-down worker-up worker-logs db-dev db-dev-all panic db-access
 
 NEXTAUTH_SECRET ?= e2e-local-nextauth-secret
 NEXTAUTH_URL    ?= http://localhost:3000
@@ -12,32 +12,49 @@ ifeq ($(OS),Windows_NT)
 SHELL := powershell.exe
 .SHELLFLAGS := -NoProfile -Command
 
+# Une ligne de recette = un process powershell.exe (~0.5s). Les 30 lignes du help
+# sont donc portees par une seule ligne de recette : le tableau est assemble ici,
+# ou make consomme les backslash-newline (PowerShell ne connait pas ce marqueur de
+# continuation, il utilise le backtick).
+HELP_LINES := \
+	"", \
+	"=== Dev ===", \
+	"db-dev                 --> demarrer la stack dev (rabbitmq + rustfs + mariadb-dev + static)", \
+	"db-dev-all             --> demarrer tous les services de compose-dev.yaml", \
+	"vision-up              --> demarrer rabbitmq + rustfs (+ creation des buckets)", \
+	"vision-down            --> arreter rabbitmq + rustfs", \
+	"worker-up              --> (re)builder et demarrer le worker vision", \
+	"worker-logs            --> suivre les logs du worker vision", \
+	"all                    --> ouvrir tous les terminaux de dev (Windows Terminal)", \
+	"", \
+	"=== E2E ===", \
+	"e2e                    --> demarrer les services + lancer Cypress headless", \
+	"e2e-open               --> demarrer les services + ouvrir l'UI Cypress", \
+	"e2e-parallel           --> lancer les tests E2E en parallele (N=3 par defaut, max 8)", \
+	"e2e-parallel-quiet     --> lancer les tests E2E en parallele en mode silencieux", \
+	"e2e-db                 --> demarrer uniquement mariadb-test", \
+	"e2e-stop               --> arreter l'API et le frontend de test", \
+	"Logs      : .e2e-api.log  .e2e-front.log", \
+	"Variables : N=4  SPEC=war/war-management.cy.ts  Q=1  NEXTAUTH_SECRET=...", \
+	"", \
+	"=== Prod / Swarm ===", \
+	"deploy                 --> builder les images et (re)demarrer tous les containers de production", \
+	"panic                  --> retirer les stacks mawster / mawster-obs / mawster-staging", \
+	"db-access              --> demarrer mariadb + backup en prod (acces DB)", \
+	"migrate                --> lancer les migrations Alembic via Docker Swarm (prod)", \
+	"migrate-staging        --> lancer les migrations Alembic via Docker Swarm (staging)", \
+	"", \
+	"=== Backup ===", \
+	"backup-now             --> declencher un backup immediatement (prod)", \
+	"backup-now-staging     --> declencher un backup manuel (staging, local only)", \
+	"backup-list            --> lister les fichiers de backup locaux", \
+	"backup-restore         --> restaurer depuis un backup local (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)", \
+	"backup-restore-staging --> restaurer un backup local dans la staging (FILE=...)", \
+	"backup-restore-remote  --> restaurer depuis Google Drive (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)", \
+	""
+
 help:
-	@echo ""
-	@echo "deploy                --> builder les images et (re)demarrer tous les containers de production"
-	@echo "db-dev                --> demarrer les services de base de donnees en mode developpement"
-	@echo "=== E2E ==="
-	@echo "e2e                  --> demarrer les services + lancer Cypress headless"
-	@echo "e2e-open             --> demarrer les services + ouvrir l'UI Cypress"
-	@echo "e2e-parallel         --> lancer les tests E2E en parallèle (N=4 par défaut, max 8)"
-	@echo "e2e-parallel-quiet   --> lancer les tests E2E en parallèle en mode silencieux"
-	@echo "e2e-db               --> demarrer uniquement mariadb-test"
-	@echo "e2e-stop             --> arreter l'API et le frontend de test"
-	@echo "Logs      : .e2e-api.log  .e2e-front.log"
-	@echo "Variables : N=4  SPEC=war/war-management.cy.ts  Q=1  NEXTAUTH_SECRET=..."
-	@echo ""
-	@echo "=== Migrate ==="
-	@echo "migrate              --> lancer les migrations Alembic via Docker Swarm (prod)"
-	@echo "migrate-staging      --> lancer les migrations Alembic via Docker Swarm (staging)"
-	@echo ""
-	@echo "=== Backup ==="
-	@echo "backup-now           --> declencher un backup immediatement (prod)"
-	@echo "backup-now-staging   --> declencher un backup manuel (staging, local only)"
-	@echo "backup-list          --> lister les fichiers de backup locaux"
-	@echo "backup-restore       --> restaurer depuis un backup local (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)"
-	@echo "backup-restore-staging --> restaurer un backup local dans la staging (FILE=...)"
-	@echo "backup-restore-remote --> restaurer depuis Google Drive (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)"
-	@echo ""
+	@$(HELP_LINES) | ForEach-Object { Write-Host $$_ }
 
 all:
 	-taskkill /f /im node.exe
@@ -83,35 +100,66 @@ backup-restore:
 backup-restore-remote:
 	if (-not '$(FILE)') { Write-Host 'Usage: make backup-restore-remote FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz'; exit 1 }; $$pass = (Select-String 'MARIADB_ROOT_PASSWORD' db.env).Line.Split('=')[1]; docker exec -e "MARIADB_ROOT_PASSWORD=$$pass" backup /usr/local/bin/restore.sh --remote $(FILE)
 
+backup-list-staging:
+	Get-ChildItem backups-staging\mawster_*.sql.gz -ErrorAction SilentlyContinue | Select-Object Length,Name | Format-Table -AutoSize; if (-not (Test-Path 'backups-staging\mawster_*.sql.gz')) { Write-Host '(no local backups)' }
+
+backup-restore-staging:
+	if (-not '$(FILE)') { Write-Host 'Usage: make backup-restore-staging FILE=mawster-staging_YYYY-MM-DD_HH-MM.sql.gz'; exit 1 }; $$id = (docker ps -q -f name=mawster-staging_backup | Select-Object -First 1); if (-not $$id) { Write-Host 'container mawster-staging_backup introuvable'; exit 1 }; docker exec $$id /usr/local/bin/restore.sh $(FILE)
+
+backup-now:
+	$$id = (docker ps -q -f name=mawster_backup | Select-Object -First 1); if (-not $$id) { Write-Host 'container mawster_backup introuvable'; exit 1 }; docker exec $$id /usr/local/bin/backup.sh
+
+backup-now-staging:
+	$$id = (docker ps -q -f name=mawster-staging_backup | Select-Object -First 1); if (-not $$id) { Write-Host 'container mawster-staging_backup introuvable'; exit 1 }; docker exec $$id /usr/local/bin/backup.sh
+
 else
 # ── Linux / macOS ─────────────────────────────────────────────────────────────
 
 help:
-	@echo ""
-	@echo "deploy                --> builder les images et (re)demarrer tous les containers de production"
-	@echo "db-dev                --> demarrer les services de base de donnees en mode"
-	@echo "=== E2E ==="
-	@echo "e2e                   --> demarrer les services + lancer Cypress headless"
-	@echo "e2e-open              --> demarrer les services + ouvrir l'UI Cypress"
-	@echo "e2e-parallel          --> lancer les tests E2E en parallèle (N=4 par défaut, max 8)"
-	@echo "e2e-parallel-quiet    --> lancer les tests E2E en parallèle en mode silencieux"
-	@echo "e2e-db                --> demarrer uniquement mariadb-test"
-	@echo "e2e-stop              --> arreter l'API et le frontend de test"
-	@echo "Logs      : .e2e-api.log  .e2e-front.log"
-	@echo "Variables : N=4  SPEC=war/war-management.cy.ts  Q=1  NEXTAUTH_SECRET=..."
-	@echo ""
-	@echo "=== Migrate ==="
-	@echo "migrate               --> lancer les migrations Alembic via Docker Swarm (prod)"
-	@echo "migrate-staging       --> lancer les migrations Alembic via Docker Swarm (staging)"
-	@echo ""
-	@echo "=== Backup ==="
-	@echo "backup-now            --> declencher un backup immediatement (prod)"
-	@echo "backup-now-staging    --> declencher un backup manuel (staging, local only)"
-	@echo "backup-list           --> lister les fichiers de backup locaux"
-	@echo "backup-restore        --> restaurer depuis un backup local (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)"
-	@echo "backup-restore-staging --> restaurer un backup local dans la staging (FILE=mawster-staging_YYYY-MM-DD_HH-MM.sql.gz)"
-	@echo "backup-restore-remote --> restaurer depuis Google Drive (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)"
-	@echo ""
+	@echo "" ; \
+	echo "=== Dev ===" ; \
+	echo "db-dev                 --> demarrer la stack dev (rabbitmq + rustfs + mariadb-dev + static)" ; \
+	echo "db-dev-all             --> demarrer tous les services de compose-dev.yaml" ; \
+	echo "vision-up              --> demarrer rabbitmq + rustfs (+ creation des buckets)" ; \
+	echo "vision-down            --> arreter rabbitmq + rustfs" ; \
+	echo "worker-up              --> (re)builder et demarrer le worker vision" ; \
+	echo "worker-logs            --> suivre les logs du worker vision" ; \
+	echo "" ; \
+	echo "=== E2E ===" ; \
+	echo "e2e                    --> demarrer les services + lancer Cypress headless" ; \
+	echo "e2e-open               --> demarrer les services + ouvrir l'UI Cypress" ; \
+	echo "e2e-parallel           --> lancer les tests E2E en parallele (N=4 par defaut, max 8)" ; \
+	echo "e2e-parallel-quiet     --> lancer les tests E2E en parallele en mode silencieux" ; \
+	echo "e2e-db                 --> demarrer uniquement mariadb-test" ; \
+	echo "e2e-stop               --> arreter l'API et le frontend de test" ; \
+	echo "Logs      : .e2e-api.log  .e2e-front.log" ; \
+	echo "Variables : N=4  SPEC=war/war-management.cy.ts  Q=1  NEXTAUTH_SECRET=..." ; \
+	echo "" ; \
+	echo "=== Tier dev public (stack Swarm mawster-dev) ===" ; \
+	echo "dev-build              --> builder les images api/migrate/front/static en :local" ; \
+	echo "dev-up                 --> builder puis deployer le stack mawster-dev" ; \
+	echo "dev-down               --> retirer le stack mawster-dev" ; \
+	echo "dev-migrate            --> lancer les migrations Alembic sur le stack mawster-dev" ; \
+	echo "dev-seed               --> wipe + seed (champions, masteries, sample data)" ; \
+	echo "dev-nuke               --> dev-down + suppression du volume de DB" ; \
+	echo "dev-logs               --> suivre les logs de l'API du stack mawster-dev" ; \
+	echo "" ; \
+	echo "=== Prod / Swarm ===" ; \
+	echo "deploy                 --> builder les images et (re)demarrer tous les containers de production" ; \
+	echo "panic                  --> retirer les stacks mawster / mawster-obs / mawster-staging" ; \
+	echo "db-access              --> demarrer mariadb + backup en prod (acces DB)" ; \
+	echo "migrate                --> lancer les migrations Alembic via Docker Swarm (prod)" ; \
+	echo "migrate-staging        --> lancer les migrations Alembic via Docker Swarm (staging)" ; \
+	echo "" ; \
+	echo "=== Backup ===" ; \
+	echo "backup-now             --> declencher un backup immediatement (prod)" ; \
+	echo "backup-now-staging     --> declencher un backup manuel (staging, local only)" ; \
+	echo "backup-list            --> lister les fichiers de backup locaux" ; \
+	echo "backup-list-staging    --> lister les fichiers de backup staging locaux" ; \
+	echo "backup-restore         --> restaurer depuis un backup local (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)" ; \
+	echo "backup-restore-staging --> restaurer un backup local dans la staging (FILE=mawster-staging_YYYY-MM-DD_HH-MM.sql.gz)" ; \
+	echo "backup-restore-remote  --> restaurer depuis Google Drive (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)" ; \
+	echo ""
 
 e2e-stop:
 	@if [ -f .e2e-api.pid ]; then \

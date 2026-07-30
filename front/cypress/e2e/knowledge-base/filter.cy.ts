@@ -44,7 +44,7 @@ describe('Knowledge Base', () => {
       cy.getByCy('filter-attacker').click();
       cy.get('[role="dialog"]').should('be.visible');
       cy.get('[role="dialog"]').find('input').type('Captain America');
-      cy.contains('[role="option"]', 'Captain America').click();
+      cy.contains('[role="option"]', 'Captain America').should('be.visible').click();
       cy.intercept('GET', '**/fight-records**');
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
 
@@ -65,7 +65,7 @@ describe('Knowledge Base', () => {
       cy.get('[role="dialog"]').should('be.visible');
       cy.get('[role="dialog"]').find('input').clear();
       cy.get('[role="dialog"]').find('input').type('Iron Man');
-      cy.contains('[role="option"]', 'Iron Man').click();
+      cy.contains('[role="option"]', 'Iron Man').should('be.visible').click();
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
 
       cy.getByCy('filter-clear').click();
