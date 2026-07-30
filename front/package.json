@@ -73,6 +73,8 @@
   },
   "overrides": {
     "diff": "^8.0.2",
-    "serialize-javascript": "^7.0.2"
+    "serialize-javascript": "^7.0.2",
+    "postcss": "$postcss",
+    "sharp": "^0.35.0"
   }
 }
