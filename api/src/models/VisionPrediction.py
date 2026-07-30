@@ -32,6 +32,10 @@ class VisionPrediction(UUIDBase, table=True):
     signature: int = 0
     ascension: int = 0
     confidence: float = Field(default=0.0)
+    # The pixel second pass overrode CLIP's ranking on this card. Stored rather
+    # than derived: the margin alone cannot tell "corrected" from "unsure", and
+    # once the candidates are persisted the reason for their order is gone.
+    reranked: bool = Field(default=False)
     crop_key: str | None = Field(default=None, max_length=255)
 
     job: "VisionJob" = Relationship(back_populates="predictions")

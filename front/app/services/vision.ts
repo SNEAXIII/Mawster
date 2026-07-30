@@ -33,7 +33,11 @@ export interface VisionPrediction {
   // CLIP alternatives, best first, top-1 included.
   candidates: { name: string; score: number }[]
   // score[0] - score[1]. null when the model gave fewer than two candidates.
+  // Signed: negative when `reranked` is true, because the winning candidate
+  // keeps its own lower CLIP score. Read the two together.
   margin: number | null
+  // The pixel second pass overrode CLIP's ranking on this card.
+  reranked: boolean
 }
 
 export interface VisionPredictionsResponse {

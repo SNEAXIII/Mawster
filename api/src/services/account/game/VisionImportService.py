@@ -275,6 +275,7 @@ class VisionImportService:
                         VisionCandidateResponse(name=c.name, score=c.score) for c in pred.candidates
                     ],
                     margin=cls._margin(pred.candidates),
+                    reranked=pred.reranked,
                 )
                 for pred in preds
             )
@@ -282,12 +283,18 @@ class VisionImportService:
 
     @staticmethod
     def _margin(candidates: list["VisionPredictionCandidate"]) -> float | None:
-        """Gap between the two best CLIP guesses, or None when there is no gap.
+        """Signed gap between the winner and the runner-up, None below two rows.
 
         This is the real confidence signal. Measured on ground truth, both
         misreads scored 0.79 — high enough for a score-based threshold to paint
         them green — while sitting 0.01 ahead of the right answer. The absolute
         score says almost nothing; this gap says whether the model actually knew.
+
+        It goes **negative** when the pixel second pass reordered the shortlist:
+        the scores stay CLIP cosines, so the card's winner is no longer the
+        highest of them. That is not a bug and not an ambiguity either — pair it
+        with `reranked` to tell "the model was corrected" from "the model was
+        unsure".
 
         Assumes `candidates` is ordered by `position`. The relationship declares
         that ordering, and every query that loads it must preserve it.
