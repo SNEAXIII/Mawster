@@ -33,6 +33,10 @@ def _candidates(*pairs):
         ((), None),
         # A dead heat is maximum ambiguity, and 0.0 says exactly that.
         ((("A", 0.5), ("B", 0.5)), 0.0),
+        # A reranked card: the pixel second pass put the lower CLIP cosine first,
+        # so the margin is negative. It must come back signed, not absolute —
+        # collapsing it would erase the difference from a genuine near-tie.
+        ((("Spider-Man (Stark Enhanced)", 0.8528), ("Spider-Man (Classic)", 0.8561)), -0.0033),
     ],
 )
 def test_margin_from_candidates(pairs, expected):

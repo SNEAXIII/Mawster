@@ -427,7 +427,25 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
                             {"name": "Hulk", "score": 0.90},
                             {"name": "Red Hulk", "score": 0.62},
                         ],
-                    )
+                    ),
+                    # A card the pixel second pass corrected: the winner keeps its
+                    # own lower CLIP cosine, so the stored order is inverted and
+                    # the derived margin comes out negative.
+                    VisionPredictionMessage(
+                        champion_name="Spider-Man (Stark Enhanced)",
+                        champion_class="Science",
+                        stars=7,
+                        rank=5,
+                        signature=200,
+                        ascension=0,
+                        confidence=0.8528,
+                        reranked=True,
+                        crop_key="imports/a/b/crops/sprite_v1.webp#1",
+                        candidates=[
+                            {"name": "Spider-Man (Stark Enhanced)", "score": 0.8528},
+                            {"name": "Spider-Man (Classic)", "score": 0.8561},
+                        ],
+                    ),
                 ],
             ),
         )
@@ -438,19 +456,32 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
 
     assert response.status_code == 200
     body = response.json()
-    assert len(body["predictions"]) == 1
-    assert body["predictions"][0]["champion_name"] == "Hulk"
-    assert body["predictions"][0]["crop_index"] == 0
+    assert len(body["predictions"]) == 2
+    # Rows come back ordered by a uuid4 primary key, so index by name, not position.
+    by_name = {p["champion_name"]: p for p in body["predictions"]}
+    assert by_name["Hulk"]["crop_index"] == 0
 
     # The candidates survive the whole round trip — worker message, child table,
     # eager load, response — and come back best first. The unit test for _margin
     # proves the arithmetic; only this proves the wiring under it.
-    row = body["predictions"][0]
+    row = by_name["Hulk"]
     assert [(c["name"], c["score"]) for c in row["candidates"]] == [
         ("Hulk", 0.90),
         ("Red Hulk", 0.62),
     ]
     assert row["margin"] == pytest.approx(0.28)
+    assert row["reranked"] is False
+
+    # The corrected card: `position` preserved the inverted order the second pass
+    # produced, so the margin is negative and the flag says why.
+    fixed = by_name["Spider-Man (Stark Enhanced)"]
+    assert fixed["reranked"] is True
+    assert fixed["crop_index"] == 1
+    assert [c["name"] for c in fixed["candidates"]] == [
+        "Spider-Man (Stark Enhanced)",
+        "Spider-Man (Classic)",
+    ]
+    assert fixed["margin"] == pytest.approx(-0.0033)
 
 
 @pytest.mark.asyncio

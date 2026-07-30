@@ -135,6 +135,7 @@ class VisionResultService:
                     signature=predicted.signature,
                     ascension=predicted.ascension,
                     confidence=predicted.confidence,
+                    reranked=predicted.reranked,
                     crop_key=predicted.crop_key,
                     candidates=[
                         VisionPredictionCandidate(
