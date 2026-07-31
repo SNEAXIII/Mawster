@@ -12,6 +12,7 @@ from src.dto.account.game.dto_vision import (
 )
 from src.dto.account.game.dto_vision_current import CurrentVisionImportResponse
 from src.dto.account.game.dto_vision_predictions import VisionPredictionsResponse
+from src.dto.account.game.dto_vision_upload import VisionInitRequest, VisionInitResponse
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND, NOT_YOUR_GAME_ACCOUNT
 from src.Messages.vision_messages import (
     IMPORT_ALREADY_PENDING,
@@ -131,6 +132,62 @@ async def create_vision_import(
         files=files,
         share_dataset=share_dataset,
     )
+
+
+@vision_controller.post(
+    "/imports/init", response_model=VisionInitResponse, status_code=status.HTTP_201_CREATED
+)
+async def init_vision_import(
+    session: SessionDep,
+    body: VisionInitRequest,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    storage: Annotated[Storage, Depends(get_storage)],
+):
+    """Reserve an import and return one presigned upload URL per screenshot.
+
+    The browser then PUTs each file straight to RustFS and calls `commit`. The
+    screenshots never transit through this API, which is the entire point: the
+    old multipart route made every byte cross the Next proxy and then the API
+    before reaching the bucket it was always headed for.
+
+    Same gates as the multipart route, in the same order — they guard the right
+    to create an import, which is unchanged by how the bytes travel.
+    """
+    await _get_own_game_account(session, body.game_account_id, current_user.id)
+
+    recent = await VisionImportService.count_recent_imports(session, current_user.id)
+    if recent >= MAX_IMPORTS_PER_HOUR:
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, IMPORT_QUOTA_EXCEEDED)
+
+    blocking = await VisionImportService.get_current(session, body.game_account_id)
+    if blocking is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, f"{IMPORT_ALREADY_PENDING}: {blocking.id}")
+
+    return await VisionImportService.init_import(
+        session=session,
+        storage=storage,
+        game_account_id=body.game_account_id,
+        screens=body.screens,
+        share_dataset=body.share_dataset,
+    )
+
+
+@vision_controller.post("/imports/{import_id}/commit", response_model=VisionImportResponse)
+async def commit_vision_import(
+    session: SessionDep,
+    import_id: uuid.UUID,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    storage: Annotated[Storage, Depends(get_storage)],
+    publisher: Annotated[VisionPublisher, Depends(get_publisher)],
+):
+    """Verify the uploaded screenshots and queue the batch.
+
+    Declared before GET /imports/{import_id} would be a mistake here — this is a
+    POST and the two never collide — but it must stay after the literal
+    "/imports/init" route above, which a UUID param would otherwise swallow.
+    """
+    vision_import = await _get_own_import(session, import_id, current_user.id)
+    return await VisionImportService.commit_import(session, storage, publisher, vision_import)
 
 
 @vision_controller.get("/imports/current", response_model=CurrentVisionImportResponse | None)

@@ -86,23 +86,126 @@ async function throwOnError(response: Response, fallback: string) {
   throw err
 }
 
-// ─── Vision Import API ───────────────────────────────────
-export const createVisionImport = async (
+// ─── Direct-to-storage upload (presigned) ────────────────
+export interface VisionUploadTarget {
+  job_id: string
+  filename: string
+  url: string
+  content_type: string
+}
+
+export interface VisionInitResponse {
+  import_id: string
+  expires_in: number
+  uploads: VisionUploadTarget[]
+}
+
+// Parallel PUTs to RustFS. Four because the win is overlapping latency, not
+// saturating the uplink: past that the same bandwidth is split more ways, each
+// file finishes later, and a phone connection starts timing out sockets.
+const UPLOAD_CONCURRENCY = 4
+
+const EXTENSION_TYPES: Record<string, string> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  webp: 'image/webp',
+}
+
+// `File.type` is a best effort by the browser, not a guarantee: it comes back
+// empty often enough (some Android pickers, drag-and-drop from an archive,
+// Cypress `selectFile` without an explicit mimeType) that trusting it alone
+// turns a valid screenshot into a 400 at init. The extension is the fallback,
+// and neither is trusted — the backend sniffs the real bytes at commit.
+const declaredType = (file: File): string =>
+  file.type || EXTENSION_TYPES[file.name.split('.').pop()?.toLowerCase() ?? ''] || ''
+
+const initVisionImport = async (
   gameAccountId: string,
   files: File[],
   shareDataset: boolean
-): Promise<VisionImport> => {
-  const formData = new FormData()
-  formData.append('game_account_id', gameAccountId)
-  files.forEach((file) => formData.append('files', file))
-  formData.append('share_dataset', String(shareDataset))
-
-  const response = await fetch(`${PROXY}/vision/imports`, {
+): Promise<VisionInitResponse> => {
+  const response = await fetch(`${PROXY}/vision/imports/init`, {
     method: 'POST',
-    body: formData,
+    headers: jsonHeaders,
+    body: JSON.stringify({
+      game_account_id: gameAccountId,
+      share_dataset: shareDataset,
+      screens: files.map((file) => ({
+        filename: file.name,
+        content_type: declaredType(file),
+        size: file.size,
+      })),
+    }),
   })
-  await throwOnError(response, "Erreur lors de la création de l'import")
+  await throwOnError(response, "Erreur lors de la préparation de l'import")
   return response.json()
+}
+
+// Straight to RustFS — not through the Next proxy, and not through the API.
+// The URL carries its own signature, so no Authorization header is sent (and
+// none would be accepted). Content-Type must match what the backend signed:
+// it is part of the signature, and any other value fails the upload outright.
+const putScreenshot = async (target: VisionUploadTarget, file: File): Promise<void> => {
+  const response = await fetch(target.url, {
+    method: 'PUT',
+    body: file,
+    headers: { 'Content-Type': target.content_type },
+  })
+  if (!response.ok) {
+    throw new Error(`Upload de « ${target.filename} » échoué (${response.status})`)
+  }
+}
+
+const commitVisionImport = async (importId: string): Promise<VisionImport> => {
+  const response = await fetch(`${PROXY}/vision/imports/${importId}/commit`, {
+    method: 'POST',
+    headers: jsonHeaders,
+  })
+  await throwOnError(response, "Erreur lors de la validation de l'import")
+  return response.json()
+}
+
+/**
+ * Uploads roster screenshots straight to object storage, then queues them.
+ *
+ * Three steps: reserve (`init`), upload in parallel, queue (`commit`). Replaces
+ * the single multipart POST, whose bytes crossed the Next proxy and the API
+ * before reaching the bucket they were always headed for — and did it serially,
+ * because the proxy buffers a whole request body before forwarding any of it.
+ *
+ * On any upload failure the reserved import is cancelled. Without that, a
+ * half-uploaded batch would hold the "one import at a time" lock until its URLs
+ * expire, and the user's retry would be refused for fifteen minutes.
+ */
+export const createVisionImport = async (
+  gameAccountId: string,
+  files: File[],
+  shareDataset: boolean,
+  onProgress?: (uploaded: number, total: number) => void
+): Promise<VisionImport> => {
+  const { import_id, uploads } = await initVisionImport(gameAccountId, files, shareDataset)
+
+  try {
+    let done = 0
+    let next = 0
+    const worker = async () => {
+      while (next < uploads.length) {
+        const index = next++
+        await putScreenshot(uploads[index], files[index])
+        done += 1
+        onProgress?.(done, uploads.length)
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(UPLOAD_CONCURRENCY, uploads.length) }, worker))
+  } catch (error) {
+    // Best-effort: the import is already unusable, and surfacing a cancellation
+    // failure here would replace the error the user actually needs to see.
+    await cancelVisionImport(import_id).catch(() => {})
+    throw error
+  }
+
+  return commitVisionImport(import_id)
 }
 
 export const getVisionImport = async (importId: string): Promise<VisionImportStatus> => {

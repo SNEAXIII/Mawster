@@ -37,6 +37,14 @@ class Settings(BaseSettings):
     # --- Vision (roster import) ---------------------------------------------
     RABBITMQ_URL: str = Field(... if IS_PROD else "amqp://mawster:mawster@localhost:5672/")
     RUSTFS_ENDPOINT: str = Field(... if IS_PROD else "http://localhost:9000")
+    # Endpoint que le NAVIGATEUR appelle pour uploader en direct (URL présignée).
+    # Distinct de RUSTFS_ENDPOINT, qui reste l'adresse interne serveur→RustFS :
+    # SigV4 signe l'en-tête Host, donc une URL signée pour `http://rustfs:9000`
+    # est refusée (SignatureDoesNotMatch) dès qu'un navigateur l'envoie au nom
+    # public. Obligatoire en prod — sans ça la feature ne peut que produire des
+    # URLs mortes, et un boot qui échoue vaut mieux qu'un upload cassé.
+    # En dev les deux coïncident : RustFS publie 9000 sur l'hôte.
+    RUSTFS_PUBLIC_ENDPOINT: str = Field(... if IS_PROD else "http://localhost:9000")
     RUSTFS_ACCESS_KEY: str = Field(... if IS_PROD else "mawster")
     RUSTFS_SECRET_KEY: str = Field(... if IS_PROD else "mawsterpassword")
     RUSTFS_BUCKET_VISION: str = Field("vision")
