@@ -117,6 +117,16 @@ services:
         aws --endpoint-url http://rustfs:9000 s3api put-bucket-lifecycle-configuration \
           --bucket vision \
           --lifecycle-configuration "{\"Rules\":[{\"ID\":\"expire-imports\",\"Status\":\"Enabled\",\"Filter\":{\"Prefix\":\"imports/\"},\"Expiration\":{\"Days\":$${VISION_RETENTION_DAYS}}}]}"
+        # The browser PUTs screenshots straight here with a presigned URL, so the
+        # bucket has to answer the preflight itself — the API is not in the path
+        # and cannot add the headers for it.
+        # BOTH ports, and both are load-bearing: `npm run dev` serves 3000, and
+        # `npm run testing` (the one Cypress drives, see cypress.config.ts
+        # baseUrl) serves 3001. Listing only 3000 leaves every vision E2E spec
+        # failing on a preflight, from a config file no one thinks to look at.
+        aws --endpoint-url http://rustfs:9000 s3api put-bucket-cors \
+          --bucket vision \
+          --cors-configuration '{"CORSRules":[{"AllowedOrigins":["http://localhost:3000","http://localhost:3001"],"AllowedMethods":["PUT"],"AllowedHeaders":["*"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3000}]}'
         aws --endpoint-url http://rustfs:9000 s3 ls
     restart: 'no'
     volumes:
