@@ -50,6 +50,16 @@ async def lifespan(_: FastAPI):
         except Exception:
             logger.exception("vision reaper failed at startup")
 
+        # Its own try: this one never touches the broker, and a cold stack where
+        # RabbitMQ is not up yet must not cost us the bookkeeping pass too.
+        try:
+            from src.storage import get_storage
+
+            async with Session() as session:
+                await VisionReaperService.cancel_stale_uploads(session, get_storage())
+        except Exception:
+            logger.exception("vision stale-upload sweep failed at startup")
+
     yield
     await consumer.stop()
 

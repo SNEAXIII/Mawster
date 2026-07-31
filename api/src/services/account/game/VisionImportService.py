@@ -4,15 +4,24 @@ from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from fastapi import HTTPException, UploadFile
+from sqlalchemy import or_
 from sqlalchemy.orm import selectinload
 from sqlmodel import func, select
 from starlette import status
 
+from src.dto.account.game.dto_vision_upload import (
+    VisionInitResponse,
+    VisionScreenDeclaration,
+    VisionUploadTarget,
+)
 from src.Messages.vision_messages import (
     BROKER_UNAVAILABLE,
     JOB_NEVER_QUEUED,
     NO_SCREENS_PROVIDED,
+    SCREEN_NOT_AN_IMAGE,
+    SCREEN_NOT_UPLOADED,
     SCREEN_TOO_LARGE,
+    SCREEN_TYPE_MISMATCH,
     TOO_MANY_SCREENS,
     UNSUPPORTED_SCREEN_TYPE,
 )
@@ -31,6 +40,18 @@ if TYPE_CHECKING:
 MAX_SCREENS_PER_IMPORT = 40
 MAX_SCREEN_BYTES = 8 * 1024 * 1024
 ALLOWED_CONTENT_TYPES = {"image/png", "image/jpeg", "image/webp"}
+
+# How long a presigned upload URL stays valid. Sized for the worst realistic
+# batch, not the median: MAX_SCREENS_PER_IMPORT files of MAX_SCREEN_BYTES over a
+# phone connection is a few hundred megabytes, and a URL that dies mid-batch
+# costs the user the whole import. Beyond this the import can never be
+# committed, which is what makes it safe for `get_current` to stop counting it
+# as blocking.
+UPLOAD_URL_TTL_SECONDS = 15 * 60
+
+# Enough to cover the longest signature checked by `_sniff_image_type`: WebP
+# needs bytes 8..11.
+MAGIC_PREFIX_BYTES = 12
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +146,24 @@ class VisionImportService:
         await session.commit()
         await session.refresh(vision_import)
 
+        await cls._publish_batch(session, publisher, vision_import, jobs)
+        return vision_import
+
+    @classmethod
+    async def _publish_batch(
+        cls,
+        session: SessionDep,
+        publisher: VisionPublisher,
+        vision_import: VisionImport,
+        jobs: list[VisionJob],
+    ) -> None:
+        """Publish one message per job, accounting for a mid-batch broker failure.
+
+        Shared by the multipart upload and the presigned commit: both reach this
+        point with rows committed and objects in the bucket, so both need the
+        same compensation. Duplicating it once meant the two paths could drift
+        into disagreeing about what a half-published batch looks like.
+        """
         published_count = 0
         try:
             for job in jobs:
@@ -153,7 +192,216 @@ class VisionImportService:
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=BROKER_UNAVAILABLE
             ) from error
 
+    @classmethod
+    async def init_import(
+        cls,
+        session: SessionDep,
+        storage: Storage,
+        game_account_id: uuid.UUID,
+        screens: list[VisionScreenDeclaration],
+        share_dataset: bool,
+    ) -> VisionInitResponse:
+        """Reserve an import and hand back one presigned PUT URL per screenshot.
+
+        Nothing is queued here: the objects do not exist yet. The import and its
+        jobs sit in AWAITING_UPLOAD until `commit_import` confirms the bytes
+        landed, which is what keeps the worker from ever being pointed at a key
+        with nothing behind it.
+
+        The object keys are derived server-side from ids the caller does not
+        choose. A client-supplied key would be a write primitive into any other
+        user's import — the same reasoning that keeps `get_crop_sprite` from
+        accepting one.
+        """
+        cls._validate_declarations(screens)
+
+        vision_import = VisionImport(
+            game_account_id=game_account_id,
+            screens_total=len(screens),
+            share_dataset=share_dataset,
+            status=VisionImportStatus.AWAITING_UPLOAD,
+        )
+        session.add(vision_import)
+
+        jobs: list[VisionJob] = []
+        for screen in screens:
+            job = VisionJob(
+                import_id=vision_import.id,
+                object_key="",
+                filename=screen.filename,
+                status=VisionJobStatus.AWAITING_UPLOAD,
+            )
+            job.object_key = screen_key(vision_import.id, job.id)
+            session.add(job)
+            jobs.append(job)
+
+        # Committed before signing: a URL whose job row does not exist would let
+        # a client write an object that `commit` can never account for, and that
+        # the retention sweep is the only thing left to clean up.
+        await session.commit()
+        await session.refresh(vision_import)
+
+        uploads = [
+            VisionUploadTarget(
+                job_id=job.id,
+                filename=screen.filename,
+                url=await storage.presigned_put_url(
+                    bucket=SECRET.RUSTFS_BUCKET_VISION,
+                    key=job.object_key,
+                    content_type=screen.content_type,
+                    expires_in=UPLOAD_URL_TTL_SECONDS,
+                ),
+                content_type=screen.content_type,
+            )
+            for job, screen in zip(jobs, screens, strict=True)
+        ]
+        return VisionInitResponse(
+            import_id=vision_import.id,
+            expires_in=UPLOAD_URL_TTL_SECONDS,
+            uploads=uploads,
+        )
+
+    @classmethod
+    def _validate_declarations(cls, screens: list[VisionScreenDeclaration]) -> None:
+        """Reject a batch on its claims alone, before a single URL is signed.
+
+        Cheap gate, not a security boundary: every one of these numbers comes
+        from the client and is re-established from the stored object in
+        `commit_import`. Its job is to fail fast, so a user does not upload
+        40 files only to be told at commit that the second one was too big.
+        """
+        if not screens:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=NO_SCREENS_PROVIDED)
+        if len(screens) > MAX_SCREENS_PER_IMPORT:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=TOO_MANY_SCREENS.format(count=len(screens), maximum=MAX_SCREENS_PER_IMPORT),
+            )
+        for screen in screens:
+            if screen.content_type not in ALLOWED_CONTENT_TYPES:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=UNSUPPORTED_SCREEN_TYPE.format(
+                        filename=screen.filename, content_type=screen.content_type
+                    ),
+                )
+            if screen.size > MAX_SCREEN_BYTES:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=SCREEN_TOO_LARGE.format(
+                        filename=screen.filename, size=screen.size, maximum=MAX_SCREEN_BYTES
+                    ),
+                )
+
+    @classmethod
+    async def commit_import(
+        cls,
+        session: SessionDep,
+        storage: Storage,
+        publisher: VisionPublisher,
+        vision_import: VisionImport,
+    ) -> VisionImport:
+        """Verify every uploaded object, then queue the batch.
+
+        This is where the trust lost by not seeing the upload is bought back. A
+        presigned PUT can pin the content type into the signature but cannot cap
+        the size, so both are re-derived here from what RustFS actually stored,
+        and the first bytes are sniffed because a declared `image/png` proves
+        nothing about the file behind it.
+
+        Idempotent: committing an import that already left AWAITING_UPLOAD is a
+        no-op rather than a second publish, so a double-click or a retried
+        request cannot queue the same screenshots twice.
+        """
+        if vision_import.status != VisionImportStatus.AWAITING_UPLOAD:
+            return vision_import
+
+        jobs = (
+            await session.exec(
+                select(VisionJob)
+                .where(VisionJob.import_id == vision_import.id)
+                .order_by(VisionJob.created_at)
+            )
+        ).all()
+
+        for job in jobs:
+            await cls._verify_uploaded(storage, job)
+
+        for job in jobs:
+            job.status = VisionJobStatus.PENDING
+            session.add(job)
+        vision_import.status = VisionImportStatus.PENDING
+        session.add(vision_import)
+        await session.commit()
+        await session.refresh(vision_import)
+
+        await cls._publish_batch(session, publisher, vision_import, list(jobs))
         return vision_import
+
+    @classmethod
+    async def _verify_uploaded(cls, storage: Storage, job: VisionJob) -> None:
+        """Fail the commit unless this job's object is a real, in-budget image.
+
+        Raises rather than returning a verdict: a batch is queued whole or not at
+        all, and a partially valid import would leave the user reviewing a roster
+        with silent holes in it.
+        """
+        filename = job.filename or job.object_key
+        stat = await storage.stat_object(SECRET.RUSTFS_BUCKET_VISION, job.object_key)
+        if stat is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=SCREEN_NOT_UPLOADED.format(filename=filename),
+            )
+        if stat.size > MAX_SCREEN_BYTES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=SCREEN_TOO_LARGE.format(
+                    filename=filename, size=stat.size, maximum=MAX_SCREEN_BYTES
+                ),
+            )
+        if stat.content_type not in ALLOWED_CONTENT_TYPES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=UNSUPPORTED_SCREEN_TYPE.format(
+                    filename=filename, content_type=stat.content_type
+                ),
+            )
+        head = await storage.get_head_bytes(
+            SECRET.RUSTFS_BUCKET_VISION, job.object_key, MAGIC_PREFIX_BYTES
+        )
+        sniffed = cls._sniff_image_type(head)
+        if sniffed is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=SCREEN_NOT_AN_IMAGE.format(filename=filename),
+            )
+        if sniffed != stat.content_type:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=SCREEN_TYPE_MISMATCH.format(
+                    filename=filename, actual=sniffed, declared=stat.content_type
+                ),
+            )
+
+    @staticmethod
+    def _sniff_image_type(head: bytes) -> str | None:
+        """The real type of a file from its first bytes, or None if not an image.
+
+        Only the three formats the pipeline can open. Deliberately not Pillow:
+        this runs on up to 40 objects per commit and must not decode anything —
+        it answers "is this plausibly the format it claims", and the worker is
+        the one that finds out whether the image is actually readable.
+        """
+        if head.startswith(b"\x89PNG\r\n\x1a\n"):
+            return "image/png"
+        if head.startswith(b"\xff\xd8\xff"):
+            return "image/jpeg"
+        # RIFF container, WEBP form type at offset 8 — the 4 bytes between are
+        # the file length, which says nothing about the format.
+        if head[:4] == b"RIFF" and head[8:12] == b"WEBP":
+            return "image/webp"
+        return None
 
     @classmethod
     async def get_import(cls, session: SessionDep, import_id: uuid.UUID) -> VisionImport | None:
@@ -173,8 +421,17 @@ class VisionImportService:
         CONFIRMED and CANCELLED are done with. Imports older than the retention
         window have lost their screenshots and crops to the bucket lifecycle, so
         validating them would mean approving data whose evidence is gone.
+
+        An AWAITING_UPLOAD import counts as blocking only while its presigned
+        URLs can still be used. Past that it is uncommittable — no upload can
+        ever succeed against dead URLs — so leaving it in the way would lock the
+        game account out of importing for the whole retention window every time
+        someone closed the tab mid-upload. It still counts against the hourly
+        quota, because that measures work asked of the server.
         """
-        cutoff = datetime.now(UTC) - timedelta(days=SECRET.VISION_RETENTION_DAYS)
+        now = datetime.now(UTC)
+        cutoff = now - timedelta(days=SECRET.VISION_RETENTION_DAYS)
+        upload_cutoff = now - timedelta(seconds=UPLOAD_URL_TTL_SECONDS)
         statement = (
             select(VisionImport)
             .where(
@@ -183,6 +440,10 @@ class VisionImportService:
                     [VisionImportStatus.CONFIRMED, VisionImportStatus.CANCELLED]
                 ),
                 VisionImport.created_at > cutoff,
+                or_(
+                    VisionImport.status != VisionImportStatus.AWAITING_UPLOAD,
+                    VisionImport.created_at > upload_cutoff,
+                ),
             )
             .order_by(VisionImport.created_at.desc(), VisionImport.id.desc())
             .limit(1)
