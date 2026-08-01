@@ -157,6 +157,17 @@ const putScreenshot = async (target: VisionUploadTarget, file: File): Promise<vo
   }
 }
 
+// Queues one screenshot as soon as its bytes are in the bucket, instead of
+// letting it wait for the slowest file of the batch. The backend re-checks the
+// stored object here — this call is what turns an anonymous PUT into a job.
+const commitScreen = async (importId: string, jobId: string): Promise<void> => {
+  const response = await fetch(`${PROXY}/vision/imports/${importId}/screens/${jobId}/commit`, {
+    method: 'POST',
+    headers: jsonHeaders,
+  })
+  await throwOnError(response, 'Erreur lors de la mise en file de la capture')
+}
+
 const commitVisionImport = async (importId: string): Promise<VisionImport> => {
   const response = await fetch(`${PROXY}/vision/imports/${importId}/commit`, {
     method: 'POST',
@@ -167,16 +178,20 @@ const commitVisionImport = async (importId: string): Promise<VisionImport> => {
 }
 
 /**
- * Uploads roster screenshots straight to object storage, then queues them.
+ * Uploads roster screenshots straight to object storage, queueing each one the
+ * moment it lands.
  *
- * Three steps: reserve (`init`), upload in parallel, queue (`commit`). Replaces
- * the single multipart POST, whose bytes crossed the Next proxy and the API
- * before reaching the bucket they were always headed for — and did it serially,
- * because the proxy buffers a whole request body before forwarding any of it.
+ * Reserve (`init`), then per file: PUT to the bucket, `commitScreen` to queue
+ * it. The batch used to be queued in one go at the end, which meant the GPU sat
+ * idle for the whole upload; now extraction of the early screenshots overlaps
+ * the upload of the late ones. `commit` at the end only seals what is left.
  *
- * On any upload failure the reserved import is cancelled. Without that, a
- * half-uploaded batch would hold the "one import at a time" lock until its URLs
- * expire, and the user's retry would be refused for fifteen minutes.
+ * One file failing no longer sinks the batch — the screenshots already queued
+ * are running in the worker and cannot be recalled, so aborting would waste them
+ * and tell the user nothing true. The failure is carried to the review screen as
+ * a failed screenshot instead. The import is only cancelled when not a single
+ * screenshot made it, where there is nothing to salvage and the "one import at a
+ * time" lock would otherwise be held until the URLs expire.
  */
 export const createVisionImport = async (
   gameAccountId: string,
@@ -186,23 +201,35 @@ export const createVisionImport = async (
 ): Promise<VisionImport> => {
   const { import_id, uploads } = await initVisionImport(gameAccountId, files, shareDataset)
 
-  try {
-    let done = 0
-    let next = 0
-    const worker = async () => {
-      while (next < uploads.length) {
-        const index = next++
+  let done = 0
+  let next = 0
+  let queued = 0
+  let firstError: unknown = null
+  const worker = async () => {
+    while (next < uploads.length) {
+      const index = next++
+      try {
         await putScreenshot(uploads[index], files[index])
-        done += 1
-        onProgress?.(done, uploads.length)
+        await commitScreen(import_id, uploads[index].job_id)
+        queued += 1
+      } catch (error) {
+        // Kept, not thrown: the sibling workers must keep going, and this is
+        // what the user sees if it turns out nothing at all went through.
+        firstError ??= error
       }
+      // Counts attempts, not successes — the bar tracks how much of the batch
+      // has been dealt with, and a file that failed is done being waited on.
+      done += 1
+      onProgress?.(done, uploads.length)
     }
-    await Promise.all(Array.from({ length: Math.min(UPLOAD_CONCURRENCY, uploads.length) }, worker))
-  } catch (error) {
+  }
+  await Promise.all(Array.from({ length: Math.min(UPLOAD_CONCURRENCY, uploads.length) }, worker))
+
+  if (queued === 0) {
     // Best-effort: the import is already unusable, and surfacing a cancellation
     // failure here would replace the error the user actually needs to see.
     await cancelVisionImport(import_id).catch(() => {})
-    throw error
+    throw firstError ?? new Error("Aucune capture n'a pu être envoyée")
   }
 
   return commitVisionImport(import_id)

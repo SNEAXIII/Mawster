@@ -1,9 +1,14 @@
-"""Unit tests for the direct-to-storage import: `init_import` / `commit_import`.
+"""Unit tests for the direct-to-storage import: `init` / `commit_screen` / `commit`.
 
 The theme running through the commit tests: the API never sees the upload, so
 every property it used to learn by reading the request body has to be re-derived
 from the stored object. Each one that is not re-checked is a way to put arbitrary
 bytes in front of the vision worker.
+
+`commit_screen` is where that verification now happens for the common case, one
+screenshot at a time as it lands; `commit_import` is the seal that settles
+whatever never made it. The second theme is therefore duplication: neither may
+ever queue a screenshot the other already queued.
 """
 
 import uuid
@@ -85,12 +90,18 @@ class FakeSession:
     async def exec(self, _statement):
         return FakeResult(self._jobs)
 
+    async def get(self, _model, primary_key):
+        return next((job for job in self._jobs if job.id == primary_key), None)
+
 
 class FakePublisher:
-    def __init__(self):
+    def __init__(self, fails: bool = False):
         self.published: list[uuid.UUID] = []
+        self.fails = fails
 
     async def publish_job(self, job_id, import_id, bucket, object_key) -> None:
+        if self.fails:
+            raise ConnectionError("broker down")
         self.published.append(job_id)
 
 
@@ -176,10 +187,10 @@ async def test_init_rejects_a_declared_size_over_the_cap():
 # ─── commit ──────────────────────────────────────────────────────────────
 
 
-def _awaiting_import() -> VisionImport:
+def _awaiting_import(screens_total: int = 1) -> VisionImport:
     return VisionImport(
         game_account_id=uuid.uuid4(),
-        screens_total=1,
+        screens_total=screens_total,
         status=VisionImportStatus.AWAITING_UPLOAD,
     )
 
@@ -195,8 +206,162 @@ def _awaiting_job(vision_import: VisionImport, filename: str = "roster.png") -> 
     return job
 
 
+async def _commit_screen(session, storage, publisher, vision_import, job):
+    return await VisionImportService.commit_screen(
+        session, storage, publisher, vision_import, job.id
+    )
+
+
 @pytest.mark.asyncio
-async def test_commit_queues_the_batch_when_every_object_checks_out():
+async def test_commit_screen_queues_that_screenshot_alone():
+    """The point of the whole design: screenshot 1 reaches the worker while
+    screenshot 2 is still uploading."""
+    vision_import = _awaiting_import(screens_total=2)
+    first, second = _awaiting_job(vision_import, "a.png"), _awaiting_job(vision_import, "b.png")
+    storage = FakeStorage({first.object_key: (PNG, "image/png")})
+    session, publisher = FakeSession([first, second]), FakePublisher()
+
+    await _commit_screen(session, storage, publisher, vision_import, first)
+
+    assert publisher.published == [first.id]
+    assert first.status == VisionJobStatus.PENDING
+    assert second.status == VisionJobStatus.AWAITING_UPLOAD
+
+
+@pytest.mark.asyncio
+async def test_commit_screen_takes_the_import_out_of_awaiting_upload():
+    """Something is queued now, so the import is no longer merely reserved."""
+    vision_import = _awaiting_import()
+    job = _awaiting_job(vision_import)
+    storage = FakeStorage({job.object_key: (PNG, "image/png")})
+
+    await _commit_screen(FakeSession([job]), storage, FakePublisher(), vision_import, job)
+
+    assert vision_import.status == VisionImportStatus.PENDING
+
+
+@pytest.mark.asyncio
+async def test_commit_screen_is_a_no_op_for_an_already_queued_job():
+    """A double-click, a retried request, or the seal sweeping a job this call
+    already published — none of them may queue the same screenshot twice."""
+    vision_import = _awaiting_import()
+    job = _awaiting_job(vision_import)
+    job.status = VisionJobStatus.PENDING
+    storage = FakeStorage({job.object_key: (PNG, "image/png")})
+    session, publisher = FakeSession([job]), FakePublisher()
+
+    result = await _commit_screen(session, storage, publisher, vision_import, job)
+
+    assert result is job
+    assert publisher.published == []
+
+
+@pytest.mark.asyncio
+async def test_commit_screen_refuses_a_job_from_another_import():
+    """The import is authorised by the controller; the job is not. Without this
+    check, its id alone would queue a stranger's screenshot."""
+    vision_import = _awaiting_import()
+    foreign = _awaiting_job(_awaiting_import(), "stranger.png")
+    storage = FakeStorage({foreign.object_key: (PNG, "image/png")})
+    session, publisher = FakeSession([foreign]), FakePublisher()
+
+    with pytest.raises(HTTPException) as exc:
+        await _commit_screen(session, storage, publisher, vision_import, foreign)
+
+    assert exc.value.status_code == 404
+    assert publisher.published == []
+
+
+@pytest.mark.asyncio
+async def test_commit_screen_leaves_a_missing_object_retryable():
+    """Not failed: the presigned URL is good for fifteen minutes, so the browser
+    can still retry the PUT. Only the seal decides a screenshot is lost."""
+    vision_import = _awaiting_import()
+    job = _awaiting_job(vision_import, "missing.png")
+    session, publisher = FakeSession([job]), FakePublisher()
+
+    with pytest.raises(HTTPException) as exc:
+        await _commit_screen(session, FakeStorage(), publisher, vision_import, job)
+
+    assert exc.value.status_code == 400
+    assert "missing.png" in exc.value.detail
+    assert job.status == VisionJobStatus.AWAITING_UPLOAD
+    assert publisher.published == []
+
+
+@pytest.mark.asyncio
+async def test_commit_screen_refuses_an_object_larger_than_the_cap():
+    """The size declared at init is a claim. A presigned PUT cannot enforce it,
+    so an honest-looking init followed by a 20 MB upload has to die here."""
+    vision_import = _awaiting_import()
+    job = _awaiting_job(vision_import)
+    oversized = PNG + b"\x00" * MAX_SCREEN_BYTES
+    storage = FakeStorage({job.object_key: (oversized, "image/png")})
+    session, publisher = FakeSession([job]), FakePublisher()
+
+    with pytest.raises(HTTPException) as exc:
+        await _commit_screen(session, storage, publisher, vision_import, job)
+
+    assert exc.value.status_code == 400
+    assert publisher.published == []
+
+
+@pytest.mark.asyncio
+async def test_commit_screen_refuses_bytes_that_are_not_an_image():
+    """Content-Type is signed, so it is whatever the client asked us to sign —
+    it says nothing about the file behind it."""
+    vision_import = _awaiting_import()
+    job = _awaiting_job(vision_import)
+    storage = FakeStorage({job.object_key: (b"#!/bin/sh\nrm -rf /", "image/png")})
+    session, publisher = FakeSession([job]), FakePublisher()
+
+    with pytest.raises(HTTPException) as exc:
+        await _commit_screen(session, storage, publisher, vision_import, job)
+
+    assert exc.value.status_code == 400
+    assert publisher.published == []
+
+
+@pytest.mark.asyncio
+async def test_commit_screen_refuses_a_type_that_contradicts_the_magic_bytes():
+    vision_import = _awaiting_import()
+    job = _awaiting_job(vision_import)
+    storage = FakeStorage({job.object_key: (JPEG, "image/png")})
+    session, publisher = FakeSession([job]), FakePublisher()
+
+    with pytest.raises(HTTPException) as exc:
+        await _commit_screen(session, storage, publisher, vision_import, job)
+
+    assert exc.value.status_code == 400
+    assert publisher.published == []
+
+
+@pytest.mark.asyncio
+async def test_commit_screen_counts_a_job_the_broker_refused():
+    """A job that is never published produces no worker result, and a worker
+    result is the only other thing that moves `screens_done`. Miss this and the
+    import stops one screenshot short of its total forever."""
+    vision_import = _awaiting_import()
+    job = _awaiting_job(vision_import)
+    storage = FakeStorage({job.object_key: (PNG, "image/png")})
+    session = FakeSession([job])
+
+    with pytest.raises(HTTPException) as exc:
+        await _commit_screen(session, storage, FakePublisher(fails=True), vision_import, job)
+
+    assert exc.value.status_code == 503
+    assert job.status == VisionJobStatus.FAILED
+    assert vision_import.screens_done == 1
+    assert vision_import.status == VisionImportStatus.DONE
+
+
+# ─── commit (seal) ───────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_commit_queues_a_screenshot_whose_per_screen_call_never_arrived():
+    """The bytes are in the bucket but no one queued them — a lost request, or a
+    tab that closed between the PUT and the commit."""
     vision_import = _awaiting_import()
     job = _awaiting_job(vision_import)
     storage = FakeStorage({job.object_key: (PNG, "image/png")})
@@ -210,95 +375,73 @@ async def test_commit_queues_the_batch_when_every_object_checks_out():
 
 
 @pytest.mark.asyncio
-async def test_commit_refuses_a_screenshot_that_was_never_uploaded():
-    vision_import = _awaiting_import()
-    job = _awaiting_job(vision_import, "missing.png")
-    session, publisher = FakeSession([job]), FakePublisher()
-
-    with pytest.raises(HTTPException) as exc:
-        await VisionImportService.commit_import(
-            session, storage := FakeStorage(), publisher, vision_import
-        )
-
-    assert exc.value.status_code == 400
-    assert "missing.png" in exc.value.detail
-    assert publisher.published == []
-    assert storage.objects == {}
-
-
-@pytest.mark.asyncio
-async def test_commit_refuses_an_object_larger_than_the_cap():
-    """The size declared at init is a claim. A presigned PUT cannot enforce it,
-    so an honest-looking init followed by a 20 MB upload has to die here."""
+async def test_commit_never_republishes_an_already_queued_job():
+    """The common case: every screenshot was queued as it landed, so the seal has
+    nothing to do. Doing it again would run the whole roster through the worker
+    twice."""
     vision_import = _awaiting_import()
     job = _awaiting_job(vision_import)
-    oversized = PNG + b"\x00" * MAX_SCREEN_BYTES
-    storage = FakeStorage({job.object_key: (oversized, "image/png")})
-    session, publisher = FakeSession([job]), FakePublisher()
-
-    with pytest.raises(HTTPException) as exc:
-        await VisionImportService.commit_import(session, storage, publisher, vision_import)
-
-    assert exc.value.status_code == 400
-    assert publisher.published == []
-
-
-@pytest.mark.asyncio
-async def test_commit_refuses_bytes_that_are_not_an_image():
-    """Content-Type is signed, so it is whatever the client asked us to sign —
-    it says nothing about the file behind it."""
-    vision_import = _awaiting_import()
-    job = _awaiting_job(vision_import)
-    storage = FakeStorage({job.object_key: (b"#!/bin/sh\nrm -rf /", "image/png")})
-    session, publisher = FakeSession([job]), FakePublisher()
-
-    with pytest.raises(HTTPException) as exc:
-        await VisionImportService.commit_import(session, storage, publisher, vision_import)
-
-    assert exc.value.status_code == 400
-    assert publisher.published == []
-
-
-@pytest.mark.asyncio
-async def test_commit_refuses_a_type_that_contradicts_the_magic_bytes():
-    vision_import = _awaiting_import()
-    job = _awaiting_job(vision_import)
-    storage = FakeStorage({job.object_key: (JPEG, "image/png")})
-    session, publisher = FakeSession([job]), FakePublisher()
-
-    with pytest.raises(HTTPException) as exc:
-        await VisionImportService.commit_import(session, storage, publisher, vision_import)
-
-    assert exc.value.status_code == 400
-    assert publisher.published == []
-
-
-@pytest.mark.asyncio
-async def test_commit_rejects_the_whole_batch_when_one_screenshot_is_bad():
-    """A partially queued import would hand the user a roster with silent holes
-    in it — worse than a refusal, because nothing says which rows are missing."""
-    vision_import = _awaiting_import()
-    good, bad = _awaiting_job(vision_import, "ok.png"), _awaiting_job(vision_import, "bad.png")
-    storage = FakeStorage({good.object_key: (PNG, "image/png")})
-    session, publisher = FakeSession([good, bad]), FakePublisher()
-
-    with pytest.raises(HTTPException):
-        await VisionImportService.commit_import(session, storage, publisher, vision_import)
-
-    assert publisher.published == []
-    assert good.status == VisionJobStatus.AWAITING_UPLOAD
-
-
-@pytest.mark.asyncio
-async def test_commit_is_a_no_op_once_the_import_left_awaiting_upload():
-    """A double-click or a retried request must not queue the batch twice."""
-    vision_import = _awaiting_import()
-    vision_import.status = VisionImportStatus.PENDING
-    job = _awaiting_job(vision_import)
+    job.status = VisionJobStatus.RUNNING
     storage = FakeStorage({job.object_key: (PNG, "image/png")})
     session, publisher = FakeSession([job]), FakePublisher()
 
-    result = await VisionImportService.commit_import(session, storage, publisher, vision_import)
+    await VisionImportService.commit_import(session, storage, publisher, vision_import)
 
-    assert result is vision_import
     assert publisher.published == []
+    assert job.status == VisionJobStatus.RUNNING
+
+
+@pytest.mark.asyncio
+async def test_commit_fails_only_the_screenshot_that_never_uploaded():
+    """The batch cannot be rejected any more: the screenshots that did upload are
+    already running in the worker and cannot be recalled. The user gets the rows
+    that could be read, plus one failed screenshot to relaunch."""
+    vision_import = _awaiting_import(screens_total=2)
+    good, lost = _awaiting_job(vision_import, "ok.png"), _awaiting_job(vision_import, "lost.png")
+    storage = FakeStorage({good.object_key: (PNG, "image/png")})
+    session, publisher = FakeSession([good, lost]), FakePublisher()
+
+    await VisionImportService.commit_import(session, storage, publisher, vision_import)
+
+    assert publisher.published == [good.id]
+    assert good.status == VisionJobStatus.PENDING
+    assert lost.status == VisionJobStatus.FAILED
+    assert "lost.png" in lost.error
+    # One of the two screenshots will never come back, and the import has to
+    # account for it now or it never reaches its total.
+    assert vision_import.screens_done == 1
+    assert vision_import.status == VisionImportStatus.RUNNING
+
+
+@pytest.mark.asyncio
+async def test_commit_finishes_an_import_where_nothing_uploaded():
+    """Every screenshot lost means the import is over on the spot — a spinner
+    with nothing behind it is the one outcome that has no way out."""
+    vision_import = _awaiting_import()
+    job = _awaiting_job(vision_import, "lost.png")
+    session, publisher = FakeSession([job]), FakePublisher()
+
+    result = await VisionImportService.commit_import(
+        session, FakeStorage(), publisher, vision_import
+    )
+
+    assert result.status == VisionImportStatus.DONE
+    assert job.status == VisionJobStatus.FAILED
+    assert publisher.published == []
+
+
+@pytest.mark.asyncio
+async def test_commit_is_a_no_op_on_a_finished_import():
+    """Confirmed and cancelled are terminal: a late seal must not resurrect
+    them, nor queue screenshots for an import the user already walked away from."""
+    for terminal in (VisionImportStatus.CONFIRMED, VisionImportStatus.CANCELLED):
+        vision_import = _awaiting_import()
+        vision_import.status = terminal
+        job = _awaiting_job(vision_import)
+        storage = FakeStorage({job.object_key: (PNG, "image/png")})
+        session, publisher = FakeSession([job]), FakePublisher()
+
+        result = await VisionImportService.commit_import(session, storage, publisher, vision_import)
+
+        assert result.status == terminal
+        assert publisher.published == []

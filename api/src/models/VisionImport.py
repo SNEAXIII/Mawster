@@ -36,3 +36,22 @@ class VisionImport(UUIDBase, TimestampMixin, table=True):
         sa_relationship_kwargs={"foreign_keys": "[VisionImport.game_account_id]"}
     )
     jobs: list["VisionJob"] = Relationship(back_populates="vision_import")
+
+    def status_for_progress(self) -> VisionImportStatus:
+        """The status this import's counters say it is in.
+
+        DONE once every screenshot has landed (success or failure), RUNNING while
+        some have, PENDING while none have — a batch that is queued but which no
+        worker has answered for yet is waiting, not running.
+
+        Lives on the model because two writers reach this conclusion: the worker
+        result (a screenshot the pipeline finished) and the import commit (a
+        screenshot that will never reach the pipeline at all). Splitting the rule
+        between them is how an import ends up spinning forever on one of the two
+        paths only.
+        """
+        if self.screens_done >= self.screens_total:
+            return VisionImportStatus.DONE
+        if self.screens_done > 0:
+            return VisionImportStatus.RUNNING
+        return VisionImportStatus.PENDING

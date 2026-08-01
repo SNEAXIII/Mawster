@@ -114,7 +114,7 @@ class VisionResultService:
             job.status = VisionJobStatus.FAILED
             job.error = JOB_NEVER_QUEUED
             vision_import.screens_done += 1
-            vision_import.status = cls._status_for_progress(vision_import)
+            vision_import.status = vision_import.status_for_progress()
             await session.commit()
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=BROKER_UNAVAILABLE
@@ -167,11 +167,4 @@ class VisionResultService:
         """A failed screenshot still counts as a finished one — otherwise the
         import never reaches `done` and the user watches a spinner forever."""
         vision_import.screens_done += 1
-        vision_import.status = cls._status_for_progress(vision_import)
-
-    @classmethod
-    def _status_for_progress(cls, vision_import: VisionImport) -> VisionImportStatus:
-        """DONE once every screenshot has landed (success or failure), RUNNING otherwise."""
-        if vision_import.screens_done >= vision_import.screens_total:
-            return VisionImportStatus.DONE
-        return VisionImportStatus.RUNNING
+        vision_import.status = vision_import.status_for_progress()
