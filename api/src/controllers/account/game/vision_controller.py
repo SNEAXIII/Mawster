@@ -9,6 +9,7 @@ from starlette import status
 from src.dto.account.game.dto_vision import (
     VisionImportDetailResponse,
     VisionImportResponse,
+    VisionJobResponse,
 )
 from src.dto.account.game.dto_vision_current import CurrentVisionImportResponse
 from src.dto.account.game.dto_vision_predictions import VisionPredictionsResponse
@@ -172,6 +173,29 @@ async def init_vision_import(
     )
 
 
+@vision_controller.post(
+    "/imports/{import_id}/screens/{job_id}/commit", response_model=VisionJobResponse
+)
+async def commit_vision_screen(
+    session: SessionDep,
+    import_id: uuid.UUID,
+    job_id: uuid.UUID,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    storage: Annotated[Storage, Depends(get_storage)],
+    publisher: Annotated[VisionPublisher, Depends(get_publisher)],
+):
+    """Verify one uploaded screenshot and queue it, without waiting for the batch.
+
+    The browser calls this after each successful PUT, so extraction starts on the
+    screenshots that already landed. `/imports/{import_id}/commit` still closes
+    the import once the last PUT is done.
+    """
+    vision_import = await _get_own_import(session, import_id, current_user.id)
+    return await VisionImportService.commit_screen(
+        session, storage, publisher, vision_import, job_id
+    )
+
+
 @vision_controller.post("/imports/{import_id}/commit", response_model=VisionImportResponse)
 async def commit_vision_import(
     session: SessionDep,
@@ -180,7 +204,11 @@ async def commit_vision_import(
     storage: Annotated[Storage, Depends(get_storage)],
     publisher: Annotated[VisionPublisher, Depends(get_publisher)],
 ):
-    """Verify the uploaded screenshots and queue the batch.
+    """Close the import: queue or fail whatever the per-screen commits left over.
+
+    Not the only queueing path any more — most screenshots are already running by
+    the time this is called — so it returns 200 with failed jobs inside rather
+    than 400 when a screenshot never uploaded.
 
     Declared before GET /imports/{import_id} would be a mistake here — this is a
     POST and the two never collide — but it must stay after the literal
