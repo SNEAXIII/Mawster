@@ -24,6 +24,7 @@ from src.Messages.vision_messages import (
     SCREEN_TYPE_MISMATCH,
     TOO_MANY_SCREENS,
     UNSUPPORTED_SCREEN_TYPE,
+    VISION_JOB_NOT_FOUND,
 )
 from src.messaging.publisher import VisionPublisher
 from src.models.VisionImport import VisionImport, VisionImportStatus
@@ -159,10 +160,11 @@ class VisionImportService:
     ) -> None:
         """Publish one message per job, accounting for a mid-batch broker failure.
 
-        Shared by the multipart upload and the presigned commit: both reach this
-        point with rows committed and objects in the bucket, so both need the
-        same compensation. Duplicating it once meant the two paths could drift
-        into disagreeing about what a half-published batch looks like.
+        The multipart path only. It fails the import as a whole because there the
+        batch really is atomic — every screenshot was accepted in one request, so
+        a broker that dies halfway leaves a batch that was never viable. The
+        presigned path publishes screenshot by screenshot through `_publish_one`,
+        where a failure costs one screenshot and not the import.
         """
         published_count = 0
         try:
@@ -294,14 +296,21 @@ class VisionImportService:
                 )
 
     @classmethod
-    async def commit_import(
+    async def commit_screen(
         cls,
         session: SessionDep,
         storage: Storage,
         publisher: VisionPublisher,
         vision_import: VisionImport,
-    ) -> VisionImport:
-        """Verify every uploaded object, then queue the batch.
+        job_id: uuid.UUID,
+    ) -> VisionJob:
+        """Verify one uploaded screenshot and queue it on its own.
+
+        Called by the browser the moment a single PUT lands, so the worker starts
+        on screenshot 1 while screenshot 12 is still climbing the user's uplink.
+        The whole batch used to wait for its slowest file before anything was
+        queued; the GPU time of every screenshot but the last now hides behind
+        the upload.
 
         This is where the trust lost by not seeing the upload is bought back. A
         presigned PUT can pin the content type into the signature but cannot cap
@@ -309,11 +318,108 @@ class VisionImportService:
         and the first bytes are sniffed because a declared `image/png` proves
         nothing about the file behind it.
 
-        Idempotent: committing an import that already left AWAITING_UPLOAD is a
-        no-op rather than a second publish, so a double-click or a retried
-        request cannot queue the same screenshots twice.
+        Idempotent: a job that already left AWAITING_UPLOAD is returned as-is
+        rather than published twice, which covers a double-click, a retried
+        request, and `commit_import` sweeping a job this call already queued.
+
+        A screenshot that fails verification is left in AWAITING_UPLOAD and the
+        400 goes back to the browser. It is NOT failed here: the user may still
+        retry the PUT against a URL that is good for fifteen minutes, and
+        `commit_import` is what decides that a screenshot never made it.
         """
-        if vision_import.status != VisionImportStatus.AWAITING_UPLOAD:
+        job = await session.get(VisionJob, job_id)
+        if job is None or job.import_id != vision_import.id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=VISION_JOB_NOT_FOUND)
+        if job.status != VisionJobStatus.AWAITING_UPLOAD:
+            return job
+
+        await cls._verify_uploaded(storage, job)
+
+        # Committed before publishing, same as the batch path: a worker must
+        # never receive a job_id whose row is still AWAITING_UPLOAD.
+        job.status = VisionJobStatus.PENDING
+        session.add(job)
+        # The first screenshot to be queued takes the import with it. Written
+        # here rather than after the publish, and only ever upward from
+        # AWAITING_UPLOAD, because a worker result racing this call owns the
+        # status from then on — overwriting it from a stale read is how an import
+        # loses its DONE and never gets it back.
+        if vision_import.status == VisionImportStatus.AWAITING_UPLOAD:
+            vision_import.status = VisionImportStatus.PENDING
+            session.add(vision_import)
+        await session.commit()
+
+        await cls._publish_one(session, publisher, vision_import, job)
+        return job
+
+    @classmethod
+    async def _publish_one(
+        cls,
+        session: SessionDep,
+        publisher: VisionPublisher,
+        vision_import: VisionImport,
+        job: VisionJob,
+    ) -> None:
+        """Queue a single job, accounting for it if the broker refuses.
+
+        The count matters more than it looks: a job that is never published
+        produces no worker result, and the worker result is the only thing that
+        ever increments `screens_done`. Without the increment here the import
+        would sit one screenshot short of its total forever, which reads as a
+        spinner that never stops.
+        """
+        try:
+            await publisher.publish_job(
+                job_id=job.id,
+                import_id=vision_import.id,
+                bucket=SECRET.RUSTFS_BUCKET_VISION,
+                object_key=job.object_key,
+            )
+        except Exception as error:
+            cls._fail_unqueued(session, vision_import, job)
+            await session.commit()
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=BROKER_UNAVAILABLE
+            ) from error
+
+    @classmethod
+    def _fail_unqueued(
+        cls, session: SessionDep, vision_import: VisionImport, job: VisionJob
+    ) -> None:
+        """Mark a job that will never reach a worker, and advance the import past it."""
+        job.status = VisionJobStatus.FAILED
+        job.error = JOB_NEVER_QUEUED
+        vision_import.screens_done += 1
+        vision_import.status = vision_import.status_for_progress()
+        session.add(job)
+        session.add(vision_import)
+
+    @classmethod
+    async def commit_import(
+        cls,
+        session: SessionDep,
+        storage: Storage,
+        publisher: VisionPublisher,
+        vision_import: VisionImport,
+    ) -> VisionImport:
+        """Seal the import: settle every screenshot the per-screen commits left behind.
+
+        By the time the browser calls this, most jobs are already PENDING,
+        RUNNING or DONE. What is left in AWAITING_UPLOAD is a screenshot whose
+        PUT failed, or one whose `commit_screen` call was lost — so each is given
+        one last verify-and-publish, and whatever still does not stand up is
+        failed for good.
+
+        Failing them individually instead of rejecting the whole batch is forced
+        by the pipelining: the jobs that did upload are already running in the
+        worker and cannot be recalled. The import finishes with a hole in it,
+        which the review screen shows as a failed screenshot the user can
+        relaunch, rather than a 400 that describes work that is happening anyway.
+
+        Idempotent: with nothing left in AWAITING_UPLOAD this only recomputes the
+        import status, so a double-click cannot queue a screenshot twice.
+        """
+        if vision_import.status in (VisionImportStatus.CONFIRMED, VisionImportStatus.CANCELLED):
             return vision_import
 
         jobs = (
@@ -323,19 +429,35 @@ class VisionImportService:
                 .order_by(VisionJob.created_at)
             )
         ).all()
+        # Filtered here rather than in the WHERE clause: every other job in this
+        # import is already queued or finished, and re-publishing one of those is
+        # exactly the duplicate this method must never create. Keeping the test
+        # in Python puts it next to the loop that depends on it.
+        leftover = [job for job in jobs if job.status == VisionJobStatus.AWAITING_UPLOAD]
 
-        for job in jobs:
-            await cls._verify_uploaded(storage, job)
-
-        for job in jobs:
+        for job in leftover:
+            try:
+                await cls._verify_uploaded(storage, job)
+            except HTTPException as error:
+                job.status = VisionJobStatus.FAILED
+                job.error = str(error.detail)
+                vision_import.screens_done += 1
+                session.add(job)
+                continue
             job.status = VisionJobStatus.PENDING
             session.add(job)
-        vision_import.status = VisionImportStatus.PENDING
+
+        vision_import.status = vision_import.status_for_progress()
         session.add(vision_import)
         await session.commit()
         await session.refresh(vision_import)
 
-        await cls._publish_batch(session, publisher, vision_import, list(jobs))
+        # Published after the commit, and one at a time: a broker failure on the
+        # third of these must leave the first two queued and running, exactly as
+        # if their per-screen commits had gone through.
+        for job in leftover:
+            if job.status == VisionJobStatus.PENDING:
+                await cls._publish_one(session, publisher, vision_import, job)
         return vision_import
 
     @classmethod
@@ -422,16 +544,32 @@ class VisionImportService:
         window have lost their screenshots and crops to the bucket lifecycle, so
         validating them would mean approving data whose evidence is gone.
 
-        An AWAITING_UPLOAD import counts as blocking only while its presigned
-        URLs can still be used. Past that it is uncommittable — no upload can
-        ever succeed against dead URLs — so leaving it in the way would lock the
-        game account out of importing for the whole retention window every time
-        someone closed the tab mid-upload. It still counts against the hourly
-        quota, because that measures work asked of the server.
+        An import with a screenshot still awaiting its upload counts as blocking
+        only while its presigned URLs can still be used. Past that it can never
+        be completed — no upload can succeed against dead URLs, so that
+        screenshot's job will never be queued and `screens_done` will never reach
+        its total — and leaving it in the way would lock the game account out of
+        importing for the whole retention window every time someone closed the
+        tab mid-upload. It still counts against the hourly quota, because that
+        measures work asked of the server.
+
+        The test is on the jobs, not on the import's own status: since each
+        screenshot is queued the moment it lands, an import whose first
+        screenshot already came back reads as RUNNING while the rest of the batch
+        is still uploading. Reading the import status alone would call that one
+        blocking forever.
         """
         now = datetime.now(UTC)
         cutoff = now - timedelta(days=SECRET.VISION_RETENTION_DAYS)
         upload_cutoff = now - timedelta(seconds=UPLOAD_URL_TTL_SECONDS)
+        has_pending_upload = (
+            select(VisionJob.id)
+            .where(
+                VisionJob.import_id == VisionImport.id,
+                VisionJob.status == VisionJobStatus.AWAITING_UPLOAD,
+            )
+            .exists()
+        )
         statement = (
             select(VisionImport)
             .where(
@@ -440,10 +578,7 @@ class VisionImportService:
                     [VisionImportStatus.CONFIRMED, VisionImportStatus.CANCELLED]
                 ),
                 VisionImport.created_at > cutoff,
-                or_(
-                    VisionImport.status != VisionImportStatus.AWAITING_UPLOAD,
-                    VisionImport.created_at > upload_cutoff,
-                ),
+                or_(~has_pending_upload, VisionImport.created_at > upload_cutoff),
             )
             .order_by(VisionImport.created_at.desc(), VisionImport.id.desc())
             .limit(1)

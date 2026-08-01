@@ -20,14 +20,40 @@ from tests.utils.utils_db import get_test_session
 app.dependency_overrides[get_session] = get_test_session
 
 
+PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"0" * 64
+
+
 class FakeStorage:
     """In-memory Storage: the tests never talk to RustFS."""
 
     def __init__(self):
         self.objects: dict[str, bytes] = {}
+        self.content_types: dict[str, str] = {}
 
     async def put_bytes(self, bucket: str, key: str, data: bytes, content_type: str) -> None:
         self.objects[key] = data
+        self.content_types[key] = content_type
+
+    async def presigned_put_url(
+        self, bucket: str, key: str, content_type: str, expires_in: int
+    ) -> str:
+        return f"https://s3.test/{bucket}/{key}?exp={expires_in}"
+
+    async def stat_object(self, bucket: str, key: str):
+        from src.storage.base import ObjectStat
+
+        if key not in self.objects:
+            return None
+        return ObjectStat(size=len(self.objects[key]), content_type=self.content_types[key])
+
+    async def get_head_bytes(self, bucket: str, key: str, length: int) -> bytes:
+        return self.objects[key][:length]
+
+    def browser_put(self, key: str, data: bytes = PNG_BYTES, content_type: str = "image/png"):
+        """What the browser does against a presigned URL — bytes appear in the
+        bucket without the API seeing them, which is the whole point of the flow."""
+        self.objects[key] = data
+        self.content_types[key] = content_type
 
     async def get_bytes(self, bucket: str, key: str) -> bytes:
         if key not in self.objects:
@@ -43,6 +69,7 @@ class FakeStorage:
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
         for key in [key for key in self.objects if key.startswith(prefix)]:
             del self.objects[key]
+            self.content_types.pop(key, None)
 
 
 class FakePublisher:
@@ -988,6 +1015,180 @@ async def test_second_import_while_one_is_pending_is_409(fake_infra):
     # The blocking id must come back, so the UI can offer to cancel it instead
     # of just showing a wall.
     assert first.json()["id"] in second.text
+
+
+async def _post_init(headers, game_account_id, filenames: list[str]):
+    async with get_test_client() as client:
+        return await client.post(
+            "/vision/imports/init",
+            headers=headers,
+            json={
+                "game_account_id": str(game_account_id),
+                "share_dataset": False,
+                "screens": [
+                    {"filename": name, "content_type": "image/png", "size": len(PNG_BYTES)}
+                    for name in filenames
+                ],
+            },
+        )
+
+
+async def _post_commit_screen(headers, import_id, job_id):
+    async with get_test_client() as client:
+        return await client.post(
+            f"/vision/imports/{import_id}/screens/{job_id}/commit", headers=headers
+        )
+
+
+async def _post_commit(headers, import_id):
+    async with get_test_client() as client:
+        return await client.post(f"/vision/imports/{import_id}/commit", headers=headers)
+
+
+def _screen_key(import_id: str, job_id: str) -> str:
+    from src.storage.base import screen_key
+
+    return screen_key(uuid.UUID(import_id), uuid.UUID(job_id))
+
+
+@pytest.mark.asyncio
+async def test_commit_screen_queues_one_screenshot_while_the_others_upload(fake_infra):
+    """The reason the endpoint exists: the worker starts on screenshot 1 without
+    waiting for screenshot 2 to finish climbing the user's uplink."""
+    storage, publisher = fake_infra
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    init = await _post_init(headers, account.id, ["a.png", "b.png"])
+    assert init.status_code == 201
+    body = init.json()
+    import_id, first = body["import_id"], body["uploads"][0]
+    storage.browser_put(_screen_key(import_id, first["job_id"]))
+
+    response = await _post_commit_screen(headers, import_id, first["job_id"])
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "pending"
+    assert [job["job_id"] for job in publisher.published] == [uuid.UUID(first["job_id"])]
+    detail = await _get_import(headers, import_id)
+    assert detail["status"] == "pending"
+    assert sorted(job["status"] for job in detail["jobs"]) == ["awaiting_upload", "pending"]
+
+
+@pytest.mark.asyncio
+async def test_commit_screen_of_another_users_import_is_forbidden(fake_infra):
+    storage, publisher = fake_infra
+    await push_one_user()
+    await push_user2()
+    owner_account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+    init = await _post_init(create_auth_headers(str(USER_ID)), owner_account.id, ["a.png"])
+    body = init.json()
+    import_id, job_id = body["import_id"], body["uploads"][0]["job_id"]
+    storage.browser_put(_screen_key(import_id, job_id))
+
+    response = await _post_commit_screen(create_auth_headers(str(USER2_ID)), import_id, job_id)
+
+    assert response.status_code == 403
+    assert publisher.published == []
+
+
+@pytest.mark.asyncio
+async def test_commit_seals_the_batch_and_fails_the_screenshot_that_never_uploaded(fake_infra):
+    """One PUT died. The screenshot that did upload is already running and cannot
+    be recalled, so the import completes around the hole instead of refusing."""
+    storage, publisher = fake_infra
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    body = (await _post_init(headers, account.id, ["ok.png", "lost.png"])).json()
+    import_id, uploaded, lost = body["import_id"], body["uploads"][0], body["uploads"][1]
+    storage.browser_put(_screen_key(import_id, uploaded["job_id"]))
+    await _post_commit_screen(headers, import_id, uploaded["job_id"])
+
+    response = await _post_commit(headers, import_id)
+
+    assert response.status_code == 200
+    assert response.json()["screens_done"] == 1
+    detail = await _get_import(headers, import_id)
+    statuses = {job["id"]: job["status"] for job in detail["jobs"]}
+    assert statuses[uploaded["job_id"]] == "pending"
+    assert statuses[lost["job_id"]] == "failed"
+    # Only the screenshot that actually arrived was ever queued.
+    assert [job["job_id"] for job in publisher.published] == [uuid.UUID(uploaded["job_id"])]
+
+
+@pytest.mark.asyncio
+async def test_commit_does_not_requeue_screenshots_already_queued_one_by_one(fake_infra):
+    """The normal path leaves the seal nothing to do. Re-publishing here would
+    run the whole roster through the worker twice and double every prediction."""
+    storage, publisher = fake_infra
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    body = (await _post_init(headers, account.id, ["a.png", "b.png"])).json()
+    import_id = body["import_id"]
+    for upload in body["uploads"]:
+        storage.browser_put(_screen_key(import_id, upload["job_id"]))
+        await _post_commit_screen(headers, import_id, upload["job_id"])
+
+    response = await _post_commit(headers, import_id)
+
+    assert response.status_code == 200
+    assert len(publisher.published) == 2
+
+
+@pytest.mark.asyncio
+async def test_current_ignores_an_import_stuck_mid_upload_past_the_url_ttl(fake_infra):
+    """The tab closed after the first screenshot was queued. Its result moved the
+    import to RUNNING, but the second screenshot can never be uploaded now that
+    the URLs are dead, so the import can never finish. Left blocking, it would
+    lock the game account out of importing for the whole retention window."""
+    from datetime import datetime, timedelta
+
+    from src.models.VisionImport import VisionImport
+    from src.services.account.game.VisionImportService import UPLOAD_URL_TTL_SECONDS
+
+    storage, _ = fake_infra
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    body = (await _post_init(headers, account.id, ["a.png", "b.png"])).json()
+    import_id, first = body["import_id"], body["uploads"][0]
+    storage.browser_put(_screen_key(import_id, first["job_id"]))
+    await _post_commit_screen(headers, import_id, first["job_id"])
+    await _drive_job_done_with_prediction(first["job_id"])
+
+    async for session in get_test_session():
+        row = await session.get(VisionImport, uuid.UUID(import_id))
+        assert row.status.value == "running"
+        row.created_at = datetime.now(UTC) - timedelta(seconds=UPLOAD_URL_TTL_SECONDS + 60)
+        session.add(row)
+        await session.commit()
+        break
+
+    response = await _get_current(headers, account.id)
+
+    assert response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_current_still_returns_an_import_whose_uploads_are_in_flight(fake_infra):
+    """The mirror of the test above: while the URLs are alive the import is very
+    much the user's business, and a second import must stay refused."""
+    storage, _ = fake_infra
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    body = (await _post_init(headers, account.id, ["a.png", "b.png"])).json()
+    import_id, first = body["import_id"], body["uploads"][0]
+    storage.browser_put(_screen_key(import_id, first["job_id"]))
+    await _post_commit_screen(headers, import_id, first["job_id"])
+
+    response = await _get_current(headers, account.id)
+
+    assert response.status_code == 200
+    assert response.json()["id"] == import_id
 
 
 @pytest.mark.asyncio
