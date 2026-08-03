@@ -20,29 +20,39 @@ export default function RarityFilterToggles({
   label,
   cyPrefix,
 }: Readonly<RarityFilterTogglesProps>) {
+  function renderTier(tier: string) {
+    const active = activeTiers.has(tier)
+    return (
+      <span key={tier}>
+        <Button
+          variant='outline'
+          size='sm'
+          data-cy={`${cyPrefix}-${tier}`}
+          aria-pressed={active}
+          className={cn(
+            'h-7 px-2 text-[11px] font-mono',
+            active && 'bg-primary/10 border-primary text-primary'
+          )}
+          onClick={() => onToggle(tier)}
+        >
+          {tier}
+        </Button>
+      </span>
+    )
+  }
+
+  const sixStarTiers = RARITY_TIERS.filter((tier) => tier.startsWith('6'))
+  const sevenStarTiers = RARITY_TIERS.filter((tier) => tier.startsWith('7'))
+
   return (
     <div className='flex flex-wrap items-center gap-1'>
       <span className='mr-1 text-[11px] font-medium text-muted-foreground'>{label}</span>
-      {RARITY_TIERS.filter((tier) => tier.startsWith('7')).map((tier) => {
-        const active = activeTiers.has(tier)
-        return (
-          <span key={tier}>
-            <Button
-              variant='outline'
-              size='sm'
-              data-cy={`${cyPrefix}-${tier}`}
-              aria-pressed={active}
-              className={cn(
-                'h-7 px-2 text-[11px] font-mono',
-                active && 'bg-primary/10 border-primary text-primary'
-              )}
-              onClick={() => onToggle(tier)}
-            >
-              {tier}
-            </Button>
-          </span>
-        )
-      })}
+      {sixStarTiers.map(renderTier)}
+      <span
+        className='mx-1 h-4 w-px bg-border'
+        aria-hidden='true'
+      />
+      {sevenStarTiers.map(renderTier)}
     </div>
   )
 }
