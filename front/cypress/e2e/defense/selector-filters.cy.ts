@@ -286,10 +286,10 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
   });
 
   // =========================================================================
-  // 6★ champions are hidden and no longer offer a reveal toggle (7★ only)
+  // 6★ champions are hidden by default but a toggle reveals them
   // =========================================================================
 
-  it('hides 6-star champions and offers no toggle to reveal them', () => {
+  it('hides 6-star champions by default and reveals them via the 6-star toggle', () => {
     setupDefenseOwner('def-rar-def', 'RarDefPlyr', 'RarDefAll', 'RD').then(({ adminData, ownerData, ownerAccId }) => {
       cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
         cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
@@ -303,16 +303,16 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
 
-      // 7★ Spider-Man visible, 6★ Wolverine hidden
+      // 7★ Spider-Man visible, 6★ Wolverine hidden by default
       cy.getByCy('champion-card-Spider-Man').should('be.visible');
       cy.getByCy('champion-card-Wolverine').should('not.exist');
 
-      // The rarity filter only exposes 7★ tiers — no 6★ toggle exists, so the
-      // 6★ champion cannot be revealed.
-      cy.getByCy('defense-rarity-6r4').should('not.exist');
-      cy.getByCy('defense-rarity-6r5').should('not.exist');
+      // The rarity filter exposes 6★ tiers too — enabling 6r5 reveals the champion.
+      cy.getByCy('defense-rarity-6r4').should('be.visible');
       cy.getByCy('defense-rarity-7r3').should('be.visible');
-      cy.getByCy('champion-card-Wolverine').should('not.exist');
+      cy.getByCy('defense-rarity-6r5').click();
+      cy.getByCy('champion-card-Wolverine').should('be.visible');
+      cy.getByCy('champion-card-Spider-Man').should('be.visible');
     });
   });
 

@@ -249,10 +249,10 @@ describe('War – WarAttackerSelector rarity filter', () => {
   });
 
   // =========================================================================
-  // 6★ attackers are hidden and no longer offer a reveal toggle (7★ only)
+  // 6★ attackers are hidden by default but a toggle reveals them
   // =========================================================================
 
-  it('hides 6-star attackers and offers no toggle to reveal them', () => {
+  it('hides 6-star attackers by default and reveals them via the 6-star toggle', () => {
     setupAttackerScenario('atk-rar-def').then(({ adminToken, memberData, ownerData, memberAccId }) => {
       // Member already has Wolverine 7r3; add a 6r5 champion
       cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
@@ -263,16 +263,16 @@ describe('War – WarAttackerSelector rarity filter', () => {
       cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
       cy.getByCy('war-attacker-search').should('be.visible');
 
-      // 7★ Wolverine visible, 6★ Storm hidden
+      // 7★ Wolverine visible, 6★ Storm hidden by default
       cy.getByCy('attacker-card-Wolverine').should('be.visible');
       cy.getByCy('attacker-card-Storm').should('not.exist');
 
-      // The rarity filter only exposes 7★ tiers — no 6★ toggle exists, so the
-      // 6★ attacker cannot be revealed.
-      cy.getByCy('war-attacker-rarity-6r4').should('not.exist');
-      cy.getByCy('war-attacker-rarity-6r5').should('not.exist');
+      // The rarity filter exposes 6★ tiers too — enabling 6r5 reveals the attacker.
+      cy.getByCy('war-attacker-rarity-6r4').should('be.visible');
       cy.getByCy('war-attacker-rarity-7r3').should('be.visible');
-      cy.getByCy('attacker-card-Storm').should('not.exist');
+      cy.getByCy('war-attacker-rarity-6r5').click();
+      cy.getByCy('attacker-card-Storm').should('be.visible');
+      cy.getByCy('attacker-card-Wolverine').should('be.visible');
     });
   });
 
