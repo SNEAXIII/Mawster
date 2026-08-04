@@ -1,6 +1,9 @@
 MESSAGE ?=
+LOGIN ?=
+ROLE ?= user
+DISCORD_ID ?=
 
-.PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions reset-db delete-db init-db cancel-last test test-cov scrape-champions check fix format
+.PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions reset-db delete-db init-db seed-user cancel-last test test-cov scrape-champions check fix format
 
 help:
 	@echo "run-dev      --> run the server in dev mode with auto reload"
@@ -11,6 +14,7 @@ help:
 	@echo "load-champions --> load champions from scripts/champions.json"
 	@echo "load-masteries --> load masteries from scripts/masteries.json"
 	@echo "init-db      --> load one user and basic bdd"
+	@echo "seed-user    --> create or promote a dev user: LOGIN=x [ROLE=admin] [DISCORD_ID=y]"
 	@echo "cancel-last  --> cancel last executed migration"
 	@echo "test         --> run tests (xdist enabled by default, set XDIST=0 to disable)"
 	@echo "test-cov     --> run test coverage (parallel, 10 workers)"
@@ -56,6 +60,12 @@ delete-db:
 
 init-db:
 	uv run python -m src.fixtures.first_init_prod
+
+# No dev-login endpoint on purpose: an HTTP route that mints any role is one
+# environment variable away from being reachable in production.
+seed-user:
+	@test -n "$(LOGIN)" || (echo "usage: make seed-user LOGIN=Sneaxiii [ROLE=admin] [DISCORD_ID=...]"; exit 1)
+	uv run python -m src.fixtures.seed_user --login "$(LOGIN)" --role "$(ROLE)" $(if $(DISCORD_ID),--discord-id "$(DISCORD_ID)",)
 
 cancel-last:
 	uv run alembic downgrade -1
