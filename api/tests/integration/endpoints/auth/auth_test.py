@@ -421,6 +421,65 @@ class TestGoogleLogin:
         )
         assert response.status_code == 200
 
+    @pytest.mark.asyncio
+    async def test_links_google_to_existing_discord_account(self, monkeypatch):
+        """The mirror case: a Google login lands on the account created via Discord."""
+        from src.services.auth.GoogleAuthService import GoogleAuthService
+
+        async def _fake_verify(cls, access_token):
+            return {
+                "sub": "google_new",
+                "email": "discorduser@example.com",
+                "email_verified": True,
+            }
+
+        monkeypatch.setattr(GoogleAuthService, "verify_token", classmethod(_fake_verify))
+
+        existing = User(
+            login="discordonlyuser",
+            email_hash=hash_email("discorduser@example.com"),
+            discord_id="discord_xyz",
+            role=Roles.USER,
+        )
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_GOOGLE, payload={"access_token": "any-google-token"}
+        )
+        assert response.status_code == 200
+        decoded = pyjwt.decode(
+            response.json()["access_token"], SECRET.SECRET_KEY, algorithms=[SECRET.ALGORITHM]
+        )
+        assert decoded["user_id"] == str(existing.id)
+
+    @pytest.mark.asyncio
+    async def test_google_link_refused_when_provider_slot_taken(self, monkeypatch):
+        """The matched account already has a different Google id — no link."""
+        from src.services.auth.GoogleAuthService import GoogleAuthService
+
+        async def _fake_verify(cls, access_token):
+            return {
+                "sub": "google_new",
+                "email": "taken@example.com",
+                "email_verified": True,
+            }
+
+        monkeypatch.setattr(GoogleAuthService, "verify_token", classmethod(_fake_verify))
+
+        existing = User(
+            login="takenuser",
+            email_hash=hash_email("taken@example.com"),
+            google_id="google_original",
+            role=Roles.USER,
+        )
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_GOOGLE, payload={"access_token": "any-google-token"}
+        )
+        assert response.status_code == 409
+        assert response.json()["message"]["code"] == "PROVIDER_ALREADY_LINKED"
+
 
 # =========================================================================
 # POST /auth/refresh — refresh token exchange
