@@ -75,6 +75,42 @@ export const {
       : []),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      const provider = account?.provider
+      if (provider !== 'discord' && provider !== 'google') return true
+      if (!account?.access_token) return '/login?error=GENERIC'
+
+      try {
+        const res = await fetch(`${getServerApiUrl()}/auth/${provider}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: account.access_token }),
+        })
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}))
+          const code = errorData?.message?.code ?? 'GENERIC'
+          console.error(`Erreur backend ${provider} auth:`, res.status, errorData)
+          return `/login?error=${encodeURIComponent(code)}`
+        }
+
+        const data = await res.json()
+        const decoded = jwt.decode(data.access_token) as JwtPayload | null
+        if (!decoded) {
+          console.error(`Impossible de décoder le JWT backend (${provider})`)
+          return '/login?error=GENERIC'
+        }
+
+        user.backendAccessToken = data.access_token
+        user.backendRefreshToken = data.refresh_token
+        user.backendUserId = decoded.user_id
+        user.backendRole = decoded.role
+        return true
+      } catch (error) {
+        console.error(`Erreur lors de l'auth ${provider}:`, error)
+        return '/login?error=GENERIC'
+      }
+    },
     async jwt({ token, user, account, profile: _profile }) {
       // Dev login via CredentialsProvider (no Discord)
       if (account?.provider === 'dev-login' && user) {
@@ -90,82 +126,18 @@ export const {
         }
       }
 
-      // Login initial via Google OAuth
-      if (account?.provider === 'google' && account.access_token) {
-        try {
-          const res = await fetch(`${getServerApiUrl()}/auth/google`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ access_token: account.access_token }),
-          })
-
-          if (!res.ok) {
-            const errorData = await res.json().catch(() => ({}))
-            console.error('Erreur backend Google auth:', res.status, errorData)
-            return { ...token, expired: true, backendAuthenticated: false }
-          }
-
-          const data = await res.json()
-          const decoded = jwt.decode(data.access_token) as JwtPayload | null
-
-          if (!decoded) {
-            console.error('Impossible de décoder le JWT backend (Google)')
-            return { ...token, expired: true, backendAuthenticated: false }
-          }
-
-          return {
-            ...token,
-            id: decoded.user_id,
-            role: decoded.role,
-            accessToken: data.access_token,
-            backendRefreshToken: data.refresh_token,
-            accessTokenExpires: Date.now() + 60 * 60 * 1000,
-            expired: false,
-            backendAuthenticated: true,
-          }
-        } catch (error) {
-          console.error("Erreur lors de l'auth Google:", error)
-          return { ...token, expired: true, backendAuthenticated: false }
-        }
-      }
-
-      // Login initial via Discord OAuth
-      if (account?.provider === 'discord' && account.access_token) {
-        try {
-          const res = await fetch(`${getServerApiUrl()}/auth/discord`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ access_token: account.access_token }),
-          })
-
-          if (!res.ok) {
-            const errorData = await res.json().catch(() => ({}))
-            console.error('Erreur backend Discord auth:', res.status, errorData)
-            return { ...token, expired: true, backendAuthenticated: false }
-          }
-
-          const data = await res.json()
-          const decoded = jwt.decode(data.access_token) as JwtPayload | null
-
-          if (!decoded) {
-            console.error('Impossible de décoder le JWT backend (Discord)')
-            return { ...token, expired: true, backendAuthenticated: false }
-          }
-
-          return {
-            ...token,
-            id: decoded.user_id,
-            role: decoded.role,
-            accessToken: data.access_token,
-            backendRefreshToken: data.refresh_token,
-            accessTokenExpires: Date.now() + 60 * 60 * 1000,
-            discordRefreshToken: account.refresh_token,
-            expired: false,
-            backendAuthenticated: true,
-          }
-        } catch (error) {
-          console.error("Erreur lors de l'auth Discord:", error)
-          return { ...token, expired: true, backendAuthenticated: false }
+      // Login initial via OAuth: the exchange already happened in signIn
+      if ((account?.provider === 'discord' || account?.provider === 'google') && user) {
+        return {
+          ...token,
+          id: user.backendUserId,
+          role: user.backendRole,
+          accessToken: user.backendAccessToken,
+          backendRefreshToken: user.backendRefreshToken,
+          accessTokenExpires: Date.now() + 60 * 60 * 1000,
+          ...(account.provider === 'discord' ? { discordRefreshToken: account.refresh_token } : {}),
+          expired: false,
+          backendAuthenticated: true,
         }
       }
 
@@ -266,5 +238,14 @@ declare module 'next-auth' {
       created_at: string | null
     }
     error?: string
+  }
+  interface User {
+    role?: string
+    accessToken?: string
+    refreshToken?: string
+    backendAccessToken?: string
+    backendRefreshToken?: string
+    backendUserId?: string
+    backendRole?: string
   }
 }
