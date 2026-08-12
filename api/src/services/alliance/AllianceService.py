@@ -345,9 +345,16 @@ class AllianceService:
         target_game_account_id: uuid.UUID,
     ) -> None:
         """Check that the current user can remove the target member.
+        - Anyone can remove their own game account (leave the alliance).
         - The owner can remove anyone (except themselves, handled elsewhere).
         - An officer can remove regular members but NOT other officers."""
         user_account_ids = await cls._get_user_account_ids(session, current_user_id)
+
+        # Leaving: a user can always pull out one of their own game accounts,
+        # whatever their rank. The owner case is rejected by remove_member
+        # (CANNOT_REMOVE_OWNER) — they must transfer ownership first.
+        if target_game_account_id in user_account_ids:
+            return
 
         # Owner can remove anyone
         if alliance.owner_id in user_account_ids:

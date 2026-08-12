@@ -160,6 +160,45 @@ class TestRemoveMember:
         )
         assert response.status_code == 400
 
+    @pytest.mark.asyncio
+    async def test_regular_member_can_leave(self):
+        """A member can always pull out their own game account."""
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER2,
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_officer_can_leave(self):
+        """An officer is not blocked by the officer-vs-officer rule on their own account."""
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        officer_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        await push_officer(alliance, officer_acc)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{officer_acc.id}",
+            headers=HEADERS_USER2,
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_owner_cannot_leave_without_transferring(self):
+        """The owner must transfer ownership first — leaving is still rejected."""
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{owner.id}",
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 400
+
 
 # =========================================================================
 # POST /alliances/{id}/officers  (add officer — owner only)
