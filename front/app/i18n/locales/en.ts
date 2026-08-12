@@ -191,6 +191,9 @@ const en = {
     googleButton: 'Sign in with Google',
     signingIn: 'Signing in...',
     errorGeneric: 'An error occurred during sign in',
+    errorProviderAlreadyLinked:
+      'This email is already linked to another account. Sign in with the provider you used the first time.',
+    errorAccountUnavailable: 'This account is disabled or deleted. Contact an administrator.',
     devModeTitle: 'Dev Mode — Pick a user',
     devNoUsers: 'No users found (run fixtures first)',
   },

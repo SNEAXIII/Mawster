@@ -193,6 +193,9 @@ const fr: Translations = {
     googleButton: 'Se connecter avec Google',
     signingIn: 'Connexion en cours...',
     errorGeneric: 'Une erreur est survenue lors de la connexion',
+    errorProviderAlreadyLinked:
+      'Cette adresse est déjà liée à un autre compte. Connecte-toi avec le fournisseur utilisé la première fois.',
+    errorAccountUnavailable: 'Ce compte est désactivé ou supprimé. Contacte un administrateur.',
     devModeTitle: 'Mode Dev — Choisir un utilisateur',
     devNoUsers: 'Aucun utilisateur trouvé (lancez les fixtures)',
   },
