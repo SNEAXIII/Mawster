@@ -345,9 +345,16 @@ class AllianceService:
         target_game_account_id: uuid.UUID,
     ) -> None:
         """Check that the current user can remove the target member.
+        - Anyone can remove their own game account (leave the alliance).
         - The owner can remove anyone (except themselves, handled elsewhere).
         - An officer can remove regular members but NOT other officers."""
         user_account_ids = await cls._get_user_account_ids(session, current_user_id)
+
+        # Leaving: a user can always pull out one of their own game accounts,
+        # whatever their rank. The owner case is rejected by remove_member
+        # (CANNOT_REMOVE_OWNER) — they must transfer ownership first.
+        if target_game_account_id in user_account_ids:
+            return
 
         # Owner can remove anyone
         if alliance.owner_id in user_account_ids:
@@ -422,14 +429,25 @@ class AllianceService:
         return result.all()
 
     @classmethod
-    async def get_my_alliances(cls, session: SessionDep, user_id: uuid.UUID) -> list[Alliance]:
-        """Return only alliances where the user has at least one game account as member."""
+    async def _member_alliance_ids(cls, session: SessionDep, user_id: uuid.UUID) -> set[uuid.UUID]:
+        """The alliances the user belongs to, as ids only — one cheap query."""
         user_accounts = await session.exec(
             select(GameAccount.alliance_id)
             .where(GameAccount.user_id == user_id)
             .where(GameAccount.alliance_id.isnot(None))  # type: ignore[union-attr]
         )
-        alliance_ids = {aid for aid in user_accounts.all() if aid is not None}
+        return {aid for aid in user_accounts.all() if aid is not None}
+
+    @classmethod
+    async def _load_alliances_with_relations(
+        cls, session: SessionDep, alliance_ids: set[uuid.UUID]
+    ) -> list[Alliance]:
+        """Load a set of alliances with owner, members and officers eagerly loaded.
+
+        Each `selectinload` costs one query, so the cascade is worth paying
+        once. Callers that need two groups of alliances must therefore union
+        their ids and come here a single time, never call this twice.
+        """
         if not alliance_ids:
             return []
         sql = (
@@ -442,7 +460,14 @@ class AllianceService:
             )
         )
         result = await session.exec(sql)
-        return result.all()
+        return list(result.all())
+
+    @classmethod
+    async def get_my_alliances(cls, session: SessionDep, user_id: uuid.UUID) -> list[Alliance]:
+        """Return only alliances where the user has at least one game account as member."""
+        return await cls._load_alliances_with_relations(
+            session, await cls._member_alliance_ids(session, user_id)
+        )
 
     @classmethod
     async def get_my_roles(cls, session: SessionDep, user_id: uuid.UUID) -> dict:
@@ -843,35 +868,28 @@ class AllianceService:
         """Return alliances where the user has a game account currently visiting (as visitor)."""
 
         visits = await AllianceVisitorService.get_visited_alliances(session, user_id)
-        if not visits:
-            return []
-        alliance_ids = {v.alliance_id for v in visits}
-        sql = (
-            select(Alliance)
-            .where(Alliance.id.in_(alliance_ids))  # type: ignore[union-attr]
-            .options(
-                selectinload(Alliance.owner),  # type: ignore[arg-type]
-                selectinload(Alliance.members),  # type: ignore[arg-type]
-                selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
-            )
-        )
-        result = await session.exec(sql)
-        return result.all()
+        return await cls._load_alliances_with_relations(session, {v.alliance_id for v in visits})
 
     @classmethod
     async def get_accessible_alliances(
         cls, session: SessionDep, user_id: uuid.UUID
     ) -> list[Alliance]:
-        """Return alliances the user can access: member alliances + visited alliances, deduplicated."""
-        mine = await cls.get_my_alliances(session, user_id)
-        visited = await cls.get_my_visited_alliances(session, user_id)
-        seen: set[uuid.UUID] = set()
-        result: list[Alliance] = []
-        for a in mine + visited:
-            if a.id not in seen:
-                seen.add(a.id)
-                result.append(a)
-        return result
+        """Return alliances the user can access: member alliances + visited alliances, deduplicated.
+
+        The ids are unioned *before* loading, so the owner, members and officers
+        of an alliance the user both belongs to and visits are fetched once
+        instead of twice and thrown away. Calling the two loaders and
+        deduplicating afterwards paid the whole eager-loading cascade twice.
+        """
+        member_ids = await cls._member_alliance_ids(session, user_id)
+        visits = await AllianceVisitorService.get_visited_alliances(session, user_id)
+        visited_ids = {v.alliance_id for v in visits}
+
+        alliances = await cls._load_alliances_with_relations(session, member_ids | visited_ids)
+        # Membership first, then visits, as the concatenation used to yield —
+        # and by name inside each group, which it never guaranteed.
+        alliances.sort(key=lambda alliance: (alliance.id not in member_ids, alliance.name))
+        return alliances
 
     # ---- Eligibility queries ----
 

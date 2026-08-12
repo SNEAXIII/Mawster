@@ -114,6 +114,7 @@ class TestVerifyToken:
 _GOOGLE_PROFILE = {
     "sub": GOOGLE_ID,
     "email": USER_EMAIL,
+    "email_verified": True,
     "name": USER_LOGIN,
 }
 
@@ -154,11 +155,15 @@ class TestGetOrCreateUser:
 
     @pytest.mark.asyncio
     async def test_email_conflict_raises_409(self, mocker):
+        """When email matches an account with a different google_id, linking is refused."""
         session = _mock_session(mocker)
         conflicting_user = _make_user(google_id="other_google_id", login="otherlogin")
 
-        # First exec (google_id lookup) → not found
-        # Second exec (email hash lookup) → conflict
+        # resolve_user flow:
+        # 1. _get_user_by_provider_id(google_id="google_123456") → not found
+        # 2. email is verified and present, so hash it
+        # 3. _get_user_by_email_hash(email_hash) → conflict found
+        # 4. _link_provider checks if conflicting_user.google_id is set → it is → PROVIDER_ALREADY_LINKED
         not_found = mocker.MagicMock()
         not_found.first.return_value = None
         conflict = mocker.MagicMock()
@@ -168,9 +173,11 @@ class TestGetOrCreateUser:
         with pytest.raises(HTTPException) as exc:
             await GoogleAuthService.get_or_create_user(session, _GOOGLE_PROFILE)
         assert exc.value.status_code == 409
+        # New behavior: error detail is {"code": "PROVIDER_ALREADY_LINKED", "message": "..."}
+        assert exc.value.detail["code"] == "PROVIDER_ALREADY_LINKED"
 
     @pytest.mark.asyncio
-    async def test_user_without_email_gets_placeholder(self, mocker):
+    async def test_user_without_email_gets_no_hash(self, mocker):
         session = _mock_session(mocker)
         profile_no_email = {**_GOOGLE_PROFILE, "email": None}
 
@@ -183,5 +190,5 @@ class TestGetOrCreateUser:
         result = await GoogleAuthService.get_or_create_user(session, profile_no_email)
 
         assert result.google_id == GOOGLE_ID
-        # email_hash computed from placeholder, not None
-        assert result.email_hash is not None
+        # Unverified/missing emails are not hashed, only verified ones are
+        assert result.email_hash is None
