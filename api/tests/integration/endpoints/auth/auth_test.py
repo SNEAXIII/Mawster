@@ -11,6 +11,7 @@ import re
 
 import jwt as pyjwt
 import pytest
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from main import app
 from src.enums.Roles import Roles
@@ -30,7 +31,7 @@ from tests.utils.utils_client import (
     execute_post_request,
 )
 from tests.utils.utils_constant import USER_ID, USER_LOGIN
-from tests.utils.utils_db import get_test_session, load_objects
+from tests.utils.utils_db import get_test_session, load_objects, sqlite_async_engine
 
 app.dependency_overrides[get_session] = get_test_session
 
@@ -225,6 +226,43 @@ class TestDiscordLogin:
             ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
         )
         assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_login_does_not_rehash_unverified_email_even_with_stale_pepper(self, monkeypatch):
+        """A stale pepper version must never be the reason an unverified address gets hashed."""
+        from src.services.auth.DiscordAuthService import DiscordAuthService
+
+        async def _fake_verify_unverified(cls, access_token):
+            return {
+                "id": 1,
+                "username": "testuser",
+                "email": "test@example.com",
+                "verified": False,
+            }
+
+        monkeypatch.setattr(
+            DiscordAuthService, "verify_token", classmethod(_fake_verify_unverified)
+        )
+
+        stale_hash = hash_email("test@example.com")
+        existing = User(
+            login="oldpepperuser",
+            email_hash=stale_hash,
+            email_hash_version=0,
+            discord_id="1",
+            role=Roles.USER,
+        )
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert response.status_code == 200
+
+        async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
+            refreshed = await session.get(User, existing.id)
+            assert refreshed.email_hash == stale_hash
+            assert refreshed.email_hash_version == 0
 
     @pytest.mark.asyncio
     async def test_links_discord_to_existing_google_account(self):

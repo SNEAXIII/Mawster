@@ -113,7 +113,7 @@ class OAuthService(ABC):
         """
         existing = await cls._get_user_by_provider_id(session, provider_field, provider_id)
         if existing is not None:
-            return await cls._login_existing(session, existing, email)
+            return await cls._login_existing(session, existing, email, email_verified)
 
         if not cls._is_linkable_email(email, email_verified):
             return await cls._create_user(session, provider_field, provider_id, email_hash=None)
@@ -146,11 +146,21 @@ class OAuthService(ABC):
         return result.first()
 
     @classmethod
-    async def _login_existing(cls, session: SessionDep, user: User, email: str | None) -> User:
+    async def _login_existing(
+        cls, session: SessionDep, user: User, email: str | None, email_verified: bool
+    ) -> User:
         user.set_last_login_date(utcnow())
-        # Only refresh a hash that already exists: writing one here would index an
-        # address whose verification status we never checked.
-        if email and user.email_hash and user.email_hash_version != SECRET.EMAIL_PEPPER_VERSION:
+        # Two guards, both load-bearing: only refresh a hash that already exists
+        # (writing a new one here would index an address that never went through
+        # the linkable check), and only from an address the provider still
+        # reports as verified (a provider that flips to unverified must not get
+        # its address indexed just because the pepper version happens to be stale).
+        if (
+            email
+            and email_verified
+            and user.email_hash
+            and user.email_hash_version != SECRET.EMAIL_PEPPER_VERSION
+        ):
             user.email_hash = hash_email(email)
             user.email_hash_version = SECRET.EMAIL_PEPPER_VERSION
         session.add(LoginLog(user=user))
