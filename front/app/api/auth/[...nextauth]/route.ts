@@ -75,7 +75,7 @@ export const {
       : []),
   ],
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ account }) {
       const provider = account?.provider
       if (provider !== 'discord' && provider !== 'google') return true
       if (!account?.access_token) return '/login?error=GENERIC'
@@ -101,10 +101,10 @@ export const {
           return '/login?error=GENERIC'
         }
 
-        user.backendAccessToken = data.access_token
-        user.backendRefreshToken = data.refresh_token
-        user.backendUserId = decoded.user_id
-        user.backendRole = decoded.role
+        account.backendAccessToken = data.access_token
+        account.backendRefreshToken = data.refresh_token
+        account.backendUserId = decoded.user_id
+        account.backendRole = decoded.role
         return true
       } catch (error) {
         console.error(`Erreur lors de l'auth ${provider}:`, error)
@@ -127,13 +127,13 @@ export const {
       }
 
       // Login initial via OAuth: the exchange already happened in signIn
-      if ((account?.provider === 'discord' || account?.provider === 'google') && user) {
+      if (account?.provider === 'discord' || account?.provider === 'google') {
         return {
           ...token,
-          id: user.backendUserId,
-          role: user.backendRole,
-          accessToken: user.backendAccessToken,
-          backendRefreshToken: user.backendRefreshToken,
+          id: account.backendUserId,
+          role: account.backendRole,
+          accessToken: account.backendAccessToken,
+          backendRefreshToken: account.backendRefreshToken,
           accessTokenExpires: Date.now() + 60 * 60 * 1000,
           ...(account.provider === 'discord' ? { discordRefreshToken: account.refresh_token } : {}),
           expired: false,
@@ -243,6 +243,8 @@ declare module 'next-auth' {
     role?: string
     accessToken?: string
     refreshToken?: string
+  }
+  interface Account {
     backendAccessToken?: string
     backendRefreshToken?: string
     backendUserId?: string
