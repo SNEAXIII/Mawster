@@ -1,27 +1,16 @@
 import httpx
 from fastapi import HTTPException
-from sqlmodel import select
 from starlette import status
 
-from src.enums.Roles import Roles
 from src.Messages.google_auth_messages import (
-    EMAIL_CONFLICT,
     GOOGLE_API_ERROR,
     GOOGLE_TOKEN_INVALID,
 )
-from src.models import LoginLog, User
-from src.models.Base import utcnow
-from src.security.secrets import SECRET
+from src.models import User
 from src.services.auth.OAuthService import OAuthService
 from src.utils.db import SessionDep
-from src.utils.email_hash import hash_email
 
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
-
-EMAIL_CONFLICT_EXCEPTION = HTTPException(
-    status_code=status.HTTP_409_CONFLICT,
-    detail=EMAIL_CONFLICT,
-)
 
 GOOGLE_TOKEN_INVALID_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -64,53 +53,11 @@ class GoogleAuthService(OAuthService):
 
     @classmethod
     async def get_or_create_user(cls, session: SessionDep, profile: dict) -> User:
-        """Trouve ou crée un utilisateur à partir du profil Google vérifié.
-
-        Flow:
-        1. Cherche par google_id (sub) → si trouvé, retourne l'utilisateur existant
-        2. Vérifie que l'email n'est pas déjà utilisé
-        3. Si email libre → crée un nouveau compte Google
-        4. Si email pris → 409 Conflict
-        """
-        google_id = str(profile["sub"])
-        email = profile.get("email") or f"{google_id}@google.placeholder"
-        username = cls._random_base_login()
-        # 1. Recherche par google_id
-        sql = select(User).where(User.google_id == google_id)
-        result = await session.exec(sql)
-        existing_user = result.first()
-
-        if existing_user:
-            existing_user.set_last_login_date(utcnow())
-            if existing_user.email_hash_version != SECRET.EMAIL_PEPPER_VERSION:
-                existing_user.email_hash = hash_email(email)
-                existing_user.email_hash_version = SECRET.EMAIL_PEPPER_VERSION
-            login_log = LoginLog(user=existing_user)
-            session.add(login_log)
-            await session.commit()
-            await session.refresh(existing_user)
-            return existing_user
-
-        # 2. Vérifier conflit email
-        email_hash = hash_email(email)
-        sql = select(User).where(User.email_hash == email_hash)
-        result = await session.exec(sql)
-        if result.first():
-            raise EMAIL_CONFLICT_EXCEPTION
-
-        # 3. Créer un nouveau compte Google
-        unique_login = await cls._generate_unique_login(session, username)
-
-        new_user = User(
-            login=unique_login,
-            email_hash=email_hash,
-            google_id=google_id,
-            role=Roles.USER,
+        """Log in, create, or link the account matching this verified Google profile."""
+        return await cls.resolve_user(
+            session,
+            provider_field="google_id",
+            provider_id=str(profile["sub"]),
+            email=profile.get("email"),
+            email_verified=bool(profile.get("email_verified")),
         )
-        new_user.set_last_login_date(utcnow())
-        login_log = LoginLog(user=new_user)
-        session.add(new_user)
-        session.add(login_log)
-        await session.commit()
-        await session.refresh(new_user)
-        return new_user

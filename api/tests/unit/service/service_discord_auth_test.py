@@ -95,11 +95,11 @@ class TestVerifyDiscordToken:
 
 
 # =========================================================================
-# get_user_by_discord_id
+# get_user_by_provider_id (inherited seam from OAuthService)
 # =========================================================================
 
 
-class TestGetUserByDiscordId:
+class TestGetUserByProviderId:
     @pytest.mark.asyncio
     async def test_found_returns_user(self, mocker):
         session = _mock_session(mocker)
@@ -108,7 +108,9 @@ class TestGetUserByDiscordId:
         result_mock.first.return_value = user
         session.exec.return_value = result_mock
 
-        result = await DiscordAuthService._get_user_by_discord_id(session, DISCORD_ID)
+        result = await DiscordAuthService._get_user_by_provider_id(
+            session, "discord_id", DISCORD_ID
+        )
         assert result is user
 
     @pytest.mark.asyncio
@@ -118,7 +120,9 @@ class TestGetUserByDiscordId:
         result_mock.first.return_value = None
         session.exec.return_value = result_mock
 
-        result = await DiscordAuthService._get_user_by_discord_id(session, "unknown_id")
+        result = await DiscordAuthService._get_user_by_provider_id(
+            session, "discord_id", "unknown_id"
+        )
         assert result is None
 
 
@@ -130,6 +134,7 @@ _DISCORD_PROFILE = {
     "id": DISCORD_ID,
     "username": USER_LOGIN,
     "email": USER_EMAIL,
+    "verified": True,
 }
 
 
@@ -140,7 +145,7 @@ class TestGetOrCreateDiscordUser:
         existing_user = _make_user()
 
         mocker.patch.object(
-            DiscordAuthService, "_get_user_by_discord_id", return_value=existing_user
+            DiscordAuthService, "_get_user_by_provider_id", return_value=existing_user
         )
 
         result = await DiscordAuthService.get_or_create_user(session, _DISCORD_PROFILE)
@@ -151,28 +156,67 @@ class TestGetOrCreateDiscordUser:
 
     @pytest.mark.asyncio
     async def test_new_user_is_created_when_discord_id_unknown(self, mocker):
+        """A verified email with no existing match creates a fresh, hashed account."""
         session = _mock_session(mocker)
 
-        mocker.patch.object(DiscordAuthService, "_get_user_by_discord_id", return_value=None)
+        mocker.patch.object(DiscordAuthService, "_get_user_by_provider_id", return_value=None)
         mocker.patch.object(DiscordAuthService, "_generate_unique_login", return_value="newlogin")
 
-        no_conflict_mock = mocker.MagicMock()
-        no_conflict_mock.first.return_value = None
-        session.exec.return_value = no_conflict_mock
+        no_match_mock = mocker.MagicMock()
+        no_match_mock.first.return_value = None
+        session.exec.return_value = no_match_mock
 
         result = await DiscordAuthService.get_or_create_user(session, _DISCORD_PROFILE)
 
         assert result is not None
         assert result.discord_id == str(_DISCORD_PROFILE["id"])
         assert result.login == "newlogin"
+        assert result.email_hash == hash_email(_DISCORD_PROFILE["email"])
         session.commit.assert_awaited()
 
     @pytest.mark.asyncio
-    async def test_email_conflict_raises_409(self, mocker):
+    async def test_unverified_email_creates_account_without_hash(self, mocker):
+        """An unverified address is never hashed, even for a brand new account."""
+        session = _mock_session(mocker)
+        profile = {**_DISCORD_PROFILE, "verified": False}
+
+        mocker.patch.object(DiscordAuthService, "_get_user_by_provider_id", return_value=None)
+        mocker.patch.object(DiscordAuthService, "_generate_unique_login", return_value="newlogin")
+
+        result = await DiscordAuthService.get_or_create_user(session, profile)
+
+        assert result.discord_id == str(profile["id"])
+        assert result.login == "newlogin"
+        assert result.email_hash is None
+        # An unlinkable (unverified) email never triggers the email-hash lookup.
+        session.exec.assert_not_called()
+        session.commit.assert_awaited()
+
+    @pytest.mark.asyncio
+    async def test_links_to_account_with_free_discord_slot(self, mocker):
+        """A verified email matching an account with no discord_id yet gets linked."""
+        session = _mock_session(mocker)
+        matched_user = _make_user(discord_id=None)
+
+        mocker.patch.object(DiscordAuthService, "_get_user_by_provider_id", return_value=None)
+
+        match_mock = mocker.MagicMock()
+        match_mock.first.return_value = matched_user
+        session.exec.return_value = match_mock
+
+        result = await DiscordAuthService.get_or_create_user(session, _DISCORD_PROFILE)
+
+        assert result is matched_user
+        assert result.discord_id == str(_DISCORD_PROFILE["id"])
+        session.commit.assert_awaited()
+
+    @pytest.mark.asyncio
+    async def test_provider_already_linked_raises_409(self, mocker):
+        """The address is held by an account that already has a different discord_id."""
         session = _mock_session(mocker)
         conflicting_user = _make_user(discord_id="other_discord_id", login="otherlogin")
 
-        mocker.patch.object(DiscordAuthService, "_get_user_by_discord_id", return_value=None)
+        mocker.patch.object(DiscordAuthService, "_get_user_by_provider_id", return_value=None)
 
         conflict_mock = mocker.MagicMock()
         conflict_mock.first.return_value = conflicting_user
@@ -181,3 +225,4 @@ class TestGetOrCreateDiscordUser:
         with pytest.raises(HTTPException) as exc:
             await DiscordAuthService.get_or_create_user(session, _DISCORD_PROFILE)
         assert exc.value.status_code == 409
+        assert exc.value.detail["code"] == "PROVIDER_ALREADY_LINKED"

@@ -62,7 +62,12 @@ async def test_client_fixture():
             # Fast deterministic behavior: empty token -> invalid, else return fake profile
             if not access_token:
                 raise DISCORD_TOKEN_INVALID_EXCEPTION
-            return {"id": 1, "username": "testuser", "email": "test@example.com"}
+            return {
+                "id": 1,
+                "username": "testuser",
+                "email": "test@example.com",
+                "verified": True,
+            }
 
         DiscordAuthService.verify_token = classmethod(_fake_verify)
 
