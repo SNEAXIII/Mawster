@@ -227,10 +227,118 @@ class TestDiscordLogin:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
+    async def test_links_discord_to_existing_google_account(self):
+        """A Discord login on an address already held by a Google account links instead of failing."""
+        existing = User(
+            login="googleonlyuser",
+            email_hash=hash_email("test@example.com"),
+            google_id="google_abc",
+            role=Roles.USER,
+        )
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert response.status_code == 200
+        decoded = pyjwt.decode(
+            response.json()["access_token"], SECRET.SECRET_KEY, algorithms=[SECRET.ALGORITHM]
+        )
+        assert decoded["user_id"] == str(existing.id)
+
+    @pytest.mark.asyncio
+    async def test_link_refused_when_account_disabled(self):
+        """Linking never writes onto a disabled account."""
+        existing = User(
+            login="disableduser",
+            email_hash=hash_email("test@example.com"),
+            google_id="google_disabled",
+            disabled_at=utcnow(),
+            role=Roles.USER,
+        )
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert response.status_code == 409
+        assert response.json()["message"]["code"] == "ACCOUNT_UNAVAILABLE"
+
+    @pytest.mark.asyncio
+    async def test_link_refused_when_account_deleted(self):
+        """Linking never writes onto a deleted account."""
+        existing = User(
+            login="deleteduser",
+            email_hash=hash_email("test@example.com"),
+            google_id="google_deleted",
+            deleted_at=utcnow(),
+            role=Roles.USER,
+        )
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert response.status_code == 409
+        assert response.json()["message"]["code"] == "ACCOUNT_UNAVAILABLE"
+
+    @pytest.mark.asyncio
+    async def test_unverified_email_creates_separate_account_without_hash(self, monkeypatch):
+        """An unverified address is never hashed, so it can never be used to reach another account."""
+        from src.services.auth.DiscordAuthService import DiscordAuthService
+
+        async def _fake_verify(cls, access_token):
+            return {
+                "id": 999,
+                "username": "unverified",
+                "email": "test@example.com",
+                "verified": False,
+            }
+
+        monkeypatch.setattr(DiscordAuthService, "verify_token", classmethod(_fake_verify))
+
+        victim = User(
+            login="victimuser",
+            email_hash=hash_email("test@example.com"),
+            google_id="google_victim",
+            role=Roles.USER,
+        )
+        await load_objects([victim])
+
+        response = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert response.status_code == 200
+        decoded = pyjwt.decode(
+            response.json()["access_token"], SECRET.SECRET_KEY, algorithms=[SECRET.ALGORITHM]
+        )
+        assert decoded["user_id"] != str(victim.id)
+
+        # A second unverified login on the same address must also succeed. It can
+        # only do so if neither account stored a hash — two equal hashes would
+        # collide on the unique constraint.
+        async def _fake_verify_other(cls, access_token):
+            return {
+                "id": 1000,
+                "username": "unverified2",
+                "email": "test@example.com",
+                "verified": False,
+            }
+
+        monkeypatch.setattr(DiscordAuthService, "verify_token", classmethod(_fake_verify_other))
+
+        second = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert second.status_code == 200
+        second_decoded = pyjwt.decode(
+            second.json()["access_token"], SECRET.SECRET_KEY, algorithms=[SECRET.ALGORITHM]
+        )
+        assert second_decoded["user_id"] not in (str(victim.id), decoded["user_id"])
+
+    @pytest.mark.asyncio
     async def test_duplicate_email_hash_returns_409(self):
-        """A Discord login whose email is already used by another account returns 409."""
-        # The mock always returns email="test@example.com" with discord_id=1.
-        # Pre-insert a user with the same email but a different discord_id.
+        """The address is held by an account that already has a different Discord id."""
         existing = User(
             login="otheruser",
             email_hash=hash_email("test@example.com"),
@@ -243,6 +351,7 @@ class TestDiscordLogin:
             ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
         )
         assert response.status_code == 409
+        assert response.json()["message"]["code"] == "PROVIDER_ALREADY_LINKED"
 
 
 # =========================================================================
