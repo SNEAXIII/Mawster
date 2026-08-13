@@ -1648,5 +1648,10 @@
     "name": "Black Tarantula",
     "champion_class": "Skill",
     "image_url": "/static/champions/black_tarantula.png"
+  },
+  {
+    "name": "Agatha Harkness",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/agatha_harkness.png"
   }
 ]
