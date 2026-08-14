@@ -35,6 +35,29 @@ VALID_CLASSES = {c.value for c in ChampionClass}
 
 REVISION_LATEST = "/revision/latest"
 
+# Fandom's bot protection rejects most profiles; tried in order until one gets through.
+IMPERSONATE_PROFILES = ["safari", "chrome", "firefox135"]
+# Mutable holder: the profile that works is reused for the hundreds of image downloads.
+_WORKING_PROFILE: dict[str, str | None] = {"name": None}
+
+
+def _fetch(url: str, timeout: int):
+    """GET a URL, trying impersonation profiles until one is not blocked."""
+    from curl_cffi import requests as cffi_requests
+
+    known_good = _WORKING_PROFILE["name"]
+    profiles = [known_good] if known_good else IMPERSONATE_PROFILES
+    last_error = None
+    for profile in profiles:
+        try:
+            resp = cffi_requests.get(url, impersonate=profile, timeout=timeout)
+            resp.raise_for_status()
+            _WORKING_PROFILE["name"] = profile
+            return resp
+        except Exception as e:
+            last_error = e
+    raise last_error
+
 
 def clean_image_url(url: str) -> str:
     """Strip Fandom's thumbnail suffixes to get the original full-size image."""
@@ -62,13 +85,10 @@ def _save_clean_png(data: bytes, filepath: Path) -> None:
 
 def download_image(url: str, filepath: Path, force: bool = False) -> bool:
     """Download an image. Returns True on success."""
-    from curl_cffi import requests as cffi_requests
-
     if filepath.exists() and not force:
         return True
     try:
-        resp = cffi_requests.get(url, impersonate="chrome", timeout=30)
-        resp.raise_for_status()
+        resp = _fetch(url, timeout=30)
         _save_clean_png(resp.content, filepath)
         return True
     except Exception as e:
@@ -189,12 +209,11 @@ def _parse_champion_row(cells, seen_names, champions, row_idx):
 def scrape_champions_list() -> list[dict]:
     """Scrape the wiki and return a list of champion dicts."""
     from bs4 import BeautifulSoup
-    from curl_cffi import requests as cffi_requests
 
     print(f"Fetching {WIKI_URL} ...")
-    resp = cffi_requests.get(WIKI_URL, impersonate="chrome", timeout=60)
-    resp.raise_for_status()
+    resp = _fetch(WIKI_URL, timeout=60)
     print(f"  [DEBUG] Response status: {resp.status_code}, length: {len(resp.text)}")
+    print(f"  [DEBUG] Impersonation profile: {_WORKING_PROFILE['name']}")
 
     soup = BeautifulSoup(resp.text, "lxml")
 
