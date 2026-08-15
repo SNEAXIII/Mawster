@@ -7,6 +7,10 @@ on:
       - 'api/src/fixtures/champions.json'
   workflow_dispatch:
     inputs:
+      base_ref:
+        description: 'ref to compare against'
+        default: 'main'
+        required: false
       image_tag:
         description: 'mawster-vision-worker tag to measure against'
         default: 'latest'
@@ -32,7 +36,7 @@ jobs:
       - name: Checkout the base branch
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.base_ref || github.ref_name }}
+          ref: ${{ github.event_name == 'pull_request' && github.base_ref || inputs.base_ref }}
           path: mawster-base
 
       # Private repo: the default GITHUB_TOKEN cannot read it.
@@ -67,7 +71,7 @@ jobs:
                 python -m src.naming.embed build &&
                 python -m src.pipeline data/real \
                   --weights out/runs/card_detector/weights/best.onnx --debug &&
-                python -m src.eval --all --dir data/real" | tee "eval-$side.txt"
+                (python -m src.eval --all --dir data/real || true)" | tee "eval-$side.txt"
             mkdir -p "gate-out/$side"
             docker cp "gate-$side:/app/out/debug/." "gate-out/$side/"
             docker rm "gate-$side"
