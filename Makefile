@@ -347,18 +347,22 @@ seed-champions:
 	@docker service ps mawster-seed --format "{{.CurrentState}}" | grep -q "^Failed" && \
 		(docker service rm mawster-seed; exit 1) || docker service rm mawster-seed
 
+# Swarm secrets are cluster-wide, not scoped to a network or stack: the bare
+# names mawster_db_password / mawster_db_root_password are the PRODUCTION
+# credentials. Remap the staging secrets onto those target names (as
+# migrate-staging does) so this job never touches the prod DB.
 seed-champions-staging:
 	docker service rm mawster-seed-staging 2>/dev/null || true
 	docker service create \
 		--name mawster-seed-staging \
 		--network internal-staging \
-		--secret mawster_db_password \
-		--secret mawster_db_root_password \
+		--secret source=mawster_db_password_staging,target=mawster_db_password \
+		--secret source=mawster_db_root_password_staging,target=mawster_db_root_password \
 		-e MARIADB_USER=mawster \
 		-e MARIADB_PORT=3306 \
 		-e MARIADB_DATABASE=mawster \
 		--mode replicated-job \
-		sneaxiii/mawster-api:latest \
+		sneaxiii/mawster-api:staging \
 		sh -c "uv run --no-sync python -m src.fixtures.load_champions && \
 		       uv run --no-sync python -m src.fixtures.load_masteries"
 	docker service logs -f mawster-seed-staging
