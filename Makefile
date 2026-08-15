@@ -323,51 +323,48 @@ migrate-staging:
 	@docker service ps mawster-migrate-staging --format "{{.CurrentState}}" | grep -q "^Failed" && \
 		(docker service rm mawster-migrate-staging; exit 1) || docker service rm mawster-migrate-staging
 
-# Champion + mastery catalogue. Not part of migrate.sh: the migrate image ships
-# only migrations/ and the migrate dependency group, with no src/ and no
-# champions.json. The api image carries both. Idempotent - load_champions adds
-# new champions, refreshes alias/image_url, and leaves everything else alone -
-# so this is safe to run on every deploy.
+# Champion + mastery catalogue. Runs inside the already-running api container
+# rather than a standalone Swarm job: SECRET (api/src/security/secrets.py) is
+# a pydantic Settings built at import time. With MODE=prod, fourteen fields
+# become required (SECRET_KEY, ALLOWED_ORIGINS, EMAIL_PEPPER, RABBITMQ_URL,
+# RUSTFS_*, API_PORT, the token expiries...) so a bare `Settings()` raises
+# before any query runs, and the mounted secrets are only exported into the
+# environment by run.sh - a standalone `sh -c` job bypasses that entirely. The
+# api service already carries the full validated environment and secrets (see
+# stack-app.yaml), so exec the loaders inside it instead of reconstructing
+# that environment field by field, mirroring dev-seed's shape. Idempotent -
+# load_champions adds new champions, refreshes alias/image_url, and leaves
+# everything else alone - so this is safe to run on every deploy.
+# docker stack deploy is asynchronous, so poll for a running container
+# instead of assuming one already exists.
 .PHONY: seed-champions seed-champions-staging
 seed-champions:
-	docker service rm mawster-seed 2>/dev/null || true
-	docker service create \
-		--name mawster-seed \
-		--network internal \
-		--secret mawster_db_password \
-		--secret mawster_db_root_password \
-		-e MARIADB_USER=mawster \
-		-e MARIADB_PORT=3306 \
-		-e MARIADB_DATABASE=mawster \
-		--mode replicated-job \
-		sneaxiii/mawster-api:latest \
-		sh -c "uv run --no-sync python -m src.fixtures.load_champions && \
-		       uv run --no-sync python -m src.fixtures.load_masteries"
-	docker service logs -f mawster-seed
-	@docker service ps mawster-seed --format "{{.CurrentState}}" | grep -q "^Failed" && \
-		(docker service rm mawster-seed; exit 1) || docker service rm mawster-seed
+	@CID=""; \
+	for i in $$(seq 1 30); do \
+		CID=$$(docker ps -q -f name=mawster_api -f status=running | head -n1); \
+		[ -n "$$CID" ] && break; \
+		sleep 2; \
+	done; \
+	if [ -z "$$CID" ]; then \
+		echo "seed-champions: no running mawster_api container found after 60s" >&2; \
+		exit 1; \
+	fi; \
+	docker exec $$CID sh -c 'uv run --no-sync python -m src.fixtures.load_champions && \
+	                          uv run --no-sync python -m src.fixtures.load_masteries'
 
-# Swarm secrets are cluster-wide, not scoped to a network or stack: the bare
-# names mawster_db_password / mawster_db_root_password are the PRODUCTION
-# credentials. Remap the staging secrets onto those target names (as
-# migrate-staging does) so this job never touches the prod DB.
 seed-champions-staging:
-	docker service rm mawster-seed-staging 2>/dev/null || true
-	docker service create \
-		--name mawster-seed-staging \
-		--network internal-staging \
-		--secret source=mawster_db_password_staging,target=mawster_db_password \
-		--secret source=mawster_db_root_password_staging,target=mawster_db_root_password \
-		-e MARIADB_USER=mawster \
-		-e MARIADB_PORT=3306 \
-		-e MARIADB_DATABASE=mawster \
-		--mode replicated-job \
-		sneaxiii/mawster-api:staging \
-		sh -c "uv run --no-sync python -m src.fixtures.load_champions && \
-		       uv run --no-sync python -m src.fixtures.load_masteries"
-	docker service logs -f mawster-seed-staging
-	@docker service ps mawster-seed-staging --format "{{.CurrentState}}" | grep -q "^Failed" && \
-		(docker service rm mawster-seed-staging; exit 1) || docker service rm mawster-seed-staging
+	@CID=""; \
+	for i in $$(seq 1 30); do \
+		CID=$$(docker ps -q -f name=mawster-staging_api -f status=running | head -n1); \
+		[ -n "$$CID" ] && break; \
+		sleep 2; \
+	done; \
+	if [ -z "$$CID" ]; then \
+		echo "seed-champions-staging: no running mawster-staging_api container found after 60s" >&2; \
+		exit 1; \
+	fi; \
+	docker exec $$CID sh -c 'uv run --no-sync python -m src.fixtures.load_champions && \
+	                          uv run --no-sync python -m src.fixtures.load_masteries'
 
 deploy:
 	docker pull sneaxiii/mawster-api:latest
