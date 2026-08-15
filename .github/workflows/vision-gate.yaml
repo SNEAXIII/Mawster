@@ -1,0 +1,97 @@
+name: Vision gate
+
+on:
+  pull_request:
+    paths:
+      - 'static-assets/static/champions/**'
+      - 'api/src/fixtures/champions.json'
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'mawster-vision-worker tag to measure against'
+        default: 'latest'
+        required: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  naming-diff:
+    name: Naming regression report
+    runs-on: ubuntu-latest
+    environment: vision
+    env:
+      IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/mawster-vision-worker:${{ inputs.image_tag || 'latest' }}
+    steps:
+      - name: Checkout the pull request
+        uses: actions/checkout@v7
+        with:
+          path: mawster-pr
+
+      - name: Checkout the base branch
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.base_ref || github.ref_name }}
+          path: mawster-base
+
+      # Private repo: the default GITHUB_TOKEN cannot read it.
+      - name: Checkout mcoc-vision
+        uses: actions/checkout@v7
+        with:
+          repository: SNEAXIII/mcoc-vision
+          token: ${{ secrets.BOT_TOKEN }}
+          path: mcoc-vision
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # One pull, reused by both runs. The image already carries the torch-free
+      # venv, the system libs, clip_visual.onnx and the PaddleOCR weights, so
+      # there is nothing to install and nothing to cache.
+      - name: Pull the worker image
+        run: docker pull "$IMAGE"
+
+      - name: Run the pipeline on both sides
+        run: |
+          set -euo pipefail
+          for side in base pr; do
+            docker run --name "gate-$side" \
+              -v "$PWD/mcoc-vision/data:/app/data:ro" \
+              -v "$PWD/mawster-$side:/mawster:ro" \
+              -e MAWSTER_REPO=/mawster \
+              "$IMAGE" sh -c "
+                python -m src.naming.embed build &&
+                python -m src.pipeline data/real \
+                  --weights out/runs/card_detector/weights/best.onnx --debug &&
+                python -m src.eval --all --dir data/real" | tee "eval-$side.txt"
+            mkdir -p "gate-out/$side"
+            docker cp "gate-$side:/app/out/debug/." "gate-out/$side/"
+            docker rm "gate-$side"
+          done
+
+      # eval_diff always exits 0, so a naming regression reports without ever
+      # turning this job red. Only the steps above can fail it.
+      - name: Build the naming diff
+        run: python3 mcoc-vision/src/eval_diff.py gate-out/base gate-out/pr > report.md
+
+      - name: Comment on the pull request
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: vision-gate
+          path: report.md
+
+      - name: Upload the before/after runs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vision-gate-${{ github.run_id }}
+          path: |
+            gate-out/
+            eval-base.txt
+            eval-pr.txt
+          retention-days: 30
