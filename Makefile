@@ -43,6 +43,8 @@ HELP_LINES := \
 	"db-access              --> demarrer mariadb + backup en prod (acces DB)", \
 	"migrate                --> lancer les migrations Alembic via Docker Swarm (prod)", \
 	"migrate-staging        --> lancer les migrations Alembic via Docker Swarm (staging)", \
+	"seed-champions         --> charger le catalogue champions/masteries en prod (idempotent)", \
+	"seed-champions-staging --> idem en staging", \
 	"", \
 	"=== Backup ===", \
 	"backup-now             --> declencher un backup immediatement (prod)", \
@@ -150,6 +152,8 @@ help:
 	echo "db-access              --> demarrer mariadb + backup en prod (acces DB)" ; \
 	echo "migrate                --> lancer les migrations Alembic via Docker Swarm (prod)" ; \
 	echo "migrate-staging        --> lancer les migrations Alembic via Docker Swarm (staging)" ; \
+	echo "seed-champions         --> charger le catalogue champions/masteries en prod (idempotent)" ; \
+	echo "seed-champions-staging --> idem en staging" ; \
 	echo "" ; \
 	echo "=== Backup ===" ; \
 	echo "backup-now             --> declencher un backup immediatement (prod)" ; \
@@ -319,6 +323,48 @@ migrate-staging:
 	@docker service ps mawster-migrate-staging --format "{{.CurrentState}}" | grep -q "^Failed" && \
 		(docker service rm mawster-migrate-staging; exit 1) || docker service rm mawster-migrate-staging
 
+# Champion + mastery catalogue. Not part of migrate.sh: the migrate image ships
+# only migrations/ and the migrate dependency group, with no src/ and no
+# champions.json. The api image carries both. Idempotent - load_champions adds
+# new champions, refreshes alias/image_url, and leaves everything else alone -
+# so this is safe to run on every deploy.
+.PHONY: seed-champions seed-champions-staging
+seed-champions:
+	docker service rm mawster-seed 2>/dev/null || true
+	docker service create \
+		--name mawster-seed \
+		--network internal \
+		--secret mawster_db_password \
+		--secret mawster_db_root_password \
+		-e MARIADB_USER=mawster \
+		-e MARIADB_PORT=3306 \
+		-e MARIADB_DATABASE=mawster \
+		--mode replicated-job \
+		sneaxiii/mawster-api:latest \
+		sh -c "uv run --no-sync python -m src.fixtures.load_champions && \
+		       uv run --no-sync python -m src.fixtures.load_masteries"
+	docker service logs -f mawster-seed
+	@docker service ps mawster-seed --format "{{.CurrentState}}" | grep -q "^Failed" && \
+		(docker service rm mawster-seed; exit 1) || docker service rm mawster-seed
+
+seed-champions-staging:
+	docker service rm mawster-seed-staging 2>/dev/null || true
+	docker service create \
+		--name mawster-seed-staging \
+		--network internal-staging \
+		--secret mawster_db_password \
+		--secret mawster_db_root_password \
+		-e MARIADB_USER=mawster \
+		-e MARIADB_PORT=3306 \
+		-e MARIADB_DATABASE=mawster \
+		--mode replicated-job \
+		sneaxiii/mawster-api:latest \
+		sh -c "uv run --no-sync python -m src.fixtures.load_champions && \
+		       uv run --no-sync python -m src.fixtures.load_masteries"
+	docker service logs -f mawster-seed-staging
+	@docker service ps mawster-seed-staging --format "{{.CurrentState}}" | grep -q "^Failed" && \
+		(docker service rm mawster-seed-staging; exit 1) || docker service rm mawster-seed-staging
+
 deploy:
 	docker pull sneaxiii/mawster-api:latest
 	docker pull sneaxiii/mawster-migrate:latest
@@ -329,6 +375,7 @@ deploy:
 # 	docker stack deploy --with-registry-auth --resolve-image always -c stack-obs.yaml mawster-obs
 	docker stack deploy --with-registry-auth --resolve-image always -c stack-app.yaml mawster
 # 	docker stack deploy --with-registry-auth --resolve-image always -c stack-app-staging.yaml mawster-staging
+	$(MAKE) seed-champions
 
 panic:
 	docker stack rm mawster
