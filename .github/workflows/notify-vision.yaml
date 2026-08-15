@@ -1,0 +1,24 @@
+name: Notify mcoc-vision of new assets
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'static-assets/static/champions/**'
+      - 'api/src/fixtures/champions.json'
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    name: Ask mcoc-vision to rebuild its gallery
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send repository_dispatch
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.BOT_TOKEN }}
+          repository: SNEAXIII/mcoc-vision
+          event-type: mawster-assets-updated
