@@ -62,8 +62,10 @@ jobs:
             The vision gate posts a naming-regression report on this PR once it
             finishes. It is informational and never blocks the merge.
 
-            After merging, remember that production only gains the champion on
-            the next `make deploy` (which runs `seed-champions`).
+            Merging lands the assets on `main`, but production does not gain the
+            champion until this is promoted to `release`, which rebuilds and
+            pushes the api and static images - only then does `make deploy`
+            (which runs `seed-champions`) pick it up.
 
       # One issue, reused. A new issue per failed run would bury the signal.
       - name: Report a scraper failure
@@ -73,6 +75,8 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
+          gh label create scraper-down --color B60205 \
+            --description "Champion wiki scraper is failing" --force
           existing=$(gh issue list --label scraper-down --state open \
                        --json number --jq '.[0].number // empty')
           if [ -n "$existing" ]; then

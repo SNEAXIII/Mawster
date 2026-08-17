@@ -71,6 +71,9 @@ jobs:
                 python -m src.naming.embed build &&
                 python -m src.pipeline data/real \
                   --weights out/runs/card_detector/weights/best.onnx --debug &&
+                # eval exits non-zero on a naming regression; tolerated so the
+                # gate never turns red on a naming change - only a pipeline
+                # crash should fail this job.
                 (python -m src.eval --all --dir data/real || true)" | tee "eval-$side.txt"
             mkdir -p "gate-out/$side"
             docker cp "gate-$side:/app/out/debug/." "gate-out/$side/"

@@ -337,12 +337,16 @@ migrate-staging:
 # this is safe to run on every deploy. Requires an api image built with
 # seed.sh present (api/api.Dockerfile COPYs it alongside run.sh).
 # docker stack deploy is asynchronous, so poll for a running container
-# instead of assuming one already exists.
+# instead of assuming one already exists. stack-app.yaml uses
+# order: start-first, so the outgoing container is still status=running
+# while the new one starts up - the ancestor filter pins the match to a
+# container from the image just pulled, so the poll can't exec into the
+# previous release's container and silently seed one deploy behind.
 .PHONY: seed-champions seed-champions-staging
 seed-champions:
 	@CID=""; \
 	for i in $$(seq 1 30); do \
-		CID=$$(docker ps -q -f name=mawster_api -f status=running | head -n1); \
+		CID=$$(docker ps -q -f name=mawster_api -f status=running -f ancestor=sneaxiii/mawster-api:latest | head -n1); \
 		[ -n "$$CID" ] && break; \
 		sleep 2; \
 	done; \
@@ -355,7 +359,7 @@ seed-champions:
 seed-champions-staging:
 	@CID=""; \
 	for i in $$(seq 1 30); do \
-		CID=$$(docker ps -q -f name=mawster-staging_api -f status=running | head -n1); \
+		CID=$$(docker ps -q -f name=mawster-staging_api -f status=running -f ancestor=sneaxiii/mawster-api:staging | head -n1); \
 		[ -n "$$CID" ] && break; \
 		sleep 2; \
 	done; \
