@@ -328,13 +328,14 @@ migrate-staging:
 # a pydantic Settings built at import time. With MODE=prod, fourteen fields
 # become required (SECRET_KEY, ALLOWED_ORIGINS, EMAIL_PEPPER, RABBITMQ_URL,
 # RUSTFS_*, API_PORT, the token expiries...) so a bare `Settings()` raises
-# before any query runs, and the mounted secrets are only exported into the
-# environment by run.sh - a standalone `sh -c` job bypasses that entirely. The
-# api service already carries the full validated environment and secrets (see
-# stack-app.yaml), so exec the loaders inside it instead of reconstructing
-# that environment field by field, mirroring dev-seed's shape. Idempotent -
-# load_champions adds new champions, refreshes alias/image_url, and leaves
-# everything else alone - so this is safe to run on every deploy.
+# before any query runs. A `docker exec` shell doesn't help by itself either:
+# it's a fresh process that does NOT inherit the exports run.sh makes at
+# runtime in PID 1, so seed.sh (api/seed.sh, shipped in the api image
+# alongside run.sh/migrate.sh) re-exports the same six secret-backed vars
+# itself before running the loaders. Idempotent - load_champions adds new
+# champions, refreshes alias/image_url, and leaves everything else alone - so
+# this is safe to run on every deploy. Requires an api image built with
+# seed.sh present (api/api.Dockerfile COPYs it alongside run.sh).
 # docker stack deploy is asynchronous, so poll for a running container
 # instead of assuming one already exists.
 .PHONY: seed-champions seed-champions-staging
@@ -349,8 +350,7 @@ seed-champions:
 		echo "seed-champions: no running mawster_api container found after 60s" >&2; \
 		exit 1; \
 	fi; \
-	docker exec $$CID sh -c 'uv run --no-sync python -m src.fixtures.load_champions && \
-	                          uv run --no-sync python -m src.fixtures.load_masteries'
+	docker exec $$CID sh seed.sh
 
 seed-champions-staging:
 	@CID=""; \
@@ -363,8 +363,7 @@ seed-champions-staging:
 		echo "seed-champions-staging: no running mawster-staging_api container found after 60s" >&2; \
 		exit 1; \
 	fi; \
-	docker exec $$CID sh -c 'uv run --no-sync python -m src.fixtures.load_champions && \
-	                          uv run --no-sync python -m src.fixtures.load_masteries'
+	docker exec $$CID sh seed.sh
 
 deploy:
 	docker pull sneaxiii/mawster-api:latest
