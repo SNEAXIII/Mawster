@@ -1,0 +1,91 @@
+name: Champion assets refresh
+
+on:
+  schedule:
+    # 05:17 UTC daily. Off the hour on purpose: GitHub's on-the-hour cron slots
+    # are congested and scheduled runs get delayed or dropped there.
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  refresh:
+    name: Scrape the wiki and open a PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.BOT_TOKEN }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ vars.PYTHON_VERSION }}
+          enable-cache: true
+
+      - name: Scrape champions from the wiki
+        working-directory: ./static-assets
+        run: uv run python scrape_champions.py
+
+      - name: Detect changes
+        id: diff
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No champion change - nothing to open."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git status --porcelain
+          fi
+
+      # A fixed branch, not a dated one: create-pull-request updates the
+      # existing PR when the branch is already there, so consecutive daily runs
+      # amend one PR instead of piling up seven a week.
+      - name: Open or update the assets PR
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.BOT_TOKEN }}
+          branch: bot/assets-refresh
+          base: main
+          commit-message: 'chore(assets): refresh champions from the wiki'
+          title: 'chore(assets): refresh champions from the wiki'
+          labels: assets-bot
+          body: |
+            Automated daily scrape of the champion wiki.
+
+            The vision gate posts a naming-regression report on this PR once it
+            finishes. It is informational and never blocks the merge.
+
+            Merging lands the assets on `main`, but production does not gain the
+            champion until this is promoted to `release`, which rebuilds and
+            pushes the api and static images - only then does `make deploy`
+            (which runs `seed-champions`) pick it up.
+
+      # One issue, reused. A new issue per failed run would bury the signal.
+      - name: Report a scraper failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          gh label create scraper-down --color B60205 \
+            --description "Champion wiki scraper is failing" --force
+          existing=$(gh issue list --label scraper-down --state open \
+                       --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Failed again: $RUN_URL"
+          else
+            gh issue create --label scraper-down \
+              --title "Champion scraper is failing" \
+              --body "The daily wiki scrape failed: $RUN_URL
+
+          Fandom's bot protection is the usual cause - see commit 68a8e5a8, which
+          added the impersonation-profile fallback in \`static-assets/scrape_champions.py\`."
+          fi
