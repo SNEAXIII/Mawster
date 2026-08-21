@@ -53,6 +53,22 @@ describe('Defense – Permissions', () => {
   });
 
   // =========================================================================
+  // Export buttons visibility
+  // =========================================================================
+
+  it('export buttons are visible for a regular member', () => {
+    setupOwnerMemberAlliance('def-perm-exp-mem', 'ExpMemOwn', 'ExpMember', 'ExpMemAll', 'EM').then(
+      ({ memberData }) => {
+        cy.apiLogin(memberData.user_id);
+        cy.navTo('defense');
+
+        cy.getByCy('defense-export-map-btn').should('be.visible');
+        cy.getByCy('defense-export-list-btn').should('be.visible');
+      },
+    );
+  });
+
+  // =========================================================================
   // Clicking empty node: member vs. owner/officer
   // =========================================================================
 
