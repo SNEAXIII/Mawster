@@ -26,6 +26,9 @@ export interface ImportResult {
   newSignature: number
   oldRarity: string | null
   oldSignature: number | null
+  newAscension: number
+  // null when the champion was not in the roster before this import.
+  oldAscension: number | null
   error?: string
 }
 
@@ -41,6 +44,7 @@ export default function ImportReportDialog({
   results,
 }: Readonly<ImportReportDialogProps>) {
   const { t } = useI18n()
+  const ascLabel = t.roster.importExport.ascLabel.toLowerCase()
 
   const addedCount = results.filter((r) => r.success && r.isNew).length
   const updatedCount = results.filter((r) => r.success && !r.isNew && !r.isSkipped).length
@@ -58,13 +62,13 @@ export default function ImportReportDialog({
           <DialogDescription className='flex items-center gap-3 mt-1 flex-wrap'>
             {addedCount > 0 && (
               <span className='inline-flex items-center gap-1 text-green-600 font-medium'>
-                <Check className='h-3.5 w-3.5' /> {addedCount}
+                <Check className='h-3.5 w-3.5' /> {addedCount}{' '}
                 {t.roster.importExport.badgeAdded.toLowerCase()}
               </span>
             )}
             {updatedCount > 0 && (
               <span className='inline-flex items-center gap-1 text-blue-600 font-medium'>
-                <Check className='h-3.5 w-3.5' /> {updatedCount}
+                <Check className='h-3.5 w-3.5' /> {updatedCount}{' '}
                 {t.roster.importExport.badgeUpdated.toLowerCase()}
               </span>
             )}
@@ -75,7 +79,7 @@ export default function ImportReportDialog({
             )}
             {failCount > 0 && (
               <span className='inline-flex items-center gap-1 text-red-600 font-medium'>
-                <X className='h-3.5 w-3.5' /> {failCount}
+                <X className='h-3.5 w-3.5' /> {failCount}{' '}
                 {t.roster.importExport.badgeError.toLowerCase()}
               </span>
             )}
@@ -89,6 +93,8 @@ export default function ImportReportDialog({
               result.oldRarity !== null && result.oldRarity !== result.newRarity
             const hasSigChange =
               result.oldSignature !== null && result.oldSignature !== result.newSignature
+            const hasAscChange =
+              result.oldAscension !== null && result.oldAscension !== result.newAscension
 
             return (
               <div
@@ -146,8 +152,9 @@ export default function ImportReportDialog({
                         {t.roster.importExport.badgeAdded}
                       </span>
                       <div className='text-gray-600 dark:text-gray-300'>
-                        {RARITY_LABELS[result.newRarity] ?? result.newRarity} · sig
+                        {RARITY_LABELS[result.newRarity] ?? result.newRarity} · sig{' '}
                         {result.newSignature}
+                        {result.newAscension > 0 && ` · ${ascLabel} ${result.newAscension}`}
                       </div>
                     </div>
                   ) : result.isSkipped ? (
@@ -181,6 +188,17 @@ export default function ImportReportDialog({
                           <ArrowRight className='text-blue-500 h-2.5 w-2.5' />
                           <span className='text-blue-600 font-semibold'>
                             sig {result.newSignature}
+                          </span>
+                        </div>
+                      )}
+                      {hasAscChange && (
+                        <div className='flex items-center gap-1 justify-end'>
+                          <span className='text-gray-400'>
+                            {ascLabel} {result.oldAscension}
+                          </span>
+                          <ArrowRight className='text-blue-500 h-2.5 w-2.5' />
+                          <span className='text-blue-600 font-semibold'>
+                            {ascLabel} {result.newAscension}
                           </span>
                         </div>
                       )}
