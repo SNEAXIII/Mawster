@@ -3,11 +3,15 @@
 import uuid
 
 import pytest
+from sqlmodel import select
 
 from main import app
+from src.models.DefensePlacement import DefensePlacement
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
+    push_champion,
+    push_champion_user,
     push_game_account,
     push_member,
     push_officer,
@@ -52,6 +56,28 @@ async def _setup_2_users():
     u2.id = USER2_ID
     u2.discord_id = DISCORD_ID_2
     await load_objects([u1, u2])
+
+
+async def _push_placement(alliance, account, node_number, champion_name, battlegroup=1):
+    """Put one of the account's champions on a defense node. Returns the placement."""
+    champion = await push_champion(name=champion_name, champion_class="Science")
+    champion_user = await push_champion_user(account, champion)
+    placement = DefensePlacement(
+        alliance_id=alliance.id,
+        battlegroup=battlegroup,
+        node_number=node_number,
+        champion_user_id=champion_user.id,
+        game_account_id=account.id,
+    )
+    await load_objects([placement])
+    return placement
+
+
+async def _placement_ids(session, alliance_id):
+    result = await session.exec(
+        select(DefensePlacement).where(DefensePlacement.alliance_id == alliance_id)
+    )
+    return {p.id for p in result.all()}
 
 
 # =========================================================================
@@ -198,6 +224,71 @@ class TestRemoveMember:
             headers=HEADERS_USER1,
         )
         assert response.status_code == 400
+
+
+# =========================================================================
+# Leaving / being kicked frees the defense nodes
+# =========================================================================
+
+
+class TestRemoveMemberClearsDefense:
+    """A departed member's champions are gone from the alliance, so their
+    defense placements must not stay on the war map."""
+
+    @pytest.mark.asyncio
+    async def test_kicked_member_defense_is_cleared(self, session):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        owner_placement = await _push_placement(alliance, owner, 1, "Spider-Man")
+        await _push_placement(alliance, member, 2, "Wolverine")
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _placement_ids(session, alliance.id) == {owner_placement.id}
+
+    @pytest.mark.asyncio
+    async def test_member_leaving_clears_own_defense(self, session):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        owner_placement = await _push_placement(alliance, owner, 1, "Spider-Man")
+        await _push_placement(alliance, member, 2, "Wolverine")
+        await _push_placement(alliance, member, 3, "Iron Man", battlegroup=2)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER2,
+        )
+        assert response.status_code == 200
+        # Every battlegroup is cleaned, not just the one they were placed in
+        assert await _placement_ids(session, alliance.id) == {owner_placement.id}
+
+    @pytest.mark.asyncio
+    async def test_other_alliance_defense_is_untouched(self, session):
+        """The member is only cleaned out of the alliance they are leaving."""
+        await _setup_2_users()
+        alliance, _owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        other_alliance, other_owner = await push_alliance_with_owner(
+            user_id=USER_ID,
+            game_pseudo=GAME_PSEUDO_3,
+            alliance_name="OtherAlliance",
+            alliance_tag="OTHR",
+        )
+        await _push_placement(alliance, member, 1, "Spider-Man")
+        other_placement = await _push_placement(other_alliance, other_owner, 1, "Wolverine")
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _placement_ids(session, alliance.id) == set()
+        assert await _placement_ids(session, other_alliance.id) == {other_placement.id}
 
 
 # =========================================================================
