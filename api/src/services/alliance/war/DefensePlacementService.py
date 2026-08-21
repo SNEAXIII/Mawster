@@ -215,6 +215,32 @@ class DefensePlacementService:
         await session.commit()
 
     @classmethod
+    async def remove_placements_for_member(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        game_account_id: uuid.UUID,
+    ) -> int:
+        """Remove every defender placed by a member on the alliance defense.
+
+        Called when a member leaves or is kicked: their roster is no longer
+        available to the alliance, so the nodes they occupied must be freed.
+        Flushes but does not commit — the caller owns the transaction.
+        Returns the number of placements deleted."""
+        stmt = select(DefensePlacement).where(
+            and_(
+                DefensePlacement.alliance_id == alliance_id,
+                DefensePlacement.game_account_id == game_account_id,
+            )
+        )
+        result = await session.exec(stmt)
+        placements = result.all()
+        for p in placements:
+            await session.delete(p)
+        await session.flush()
+        return len(placements)
+
+    @classmethod
     async def clear_defense(
         cls,
         session: SessionDep,
