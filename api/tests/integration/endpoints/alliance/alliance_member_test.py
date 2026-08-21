@@ -73,6 +73,14 @@ async def _push_placement(alliance, account, node_number, champion_name, battleg
     return placement
 
 
+async def _push_member_in_group(alliance, user_id, game_pseudo, group):
+    """Add a member to the alliance, already assigned to a battlegroup."""
+    member = await push_member(alliance, user_id=user_id, game_pseudo=game_pseudo)
+    member.alliance_group = group
+    await load_objects([member])
+    return member
+
+
 async def _placement_ids(session, alliance_id):
     result = await session.exec(
         select(DefensePlacement).where(DefensePlacement.alliance_id == alliance_id)
@@ -475,6 +483,69 @@ class TestSetMemberGroup:
             headers=HEADERS_USER1,
         )
         assert response.status_code == 409
+
+
+# =========================================================================
+# Changing battlegroup frees the defense nodes of the old one
+# =========================================================================
+
+
+class TestSetMemberGroupClearsDefense:
+    """A defender only exists on its owner's battlegroup, so moving a member out
+    of a battlegroup must take their defenders off that map."""
+
+    @pytest.mark.asyncio
+    async def test_moving_to_another_group_clears_defense(self, session):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        owner.alliance_group = 1
+        await load_objects([owner])
+        member = await _push_member_in_group(alliance, USER2_ID, GAME_PSEUDO_2, group=1)
+        owner_placement = await _push_placement(alliance, owner, 1, "Spider-Man")
+        await _push_placement(alliance, member, 2, "Wolverine")
+
+        response = await execute_patch_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}/group",
+            {"group": 2},
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _placement_ids(session, alliance.id) == {owner_placement.id}
+
+    @pytest.mark.asyncio
+    async def test_removing_from_group_clears_defense(self, session):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        owner.alliance_group = 1
+        await load_objects([owner])
+        member = await _push_member_in_group(alliance, USER2_ID, GAME_PSEUDO_2, group=1)
+        owner_placement = await _push_placement(alliance, owner, 1, "Spider-Man")
+        await _push_placement(alliance, member, 2, "Wolverine")
+
+        response = await execute_patch_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}/group",
+            {"group": None},
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _placement_ids(session, alliance.id) == {owner_placement.id}
+
+    @pytest.mark.asyncio
+    async def test_setting_the_same_group_keeps_defense(self, session):
+        """Re-sending the group the member already has is a no-op — their
+        defenders are still on the right map and must survive."""
+        await _setup_2_users()
+        alliance, _owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await _push_member_in_group(alliance, USER2_ID, GAME_PSEUDO_2, group=1)
+        placement = await _push_placement(alliance, member, 2, "Wolverine")
+
+        response = await execute_patch_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}/group",
+            {"group": 1},
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _placement_ids(session, alliance.id) == {placement.id}
 
 
 # =========================================================================

@@ -819,6 +819,14 @@ class AllianceService:
                     status_code=status.HTTP_409_CONFLICT,
                     detail=group_max_members_reached(group, MAX_MEMBERS_PER_GROUP),
                 )
+        # A defender only exists on the battlegroup its owner belongs to. Moving
+        # the member (or pulling them out of every group) would strand their
+        # defenders on a map they can no longer be placed on, so free those nodes.
+        if group != game_account.alliance_group:
+            await DefensePlacementService.remove_placements_for_member(
+                session, alliance_id, game_account_id
+            )
+
         game_account.alliance_group = group
         session.add(game_account)
         await session.commit()
