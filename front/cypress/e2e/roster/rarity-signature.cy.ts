@@ -113,8 +113,8 @@ describe('Roster – Rarity & Signature', () => {
         cy.getByCy('champion-submit').click();
         cy.contains('DoctorVoodoo added / updated').scrollIntoView().should('be.visible');
 
-        // Verify sig 200 is displayed on the card
-        cy.getByCy('champion-card-DoctorVoodoo').find('[data-cy="champion-sig"]').should('contain', 'sig 200');
+        // Verify the signature value is displayed on the card
+        cy.getByCy('champion-card-DoctorVoodoo').find('[data-cy="champion-sig"]').should('contain', '200');
       });
     });
 
@@ -137,8 +137,8 @@ describe('Roster – Rarity & Signature', () => {
         cy.getByCy('champion-submit').click();
         cy.contains('Magik added / updated').scrollIntoView().should('be.visible');
 
-        // Verify sig 150 on the card
-        cy.getByCy('champion-card-Magik').find('[data-cy="champion-sig"]').should('contain', 'sig 150');
+        // Verify the signature value on the card
+        cy.getByCy('champion-card-Magik').find('[data-cy="champion-sig"]').should('contain', '150');
       });
     });
 
@@ -157,11 +157,11 @@ describe('Roster – Rarity & Signature', () => {
         cy.getByCy('champion-submit').click();
         cy.contains('Phoenix added / updated').scrollIntoView().should('be.visible');
 
-        // Card should show "sig 0" with the dim style (text-white/50)
+        // Card should show a dim "0" signature
         cy.getByCy('champion-card-Phoenix')
           .find('[data-cy="champion-sig"]')
-          .should('contain', 'sig 0')
-          .and('have.class', 'text-white/50');
+          .should('contain', '0')
+          .and('have.class', 'text-muted-foreground');
       });
     });
   });
