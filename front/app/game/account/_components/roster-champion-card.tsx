@@ -25,6 +25,32 @@ interface RosterChampionCardProps {
   onCancelRequest?: (requestId: string) => void
 }
 
+/** Action button rendered over the top scrim of the card */
+function CardAction({
+  className,
+  onClick,
+  title,
+  dataCy,
+  children,
+}: Readonly<{
+  className: string
+  onClick: () => void
+  title: string
+  dataCy?: string
+  children: React.ReactNode
+}>) {
+  return (
+    <button
+      className={cn('rounded p-0.5 transition-colors', className)}
+      onClick={onClick}
+      title={title}
+      data-cy={dataCy}
+    >
+      {children}
+    </button>
+  )
+}
+
 export default function RosterChampionCard({
   entry,
   onEdit,
@@ -42,99 +68,30 @@ export default function RosterChampionCard({
 
   return (
     <div
-      className={`rounded-md bg-card ${classColors.border} border-[3px] shadow hover:shadow-lg transition-shadow relative group`}
+      className={cn(
+        'group relative mx-auto flex w-full max-w-[84px] flex-col items-center rounded-md border bg-card/50 pt-0.5 transition-colors hover:bg-card',
+        classColors.border
+      )}
       data-cy={`champion-card-${entry.champion_name}`}
     >
-      {/* Action buttons — always visible on touch, hover on desktop */}
-      {!readOnly && (
-        <div className='absolute top-1 right-1 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-40'>
-          {onTogglePreferredAttacker && (
-            <button
-              className={cn(
-                'bg-black/60 rounded-full p-1',
-                entry.is_preferred_attacker
-                  ? 'text-yellow-400 hover:text-yellow-300'
-                  : 'text-white/40 hover:text-yellow-400'
-              )}
-              onClick={() => onTogglePreferredAttacker(entry)}
-              title={t.roster.preferredAttackerToggle}
-              data-cy='preferred-attacker-toggle'
-            >
-              <span className='text-xs leading-none'>⚔</span>
-            </button>
-          )}
-          {entry.is_ascendable && entry.ascension < 2 && onAscend && (
-            <button
-              className='text-purple-400 hover:text-purple-300 bg-black/60 rounded-full p-1'
-              onClick={() => onAscend(entry)}
-              title='Ascension'
-            >
-              <Star className='size-3.5' />
-            </button>
-          )}
-          {pendingRequestId && onCancelRequest && (
-            <button
-              data-cy='cancel-pending-request'
-              className='text-red-400 hover:text-red-300 bg-black/60 rounded-full p-1'
-              onClick={() => onCancelRequest(pendingRequestId)}
-              title={t.roster.upgradeRequests.cancel}
-            >
-              <X className='size-3.5' />
-            </button>
-          )}
-          {!pendingRequestId && nextRarity && onUpgrade && (
-            <button
-              data-cy='champion-upgrade'
-              className='text-green-400 hover:text-green-300 bg-black/60 rounded-full p-1'
-              onClick={() => onUpgrade(entry)}
-              title={t.roster.upgrade}
-            >
-              <ArrowUp className='size-3.5' />
-            </button>
-          )}
-          {onEdit && (
-            <button
-              className='text-blue-400 hover:text-blue-300 bg-black/60 rounded-full p-1'
-              onClick={() => onEdit(entry)}
-              title='Edit'
-              data-cy='champion-edit'
-            >
-              <Pencil className='size-3.5' />
-            </button>
-          )}
-          {onDelete && (
-            <button
-              className='text-red-400 hover:text-red-600 bg-black/60 rounded-full p-1'
-              onClick={() => onDelete(entry)}
-              title={t.common.delete}
-              data-cy='champion-delete'
-            >
-              <Trash2 className='size-3.5' />
-            </button>
-          )}
-        </div>
-      )}
+      {/* Star frame portrait */}
+      <ChampionPortrait
+        imageUrl={entry.image_url}
+        name={entry.champion_name}
+        rarity={entry.rarity}
+        size={72}
+        isPreferred={entry.is_preferred_attacker}
+        ascension={entry.ascension}
+        is_saga_attacker={entry.is_saga_attacker}
+        is_saga_defender={entry.is_saga_defender}
+        sagaMode='all'
+      />
 
-      {/* Champion portrait with frame */}
-      <div className='flex justify-center pt-1'>
-        <ChampionPortrait
-          imageUrl={entry.image_url}
-          name={entry.champion_name}
-          rarity={entry.rarity}
-          size={72}
-          isPreferred={entry.is_preferred_attacker}
-          ascension={entry.ascension}
-          is_saga_attacker={entry.is_saga_attacker}
-          is_saga_defender={entry.is_saga_defender}
-          sagaMode='all'
-        />
-      </div>
-
-      {/* Name (shortened) */}
+      {/* Name */}
       <p
         className={cn(
-          'text-[10px] font-semibold text-center truncate px-0.5 mt-0.5',
-          entry.is_preferred_attacker ? 'text-yellow-400' : 'text-white'
+          '-mt-1 w-full truncate px-1 text-center text-[10px] leading-tight font-semibold',
+          entry.is_preferred_attacker ? 'text-yellow-400' : 'text-foreground'
         )}
         title={entry.champion_name}
         data-cy={entry.is_preferred_attacker ? 'preferred-attacker-name' : undefined}
@@ -142,32 +99,95 @@ export default function RosterChampionCard({
         {shortenChampionName(entry.champion_name)}
       </p>
 
-      {/* Signature + Ascension */}
-      <div className='flex justify-center gap-1 pb-1'>
-        {entry.signature > 0 ? (
-          <span
-            className='text-amber-400 text-[9px] font-semibold'
-            data-cy='champion-sig'
-          >
-            sig {entry.signature}
-          </span>
-        ) : (
-          <span
-            className='text-white/50 text-[9px]'
-            data-cy='champion-sig'
-          >
-            sig 0
-          </span>
-        )}
+      {/* Signature + ascension */}
+      <div className='flex items-center gap-1 pb-0.5 leading-tight'>
+        <span
+          className={cn(
+            'text-[9px] font-semibold tabular-nums',
+            entry.signature > 0 ? 'text-amber-400' : 'text-muted-foreground'
+          )}
+          data-cy='champion-sig'
+        >
+          {entry.signature}
+        </span>
         {entry.ascension > 0 && (
           <span
-            className='text-purple-400 text-[9px] font-semibold'
+            className='text-[9px] font-semibold text-purple-400'
             data-cy='champion-ascension'
           >
-            · A{entry.ascension}
+            A{entry.ascension}
           </span>
         )}
       </div>
+
+      {/* Action bar — always visible on touch, hover on desktop */}
+      {!readOnly && (
+        <div className='absolute inset-x-0 top-0 z-40 flex justify-end gap-0.5 rounded-t bg-gradient-to-b from-black/85 to-transparent p-0.5 pb-3 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100'>
+          {onTogglePreferredAttacker && (
+            <CardAction
+              className={
+                entry.is_preferred_attacker
+                  ? 'text-yellow-400 hover:text-yellow-300'
+                  : 'text-white/50 hover:text-yellow-400'
+              }
+              onClick={() => onTogglePreferredAttacker(entry)}
+              title={t.roster.preferredAttackerToggle}
+              dataCy='preferred-attacker-toggle'
+            >
+              <span className='text-xs leading-none'>⚔</span>
+            </CardAction>
+          )}
+          {entry.is_ascendable && entry.ascension < 2 && onAscend && (
+            <CardAction
+              className='text-purple-400 hover:text-purple-300'
+              onClick={() => onAscend(entry)}
+              title='Ascension'
+            >
+              <Star className='size-3.5' />
+            </CardAction>
+          )}
+          {pendingRequestId && onCancelRequest && (
+            <CardAction
+              className='text-red-400 hover:text-red-300'
+              onClick={() => onCancelRequest(pendingRequestId)}
+              title={t.roster.upgradeRequests.cancel}
+              dataCy='cancel-pending-request'
+            >
+              <X className='size-3.5' />
+            </CardAction>
+          )}
+          {!pendingRequestId && nextRarity && onUpgrade && (
+            <CardAction
+              className='text-green-400 hover:text-green-300'
+              onClick={() => onUpgrade(entry)}
+              title={t.roster.upgrade}
+              dataCy='champion-upgrade'
+            >
+              <ArrowUp className='size-3.5' />
+            </CardAction>
+          )}
+          {onEdit && (
+            <CardAction
+              className='text-blue-400 hover:text-blue-300'
+              onClick={() => onEdit(entry)}
+              title='Edit'
+              dataCy='champion-edit'
+            >
+              <Pencil className='size-3.5' />
+            </CardAction>
+          )}
+          {onDelete && (
+            <CardAction
+              className='text-red-400 hover:text-red-600'
+              onClick={() => onDelete(entry)}
+              title={t.common.delete}
+              dataCy='champion-delete'
+            >
+              <Trash2 className='size-3.5' />
+            </CardAction>
+          )}
+        </div>
+      )}
     </div>
   )
 }

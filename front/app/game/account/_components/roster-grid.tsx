@@ -46,19 +46,19 @@ export default function RosterGrid({
   }
 
   return (
-    <div className='flex flex-col gap-6'>
+    <div className='flex flex-col gap-4'>
       {groupedRoster.map(([rarity, entries]) => (
         <div
           key={rarity}
           data-cy={`rarity-group-${rarity}`}
         >
-          <h3 className='text-lg font-semibold mb-2 flex items-center gap-2'>
-            <span className='bg-muted text-yellow-400 px-3 py-0.5 rounded-md text-sm font-bold'>
+          <h3 className='text-base font-semibold mb-1.5 flex items-center gap-2'>
+            <span className='bg-muted text-yellow-400 px-2 py-0.5 rounded text-xs font-bold'>
               {RARITY_LABELS[rarity]}
             </span>
-            <span className='text-sm text-muted-foreground'>({entries.length})</span>
+            <span className='text-xs text-muted-foreground'>({entries.length})</span>
           </h3>
-          <div className='grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2'>
+          <div className='grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-14 gap-1.5'>
             {entries.map((entry) => {
               const pending = upgradeRequests?.find((r) => r.champion_user_id === entry.id)
               return (
