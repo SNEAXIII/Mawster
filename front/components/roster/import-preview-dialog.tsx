@@ -62,7 +62,9 @@ export default function ImportPreviewDialog({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className='max-w-xl max-h-[85vh] flex flex-col'>
+      {/* p-4 on a phone: the default p-6 spends 48px of a 360px screen on gutters,
+          which is what pushed the review row's fields into each other. */}
+      <DialogContent className='max-w-xl max-h-[85vh] flex flex-col p-4 sm:p-6'>
         <DialogHeader>
           <DialogTitle>{t.roster.importExport.previewTitle}</DialogTitle>
           <DialogDescription>
@@ -86,7 +88,7 @@ export default function ImportPreviewDialog({
         )}
 
         {/* Scrollable list */}
-        <div className='flex-1 overflow-y-auto px-2'>
+        <div className='flex-1 overflow-y-auto px-1 sm:px-2'>
           {editable ? (
             <MarginGroupedRows
               previewRows={previewRows}

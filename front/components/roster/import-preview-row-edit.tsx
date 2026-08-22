@@ -102,52 +102,52 @@ export default function ImportPreviewRowEdit({
   }
 
   return (
-    <div className='flex gap-3 py-3'>
-      <div className='shrink-0'>
-        {row.spriteUrl && row.cropIndex != null && !spriteFailed ? (
-          // The box is sized from SPRITE_DISPLAY rather than an h-24/w-24 rem
-          // pair: rem tracks the browser's root font size, and a user who raised
-          // it would get a box larger than the pixel arithmetic slicing it, so
-          // the neighbouring cells would bleed in and a row would show two
-          // champions' art. One number drives both, so they cannot disagree.
-          <div
-            className='overflow-hidden rounded-md border border-border'
-            style={{ width: SPRITE_DISPLAY, height: SPRITE_DISPLAY }}
-          >
-            <img
-              src={row.spriteUrl}
-              alt={row.champion_name}
-              onError={() => setSpriteFailed(true)}
-              // The sheet is always SPRITE_COLS cells wide, so scaling it to
-              // SPRITE_COLS box-widths makes one cell exactly one box. Still one
-              // request for the whole screenshot, as with the background-image.
-              // Width and both offsets are percentages of the same box, so the
-              // border eating into the content width shifts nothing — and a
-              // percentage margin-top resolves against the *width* too, which is
-              // what makes the vertical step match the horizontal one on a
-              // square cell.
-              className='max-w-none'
-              style={{
-                width: `${SPRITE_COLS * 100}%`,
-                marginLeft: `${-(row.cropIndex % SPRITE_COLS) * 100}%`,
-                marginTop: `${-Math.floor(row.cropIndex / SPRITE_COLS) * 100}%`,
-              }}
-              data-cy={`preview-row-crop-${index}`}
+    <div className='flex flex-col gap-2 py-3'>
+      <div className='flex gap-3'>
+        <div className='shrink-0'>
+          {row.spriteUrl && row.cropIndex != null && !spriteFailed ? (
+            // The box is sized from SPRITE_DISPLAY rather than an h-24/w-24 rem
+            // pair: rem tracks the browser's root font size, and a user who raised
+            // it would get a box larger than the pixel arithmetic slicing it, so
+            // the neighbouring cells would bleed in and a row would show two
+            // champions' art. One number drives both, so they cannot disagree.
+            <div
+              className='overflow-hidden rounded-md border border-border'
+              style={{ width: SPRITE_DISPLAY, height: SPRITE_DISPLAY }}
+            >
+              <img
+                src={row.spriteUrl}
+                alt={row.champion_name}
+                onError={() => setSpriteFailed(true)}
+                // The sheet is always SPRITE_COLS cells wide, so scaling it to
+                // SPRITE_COLS box-widths makes one cell exactly one box. Still one
+                // request for the whole screenshot, as with the background-image.
+                // Width and both offsets are percentages of the same box, so the
+                // border eating into the content width shifts nothing — and a
+                // percentage margin-top resolves against the *width* too, which is
+                // what makes the vertical step match the horizontal one on a
+                // square cell.
+                className='max-w-none'
+                style={{
+                  width: `${SPRITE_COLS * 100}%`,
+                  marginLeft: `${-(row.cropIndex % SPRITE_COLS) * 100}%`,
+                  marginTop: `${-Math.floor(row.cropIndex / SPRITE_COLS) * 100}%`,
+                }}
+                data-cy={`preview-row-crop-${index}`}
+              />
+            </div>
+          ) : (
+            <ChampionPortrait
+              imageUrl={row.image_url}
+              name={row.champion_name}
+              rarity={row.newRarity}
+              size={40}
             />
-          </div>
-        ) : (
-          <ChampionPortrait
-            imageUrl={row.image_url}
-            name={row.champion_name}
-            rarity={row.newRarity}
-            size={40}
-          />
-        )}
-      </div>
+          )}
+        </div>
 
-      <div className='min-w-0 flex-1 space-y-1.5'>
         {/* Identity: name, class and the two badges on one wrapping line */}
-        <div className='flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1'>
+        <div className='flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 self-start'>
           <ImportPreviewChampionPicker
             index={index}
             championName={shortenChampionName(row.champion_name)}
@@ -184,64 +184,71 @@ export default function ImportPreviewRowEdit({
             {statusLabels[status]}
           </Badge>
         </div>
-        <div className='flex flex-row gap-6'>
-          <label className='flex min-w-0 flex-col gap-0.5'>
-            <span className='text-[10px] uppercase tracking-wide text-muted-foreground'>
-              {t.roster.importExport.rarityLabel}
-            </span>
-            <Select
-              value={row.newRarity}
-              onValueChange={(value) => emit({ newRarity: value })}
+      </div>
+
+      {/* The three fields sit under the crop, on the row's full width, and in a
+          grid rather than a flex line. A number input carries a wide intrinsic
+          minimum, so on a flex line the two of them squeezed the rarity select
+          down to "7R…" on a phone — the one value the reviewer is here to check.
+          minmax(0,1fr) columns share the width evenly whatever the content, and
+          rarity gets the wider share since its value is the longest. */}
+      <div className='grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] gap-2'>
+        <label className='flex min-w-0 flex-col gap-0.5'>
+          <span className='text-[10px] uppercase tracking-wide text-muted-foreground'>
+            {t.roster.importExport.rarityLabel}
+          </span>
+          <Select
+            value={row.newRarity}
+            onValueChange={(value) => emit({ newRarity: value })}
+          >
+            <SelectTrigger
+              className='h-8 w-full text-xs px-2 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:shrink-0'
+              data-cy={`preview-row-rarity-select-${index}`}
             >
-              <SelectTrigger
-                className='h-8 w-full text-xs px-2'
-                data-cy={`preview-row-rarity-select-${index}`}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {RARITIES.map((rarity) => (
-                  <SelectItem
-                    key={rarity}
-                    value={rarity}
-                  >
-                    {RARITY_LABELS[rarity] ?? rarity}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </label>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {RARITIES.map((rarity) => (
+                <SelectItem
+                  key={rarity}
+                  value={rarity}
+                >
+                  {RARITY_LABELS[rarity] ?? rarity}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </label>
 
-          <label className='flex flex-col gap-0.5'>
-            <span className='text-[10px] uppercase tracking-wide text-muted-foreground'>
-              {t.roster.importExport.sigLabel}
-            </span>
-            <Input
-              type='number'
-              min={0}
-              max={MAX_SIGNATURE}
-              className='h-8 w-full text-xs px-2'
-              value={row.newSignature}
-              onChange={(e) => emit({ newSignature: clamp(e.target.value, MAX_SIGNATURE) })}
-              data-cy={`preview-row-signature-input-${index}`}
-            />
-          </label>
+        <label className='flex min-w-0 flex-col gap-0.5'>
+          <span className='text-[10px] uppercase tracking-wide text-muted-foreground'>
+            {t.roster.importExport.sigLabel}
+          </span>
+          <Input
+            type='number'
+            min={0}
+            max={MAX_SIGNATURE}
+            className='h-8 w-full min-w-0 text-xs px-2'
+            value={row.newSignature}
+            onChange={(e) => emit({ newSignature: clamp(e.target.value, MAX_SIGNATURE) })}
+            data-cy={`preview-row-signature-input-${index}`}
+          />
+        </label>
 
-          <label className='flex flex-col gap-0.5'>
-            <span className='text-[10px] uppercase tracking-wide text-muted-foreground'>
-              {t.roster.importExport.ascLabel}
-            </span>
-            <Input
-              type='number'
-              min={0}
-              max={MAX_ASCENSION}
-              className='h-8 w-full text-xs px-2'
-              value={row.ascension ?? 0}
-              onChange={(e) => emit({ ascension: clamp(e.target.value, MAX_ASCENSION) })}
-              data-cy={`preview-row-ascension-input-${index}`}
-            />
-          </label>
-        </div>
+        <label className='flex min-w-0 flex-col gap-0.5'>
+          <span className='text-[10px] uppercase tracking-wide text-muted-foreground'>
+            {t.roster.importExport.ascLabel}
+          </span>
+          <Input
+            type='number'
+            min={0}
+            max={MAX_ASCENSION}
+            className='h-8 w-full min-w-0 text-xs px-2'
+            value={row.ascension ?? 0}
+            onChange={(e) => emit({ ascension: clamp(e.target.value, MAX_ASCENSION) })}
+            data-cy={`preview-row-ascension-input-${index}`}
+          />
+        </label>
       </div>
     </div>
   )
