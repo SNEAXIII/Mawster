@@ -9,6 +9,7 @@ import PreferredBadge from '@/components/preferred-badge'
 import SagaBadge from '@/components/saga-badge'
 import AscensionBadge from '@/components/ascension-badge'
 import { cn } from '@/app/lib/utils'
+import { useExportMode } from '@/app/contexts/export-mode-context'
 
 type mode = 'normal' | 'synergy' | 'prefight'
 type SagaMode = 'attacker' | 'defender' | 'all'
@@ -62,8 +63,11 @@ export default function ChampionPortrait({
       : sagaMode === 'defender'
         ? is_saga_defender
         : is_saga_attacker || is_saga_defender
+  const exporting = useExportMode()
   const frameUrl = getStarFrameUrl(rarity)
-  const imgSize = 60 // pre-resized thumbnails
+  // Pre-resized thumbnail on screen; full-resolution source while exporting, so
+  // the upscaled PNG capture stays sharp.
+  const imgSize = exporting ? undefined : 60
   const baseClass = 'absolute inset-1.5 pb-0.75 w-[calc(100%-12px)] h-[calc(100%-12px)]'
 
   return (

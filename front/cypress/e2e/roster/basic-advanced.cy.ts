@@ -81,7 +81,7 @@ describe('Roster – Basic (advanced)', () => {
       cy.contains('button', '200').click();
       cy.getByCy('champion-submit').click();
       cy.contains('DoctorSig added / updated').scrollIntoView().should('be.visible');
-      cy.contains('sig 200').scrollIntoView().should('be.visible');
+      cy.get('[data-cy="champion-sig"]').contains('200').scrollIntoView().should('be.visible');
     });
   });
 
