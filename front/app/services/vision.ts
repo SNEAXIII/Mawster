@@ -267,7 +267,11 @@ export const getSpriteUrl = (importId: string, jobId: string): string =>
 // arithmetic needs. Changing either here without changing the worker puts the
 // wrong champion's art beside a row.
 export const SPRITE_COLS = 8
-export const SPRITE_DISPLAY = 96
+// The card's rank line ("Rang 4") is printed small inside the crop, and at 96
+// it was unreadable on a phone — the one thing a reviewer needs to check the
+// detected rarity against. 128 stays below the 192px source cell, so the
+// thumbnail is still downscaled and never blurred.
+export const SPRITE_DISPLAY = 128
 
 export const confirmVisionImport = async (
   importId: string,
