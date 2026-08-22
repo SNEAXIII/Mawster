@@ -570,6 +570,7 @@ const fr: Translations = {
       preferredAttackerFilter: 'Préféré',
       rankFilter: 'Rang',
       noteLabel: 'Note',
+      noAttackerAssigned: 'Aucun attaquant assigné',
       notePlaceholder: 'Ajouter une note pour ce combat…',
       noteSave: 'Enregistrer la note',
       noteSaved: 'Note enregistrée',

@@ -563,6 +563,7 @@ const en = {
       preferredAttackerFilter: 'Preferred',
       rankFilter: 'Rank',
       noteLabel: 'Note',
+      noAttackerAssigned: 'No attacker assigned',
       notePlaceholder: 'Add a note for this combat…',
       noteSave: 'Save note',
       noteSaved: 'Note saved',

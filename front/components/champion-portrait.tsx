@@ -13,6 +13,13 @@ import { useExportMode } from '@/app/contexts/export-mode-context'
 type mode = 'normal' | 'synergy' | 'prefight'
 type SagaMode = 'attacker' | 'defender' | 'all'
 
+/**
+ * Shape of the outer box:
+ * - 'square' — size x size, the frame letterboxed inside it
+ * - 'frame'  — size x size/1.218, no dead space above and below the frame
+ */
+export type BoxShape = 'square' | 'frame'
+
 /** Both star frames share the same aspect ratio (212x174 and 106x87). */
 const FRAME_ASPECT = 212 / 174
 
@@ -58,10 +65,15 @@ export function pickThumbnailSize(cssPx: number): number | undefined {
  * The frame is `object-contain` in a square box, so it renders full-width and
  * letterboxed vertically — the window has to be offset by that letterbox.
  */
-export function getFrameWindowRect(size: number, rarity: string, override?: FrameWindow) {
+export function getFrameWindowRect(
+  size: number,
+  rarity: string,
+  override?: FrameWindow,
+  box: BoxShape = 'square'
+) {
   const w = override ?? FRAME_WINDOWS[rarity.charAt(0)] ?? FRAME_WINDOWS['6']
   const frameHeight = size / FRAME_ASPECT
-  const letterbox = (size - frameHeight) / 2
+  const letterbox = box === 'frame' ? 0 : (size - frameHeight) / 2
   return {
     left: w.left * size,
     top: letterbox + w.top * frameHeight,
@@ -95,6 +107,8 @@ interface ChampionPortraitProps {
   ascension?: number
   /** Override the image placement inside the frame — used by the /dev/portrait lab */
   frameWindow?: FrameWindow
+  /** Outer box shape — 'frame' drops the vertical dead space (default 'square') */
+  box?: BoxShape
   dataCy?: string
 }
 
@@ -117,6 +131,7 @@ export default function ChampionPortrait({
   sagaMode = 'all',
   ascension = 0,
   frameWindow,
+  box = 'square',
   dataCy,
 }: Readonly<ChampionPortraitProps>) {
   const showSaga =
@@ -127,7 +142,7 @@ export default function ChampionPortrait({
         : is_saga_attacker || is_saga_defender
   const exporting = useExportMode()
   const frameUrl = getStarFrameUrl(rarity)
-  const windowRect = getFrameWindowRect(size, rarity, frameWindow)
+  const windowRect = getFrameWindowRect(size, rarity, frameWindow, box)
   const focusY = (frameWindow ?? FRAME_WINDOWS[rarity.charAt(0)] ?? FRAME_WINDOWS['6']).focusY
   // Pre-resized thumbnail on screen; full-resolution source while exporting, so
   // the upscaled PNG capture stays sharp.
@@ -137,7 +152,7 @@ export default function ChampionPortrait({
   return (
     <div
       className='relative shrink-0'
-      style={{ width: size, height: size }}
+      style={{ width: size, height: box === 'frame' ? size / FRAME_ASPECT : size }}
       data-cy={dataCy ?? `champion-portrait-${name}-${mode}`}
     >
       {/* Star frame – behind */}
