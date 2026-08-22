@@ -10,7 +10,6 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": false,
-    "baseUrl": "..",
     "types": ["cypress"]
   },
   "include": ["**/*.ts", "support/index.d.ts"]

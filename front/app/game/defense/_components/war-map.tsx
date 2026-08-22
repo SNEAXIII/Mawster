@@ -24,9 +24,32 @@ interface WarMapNodeProps {
   hasNote?: boolean
 }
 
+/**
+ * Compact node geometry. The portrait fills the cell edge to edge, so the cell
+ * is exactly as tall as the star frame renders (frames are 1.218:1) plus the
+ * optional pseudo line — no dead space, no fixed magic heights.
+ */
+const NODE_WIDTH = 56
+const BORDER = 2
+/** 1px of breathing room so the cell's coloured border stays visible on the left. */
+const PAD_LEFT = 1
+const PORTRAIT = NODE_WIDTH - BORDER * 2 - PAD_LEFT
+const PORTRAIT_HEIGHT = Math.round(PORTRAIT / (212 / 174))
+const PSEUDO_HEIGHT = 12
+
 export function WarMapPlaceHolder() {
-  return <div className='w-3'></div>
+  return <div className='w-2'></div>
 }
+
+/** "7R4·A2" when signatures are hidden, "R4·200·A1" otherwise. */
+function nodeRarityLabel(placement: DefensePlacement, hideSig: boolean): string {
+  if (!hideSig) return rarityLabel(placement.rarity, placement.signature, placement.ascension)
+  const { stars, rank } = parseRarity(placement.rarity)
+  const parts = [`${stars}R${rank}`]
+  if (placement.ascension > 0) parts.push(`A${placement.ascension}`)
+  return parts.join('·')
+}
+
 export function WarMapNode({
   nodeNumber,
   placement,
@@ -42,21 +65,28 @@ export function WarMapNode({
   hasNote = false,
 }: Readonly<WarMapNodeProps>) {
   const { t } = useI18n()
+  // The line is reserved for every node so rows keep one height, and an empty
+  // one on a placed defender means "no attacker assigned" rather than "hidden".
+  const showPseudo = !hidePseudo
 
   return (
     <div
       role='button'
       tabIndex={0}
       className={cn(
-        'relative flex flex-col items-center justify-center rounded-lg border-2 cursor-pointer transition-all',
-        'w-17 h-20.5',
+        'group relative rounded-md border-2 cursor-pointer transition-all',
         colorClasses,
         hoverClasses,
         hasPrefight && 'ring-2 ring-foreground',
         !hasPrefight && !dimmed && placement && 'ring-1 ring-white/30',
-        !dimmed && !placement && 'opacity-80',
+        // Empty nodes recede so the eye lands on what is actually placed.
+        !placement && 'border-dashed opacity-45 hover:opacity-80',
         dimmed && 'opacity-25'
       )}
+      style={{
+        width: NODE_WIDTH,
+        height: PORTRAIT_HEIGHT + BORDER * 2 + (showPseudo ? PSEUDO_HEIGHT : 0),
+      }}
       onClick={() => onNodeClick(nodeNumber)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') onNodeClick(nodeNumber)
@@ -68,71 +98,86 @@ export function WarMapNode({
       }
       data-cy={`war-node-${nodeNumber}`}
     >
-      {/* Node number badge */}
-      <span className='absolute -top-2 -left-1 text-[10px] font-bold bg-black/70 text-white rounded px-1 z-20'>
-        {nodeNumber}
-      </span>
-
-      {/* Note indicator */}
-      {hasNote && (
-        <span
-          className='absolute -bottom-1.5 -right-1.5 z-30 flex items-center justify-center rounded-full bg-amber-500 text-white ring-1 ring-background p-0.5 shadow'
-          data-cy={`war-node-has-note-${nodeNumber}`}
-          title={t.game.war.noteLabel}
-        >
-          <StickyNote className='size-2.5' />
-        </span>
-      )}
-
-      {/* Remove button */}
-      {placement && canManage && (
-        <button
-          className='absolute -top-2 -right-2 z-30 bg-red-600 hover:bg-red-700 text-white rounded-full w-5 h-5 flex items-center justify-center'
-          onClick={(e) => {
-            e.stopPropagation()
-            onRemove(nodeNumber)
-          }}
-          title={t.game.defense.removeDefender}
-        >
-          <X className='w-3 h-3' />
-        </button>
-      )}
-      {placement ? (
-        <div className='flex flex-col items-center gap-0.5'>
-          <ChampionPortrait
-            imageUrl={placement.champion_image_url}
-            name={placement.champion_name}
-            rarity={placement.rarity}
-            size={45}
-            isPreferred={placement.is_preferred_attacker}
-            ascension={placement.ascension}
-            is_saga_attacker={placement.is_saga_attacker}
-            is_saga_defender={placement.is_saga_defender}
-            sagaMode='defender'
-          />
-          <span
-            className={cn(
-              'text-[10px] font-medium leading-none',
-              rarityBadgeClass(placement.rarity)
-            )}
-          >
-            {hideSig
-              ? (() => {
-                  const { stars, rank } = parseRarity(placement.rarity)
-                  const parts = [`${stars}R${rank}`]
-                  if (placement.ascension > 0) parts.push(`A${placement.ascension}`)
-                  return parts.join('·')
-                })()
-              : rarityLabel(placement.rarity, placement.signature, placement.ascension)}
-          </span>
-          {!hidePseudo && placement.game_pseudo && (
-            <span className='text-[9px] text-white/80 truncate max-w-14 sm:max-w-16 text-center leading-tight'>
-              {placement.game_pseudo}
+      <div
+        className='relative w-full'
+        style={{ height: PORTRAIT_HEIGHT, paddingLeft: PAD_LEFT }}
+      >
+        {placement ? (
+          <>
+            <ChampionPortrait
+              imageUrl={placement.champion_image_url}
+              name={placement.champion_name}
+              rarity={placement.rarity}
+              size={PORTRAIT}
+              box='frame'
+              isPreferred={placement.is_preferred_attacker}
+              ascension={placement.ascension}
+              is_saga_attacker={placement.is_saga_attacker}
+              is_saga_defender={placement.is_saga_defender}
+              sagaMode='defender'
+            />
+            {/* Rarity over the frame's bottom band */}
+            <span
+              className={cn(
+                'absolute inset-x-0 bottom-0 z-40 rounded-b bg-black/70 text-center text-[9px] font-semibold leading-[11px]',
+                rarityBadgeClass(placement.rarity)
+              )}
+            >
+              {nodeRarityLabel(placement, hideSig)}
             </span>
+          </>
+        ) : (
+          <span className='absolute inset-0 flex items-center justify-center text-[10px] text-white/30'>
+            +
+          </span>
+        )}
+
+        {/* Node number — inside the cell so it never collides with its neighbour,
+            and above the portrait badges (z-30) since it must always be readable */}
+        <span className='absolute top-0 left-0 z-40 rounded-br bg-black/70 px-1 text-[9px] font-bold leading-[13px] text-white'>
+          {nodeNumber}
+        </span>
+
+        {/* Remove — hover-revealed on desktop, always reachable on touch. It sits
+            on the ascension badge, whose level is also in the rarity label. */}
+        {placement && canManage && (
+          <button
+            className='absolute top-0 right-0 z-40 flex size-4 items-center justify-center rounded-bl bg-red-600 text-white opacity-100 transition-opacity hover:bg-red-700 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100'
+            onClick={(e) => {
+              e.stopPropagation()
+              onRemove(nodeNumber)
+            }}
+            title={t.game.defense.removeDefender}
+          >
+            <X className='size-2.5' />
+          </button>
+        )}
+
+        {hasNote && (
+          <span
+            className='absolute right-0 bottom-0 z-30 flex items-center justify-center rounded-tl bg-amber-500 p-0.5 text-white'
+            data-cy={`war-node-has-note-${nodeNumber}`}
+            title={t.game.war.noteLabel}
+          >
+            <StickyNote className='size-2' />
+          </span>
+        )}
+      </div>
+
+      {showPseudo && (
+        <span
+          className={cn(
+            'block truncate px-0.5 text-center text-[9px] leading-[12px]',
+            placement?.game_pseudo ? 'text-white/80' : 'text-white/30'
           )}
-        </div>
-      ) : (
-        <span className='text-white/40 text-xs'>+</span>
+          style={{ height: PSEUDO_HEIGHT }}
+          title={placement && !placement.game_pseudo ? t.game.war.noAttackerAssigned : undefined}
+          data-cy={
+            placement && !placement.game_pseudo ? `war-node-unassigned-${nodeNumber}` : undefined
+          }
+        >
+          {placement && !placement.game_pseudo ? '—' : placement?.game_pseudo}
+        </span>
       )}
     </div>
   )
@@ -178,18 +223,19 @@ export default function WarMap({
           key={section.label}
           className='flex flex-col items-center gap-1 w-full'
         >
-          {/* Section label */}
-          <div
-            className={cn('text-xs font-bold uppercase tracking-wider mt-2 mb-1', section.color)}
-          >
-            {section.label}
+          {/* Section label, sitting on its own rule instead of above it */}
+          <div className='mt-1.5 mb-1 flex w-3/4 items-center gap-2'>
+            <span className={cn('flex-1 border-t', section.borderColor)} />
+            <span className={cn('text-[10px] font-bold tracking-wider uppercase', section.color)}>
+              {section.label}
+            </span>
+            <span className={cn('flex-1 border-t', section.borderColor)} />
           </div>
-          <div className={cn('border-t w-3/4 mb-2', section.borderColor)} />
 
           {section.rows.map((row, rowIdx) => (
             <div
               key={rowIdx}
-              className='flex gap-1 justify-center'
+              className='flex gap-2 justify-center'
             >
               {row.map((nodeNumber, index) =>
                 nodeNumber === 0 ? (
