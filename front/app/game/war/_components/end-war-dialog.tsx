@@ -19,6 +19,7 @@ interface EndWarDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   hasSeason: boolean
+  currentElo: number
   onConfirm: (win: boolean, eloChange: number | null) => void
 }
 
@@ -26,6 +27,7 @@ export default function EndWarDialog({
   open,
   onOpenChange,
   hasSeason,
+  currentElo,
   onConfirm,
 }: Readonly<EndWarDialogProps>) {
   const { t } = useI18n()
@@ -34,17 +36,16 @@ export default function EndWarDialog({
   const [confirmInput, setConfirmInput] = useState('')
 
   const parsedElo = eloInput === '' ? null : Number(eloInput)
-  const eloValid =
-    !hasSeason ||
-    (parsedElo !== null &&
-      !isNaN(parsedElo) &&
-      parsedElo !== 0 &&
-      (win ? parsedElo > 0 : parsedElo < 0))
+  const eloValid = !hasSeason || (parsedElo !== null && !isNaN(parsedElo) && parsedElo > 0)
+  const signedElo = parsedElo === null ? null : win ? parsedElo : -parsedElo
+  // Mirrors the backend clamp in WarService.end_war so the preview never
+  // promises an ELO the API will not actually store.
+  const nextElo = signedElo === null ? null : Math.max(0, Math.min(4500, currentElo + signedElo))
   const confirmed = confirmInput.trim().toLowerCase() === 'confirm'
 
   function handleConfirm() {
     if (!eloValid || !confirmed) return
-    onConfirm(win, hasSeason ? parsedElo : null)
+    onConfirm(win, hasSeason ? signedElo : null)
     onOpenChange(false)
     setEloInput('')
     setConfirmInput('')
@@ -71,7 +72,7 @@ export default function EndWarDialog({
             <div className='flex items-center gap-2'>
               <span
                 className={
-                  win ? 'text-sm font-semibold text-primary' : 'text-sm text-muted-foreground'
+                  win ? 'text-sm font-semibold text-green-500' : 'text-sm text-muted-foreground'
                 }
               >
                 {t.game.war.win}
@@ -100,7 +101,8 @@ export default function EndWarDialog({
               <Input
                 id='elo-change'
                 type='number'
-                placeholder={win ? '+30' : '-30'}
+                min='1'
+                placeholder='30'
                 value={eloInput}
                 onChange={(e) => setEloInput(e.target.value)}
                 data-cy='end-war-elo-input'
@@ -110,9 +112,29 @@ export default function EndWarDialog({
                   className='text-xs text-destructive'
                   data-cy='end-war-elo-error'
                 >
-                  {win ? t.game.war.eloMustBePositive : t.game.war.eloMustBeNegative}
+                  {t.game.war.eloMustBePositive}
                 </p>
               )}
+              <div
+                className='flex items-center gap-2 text-sm'
+                data-cy='end-war-elo-preview'
+              >
+                <span className='text-muted-foreground'>{t.game.war.currentElo}</span>
+                <span className='font-medium'>{currentElo}</span>
+                {nextElo !== null && eloValid && (
+                  <>
+                    <span className='text-muted-foreground'>&rarr;</span>
+                    <span
+                      className={
+                        win ? 'font-semibold text-green-500' : 'font-semibold text-destructive'
+                      }
+                      data-cy='end-war-elo-next'
+                    >
+                      {nextElo}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
           )}
 
