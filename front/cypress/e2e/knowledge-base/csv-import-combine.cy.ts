@@ -1,7 +1,7 @@
 import { setupWarOwner } from '../../support/e2e';
 
 // Column indices (0-based) — see display.cy.ts:
-// 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: Tier | 7: KO | 8: Alliance | 9: Season | 10: Date
+// 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: KO | 7: Alliance | 8: Season | 9: Tier | 10: Date | 11: Note
 
 describe('Knowledge Base – CSV Import combined records', () => {
   beforeEach(() => {
@@ -36,7 +36,7 @@ describe('Knowledge Base – CSV Import combined records', () => {
                   cy.get('td').eq(1).should('contain.text', 'Magik');
                   cy.get('td').eq(2).should('contain.text', 'Serpent');
                   cy.get('td').eq(5).should('contain.text', '15');
-                  cy.get('td').eq(7).should('have.text', '2');
+                  cy.getByCy('fight-record-ko').should('have.text', '2');
                 });
             });
           });
@@ -70,7 +70,7 @@ describe('Knowledge Base – CSV Import combined records', () => {
               .first()
               .within(() => {
                 cy.get('td').eq(5).should('contain.text', '20');
-                cy.get('td').eq(7).should('have.text', '0');
+                cy.getByCy('fight-record-ko').should('have.text', '0');
               });
           });
         });
