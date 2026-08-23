@@ -94,7 +94,7 @@ jobs:
 
       - name: Upload the before/after runs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: vision-gate-${{ github.run_id }}
           path: |
