@@ -155,7 +155,7 @@ export function WarMapNode({
 
         {hasNote && (
           <span
-            className='absolute right-0 bottom-0 z-30 flex items-center justify-center rounded-tl bg-amber-500 p-0.5 text-white'
+            className='absolute right-0 bottom-2.75 z-40 flex items-center justify-center rounded-l bg-amber-500 p-0.5 text-white'
             data-cy={`war-node-has-note-${nodeNumber}`}
             title={t.game.war.noteLabel}
           >
