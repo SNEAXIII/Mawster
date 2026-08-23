@@ -34,6 +34,7 @@ from src.models.AllianceVisitor import AllianceVisitor
 from src.models.GameAccount import GameAccount
 from src.models.User import User
 from src.services.alliance.AllianceVisitorService import AllianceVisitorService
+from src.services.alliance.UpgradeRequestService import UpgradeRequestService
 from src.services.alliance.war.DefensePlacementService import DefensePlacementService
 from src.utils.db import SessionDep
 
@@ -664,6 +665,9 @@ class AllianceService:
         await DefensePlacementService.remove_placements_for_member(
             session, alliance_id, game_account_id
         )
+        # Same for the rank-ups the alliance was waiting on: the roster is out of
+        # reach, and once out of the alliance nobody can even cancel those rows.
+        await UpgradeRequestService.cancel_pending_for_member(session, game_account_id)
 
         game_account.alliance_id = None
         game_account.alliance_group = None
