@@ -48,7 +48,7 @@ jobs:
       # amend one PR instead of piling up seven a week.
       - name: Open or update the assets PR
         if: steps.diff.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.BOT_TOKEN }}
           branch: bot/assets-refresh
