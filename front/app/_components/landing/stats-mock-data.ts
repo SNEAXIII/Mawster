@@ -247,7 +247,6 @@ function row(
     total_boss: v.boss,
     total_not_fought: v.notFought,
     ratio,
-    score: 0,
     wars_participated: v.wars,
     avg_fights_per_war: v.fights / v.wars,
     avg_boss_miniboss_per_war: (v.miniboss + v.boss) / v.wars,

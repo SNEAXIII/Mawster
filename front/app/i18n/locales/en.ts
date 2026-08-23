@@ -402,7 +402,6 @@ const en = {
           boss: 'Boss',
           notFought: 'Not Fought',
           ratio: 'Ratio',
-          score: 'Score',
           warsParticipated: 'Wars',
           avgFights: 'Avg Fights',
           avgBossMiniboss: 'AVG MB/B',

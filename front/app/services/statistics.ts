@@ -29,7 +29,6 @@ export interface PlayerSeasonStats {
   total_boss: number
   total_not_fought: number
   ratio: number
-  score: number
   wars_participated: number
   avg_fights_per_war: number
   avg_boss_miniboss_per_war: number

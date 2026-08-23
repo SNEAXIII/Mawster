@@ -406,7 +406,6 @@ const fr: Translations = {
           boss: 'Boss',
           notFought: 'Non combattu',
           ratio: 'Ratio',
-          score: 'Score',
           warsParticipated: 'Guerres',
           avgFights: 'Moy. Combats',
           avgBossMiniboss: 'AVG MB/B',
