@@ -694,6 +694,8 @@ const fr: Translations = {
       noteExpand: 'Cliquer pour afficher la note entière',
       noteCollapse: 'Cliquer pour replier',
       noData: 'Aucun combat enregistré.',
+      exportImage: 'Exporter image',
+      exportTitle: 'Base de connaissances',
       filterAttacker: 'Sélectionner attaquant',
       filterDefender: 'Sélectionner défenseur',
       clearFilters: 'Effacer les filtres',
