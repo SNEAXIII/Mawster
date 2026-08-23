@@ -102,7 +102,7 @@ export function WarMapNode({
         className='relative w-full'
         style={{ height: PORTRAIT_HEIGHT, paddingLeft: PAD_LEFT }}
       >
-        {placement ? (
+        {placement && (
           <>
             <ChampionPortrait
               imageUrl={placement.champion_image_url}
@@ -126,10 +126,6 @@ export function WarMapNode({
               {nodeRarityLabel(placement, hideSig)}
             </span>
           </>
-        ) : (
-          <span className='absolute inset-0 flex items-center justify-center text-[10px] text-white/30'>
-            +
-          </span>
         )}
 
         {/* Node number — inside the cell so it never collides with its neighbour,
@@ -163,6 +159,14 @@ export function WarMapNode({
           </span>
         )}
       </div>
+
+      {/* Empty node marker — centred on the whole cell (portrait + reserved
+          pseudo line), otherwise it sits high in every node that reserves one. */}
+      {!placement && (
+        <span className='pointer-events-none absolute inset-0 flex items-center justify-center text-[10px] text-white/30'>
+          +
+        </span>
+      )}
 
       {showPseudo && (
         <span
