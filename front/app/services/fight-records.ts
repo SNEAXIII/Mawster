@@ -39,6 +39,7 @@ export interface FightRecord {
   alliance_id: string
   alliance_name: string
   season_id: string | null
+  season_number?: number | null
   game_account_pseudo?: string | null
   node_number: number
   tier?: number | null

@@ -259,6 +259,8 @@ class FightRecordService:
         RegDefender = aliased(Champion)
         ImpAttacker = aliased(Champion)
         ImpDefender = aliased(Champion)
+        RegSeason = aliased(Season)
+        ImpSeason = aliased(Season)
 
         sub_queries = []
 
@@ -287,6 +289,7 @@ class FightRecordService:
                     WarFightRecord.id.label("id"),
                     WarFightRecord.alliance_id.label("alliance_id"),
                     WarFightRecord.season_id.label("season_id"),
+                    RegSeason.number.label("season_number"),
                     WarFightRecord.node_number.label("node_number"),
                     WarFightRecord.champion_id.label("champion_id"),
                     WarFightRecord.defender_champion_id.label("defender_champion_id"),
@@ -319,6 +322,7 @@ class FightRecordService:
                 .join(RegAttacker, WarFightRecord.champion_id == RegAttacker.id)
                 .join(RegDefender, WarFightRecord.defender_champion_id == RegDefender.id)
                 .join(GameAccount, WarFightRecord.game_account_id == GameAccount.id)
+                .outerjoin(RegSeason, WarFightRecord.season_id == RegSeason.id)
                 .where(and_(*reg_conds))
             )
             sub_queries.append(reg_sub)
@@ -343,6 +347,7 @@ class FightRecordService:
                     WarFightRecordImport.id.label("id"),
                     WarFightRecordImport.alliance_id.label("alliance_id"),
                     WarFightRecordImport.season_id.label("season_id"),
+                    ImpSeason.number.label("season_number"),
                     WarFightRecordImport.node_number.label("node_number"),
                     WarFightRecordImport.champion_id.label("champion_id"),
                     WarFightRecordImport.defender_champion_id.label("defender_champion_id"),
@@ -374,6 +379,7 @@ class FightRecordService:
                 .join(Alliance, WarFightRecordImport.alliance_id == Alliance.id)
                 .join(ImpAttacker, WarFightRecordImport.champion_id == ImpAttacker.id)
                 .join(ImpDefender, WarFightRecordImport.defender_champion_id == ImpDefender.id)
+                .outerjoin(ImpSeason, WarFightRecordImport.season_id == ImpSeason.id)
                 .where(and_(*imp_conds))
             )
             sub_queries.append(imp_sub)
@@ -393,6 +399,7 @@ class FightRecordService:
             "node_number": base.c.node_number,
             "battlegroup": base.c.battlegroup,
             "created_at": base.c.created_at,
+            "season_number": base.c.season_number,
             "champion_name": base.c.champion_name,
             "defender_champion_name": base.c.defender_champion_name,
             "alliance_name": base.c.alliance_name,
@@ -419,6 +426,7 @@ class FightRecordService:
                 alliance_id=row["alliance_id"],
                 alliance_name=row["alliance_name"],
                 season_id=row["season_id"],
+                season_number=row["season_number"],
                 game_account_pseudo=row["game_account_pseudo"],
                 battlegroup=row["battlegroup"],
                 node_number=row["node_number"],

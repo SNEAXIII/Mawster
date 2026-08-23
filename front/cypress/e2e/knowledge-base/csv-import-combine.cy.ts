@@ -1,7 +1,7 @@
 import { setupWarOwner } from '../../support/e2e';
 
 // Column indices (0-based) — see display.cy.ts:
-// 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: Tier | 7: KO | 8: Alliance | 9: Date
+// 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: Tier | 7: KO | 8: Alliance | 9: Season | 10: Date
 
 describe('Knowledge Base – CSV Import combined records', () => {
   beforeEach(() => {

@@ -681,6 +681,7 @@ class TestListFightRecords:
         )
         assert resp.status_code == 200
         assert len(resp.json()["items"]) == 1
+        assert resp.json()["items"][0]["season_number"] == 64
 
         resp_no_match = await execute_get_request(
             f"/fight-records?season_selector=specific&season_id={uuid.uuid4()}", headers=headers
@@ -783,6 +784,51 @@ class TestListFightRecords:
         assert resp.json()["items"][0]["champion_name"] == "Spider-Man"
 
     @pytest.mark.asyncio
+    async def test_sort_by_season_number(self):
+        """sort_by=season_number must order items by the season number of each record."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        older_season = Season(number=70, status=SeasonStatus.ended)
+        newer_season = Season(number=71, status=SeasonStatus.ended)
+        await load_objects([older_season, newer_season])
+
+        def _record(node_number: int, season_id):
+            return WarFightRecord(
+                war_id=data["war"].id,
+                alliance_id=data["alliance"].id,
+                game_account_id=data["member"].id,
+                battlegroup=1,
+                node_number=node_number,
+                tier=1,
+                season_id=season_id,
+                champion_id=data["attacker_champ"].id,
+                stars=7,
+                rank=4,
+                ascension=0,
+                is_saga_attacker=True,
+                defender_champion_id=data["defender_champ"].id,
+                defender_stars=6,
+                defender_rank=3,
+                defender_ascension=0,
+                defender_is_saga_defender=False,
+            )
+
+        await load_objects([_record(10, older_season.id), _record(11, newer_season.id)])
+
+        resp = await execute_get_request(
+            "/fight-records?sort_by=season_number&sort_order=asc", headers=headers
+        )
+        assert resp.status_code == 200
+        assert [item["season_number"] for item in resp.json()["items"]] == [70, 71]
+
+        resp_desc = await execute_get_request(
+            "/fight-records?sort_by=season_number&sort_order=desc", headers=headers
+        )
+        assert resp_desc.status_code == 200
+        assert [item["season_number"] for item in resp_desc.json()["items"]] == [71, 70]
+
+    @pytest.mark.asyncio
     async def test_sort_by_defender_champion_name(self):
         """sort_by=defender_champion_name must join DefenderChampion and order by name (lines 239-242)."""
         data = await _setup_war_with_fight()
@@ -858,6 +904,7 @@ class TestListFightRecords:
         assert resp.status_code == 200
         assert resp.json()["total"] == 1
         assert resp.json()["items"][0]["node_number"] == 10
+        assert resp.json()["items"][0]["season_number"] == 65
 
     @pytest.mark.asyncio
     async def test_filter_by_season_selector_off_season(self):
@@ -914,6 +961,7 @@ class TestListFightRecords:
         assert resp.status_code == 200
         assert resp.json()["total"] == 1
         assert resp.json()["items"][0]["node_number"] == 11
+        assert resp.json()["items"][0]["season_number"] is None
 
     @pytest.mark.asyncio
     async def test_filter_by_season_selector_current(self):

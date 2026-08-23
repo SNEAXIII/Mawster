@@ -679,6 +679,7 @@ const en = {
       alliance: 'Alliance',
       synergies: 'Synergies',
       prefights: 'Prefights',
+      season: 'Season',
       date: 'Date',
       note: 'Note',
       noteBy: 'by',
