@@ -39,8 +39,15 @@ export const COMPACT_COL = 'w-px px-1 text-center'
 /**
  * The one column that stretches. `max-w-0` looks odd but it is what makes the
  * long notes truncate instead of widening the column past the table.
+ *
+ * `min-w-48` is the floor that keeps it readable: once the compact columns fill
+ * the container on their own there is no leftover width to soak up, and
+ * `max-w-0` alone collapses the cell to 0px — the note text then renders at
+ * zero width and cannot be read or clicked. min-width wins over max-width in
+ * CSS, so the column keeps the 12rem the note cell had before, and the table
+ * scrolls horizontally past it as it already did.
  */
-export const GROW_COL = 'w-full max-w-0 px-3'
+export const GROW_COL = 'w-full min-w-48 max-w-0 px-3'
 
 /**
  * Columns dropped from the exported image: the tier is already implied by the
