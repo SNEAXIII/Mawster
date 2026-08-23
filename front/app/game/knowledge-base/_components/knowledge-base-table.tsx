@@ -8,6 +8,7 @@ import { getChampionImageUrl } from '@/app/services/champions'
 import { shortenChampionName } from '@/app/services/roster'
 import type { FightRecord, SynergyRecord, PrefightRecord } from '@/app/services/fight-records'
 import { reportNote } from '@/app/services/moderation'
+import ChampionPortrait from '@/components/champion-portrait'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/app/lib/utils'
 
@@ -144,27 +145,46 @@ type ChampionCellProps = Readonly<{
   imageUrl: string | null
   stars?: number | null
   rank?: number | null
+  ascension?: number | null
+  isSaga?: boolean | null
+  sagaMode: 'attacker' | 'defender'
 }>
 
-function ChampionCell({ name, imageUrl, stars, rank }: ChampionCellProps) {
-  const src = getChampionImageUrl(imageUrl, 40)
+/**
+ * Framed portrait with the rank underneath — no champion name, the frame already
+ * says how many stars and the name is kept for screen readers / tooltip only.
+ */
+function ChampionCell({
+  name,
+  imageUrl,
+  stars,
+  rank,
+  ascension,
+  isSaga,
+  sagaMode,
+}: ChampionCellProps) {
   return (
     <td className='px-3 py-2'>
-      <div className='flex items-center gap-2'>
-        {src && (
-          <img
-            src={src}
-            alt={name}
-            className='w-10 h-10 object-contain rounded'
-          />
-        )}
-        <div>
-          <p className='text-sm font-medium whitespace-nowrap'>{shortenChampionName(name)}</p>
-          <p className='text-xs text-muted-foreground'>
-            {stars != null ? `${stars}★` : ''}
-            {rank != null ? ` R${rank}` : ''}
-          </p>
-        </div>
+      <div
+        className='flex flex-col items-center gap-0.5'
+        title={shortenChampionName(name)}
+        data-cy-champion={name}
+      >
+        <ChampionPortrait
+          imageUrl={imageUrl}
+          name={name}
+          rarity={String(stars ?? 6)}
+          size={52}
+          box='frame'
+          ascension={ascension ?? 0}
+          is_saga_attacker={sagaMode === 'attacker' && !!isSaga}
+          is_saga_defender={sagaMode === 'defender' && !!isSaga}
+          sagaMode={sagaMode}
+        />
+        <span className='text-xs text-muted-foreground whitespace-nowrap'>
+          {rank != null ? `R${rank}` : '—'}
+        </span>
+        <span className='sr-only'>{name}</span>
       </div>
     </td>
   )
@@ -322,12 +342,18 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
                   imageUrl={r.image_url}
                   stars={r.stars}
                   rank={r.rank}
+                  ascension={r.ascension}
+                  isSaga={r.is_saga_attacker}
+                  sagaMode='attacker'
                 />
                 <ChampionCell
                   name={r.defender_champion_name}
                   imageUrl={r.defender_image_url}
                   stars={r.defender_stars}
                   rank={r.defender_rank}
+                  ascension={r.defender_ascension}
+                  isSaga={r.defender_is_saga_defender}
+                  sagaMode='defender'
                 />
                 <SynergiesCell synergies={r.synergies} />
                 <PrefightsCell prefights={r.prefights} />
