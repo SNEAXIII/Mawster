@@ -113,7 +113,7 @@ export default function ImportPreviewRowEdit({
             // champions' art. One number drives both, so they cannot disagree.
             <div
               className='overflow-hidden rounded-md border border-border'
-              style={{ width: SPRITE_DISPLAY, height: SPRITE_DISPLAY }}
+              style={{ width: SPRITE_DISPLAY / 1.3, height: SPRITE_DISPLAY / 1.3 }}
             >
               <img
                 src={row.spriteUrl}
@@ -183,72 +183,65 @@ export default function ImportPreviewRowEdit({
           >
             {statusLabels[status]}
           </Badge>
-        </div>
-      </div>
-
-      {/* The three fields sit under the crop, on the row's full width, and in a
-          grid rather than a flex line. A number input carries a wide intrinsic
-          minimum, so on a flex line the two of them squeezed the rarity select
-          down to "7R…" on a phone — the one value the reviewer is here to check.
-          minmax(0,1fr) columns share the width evenly whatever the content, and
-          rarity gets the wider share since its value is the longest. */}
-      <div className='grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] gap-2'>
-        <label className='flex min-w-0 flex-col gap-0.5'>
-          <span className='text-[10px] uppercase tracking-wide text-muted-foreground'>
-            {t.roster.importExport.rarityLabel}
-          </span>
-          <Select
-            value={row.newRarity}
-            onValueChange={(value) => emit({ newRarity: value })}
-          >
-            <SelectTrigger
-              className='h-8 w-full text-xs px-2 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:shrink-0'
-              data-cy={`preview-row-rarity-select-${index}`}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {RARITIES.map((rarity) => (
-                <SelectItem
-                  key={rarity}
-                  value={rarity}
+          <div className='grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] gap-2'>
+            <label className='flex min-w-0 flex-col gap-0.5'>
+              <span className='text-[10px] uppercase tracking-wide text-muted-foreground'>
+                {t.roster.importExport.rarityLabel}
+              </span>
+              <Select
+                value={row.newRarity}
+                onValueChange={(value) => emit({ newRarity: value })}
+              >
+                <SelectTrigger
+                  className='h-8 w-full text-xs px-2 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:shrink-0'
+                  data-cy={`preview-row-rarity-select-${index}`}
                 >
-                  {RARITY_LABELS[rarity] ?? rarity}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </label>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RARITIES.map((rarity) => (
+                    <SelectItem
+                      key={rarity}
+                      value={rarity}
+                    >
+                      {RARITY_LABELS[rarity] ?? rarity}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </label>
 
-        <label className='flex min-w-0 flex-col gap-0.5'>
-          <span className='text-[10px] uppercase tracking-wide text-muted-foreground'>
-            {t.roster.importExport.sigLabel}
-          </span>
-          <Input
-            type='number'
-            min={0}
-            max={MAX_SIGNATURE}
-            className='h-8 w-full min-w-0 text-xs px-2'
-            value={row.newSignature}
-            onChange={(e) => emit({ newSignature: clamp(e.target.value, MAX_SIGNATURE) })}
-            data-cy={`preview-row-signature-input-${index}`}
-          />
-        </label>
+            <label className='flex min-w-0 flex-col gap-0.5'>
+              <span className='text-[10px] uppercase tracking-wide text-muted-foreground'>
+                {t.roster.importExport.sigLabel}
+              </span>
+              <Input
+                type='number'
+                min={0}
+                max={MAX_SIGNATURE}
+                className='h-8 w-full min-w-0 text-xs px-2'
+                value={row.newSignature}
+                onChange={(e) => emit({ newSignature: clamp(e.target.value, MAX_SIGNATURE) })}
+                data-cy={`preview-row-signature-input-${index}`}
+              />
+            </label>
 
-        <label className='flex min-w-0 flex-col gap-0.5'>
-          <span className='text-[10px] uppercase tracking-wide text-muted-foreground'>
-            {t.roster.importExport.ascLabel}
-          </span>
-          <Input
-            type='number'
-            min={0}
-            max={MAX_ASCENSION}
-            className='h-8 w-full min-w-0 text-xs px-2'
-            value={row.ascension ?? 0}
-            onChange={(e) => emit({ ascension: clamp(e.target.value, MAX_ASCENSION) })}
-            data-cy={`preview-row-ascension-input-${index}`}
-          />
-        </label>
+            <label className='flex min-w-0 flex-col gap-0.5'>
+              <span className='text-[10px] uppercase tracking-wide text-muted-foreground'>
+                {t.roster.importExport.ascLabel}
+              </span>
+              <Input
+                type='number'
+                min={0}
+                max={MAX_ASCENSION}
+                className='h-8 w-full min-w-0 text-xs px-2'
+                value={row.ascension ?? 0}
+                onChange={(e) => emit({ ascension: clamp(e.target.value, MAX_ASCENSION) })}
+                data-cy={`preview-row-ascension-input-${index}`}
+              />
+            </label>
+          </div>
+        </div>
       </div>
     </div>
   )
