@@ -140,6 +140,36 @@ class UpgradeRequestService:
         await session.commit()
 
     @classmethod
+    async def cancel_pending_for_member(
+        cls, session: SessionDep, game_account_id: uuid.UUID
+    ) -> int:
+        """Drop every pending upgrade request aimed at a member's roster.
+
+        Called when a member leaves or is kicked: the request was the alliance
+        asking for a rank-up, and once the roster is gone nobody can act on it
+        — nor even cancel it, since cancelling requires an officer of the
+        alliance the champion owner belongs to.
+        Requests already marked done are history and are kept.
+        Flushes but does not commit — the caller owns the transaction.
+        Returns the number of requests deleted."""
+        stmt = (
+            select(RequestedUpgrade)
+            .join(ChampionUser, RequestedUpgrade.champion_user_id == ChampionUser.id)
+            .where(
+                and_(
+                    ChampionUser.game_account_id == game_account_id,
+                    RequestedUpgrade.done_at.is_(None),  # type: ignore[union-attr]
+                )
+            )
+        )
+        result = await session.exec(stmt)
+        requests = result.all()
+        for req in requests:
+            await session.delete(req)
+        await session.flush()
+        return len(requests)
+
+    @classmethod
     async def auto_complete_for_champion_user(
         cls, session: SessionDep, champion_user: ChampionUser
     ) -> None:

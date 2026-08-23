@@ -6,7 +6,9 @@ import pytest
 from sqlmodel import select
 
 from main import app
+from src.models.Base import utcnow
 from src.models.DefensePlacement import DefensePlacement
+from src.models.RequestedUpgrade import RequestedUpgrade
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
@@ -79,6 +81,25 @@ async def _push_member_in_group(alliance, user_id, game_pseudo, group):
     member.alliance_group = group
     await load_objects([member])
     return member
+
+
+async def _push_upgrade_request(account, champion_name, requester, rarity="7r5", done_at=None):
+    """Ask for a rank-up on one of the account's champions. Returns the request."""
+    champion = await push_champion(name=champion_name, champion_class="Science")
+    champion_user = await push_champion_user(account, champion)
+    request = RequestedUpgrade(
+        champion_user_id=champion_user.id,
+        requester_game_account_id=requester.id,
+        requested_rarity=rarity,
+        done_at=done_at,
+    )
+    await load_objects([request])
+    return request
+
+
+async def _upgrade_request_ids(session):
+    result = await session.exec(select(RequestedUpgrade))
+    return {r.id for r in result.all()}
 
 
 async def _placement_ids(session, alliance_id):
@@ -297,6 +318,83 @@ class TestRemoveMemberClearsDefense:
         assert response.status_code == 200
         assert await _placement_ids(session, alliance.id) == set()
         assert await _placement_ids(session, other_alliance.id) == {other_placement.id}
+
+
+# =========================================================================
+# Leaving / being kicked cancels the pending upgrade requests
+# =========================================================================
+
+
+class TestRemoveMemberCancelsUpgradeRequests:
+    """A rank-up request is the alliance asking a member for a champion. Once
+    the member is out, the request is moot — and unreachable, since cancelling
+    it goes through an officer of the champion owner's alliance."""
+
+    @pytest.mark.asyncio
+    async def test_kicked_member_pending_requests_are_cancelled(self, session):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        owner_request = await _push_upgrade_request(owner, "Spider-Man", requester=owner)
+        await _push_upgrade_request(member, "Wolverine", requester=owner)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _upgrade_request_ids(session) == {owner_request.id}
+
+    @pytest.mark.asyncio
+    async def test_member_leaving_cancels_own_pending_requests(self, session):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        owner_request = await _push_upgrade_request(owner, "Spider-Man", requester=owner)
+        await _push_upgrade_request(member, "Wolverine", requester=owner)
+        await _push_upgrade_request(member, "Iron Man", requester=member)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER2,
+        )
+        assert response.status_code == 200
+        # Their own self-request goes too — it was an alliance-visible ask
+        assert await _upgrade_request_ids(session) == {owner_request.id}
+
+    @pytest.mark.asyncio
+    async def test_completed_requests_are_kept(self, session):
+        """A request already marked done is history, not a pending ask."""
+        await _setup_2_users()
+        alliance, _owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        done_request = await _push_upgrade_request(
+            member, "Spider-Man", requester=_owner, done_at=utcnow()
+        )
+        await _push_upgrade_request(member, "Wolverine", requester=_owner)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _upgrade_request_ids(session) == {done_request.id}
+
+    @pytest.mark.asyncio
+    async def test_requests_the_member_made_for_others_are_kept(self, session):
+        """The alliance still wants that rank-up: only the requester left, not
+        the champion."""
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        owner_request = await _push_upgrade_request(owner, "Spider-Man", requester=member)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _upgrade_request_ids(session) == {owner_request.id}
 
 
 # =========================================================================

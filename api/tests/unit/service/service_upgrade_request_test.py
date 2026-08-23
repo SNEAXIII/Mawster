@@ -258,6 +258,54 @@ class TestCancelUpgradeRequest:
 
 
 # =========================================================================
+# cancel_pending_for_member
+# =========================================================================
+
+
+class TestCancelPendingForMember:
+    @pytest.mark.asyncio
+    async def test_deletes_every_pending_request(self, mocker):
+        session = _mock_session(mocker)
+        req1 = _make_upgrade_request(rarity="7r2")
+        req2 = _make_upgrade_request(rarity="7r3")
+
+        mock_result = mocker.MagicMock()
+        mock_result.all.return_value = [req1, req2]
+        session.exec.return_value = mock_result
+
+        deleted = await UpgradeRequestService.cancel_pending_for_member(session, GAME_ACCOUNT_ID)
+
+        assert deleted == 2
+        assert session.delete.await_count == 2
+        session.flush.assert_awaited()
+
+    @pytest.mark.asyncio
+    async def test_no_pending_request_deletes_nothing(self, mocker):
+        session = _mock_session(mocker)
+
+        mock_result = mocker.MagicMock()
+        mock_result.all.return_value = []
+        session.exec.return_value = mock_result
+
+        deleted = await UpgradeRequestService.cancel_pending_for_member(session, GAME_ACCOUNT_ID)
+
+        assert deleted == 0
+        assert not session.delete.called
+
+    @pytest.mark.asyncio
+    async def test_does_not_commit(self, mocker):
+        """The caller (member removal) owns the transaction."""
+        session = _mock_session(mocker)
+        mock_result = mocker.MagicMock()
+        mock_result.all.return_value = [_make_upgrade_request()]
+        session.exec.return_value = mock_result
+
+        await UpgradeRequestService.cancel_pending_for_member(session, GAME_ACCOUNT_ID)
+
+        assert not session.commit.called
+
+
+# =========================================================================
 # auto_complete_for_champion_user
 # =========================================================================
 
