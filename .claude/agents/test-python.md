@@ -148,12 +148,8 @@ Only write these when the service has pure logic testable without DB. Don't dupl
 
 ## Step 5: Run and Fix
 
-Run via the **pytest MCP runner** (`mcp__pytest-runner__run_specific_tests`) rather than
-`uv run pytest` in Bash — it keeps large test output out of the context window and only
-surfaces failures.
-
-If run in Bash anyway, reduce output: `--tb=line -q` (not `-v --tb=short`), and pipe
-through `ctx_execute` to keep only failure lines:
+Run the tests through `ctx_execute` rather than raw Bash — pytest output is long and only
+the failures matter. Reduce it further with `--tb=line -q` (not `-v --tb=short`):
 ```bash
 uv run pytest tests/integration/endpoints/<feature>_test.py --tb=line -q
 ```

@@ -28,7 +28,7 @@ Workflow complet pour ouvrir une PR sur `main` depuis la branche courante.
    git push -u origin <branch>
    ```
 
-5. **Créer la PR** via `mcp__plugin_github_github__create_pull_request` :
+5. **Créer la PR** via `mcp__github__create_pull_request` :
    - `owner` et `repo` : extraits depuis `git remote get-url origin` (ex: `git@github.com:OWNER/REPO.git` ou `https://github.com/OWNER/REPO`)
    - `head` : branche courante
    - `base` : `main`

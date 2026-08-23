@@ -27,10 +27,18 @@ make fix               # ruff lint --fix
 make format            # ruff format
 make run-dev           # serveur dev (port 8000)
 make run-testing       # serveur test (port 8001)
+make install           # dépendances prod
+make install-dev       # dépendances prod + dev
+make scrape-champions  # re-scrape la liste des champions
+make seed-user         # crée un utilisateur de dev
 ```
+
+`make help` liste les cibles à jour — s'y référer si un appel échoue sur une cible inconnue.
 
 ## Important
 
-- `make reset-db` écrase la DB de dev — utiliser `/db-migrate` pour les migrations sur DB dédiée
+- Appel sans argument → `make help`
+- `make reset-db` et `make delete-db` écrasent la DB de dev — demander confirmation avant, et
+  utiliser `/db-migrate` pour les migrations (DB dédiée `mawster_migrate`)
 - `make create-mig` nécessite toujours un `MESSAGE`
 - `make test` lance 10 workers xdist par défaut
