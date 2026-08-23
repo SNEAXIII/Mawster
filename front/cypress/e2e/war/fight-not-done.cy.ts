@@ -26,8 +26,7 @@ describe('War – Fight Not Done', () => {
   it('fight-not-done button is hidden for regular member', () => {
     setupAttackerScenario('fnd-member').then(({ memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      cy.apiLogin(memberData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(memberData.user_id, 'war');
       cy.getByCy('fight-not-done-node-10').should('not.exist');
     });
   });

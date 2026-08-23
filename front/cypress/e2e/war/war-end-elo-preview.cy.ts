@@ -42,8 +42,7 @@ describe('War – End war ELO preview', () => {
 
   it('shows current ELO alone until a valid amount is typed', () => {
     setupSeasonWar('elo-prev-idle', 'PreviewIdle', 'PreviewIdleAlliance', 'PI', 1500).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('end-war-btn').click();
 
       cy.getByCy('end-war-elo-preview').should('be.visible').and('contain.text', '1500');
@@ -53,8 +52,7 @@ describe('War – End war ELO preview', () => {
 
   it('adds the typed amount on a win', () => {
     setupSeasonWar('elo-prev-win', 'PreviewWin', 'PreviewWinAlliance', 'PW', 1500).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('end-war-btn').click();
 
       cy.getByCy('end-war-elo-input').type('30');
@@ -64,8 +62,7 @@ describe('War – End war ELO preview', () => {
 
   it('subtracts a POSITIVE typed amount on a loss', () => {
     setupSeasonWar('elo-prev-lose', 'PreviewLose', 'PreviewLoseAlliance', 'PL', 1500).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('end-war-btn').click();
 
       // Toggling to "lose" clears the input, so type after switching.
@@ -81,8 +78,7 @@ describe('War – End war ELO preview', () => {
 
   it('rejects a negative amount', () => {
     setupSeasonWar('elo-prev-neg', 'PreviewNeg', 'PreviewNegAlliance', 'PN', 1500).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('end-war-btn').click();
 
       cy.getByCy('end-war-elo-input').type('-30');
@@ -95,8 +91,7 @@ describe('War – End war ELO preview', () => {
 
   it('clamps the preview at the backend ceiling of 4500', () => {
     setupSeasonWar('elo-prev-cap', 'PreviewCap', 'PreviewCapAlliance', 'PC', 4400).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('end-war-btn').click();
 
       cy.getByCy('end-war-elo-input').type('500');
@@ -106,8 +101,7 @@ describe('War – End war ELO preview', () => {
 
   it('persists the negated amount after confirming a loss', () => {
     setupSeasonWar('elo-prev-end', 'PreviewEnd', 'PreviewEndAlliance', 'PE', 1500).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('end-war-btn').click();
 
       cy.getByCy('end-war-win-switch').click();

@@ -29,8 +29,7 @@ describe('Login & Profile – UI', () => {
 
   it('displays profile info after login', () => {
     setupUser('profile-token').then(({ login, user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
       cy.contains('Account Information').should('be.visible');
       cy.getByCy('username-row').should('contain', login);
       cy.getByCy('member-since-row').should('be.visible');
@@ -39,16 +38,14 @@ describe('Login & Profile – UI', () => {
 
   it('shows admin role badge for admin users', () => {
     setupAdmin('admin-badge-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
       cy.contains('admin').should('be.visible');
     });
   });
 
   it('signs out and redirects to the home page', () => {
     setupUser('signout-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
       cy.getByCy('sign-out-btn').click();
       cy.url().should('eq', `${Cypress.config('baseUrl')}/`);
       cy.getByCy('nav-sign-in').should('be.visible');
@@ -103,16 +100,14 @@ describe('Login & Profile – UI', () => {
 
   it('pencil button is always visible on profile page', () => {
     setupUser('edit-btn-visible-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
       cy.getByCy('edit-username-btn').should('be.visible');
     });
   });
 
   it('can edit username successfully', () => {
     setupUser('edit-username-ok-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
       cy.getByCy('edit-username-btn').click();
       cy.getByCy('edit-username-input').clear().type('NewLogin123');
       cy.getByCy('edit-username-confirm').click();
@@ -122,8 +117,7 @@ describe('Login & Profile – UI', () => {
 
   it('shows validation error for invalid login format', () => {
     setupUser('edit-username-invalid-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
       cy.getByCy('edit-username-btn').click();
       cy.getByCy('edit-username-input').clear().type('a!');
       cy.getByCy('edit-username-confirm').click();
@@ -134,8 +128,7 @@ describe('Login & Profile – UI', () => {
 
   it('cancel restores original login without saving', () => {
     setupUser('edit-username-cancel-token').then(({ login, user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
       cy.getByCy('edit-username-btn').click();
       cy.getByCy('edit-username-input').clear().type('ChangedName');
       cy.getByCy('edit-username-cancel').click();
@@ -146,8 +139,7 @@ describe('Login & Profile – UI', () => {
 
   it('Escape key cancels editing', () => {
     setupUser('edit-username-escape-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
       cy.getByCy('edit-username-btn').click();
       cy.getByCy('edit-username-input').should('be.visible').type('{esc}');
       cy.getByCy('edit-username-btn').should('be.visible');
@@ -157,8 +149,7 @@ describe('Login & Profile – UI', () => {
   it('shows error when username already taken', () => {
     setupUser('taken-user1-token').then(({ user_id }) => {
       setupUser('taken-user2-token').then(({ login: login2 }) => {
-        cy.apiLogin(user_id);
-        cy.navTo('profile');
+        cy.apiLogin(user_id, 'profile');
         cy.getByCy('edit-username-btn').click();
         cy.getByCy('edit-username-input').clear().type(login2);
         cy.getByCy('edit-username-confirm').click();

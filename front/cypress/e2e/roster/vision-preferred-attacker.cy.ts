@@ -26,8 +26,7 @@ describe('Roster – Vision import preserves preferred attacker', () => {
         });
       });
 
-      cy.apiLogin(userData.user_id);
-      cy.navTo('roster');
+      cy.apiLogin(userData.user_id, 'roster');
 
       // Baseline: Hulk is the only preferred attacker.
       cy.getByCy('preferred-attacker-name').should('have.length', 1);

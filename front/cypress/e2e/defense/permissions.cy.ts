@@ -14,8 +14,7 @@ describe('Defense – Permissions', () => {
       cy.apiCreateGameAccount(access_token, 'ClrEmptyOwn', true).then((acc) => {
         cy.apiCreateAlliance(access_token, 'ClrEmptyAll', 'CE', acc.id);
       });
-      cy.apiLogin(user_id);
-      cy.navTo('defense');
+      cy.apiLogin(user_id, 'defense');
       cy.getByCy('defense-clear-all').should('not.exist');
     });
   });
@@ -29,8 +28,7 @@ describe('Defense – Permissions', () => {
             .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
         cy.getByCy('defense-clear-all').should('be.visible');
       },
     );
@@ -45,8 +43,7 @@ describe('Defense – Permissions', () => {
             .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
-        cy.apiLogin(memberData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(memberData.user_id, 'defense');
         cy.getByCy('defense-clear-all').should('not.exist');
       },
     );
@@ -57,15 +54,12 @@ describe('Defense – Permissions', () => {
   // =========================================================================
 
   it('export buttons are visible for a regular member', () => {
-    setupOwnerMemberAlliance('def-perm-exp-mem', 'ExpMemOwn', 'ExpMember', 'ExpMemAll', 'EM').then(
-      ({ memberData }) => {
-        cy.apiLogin(memberData.user_id);
-        cy.navTo('defense');
+    setupOwnerMemberAlliance('def-perm-exp-mem', 'ExpMemOwn', 'ExpMember', 'ExpMemAll', 'EM').then(({ memberData }) => {
+      cy.apiLogin(memberData.user_id, 'defense');
 
-        cy.getByCy('defense-export-map-btn').should('be.visible');
-        cy.getByCy('defense-export-list-btn').should('be.visible');
-      },
-    );
+      cy.getByCy('defense-export-map-btn').should('be.visible');
+      cy.getByCy('defense-export-list-btn').should('be.visible');
+    });
   });
 
   // =========================================================================
@@ -74,8 +68,7 @@ describe('Defense – Permissions', () => {
 
   it('clicking an empty node does NOT open champion selector for a regular member', () => {
     setupOwnerMemberAlliance('def-perm-click', 'ClickOwn', 'ClickMem', 'ClickAll', 'CK').then(({ memberData }) => {
-      cy.apiLogin(memberData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(memberData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       // Selector dialog should NOT appear
@@ -91,8 +84,7 @@ describe('Defense – Permissions', () => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
         );
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-5').click();
         cy.contains('Select Champion').should('be.visible');

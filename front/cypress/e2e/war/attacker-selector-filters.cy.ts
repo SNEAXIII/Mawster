@@ -1,8 +1,7 @@
 import { setupAttackerScenario } from '../../support/e2e';
 
 function goToAttackersMode(userId: string) {
-  cy.apiLogin(userId);
-  cy.navTo('war');
+  cy.apiLogin(userId, 'war');
   cy.getByCy('war-mode-attackers').click();
 }
 

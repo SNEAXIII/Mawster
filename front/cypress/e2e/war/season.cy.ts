@@ -8,8 +8,7 @@ describe('Season — war page', () => {
   it('shows pre-season badge on war page when no active season', () => {
     setupWarOwner('season-off', 'OffOwner', 'OffAlliance', 'OF').then(({ ownerData, allianceId }) => {
       cy.apiCreateWar(ownerData.access_token, allianceId, 'OffEnemy');
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('season-pre-season-badge').should('be.visible').and('contain', 'Pre-season');
     });
   });
@@ -29,8 +28,7 @@ describe('Season — war page', () => {
             headers: { Authorization: `Bearer ${adminData.access_token}` },
           }).then(() => {
             cy.apiCreateWar(ownerData.access_token, allianceId, 'ActiveEnemy');
-            cy.apiLogin(ownerData.user_id);
-            cy.navTo('war');
+            cy.apiLogin(ownerData.user_id, 'war');
             cy.getByCy('season-active-badge').should('be.visible').and('contain', 'Season 64');
           });
         });

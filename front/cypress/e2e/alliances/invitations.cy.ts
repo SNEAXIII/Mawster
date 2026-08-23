@@ -11,8 +11,7 @@ describe('Alliances – Invitations', () => {
         return cy.apiCreateGameAccount(newMember.access_token, 'NewMemberAcc', true);
       });
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(ownerData.user_id, 'alliances');
 
       cy.getByCy('alliance-card-InviteAlliance').should('be.visible');
 
@@ -40,8 +39,7 @@ describe('Alliances – Invitations', () => {
           return cy.apiCreateGameAccount(member.access_token, 'EligibleAcc', true);
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         cy.intercept('GET', '**/alliances/eligible-members').as('eligibleMembers');
         cy.getByCy('invite-member-toggle').click();
@@ -61,8 +59,7 @@ describe('Alliances – Invitations', () => {
           cy.apiCreateGameAccount(m2.access_token, 'BetaPlayer', true);
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         cy.intercept('GET', '**/alliances/eligible-members').as('eligibleMembers');
         cy.getByCy('invite-member-toggle').click();
@@ -82,8 +79,7 @@ describe('Alliances – Invitations', () => {
           cy.apiCreateGameAccount(m.access_token, 'SomeMember', true);
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         cy.intercept('GET', '**/alliances/eligible-members').as('eligibleMembers');
         cy.getByCy('invite-member-toggle').click();
@@ -102,8 +98,7 @@ describe('Alliances – Invitations', () => {
           cy.apiCreateGameAccount(m.access_token, 'PickedAcc', true);
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         cy.intercept('GET', '**/alliances/eligible-members').as('eligibleMembers');
         cy.getByCy('invite-member-toggle').click();
@@ -124,8 +119,7 @@ describe('Alliances – Invitations', () => {
           return cy.apiCreateGameAccount(invitee.access_token, 'JoinPlayer', true).then((inviteeAccount) => {
             cy.apiInviteMember(ownerData.access_token, allianceId, inviteeAccount.id);
 
-            cy.apiLogin(invitee.user_id);
-            cy.navTo('alliances');
+            cy.apiLogin(invitee.user_id, 'alliances');
 
             // Verify invitation content before accepting
             cy.getByCy('my-invitations-section').should('be.visible');
@@ -155,8 +149,7 @@ describe('Alliances – Invitations', () => {
       cy.apiCreateGameAccount(ownerData.access_token, 'SecondAcc', false).then((secondAccount) => {
         cy.apiInviteMember(ownerData.access_token, allianceId, secondAccount.id);
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         // The invitation for the owner's own second account must be visible
         cy.getByCy('my-invitations-section').should('be.visible');
@@ -182,8 +175,7 @@ describe('Alliances – Invitations', () => {
           return cy.apiCreateGameAccount(invitee.access_token, 'DeclinePlayer', true).then((inviteeAccount) => {
             cy.apiInviteMember(ownerData.access_token, allianceId, inviteeAccount.id);
 
-            cy.apiLogin(invitee.user_id);
-            cy.navTo('alliances');
+            cy.apiLogin(invitee.user_id, 'alliances');
 
             cy.getByCy('my-invitations-section').should('be.visible');
             cy.getByCy('decline-invitation').click();

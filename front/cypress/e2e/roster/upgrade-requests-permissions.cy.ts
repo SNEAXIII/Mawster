@@ -15,8 +15,7 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
         setupUser('ur-t6-member1').then((m1) => {
           cy.apiCreateGameAccount(m1.access_token, 'T6Member1', true).then((m1Acc) => {
             cy.apiForceJoinAlliance(m1Acc.id, allianceId);
-            cy.apiLogin(m1.user_id);
-            cy.navTo('alliances');
+            cy.apiLogin(m1.user_id, 'alliances');
 
             // Regular member1 views member2's roster
             cy.getByCy('view-roster-ur-t6Member').click();
@@ -35,8 +34,7 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
     setupAllianceWithMember('ur-t7', 'Deadpool', 'Mutant').then(({ ownerData, memberData, championUserId }) => {
       cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 
-      cy.apiLogin(memberData.user_id);
-      cy.navTo('roster');
+      cy.apiLogin(memberData.user_id, 'roster');
 
       cy.getByCy('upgrade-requests-section').should('be.visible');
       cy.getByCy('upgrade-requests-section').click();
@@ -58,8 +56,7 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
             .then((cu2) => {
               cy.apiCreateUpgradeRequest(ownerData.access_token, cu2.id, '7r4');
 
-              cy.apiLogin(memberData.user_id);
-              cy.navTo('roster');
+              cy.apiLogin(memberData.user_id, 'roster');
 
               cy.getByCy('upgrade-requests-section').should('be.visible');
               cy.getByCy('upgrade-requests-section').click();
@@ -76,8 +73,7 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
     setupAllianceWithMember('UR', 'SentryCard', 'Science').then(({ ownerData, championUserId }) => {
       cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(ownerData.user_id, 'alliances');
 
       cy.getByCy('invite-member-toggle').should('be.visible');
       cy.getByCy('view-roster-URMember').click();

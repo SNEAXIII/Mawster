@@ -43,8 +43,7 @@ describe('Roster – Vision margin and correction', () => {
       cy.apiLoadChampion(adminData.access_token, 'Hulk', 'Science');
       cy.apiLoadChampion(adminData.access_token, 'Iron Man', 'Tech');
 
-      cy.apiLogin(userData.user_id);
-      cy.navTo('roster');
+      cy.apiLogin(userData.user_id, 'roster');
 
       uploadFixtureScreenshot();
 
@@ -69,8 +68,7 @@ describe('Roster – Vision margin and correction', () => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, warMachineId, '6r4');
       });
 
-      cy.apiLogin(userData.user_id);
-      cy.navTo('roster');
+      cy.apiLogin(userData.user_id, 'roster');
 
       uploadFixtureScreenshot();
 

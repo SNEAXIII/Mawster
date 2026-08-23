@@ -14,8 +14,7 @@ describe('War note – attacker selector', () => {
   it('officer edits a fight note from inside the attacker selector', () => {
     cy.intercept('PUT', '**/nodes/*/*/note').as('saveNote');
     setupAttackerScenario('selnote').then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('war-mode-attackers').click();
 
       // Open the selector on node 10 and write a note via the embedded editor.
@@ -48,8 +47,7 @@ describe('War note – attacker selector', () => {
 
   it('keeps the fight note folded by default and toggles it open', () => {
     setupAttackerScenario('selfold').then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('war-mode-attackers').click();
 
       cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
