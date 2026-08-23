@@ -127,7 +127,7 @@ class StatisticService:
         _kos = func.coalesce(attacker_sq.c.total_kos, 0)
         _not_fought = func.coalesce(attacker_sq.c.total_not_fought, 0)
         # Each not-done fight counts as a fight with NOT_FOUGHT_KOS KOs in the
-        # ratio, so skipping a node penalizes the player just like in the score.
+        # ratio, so skipping a node penalizes the player.
         _ratio_kos = _kos + NOT_FOUGHT_KOS * _not_fought
         _ratio_fights = _combined_fights + _not_fought
         _wars = wars_sq.c.wars_participated
