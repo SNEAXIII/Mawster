@@ -15,8 +15,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r3' },
       { name: 'Iron Man', cls: 'Tech', rarity: '7r3' },
     ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.contains('Select Champion').should('be.visible');
@@ -37,8 +36,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3' },
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r3' },
     ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.get('input[placeholder]').type('mutant');
@@ -57,8 +55,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
         cy.contains('Select Champion').should('be.visible');
@@ -80,8 +77,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r5', options: { ascension: 1, is_ascendable: true } },
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r3' },
     ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
 
@@ -99,8 +95,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3', options: { signature: 200 } },
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r3', options: { signature: 100 } },
     ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.getByCy('champion-card-Spider-Man').click();
@@ -122,8 +117,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3', options: { signature: 200 } },
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r4', options: { signature: 100 } },
     ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.getByCy('champion-card-Spider-Man').click();
@@ -150,8 +144,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
           cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', { signature: 100 });
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
         cy.getByCy('champion-card-Spider-Man').click();
@@ -189,8 +182,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
           });
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
         cy.getByCy('champion-card-Wolverine').click();
@@ -217,8 +209,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
           });
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
         cy.getByCy('champion-card-Doctor-Doom').click();
@@ -244,8 +235,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
           cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r4', { signature: 100 }),
         );
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
         cy.getByCy('champion-card-Spider-Man').should('be.visible').click();
@@ -273,8 +263,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
     setupDefenseScenario('def-pl-entry-empty', 'EntryEmptyPlyr', 'EE', [
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3' },
     ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.getByCy('defense-current-placement').should('contain', 'Empty');
@@ -286,8 +275,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3' },
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r4' },
     ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       // Place Spider-Man on node 1
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -307,8 +295,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
     setupDefenseScenario('def-pl-title', 'TitlePlyr', 'TT', [
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3', options: { signature: 200 } },
     ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').should('have.attr', 'title').and('include', 'Empty');
 

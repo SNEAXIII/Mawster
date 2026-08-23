@@ -7,16 +7,14 @@ describe('Alliances – Creation', () => {
 
   it('shows the alliances page title', () => {
     setupUser('alliance-page-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(user_id, 'alliances');
       cy.contains('Alliances').should('be.visible');
     });
   });
 
   it('shows empty state when user has no game accounts', () => {
     setupUser('alliance-noacc-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(user_id, 'alliances');
       cy.contains('Browse and create alliances for your alliance wars.').should('be.visible');
       cy.contains('No alliances yet. Create the first one!').should('be.visible');
     });
@@ -26,8 +24,7 @@ describe('Alliances – Creation', () => {
     setupUser('alliance-create-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'AllianceLeader', true);
 
-      cy.apiLogin(user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(user_id, 'alliances');
 
       cy.getByCy('tab-create').click();
       cy.getByCy('alliance-name-input').should('be.visible').type('TestAlliance');
@@ -51,8 +48,7 @@ describe('Alliances – Creation', () => {
         cy.apiCreateAlliance(access_token, 'MyAlliance', 'MA', account.id);
       });
 
-      cy.apiLogin(user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(user_id, 'alliances');
 
       cy.getByCy('alliance-card-MyAlliance')
         .should('be.visible')
@@ -74,8 +70,7 @@ describe('Alliances – Creation', () => {
     setupUser('alliance-nameinv-token').then(({ user_id, access_token }: UserSetupData) => {
       cy.apiCreateGameAccount(access_token, 'LeaderNameInv', true);
 
-      cy.apiLogin(user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(user_id, 'alliances');
 
       cy.getByCy('tab-create').click();
       cy.getByCy('alliance-name-input').type('Bad-Alliance!');
@@ -91,8 +86,7 @@ describe('Alliances – Creation', () => {
     setupUser('alliance-taginv-token').then(({ user_id, access_token }: UserSetupData) => {
       cy.apiCreateGameAccount(access_token, 'LeaderTagInv', true);
 
-      cy.apiLogin(user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(user_id, 'alliances');
 
       cy.getByCy('tab-create').click();
       cy.getByCy('alliance-name-input').type('Good Alliance');
@@ -107,8 +101,7 @@ describe('Alliances – Creation', () => {
   it('shows the empty state when user has game accounts but no alliances', () => {
     setupUser('alliance-empty-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'EmptyAcc', true);
-      cy.apiLogin(user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(user_id, 'alliances');
       cy.getByCy('alliance-empty-text').should('contain', 'No alliances yet');
     });
   });

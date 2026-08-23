@@ -11,8 +11,7 @@ describe('Alliances – Permissions', () => {
 
   it('regular member cannot see invite button', () => {
     setupOwnerMemberAlliance('perm', 'PermOwner', 'PermMember', 'PermAlliance', 'PA').then(({ memberData }) => {
-      cy.apiLogin(memberData.user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(memberData.user_id, 'alliances');
 
       cy.getByCy('alliance-card-PermAlliance')
         .should('be.visible')
@@ -34,8 +33,7 @@ describe('Alliances – Permissions', () => {
           });
         });
 
-        cy.apiLogin(memberData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(memberData.user_id, 'alliances');
         cy.getByCy('alliance-card-PendingAlliance')
           .should('be.visible')
           .within(() => {
@@ -49,8 +47,7 @@ describe('Alliances – Permissions', () => {
   it('regular member cannot see promote/demote/exclude buttons', () => {
     setupOwnerMemberAlliance('perm-no-actions', 'ActionsOwner', 'ActionsMember', 'ActionsAlliance', 'AC').then(
       ({ memberData }) => {
-        cy.apiLogin(memberData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(memberData.user_id, 'alliances');
 
         cy.getByCy('alliance-card-ActionsAlliance')
           .should('be.visible')
@@ -72,8 +69,7 @@ describe('Alliances – Permissions', () => {
       ({ ownerData, memberData, allianceId, memberAccId }) => {
         cy.apiAddOfficer(ownerData.access_token, allianceId, memberAccId);
 
-        cy.apiLogin(memberData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(memberData.user_id, 'alliances');
 
         cy.getByCy('alliance-card-OfficerAlliance')
           .should('be.visible')

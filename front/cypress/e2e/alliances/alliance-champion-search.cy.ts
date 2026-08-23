@@ -9,8 +9,7 @@ describe('Alliance champion search', () => {
 
   it('officer filters by champion name and requests a rank-up', () => {
     setupAllianceWithMember('cs-officer', 'Iron Man', 'Tech').then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(ownerData.user_id, 'alliances');
       cy.getByCy('tab-champion-search').click();
 
       cy.getByCy('roster-filter-name').type('Iron');
@@ -35,8 +34,7 @@ describe('Alliance champion search', () => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r1'),
         );
 
-        cy.apiLogin(visitorData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(visitorData.user_id, 'alliances');
         cy.getByCy('tab-champion-search').click();
 
         cy.getByCy('roster-filter-name').type('Wolverine');
@@ -51,8 +49,7 @@ describe('Alliance champion search', () => {
 
   it('shows empty state when filters match nothing', () => {
     setupAllianceWithMember('cs-empty', 'Doctor Doom', 'Mystic').then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(ownerData.user_id, 'alliances');
       cy.getByCy('tab-champion-search').click();
 
       cy.getByCy('roster-filter-name').type('Nonexistentxyz');
@@ -93,8 +90,7 @@ describe('Alliance champion search', () => {
         cy.apiAddChampionToRoster(memberToken, memberAccId, champs[0].id, '7r1'),
       );
 
-      cy.apiLogin(users['cs-grp-owner'].user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(users['cs-grp-owner'].user_id, 'alliances');
       cy.getByCy('tab-champion-search').click();
 
       // No group filter: both champions listed.
@@ -119,8 +115,7 @@ describe('Alliance champion search', () => {
 
   it('always shows the battlegroup selector with static group options', () => {
     setupAllianceWithMember('cs-onegrp', 'Iron Man', 'Tech').then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(ownerData.user_id, 'alliances');
       cy.getByCy('tab-champion-search').click();
 
       cy.getByCy('champion-group-Iron Man').should('be.visible');

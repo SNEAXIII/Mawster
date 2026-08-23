@@ -1,8 +1,7 @@
 import { setupAttackerScenario, setupPrefightScenario, BACKEND } from '../../support/e2e';
 
 function goToAttackersMode(userId: string) {
-  cy.apiLogin(userId);
-  cy.navTo('war');
+  cy.apiLogin(userId, 'war');
   cy.getByCy('war-mode-attackers').click();
 }
 
@@ -86,8 +85,7 @@ describe('War – Attackers mode (advanced)', () => {
           });
 
           cy.then(() => {
-            cy.apiLogin(memberData.user_id);
-            cy.navTo('war');
+            cy.apiLogin(memberData.user_id, 'war');
             cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
             cy.getByCy('war-attacker-search').should('be.visible');
             cy.getByCy('attacker-card-Vision').should('be.visible').click();

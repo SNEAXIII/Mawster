@@ -12,8 +12,7 @@ describe('War – prefight highlight on map', () => {
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
         cy.apiAddWarPrefight(memberData.access_token, allianceId, warId, 1, prefightChampionUserId, 10);
 
-        cy.apiLogin(memberData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(memberData.user_id, 'war');
 
         cy.getByCy('war-node-10').should('have.class', 'ring-foreground');
       },
@@ -22,8 +21,7 @@ describe('War – prefight highlight on map', () => {
 
   it('node without prefight has no cyan ring', () => {
     setupPrefightScenario('pf-no-ring').then(({ memberData }) => {
-      cy.apiLogin(memberData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(memberData.user_id, 'war');
 
       cy.getByCy('war-node-10').should('not.have.class', 'ring-cyan-400');
     });
@@ -55,8 +53,7 @@ describe('War – prefight highlight on map', () => {
           });
         });
 
-        cy.apiLogin(memberData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(memberData.user_id, 'war');
 
         // filter by member: node 10 (owner attacker + member prefight) must NOT be dimmed
         cy.selectOption('war-player-filter', 'pfltMember');
@@ -91,8 +88,7 @@ describe('War – prefight highlight on map', () => {
           });
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
 
         // filter by owner: node 1 (owner attacker) not dimmed, node 10 (member only) dimmed
         cy.selectOption('war-player-filter', 'pflt2Owner');

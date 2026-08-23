@@ -9,8 +9,7 @@ describe('War – Bans', () => {
     setupWarOwner('war-bans-ui', 'BanOfficer', 'BanAlliance', 'BA').then(({ adminData, ownerData, allianceId }) => {
       cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
         const champ = champs[0];
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
 
         cy.getByCy('declare-war-btn').click();
         cy.getByCy('opponent-name-input').type('BanEnemy');
@@ -37,8 +36,7 @@ describe('War – Bans', () => {
       cy.apiLoadChampion(adminData.access_token, 'Storm', 'Mutant').then((champs) => {
         const champ = champs[0];
         cy.apiCreateWar(ownerData.access_token, allianceId, 'BanTarget', [champ.id]);
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
 
         cy.getByCy(`ban-display-${champ.id}`).should('have.attr', 'title', champ.name);
       });
@@ -51,8 +49,7 @@ describe('War – Bans', () => {
         alias: 'wolvie;logan;claws',
       }).then((champs) => {
         const champ = champs[0];
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
 
         cy.getByCy('declare-war-btn').click();
         cy.getByCy('opponent-name-input').type('AliasEnemy');
@@ -88,8 +85,7 @@ describe('War – Bans', () => {
         champions.map((c) => ({ name: c.name, cls: c.cls })),
       ).then((champMap) => {
         const ids = Object.values(champMap);
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
 
         cy.getByCy('declare-war-btn').click();
         cy.getByCy('opponent-name-input').type('MaxBanEnemy');

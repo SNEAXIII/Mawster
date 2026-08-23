@@ -269,14 +269,16 @@ Cypress.Commands.add('apiForceJoinAlliance', (gameAccountId: string, allianceId:
 
 // ── API login — bypasses the UI entirely ─────────────────────────────────────
 
-Cypress.Commands.add('apiLogin', (userId: string) => {
+// The optional `page` lands directly on the target route: without it the caller
+// pays a second page load through cy.navTo right after ('/' then the real page).
+Cypress.Commands.add('apiLogin', (userId: string, page?: string) => {
   cy.clearAllCookies();
   cy.clearAllSessionStorage();
   cy.clearAllLocalStorage();
   cy.request('POST', '/api/dev/login', { user_id: userId }).then((res) => {
     cy.setCookie('authjs.session-token', res.body.sessionToken);
   });
-  cy.visit('/');
+  cy.visit(page ? navUrl(page) : '/');
 });
 
 // ── UI login via dev-login flow ──────────────────────────────────────────────
@@ -302,8 +304,14 @@ const NAV_URLS: Record<string, string> = {
   war: '/game/war',
 };
 
+function navUrl(page: string): string {
+  const url = NAV_URLS[page];
+  if (!url) throw new Error(`Unknown nav page "${page}" — expected one of ${Object.keys(NAV_URLS).join(', ')}`);
+  return url;
+}
+
 Cypress.Commands.add('navTo', (page: string) => {
-  cy.visit(NAV_URLS[page]);
+  cy.visit(navUrl(page));
 });
 
 // ── Invite member to alliance (direct backend call) ─────────────────────────

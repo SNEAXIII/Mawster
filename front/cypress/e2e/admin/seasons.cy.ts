@@ -7,8 +7,7 @@ describe('Admin — seasons panel', () => {
 
   it('season number input only accepts digits', () => {
     setupAdmin('season-input-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('admin');
+      cy.apiLogin(user_id, 'admin');
       cy.getByCy('tab-seasons').click();
       cy.getByCy('season-number-input').type('abc12e-3.5').should('have.value', '1235');
     });
@@ -16,8 +15,7 @@ describe('Admin — seasons panel', () => {
 
   it('admin can create and open a season from the panel', () => {
     setupAdmin('season-admin-panel-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('admin');
+      cy.apiLogin(user_id, 'admin');
       cy.getByCy('tab-seasons').click();
       cy.getByCy('seasons-panel').should('be.visible');
       cy.getByCy('season-number-input').type('99');
@@ -45,8 +43,7 @@ describe('Admin — seasons panel', () => {
         body: { number: 55 },
         headers: { Authorization: `Bearer ${access_token}` },
       });
-      cy.apiLogin(user_id);
-      cy.navTo('admin');
+      cy.apiLogin(user_id, 'admin');
       cy.getByCy('tab-seasons').click();
 
       // Open
@@ -80,8 +77,7 @@ describe('Admin — seasons panel', () => {
         body: { number: 56 },
         headers: { Authorization: `Bearer ${access_token}` },
       });
-      cy.apiLogin(user_id);
-      cy.navTo('admin');
+      cy.apiLogin(user_id, 'admin');
       cy.getByCy('tab-seasons').click();
 
       // Open then close to reach the ended state

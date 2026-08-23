@@ -14,8 +14,7 @@ describe('Roster – Rarity & Signature', () => {
       setupRosterUser('ui-rarity', 'RarityPlayer').then(({ adminData, userData }) => {
         cy.apiLoadChampion(adminData.access_token, 'Medusa', 'Cosmic');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Medusa');
@@ -37,8 +36,7 @@ describe('Roster – Rarity & Signature', () => {
         cy.apiLoadChampion(adminData.access_token, 'Thor', 'Cosmic');
         cy.apiLoadChampion(adminData.access_token, 'Hulk', 'Science');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         // Add Thor at 7r4
         cy.contains('Add / Update a Champion').click();
@@ -69,8 +67,7 @@ describe('Roster – Rarity & Signature', () => {
       setupRosterUser('ui-rarity-highlight', 'HighlightPlayer').then(({ adminData, userData }) => {
         cy.apiLoadChampion(adminData.access_token, 'Venom', 'Cosmic');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Venom');
@@ -97,8 +94,7 @@ describe('Roster – Rarity & Signature', () => {
       setupRosterUser('ui-sig-preset', 'SigPresetPlayer').then(({ adminData, userData }) => {
         cy.apiLoadChampion(adminData.access_token, 'DoctorVoodoo', 'Mystic');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('DoctorVoodoo');
@@ -122,8 +118,7 @@ describe('Roster – Rarity & Signature', () => {
       setupRosterUser('ui-sig-manual', 'SigManualPlayer').then(({ adminData, userData }) => {
         cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Magik');
@@ -146,8 +141,7 @@ describe('Roster – Rarity & Signature', () => {
       setupRosterUser('ui-sig-zero', 'SigZeroPlayer').then(({ adminData, userData }) => {
         cy.apiLoadChampion(adminData.access_token, 'Phoenix', 'Cosmic');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Phoenix');

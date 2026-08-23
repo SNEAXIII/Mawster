@@ -21,8 +21,7 @@ describe('War – attacker panel player filter', () => {
           });
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
 
         cy.getByCy('attacker-member-war-pfltOwner').should('be.visible');
         cy.getByCy('attacker-member-war-pfltMember').should('be.visible');
@@ -53,8 +52,7 @@ describe('War – attacker panel player filter', () => {
           });
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
 
         cy.selectOption('war-player-filter', 'war-pflt-rOwner');
         cy.getByCy('attacker-member-war-pflt-rMember').should('not.exist');

@@ -19,8 +19,7 @@ describe('Big Thing season format — war page', () => {
           headers: { Authorization: `Bearer ${adminData.access_token}` },
         }).then(() => {
           cy.apiCreateWar(ownerData.access_token, allianceId, 'BTEnemy');
-          cy.apiLogin(ownerData.user_id);
-          cy.navTo('war');
+          cy.apiLogin(ownerData.user_id, 'war');
 
           // Big Thing format badge is shown
           cy.getByCy('season-format-banner').should('be.visible').and('contain', 'Big Thing');
@@ -46,8 +45,7 @@ describe('Big Thing season format — war page', () => {
         headers: { Authorization: `Bearer ${adminData.access_token}` },
       }).then(() => {
         cy.apiCreateWar(ownerData.access_token, allianceId, 'BTPreEnemy');
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
 
         // Pre-season badge (no active season) — the war earns no ELO...
         cy.getByCy('season-pre-season-badge').should('be.visible').and('contain', 'Pre-season');
