@@ -49,6 +49,7 @@ class WarFightRecordResponse(BaseModel):
     node_number: int
     tier: int | None = None
     alliance_name: str
+    alliance_tag: str | None = None
     champion_id: uuid.UUID
     champion_name: str
     champion_class: str
@@ -91,6 +92,7 @@ class WarFightRecordResponse(BaseModel):
                 "war_id": None,
                 "alliance_id": data.alliance_id,
                 "alliance_name": data.alliance.name,
+                "alliance_tag": data.alliance.tag,
                 "season_id": data.season_id,
                 "season_number": data.season.number if data.season_id and data.season else None,
                 "game_account_pseudo": None,
@@ -130,6 +132,7 @@ class WarFightRecordResponse(BaseModel):
             "war_id": data.war_id,
             "alliance_id": data.alliance_id,
             "alliance_name": data.alliance.name,
+            "alliance_tag": data.alliance.tag,
             "season_id": data.season_id,
             "season_number": data.season.number if data.season_id and data.season else None,
             "game_account_pseudo": data.game_account.game_pseudo if data.game_account else None,

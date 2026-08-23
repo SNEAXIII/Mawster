@@ -1,5 +1,9 @@
 import { BACKEND, setupKnowledgeBaseFast, setupUser } from '../../support/e2e';
 
+// The alliance column renders the tag (`[KBA]`), the same text as the filter's
+// dropdown options — so every alliance lookup here must be scoped to
+// `[role="option"]`, or it matches the table cell that comes first in the DOM.
+
 describe('Knowledge Base — alliance visibility', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -59,8 +63,9 @@ describe('Knowledge Base — alliance visibility', () => {
 
             cy.getByCy('filter-alliance-trigger').should('be.visible');
             cy.getByCy('filter-alliance-trigger').click();
-            cy.contains(`[${prefixA.slice(0, 3).toUpperCase()}]`).should('be.visible');
-            cy.contains(`[${prefixB.slice(0, 3).toUpperCase()}]`).should('be.visible');
+            cy.get('[role="listbox"]').should('be.visible');
+            cy.contains('[role="option"]', `[${prefixA.slice(0, 3).toUpperCase()}]`).should('be.visible');
+            cy.contains('[role="option"]', `[${prefixB.slice(0, 3).toUpperCase()}]`).should('be.visible');
           });
         });
       });
@@ -99,14 +104,12 @@ describe('Knowledge Base — alliance visibility', () => {
             cy.visit('/game/knowledge-base');
 
             // Filter by alliance A → records visible
-            cy.getByCy('filter-alliance-trigger').click();
-            cy.contains(`[${prefixA.slice(0, 3).toUpperCase()}]`).click();
+            cy.selectOption('filter-alliance-trigger', `[${prefixA.slice(0, 3).toUpperCase()}]`);
             cy.getByCy('fight-records-table').find('tbody tr').should('have.length.gte', 1);
 
             // Clear + filter by alliance B (no records) → empty state
             cy.getByCy('filter-clear').click();
-            cy.getByCy('filter-alliance-trigger').click();
-            cy.contains(`[${prefixB.slice(0, 3).toUpperCase()}]`).click();
+            cy.selectOption('filter-alliance-trigger', `[${prefixB.slice(0, 3).toUpperCase()}]`);
             cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
           });
         });

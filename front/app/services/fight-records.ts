@@ -38,6 +38,7 @@ export interface FightRecord {
   war_id?: string | null
   alliance_id: string
   alliance_name: string
+  alliance_tag?: string | null
   season_id: string | null
   season_number?: number | null
   game_account_pseudo?: string | null

@@ -685,6 +685,8 @@ const en = {
       noteExpand: 'Click to show the full note',
       noteCollapse: 'Click to collapse',
       noData: 'No fight records found.',
+      exportImage: 'Export image',
+      exportTitle: 'Knowledge base',
       filterAttacker: 'Select attacker',
       filterDefender: 'Select defender',
       clearFilters: 'Clear filters',
