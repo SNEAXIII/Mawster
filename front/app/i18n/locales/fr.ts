@@ -687,6 +687,7 @@ const fr: Translations = {
       alliance: 'Alliance',
       synergies: 'Synergies',
       prefights: 'Préfights',
+      season: 'Saison',
       date: 'Date',
       note: 'Note',
       noteBy: 'par',

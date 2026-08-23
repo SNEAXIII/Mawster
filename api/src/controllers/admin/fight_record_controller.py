@@ -40,6 +40,7 @@ async def list_fight_records(
     source: FightRecordSource = Query(default=FightRecordSource.All),
     sort_by: Literal[
         "created_at",
+        "season_number",
         "ko_count",
         "tier",
         "node_number",

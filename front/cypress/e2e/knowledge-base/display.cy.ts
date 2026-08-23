@@ -1,7 +1,7 @@
 import { setupKnowledgeBaseFast, setupKnowledgeBase } from '../../support/e2e';
 
 // Column indices (0-based):
-// 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: Tier | 7: KO | 8: Alliance | 9: Date
+// 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: Tier | 7: KO | 8: Alliance | 9: Season | 10: Date
 //
 // Dev endpoint alternates champions per node:
 //   odd  nodes: attacker=Iron Man,       defender=Captain America
@@ -27,6 +27,7 @@ describe('Knowledge Base', () => {
         cy.contains('th', 'Node').should('exist');
         cy.contains('th', 'KO').should('exist');
         cy.contains('th', 'Alliance').should('exist');
+        cy.contains('th', 'Season').should('exist');
         cy.contains('th', 'Date').should('exist');
       });
     });

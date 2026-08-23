@@ -248,6 +248,7 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
     { col: 'tier', label: kb.tier },
     { col: 'ko_count', label: kb.ko },
     { col: 'alliance_name', label: kb.alliance },
+    { col: 'season_number', label: kb.season },
     { col: 'created_at', label: kb.date },
     { col: null, label: kb.note },
   ]
@@ -285,7 +286,7 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
           {!loading && records.length === 0 && (
             <tr>
               <td
-                colSpan={11}
+                colSpan={12}
                 className='px-3 py-8 text-center text-muted-foreground'
               >
                 {kb.noData}
@@ -339,6 +340,12 @@ export default function KnowledgeBaseTable({ records, loading, sortBy, sortOrder
                   {r.ko_count}
                 </td>
                 <td className='px-3 py-2'>{r.alliance_name}</td>
+                <td
+                  className='px-3 py-2 whitespace-nowrap'
+                  data-cy='fight-record-season'
+                >
+                  {r.season_number != null ? `S${r.season_number}` : '—'}
+                </td>
                 <td className='px-3 py-2 whitespace-nowrap'>
                   {r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}
                 </td>
