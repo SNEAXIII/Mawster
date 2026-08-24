@@ -147,6 +147,10 @@ export default function ChampionPortrait({
   // Pre-resized thumbnail on screen; full-resolution source while exporting, so
   // the upscaled PNG capture stays sharp.
   const imgSize = exporting ? undefined : pickThumbnailSize(windowRect.width)
+  // Lazy off-screen images: a full roster mounts hundreds of portraits at once.
+  // Never lazy while exporting — html2canvas snapshots the DOM synchronously and
+  // would capture blanks for anything the browser hasn't decided to load yet.
+  const eagerLoad = exporting
   const windowStyle: React.CSSProperties = { position: 'absolute', ...windowRect }
 
   return (
@@ -159,6 +163,8 @@ export default function ChampionPortrait({
       <img
         src={frameUrl}
         alt=''
+        loading={eagerLoad ? 'eager' : 'lazy'}
+        decoding='async'
         className='absolute inset-0 w-full h-full object-contain pointer-events-none'
       />
       {/* Champion image – on top, filling the frame's window. `focusY` keeps the
@@ -168,6 +174,8 @@ export default function ChampionPortrait({
         <img
           src={getChampionImageUrl(imageUrl, imgSize) ?? ''}
           alt={name}
+          loading={eagerLoad ? 'eager' : 'lazy'}
+          decoding='async'
           className='object-cover z-10'
           style={{ ...windowStyle, objectPosition: `50% ${focusY * 100}%` }}
         />
