@@ -7,6 +7,7 @@ import ChampionsPanel from './champions-panel'
 import SeasonsPanel from './seasons-panel'
 import KnowledgeBasePanel from './knowledge-base-panel'
 import ModerationPanel from './moderation-panel'
+import VisionStatsPanel from './vision-stats-panel'
 import { useAdminViewModel, AdminTab } from '../_viewmodels/use-admin-viewmodel'
 
 interface AdminContentProps {
@@ -22,6 +23,7 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
     { value: AdminTab.Champions, label: t.nav.champions },
     { value: AdminTab.Seasons, label: t.nav.seasons },
     { value: AdminTab.KnowledgeBase, label: t.admin.knowledgeBase.tab },
+    { value: AdminTab.VisionImports, label: t.admin.visionStats.tab },
     { value: AdminTab.Moderation, label: t.moderation.tab },
   ]
 
@@ -44,6 +46,7 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
       {vm.activeTab === AdminTab.Champions && <ChampionsPanel />}
       {vm.activeTab === AdminTab.Seasons && <SeasonsPanel />}
       {vm.activeTab === AdminTab.KnowledgeBase && <KnowledgeBasePanel />}
+      {vm.activeTab === AdminTab.VisionImports && <VisionStatsPanel />}
       {vm.activeTab === AdminTab.Moderation && <ModerationPanel />}
     </div>
   )
