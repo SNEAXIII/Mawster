@@ -51,7 +51,7 @@ export function useAlliancesViewModel() {
   const [statsAllianceId, setStatsAllianceId] = useState('')
   const [seasonStats, setSeasonStats] = useState<PlayerSeasonStats[]>([])
   const [statsWarId, setStatsWarId] = useState<string | null>(null)
-  const [statsLoading, setStatsLoading] = useState(false)
+  const [statsRefreshing, setStatsRefreshing] = useState(false)
   const [statsError, setStatsError] = useState('')
 
   const initialTab = (searchParams.get('tab') as AllianceTab) || AllianceTab.Alliances
@@ -135,7 +135,7 @@ export function useAlliancesViewModel() {
 
   const loadSeasonStats = useCallback(
     async (allianceId: string, warId?: string | null) => {
-      setStatsLoading(true)
+      setStatsRefreshing(true)
       setStatsError('')
       try {
         const stats = await getCurrentSeasonStatistics(allianceId, warId ?? undefined)
@@ -145,7 +145,7 @@ export function useAlliancesViewModel() {
         setSeasonStats([])
         setStatsError((err as Error).message || t.game.alliances.statistics.loadError)
       } finally {
-        setStatsLoading(false)
+        setStatsRefreshing(false)
       }
     },
     [t.game.alliances.statistics.loadError]
@@ -338,7 +338,10 @@ export function useAlliancesViewModel() {
     seasonStats,
     statsWarId,
     handleStatsWarChange,
-    statsLoading,
+    // Blank the panel only while there is nothing to show yet. A filter refetch
+    // keeps the previous rows on screen so the filter bar never unmounts.
+    statsLoading: statsRefreshing && seasonStats.length === 0,
+    statsRefreshing,
     statsError,
     searchParams,
     setActiveTab,

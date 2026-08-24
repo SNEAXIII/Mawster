@@ -29,6 +29,7 @@ interface AllianceStatisticsTabProps {
   onAllianceChange: (allianceId: string) => void
   seasonStats: PlayerSeasonStats[]
   statsLoading: boolean
+  statsRefreshing: boolean
   statsError: string
   onRetry: () => Promise<void>
   selectedWarId: string | null
@@ -49,6 +50,7 @@ export default function AllianceStatisticsTab({
   onAllianceChange,
   seasonStats,
   statsLoading,
+  statsRefreshing,
   statsError,
   onRetry,
   selectedWarId,
@@ -186,7 +188,7 @@ export default function AllianceStatisticsTab({
             {stat.retry}
           </Button>
         </div>
-      ) : seasonStats.length === 0 ? (
+      ) : seasonStats.length === 0 && selectedWarId === null ? (
         <p
           className='text-sm text-muted-foreground py-6 text-center'
           data-cy='statistics-empty'
@@ -312,7 +314,12 @@ export default function AllianceStatisticsTab({
             )}
           </div>
 
-          <div className='flex flex-col lg:flex-row gap-6'>
+          <div
+            className={`flex flex-col lg:flex-row gap-6 transition-opacity ${
+              statsRefreshing ? 'opacity-60' : ''
+            }`}
+            aria-busy={statsRefreshing}
+          >
             <div className='flex-1 min-w-0'>
               {filteredStats.length === 0 ? (
                 <p
