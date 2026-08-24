@@ -28,9 +28,12 @@ async def get_current_season_statistics(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     alliance_id: uuid.UUID,
+    war_id: uuid.UUID | None = Query(default=None),
 ):
-    """Get the current season statistics."""
-    return await StatisticService.get_display_season_statistics(session, current_user, alliance_id)
+    """Get the current season statistics, optionally narrowed to a single war."""
+    return await StatisticService.get_display_season_statistics(
+        session, current_user, alliance_id, war_id
+    )
 
 
 @statistics_controller.get(

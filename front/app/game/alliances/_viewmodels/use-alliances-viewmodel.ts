@@ -50,6 +50,7 @@ export function useAlliancesViewModel() {
   const [creating, setCreating] = useState(false)
   const [statsAllianceId, setStatsAllianceId] = useState('')
   const [seasonStats, setSeasonStats] = useState<PlayerSeasonStats[]>([])
+  const [statsWarId, setStatsWarId] = useState<string | null>(null)
   const [statsLoading, setStatsLoading] = useState(false)
   const [statsError, setStatsError] = useState('')
 
@@ -133,11 +134,11 @@ export function useAlliancesViewModel() {
   }
 
   const loadSeasonStats = useCallback(
-    async (allianceId: string) => {
+    async (allianceId: string, warId?: string | null) => {
       setStatsLoading(true)
       setStatsError('')
       try {
-        const stats = await getCurrentSeasonStatistics(allianceId)
+        const stats = await getCurrentSeasonStatistics(allianceId, warId ?? undefined)
         setSeasonStats(stats)
       } catch (err: unknown) {
         console.error(err)
@@ -189,17 +190,24 @@ export function useAlliancesViewModel() {
     }
 
     if (activeTab === AllianceTab.Statistics) {
-      loadSeasonStats(targetAllianceId).catch(() => {})
+      loadSeasonStats(targetAllianceId, statsWarId).catch(() => {})
     }
-  }, [activeTab, alliances, statsAllianceId, loadSeasonStats])
+  }, [activeTab, alliances, statsAllianceId, statsWarId, loadSeasonStats])
 
   const handleStatsAllianceChange = (allianceId: string) => {
     setStatsAllianceId(allianceId)
+    // Wars are alliance-scoped: keeping the previous selection would filter on a
+    // war that does not belong to the newly selected alliance.
+    setStatsWarId(null)
+  }
+
+  const handleStatsWarChange = (warId: string | null) => {
+    setStatsWarId(warId)
   }
 
   const handleRefreshStatistics = async () => {
     if (!statsAllianceId) return
-    await loadSeasonStats(statsAllianceId)
+    await loadSeasonStats(statsAllianceId, statsWarId)
   }
 
   const ALLIANCE_NAME_REGEX = /^[a-zA-Z0-9 ]{3,50}$/
@@ -328,6 +336,8 @@ export function useAlliancesViewModel() {
     rosterTarget,
     statsAllianceId,
     seasonStats,
+    statsWarId,
+    handleStatsWarChange,
     statsLoading,
     statsError,
     searchParams,

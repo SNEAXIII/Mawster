@@ -113,6 +113,8 @@ export default function AllianceContent() {
             statsLoading={vm.statsLoading}
             statsError={vm.statsError}
             onRetry={vm.handleRefreshStatistics}
+            selectedWarId={vm.statsWarId}
+            onWarChange={vm.handleStatsWarChange}
           />
         )}
 
