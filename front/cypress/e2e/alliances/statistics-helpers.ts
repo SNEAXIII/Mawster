@@ -159,6 +159,40 @@ export function withWarScenarioTwoPlayers(
   });
 }
 
+// Two ended wars in the same season, each fought by a different player:
+// the owner fights in war one only, the member in war two only. Lets a spec
+// assert that the war filter actually re-scopes the stats table, not just the chart.
+export function withTwoEndedWarsTwoPlayers(
+  adminToken: string,
+  ownerToken: string,
+  ownerAccId: string,
+  memberToken: string,
+  memberAccId: string,
+  allianceId: string,
+  cb: (args: { warOneId: string; warTwoId: string }) => void,
+) {
+  createAndActivateSeason(adminToken).then(() => {
+    loadChampAndAddToTwoRosters(
+      adminToken,
+      ownerToken,
+      ownerAccId,
+      memberToken,
+      memberAccId,
+      ({ champId, cuOwnerId, cuMemberId }) => {
+        cy.apiCreateWar(ownerToken, allianceId, 'WarOne').then((warOne: { id: string }) => {
+          addStatsForPlayer(ownerToken, allianceId, warOne.id, champId, cuOwnerId, 10, 0);
+          cy.apiEndWar(ownerToken, allianceId, warOne.id, true, 10);
+          cy.apiCreateWar(ownerToken, allianceId, 'WarTwo').then((warTwo: { id: string }) => {
+            addStatsForPlayer(ownerToken, allianceId, warTwo.id, champId, cuMemberId, 11, 2);
+            cy.apiEndWar(ownerToken, allianceId, warTwo.id, true, 10);
+            cb({ warOneId: warOne.id, warTwoId: warTwo.id });
+          });
+        });
+      },
+    );
+  });
+}
+
 function loadTwoChampsAddToRosters(
   adminToken: string,
   ownerToken: string,

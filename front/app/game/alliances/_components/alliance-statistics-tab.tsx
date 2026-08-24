@@ -29,8 +29,11 @@ interface AllianceStatisticsTabProps {
   onAllianceChange: (allianceId: string) => void
   seasonStats: PlayerSeasonStats[]
   statsLoading: boolean
+  statsRefreshing: boolean
   statsError: string
   onRetry: () => Promise<void>
+  selectedWarId: string | null
+  onWarChange: (warId: string | null) => void
 }
 
 type MemberFilter = 'current' | 'all' | 'former'
@@ -47,8 +50,11 @@ export default function AllianceStatisticsTab({
   onAllianceChange,
   seasonStats,
   statsLoading,
+  statsRefreshing,
   statsError,
   onRetry,
+  selectedWarId,
+  onWarChange,
 }: Readonly<AllianceStatisticsTabProps>) {
   const { t } = useI18n()
   const stat = t.game.alliances.statistics
@@ -78,8 +84,6 @@ export default function AllianceStatisticsTab({
   const {
     selectedGameAccountId,
     setSelectedGameAccountId,
-    selectedWarId,
-    setSelectedWarId,
     championUsage,
     chartMetric,
     setChartMetric,
@@ -90,7 +94,7 @@ export default function AllianceStatisticsTab({
     wars,
     chartLoading,
     handleRowClick,
-  } = useChampionStats(selectedAllianceId, selectedGroup)
+  } = useChampionStats(selectedAllianceId, selectedGroup, selectedWarId)
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -184,7 +188,7 @@ export default function AllianceStatisticsTab({
             {stat.retry}
           </Button>
         </div>
-      ) : seasonStats.length === 0 ? (
+      ) : seasonStats.length === 0 && selectedWarId === null ? (
         <p
           className='text-sm text-muted-foreground py-6 text-center'
           data-cy='statistics-empty'
@@ -213,7 +217,7 @@ export default function AllianceStatisticsTab({
 
             <Select
               value={selectedWarId ?? 'all'}
-              onValueChange={(v) => setSelectedWarId(v === 'all' ? null : v)}
+              onValueChange={(v) => onWarChange(v === 'all' ? null : v)}
             >
               <SelectTrigger
                 className='w-44'
@@ -301,7 +305,7 @@ export default function AllianceStatisticsTab({
                   setSortField('ratio')
                   setSortDir('desc')
                   setSelectedGameAccountId(null)
-                  setSelectedWarId(null)
+                  onWarChange(null)
                 }}
                 data-cy='statistics-reset-filters'
               >
@@ -310,7 +314,12 @@ export default function AllianceStatisticsTab({
             )}
           </div>
 
-          <div className='flex flex-col lg:flex-row gap-6'>
+          <div
+            className={`flex flex-col lg:flex-row gap-6 transition-opacity ${
+              statsRefreshing ? 'opacity-60' : ''
+            }`}
+            aria-busy={statsRefreshing}
+          >
             <div className='flex-1 min-w-0'>
               {filteredStats.length === 0 ? (
                 <p

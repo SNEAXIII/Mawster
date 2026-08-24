@@ -5,9 +5,14 @@ import { getChampionUsage } from '@/app/services/statistics'
 import { getWars, type War } from '@/app/services/war'
 import { useChampionUsageChart } from '@/app/components/statistics/use-champion-usage-chart'
 
-export function useChampionStats(allianceId: string, selectedGroup = 'all') {
+// selectedWarId is owned by the alliances viewmodel: the war filter drives both
+// the champion chart (here) and the season stats table (fetched upstream).
+export function useChampionStats(
+  allianceId: string,
+  selectedGroup = 'all',
+  selectedWarId: string | null = null
+) {
   const [selectedGameAccountId, setSelectedGameAccountId] = useState<string | null>(null)
-  const [selectedWarId, setSelectedWarId] = useState<string | null>(null)
   const [wars, setWars] = useState<War[]>([])
 
   useEffect(() => {
@@ -41,8 +46,6 @@ export function useChampionStats(allianceId: string, selectedGroup = 'all') {
   return {
     selectedGameAccountId,
     setSelectedGameAccountId,
-    selectedWarId,
-    setSelectedWarId,
     championUsage: chart.usage,
     chartMetric: chart.metric,
     setChartMetric: chart.setMetric,

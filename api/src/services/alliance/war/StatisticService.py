@@ -33,7 +33,11 @@ from src.utils.db import SessionDep
 class StatisticService:
     @classmethod
     async def get_display_season_statistics(
-        cls, session: SessionDep, current_user: User, alliance_id: uuid.UUID
+        cls,
+        session: SessionDep,
+        current_user: User,
+        alliance_id: uuid.UUID,
+        war_id: uuid.UUID | None = None,
     ) -> list[PlayerSeasonStatsResponse]:
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
@@ -46,6 +50,16 @@ class StatisticService:
             return []
         season_id = display_season.id
 
+        # Every subquery below is scoped to the same set of wars. When war_id is
+        # given the whole page (table + chart) narrows down to that single war.
+        war_scope = [
+            War.season_id == season_id,
+            War.alliance_id == alliance_id,
+            War.status == WarStatus.ended,
+        ]
+        if war_id is not None:
+            war_scope.append(War.id == war_id)
+
         assist_sq = (
             select(
                 ChampionUser.game_account_id.label("game_account_id"),
@@ -56,9 +70,7 @@ class StatisticService:
                 WarDefensePlacement, WarDefensePlacement.assist_champion_user_id == ChampionUser.id
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .where(War.season_id == season_id)
-            .where(War.alliance_id == alliance_id)
-            .where(War.status == WarStatus.ended)
+            .where(*war_scope)
             .group_by(ChampionUser.game_account_id)
             .subquery()
         )
@@ -82,9 +94,7 @@ class StatisticService:
                 WarDefensePlacement.attacker_champion_user_id == ChampionUser.id,
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .where(War.season_id == season_id)
-            .where(War.alliance_id == alliance_id)
-            .where(War.status == WarStatus.ended)
+            .where(*war_scope)
             .group_by(GameAccount.id)
             .subquery()
         )
@@ -99,17 +109,13 @@ class StatisticService:
                 WarDefensePlacement.attacker_champion_user_id == ChampionUser.id,
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .where(War.season_id == season_id)
-            .where(War.alliance_id == alliance_id)
-            .where(War.status == WarStatus.ended),
+            .where(*war_scope),
             select(ChampionUser.game_account_id.label("game_account_id"), War.id.label("war_id"))
             .join(
                 WarDefensePlacement, WarDefensePlacement.assist_champion_user_id == ChampionUser.id
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .where(War.season_id == season_id)
-            .where(War.alliance_id == alliance_id)
-            .where(War.status == WarStatus.ended),
+            .where(*war_scope),
         ).subquery()
         wars_sq = (
             select(

@@ -35,8 +35,12 @@ export interface PlayerSeasonStats {
   is_current_member: boolean
 }
 
-export async function getCurrentSeasonStatistics(allianceId: string): Promise<PlayerSeasonStats[]> {
-  const response = await fetch(`${PROXY}/statistics/current_season/${allianceId}`, {
+export async function getCurrentSeasonStatistics(
+  allianceId: string,
+  warId?: string
+): Promise<PlayerSeasonStats[]> {
+  const query = warId ? `?war_id=${encodeURIComponent(warId)}` : ''
+  const response = await fetch(`${PROXY}/statistics/current_season/${allianceId}${query}`, {
     headers: jsonHeaders,
   })
   await throwOnError(response, 'Failed to load season statistics')
