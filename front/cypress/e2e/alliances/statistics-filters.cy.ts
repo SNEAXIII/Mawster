@@ -4,6 +4,7 @@ import {
   withWarScenarioTwoPlayers,
   withWarScenarioDiffChampsPlayers,
   withWarScenarioTwoOwnerChamps,
+  withTwoEndedWarsTwoPlayers,
 } from './statistics-helpers';
 
 describe('Alliance Statistics – Filters & Champion chart', () => {
@@ -130,6 +131,70 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
         cy.contains('Ended Enemy').should('be.visible');
         cy.contains('Active Enemy').should('not.exist');
       });
+    });
+  });
+
+  it('war filter re-scopes the stats table, not only the chart', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-wft-admin', role: 'admin' },
+      {
+        discord_token: 'stat-wft-owner',
+        game_pseudo: 'WftOwner',
+        create_alliance: { name: 'WftAlliance', tag: 'WFT' },
+        battlegroup: 1,
+      },
+      {
+        discord_token: 'stat-wft-member',
+        game_pseudo: 'WftMember',
+        join_alliance_token: 'stat-wft-owner',
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-wft-admin'].access_token;
+      const ownerToken = users['stat-wft-owner'].access_token;
+      const allianceId = users['stat-wft-owner'].alliance_id!;
+      const ownerAccId = users['stat-wft-owner'].account_id!;
+      const memberToken = users['stat-wft-member'].access_token;
+      const memberAccId = users['stat-wft-member'].account_id!;
+      const ownerRow = `statistics-row-${ownerAccId}`;
+      const memberRow = `statistics-row-${memberAccId}`;
+
+      withTwoEndedWarsTwoPlayers(
+        adminToken,
+        ownerToken,
+        ownerAccId,
+        memberToken,
+        memberAccId,
+        allianceId,
+        ({ warOneId, warTwoId }) => {
+          cy.apiLogin(users['stat-wft-owner'].user_id);
+          cy.goToAllianceStatsTab();
+
+          // All wars → both players, each with their single fight.
+          cy.getByCy('statistics-table').find('tbody tr').should('have.length', 2);
+          cy.getByCy(ownerRow).should('exist');
+          cy.getByCy(memberRow).should('exist');
+
+          // WarOne → only the owner fought there.
+          cy.getByCy('statistics-war-filter').click();
+          cy.getByCy(`statistics-war-${warOneId}`).click();
+          cy.getByCy('statistics-table').find('tbody tr').should('have.length', 1);
+          cy.getByCy(ownerRow).should('exist');
+          cy.getByCy(memberRow).should('not.exist');
+
+          // WarTwo → only the member fought there, with the 2 KOs of that war.
+          cy.getByCy('statistics-war-filter').click();
+          cy.getByCy(`statistics-war-${warTwoId}`).click();
+          cy.getByCy('statistics-table').find('tbody tr').should('have.length', 1);
+          cy.getByCy(memberRow).should('exist');
+          cy.getByCy(ownerRow).should('not.exist');
+
+          // Back to all wars → the table widens again.
+          cy.getByCy('statistics-war-filter').click();
+          cy.getByCy('statistics-war-all').click();
+          cy.getByCy('statistics-table').find('tbody tr').should('have.length', 2);
+        },
+      );
     });
   });
 
