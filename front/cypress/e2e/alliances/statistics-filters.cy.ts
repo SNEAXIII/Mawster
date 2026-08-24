@@ -5,6 +5,7 @@ import {
   withWarScenarioDiffChampsPlayers,
   withWarScenarioTwoOwnerChamps,
   withTwoEndedWarsTwoPlayers,
+  withTwoSeasonsOneWarEach,
 } from './statistics-helpers';
 
 describe('Alliance Statistics – Filters & Champion chart', () => {
@@ -193,6 +194,66 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
           cy.getByCy('statistics-war-filter').click();
           cy.getByCy('statistics-war-all').click();
           cy.getByCy('statistics-table').find('tbody tr').should('have.length', 2);
+        },
+      );
+    });
+  });
+
+  it('season filter switches the table to a past season and rescopes the wars', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-sf-admin', role: 'admin' },
+      {
+        discord_token: 'stat-sf-owner',
+        game_pseudo: 'SfOwner',
+        create_alliance: { name: 'SfAlliance', tag: 'SF1' },
+        battlegroup: 1,
+      },
+      {
+        discord_token: 'stat-sf-member',
+        game_pseudo: 'SfMember',
+        join_alliance_token: 'stat-sf-owner',
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-sf-admin'].access_token;
+      const ownerToken = users['stat-sf-owner'].access_token;
+      const allianceId = users['stat-sf-owner'].alliance_id!;
+      const ownerAccId = users['stat-sf-owner'].account_id!;
+      const memberToken = users['stat-sf-member'].access_token;
+      const memberAccId = users['stat-sf-member'].account_id!;
+      const ownerRow = `statistics-row-${ownerAccId}`;
+      const memberRow = `statistics-row-${memberAccId}`;
+
+      withTwoSeasonsOneWarEach(
+        adminToken,
+        ownerToken,
+        ownerAccId,
+        memberToken,
+        memberAccId,
+        allianceId,
+        ({ pastSeasonId, currentSeasonId }) => {
+          cy.apiLogin(users['stat-sf-owner'].user_id);
+          cy.goToAllianceStatsTab();
+
+          // Defaults to the newest season with data — only the member fought there.
+          cy.getByCy('statistics-season-filter').should('contain', 'Season 64');
+          cy.getByCy(memberRow).should('exist');
+          cy.getByCy(ownerRow).should('not.exist');
+
+          // Both seasons are offered, newest first.
+          cy.getByCy('statistics-season-filter').click();
+          cy.getByCy(`statistics-season-${currentSeasonId}`).should('be.visible');
+          cy.getByCy(`statistics-season-${pastSeasonId}`).click();
+
+          // Season 63 → the other player, with the KOs of that season's war.
+          cy.getByCy('statistics-season-filter').should('contain', 'Season 63');
+          cy.getByCy(ownerRow).should('exist');
+          cy.getByCy(memberRow).should('not.exist');
+
+          // The war dropdown follows the season: only that season's war is listed.
+          cy.getByCy('statistics-war-filter').click();
+          cy.contains('OldWar').should('be.visible');
+          cy.contains('NewWar').should('not.exist');
         },
       );
     });

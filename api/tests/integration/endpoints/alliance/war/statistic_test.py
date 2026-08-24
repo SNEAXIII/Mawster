@@ -304,6 +304,57 @@ class TestGetCurrentSeasonStatistics:
         assert rows[0]["wars_participated"] == 1
 
     @pytest.mark.anyio
+    async def test_season_id_selects_a_past_season(self):
+        """Without season_id the display (active) season wins; season_id overrides it."""
+        data = await _base_setup()
+        past = Season(number=63, status=SeasonStatus.ended)
+        current = Season(number=64, status=SeasonStatus.active)
+        past_war = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name="Old",
+            created_by_id=data["owner"].id,
+            season_id=past.id,
+            status=WarStatus.ended,
+        )
+        current_war = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name="New",
+            created_by_id=data["owner"].id,
+            season_id=current.id,
+            status=WarStatus.ended,
+        )
+        await load_objects([past, current, past_war, current_war])
+        cu = await push_champion_user(data["owner"], data["champ"])
+        await _add_placement(past_war.id, cu.id, data["champ"].id, node_number=10, ko_count=3)
+        await _add_placement(current_war.id, cu.id, data["champ"].id, node_number=11, ko_count=0)
+
+        default = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
+        assert default.status_code == 200
+        assert default.json()[0]["total_kos"] == 0
+
+        past_only = await execute_get_request(
+            f"{STATS_URL}/{data['alliance'].id}?season_id={past.id}", USER_HEADERS
+        )
+        assert past_only.status_code == 200
+        rows = past_only.json()
+        assert len(rows) == 1
+        assert rows[0]["total_kos"] == 3
+        assert rows[0]["wars_participated"] == 1
+
+    @pytest.mark.anyio
+    async def test_unknown_season_id_returns_empty(self):
+        data = await _setup_with_active_season()
+        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=10)
+
+        response = await execute_get_request(
+            f"{STATS_URL}/{data['alliance'].id}?season_id={uuid.uuid4()}", USER_HEADERS
+        )
+        assert response.status_code == 200
+        assert response.json() == []
+
+    @pytest.mark.anyio
     async def test_war_id_of_another_alliance_returns_empty(self):
         data = await _setup_with_active_season()
         await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, node_number=10)
