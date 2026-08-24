@@ -414,6 +414,8 @@ const en = {
           former: 'Former members',
         },
         champion: 'Champion',
+        seasonFilter: 'Season',
+        seasonOption: 'Season {number}',
         warFilter: 'War',
         allWars: 'All wars',
         chartByAll: 'All',

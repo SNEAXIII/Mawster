@@ -34,6 +34,8 @@ interface AllianceStatisticsTabProps {
   onRetry: () => Promise<void>
   selectedWarId: string | null
   onWarChange: (warId: string | null) => void
+  selectedSeasonId: string | null
+  onSeasonChange: (seasonId: string | null) => void
 }
 
 type MemberFilter = 'current' | 'all' | 'former'
@@ -55,6 +57,8 @@ export default function AllianceStatisticsTab({
   onRetry,
   selectedWarId,
   onWarChange,
+  selectedSeasonId,
+  onSeasonChange,
 }: Readonly<AllianceStatisticsTabProps>) {
   const { t } = useI18n()
   const stat = t.game.alliances.statistics
@@ -92,9 +96,16 @@ export default function AllianceStatisticsTab({
     detailOpen,
     setDetailOpen,
     wars,
+    seasons,
     chartLoading,
     handleRowClick,
-  } = useChampionStats(selectedAllianceId, selectedGroup, selectedWarId)
+  } = useChampionStats(selectedAllianceId, selectedGroup, selectedWarId, selectedSeasonId)
+
+  // Pin the selector to the newest season with data as soon as the wars land, so
+  // the dropdown never disagrees with the season the backend actually returned.
+  useEffect(() => {
+    if (selectedSeasonId === null && seasons.length > 0) onSeasonChange(seasons[0].id)
+  }, [seasons, selectedSeasonId, onSeasonChange])
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -144,7 +155,10 @@ export default function AllianceStatisticsTab({
     sortField !== 'ratio' ||
     sortDir !== 'desc' ||
     selectedGameAccountId !== null ||
-    selectedWarId !== null
+    selectedWarId !== null ||
+    // A season other than the newest one is a deliberate narrowing, so the
+    // reset affordance has to show.
+    (seasons.length > 0 && selectedSeasonId !== null && selectedSeasonId !== seasons[0].id)
 
   return (
     <div className='flex flex-col gap-4'>
@@ -214,6 +228,31 @@ export default function AllianceStatisticsTab({
                 <SelectItem value='former'>{stat.memberFilter.former}</SelectItem>
               </SelectContent>
             </Select>
+
+            {seasons.length > 0 && (
+              <Select
+                value={selectedSeasonId ?? seasons[0].id}
+                onValueChange={onSeasonChange}
+              >
+                <SelectTrigger
+                  className='w-36'
+                  data-cy='statistics-season-filter'
+                >
+                  <SelectValue placeholder={stat.seasonFilter} />
+                </SelectTrigger>
+                <SelectContent>
+                  {seasons.map((season) => (
+                    <SelectItem
+                      key={season.id}
+                      value={season.id}
+                      data-cy={`statistics-season-${season.id}`}
+                    >
+                      {stat.seasonOption.replace('{number}', String(season.number))}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
             <Select
               value={selectedWarId ?? 'all'}
@@ -306,6 +345,7 @@ export default function AllianceStatisticsTab({
                   setSortDir('desc')
                   setSelectedGameAccountId(null)
                   onWarChange(null)
+                  onSeasonChange(seasons.length > 0 ? seasons[0].id : null)
                 }}
                 data-cy='statistics-reset-filters'
               >
