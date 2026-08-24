@@ -31,12 +31,23 @@ from src.utils.db import SessionDep
 
 
 class StatisticService:
+    @staticmethod
+    async def _resolve_season_id(
+        session: SessionDep, season_id: uuid.UUID | None
+    ) -> uuid.UUID | None:
+        """Explicit season when the caller picked one, else the display season."""
+        if season_id is not None:
+            return season_id
+        display_season = await SeasonService.get_display_season(session)
+        return None if display_season is None else display_season.id
+
     @classmethod
     async def get_display_season_statistics(
         cls,
         session: SessionDep,
         current_user: User,
         alliance_id: uuid.UUID,
+        season_id: uuid.UUID | None = None,
         war_id: uuid.UUID | None = None,
     ) -> list[PlayerSeasonStatsResponse]:
         alliance = await session.get(Alliance, alliance_id)
@@ -45,15 +56,14 @@ class StatisticService:
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
 
-        display_season = await SeasonService.get_display_season(session)
-        if display_season is None:
+        target_season_id = await cls._resolve_season_id(session, season_id)
+        if target_season_id is None:
             return []
-        season_id = display_season.id
 
         # Every subquery below is scoped to the same set of wars. When war_id is
         # given the whole page (table + chart) narrows down to that single war.
         war_scope = [
-            War.season_id == season_id,
+            War.season_id == target_season_id,
             War.alliance_id == alliance_id,
             War.status == WarStatus.ended,
         ]
@@ -194,6 +204,7 @@ class StatisticService:
         alliance_group: int | None = None,
         deathless: bool | None = None,
         perspective: str = "attacker",
+        season_id: uuid.UUID | None = None,
     ) -> list[ChampionUsageResponse]:
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
@@ -201,13 +212,13 @@ class StatisticService:
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
-        display_season = await SeasonService.get_display_season(session)
-        if display_season is None:
+        target_season_id = await cls._resolve_season_id(session, season_id)
+        if target_season_id is None:
             return []
 
         conditions = [
             WarFightRecord.alliance_id == alliance_id,
-            WarFightRecord.season_id == display_season.id,
+            WarFightRecord.season_id == target_season_id,
         ]
         if game_account_id is not None:
             conditions.append(WarFightRecord.game_account_id == game_account_id)

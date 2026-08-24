@@ -418,6 +418,8 @@ const fr: Translations = {
           former: 'Anciens membres',
         },
         champion: 'Champion',
+        seasonFilter: 'Saison',
+        seasonOption: 'Saison {number}',
         warFilter: 'Guerre',
         allWars: 'Toutes les guerres',
         chartByAll: 'Tous',

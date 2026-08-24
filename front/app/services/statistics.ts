@@ -37,9 +37,13 @@ export interface PlayerSeasonStats {
 
 export async function getCurrentSeasonStatistics(
   allianceId: string,
-  warId?: string
+  warId?: string,
+  seasonId?: string
 ): Promise<PlayerSeasonStats[]> {
-  const query = warId ? `?war_id=${encodeURIComponent(warId)}` : ''
+  const params = new URLSearchParams()
+  if (seasonId) params.set('season_id', seasonId)
+  if (warId) params.set('war_id', warId)
+  const query = params.toString() ? `?${params.toString()}` : ''
   const response = await fetch(`${PROXY}/statistics/current_season/${allianceId}${query}`, {
     headers: jsonHeaders,
   })
@@ -61,9 +65,11 @@ export async function getChampionUsage(
   warId?: string,
   allianceGroup?: number,
   deathless?: boolean,
-  perspective?: Perspective
+  perspective?: Perspective,
+  seasonId?: string
 ): Promise<ChampionUsageItem[]> {
   const params = new URLSearchParams()
+  if (seasonId) params.set('season_id', seasonId)
   if (gameAccountId) params.set('game_account_id', gameAccountId)
   if (warId) params.set('war_id', warId)
   if (allianceGroup !== undefined) params.set('alliance_group', String(allianceGroup))

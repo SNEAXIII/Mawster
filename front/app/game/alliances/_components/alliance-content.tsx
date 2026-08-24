@@ -116,6 +116,8 @@ export default function AllianceContent() {
             onRetry={vm.handleRefreshStatistics}
             selectedWarId={vm.statsWarId}
             onWarChange={vm.handleStatsWarChange}
+            selectedSeasonId={vm.statsSeasonId}
+            onSeasonChange={vm.handleStatsSeasonChange}
           />
         )}
 
