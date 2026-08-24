@@ -10,8 +10,9 @@ import {
   getNextRarity,
 } from '@/app/services/roster'
 import { Trash2, Pencil, ArrowUp, X, Star } from 'lucide-react'
+import { memo } from 'react'
 
-interface RosterChampionCardProps {
+export interface RosterChampionCardProps {
   entry: RosterEntry
   onEdit?: (entry: RosterEntry) => void
   onDelete?: (entry: RosterEntry) => void
@@ -51,7 +52,7 @@ function CardAction({
   )
 }
 
-export default function RosterChampionCard({
+function RosterChampionCard({
   entry,
   onEdit,
   onDelete,
@@ -191,3 +192,7 @@ export default function RosterChampionCard({
     </div>
   )
 }
+
+// Memoised: a roster renders hundreds of these, and filtering by name re-runs on
+// every keystroke while keeping the surviving entries' object identity.
+export default memo(RosterChampionCard)

@@ -1,38 +1,34 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useI18n } from '@/app/i18n'
 import { RosterEntry, RARITY_LABELS, UpgradeRequest } from '@/app/services/roster'
-import RosterChampionCard from './roster-champion-card'
+import RosterChampionCard, { RosterChampionCardProps } from './roster-champion-card'
 
-interface RosterGridProps {
+/** Everything the grid forwards as-is to each card */
+type RosterCardActions = Omit<RosterChampionCardProps, 'entry' | 'pendingRequestId'>
+
+interface RosterGridProps extends RosterCardActions {
   groupedRoster: [string, RosterEntry[]][]
-  onEdit?: (entry: RosterEntry) => void
-  onDelete?: (entry: RosterEntry) => void
-  onUpgrade?: (entry: RosterEntry) => void
-  onTogglePreferredAttacker?: (entry: RosterEntry) => void
-  onAscend?: (entry: RosterEntry) => void
-  readOnly?: boolean
   /** Pending upgrade requests — used to show cancel button instead of upgrade arrow */
   upgradeRequests?: UpgradeRequest[]
-  /** Callback to cancel an upgrade request */
-  onCancelRequest?: (requestId: string) => void
   /** True when filters are active — changes the empty-state message */
   isFiltered?: boolean
 }
 
 export default function RosterGrid({
   groupedRoster,
-  onEdit,
-  onDelete,
-  onUpgrade,
-  onTogglePreferredAttacker,
-  onAscend,
-  readOnly = false,
   upgradeRequests,
-  onCancelRequest,
   isFiltered = false,
+  ...cardActions
 }: RosterGridProps) {
   const { t } = useI18n()
+
+  /** champion_user_id → pending request id, built once instead of scanning per card */
+  const pendingByChampion = useMemo(
+    () => new Map((upgradeRequests ?? []).map((r) => [r.champion_user_id, r.id])),
+    [upgradeRequests]
+  )
 
   if (groupedRoster.length === 0) {
     return (
@@ -59,23 +55,14 @@ export default function RosterGrid({
             <span className='text-xs text-muted-foreground'>({entries.length})</span>
           </h3>
           <div className='grid grid-cols-[repeat(auto-fill,minmax(5.25rem,1fr))] gap-1.5'>
-            {entries.map((entry) => {
-              const pending = upgradeRequests?.find((r) => r.champion_user_id === entry.id)
-              return (
-                <RosterChampionCard
-                  key={entry.id}
-                  entry={entry}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onUpgrade={onUpgrade}
-                  onTogglePreferredAttacker={onTogglePreferredAttacker}
-                  onAscend={onAscend}
-                  readOnly={readOnly}
-                  pendingRequestId={pending?.id}
-                  onCancelRequest={onCancelRequest}
-                />
-              )
-            })}
+            {entries.map((entry) => (
+              <RosterChampionCard
+                key={entry.id}
+                {...cardActions}
+                entry={entry}
+                pendingRequestId={pendingByChampion.get(entry.id)}
+              />
+            ))}
           </div>
         </div>
       ))}
