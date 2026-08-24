@@ -58,7 +58,7 @@ export default function RosterGrid({
             </span>
             <span className='text-xs text-muted-foreground'>({entries.length})</span>
           </h3>
-          <div className='grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-14 gap-1.5'>
+          <div className='grid grid-cols-[repeat(auto-fill,minmax(5.25rem,1fr))] gap-1.5'>
             {entries.map((entry) => {
               const pending = upgradeRequests?.find((r) => r.champion_user_id === entry.id)
               return (

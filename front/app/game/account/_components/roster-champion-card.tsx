@@ -69,7 +69,7 @@ export default function RosterChampionCard({
   return (
     <div
       className={cn(
-        'group relative mx-auto flex w-full max-w-[84px] flex-col items-center rounded-md border bg-card/50 pt-0.5 transition-colors hover:bg-card',
+        'group relative mx-auto flex w-21 flex-col items-center rounded-md border bg-card/50 pt-0.5 transition-colors hover:bg-card',
         classColors.border
       )}
       data-cy={`champion-card-${entry.champion_name}`}
