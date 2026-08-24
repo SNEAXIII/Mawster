@@ -198,6 +198,44 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
     });
   });
 
+  it('keeps the filter bar reachable when a war filter empties the table', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-wfe-admin', role: 'admin' },
+      {
+        discord_token: 'stat-wfe-owner',
+        game_pseudo: 'WfeOwner',
+        create_alliance: { name: 'WfeAlliance', tag: 'WFE' },
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-wfe-admin'].access_token;
+      const ownerToken = users['stat-wfe-owner'].access_token;
+      const allianceId = users['stat-wfe-owner'].alliance_id!;
+      const ownerAccId = users['stat-wfe-owner'].account_id!;
+
+      withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Fought', ({ champId, cuId, warId }) => {
+        addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, 0);
+        cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
+        // A second ended war nobody fought in: filtering on it yields zero rows.
+        cy.apiCreateWar(ownerToken, allianceId, 'Empty').then((emptyWar: { id: string }) => {
+          cy.apiEndWar(ownerToken, allianceId, emptyWar.id, true, 10);
+          cy.apiLogin(users['stat-wfe-owner'].user_id);
+          cy.goToAllianceStatsTab();
+          cy.getByCy('statistics-table').should('be.visible');
+
+          cy.getByCy('statistics-war-filter').click();
+          cy.getByCy(`statistics-war-${emptyWar.id}`).click();
+
+          // No rows, but the filters must stay on screen or the filter is a dead end.
+          cy.getByCy('statistics-empty-filtered').should('be.visible');
+          cy.getByCy('statistics-war-filter').should('be.visible');
+          cy.getByCy('statistics-reset-filters').should('be.visible').click();
+          cy.getByCy('statistics-table').should('be.visible');
+        });
+      });
+    });
+  });
+
   it('chart metric toggle switches between deathless, all and kos', () => {
     cy.apiBatchSetup([
       { discord_token: 'stat-cm-admin', role: 'admin' },
