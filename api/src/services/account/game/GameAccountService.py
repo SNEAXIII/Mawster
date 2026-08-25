@@ -103,7 +103,13 @@ class GameAccountService:
 
     @classmethod
     async def delete_game_account(cls, session: SessionDep, game_account: GameAccount) -> None:
-        owned = await session.exec(select(Alliance).where(Alliance.owner_id == game_account.id))
+        # A soft-deleted alliance keeps its owner_id for history — it must not
+        # pin the game account down any more.
+        owned = await session.exec(
+            select(Alliance)
+            .where(Alliance.owner_id == game_account.id)
+            .where(Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
+        )
         if owned.first() is not None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,

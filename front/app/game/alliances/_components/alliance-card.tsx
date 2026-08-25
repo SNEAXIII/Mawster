@@ -16,6 +16,7 @@ import UsernameEnriched from '@/components/username-enriched'
 import { patchAllianceElo, patchAllianceTier } from '@/app/services/game'
 import { toast } from 'sonner'
 import AllianceVisitorsSection from './alliance-visitors-section'
+import AllianceDeleteButton from './alliance-delete-button'
 
 interface AllianceCardProps {
   alliance: Alliance
@@ -121,9 +122,9 @@ export default function AllianceCard({
     <Card data-cy={`alliance-card-${alliance.name}`}>
       <CardContent className='py-3 sm:py-4 px-3 sm:px-6 flex flex-col gap-3 sm:gap-4'>
         {/* Alliance header */}
-        <div className='flex items-center gap-3'>
-          <Shield className='size-5 text-primary' />
-          <div>
+        <div className='flex items-start gap-3'>
+          <Shield className='size-5 text-primary mt-0.5' />
+          <div className='flex-1'>
             <div className='flex items-center gap-2 flex-wrap'>
               <p
                 className='font-medium text-foreground'
@@ -257,6 +258,11 @@ export default function AllianceCard({
               </span>
             </div>
           </div>
+
+          <AllianceDeleteButton
+            alliance={alliance}
+            onDeleted={onRefresh}
+          />
         </div>
 
         {/* Pending invitations section — above members, collapsible (visible to officers/owners) */}

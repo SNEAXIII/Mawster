@@ -290,8 +290,11 @@ export function useAlliancesViewModel() {
     }
   }
 
+  // Also refreshes the eligible owners: any membership change — a member
+  // leaving, the alliance being disbanded — can free a game account, and the
+  // "Create" tab only shows up when at least one is eligible.
   const handleMemberRefresh = async () => {
-    await Promise.all([refreshAlliances(), fetchEligibleMembers(), fetchMyAccounts()])
+    await refreshMembership()
   }
 
   const handleAcceptInvitation = async (invitationId: string) => {

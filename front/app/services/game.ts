@@ -271,10 +271,15 @@ export async function createAlliance(
   return response.json()
 }
 
-export async function deleteAlliance(id: string): Promise<void> {
+/**
+ * Disband an alliance. `name` is the retyped alliance name: the backend refuses
+ * the call unless it matches exactly, so the confirmation is not UI-only.
+ */
+export async function deleteAlliance(id: string, name: string): Promise<void> {
   const response = await debugFetch(`${PROXY}/alliances/${id}`, {
     method: 'DELETE',
     headers: jsonHeaders,
+    body: JSON.stringify({ name }),
   })
   await throwOnError(response, "Erreur lors de la suppression de l'alliance")
 }
