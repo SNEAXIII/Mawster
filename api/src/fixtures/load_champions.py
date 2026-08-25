@@ -21,11 +21,11 @@ Usage:
 """
 
 import json
-import sys
 from pathlib import Path
 
 from sqlmodel import Session, create_engine, select
 
+from src.fixtures.paths import json_path_from_argv
 from src.models.champion.Champion import Champion
 from src.security.secrets import SECRET
 
@@ -154,8 +154,4 @@ def load_champions(json_path: Path = DEFAULT_JSON_PATH):
 
 
 if __name__ == "__main__":
-    json_file = DEFAULT_JSON_PATH
-    if len(sys.argv) > 2 and sys.argv[1] == "--json":
-        json_file = Path(sys.argv[2])
-
-    load_champions(json_file)
+    load_champions(json_path_from_argv(DEFAULT_JSON_PATH))
