@@ -50,6 +50,7 @@ HELP_LINES := \
 	"backup-now             --> declencher un backup immediatement (prod)", \
 	"backup-now-staging     --> declencher un backup manuel (staging, local only)", \
 	"backup-list            --> lister les fichiers de backup locaux", \
+	"backup-list-staging    --> lister les fichiers de backup staging locaux", \
 	"backup-restore         --> restaurer depuis un backup local (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)", \
 	"backup-restore-staging --> restaurer un backup local dans la staging (FILE=...)", \
 	"backup-restore-remote  --> restaurer depuis Google Drive (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)", \
@@ -143,6 +144,7 @@ help:
 	echo "dev-down               --> retirer le stack mawster-dev" ; \
 	echo "dev-migrate            --> lancer les migrations Alembic sur le stack mawster-dev" ; \
 	echo "dev-seed               --> wipe + seed (champions, masteries, sample data)" ; \
+	echo "dev-reset              --> alias de dev-seed" ; \
 	echo "dev-nuke               --> dev-down + suppression du volume de DB" ; \
 	echo "dev-logs               --> suivre les logs de l'API du stack mawster-dev" ; \
 	echo "" ; \
