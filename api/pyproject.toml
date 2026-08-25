@@ -47,6 +47,10 @@ extend = "../ruff.toml"
 # Pydantic field validators must raise ValueError: it is the only exception Pydantic
 # turns into a 422. A TypeError (what TRY004 asks for) escapes as a 500 instead.
 "src/validators/*.py" = ["TRY004"]
+# main.py builds the messaging stack in the lifespan rather than at import time, so its
+# imports belong inside the functions that need them. Everywhere else — src/ included —
+# imports go at the top of the module.
+"main.py" = ["PLC0415"]
 
 [dependency-groups]
 migrate = [

@@ -5,7 +5,12 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
 from main import app
+from src.services.auth.DiscordAuthService import (
+    DISCORD_TOKEN_INVALID_EXCEPTION,
+    DiscordAuthService,
+)
 from src.utils.db import get_session
+from tests.utils import utils_client
 from tests.utils.utils_db import Session, delete_db, get_test_session, reset_test_db
 
 
@@ -46,15 +51,10 @@ async def test_client_fixture():
         base_url="http://test",
     ) as client:
         # Import inside fixture to avoid import cycles at module import time
-        from tests.utils import utils_client
 
         utils_client._SHARED_CLIENT = client
 
         # Patch DiscordAuthService.verify_discord_token to avoid real network calls
-        from src.services.auth.DiscordAuthService import (
-            DISCORD_TOKEN_INVALID_EXCEPTION,
-            DiscordAuthService,
-        )
 
         original_verify = DiscordAuthService.verify_token
 

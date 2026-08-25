@@ -9,6 +9,7 @@ from main import app
 from src.models.alliance.DefensePlacement import DefensePlacement
 from src.models.Base import utcnow
 from src.models.champion.RequestedUpgrade import RequestedUpgrade
+from src.models.user.GameAccount import GameAccount
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
@@ -552,7 +553,6 @@ class TestSetMemberGroup:
     async def test_group_over_capacity_returns_409(self):
         """T3: a group is capped at MAX_MEMBERS_PER_GROUP (10). Adding one more past
         the cap must be rejected with 409."""
-        from src.models.user.GameAccount import GameAccount
 
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)

@@ -3,9 +3,11 @@
 import uuid
 
 import pytest
+from fastapi import HTTPException
 from sqlmodel import select
 
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
+from src.models.user.UserMute import UserMute
 from src.models.war.War import War, WarStatus
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.models.war.WarFightNote import WarFightNote
@@ -194,9 +196,6 @@ async def test_delete_soft_deletes_note_and_keeps_history(session):
 
 @pytest.mark.asyncio
 async def test_delete_by_muted_officer_raises_403(session):
-    from fastapi import HTTPException
-
-    from src.models.user.UserMute import UserMute
 
     data = await _setup_war_with_placement()
     war = data["war"]
@@ -232,7 +231,6 @@ async def test_delete_by_muted_officer_raises_403(session):
 
 @pytest.mark.asyncio
 async def test_delete_missing_note_raises_404(session):
-    from fastapi import HTTPException
 
     data = await _setup_war_with_placement()
 
@@ -249,7 +247,6 @@ async def test_delete_missing_note_raises_404(session):
 
 @pytest.mark.asyncio
 async def test_upsert_on_ended_war_raises_409(session):
-    from fastapi import HTTPException
 
     data = await _setup_war_with_placement()
     war = data["war"]

@@ -7,9 +7,11 @@ import pytest
 from src.enums.Roles import Roles
 from src.models import User
 from src.models.champion.ChampionUser import ChampionUser
+from src.models.champion.ChampionUser import ChampionUser as CU
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
+    push_champion_user,
     push_member,
     push_officer,
 )
@@ -595,7 +597,6 @@ class TestPlaceDefenderEdgeCases:
         # We need champion_user.game_account_id == the fake id we pass, so craft a
         # ChampionUser that points to a non-existent game account.
         fake_ga_id = uuid.uuid4()
-        from src.models.champion.ChampionUser import ChampionUser as CU
 
         orphan_cu = CU(
             id=uuid.uuid4(),
@@ -625,7 +626,6 @@ class TestPlaceDefenderEdgeCases:
         # Create a second alliance and an account in it
 
         other_user_id = uuid.uuid4()
-        from src.models import User
 
         other_user = User(
             id=other_user_id,
@@ -635,11 +635,6 @@ class TestPlaceDefenderEdgeCases:
             role="user",
         )
         await load_objects([other_user])
-
-        from tests.integration.endpoints.setup.game_setup import (
-            push_alliance_with_owner,
-            push_champion_user,
-        )
 
         _other_alliance, other_owner = await push_alliance_with_owner(
             user_id=other_user_id,
@@ -692,7 +687,6 @@ class TestPlaceDefenderEdgeCases:
         headers = create_auth_headers(user_id=str(USER_ID))
 
         # Create 3 more champions for the owner so we can place 5 total
-        from tests.integration.endpoints.setup.game_setup import push_champion, push_champion_user
 
         champ_extra_1 = await push_champion(name="Thor", champion_class="Cosmic")
         champ_extra_2 = await push_champion(name="Captain America", champion_class="Science")
@@ -739,7 +733,6 @@ class TestAvailableChampionsEdgeCases:
     async def test_available_champions_empty_battlegroup(self):
         """Returns [] when no members are assigned to the battlegroup (line 267)."""
         await load_objects([get_generic_user(is_base_id=True)])
-        from tests.integration.endpoints.setup.game_setup import push_alliance_with_owner
 
         alliance, owner = await push_alliance_with_owner(
             user_id=USER_ID,
@@ -766,8 +759,6 @@ class TestAvailableChampionsEdgeCases:
         """Champions of a player who reached 5 defenders are excluded (line 307)."""
         data = await _setup_alliance_with_bg()
         headers = create_auth_headers(user_id=str(USER_ID))
-
-        from tests.integration.endpoints.setup.game_setup import push_champion, push_champion_user
 
         champ_extra_1 = await push_champion(name="Thor", champion_class="Cosmic")
         champ_extra_2 = await push_champion(name="Captain America", champion_class="Science")

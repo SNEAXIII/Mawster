@@ -190,10 +190,10 @@ async def dev_login_by_pseudo(body: DevLoginByPseudoRequest, session: SessionDep
 @dev_controller.post("/truncate", status_code=200)
 async def truncate_database(session: SessionDep):
     """Truncate all tables in the database. For testing purposes only."""
-    await session.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+    await session.exec(text("SET FOREIGN_KEY_CHECKS = 0"))
     for table in reversed(SQLModel.metadata.sorted_tables):
-        await session.execute(text(f"TRUNCATE TABLE `{table.name}`"))
-    await session.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+        await session.exec(text(f"TRUNCATE TABLE `{table.name}`"))
+    await session.exec(text("SET FOREIGN_KEY_CHECKS = 1"))
     await session.commit()
     return {"message": "All tables truncated"}
 
@@ -201,10 +201,10 @@ async def truncate_database(session: SessionDep):
 @dev_controller.post("/fixtures", status_code=200)
 async def run_fixtures(session: SessionDep):
     """Truncate all tables then run every fixture script in /fixtures/. Testing only."""
-    await session.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+    await session.exec(text("SET FOREIGN_KEY_CHECKS = 0"))
     for table in reversed(SQLModel.metadata.sorted_tables):
-        await session.execute(text(f"TRUNCATE TABLE `{table.name}`"))
-    await session.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+        await session.exec(text(f"TRUNCATE TABLE `{table.name}`"))
+    await session.exec(text("SET FOREIGN_KEY_CHECKS = 1"))
     await session.commit()
 
     fixtures_dir = Path(__file__).resolve().parent.parent.parent / "fixtures"

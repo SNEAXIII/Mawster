@@ -55,9 +55,6 @@ ignore = [
     # `Depends(...)`, `Query(...)` and `File(...)` in parameter defaults is *the* FastAPI
     # idiom; bugbear's "no function call in default argument" does not apply.
     "B008",
-    # Function-level imports are deliberate here: they break SQLModel/service import
-    # cycles and keep heavy optional deps (boto3, aio_pika) out of module import time.
-    "PLC0415",
     # `class X(str, Enum)` is kept over `StrEnum`: it changes what `str(X.A)` returns,
     # which leaks into Pydantic serialisation and stored values.
     "UP042",
@@ -77,7 +74,9 @@ ignore = [
 # keep running (and print a diagnostic) whatever a subprocess or a scraped page throws.
 ".claude/**" = ["BLE001", "S110"]
 "scripts/**" = ["BLE001", "S110"]
-"static-assets/**" = ["BLE001", "S110"]
+# PLC0415: heavy, optional third-party deps (PIL, bs4, curl_cffi) are imported inside
+# the function that needs them, so the other entry points run without them installed.
+"static-assets/**" = ["BLE001", "S110", "PLC0415"]
 
 [format]
 quote-style = "double"

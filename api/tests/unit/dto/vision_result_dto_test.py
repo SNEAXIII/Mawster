@@ -3,7 +3,7 @@ import uuid
 import pytest
 from pydantic import ValidationError
 
-from src.dto.account.game.dto_vision_result import VisionResultMessage
+from src.dto.account.game.dto_vision_result import VisionPredictionMessage, VisionResultMessage
 
 
 def _payload(**overrides) -> dict:
@@ -72,7 +72,6 @@ def test_result_message_rejects_an_unknown_status():
 
 
 def test_prediction_message_parses_candidates():
-    from src.dto.account.game.dto_vision_result import VisionPredictionMessage
 
     message = VisionPredictionMessage.model_validate(
         {
@@ -92,7 +91,6 @@ def test_prediction_message_parses_candidates():
 
 def test_prediction_message_without_candidates_stays_valid():
     """An older worker sends no candidates at all. It must keep working."""
-    from src.dto.account.game.dto_vision_result import VisionPredictionMessage
 
     message = VisionPredictionMessage.model_validate({"champion_name": "Hulk", "confidence": 0.91})
 

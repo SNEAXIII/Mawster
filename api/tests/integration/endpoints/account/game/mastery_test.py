@@ -1,5 +1,7 @@
 """Integration tests for mastery endpoints."""
 
+import uuid
+
 import pytest
 
 from main import app
@@ -157,7 +159,6 @@ class TestGameAccountMasteries:
         """Line 64: mastery not found raises HTTP 404."""
         await push_one_user()
         account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-        import uuid
 
         unknown_id = str(uuid.uuid4())
         payload = [{"mastery_id": unknown_id, "unlocked": 1, "attack": 0, "defense": 0}]

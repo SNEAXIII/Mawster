@@ -24,6 +24,7 @@ from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.services.admin.ModerationService import ModerationService
 from src.services.alliance.war.WarFightNoteService import WarFightNoteService
+from src.services.alliance.war.WarService import WarService
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -773,7 +774,6 @@ async def test_admin_mute_and_warn_endpoints(session):
 
 @pytest.mark.asyncio
 async def test_three_reports_block_note_in_war_map(session):
-    from src.services.alliance.war.WarService import WarService
 
     data = await _setup_war_with_placement()
     alliance = data["alliance"]
@@ -817,7 +817,6 @@ async def test_three_reports_block_note_in_war_map(session):
 
 @pytest.mark.asyncio
 async def test_note_id_present_in_war_map(session):
-    from src.services.alliance.war.WarService import WarService
 
     data = await _setup_war_with_placement()
     owner = data["owner"]

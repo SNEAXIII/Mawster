@@ -4,6 +4,10 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from src.models.war.WarFightRecordImport import (
+    WarFightRecordImport as _WarFightRecordImport,
+)
+
 
 class ChampionUserSnapshotResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -82,9 +86,6 @@ class WarFightRecordResponse(BaseModel):
     def flatten_relations(cls, data: Any) -> Any:
         if isinstance(data, dict):
             return data
-        from src.models.war.WarFightRecordImport import (
-            WarFightRecordImport as _WarFightRecordImport,
-        )
 
         is_import = isinstance(data, _WarFightRecordImport)
         if is_import:

@@ -1,11 +1,5 @@
 import { Perspective } from '@/app/components/statistics/member-champion-chart'
-
-const PROXY = '/api/back'
-
-const jsonHeaders: HeadersInit = {
-  Accept: 'application/json',
-  'Content-Type': 'application/json',
-}
+import { PROXY, jsonHeaders } from '@/app/services/utils'
 
 async function throwOnError(response: Response, fallback: string) {
   if (response.ok) return

@@ -3,7 +3,7 @@ LOGIN ?=
 ROLE ?= user
 DISCORD_ID ?=
 
-.PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions reset-db delete-db init-db seed-user cancel-last test test-cov scrape-champions check fix format
+.PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions load-masteries reset-db delete-db init-db seed-user cancel-last test test-cov scrape-champions repopulate-db check fix format
 
 help:
 	@echo "run-dev      --> run the server in dev mode with auto reload"
@@ -16,14 +16,17 @@ help:
 	@echo "init-db      --> load one user and basic bdd"
 	@echo "seed-user    --> create or promote a dev user: LOGIN=x [ROLE=admin] [DISCORD_ID=y]"
 	@echo "cancel-last  --> cancel last executed migration"
-	@echo "test         --> run tests (xdist enabled by default, set XDIST=0 to disable)"
-	@echo "test-cov     --> run test coverage (parallel, 10 workers)"
+	@echo "test         --> run the whole suite (5 xdist workers)"
+	@echo "test-cov     --> run the suite with coverage (5 xdist workers, loadscope)"
 	@echo "install      --> install prod dependencies only"
 	@echo "install-dev  --> install all dependencies (prod + dev + migrate groups)"
 	@echo "reset-db     --> reset the database"
 	@echo "delete-db    --> drop all tables WITHOUT recreating the schema (empty db)"
 	@echo "repopulate-db --> reset the database and load champions + fixtures"
 	@echo "scrape-champions --> scrape MCOC wiki and download champion images"
+	@echo "check        --> ruff lint"
+	@echo "fix          --> ruff lint with autofix"
+	@echo "format       --> ruff format"
 
 install:
 	uv sync --no-dev

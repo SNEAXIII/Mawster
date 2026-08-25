@@ -97,7 +97,7 @@ class VisionStatsService:
     @classmethod
     async def _import_counters(cls, session: AsyncSession, days: int) -> dict:
         rows = (
-            await session.execute(
+            await session.exec(
                 select(
                     col(VisionImport.status),
                     func.count(col(VisionImport.id)),
@@ -125,7 +125,7 @@ class VisionStatsService:
     @classmethod
     async def _job_counters(cls, session: AsyncSession, days: int) -> tuple[int, int]:
         rows = (
-            await session.execute(
+            await session.exec(
                 select(col(VisionJob.status), func.count(col(VisionJob.id)))
                 .where(cls._since(col(VisionJob.created_at), days))
                 .group_by(col(VisionJob.status))
@@ -140,7 +140,7 @@ class VisionStatsService:
         cls, session: AsyncSession, days: int
     ) -> tuple[int, int, int, float | None]:
         row = (
-            await session.execute(
+            await session.exec(
                 select(
                     func.count(col(VisionPrediction.id)),
                     func.coalesce(
@@ -174,7 +174,7 @@ class VisionStatsService:
     @classmethod
     async def _distinct_actors(cls, session: AsyncSession, days: int) -> tuple[int, int]:
         row = (
-            await session.execute(
+            await session.exec(
                 select(
                     func.count(func.distinct(col(GameAccount.user_id))),
                     func.count(func.distinct(col(VisionImport.game_account_id))),
@@ -190,7 +190,7 @@ class VisionStatsService:
     async def _daily(cls, session: AsyncSession, days: int) -> list[VisionStatsDailyPoint]:
         day_col = func.date(col(VisionImport.created_at))
         rows = (
-            await session.execute(
+            await session.exec(
                 select(
                     day_col,
                     func.count(col(VisionImport.id)),
@@ -239,7 +239,7 @@ class VisionStatsService:
     async def _top_errors(cls, session: AsyncSession, days: int) -> list[VisionJobErrorStat]:
         count = func.count(col(VisionJob.id))
         rows = (
-            await session.execute(
+            await session.exec(
                 select(col(VisionJob.error), count)
                 .where(
                     col(VisionJob.status) == VisionJobStatus.FAILED,
@@ -264,9 +264,7 @@ class VisionStatsService:
             session, days
         )
         distinct_users, distinct_accounts = await cls._distinct_actors(session, days)
-        imports_all_time = (
-            await session.execute(select(func.count(col(VisionImport.id))))
-        ).scalar_one()
+        imports_all_time = (await session.exec(select(func.count(col(VisionImport.id))))).one()
 
         confirmed = per_status.get(VisionImportStatus.CONFIRMED, 0)
         cancelled = per_status.get(VisionImportStatus.CANCELLED, 0)
@@ -322,7 +320,7 @@ class VisionStatsService:
         if not user_ids:
             return {}
         rows = (
-            await session.execute(
+            await session.exec(
                 select(col(GameAccount.user_id), col(GameAccount.game_pseudo))
                 .where(col(GameAccount.user_id).in_(user_ids))
                 .order_by(col(GameAccount.game_pseudo))
@@ -340,7 +338,7 @@ class VisionStatsService:
         if not user_ids:
             return {}
         rows = (
-            await session.execute(
+            await session.exec(
                 select(col(GameAccount.user_id), func.count(col(VisionPrediction.id)))
                 .select_from(VisionPrediction)
                 .join(VisionJob, col(VisionJob.id) == col(VisionPrediction.job_id))
@@ -407,14 +405,14 @@ class VisionStatsService:
         )
 
         total = (
-            await session.execute(select(func.count()).select_from(base.order_by(None).subquery()))
-        ).scalar_one()
+            await session.exec(select(func.count()).select_from(base.order_by(None).subquery()))
+        ).one()
 
         order = aggregates[sort_by]
         ordered = base.order_by(
             order.asc() if sort_order == "asc" else desc(order), col(User.login)
         )
-        rows = (await session.execute(ordered.offset((page - 1) * size).limit(size))).all()
+        rows = (await session.exec(ordered.offset((page - 1) * size).limit(size))).all()
 
         user_ids = [row[0] for row in rows]
         pseudos = await cls._pseudos_by_user(session, user_ids)
@@ -458,7 +456,7 @@ class VisionStatsService:
         if not import_ids:
             return {}
         failed_rows = (
-            await session.execute(
+            await session.exec(
                 select(col(VisionJob.import_id), func.count(col(VisionJob.id)))
                 .where(
                     col(VisionJob.import_id).in_(import_ids),
@@ -468,7 +466,7 @@ class VisionStatsService:
             )
         ).all()
         prediction_rows = (
-            await session.execute(
+            await session.exec(
                 select(col(VisionJob.import_id), func.count(col(VisionPrediction.id)))
                 .select_from(VisionJob)
                 .join(VisionPrediction, col(VisionPrediction.job_id) == col(VisionJob.id))
@@ -507,16 +505,16 @@ class VisionStatsService:
         )
 
         total = (
-            await session.execute(
+            await session.exec(
                 select(func.count())
                 .select_from(VisionImport)
                 .join(GameAccount, col(GameAccount.id) == col(VisionImport.game_account_id))
                 .where(*filters)
             )
-        ).scalar_one()
+        ).one()
 
         rows = (
-            await session.execute(
+            await session.exec(
                 base.order_by(desc(col(VisionImport.created_at)))
                 .offset((page - 1) * size)
                 .limit(size)

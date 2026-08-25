@@ -1,10 +1,7 @@
 // ─── Admin AI-import stats service ───────────────────────
 // Read-only aggregates over the vision (AI) roster imports. Admin-only on the
 // backend; nothing here is reachable from a normal user session.
-
-const PROXY = '/api/back'
-
-const jsonHeaders: HeadersInit = { Accept: 'application/json' }
+import { PROXY, jsonHeaders } from '@/app/services/utils'
 
 async function throwOnError(response: Response, fallback: string) {
   if (response.ok) return

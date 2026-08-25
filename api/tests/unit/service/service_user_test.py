@@ -2,6 +2,7 @@ import uuid
 from datetime import UTC, datetime
 
 import pytest
+from sqlmodel import select
 
 from src.dto.auth.dto_utilisateurs import UserAdminViewSingleUser
 from src.enums.Roles import Roles
@@ -533,9 +534,6 @@ async def test_demote_user_errors(mocker, fake_user, expected_error):
 
 def test_build_status_filter_deleted():
     """status='deleted' adds deleted_at != None filter (line 197)."""
-    from sqlmodel import select
-
-    from src.models import User
 
     sql = select(User)
     result = UserAdminService.build_status_filter(sql, "deleted")
@@ -544,7 +542,6 @@ def test_build_status_filter_deleted():
 
 def test_build_status_filter_disabled():
     """status='disabled' adds deleted_at==None + disabled_at!=None (lines 198-199)."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_status_filter(sql, "disabled")
@@ -553,7 +550,6 @@ def test_build_status_filter_disabled():
 
 def test_build_status_filter_enabled():
     """status='enabled' adds both == None filters (lines 200-201)."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_status_filter(sql, "enabled")
@@ -562,7 +558,6 @@ def test_build_status_filter_enabled():
 
 def test_build_status_filter_none():
     """status=None returns the same query object unchanged."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_status_filter(sql, None)
@@ -571,7 +566,6 @@ def test_build_status_filter_none():
 
 def test_build_role_filter_valid_role():
     """Known role adds a WHERE clause (line 207)."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_role_filter(sql, Roles.ADMIN)
@@ -580,7 +574,6 @@ def test_build_role_filter_valid_role():
 
 def test_build_role_filter_none():
     """role=None skips the WHERE clause."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_role_filter(sql, None)
@@ -589,7 +582,6 @@ def test_build_role_filter_none():
 
 def test_build_search_filter_with_value():
     """Non-empty search string adds ilike filter (lines 213-214)."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_search_filter(sql, "alice")
@@ -598,7 +590,6 @@ def test_build_search_filter_with_value():
 
 def test_build_search_filter_whitespace_only():
     """Whitespace-only search is ignored (line 212 short-circuits)."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_search_filter(sql, "   ")
@@ -607,7 +598,6 @@ def test_build_search_filter_whitespace_only():
 
 def test_build_search_filter_none():
     """None search is ignored."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_search_filter(sql, None)
