@@ -1,3 +1,5 @@
+import { PROXY, jsonHeaders } from '@/app/services/utils'
+
 // ─── Types ───────────────────────────────────────────────
 export interface GameAccount {
   id: string
@@ -49,15 +51,8 @@ export interface AllianceVisitor {
   visited_at: string
 }
 
-// ─── Helpers ─────────────────────────────────────────────
-const PROXY = '/api/back'
 import { IS_DEV } from '@/app/lib/dev-mode'
 import type { RosterEntry } from '@/app/services/roster'
-
-const jsonHeaders: HeadersInit = {
-  Accept: 'application/json',
-  'Content-Type': 'application/json',
-}
 
 async function throwOnError(response: Response, fallback: string) {
   if (response.ok) return

@@ -1,3 +1,5 @@
+import { PROXY, jsonHeaders } from '@/app/services/utils'
+
 // ─── War Service ─────────────────────────────────────────
 
 export interface BannedChampion {
@@ -128,15 +130,6 @@ export interface WarPrefight {
   is_saga_defender: boolean
   game_pseudo: string
   created_at: string
-}
-
-// ─── Helpers ─────────────────────────────────────────────
-
-const PROXY = '/api/back'
-
-const jsonHeaders: HeadersInit = {
-  Accept: 'application/json',
-  'Content-Type': 'application/json',
 }
 
 async function throwOnError(response: Response, fallback: string) {
