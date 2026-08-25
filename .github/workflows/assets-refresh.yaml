@@ -30,7 +30,9 @@ jobs:
 
       - name: Scrape champions from the wiki
         working-directory: ./static-assets
-        run: uv run python scrape_champions.py
+        # static-assets has no build-system, so nothing has to be built here and
+        # --no-build costs nothing while blocking dependency setup scripts.
+        run: uv run --locked --no-build python scrape_champions.py
 
       - name: Detect changes
         id: diff
