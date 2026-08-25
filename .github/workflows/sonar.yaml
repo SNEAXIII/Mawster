@@ -20,6 +20,10 @@ jobs:
   sonar:
     name: SonarQube Cloud scan
     runs-on: ubuntu-latest
+    # SONAR_TOKEN is an *environment* secret, not a repository one: without this
+    # line `secrets.SONAR_TOKEN` resolves to an empty string and the scanner
+    # fails with "Not authorized or project not found".
+    environment: Api
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
