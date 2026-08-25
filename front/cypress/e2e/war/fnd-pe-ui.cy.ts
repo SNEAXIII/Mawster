@@ -37,8 +37,7 @@ describe('War – FND & Planning Error: knowledge base rendering', () => {
       cy.apiToggleFightNotDone(ownerData.access_token, allianceId, warId, 1, 10);
       cy.apiEndWar(ownerData.access_token, allianceId, warId);
 
-      cy.apiLogin(ownerData.user_id);
-      cy.visit('/game/knowledge-base?season_selector=off_season');
+      cy.apiLogin(ownerData.user_id, '/game/knowledge-base?season_selector=off_season');
 
       cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
       cy.getByCy('fight-record-planning-error').should('not.exist');
@@ -51,8 +50,7 @@ describe('War – FND & Planning Error: knowledge base rendering', () => {
       cy.apiUpdateWarKo(ownerData.access_token, allianceId, warId, 1, 10, 1);
       cy.apiEndWar(ownerData.access_token, allianceId, warId);
 
-      cy.apiLogin(ownerData.user_id);
-      cy.visit('/game/knowledge-base?season_selector=off_season');
+      cy.apiLogin(ownerData.user_id, '/game/knowledge-base?season_selector=off_season');
 
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
       cy.getByCy('fight-record-ko').should('have.text', '1');

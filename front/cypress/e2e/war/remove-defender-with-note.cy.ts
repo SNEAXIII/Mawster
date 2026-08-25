@@ -40,8 +40,7 @@ describe('War – Remove defender that has a fight note', () => {
         });
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-        cy.apiLogin(ownerData.user_id);
-        cy.visit('/game/war');
+        cy.apiLogin(ownerData.user_id, 'war');
         cy.getByCy('node-actions-trigger-node-10').click();
         cy.getByCy('war-note-input').should('have.value', 'Keep me across defenders');
       },

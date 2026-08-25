@@ -14,8 +14,7 @@ describe('Knowledge Base', () => {
 
   it('sorts by KO count descending then ascending', () => {
     setupKnowledgeBaseFast('kb-sort').then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
 
@@ -43,8 +42,7 @@ describe('Knowledge Base', () => {
 
   it('sorts by node number descending then ascending', () => {
     setupKnowledgeBaseFast('kb-sortnode').then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       cy.contains('th', 'Node').click();
       cy.getByCy('fight-records-table')
