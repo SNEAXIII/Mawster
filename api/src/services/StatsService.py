@@ -13,17 +13,17 @@ class StatsService:
     async def get_public_stats(session: AsyncSession) -> PublicStatsResponse:
         cutoff = utcnow() - timedelta(days=30)
         active_alliances = (
-            await session.execute(
+            await session.exec(
                 select(func.count(func.distinct(War.alliance_id))).where(War.created_at >= cutoff)
             )
         ).scalar_one()
         participating_players = (
-            await session.execute(select(func.count(func.distinct(WarFightRecord.game_account_id))))
+            await session.exec(select(func.count(func.distinct(WarFightRecord.game_account_id))))
         ).scalar_one()
         knowledge_base_fights = (
-            await session.execute(select(func.count(WarFightRecord.id)))
+            await session.exec(select(func.count(WarFightRecord.id)))
         ).scalar_one()
-        wars_recorded = (await session.execute(select(func.count(War.id)))).scalar_one()
+        wars_recorded = (await session.exec(select(func.count(War.id)))).scalar_one()
         return PublicStatsResponse(
             active_alliances=active_alliances,
             participating_players=participating_players,

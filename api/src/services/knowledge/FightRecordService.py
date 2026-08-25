@@ -392,7 +392,7 @@ class FightRecordService:
         base = (union_all(*sub_queries) if len(sub_queries) > 1 else sub_queries[0]).subquery()
 
         # COUNT
-        total = (await session.execute(select(func.count()).select_from(base))).scalar_one()
+        total = (await session.exec(select(func.count()).select_from(base))).one()
 
         # SORT — all labeled columns are directly accessible on the subquery
         sort_col_map = {
@@ -411,8 +411,8 @@ class FightRecordService:
 
         rows = (
             (
-                await session.execute(
-                    select(base).order_by(sort_expr).offset((page - 1) * size).limit(size)
+                await session.exec(
+                    select(*base.c).order_by(sort_expr).offset((page - 1) * size).limit(size)
                 )
             )
             .mappings()
