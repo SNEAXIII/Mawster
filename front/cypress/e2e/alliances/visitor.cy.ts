@@ -164,6 +164,43 @@ describe('Visitor system', () => {
         cy.getByCy(`invite-visitor-as-member-${visitorAccId}`).should('not.exist');
       });
     });
+
+    it('sees the visitor badge and can leave the visited alliance', () => {
+      setupVisitorScenario('vis-leave').then(({ visitorData }) => {
+        cy.apiLogin(visitorData.user_id, 'alliances');
+
+        cy.getByCy('alliance-visitor-badge').should('be.visible');
+        cy.getByCy('leave-visit-button').click();
+        cy.getByCy('confirmation-dialog-confirm').click();
+
+        // The visitor has no other alliance: the page falls back to the empty state
+        cy.getByCy('alliance-empty-state').should('be.visible');
+        cy.getByCy('leave-visit-button').should('not.exist');
+      });
+    });
+
+    it('keeps the alliance when the leave dialog is cancelled', () => {
+      setupVisitorScenario('vis-cancel').then(({ visitorData }) => {
+        cy.apiLogin(visitorData.user_id, 'alliances');
+
+        cy.getByCy('leave-visit-button').click();
+        cy.getByCy('confirmation-dialog-cancel').click();
+
+        cy.getByCy('alliance-visitor-badge').should('be.visible');
+        cy.getByCy('leave-visit-button').should('be.visible');
+      });
+    });
+  });
+
+  describe('Member — alliance page', () => {
+    it('does not see the leave-visit action on their own alliance', () => {
+      setupVisitorScenario('vis-noleave').then(({ ownerData }) => {
+        cy.apiLogin(ownerData.user_id, 'alliances');
+
+        cy.getByCy('alliance-visitor-badge').should('not.exist');
+        cy.getByCy('leave-visit-button').should('not.exist');
+      });
+    });
   });
 });
 
