@@ -47,6 +47,12 @@ extend = "../ruff.toml"
 # Pydantic field validators must raise ValueError: it is the only exception Pydantic
 # turns into a 422. A TypeError (what TRY004 asks for) escapes as a 500 instead.
 "src/validators/*.py" = ["TRY004"]
+# Function-level imports are deliberate in the app itself: they break SQLModel/service
+# import cycles, keep heavy optional deps (boto3, aio_pika) out of module import time,
+# and in main.py defer the messaging stack to the lifespan rather than import time.
+# Tests have none of those constraints, so the rule stays on under tests/.
+"src/**" = ["PLC0415"]
+"main.py" = ["PLC0415"]
 
 [dependency-groups]
 migrate = [
