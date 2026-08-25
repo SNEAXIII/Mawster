@@ -299,12 +299,18 @@ const NAV_URLS: Record<string, string> = {
   administration: '/admin',
   alliances: '/game/alliances',
   defense: '/game/defense',
+  'knowledge-base': '/game/knowledge-base',
+  'knowledge-base-import': '/game/knowledge-base/import',
   profile: '/profile',
   roster: '/game/account',
   war: '/game/war',
 };
 
+// Accepts either a nav key ('war') or a literal path ('/game/war?bg=2'). The
+// literal form exists because query strings are part of the destination for
+// some specs and can't be expressed as a key.
 function navUrl(page: string): string {
+  if (page.startsWith('/')) return page;
   const url = NAV_URLS[page];
   if (!url) throw new Error(`Unknown nav page "${page}" — expected one of ${Object.keys(NAV_URLS).join(', ')}`);
   return url;
@@ -1348,8 +1354,7 @@ Cypress.Commands.add('goToAdminChampionsTab', () => {
 });
 
 Cypress.Commands.add('goToWarMode', (userId: string, mode: 'defenders' | 'attackers') => {
-  cy.apiLogin(userId);
-  cy.navTo('war');
+  cy.apiLogin(userId, 'war');
   cy.getByCy(`war-mode-${mode}`).click();
 });
 

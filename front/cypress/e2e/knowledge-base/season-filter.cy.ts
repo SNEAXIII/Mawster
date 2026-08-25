@@ -79,8 +79,7 @@ describe('Knowledge Base - Season Filter', () => {
         cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 2, season.id);
         cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 1);
 
-        cy.apiLogin(userId);
-        cy.visit('/game/knowledge-base');
+        cy.apiLogin(userId, 'knowledge-base');
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
       });
     });
@@ -92,8 +91,7 @@ describe('Knowledge Base - Season Filter', () => {
         cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 2, season.id);
         cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 1);
 
-        cy.apiLogin(userId);
-        cy.visit('/game/knowledge-base');
+        cy.apiLogin(userId, 'knowledge-base');
 
         cy.selectOption('filter-season-selector-trigger', 'All');
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 3);
@@ -107,8 +105,7 @@ describe('Knowledge Base - Season Filter', () => {
         cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 2, season.id);
         cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 1);
 
-        cy.apiLogin(userId);
-        cy.visit('/game/knowledge-base');
+        cy.apiLogin(userId, 'knowledge-base');
 
         cy.selectOption('filter-season-selector-trigger', 'Pre-season');
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
@@ -126,8 +123,7 @@ describe('Knowledge Base - Season Filter', () => {
           cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 2, seasonA.id);
           cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 1, seasonB.id);
 
-          cy.apiLogin(userId);
-          cy.visit('/game/knowledge-base');
+          cy.apiLogin(userId, 'knowledge-base');
 
           cy.selectOption('filter-season-selector-trigger', 'Current Season');
           cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
@@ -145,8 +141,7 @@ describe('Knowledge Base - Season Filter', () => {
           cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 1, seasonA.id);
           cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 2, seasonB.id);
 
-          cy.apiLogin(userId);
-          cy.visit('/game/knowledge-base');
+          cy.apiLogin(userId, 'knowledge-base');
 
           cy.selectOption('filter-season-selector-trigger', 'Specific Season');
 
@@ -166,8 +161,7 @@ describe('Knowledge Base - Season Filter', () => {
         cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 2, season.id);
         cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 1);
 
-        cy.apiLogin(userId);
-        cy.visit('/game/knowledge-base');
+        cy.apiLogin(userId, 'knowledge-base');
 
         cy.selectOption('filter-season-selector-trigger', 'All');
         cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 3);

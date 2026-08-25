@@ -159,8 +159,9 @@ declare global {
       /**
        * Log in via the dev API (no UI). Faster than uiLogin.
        * Pass ownerData.user_id (UUID).
-       * @param page - Optional nav page identifier to land on directly (same keys as navTo).
-       *               Saves the extra page load of `apiLogin` + `navTo`.
+       * @param page - Optional destination to land on directly: a nav key (same keys as
+       *               navTo) or a literal path such as "/game/war?bg=2".
+       *               Saves the extra page load of `apiLogin` + `navTo`/`visit`.
        */
       apiLogin(userId: string, page?: string): Chainable<void>;
 

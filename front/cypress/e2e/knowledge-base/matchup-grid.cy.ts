@@ -69,8 +69,7 @@ function seedMatchups(prefix: string): Cypress.Chainable<SeededMatchups> {
 }
 
 function openMatchupsTab(userId: string) {
-  cy.apiLogin(userId);
-  cy.visit('/game/knowledge-base');
+  cy.apiLogin(userId, 'knowledge-base');
   cy.getByCy('kb-tab-matchups').click();
   cy.getByCy('matchups-tab').should('be.visible');
 }

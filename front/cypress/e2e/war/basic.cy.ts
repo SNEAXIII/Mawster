@@ -14,8 +14,7 @@ describe('War – Basic page rendering', () => {
 
   it('shows no-alliance message when navigating to war page without alliance', () => {
     setupUser('war-basic-noally-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(user_id, 'war');
       cy.contains('need to join an alliance').should('be.visible');
     });
   });

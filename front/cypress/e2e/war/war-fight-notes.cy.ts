@@ -9,8 +9,7 @@ describe('War Fight Notes', () => {
     setupAttackerScenario('wfn1').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
       // The note popover only renders on nodes with an assigned attacker.
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      cy.apiLogin(ownerData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
       cy.getByCy('node-actions-trigger-node-10').click();
@@ -27,8 +26,7 @@ describe('War Fight Notes', () => {
   it('officer deletes a note from a node', () => {
     setupAttackerScenario('wfn3').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      cy.apiLogin(ownerData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
       // Write a note, then delete it
@@ -49,16 +47,14 @@ describe('War Fight Notes', () => {
     setupAttackerScenario('wfn2').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       // Officer writes the note first
-      cy.apiLogin(ownerData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('war-note-input').type('Read only for members');
       cy.getByCy('war-note-save').click();
 
       // Member views — read-only, no editor
-      cy.apiLogin(memberData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(memberData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('war-note-readonly').should('contain.text', 'Read only for members');

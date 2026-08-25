@@ -13,8 +13,7 @@ describe('Knowledge Base – CSV Import combined records', () => {
       cy.apiCreateSeason(adminData.access_token, 1).then(() => {
         cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic').then(() => {
           cy.apiLoadChampion(adminData.access_token, 'Serpent', 'Cosmic').then(() => {
-            cy.apiLogin(ownerData.user_id);
-            cy.visit('/game/knowledge-base/import');
+            cy.apiLogin(ownerData.user_id, 'knowledge-base-import');
 
             // No header line, ko_count present
             const csv = `Magik,Serpent,15,S1,2\n`;
@@ -50,8 +49,7 @@ describe('Knowledge Base – CSV Import combined records', () => {
       cy.apiCreateSeason(adminData.access_token, 1).then(() => {
         cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic').then(() => {
           cy.apiLoadChampion(adminData.access_token, 'Serpent', 'Cosmic').then(() => {
-            cy.apiLogin(ownerData.user_id);
-            cy.visit('/game/knowledge-base/import');
+            cy.apiLogin(ownerData.user_id, 'knowledge-base-import');
 
             // Header present, trailing empty ko_count
             const csv = `attacker,defender,node,season,ko_count\nMagik,Serpent,20,S1,\n`;
@@ -84,8 +82,7 @@ describe('Knowledge Base – CSV Import combined records', () => {
         cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic').then(() => {
           cy.apiLoadChampion(adminData.access_token, 'Serpent', 'Cosmic').then(() => {
             cy.apiLoadChampion(adminData.access_token, 'Doom', 'Mystic').then(() => {
-              cy.apiLogin(ownerData.user_id);
-              cy.visit('/game/knowledge-base/import');
+              cy.apiLogin(ownerData.user_id, 'knowledge-base-import');
 
               // Mixed: one row with ko_count, one with empty ko_count, no header
               const csv = `Magik,Serpent,15,S1,2\nDoom,Serpent,16,S1,\n`;
@@ -132,8 +129,7 @@ describe('Knowledge Base – CSV Import combined records', () => {
                 ko_count: 2,
               },
             ]).then(() => {
-              cy.apiLogin(ownerData.user_id);
-              cy.visit('/game/knowledge-base');
+              cy.apiLogin(ownerData.user_id, 'knowledge-base');
 
               // Imported record is visible with no player filter
               cy.getByCy('fight-records-table').should('contain.text', 'Magik');

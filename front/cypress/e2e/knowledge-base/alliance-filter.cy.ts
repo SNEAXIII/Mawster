@@ -11,8 +11,7 @@ describe('Knowledge Base — alliance visibility', () => {
 
   it('user with no alliance sees error (403)', () => {
     setupUser('kbaf-noalliance').then((userData) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       cy.getByCy('fight-records-table').should('not.exist');
       cy.contains('Failed to load fight records.').should('be.visible');
@@ -22,8 +21,7 @@ describe('Knowledge Base — alliance visibility', () => {
   it('member of 1 alliance — alliance dropdown not visible', () => {
     const prefix = 'kbaf-one';
     setupKnowledgeBaseFast(prefix).then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       cy.getByCy('fight-records-table').should('be.visible');
       cy.getByCy('filter-alliance').should('not.exist');
@@ -58,8 +56,7 @@ describe('Knowledge Base — alliance visibility', () => {
             headers: { Authorization: `Bearer ${userA.access_token}` },
             body: {},
           }).then(() => {
-            cy.apiLogin(userA.user_id);
-            cy.visit('/game/knowledge-base');
+            cy.apiLogin(userA.user_id, 'knowledge-base');
 
             cy.getByCy('filter-alliance-trigger').should('be.visible');
             cy.getByCy('filter-alliance-trigger').click();
@@ -100,8 +97,7 @@ describe('Knowledge Base — alliance visibility', () => {
             headers: { Authorization: `Bearer ${userA.access_token}` },
             body: {},
           }).then(() => {
-            cy.apiLogin(userA.user_id);
-            cy.visit('/game/knowledge-base');
+            cy.apiLogin(userA.user_id, 'knowledge-base');
 
             // Filter by alliance A → records visible
             cy.selectOption('filter-alliance-trigger', `[${prefixA.slice(0, 3).toUpperCase()}]`);
