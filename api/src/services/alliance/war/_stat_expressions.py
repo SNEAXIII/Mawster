@@ -3,7 +3,7 @@ formula so alliance and player stats never diverge."""
 
 from sqlalchemy import and_, case, func
 
-from src.models.WarDefensePlacement import WarDefensePlacement
+from src.models.war.WarDefensePlacement import WarDefensePlacement
 
 is_normal = and_(
     WarDefensePlacement.is_fight_not_done.is_(False),

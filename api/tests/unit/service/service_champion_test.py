@@ -6,7 +6,7 @@ import pytest
 from fastapi import HTTPException
 
 from src.dto.admin.dto_champion import ChampionLoadRequest
-from src.models.Champion import Champion
+from src.models.champion.Champion import Champion
 from src.services.admin.ChampionService import VALID_CLASSES, ChampionService
 
 # ---------------------------------------------------------------------------

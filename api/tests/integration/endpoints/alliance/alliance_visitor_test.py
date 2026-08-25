@@ -75,8 +75,8 @@ class TestInviteVisitor:
         alliance, _owner_acc = await push_alliance_with_owner(
             user_id=USER_ID, game_pseudo=GAME_PSEUDO
         )
-        from src.models.AllianceVisitor import AllianceVisitor
-        from src.models.GameAccount import GameAccount
+        from src.models.alliance.AllianceVisitor import AllianceVisitor
+        from src.models.user.GameAccount import GameAccount
 
         visitors = []
         for i in range(10):
@@ -166,7 +166,7 @@ class TestAcceptVisitorInvitation:
 
         from sqlmodel import select
 
-        from src.models.GameAccount import GameAccount as GA
+        from src.models.user.GameAccount import GameAccount as GA
 
         async for session in get_test_session():
             result = await session.exec(select(GA).where(GA.id == visitor_acc.id))

@@ -2,7 +2,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.enums.SeasonStatus import SeasonStatus
-from src.models.Season import Season
+from src.models.war.Season import Season
 
 
 class SeasonService:

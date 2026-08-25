@@ -6,9 +6,9 @@ import pytest
 from fastapi import HTTPException
 
 from src.enums.InvitationStatus import InvitationStatus
-from src.models.Alliance import Alliance
-from src.models.AllianceInvitation import AllianceInvitation
-from src.models.GameAccount import GameAccount
+from src.models.alliance.Alliance import Alliance
+from src.models.alliance.AllianceInvitation import AllianceInvitation
+from src.models.user.GameAccount import GameAccount
 from src.services.alliance.AllianceInvitationService import (
     MAX_MEMBERS_PER_ALLIANCE,
     AllianceInvitationService,

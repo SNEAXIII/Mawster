@@ -2,7 +2,7 @@
 
 import uuid
 
-from src.models.War import War, WarStatus
+from src.models.war.War import War, WarStatus
 from src.services.alliance.RankingHistoryService import RankingHistoryService
 
 

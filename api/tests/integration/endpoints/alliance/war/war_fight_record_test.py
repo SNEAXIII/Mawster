@@ -8,16 +8,16 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.enums.Roles import Roles
 from src.enums.SeasonStatus import SeasonStatus
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.Season import Season
-from src.models.War import War
-from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.WarFightPrefight import WarFightPrefight
-from src.models.WarFightRecord import WarFightRecord
-from src.models.WarFightSynergy import WarFightSynergy
-from src.models.WarPrefightAttacker import WarPrefightAttacker
-from src.models.WarSynergyAttacker import WarSynergyAttacker
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.war.Season import Season
+from src.models.war.War import War
+from src.models.war.WarDefensePlacement import WarDefensePlacement
+from src.models.war.WarFightPrefight import WarFightPrefight
+from src.models.war.WarFightRecord import WarFightRecord
+from src.models.war.WarFightSynergy import WarFightSynergy
+from src.models.war.WarPrefightAttacker import WarPrefightAttacker
+from src.models.war.WarSynergyAttacker import WarSynergyAttacker
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -151,7 +151,7 @@ class TestWarFightRecordSnapshot:
         """WarFightRecord.is_saga_attacker/defender_is_saga_defender must be sourced from the
         ChampionSagaRole set for the WAR'S OWN season — not any other season, and not a
         champion-level attribute."""
-        from src.models.Season import Season
+        from src.models.war.Season import Season
         from src.services.admin.SagaService import SagaService
 
         data = await _setup_war_with_fight()
@@ -236,7 +236,7 @@ class TestWarFightRecordSnapshot:
     async def test_snapshot_links_note_to_fight_record(self, session):
         """A WarFightNote on a snapshotted node must be linked to its WarFightRecord."""
         from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
-        from src.models.WarFightNote import WarFightNote
+        from src.models.war.WarFightNote import WarFightNote
         from src.services.alliance.war.WarFightNoteService import WarFightNoteService
         from src.services.knowledge.FightRecordService import FightRecordService
 
@@ -1279,7 +1279,7 @@ class TestAdminSnapshotEndpoints:
         data = await _setup_war_with_fight()
         # End the war via the API so it has status=ended but snapshotted_at is set by end_war.
         # Instead, directly set war status to ended without calling snapshot_war.
-        from src.models.War import WarStatus
+        from src.models.war.War import WarStatus
 
         war = await session.get(War, data["war"].id)
         war.status = WarStatus.ended

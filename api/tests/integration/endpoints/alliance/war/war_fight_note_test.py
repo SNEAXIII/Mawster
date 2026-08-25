@@ -6,10 +6,10 @@ import pytest
 from sqlmodel import select
 
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
-from src.models.War import War, WarStatus
-from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.WarFightNote import WarFightNote
-from src.models.WarFightNoteRevision import WarFightNoteRevision
+from src.models.war.War import War, WarStatus
+from src.models.war.WarDefensePlacement import WarDefensePlacement
+from src.models.war.WarFightNote import WarFightNote
+from src.models.war.WarFightNoteRevision import WarFightNoteRevision
 from src.services.alliance.war.WarFightNoteService import WarFightNoteService
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
@@ -196,7 +196,7 @@ async def test_delete_soft_deletes_note_and_keeps_history(session):
 async def test_delete_by_muted_officer_raises_403(session):
     from fastapi import HTTPException
 
-    from src.models.UserMute import UserMute
+    from src.models.user.UserMute import UserMute
 
     data = await _setup_war_with_placement()
     war = data["war"]

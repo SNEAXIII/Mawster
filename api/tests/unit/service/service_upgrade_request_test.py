@@ -6,10 +6,10 @@ import pytest
 from fastapi import HTTPException
 
 from src.models.Base import utcnow
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.GameAccount import GameAccount
-from src.models.RequestedUpgrade import RequestedUpgrade
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.champion.RequestedUpgrade import RequestedUpgrade
+from src.models.user.GameAccount import GameAccount
 from src.services.alliance.UpgradeRequestService import UpgradeRequestService
 from tests.utils.utils_constant import GAME_PSEUDO_2, USER_ID
 

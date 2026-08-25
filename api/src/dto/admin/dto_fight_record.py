@@ -82,7 +82,9 @@ class WarFightRecordResponse(BaseModel):
     def flatten_relations(cls, data: Any) -> Any:
         if isinstance(data, dict):
             return data
-        from src.models.WarFightRecordImport import WarFightRecordImport as _WarFightRecordImport
+        from src.models.war.WarFightRecordImport import (
+            WarFightRecordImport as _WarFightRecordImport,
+        )
 
         is_import = isinstance(data, _WarFightRecordImport)
         if is_import:

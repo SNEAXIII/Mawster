@@ -4,10 +4,10 @@ import uuid
 
 from pydantic import BaseModel
 
-from src.models.VisionImport import VisionImport
-from src.models.VisionJob import VisionJob
-from src.models.VisionPrediction import VisionPrediction
-from src.models.VisionSample import VisionSample
+from src.models.vision.VisionImport import VisionImport
+from src.models.vision.VisionJob import VisionJob
+from src.models.vision.VisionPrediction import VisionPrediction
+from src.models.vision.VisionSample import VisionSample
 from src.security.secrets import SECRET
 from src.storage.base import Storage
 from src.utils.db import SessionDep

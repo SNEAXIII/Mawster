@@ -6,10 +6,10 @@ from starlette import status
 
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
 from src.models.Base import utcnow
-from src.models.War import War, WarStatus
-from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.WarFightNote import WarFightNote
-from src.models.WarFightNoteRevision import WarFightNoteRevision
+from src.models.war.War import War, WarStatus
+from src.models.war.WarDefensePlacement import WarDefensePlacement
+from src.models.war.WarFightNote import WarFightNote
+from src.models.war.WarFightNoteRevision import WarFightNoteRevision
 from src.services.admin.ModerationService import ModerationService
 from src.utils.db import SessionDep
 

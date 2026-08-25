@@ -6,7 +6,7 @@ from src.dto.account.game.dto_vision_predictions import (
     VisionPredictionResponse,
     VisionPredictionsResponse,
 )
-from src.models.VisionPredictionCandidate import VisionPredictionCandidate
+from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 from src.services.account.game.VisionImportService import VisionImportService
 
 

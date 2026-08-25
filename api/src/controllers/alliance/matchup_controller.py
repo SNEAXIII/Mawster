@@ -12,7 +12,7 @@ from src.dto.alliance.dto_matchup import (
     MatchupUpsertRequest,
 )
 from src.models import User
-from src.models.MatchupRating import MatchupRating
+from src.models.matchup.MatchupRating import MatchupRating
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.MatchupService import MatchupService
 from src.services.auth.AuthService import AuthService

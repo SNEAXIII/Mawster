@@ -14,8 +14,8 @@ from src.Messages.mastery_messages import (
     MASTERY_NOT_FOUND,
     MASTERY_VALUE_EXCEEDS_MAX,
 )
-from src.models.GameAccountMastery import GameAccountMastery
-from src.models.Mastery import Mastery
+from src.models.user.GameAccountMastery import GameAccountMastery
+from src.models.user.Mastery import Mastery
 from src.utils.db import SessionDep
 
 

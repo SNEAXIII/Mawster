@@ -27,9 +27,9 @@ from src.Messages.vision_messages import (
 from src.messaging import get_publisher
 from src.messaging.publisher import VisionPublisher
 from src.models import User
-from src.models.GameAccount import GameAccount
-from src.models.VisionImport import VisionImport
-from src.models.VisionJob import VisionJob, VisionJobStatus
+from src.models.user.GameAccount import GameAccount
+from src.models.vision.VisionImport import VisionImport
+from src.models.vision.VisionJob import VisionJob, VisionJobStatus
 from src.security.secrets import SECRET
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.account.game.VisionDatasetService import ConfirmedRow

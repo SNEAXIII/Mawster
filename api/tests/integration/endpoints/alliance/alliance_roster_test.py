@@ -5,7 +5,7 @@ import uuid
 import pytest
 
 from main import app
-from src.models.ChampionUser import ChampionUser
+from src.models.champion.ChampionUser import ChampionUser
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,

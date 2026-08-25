@@ -4,8 +4,8 @@ import uuid
 
 import pytest
 
-from src.models.DefensePlacement import DefensePlacement
-from src.models.War import War
+from src.models.alliance.DefensePlacement import DefensePlacement
+from src.models.war.War import War
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,

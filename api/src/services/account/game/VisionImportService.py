@@ -27,8 +27,8 @@ from src.Messages.vision_messages import (
     VISION_JOB_NOT_FOUND,
 )
 from src.messaging.publisher import VisionPublisher
-from src.models.VisionImport import VisionImport, VisionImportStatus
-from src.models.VisionJob import VisionJob, VisionJobStatus
+from src.models.vision.VisionImport import VisionImport, VisionImportStatus
+from src.models.vision.VisionJob import VisionJob, VisionJobStatus
 from src.security.secrets import SECRET
 from src.services.account.game.VisionDatasetService import ConfirmedRow, VisionDatasetService
 from src.storage.base import Storage, import_prefix, screen_key
@@ -36,7 +36,7 @@ from src.utils.db import SessionDep
 
 if TYPE_CHECKING:
     from src.dto.account.game.dto_vision_predictions import VisionPredictionResponse
-    from src.models.VisionPredictionCandidate import VisionPredictionCandidate
+    from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 
 MAX_SCREENS_PER_IMPORT = 40
 MAX_SCREEN_BYTES = 8 * 1024 * 1024
@@ -597,7 +597,7 @@ class VisionImportService:
         would reset it. Cancelled imports count too — the quota measures work
         asked of the server, not work kept.
         """
-        from src.models.GameAccount import GameAccount
+        from src.models.user.GameAccount import GameAccount
 
         cutoff = datetime.now(UTC) - timedelta(hours=hours)
         statement = (
@@ -610,8 +610,8 @@ class VisionImportService:
     @classmethod
     async def count_predictions(cls, session: SessionDep, import_id: uuid.UUID) -> int:
         """How many champions were read across every job of this import."""
-        from src.models.VisionJob import VisionJob
-        from src.models.VisionPrediction import VisionPrediction
+        from src.models.vision.VisionJob import VisionJob
+        from src.models.vision.VisionPrediction import VisionPrediction
 
         statement = (
             select(func.count(VisionPrediction.id))
@@ -630,7 +630,7 @@ class VisionImportService:
             VisionCandidateResponse,
             VisionPredictionResponse,
         )
-        from src.models.VisionPrediction import VisionPrediction
+        from src.models.vision.VisionPrediction import VisionPrediction
 
         jobs = (
             await session.exec(

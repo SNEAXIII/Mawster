@@ -7,9 +7,9 @@ import pytest
 
 from main import app
 from src.models.Base import utcnow
-from src.models.VisionImport import VisionImport, VisionImportStatus
-from src.models.VisionJob import VisionJob, VisionJobStatus
-from src.models.VisionPrediction import VisionPrediction
+from src.models.vision.VisionImport import VisionImport, VisionImportStatus
+from src.models.vision.VisionJob import VisionJob, VisionJobStatus
+from src.models.vision.VisionPrediction import VisionPrediction
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import push_game_account
 from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2

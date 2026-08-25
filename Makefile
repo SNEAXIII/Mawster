@@ -285,7 +285,7 @@ vision-up:
 vision-down:
 	docker compose -f compose-dev.yaml stop rabbitmq rustfs
 
-worker-up:
+worker-up: vision-up
 	docker compose -f compose-dev.yaml up -d --build vision-worker
 
 worker-logs:
@@ -389,9 +389,7 @@ panic:
 db-access:
 	docker compose -f compose-prod.yaml -f compose-prod.yaml -f compose-db-access.yaml up mariadb backup -d
 
-# Depends on vision-up so a single `make db-dev` brings up the full dev stack:
-# rabbitmq + rustfs (+ rustfs-init to create the buckets) then mariadb + static.
-db-dev: vision-up
+db-dev:
 	docker compose -f compose-dev.yaml up -d --build mariadb-dev static
 
 db-dev-all:

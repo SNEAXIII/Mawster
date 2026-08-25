@@ -6,17 +6,17 @@ from sqlmodel import Session, SQLModel, create_engine, select
 
 from src.fixtures import sample_data as sd
 from src.fixtures.load_champions import _load_capabilities, _process_champion_item
-from src.models.Alliance import Alliance
-from src.models.AllianceVisitor import AllianceVisitor
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.GameAccount import GameAccount
-from src.models.Mastery import Mastery
-from src.models.Season import Season
-from src.models.User import User
-from src.models.War import War
-from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.WarPrefightAttacker import WarPrefightAttacker
+from src.models.alliance.Alliance import Alliance
+from src.models.alliance.AllianceVisitor import AllianceVisitor
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.user.GameAccount import GameAccount
+from src.models.user.Mastery import Mastery
+from src.models.user.User import User
+from src.models.war.Season import Season
+from src.models.war.War import War
+from src.models.war.WarDefensePlacement import WarDefensePlacement
+from src.models.war.WarPrefightAttacker import WarPrefightAttacker
 
 FIXTURES = Path(__file__).resolve().parents[3] / "src" / "fixtures"
 

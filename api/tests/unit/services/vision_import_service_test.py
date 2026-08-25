@@ -6,9 +6,9 @@ import pytest
 from fastapi import HTTPException
 from starlette.datastructures import Headers, UploadFile
 
-from src.models.VisionImport import VisionImport, VisionImportStatus
-from src.models.VisionJob import VisionJob, VisionJobStatus
-from src.models.VisionPrediction import VisionPrediction
+from src.models.vision.VisionImport import VisionImport, VisionImportStatus
+from src.models.vision.VisionJob import VisionJob, VisionJobStatus
+from src.models.vision.VisionPrediction import VisionPrediction
 from src.services.account.game.VisionImportService import (
     MAX_SCREEN_BYTES,
     MAX_SCREENS_PER_IMPORT,
@@ -251,8 +251,8 @@ async def test_create_import_marks_unpublished_jobs_failed_on_publish_error():
         )
     assert exc.value.status_code == 503
 
-    from src.models.VisionImport import VisionImport
-    from src.models.VisionJob import VisionJob
+    from src.models.vision.VisionImport import VisionImport
+    from src.models.vision.VisionJob import VisionJob
 
     imports = [obj for obj in session.added if isinstance(obj, VisionImport)]
     # session.add() may record the same object more than once (store loop, then

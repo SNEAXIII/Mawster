@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from src.dto.admin.dto_season import SeasonCreateRequest, SeasonResponse
 from src.enums.SeasonFormat import SeasonFormat
 from src.enums.SeasonStatus import SeasonStatus
-from src.models.Season import Season
+from src.models.war.Season import Season
 
 
 class TestSeasonCreateRequest:

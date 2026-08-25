@@ -8,9 +8,9 @@ from fastapi import HTTPException
 
 from main import app
 from src.enums.SeasonStatus import SeasonStatus
-from src.models.Season import Season
-from src.models.War import War, WarStatus
-from src.models.WarDefensePlacement import WarDefensePlacement
+from src.models.war.Season import Season
+from src.models.war.War import War, WarStatus
+from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.services.PlayerStatsService import PlayerStatsService
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
@@ -366,7 +366,7 @@ async def _push_fight_record(
     ko_count=0,
     is_planning_error=False,
 ):
-    from src.models.WarFightRecord import WarFightRecord as _WFR
+    from src.models.war.WarFightRecord import WarFightRecord as _WFR
 
     record = _WFR(
         war_id=war.id,

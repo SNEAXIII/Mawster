@@ -6,9 +6,9 @@ from sqlmodel import select
 
 from src.dto.account.game.dto_vision_result import VisionPredictionMessage, VisionResultMessage
 from src.Messages.vision_messages import JOB_NEVER_QUEUED
-from src.models.VisionImport import VisionImport, VisionImportStatus
-from src.models.VisionJob import VisionJob, VisionJobStatus
-from src.models.VisionPredictionCandidate import VisionPredictionCandidate
+from src.models.vision.VisionImport import VisionImport, VisionImportStatus
+from src.models.vision.VisionJob import VisionJob, VisionJobStatus
+from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 from src.services.account.game.VisionResultService import VisionResultService
 
 
