@@ -109,7 +109,7 @@ def _upload(
 async def test_create_import_rejects_empty_file_list():
     with pytest.raises(HTTPException) as exc:
         await VisionImportService.create_import(
-            session=AsyncMock(),
+            session=FakeSession([]),
             storage=FakeStorage(),
             publisher=AsyncMock(),
             game_account_id=uuid.uuid4(),
@@ -124,7 +124,7 @@ async def test_create_import_rejects_too_many_files():
     files = [_upload(f"s{i}.png") for i in range(MAX_SCREENS_PER_IMPORT + 1)]
     with pytest.raises(HTTPException) as exc:
         await VisionImportService.create_import(
-            session=AsyncMock(),
+            session=FakeSession([]),
             storage=FakeStorage(),
             publisher=AsyncMock(),
             game_account_id=uuid.uuid4(),
@@ -139,7 +139,7 @@ async def test_create_import_rejects_oversized_screen():
     oversized = _upload("big.png", content=b"0" * (MAX_SCREEN_BYTES + 1))
     with pytest.raises(HTTPException) as exc:
         await VisionImportService.create_import(
-            session=AsyncMock(),
+            session=FakeSession([]),
             storage=FakeStorage(),
             publisher=AsyncMock(),
             game_account_id=uuid.uuid4(),
@@ -154,7 +154,7 @@ async def test_create_import_rejects_unsupported_content_type():
     pdf = _upload("roster.pdf", content_type="application/pdf", content=b"%PDF")
     with pytest.raises(HTTPException) as exc:
         await VisionImportService.create_import(
-            session=AsyncMock(),
+            session=FakeSession([]),
             storage=FakeStorage(),
             publisher=AsyncMock(),
             game_account_id=uuid.uuid4(),
@@ -173,7 +173,7 @@ async def test_create_import_rejects_unsupported_content_type_before_touching_st
     storage = FakeStorage()
     with pytest.raises(HTTPException):
         await VisionImportService.create_import(
-            session=AsyncMock(),
+            session=FakeSession([]),
             storage=storage,
             publisher=AsyncMock(),
             game_account_id=uuid.uuid4(),
