@@ -26,12 +26,12 @@ jobs:
     environment: Api
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # Full history, not the default shallow clone: Sonar reads git blame
           # to date issues and decide what counts as new code.
           fetch-depth: 0
       - name: SonarQube Cloud scan
-        uses: SonarSource/sonarqube-scan-action@v8.2.0
+        uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e # v8.2.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
