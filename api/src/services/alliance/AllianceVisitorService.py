@@ -12,6 +12,7 @@ from src.Messages.visitor_messages import (
     alliance_max_visitors_reached,
 )
 from src.models.alliance.AllianceVisitor import AllianceVisitor
+from src.models.user.GameAccount import GameAccount
 from src.utils.db import SessionDep
 
 MAX_VISITORS_PER_ALLIANCE = 10
@@ -117,7 +118,6 @@ class AllianceVisitorService:
         cls, session: SessionDep, user_id: uuid.UUID
     ) -> list[AllianceVisitor]:
         """Return all active visits for game accounts belonging to this user."""
-        from src.models.user.GameAccount import GameAccount
 
         accs = await session.exec(select(GameAccount).where(GameAccount.user_id == user_id))
         account_ids = {acc.id for acc in accs.all()}

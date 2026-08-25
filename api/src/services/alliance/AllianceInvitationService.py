@@ -22,6 +22,7 @@ from src.Messages.invitation_messages import (
 from src.Messages.visitor_messages import ALREADY_A_VISITOR, alliance_max_visitors_reached
 from src.models.alliance.Alliance import Alliance
 from src.models.alliance.AllianceInvitation import AllianceInvitation
+from src.models.alliance.AllianceVisitor import AllianceVisitor as AV
 from src.models.Base import utcnow
 from src.models.user.GameAccount import GameAccount
 from src.services.alliance.AllianceVisitorService import (
@@ -183,7 +184,6 @@ class AllianceInvitationService:
         cls, session: SessionDep, invitation_id: uuid.UUID, user_id: uuid.UUID
     ) -> AllianceInvitation:
         """Accept a pending invitation. MEMBER: join alliance. VISITOR: create AllianceVisitor record."""
-        from src.models.alliance.AllianceVisitor import AllianceVisitor as AV
 
         invitation = await session.get(AllianceInvitation, invitation_id)
         if invitation is None:
@@ -239,7 +239,6 @@ class AllianceInvitationService:
                 detail=alliance_max_members_reached(MAX_MEMBERS_PER_ALLIANCE),
             )
         # Clean up any visitor record for this game account in this alliance
-        from src.services.alliance.AllianceVisitorService import AllianceVisitorService
 
         await AllianceVisitorService.remove_if_visitor(
             session, invitation.alliance_id, invitation.game_account_id

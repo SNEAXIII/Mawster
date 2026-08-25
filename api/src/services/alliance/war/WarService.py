@@ -54,6 +54,7 @@ from src.Messages.war_messages import (
     member_max_attackers_reached,
     node_exceeds_map,
 )
+from src.models.alliance.Alliance import Alliance
 from src.models.alliance.DefensePlacement import DefensePlacement
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
@@ -68,6 +69,7 @@ from src.services.admin.ModerationService import AUTO_BLOCK_THRESHOLD, Moderatio
 from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
 from src.services.alliance.war.WarFormatConfig import for_format
+from src.services.knowledge.FightRecordService import FightRecordService
 from src.utils.db import SessionDep
 
 
@@ -544,7 +546,6 @@ class WarService:
         win: bool,
         elo_change: int | None,
     ) -> WarResponse:
-        from src.models.alliance.Alliance import Alliance
 
         war = await cls.get_war(session, war_id, alliance_id)
         alliance = await session.get(Alliance, alliance_id)
@@ -575,7 +576,6 @@ class WarService:
         session.add(war)
         await session.commit()
         await session.refresh(war)
-        from src.services.knowledge.FightRecordService import FightRecordService
 
         await FightRecordService.snapshot_war(session, war)
         return WarResponse.model_validate(await cls._load_war(session, war.id))

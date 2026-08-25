@@ -198,7 +198,6 @@ class AllianceService:
         """True if the user is a member, officer, owner, OR has a visitor account in the alliance."""
         if await cls.is_member(session, user_id, alliance_id):
             return True
-        from src.services.alliance.AllianceVisitorService import AllianceVisitorService
 
         user_accounts = await cls._get_user_accounts(session, user_id)
         for acc in user_accounts:
