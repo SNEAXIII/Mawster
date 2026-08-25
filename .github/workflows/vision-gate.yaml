@@ -29,26 +29,26 @@ jobs:
       IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/mawster-vision-worker:${{ inputs.image_tag || 'latest' }}
     steps:
       - name: Checkout the pull request
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           path: mawster-pr
 
       - name: Checkout the base branch
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ github.event_name == 'pull_request' && github.base_ref || inputs.base_ref }}
           path: mawster-base
 
       # Private repo: the default GITHUB_TOKEN cannot read it.
       - name: Checkout mcoc-vision
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: SNEAXIII/mcoc-vision
           token: ${{ secrets.BOT_TOKEN }}
           path: mcoc-vision
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -87,14 +87,14 @@ jobs:
 
       - name: Comment on the pull request
         if: github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@v3
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         with:
           header: vision-gate
           path: report.md
 
       - name: Upload the before/after runs
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: vision-gate-${{ github.run_id }}
           path: |
