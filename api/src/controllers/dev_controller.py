@@ -371,11 +371,14 @@ async def dev_create_mastery(body: DevCreateMasteryRequest, session: SessionDep)
     }
 
 
+MAX_BULK_ROWS = 1000
+
+
 class BulkFillWarAttackersRequest(BaseModel):
     war_id: uuid.UUID
     battlegroup: int
     game_account_id: uuid.UUID
-    count: int = Field(ge=1, le=50)
+    count: int = Field(ge=1, le=MAX_BULK_ROWS)
 
 
 @dev_controller.post("/bulk-fill-war-attackers", status_code=200)
@@ -389,7 +392,9 @@ async def bulk_fill_war_attackers(body: BulkFillWarAttackersRequest, session: Se
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="No champion found")
 
     created = 0
-    for node in range(1, body.count + 1):
+    # Clamp outside Pydantic too: the loop bound must not come straight from the payload
+    row_count = min(body.count, MAX_BULK_ROWS)
+    for node in range(1, row_count + 1):
         existing = (
             await session.exec(
                 select(WarDefensePlacement).where(
@@ -433,7 +438,7 @@ class BulkCreateFightRecordsRequest(BaseModel):
     war_id: uuid.UUID
     alliance_id: uuid.UUID
     game_account_id: uuid.UUID
-    count: int = Field(ge=1, le=50)
+    count: int = Field(ge=1, le=MAX_BULK_ROWS)
     tier: int = 1
     season_id: uuid.UUID | None = None
 
@@ -452,7 +457,8 @@ async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session
 
     saga = await SagaService.get_roles_for_season(session, body.season_id) if body.season_id else {}
 
-    for node in range(1, body.count + 1):
+    row_count = min(body.count, MAX_BULK_ROWS)
+    for node in range(1, row_count + 1):
         # Alternate attacker/defender so champion filters return subsets
         if node % 2 == 1:
             atk, dfn = attacker_champ, defender_champ
