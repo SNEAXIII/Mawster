@@ -6,8 +6,8 @@ import pytest
 
 from src.enums.Roles import Roles
 from src.models import User
-from src.models.DefensePlacement import DefensePlacement
-from src.models.War import War
+from src.models.alliance.DefensePlacement import DefensePlacement
+from src.models.war.War import War
 from tests.integration.endpoints.setup.game_setup import (
     get_game_account,
     push_alliance_with_owner,

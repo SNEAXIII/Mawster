@@ -6,7 +6,7 @@ import pytest
 
 from src.enums.Roles import Roles
 from src.models import User
-from src.models.ChampionUser import ChampionUser
+from src.models.champion.ChampionUser import ChampionUser
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -595,7 +595,7 @@ class TestPlaceDefenderEdgeCases:
         # We need champion_user.game_account_id == the fake id we pass, so craft a
         # ChampionUser that points to a non-existent game account.
         fake_ga_id = uuid.uuid4()
-        from src.models.ChampionUser import ChampionUser as CU
+        from src.models.champion.ChampionUser import ChampionUser as CU
 
         orphan_cu = CU(
             id=uuid.uuid4(),

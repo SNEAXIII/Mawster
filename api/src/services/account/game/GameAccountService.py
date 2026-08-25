@@ -9,8 +9,8 @@ from src.Messages.game_account_messages import (
     GAME_ACCOUNT_IS_ALLIANCE_OWNER,
     max_game_accounts_reached,
 )
-from src.models.Alliance import Alliance
-from src.models.GameAccount import GameAccount
+from src.models.alliance.Alliance import Alliance
+from src.models.user.GameAccount import GameAccount
 from src.utils.db import SessionDep
 
 MAX_GAME_ACCOUNTS_PER_USER = 10

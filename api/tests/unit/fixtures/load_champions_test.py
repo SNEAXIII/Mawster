@@ -1,7 +1,7 @@
 from sqlmodel import Session, SQLModel, create_engine, select
 
 from src.fixtures.load_champions import _load_capabilities, _process_champion_item
-from src.models.Champion import Champion
+from src.models.champion.Champion import Champion
 
 CAPS = {
     "Hercules": {"is_ascendable": True, "has_prefight": True},

@@ -31,23 +31,23 @@ from src.enums.SeasonFormat import SeasonFormat
 from src.enums.SeasonStatus import SeasonStatus
 from src.fixtures import sync_engine
 from src.models import LoginLog, User
-from src.models.Alliance import Alliance
-from src.models.AllianceInvitation import AllianceInvitation
-from src.models.AllianceOfficer import AllianceOfficer
-from src.models.AllianceVisitor import AllianceVisitor
+from src.models.alliance.Alliance import Alliance
+from src.models.alliance.AllianceInvitation import AllianceInvitation
+from src.models.alliance.AllianceOfficer import AllianceOfficer
+from src.models.alliance.AllianceVisitor import AllianceVisitor
 from src.models.Base import utcnow
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.GameAccount import GameAccount
-from src.models.GameAccountMastery import GameAccountMastery
-from src.models.Mastery import Mastery
-from src.models.RequestedUpgrade import RequestedUpgrade
-from src.models.Season import Season
-from src.models.War import War, WarStatus
-from src.models.WarBan import WarBan
-from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.WarPrefightAttacker import WarPrefightAttacker
-from src.models.WarSynergyAttacker import WarSynergyAttacker
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.champion.RequestedUpgrade import RequestedUpgrade
+from src.models.user.GameAccount import GameAccount
+from src.models.user.GameAccountMastery import GameAccountMastery
+from src.models.user.Mastery import Mastery
+from src.models.war.Season import Season
+from src.models.war.War import War, WarStatus
+from src.models.war.WarBan import WarBan
+from src.models.war.WarDefensePlacement import WarDefensePlacement
+from src.models.war.WarPrefightAttacker import WarPrefightAttacker
+from src.models.war.WarSynergyAttacker import WarSynergyAttacker
 from src.utils.email_hash import hash_email
 
 fake = Faker(locale="en")

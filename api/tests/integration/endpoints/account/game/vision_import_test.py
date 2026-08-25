@@ -128,7 +128,7 @@ async def _fail_job(job_id: str) -> None:
     """Drive a job into FAILED through the real service, exactly as a worker
     failure would — rather than poking the row by hand."""
     from src.dto.account.game.dto_vision_result import VisionResultMessage
-    from src.models.VisionJob import VisionJob
+    from src.models.vision.VisionJob import VisionJob
     from src.services.account.game.VisionResultService import VisionResultService
     from tests.utils.utils_db import get_test_session
 
@@ -303,7 +303,7 @@ async def test_cancel_keeps_the_row_so_the_quota_still_counts_it(fake_infra):
 
     assert response.status_code == 204
 
-    from src.models.VisionImport import VisionImport, VisionImportStatus
+    from src.models.vision.VisionImport import VisionImport, VisionImportStatus
     from tests.utils.utils_db import get_test_session
 
     async for session in get_test_session():
@@ -428,7 +428,7 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
         VisionPredictionMessage,
         VisionResultMessage,
     )
-    from src.models.VisionJob import VisionJob
+    from src.models.vision.VisionJob import VisionJob
     from src.services.account.game.VisionResultService import VisionResultService
 
     async for session in get_test_session():
@@ -605,7 +605,7 @@ async def _drive_job_done_with_prediction(job_id: str) -> None:
         VisionPredictionMessage,
         VisionResultMessage,
     )
-    from src.models.VisionJob import VisionJob
+    from src.models.vision.VisionJob import VisionJob
     from src.services.account.game.VisionResultService import VisionResultService
 
     async for session in get_test_session():
@@ -825,7 +825,7 @@ async def test_current_excludes_an_import_whose_images_expired(fake_infra):
     nothing left to check the predictions against."""
     from datetime import datetime, timedelta
 
-    from src.models.VisionImport import VisionImport
+    from src.models.vision.VisionImport import VisionImport
     from src.security.secrets import SECRET
     from tests.utils.utils_db import get_test_session
 
@@ -912,7 +912,7 @@ async def test_current_returns_the_most_recent_candidate(fake_infra):
     the second row is inserted directly. The two rows get distinct timestamps,
     so this covers the created_at ordering only — the id tie-break is covered
     by the test below."""
-    from src.models.VisionImport import VisionImport
+    from src.models.vision.VisionImport import VisionImport
     from tests.utils.utils_db import get_test_session
 
     await push_one_user()
@@ -939,7 +939,7 @@ async def test_current_breaks_a_timestamp_tie_on_id(fake_infra):
     the same timestamp so only the secondary sort can decide."""
     from datetime import datetime
 
-    from src.models.VisionImport import VisionImport
+    from src.models.vision.VisionImport import VisionImport
     from tests.utils.utils_db import get_test_session
 
     await push_one_user()
@@ -1146,7 +1146,7 @@ async def test_current_ignores_an_import_stuck_mid_upload_past_the_url_ttl(fake_
     lock the game account out of importing for the whole retention window."""
     from datetime import datetime, timedelta
 
-    from src.models.VisionImport import VisionImport
+    from src.models.vision.VisionImport import VisionImport
     from src.services.account.game.VisionImportService import UPLOAD_URL_TTL_SECONDS
 
     storage, _ = fake_infra

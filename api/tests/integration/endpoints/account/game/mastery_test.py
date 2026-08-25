@@ -4,7 +4,7 @@ import pytest
 
 from main import app
 from src.enums.Roles import Roles
-from src.models.Mastery import Mastery
+from src.models.user.Mastery import Mastery
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,

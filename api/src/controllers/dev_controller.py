@@ -17,11 +17,11 @@ from src.dto.auth.dto_token import LoginResponse, TokenBody
 from src.dto.auth.dto_utilisateurs import UserProfile
 from src.enums.Roles import Roles
 from src.models import GameAccount, User
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.Mastery import Mastery
-from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.WarFightRecord import WarFightRecord
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.user.Mastery import Mastery
+from src.models.war.WarDefensePlacement import WarDefensePlacement
+from src.models.war.WarFightRecord import WarFightRecord
 from src.security.secrets import SECRET
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.account.UserService import UserService

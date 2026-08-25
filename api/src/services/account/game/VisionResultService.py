@@ -6,10 +6,10 @@ from starlette import status
 
 from src.dto.account.game.dto_vision_result import VisionResultMessage
 from src.Messages.vision_messages import BROKER_UNAVAILABLE, JOB_NEVER_QUEUED
-from src.models.VisionImport import VisionImport, VisionImportStatus
-from src.models.VisionJob import VisionJob, VisionJobStatus
-from src.models.VisionPrediction import VisionPrediction
-from src.models.VisionPredictionCandidate import VisionPredictionCandidate
+from src.models.vision.VisionImport import VisionImport, VisionImportStatus
+from src.models.vision.VisionJob import VisionJob, VisionJobStatus
+from src.models.vision.VisionPrediction import VisionPrediction
+from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 from src.security.secrets import SECRET
 from src.utils.db import SessionDep
 

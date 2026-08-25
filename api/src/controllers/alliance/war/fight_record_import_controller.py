@@ -8,7 +8,7 @@ from src.dto.alliance.war.dto_fight_record_import import (
     FightRecordImportRequest,
     FightRecordImportResponse,
 )
-from src.models.User import User
+from src.models.user.User import User
 from src.services.auth.AuthService import AuthService
 from src.services.knowledge.FightRecordImportService import FightRecordImportService
 from src.utils.db import SessionDep

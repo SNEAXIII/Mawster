@@ -16,11 +16,11 @@ from src.Messages.defense_messages import (
     node_exceeds_map,
     player_max_defenders_reached,
 )
-from src.models.Alliance import Alliance
-from src.models.AllianceOfficer import AllianceOfficer
-from src.models.ChampionUser import ChampionUser
-from src.models.DefensePlacement import DefensePlacement
-from src.models.GameAccount import GameAccount
+from src.models.alliance.Alliance import Alliance
+from src.models.alliance.AllianceOfficer import AllianceOfficer
+from src.models.alliance.DefensePlacement import DefensePlacement
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.user.GameAccount import GameAccount
 from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
 from src.services.alliance.war.WarFormatConfig import for_format

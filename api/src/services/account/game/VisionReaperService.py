@@ -5,8 +5,8 @@ from sqlmodel import select
 
 from src.messaging.publisher import VisionPublisher
 from src.messaging.topology import MAX_ATTEMPTS
-from src.models.VisionImport import VisionImport, VisionImportStatus
-from src.models.VisionJob import VisionJob, VisionJobStatus
+from src.models.vision.VisionImport import VisionImport, VisionImportStatus
+from src.models.vision.VisionJob import VisionJob, VisionJobStatus
 from src.security.secrets import SECRET
 from src.services.account.game.VisionImportService import UPLOAD_URL_TTL_SECONDS
 from src.storage.base import Storage, import_prefix

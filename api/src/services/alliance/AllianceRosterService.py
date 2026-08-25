@@ -4,9 +4,9 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.sql.expression import Select
 from sqlmodel import and_, or_, select
 
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.GameAccount import GameAccount
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.user.GameAccount import GameAccount
 from src.utils.db import SessionDep
 
 

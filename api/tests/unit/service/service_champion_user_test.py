@@ -5,9 +5,9 @@ import uuid
 import pytest
 from fastapi import HTTPException
 
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.GameAccount import GameAccount
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.user.GameAccount import GameAccount
 from src.services.account.game.ChampionUserService import VALID_RARITIES, ChampionUserService
 from tests.utils.utils_constant import GAME_PSEUDO, USER_ID
 

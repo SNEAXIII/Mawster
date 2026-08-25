@@ -3,7 +3,7 @@
 import pytest
 
 from src.enums.SeasonStatus import SeasonStatus
-from src.models.Season import Season
+from src.models.war.Season import Season
 from src.services.SeasonService import SeasonService
 from tests.utils.utils_db import load_objects
 

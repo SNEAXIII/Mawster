@@ -5,9 +5,9 @@ import uuid
 import pytest
 from fastapi import HTTPException
 
-from src.models.Alliance import Alliance
-from src.models.AllianceOfficer import AllianceOfficer
-from src.models.GameAccount import GameAccount
+from src.models.alliance.Alliance import Alliance
+from src.models.alliance.AllianceOfficer import AllianceOfficer
+from src.models.user.GameAccount import GameAccount
 from src.services.alliance.AllianceService import (
     MAX_MEMBERS_PER_ALLIANCE,
     MAX_MEMBERS_PER_GROUP,

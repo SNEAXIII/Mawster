@@ -2,7 +2,7 @@ import uuid
 
 import pytest
 
-from src.models.VisionJob import VisionJob, VisionJobStatus
+from src.models.vision.VisionJob import VisionJob, VisionJobStatus
 from src.services.account.game.VisionReaperService import VisionReaperService
 
 

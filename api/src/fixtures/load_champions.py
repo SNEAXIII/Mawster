@@ -26,7 +26,7 @@ from pathlib import Path
 
 from sqlmodel import Session, create_engine, select
 
-from src.models.Champion import Champion
+from src.models.champion.Champion import Champion
 from src.security.secrets import SECRET
 
 sync_engine = create_engine(

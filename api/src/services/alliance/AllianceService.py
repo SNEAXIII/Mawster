@@ -27,12 +27,12 @@ from src.Messages.alliance_messages import (
     alliance_max_members_reached,
     group_max_members_reached,
 )
-from src.models.Alliance import Alliance
-from src.models.AllianceInvitation import AllianceInvitation
-from src.models.AllianceOfficer import AllianceOfficer
-from src.models.AllianceVisitor import AllianceVisitor
-from src.models.GameAccount import GameAccount
-from src.models.User import User
+from src.models.alliance.Alliance import Alliance
+from src.models.alliance.AllianceInvitation import AllianceInvitation
+from src.models.alliance.AllianceOfficer import AllianceOfficer
+from src.models.alliance.AllianceVisitor import AllianceVisitor
+from src.models.user.GameAccount import GameAccount
+from src.models.user.User import User
 from src.services.alliance.AllianceVisitorService import AllianceVisitorService
 from src.services.alliance.UpgradeRequestService import UpgradeRequestService
 from src.services.alliance.war.DefensePlacementService import DefensePlacementService

@@ -20,10 +20,10 @@ from src.Messages.invitation_messages import (
     alliance_max_members_reached,
 )
 from src.Messages.visitor_messages import ALREADY_A_VISITOR, alliance_max_visitors_reached
-from src.models.Alliance import Alliance
-from src.models.AllianceInvitation import AllianceInvitation
+from src.models.alliance.Alliance import Alliance
+from src.models.alliance.AllianceInvitation import AllianceInvitation
 from src.models.Base import utcnow
-from src.models.GameAccount import GameAccount
+from src.models.user.GameAccount import GameAccount
 from src.services.alliance.AllianceVisitorService import (
     MAX_VISITORS_PER_ALLIANCE,
     AllianceVisitorService,
@@ -183,7 +183,7 @@ class AllianceInvitationService:
         cls, session: SessionDep, invitation_id: uuid.UUID, user_id: uuid.UUID
     ) -> AllianceInvitation:
         """Accept a pending invitation. MEMBER: join alliance. VISITOR: create AllianceVisitor record."""
-        from src.models.AllianceVisitor import AllianceVisitor as AV
+        from src.models.alliance.AllianceVisitor import AllianceVisitor as AV
 
         invitation = await session.get(AllianceInvitation, invitation_id)
         if invitation is None:

@@ -2,13 +2,13 @@
 
 import uuid
 
-from src.models.Alliance import Alliance
-from src.models.AllianceOfficer import AllianceOfficer
-from src.models.AllianceVisitor import AllianceVisitor
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.GameAccount import GameAccount
-from src.models.Mastery import Mastery
+from src.models.alliance.Alliance import Alliance
+from src.models.alliance.AllianceOfficer import AllianceOfficer
+from src.models.alliance.AllianceVisitor import AllianceVisitor
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.user.GameAccount import GameAccount
+from src.models.user.Mastery import Mastery
 from tests.utils.utils_constant import (
     ALLIANCE_NAME,
     ALLIANCE_TAG,

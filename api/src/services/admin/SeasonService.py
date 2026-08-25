@@ -12,7 +12,7 @@ from src.Messages.season_messages import (
     SEASON_NOT_FOUND,
     SEASON_NUMBER_ALREADY_EXISTS,
 )
-from src.models.Season import Season
+from src.models.war.Season import Season
 from src.utils.db import SessionDep
 
 

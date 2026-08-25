@@ -3,9 +3,9 @@ import uuid
 
 import pytest
 
-from src.models.VisionImport import VisionImport
-from src.models.VisionJob import VisionJob
-from src.models.VisionPrediction import VisionPrediction
+from src.models.vision.VisionImport import VisionImport
+from src.models.vision.VisionJob import VisionJob
+from src.models.vision.VisionPrediction import VisionPrediction
 from src.services.account.game.VisionDatasetService import ConfirmedRow, VisionDatasetService
 
 
