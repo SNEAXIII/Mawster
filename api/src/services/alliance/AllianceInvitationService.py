@@ -37,8 +37,13 @@ MAX_MEMBERS_PER_ALLIANCE = 30
 class AllianceInvitationService:
     @staticmethod
     async def _get_user_account_ids(session: SessionDep, user_id: uuid.UUID) -> set[uuid.UUID]:
-        """Get the set of game account IDs belonging to a user."""
-        result = await session.exec(select(GameAccount).where(GameAccount.user_id == user_id))
+        """Get the set of live game account IDs belonging to a user."""
+        result = await session.exec(
+            select(GameAccount).where(
+                GameAccount.user_id == user_id,
+                GameAccount.deleted_at.is_(None),
+            )
+        )
         return {acc.id for acc in result.all()}
 
     @staticmethod
@@ -74,7 +79,7 @@ class AllianceInvitationService:
         """Create an invitation for a game account to join (MEMBER) or visit (VISITOR) an alliance."""
         # Check the game account exists
         game_account = await session.get(GameAccount, game_account_id)
-        if game_account is None:
+        if game_account is None or game_account.deleted_at is not None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=GAME_ACCOUNT_NOT_FOUND,
