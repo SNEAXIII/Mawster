@@ -13,6 +13,15 @@ export interface GameAccount {
   created_at: string
 }
 
+export interface DeletedGameAccount {
+  id: string
+  game_pseudo: string
+  created_at: string
+  deleted_at: string
+  /** Instant past which the account can no longer be restored */
+  restorable_until: string
+}
+
 export interface AllianceMember {
   id: string
   user_id: string
@@ -113,6 +122,21 @@ export async function deleteGameAccount(id: string): Promise<void> {
     headers: jsonHeaders,
   })
   await throwOnError(response, 'Erreur lors de la suppression du compte de jeu')
+}
+
+export async function getDeletedGameAccounts(): Promise<DeletedGameAccount[]> {
+  const response = await debugFetch(`${PROXY}/game-accounts/deleted`, { headers: jsonHeaders })
+  await throwOnError(response, 'Erreur lors de la récupération des comptes supprimés')
+  return response.json()
+}
+
+export async function restoreGameAccount(id: string): Promise<GameAccount> {
+  const response = await debugFetch(`${PROXY}/game-accounts/${id}/restore`, {
+    method: 'POST',
+    headers: jsonHeaders,
+  })
+  await throwOnError(response, 'Erreur lors de la restauration du compte de jeu')
+  return response.json()
 }
 
 // ─── Alliances ───────────────────────────────────────────

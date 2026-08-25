@@ -117,7 +117,7 @@ describe('Game Accounts – UI', () => {
   // Delete
   // =========================================================================
 
-  it('deletes a game account with confirmation dialog', () => {
+  it('deletes a game account after typing its name in the confirmation dialog', () => {
     setupUser('ga-delete-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'ToDelete', true);
 
@@ -127,10 +127,11 @@ describe('Game Accounts – UI', () => {
       cy.getByCy('account-row-ToDelete').find('[data-cy="account-delete-btn"]').click({ force: true });
 
       cy.get('[role="alertdialog"]').should('be.visible');
-      cy.get('[role="alertdialog"]').contains('button', 'Delete').click();
+      cy.getByCy('confirm-text-input').type('ToDelete');
+      cy.getByCy('confirmation-dialog-confirm').click();
 
       cy.contains('Game account deleted successfully').should('be.visible');
-      cy.contains('ToDelete').should('not.exist');
+      cy.getByCy('account-row-ToDelete').should('not.exist');
     });
   });
 
