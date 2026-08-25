@@ -6,6 +6,7 @@ import pytest
 from fastapi import HTTPException
 
 from src.models.alliance.AllianceVisitor import AllianceVisitor
+from src.models.user.GameAccount import GameAccount
 from src.services.alliance.AllianceVisitorService import AllianceVisitorService
 
 # ---------------------------------------------------------------------------
@@ -246,7 +247,6 @@ class TestGetVisitedAlliances:
 
     @pytest.mark.asyncio
     async def test_returns_visited_alliances(self, mocker):
-        from src.models.user.GameAccount import GameAccount
 
         session = _mock_session(mocker)
         user_id = uuid.uuid4()

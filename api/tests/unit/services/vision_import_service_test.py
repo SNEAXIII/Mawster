@@ -251,9 +251,6 @@ async def test_create_import_marks_unpublished_jobs_failed_on_publish_error():
         )
     assert exc.value.status_code == 503
 
-    from src.models.vision.VisionImport import VisionImport
-    from src.models.vision.VisionJob import VisionJob
-
     imports = [obj for obj in session.added if isinstance(obj, VisionImport)]
     # session.add() may record the same object more than once (store loop, then
     # the failure handler); dedupe by identity/id since it's still one row.

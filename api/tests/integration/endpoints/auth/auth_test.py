@@ -18,6 +18,8 @@ from src.enums.Roles import Roles
 from src.models import User
 from src.models.Base import utcnow
 from src.security.secrets import SECRET
+from src.services.auth.DiscordAuthService import DiscordAuthService
+from src.services.auth.GoogleAuthService import GoogleAuthService
 from src.services.auth.JWTService import JWTService
 from src.utils.db import get_session
 from src.utils.email_hash import hash_email
@@ -230,7 +232,6 @@ class TestDiscordLogin:
     @pytest.mark.asyncio
     async def test_login_does_not_rehash_unverified_email_even_with_stale_pepper(self, monkeypatch):
         """A stale pepper version must never be the reason an unverified address gets hashed."""
-        from src.services.auth.DiscordAuthService import DiscordAuthService
 
         async def _fake_verify_unverified(cls, access_token):
             return {
@@ -323,7 +324,6 @@ class TestDiscordLogin:
     @pytest.mark.asyncio
     async def test_unverified_email_creates_separate_account_without_hash(self, monkeypatch):
         """An unverified address is never hashed, so it can never be used to reach another account."""
-        from src.services.auth.DiscordAuthService import DiscordAuthService
 
         async def _fake_verify(cls, access_token):
             return {
@@ -400,7 +400,6 @@ class TestDiscordLogin:
 class TestGoogleLogin:
     @pytest.mark.asyncio
     async def test_login_rehashes_email_when_pepper_version_outdated(self, monkeypatch):
-        from src.services.auth.GoogleAuthService import GoogleAuthService
 
         async def _fake_verify(cls, access_token):
             return {"sub": "google_123", "email": "google@example.com"}
@@ -424,7 +423,6 @@ class TestGoogleLogin:
     @pytest.mark.asyncio
     async def test_links_google_to_existing_discord_account(self, monkeypatch):
         """The mirror case: a Google login lands on the account created via Discord."""
-        from src.services.auth.GoogleAuthService import GoogleAuthService
 
         async def _fake_verify(cls, access_token):
             return {
@@ -455,7 +453,6 @@ class TestGoogleLogin:
     @pytest.mark.asyncio
     async def test_google_link_refused_when_provider_slot_taken(self, monkeypatch):
         """The matched account already has a different Google id — no link."""
-        from src.services.auth.GoogleAuthService import GoogleAuthService
 
         async def _fake_verify(cls, access_token):
             return {

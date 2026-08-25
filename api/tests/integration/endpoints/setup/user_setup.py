@@ -8,6 +8,10 @@ from tests.utils.utils_constant import (
     ADMIN_EMAIL,
     ADMIN_LOGIN,
     DISCORD_ID,
+    DISCORD_ID_2,
+    USER2_EMAIL,
+    USER2_ID,
+    USER2_LOGIN,
     USER_EMAIL,
     USER_ID,
     USER_LOGIN,
@@ -66,7 +70,6 @@ async def push_one_user():
 
 async def push_user2():
     """Insert the second standard test user (USER2_*)."""
-    from tests.utils.utils_constant import DISCORD_ID_2, USER2_EMAIL, USER2_ID, USER2_LOGIN
 
     user2 = get_generic_user(
         login=USER2_LOGIN, email=USER2_EMAIL, role=Roles.USER

@@ -271,8 +271,6 @@ async def test_retry_reverts_to_failed_when_publish_fails():
 
 @pytest.mark.asyncio
 async def test_succeed_persists_candidates(session):
-    from src.dto.account.game.dto_vision_result import VisionResultMessage
-    from src.services.account.game.VisionResultService import VisionResultService
 
     job = await _make_job(session)
     message = VisionResultMessage.model_validate(

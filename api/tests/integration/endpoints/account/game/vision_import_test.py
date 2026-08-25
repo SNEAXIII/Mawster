@@ -2,14 +2,24 @@
 
 import io
 import uuid
-from datetime import UTC
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from botocore.exceptions import ClientError
 
 from main import app
+from src.dto.account.game.dto_vision_result import (
+    VisionPredictionMessage,
+    VisionResultMessage,
+)
 from src.messaging import get_publisher
+from src.models.vision.VisionImport import VisionImport, VisionImportStatus
+from src.models.vision.VisionJob import VisionJob
+from src.security.secrets import SECRET
+from src.services.account.game.VisionImportService import UPLOAD_URL_TTL_SECONDS
+from src.services.account.game.VisionResultService import VisionResultService
 from src.storage import get_storage
+from src.storage.base import ObjectStat, screen_key, sprite_key
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import push_game_account
 from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2
@@ -40,7 +50,6 @@ class FakeStorage:
         return f"https://s3.test/{bucket}/{key}?exp={expires_in}"
 
     async def stat_object(self, bucket: str, key: str):
-        from src.storage.base import ObjectStat
 
         if key not in self.objects:
             return None
@@ -127,10 +136,6 @@ async def _get_import(headers, import_id) -> dict:
 async def _fail_job(job_id: str) -> None:
     """Drive a job into FAILED through the real service, exactly as a worker
     failure would — rather than poking the row by hand."""
-    from src.dto.account.game.dto_vision_result import VisionResultMessage
-    from src.models.vision.VisionJob import VisionJob
-    from src.services.account.game.VisionResultService import VisionResultService
-    from tests.utils.utils_db import get_test_session
 
     async for session in get_test_session():
         job = await session.get(VisionJob, uuid.UUID(job_id))
@@ -303,9 +308,6 @@ async def test_cancel_keeps_the_row_so_the_quota_still_counts_it(fake_infra):
 
     assert response.status_code == 204
 
-    from src.models.vision.VisionImport import VisionImport, VisionImportStatus
-    from tests.utils.utils_db import get_test_session
-
     async for session in get_test_session():
         row = await session.get(VisionImport, uuid.UUID(import_id))
         assert row is not None, "cancelling must NOT delete the row"
@@ -424,12 +426,6 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
     job_id = detail["jobs"][0]["id"]
 
     # Drive the job to done with one prediction through the real service.
-    from src.dto.account.game.dto_vision_result import (
-        VisionPredictionMessage,
-        VisionResultMessage,
-    )
-    from src.models.vision.VisionJob import VisionJob
-    from src.services.account.game.VisionResultService import VisionResultService
 
     async for session in get_test_session():
         job = await session.get(VisionJob, uuid.UUID(job_id))
@@ -543,8 +539,6 @@ async def test_sprite_bytes_for_owner(fake_infra):
     detail = await _get_import(headers, import_id)
     job_id = detail["jobs"][0]["id"]
 
-    from src.storage.base import sprite_key
-
     sheet = b"RIFF____WEBPVP8 sheet-bytes"
     storage.objects[sprite_key(uuid.UUID(import_id), uuid.UUID(job_id))] = sheet
 
@@ -601,12 +595,6 @@ async def test_sprite_missing_object_is_404(fake_infra):
 async def _drive_job_done_with_prediction(job_id: str) -> None:
     """Drive a job to DONE with one prediction through the real service, exactly
     as the vision worker would report a successful read."""
-    from src.dto.account.game.dto_vision_result import (
-        VisionPredictionMessage,
-        VisionResultMessage,
-    )
-    from src.models.vision.VisionJob import VisionJob
-    from src.services.account.game.VisionResultService import VisionResultService
 
     async for session in get_test_session():
         job = await session.get(VisionJob, uuid.UUID(job_id))
@@ -823,11 +811,6 @@ async def test_current_returns_204_when_nothing_awaits(fake_infra):
 async def test_current_excludes_an_import_whose_images_expired(fake_infra):
     """Past the retention window the screenshots and crops are gone, so there is
     nothing left to check the predictions against."""
-    from datetime import datetime, timedelta
-
-    from src.models.vision.VisionImport import VisionImport
-    from src.security.secrets import SECRET
-    from tests.utils.utils_db import get_test_session
 
     await push_one_user()
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -912,8 +895,6 @@ async def test_current_returns_the_most_recent_candidate(fake_infra):
     the second row is inserted directly. The two rows get distinct timestamps,
     so this covers the created_at ordering only — the id tie-break is covered
     by the test below."""
-    from src.models.vision.VisionImport import VisionImport
-    from tests.utils.utils_db import get_test_session
 
     await push_one_user()
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -937,10 +918,6 @@ async def test_current_breaks_a_timestamp_tie_on_id(fake_infra):
     """Identical created_at is possible under a bulk insert, and without the id
     tie-break the winner would vary between requests. Both rows are inserted with
     the same timestamp so only the secondary sort can decide."""
-    from datetime import datetime
-
-    from src.models.vision.VisionImport import VisionImport
-    from tests.utils.utils_db import get_test_session
 
     await push_one_user()
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -1046,7 +1023,6 @@ async def _post_commit(headers, import_id):
 
 
 def _screen_key(import_id: str, job_id: str) -> str:
-    from src.storage.base import screen_key
 
     return screen_key(uuid.UUID(import_id), uuid.UUID(job_id))
 
@@ -1144,10 +1120,6 @@ async def test_current_ignores_an_import_stuck_mid_upload_past_the_url_ttl(fake_
     import to RUNNING, but the second screenshot can never be uploaded now that
     the URLs are dead, so the import can never finish. Left blocking, it would
     lock the game account out of importing for the whole retention window."""
-    from datetime import datetime, timedelta
-
-    from src.models.vision.VisionImport import VisionImport
-    from src.services.account.game.VisionImportService import UPLOAD_URL_TTL_SECONDS
 
     storage, _ = fake_infra
     await push_one_user()
