@@ -41,8 +41,7 @@ class JWTService:
             expires_delta = timedelta(minutes=SECRET.ACCESS_TOKEN_EXPIRE_MINUTES)
         expire = datetime.now(tz=UTC) + expires_delta
         to_encode.update({"exp": expire})
-        encoded_jwt = jwt.encode(to_encode, SECRET.SECRET_KEY, algorithm=SECRET.ALGORITHM)
-        return encoded_jwt
+        return jwt.encode(to_encode, SECRET.SECRET_KEY, algorithm=SECRET.ALGORITHM)
 
     @classmethod
     def create_access_token(cls, user: User | None) -> str:

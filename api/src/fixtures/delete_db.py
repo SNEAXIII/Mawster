@@ -30,9 +30,8 @@ def delete(number_of_attempts=7):
         except Exception as e:
             print(f"❌ Attempt {attempt + 1} failed: {e}")
             sleep(attempt + 1)
-    raise pymysql.err.OperationalError(
-        f"Failed to delete database after {number_of_attempts} attempts"
-    )
+    msg = f"Failed to delete database after {number_of_attempts} attempts"
+    raise pymysql.err.OperationalError(msg)
 
 
 if __name__ == "__main__":

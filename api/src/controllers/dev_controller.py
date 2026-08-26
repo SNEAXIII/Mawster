@@ -114,8 +114,7 @@ async def read_users_me_with_token(body: TokenBody, session: SessionDep):
     """
     data = JWTService.decode_jwt(body.token)
     user_id = data.get("user_id")
-    user = await UserService.get_user_by_id_with_validity_check(session, user_id)
-    return user
+    return await UserService.get_user_by_id_with_validity_check(session, user_id)
 
 
 @dev_controller.get("/users", response_model=list[DevUser])

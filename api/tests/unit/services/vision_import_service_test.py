@@ -46,7 +46,8 @@ class FakeStorage:
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
         self._record("delete_prefix")
         if self.fail_delete:
-            raise ConnectionError("RustFS unreachable")
+            msg = "RustFS unreachable"
+            raise ConnectionError(msg)
         self.deleted_prefixes.append(prefix)
         self.puts = [(b, k, d) for (b, k, d) in self.puts if not k.startswith(prefix)]
 
@@ -88,7 +89,8 @@ class FakePublisher:
     async def publish_job(self, job_id, import_id, bucket, object_key) -> None:
         self._calls.append("publish")
         if self.fail_at is not None and len(self.published) == self.fail_at:
-            raise ConnectionError("broker unreachable")
+            msg = "broker unreachable"
+            raise ConnectionError(msg)
         self.published.append(job_id)
 
 

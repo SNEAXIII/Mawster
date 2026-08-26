@@ -91,7 +91,8 @@ class FakePublisher:
     async def publish_job(self, job_id, import_id, bucket, object_key) -> None:
         if self.fail_next:
             self.fail_next = False
-            raise RuntimeError("broker unavailable")
+            msg = "broker unavailable"
+            raise RuntimeError(msg)
         self.published.append(
             {
                 "job_id": job_id,

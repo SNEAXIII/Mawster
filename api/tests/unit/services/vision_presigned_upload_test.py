@@ -101,7 +101,8 @@ class FakePublisher:
 
     async def publish_job(self, job_id, import_id, bucket, object_key) -> None:
         if self.fails:
-            raise ConnectionError("broker down")
+            msg = "broker down"
+            raise ConnectionError(msg)
         self.published.append(job_id)
 
 

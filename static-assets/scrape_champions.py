@@ -26,7 +26,7 @@ _PYPROJECT = Path(__file__).resolve().parent / "pyproject.toml"
 
 
 def _load_resize_sizes() -> list[int]:
-    with open(_PYPROJECT, "rb") as f:
+    with _PYPROJECT.open("rb") as f:
         config = tomllib.load(f)
     return config.get("tool", {}).get("scraper", {}).get("resize_sizes", [])
 
@@ -69,8 +69,7 @@ def clean_image_url(url: str) -> str:
 def sanitize_filename(name: str) -> str:
     """Create a safe, lowercase filename from a champion name."""
     safe = re.sub(r"[^a-zA-Z0-9_\-]", "_", name.lower())
-    safe = re.sub(r"_+", "_", safe).strip("_")
-    return safe
+    return re.sub(r"_+", "_", safe).strip("_")
 
 
 def _save_clean_png(data: bytes, filepath: Path) -> None:
@@ -273,7 +272,7 @@ def download_champion_images(champions: list[dict], force: bool = False):
             time.sleep(0.1)
 
     JSON_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    with open(JSON_OUTPUT, "w", encoding="utf-8") as f:
+    with JSON_OUTPUT.open("w", encoding="utf-8") as f:
         json.dump(final_data, f, indent=2, ensure_ascii=False)
 
     print(f"\nDone! JSON saved to {JSON_OUTPUT}")
@@ -342,7 +341,7 @@ def action_resize(force: bool = False):
         print("No resize_sizes configured in [tool.scraper] of pyproject.toml.")
         return
 
-    with open(JSON_OUTPUT, encoding="utf-8") as f:
+    with JSON_OUTPUT.open(encoding="utf-8") as f:
         champions_data = json.load(f)
 
     for size in sizes:

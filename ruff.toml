@@ -51,6 +51,10 @@ select = [
     "SLOT", # flake8-slots — missing __slots__ on str/tuple subclasses
     "FLY", # flynt — a static `str.join` that reads better as an f-string
     "ICN", # flake8-import-conventions — the conventional `import x as y` aliases
+    "A", # flake8-builtins — a parameter shadowing a builtin
+    "RET", # flake8-return — assign-then-return, redundant else after return
+    "PTH", # flake8-use-pathlib — os.path calls that pathlib does better
+    "EM", # flake8-errmsg — exception messages built inline at the raise site
     "BLE001", # blind `except Exception`
     "TRY004", # raise TypeError for type checks
     "EXE001", # shebang on a non-executable file

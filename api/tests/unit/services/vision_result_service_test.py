@@ -34,7 +34,8 @@ class RaisingPublisher:
     """Simulates a broker blip: every publish attempt fails."""
 
     async def publish_job(self, job_id, import_id, bucket, object_key) -> None:
-        raise RuntimeError("broker unavailable")
+        msg = "broker unavailable"
+        raise RuntimeError(msg)
 
 
 class FakeSession:

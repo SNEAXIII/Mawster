@@ -85,7 +85,7 @@ def load_masteries(json_path: Path = DEFAULT_JSON_PATH):
 
     try:
         with Session(sync_engine) as session:
-            with open(json_path, encoding="utf-8") as f:
+            with json_path.open(encoding="utf-8") as f:
                 masteries_data = json.load(f)
 
             if not isinstance(masteries_data, list):

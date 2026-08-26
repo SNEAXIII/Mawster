@@ -19,13 +19,11 @@ war_admin_controller = APIRouter(
     "/wars/force-snapshot", status_code=200, response_model=ForceSnapshotResponse
 )
 async def force_snapshot_wars(session: SessionDep):
-    result = await FightRecordAdminService.force_snapshot_all(session)
-    return result
+    return await FightRecordAdminService.force_snapshot_all(session)
 
 
 @war_admin_controller.get(
     "/wars/snapshot-stats", status_code=200, response_model=list[AllianceSnapshotStatResponse]
 )
 async def get_snapshot_stats(session: SessionDep):
-    result = await FightRecordAdminService.get_snapshot_stats(session)
-    return result
+    return await FightRecordAdminService.get_snapshot_stats(session)

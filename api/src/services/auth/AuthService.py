@@ -21,8 +21,7 @@ class AuthService:
         if data.get("role") not in Roles.__members__.values():
             raise INSUFFISANT_ROLE_EXCEPTION
         user_id = data.get("user_id")
-        user = await UserService.get_user_by_id_with_validity_check(session, user_id)
-        return user
+        return await UserService.get_user_by_id_with_validity_check(session, user_id)
 
     @classmethod
     async def require_admin(

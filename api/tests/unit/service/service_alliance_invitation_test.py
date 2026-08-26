@@ -116,7 +116,7 @@ class TestCreateInvitation:
         )
 
         get_map = {ga_id: invited_acc, inviter_acc_id: inviter_acc}
-        session.get = mocker.AsyncMock(side_effect=lambda model, id: get_map.get(id))
+        session.get = mocker.AsyncMock(side_effect=lambda model, obj_id: get_map.get(obj_id))
 
         if account_exists and not already_in_alliance:
             count_mock = mocker.MagicMock()
@@ -273,7 +273,7 @@ class TestAcceptInvitation:
         )
 
         get_map = {inv_id: invitation, ga_id: game_account}
-        session.get = mocker.AsyncMock(side_effect=lambda model, id: get_map.get(id))
+        session.get = mocker.AsyncMock(side_effect=lambda model, obj_id: get_map.get(obj_id))
 
         accounts_mock = mocker.MagicMock()
         accounts_mock.all.return_value = [user_acc]

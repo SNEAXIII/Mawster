@@ -27,8 +27,10 @@ def json_path_from_argv(default: Path) -> Path:
     resolved = candidate.resolve()
 
     if not resolved.is_relative_to(ALLOWED_ROOT):
-        raise SystemExit(f"❌ Refusing to read {resolved}: outside {ALLOWED_ROOT}")
+        msg = f"❌ Refusing to read {resolved}: outside {ALLOWED_ROOT}"
+        raise SystemExit(msg)
     if not resolved.is_file():
-        raise SystemExit(f"❌ No such fixture file: {resolved}")
+        msg = f"❌ No such fixture file: {resolved}"
+        raise SystemExit(msg)
 
     return resolved

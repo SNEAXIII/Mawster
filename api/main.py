@@ -191,7 +191,8 @@ async def validation_exception_handler(request, exc):
     for error in exc.errors():
         location_list = error.get("loc")
         if not location_list:
-            raise ValueError(f"loc parameter is not correct:\n {error}")
+            msg = f"loc parameter is not correct:\n {error}"
+            raise ValueError(msg)
         location = location_list[-1]
         error_type = error.get("type").capitalize().replace("_", " ")
         error_message = error.get("msg").removeprefix(f"{error_type}, ")

@@ -41,7 +41,7 @@ class SeasonService:
 
     @classmethod
     async def create_season(
-        cls, session: SessionDep, number: int, format: SeasonFormat = SeasonFormat.regular
+        cls, session: SessionDep, number: int, season_format: SeasonFormat = SeasonFormat.regular
     ) -> Season:
         existing = await session.exec(select(Season).where(Season.number == number))
         if existing.first() is not None:
@@ -54,7 +54,7 @@ class SeasonService:
                 status_code=http_status.HTTP_409_CONFLICT,
                 detail=SEASON_CURRENT_EXISTS,
             )
-        season = Season(number=number, format=format)
+        season = Season(number=number, format=season_format)
         session.add(season)
         await session.commit()
         await session.refresh(season)

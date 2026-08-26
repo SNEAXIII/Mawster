@@ -62,13 +62,12 @@ async def create_game_account(
 ):
     """Create a new game account for the current user.
     Only a game pseudo is required. The ID is auto-generated."""
-    result = await GameAccountService.create_game_account(
+    return await GameAccountService.create_game_account(
         session=session,
         user_id=current_user.id,
         game_pseudo=body.game_pseudo,
         is_primary=body.is_primary,
     )
-    return result
 
 
 @game_account_controller.get(
@@ -141,13 +140,12 @@ async def update_game_account(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
     if game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_GAME_ACCOUNT)
-    result = await GameAccountService.update_game_account(
+    return await GameAccountService.update_game_account(
         session=session,
         game_account=game_account,
         game_pseudo=body.game_pseudo,
         is_primary=body.is_primary,
     )
-    return result
 
 
 @game_account_controller.delete(

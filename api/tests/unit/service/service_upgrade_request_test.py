@@ -44,7 +44,7 @@ def _make_champion_user(
 ) -> ChampionUser:
     stars = int(rarity.split("r")[0])
     rank = int(rarity.split("r")[1])
-    cu = ChampionUser(
+    return ChampionUser(
         id=CHAMPION_USER_ID,
         game_account_id=game_account_id,
         champion_id=champion_id,
@@ -52,7 +52,6 @@ def _make_champion_user(
         rank=rank,
         signature=0,
     )
-    return cu
 
 
 def _make_game_account(

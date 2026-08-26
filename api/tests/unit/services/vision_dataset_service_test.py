@@ -32,8 +32,8 @@ class FakeSession:
     def add(self, obj) -> None:
         self.added.append(obj)
 
-    async def get(self, model, id):
-        return self._store.get((model, id))
+    async def get(self, model, obj_id):
+        return self._store.get((model, obj_id))
 
     async def commit(self):
         pass
