@@ -7,6 +7,7 @@ from starlette import status
 from src.dto.account.game.dto_game_account import GameAccountResponse
 from src.dto.alliance.dto_alliance import (
     AllianceCreateRequest,
+    AllianceDeleteRequest,
     AllianceMyRolesResponse,
     AllianceResponse,
     AllianceUpdateEloRequest,
@@ -188,12 +189,16 @@ async def update_alliance_tier(
 @alliance_core_controller.delete("/{alliance_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_alliance(
     alliance_id: uuid.UUID,
+    body: AllianceDeleteRequest,
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Delete an alliance. Only the owner can delete."""
+    """Soft-delete an alliance. Owner only, and only while they are its last member.
+
+    The caller must retype the alliance name in `body.name` to confirm.
+    """
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     await AllianceService.require_owner(session, alliance_id, current_user.id)
-    await AllianceService.delete_alliance(session, alliance)
+    await AllianceService.delete_alliance(session, alliance, body.name)

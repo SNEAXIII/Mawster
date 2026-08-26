@@ -16,6 +16,8 @@ GAME_ACCOUNT_MUST_BE_MEMBER_TO_BECOME_OFFICER = (
 GAME_ACCOUNT_ALREADY_OFFICER = "Game account is already an officer of this alliance"
 GAME_ACCOUNT_NOT_OFFICER = "This game account is not an officer of this alliance"
 INVALID_GROUP_VALUE = "Group must be 1, 2, 3 or null"
+ALLIANCE_NOT_EMPTY = "The alliance still has other members: remove them all before deleting it"
+ALLIANCE_NAME_CONFIRMATION_MISMATCH = "The confirmation name does not match the alliance name"
 
 
 def alliance_max_members_reached(max_members: int) -> str:

@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
@@ -27,6 +28,9 @@ class Alliance(UUIDBase, TimestampMixin, table=True):
     )
     elo: int = Field(default=0)
     tier: int = Field(default=20)
+    # Soft delete: a disbanded alliance keeps its rows (wars, placements, stats)
+    # so past seasons stay readable — same contract as User.deleted_at.
+    deleted_at: datetime | None = Field(default=None)
 
     # Relations
     owner: "GameAccount" = Relationship(

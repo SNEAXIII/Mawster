@@ -368,7 +368,13 @@ const fr: Translations = {
       noGroup: 'Aucun groupe',
       groupSetSuccess: '{pseudo} déplacé dans le {group} !',
       groupSetError: 'Erreur lors du changement de groupe',
+      deleteAlliance: "Supprimer l'alliance",
       deleteConfirm: 'Êtes-vous sûr de vouloir supprimer cette alliance ?',
+      deleteConfirmTitle: "Supprimer l'alliance",
+      deleteConfirmDesc:
+        'Cela dissout {name}. Les guerres et statistiques passées sont conservées, mais l\'alliance disparaît pour tout le monde. Saisissez {name} pour confirmer.',
+      deleteOnlyWhenAlone:
+        'Vous devez être le dernier membre : retirez tous les autres membres avant de supprimer l\'alliance.',
       createSuccess: 'Alliance créée avec succès !',
       createError: "Erreur lors de la création de l'alliance",
       deleteSuccess: 'Alliance supprimée avec succès !',

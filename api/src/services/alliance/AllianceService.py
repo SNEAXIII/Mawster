@@ -9,6 +9,8 @@ from starlette import status
 from src.enums.InvitationStatus import InvitationStatus
 from src.enums.InvitationType import InvitationType
 from src.Messages.alliance_messages import (
+    ALLIANCE_NAME_CONFIRMATION_MISMATCH,
+    ALLIANCE_NOT_EMPTY,
     ALLIANCE_NOT_FOUND,
     CANNOT_REMOVE_OWNER,
     GAME_ACCOUNT_ALREADY_IN_ALLIANCE,
@@ -31,6 +33,7 @@ from src.models.alliance.Alliance import Alliance
 from src.models.alliance.AllianceInvitation import AllianceInvitation
 from src.models.alliance.AllianceOfficer import AllianceOfficer
 from src.models.alliance.AllianceVisitor import AllianceVisitor
+from src.models.Base import utcnow
 from src.models.user.GameAccount import GameAccount
 from src.models.user.User import User
 from src.services.alliance.AllianceVisitorService import AllianceVisitorService
@@ -132,10 +135,15 @@ class AllianceService:
     async def _load_alliance_with_relations(
         cls, session: SessionDep, alliance_id: uuid.UUID
     ) -> Alliance | None:
-        """Load an alliance with owner, members and officers eagerly loaded."""
+        """Load an alliance with owner, members and officers eagerly loaded.
+
+        A soft-deleted alliance is never returned, so every caller that goes
+        through this loader 404s on a disbanded alliance without its own check.
+        """
         sql = (
             select(Alliance)
             .where(Alliance.id == alliance_id)
+            .where(Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
             .options(
                 selectinload(Alliance.owner),  # type: ignore[arg-type]
                 selectinload(Alliance.members),  # type: ignore[arg-type]
@@ -426,10 +434,14 @@ class AllianceService:
 
     @classmethod
     async def get_all_alliances(cls, session: SessionDep) -> list[Alliance]:
-        sql = select(Alliance).options(
-            selectinload(Alliance.owner),  # type: ignore[arg-type]
-            selectinload(Alliance.members),  # type: ignore[arg-type]
-            selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
+        sql = (
+            select(Alliance)
+            .where(Alliance.deleted_at.is_(None))
+            .options(  # type: ignore[union-attr]
+                selectinload(Alliance.owner),  # type: ignore[arg-type]
+                selectinload(Alliance.members),  # type: ignore[arg-type]
+                selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
+            )
         )
         result = await session.exec(sql)
         return result.all()
@@ -459,6 +471,7 @@ class AllianceService:
         sql = (
             select(Alliance)
             .where(Alliance.id.in_(alliance_ids))  # type: ignore[union-attr]
+            .where(Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
             .options(
                 selectinload(Alliance.owner),  # type: ignore[arg-type]
                 selectinload(Alliance.members),  # type: ignore[arg-type]
@@ -503,6 +516,7 @@ class AllianceService:
         sql = (
             select(Alliance)
             .where(Alliance.id.in_(alliance_ids))  # type: ignore[union-attr]
+            .where(Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
             .options(
                 selectinload(Alliance.officers),  # type: ignore[arg-type]
             )
@@ -584,8 +598,46 @@ class AllianceService:
         return await cls._load_alliance_with_relations(session, alliance.id)
 
     @classmethod
-    async def delete_alliance(cls, session: SessionDep, alliance: Alliance) -> None:
-        # Remove all members from the alliance first
+    def _assert_delete_confirmation(cls, alliance: Alliance, confirmation_name: str) -> None:
+        """Raise 400 unless the caller retyped the alliance name exactly."""
+        if confirmation_name.strip() != alliance.name:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ALLIANCE_NAME_CONFIRMATION_MISMATCH,
+            )
+
+    @classmethod
+    async def _assert_owner_is_last_member(cls, session: SessionDep, alliance: Alliance) -> None:
+        """Raise 409 if anyone but the owner is still a member of the alliance."""
+        others = await session.exec(
+            select(func.count())
+            .select_from(GameAccount)
+            .where(GameAccount.alliance_id == alliance.id)
+            .where(GameAccount.id != alliance.owner_id)
+        )
+        if (others.one() or 0) > 0:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=ALLIANCE_NOT_EMPTY,
+            )
+
+    @classmethod
+    async def delete_alliance(
+        cls, session: SessionDep, alliance: Alliance, confirmation_name: str
+    ) -> None:
+        """Soft-delete an alliance the owner is alone in.
+
+        The row itself survives — wars, defense placements and season statistics
+        keep pointing at it, so past seasons stay readable. What goes away is the
+        live membership: the owner is freed to create or join another alliance,
+        and the alliance disappears from every listing (see the ``deleted_at``
+        filter in the loaders above).
+        """
+        cls._assert_delete_confirmation(alliance, confirmation_name)
+        await cls._assert_owner_is_last_member(session, alliance)
+
+        # Free the owner: their game account must leave so it can create or join
+        # another alliance (see `_assert_not_in_alliance`).
         members_result = await session.exec(
             select(GameAccount).where(GameAccount.alliance_id == alliance.id)
         )
@@ -601,7 +653,28 @@ class AllianceService:
         for off in officers_result.all():
             await session.delete(off)
 
-        await session.delete(alliance)
+        # Visitors are not members, so an alliance can be "owner only" and still
+        # have spectators — drop their access along with the alliance.
+        visitors_result = await session.exec(
+            select(AllianceVisitor).where(AllianceVisitor.alliance_id == alliance.id)
+        )
+        for visitor in visitors_result.all():
+            await session.delete(visitor)
+
+        # Pending invitations would otherwise point at an alliance nobody can see.
+        invitations_result = await session.exec(
+            select(AllianceInvitation)
+            .where(AllianceInvitation.alliance_id == alliance.id)
+            .where(AllianceInvitation.status == InvitationStatus.PENDING)
+        )
+        now = utcnow()
+        for invitation in invitations_result.all():
+            invitation.status = InvitationStatus.DECLINED
+            invitation.responded_at = now
+            session.add(invitation)
+
+        alliance.deleted_at = now
+        session.add(alliance)
         await session.commit()
 
     # ---- Member management ----

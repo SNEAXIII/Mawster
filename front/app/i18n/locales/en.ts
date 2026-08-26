@@ -364,7 +364,13 @@ const en = {
       noGroup: 'No group',
       groupSetSuccess: '{pseudo} moved to {group}!',
       groupSetError: 'Failed to update group',
+      deleteAlliance: 'Delete alliance',
       deleteConfirm: 'Are you sure you want to delete this alliance?',
+      deleteConfirmTitle: 'Delete alliance',
+      deleteConfirmDesc:
+        'This will disband {name}. Wars and past statistics are kept, but the alliance disappears for everyone. Type {name} to confirm.',
+      deleteOnlyWhenAlone:
+        'You must be the last member left: remove every other member before deleting the alliance.',
       createSuccess: 'Alliance created successfully!',
       createError: 'Failed to create alliance',
       deleteSuccess: 'Alliance deleted successfully!',

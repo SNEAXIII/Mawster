@@ -16,6 +16,7 @@ import UsernameEnriched from '@/components/username-enriched'
 import { patchAllianceElo, patchAllianceTier } from '@/app/services/game'
 import { toast } from 'sonner'
 import AllianceVisitorsSection from './alliance-visitors-section'
+import AllianceDeleteButton from './alliance-delete-button'
 import AllianceLeaveVisitButton from './alliance-leave-visit-button'
 import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
 
@@ -123,9 +124,9 @@ export default function AllianceCard({
     <Card data-cy={`alliance-card-${alliance.name}`}>
       <CardContent className='py-3 sm:py-4 px-3 sm:px-6 flex flex-col gap-3 sm:gap-4'>
         {/* Alliance header */}
-        <div className='flex items-center gap-3'>
-          <Shield className='size-5 text-primary' />
-          <div>
+        <div className='flex items-start gap-3'>
+          <Shield className='size-5 text-primary mt-0.5' />
+          <div className='flex-1'>
             <div className='flex items-center gap-2 flex-wrap'>
               <p
                 className='font-medium text-foreground'
@@ -268,14 +269,19 @@ export default function AllianceCard({
               </span>
             </div>
           </div>
-          {alliance.isVisitor && (
-            <div className='ml-auto self-start'>
+
+          <div className='self-start flex items-center gap-1'>
+            {alliance.isVisitor && (
               <AllianceLeaveVisitButton
                 allianceId={alliance.id}
                 onRefresh={onRefresh}
               />
-            </div>
-          )}
+            )}
+            <AllianceDeleteButton
+              alliance={alliance}
+              onDeleted={onRefresh}
+            />
+          </div>
         </div>
 
         {/* Pending invitations section — above members, collapsible (visible to officers/owners) */}
