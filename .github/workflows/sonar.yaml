@@ -50,7 +50,7 @@ jobs:
         # reference branch to carry coverage too. Coverage is scoped to api/src by
         # [tool.coverage.run] in pyproject.toml; the report lands in api/coverage.xml,
         # where sonar-project.properties expects it.
-        run: uv run --no-sync pytest tests --cov --cov-report=xml:coverage.xml -q -n auto --dist=loadscope
+        run: uv run --no-sync --no-build pytest tests --cov --cov-report=xml:coverage.xml -q -n auto --dist=loadscope
       - name: SonarQube Cloud scan
         uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e # v8.2.0
         env:
