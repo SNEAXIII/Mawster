@@ -19,6 +19,10 @@ logger = logging.getLogger(__name__)
 Session = sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
 
 RECONNECT_DELAY_SECONDS = 5
+# A broker that is simply down keeps refusing forever. Repeating the same
+# warning every RECONNECT_DELAY_SECONDS drowns the logs, so only one attempt in
+# this many is logged loudly (~1 minute apart); the rest go to debug.
+RECONNECT_LOG_EVERY_N_ATTEMPTS = 12
 
 
 class VisionResultConsumer:
@@ -41,6 +45,7 @@ class VisionResultConsumer:
         self._task = asyncio.create_task(self._run())
 
     async def _run(self) -> None:
+        unreachable_attempts = 0
         while True:
             try:
                 self._connection = await connect_robust(SECRET.RABBITMQ_URL)
@@ -51,12 +56,48 @@ class VisionResultConsumer:
                 await queue.consume(self._on_message)
                 logger.info("vision consumer listening on %s", QUEUE_RESULTS)
                 return
+            except OSError as error:
+                # Broker not reachable: refused, DNS failure, handshake timeout.
+                # aiormq's AMQPConnectionError is an OSError too. This is the
+                # normal state while RabbitMQ is down or still booting, and the
+                # traceback says nothing the one-liner doesn't - so keep it terse
+                # and throttled rather than dumping a stack every few seconds.
+                unreachable_attempts += 1
+                self._log_unreachable(unreachable_attempts, error)
             except Exception:
+                # Anything else (bad topology, auth rejected, a bug here) is not
+                # routine. Keep the traceback: it is the only clue available.
+                unreachable_attempts = 0
                 logger.exception(
-                    "vision consumer could not connect, retrying in %ss",
+                    "vision consumer could not start, retrying in %ss",
                     RECONNECT_DELAY_SECONDS,
                 )
-                await asyncio.sleep(RECONNECT_DELAY_SECONDS)
+            # Whatever failed may have left a half-open connection behind; the
+            # next iteration overwrites self._connection, so drop it now.
+            await self._discard_connection()
+            await asyncio.sleep(RECONNECT_DELAY_SECONDS)
+
+    @staticmethod
+    def _log_unreachable(attempt: int, error: OSError) -> None:
+        if attempt == 1 or attempt % RECONNECT_LOG_EVERY_N_ATTEMPTS == 0:
+            logger.warning(
+                "vision consumer cannot reach RabbitMQ (%s), still retrying every %ss (attempt %s)",
+                error,
+                RECONNECT_DELAY_SECONDS,
+                attempt,
+            )
+        else:
+            logger.debug("vision consumer cannot reach RabbitMQ (%s)", error)
+
+    async def _discard_connection(self) -> None:
+        if self._connection is None:
+            return
+        connection, self._connection = self._connection, None
+        try:
+            await connection.close()
+        except Exception:  # noqa: BLE001 - a broken socket closes badly in
+            # driver-specific ways, and we are already on the failure path.
+            logger.debug("vision consumer failed to close a stale connection")
 
     async def _on_message(self, message: AbstractIncomingMessage) -> None:
         try:
@@ -103,6 +144,4 @@ class VisionResultConsumer:
         if self._task is not None:
             self._task.cancel()
             self._task = None
-        if self._connection is not None:
-            await self._connection.close()
-            self._connection = None
+        await self._discard_connection()
