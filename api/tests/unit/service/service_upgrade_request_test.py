@@ -242,8 +242,10 @@ class TestCancelUpgradeRequest:
         session = _mock_session(mocker)
         session.get.return_value = None
 
+        missing_request_id = uuid.uuid4()
+
         with pytest.raises(HTTPException) as exc:
-            await UpgradeRequestService.cancel_upgrade_request(session, uuid.uuid4())
+            await UpgradeRequestService.cancel_upgrade_request(session, missing_request_id)
         assert exc.value.status_code == 404
 
     @pytest.mark.asyncio

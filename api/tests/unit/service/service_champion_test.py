@@ -64,8 +64,10 @@ class TestGetChampionById:
         session = _mock_session(mocker)
         session.get.return_value = None
 
+        missing_champion_id = uuid.uuid4()
+
         with pytest.raises(HTTPException) as exc:
-            await ChampionService.get_champion_by_id(session, uuid.uuid4())
+            await ChampionService.get_champion_by_id(session, missing_champion_id)
         assert exc.value.status_code == 404
 
 
@@ -256,8 +258,10 @@ class TestUpdateAlias:
             side_effect=HTTPException(status_code=404, detail="Not found"),
         )
 
+        missing_champion_id = uuid.uuid4()
+
         with pytest.raises(HTTPException) as exc:
-            await ChampionService.update_alias(session, uuid.uuid4(), "alias")
+            await ChampionService.update_alias(session, missing_champion_id, "alias")
         assert exc.value.status_code == 404
 
 
@@ -417,8 +421,10 @@ class TestDeleteChampion:
             side_effect=HTTPException(status_code=404, detail="Not found"),
         )
 
+        missing_champion_id = uuid.uuid4()
+
         with pytest.raises(HTTPException) as exc:
-            await ChampionService.delete_champion(session, uuid.uuid4())
+            await ChampionService.delete_champion(session, missing_champion_id)
         assert exc.value.status_code == 404
 
 

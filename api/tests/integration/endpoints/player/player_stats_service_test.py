@@ -212,8 +212,10 @@ class TestGetPlayerSeasons:
         owner_user = get_generic_user(is_base_id=True)
 
         async for session in get_test_session():
+            missing_account_id = uuid.uuid4()
+
             with pytest.raises(HTTPException) as exc:
-                await PlayerStatsService.get_player_seasons(session, owner_user, uuid.uuid4())
+                await PlayerStatsService.get_player_seasons(session, owner_user, missing_account_id)
             assert exc.value.status_code == 404
 
 

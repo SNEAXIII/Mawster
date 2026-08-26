@@ -51,55 +51,67 @@ class TestWarPlacementCreateRequest:
         assert req.node_number == 50
 
     def test_node_number_too_low_raises(self):
+        champion_id = uuid.uuid4()
+
         with pytest.raises(ValidationError):
             WarPlacementCreateRequest(
                 node_number=0,
-                champion_id=uuid.uuid4(),
+                champion_id=champion_id,
                 stars=7,
                 rank=3,
             )
 
     def test_node_number_too_high_raises(self):
+        champion_id = uuid.uuid4()
+
         with pytest.raises(ValidationError):
             WarPlacementCreateRequest(
                 node_number=56,
-                champion_id=uuid.uuid4(),
+                champion_id=champion_id,
                 stars=7,
                 rank=3,
             )
 
     def test_stars_below_6_raises(self):
+        champion_id = uuid.uuid4()
+
         with pytest.raises(ValidationError):
             WarPlacementCreateRequest(
                 node_number=10,
-                champion_id=uuid.uuid4(),
+                champion_id=champion_id,
                 stars=5,
                 rank=3,
             )
 
     def test_stars_above_7_raises(self):
+        champion_id = uuid.uuid4()
+
         with pytest.raises(ValidationError):
             WarPlacementCreateRequest(
                 node_number=10,
-                champion_id=uuid.uuid4(),
+                champion_id=champion_id,
                 stars=8,
                 rank=3,
             )
 
     def test_rank_below_1_raises(self):
+        champion_id = uuid.uuid4()
+
         with pytest.raises(ValidationError):
             WarPlacementCreateRequest(
                 node_number=10,
-                champion_id=uuid.uuid4(),
+                champion_id=champion_id,
                 stars=7,
                 rank=0,
             )
 
     def test_rank_above_6_raises(self):
+        champion_id = uuid.uuid4()
+
         with pytest.raises(ValidationError):
             WarPlacementCreateRequest(
                 node_number=10,
-                champion_id=uuid.uuid4(),
+                champion_id=champion_id,
                 stars=7,
                 rank=7,
             )
@@ -124,10 +136,12 @@ class TestWarPlacementCreateRequest:
         assert req.ascension == 2
 
     def test_ascension_above_2_raises(self):
+        champion_id = uuid.uuid4()
+
         with pytest.raises(ValidationError):
             WarPlacementCreateRequest(
                 node_number=10,
-                champion_id=uuid.uuid4(),
+                champion_id=champion_id,
                 stars=7,
                 rank=3,
                 ascension=3,
@@ -147,12 +161,16 @@ class TestWarSynergyCreateRequest:
         assert req.target_champion_user_id is not None
 
     def test_missing_champion_user_id_raises(self):
+        target_champion_user_id = uuid.uuid4()
+
         with pytest.raises(ValidationError):
-            WarSynergyCreateRequest(target_champion_user_id=uuid.uuid4())  # type: ignore[call-arg]
+            WarSynergyCreateRequest(target_champion_user_id=target_champion_user_id)  # type: ignore[call-arg]
 
     def test_missing_target_raises(self):
+        champion_user_id = uuid.uuid4()
+
         with pytest.raises(ValidationError):
-            WarSynergyCreateRequest(champion_user_id=uuid.uuid4())  # type: ignore[call-arg]
+            WarSynergyCreateRequest(champion_user_id=champion_user_id)  # type: ignore[call-arg]
 
 
 # ─── Slot counting logic (pure set union) ─────────────────

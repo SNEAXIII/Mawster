@@ -405,8 +405,10 @@ async def test_get_user_by_id_with_validity_check_user_not_found(mocker):
     """Valid UUID but no user in DB hits line 72."""
     mock_session = session_mock(mocker)
     get_user_mock(mocker, None)
+    user_id = str(USER_ID)
+
     with pytest.raises(UserLoginError) as exc:
-        await UserService.get_user_by_id_with_validity_check(mock_session, str(USER_ID))
+        await UserService.get_user_by_id_with_validity_check(mock_session, user_id)
     assert exc.value.detail == str(USER_DOESNT_EXISTS)
 
 
@@ -415,8 +417,10 @@ async def test_get_user_by_id_with_validity_check_deleted(mocker):
     """Deleted user hits line 74."""
     mock_session = session_mock(mocker)
     get_user_mock(mocker, User(login=LOGIN, deleted_at=utcnow()))
+    user_id = str(USER_ID)
+
     with pytest.raises(UserLoginError) as exc:
-        await UserService.get_user_by_id_with_validity_check(mock_session, str(USER_ID))
+        await UserService.get_user_by_id_with_validity_check(mock_session, user_id)
     assert exc.value.detail == str(USER_IS_DELETED)
 
 
@@ -426,8 +430,10 @@ async def test_get_user_by_id_with_validity_check_disabled(mocker):
     mock_session = session_mock(mocker)
     fake_user = User(login=LOGIN, disabled_at=utcnow())
     get_user_mock(mocker, fake_user)
+    user_id = str(USER_ID)
+
     with pytest.raises(UserLoginError) as exc:
-        await UserService.get_user_by_id_with_validity_check(mock_session, str(USER_ID))
+        await UserService.get_user_by_id_with_validity_check(mock_session, user_id)
     assert exc.value.detail == str(USER_IS_DISABLED)
 
 

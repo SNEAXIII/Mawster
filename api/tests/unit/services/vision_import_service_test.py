@@ -107,12 +107,17 @@ def _upload(
 
 @pytest.mark.asyncio
 async def test_create_import_rejects_empty_file_list():
+    session = FakeSession([])
+    storage = FakeStorage()
+    publisher = AsyncMock()
+    game_account_id = uuid.uuid4()
+
     with pytest.raises(HTTPException) as exc:
         await VisionImportService.create_import(
-            session=FakeSession([]),
-            storage=FakeStorage(),
-            publisher=AsyncMock(),
-            game_account_id=uuid.uuid4(),
+            session=session,
+            storage=storage,
+            publisher=publisher,
+            game_account_id=game_account_id,
             files=[],
             share_dataset=False,
         )
@@ -122,12 +127,17 @@ async def test_create_import_rejects_empty_file_list():
 @pytest.mark.asyncio
 async def test_create_import_rejects_too_many_files():
     files = [_upload(f"s{i}.png") for i in range(MAX_SCREENS_PER_IMPORT + 1)]
+    session = FakeSession([])
+    storage = FakeStorage()
+    publisher = AsyncMock()
+    game_account_id = uuid.uuid4()
+
     with pytest.raises(HTTPException) as exc:
         await VisionImportService.create_import(
-            session=FakeSession([]),
-            storage=FakeStorage(),
-            publisher=AsyncMock(),
-            game_account_id=uuid.uuid4(),
+            session=session,
+            storage=storage,
+            publisher=publisher,
+            game_account_id=game_account_id,
             files=files,
             share_dataset=False,
         )
@@ -137,12 +147,17 @@ async def test_create_import_rejects_too_many_files():
 @pytest.mark.asyncio
 async def test_create_import_rejects_oversized_screen():
     oversized = _upload("big.png", content=b"0" * (MAX_SCREEN_BYTES + 1))
+    session = FakeSession([])
+    storage = FakeStorage()
+    publisher = AsyncMock()
+    game_account_id = uuid.uuid4()
+
     with pytest.raises(HTTPException) as exc:
         await VisionImportService.create_import(
-            session=FakeSession([]),
-            storage=FakeStorage(),
-            publisher=AsyncMock(),
-            game_account_id=uuid.uuid4(),
+            session=session,
+            storage=storage,
+            publisher=publisher,
+            game_account_id=game_account_id,
             files=[oversized],
             share_dataset=False,
         )
@@ -152,12 +167,17 @@ async def test_create_import_rejects_oversized_screen():
 @pytest.mark.asyncio
 async def test_create_import_rejects_unsupported_content_type():
     pdf = _upload("roster.pdf", content_type="application/pdf", content=b"%PDF")
+    session = FakeSession([])
+    storage = FakeStorage()
+    publisher = AsyncMock()
+    game_account_id = uuid.uuid4()
+
     with pytest.raises(HTTPException) as exc:
         await VisionImportService.create_import(
-            session=FakeSession([]),
-            storage=FakeStorage(),
-            publisher=AsyncMock(),
-            game_account_id=uuid.uuid4(),
+            session=session,
+            storage=storage,
+            publisher=publisher,
+            game_account_id=game_account_id,
             files=[pdf],
             share_dataset=False,
         )
@@ -171,12 +191,16 @@ async def test_create_import_rejects_unsupported_content_type_before_touching_st
     opened."""
     files = [_upload("ok.png"), _upload("roster.pdf", content_type="application/pdf")]
     storage = FakeStorage()
+    session = FakeSession([])
+    publisher = AsyncMock()
+    game_account_id = uuid.uuid4()
+
     with pytest.raises(HTTPException):
         await VisionImportService.create_import(
-            session=FakeSession([]),
+            session=session,
             storage=storage,
-            publisher=AsyncMock(),
-            game_account_id=uuid.uuid4(),
+            publisher=publisher,
+            game_account_id=game_account_id,
             files=files,
             share_dataset=False,
         )
@@ -240,12 +264,14 @@ async def test_create_import_marks_unpublished_jobs_failed_on_publish_error():
     session = FakeSession(calls)
 
     files = [_upload("s1.png"), _upload("s2.png"), _upload("s3.png")]
+    game_account_id = uuid.uuid4()
+
     with pytest.raises(HTTPException) as exc:
         await VisionImportService.create_import(
             session=session,
             storage=storage,
             publisher=publisher,
-            game_account_id=uuid.uuid4(),
+            game_account_id=game_account_id,
             files=files,
             share_dataset=False,
         )
@@ -278,12 +304,16 @@ async def test_create_import_deletes_written_objects_on_later_validation_failure
         _upload("big.png", content=b"0" * (MAX_SCREEN_BYTES + 1)),
     ]
 
+    session = FakeSession([])
+    publisher = AsyncMock()
+    game_account_id = uuid.uuid4()
+
     with pytest.raises(HTTPException):
         await VisionImportService.create_import(
-            session=FakeSession([]),
+            session=session,
             storage=storage,
-            publisher=AsyncMock(),
-            game_account_id=uuid.uuid4(),
+            publisher=publisher,
+            game_account_id=game_account_id,
             files=files,
             share_dataset=False,
         )

@@ -252,13 +252,15 @@ async def test_upsert_on_ended_war_raises_409(session):
     war = data["war"]
     war.status = WarStatus.ended
 
+    body = WarFightNoteUpsertRequest(content="too late")
+
     with pytest.raises(HTTPException) as exc_info:
         await WarFightNoteService.upsert_note(
             session=session,
             war=war,
             battlegroup=BG,
             node_number=NODE,
-            body=WarFightNoteUpsertRequest(content="too late"),
+            body=body,
             editor_account_id=data["owner"].id,
             editor_user_id=data["owner"].user_id,
         )
