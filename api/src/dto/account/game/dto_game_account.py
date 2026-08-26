@@ -51,3 +51,15 @@ class GameAccountResponse(BaseModel):
             "is_primary": data.is_primary,
             "created_at": data.created_at,
         }
+
+
+class DeletedGameAccountResponse(BaseModel):
+    """DTO for a logically deleted game account still awaiting restore."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    game_pseudo: str
+    created_at: datetime
+    deleted_at: datetime
+    restorable_until: datetime

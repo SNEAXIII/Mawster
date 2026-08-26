@@ -1,14 +1,26 @@
 """Integration tests for /game-accounts endpoints."""
 
 import uuid
+from datetime import datetime, timedelta
 
 import pytest
+from sqlmodel import select
 
 from main import app
+from src.enums.InvitationStatus import InvitationStatus
+from src.enums.InvitationType import InvitationType
+from src.models.alliance.AllianceInvitation import AllianceInvitation
+from src.models.Base import utcnow
+from src.services.account.game.GameAccountService import (
+    MAX_GAME_ACCOUNTS_PER_USER,
+    RESTORE_WINDOW_DAYS,
+)
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_game_account,
+    push_member,
+    push_visitor,
 )
 from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2
 from tests.utils.utils_client import (
@@ -24,7 +36,7 @@ from tests.utils.utils_constant import (
     USER2_ID,
     USER_ID,
 )
-from tests.utils.utils_db import get_test_session
+from tests.utils.utils_db import get_test_session, load_objects
 
 app.dependency_overrides[get_session] = get_test_session
 
@@ -400,3 +412,342 @@ class TestDeleteGameAccount:
         _, owner_acc = await push_alliance_with_owner(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
         response = await execute_delete_request(f"/game-accounts/{owner_acc.id}", headers=HEADERS)
         assert response.status_code == 409
+
+
+# =========================================================================
+# Soft delete: the account survives, hidden, for RESTORE_WINDOW_DAYS
+# =========================================================================
+
+
+class TestSoftDeleteGameAccount:
+    @pytest.mark.asyncio
+    async def test_deleted_account_disappears_from_the_list(self):
+        await _setup_1_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+        await execute_delete_request(f"/game-accounts/{acc.id}", headers=HEADERS)
+
+        response = await execute_get_request(ENDPOINT, headers=HEADERS)
+        assert response.status_code == 200
+        assert response.json() == []
+
+    @pytest.mark.asyncio
+    async def test_deleted_account_is_not_readable_anymore(self):
+        await _setup_1_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+        await execute_delete_request(f"/game-accounts/{acc.id}", headers=HEADERS)
+
+        response = await execute_get_request(f"/game-accounts/{acc.id}", headers=HEADERS)
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_deleted_account_cannot_be_updated(self):
+        await _setup_1_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+        await execute_delete_request(f"/game-accounts/{acc.id}", headers=HEADERS)
+
+        payload = {"game_pseudo": "Renamed", "is_primary": False}
+        response = await execute_put_request(f"/game-accounts/{acc.id}", payload, headers=HEADERS)
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_delete_hands_the_primary_flag_over(self):
+        """The primary flag belongs to a live account: it moves on deletion."""
+        await _setup_1_user()
+        primary = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO, is_primary=True)
+        await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO_2)
+
+        response = await execute_delete_request(f"/game-accounts/{primary.id}", headers=HEADERS)
+        assert response.status_code == 204
+
+        remaining = (await execute_get_request(ENDPOINT, headers=HEADERS)).json()
+        assert len(remaining) == 1
+        assert remaining[0]["game_pseudo"] == GAME_PSEUDO_2
+        assert remaining[0]["is_primary"] is True
+
+    @pytest.mark.asyncio
+    async def test_delete_account_member_of_an_alliance_returns_409(self):
+        """A member must leave their alliance before deleting the account."""
+        await _setup_1_user()
+        await push_user2()
+        alliance, _ = await push_alliance_with_owner(user_id=USER2_ID, game_pseudo="Owner")
+        member = await push_member(alliance=alliance, user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+        response = await execute_delete_request(f"/game-accounts/{member.id}", headers=HEADERS)
+        assert response.status_code == 409
+
+
+# =========================================================================
+# GET /game-accounts/deleted
+# =========================================================================
+
+
+class TestListDeletedGameAccounts:
+    ENDPOINT_DELETED = "/game-accounts/deleted"
+
+    @pytest.mark.asyncio
+    async def test_lists_deleted_accounts_with_their_deadline(self):
+        await _setup_1_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        await execute_delete_request(f"/game-accounts/{acc.id}", headers=HEADERS)
+
+        response = await execute_get_request(self.ENDPOINT_DELETED, headers=HEADERS)
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) == 1
+        assert body[0]["id"] == str(acc.id)
+        assert body[0]["game_pseudo"] == GAME_PSEUDO
+        deleted_at = datetime.fromisoformat(body[0]["deleted_at"])
+        restorable_until = datetime.fromisoformat(body[0]["restorable_until"])
+        assert restorable_until - deleted_at == timedelta(days=RESTORE_WINDOW_DAYS)
+
+    @pytest.mark.asyncio
+    async def test_live_accounts_are_not_listed(self):
+        await _setup_1_user()
+        await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+        response = await execute_get_request(self.ENDPOINT_DELETED, headers=HEADERS)
+        assert response.json() == []
+
+    @pytest.mark.asyncio
+    async def test_expired_accounts_are_not_listed(self):
+        """Past the restore window the account is lost for the player."""
+        await _setup_1_user()
+        await push_game_account(
+            user_id=USER_ID,
+            game_pseudo=GAME_PSEUDO,
+            deleted_at=utcnow() - timedelta(days=RESTORE_WINDOW_DAYS, hours=1),
+        )
+
+        response = await execute_get_request(self.ENDPOINT_DELETED, headers=HEADERS)
+        assert response.json() == []
+
+    @pytest.mark.asyncio
+    async def test_other_users_deleted_accounts_are_not_listed(self):
+        await _setup_1_user()
+        await push_user2()
+        await push_game_account(
+            user_id=USER2_ID, game_pseudo="Other", deleted_at=utcnow() - timedelta(hours=1)
+        )
+
+        response = await execute_get_request(self.ENDPOINT_DELETED, headers=HEADERS)
+        assert response.json() == []
+
+    @pytest.mark.asyncio
+    async def test_without_auth_returns_401(self):
+        response = await execute_get_request(self.ENDPOINT_DELETED)
+        assert response.status_code == 401
+
+
+# =========================================================================
+# POST /game-accounts/{id}/restore
+# =========================================================================
+
+
+class TestRestoreGameAccount:
+    @staticmethod
+    def _route(account_id) -> str:
+        return f"/game-accounts/{account_id}/restore"
+
+    @pytest.mark.asyncio
+    async def test_restore_ok(self):
+        await _setup_1_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        await execute_delete_request(f"/game-accounts/{acc.id}", headers=HEADERS)
+
+        response = await execute_post_request(self._route(acc.id), {}, headers=HEADERS)
+        assert response.status_code == 200
+        assert response.json()["game_pseudo"] == GAME_PSEUDO
+
+        listed = (await execute_get_request(ENDPOINT, headers=HEADERS)).json()
+        assert [a["id"] for a in listed] == [str(acc.id)]
+
+    @pytest.mark.asyncio
+    async def test_restore_last_account_makes_it_primary_again(self):
+        await _setup_1_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO, is_primary=True)
+        await execute_delete_request(f"/game-accounts/{acc.id}", headers=HEADERS)
+
+        response = await execute_post_request(self._route(acc.id), {}, headers=HEADERS)
+        assert response.status_code == 200
+        assert response.json()["is_primary"] is True
+
+    @pytest.mark.asyncio
+    async def test_restore_keeps_an_existing_primary_untouched(self):
+        await _setup_1_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO, is_primary=True)
+        await execute_delete_request(f"/game-accounts/{acc.id}", headers=HEADERS)
+        await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO_2, is_primary=True)
+
+        response = await execute_post_request(self._route(acc.id), {}, headers=HEADERS)
+        assert response.status_code == 200
+        assert response.json()["is_primary"] is False
+
+    @pytest.mark.asyncio
+    async def test_restore_after_the_window_returns_410(self):
+        await _setup_1_user()
+        acc = await push_game_account(
+            user_id=USER_ID,
+            game_pseudo=GAME_PSEUDO,
+            deleted_at=utcnow() - timedelta(days=RESTORE_WINDOW_DAYS, hours=1),
+        )
+
+        response = await execute_post_request(self._route(acc.id), {}, headers=HEADERS)
+        assert response.status_code == 410
+
+    @pytest.mark.asyncio
+    async def test_restore_a_live_account_returns_409(self):
+        await _setup_1_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+        response = await execute_post_request(self._route(acc.id), {}, headers=HEADERS)
+        assert response.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_restore_other_users_account_returns_403(self):
+        await _setup_1_user()
+        await push_user2()
+        acc = await push_game_account(
+            user_id=USER2_ID, game_pseudo="Other", deleted_at=utcnow() - timedelta(hours=1)
+        )
+
+        response = await execute_post_request(self._route(acc.id), {}, headers=HEADERS)
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_restore_nonexistent_returns_404(self):
+        await _setup_1_user()
+        response = await execute_post_request(self._route(uuid.uuid4()), {}, headers=HEADERS)
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_restore_without_auth_returns_401(self):
+        response = await execute_post_request(self._route(uuid.uuid4()), {})
+        assert response.status_code == 401
+
+
+# =========================================================================
+# Quota: a restorable account keeps eating its slot
+# =========================================================================
+
+
+class TestQuotaWithDeletedAccounts:
+    @pytest.mark.asyncio
+    async def test_restorable_account_still_counts_in_the_quota(self):
+        await _setup_1_user()
+        for index in range(MAX_GAME_ACCOUNTS_PER_USER - 1):
+            await push_game_account(user_id=USER_ID, game_pseudo=f"Acc{index}")
+        deleted = await push_game_account(user_id=USER_ID, game_pseudo="Doomed")
+        await execute_delete_request(f"/game-accounts/{deleted.id}", headers=HEADERS)
+
+        response = await execute_post_request(
+            ENDPOINT, {"game_pseudo": "OneTooMany", "is_primary": False}, headers=HEADERS
+        )
+        assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_definitively_lost_account_frees_its_slot(self):
+        await _setup_1_user()
+        for index in range(MAX_GAME_ACCOUNTS_PER_USER - 1):
+            await push_game_account(user_id=USER_ID, game_pseudo=f"Acc{index}")
+        await push_game_account(
+            user_id=USER_ID,
+            game_pseudo="Lost",
+            deleted_at=utcnow() - timedelta(days=RESTORE_WINDOW_DAYS, hours=1),
+        )
+
+        response = await execute_post_request(
+            ENDPOINT, {"game_pseudo": "Replacement", "is_primary": False}, headers=HEADERS
+        )
+        assert response.status_code == 201
+
+
+# =========================================================================
+# Deletion vs. the account's alliance ties
+# =========================================================================
+
+
+async def _push_invitation(
+    alliance_id,
+    game_account_id,
+    invited_by_game_account_id,
+    status_: InvitationStatus = InvitationStatus.PENDING,
+    type_: InvitationType = InvitationType.MEMBER,
+) -> AllianceInvitation:
+    invitation = AllianceInvitation(
+        id=uuid.uuid4(),
+        alliance_id=alliance_id,
+        game_account_id=game_account_id,
+        invited_by_game_account_id=invited_by_game_account_id,
+        status=status_,
+        type=type_,
+    )
+    await load_objects([invitation])
+    return invitation
+
+
+async def _invitation_exists(invitation_id) -> bool:
+    async for session in get_test_session():
+        result = await session.exec(
+            select(AllianceInvitation).where(AllianceInvitation.id == invitation_id)
+        )
+        return result.first() is not None
+
+
+class TestDeleteGameAccountAllianceTies:
+    @pytest.mark.asyncio
+    async def test_visitor_account_cannot_be_deleted(self):
+        """Visiting an alliance blocks the deletion, exactly like being a member."""
+        await _setup_1_user()
+        await push_user2()
+        alliance, _ = await push_alliance_with_owner(user_id=USER2_ID, game_pseudo="Owner")
+        visitor = await push_visitor(alliance=alliance, user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+        response = await execute_delete_request(f"/game-accounts/{visitor.id}", headers=HEADERS)
+        assert response.status_code == 409
+
+        listed = (await execute_get_request(ENDPOINT, headers=HEADERS)).json()
+        assert [acc["id"] for acc in listed] == [str(visitor.id)]
+
+    @pytest.mark.asyncio
+    async def test_delete_cancels_the_invitations_the_account_received(self):
+        await _setup_1_user()
+        await push_user2()
+        alliance, owner_acc = await push_alliance_with_owner(user_id=USER2_ID, game_pseudo="Owner")
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        invitation = await _push_invitation(alliance.id, acc.id, owner_acc.id)
+
+        response = await execute_delete_request(f"/game-accounts/{acc.id}", headers=HEADERS)
+        assert response.status_code == 204
+        assert await _invitation_exists(invitation.id) is False
+
+    @pytest.mark.asyncio
+    async def test_delete_cancels_the_invitations_the_account_sent(self):
+        """An invite sent by the account goes too — nobody could cancel it afterwards."""
+        await _setup_1_user()
+        await push_user2()
+        alliance, _ = await push_alliance_with_owner(user_id=USER2_ID, game_pseudo="Owner")
+        inviter = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        guest = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        invitation = await _push_invitation(alliance.id, guest.id, inviter.id)
+
+        response = await execute_delete_request(f"/game-accounts/{inviter.id}", headers=HEADERS)
+        assert response.status_code == 204
+        assert await _invitation_exists(invitation.id) is False
+
+    @pytest.mark.asyncio
+    async def test_delete_leaves_answered_invitations_alone(self):
+        """Only pending rows are cancelled: answered ones stay as history."""
+        await _setup_1_user()
+        await push_user2()
+        alliance, owner_acc = await push_alliance_with_owner(user_id=USER2_ID, game_pseudo="Owner")
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        declined = await _push_invitation(
+            alliance.id, acc.id, owner_acc.id, status_=InvitationStatus.DECLINED
+        )
+
+        response = await execute_delete_request(f"/game-accounts/{acc.id}", headers=HEADERS)
+        assert response.status_code == 204
+        assert await _invitation_exists(declined.id) is True

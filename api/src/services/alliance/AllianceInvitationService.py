@@ -3,7 +3,7 @@ import uuid
 from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload
-from sqlmodel import select
+from sqlmodel import or_, select
 from starlette import status
 
 from src.enums.InvitationStatus import InvitationStatus
@@ -37,8 +37,13 @@ MAX_MEMBERS_PER_ALLIANCE = 30
 class AllianceInvitationService:
     @staticmethod
     async def _get_user_account_ids(session: SessionDep, user_id: uuid.UUID) -> set[uuid.UUID]:
-        """Get the set of game account IDs belonging to a user."""
-        result = await session.exec(select(GameAccount).where(GameAccount.user_id == user_id))
+        """Get the set of live game account IDs belonging to a user."""
+        result = await session.exec(
+            select(GameAccount).where(
+                GameAccount.user_id == user_id,
+                GameAccount.deleted_at.is_(None),
+            )
+        )
         return {acc.id for acc in result.all()}
 
     @staticmethod
@@ -74,7 +79,7 @@ class AllianceInvitationService:
         """Create an invitation for a game account to join (MEMBER) or visit (VISITOR) an alliance."""
         # Check the game account exists
         game_account = await session.get(GameAccount, game_account_id)
-        if game_account is None:
+        if game_account is None or game_account.deleted_at is not None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=GAME_ACCOUNT_NOT_FOUND,
@@ -294,6 +299,28 @@ class AllianceInvitationService:
         await session.commit()
         await session.refresh(invitation)
         return invitation
+
+    @classmethod
+    async def cancel_pending_for_game_account(
+        cls, session: SessionDep, game_account_id: uuid.UUID
+    ) -> None:
+        """Drop every pending invitation a game account received or sent.
+
+        Called when the account goes away: an invitation nobody can answer any
+        more — nor cancel, once the account is out of every listing — would sit
+        pending forever and keep blocking a fresh invite.
+        """
+        result = await session.exec(
+            select(AllianceInvitation).where(
+                AllianceInvitation.status == InvitationStatus.PENDING,
+                or_(
+                    AllianceInvitation.game_account_id == game_account_id,
+                    AllianceInvitation.invited_by_game_account_id == game_account_id,
+                ),
+            )
+        )
+        for invitation in result.all():
+            await session.delete(invitation)
 
     @classmethod
     async def cancel_invitation(

@@ -48,8 +48,13 @@ MAX_MEMBERS_PER_ALLIANCE = 30
 class AllianceService:
     @staticmethod
     async def _get_user_accounts(session: SessionDep, user_id: uuid.UUID) -> list[GameAccount]:
-        """Get all game accounts belonging to a user."""
-        result = await session.exec(select(GameAccount).where(GameAccount.user_id == user_id))
+        """Get all live game accounts belonging to a user."""
+        result = await session.exec(
+            select(GameAccount).where(
+                GameAccount.user_id == user_id,
+                GameAccount.deleted_at.is_(None),
+            )
+        )
         return result.all()
 
     @classmethod
@@ -396,7 +401,7 @@ class AllianceService:
         """Create a new alliance. The owner game account must belong to the current user
         and must not already be in an alliance."""
         owner = await session.get(GameAccount, owner_id)
-        if owner is None:
+        if owner is None or owner.deleted_at is not None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=OWNER_GAME_ACCOUNT_NOT_FOUND,
@@ -492,7 +497,12 @@ class AllianceService:
           - my_account_ids: [ str(account_id), ... ]
         """
         # 1. Get all game accounts for this user
-        accs_result = await session.exec(select(GameAccount).where(GameAccount.user_id == user_id))
+        accs_result = await session.exec(
+            select(GameAccount).where(
+                GameAccount.user_id == user_id,
+                GameAccount.deleted_at.is_(None),
+            )
+        )
         user_accounts = accs_result.all()
         user_account_ids = {acc.id for acc in user_accounts}
         my_account_ids = [str(aid) for aid in user_account_ids]
@@ -991,6 +1001,7 @@ class AllianceService:
         sql = select(GameAccount).where(
             GameAccount.user_id == user_id,
             GameAccount.alliance_id.is_(None),
+            GameAccount.deleted_at.is_(None),
         )
         result = await session.exec(sql)
         return result.all()

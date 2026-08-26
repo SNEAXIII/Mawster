@@ -1,7 +1,7 @@
 """alliance_soft_delete
 
 Revision ID: c4a1f0b93de7
-Revises: 44ec4546df6d
+Revises: 71b1b4647961
 Create Date: 2026-08-25 10:00:00.000000
 
 """
@@ -14,7 +14,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "c4a1f0b93de7"
-down_revision: str | None = "44ec4546df6d"
+down_revision: str | None = "71b1b4647961"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

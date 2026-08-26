@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship
@@ -23,6 +24,11 @@ class GameAccount(UUIDBase, TimestampMixin, table=True):
     alliance_group: int | None = Field(default=None)  # 1, 2, 3 or None
     game_pseudo: str = Field(max_length=16)
     is_primary: bool = Field(default=False)
+    # Logical deletion: the account stays in DB but is invisible to its owner.
+    # It can be restored for RESTORE_WINDOW_DAYS (see GameAccountService), after
+    # which it is unreachable — while still counting against the account quota
+    # until then.
+    deleted_at: datetime | None = Field(default=None)
 
     # Relations
     user: "User" = Relationship(back_populates="game_accounts")
