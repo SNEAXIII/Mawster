@@ -1,0 +1,36 @@
+# zizmor — GitHub Actions security audit, run by the `zizmor` pre-commit hook.
+#
+# The point of this file is that the hook stays green on today's tree, so a *new*
+# finding is visible instead of being lost in a wall of pre-existing ones. Everything
+# ignored here is a deliberate trade-off, not a defect: each entry names why.
+#
+# Nothing else is muted. template-injection, excessive-permissions, unpinned uses,
+# secret leakage and the rest stay live.
+
+rules:
+  cache-poisoning:
+    # 7 hits, all on setup-python / setup-node / setup-uv caches in the test pipeline.
+    # zizmor's concern is a workflow that both caches and publishes: a poisoned cache
+    # could reach a release artifact. Removing the caches would cost several minutes on
+    # every push. Revisit when the build starts signing or publishing from these jobs.
+    ignore:
+      - api_front__test_lint_build.yaml
+      - sonar.yaml
+
+  artipacked:
+    # 16 hits: actions/checkout leaves the credential in .git/config by default, which
+    # matters when a later step uploads the workspace as an artifact. No job here does.
+    # Setting persist-credentials: false on 16 checkouts would break the steps that push.
+    ignore:
+      - api_front__test_lint_build.yaml
+      - assets-refresh.yaml
+      - notify-vision.yaml
+      - security.yml
+      - sonar.yaml
+      - vision-gate.yaml
+
+  unpinned-images:
+    # One service container in the e2e job pinned by tag rather than digest. It is a
+    # test database that never touches a release artifact.
+    ignore:
+      - api_front__test_lint_build.yaml
