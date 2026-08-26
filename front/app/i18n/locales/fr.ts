@@ -386,6 +386,11 @@ const fr: Translations = {
       kickVisitor: 'Retirer le visiteur',
       kickVisitorConfirm: "Êtes-vous sûr de vouloir retirer ce visiteur de l'alliance ?",
       visitorBadge: 'Visiteur',
+      leaveVisit: 'Quitter la visite',
+      leaveVisitConfirm:
+        "Êtes-vous sûr de vouloir quitter cette alliance visitée ? Vous perdrez l'accès à son roster, sa défense et ses guerres.",
+      leaveVisitSuccess: 'Vous ne visitez plus cette alliance',
+      leaveVisitError: "Erreur lors du départ de l'alliance visitée",
       memberBadge: 'Membre',
       invitationTypeVisitor: 'Invitation visiteur',
       statistics: {

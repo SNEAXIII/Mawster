@@ -382,6 +382,11 @@ const en = {
       kickVisitor: 'Remove visitor',
       kickVisitorConfirm: 'Are you sure you want to remove this visitor from the alliance?',
       visitorBadge: 'Visitor',
+      leaveVisit: 'Stop visiting',
+      leaveVisitConfirm:
+        'Are you sure you want to stop visiting this alliance? You will lose access to its roster, defense and wars.',
+      leaveVisitSuccess: 'You are no longer visiting this alliance',
+      leaveVisitError: 'Failed to leave the visited alliance',
       memberBadge: 'Member',
       invitationTypeVisitor: 'Visitor invitation',
       statistics: {
