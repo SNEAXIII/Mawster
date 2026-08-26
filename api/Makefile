@@ -3,7 +3,7 @@ LOGIN ?=
 ROLE ?= user
 DISCORD_ID ?=
 
-.PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions load-masteries reset-db delete-db init-db seed-user cancel-last test test-cov scrape-champions repopulate-db check fix format
+.PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions load-masteries reset-db delete-db init-db seed-user cancel-last test test-cov scrape-champions repopulate-db check fix fix-unsafe format
 
 help:
 	@echo "run-dev      --> run the server in dev mode with auto reload"
@@ -26,6 +26,7 @@ help:
 	@echo "scrape-champions --> scrape MCOC wiki and download champion images"
 	@echo "check        --> ruff lint"
 	@echo "fix          --> ruff lint with autofix"
+	@echo "fix-unsafe   --> ruff autofix including the fixes ruff marks unsafe -- review the diff"
 	@echo "format       --> ruff format"
 
 install:
@@ -93,6 +94,9 @@ check:
 
 fix:
 	uvx ruff check --fix
+
+fix-unsafe:
+	uvx ruff check --fix --unsafe-fixes
 
 format:
 	uvx ruff format
