@@ -44,3 +44,13 @@ class TimestampMixin(SQLModel):
     """
 
     created_at: datetime = Field(default_factory=utcnow)
+
+
+def as_utc(value: datetime) -> datetime:
+    """Return ``value`` as a timezone-aware UTC datetime.
+
+    Timestamps read back from the database come out naive (the drivers drop the
+    tzinfo), so comparing them with :func:`utcnow` would raise. Normalize both
+    sides through this helper before any Python-side comparison.
+    """
+    return value if value.tzinfo is not None else value.replace(tzinfo=UTC)

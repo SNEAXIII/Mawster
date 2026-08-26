@@ -119,7 +119,12 @@ class AllianceVisitorService:
     ) -> list[AllianceVisitor]:
         """Return all active visits for game accounts belonging to this user."""
 
-        accs = await session.exec(select(GameAccount).where(GameAccount.user_id == user_id))
+        accs = await session.exec(
+            select(GameAccount).where(
+                GameAccount.user_id == user_id,
+                GameAccount.deleted_at.is_(None),
+            )
+        )
         account_ids = {acc.id for acc in accs.all()}
         if not account_ids:
             return []

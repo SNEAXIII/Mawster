@@ -1,6 +1,7 @@
 """Setup helpers to create game accounts, alliances, officers and members for integration tests."""
 
 import uuid
+from datetime import datetime
 
 from src.models.alliance.Alliance import Alliance
 from src.models.alliance.AllianceOfficer import AllianceOfficer
@@ -30,6 +31,7 @@ def get_game_account(
     alliance_id: uuid.UUID | None = None,
     alliance_group: int | None = None,
     account_id: uuid.UUID | None = None,
+    deleted_at: datetime | None = None,
 ) -> GameAccount:
     return GameAccount(
         id=account_id or uuid.uuid4(),
@@ -38,6 +40,7 @@ def get_game_account(
         is_primary=is_primary,
         alliance_id=alliance_id,
         alliance_group=alliance_group,
+        deleted_at=deleted_at,
     )
 
 
@@ -81,6 +84,7 @@ async def push_game_account(
     game_pseudo: str = GAME_PSEUDO,
     is_primary: bool = False,
     alliance_id: uuid.UUID | None = None,
+    deleted_at: datetime | None = None,
 ) -> GameAccount:
     """Insert a single game account into the test DB and return it."""
     acc = get_game_account(
@@ -88,6 +92,7 @@ async def push_game_account(
         game_pseudo=game_pseudo,
         is_primary=is_primary,
         alliance_id=alliance_id,
+        deleted_at=deleted_at,
     )
     await load_objects([acc])
     return acc
