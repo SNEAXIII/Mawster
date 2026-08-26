@@ -21,6 +21,7 @@ const en = {
     yes: 'Yes',
     no: 'No',
     noResults: 'No results found.',
+    clearSelection: 'Clear selection',
   },
 
   // Navigation

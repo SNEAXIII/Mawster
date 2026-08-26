@@ -97,7 +97,8 @@ export default function DefenseSidePanel({
                     isMine={isMine(member.game_account_id)}
                   />
                   <div className='flex items-center gap-2'>
-                    <span
+                    <button
+                      type='button'
                       onClick={() =>
                         setMasteryTarget({
                           gameAccountId: member.game_account_id,
@@ -106,9 +107,10 @@ export default function DefenseSidePanel({
                       }
                       className='cursor-pointer text-muted-foreground hover:text-foreground transition-colors'
                       title={t.mastery.title}
+                      aria-label={t.mastery.title}
                     >
                       <Shield size={13} />
-                    </span>
+                    </button>
                     <span
                       data-cy={`defender-count-${member.game_pseudo}`}
                       className={cn(

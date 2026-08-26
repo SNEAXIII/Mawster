@@ -23,6 +23,7 @@ const fr: Translations = {
     yes: 'Oui',
     no: 'Non',
     noResults: 'Aucun résultat trouvé.',
+    clearSelection: 'Effacer la sélection',
   },
 
   // Navigation
@@ -372,9 +373,9 @@ const fr: Translations = {
       deleteConfirm: 'Êtes-vous sûr de vouloir supprimer cette alliance ?',
       deleteConfirmTitle: "Supprimer l'alliance",
       deleteConfirmDesc:
-        'Cela dissout {name}. Les guerres et statistiques passées sont conservées, mais l\'alliance disparaît pour tout le monde. Saisissez {name} pour confirmer.',
+        "Cela dissout {name}. Les guerres et statistiques passées sont conservées, mais l'alliance disparaît pour tout le monde. Saisissez {name} pour confirmer.",
       deleteOnlyWhenAlone:
-        'Vous devez être le dernier membre : retirez tous les autres membres avant de supprimer l\'alliance.',
+        "Vous devez être le dernier membre : retirez tous les autres membres avant de supprimer l'alliance.",
       createSuccess: 'Alliance créée avec succès !',
       createError: "Erreur lors de la création de l'alliance",
       deleteSuccess: 'Alliance supprimée avec succès !',

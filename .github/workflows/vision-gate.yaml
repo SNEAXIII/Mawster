@@ -16,13 +16,12 @@ on:
         default: 'latest'
         required: false
 
-permissions:
-  contents: read
-  pull-requests: write
-
 jobs:
   naming-diff:
     name: Naming regression report
+    permissions:
+      contents: read
+      pull-requests: write
     runs-on: ubuntu-latest
     environment: vision
     env:

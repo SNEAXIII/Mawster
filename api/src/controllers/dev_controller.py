@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Form, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import text
 from sqlmodel import SQLModel, select
 from starlette import status as http_status
@@ -487,10 +487,22 @@ async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session
     return {"created": body.count}
 
 
+# scripts/e2e_parallel.py slices backend.log on these markers to attribute lines to a
+# test, so a title is bounded to one line: a newline in it would forge a second marker
+# and mis-attribute every line after it.
+MAX_LOG_TITLE = 200
+
+
 class LogMarkerRequest(BaseModel):
     event: Literal["start", "end"]
     title: str  # full test title, e.g. "war > place defender > node 1"
     passed: bool | None = None  # None for start, True/False for end
+
+    @field_validator("title")
+    @classmethod
+    def keep_title_on_one_line(cls, value: str) -> str:
+        """Collapse every run of whitespace — newlines included — and cap the length."""
+        return " ".join(value.split())[:MAX_LOG_TITLE]
 
 
 @dev_controller.post("/log-marker", status_code=200)

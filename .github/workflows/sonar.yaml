@@ -10,13 +10,12 @@ on:
     branches: [main, release]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pull-requests: read
-
 jobs:
   sonar:
     name: SonarQube Cloud scan
+    permissions:
+      contents: read
+      pull-requests: read
     runs-on: ubuntu-latest
     # SONAR_TOKEN is an environment secret: without this line it resolves to an
     # empty string and the scanner fails with "Not authorized".
