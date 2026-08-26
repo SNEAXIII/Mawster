@@ -41,10 +41,12 @@ select = [
     "PLE", # pylint errors
     "PLW", # pylint warnings
     "RUF", # ruff-specific
+    "FAST", # FastAPI: Annotated dependencies, redundant response_model, unused path params
     "BLE001", # blind `except Exception`
     "TRY004", # raise TypeError for type checks
     "EXE001", # shebang on a non-executable file
     "S110", # try/except/pass swallowing errors
+    "PT018", # composite `assert a and b` — pytest cannot say which half failed
 ]
 
 ignore = [
