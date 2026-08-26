@@ -218,7 +218,7 @@ class TestDevEnvInfo:
 class TestDevLogMarker:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "event, passed",
+        ("event", "passed"),
         [
             ("start", None),
             ("end", True),

@@ -55,6 +55,7 @@ select = [
     "RET", # flake8-return — assign-then-return, redundant else after return
     "PTH", # flake8-use-pathlib — os.path calls that pathlib does better
     "EM", # flake8-errmsg — exception messages built inline at the raise site
+    "PT", # flake8-pytest-style — parametrize/fixture form, over-broad raises
     "BLE001", # blind `except Exception`
     "TRY004", # raise TypeError for type checks
     "EXE001", # shebang on a non-executable file
@@ -80,6 +81,12 @@ ignore = [
     "RUF002",
     "RUF003",
 ]
+
+[lint.flake8-pytest-style]
+# PT011 asks for a `match=` on over-broad exception types. Trimmed to the catch-alls:
+# a bare `ValueError` in these tests is already pinned by an `assert error.value.args[0]
+# == MESSAGE` on the next line, so requiring `match=` too would only duplicate it.
+raises-require-match-for = ["BaseException", "Exception"]
 
 [lint.per-file-ignores]
 # Local tooling: best-effort scripts where a catch-all except is deliberate — they must

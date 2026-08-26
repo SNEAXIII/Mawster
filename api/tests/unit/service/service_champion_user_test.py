@@ -353,7 +353,7 @@ class TestGetRosterByGameAccount:
 class TestGetChampionUser:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "return_value, expected_none",
+        ("return_value", "expected_none"),
         [
             (_make_champion_user(), False),
             (None, True),
@@ -460,7 +460,7 @@ class TestDeleteRoster:
 class TestUpgradeChampionRank:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "before,after",
+        ("before", "after"),
         [
             ("6r4", "6r5"),
             ("7r1", "7r2"),

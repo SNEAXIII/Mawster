@@ -14,7 +14,7 @@ from tests.utils import utils_client
 from tests.utils.utils_db import Session, delete_db, get_test_session, reset_test_db
 
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(autouse=True)
 def reset_db() -> Iterator:
     # Setup
     reset_test_db()

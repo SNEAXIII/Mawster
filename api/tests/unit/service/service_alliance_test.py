@@ -71,7 +71,7 @@ def _make_officer(alliance_id, game_account_id):
 class TestAssertIsOwnerOrOfficer:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "is_owner, is_officer, should_pass",
+        ("is_owner", "is_officer", "should_pass"),
         [
             (True, False, True),
             (False, True, True),
@@ -120,7 +120,7 @@ class TestAssertIsOwnerOrOfficer:
 class TestAssertIsOwner:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "is_owner, should_pass",
+        ("is_owner", "should_pass"),
         [(True, True), (False, False)],
         ids=["owner_passes", "non_owner_denied"],
     )
@@ -152,7 +152,7 @@ class TestAssertIsOwner:
 class TestAssertCanRemoveMember:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "caller_role, target_role, should_pass, expected_detail_fragment",
+        ("caller_role", "target_role", "should_pass", "expected_detail_fragment"),
         [
             ("owner", "regular", True, None),
             ("owner", "officer", True, None),
@@ -226,7 +226,7 @@ class TestAssertCanRemoveMember:
 class TestCreateAlliance:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "owner_exists, owner_belongs_to_user, already_in_alliance, expected_status",
+        ("owner_exists", "owner_belongs_to_user", "already_in_alliance", "expected_status"),
         [
             (True, True, False, None),  # success
             (False, False, False, 404),  # owner not found
@@ -282,7 +282,7 @@ class TestCreateAlliance:
 class TestAddMember:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "account_exists, already_in_alliance, current_member_count, expected_status",
+        ("account_exists", "already_in_alliance", "current_member_count", "expected_status"),
         [
             (True, False, 0, None),
             (False, False, 0, 404),
@@ -338,7 +338,7 @@ class TestAddMember:
 class TestRemoveMember:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "alliance_exists, is_owner, member_found, expected_status",
+        ("alliance_exists", "is_owner", "member_found", "expected_status"),
         [
             (True, False, True, None),  # success
             (False, False, False, 404),  # alliance not found
@@ -394,7 +394,7 @@ class TestRemoveMember:
 class TestAddofficer:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "account_exists, is_member, already_officer, expected_status",
+        ("account_exists", "is_member", "already_officer", "expected_status"),
         [
             (True, True, False, None),
             (False, False, False, 404),
@@ -446,7 +446,7 @@ class TestAddofficer:
 class TestRemoveofficer:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "officer_found, expected_status",
+        ("officer_found", "expected_status"),
         [(True, None), (False, 404)],
         ids=["success", "not_found"],
     )
@@ -485,7 +485,7 @@ class TestRemoveofficer:
 class TestSetMemberGroup:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "member_found, group, current_count, expected_status",
+        ("member_found", "group", "current_count", "expected_status"),
         [
             (True, 1, 0, None),  # success
             (True, None, 0, None),  # remove from group

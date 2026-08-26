@@ -2,6 +2,7 @@ import uuid
 from datetime import UTC, datetime
 
 import pytest
+from fastapi import HTTPException
 from sqlmodel import select
 
 from src.dto.auth.dto_utilisateurs import UserAdminViewSingleUser
@@ -142,7 +143,7 @@ async def test_get_user_by_login_with_validity_check_success(mocker):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "fake_user,expected_error",
+    ("fake_user", "expected_error"),
     [
         (None, USER_DOESNT_EXISTS),
         (User(login=LOGIN, deleted_at=utcnow()), USER_IS_DELETED),
@@ -183,7 +184,7 @@ async def test_patch_disable_user_success(mocker, use_time_machine):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "fake_user,expected_error",
+    ("fake_user", "expected_error"),
     [
         (None, TARGET_USER_DOESNT_EXISTS),
         (User(login=LOGIN, deleted_at=utcnow()), TARGET_USER_IS_DELETED),
@@ -265,7 +266,7 @@ async def test_patch_enable_user_success(mocker):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "fake_user,expected_error",
+    ("fake_user", "expected_error"),
     [
         (None, TARGET_USER_DOESNT_EXISTS),
         (User(login=LOGIN, deleted_at=utcnow()), TARGET_USER_IS_DELETED),
@@ -307,7 +308,7 @@ async def test_delete_user_success(mocker, use_time_machine):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "fake_user,expected_error",
+    ("fake_user", "expected_error"),
     [
         (None, TARGET_USER_DOESNT_EXISTS),
         (User(login=LOGIN, deleted_at=utcnow()), TARGET_USER_IS_ALREADY_DELETED),
@@ -369,7 +370,7 @@ async def test_update_login_already_taken(mocker):
     get_user_by_login_mock(mocker, other_user)
 
     # Act / Assert
-    with pytest.raises(Exception) as exc:
+    with pytest.raises(HTTPException) as exc:
         await UserService.update_login(mock_session, current_user, "OtherLogin")
 
     assert exc.value.status_code == 409
@@ -469,7 +470,7 @@ async def test_promote_user_success(mocker):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "fake_user,expected_error",
+    ("fake_user", "expected_error"),
     [
         (None, TARGET_USER_DOESNT_EXISTS),
         (User(login=LOGIN, deleted_at=utcnow()), TARGET_USER_IS_DELETED),
@@ -512,7 +513,7 @@ async def test_demote_user_success(mocker):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "fake_user,expected_error",
+    ("fake_user", "expected_error"),
     [
         (None, TARGET_USER_DOESNT_EXISTS),
         (User(login=LOGIN, deleted_at=utcnow()), TARGET_USER_IS_DELETED),

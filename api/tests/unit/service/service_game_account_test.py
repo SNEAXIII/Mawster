@@ -127,7 +127,7 @@ class TestGetGameAccountsByUser:
 class TestGetGameAccount:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "return_value, expected_none",
+        ("return_value", "expected_none"),
         [
             (_make_account(), False),
             (None, True),
