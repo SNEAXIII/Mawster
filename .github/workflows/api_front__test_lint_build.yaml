@@ -494,6 +494,35 @@ jobs:
               -c stack-app.yaml \
               mawster
 
+      # After the deploy, not on release creation: what players care about is the moment the
+      # version is actually live.
+      - name: Announce the deploy on Discord
+        env:
+          VERSION: ${{ needs.changes.outputs.version }}
+          RELEASE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.changes.outputs.version }}
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          set -euo pipefail
+          # The secrets context is not readable from a step-level `if:`, hence the test here.
+          if [ -z "${WEBHOOK:-}" ]; then
+            echo "DISCORD_WEBHOOK is not configured - announcement skipped."
+            exit 0
+          fi
+          # jq builds the JSON: a release title containing a quote would break a hand-assembled
+          # payload.
+          payload=$(jq -n \
+            --arg version "$VERSION" \
+            --arg url "$RELEASE_URL" \
+            '{
+              embeds: [{
+                title: "Mawster \($version) est en ligne",
+                description: "Les nouveautés de cette version : [notes de release](\($url))",
+                url: $url,
+                color: 5793266
+              }]
+            }')
+          curl -sS -f -X POST -H "Content-Type: application/json" -d "$payload" "$WEBHOOK"
+
   deploy-staging:
     name: Deploy to staging
     permissions:
