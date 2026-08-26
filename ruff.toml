@@ -42,6 +42,15 @@ select = [
     "PLW", # pylint warnings
     "RUF", # ruff-specific
     "FAST", # FastAPI: Annotated dependencies, redundant response_model, unused path params
+    "ASYNC", # flake8-async — sync/blocking calls inside `async def`
+    "LOG", # flake8-logging — logger built or called wrong
+    "T10", # flake8-debugger — a `breakpoint()` or `pdb` import left behind
+    "PGH", # pygrep-hooks — blanket `# noqa` / `# type: ignore` with no rule code
+    "TID", # flake8-tidy-imports — relative imports reaching outside the package
+    "RSE", # flake8-raise — `raise X()` with redundant parentheses
+    "SLOT", # flake8-slots — missing __slots__ on str/tuple subclasses
+    "FLY", # flynt — a static `str.join` that reads better as an f-string
+    "ICN", # flake8-import-conventions — the conventional `import x as y` aliases
     "BLE001", # blind `except Exception`
     "TRY004", # raise TypeError for type checks
     "EXE001", # shebang on a non-executable file
