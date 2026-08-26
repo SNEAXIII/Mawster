@@ -137,7 +137,6 @@ async def dev_login(body: DevLoginRequest, session: SessionDep) -> LoginResponse
     logger.warning("DEV LOGIN — user: %s", user.login)
 
     return LoginResponse(
-        token_type="bearer",
         access_token=access_token,
         refresh_token=refresh_token,
     )
@@ -161,7 +160,6 @@ async def dev_token(username: Annotated[str, Form()], session: SessionDep) -> Lo
             )
     logger.warning("DEV TOKEN — username: %s / user: %s", username, user.login)
     return LoginResponse(
-        token_type="bearer",
         access_token=JWTService.create_access_token(user),
         refresh_token=JWTService.create_refresh_token(user),
     )
@@ -181,9 +179,7 @@ async def dev_login_by_pseudo(body: DevLoginByPseudoRequest, session: SessionDep
     access_token = JWTService.create_access_token(user)
     refresh_token = JWTService.create_refresh_token(user)
     logger.warning("DEV LOGIN BY PSEUDO — pseudo: %s / user: %s", body.game_pseudo, user.login)
-    return LoginResponse(
-        token_type="bearer", access_token=access_token, refresh_token=refresh_token
-    )
+    return LoginResponse(access_token=access_token, refresh_token=refresh_token)
 
 
 @dev_controller.post("/truncate", status_code=200)

@@ -56,6 +56,7 @@ select = [
     "PTH", # flake8-use-pathlib — os.path calls that pathlib does better
     "EM", # flake8-errmsg — exception messages built inline at the raise site
     "PT", # flake8-pytest-style — parametrize/fixture form, over-broad raises
+    "S", # flake8-bandit — see the per-file-ignores below for the test/script carve-outs
     "BLE001", # blind `except Exception`
     "TRY004", # raise TypeError for type checks
     "EXE001", # shebang on a non-executable file
@@ -91,11 +92,13 @@ raises-require-match-for = ["BaseException", "Exception"]
 [lint.per-file-ignores]
 # Local tooling: best-effort scripts where a catch-all except is deliberate — they must
 # keep running (and print a diagnostic) whatever a subprocess or a scraped page throws.
-".claude/**" = ["BLE001", "S110"]
-"scripts/**" = ["BLE001", "S110"]
+".claude/**" = ["BLE001", "S110", "S603", "S607"]
+# S603/S607/S310: local dev tooling driving `docker`, `npm` and localhost health
+# checks with hardcoded argv. There is no untrusted input to sanitise here.
+"scripts/**" = ["BLE001", "S110", "S603", "S607", "S310"]
 # PLC0415: heavy, optional third-party deps (PIL, bs4, curl_cffi) are imported inside
 # the function that needs them, so the other entry points run without them installed.
-"static-assets/**" = ["BLE001", "S110", "PLC0415"]
+"static-assets/**" = ["BLE001", "S110", "PLC0415", "S603", "S607"]
 
 [format]
 quote-style = "double"

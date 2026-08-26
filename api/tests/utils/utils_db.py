@@ -67,7 +67,9 @@ def _truncate_all():
         # Disable FK checks for speed during truncation
         conn.execute(text("PRAGMA foreign_keys = OFF"))
         for table in reversed(SQLModel.metadata.sorted_tables):
-            conn.execute(text(f'DELETE FROM "{table.name}"'))
+            # S608 ignored: the table names come from SQLModel.metadata, which we declare
+            # ourselves — no request data reaches this string.
+            conn.execute(text(f'DELETE FROM "{table.name}"'))  # noqa: S608
         # Reset SQLite AUTOINCREMENT sequences
         result = conn.execute(
             text("SELECT name FROM sqlite_master WHERE type='table' AND name='sqlite_sequence'")
