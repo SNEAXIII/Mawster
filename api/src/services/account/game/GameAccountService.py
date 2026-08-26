@@ -10,13 +10,16 @@ from src.Messages.game_account_messages import (
     GAME_ACCOUNT_ALREADY_DELETED,
     GAME_ACCOUNT_IN_ALLIANCE,
     GAME_ACCOUNT_IS_ALLIANCE_OWNER,
+    GAME_ACCOUNT_IS_VISITOR,
     GAME_ACCOUNT_NOT_DELETED,
     GAME_ACCOUNT_RESTORE_EXPIRED,
     max_game_accounts_reached,
 )
 from src.models.alliance.Alliance import Alliance
+from src.models.alliance.AllianceVisitor import AllianceVisitor
 from src.models.Base import as_utc, utcnow
 from src.models.user.GameAccount import GameAccount
+from src.services.alliance.AllianceInvitationService import AllianceInvitationService
 from src.utils.db import SessionDep
 
 MAX_GAME_ACCOUNTS_PER_USER = 10
@@ -185,13 +188,14 @@ class GameAccountService:
         session.add(accounts[0])
 
     @classmethod
-    async def delete_game_account(cls, session: SessionDep, game_account: GameAccount) -> None:
-        """Logically delete a game account. It must not belong to any alliance."""
-        if game_account.deleted_at is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=GAME_ACCOUNT_ALREADY_DELETED,
-            )
+    async def _assert_out_of_every_alliance(
+        cls, session: SessionDep, game_account: GameAccount
+    ) -> None:
+        """Raise 409 if the account is still tied to an alliance, in any capacity.
+
+        Owning, being a member of, or visiting one all block the deletion: the
+        player has to leave (or hand over) first.
+        """
         owned = await session.exec(select(Alliance).where(Alliance.owner_id == game_account.id))
         if owned.first() is not None:
             raise HTTPException(
@@ -203,6 +207,27 @@ class GameAccountService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail=GAME_ACCOUNT_IN_ALLIANCE,
             )
+        visits = await session.exec(
+            select(AllianceVisitor).where(AllianceVisitor.game_account_id == game_account.id)
+        )
+        if visits.first() is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=GAME_ACCOUNT_IS_VISITOR,
+            )
+
+    @classmethod
+    async def delete_game_account(cls, session: SessionDep, game_account: GameAccount) -> None:
+        """Logically delete a game account. It must be out of every alliance first."""
+        if game_account.deleted_at is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=GAME_ACCOUNT_ALREADY_DELETED,
+            )
+        await cls._assert_out_of_every_alliance(session, game_account)
+        # Pending invitations die with the account: nobody could answer them
+        # once it is hidden, and a stale one would block a later invite.
+        await AllianceInvitationService.cancel_pending_for_game_account(session, game_account.id)
         game_account.deleted_at = utcnow()
         # The primary flag belongs to a live account: hand it over before leaving.
         game_account.is_primary = False

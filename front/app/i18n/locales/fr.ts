@@ -272,7 +272,8 @@ const fr: Translations = {
       deleteConfirm:
         'La suppression de « {pseudo} » le retire de vos comptes. Vous pouvez le restaurer pendant {days} jours — passé ce délai, il est définitivement perdu.',
       deleteTypeConfirm: 'Saisissez le nom du compte pour confirmer',
-      deleteInAlliance: 'Quittez ou cédez votre alliance avant de supprimer ce compte',
+      deleteInAlliance:
+        'Ce compte est encore lié à une alliance (chef, membre ou visiteur) — quittez-la ou cédez-la d’abord',
       createSuccess: 'Compte de jeu créé avec succès !',
       createError: 'Erreur lors de la création du compte de jeu',
       deleteSuccess: 'Compte de jeu supprimé avec succès !',

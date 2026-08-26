@@ -4,8 +4,12 @@ import uuid
 from datetime import datetime, timedelta
 
 import pytest
+from sqlmodel import select
 
 from main import app
+from src.enums.InvitationStatus import InvitationStatus
+from src.enums.InvitationType import InvitationType
+from src.models.alliance.AllianceInvitation import AllianceInvitation
 from src.models.Base import utcnow
 from src.services.account.game.GameAccountService import (
     MAX_GAME_ACCOUNTS_PER_USER,
@@ -16,6 +20,7 @@ from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_game_account,
     push_member,
+    push_visitor,
 )
 from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2
 from tests.utils.utils_client import (
@@ -31,7 +36,7 @@ from tests.utils.utils_constant import (
     USER2_ID,
     USER_ID,
 )
-from tests.utils.utils_db import get_test_session
+from tests.utils.utils_db import get_test_session, load_objects
 
 app.dependency_overrides[get_session] = get_test_session
 
@@ -657,3 +662,92 @@ class TestQuotaWithDeletedAccounts:
             ENDPOINT, {"game_pseudo": "Replacement", "is_primary": False}, headers=HEADERS
         )
         assert response.status_code == 201
+
+
+# =========================================================================
+# Deletion vs. the account's alliance ties
+# =========================================================================
+
+
+async def _push_invitation(
+    alliance_id,
+    game_account_id,
+    invited_by_game_account_id,
+    status_: InvitationStatus = InvitationStatus.PENDING,
+    type_: InvitationType = InvitationType.MEMBER,
+) -> AllianceInvitation:
+    invitation = AllianceInvitation(
+        id=uuid.uuid4(),
+        alliance_id=alliance_id,
+        game_account_id=game_account_id,
+        invited_by_game_account_id=invited_by_game_account_id,
+        status=status_,
+        type=type_,
+    )
+    await load_objects([invitation])
+    return invitation
+
+
+async def _invitation_exists(invitation_id) -> bool:
+    async for session in get_test_session():
+        result = await session.exec(
+            select(AllianceInvitation).where(AllianceInvitation.id == invitation_id)
+        )
+        return result.first() is not None
+
+
+class TestDeleteGameAccountAllianceTies:
+    @pytest.mark.asyncio
+    async def test_visitor_account_cannot_be_deleted(self):
+        """Visiting an alliance blocks the deletion, exactly like being a member."""
+        await _setup_1_user()
+        await push_user2()
+        alliance, _ = await push_alliance_with_owner(user_id=USER2_ID, game_pseudo="Owner")
+        visitor = await push_visitor(alliance=alliance, user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+
+        response = await execute_delete_request(f"/game-accounts/{visitor.id}", headers=HEADERS)
+        assert response.status_code == 409
+
+        listed = (await execute_get_request(ENDPOINT, headers=HEADERS)).json()
+        assert [acc["id"] for acc in listed] == [str(visitor.id)]
+
+    @pytest.mark.asyncio
+    async def test_delete_cancels_the_invitations_the_account_received(self):
+        await _setup_1_user()
+        await push_user2()
+        alliance, owner_acc = await push_alliance_with_owner(user_id=USER2_ID, game_pseudo="Owner")
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        invitation = await _push_invitation(alliance.id, acc.id, owner_acc.id)
+
+        response = await execute_delete_request(f"/game-accounts/{acc.id}", headers=HEADERS)
+        assert response.status_code == 204
+        assert await _invitation_exists(invitation.id) is False
+
+    @pytest.mark.asyncio
+    async def test_delete_cancels_the_invitations_the_account_sent(self):
+        """An invite sent by the account goes too — nobody could cancel it afterwards."""
+        await _setup_1_user()
+        await push_user2()
+        alliance, _ = await push_alliance_with_owner(user_id=USER2_ID, game_pseudo="Owner")
+        inviter = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        guest = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        invitation = await _push_invitation(alliance.id, guest.id, inviter.id)
+
+        response = await execute_delete_request(f"/game-accounts/{inviter.id}", headers=HEADERS)
+        assert response.status_code == 204
+        assert await _invitation_exists(invitation.id) is False
+
+    @pytest.mark.asyncio
+    async def test_delete_leaves_answered_invitations_alone(self):
+        """Only pending rows are cancelled: answered ones stay as history."""
+        await _setup_1_user()
+        await push_user2()
+        alliance, owner_acc = await push_alliance_with_owner(user_id=USER2_ID, game_pseudo="Owner")
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        declined = await _push_invitation(
+            alliance.id, acc.id, owner_acc.id, status_=InvitationStatus.DECLINED
+        )
+
+        response = await execute_delete_request(f"/game-accounts/{acc.id}", headers=HEADERS)
+        assert response.status_code == 204
+        assert await _invitation_exists(declined.id) is True

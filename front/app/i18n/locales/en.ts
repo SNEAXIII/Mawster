@@ -268,7 +268,8 @@ const en = {
       deleteConfirm:
         'Deleting "{pseudo}" hides it from your accounts. You can restore it for {days} days — after that it is lost for good.',
       deleteTypeConfirm: 'Type the account name to confirm',
-      deleteInAlliance: 'Leave or hand over your alliance before deleting this account',
+      deleteInAlliance:
+        'This account is still tied to an alliance (leader, member or visitor) — leave or hand it over first',
       createSuccess: 'Game account created successfully!',
       createError: 'Failed to create game account',
       deleteSuccess: 'Game account deleted successfully!',

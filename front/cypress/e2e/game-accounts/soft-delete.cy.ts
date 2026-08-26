@@ -98,7 +98,7 @@ describe('Game Accounts – soft delete & restore', () => {
       cy.getByCy('confirm-text-input').type('Leader');
       cy.getByCy('confirmation-dialog-confirm').click();
 
-      cy.contains('Leave or hand over your alliance').should('be.visible');
+      cy.contains('still tied to an alliance').should('be.visible');
       cy.getByCy('account-row-Leader').should('be.visible');
       cy.getByCy('deleted-account-row-Leader').should('not.exist');
     });
