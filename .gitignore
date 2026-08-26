@@ -210,3 +210,8 @@ cython_debug/
 backup/rclone.conf
 backups*/
 .worktrees/
+
+# Screenshots dropped at the repo root to show something to Claude
+/image*.png
+/screenshot*.png
+/Capture*.png
