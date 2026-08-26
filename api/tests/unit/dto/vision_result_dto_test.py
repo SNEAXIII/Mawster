@@ -67,8 +67,10 @@ def test_result_message_accepts_a_failure_with_no_predictions():
 
 
 def test_result_message_rejects_an_unknown_status():
+    payload = _payload(status="in_progress")
+
     with pytest.raises(ValidationError):
-        VisionResultMessage.model_validate(_payload(status="in_progress"))
+        VisionResultMessage.model_validate(payload)
 
 
 def test_prediction_message_parses_candidates():

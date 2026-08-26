@@ -101,7 +101,8 @@ class FakePublisher:
 
     async def publish_job(self, job_id, import_id, bucket, object_key) -> None:
         if self.fails:
-            raise ConnectionError("broker down")
+            msg = "broker down"
+            raise ConnectionError(msg)
         self.published.append(job_id)
 
 
@@ -164,8 +165,10 @@ async def test_init_rejects_more_screens_than_the_batch_limit():
 async def test_init_rejects_an_unsupported_declared_type():
     session, storage = FakeSession(), FakeStorage()
 
+    declaration = _declaration(content_type="application/pdf")
+
     with pytest.raises(HTTPException) as exc:
-        await _init(session, storage, [_declaration(content_type="application/pdf")])
+        await _init(session, storage, [declaration])
 
     assert exc.value.status_code == 400
     assert storage.signed == []
@@ -177,8 +180,10 @@ async def test_init_rejects_a_declared_size_over_the_cap():
     was too big — after uploading all forty."""
     session, storage = FakeSession(), FakeStorage()
 
+    declaration = _declaration(size=MAX_SCREEN_BYTES + 1)
+
     with pytest.raises(HTTPException) as exc:
-        await _init(session, storage, [_declaration(size=MAX_SCREEN_BYTES + 1)])
+        await _init(session, storage, [declaration])
 
     assert exc.value.status_code == 400
     assert storage.signed == []
@@ -280,8 +285,10 @@ async def test_commit_screen_leaves_a_missing_object_retryable():
     job = _awaiting_job(vision_import, "missing.png")
     session, publisher = FakeSession([job]), FakePublisher()
 
+    storage = FakeStorage()
+
     with pytest.raises(HTTPException) as exc:
-        await _commit_screen(session, FakeStorage(), publisher, vision_import, job)
+        await _commit_screen(session, storage, publisher, vision_import, job)
 
     assert exc.value.status_code == 400
     assert "missing.png" in exc.value.detail
@@ -346,8 +353,10 @@ async def test_commit_screen_counts_a_job_the_broker_refused():
     storage = FakeStorage({job.object_key: (PNG, "image/png")})
     session = FakeSession([job])
 
+    publisher = FakePublisher(fails=True)
+
     with pytest.raises(HTTPException) as exc:
-        await _commit_screen(session, storage, FakePublisher(fails=True), vision_import, job)
+        await _commit_screen(session, storage, publisher, vision_import, job)
 
     assert exc.value.status_code == 503
     assert job.status == VisionJobStatus.FAILED

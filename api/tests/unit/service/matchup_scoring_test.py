@@ -26,12 +26,12 @@ def test_build_target_key_for_node():
 
 
 def test_build_target_key_rejects_defender_without_id():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="requires defender_champion_id"):
         build_target_key(MatchupTargetType.DEFENDER, None, None)
 
 
 def test_build_target_key_rejects_node_without_number():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="requires node_number"):
         build_target_key(MatchupTargetType.NODE, None, None)
 
 

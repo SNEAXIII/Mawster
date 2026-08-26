@@ -382,8 +382,7 @@ class DefensePlacementService:
             group["owners"].sort(key=lambda o: (-o["stars"], -o["rank"], o["defender_count"]))
 
         # Sort champions alphabetically
-        result = sorted(champion_groups.values(), key=lambda g: g["champion_name"])
-        return result
+        return sorted(champion_groups.values(), key=lambda g: g["champion_name"])
 
     @classmethod
     async def get_bg_members_with_counts(

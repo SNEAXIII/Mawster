@@ -23,10 +23,12 @@ def build_target_key(
     """
     if target_type is MatchupTargetType.DEFENDER:
         if defender_champion_id is None:
-            raise ValueError("A defender rating requires defender_champion_id")
+            msg = "A defender rating requires defender_champion_id"
+            raise ValueError(msg)
         return f"def:{defender_champion_id}"
     if node_number is None:
-        raise ValueError("A node rating requires node_number")
+        msg = "A node rating requires node_number"
+        raise ValueError(msg)
     return f"node:{node_number}"
 
 

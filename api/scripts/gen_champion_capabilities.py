@@ -96,11 +96,14 @@ def _sql_path_from_argv(raw: str) -> Path:
     resolved = Path(raw).expanduser().resolve()
 
     if not resolved.is_relative_to(ALLOWED_ROOT):
-        raise SystemExit(f"❌ Refusing to read {resolved}: outside {ALLOWED_ROOT}")
+        msg = f"❌ Refusing to read {resolved}: outside {ALLOWED_ROOT}"
+        raise SystemExit(msg)
     if not resolved.is_file():
-        raise SystemExit(f"❌ No such SQL dump: {resolved}")
+        msg = f"❌ No such SQL dump: {resolved}"
+        raise SystemExit(msg)
     if resolved.suffix.lower() != ".sql":
-        raise SystemExit(f"❌ Expected an uncompressed .sql dump, got: {resolved.name}")
+        msg = f"❌ Expected an uncompressed .sql dump, got: {resolved.name}"
+        raise SystemExit(msg)
 
     return resolved
 
@@ -126,5 +129,6 @@ def main(sql_path: str) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        raise SystemExit(f"Usage: python {Path(sys.argv[0]).name} <path-to-uncompressed-prod.sql>")
+        msg = f"Usage: python {Path(sys.argv[0]).name} <path-to-uncompressed-prod.sql>"
+        raise SystemExit(msg)
     main(sys.argv[1])

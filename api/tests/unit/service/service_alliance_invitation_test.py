@@ -67,7 +67,14 @@ def _make_alliance(alliance_id=None, owner_id=None):
 class TestCreateInvitation:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "account_exists, already_in_alliance, member_count, has_pending, inviter_in_alliance, expected_status",
+        (
+            "account_exists",
+            "already_in_alliance",
+            "member_count",
+            "has_pending",
+            "inviter_in_alliance",
+            "expected_status",
+        ),
         [
             (True, False, 0, False, True, None),
             (False, False, 0, False, True, 404),
@@ -116,7 +123,7 @@ class TestCreateInvitation:
         )
 
         get_map = {ga_id: invited_acc, inviter_acc_id: inviter_acc}
-        session.get = mocker.AsyncMock(side_effect=lambda model, id: get_map.get(id))
+        session.get = mocker.AsyncMock(side_effect=lambda model, obj_id: get_map.get(obj_id))
 
         if account_exists and not already_in_alliance:
             count_mock = mocker.MagicMock()
@@ -221,7 +228,14 @@ class TestGetInvitationsForAlliance:
 class TestAcceptInvitation:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "inv_found, inv_pending, belongs_to_user, already_in_alliance, member_count, expected_status",
+        (
+            "inv_found",
+            "inv_pending",
+            "belongs_to_user",
+            "already_in_alliance",
+            "member_count",
+            "expected_status",
+        ),
         [
             (True, True, True, False, 0, None),
             (False, True, True, False, 0, 404),
@@ -273,7 +287,7 @@ class TestAcceptInvitation:
         )
 
         get_map = {inv_id: invitation, ga_id: game_account}
-        session.get = mocker.AsyncMock(side_effect=lambda model, id: get_map.get(id))
+        session.get = mocker.AsyncMock(side_effect=lambda model, obj_id: get_map.get(obj_id))
 
         accounts_mock = mocker.MagicMock()
         accounts_mock.all.return_value = [user_acc]
@@ -309,7 +323,7 @@ class TestAcceptInvitation:
 class TestDeclineInvitation:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "inv_found, inv_pending, belongs_to_user, expected_status",
+        ("inv_found", "inv_pending", "belongs_to_user", "expected_status"),
         [
             (True, True, True, None),
             (False, True, True, 404),
@@ -360,7 +374,7 @@ class TestDeclineInvitation:
 class TestCancelInvitation:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "inv_found, inv_pending, same_alliance, expected_status",
+        ("inv_found", "inv_pending", "same_alliance", "expected_status"),
         [
             (True, True, True, None),
             (False, True, True, 404),

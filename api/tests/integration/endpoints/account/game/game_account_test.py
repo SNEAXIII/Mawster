@@ -694,6 +694,7 @@ async def _invitation_exists(invitation_id) -> bool:
             select(AllianceInvitation).where(AllianceInvitation.id == invitation_id)
         )
         return result.first() is not None
+    return None
 
 
 class TestDeleteGameAccountAllianceTies:

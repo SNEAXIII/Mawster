@@ -1,7 +1,7 @@
 """Admin read-only endpoints behind the AI-import dashboard."""
 
 import uuid
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query
 
@@ -35,17 +35,20 @@ async def get_vision_stats(session: SessionDep, days: int = DaysQuery):
 async def get_vision_user_stats(
     session: SessionDep,
     days: int = DaysQuery,
-    page: int = Query(default=1, ge=1),
-    size: int = Query(default=20, ge=1, le=100),
-    sort_by: Literal[
-        "imports_total",
-        "imports_confirmed",
-        "imports_cancelled",
-        "imports_failed",
-        "screens_total",
-        "last_import_at",
-    ] = Query(default="imports_total"),
-    sort_order: str = Query(default="desc", pattern="^(asc|desc)$"),
+    page: Annotated[int, Query(ge=1)] = 1,
+    size: Annotated[int, Query(ge=1, le=100)] = 20,
+    sort_by: Annotated[
+        Literal[
+            "imports_total",
+            "imports_confirmed",
+            "imports_cancelled",
+            "imports_failed",
+            "screens_total",
+            "last_import_at",
+        ],
+        Query(),
+    ] = "imports_total",
+    sort_order: Annotated[str, Query(pattern="^(asc|desc)$")] = "desc",
 ):
     """Who runs AI imports, and how those imports end up."""
     return await VisionStatsService.get_user_stats(
@@ -57,10 +60,10 @@ async def get_vision_user_stats(
 async def get_vision_imports(
     session: SessionDep,
     days: int = DaysQuery,
-    page: int = Query(default=1, ge=1),
-    size: int = Query(default=20, ge=1, le=100),
-    status: VisionImportStatus | None = Query(default=None),
-    user_id: uuid.UUID | None = Query(default=None),
+    page: Annotated[int, Query(ge=1)] = 1,
+    size: Annotated[int, Query(ge=1, le=100)] = 20,
+    status: Annotated[VisionImportStatus | None, Query()] = None,
+    user_id: Annotated[uuid.UUID | None, Query()] = None,
 ):
     """The import log itself, newest first — the drill-down behind the charts."""
     return await VisionStatsService.get_recent_imports(

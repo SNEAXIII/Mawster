@@ -125,7 +125,7 @@ async def test_require_super_admin_admin_fails(mocker):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "method_to_test,role",
+    ("method_to_test", "role"),
     [
         (AuthService.require_admin, UNKNOWN_ROLE),
         (AuthService.require_admin, Roles.USER),

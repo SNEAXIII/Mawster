@@ -34,7 +34,8 @@ class RaisingPublisher:
     """Simulates a broker blip: every publish attempt fails."""
 
     async def publish_job(self, job_id, import_id, bucket, object_key) -> None:
-        raise RuntimeError("broker unavailable")
+        msg = "broker unavailable"
+        raise RuntimeError(msg)
 
 
 class FakeSession:
@@ -257,8 +258,10 @@ async def test_retry_reverts_to_failed_when_publish_fails():
     vision_import.status = VisionImportStatus.DONE
     session = FakeSession(job, vision_import)
 
+    publisher = RaisingPublisher()
+
     with pytest.raises(HTTPException) as exc_info:
-        await VisionResultService.retry_job(session, RaisingPublisher(), job, vision_import)
+        await VisionResultService.retry_job(session, publisher, job, vision_import)
 
     assert exc_info.value.status_code == 503
     assert job.status == VisionJobStatus.FAILED

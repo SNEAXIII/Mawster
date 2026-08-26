@@ -103,4 +103,5 @@ async def execute_request(
         return await execute_patch_request(url, payload=payload or {}, headers=headers)
     if method == "DELETE":
         return await execute_delete_request(url, headers=headers, payload=payload)
-    raise ValueError(f"Unsupported HTTP method: {method}")
+    msg = f"Unsupported HTTP method: {method}"
+    raise ValueError(msg)

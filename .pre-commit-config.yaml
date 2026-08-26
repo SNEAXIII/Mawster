@@ -19,6 +19,16 @@ repos:
   # on Windows and in CI.
   - repo: local
     hooks:
+      # Ruff's PT012 rejects a `pytest.raises` block holding several statements, but it
+      # does not look inside the statement — `_init(s, [_declaration(...)])` is one
+      - id: raises-arity
+        name: one throwing call per pytest.raises
+        # `uv run`, not `python3`: there is no `python3` on Windows, and uv is already
+        # this repo's interpreter. `--no-project` keeps it from resolving api/ first.
+        entry: uv run --no-project python .claude/skills/raises-arity/scripts/check_raises_arity.py
+        language: system
+        files: ^api/tests/.*\.py$
+
       - id: eslint
         name: eslint (front)
         entry: "bash -c 'cd front && exec node_modules/.bin/eslint --fix --no-warn-ignored \"${@#front/}\"' --"

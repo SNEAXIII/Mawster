@@ -48,5 +48,6 @@ def test_existing_champion_flag_update():
 
 def test_real_capabilities_file_loads():
     caps = _load_capabilities()
-    assert isinstance(caps, dict) and caps
+    assert isinstance(caps, dict)
+    assert caps
     assert sum(1 for f in caps.values() if f.get("has_prefight")) >= 12

@@ -43,7 +43,7 @@ def _load_capabilities(path: Path = CAPABILITIES_JSON_PATH) -> dict:
     """Load the name->flags capability map. Returns {} if the file is absent."""
     if not path.exists():
         return {}
-    with open(path, encoding="utf-8") as f:
+    with path.open(encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -123,7 +123,7 @@ def load_champions(json_path: Path = DEFAULT_JSON_PATH):
 
     try:
         with Session(sync_engine) as session:
-            with open(json_path, encoding="utf-8") as f:
+            with json_path.open(encoding="utf-8") as f:
                 champions_data = json.load(f)
 
             if not isinstance(champions_data, list):

@@ -44,7 +44,7 @@ def _make_champion_user(
 ) -> ChampionUser:
     stars = int(rarity.split("r")[0])
     rank = int(rarity.split("r")[1])
-    cu = ChampionUser(
+    return ChampionUser(
         id=CHAMPION_USER_ID,
         game_account_id=game_account_id,
         champion_id=champion_id,
@@ -52,7 +52,6 @@ def _make_champion_user(
         rank=rank,
         signature=0,
     )
-    return cu
 
 
 def _make_game_account(
@@ -242,8 +241,10 @@ class TestCancelUpgradeRequest:
         session = _mock_session(mocker)
         session.get.return_value = None
 
+        missing_request_id = uuid.uuid4()
+
         with pytest.raises(HTTPException) as exc:
-            await UpgradeRequestService.cancel_upgrade_request(session, uuid.uuid4())
+            await UpgradeRequestService.cancel_upgrade_request(session, missing_request_id)
         assert exc.value.status_code == 404
 
     @pytest.mark.asyncio

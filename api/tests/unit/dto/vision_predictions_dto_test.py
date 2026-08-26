@@ -21,7 +21,7 @@ def _candidates(*pairs):
 
 
 @pytest.mark.parametrize(
-    "pairs, expected",
+    ("pairs", "expected"),
     [
         # The motivating case: a high absolute score the old badge painted green,
         # with the runner-up 0.01 behind. Both real misreads looked like this.

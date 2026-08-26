@@ -21,16 +21,22 @@ class TestAllianceCreateRequest:
         assert dto.name == "MyAlliance"
 
     def test_name_rejects_special_chars(self):
+        owner_id = uuid.uuid4()
+
         with pytest.raises(ValidationError):
-            AllianceCreateRequest(name="My-Alliance!", tag="ALLY", owner_id=uuid.uuid4())
+            AllianceCreateRequest(name="My-Alliance!", tag="ALLY", owner_id=owner_id)
 
     def test_tag_rejects_special_chars(self):
+        owner_id = uuid.uuid4()
+
         with pytest.raises(ValidationError):
-            AllianceCreateRequest(name="MyAlliance", tag="AL-Y!", owner_id=uuid.uuid4())
+            AllianceCreateRequest(name="MyAlliance", tag="AL-Y!", owner_id=owner_id)
 
     def test_tag_rejects_spaces(self):
+        owner_id = uuid.uuid4()
+
         with pytest.raises(ValidationError):
-            AllianceCreateRequest(name="MyAlliance", tag="AL Y", owner_id=uuid.uuid4())
+            AllianceCreateRequest(name="MyAlliance", tag="AL Y", owner_id=owner_id)
 
 
 def _make_alliance(elo: int = 1500, tier: int = 8):

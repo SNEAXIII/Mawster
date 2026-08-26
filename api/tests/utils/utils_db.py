@@ -1,5 +1,6 @@
 import os
 import time
+from pathlib import Path
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -13,7 +14,7 @@ IS_ECHO_ASYNC = False
 # ── Per-worker DB name (pytest-xdist support) ──────────────────────────
 # Each xdist worker gets PYTEST_XDIST_WORKER env var (gw0, gw1, …).
 # When running without xdist the var is absent → single "test.db".
-os.makedirs("temp", exist_ok=True)
+Path("temp").mkdir(exist_ok=True)
 _worker = os.environ.get("PYTEST_XDIST_WORKER", "")
 DB_NAME = f"temp/test_{_worker}.db" if _worker else "temp/test.db"
 
@@ -38,14 +39,15 @@ _schema_ready = False
 
 def delete_db(retries: int = 20, delay: float = 0.2):
     """Delete the DB file on disk (opt-in via TEST_DELETE_DB env var)."""
-    if os.getenv("TEST_DELETE_DB") in ("1", "true", "True") and os.path.exists(DB_NAME):
+    db_path = Path(DB_NAME)
+    if os.getenv("TEST_DELETE_DB") in ("1", "true", "True") and db_path.exists():
         for _ in range(retries):
             try:
-                os.remove(DB_NAME)
+                db_path.unlink()
                 return
             except PermissionError:
                 time.sleep(delay)
-        os.remove(DB_NAME)
+        db_path.unlink()
 
 
 def ensure_schema():
@@ -65,7 +67,9 @@ def _truncate_all():
         # Disable FK checks for speed during truncation
         conn.execute(text("PRAGMA foreign_keys = OFF"))
         for table in reversed(SQLModel.metadata.sorted_tables):
-            conn.execute(text(f'DELETE FROM "{table.name}"'))
+            # S608 ignored: the table names come from SQLModel.metadata, which we declare
+            # ourselves — no request data reaches this string.
+            conn.execute(text(f'DELETE FROM "{table.name}"'))  # noqa: S608
         # Reset SQLite AUTOINCREMENT sequences
         result = conn.execute(
             text("SELECT name FROM sqlite_master WHERE type='table' AND name='sqlite_sequence'")

@@ -17,8 +17,7 @@ from src.utils.db import SessionDep
 class UserService:
     @classmethod
     async def get_user(cls, session: SessionDep, user_id: uuid.UUID) -> User | None:
-        result = await session.get(User, user_id)
-        return result
+        return await session.get(User, user_id)
 
     @classmethod
     async def get_user_by_login(cls, session: SessionDep, login: str) -> User | None:

@@ -32,7 +32,10 @@ async def test_unroutable_publish_raises(mocker):
     publisher = VisionPublisher()
     mocker.patch.object(publisher, "_ensure_exchange", AsyncMock(return_value=exchange))
 
+    job_id = uuid.uuid4()
+    import_id = uuid.uuid4()
+
     with pytest.raises(DeliveryError):
         await publisher.publish_job(
-            job_id=uuid.uuid4(), import_id=uuid.uuid4(), bucket="vision", object_key="k"
+            job_id=job_id, import_id=import_id, bucket="vision", object_key="k"
         )

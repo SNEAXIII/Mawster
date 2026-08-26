@@ -25,7 +25,7 @@ SEASONS_URL = "/admin/seasons"
 CURRENT_URL = "/seasons/current"
 
 
-@pytest.fixture()
+@pytest.fixture
 async def admin_in_db():
     await load_objects([get_admin()])
 
@@ -212,7 +212,7 @@ class TestRevertSeason:
 
 
 class TestGetCurrentSeason:
-    @pytest.fixture()
+    @pytest.fixture
     async def user_in_db(self):
         await load_objects([get_generic_user(is_base_id=True)])
 
@@ -252,11 +252,11 @@ class TestGetCurrentSeason:
 
 
 class TestListSeasonsPublic:
-    @pytest.fixture()
+    @pytest.fixture
     async def user_in_db(self):
         await load_objects([get_generic_user(is_base_id=True)])
 
-    @pytest.fixture()
+    @pytest.fixture
     async def member_in_alliance(self):
         await load_objects([get_generic_user(is_base_id=True)])
         await push_alliance_with_owner(

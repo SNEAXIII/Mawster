@@ -82,7 +82,7 @@ class TestAdminUsersAccessControl:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "method, url, payload",
+        ("method", "url", "payload"),
         [(action, route, payload) for action, route, payload, _ in _ADMIN_USER_ROUTES],
         ids=[name for _, _, _, name in _ADMIN_USER_ROUTES],
     )
@@ -92,7 +92,7 @@ class TestAdminUsersAccessControl:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "method, url, payload",
+        ("method", "url", "payload"),
         [(action, route, payload) for action, route, payload, _ in _ADMIN_USER_ROUTES],
         ids=[name for _, _, _, name in _ADMIN_USER_ROUTES],
     )
@@ -119,7 +119,7 @@ class TestGetUsers:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "page, size, expected_status",
+        ("page", "size", "expected_status"),
         [
             (1, 10, 200),
             (0, 10, 422),
@@ -166,7 +166,7 @@ class TestDisableUser:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "scenario, expected_status",
+        ("scenario", "expected_status"),
         [
             ("already_disabled", 400),
             ("deleted", 400),
@@ -228,7 +228,7 @@ class TestEnableUser:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "scenario, expected_status",
+        ("scenario", "expected_status"),
         [
             ("already_enabled", 400),
             ("deleted", 400),
@@ -272,7 +272,7 @@ class TestAdminDeleteUser:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "scenario, expected_status",
+        ("scenario", "expected_status"),
         [
             ("already_deleted", 400),
             ("is_admin", 400),
@@ -334,7 +334,7 @@ class TestPromoteUser:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "scenario, expected_status",
+        ("scenario", "expected_status"),
         [
             ("already_admin", 400),
             ("deleted", 400),
@@ -480,7 +480,7 @@ class TestDemoteUser:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "scenario, expected_status",
+        ("scenario", "expected_status"),
         [
             ("not_admin", 400),
             ("deleted", 400),

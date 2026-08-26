@@ -67,18 +67,21 @@ class OAuthService(ABC):
     @abstractmethod
     async def get_or_create_user(cls, session: SessionDep, profile: dict) -> User: ...
 
+    # S311 ignored throughout the login helpers below: what they draw is a public
+    # identifier, not a credential. Guessing someone's login grants nothing — the
+    # JWT signing key is what gates access, and that comes from `secrets`.
     @classmethod
     def _random_base_login(cls) -> str:
-        adj = random.choice(_ADJECTIVES)
-        noun = random.choice(_NOUNS)
-        digits = "".join(random.choices(string.digits, k=2))
+        adj = random.choice(_ADJECTIVES)  # noqa: S311
+        noun = random.choice(_NOUNS)  # noqa: S311
+        digits = "".join(random.choices(string.digits, k=2))  # noqa: S311
         return f"{adj}{noun}{digits}"
 
     @classmethod
     def _normalize_login(cls, username: str) -> str:
         normalized = "".join(c for c in username if c.isalnum())
         if len(normalized) < 4:
-            suffix = "".join(random.choices(string.digits, k=4))
+            suffix = "".join(random.choices(string.digits, k=4))  # noqa: S311
             normalized = f"{normalized}{suffix}"
         return normalized[:15]
 
@@ -91,9 +94,9 @@ class OAuthService(ABC):
             result = await session.exec(sql)
             if result.first() is None:
                 return login
-            suffix = "".join(random.choices(string.digits, k=3))
+            suffix = "".join(random.choices(string.digits, k=3))  # noqa: S311
             login = f"{base_login[:12]}{suffix}"
-        return f"user{''.join(random.choices(string.ascii_lowercase + string.digits, k=10))}"
+        return f"user{''.join(random.choices(string.ascii_lowercase + string.digits, k=10))}"  # noqa: S311
 
     @classmethod
     async def resolve_user(

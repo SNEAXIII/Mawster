@@ -114,8 +114,7 @@ async def read_users_me_with_token(body: TokenBody, session: SessionDep):
     """
     data = JWTService.decode_jwt(body.token)
     user_id = data.get("user_id")
-    user = await UserService.get_user_by_id_with_validity_check(session, user_id)
-    return user
+    return await UserService.get_user_by_id_with_validity_check(session, user_id)
 
 
 @dev_controller.get("/users", response_model=list[DevUser])
@@ -138,7 +137,6 @@ async def dev_login(body: DevLoginRequest, session: SessionDep) -> LoginResponse
     logger.warning("DEV LOGIN — user: %s", user.login)
 
     return LoginResponse(
-        token_type="bearer",
         access_token=access_token,
         refresh_token=refresh_token,
     )
@@ -162,7 +160,6 @@ async def dev_token(username: Annotated[str, Form()], session: SessionDep) -> Lo
             )
     logger.warning("DEV TOKEN — username: %s / user: %s", username, user.login)
     return LoginResponse(
-        token_type="bearer",
         access_token=JWTService.create_access_token(user),
         refresh_token=JWTService.create_refresh_token(user),
     )
@@ -182,9 +179,7 @@ async def dev_login_by_pseudo(body: DevLoginByPseudoRequest, session: SessionDep
     access_token = JWTService.create_access_token(user)
     refresh_token = JWTService.create_refresh_token(user)
     logger.warning("DEV LOGIN BY PSEUDO — pseudo: %s / user: %s", body.game_pseudo, user.login)
-    return LoginResponse(
-        token_type="bearer", access_token=access_token, refresh_token=refresh_token
-    )
+    return LoginResponse(access_token=access_token, refresh_token=refresh_token)
 
 
 @dev_controller.post("/truncate", status_code=200)
@@ -207,7 +202,9 @@ async def run_fixtures(session: SessionDep):
     await session.exec(text("SET FOREIGN_KEY_CHECKS = 1"))
     await session.commit()
 
-    fixtures_dir = Path(__file__).resolve().parent.parent.parent / "fixtures"
+    # ASYNC240 ignored: this route is testing-only and already blocks the loop on
+    # exec_module below, so routing the path calls through anyio would buy nothing.
+    fixtures_dir = Path(__file__).resolve().parent.parent.parent / "fixtures"  # noqa: ASYNC240
     results = {}
     for fixture_file in sorted(fixtures_dir.glob("*.py")):
         if fixture_file.stem.startswith("_"):
