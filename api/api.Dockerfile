@@ -2,12 +2,18 @@ FROM python:3.12-alpine AS builder
 
 WORKDIR /app
 
-RUN pip install uv
+# `--only-binary :all:` refuses sdists, so no package gets to run a setup.py at build
+# time; `uv==` pins what an unpinned `pip install uv` would otherwise resolve fresh on
+# every rebuild. Same reasoning for uv's own `--no-build` below.
+RUN pip install --only-binary :all: uv==0.10.6
 
 COPY pyproject.toml uv.lock ./
-RUN uv sync --no-dev --frozen --no-install-project
+RUN uv sync --no-dev --frozen --no-build --no-install-project
 
 COPY src ./src
+# No `--no-build` here on purpose: every third-party dependency is already installed by
+# the sync above, so the only thing left to build is mawster-api itself — our own source,
+# which has no wheel and is not the supply-chain risk the flag guards against.
 RUN uv sync --no-dev --frozen
 
 # ---
@@ -18,7 +24,7 @@ LABEL maintainer="SNEAXIII <misterbalise2@gmail.com>"
 
 ENV PYTHONUNBUFFERED=1
 
-RUN apk add --no-cache bash && pip install uv
+RUN apk add --no-cache bash && pip install --only-binary :all: uv==0.10.6
 
 WORKDIR /app
 
