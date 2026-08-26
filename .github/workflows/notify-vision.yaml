@@ -8,12 +8,11 @@ on:
       - 'static-assets/static/champions/**'
       - 'api/src/fixtures/champions.json'
 
-permissions:
-  contents: read
-
 jobs:
   dispatch:
     name: Ask mcoc-vision to rebuild its gallery
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Send repository_dispatch

@@ -6,12 +6,11 @@ on:
   pull_request:
     branches: [main, release]
 
-permissions:
-  contents: read
-
 jobs:
   trivy:
     name: Trivy Security Scan
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
