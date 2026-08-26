@@ -63,7 +63,8 @@ def test_seed_has_seasons(seeded_session):
     numbers = {s.number for s in seasons}
     assert {60, 61, 62, 63, 64, 65, 66, 67} <= numbers
     active = [s for s in seasons if s.status.value == "active"]
-    assert len(active) == 1 and active[0].number == 67
+    assert len(active) == 1
+    assert active[0].number == 67
 
 
 def test_seed_has_three_wars(seeded_session):
