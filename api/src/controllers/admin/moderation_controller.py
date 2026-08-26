@@ -1,4 +1,5 @@
 import uuid
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 from starlette import status
@@ -27,7 +28,7 @@ moderation_controller = APIRouter(
 @moderation_controller.get("/note-reports", response_model=PaginatedNoteReports)
 async def list_note_reports(
     session: SessionDep,
-    status_filter: NoteReportStatus | None = Query(default=None, alias="status"),
+    status_filter: Annotated[NoteReportStatus | None, Query(alias="status")] = None,
     alliance_id: uuid.UUID | None = None,
     page: int = 1,
     size: int = 20,
