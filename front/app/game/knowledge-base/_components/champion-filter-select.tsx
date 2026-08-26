@@ -71,8 +71,18 @@ export default function ChampionFilterSelect({
           {value ? (
             <span
               role='button'
+              tabIndex={0}
+              aria-label={t.common.clearSelection}
               data-cy={dataCy ? `${dataCy}-clear` : undefined}
               onClick={(e) => {
+                e.stopPropagation()
+                onChange(null)
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return
+                // The popover trigger is an ancestor: without both calls, Enter/Space
+                // would clear the filter *and* open the popover.
+                e.preventDefault()
                 e.stopPropagation()
                 onChange(null)
               }}
