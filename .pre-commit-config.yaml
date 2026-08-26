@@ -23,16 +23,12 @@ repos:
       # does not look inside the statement — `_init(s, [_declaration(...)])` is one
       - id: raises-arity
         name: one throwing call per pytest.raises
-        # `uv run`, not `python3`: there is no `python3` on Windows, and uv is already
-        # this repo's interpreter. `--no-project` keeps it from resolving api/ first.
+        # uv run, not python3: no python3 on Windows. --no-project skips resolving api/.
         entry: uv run --no-project python .claude/skills/raises-arity/scripts/check_raises_arity.py
         language: system
         files: ^api/tests/.*\.py$
 
-      # GitHub Actions security audit. Catches the class Sonar reports days later:
-      # `${{ }}` expanded into a `run:` block, over-broad token scopes, unpinned actions.
-      # Ignores for today's accepted trade-offs live in .github/zizmor.yml, so a *new*
-      # finding stands out instead of drowning in pre-existing ones.
+      # Accepted trade-offs are listed in .github/zizmor.yml so a new finding stands out.
       # --min-severity low: informational findings should not block a commit.
       - id: zizmor
         name: GitHub Actions audit

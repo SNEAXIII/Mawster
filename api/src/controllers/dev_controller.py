@@ -202,8 +202,7 @@ async def run_fixtures(session: SessionDep):
     await session.exec(text("SET FOREIGN_KEY_CHECKS = 1"))
     await session.commit()
 
-    # ASYNC240 ignored: this route is testing-only and already blocks the loop on
-    # exec_module below, so routing the path calls through anyio would buy nothing.
+    # ASYNC240: testing-only route that already blocks on exec_module below.
     fixtures_dir = Path(__file__).resolve().parent.parent.parent / "fixtures"  # noqa: ASYNC240
     results = {}
     for fixture_file in sorted(fixtures_dir.glob("*.py")):
@@ -487,9 +486,8 @@ async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session
     return {"created": body.count}
 
 
-# scripts/e2e_parallel.py slices backend.log on these markers to attribute lines to a
-# test, so a title is bounded to one line: a newline in it would forge a second marker
-# and mis-attribute every line after it.
+# scripts/e2e_parallel.py slices backend.log on these markers, so a newline in a title
+# would forge a second marker and mis-attribute every line after it.
 MAX_LOG_TITLE = 200
 
 

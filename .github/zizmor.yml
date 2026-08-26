@@ -1,26 +1,18 @@
-# zizmor — GitHub Actions security audit, run by the `zizmor` pre-commit hook.
-#
-# The point of this file is that the hook stays green on today's tree, so a *new*
-# finding is visible instead of being lost in a wall of pre-existing ones. Everything
-# ignored here is a deliberate trade-off, not a defect: each entry names why.
-#
-# Nothing else is muted. template-injection, excessive-permissions, unpinned uses,
-# secret leakage and the rest stay live.
+# Ignored below = accepted trade-off, not a defect, so a new finding stands out.
+# Nothing else is muted: template-injection, excessive-permissions, unpinned uses and
+# secret leakage stay live.
 
 rules:
   cache-poisoning:
-    # 7 hits, all on setup-python / setup-node / setup-uv caches in the test pipeline.
-    # zizmor's concern is a workflow that both caches and publishes: a poisoned cache
-    # could reach a release artifact. Removing the caches would cost several minutes on
-    # every push. Revisit when the build starts signing or publishing from these jobs.
+    # setup-python/node/uv caches. Dropping them costs minutes per push, and none of
+    # these jobs publish a release artifact. Revisit if they ever do.
     ignore:
       - api_front__test_lint_build.yaml
       - sonar.yaml
 
   artipacked:
-    # 16 hits: actions/checkout leaves the credential in .git/config by default, which
-    # matters when a later step uploads the workspace as an artifact. No job here does.
-    # Setting persist-credentials: false on 16 checkouts would break the steps that push.
+    # checkout leaves the credential in .git/config. Only matters if a job uploads the
+    # workspace as an artifact; none does.
     ignore:
       - api_front__test_lint_build.yaml
       - assets-refresh.yaml
@@ -30,7 +22,6 @@ rules:
       - vision-gate.yaml
 
   unpinned-images:
-    # One service container in the e2e job pinned by tag rather than digest. It is a
-    # test database that never touches a release artifact.
+    # Test database, pinned by tag. Never reaches a release artifact.
     ignore:
       - api_front__test_lint_build.yaml
