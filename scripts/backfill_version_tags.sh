@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 # Tags the 24 versions reconstructed in CHANGELOG.md.
 #
-# Each version is anchored on the last commit of main on its date, i.e. what shipped that day.
+# Each version is anchored on the commit of main that the deploy actually promoted: the
+# main-side parent of the last "Merge pull request from SNEAXIII/main" landing on release on
+# that date. Anchoring on the last commit of main that day is wrong - the deploy often runs
+# late in the evening, and commits pushed afterwards ship with the *next* deploy.
+#
+# The three versions predating the first production deploy (2026-04-30) have no such merge to
+# anchor on, and fall back to the last commit of main on their date.
+#
 # Tags are annotated and never overwrite an existing tag.
 #
 #   ./scripts/backfill_version_tags.sh          # show what would be tagged
@@ -10,6 +17,10 @@
 # Publishing stays manual and deliberate: git push origin --tags
 
 set -euo pipefail
+
+# Day boundaries are read in the author's timezone, not the runner's. A deploy at 01:33 Paris
+# time belongs to the previous day in UTC, which would pull the next day's work into the tag.
+export TZ=Europe/Paris
 
 APPLY=false
 [ "${1:-}" = "--apply" ] && APPLY=true
@@ -51,18 +62,30 @@ for entry in "${VERSIONS[@]}"; do
     continue
   fi
 
-  commit=$(git rev-list -1 --first-parent --before="${date} 23:59:59" origin/main)
+  # Last deploy of the wave: a merge of main into release, dated on or before that day.
+  deploy=$(git log --first-parent --format='%H %s' --until="${date} 23:59:59" origin/release \
+             | grep -m1 'from SNEAXIII/main' | cut -d' ' -f1 || true)
+
+  if [ -n "$deploy" ]; then
+    commit=$(git rev-parse "${deploy}^2")
+    origin="deploy ${deploy:0:8}"
+  else
+    # Before the first production deploy, nothing was promoted; fall back to main.
+    commit=$(git rev-list -1 --first-parent --until="${date} 23:59:59" origin/main)
+    origin="main (pre-production)"
+  fi
+
   if [ -z "$commit" ]; then
-    echo "! ${tag}: no commit found before ${date}" >&2
+    echo "! ${tag}: no commit found for ${date}" >&2
     exit 1
   fi
 
   if $APPLY; then
     GIT_COMMITTER_DATE="${date}T12:00:00" \
       git tag -a "$tag" "$commit" -m "${version} — ${title}"
-    echo "+ ${tag} → ${commit:0:8} (${date})"
+    echo "+ ${tag} → ${commit:0:8}  ${date}  ${origin}"
   else
-    echo "  ${tag} → ${commit:0:8} (${date}) — ${title}"
+    echo "  ${tag} → ${commit:0:8}  ${date}  ${origin}  — ${title}"
   fi
 done
 
