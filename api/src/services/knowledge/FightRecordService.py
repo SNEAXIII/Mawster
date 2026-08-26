@@ -228,7 +228,9 @@ class FightRecordService:
         return []
 
     @classmethod
-    async def get_fight_records(
+    # Refactor candidate, the worst in the codebase: 27 complexity, 27 branches, 84
+    # statements. Filter building and result shaping are two jobs in one function.
+    async def get_fight_records(  # noqa: C901, PLR0912, PLR0915
         cls,
         session: SessionDep,
         accessible_alliance_ids: list[uuid.UUID],

@@ -12,7 +12,9 @@ from src.utils.db import SessionDep
 
 class AllianceRosterService:
     @classmethod
-    def _apply_filters(
+    # Refactor candidate: one branch per optional filter (13 complexity). A small
+    # filter->clause mapping would flatten it.
+    def _apply_filters(  # noqa: C901
         cls,
         stmt: Select,
         *,

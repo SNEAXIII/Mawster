@@ -44,6 +44,8 @@ extend = "../ruff.toml"
 # S101: `assert` *is* the test framework. S105: constants named FAKE_TOKEN / TOKEN_TYPE
 # hold fixture strings, not credentials. S106 likewise for the token_type kwarg.
 "tests/**" = ["S101", "S105", "S106"]
+# Local tooling, not shipped code: a long linear `main` is the right shape for it.
+"scripts/**" = ["C901", "PLR0912", "PLR0915"]
 # Local DB scripts: the retry loops must swallow *any* driver/ORM error and try again,
 # which is the point — they run against a database that may not be up yet.
 "src/fixtures/*_db.py" = ["BLE001"]

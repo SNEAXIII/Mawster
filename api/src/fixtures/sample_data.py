@@ -276,7 +276,9 @@ def _build_roster(
     return entries
 
 
-def load_sample_data(engine=sync_engine):
+# Refactor candidate: one long linear seed script (26 complexity, 165 statements).
+# Splitting it per entity would make it readable, but nothing depends on that today.
+def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
     try:
         with Session(engine) as session:
             # ── Champion catalogue ────────────────────────────────────────────────

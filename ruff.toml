@@ -57,6 +57,9 @@ select = [
     "EM", # flake8-errmsg — exception messages built inline at the raise site
     "PT", # flake8-pytest-style — parametrize/fixture form, over-broad raises
     "S", # flake8-bandit — see the per-file-ignores below for the test/script carve-outs
+    "C90", # mccabe — cyclomatic complexity
+    "PLR0912", # too many branches
+    "PLR0915", # too many statements
     "BLE001", # blind `except Exception`
     "TRY004", # raise TypeError for type checks
     "EXE001", # shebang on a non-executable file
@@ -83,6 +86,19 @@ ignore = [
     "RUF003",
 ]
 
+[lint.mccabe]
+# Raised from ruff's default of 10: at 10 the rule fires on four services that are branchy
+# by nature (filter builders, attacker eligibility) without pointing at a real defect.
+# 12 is where it starts catching functions that genuinely want splitting.
+max-complexity = 12
+
+[lint.pylint]
+# Same reasoning: set just above the healthy end of the current codebase, so these fire on
+# new drift rather than on everything written so far. The few functions already past the
+# line carry a `# noqa` naming them as refactor candidates.
+max-branches = 15
+max-statements = 60
+
 [lint.flake8-pytest-style]
 # PT011 asks for a `match=` on over-broad exception types. Trimmed to the catch-alls:
 # a bare `ValueError` in these tests is already pinned by an `assert error.value.args[0]
@@ -95,7 +111,7 @@ raises-require-match-for = ["BaseException", "Exception"]
 ".claude/**" = ["BLE001", "S110", "S603", "S607"]
 # S603/S607/S310: local dev tooling driving `docker`, `npm` and localhost health
 # checks with hardcoded argv. There is no untrusted input to sanitise here.
-"scripts/**" = ["BLE001", "S110", "S603", "S607", "S310"]
+"scripts/**" = ["BLE001", "S110", "S603", "S607", "S310", "C901", "PLR0912", "PLR0915"]
 # PLC0415: heavy, optional third-party deps (PIL, bs4, curl_cffi) are imported inside
 # the function that needs them, so the other entry points run without them installed.
 "static-assets/**" = ["BLE001", "S110", "PLC0415", "S603", "S607"]
