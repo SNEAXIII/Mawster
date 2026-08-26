@@ -1,9 +1,7 @@
 name: Sonar
 
-# Kept out of the main CI pipeline on purpose: that workflow only runs on
-# push to release/staging and PRs to main, so main itself would never be
-# analyzed — and Sonar needs an analysis of the default branch as the
-# reference point every PR is compared against.
+# Separate from the main CI pipeline, which never runs on push to main —
+# Sonar needs an analysis of the default branch as the PR reference point.
 
 on:
   push:
@@ -20,16 +18,14 @@ jobs:
   sonar:
     name: SonarQube Cloud scan
     runs-on: ubuntu-latest
-    # SONAR_TOKEN is an *environment* secret, not a repository one: without this
-    # line `secrets.SONAR_TOKEN` resolves to an empty string and the scanner
-    # fails with "Not authorized or project not found".
+    # SONAR_TOKEN is an environment secret: without this line it resolves to an
+    # empty string and the scanner fails with "Not authorized".
     environment: Api
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          # Full history, not the default shallow clone: Sonar reads git blame
-          # to date issues and decide what counts as new code.
+          # Sonar reads git blame to decide what counts as new code.
           fetch-depth: 0
       - name: Install uv
         uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -38,18 +34,14 @@ jobs:
           enable-cache: true
       - name: Install dev dependencies
         working-directory: ./api
-        # Same flags as the CI pipeline: no source distribution is ever built and
-        # the project itself is not installed — pytest puts ./api on sys.path.
+        # Same flags as the CI pipeline.
         run: uv sync --all-groups --locked --no-build --no-install-project
       - name: Run backend tests with coverage
         working-directory: ./api
         env:
           MODE: dev
-        # The suite runs here rather than being pulled from the CI pipeline as an
-        # artifact: that pipeline never runs on push to main, and Sonar needs the
-        # reference branch to carry coverage too. Coverage is scoped to api/src by
-        # [tool.coverage.run] in pyproject.toml; the report lands in api/coverage.xml,
-        # where sonar-project.properties expects it.
+        # Report lands in api/coverage.xml, where sonar-project.properties
+        # expects it; scope is set by [tool.coverage.run] in pyproject.toml.
         run: uv run --no-sync --no-build pytest tests --cov --cov-report=xml:coverage.xml -q -n auto --dist=loadscope
       - name: SonarQube Cloud scan
         uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e # v8.2.0

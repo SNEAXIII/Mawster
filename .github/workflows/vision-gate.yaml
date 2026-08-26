@@ -53,9 +53,8 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # One pull, reused by both runs. The image already carries the torch-free
-      # venv, the system libs, clip_visual.onnx and the PaddleOCR weights, so
-      # there is nothing to install and nothing to cache.
+      # One pull, reused by both runs: the image already carries the venv,
+      # the system libs and the model weights - nothing to install or cache.
       - name: Pull the worker image
         run: docker pull "$IMAGE"
 
@@ -71,17 +70,14 @@ jobs:
                 python -m src.naming.embed build &&
                 python -m src.pipeline data/real \
                   --weights out/runs/card_detector/weights/best.onnx --debug &&
-                # eval exits non-zero on a naming regression; tolerated so the
-                # gate never turns red on a naming change - only a pipeline
-                # crash should fail this job.
+                # eval exits non-zero on a naming regression; tolerated so only
+                # a pipeline crash can fail this job.
                 (python -m src.eval --all --dir data/real || true)" | tee "eval-$side.txt"
             mkdir -p "gate-out/$side"
             docker cp "gate-$side:/app/out/debug/." "gate-out/$side/"
             docker rm "gate-$side"
           done
 
-      # eval_diff always exits 0, so a naming regression reports without ever
-      # turning this job red. Only the steps above can fail it.
       - name: Build the naming diff
         run: python3 mcoc-vision/src/eval_diff.py gate-out/base gate-out/pr > report.md
 

@@ -36,12 +36,9 @@ jobs:
           enable-cache: true
       - name: Install dev dependencies
         working-directory: ${{ env.WORKDIR }}
-        # --no-build forbids building any source distribution, which is where a
-        # compromised dependency would run arbitrary setup code. It also refuses
-        # to build this project (no wheel, hatchling backend), hence
-        # --no-install-project: the venv gets the locked dependencies only.
-        # Nothing needs the editable install — pytest puts ./api on sys.path
-        # from the rootdir, and `uv run app_testing.py` re-syncs it for e2e.
+        # --no-build blocks source-dist build scripts, where a compromised
+        # dependency would run code; it also refuses this project, hence
+        # --no-install-project — pytest puts ./api on sys.path anyway.
         run: uv sync --all-groups --locked --no-build --no-install-project
       - name: Run Ruff linter
         working-directory: ${{ env.WORKDIR }}
@@ -75,7 +72,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      # ── Frontend ──
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
@@ -151,12 +147,7 @@ jobs:
           enable-cache: true
       - name: Install API dependencies
         working-directory: ./api
-        # --no-build forbids building any source distribution, which is where a
-        # compromised dependency would run arbitrary setup code. It also refuses
-        # to build this project (no wheel, hatchling backend), hence
-        # --no-install-project: the venv gets the locked dependencies only.
-        # Nothing needs the editable install — pytest puts ./api on sys.path
-        # from the rootdir, and `uv run app_testing.py` re-syncs it for e2e.
+        # Same flags as the lint job above.
         run: uv sync --all-groups --locked --no-build --no-install-project
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
@@ -184,7 +175,6 @@ jobs:
       - name: Extract frontend build
         run: tar -xzf /tmp/next-e2e-build.tar.gz -C front
 
-      # ── Run Cypress ──
       - name: Run Cypress E2E tests (runner ${{ matrix.runner }})
         run: python3 scripts/e2e_parallel.py --workers 1 --spec "${{ matrix.specs }}" --skip-build --quiet
       - name: Upload Cypress results

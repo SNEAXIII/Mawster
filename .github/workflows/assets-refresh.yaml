@@ -2,8 +2,8 @@ name: Champion assets refresh
 
 on:
   schedule:
-    # 05:17 UTC daily. Off the hour on purpose: GitHub's on-the-hour cron slots
-    # are congested and scheduled runs get delayed or dropped there.
+    # Off the hour on purpose: GitHub's on-the-hour slots are congested and
+    # scheduled runs get delayed or dropped there.
     - cron: '17 5 * * *'
   workflow_dispatch:
 
@@ -30,8 +30,8 @@ jobs:
 
       - name: Scrape champions from the wiki
         working-directory: ./static-assets
-        # static-assets has no build-system, so nothing has to be built here and
-        # --no-build costs nothing while blocking dependency setup scripts.
+        # --no-build: nothing here needs building, and it blocks dependency
+        # setup scripts.
         run: uv run --locked --no-build python scrape_champions.py
 
       - name: Detect changes
@@ -45,9 +45,8 @@ jobs:
             git status --porcelain
           fi
 
-      # A fixed branch, not a dated one: create-pull-request updates the
-      # existing PR when the branch is already there, so consecutive daily runs
-      # amend one PR instead of piling up seven a week.
+      # Fixed branch, not a dated one: daily runs amend one PR instead of
+      # piling up seven a week.
       - name: Open or update the assets PR
         if: steps.diff.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
