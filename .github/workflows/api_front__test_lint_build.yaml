@@ -203,8 +203,13 @@ jobs:
     steps:
       - name: Compute deploy metadata
         id: meta
+        # Through env, not ${{ }} in run: a template is expanded into the script text,
+        # so a hostile branch name would be executed rather than compared.
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref_name }}" = "release" ]; then
+          if [ "$EVENT_NAME" = "push" ] && [ "$REF_NAME" = "release" ]; then
             echo "moving_tag=latest" >> "$GITHUB_OUTPUT"
             echo "tag_prefix=" >> "$GITHUB_OUTPUT"
           else

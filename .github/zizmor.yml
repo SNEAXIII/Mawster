@@ -1,0 +1,27 @@
+# Ignored below = accepted trade-off, not a defect, so a new finding stands out.
+# Nothing else is muted: template-injection, excessive-permissions, unpinned uses and
+# secret leakage stay live.
+
+rules:
+  cache-poisoning:
+    # setup-python/node/uv caches. Dropping them costs minutes per push, and none of
+    # these jobs publish a release artifact. Revisit if they ever do.
+    ignore:
+      - api_front__test_lint_build.yaml
+      - sonar.yaml
+
+  artipacked:
+    # checkout leaves the credential in .git/config. Only matters if a job uploads the
+    # workspace as an artifact; none does.
+    ignore:
+      - api_front__test_lint_build.yaml
+      - assets-refresh.yaml
+      - notify-vision.yaml
+      - security.yml
+      - sonar.yaml
+      - vision-gate.yaml
+
+  unpinned-images:
+    # Test database, pinned by tag. Never reaches a release artifact.
+    ignore:
+      - api_front__test_lint_build.yaml

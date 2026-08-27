@@ -11,4 +11,4 @@ fi
 export MARIADB_USER=mawster
 export MARIADB_DATABASE=mawster
 
-uv run --no-sync alembic upgrade head
+uv run --no-build --no-sync alembic upgrade head

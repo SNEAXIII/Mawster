@@ -28,5 +28,5 @@ export RUSTFS_SECRET_KEY="${RUSTFS_SECRET_KEY:-$(cat /run/secrets/mawster_rustfs
 
 # set -e stops here if load_champions fails, so load_masteries never runs
 # against a half-seeded catalogue.
-uv run --no-sync python -m src.fixtures.load_champions
-uv run --no-sync python -m src.fixtures.load_masteries
+uv run --no-build --no-sync python -m src.fixtures.load_champions
+uv run --no-build --no-sync python -m src.fixtures.load_masteries

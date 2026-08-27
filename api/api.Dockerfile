@@ -2,12 +2,13 @@ FROM python:3.12-alpine AS builder
 
 WORKDIR /app
 
-RUN pip install uv
+RUN pip install --only-binary :all: uv==0.10.6
 
 COPY pyproject.toml uv.lock ./
-RUN uv sync --no-dev --frozen --no-install-project
+RUN uv sync --no-dev --frozen --no-build --no-install-project
 
 COPY src ./src
+# No --no-build: this sync installs mawster-api itself, which has no wheel.
 RUN uv sync --no-dev --frozen
 
 # ---
@@ -18,7 +19,7 @@ LABEL maintainer="SNEAXIII <misterbalise2@gmail.com>"
 
 ENV PYTHONUNBUFFERED=1
 
-RUN apk add --no-cache bash && pip install uv
+RUN apk add --no-cache bash && pip install --only-binary :all: uv==0.10.6
 
 WORKDIR /app
 
