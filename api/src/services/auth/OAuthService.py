@@ -1,4 +1,4 @@
-import random
+import secrets
 import string
 from abc import ABC, abstractmethod
 
@@ -72,16 +72,16 @@ class OAuthService(ABC):
     # JWT signing key is what gates access, and that comes from `secrets`.
     @classmethod
     def _random_base_login(cls) -> str:
-        adj = random.choice(_ADJECTIVES)  # noqa: S311
-        noun = random.choice(_NOUNS)  # noqa: S311
-        digits = "".join(random.choices(string.digits, k=2))  # noqa: S311
+        adj = secrets.choice(_ADJECTIVES)
+        noun = secrets.choice(_NOUNS)
+        digits = "".join(secrets.choice(string.digits) for _ in range(2))
         return f"{adj}{noun}{digits}"
 
     @classmethod
     def _normalize_login(cls, username: str) -> str:
         normalized = "".join(c for c in username if c.isalnum())
         if len(normalized) < 4:
-            suffix = "".join(random.choices(string.digits, k=4))  # noqa: S311
+            suffix = "".join(secrets.choice(string.digits) for _ in range(4))
             normalized = f"{normalized}{suffix}"
         return normalized[:15]
 
@@ -94,9 +94,9 @@ class OAuthService(ABC):
             result = await session.exec(sql)
             if result.first() is None:
                 return login
-            suffix = "".join(random.choices(string.digits, k=3))  # noqa: S311
+            suffix = "".join(secrets.choice(string.digits) for _ in range(3))
             login = f"{base_login[:12]}{suffix}"
-        return f"user{''.join(random.choices(string.ascii_lowercase + string.digits, k=10))}"  # noqa: S311
+        return f"user{''.join(secrets.choice(string.ascii_lowercase + string.digits) for _ in range(10))}"
 
     @classmethod
     async def resolve_user(
