@@ -396,7 +396,7 @@ def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
 
                 session.add(
                     LoginLog(
-                        id_user=user.id,
+                        user_id=user.id,
                         date_connexion=fake.date_time_between(start_date="-30d", end_date=NOW),
                     )
                 )

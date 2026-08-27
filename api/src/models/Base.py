@@ -58,8 +58,8 @@ class UUIDBase(SQLModel):
 class UserFk(SQLModel):
     """Adds the FK to the owning ``user`` row.
 
-    LoginLog is the one table that stays out: its column is named ``id_user``, and
-    renaming it would cost a migration for no behaviour change.
+    For a table hanging off a game account rather than an account-less user, see
+    :class:`GameAccountFk`.
     """
 
     user_id: uuid.UUID = Field(foreign_key=FK_USER)
