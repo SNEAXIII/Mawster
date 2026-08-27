@@ -45,4 +45,4 @@ jobs:
       # Fails the build. The pre-commit hook runs the same command, but only for
       # contributors who installed it and did not pass --no-verify.
       - name: Audit workflows
-        run: uvx zizmor@1.29.0 --config .github/zizmor.yml --min-severity low .github/workflows/
+        run: uvx --no-build zizmor@1.29.0 --config .github/zizmor.yml --min-severity low .github/workflows/
