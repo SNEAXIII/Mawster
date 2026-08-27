@@ -11,8 +11,6 @@ IS_TESTING = os.getenv("MODE") == "testing"
 # Le staging tourne sans RustFS ni RabbitMQ : VISION_ENABLED=0 y rend les
 # réglages vision optionnels et coupe la feature, au lieu de refuser de booter.
 VISION_ENABLED = os.getenv("VISION_ENABLED", "1").strip().lower() not in {"0", "false", "no"}
-# Un déploiement qui prétend servir la vision doit fournir ses adresses ; celui
-# qui l'a coupée n'a rien à fournir.
 _VISION_REQUIRED = IS_PROD and VISION_ENABLED
 
 _log = logging.getLogger(__name__)
