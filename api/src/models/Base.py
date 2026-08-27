@@ -36,6 +36,16 @@ class UUIDBase(SQLModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
 
 
+class UserFk(SQLModel):
+    """Adds the FK to the owning ``user`` row.
+
+    LoginLog is the one table that stays out: its column is named ``id_user``, and
+    renaming it would cost a migration for no behaviour change.
+    """
+
+    user_id: uuid.UUID = Field(foreign_key="user.id")
+
+
 class GameAccountFk(SQLModel):
     """Adds the FK to the owning ``game_account`` row.
 
@@ -57,6 +67,15 @@ class AuthorshipFk(SQLModel):
     updated_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
 
 
+class PlacedByFk(SQLModel):
+    """Adds the optional FK to the game account that placed the defender.
+
+    Nullable: rows imported or created before the column existed have no known author.
+    """
+
+    placed_by_id: uuid.UUID | None = Field(default=None, foreign_key="game_account.id")
+
+
 class AllianceFk(SQLModel):
     """Adds the FK to the owning ``alliance`` row.
 
@@ -74,6 +93,16 @@ class ChampionFk(SQLModel):
     """
 
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
+
+
+class ChampionUserFk(SQLModel):
+    """Adds the FK to a roster entry — a champion owned by a game account.
+
+    Distinct from :class:`ChampionFk`, which points at the champion catalog: this one
+    designates one player's copy, with its stars, rank and signature.
+    """
+
+    champion_user_id: uuid.UUID = Field(foreign_key="champion_user.id")
 
 
 class SeasonFk(SQLModel):

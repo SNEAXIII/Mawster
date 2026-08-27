@@ -10,6 +10,7 @@ from src.models.Base import (
     ChampionFk,
     KoCount,
     NodeNumber,
+    PlacedByFk,
     Rank,
     Stars,
     TimestampMixin,
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
     from src.models.war.War import War
 
 
-class WarDefensePlacement(UUIDBase, ChampionFk, TimestampMixin, table=True):
+class WarDefensePlacement(UUIDBase, PlacedByFk, ChampionFk, TimestampMixin, table=True):
     __tablename__ = "war_defense_placement"
     __table_args__ = (
         sa.UniqueConstraint("war_id", "battlegroup", "node_number", name="uq_war_defense_node"),
@@ -35,7 +36,6 @@ class WarDefensePlacement(UUIDBase, ChampionFk, TimestampMixin, table=True):
     stars: Stars
     rank: Rank
     ascension: Ascension = 0
-    placed_by_id: uuid.UUID | None = Field(default=None, foreign_key="game_account.id")
     attacker_champion_user_id: uuid.UUID | None = Field(
         default=None, foreign_key="champion_user.id"
     )

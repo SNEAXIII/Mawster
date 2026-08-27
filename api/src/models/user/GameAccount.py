@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship
 
-from src.models.Base import TimestampMixin, UUIDBase
+from src.models.Base import TimestampMixin, UserFk, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.alliance.Alliance import Alliance
@@ -16,10 +16,9 @@ if TYPE_CHECKING:
     from src.models.user.User import User
 
 
-class GameAccount(UUIDBase, TimestampMixin, table=True):
+class GameAccount(UUIDBase, UserFk, TimestampMixin, table=True):
     __tablename__ = "game_account"
 
-    user_id: uuid.UUID = Field(foreign_key="user.id")
     alliance_id: uuid.UUID | None = Field(default=None, foreign_key="alliance.id")
     alliance_group: int | None = Field(default=None)  # 1, 2, 3 or None
     game_pseudo: str = Field(max_length=16)
