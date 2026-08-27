@@ -97,6 +97,7 @@ if IS_TESTING:
         DiscordAuthService,
     )
 
+    # NOSONAR S7503
     async def _fake_verify(cls, access_token: str) -> dict:
         if not access_token:
             raise DISCORD_TOKEN_INVALID_EXCEPTION
