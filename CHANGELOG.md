@@ -3,6 +3,25 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.6.1](https://github.com/SNEAXIII/Mawster/compare/v1.6.0...v1.6.1) (2026-08-27)
+
+
+### Corrigé
+
+* **auth:** secrets has no choices(), OAuth login generation was broken ([045b52f](https://github.com/SNEAXIII/Mawster/commit/045b52f9289c5171d23c7a40b8d5f74e8df342cb))
+
+
+### Modifié
+
+* **enums:** move WarStatus and the vision statuses to src/enums ([60df1ea](https://github.com/SNEAXIII/Mawster/commit/60df1eafdcfda5347ee5df50a161f0ef9c8d72db))
+* **models:** add DefenderChampionFk mixin ([1079026](https://github.com/SNEAXIII/Mawster/commit/1079026c196d8c0bbff55f6742f84d180007e86b))
+* **models:** add WarFightRecordFk mixin ([92d960f](https://github.com/SNEAXIII/Mawster/commit/92d960f33a88bab7a3fee72fb5d891e4829bccaf))
+* **models:** extend Base mixins to user, roster and placement FKs ([4f23f02](https://github.com/SNEAXIII/Mawster/commit/4f23f024b515ffe2d0e6ad753f76d4b7ff39a343))
+* **models:** factor shared FK columns into Base mixins ([0e2c071](https://github.com/SNEAXIII/Mawster/commit/0e2c071def95f03df504641d576799503686a9a4))
+* **models:** fix GameAccount import path in ChampionUser ([5342e66](https://github.com/SNEAXIII/Mawster/commit/5342e6622732b0c3308dc027ca47a8e93620d3c9))
+* **models:** rename login_log.id_user to user_id ([5890162](https://github.com/SNEAXIII/Mawster/commit/58901629a125bca7ae76185ecf40ebdc780d0348))
+* **models:** spell each foreign-key target once ([7286922](https://github.com/SNEAXIII/Mawster/commit/72869221026911837ed97b9fa95f4ca2df867f5c))
+
 ## [1.6.0](https://github.com/SNEAXIII/Mawster/compare/v1.5.0...v1.6.0) (2026-08-27)
 
 
