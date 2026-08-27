@@ -7,11 +7,7 @@
       "package-name": "mawster",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
-        {
-          "type": "toml",
-          "path": "api/pyproject.toml",
-          "jsonpath": "$.project.version"
-        }
+        "api/main.py"
       ]
     }
   },

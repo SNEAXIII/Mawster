@@ -64,7 +64,7 @@ async def lifespan(_: FastAPI):
     await consumer.stop()
 
 
-app = FastAPI(title="Mawster", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="Mawster", version="1.5.0", lifespan=lifespan)  # x-release-please-version
 Instrumentator().instrument(app)
 
 # Rate limiter (utilise l'IP du client — X-Forwarded-For si disponible, sinon connexion directe)

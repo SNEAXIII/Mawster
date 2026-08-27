@@ -1,5 +1,8 @@
 [project]
 name = "mawster-api"
+# Deliberately frozen, and not what a release bumps: uv.lock mirrors this field, so bumping it
+# would make `uv sync --locked` fail in CI on every release pull request. The released version
+# lives in version.txt, in the git tag, and in the FastAPI app in main.py.
 version = "1.5.0"
 description = "Mawster API - MCOC Alliance Management"
 license = "AGPL-3.0-or-later"
