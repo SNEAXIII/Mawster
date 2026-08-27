@@ -26,8 +26,7 @@ describe('War – Fight Not Done', () => {
   it('planning-error button is hidden for regular member', () => {
     setupAttackerScenario('pe-member').then(({ memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      cy.apiLogin(memberData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(memberData.user_id, 'war');
       cy.getByCy('planning-error-node-10').should('not.exist');
     });
   });

@@ -159,8 +159,11 @@ declare global {
       /**
        * Log in via the dev API (no UI). Faster than uiLogin.
        * Pass ownerData.user_id (UUID).
+       * @param page - Optional destination to land on directly: a nav key (same keys as
+       *               navTo) or a literal path such as "/game/war?bg=2".
+       *               Saves the extra page load of `apiLogin` + `navTo`/`visit`.
        */
-      apiLogin(userId: string): Chainable<void>;
+      apiLogin(userId: string, page?: string): Chainable<void>;
 
       /**
        * Log in via the dev-login UI on the login page.
@@ -178,6 +181,15 @@ declare global {
        * Select a DOM element by its `data-cy` attribute.
        */
       getByCy(selector: string): Chainable<JQuery<HTMLElement>>;
+
+      /**
+       * Open a Radix Select / combobox trigger and click the option matching `label`.
+       * Waits for the listbox to be visible first, so the option is queried on the
+       * settled DOM instead of a node React may detach mid-click.
+       * @param trigger - `data-cy` of the select trigger
+       * @param label - visible text of the option to pick
+       */
+      selectOption(trigger: string, label: string): Chainable<JQuery<HTMLElement>>;
 
       /** Declare a war against an opponent (direct backend call). */
       apiCreateWar(

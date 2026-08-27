@@ -73,7 +73,7 @@ def test_login_validator_success():
 
 
 @pytest.mark.parametrize(
-    "login, error_message",
+    ("login", "error_message"),
     [
         (1, NOT_STR),
         ("Lo", login_wrong_size),

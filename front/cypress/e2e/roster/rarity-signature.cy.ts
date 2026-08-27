@@ -14,8 +14,7 @@ describe('Roster – Rarity & Signature', () => {
       setupRosterUser('ui-rarity', 'RarityPlayer').then(({ adminData, userData }) => {
         cy.apiLoadChampion(adminData.access_token, 'Medusa', 'Cosmic');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Medusa');
@@ -37,8 +36,7 @@ describe('Roster – Rarity & Signature', () => {
         cy.apiLoadChampion(adminData.access_token, 'Thor', 'Cosmic');
         cy.apiLoadChampion(adminData.access_token, 'Hulk', 'Science');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         // Add Thor at 7r4
         cy.contains('Add / Update a Champion').click();
@@ -69,8 +67,7 @@ describe('Roster – Rarity & Signature', () => {
       setupRosterUser('ui-rarity-highlight', 'HighlightPlayer').then(({ adminData, userData }) => {
         cy.apiLoadChampion(adminData.access_token, 'Venom', 'Cosmic');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Venom');
@@ -97,8 +94,7 @@ describe('Roster – Rarity & Signature', () => {
       setupRosterUser('ui-sig-preset', 'SigPresetPlayer').then(({ adminData, userData }) => {
         cy.apiLoadChampion(adminData.access_token, 'DoctorVoodoo', 'Mystic');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('DoctorVoodoo');
@@ -113,8 +109,8 @@ describe('Roster – Rarity & Signature', () => {
         cy.getByCy('champion-submit').click();
         cy.contains('DoctorVoodoo added / updated').scrollIntoView().should('be.visible');
 
-        // Verify sig 200 is displayed on the card
-        cy.getByCy('champion-card-DoctorVoodoo').find('[data-cy="champion-sig"]').should('contain', 'sig 200');
+        // Verify the signature value is displayed on the card
+        cy.getByCy('champion-card-DoctorVoodoo').find('[data-cy="champion-sig"]').should('contain', '200');
       });
     });
 
@@ -122,8 +118,7 @@ describe('Roster – Rarity & Signature', () => {
       setupRosterUser('ui-sig-manual', 'SigManualPlayer').then(({ adminData, userData }) => {
         cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Magik');
@@ -137,8 +132,8 @@ describe('Roster – Rarity & Signature', () => {
         cy.getByCy('champion-submit').click();
         cy.contains('Magik added / updated').scrollIntoView().should('be.visible');
 
-        // Verify sig 150 on the card
-        cy.getByCy('champion-card-Magik').find('[data-cy="champion-sig"]').should('contain', 'sig 150');
+        // Verify the signature value on the card
+        cy.getByCy('champion-card-Magik').find('[data-cy="champion-sig"]').should('contain', '150');
       });
     });
 
@@ -146,8 +141,7 @@ describe('Roster – Rarity & Signature', () => {
       setupRosterUser('ui-sig-zero', 'SigZeroPlayer').then(({ adminData, userData }) => {
         cy.apiLoadChampion(adminData.access_token, 'Phoenix', 'Cosmic');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Phoenix');
@@ -157,11 +151,11 @@ describe('Roster – Rarity & Signature', () => {
         cy.getByCy('champion-submit').click();
         cy.contains('Phoenix added / updated').scrollIntoView().should('be.visible');
 
-        // Card should show "sig 0" with the dim style (text-white/50)
+        // Card should show a dim "0" signature
         cy.getByCy('champion-card-Phoenix')
           .find('[data-cy="champion-sig"]')
-          .should('contain', 'sig 0')
-          .and('have.class', 'text-white/50');
+          .should('contain', '0')
+          .and('have.class', 'text-muted-foreground');
       });
     });
   });

@@ -8,7 +8,7 @@ export MARIADB_ROOT_PASSWORD=$(cat /run/secrets/mawster_db_root_password)
 
 # Remote upload (Google Drive via rclone) is optional — disabled on staging.
 BACKUP_REMOTE_ENABLED=${BACKUP_REMOTE_ENABLED:-true}
-if [ "$BACKUP_REMOTE_ENABLED" = "true" ]; then
+if [[ "$BACKUP_REMOTE_ENABLED" = "true" ]]; then
   RCLONE_CONFIG_WRITABLE=/tmp/rclone.conf
   cp /run/secrets/mawster_rclone_conf "$RCLONE_CONFIG_WRITABLE"
   chmod 600 "$RCLONE_CONFIG_WRITABLE"
@@ -58,7 +58,7 @@ while true; do
   rm "$OLDEST"
 done
 
-if [ "$BACKUP_REMOTE_ENABLED" = "true" ]; then
+if [[ "$BACKUP_REMOTE_ENABLED" = "true" ]]; then
   # ── 4. Upload to remote ─────────────────────────────────────────────────────
   echo "[backup] Uploading to remote..."
   rclone copy "${BACKUP_DIR}/" "${RCLONE_REMOTE}/" --include "${BACKUP_PREFIX}_*.sql.gz"

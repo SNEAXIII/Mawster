@@ -59,7 +59,7 @@ class TestChampionReadAccessControl:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "method, url, payload",
+        ("method", "url", "payload"),
         [(action, route, payload) for action, route, payload, _ in _USER_CHAMPION_ROUTES],
         ids=[name for _, _, _, name in _USER_CHAMPION_ROUTES],
     )
@@ -69,7 +69,7 @@ class TestChampionReadAccessControl:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "method, url, payload",
+        ("method", "url", "payload"),
         [(action, route, payload) for action, route, payload, _ in _USER_CHAMPION_ROUTES],
         ids=[name for _, _, _, name in _USER_CHAMPION_ROUTES],
     )
@@ -85,7 +85,7 @@ class TestAdminChampionsAccessControl:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "method, url, payload",
+        ("method", "url", "payload"),
         [(action, route, payload) for action, route, payload, _ in _ADMIN_CHAMPION_ROUTES],
         ids=[name for _, _, _, name in _ADMIN_CHAMPION_ROUTES],
     )
@@ -95,7 +95,7 @@ class TestAdminChampionsAccessControl:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "method, url, payload",
+        ("method", "url", "payload"),
         [(action, route, payload) for action, route, payload, _ in _ADMIN_CHAMPION_ROUTES],
         ids=[name for _, _, _, name in _ADMIN_CHAMPION_ROUTES],
     )
@@ -112,7 +112,7 @@ class TestAdminChampionsAccessControl:
 class TestGetChampions:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "params, expected_status",
+        ("params", "expected_status"),
         [
             ("?page=1&size=10", 200),
             ("?page=0", 422),

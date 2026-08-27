@@ -14,8 +14,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
       setupRosterUser('ui-combined', 'CombinedPlayer').then(({ adminData, userData }) => {
         cy.apiLoadChampion(adminData.access_token, 'Omega', 'Mutant', { is_ascendable: true });
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Omega');
@@ -48,7 +47,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
         cy.getByCy('champion-card-Omega').find('[data-cy="preferred-badge"]').should('exist');
 
         // Signature 200
-        cy.getByCy('champion-card-Omega').find('[data-cy="champion-sig"]').should('exist').and('contain', 'sig 200');
+        cy.getByCy('champion-card-Omega').find('[data-cy="champion-sig"]').should('exist').and('contain', '200');
 
         // Ascension A2
         cy.getByCy('champion-card-Omega').find('[data-cy="champion-ascension"]').should('exist').and('contain', 'A2');
@@ -73,8 +72,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
             is_preferred_attacker: true,
           });
 
-          cy.apiLogin(userData.user_id);
-          cy.navTo('roster');
+          cy.apiLogin(userData.user_id, 'roster');
 
           // Click the edit button on the champion card
           cy.getByCy('champion-edit').first().click({ force: true });
@@ -104,8 +102,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
             ascension: 0,
           });
 
-          cy.apiLogin(userData.user_id);
-          cy.navTo('roster');
+          cy.apiLogin(userData.user_id, 'roster');
 
           // Click edit
           cy.getByCy('champion-edit').first().click({ force: true });
@@ -125,7 +122,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
 
           // Verify updated values on the card
           cy.getByCy('rarity-group-7r4').contains('EditUpd').scrollIntoView().should('be.visible');
-          cy.getByCy('champion-card-EditUpd').find('[data-cy="champion-sig"]').should('contain', 'sig 200');
+          cy.getByCy('champion-card-EditUpd').find('[data-cy="champion-sig"]').should('contain', '200');
           cy.getByCy('champion-card-EditUpd').find('[data-cy="champion-ascension"]').should('contain', 'A1');
         });
       });
@@ -145,8 +142,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
             signature: 200,
           });
 
-          cy.apiLogin(userData.user_id);
-          cy.navTo('roster');
+          cy.apiLogin(userData.user_id, 'roster');
 
           // Open form and search for the same champion
           cy.contains('Add / Update a Champion').click();
@@ -167,8 +163,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
       setupRosterUser('ui-already-dup', 'AlreadyDupPlayer').then(({ adminData, userData }) => {
         cy.apiLoadChampion(adminData.access_token, 'Kingpin', 'Skill');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         // Add Kingpin at 7r1 with sig 20
         cy.contains('Add / Update a Champion').click();
@@ -197,7 +192,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
         cy.get('[data-cy="champion-delete"]').should('have.length', 1);
         // Should now be in the 7r2 group
         cy.getByCy('rarity-group-7r2').scrollIntoView().contains('Kingpin').should('be.visible');
-        cy.getByCy('champion-card-Kingpin').find('[data-cy="champion-sig"]').should('contain', 'sig 200');
+        cy.getByCy('champion-card-Kingpin').find('[data-cy="champion-sig"]').should('contain', '200');
       });
     });
   });

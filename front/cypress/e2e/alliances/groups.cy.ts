@@ -32,8 +32,7 @@ describe('Alliances – Member Groups', () => {
 
   it('displays all four group column headers', () => {
     setupOwnerMemberAlliance('grp-headers', 'HdrOwner', 'HdrMember', 'HdrAlliance', 'HD').then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(ownerData.user_id, 'alliances');
 
       cy.getByCy('alliance-card-HdrAlliance').within(() => {
         cy.getByCy('group-col-1').should('exist');
@@ -52,8 +51,7 @@ describe('Alliances – Member Groups', () => {
         cy.apiSetMemberGroup(ownerData.access_token, allianceId, ownerAccId, 1);
         cy.apiSetMemberGroup(ownerData.access_token, allianceId, memberAccId, 2);
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         cy.getByCy('alliance-card-PlaceAlliance').within(() => {
           cy.getByCy('group-col-1').find('[data-cy="member-row-PlaceOwner"]').should('exist');
@@ -68,8 +66,7 @@ describe('Alliances – Member Groups', () => {
   it('shows unassigned member under the No group column by default', () => {
     setupOwnerMemberAlliance('grp-nogroup', 'NoGrpOwner', 'NoGrpMember', 'NoGrpAlliance', 'NG').then(
       ({ ownerData }) => {
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         cy.getByCy('alliance-card-NoGrpAlliance').within(() => {
           cy.getByCy('group-col-unassigned').find('[data-cy="member-row-NoGrpOwner"]').should('exist');
@@ -85,8 +82,7 @@ describe('Alliances – Member Groups', () => {
         cy.apiSetMemberGroup(ownerData.access_token, allianceId, memberAccId, 3);
         cy.apiSetMemberGroup(ownerData.access_token, allianceId, memberAccId, null);
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         cy.getByCy('alliance-card-ClearAlliance').within(() => {
           cy.getByCy('group-col-3').find('[data-cy="member-row-ClearMember"]').should('not.exist');
@@ -101,8 +97,7 @@ describe('Alliances – Member Groups', () => {
   it('group picker shows all three groups when none are full', () => {
     setupOwnerMemberAlliance('grp-picker-all', 'PickerOwner', 'PickerMember', 'PickerAlliance', 'PK').then(
       ({ ownerData }) => {
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         cy.getByCy('alliance-card-PickerAlliance').within(() => {
           cy.getByCy('member-row-PickerMember').find('[data-cy="member-group-select"]').click();
@@ -131,8 +126,7 @@ describe('Alliances – Member Groups', () => {
       createAndJoinMember('grp-full-target', 'FullTarget', allianceId);
       fillGroupOneWith9Members(allianceId, ownerData.access_token, 'grp-full-extra');
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(ownerData.user_id, 'alliances');
 
       cy.getByCy('alliance-card-FullAlliance').within(() => {
         cy.getByCy('member-row-FullTarget').find('[data-cy="member-group-select"]').click();
@@ -159,8 +153,7 @@ describe('Alliances – Member Groups', () => {
       cy.apiSetMemberGroup(ownerData.access_token, allianceId, ownerAccId, 1);
       fillGroupOneWith9Members(allianceId, ownerData.access_token, 'grp-keep-extra');
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('alliances');
+      cy.apiLogin(ownerData.user_id, 'alliances');
 
       cy.getByCy('alliance-card-KeepAlliance').within(() => {
         cy.getByCy('member-row-KeepOwner').find('[data-cy="member-group-select"]').click();

@@ -1,7 +1,6 @@
 import { setupAttackerScenario, setupPrefightScenario, BACKEND } from '../../support/e2e';
 function goToAttackersMode(userId: string) {
-  cy.apiLogin(userId);
-  cy.navTo('war');
+  cy.apiLogin(userId, 'war');
   cy.getByCy('war-mode-attackers').click();
 }
 
@@ -14,8 +13,7 @@ describe('War – Attackers mode', () => {
 
   it('attackers panel is visible by default (Attackers mode)', () => {
     setupAttackerScenario('atk-panel').then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('war-mode-attackers').should('have.class', 'bg-primary');
     });
   });
@@ -179,8 +177,7 @@ describe('War – Attackers mode', () => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
       // Log in as the member (not the owner/officer)
-      cy.apiLogin(memberData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(memberData.user_id, 'war');
 
       cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
     });

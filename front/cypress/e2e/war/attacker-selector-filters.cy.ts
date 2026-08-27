@@ -1,8 +1,7 @@
 import { setupAttackerScenario } from '../../support/e2e';
 
 function goToAttackersMode(userId: string) {
-  cy.apiLogin(userId);
-  cy.navTo('war');
+  cy.apiLogin(userId, 'war');
   cy.getByCy('war-mode-attackers').click();
 }
 
@@ -31,14 +30,12 @@ describe('War – WarAttackerSelector filters', () => {
       cy.getByCy('attacker-card-Vision').should('be.visible');
 
       // Filter by Tech → only Vision
-      cy.getByCy('selector-class-filter').click();
-      cy.contains('[role="option"]', 'Tech').click();
+      cy.selectOption('selector-class-filter', 'Tech');
       cy.getByCy('attacker-card-Vision').should('be.visible');
       cy.getByCy('attacker-card-Wolverine').should('not.exist');
 
       // Filter by Mutant → only Wolverine
-      cy.getByCy('selector-class-filter').click();
-      cy.contains('[role="option"]', 'Mutant').click();
+      cy.selectOption('selector-class-filter', 'Mutant');
       cy.getByCy('attacker-card-Wolverine').should('be.visible');
       cy.getByCy('attacker-card-Vision').should('not.exist');
     });
@@ -122,14 +119,12 @@ describe('War – WarAttackerSelector filters', () => {
       cy.getByCy('attacker-card-Wolverine').scrollIntoView().should('be.visible');
 
       // Filter by member → only Wolverine
-      cy.getByCy('selector-player-filter').click();
-      cy.contains('[role="option"]', memberPseudo).click();
+      cy.selectOption('selector-player-filter', memberPseudo);
       cy.getByCy('attacker-card-Wolverine').should('be.visible');
       cy.getByCy('attacker-card-Storm').should('not.exist');
 
       // Switch to owner → only Storm
-      cy.getByCy('selector-player-filter').click();
-      cy.contains('[role="option"]', ownerPseudo).click();
+      cy.selectOption('selector-player-filter', ownerPseudo);
       cy.getByCy('attacker-card-Storm').should('be.visible');
       cy.getByCy('attacker-card-Wolverine').should('not.exist');
     });
@@ -153,10 +148,8 @@ describe('War – WarAttackerSelector filters', () => {
       cy.getByCy('war-attacker-search').should('be.visible');
 
       // Filter by owner + Mutant → only Storm (Vision excluded by class, Wolverine excluded by player)
-      cy.getByCy('selector-player-filter').click();
-      cy.contains('[role="option"]', ownerPseudo).click();
-      cy.getByCy('selector-class-filter').click();
-      cy.contains('[role="option"]', 'Mutant').click();
+      cy.selectOption('selector-player-filter', ownerPseudo);
+      cy.selectOption('selector-class-filter', 'Mutant');
 
       cy.getByCy('attacker-card-Storm').should('be.visible');
       cy.getByCy('attacker-card-Vision').should('not.exist');
@@ -177,8 +170,7 @@ describe('War – WarAttackerSelector filters', () => {
       cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
       cy.getByCy('war-attacker-search').should('be.visible');
 
-      cy.getByCy('selector-player-filter').click();
-      cy.contains('[role="option"]', ownerPseudo).click();
+      cy.selectOption('selector-player-filter', ownerPseudo);
       cy.getByCy('attacker-card-Wolverine').should('not.exist');
 
       cy.getByCy('selector-reset-filters').click();
@@ -256,10 +248,10 @@ describe('War – WarAttackerSelector rarity filter', () => {
   });
 
   // =========================================================================
-  // 6★ attackers are hidden and no longer offer a reveal toggle (7★ only)
+  // 6★ attackers are hidden by default but a toggle reveals them
   // =========================================================================
 
-  it('hides 6-star attackers and offers no toggle to reveal them', () => {
+  it('hides 6-star attackers by default and reveals them via the 6-star toggle', () => {
     setupAttackerScenario('atk-rar-def').then(({ adminToken, memberData, ownerData, memberAccId }) => {
       // Member already has Wolverine 7r3; add a 6r5 champion
       cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
@@ -270,16 +262,16 @@ describe('War – WarAttackerSelector rarity filter', () => {
       cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
       cy.getByCy('war-attacker-search').should('be.visible');
 
-      // 7★ Wolverine visible, 6★ Storm hidden
+      // 7★ Wolverine visible, 6★ Storm hidden by default
       cy.getByCy('attacker-card-Wolverine').should('be.visible');
       cy.getByCy('attacker-card-Storm').should('not.exist');
 
-      // The rarity filter only exposes 7★ tiers — no 6★ toggle exists, so the
-      // 6★ attacker cannot be revealed.
-      cy.getByCy('war-attacker-rarity-6r4').should('not.exist');
-      cy.getByCy('war-attacker-rarity-6r5').should('not.exist');
+      // The rarity filter exposes 6★ tiers too — enabling 6r5 reveals the attacker.
+      cy.getByCy('war-attacker-rarity-6r4').should('be.visible');
       cy.getByCy('war-attacker-rarity-7r3').should('be.visible');
-      cy.getByCy('attacker-card-Storm').should('not.exist');
+      cy.getByCy('war-attacker-rarity-6r5').click();
+      cy.getByCy('attacker-card-Storm').should('be.visible');
+      cy.getByCy('attacker-card-Wolverine').should('be.visible');
     });
   });
 

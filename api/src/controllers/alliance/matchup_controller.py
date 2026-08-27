@@ -12,7 +12,7 @@ from src.dto.alliance.dto_matchup import (
     MatchupUpsertRequest,
 )
 from src.models import User
-from src.models.MatchupRating import MatchupRating
+from src.models.matchup.MatchupRating import MatchupRating
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.MatchupService import MatchupService
 from src.services.auth.AuthService import AuthService
@@ -32,7 +32,7 @@ async def list_matchups(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     champion_id: uuid.UUID | None = None,
     defender_champion_id: uuid.UUID | None = None,
-    node_number: int | None = Query(default=None, ge=1, le=50),
+    node_number: Annotated[int | None, Query(ge=1, le=50)] = None,
 ):
     """List the alliance's matchup ratings. Members, officers, owner or visitors."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
@@ -50,7 +50,7 @@ async def evaluate_matchups(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     defender_champion_id: uuid.UUID | None = None,
-    node_number: int | None = Query(default=None, ge=1, le=50),
+    node_number: Annotated[int | None, Query(ge=1, le=50)] = None,
     champion_id: uuid.UUID | None = None,
     game_account_id: uuid.UUID | None = None,
 ):

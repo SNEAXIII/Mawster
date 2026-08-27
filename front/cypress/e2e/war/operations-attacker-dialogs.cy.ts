@@ -53,8 +53,7 @@ describe('War – Operations (attacker-linked confirmations)', () => {
     setupAttackerScenario('war-op-rm-ko').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(ownerData.user_id, 'war');
 
       cy.intercept('PATCH', '**/node/10/ko').as('updateKo');
       cy.getByCy('ko-inc-node-10').click();
@@ -95,8 +94,7 @@ describe('War – Operations (attacker-linked confirmations)', () => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
         cy.getByCy('war-mode-defenders').click();
 
         cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
@@ -116,8 +114,7 @@ describe('War – Operations (attacker-linked confirmations)', () => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
         cy.getByCy('war-mode-defenders').click();
 
         cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
@@ -138,8 +135,7 @@ describe('War – Operations (attacker-linked confirmations)', () => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
         cy.getByCy('war-mode-defenders').click();
 
         cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
@@ -161,8 +157,7 @@ describe('War – Operations (attacker-linked confirmations)', () => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
         cy.getByCy('war-mode-defenders').click();
 
         cy.getByCy('war-node-10').scrollIntoView().click({ force: true });

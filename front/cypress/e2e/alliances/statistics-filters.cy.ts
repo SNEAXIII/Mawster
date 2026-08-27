@@ -4,6 +4,8 @@ import {
   withWarScenarioTwoPlayers,
   withWarScenarioDiffChampsPlayers,
   withWarScenarioTwoOwnerChamps,
+  withTwoEndedWarsTwoPlayers,
+  withTwoSeasonsOneWarEach,
 } from './statistics-helpers';
 
 describe('Alliance Statistics – Filters & Champion chart', () => {
@@ -129,6 +131,168 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
         cy.getByCy('statistics-war-filter').click();
         cy.contains('Ended Enemy').should('be.visible');
         cy.contains('Active Enemy').should('not.exist');
+      });
+    });
+  });
+
+  it('war filter re-scopes the stats table, not only the chart', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-wft-admin', role: 'admin' },
+      {
+        discord_token: 'stat-wft-owner',
+        game_pseudo: 'WftOwner',
+        create_alliance: { name: 'WftAlliance', tag: 'WFT' },
+        battlegroup: 1,
+      },
+      {
+        discord_token: 'stat-wft-member',
+        game_pseudo: 'WftMember',
+        join_alliance_token: 'stat-wft-owner',
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-wft-admin'].access_token;
+      const ownerToken = users['stat-wft-owner'].access_token;
+      const allianceId = users['stat-wft-owner'].alliance_id!;
+      const ownerAccId = users['stat-wft-owner'].account_id!;
+      const memberToken = users['stat-wft-member'].access_token;
+      const memberAccId = users['stat-wft-member'].account_id!;
+      const ownerRow = `statistics-row-${ownerAccId}`;
+      const memberRow = `statistics-row-${memberAccId}`;
+
+      withTwoEndedWarsTwoPlayers(
+        adminToken,
+        ownerToken,
+        ownerAccId,
+        memberToken,
+        memberAccId,
+        allianceId,
+        ({ warOneId, warTwoId }) => {
+          cy.apiLogin(users['stat-wft-owner'].user_id);
+          cy.goToAllianceStatsTab();
+
+          // All wars → both players, each with their single fight.
+          cy.getByCy('statistics-table').find('tbody tr').should('have.length', 2);
+          cy.getByCy(ownerRow).should('exist');
+          cy.getByCy(memberRow).should('exist');
+
+          // WarOne → only the owner fought there.
+          cy.getByCy('statistics-war-filter').click();
+          cy.getByCy(`statistics-war-${warOneId}`).click();
+          cy.getByCy('statistics-table').find('tbody tr').should('have.length', 1);
+          cy.getByCy(ownerRow).should('exist');
+          cy.getByCy(memberRow).should('not.exist');
+
+          // WarTwo → only the member fought there, with the 2 KOs of that war.
+          cy.getByCy('statistics-war-filter').click();
+          cy.getByCy(`statistics-war-${warTwoId}`).click();
+          cy.getByCy('statistics-table').find('tbody tr').should('have.length', 1);
+          cy.getByCy(memberRow).should('exist');
+          cy.getByCy(ownerRow).should('not.exist');
+
+          // Back to all wars → the table widens again.
+          cy.getByCy('statistics-war-filter').click();
+          cy.getByCy('statistics-war-all').click();
+          cy.getByCy('statistics-table').find('tbody tr').should('have.length', 2);
+        },
+      );
+    });
+  });
+
+  it('season filter switches the table to a past season and rescopes the wars', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-sf-admin', role: 'admin' },
+      {
+        discord_token: 'stat-sf-owner',
+        game_pseudo: 'SfOwner',
+        create_alliance: { name: 'SfAlliance', tag: 'SF1' },
+        battlegroup: 1,
+      },
+      {
+        discord_token: 'stat-sf-member',
+        game_pseudo: 'SfMember',
+        join_alliance_token: 'stat-sf-owner',
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-sf-admin'].access_token;
+      const ownerToken = users['stat-sf-owner'].access_token;
+      const allianceId = users['stat-sf-owner'].alliance_id!;
+      const ownerAccId = users['stat-sf-owner'].account_id!;
+      const memberToken = users['stat-sf-member'].access_token;
+      const memberAccId = users['stat-sf-member'].account_id!;
+      const ownerRow = `statistics-row-${ownerAccId}`;
+      const memberRow = `statistics-row-${memberAccId}`;
+
+      withTwoSeasonsOneWarEach(
+        adminToken,
+        ownerToken,
+        ownerAccId,
+        memberToken,
+        memberAccId,
+        allianceId,
+        ({ pastSeasonId, currentSeasonId }) => {
+          cy.apiLogin(users['stat-sf-owner'].user_id);
+          cy.goToAllianceStatsTab();
+
+          // Defaults to the newest season with data — only the member fought there.
+          cy.getByCy('statistics-season-filter').should('contain', 'Season 64');
+          cy.getByCy(memberRow).should('exist');
+          cy.getByCy(ownerRow).should('not.exist');
+
+          // Both seasons are offered, newest first.
+          cy.getByCy('statistics-season-filter').click();
+          cy.getByCy(`statistics-season-${currentSeasonId}`).should('be.visible');
+          cy.getByCy(`statistics-season-${pastSeasonId}`).click();
+
+          // Season 63 → the other player, with the KOs of that season's war.
+          cy.getByCy('statistics-season-filter').should('contain', 'Season 63');
+          cy.getByCy(ownerRow).should('exist');
+          cy.getByCy(memberRow).should('not.exist');
+
+          // The war dropdown follows the season: only that season's war is listed.
+          cy.getByCy('statistics-war-filter').click();
+          cy.contains('OldWar').should('be.visible');
+          cy.contains('NewWar').should('not.exist');
+        },
+      );
+    });
+  });
+
+  it('keeps the filter bar reachable when a war filter empties the table', () => {
+    cy.apiBatchSetup([
+      { discord_token: 'stat-wfe-admin', role: 'admin' },
+      {
+        discord_token: 'stat-wfe-owner',
+        game_pseudo: 'WfeOwner',
+        create_alliance: { name: 'WfeAlliance', tag: 'WFE' },
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const adminToken = users['stat-wfe-admin'].access_token;
+      const ownerToken = users['stat-wfe-owner'].access_token;
+      const allianceId = users['stat-wfe-owner'].alliance_id!;
+      const ownerAccId = users['stat-wfe-owner'].account_id!;
+
+      withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Fought', ({ champId, cuId, warId }) => {
+        addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, 0);
+        cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
+        // A second ended war nobody fought in: filtering on it yields zero rows.
+        cy.apiCreateWar(ownerToken, allianceId, 'Empty').then((emptyWar: { id: string }) => {
+          cy.apiEndWar(ownerToken, allianceId, emptyWar.id, true, 10);
+          cy.apiLogin(users['stat-wfe-owner'].user_id);
+          cy.goToAllianceStatsTab();
+          cy.getByCy('statistics-table').should('be.visible');
+
+          cy.getByCy('statistics-war-filter').click();
+          cy.getByCy(`statistics-war-${emptyWar.id}`).click();
+
+          // No rows, but the filters must stay on screen or the filter is a dead end.
+          cy.getByCy('statistics-empty-filtered').should('be.visible');
+          cy.getByCy('statistics-war-filter').should('be.visible');
+          cy.getByCy('statistics-reset-filters').should('be.visible').click();
+          cy.getByCy('statistics-table').should('be.visible');
+        });
       });
     });
   });

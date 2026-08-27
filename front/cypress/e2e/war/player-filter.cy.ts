@@ -21,14 +21,12 @@ describe('War – attacker panel player filter', () => {
           });
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
 
         cy.getByCy('attacker-member-war-pfltOwner').should('be.visible');
         cy.getByCy('attacker-member-war-pfltMember').should('be.visible');
 
-        cy.getByCy('war-player-filter').click();
-        cy.contains('[role="option"]', 'war-pfltOwner').click();
+        cy.selectOption('war-player-filter', 'war-pfltOwner');
 
         cy.getByCy('attacker-member-war-pfltOwner').should('be.visible');
         cy.getByCy('attacker-member-war-pfltMember').should('not.exist');
@@ -54,15 +52,12 @@ describe('War – attacker panel player filter', () => {
           });
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
 
-        cy.getByCy('war-player-filter').click();
-        cy.contains('[role="option"]', 'war-pflt-rOwner').click();
+        cy.selectOption('war-player-filter', 'war-pflt-rOwner');
         cy.getByCy('attacker-member-war-pflt-rMember').should('not.exist');
 
-        cy.getByCy('war-player-filter').click();
-        cy.contains('[role="option"]', 'All').click();
+        cy.selectOption('war-player-filter', 'All');
 
         cy.getByCy('attacker-member-war-pflt-rOwner').scrollIntoView().should('be.visible');
         cy.getByCy('attacker-member-war-pflt-rMember').scrollIntoView().should('be.visible');

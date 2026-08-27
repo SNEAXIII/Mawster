@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from src.dto.alliance.war.dto_ranking_history import RankingHistoryResponse
-from src.models.User import User
+from src.models.user.User import User
 from src.services.alliance.RankingHistoryService import RankingHistoryService
 from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep

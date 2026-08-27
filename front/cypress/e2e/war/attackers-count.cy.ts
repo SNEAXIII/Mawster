@@ -7,8 +7,7 @@ describe('War – attackers count badge color', () => {
 
   it('count badge is red when fewer than 50 attackers are assigned', () => {
     setupAttackerScenario('war-cnt-red').then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(ownerData.user_id, 'war');
 
       cy.getByCy('attackers-count').should('have.class', 'text-destructive');
       cy.getByCy('attackers-count').should('not.have.class', 'text-yellow-400');
@@ -19,8 +18,7 @@ describe('War – attackers count badge color', () => {
     setupAttackerScenario('war-cnt-gold').then(({ ownerData, ownerAccId, warId }) => {
       cy.apiBulkFillWarAttackers(warId, 1, ownerAccId, 50);
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(ownerData.user_id, 'war');
 
       cy.getByCy('attackers-count').should('have.class', 'text-yellow-400');
       cy.getByCy('attackers-count').should('not.have.class', 'text-destructive');

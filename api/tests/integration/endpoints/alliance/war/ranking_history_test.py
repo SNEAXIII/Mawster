@@ -7,8 +7,9 @@ import pytest
 from main import app
 from src.enums.Roles import Roles
 from src.enums.SeasonStatus import SeasonStatus
-from src.models.Season import Season
-from src.models.War import War, WarStatus
+from src.enums.WarStatus import WarStatus
+from src.models.war.Season import Season
+from src.models.war.War import War
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import push_alliance_with_owner, push_visitor
 from tests.integration.endpoints.setup.user_setup import get_generic_user

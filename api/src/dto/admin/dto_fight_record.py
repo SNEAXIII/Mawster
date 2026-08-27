@@ -4,6 +4,10 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from src.models.war.WarFightRecordImport import (
+    WarFightRecordImport as _WarFightRecordImport,
+)
+
 
 class ChampionUserSnapshotResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -43,11 +47,13 @@ class WarFightRecordResponse(BaseModel):
     war_id: uuid.UUID | None = None
     alliance_id: uuid.UUID
     season_id: uuid.UUID | None = None
+    season_number: int | None = None
     game_account_pseudo: str | None = None
     battlegroup: int | None = None
     node_number: int
     tier: int | None = None
     alliance_name: str
+    alliance_tag: str | None = None
     champion_id: uuid.UUID
     champion_name: str
     champion_class: str
@@ -80,7 +86,6 @@ class WarFightRecordResponse(BaseModel):
     def flatten_relations(cls, data: Any) -> Any:
         if isinstance(data, dict):
             return data
-        from src.models.WarFightRecordImport import WarFightRecordImport as _WarFightRecordImport
 
         is_import = isinstance(data, _WarFightRecordImport)
         if is_import:
@@ -90,7 +95,9 @@ class WarFightRecordResponse(BaseModel):
                 "war_id": None,
                 "alliance_id": data.alliance_id,
                 "alliance_name": data.alliance.name,
+                "alliance_tag": data.alliance.tag,
                 "season_id": data.season_id,
+                "season_number": data.season.number if data.season_id and data.season else None,
                 "game_account_pseudo": None,
                 "battlegroup": None,
                 "node_number": data.node_number,
@@ -128,7 +135,9 @@ class WarFightRecordResponse(BaseModel):
             "war_id": data.war_id,
             "alliance_id": data.alliance_id,
             "alliance_name": data.alliance.name,
+            "alliance_tag": data.alliance.tag,
             "season_id": data.season_id,
+            "season_number": data.season.number if data.season_id and data.season else None,
             "game_account_pseudo": data.game_account.game_pseudo if data.game_account else None,
             "battlegroup": data.battlegroup,
             "node_number": data.node_number,

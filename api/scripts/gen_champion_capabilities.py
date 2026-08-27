@@ -16,7 +16,12 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parents[1] / "src" / "fixtures" / "champions_capabilities.json"
 FLAGS = ("is_ascendable", "has_prefight", "is_saga_attacker", "is_saga_defender")
 
+# The repo root (api/scripts/gen_champion_capabilities.py -> Mawster/). Dumps are
+# read from `backups/`, so nothing outside the repo needs to be reachable here.
+ALLOWED_ROOT = Path(__file__).resolve().parents[2]
 
+
+# TODO reduce complexity
 def _split_rows(seg: str):
     rows, i, n = [], 0, len(seg)
     while i < n:
@@ -80,8 +85,32 @@ def _unquote(s: str) -> str:
     return re.sub(r"\\(.)", lambda m: m.group(1), s[1:-1])
 
 
+def _sql_path_from_argv(raw: str) -> Path:
+    """Resolve and validate the CLI path before any filesystem access.
+
+    Same discipline as `src/fixtures/paths.py`, with a wider root: dumps live in
+    `backups/` at the repo root, not under `api/`. The path is resolved
+    (symlinks and `..` chains included) and must land inside the repo, be a
+    regular file, and carry a `.sql` suffix — so a faulty argument exits
+    non-zero instead of reading whatever it happens to point at.
+    """
+    resolved = Path(raw).expanduser().resolve()
+
+    if not resolved.is_relative_to(ALLOWED_ROOT):
+        msg = f"❌ Refusing to read {resolved}: outside {ALLOWED_ROOT}"
+        raise SystemExit(msg)
+    if not resolved.is_file():
+        msg = f"❌ No such SQL dump: {resolved}"
+        raise SystemExit(msg)
+    if resolved.suffix.lower() != ".sql":
+        msg = f"❌ Expected an uncompressed .sql dump, got: {resolved.name}"
+        raise SystemExit(msg)
+
+    return resolved
+
+
 def main(sql_path: str) -> None:
-    data = Path(sql_path).read_text(errors="replace")
+    data = _sql_path_from_argv(sql_path).read_text(errors="replace")
     m = re.search(r"CREATE TABLE `champion` \(([^;]*?)\n\) ENGINE", data, re.DOTALL)
     cols = re.findall(r"^\s*`([a-z_0-9]+)`", m.group(1), re.MULTILINE)
     ins = re.search(r"INSERT INTO `champion`(?:\s*\([^)]*\))?\s+VALUES\s+", data)
@@ -100,4 +129,7 @@ def main(sql_path: str) -> None:
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        msg = f"Usage: python {Path(sys.argv[0]).name} <path-to-uncompressed-prod.sql>"
+        raise SystemExit(msg)
     main(sys.argv[1])

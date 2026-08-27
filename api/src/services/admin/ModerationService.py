@@ -15,15 +15,15 @@ from src.dto.admin.dto_moderation import (
     WarnResponse,
 )
 from src.enums.NoteReportStatus import NoteReportStatus
-from src.models.Alliance import Alliance
+from src.models.alliance.Alliance import Alliance
 from src.models.Base import utcnow
-from src.models.GameAccount import GameAccount
-from src.models.NoteReport import NoteReport
-from src.models.User import User
-from src.models.UserMute import UserMute
-from src.models.UserWarn import UserWarn
-from src.models.WarFightNote import WarFightNote
-from src.models.WarFightNoteRevision import WarFightNoteRevision
+from src.models.user.GameAccount import GameAccount
+from src.models.user.NoteReport import NoteReport
+from src.models.user.User import User
+from src.models.user.UserMute import UserMute
+from src.models.user.UserWarn import UserWarn
+from src.models.war.WarFightNote import WarFightNote
+from src.models.war.WarFightNoteRevision import WarFightNoteRevision
 from src.utils.db import SessionDep
 
 AUTO_BLOCK_THRESHOLD = 3

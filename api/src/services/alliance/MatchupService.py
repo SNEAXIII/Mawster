@@ -23,13 +23,13 @@ from src.Messages.matchup_messages import (
     GAME_ACCOUNT_NOT_IN_ALLIANCE,
     MATCHUP_NOT_FOUND,
 )
+from src.models.alliance.DefensePlacement import DefensePlacement
 from src.models.Base import utcnow
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.DefensePlacement import DefensePlacement
-from src.models.GameAccount import GameAccount
-from src.models.MatchupRating import MatchupRating
-from src.models.MatchupSynergy import MatchupSynergy
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.matchup.MatchupRating import MatchupRating
+from src.models.matchup.MatchupSynergy import MatchupSynergy
+from src.models.user.GameAccount import GameAccount
 from src.services.alliance.matchup_scoring import (
     build_target_key,
     combine_verdicts,

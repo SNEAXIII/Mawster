@@ -24,8 +24,7 @@ describe('War – Saga & Ascension Badges (sagaMode attacker)', () => {
           }).then((cu: { id: string }) => {
             cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, cu.id);
 
-            cy.apiLogin(ownerData.user_id);
-            cy.navTo('war');
+            cy.apiLogin(ownerData.user_id, 'war');
             cy.getByCy('war-mode-attackers').click();
           });
         });

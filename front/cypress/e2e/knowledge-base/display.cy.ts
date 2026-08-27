@@ -1,7 +1,7 @@
 import { setupKnowledgeBaseFast, setupKnowledgeBase } from '../../support/e2e';
 
 // Column indices (0-based):
-// 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: Tier | 7: KO | 8: Alliance | 9: Date
+// 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: KO | 7: Alliance | 8: Season | 9: Tier | 10: Date | 11: Note
 //
 // Dev endpoint alternates champions per node:
 //   odd  nodes: attacker=Iron Man,       defender=Captain America
@@ -14,8 +14,7 @@ describe('Knowledge Base', () => {
 
   it('renders all expected column headers', () => {
     setupKnowledgeBaseFast('kb-cols').then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       cy.getByCy('fight-records-table').should('be.visible');
       cy.getByCy('fight-records-table').within(() => {
@@ -27,6 +26,7 @@ describe('Knowledge Base', () => {
         cy.contains('th', 'Node').should('exist');
         cy.contains('th', 'KO').should('exist');
         cy.contains('th', 'Alliance').should('exist');
+        cy.contains('th', 'Season').should('exist');
         cy.contains('th', 'Date').should('exist');
       });
     });
@@ -34,8 +34,7 @@ describe('Knowledge Base', () => {
 
   it('renders 2 fight records from one completed war', () => {
     setupKnowledgeBaseFast('kb-count').then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
     });
   });
@@ -43,8 +42,7 @@ describe('Knowledge Base', () => {
   it('shows the owner game pseudo in the Player column for every row', () => {
     const prefix = 'kb-pseudo';
     setupKnowledgeBaseFast(prefix).then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       const pseudo = `${prefix}Own`.slice(0, 16);
       cy.getByCy('fight-records-table')
@@ -57,8 +55,7 @@ describe('Knowledge Base', () => {
 
   it('nodes have no synergies and no prefights', () => {
     setupKnowledgeBaseFast('kb-nopf').then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       cy.getByCy('fight-records-table')
         .find('tbody tr')
@@ -79,16 +76,14 @@ describe('Knowledge Base', () => {
         create_alliance: { name: 'NoWarAlliance', tag: 'NWA' },
       },
     ]).then((users) => {
-      cy.apiLogin(users['kb-nowar-owner'].user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(users['kb-nowar-owner'].user_id, 'knowledge-base');
       cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
     });
   });
 
   it('shows pagination controls disabled on single page', () => {
     setupKnowledgeBaseFast('kb-pag').then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       cy.getByCy('pagination-page-info').should('contain.text', 'Page 1/');
       cy.getByCy('pagination-first').should('be.disabled');

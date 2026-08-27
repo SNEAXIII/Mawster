@@ -9,7 +9,7 @@ export default function PreferredBadge({
   return (
     <div
       className={cn(
-        'absolute top-0 left-0 bg-white text-black rounded-full p-0.5 flex items-center justify-center',
+        'absolute top-0 left-1/2 -translate-x-1/2 bg-white text-black rounded-full p-0.5 flex items-center justify-center',
         additionalClasses
       )}
       data-cy='preferred-badge'

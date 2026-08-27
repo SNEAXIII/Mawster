@@ -12,9 +12,9 @@ describe('War note – attacker selector', () => {
   });
 
   it('officer edits a fight note from inside the attacker selector', () => {
+    cy.intercept('PUT', '**/nodes/*/*/note').as('saveNote');
     setupAttackerScenario('selnote').then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('war-mode-attackers').click();
 
       // Open the selector on node 10 and write a note via the embedded editor.
@@ -26,6 +26,11 @@ describe('War note – attacker selector', () => {
         cy.getByCy('war-attacker-selector-note-toggle').click();
         cy.getByCy('war-note-input').type(NOTE);
         cy.getByCy('war-note-save').click();
+      });
+      // Wait for the round-trip: the save button is also disabled while saving, so
+      // its state alone does not prove the note reached the placements.
+      cy.wait('@saveNote');
+      cy.getByCy('war-attacker-selector-note').within(() => {
         // Save leaves the editor open and, the note now being unchanged, disabled.
         cy.getByCy('war-note-save').should('be.disabled');
       });
@@ -42,8 +47,7 @@ describe('War note – attacker selector', () => {
 
   it('keeps the fight note folded by default and toggles it open', () => {
     setupAttackerScenario('selfold').then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('war-mode-attackers').click();
 
       cy.getByCy('war-node-10').scrollIntoView().click({ force: true });

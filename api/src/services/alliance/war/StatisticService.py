@@ -10,11 +10,11 @@ from src.dto.alliance.war.dto_statistic import (
     ChampionUsageResponse,
     PlayerSeasonStatsResponse,
 )
+from src.enums.WarStatus import WarStatus
 from src.models import ChampionUser, GameAccount, User, War, WarDefensePlacement
-from src.models.Alliance import Alliance
-from src.models.Champion import Champion
-from src.models.War import WarStatus
-from src.models.WarFightRecord import WarFightRecord
+from src.models.alliance.Alliance import Alliance
+from src.models.champion.Champion import Champion
+from src.models.war.WarFightRecord import WarFightRecord
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.war._stat_expressions import (
     boss_case,
@@ -31,9 +31,24 @@ from src.utils.db import SessionDep
 
 
 class StatisticService:
+    @staticmethod
+    async def _resolve_season_id(
+        session: SessionDep, season_id: uuid.UUID | None
+    ) -> uuid.UUID | None:
+        """Explicit season when the caller picked one, else the display season."""
+        if season_id is not None:
+            return season_id
+        display_season = await SeasonService.get_display_season(session)
+        return None if display_season is None else display_season.id
+
     @classmethod
     async def get_display_season_statistics(
-        cls, session: SessionDep, current_user: User, alliance_id: uuid.UUID
+        cls,
+        session: SessionDep,
+        current_user: User,
+        alliance_id: uuid.UUID,
+        season_id: uuid.UUID | None = None,
+        war_id: uuid.UUID | None = None,
     ) -> list[PlayerSeasonStatsResponse]:
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
@@ -41,10 +56,19 @@ class StatisticService:
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
 
-        display_season = await SeasonService.get_display_season(session)
-        if display_season is None:
+        target_season_id = await cls._resolve_season_id(session, season_id)
+        if target_season_id is None:
             return []
-        season_id = display_season.id
+
+        # Every subquery below is scoped to the same set of wars. When war_id is
+        # given the whole page (table + chart) narrows down to that single war.
+        war_scope = [
+            War.season_id == target_season_id,
+            War.alliance_id == alliance_id,
+            War.status == WarStatus.ended,
+        ]
+        if war_id is not None:
+            war_scope.append(War.id == war_id)
 
         assist_sq = (
             select(
@@ -56,9 +80,7 @@ class StatisticService:
                 WarDefensePlacement, WarDefensePlacement.assist_champion_user_id == ChampionUser.id
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .where(War.season_id == season_id)
-            .where(War.alliance_id == alliance_id)
-            .where(War.status == WarStatus.ended)
+            .where(*war_scope)
             .group_by(ChampionUser.game_account_id)
             .subquery()
         )
@@ -82,9 +104,7 @@ class StatisticService:
                 WarDefensePlacement.attacker_champion_user_id == ChampionUser.id,
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .where(War.season_id == season_id)
-            .where(War.alliance_id == alliance_id)
-            .where(War.status == WarStatus.ended)
+            .where(*war_scope)
             .group_by(GameAccount.id)
             .subquery()
         )
@@ -99,17 +119,13 @@ class StatisticService:
                 WarDefensePlacement.attacker_champion_user_id == ChampionUser.id,
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .where(War.season_id == season_id)
-            .where(War.alliance_id == alliance_id)
-            .where(War.status == WarStatus.ended),
+            .where(*war_scope),
             select(ChampionUser.game_account_id.label("game_account_id"), War.id.label("war_id"))
             .join(
                 WarDefensePlacement, WarDefensePlacement.assist_champion_user_id == ChampionUser.id
             )
             .join(War, WarDefensePlacement.war_id == War.id)
-            .where(War.season_id == season_id)
-            .where(War.alliance_id == alliance_id)
-            .where(War.status == WarStatus.ended),
+            .where(*war_scope),
         ).subquery()
         wars_sq = (
             select(
@@ -127,7 +143,7 @@ class StatisticService:
         _kos = func.coalesce(attacker_sq.c.total_kos, 0)
         _not_fought = func.coalesce(attacker_sq.c.total_not_fought, 0)
         # Each not-done fight counts as a fight with NOT_FOUGHT_KOS KOs in the
-        # ratio, so skipping a node penalizes the player just like in the score.
+        # ratio, so skipping a node penalizes the player.
         _ratio_kos = _kos + NOT_FOUGHT_KOS * _not_fought
         _ratio_fights = _combined_fights + _not_fought
         _wars = wars_sq.c.wars_participated
@@ -188,6 +204,7 @@ class StatisticService:
         alliance_group: int | None = None,
         deathless: bool | None = None,
         perspective: str = "attacker",
+        season_id: uuid.UUID | None = None,
     ) -> list[ChampionUsageResponse]:
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
@@ -195,13 +212,13 @@ class StatisticService:
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
-        display_season = await SeasonService.get_display_season(session)
-        if display_season is None:
+        target_season_id = await cls._resolve_season_id(session, season_id)
+        if target_season_id is None:
             return []
 
         conditions = [
             WarFightRecord.alliance_id == alliance_id,
-            WarFightRecord.season_id == display_season.id,
+            WarFightRecord.season_id == target_season_id,
         ]
         if game_account_id is not None:
             conditions.append(WarFightRecord.game_account_id == game_account_id)

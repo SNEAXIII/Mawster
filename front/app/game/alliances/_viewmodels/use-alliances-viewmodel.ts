@@ -50,7 +50,9 @@ export function useAlliancesViewModel() {
   const [creating, setCreating] = useState(false)
   const [statsAllianceId, setStatsAllianceId] = useState('')
   const [seasonStats, setSeasonStats] = useState<PlayerSeasonStats[]>([])
-  const [statsLoading, setStatsLoading] = useState(false)
+  const [statsWarId, setStatsWarId] = useState<string | null>(null)
+  const [statsSeasonId, setStatsSeasonId] = useState<string | null>(null)
+  const [statsRefreshing, setStatsRefreshing] = useState(false)
   const [statsError, setStatsError] = useState('')
 
   const initialTab = (searchParams.get('tab') as AllianceTab) || AllianceTab.Alliances
@@ -133,18 +135,22 @@ export function useAlliancesViewModel() {
   }
 
   const loadSeasonStats = useCallback(
-    async (allianceId: string) => {
-      setStatsLoading(true)
+    async (allianceId: string, warId?: string | null, seasonId?: string | null) => {
+      setStatsRefreshing(true)
       setStatsError('')
       try {
-        const stats = await getCurrentSeasonStatistics(allianceId)
+        const stats = await getCurrentSeasonStatistics(
+          allianceId,
+          warId ?? undefined,
+          seasonId ?? undefined
+        )
         setSeasonStats(stats)
       } catch (err: unknown) {
         console.error(err)
         setSeasonStats([])
         setStatsError((err as Error).message || t.game.alliances.statistics.loadError)
       } finally {
-        setStatsLoading(false)
+        setStatsRefreshing(false)
       }
     },
     [t.game.alliances.statistics.loadError]
@@ -189,17 +195,32 @@ export function useAlliancesViewModel() {
     }
 
     if (activeTab === AllianceTab.Statistics) {
-      loadSeasonStats(targetAllianceId).catch(() => {})
+      loadSeasonStats(targetAllianceId, statsWarId, statsSeasonId).catch(() => {})
     }
-  }, [activeTab, alliances, statsAllianceId, loadSeasonStats])
+  }, [activeTab, alliances, statsAllianceId, statsWarId, statsSeasonId, loadSeasonStats])
 
   const handleStatsAllianceChange = (allianceId: string) => {
     setStatsAllianceId(allianceId)
+    // Wars are alliance-scoped: keeping the previous selection would filter on a
+    // war that does not belong to the newly selected alliance.
+    setStatsWarId(null)
+    setStatsSeasonId(null)
+  }
+
+  const handleStatsWarChange = (warId: string | null) => {
+    setStatsWarId(warId)
+  }
+
+  const handleStatsSeasonChange = (seasonId: string | null) => {
+    setStatsSeasonId(seasonId)
+    // A war belongs to a single season, so the current war selection cannot
+    // survive a season change.
+    setStatsWarId(null)
   }
 
   const handleRefreshStatistics = async () => {
     if (!statsAllianceId) return
-    await loadSeasonStats(statsAllianceId)
+    await loadSeasonStats(statsAllianceId, statsWarId, statsSeasonId)
   }
 
   const ALLIANCE_NAME_REGEX = /^[a-zA-Z0-9 ]{3,50}$/
@@ -269,8 +290,11 @@ export function useAlliancesViewModel() {
     }
   }
 
+  // Also refreshes the eligible owners: any membership change — a member
+  // leaving, the alliance being disbanded — can free a game account, and the
+  // "Create" tab only shows up when at least one is eligible.
   const handleMemberRefresh = async () => {
-    await Promise.all([refreshAlliances(), fetchEligibleMembers(), fetchMyAccounts()])
+    await refreshMembership()
   }
 
   const handleAcceptInvitation = async (invitationId: string) => {
@@ -328,7 +352,14 @@ export function useAlliancesViewModel() {
     rosterTarget,
     statsAllianceId,
     seasonStats,
-    statsLoading,
+    statsWarId,
+    handleStatsWarChange,
+    statsSeasonId,
+    handleStatsSeasonChange,
+    // Blank the panel only while there is nothing to show yet. A filter refetch
+    // keeps the previous rows on screen so the filter bar never unmounts.
+    statsLoading: statsRefreshing && seasonStats.length === 0,
+    statsRefreshing,
     statsError,
     searchParams,
     setActiveTab,

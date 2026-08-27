@@ -26,6 +26,7 @@ interface DevUser {
 function LoginPageContent() {
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') ?? '/'
+  const errorCode = searchParams.get('error')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [devUsers, setDevUsers] = useState<DevUser[]>([])
@@ -42,6 +43,18 @@ function LoginPageContent() {
       .catch(() => setDevUsers([]))
       .finally(() => setDevLoading(false))
   }, [])
+
+  // Handle OAuth error codes from the callback URL
+  useEffect(() => {
+    if (!errorCode) return
+    if (errorCode === 'PROVIDER_ALREADY_LINKED') {
+      setError(t.login.errorProviderAlreadyLinked)
+    } else if (errorCode === 'ACCOUNT_UNAVAILABLE') {
+      setError(t.login.errorAccountUnavailable)
+    } else {
+      setError(t.login.errorGeneric)
+    }
+  }, [errorCode, t])
 
   const handleGoogleLogin = async () => {
     setIsLoading(true)

@@ -11,8 +11,7 @@ describe('Mastery tab', () => {
 
   it('shows empty state when no masteries configured', () => {
     setupRosterUser('mastery-empty', 'MasteryUser').then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/account?tab=mastery');
+      cy.apiLogin(userData.user_id, '/game/account?tab=mastery');
       cy.contains('No masteries configured yet').should('be.visible');
     });
   });
@@ -26,8 +25,7 @@ describe('Mastery tab', () => {
       cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 5, 3);
       cy.apiCreateMastery(adminData.access_token, 'LIMBER', 3, 2);
 
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/account?tab=mastery');
+      cy.apiLogin(userData.user_id, '/game/account?tab=mastery');
 
       cy.getByCy('mastery-card-assassin').should('be.visible');
       cy.getByCy('mastery-card-limber').should('be.visible');
@@ -44,8 +42,7 @@ describe('Mastery tab', () => {
   it('owner can save masteries and values persist after reload', () => {
     setupRosterUser('mastery-save', 'MasteryUser').then(({ adminData, userData, accountId }) => {
       cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 5, 3);
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/account?tab=mastery');
+      cy.apiLogin(userData.user_id, '/game/account?tab=mastery');
 
       cy.getByCy('mastery-assassin-unlocked').clear().type('4');
       cy.getByCy('mastery-assassin-attack').clear().type('3');
@@ -69,8 +66,7 @@ describe('Mastery tab', () => {
     setupRosterUser('mastery-tab-nav', 'MasteryUser').then(({ adminData, userData }) => {
       cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 5, 3);
 
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/account');
+      cy.apiLogin(userData.user_id, 'roster');
       cy.getByCy('tab-mastery').click();
       cy.getByCy('mastery-card-assassin').should('be.visible');
       cy.url().should('include', 'tab=mastery');
@@ -88,8 +84,7 @@ describe('Mastery tab', () => {
           { mastery_id: mastery.id, unlocked: 5, attack: 4, defense: 3 },
         ]);
 
-        cy.apiLogin(userData.user_id);
-        cy.visit('/game/account?tab=mastery');
+        cy.apiLogin(userData.user_id, '/game/account?tab=mastery');
 
         cy.getByCy('mastery-assassin-unlocked').should('have.value', '5');
         cy.getByCy('mastery-assassin-attack').should('have.value', '4');
@@ -106,8 +101,7 @@ describe('Mastery tab', () => {
     setupRosterUser('mastery-validation', 'MasteryUser').then(({ adminData, userData }) => {
       cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 5, 3);
 
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/account?tab=mastery');
+      cy.apiLogin(userData.user_id, '/game/account?tab=mastery');
 
       cy.getByCy('mastery-assassin-unlocked').clear().type('3');
       cy.getByCy('mastery-assassin-attack').clear().type('5');
@@ -120,8 +114,7 @@ describe('Mastery tab', () => {
     setupRosterUser('mastery-validation-max', 'MasteryUser').then(({ adminData, userData }) => {
       cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 5, 3);
 
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/account?tab=mastery');
+      cy.apiLogin(userData.user_id, '/game/account?tab=mastery');
 
       cy.getByCy('mastery-assassin-unlocked').clear().type('99');
       cy.getByCy('mastery-assassin-unlocked').should('have.value', '5');
@@ -139,8 +132,7 @@ describe('Mastery tab', () => {
           { mastery_id: mastery.id, unlocked: 5, attack: 0, defense: 0 },
         ]);
 
-        cy.apiLogin(userData.user_id);
-        cy.visit('/game/account?tab=mastery');
+        cy.apiLogin(userData.user_id, '/game/account?tab=mastery');
 
         cy.getByCy('mastery-card-assassin').contains('MAX').should('be.visible');
       });
@@ -173,8 +165,7 @@ describe('Mastery tab', () => {
       cy.apiCreateMastery(adminToken, 'ASSASSIN', 5, 3).then((mastery) => {
         cy.apiSaveMasteries(ownerToken, ownerAccId, [{ mastery_id: mastery.id, unlocked: 4, attack: 3, defense: 2 }]);
 
-        cy.apiLogin(memberUserId);
-        cy.visit('/game/alliances');
+        cy.apiLogin(memberUserId, 'alliances');
 
         cy.getByCy('view-roster-OwnerPseudo').click();
         cy.getByCy('mastery-card-assassin').should('be.visible');

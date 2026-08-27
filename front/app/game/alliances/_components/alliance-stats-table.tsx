@@ -20,7 +20,6 @@ export type SortField =
   | 'total_boss'
   | 'total_not_fought'
   | 'ratio'
-  | 'score'
   | 'wars_participated'
   | 'avg_fights_per_war'
   | 'avg_boss_miniboss_per_war'
@@ -128,10 +127,6 @@ export function AllianceStatsTable({
       ),
       ratio: top3(
         rows.map((r) => r.ratio),
-        true
-      ),
-      score: top3(
-        rows.map((r) => r.score),
         true
       ),
       wars_participated: top3(

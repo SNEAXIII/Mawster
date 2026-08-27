@@ -5,50 +5,59 @@ description: Use when running Cypress E2E tests — full suite or targeted specs
 
 # E2E Tests
 
-**Outil unique** : `mcp__server-runner__run_e2e` — il démarre la stack test si besoin (MariaDB-test 3307 + API 8001 + Front 3001), puis lance Cypress.
+**Point d'entrée unique** : `scripts/e2e_parallel.py` — le même runner que la CI. Il build le
+front (`.next-e2e`), démarre un backend + un front par worker (ports `8010+N` / `3010+N`,
+DB `mawster_test_N`), lance Cypress, puis nettoie.
 
-Le MCP `cypress-runner` a été supprimé : il servait des rapports périmés, donc un
-« passing » pouvait être faux. Plus de run parallèle sur plusieurs workers.
+Ne jamais appeler `npx cypress run` directement : sans la stack montée par le script,
+les specs échouent sur des timeouts au lieu de tester quoi que ce soit.
 
-## Paramètres
+**Prérequis** : Docker avec `mariadb-test` accessible sur **3307**.
 
-| Paramètre | Valeur |
-|-----------|--------|
-| `spec_files` | Liste de specs ciblées (chemins relatifs à `front/cypress/e2e/`). Omis = toutes les specs. |
-
-## Lancer tous les tests
-
-```
-mcp__server-runner__run_e2e()
+```bash
+docker compose -f compose-dev.yaml up -d mariadb-test
 ```
 
-Long — la suite complète tourne en série. Préférer les specs ciblées en local et
-laisser la CI faire la passe complète.
+## Specs ciblées (à privilégier en local)
 
-## Lancer des specs ciblées
+`--spec` accepte une liste séparée par des virgules, relative à `front/cypress/e2e/` ;
+un dossier est développé en toutes ses specs.
 
-Maximum 3 fichiers par batch. Si plus de 3 specs, les grouper et lancer batch par
-batch en attendant les résultats entre chaque.
-
+```bash
+python3 scripts/e2e_parallel.py --spec "war/basic.cy.ts,roster/roster.cy.ts" --quiet
 ```
-mcp__server-runner__run_e2e(spec_files=["war/basic.cy.ts", "roster/foo.cy.ts"])
+
+Maximum 3 fichiers par batch. Au-delà, grouper et lancer batch par batch en attendant
+les résultats entre chaque.
+
+## Suite complète
+
+```bash
+python3 scripts/e2e_parallel.py --workers 4 --quiet
 ```
+
+Long — préférer les specs ciblées en local et laisser la CI faire la passe complète.
+
+## Options utiles
+
+| Option | Effet |
+|--------|-------|
+| `--workers N` | 1 à 8 workers parallèles (défaut 2 ; `--spec` force le nombre de specs) |
+| `--quiet` | Masque les logs backend/front, garde la sortie Cypress |
+| `--skip-build` | Réutilise le `.next-e2e` existant — seulement si le front n'a pas bougé |
+| `--include-vision` | Inclut les specs vision (exclues par défaut : elles exigent RabbitMQ + RustFS + un worker vision) |
 
 ## Si des tests échouent
 
-1. Récupérer les `spec` des tests échoués dans les résultats
+1. Récupérer le `spec` de chaque test en échec dans la sortie
 2. Relancer uniquement ces specs :
 
+```bash
+python3 scripts/e2e_parallel.py --spec "war/basic.cy.ts"
 ```
-mcp__server-runner__run_e2e(spec_files=["war/basic.cy.ts"])
-```
 
-## Vérifier qu'un résultat est frais
-
-L'ancien runner mentait sur ce point. Avant de croire un vert :
-
-- Les artefacts sont dans `front/cypress/results/` — comparer leur `mtime` à l'heure du run
-- Un run qui n'a produit aucun nouveau fichier n'a rien exécuté
+Artefacts dans `front/cypress/results/` (rapports XML, screenshots d'échec). Comparer leur
+`mtime` à l'heure du run : un run qui n'a produit aucun nouveau fichier n'a rien exécuté.
 
 ## Conventions E2E du projet
 

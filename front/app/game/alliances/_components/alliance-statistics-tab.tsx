@@ -29,8 +29,13 @@ interface AllianceStatisticsTabProps {
   onAllianceChange: (allianceId: string) => void
   seasonStats: PlayerSeasonStats[]
   statsLoading: boolean
+  statsRefreshing: boolean
   statsError: string
   onRetry: () => Promise<void>
+  selectedWarId: string | null
+  onWarChange: (warId: string | null) => void
+  selectedSeasonId: string | null
+  onSeasonChange: (seasonId: string | null) => void
 }
 
 type MemberFilter = 'current' | 'all' | 'former'
@@ -47,8 +52,13 @@ export default function AllianceStatisticsTab({
   onAllianceChange,
   seasonStats,
   statsLoading,
+  statsRefreshing,
   statsError,
   onRetry,
+  selectedWarId,
+  onWarChange,
+  selectedSeasonId,
+  onSeasonChange,
 }: Readonly<AllianceStatisticsTabProps>) {
   const { t } = useI18n()
   const stat = t.game.alliances.statistics
@@ -78,8 +88,6 @@ export default function AllianceStatisticsTab({
   const {
     selectedGameAccountId,
     setSelectedGameAccountId,
-    selectedWarId,
-    setSelectedWarId,
     championUsage,
     chartMetric,
     setChartMetric,
@@ -88,9 +96,16 @@ export default function AllianceStatisticsTab({
     detailOpen,
     setDetailOpen,
     wars,
+    seasons,
     chartLoading,
     handleRowClick,
-  } = useChampionStats(selectedAllianceId, selectedGroup)
+  } = useChampionStats(selectedAllianceId, selectedGroup, selectedWarId, selectedSeasonId)
+
+  // Pin the selector to the newest season with data as soon as the wars land, so
+  // the dropdown never disagrees with the season the backend actually returned.
+  useEffect(() => {
+    if (selectedSeasonId === null && seasons.length > 0) onSeasonChange(seasons[0].id)
+  }, [seasons, selectedSeasonId, onSeasonChange])
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -140,7 +155,10 @@ export default function AllianceStatisticsTab({
     sortField !== 'ratio' ||
     sortDir !== 'desc' ||
     selectedGameAccountId !== null ||
-    selectedWarId !== null
+    selectedWarId !== null ||
+    // A season other than the newest one is a deliberate narrowing, so the
+    // reset affordance has to show.
+    (seasons.length > 0 && selectedSeasonId !== null && selectedSeasonId !== seasons[0].id)
 
   return (
     <div className='flex flex-col gap-4'>
@@ -184,7 +202,7 @@ export default function AllianceStatisticsTab({
             {stat.retry}
           </Button>
         </div>
-      ) : seasonStats.length === 0 ? (
+      ) : seasonStats.length === 0 && selectedWarId === null ? (
         <p
           className='text-sm text-muted-foreground py-6 text-center'
           data-cy='statistics-empty'
@@ -211,9 +229,34 @@ export default function AllianceStatisticsTab({
               </SelectContent>
             </Select>
 
+            {seasons.length > 0 && (
+              <Select
+                value={selectedSeasonId ?? seasons[0].id}
+                onValueChange={onSeasonChange}
+              >
+                <SelectTrigger
+                  className='w-36'
+                  data-cy='statistics-season-filter'
+                >
+                  <SelectValue placeholder={stat.seasonFilter} />
+                </SelectTrigger>
+                <SelectContent>
+                  {seasons.map((season) => (
+                    <SelectItem
+                      key={season.id}
+                      value={season.id}
+                      data-cy={`statistics-season-${season.id}`}
+                    >
+                      {stat.seasonOption.replace('{number}', String(season.number))}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
             <Select
               value={selectedWarId ?? 'all'}
-              onValueChange={(v) => setSelectedWarId(v === 'all' ? null : v)}
+              onValueChange={(v) => onWarChange(v === 'all' ? null : v)}
             >
               <SelectTrigger
                 className='w-44'
@@ -301,7 +344,8 @@ export default function AllianceStatisticsTab({
                   setSortField('ratio')
                   setSortDir('desc')
                   setSelectedGameAccountId(null)
-                  setSelectedWarId(null)
+                  onWarChange(null)
+                  onSeasonChange(seasons.length > 0 ? seasons[0].id : null)
                 }}
                 data-cy='statistics-reset-filters'
               >
@@ -310,7 +354,12 @@ export default function AllianceStatisticsTab({
             )}
           </div>
 
-          <div className='flex flex-col lg:flex-row gap-6'>
+          <div
+            className={`flex flex-col lg:flex-row gap-6 transition-opacity ${
+              statsRefreshing ? 'opacity-60' : ''
+            }`}
+            aria-busy={statsRefreshing}
+          >
             <div className='flex-1 min-w-0'>
               {filteredStats.length === 0 ? (
                 <p

@@ -159,6 +159,77 @@ export function withWarScenarioTwoPlayers(
   });
 }
 
+// Two ended wars in the same season, each fought by a different player:
+// the owner fights in war one only, the member in war two only. Lets a spec
+// assert that the war filter actually re-scopes the stats table, not just the chart.
+export function withTwoEndedWarsTwoPlayers(
+  adminToken: string,
+  ownerToken: string,
+  ownerAccId: string,
+  memberToken: string,
+  memberAccId: string,
+  allianceId: string,
+  cb: (args: { warOneId: string; warTwoId: string }) => void,
+) {
+  createAndActivateSeason(adminToken).then(() => {
+    loadChampAndAddToTwoRosters(
+      adminToken,
+      ownerToken,
+      ownerAccId,
+      memberToken,
+      memberAccId,
+      ({ champId, cuOwnerId, cuMemberId }) => {
+        cy.apiCreateWar(ownerToken, allianceId, 'WarOne').then((warOne: { id: string }) => {
+          addStatsForPlayer(ownerToken, allianceId, warOne.id, champId, cuOwnerId, 10, 0);
+          cy.apiEndWar(ownerToken, allianceId, warOne.id, true, 10);
+          cy.apiCreateWar(ownerToken, allianceId, 'WarTwo').then((warTwo: { id: string }) => {
+            addStatsForPlayer(ownerToken, allianceId, warTwo.id, champId, cuMemberId, 11, 2);
+            cy.apiEndWar(ownerToken, allianceId, warTwo.id, true, 10);
+            cb({ warOneId: warOne.id, warTwoId: warTwo.id });
+          });
+        });
+      },
+    );
+  });
+}
+
+// Two seasons, one ended war each, fought by a different player. Season 63 is
+// closed before 64 opens because a war is stamped with whichever season is
+// active when it is created, and only one season may be current at a time.
+export function withTwoSeasonsOneWarEach(
+  adminToken: string,
+  ownerToken: string,
+  ownerAccId: string,
+  memberToken: string,
+  memberAccId: string,
+  allianceId: string,
+  cb: (args: { pastSeasonId: string; currentSeasonId: string }) => void,
+) {
+  createOpenSeason(adminToken, 63).then((pastSeasonId) => {
+    loadChampAndAddToTwoRosters(
+      adminToken,
+      ownerToken,
+      ownerAccId,
+      memberToken,
+      memberAccId,
+      ({ champId, cuOwnerId, cuMemberId }) => {
+        cy.apiCreateWar(ownerToken, allianceId, 'OldWar').then((oldWar: { id: string }) => {
+          addStatsForPlayer(ownerToken, allianceId, oldWar.id, champId, cuOwnerId, 10, 3);
+          cy.apiEndWar(ownerToken, allianceId, oldWar.id, true, 10);
+          closeSeason(adminToken, pastSeasonId);
+          createOpenSeason(adminToken, 64).then((currentSeasonId) => {
+            cy.apiCreateWar(ownerToken, allianceId, 'NewWar').then((newWar: { id: string }) => {
+              addStatsForPlayer(ownerToken, allianceId, newWar.id, champId, cuMemberId, 11, 0);
+              cy.apiEndWar(ownerToken, allianceId, newWar.id, true, 10);
+              cb({ pastSeasonId, currentSeasonId });
+            });
+          });
+        });
+      },
+    );
+  });
+}
+
 function loadTwoChampsAddToRosters(
   adminToken: string,
   ownerToken: string,

@@ -23,7 +23,10 @@ export interface PreviewRow {
   // because JSON-import rows never populated it before this field existed.
   oldAscension?: number | null
   confidence?: number
-  cropUrl?: string | null
+  // The screenshot's thumbnail sheet, and this card's cell in it. Both null on
+  // a JSON import and on a card whose detection box was degenerate.
+  spriteUrl?: string | null
+  cropIndex?: number | null
   prediction_id?: string | null
   editable?: boolean
   // CLIP alternatives, best first, top-1 included. Absent on JSON imports.
@@ -47,6 +50,7 @@ interface ImportPreviewRowProps {
 
 export default function ImportPreviewRow({ row, index, onRowChange }: ImportPreviewRowProps) {
   const { t } = useI18n()
+  const ascLabel = t.roster.importExport.ascLabel.toLowerCase()
 
   if (row.editable) {
     return (
@@ -100,6 +104,7 @@ export default function ImportPreviewRow({ row, index, onRowChange }: ImportPrev
             </span>
             <div className='text-gray-600 dark:text-gray-300'>
               {RARITY_LABELS[row.newRarity] ?? row.newRarity} · sig {row.newSignature}
+              {(row.ascension ?? 0) > 0 && ` · ${ascLabel} ${row.ascension}`}
             </div>
           </div>
         ) : row.hasChanges ? (
@@ -123,6 +128,17 @@ export default function ImportPreviewRow({ row, index, onRowChange }: ImportPrev
                 <span className='text-gray-400'>sig {row.oldSignature}</span>
                 <ArrowRight className='text-blue-500 h-2.5 w-2.5' />
                 <span className='text-blue-600 font-semibold'>sig {row.newSignature}</span>
+              </div>
+            )}
+            {(row.oldAscension ?? 0) !== (row.ascension ?? 0) && (
+              <div className='flex items-center gap-1 justify-end'>
+                <span className='text-gray-400'>
+                  {ascLabel} {row.oldAscension ?? 0}
+                </span>
+                <ArrowRight className='text-blue-500 h-2.5 w-2.5' />
+                <span className='text-blue-600 font-semibold'>
+                  {ascLabel} {row.ascension ?? 0}
+                </span>
               </div>
             )}
           </div>

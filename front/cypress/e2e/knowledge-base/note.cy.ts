@@ -10,8 +10,7 @@ describe('Knowledge Base — note', () => {
   it('shows the note author pseudo under the note cell', () => {
     const prefix = 'kb-noteauth';
     setupKnowledgeBase(prefix).then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       const author = `${prefix}Def`.slice(0, 16);
       cy.getByCy('kb-note-author').should('have.length', 1).and('contain.text', `by ${author}`);
@@ -21,8 +20,7 @@ describe('Knowledge Base — note', () => {
   it('opens a popover with the full note text and its author', () => {
     const prefix = 'kb-notepop';
     setupKnowledgeBase(prefix).then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       const author = `${prefix}Def`.slice(0, 16);
 
@@ -41,8 +39,7 @@ describe('Knowledge Base — note', () => {
   it('keeps the report flag available on a note', () => {
     const prefix = 'kb-noterep';
     setupKnowledgeBase(prefix).then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       // The Note column sits at the far right of a horizontally scrollable table.
       cy.getByCy('kb-note-report').should('have.length', 1).scrollIntoView().should('be.visible');

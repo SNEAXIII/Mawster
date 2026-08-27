@@ -1,15 +1,6 @@
 'use client'
 
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Dot,
-} from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Dot } from 'recharts'
 import { ChartContainer } from '@/components/ui/chart'
 import { useI18n } from '@/app/i18n'
 import type { RankingHistoryPoint } from '@/app/services/game'
@@ -106,41 +97,36 @@ export default function AllianceRankingChart({
         config={chartConfig}
         className='h-40 w-full'
       >
-        <ResponsiveContainer
-          width='100%'
-          height='100%'
+        <LineChart
+          data={points}
+          margin={{ top: 4, right: 8, left: -16, bottom: 0 }}
         >
-          <LineChart
-            data={points}
-            margin={{ top: 4, right: 8, left: -16, bottom: 0 }}
-          >
-            <CartesianGrid
-              strokeDasharray='3 3'
-              className='stroke-muted'
-            />
-            <XAxis
-              dataKey='war_number'
-              tick={{ fontSize: 10 }}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              tick={{ fontSize: 10 }}
-              tickLine={false}
-              axisLine={false}
-              domain={['auto', 'auto']}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Line
-              type='monotone'
-              dataKey='elo_after'
-              stroke='hsl(var(--primary))'
-              strokeWidth={2}
-              dot={<WinLossDot />}
-              activeDot={{ r: 6 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+          <CartesianGrid
+            strokeDasharray='3 3'
+            className='stroke-muted'
+          />
+          <XAxis
+            dataKey='war_number'
+            tick={{ fontSize: 10 }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 10 }}
+            tickLine={false}
+            axisLine={false}
+            domain={['auto', 'auto']}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Line
+            type='monotone'
+            dataKey='elo_after'
+            stroke='hsl(var(--primary))'
+            strokeWidth={2}
+            dot={<WinLossDot />}
+            activeDot={{ r: 6 }}
+          />
+        </LineChart>
       </ChartContainer>
     </div>
   )

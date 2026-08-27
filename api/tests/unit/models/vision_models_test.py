@@ -3,9 +3,13 @@ import uuid
 import pytest
 from sqlmodel import select
 
-from src.models.VisionImport import VisionImport, VisionImportStatus
-from src.models.VisionJob import VisionJob, VisionJobStatus
-from src.models.VisionPrediction import VisionPrediction
+from src.enums.VisionImportStatus import VisionImportStatus
+from src.enums.VisionJobStatus import VisionJobStatus
+from src.models.vision.VisionImport import VisionImport
+from src.models.vision.VisionJob import VisionJob
+from src.models.vision.VisionPrediction import VisionPrediction
+from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
+from src.models.vision.VisionSample import VisionSample
 
 
 def test_vision_import_defaults():
@@ -57,7 +61,6 @@ def test_vision_prediction_accepts_unknown_champion():
 
 
 def test_vision_sample_construction():
-    from src.models.VisionSample import VisionSample
 
     sample = VisionSample(
         import_id=uuid.uuid4(),
@@ -69,19 +72,16 @@ def test_vision_sample_construction():
 
 
 def test_vision_import_has_confirmed_status():
-    from src.models.VisionImport import VisionImportStatus
 
     assert VisionImportStatus.CONFIRMED.value == "confirmed"
 
 
 def test_vision_import_has_cancelled_status():
-    from src.models.VisionImport import VisionImportStatus
 
     assert VisionImportStatus.CANCELLED.value == "cancelled"
 
 
 def test_candidate_carries_its_rank():
-    from src.models.VisionPredictionCandidate import VisionPredictionCandidate
 
     candidate = VisionPredictionCandidate(
         prediction_id=uuid.uuid4(), name="Gorr", score=0.78, position=1
@@ -93,7 +93,6 @@ def test_candidate_carries_its_rank():
 
 
 def test_vision_prediction_candidates_default_to_empty():
-    from src.models.VisionPrediction import VisionPrediction
 
     pred = VisionPrediction(job_id=uuid.uuid4())
     assert pred.candidates == []
@@ -101,7 +100,6 @@ def test_vision_prediction_candidates_default_to_empty():
 
 @pytest.mark.asyncio
 async def test_candidates_come_back_best_first(session):
-    from src.models.VisionPredictionCandidate import VisionPredictionCandidate
 
     pred = VisionPrediction(job_id=uuid.uuid4(), champion_name="Gladiator")
     session.add(pred)
@@ -136,7 +134,6 @@ async def test_candidates_relationship_returns_best_first(session):
     `test_candidates_come_back_best_first` above, since that test orders the
     query explicitly. This one loads through the relationship attribute so a
     broken `order_by` actually fails a test."""
-    from src.models.VisionPredictionCandidate import VisionPredictionCandidate
 
     pred = VisionPrediction(job_id=uuid.uuid4(), champion_name="Gladiator")
     session.add(pred)

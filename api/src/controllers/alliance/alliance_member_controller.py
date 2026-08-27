@@ -13,7 +13,7 @@ from src.dto.alliance.dto_alliance import (
 )
 from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.models import User
-from src.models.Alliance import Alliance
+from src.models.alliance.Alliance import Alliance
 from src.services.alliance.AllianceService import AllianceService
 from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep

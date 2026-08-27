@@ -1,0 +1,54 @@
+import uuid
+from typing import TYPE_CHECKING, Optional
+
+from sqlmodel import Field, Relationship
+
+from src.models.Base import (
+    FK_GAME_ACCOUNT,
+    AllianceFk,
+    ChampionFk,
+    DefenderChampionFk,
+    KoCount,
+    NodeNumber,
+    SeasonFk,
+    TimestampMixin,
+    UUIDBase,
+)
+
+if TYPE_CHECKING:
+    from src.models.alliance.Alliance import Alliance
+    from src.models.champion.Champion import Champion
+    from src.models.user.GameAccount import GameAccount
+    from src.models.war.Season import Season
+
+
+class WarFightRecordImport(
+    UUIDBase, DefenderChampionFk, SeasonFk, AllianceFk, ChampionFk, TimestampMixin, table=True
+):
+    __tablename__ = "war_fight_record_import"
+
+    node_number: NodeNumber
+    ko_count: KoCount = 0
+    imported_by_id: uuid.UUID = Field(foreign_key=FK_GAME_ACCOUNT)
+
+    alliance: "Alliance" = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[WarFightRecordImport.alliance_id]"}
+    )
+    season: Optional["Season"] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[WarFightRecordImport.season_id]"}
+    )
+    champion: "Champion" = Relationship(
+        sa_relationship_kwargs={
+            "foreign_keys": "[WarFightRecordImport.champion_id]",
+            "overlaps": "defender_champion",
+        }
+    )
+    defender_champion: "Champion" = Relationship(
+        sa_relationship_kwargs={
+            "foreign_keys": "[WarFightRecordImport.defender_champion_id]",
+            "overlaps": "champion",
+        }
+    )
+    imported_by: "GameAccount" = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[WarFightRecordImport.imported_by_id]"}
+    )

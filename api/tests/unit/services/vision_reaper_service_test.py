@@ -2,7 +2,9 @@ import uuid
 
 import pytest
 
-from src.models.VisionJob import VisionJob, VisionJobStatus
+from src.enums.VisionJobStatus import VisionJobStatus
+from src.messaging.topology import MAX_ATTEMPTS
+from src.models.vision.VisionJob import VisionJob
 from src.services.account.game.VisionReaperService import VisionReaperService
 
 
@@ -53,7 +55,6 @@ async def test_requeues_pending_jobs():
 @pytest.mark.asyncio
 async def test_skips_jobs_at_the_attempt_ceiling():
     """A job that already burned its attempts is not resurrected forever."""
-    from src.messaging.topology import MAX_ATTEMPTS
 
     jobs = [_job(attempts=MAX_ATTEMPTS)]
     session, publisher = FakeSession(jobs), FakePublisher()

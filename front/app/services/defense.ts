@@ -1,3 +1,5 @@
+import { PROXY, jsonHeaders } from '@/app/services/utils'
+
 // ─── Defense Placement Service ───────────────────────────
 
 export interface DefensePlacement {
@@ -61,14 +63,6 @@ export interface BgMember {
   max_defenders: number
   is_owner: boolean
   is_officer: boolean
-}
-
-// ─── Helpers ─────────────────────────────────────────────
-const PROXY = '/api/back'
-
-const jsonHeaders: HeadersInit = {
-  Accept: 'application/json',
-  'Content-Type': 'application/json',
 }
 
 async function throwOnError(response: Response, fallback: string) {

@@ -2,6 +2,8 @@ import uuid
 from datetime import UTC, datetime
 
 import pytest
+from fastapi import HTTPException
+from sqlmodel import select
 
 from src.dto.auth.dto_utilisateurs import UserAdminViewSingleUser
 from src.enums.Roles import Roles
@@ -141,7 +143,7 @@ async def test_get_user_by_login_with_validity_check_success(mocker):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "fake_user,expected_error",
+    ("fake_user", "expected_error"),
     [
         (None, USER_DOESNT_EXISTS),
         (User(login=LOGIN, deleted_at=utcnow()), USER_IS_DELETED),
@@ -182,7 +184,7 @@ async def test_patch_disable_user_success(mocker, use_time_machine):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "fake_user,expected_error",
+    ("fake_user", "expected_error"),
     [
         (None, TARGET_USER_DOESNT_EXISTS),
         (User(login=LOGIN, deleted_at=utcnow()), TARGET_USER_IS_DELETED),
@@ -264,7 +266,7 @@ async def test_patch_enable_user_success(mocker):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "fake_user,expected_error",
+    ("fake_user", "expected_error"),
     [
         (None, TARGET_USER_DOESNT_EXISTS),
         (User(login=LOGIN, deleted_at=utcnow()), TARGET_USER_IS_DELETED),
@@ -306,7 +308,7 @@ async def test_delete_user_success(mocker, use_time_machine):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "fake_user,expected_error",
+    ("fake_user", "expected_error"),
     [
         (None, TARGET_USER_DOESNT_EXISTS),
         (User(login=LOGIN, deleted_at=utcnow()), TARGET_USER_IS_ALREADY_DELETED),
@@ -368,7 +370,7 @@ async def test_update_login_already_taken(mocker):
     get_user_by_login_mock(mocker, other_user)
 
     # Act / Assert
-    with pytest.raises(Exception) as exc:
+    with pytest.raises(HTTPException) as exc:
         await UserService.update_login(mock_session, current_user, "OtherLogin")
 
     assert exc.value.status_code == 409
@@ -404,8 +406,10 @@ async def test_get_user_by_id_with_validity_check_user_not_found(mocker):
     """Valid UUID but no user in DB hits line 72."""
     mock_session = session_mock(mocker)
     get_user_mock(mocker, None)
+    user_id = str(USER_ID)
+
     with pytest.raises(UserLoginError) as exc:
-        await UserService.get_user_by_id_with_validity_check(mock_session, str(USER_ID))
+        await UserService.get_user_by_id_with_validity_check(mock_session, user_id)
     assert exc.value.detail == str(USER_DOESNT_EXISTS)
 
 
@@ -414,8 +418,10 @@ async def test_get_user_by_id_with_validity_check_deleted(mocker):
     """Deleted user hits line 74."""
     mock_session = session_mock(mocker)
     get_user_mock(mocker, User(login=LOGIN, deleted_at=utcnow()))
+    user_id = str(USER_ID)
+
     with pytest.raises(UserLoginError) as exc:
-        await UserService.get_user_by_id_with_validity_check(mock_session, str(USER_ID))
+        await UserService.get_user_by_id_with_validity_check(mock_session, user_id)
     assert exc.value.detail == str(USER_IS_DELETED)
 
 
@@ -425,8 +431,10 @@ async def test_get_user_by_id_with_validity_check_disabled(mocker):
     mock_session = session_mock(mocker)
     fake_user = User(login=LOGIN, disabled_at=utcnow())
     get_user_mock(mocker, fake_user)
+    user_id = str(USER_ID)
+
     with pytest.raises(UserLoginError) as exc:
-        await UserService.get_user_by_id_with_validity_check(mock_session, str(USER_ID))
+        await UserService.get_user_by_id_with_validity_check(mock_session, user_id)
     assert exc.value.detail == str(USER_IS_DISABLED)
 
 
@@ -462,7 +470,7 @@ async def test_promote_user_success(mocker):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "fake_user,expected_error",
+    ("fake_user", "expected_error"),
     [
         (None, TARGET_USER_DOESNT_EXISTS),
         (User(login=LOGIN, deleted_at=utcnow()), TARGET_USER_IS_DELETED),
@@ -505,7 +513,7 @@ async def test_demote_user_success(mocker):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "fake_user,expected_error",
+    ("fake_user", "expected_error"),
     [
         (None, TARGET_USER_DOESNT_EXISTS),
         (User(login=LOGIN, deleted_at=utcnow()), TARGET_USER_IS_DELETED),
@@ -533,9 +541,6 @@ async def test_demote_user_errors(mocker, fake_user, expected_error):
 
 def test_build_status_filter_deleted():
     """status='deleted' adds deleted_at != None filter (line 197)."""
-    from sqlmodel import select
-
-    from src.models import User
 
     sql = select(User)
     result = UserAdminService.build_status_filter(sql, "deleted")
@@ -544,7 +549,6 @@ def test_build_status_filter_deleted():
 
 def test_build_status_filter_disabled():
     """status='disabled' adds deleted_at==None + disabled_at!=None (lines 198-199)."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_status_filter(sql, "disabled")
@@ -553,7 +557,6 @@ def test_build_status_filter_disabled():
 
 def test_build_status_filter_enabled():
     """status='enabled' adds both == None filters (lines 200-201)."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_status_filter(sql, "enabled")
@@ -562,7 +565,6 @@ def test_build_status_filter_enabled():
 
 def test_build_status_filter_none():
     """status=None returns the same query object unchanged."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_status_filter(sql, None)
@@ -571,7 +573,6 @@ def test_build_status_filter_none():
 
 def test_build_role_filter_valid_role():
     """Known role adds a WHERE clause (line 207)."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_role_filter(sql, Roles.ADMIN)
@@ -580,7 +581,6 @@ def test_build_role_filter_valid_role():
 
 def test_build_role_filter_none():
     """role=None skips the WHERE clause."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_role_filter(sql, None)
@@ -589,7 +589,6 @@ def test_build_role_filter_none():
 
 def test_build_search_filter_with_value():
     """Non-empty search string adds ilike filter (lines 213-214)."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_search_filter(sql, "alice")
@@ -598,7 +597,6 @@ def test_build_search_filter_with_value():
 
 def test_build_search_filter_whitespace_only():
     """Whitespace-only search is ignored (line 212 short-circuits)."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_search_filter(sql, "   ")
@@ -607,7 +605,6 @@ def test_build_search_filter_whitespace_only():
 
 def test_build_search_filter_none():
     """None search is ignored."""
-    from sqlmodel import select
 
     sql = select(User)
     result = UserAdminService.build_search_filter(sql, None)

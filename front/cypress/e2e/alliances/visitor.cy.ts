@@ -8,8 +8,7 @@ describe('Visitor system', () => {
   describe('Visitor — war page', () => {
     it('cannot see management buttons', () => {
       setupVisitorScenario('vis-war').then(({ visitorData }) => {
-        cy.apiLogin(visitorData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(visitorData.user_id, 'war');
 
         cy.getByCy('war-mode-toggle').should('not.exist');
         cy.getByCy('end-war-btn').should('not.exist');
@@ -21,8 +20,7 @@ describe('Visitor system', () => {
   describe('Officer — alliance page visitors section', () => {
     it('sees visitor in visitors section', () => {
       setupVisitorScenario('vis-list').then(({ ownerData, visitorAccId }) => {
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         cy.getByCy(`visitor-row-${visitorAccId}`).should('be.visible');
       });
@@ -30,8 +28,7 @@ describe('Visitor system', () => {
 
     it('can kick visitor via confirmation dialog', () => {
       setupVisitorScenario('vis-kick').then(({ ownerData, visitorAccId }) => {
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         cy.getByCy(`kick-visitor-${visitorAccId}`).click();
         cy.getByCy('confirmation-dialog-confirm').click();
@@ -42,8 +39,7 @@ describe('Visitor system', () => {
 
     it('can invite visitor as member', () => {
       setupVisitorScenario('vis-promote').then(({ ownerData, visitorAccId }) => {
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         cy.getByCy(`invite-visitor-as-member-${visitorAccId}`).click();
 
@@ -68,8 +64,7 @@ describe('Visitor system', () => {
       ]).then((users) => {
         const ownerData = users['vis-inv-owner'];
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         cy.getByCy('invite-member-toggle').click();
         cy.getByCy('invite-type-visitor').click();
@@ -96,8 +91,7 @@ describe('Visitor system', () => {
       ]).then((users) => {
         const ownerData = users['vis-mbr-owner'];
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         cy.getByCy('invite-member-toggle').click();
         cy.getByCy('invite-member-select').click();
@@ -127,8 +121,7 @@ describe('Visitor system', () => {
         const userData = users['badge-vis-user'];
 
         cy.apiInviteMember(ownerData.access_token, ownerData.alliance_id!, userData.account_id!, 'visitor').then(() => {
-          cy.apiLogin(userData.user_id);
-          cy.navTo('alliances');
+          cy.apiLogin(userData.user_id, 'alliances');
 
           cy.get('[data-cy^="visitor-badge-"]').should('be.visible');
         });
@@ -151,8 +144,7 @@ describe('Visitor system', () => {
         const userData = users['badge-mbr-user'];
 
         cy.apiInviteMember(ownerData.access_token, ownerData.alliance_id!, userData.account_id!, 'member').then(() => {
-          cy.apiLogin(userData.user_id);
-          cy.navTo('alliances');
+          cy.apiLogin(userData.user_id, 'alliances');
 
           cy.get('[data-cy^="member-badge-"]').should('be.visible');
         });
@@ -163,14 +155,50 @@ describe('Visitor system', () => {
   describe('Visitor — alliance page', () => {
     it('sees visitors section but no manage buttons', () => {
       setupVisitorScenario('vis-readonly').then(({ visitorData, visitorAccId }) => {
-        cy.apiLogin(visitorData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(visitorData.user_id, 'alliances');
 
         // Visitor row visible
         cy.getByCy(`visitor-row-${visitorAccId}`).should('be.visible');
         // No kick/invite buttons
         cy.getByCy(`kick-visitor-${visitorAccId}`).should('not.exist');
         cy.getByCy(`invite-visitor-as-member-${visitorAccId}`).should('not.exist');
+      });
+    });
+
+    it('sees the visitor badge and can leave the visited alliance', () => {
+      setupVisitorScenario('vis-leave').then(({ visitorData }) => {
+        cy.apiLogin(visitorData.user_id, 'alliances');
+
+        cy.getByCy('alliance-visitor-badge').should('be.visible');
+        cy.getByCy('leave-visit-button').click();
+        cy.getByCy('confirmation-dialog-confirm').click();
+
+        // The visitor has no other alliance: the page falls back to the empty state
+        cy.getByCy('alliance-empty-state').should('be.visible');
+        cy.getByCy('leave-visit-button').should('not.exist');
+      });
+    });
+
+    it('keeps the alliance when the leave dialog is cancelled', () => {
+      setupVisitorScenario('vis-cancel').then(({ visitorData }) => {
+        cy.apiLogin(visitorData.user_id, 'alliances');
+
+        cy.getByCy('leave-visit-button').click();
+        cy.getByCy('confirmation-dialog-cancel').click();
+
+        cy.getByCy('alliance-visitor-badge').should('be.visible');
+        cy.getByCy('leave-visit-button').should('be.visible');
+      });
+    });
+  });
+
+  describe('Member — alliance page', () => {
+    it('does not see the leave-visit action on their own alliance', () => {
+      setupVisitorScenario('vis-noleave').then(({ ownerData }) => {
+        cy.apiLogin(ownerData.user_id, 'alliances');
+
+        cy.getByCy('alliance-visitor-badge').should('not.exist');
+        cy.getByCy('leave-visit-button').should('not.exist');
       });
     });
   });
@@ -249,8 +277,7 @@ describe('Visitor — defense page', () => {
 
   it('cannot place a defender (clicking node does not open selector)', () => {
     setupVisitorScenario('vis-def').then(({ visitorData }) => {
-      cy.apiLogin(visitorData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(visitorData.user_id, 'defense');
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.contains('Select Champion').should('not.exist');
     });
@@ -264,8 +291,7 @@ describe('Visitor — war interactive elements', () => {
 
   it('ko-inc and ko-dec buttons are not visible but ko count is shown', () => {
     setupVisitorWarScene('vis-ko').then(({ visitorUserId }) => {
-      cy.apiLogin(visitorUserId);
-      cy.navTo('war');
+      cy.apiLogin(visitorUserId, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('ko-inc-node-10').should('not.exist');
       cy.getByCy('ko-dec-node-10').should('not.exist');
@@ -275,8 +301,7 @@ describe('Visitor — war interactive elements', () => {
 
   it('combat complete button is not visible', () => {
     setupVisitorWarScene('vis-cbt').then(({ visitorUserId }) => {
-      cy.apiLogin(visitorUserId);
-      cy.navTo('war');
+      cy.apiLogin(visitorUserId, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('combat-complete-node-10').should('not.exist');
     });
@@ -284,8 +309,7 @@ describe('Visitor — war interactive elements', () => {
 
   it('remove attacker button is not visible', () => {
     setupVisitorWarScene('vis-rma').then(({ visitorUserId }) => {
-      cy.apiLogin(visitorUserId);
-      cy.navTo('war');
+      cy.apiLogin(visitorUserId, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('remove-attacker-node-10').should('not.exist');
     });
@@ -293,8 +317,7 @@ describe('Visitor — war interactive elements', () => {
 
   it('synergy add button is visible but disabled', () => {
     setupVisitorWarScene('vis-syn').then(({ visitorUserId }) => {
-      cy.apiLogin(visitorUserId);
-      cy.navTo('war');
+      cy.apiLogin(visitorUserId, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('synergy-trigger-Iron-Man').click();
       cy.getByCy('synergy-add-Iron-Man').should('be.visible').and('be.disabled');
@@ -303,8 +326,7 @@ describe('Visitor — war interactive elements', () => {
 
   it('prefight add button is visible but disabled', () => {
     setupVisitorWarScene('vis-pf').then(({ visitorUserId }) => {
-      cy.apiLogin(visitorUserId);
-      cy.navTo('war');
+      cy.apiLogin(visitorUserId, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('prefight-add-node-10').should('be.visible').and('be.disabled');

@@ -3,8 +3,14 @@
 import uuid
 
 import pytest
+from sqlmodel import select
 
 from main import app
+from src.enums.InvitationStatus import InvitationStatus
+from src.models.alliance.Alliance import Alliance
+from src.models.alliance.AllianceInvitation import AllianceInvitation
+from src.models.alliance.AllianceOfficer import AllianceOfficer
+from src.models.alliance.AllianceVisitor import AllianceVisitor
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
@@ -211,11 +217,15 @@ class TestUpdateAlliance:
 
 class TestDeleteAlliance:
     @pytest.mark.asyncio
-    async def test_owner_can_delete(self):
+    async def test_owner_alone_can_delete(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
-        response = await execute_delete_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1)
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}",
+            headers=HEADERS_USER1,
+            payload={"name": ALLIANCE_NAME},
+        )
         assert response.status_code == 204
 
     @pytest.mark.asyncio
@@ -223,8 +233,164 @@ class TestDeleteAlliance:
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
-        response = await execute_delete_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER2)
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}",
+            headers=HEADERS_USER2,
+            payload={"name": ALLIANCE_NAME},
+        )
         assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_deleted_alliance_is_soft_deleted_not_removed(self):
+        """The row survives (deleted_at stamped) so wars and stats keep resolving."""
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+
+        resp = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}",
+            headers=HEADERS_USER1,
+            payload={"name": ALLIANCE_NAME},
+        )
+        assert resp.status_code == 204
+
+        async for session in get_test_session():
+            row = await session.get(Alliance, alliance.id)
+            assert row is not None
+            assert row.deleted_at is not None
+
+    @pytest.mark.asyncio
+    async def test_deleted_alliance_disappears_from_every_listing(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+
+        await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}",
+            headers=HEADERS_USER1,
+            payload={"name": ALLIANCE_NAME},
+        )
+
+        detail = await execute_get_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1)
+        assert detail.status_code == 404
+
+        for route in ("", "/mine", "/accessible"):
+            listing = await execute_get_request(f"{ENDPOINT}{route}", headers=HEADERS_USER1)
+            assert listing.status_code == 200
+            assert listing.json() == []
+
+        roles = await execute_get_request(f"{ENDPOINT}/my-roles", headers=HEADERS_USER1)
+        assert roles.status_code == 200
+        assert roles.json()["roles"] == {}
+
+    @pytest.mark.asyncio
+    async def test_owner_can_create_a_new_alliance_after_deleting(self):
+        """Deleting frees the owner's game account, so it becomes eligible again."""
+        await _setup_2_users()
+        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
+
+        await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}",
+            headers=HEADERS_USER1,
+            payload={"name": ALLIANCE_NAME},
+        )
+
+        eligible = await execute_get_request(f"{ENDPOINT}/eligible-owners", headers=HEADERS_USER1)
+        assert eligible.status_code == 200
+        assert [acc["id"] for acc in eligible.json()] == [str(owner_acc.id)]
+
+        created = await execute_post_request(
+            ENDPOINT,
+            {"name": "SecondTry", "tag": "ST2", "owner_id": str(owner_acc.id)},
+            headers=HEADERS_USER1,
+        )
+        assert created.status_code == 201
+
+    @pytest.mark.asyncio
+    async def test_cannot_delete_while_another_member_remains(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        resp = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}",
+            headers=HEADERS_USER1,
+            payload={"name": ALLIANCE_NAME},
+        )
+        assert resp.status_code == 409
+
+        # Still very much alive
+        detail = await execute_get_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1)
+        assert detail.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_cannot_delete_with_wrong_confirmation_name(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+
+        resp = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}",
+            headers=HEADERS_USER1,
+            payload={"name": "NotMyAlliance"},
+        )
+        assert resp.status_code == 400
+
+        detail = await execute_get_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1)
+        assert detail.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_confirmation_name_is_case_sensitive(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+
+        resp = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}",
+            headers=HEADERS_USER1,
+            payload={"name": ALLIANCE_NAME.lower()},
+        )
+        assert resp.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_delete_without_confirmation_name_is_rejected(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+
+        resp = await execute_delete_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1)
+        assert resp.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_delete_drops_visitors_and_declines_pending_invitations(self):
+        await _setup_2_users()
+        alliance, owner_acc = await push_alliance_with_owner(user_id=USER_ID)
+        visitor = await push_visitor(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        invited = await push_game_account(user_id=USER2_ID, game_pseudo="InvitedGuy")
+        await load_objects(
+            [
+                AllianceInvitation(
+                    alliance_id=alliance.id,
+                    game_account_id=invited.id,
+                    invited_by_game_account_id=owner_acc.id,
+                )
+            ]
+        )
+
+        resp = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}",
+            headers=HEADERS_USER1,
+            payload={"name": ALLIANCE_NAME},
+        )
+        assert resp.status_code == 204
+
+        async for session in get_test_session():
+            visitors = await session.exec(
+                select(AllianceVisitor).where(AllianceVisitor.alliance_id == alliance.id)
+            )
+            assert visitors.all() == []
+            invitations = await session.exec(
+                select(AllianceInvitation).where(AllianceInvitation.alliance_id == alliance.id)
+            )
+            assert all(inv.status != InvitationStatus.PENDING for inv in invitations.all())
+
+        # The visitor account itself is untouched
+        assert visitor is not None
 
 
 # =========================================================================
@@ -383,7 +549,11 @@ class TestAllianceNotFound:
     @pytest.mark.asyncio
     async def test_delete_alliance_not_found(self):
         await _setup_2_users()
-        resp = await execute_delete_request(f"{ENDPOINT}/{self.FAKE_ID}", headers=HEADERS_USER1)
+        resp = await execute_delete_request(
+            f"{ENDPOINT}/{self.FAKE_ID}",
+            headers=HEADERS_USER1,
+            payload={"name": ALLIANCE_NAME},
+        )
         assert resp.status_code == 404
 
     @pytest.mark.asyncio
@@ -503,22 +673,37 @@ class TestRequireVisitor:
 
 class TestDeleteAllianceWithOfficers:
     @pytest.mark.asyncio
-    async def test_delete_alliance_that_has_officers(self):
+    async def test_delete_alliance_that_has_a_stale_officer_row(self):
         """
-        DELETE /alliances/{id} when the alliance has officers must delete the officer rows too.
-        Covers the officer deletion loop at line 509.
+        Deletion is owner-only-and-alone, so an officer row can only survive as a
+        leftover pointing at a game account that already left. It must still be
+        cleaned up rather than dangle on a disbanded alliance.
         """
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
         await push_officer(alliance, member)
+        # The officer leaves the alliance, leaving the owner alone
+        await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}", headers=HEADERS_USER1
+        )
 
-        resp = await execute_delete_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1)
+        resp = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}",
+            headers=HEADERS_USER1,
+            payload={"name": ALLIANCE_NAME},
+        )
         assert resp.status_code == 204
 
-        # Alliance must be gone
+        # Alliance is no longer reachable, and no officer row is left behind
         resp2 = await execute_get_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1)
         assert resp2.status_code == 404
+
+        async for session in get_test_session():
+            officers = await session.exec(
+                select(AllianceOfficer).where(AllianceOfficer.alliance_id == alliance.id)
+            )
+            assert officers.all() == []
 
 
 # =========================================================================

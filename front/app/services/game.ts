@@ -1,3 +1,5 @@
+import { PROXY, jsonHeaders } from '@/app/services/utils'
+
 // ─── Types ───────────────────────────────────────────────
 export interface GameAccount {
   id: string
@@ -9,6 +11,15 @@ export interface GameAccount {
   game_pseudo: string
   is_primary: boolean
   created_at: string
+}
+
+export interface DeletedGameAccount {
+  id: string
+  game_pseudo: string
+  created_at: string
+  deleted_at: string
+  /** Instant past which the account can no longer be restored */
+  restorable_until: string
 }
 
 export interface AllianceMember {
@@ -49,15 +60,8 @@ export interface AllianceVisitor {
   visited_at: string
 }
 
-// ─── Helpers ─────────────────────────────────────────────
-const PROXY = '/api/back'
 import { IS_DEV } from '@/app/lib/dev-mode'
 import type { RosterEntry } from '@/app/services/roster'
-
-const jsonHeaders: HeadersInit = {
-  Accept: 'application/json',
-  'Content-Type': 'application/json',
-}
 
 async function throwOnError(response: Response, fallback: string) {
   if (response.ok) return
@@ -118,6 +122,21 @@ export async function deleteGameAccount(id: string): Promise<void> {
     headers: jsonHeaders,
   })
   await throwOnError(response, 'Erreur lors de la suppression du compte de jeu')
+}
+
+export async function getDeletedGameAccounts(): Promise<DeletedGameAccount[]> {
+  const response = await debugFetch(`${PROXY}/game-accounts/deleted`, { headers: jsonHeaders })
+  await throwOnError(response, 'Erreur lors de la récupération des comptes supprimés')
+  return response.json()
+}
+
+export async function restoreGameAccount(id: string): Promise<GameAccount> {
+  const response = await debugFetch(`${PROXY}/game-accounts/${id}/restore`, {
+    method: 'POST',
+    headers: jsonHeaders,
+  })
+  await throwOnError(response, 'Erreur lors de la restauration du compte de jeu')
+  return response.json()
 }
 
 // ─── Alliances ───────────────────────────────────────────
@@ -276,10 +295,15 @@ export async function createAlliance(
   return response.json()
 }
 
-export async function deleteAlliance(id: string): Promise<void> {
+/**
+ * Disband an alliance. `name` is the retyped alliance name: the backend refuses
+ * the call unless it matches exactly, so the confirmation is not UI-only.
+ */
+export async function deleteAlliance(id: string, name: string): Promise<void> {
   const response = await debugFetch(`${PROXY}/alliances/${id}`, {
     method: 'DELETE',
     headers: jsonHeaders,
+    body: JSON.stringify({ name }),
   })
   await throwOnError(response, "Erreur lors de la suppression de l'alliance")
 }

@@ -13,8 +13,8 @@ FastAPI + SQLModel + MariaDB async, Python 3.12, uv.
 - `/make <target>` — run any Makefile target (e.g. `lint`, `test`, `install`)
 - `/db-migrate create <message>` — create a new Alembic migration (resets the dedicated `mawster_migrate` DB internally — never touch the dev DB)
 - `/db-migrate` — apply pending migrations
-- `mcp__pytest-runner__run_all_tests` — run full pytest suite (keeps output out of context)
-- `mcp__pytest-runner__run_failing_tests` — re-run only failing tests
+- `/make test` — run the full pytest suite (10 xdist workers); wrap it in `ctx_execute` to keep the output out of context
+- Re-run a single file: `cd api && uv run pytest tests/integration/endpoints/<feature>_test.py --tb=line -q`
 - `/server-dev` — start dev servers if needed
 - `/model-dto-audit` — before adding a model or DTO, check for field drift/duplication; factor shared fields into a mixin (single source of truth)
 - `/codebase-design` — when designing a service interface or deciding where a seam goes (deep-module vocabulary)

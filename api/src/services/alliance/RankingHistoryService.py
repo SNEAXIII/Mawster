@@ -5,9 +5,10 @@ from sqlmodel import select
 from starlette import status
 
 from src.dto.alliance.war.dto_ranking_history import RankingHistoryPoint, RankingHistoryResponse
-from src.models.Alliance import Alliance
-from src.models.User import User
-from src.models.War import War, WarStatus
+from src.enums.WarStatus import WarStatus
+from src.models.alliance.Alliance import Alliance
+from src.models.user.User import User
+from src.models.war.War import War
 from src.services.alliance.AllianceService import AllianceService
 from src.services.SeasonService import SeasonService
 from src.utils.db import SessionDep

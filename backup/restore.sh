@@ -24,7 +24,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [ -z "$FILENAME" ]; then
+if [[ -z "$FILENAME" ]]; then
   echo "Usage: restore.sh [--remote] <filename>"
   echo "Example: restore.sh mawster_2026-03-30_08-00.sql.gz"
   echo "Example: restore.sh --remote mawster_2026-03-30_08-00.sql.gz"
@@ -32,7 +32,7 @@ if [ -z "$FILENAME" ]; then
 fi
 
 # ── Download from remote if needed ───────────────────────────────────────────
-if [ "$REMOTE" = true ]; then
+if [[ "$REMOTE" = true ]]; then
   echo "[restore] Downloading $FILENAME from remote..."
   rclone copy "${RCLONE_REMOTE}/${FILENAME}" "${BACKUP_DIR}/"
   echo "[restore] Download complete"
@@ -40,7 +40,7 @@ fi
 
 FILEPATH="${BACKUP_DIR}/${FILENAME}"
 
-if [ ! -f "$FILEPATH" ]; then
+if [[ ! -f "$FILEPATH" ]]; then
   echo "[restore] ERROR: File not found: $FILEPATH"
   echo "[restore] Available local backups:"
   ls -lh "${BACKUP_DIR}"/mawster_*.sql.gz 2>/dev/null || echo "  (none)"

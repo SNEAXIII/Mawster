@@ -14,7 +14,8 @@ def test_roster_rank_distribution_matches_prod_shape():
     ranks = collections.Counter(sd.roster_rank(slot, size) for slot in range(size))
     assert set(ranks) <= {1, 2, 3, 4, 5}
     assert ranks[4] >= ranks[3] >= ranks[5]  # r4 most common, r3 next, r5 rarer
-    assert ranks[1] >= 1 and ranks[2] >= 1  # low ranks present
+    assert ranks[1] >= 1  # low ranks present
+    assert ranks[2] >= 1
 
 
 def test_ascension_zero_when_not_ascendable():

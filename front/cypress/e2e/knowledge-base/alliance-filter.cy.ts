@@ -1,5 +1,9 @@
 import { BACKEND, setupKnowledgeBaseFast, setupUser } from '../../support/e2e';
 
+// The alliance column renders the tag (`[KBA]`), the same text as the filter's
+// dropdown options — so every alliance lookup here must be scoped to
+// `[role="option"]`, or it matches the table cell that comes first in the DOM.
+
 describe('Knowledge Base — alliance visibility', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -7,8 +11,7 @@ describe('Knowledge Base — alliance visibility', () => {
 
   it('user with no alliance sees error (403)', () => {
     setupUser('kbaf-noalliance').then((userData) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       cy.getByCy('fight-records-table').should('not.exist');
       cy.contains('Failed to load fight records.').should('be.visible');
@@ -18,8 +21,7 @@ describe('Knowledge Base — alliance visibility', () => {
   it('member of 1 alliance — alliance dropdown not visible', () => {
     const prefix = 'kbaf-one';
     setupKnowledgeBaseFast(prefix).then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       cy.getByCy('fight-records-table').should('be.visible');
       cy.getByCy('filter-alliance').should('not.exist');
@@ -54,13 +56,13 @@ describe('Knowledge Base — alliance visibility', () => {
             headers: { Authorization: `Bearer ${userA.access_token}` },
             body: {},
           }).then(() => {
-            cy.apiLogin(userA.user_id);
-            cy.visit('/game/knowledge-base');
+            cy.apiLogin(userA.user_id, 'knowledge-base');
 
             cy.getByCy('filter-alliance-trigger').should('be.visible');
             cy.getByCy('filter-alliance-trigger').click();
-            cy.contains(`[${prefixA.slice(0, 3).toUpperCase()}]`).should('be.visible');
-            cy.contains(`[${prefixB.slice(0, 3).toUpperCase()}]`).should('be.visible');
+            cy.get('[role="listbox"]').should('be.visible');
+            cy.contains('[role="option"]', `[${prefixA.slice(0, 3).toUpperCase()}]`).should('be.visible');
+            cy.contains('[role="option"]', `[${prefixB.slice(0, 3).toUpperCase()}]`).should('be.visible');
           });
         });
       });
@@ -95,18 +97,15 @@ describe('Knowledge Base — alliance visibility', () => {
             headers: { Authorization: `Bearer ${userA.access_token}` },
             body: {},
           }).then(() => {
-            cy.apiLogin(userA.user_id);
-            cy.visit('/game/knowledge-base');
+            cy.apiLogin(userA.user_id, 'knowledge-base');
 
             // Filter by alliance A → records visible
-            cy.getByCy('filter-alliance-trigger').click();
-            cy.contains(`[${prefixA.slice(0, 3).toUpperCase()}]`).click();
+            cy.selectOption('filter-alliance-trigger', `[${prefixA.slice(0, 3).toUpperCase()}]`);
             cy.getByCy('fight-records-table').find('tbody tr').should('have.length.gte', 1);
 
             // Clear + filter by alliance B (no records) → empty state
             cy.getByCy('filter-clear').click();
-            cy.getByCy('filter-alliance-trigger').click();
-            cy.contains(`[${prefixB.slice(0, 3).toUpperCase()}]`).click();
+            cy.selectOption('filter-alliance-trigger', `[${prefixB.slice(0, 3).toUpperCase()}]`);
             cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
           });
         });

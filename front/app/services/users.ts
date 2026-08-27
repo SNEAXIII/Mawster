@@ -1,4 +1,5 @@
 import { possibleRoles, possibleStatus } from '@/app/lib/constants'
+import { PROXY, jsonHeaders } from '@/app/services/utils'
 
 // ─── Types ───────────────────────────────────────────────
 export interface User {
@@ -33,15 +34,8 @@ export interface ApiErrorResponse {
   errors: ValidationErrors
 }
 
-// ─── Helpers ─────────────────────────────────────────────
 // Tous les appels passent par le proxy Next.js /api/back
 // Le JWT backend est injecté côté serveur, jamais côté client.
-const PROXY = '/api/back'
-
-const jsonHeaders: HeadersInit = {
-  Accept: 'application/json',
-  'Content-Type': 'application/json',
-}
 
 async function throwOnError(response: Response, fallback: string) {
   if (response.ok) return

@@ -97,7 +97,9 @@ export default function DefenseSidePanel({
                     isMine={isMine(member.game_account_id)}
                   />
                   <div className='flex items-center gap-2'>
-                    <span
+                    <button
+                      type='button'
+                      data-cy={`mastery-${member.game_pseudo}`}
                       onClick={() =>
                         setMasteryTarget({
                           gameAccountId: member.game_account_id,
@@ -106,9 +108,10 @@ export default function DefenseSidePanel({
                       }
                       className='cursor-pointer text-muted-foreground hover:text-foreground transition-colors'
                       title={t.mastery.title}
+                      aria-label={t.mastery.title}
                     >
                       <Shield size={13} />
-                    </span>
+                    </button>
                     <span
                       data-cy={`defender-count-${member.game_pseudo}`}
                       className={cn(
@@ -160,6 +163,8 @@ export default function DefenseSidePanel({
                         </span>
                         {canManage && (
                           <button
+                            type='button'
+                            data-cy={`remove-defender-${p.node_number}`}
                             className='absolute -top-1 -right-1 z-10 hidden group-hover:flex bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full size-4 items-center justify-center'
                             onClick={() => onRemoveDefender(p.node_number)}
                             title={t.game.defense.removeDefender}

@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from typing import Annotated
 
 import jwt
 from fastapi import Depends
@@ -25,7 +26,9 @@ from src.security.secrets import SECRET
 _http_bearer = HTTPBearer()
 
 
-async def oauth2_scheme(credentials: HTTPAuthorizationCredentials = Depends(_http_bearer)) -> str:
+async def oauth2_scheme(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_http_bearer)],
+) -> str:
     return credentials.credentials
 
 
@@ -38,8 +41,7 @@ class JWTService:
             expires_delta = timedelta(minutes=SECRET.ACCESS_TOKEN_EXPIRE_MINUTES)
         expire = datetime.now(tz=UTC) + expires_delta
         to_encode.update({"exp": expire})
-        encoded_jwt = jwt.encode(to_encode, SECRET.SECRET_KEY, algorithm=SECRET.ALGORITHM)
-        return encoded_jwt
+        return jwt.encode(to_encode, SECRET.SECRET_KEY, algorithm=SECRET.ALGORITHM)
 
     @classmethod
     def create_access_token(cls, user: User | None) -> str:

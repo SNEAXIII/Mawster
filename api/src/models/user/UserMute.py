@@ -1,0 +1,19 @@
+import uuid
+from datetime import datetime
+
+import sqlalchemy as sa
+from sqlmodel import Field
+
+from src.models.Base import FK_USER, TimestampMixin, UserFk, UUIDBase
+
+
+class UserMute(UUIDBase, UserFk, TimestampMixin, table=True):
+    """Blocks note editing AND reporting. Reason is visible to the muted user and admins."""
+
+    __tablename__ = "user_mute"
+
+    reason: str = Field(sa_column=sa.Column(sa.Text, nullable=False))
+    muted_by_id: uuid.UUID = Field(foreign_key=FK_USER)
+    expires_at: datetime | None = Field(default=None)
+    lifted_at: datetime | None = Field(default=None)
+    lifted_by_id: uuid.UUID | None = Field(default=None, foreign_key=FK_USER)

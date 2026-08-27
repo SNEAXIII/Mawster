@@ -9,9 +9,12 @@ from starlette import status
 from src.dto.account.game.dto_vision import (
     VisionImportDetailResponse,
     VisionImportResponse,
+    VisionJobResponse,
 )
 from src.dto.account.game.dto_vision_current import CurrentVisionImportResponse
 from src.dto.account.game.dto_vision_predictions import VisionPredictionsResponse
+from src.dto.account.game.dto_vision_upload import VisionInitRequest, VisionInitResponse
+from src.enums.VisionJobStatus import VisionJobStatus
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND, NOT_YOUR_GAME_ACCOUNT
 from src.Messages.vision_messages import (
     IMPORT_ALREADY_PENDING,
@@ -25,9 +28,9 @@ from src.Messages.vision_messages import (
 from src.messaging import get_publisher
 from src.messaging.publisher import VisionPublisher
 from src.models import User
-from src.models.GameAccount import GameAccount
-from src.models.VisionImport import VisionImport
-from src.models.VisionJob import VisionJob, VisionJobStatus
+from src.models.user.GameAccount import GameAccount
+from src.models.vision.VisionImport import VisionImport
+from src.models.vision.VisionJob import VisionJob
 from src.security.secrets import SECRET
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.account.game.VisionDatasetService import ConfirmedRow
@@ -35,7 +38,7 @@ from src.services.account.game.VisionImportService import VisionImportService
 from src.services.account.game.VisionResultService import VisionResultService
 from src.services.auth.AuthService import AuthService
 from src.storage import get_storage
-from src.storage.base import Storage, crop_key
+from src.storage.base import Storage, sprite_key
 from src.utils.db import SessionDep
 
 vision_controller = APIRouter(
@@ -133,6 +136,89 @@ async def create_vision_import(
     )
 
 
+@vision_controller.post(
+    "/imports/init", response_model=VisionInitResponse, status_code=status.HTTP_201_CREATED
+)
+async def init_vision_import(
+    session: SessionDep,
+    body: VisionInitRequest,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    storage: Annotated[Storage, Depends(get_storage)],
+):
+    """Reserve an import and return one presigned upload URL per screenshot.
+
+    The browser then PUTs each file straight to RustFS and calls `commit`. The
+    screenshots never transit through this API, which is the entire point: the
+    old multipart route made every byte cross the Next proxy and then the API
+    before reaching the bucket it was always headed for.
+
+    Same gates as the multipart route, in the same order — they guard the right
+    to create an import, which is unchanged by how the bytes travel.
+    """
+    await _get_own_game_account(session, body.game_account_id, current_user.id)
+
+    recent = await VisionImportService.count_recent_imports(session, current_user.id)
+    if recent >= MAX_IMPORTS_PER_HOUR:
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, IMPORT_QUOTA_EXCEEDED)
+
+    blocking = await VisionImportService.get_current(session, body.game_account_id)
+    if blocking is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, f"{IMPORT_ALREADY_PENDING}: {blocking.id}")
+
+    return await VisionImportService.init_import(
+        session=session,
+        storage=storage,
+        game_account_id=body.game_account_id,
+        screens=body.screens,
+        share_dataset=body.share_dataset,
+    )
+
+
+@vision_controller.post(
+    "/imports/{import_id}/screens/{job_id}/commit", response_model=VisionJobResponse
+)
+async def commit_vision_screen(
+    session: SessionDep,
+    import_id: uuid.UUID,
+    job_id: uuid.UUID,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    storage: Annotated[Storage, Depends(get_storage)],
+    publisher: Annotated[VisionPublisher, Depends(get_publisher)],
+):
+    """Verify one uploaded screenshot and queue it, without waiting for the batch.
+
+    The browser calls this after each successful PUT, so extraction starts on the
+    screenshots that already landed. `/imports/{import_id}/commit` still closes
+    the import once the last PUT is done.
+    """
+    vision_import = await _get_own_import(session, import_id, current_user.id)
+    return await VisionImportService.commit_screen(
+        session, storage, publisher, vision_import, job_id
+    )
+
+
+@vision_controller.post("/imports/{import_id}/commit", response_model=VisionImportResponse)
+async def commit_vision_import(
+    session: SessionDep,
+    import_id: uuid.UUID,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    storage: Annotated[Storage, Depends(get_storage)],
+    publisher: Annotated[VisionPublisher, Depends(get_publisher)],
+):
+    """Close the import: queue or fail whatever the per-screen commits left over.
+
+    Not the only queueing path any more — most screenshots are already running by
+    the time this is called — so it returns 200 with failed jobs inside rather
+    than 400 when a screenshot never uploaded.
+
+    Declared before GET /imports/{import_id} would be a mistake here — this is a
+    POST and the two never collide — but it must stay after the literal
+    "/imports/init" route above, which a UUID param would otherwise swallow.
+    """
+    vision_import = await _get_own_import(session, import_id, current_user.id)
+    return await VisionImportService.commit_import(session, storage, publisher, vision_import)
+
+
 @vision_controller.get("/imports/current", response_model=CurrentVisionImportResponse | None)
 async def get_current_vision_import(
     session: SessionDep,
@@ -204,26 +290,15 @@ async def confirm_vision_import(
     return VisionConfirmResponse(samples_archived=archived)
 
 
-@vision_controller.get("/imports/{import_id}/jobs/{job_id}/crops/{index}")
-async def get_crop_url(
-    session: SessionDep,
-    import_id: uuid.UUID,
-    job_id: uuid.UUID,
-    index: int,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
-    storage: Annotated[Storage, Depends(get_storage)],
-):
-    """Bytes of one champion crop. The object key is rebuilt server-side from ids
-    whose ownership is verified — a client-supplied key would let anyone read
-    another user's screenshots by guessing.
+async def _fetch_or_404(storage: Storage, key: str) -> bytes:
+    """Fetch one object, translating a storage miss into the crop-not-found 404.
 
-    Served through the API (rather than a presigned RustFS URL) because in this
-    deployment only the Next.js frontend is publicly reachable — the browser
-    never talks to RustFS or the API directly, only to the Next proxy."""
-    await _get_own_import(session, import_id, current_user.id)
-    key = crop_key(import_id, job_id, index)
+    Kept as a named helper rather than inlined: the miss detection (three
+    different shapes a botocore 404 can take) is the fiddly part, and any future
+    route serving import bytes should reuse it rather than re-derive it.
+    """
     try:
-        data = await storage.get_bytes(SECRET.RUSTFS_BUCKET_VISION, key)
+        return await storage.get_bytes(SECRET.RUSTFS_BUCKET_VISION, key)
     except ClientError as exc:
         error_code = exc.response.get("Error", {}).get("Code")
         http_status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
@@ -232,12 +307,39 @@ async def get_crop_url(
                 status_code=status.HTTP_404_NOT_FOUND, detail=VISION_CROP_NOT_FOUND
             ) from exc
         raise
-    # Crops are immutable once written: the key embeds the import and job ids, and
-    # nothing ever rewrites that object. Cached privately so re-renders of the
-    # review list stop refetching all 48 of them.
+
+
+@vision_controller.get("/imports/{import_id}/jobs/{job_id}/crops/sprite")
+async def get_crop_sprite(
+    session: SessionDep,
+    import_id: uuid.UUID,
+    job_id: uuid.UUID,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    storage: Annotated[Storage, Depends(get_storage)],
+):
+    """Every thumbnail of one screenshot, as a single sheet the front slices.
+
+    The object key is rebuilt server-side from ids whose ownership is verified —
+    a client-supplied key would let anyone read another user's screenshots by
+    guessing.
+
+    Served through the API (rather than a presigned RustFS URL) because in this
+    deployment only the Next.js frontend is publicly reachable — the browser
+    never talks to RustFS or the API directly, only to the Next proxy.
+    """
+    await _get_own_import(session, import_id, current_user.id)
+    key = sprite_key(import_id, job_id)
+    data = await _fetch_or_404(storage, key)
+    # Cached privately so re-opening the review dialog stops refetching the sheet.
+    # `immutable` holds as long as a job id names one successful run: the key
+    # embeds the import and job ids, and the only thing that rewrites a job is a
+    # retry — which only failed jobs allow, and a failed job never uploaded a
+    # sheet to be cached in the first place.
+    # The Next proxy (front/app/api/back/[...path]/route.ts) forwards this header
+    # through; without that this whole block would be dead weight.
     return Response(
         content=data,
-        media_type="image/png",
+        media_type="image/webp",
         headers={"Cache-Control": "private, max-age=3600, immutable"},
     )
 

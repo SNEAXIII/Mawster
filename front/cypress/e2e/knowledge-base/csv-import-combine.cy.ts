@@ -1,7 +1,7 @@
 import { setupWarOwner } from '../../support/e2e';
 
 // Column indices (0-based) — see display.cy.ts:
-// 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: Tier | 7: KO | 8: Alliance | 9: Date
+// 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: KO | 7: Alliance | 8: Season | 9: Tier | 10: Date | 11: Note
 
 describe('Knowledge Base – CSV Import combined records', () => {
   beforeEach(() => {
@@ -13,8 +13,7 @@ describe('Knowledge Base – CSV Import combined records', () => {
       cy.apiCreateSeason(adminData.access_token, 1).then(() => {
         cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic').then(() => {
           cy.apiLoadChampion(adminData.access_token, 'Serpent', 'Cosmic').then(() => {
-            cy.apiLogin(ownerData.user_id);
-            cy.visit('/game/knowledge-base/import');
+            cy.apiLogin(ownerData.user_id, 'knowledge-base-import');
 
             // No header line, ko_count present
             const csv = `Magik,Serpent,15,S1,2\n`;
@@ -36,7 +35,7 @@ describe('Knowledge Base – CSV Import combined records', () => {
                   cy.get('td').eq(1).should('contain.text', 'Magik');
                   cy.get('td').eq(2).should('contain.text', 'Serpent');
                   cy.get('td').eq(5).should('contain.text', '15');
-                  cy.get('td').eq(7).should('have.text', '2');
+                  cy.getByCy('fight-record-ko').should('have.text', '2');
                 });
             });
           });
@@ -50,8 +49,7 @@ describe('Knowledge Base – CSV Import combined records', () => {
       cy.apiCreateSeason(adminData.access_token, 1).then(() => {
         cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic').then(() => {
           cy.apiLoadChampion(adminData.access_token, 'Serpent', 'Cosmic').then(() => {
-            cy.apiLogin(ownerData.user_id);
-            cy.visit('/game/knowledge-base/import');
+            cy.apiLogin(ownerData.user_id, 'knowledge-base-import');
 
             // Header present, trailing empty ko_count
             const csv = `attacker,defender,node,season,ko_count\nMagik,Serpent,20,S1,\n`;
@@ -70,7 +68,7 @@ describe('Knowledge Base – CSV Import combined records', () => {
               .first()
               .within(() => {
                 cy.get('td').eq(5).should('contain.text', '20');
-                cy.get('td').eq(7).should('have.text', '0');
+                cy.getByCy('fight-record-ko').should('have.text', '0');
               });
           });
         });
@@ -84,8 +82,7 @@ describe('Knowledge Base – CSV Import combined records', () => {
         cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic').then(() => {
           cy.apiLoadChampion(adminData.access_token, 'Serpent', 'Cosmic').then(() => {
             cy.apiLoadChampion(adminData.access_token, 'Doom', 'Mystic').then(() => {
-              cy.apiLogin(ownerData.user_id);
-              cy.visit('/game/knowledge-base/import');
+              cy.apiLogin(ownerData.user_id, 'knowledge-base-import');
 
               // Mixed: one row with ko_count, one with empty ko_count, no header
               const csv = `Magik,Serpent,15,S1,2\nDoom,Serpent,16,S1,\n`;
@@ -132,8 +129,7 @@ describe('Knowledge Base – CSV Import combined records', () => {
                 ko_count: 2,
               },
             ]).then(() => {
-              cy.apiLogin(ownerData.user_id);
-              cy.visit('/game/knowledge-base');
+              cy.apiLogin(ownerData.user_id, 'knowledge-base');
 
               // Imported record is visible with no player filter
               cy.getByCy('fight-records-table').should('contain.text', 'Magik');

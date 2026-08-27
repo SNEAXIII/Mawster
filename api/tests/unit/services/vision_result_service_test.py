@@ -5,10 +5,12 @@ from fastapi import HTTPException
 from sqlmodel import select
 
 from src.dto.account.game.dto_vision_result import VisionPredictionMessage, VisionResultMessage
+from src.enums.VisionImportStatus import VisionImportStatus
+from src.enums.VisionJobStatus import VisionJobStatus
 from src.Messages.vision_messages import JOB_NEVER_QUEUED
-from src.models.VisionImport import VisionImport, VisionImportStatus
-from src.models.VisionJob import VisionJob, VisionJobStatus
-from src.models.VisionPredictionCandidate import VisionPredictionCandidate
+from src.models.vision.VisionImport import VisionImport
+from src.models.vision.VisionJob import VisionJob
+from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 from src.services.account.game.VisionResultService import VisionResultService
 
 
@@ -34,7 +36,8 @@ class RaisingPublisher:
     """Simulates a broker blip: every publish attempt fails."""
 
     async def publish_job(self, job_id, import_id, bucket, object_key) -> None:
-        raise RuntimeError("broker unavailable")
+        msg = "broker unavailable"
+        raise RuntimeError(msg)
 
 
 class FakeSession:
@@ -257,8 +260,10 @@ async def test_retry_reverts_to_failed_when_publish_fails():
     vision_import.status = VisionImportStatus.DONE
     session = FakeSession(job, vision_import)
 
+    publisher = RaisingPublisher()
+
     with pytest.raises(HTTPException) as exc_info:
-        await VisionResultService.retry_job(session, RaisingPublisher(), job, vision_import)
+        await VisionResultService.retry_job(session, publisher, job, vision_import)
 
     assert exc_info.value.status_code == 503
     assert job.status == VisionJobStatus.FAILED
@@ -271,8 +276,6 @@ async def test_retry_reverts_to_failed_when_publish_fails():
 
 @pytest.mark.asyncio
 async def test_succeed_persists_candidates(session):
-    from src.dto.account.game.dto_vision_result import VisionResultMessage
-    from src.services.account.game.VisionResultService import VisionResultService
 
     job = await _make_job(session)
     message = VisionResultMessage.model_validate(

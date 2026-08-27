@@ -16,14 +16,15 @@ from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
 from src.enums.NoteReportStatus import NoteReportStatus
 from src.enums.Roles import Roles
 from src.models.Base import utcnow
-from src.models.NoteReport import NoteReport
-from src.models.User import User
-from src.models.UserMute import UserMute
-from src.models.UserWarn import UserWarn
-from src.models.War import War
-from src.models.WarDefensePlacement import WarDefensePlacement
+from src.models.user.NoteReport import NoteReport
+from src.models.user.User import User
+from src.models.user.UserMute import UserMute
+from src.models.user.UserWarn import UserWarn
+from src.models.war.War import War
+from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.services.admin.ModerationService import ModerationService
 from src.services.alliance.war.WarFightNoteService import WarFightNoteService
+from src.services.alliance.war.WarService import WarService
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -156,13 +157,15 @@ async def test_report_note_duplicate_refused(session):
         body=NoteReportCreateRequest(reason="bad"),
     )
 
+    body = NoteReportCreateRequest(reason="again")
+
     with pytest.raises(HTTPException) as exc:
         await ModerationService.report_note(
             session,
             note_id=note.id,
             reporter_account_id=reporter.id,
             reporter_user_id=reporter.user_id,
-            body=NoteReportCreateRequest(reason="again"),
+            body=body,
         )
     assert exc.value.status_code == 409
 
@@ -177,13 +180,15 @@ async def test_report_refused_when_whitelisted(session):
     session.add(note)
     await session.commit()
 
+    body = NoteReportCreateRequest(reason="bad")
+
     with pytest.raises(HTTPException) as exc:
         await ModerationService.report_note(
             session,
             note_id=note.id,
             reporter_account_id=reporter.id,
             reporter_user_id=reporter.user_id,
-            body=NoteReportCreateRequest(reason="bad"),
+            body=body,
         )
     assert exc.value.status_code == 409
 
@@ -203,13 +208,15 @@ async def test_report_refused_when_muted(session):
     )
     await session.commit()
 
+    body = NoteReportCreateRequest(reason="bad")
+
     with pytest.raises(HTTPException) as exc:
         await ModerationService.report_note(
             session,
             note_id=note.id,
             reporter_account_id=reporter.id,
             reporter_user_id=reporter.user_id,
-            body=NoteReportCreateRequest(reason="bad"),
+            body=body,
         )
     assert exc.value.status_code == 403
 
@@ -265,13 +272,15 @@ async def test_active_mute_blocks_note_edit(session):
     )
     await session.commit()
 
+    body = WarFightNoteUpsertRequest(content="x")
+
     with pytest.raises(HTTPException) as exc:
         await WarFightNoteService.upsert_note(
             session,
             war=war,
             battlegroup=BG,
             node_number=NODE,
-            body=WarFightNoteUpsertRequest(content="x"),
+            body=body,
             editor_account_id=owner.id,
             editor_user_id=owner.user_id,
         )
@@ -408,13 +417,15 @@ async def test_upsert_identical_content_rejected(session):
     owner = data["owner"]
 
     # The note created by the helper already has content "n".
+    body = WarFightNoteUpsertRequest(content="n")
+
     with pytest.raises(HTTPException) as exc:
         await WarFightNoteService.upsert_note(
             session,
             war=war,
             battlegroup=BG,
             node_number=NODE,
-            body=WarFightNoteUpsertRequest(content="n"),
+            body=body,
             editor_account_id=owner.id,
             editor_user_id=owner.user_id,
         )
@@ -492,17 +503,21 @@ async def test_muted_user_cannot_edit_or_report(session):
         body=MuteCreateRequest(reason="spam"),
     )
 
+    edit_body = WarFightNoteUpsertRequest(content="x")
+
     with pytest.raises(HTTPException) as edit_exc:
         await WarFightNoteService.upsert_note(
             session,
             war=war,
             battlegroup=BG,
             node_number=NODE,
-            body=WarFightNoteUpsertRequest(content="x"),
+            body=edit_body,
             editor_account_id=reporter.id,
             editor_user_id=reporter.user_id,
         )
     assert edit_exc.value.status_code == 403
+
+    report_body = NoteReportCreateRequest(reason="bad")
 
     with pytest.raises(HTTPException) as report_exc:
         await ModerationService.report_note(
@@ -510,7 +525,7 @@ async def test_muted_user_cannot_edit_or_report(session):
             note_id=note.id,
             reporter_account_id=reporter.id,
             reporter_user_id=reporter.user_id,
-            body=NoteReportCreateRequest(reason="bad"),
+            body=report_body,
         )
     assert report_exc.value.status_code == 403
 
@@ -773,7 +788,6 @@ async def test_admin_mute_and_warn_endpoints(session):
 
 @pytest.mark.asyncio
 async def test_three_reports_block_note_in_war_map(session):
-    from src.services.alliance.war.WarService import WarService
 
     data = await _setup_war_with_placement()
     alliance = data["alliance"]
@@ -817,7 +831,6 @@ async def test_three_reports_block_note_in_war_map(session):
 
 @pytest.mark.asyncio
 async def test_note_id_present_in_war_map(session):
-    from src.services.alliance.war.WarService import WarService
 
     data = await _setup_war_with_placement()
     owner = data["owner"]

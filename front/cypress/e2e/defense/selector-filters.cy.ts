@@ -18,15 +18,13 @@ describe('Defense – AllianceDefenseSelector filters', () => {
         cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
       });
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.getByCy('champion-card-Spider-Man').should('be.visible');
       cy.getByCy('champion-card-Wolverine').should('be.visible');
 
-      cy.getByCy('selector-class-filter').click();
-      cy.contains('[role="option"]', 'Cosmic').click();
+      cy.selectOption('selector-class-filter', 'Cosmic');
 
       cy.getByCy('champion-card-Spider-Man').should('be.visible');
       cy.getByCy('champion-card-Wolverine').should('not.exist');
@@ -47,15 +45,13 @@ describe('Defense – AllianceDefenseSelector filters', () => {
           cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3');
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
         cy.getByCy('champion-card-Spider-Man').should('be.visible');
         cy.getByCy('champion-card-Wolverine').should('be.visible');
 
-        cy.getByCy('selector-player-filter').click();
-        cy.contains('[role="option"]', 'PlyrFltOwn').click();
+        cy.selectOption('selector-player-filter', 'PlyrFltOwn');
 
         cy.getByCy('champion-card-Spider-Man').should('be.visible');
         cy.getByCy('champion-card-Wolverine').should('not.exist');
@@ -78,8 +74,7 @@ describe('Defense – AllianceDefenseSelector filters', () => {
         cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
       });
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.getByCy('champion-card-Spider-Man').should('be.visible');
@@ -109,8 +104,7 @@ describe('Defense – AllianceDefenseSelector filters', () => {
           });
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
         cy.getByCy('champion-card-Spider-Man').should('be.visible');
@@ -136,8 +130,7 @@ describe('Defense – AllianceDefenseSelector filters', () => {
           });
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
         cy.getByCy('champion-card-Spider-Man').should('be.visible');
@@ -167,8 +160,7 @@ describe('Defense – AllianceDefenseSelector filters', () => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
 
@@ -203,14 +195,12 @@ describe('Defense – AllianceDefenseSelector filters', () => {
           });
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('member-section-MPFltOwner').should('be.visible');
         cy.getByCy('member-section-MPFltMember').should('be.visible');
 
-        cy.getByCy('defense-player-filter').click();
-        cy.contains('[role="option"]', 'MPFltOwner').click();
+        cy.selectOption('defense-player-filter', 'MPFltOwner');
 
         cy.getByCy('member-section-MPFltOwner').should('be.visible');
         cy.getByCy('member-section-MPFltMember').should('not.exist');
@@ -230,15 +220,12 @@ describe('Defense – AllianceDefenseSelector filters', () => {
           });
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('defense-player-filter').click();
-        cy.contains('[role="option"]', 'MPFROwner').click();
+        cy.selectOption('defense-player-filter', 'MPFROwner');
         cy.getByCy('member-section-MPFRMember').should('not.exist');
 
-        cy.getByCy('defense-player-filter').click();
-        cy.contains('[role="option"]', 'All').click();
+        cy.selectOption('defense-player-filter', 'All');
 
         cy.getByCy('member-section-MPFROwner').should('be.visible');
         cy.getByCy('member-section-MPFRMember').should('be.visible');
@@ -266,8 +253,7 @@ describe('Defense – AllianceDefenseSelector filters', () => {
         cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
       });
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
 
@@ -278,8 +264,7 @@ describe('Defense – AllianceDefenseSelector filters', () => {
       cy.getByCy('champion-card-Wolverine').should('not.exist');
 
       // Add class filter Cosmic → only Spider-Man
-      cy.getByCy('selector-class-filter').click();
-      cy.contains('[role="option"]', 'Cosmic').click();
+      cy.selectOption('selector-class-filter', 'Cosmic');
       cy.getByCy('champion-card-Spider-Man').should('be.visible');
       cy.getByCy('champion-card-Iron-Man').should('not.exist');
     });
@@ -292,10 +277,10 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
   });
 
   // =========================================================================
-  // 6★ champions are hidden and no longer offer a reveal toggle (7★ only)
+  // 6★ champions are hidden by default but a toggle reveals them
   // =========================================================================
 
-  it('hides 6-star champions and offers no toggle to reveal them', () => {
+  it('hides 6-star champions by default and reveals them via the 6-star toggle', () => {
     setupDefenseOwner('def-rar-def', 'RarDefPlyr', 'RarDefAll', 'RD').then(({ adminData, ownerData, ownerAccId }) => {
       cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
         cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
@@ -304,21 +289,20 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
         cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '6r5');
       });
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
 
-      // 7★ Spider-Man visible, 6★ Wolverine hidden
+      // 7★ Spider-Man visible, 6★ Wolverine hidden by default
       cy.getByCy('champion-card-Spider-Man').should('be.visible');
       cy.getByCy('champion-card-Wolverine').should('not.exist');
 
-      // The rarity filter only exposes 7★ tiers — no 6★ toggle exists, so the
-      // 6★ champion cannot be revealed.
-      cy.getByCy('defense-rarity-6r4').should('not.exist');
-      cy.getByCy('defense-rarity-6r5').should('not.exist');
+      // The rarity filter exposes 6★ tiers too — enabling 6r5 reveals the champion.
+      cy.getByCy('defense-rarity-6r4').should('be.visible');
       cy.getByCy('defense-rarity-7r3').should('be.visible');
-      cy.getByCy('champion-card-Wolverine').should('not.exist');
+      cy.getByCy('defense-rarity-6r5').click();
+      cy.getByCy('champion-card-Wolverine').should('be.visible');
+      cy.getByCy('champion-card-Spider-Man').should('be.visible');
     });
   });
 
@@ -336,8 +320,7 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5');
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
         cy.getByCy('champion-card-Spider-Man').should('be.visible');
@@ -368,8 +351,7 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
           },
         );
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
 
@@ -413,8 +395,7 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
           });
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
 

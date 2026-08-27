@@ -4,8 +4,7 @@ const NOTE = 'Suspicious note content';
 
 /** Officer writes a note on node 10 via the war-map popover. */
 function writeNoteAsOfficer(officerUserId: string) {
-  cy.apiLogin(officerUserId);
-  cy.visit('/game/war');
+  cy.apiLogin(officerUserId, 'war');
   cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
   cy.getByCy('node-actions-trigger-node-10').click();
   cy.getByCy('war-note-input').type(NOTE);
@@ -14,8 +13,7 @@ function writeNoteAsOfficer(officerUserId: string) {
 
 /** A reader reports the note on node 10. */
 function reportNoteAsMember(memberUserId: string) {
-  cy.apiLogin(memberUserId);
-  cy.visit('/game/war');
+  cy.apiLogin(memberUserId, 'war');
   cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
   cy.getByCy('node-actions-trigger-node-10').click();
   cy.getByCy('war-note-report').click();
@@ -23,8 +21,7 @@ function reportNoteAsMember(memberUserId: string) {
 }
 
 function openModerationTab(adminUserId: string) {
-  cy.apiLogin(adminUserId);
-  cy.visit('/admin');
+  cy.apiLogin(adminUserId, 'admin');
   cy.getByCy('tab-moderation').click();
   cy.getByCy('moderation-reports-table').should('be.visible');
 }
@@ -67,8 +64,7 @@ describe('War note moderation', () => {
       });
 
       // The note is gone for the member afterwards
-      cy.apiLogin(memberData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(memberData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('war-note-readonly').should('not.exist');
@@ -89,8 +85,7 @@ describe('War note moderation', () => {
       });
 
       // Dismiss = whitelisted, so the note stays readable for members
-      cy.apiLogin(memberData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(memberData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('war-note-readonly').should('contain.text', NOTE);
@@ -107,8 +102,7 @@ describe('War note moderation', () => {
       cy.getByCy('node-has-note-10').should('exist');
 
       // A simple member gets a read-only note (no editor) but can still report.
-      cy.apiLogin(memberData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(memberData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('war-note-readonly').should('contain.text', NOTE);
@@ -141,8 +135,7 @@ describe('War note moderation', () => {
       });
 
       // The muted author sees the contextual notice and can neither edit nor report.
-      cy.apiLogin(ownerData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('war-note-mute-notice').should('be.visible');
@@ -167,8 +160,7 @@ describe('War note moderation', () => {
       });
 
       // The muted officer sees the notice and the delete button is disabled.
-      cy.apiLogin(ownerData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('war-note-mute-notice').should('be.visible');

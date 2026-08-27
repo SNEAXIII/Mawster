@@ -58,6 +58,16 @@ Cypress.Commands.add('getByCy', (selector: string) => {
   return cy.get(`[data-cy="${selector}"]`);
 });
 
+// ── Radix Select / combobox: open a trigger and pick an option ───────────────
+// Waiting for the listbox before querying the option avoids clicking a node
+// that React detaches while the panel is still settling (flaky on CI).
+
+Cypress.Commands.add('selectOption', (trigger: string, label: string) => {
+  cy.getByCy(trigger).click();
+  cy.get('[role="listbox"]').should('be.visible');
+  cy.contains('[role="option"]', label).should('be.visible').click();
+});
+
 // ── Truncate DB (direct backend call) ────────────────────────────────────────
 
 Cypress.Commands.add('truncateDb', () => {
@@ -259,14 +269,16 @@ Cypress.Commands.add('apiForceJoinAlliance', (gameAccountId: string, allianceId:
 
 // ── API login — bypasses the UI entirely ─────────────────────────────────────
 
-Cypress.Commands.add('apiLogin', (userId: string) => {
+// The optional `page` lands directly on the target route: without it the caller
+// pays a second page load through cy.navTo right after ('/' then the real page).
+Cypress.Commands.add('apiLogin', (userId: string, page?: string) => {
   cy.clearAllCookies();
   cy.clearAllSessionStorage();
   cy.clearAllLocalStorage();
   cy.request('POST', '/api/dev/login', { user_id: userId }).then((res) => {
     cy.setCookie('authjs.session-token', res.body.sessionToken);
   });
-  cy.visit('/');
+  cy.visit(page ? navUrl(page) : '/');
 });
 
 // ── UI login via dev-login flow ──────────────────────────────────────────────
@@ -287,13 +299,25 @@ const NAV_URLS: Record<string, string> = {
   administration: '/admin',
   alliances: '/game/alliances',
   defense: '/game/defense',
+  'knowledge-base': '/game/knowledge-base',
+  'knowledge-base-import': '/game/knowledge-base/import',
   profile: '/profile',
   roster: '/game/account',
   war: '/game/war',
 };
 
+// Accepts either a nav key ('war') or a literal path ('/game/war?bg=2'). The
+// literal form exists because query strings are part of the destination for
+// some specs and can't be expressed as a key.
+function navUrl(page: string): string {
+  if (page.startsWith('/')) return page;
+  const url = NAV_URLS[page];
+  if (!url) throw new Error(`Unknown nav page "${page}" — expected one of ${Object.keys(NAV_URLS).join(', ')}`);
+  return url;
+}
+
 Cypress.Commands.add('navTo', (page: string) => {
-  cy.visit(NAV_URLS[page]);
+  cy.visit(navUrl(page));
 });
 
 // ── Invite member to alliance (direct backend call) ─────────────────────────
@@ -1330,8 +1354,7 @@ Cypress.Commands.add('goToAdminChampionsTab', () => {
 });
 
 Cypress.Commands.add('goToWarMode', (userId: string, mode: 'defenders' | 'attackers') => {
-  cy.apiLogin(userId);
-  cy.navTo('war');
+  cy.apiLogin(userId, 'war');
   cy.getByCy(`war-mode-${mode}`).click();
 });
 

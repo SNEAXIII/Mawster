@@ -41,10 +41,30 @@ select = [
     "PLE", # pylint errors
     "PLW", # pylint warnings
     "RUF", # ruff-specific
+    "FAST", # FastAPI: Annotated dependencies, redundant response_model, unused path params
+    "ASYNC", # flake8-async — sync/blocking calls inside `async def`
+    "LOG", # flake8-logging — logger built or called wrong
+    "T10", # flake8-debugger — a `breakpoint()` or `pdb` import left behind
+    "PGH", # pygrep-hooks — blanket `# noqa` / `# type: ignore` with no rule code
+    "TID", # flake8-tidy-imports — relative imports reaching outside the package
+    "RSE", # flake8-raise — `raise X()` with redundant parentheses
+    "SLOT", # flake8-slots — missing __slots__ on str/tuple subclasses
+    "FLY", # flynt — a static `str.join` that reads better as an f-string
+    "ICN", # flake8-import-conventions — the conventional `import x as y` aliases
+    "A", # flake8-builtins — a parameter shadowing a builtin
+    "RET", # flake8-return — assign-then-return, redundant else after return
+    "PTH", # flake8-use-pathlib — os.path calls that pathlib does better
+    "EM", # flake8-errmsg — exception messages built inline at the raise site
+    "PT", # flake8-pytest-style — parametrize/fixture form, over-broad raises
+    "S", # flake8-bandit — see the per-file-ignores below for the test/script carve-outs
+    "C90", # mccabe — cyclomatic complexity
+    "PLR0912", # too many branches
+    "PLR0915", # too many statements
     "BLE001", # blind `except Exception`
     "TRY004", # raise TypeError for type checks
     "EXE001", # shebang on a non-executable file
     "S110", # try/except/pass swallowing errors
+    "PT018", # composite `assert a and b` — pytest cannot say which half failed
 ]
 
 ignore = [
@@ -52,12 +72,6 @@ ignore = [
     # This is the project-wide convention for models/services/enums/DTOs — renaming ~90
     # files would churn every import for no behavioural gain.
     "N999",
-    # `Depends(...)`, `Query(...)` and `File(...)` in parameter defaults is *the* FastAPI
-    # idiom; bugbear's "no function call in default argument" does not apply.
-    "B008",
-    # Function-level imports are deliberate here: they break SQLModel/service import
-    # cycles and keep heavy optional deps (boto3, aio_pika) out of module import time.
-    "PLC0415",
     # `class X(str, Enum)` is kept over `StrEnum`: it changes what `str(X.A)` returns,
     # which leaks into Pydantic serialisation and stored values.
     "UP042",
@@ -72,12 +86,35 @@ ignore = [
     "RUF003",
 ]
 
+[lint.mccabe]
+# Raised from ruff's default of 10: at 10 the rule fires on four services that are branchy
+# by nature (filter builders, attacker eligibility) without pointing at a real defect.
+# 12 is where it starts catching functions that genuinely want splitting.
+max-complexity = 12
+
+[lint.pylint]
+# Same reasoning: set just above the healthy end of the current codebase, so these fire on
+# new drift rather than on everything written so far. The few functions already past the
+# line carry a `# noqa` naming them as refactor candidates.
+max-branches = 15
+max-statements = 60
+
+[lint.flake8-pytest-style]
+# PT011 asks for a `match=` on over-broad exception types. Trimmed to the catch-alls:
+# a bare `ValueError` in these tests is already pinned by an `assert error.value.args[0]
+# == MESSAGE` on the next line, so requiring `match=` too would only duplicate it.
+raises-require-match-for = ["BaseException", "Exception"]
+
 [lint.per-file-ignores]
 # Local tooling: best-effort scripts where a catch-all except is deliberate — they must
 # keep running (and print a diagnostic) whatever a subprocess or a scraped page throws.
-".claude/**" = ["BLE001", "S110"]
-"scripts/**" = ["BLE001", "S110"]
-"static-assets/**" = ["BLE001", "S110"]
+".claude/**" = ["BLE001", "S110", "S603", "S607"]
+# S603/S607/S310: local dev tooling driving `docker`, `npm` and localhost health
+# checks with hardcoded argv. There is no untrusted input to sanitise here.
+"scripts/**" = ["BLE001", "S110", "S603", "S607", "S310", "C901", "PLR0912", "PLR0915"]
+# PLC0415: heavy, optional third-party deps (PIL, bs4, curl_cffi) are imported inside
+# the function that needs them, so the other entry points run without them installed.
+"static-assets/**" = ["BLE001", "S110", "PLC0415", "S603", "S607"]
 
 [format]
 quote-style = "double"

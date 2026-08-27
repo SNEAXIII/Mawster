@@ -129,6 +129,10 @@ services:
       # RustFS. Bucket names + retention are plain config; the broker URL and the
       # store keys are injected from secret files by the command shim below.
       RUSTFS_ENDPOINT: http://rustfs:9000
+      # What the BROWSER calls. SigV4 signs the Host header, so a URL signed
+      # against the internal name above is rejected the instant a browser sends
+      # it here. Must match the Traefik router rule on the rustfs service.
+      RUSTFS_PUBLIC_ENDPOINT: https://s3.mawster.app
       RUSTFS_BUCKET_VISION: vision
       RUSTFS_BUCKET_DATASET: dataset
       VISION_RETENTION_DAYS: '7'
@@ -308,11 +312,17 @@ services:
     image: rustfs/rustfs:latest
     networks:
       - internal
-    # Web console only, served at http://localhost:9001/rustfs/console/ (the
-    # port's root path answers as the S3 API, so `/` returns AccessDenied).
-    # The S3 API port (9000) stays internal — api/worker reach it via
-    # http://rustfs:9000 on the overlay network. Published in host mode on the
-    # manager node. No Traefik route on purpose: keep it behind SSH/loopback.
+      - traefik-public
+    # Web console (9001) stays off Traefik on purpose — behind SSH/loopback,
+    # published in host mode on the manager node.
+    #
+    # The S3 API (9000) IS routed, at s3.mawster.app, because the browser now
+    # uploads screenshots straight here with a presigned URL. Being reachable is
+    # not being open: no bucket policy grants anonymous access, so an unsigned
+    # request gets AccessDenied and a signed one can only touch the single key
+    # the API chose, for fifteen minutes. api/worker keep using the internal
+    # http://rustfs:9000 — server-side traffic has no reason to leave the
+    # overlay, and RUSTFS_PUBLIC_ENDPOINT exists precisely to keep the two apart.
     ports:
       - target: 9001
         published: 9001
@@ -338,6 +348,14 @@ services:
           - node.role == manager
       restart_policy:
         condition: on-failure
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.http.routers.rustfs.rule=Host(`s3.mawster.app`)
+        - traefik.http.routers.rustfs.entrypoints=websecure
+        - traefik.http.routers.rustfs.tls.certresolver=letsencrypt
+        - traefik.http.routers.rustfs.service=rustfs
+        - traefik.http.services.rustfs.loadbalancer.server.port=9000
     logging:
       driver: json-file
       options:
@@ -372,6 +390,13 @@ services:
         aws --endpoint-url http://rustfs:9000 s3api put-bucket-lifecycle-configuration \
           --bucket vision \
           --lifecycle-configuration "{\"Rules\":[{\"ID\":\"expire-imports\",\"Status\":\"Enabled\",\"Filter\":{\"Prefix\":\"imports/\"},\"Expiration\":{\"Days\":$${VISION_RETENTION_DAYS}}}]}"
+        # Presigned uploads come straight from the browser, so the bucket answers
+        # its own preflight — the API is not in that request path. Exactly one
+        # origin: the site that hands out the URLs. Widening this would let any
+        # page replay a leaked URL from its own origin.
+        aws --endpoint-url http://rustfs:9000 s3api put-bucket-cors \
+          --bucket vision \
+          --cors-configuration '{"CORSRules":[{"AllowedOrigins":["https://www.mawster.app"],"AllowedMethods":["PUT"],"AllowedHeaders":["*"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3000}]}'
     deploy:
       replicas: 1
       restart_policy:

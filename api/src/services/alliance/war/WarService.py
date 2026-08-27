@@ -17,6 +17,7 @@ from src.dto.alliance.war.dto_war import (
     WarResponse,
     WarSynergyResponse,
 )
+from src.enums.WarStatus import WarStatus
 from src.Messages.war_messages import (
     ACTIVE_WAR_ALREADY_EXISTS,
     ASSIST_NO_ATTACKER_ASSIGNED,
@@ -54,20 +55,22 @@ from src.Messages.war_messages import (
     member_max_attackers_reached,
     node_exceeds_map,
 )
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.DefensePlacement import DefensePlacement
-from src.models.GameAccount import GameAccount
-from src.models.War import War, WarStatus
-from src.models.WarBan import WarBan
-from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.WarFightNote import WarFightNote
-from src.models.WarPrefightAttacker import WarPrefightAttacker
-from src.models.WarSynergyAttacker import WarSynergyAttacker
+from src.models.alliance.Alliance import Alliance
+from src.models.alliance.DefensePlacement import DefensePlacement
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.user.GameAccount import GameAccount
+from src.models.war.War import War
+from src.models.war.WarBan import WarBan
+from src.models.war.WarDefensePlacement import WarDefensePlacement
+from src.models.war.WarFightNote import WarFightNote
+from src.models.war.WarPrefightAttacker import WarPrefightAttacker
+from src.models.war.WarSynergyAttacker import WarSynergyAttacker
 from src.services.admin.ModerationService import AUTO_BLOCK_THRESHOLD, ModerationService
 from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
 from src.services.alliance.war.WarFormatConfig import for_format
+from src.services.knowledge.FightRecordService import FightRecordService
 from src.utils.db import SessionDep
 
 
@@ -544,7 +547,6 @@ class WarService:
         win: bool,
         elo_change: int | None,
     ) -> WarResponse:
-        from src.models.Alliance import Alliance
 
         war = await cls.get_war(session, war_id, alliance_id)
         alliance = await session.get(Alliance, alliance_id)
@@ -575,7 +577,6 @@ class WarService:
         session.add(war)
         await session.commit()
         await session.refresh(war)
-        from src.services.knowledge.FightRecordService import FightRecordService
 
         await FightRecordService.snapshot_war(session, war)
         return WarResponse.model_validate(await cls._load_war(session, war.id))

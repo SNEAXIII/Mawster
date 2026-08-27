@@ -32,6 +32,12 @@ class VisionPredictionMessage(BaseModel):
     ascension: int = 0
     confidence: float = 0.0
     crop_key: str | None = None
+    # True when CLIP's top two were near-tied and a pixel second pass reordered
+    # them. Those cards arrive with a *negative* margin — the winner keeps its
+    # own, lower, CLIP cosine — so without this flag they are indistinguishable
+    # from a card the model was simply unsure about. False from a worker that
+    # predates the second pass.
+    reranked: bool = False
     # Best first. Empty from a worker that predates this field, or when the
     # portrait crop failed and no naming ran — both are valid, not errors.
     candidates: list[VisionCandidate] = []
