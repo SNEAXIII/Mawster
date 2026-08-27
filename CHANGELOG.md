@@ -10,41 +10,7 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le ve
 
 * add visitor leave functionality to alliance page ([0d63a32](https://github.com/SNEAXIII/Mawster/commit/0d63a32217ef9f674bf5c53acb6593bb12fdbf48))
 * block deletion for visiting accounts and cancel their pending invitations ([1f3ceff](https://github.com/SNEAXIII/Mawster/commit/1f3ceff09fdc252942a6f098807cc56900e5b6bb))
-* **ci:** announce production deploys on Discord ([1276e22](https://github.com/SNEAXIII/Mawster/commit/1276e2269d009efe186132f60cf2675b22cecd27))
-* **ci:** refresh uv.lock on the release pull request ([01c6cfe](https://github.com/SNEAXIII/Mawster/commit/01c6cfe27cccf48dcdba266b2d616d4313fd550e))
-* **ci:** tag the images with the released version ([3b3e9d8](https://github.com/SNEAXIII/Mawster/commit/3b3e9d82c21b7907921c680d8ee6855de83fc6e5))
-* **ci:** version the project with release-please ([32c9979](https://github.com/SNEAXIII/Mawster/commit/32c9979228162befabc53df58ff79fab617dbb56))
-* **ci:** version the project with release-please ([993a57a](https://github.com/SNEAXIII/Mawster/commit/993a57a70e475461442c528c80942a84244cf866))
 * confirm game account deletion by name and offer a 7-day restore ([489eabd](https://github.com/SNEAXIII/Mawster/commit/489eabdd2598dba014925cb69a51dac39970485d))
-* **front:** let a visitor leave the alliance they visit ([587d1b8](https://github.com/SNEAXIII/Mawster/commit/587d1b8214f28926c1e1e938b4978e424abd0907))
-* soft-delete alliances with owner-only confirmation ([f5debcc](https://github.com/SNEAXIII/Mawster/commit/f5debcc066fd33ef48aa6a2a0afc485db5e69c4e))
-* soft-delete an alliance, leader only and only when alone ([c140aff](https://github.com/SNEAXIII/Mawster/commit/c140affe066474d7d1d8efc4be3f030b96a5dd68))
-* soft-delete game accounts with a 7-day restore window ([94471c8](https://github.com/SNEAXIII/Mawster/commit/94471c882594dab6e0b38783ecd5fbdf952a5295))
-
-
-### Corrigé
-
-* **a11y:** make three click-only controls keyboard operable ([37200d6](https://github.com/SNEAXIII/Mawster/commit/37200d6509b53e701e75f51811a921e1b5f81367))
-* **ci:** keep uv.lock in step with the release version ([99bbe9e](https://github.com/SNEAXIII/Mawster/commit/99bbe9e01a05bef29f3b7eb83ace10416ad6f840))
-* **ci:** pass branch metadata through env, and audit workflows with z… ([0c05c70](https://github.com/SNEAXIII/Mawster/commit/0c05c705119b7e70b1b99d39a32764729fc46513))
-* **ci:** pass branch metadata through env, and audit workflows with zizmor ([aef87c7](https://github.com/SNEAXIII/Mawster/commit/aef87c76922e8f7e601afd35735255ec93beae6a))
-* **dev:** keep a log marker title on a single line ([7026b73](https://github.com/SNEAXIII/Mawster/commit/7026b73fac3803dfbc91a3c33c913ed139029158))
-* **docker:** refuse sdists and pin uv in the image builds ([a70bbf6](https://github.com/SNEAXIII/Mawster/commit/a70bbf6b633125c59e07eb66093e7fd6d099e6ec))
-* **docker:** refuse sdists in the container entrypoints too ([2ac24b8](https://github.com/SNEAXIII/Mawster/commit/2ac24b87f82253cbc2038ec4ef525c2d762210a9))
-* **e2e:** target the remove button by data-cy, not by DOM order ([5f333e5](https://github.com/SNEAXIII/Mawster/commit/5f333e5a31da31e46632da53df9efc06ec675078))
-* front/package.json & front/package-lock.json to reduce vulnerabilities ([096ebba](https://github.com/SNEAXIII/Mawster/commit/096ebba2f265314203c48baff72a3d95b0649f81))
-* **front:** restore peer dependency resolution, unbreak the build ([5f297c3](https://github.com/SNEAXIII/Mawster/commit/5f297c3e2bb231a322f57814caa75460b219b9d7))
-* **front:** restore peer dependency resolution, unbreak the build ([d8bad0c](https://github.com/SNEAXIII/Mawster/commit/d8bad0c484ee50cd265ab2456778f1f2f408fffc))
-* **scripts:** anchor version tags on the promoted commit ([a4e4fe6](https://github.com/SNEAXIII/Mawster/commit/a4e4fe64b4ea54d7dcdd98862b7366274111c116))
-* stop dumping a traceback every 5s when RabbitMQ is unreachable ([bd23a5c](https://github.com/SNEAXIII/Mawster/commit/bd23a5cdff916dbd9df492973c0da2d64e7ab49e))
-* stop dumping a traceback every 5s when RabbitMQ is unreachable ([f191f26](https://github.com/SNEAXIII/Mawster/commit/f191f26d3e99c7203eec177b4227da1c64523167))
-
-
-### Modifié
-
-* **api:** annotate the last Depends defaults and enforce B008 ([fd855fe](https://github.com/SNEAXIII/Mawster/commit/fd855feec0e52b3b0ce2cb9de7f5ad7c471b66c2))
-* **api:** migrate Query parameters to Annotated ([463bbea](https://github.com/SNEAXIII/Mawster/commit/463bbea94ce1795e133081db9917a400e06a360e))
-* **tests:** hoist setup calls out of pytest.raises blocks ([6aa5cb7](https://github.com/SNEAXIII/Mawster/commit/6aa5cb747bdf427a2ff0d106cf5ae9be54180a47))
 
 ## [1.5.0] — 2026-08-25
 
