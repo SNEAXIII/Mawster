@@ -11,15 +11,12 @@ rules:
       - sonar.yaml
 
   artipacked:
-    # checkout leaves the credential in .git/config. Only matters if a job uploads the
-    # workspace as an artifact; none does.
+    # The other 13 checkouts now set persist-credentials: false. These three still need
+    # the credential after checkout: two push or open pull requests, and vision-gate
+    # reads a private repo with BOT_TOKEN.
     ignore:
-      - api_front__test_lint_build.yaml
       - assets-refresh.yaml
-      - notify-vision.yaml
       - release-please.yaml
-      - security.yml
-      - sonar.yaml
       - vision-gate.yaml
 
   unpinned-images:
