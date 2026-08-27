@@ -105,6 +105,16 @@ class ChampionUserFk(SQLModel):
     champion_user_id: uuid.UUID = Field(foreign_key="champion_user.id")
 
 
+class WarFightRecordFk(SQLModel):
+    """Adds the FK to the fight record a row details.
+
+    Required here: a synergy or a prefight only exists as part of one recorded fight.
+    WarFightNote keeps its own nullable column — a note can stand without a record.
+    """
+
+    war_fight_record_id: uuid.UUID = Field(foreign_key="war_fight_record.id")
+
+
 class SeasonFk(SQLModel):
     """Adds the optional FK to the ``season`` row.
 

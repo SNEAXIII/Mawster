@@ -1,19 +1,17 @@
-import uuid
 from typing import TYPE_CHECKING
 
-from sqlmodel import Field, Relationship
+from sqlmodel import Relationship
 
-from src.models.Base import Ascension, ChampionFk, Stars, UUIDBase
+from src.models.Base import Ascension, ChampionFk, Stars, UUIDBase, WarFightRecordFk
 
 if TYPE_CHECKING:
     from src.models.champion.Champion import Champion
     from src.models.war.WarFightRecord import WarFightRecord
 
 
-class WarFightSynergy(UUIDBase, ChampionFk, table=True):
+class WarFightSynergy(UUIDBase, WarFightRecordFk, ChampionFk, table=True):
     __tablename__ = "war_fight_synergy"
 
-    war_fight_record_id: uuid.UUID = Field(foreign_key="war_fight_record.id")
     stars: Stars
     ascension: Ascension
 
