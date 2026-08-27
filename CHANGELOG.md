@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.6.2](https://github.com/SNEAXIII/Mawster/compare/v1.6.1...v1.6.2) (2026-08-27)
+
+
+### Corrigé
+
+* update datas ([6938362](https://github.com/SNEAXIII/Mawster/commit/6938362d5ab81a172671ca30ed71cb6a958a1d4c))
+
 ## [1.6.1](https://github.com/SNEAXIII/Mawster/compare/v1.6.0...v1.6.1) (2026-08-27)
 
 
