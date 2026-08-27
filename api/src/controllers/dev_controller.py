@@ -283,31 +283,33 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
             )
             account_id = str(acc.id)
 
-            # 5a. Create alliance
-            if spec.create_alliance:
-                alliance = await AllianceService.create_alliance(
-                    session,
-                    name=spec.create_alliance.name,
-                    tag=spec.create_alliance.tag,
-                    owner_id=acc.id,
-                    current_user_id=user.id,
-                )
-                alliance_id = str(alliance.id)
+        # This step depends on step 4, flattened to reduce cognitive complexity
+        # 5a. Create alliance
+        if spec.create_alliance:
+            alliance = await AllianceService.create_alliance(
+                session,
+                name=spec.create_alliance.name,
+                tag=spec.create_alliance.tag,
+                owner_id=acc.id,
+                current_user_id=user.id,
+            )
+            alliance_id = str(alliance.id)
 
-            # 5b. Force-join another user's alliance
-            elif spec.join_alliance_token:
-                ref = results.get(spec.join_alliance_token)
-                if ref and ref.alliance_id:
-                    acc.alliance_id = uuid.UUID(ref.alliance_id)
-                    session.add(acc)
-                    await session.commit()
-                    alliance_id = ref.alliance_id
+        # 5b. Force-join another user's alliance
+        elif spec.join_alliance_token:
+            ref = results.get(spec.join_alliance_token)
+            if ref and ref.alliance_id:
+                acc.alliance_id = uuid.UUID(ref.alliance_id)
+                session.add(acc)
+                await session.commit()
+                alliance_id = ref.alliance_id
 
-            # 6. Assign battlegroup
-            if spec.battlegroup is not None and alliance_id:
-                await AllianceService.set_member_group(
-                    session, uuid.UUID(alliance_id), acc.id, spec.battlegroup
-                )
+        # This step depends on step 4, flattened to reduce cognitive complexity
+        # 6. Assign battlegroup
+        if spec.battlegroup is not None and alliance_id:
+            await AllianceService.set_member_group(
+                session, uuid.UUID(alliance_id), acc.id, spec.battlegroup
+            )
 
         results[spec.discord_token] = SetupUserResult(
             access_token=access_token,

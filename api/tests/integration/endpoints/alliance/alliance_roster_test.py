@@ -165,13 +165,24 @@ class TestAllianceRosterFilters:
         assert [r["champion_name"] for r in response.json()] == ["Beast"]
 
     @pytest.mark.asyncio
-    async def test_rank_filter_matches_stars_and_rank(self):
+    @pytest.mark.parametrize(
+        ("input_querry", "expected"),
+        [
+            (["7r5"], ["7r5"]),
+            (["6r5", "7r5"], ["6r5", "7r5"]),
+            (["6r5", "7r1", "7r2", "7r3", "7r4", "7r5", "7r6"], ["6r5", "7r2", "7r5"]),
+        ],
+        ids=["one_champ", "two_champs", "three_champs"],
+    )
+    async def test_rank_filter_matches_stars_and_rank(self, input_querry, expected):
         alliance, *_ = await self._alliance_with_three_champs()
+        ranks_querry = "&".join([f"ranks={rank}" for rank in input_querry])
         response = await execute_get_request(
-            f"/alliances/{alliance.id}/roster?ranks=7r5", headers=HEADERS_OWNER
+            f"/alliances/{alliance.id}/roster?{ranks_querry}", headers=HEADERS_OWNER
         )
         rarities = sorted(r["rarity"] for r in response.json())
-        assert rarities == ["7r5"]  # Hercules 7r5, but not Beast 6r5
+        print(f"{rarities = } {expected = }")
+        assert rarities == expected
 
     @pytest.mark.asyncio
     async def test_ascension_filter(self):

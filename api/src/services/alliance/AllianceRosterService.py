@@ -2,7 +2,7 @@ import uuid
 
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql.expression import Select
-from sqlmodel import and_, or_, select
+from sqlmodel import or_, select, tuple_
 
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
@@ -14,7 +14,7 @@ class AllianceRosterService:
     @classmethod
     # Refactor candidate: one branch per optional filter (13 complexity). A small
     # filter->clause mapping would flatten it.
-    def _apply_filters(  # noqa: C901
+    def _apply_filters(
         cls,
         stmt: Select,
         *,
@@ -42,18 +42,13 @@ class AllianceRosterService:
         if champion_class:
             stmt = stmt.where(Champion.champion_class == champion_class)
         if ranks:
-            pairs = []
-            for code in ranks:
-                stars_str, _, rank_str = code.partition("r")
-                if stars_str.isdigit() and rank_str.isdigit():
-                    pairs.append(
-                        and_(
-                            ChampionUser.stars == int(stars_str),
-                            ChampionUser.rank == int(rank_str),
-                        )
-                    )
+            pairs = [
+                (int(s), int(r))
+                for s, _, r in (code.partition("r") for code in ranks)
+                if s.isdigit() and r.isdigit()
+            ]
             if pairs:
-                stmt = stmt.where(or_(*pairs))
+                stmt = stmt.where(tuple_(ChampionUser.stars, ChampionUser.rank).in_(pairs))
         if ascensions:
             stmt = stmt.where(ChampionUser.ascension.in_(ascensions))
         if preferred_attacker:
