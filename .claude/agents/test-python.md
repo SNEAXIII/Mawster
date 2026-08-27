@@ -1,6 +1,8 @@
 ---
 name: test-python
-description: Writes unit and integration tests for backend FastAPI/SQLModel features in this project. Use when adding a new endpoint, service, or DTO that needs tests, or when tests are missing for an existing feature. Researches the implementation first, then writes tests matching project conventions and runs them.
+description: >
+  Writes unit and integration tests for this FastAPI/SQLModel backend. Use when a new endpoint,
+  service or DTO needs tests, or when an existing feature has none.
 model: claude-sonnet-5
 ---
 
