@@ -23,8 +23,8 @@ describe('Defense – Remove defender', () => {
 
       cy.getByCy('defender-count-RmPlyr').should('contain', '2/5');
 
-      // Click remove on the side panel (force click because button is hidden until hover)
-      cy.getByCy('member-section-RmPlyr').find('button').first().click({ force: true });
+      // force: the X only appears on hover
+      cy.getByCy('remove-defender-1').click({ force: true });
 
       cy.getByCy('defender-count-RmPlyr').should('contain', '1/5');
       cy.contains('Defender removed').should('be.visible');
@@ -76,7 +76,7 @@ describe('Defense – Remove defender', () => {
         cy.get('body').type('{esc}');
 
         // Remove Spider-Man via side panel
-        cy.getByCy('member-section-RmReappPlyr').find('button').first().click({ force: true });
+        cy.getByCy('remove-defender-1').click({ force: true });
         cy.getByCy('defender-count-RmReappPlyr').should('contain', '0/5');
 
         // Spider-Man should reappear in selector
