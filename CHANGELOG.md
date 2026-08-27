@@ -3,6 +3,15 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.6.0](https://github.com/SNEAXIII/Mawster/compare/v1.5.0...v1.6.0) (2026-08-27)
+
+
+### Ajouté
+
+* add visitor leave functionality to alliance page ([0d63a32](https://github.com/SNEAXIII/Mawster/commit/0d63a32217ef9f674bf5c53acb6593bb12fdbf48))
+* block deletion for visiting accounts and cancel their pending invitations ([1f3ceff](https://github.com/SNEAXIII/Mawster/commit/1f3ceff09fdc252942a6f098807cc56900e5b6bb))
+* confirm game account deletion by name and offer a 7-day restore ([489eabd](https://github.com/SNEAXIII/Mawster/commit/489eabdd2598dba014925cb69a51dac39970485d))
+
 ## [1.5.0] — 2026-08-25
 
 ### Ajouté
