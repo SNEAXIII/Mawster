@@ -40,6 +40,14 @@
     "has_prefight": false
   },
   {
+    "name": "Agatha Harkness",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/agatha_harkness.png",
+    "alias": null,
+    "is_ascendable": true,
+    "has_prefight": false
+  },
+  {
     "name": "Agent Venom",
     "champion_class": "Skill",
     "image_url": "/static/champions/agent_venom.png",
@@ -60,7 +68,7 @@
     "champion_class": "Mystic",
     "image_url": "/static/champions/america_chavez.png",
     "alias": "AC ",
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
@@ -104,6 +112,14 @@
     "has_prefight": false
   },
   {
+    "name": "Anti-Venomoid",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/anti-venomoid.png",
+    "alias": null,
+    "is_ascendable": false,
+    "has_prefight": false
+  },
+  {
     "name": "Apocalypse",
     "champion_class": "Mutant",
     "image_url": "/static/champions/apocalypse.png",
@@ -132,7 +148,7 @@
     "champion_class": "Tech",
     "image_url": "/static/champions/arnim_zola.png",
     "alias": null,
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": true
   },
   {
@@ -140,7 +156,7 @@
     "champion_class": "Skill",
     "image_url": "/static/champions/attuma.png",
     "alias": null,
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
@@ -212,6 +228,14 @@
     "champion_class": "Skill",
     "image_url": "/static/champions/black_panther_civil_war.png",
     "alias": "bpcw",
+    "is_ascendable": true,
+    "has_prefight": false
+  },
+  {
+    "name": "Black Tarantula",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/black_tarantula.png",
+    "alias": null,
     "is_ascendable": true,
     "has_prefight": false
   },
@@ -380,7 +404,7 @@
     "champion_class": "Mutant",
     "image_url": "/static/champions/colossus.png",
     "alias": "colo",
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
@@ -588,7 +612,7 @@
     "champion_class": "Mystic",
     "image_url": "/static/champions/dragon_man.png",
     "alias": null,
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
@@ -604,7 +628,7 @@
     "champion_class": "Mutant",
     "image_url": "/static/champions/dust.png",
     "alias": null,
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
@@ -796,7 +820,7 @@
     "champion_class": "Tech",
     "image_url": "/static/champions/guillotine_2099.png",
     "alias": "g99",
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
@@ -869,6 +893,14 @@
     "image_url": "/static/champions/hit-monkey.png",
     "alias": "HitMonkey;Hit Monkey",
     "is_ascendable": true,
+    "has_prefight": false
+  },
+  {
+    "name": "Hobgoblin (Phil Urich)",
+    "champion_class": "Tech",
+    "image_url": "/static/champions/hobgoblin_phil_urich.png",
+    "alias": null,
+    "is_ascendable": false,
     "has_prefight": false
   },
   {
@@ -988,7 +1020,7 @@
     "champion_class": "Tech",
     "image_url": "/static/champions/iron_man.png",
     "alias": "im",
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
@@ -1172,7 +1204,7 @@
     "champion_class": "Cosmic",
     "image_url": "/static/champions/knull.png",
     "alias": null,
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
@@ -1412,7 +1444,7 @@
     "champion_class": "Skill",
     "image_url": "/static/champions/moondragon.png",
     "alias": null,
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": true
   },
   {
@@ -1509,7 +1541,7 @@
     "image_url": "/static/champions/nico_minoru.png",
     "alias": "nico",
     "is_ascendable": false,
-    "has_prefight": false
+    "has_prefight": true
   },
   {
     "name": "Night Thrasher",
@@ -1629,6 +1661,14 @@
     "image_url": "/static/champions/photon.png",
     "alias": null,
     "is_ascendable": false,
+    "has_prefight": false
+  },
+  {
+    "name": "Phyla-Vell",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/phyla-vell.png",
+    "alias": null,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
@@ -1869,7 +1909,7 @@
     "image_url": "/static/champions/scorpion.png",
     "alias": "scp",
     "is_ascendable": false,
-    "has_prefight": false
+    "has_prefight": true
   },
   {
     "name": "Scream",
@@ -1884,6 +1924,14 @@
     "champion_class": "Tech",
     "image_url": "/static/champions/sentinel.png",
     "alias": "senti",
+    "is_ascendable": false,
+    "has_prefight": false
+  },
+  {
+    "name": "Sentinelbot",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/sentinelbot.png",
+    "alias": null,
     "is_ascendable": false,
     "has_prefight": false
   },
@@ -1918,6 +1966,14 @@
     "alias": null,
     "is_ascendable": false,
     "has_prefight": true
+  },
+  {
+    "name": "Shatterstar",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/shatterstar.png",
+    "alias": null,
+    "is_ascendable": true,
+    "has_prefight": false
   },
   {
     "name": "She-Hulk",
@@ -2020,7 +2076,7 @@
     "champion_class": "Science",
     "image_url": "/static/champions/spider-ham.png",
     "alias": "SpiderHam;Spider Ham",
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
@@ -2028,7 +2084,7 @@
     "champion_class": "Science",
     "image_url": "/static/champions/spider-man_classic.png",
     "alias": "SpiderMan;Spider Man",
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
@@ -2076,7 +2132,7 @@
     "champion_class": "Cosmic",
     "image_url": "/static/champions/spider-man_symbiote.png",
     "alias": "SpiderMan;Spider Man",
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
@@ -2124,7 +2180,7 @@
     "champion_class": "Science",
     "image_url": "/static/champions/spot.png",
     "alias": null,
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
@@ -2196,6 +2252,14 @@
     "champion_class": "Cosmic",
     "image_url": "/static/champions/superior_iron_man.png",
     "alias": "sim;ims",
+    "is_ascendable": false,
+    "has_prefight": false
+  },
+  {
+    "name": "Symbioid",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/symbioid.png",
+    "alias": null,
     "is_ascendable": false,
     "has_prefight": false
   },
@@ -2484,7 +2548,7 @@
     "champion_class": "Tech",
     "image_url": "/static/champions/warlock.png",
     "alias": null,
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
@@ -2493,6 +2557,14 @@
     "image_url": "/static/champions/wasp.png",
     "alias": null,
     "is_ascendable": false,
+    "has_prefight": false
+  },
+  {
+    "name": "Wave",
+    "champion_class": "Science",
+    "image_url": "/static/champions/wave.png",
+    "alias": null,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
@@ -2508,7 +2580,7 @@
     "champion_class": "Mystic",
     "image_url": "/static/champions/white_tiger.png",
     "alias": "wt",
-    "is_ascendable": false,
+    "is_ascendable": true,
     "has_prefight": false
   },
   {
