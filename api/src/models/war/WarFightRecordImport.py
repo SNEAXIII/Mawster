@@ -3,7 +3,15 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship
 
-from src.models.Base import KoCount, NodeNumber, TimestampMixin, UUIDBase
+from src.models.Base import (
+    AllianceFk,
+    ChampionFk,
+    KoCount,
+    NodeNumber,
+    SeasonFk,
+    TimestampMixin,
+    UUIDBase,
+)
 
 if TYPE_CHECKING:
     from src.models.alliance.Alliance import Alliance
@@ -12,13 +20,10 @@ if TYPE_CHECKING:
     from src.models.war.Season import Season
 
 
-class WarFightRecordImport(UUIDBase, TimestampMixin, table=True):
+class WarFightRecordImport(UUIDBase, SeasonFk, AllianceFk, ChampionFk, TimestampMixin, table=True):
     __tablename__ = "war_fight_record_import"
 
-    alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
-    season_id: uuid.UUID | None = Field(default=None, foreign_key="season.id")
     node_number: NodeNumber
-    champion_id: uuid.UUID = Field(foreign_key="champion.id")
     defender_champion_id: uuid.UUID = Field(foreign_key="champion.id")
     ko_count: KoCount = 0
     imported_by_id: uuid.UUID = Field(foreign_key="game_account.id")

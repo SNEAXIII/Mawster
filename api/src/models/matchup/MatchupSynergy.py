@@ -4,14 +4,14 @@ from typing import TYPE_CHECKING
 import sqlalchemy as sa
 from sqlmodel import Field, Relationship
 
-from src.models.Base import UUIDBase
+from src.models.Base import ChampionFk, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.champion.Champion import Champion
     from src.models.matchup.MatchupRating import MatchupRating
 
 
-class MatchupSynergy(UUIDBase, table=True):
+class MatchupSynergy(UUIDBase, ChampionFk, table=True):
     """A synergy champion attached to a rating.
 
     ``is_required`` gates the rating: a missing required synergy makes the rated fight
@@ -25,7 +25,6 @@ class MatchupSynergy(UUIDBase, table=True):
     )
 
     matchup_rating_id: uuid.UUID = Field(foreign_key="matchup_rating.id", ondelete="CASCADE")
-    champion_id: uuid.UUID = Field(foreign_key="champion.id")
     is_required: bool = Field(default=True)
 
     rating: "MatchupRating" = Relationship(back_populates="synergies")

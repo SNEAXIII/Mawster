@@ -1,22 +1,20 @@
-import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship
 
-from src.models.Base import GameAccountFk, UUIDBase, utcnow
+from src.models.Base import AllianceFk, GameAccountFk, UUIDBase, utcnow
 
 if TYPE_CHECKING:
     from src.models.alliance.Alliance import Alliance
     from src.models.user.GameAccount import GameAccount
 
 
-class AllianceOfficer(UUIDBase, GameAccountFk, table=True):
+class AllianceOfficer(UUIDBase, AllianceFk, GameAccountFk, table=True):
     """Association table: a game account designated as officer (deputy) of an alliance."""
 
     __tablename__ = "alliance_officer"
 
-    alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
     assigned_at: datetime = Field(default_factory=utcnow)
 
     # Relations

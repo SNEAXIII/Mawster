@@ -5,13 +5,21 @@ from typing import TYPE_CHECKING
 import sqlalchemy as sa
 from sqlmodel import Field, Relationship
 
-from src.models.Base import Battlegroup, NodeNumber, TimestampMixin, UUIDBase, utcnow
+from src.models.Base import (
+    AllianceFk,
+    AuthorshipFk,
+    Battlegroup,
+    NodeNumber,
+    TimestampMixin,
+    UUIDBase,
+    utcnow,
+)
 
 if TYPE_CHECKING:
     from src.models.war.WarFightNoteRevision import WarFightNoteRevision
 
 
-class WarFightNote(UUIDBase, TimestampMixin, table=True):
+class WarFightNote(UUIDBase, AuthorshipFk, AllianceFk, TimestampMixin, table=True):
     """A note attached to one war combat node. Editable by officers/owners while the war is
     active; frozen (linked to the fight record) at snapshot."""
 
@@ -27,12 +35,9 @@ class WarFightNote(UUIDBase, TimestampMixin, table=True):
         default=None, foreign_key="war_defense_placement.id", ondelete="SET NULL"
     )
     war_id: uuid.UUID = Field(foreign_key="war.id")
-    alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
     battlegroup: Battlegroup
     node_number: NodeNumber
     content: str = Field(sa_column=sa.Column(sa.Text, nullable=False))
-    created_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
-    updated_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     updated_at: datetime = Field(default_factory=utcnow)
     war_fight_record_id: uuid.UUID | None = Field(default=None, foreign_key="war_fight_record.id")
     # Moderation columns (used by a later plan; created now to avoid a second migration churn).

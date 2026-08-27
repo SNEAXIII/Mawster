@@ -37,7 +37,52 @@ class UUIDBase(SQLModel):
 
 
 class GameAccountFk(SQLModel):
+    """Adds the FK to the owning ``game_account`` row.
+
+    The reference mixin of the family: every table that belongs to a single game
+    account declares the column here rather than restating it.
+    """
+
     game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
+
+
+class AuthorshipFk(SQLModel):
+    """Adds the pair of FKs tracking who created and who last edited the row.
+
+    Both are required: a row always has an author, and ``updated_by`` starts equal to
+    ``created_by``.
+    """
+
+    created_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
+    updated_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
+
+
+class AllianceFk(SQLModel):
+    """Adds the FK to the owning ``alliance`` row.
+
+    Same single-source-of-truth intent as :class:`GameAccountFk`.
+    """
+
+    alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
+
+
+class ChampionFk(SQLModel):
+    """Adds the FK to the ``champion`` catalog table.
+
+    Same single-source-of-truth intent as :class:`GameAccountFk`: every table that
+    points at a champion declares the column identically.
+    """
+
+    champion_id: uuid.UUID = Field(foreign_key="champion.id")
+
+
+class SeasonFk(SQLModel):
+    """Adds the optional FK to the ``season`` row.
+
+    Nullable on purpose: rows created outside a running season carry no season.
+    """
+
+    season_id: uuid.UUID | None = Field(default=None, foreign_key="season.id")
 
 
 class TimestampMixin(SQLModel):

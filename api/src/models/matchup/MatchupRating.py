@@ -7,14 +7,25 @@ from sqlmodel import Field, Relationship
 
 from src.enums.MatchupTargetType import MatchupTargetType
 from src.enums.MatchupVerdict import MatchupVerdict
-from src.models.Base import NodeNumber, TimestampMixin, UUIDBase, utcnow
+from src.models.Base import (
+    AllianceFk,
+    AuthorshipFk,
+    ChampionFk,
+    NodeNumber,
+    SeasonFk,
+    TimestampMixin,
+    UUIDBase,
+    utcnow,
+)
 
 if TYPE_CHECKING:
     from src.models.champion.Champion import Champion
     from src.models.matchup.MatchupSynergy import MatchupSynergy
 
 
-class MatchupRating(UUIDBase, TimestampMixin, table=True):
+class MatchupRating(
+    UUIDBase, AuthorshipFk, SeasonFk, AllianceFk, ChampionFk, TimestampMixin, table=True
+):
     """One alliance's verdict on `champion versus obstacle`, where the obstacle is either a
     defender champion or a node — never both."""
 
@@ -37,8 +48,6 @@ class MatchupRating(UUIDBase, TimestampMixin, table=True):
         ),
     )
 
-    alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
-    champion_id: uuid.UUID = Field(foreign_key="champion.id")
     target_type: MatchupTargetType
     defender_champion_id: uuid.UUID | None = Field(default=None, foreign_key="champion.id")
     node_number: NodeNumber | None = Field(default=None)
@@ -47,9 +56,6 @@ class MatchupRating(UUIDBase, TimestampMixin, table=True):
     verdict: MatchupVerdict
     prefight_champion_id: uuid.UUID | None = Field(default=None, foreign_key="champion.id")
     # Never written in v1. NULL means "applies to every season".
-    season_id: uuid.UUID | None = Field(default=None, foreign_key="season.id")
-    created_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
-    updated_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     updated_at: datetime = Field(default_factory=utcnow)
 
     champion: "Champion" = Relationship(

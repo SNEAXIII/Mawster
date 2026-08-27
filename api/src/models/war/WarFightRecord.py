@@ -4,12 +4,15 @@ from typing import TYPE_CHECKING, Optional
 from sqlmodel import Field, Relationship
 
 from src.models.Base import (
+    AllianceFk,
     Ascension,
     Battlegroup,
+    ChampionFk,
     GameAccountFk,
     KoCount,
     NodeNumber,
     Rank,
+    SeasonFk,
     Stars,
     TimestampMixin,
     UUIDBase,
@@ -25,16 +28,15 @@ if TYPE_CHECKING:
     from src.models.war.WarFightSynergy import WarFightSynergy
 
 
-class WarFightRecord(UUIDBase, TimestampMixin, GameAccountFk, table=True):
+class WarFightRecord(
+    UUIDBase, SeasonFk, AllianceFk, ChampionFk, TimestampMixin, GameAccountFk, table=True
+):
     __tablename__ = "war_fight_record"
 
     war_id: uuid.UUID = Field(foreign_key="war.id")
-    alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
-    season_id: uuid.UUID | None = Field(default=None, foreign_key="season.id")
     battlegroup: Battlegroup
     node_number: NodeNumber
     tier: int
-    champion_id: uuid.UUID = Field(foreign_key="champion.id")
     stars: Stars
     rank: Rank
     ascension: Ascension
