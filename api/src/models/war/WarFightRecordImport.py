@@ -6,6 +6,7 @@ from sqlmodel import Field, Relationship
 from src.models.Base import (
     AllianceFk,
     ChampionFk,
+    DefenderChampionFk,
     KoCount,
     NodeNumber,
     SeasonFk,
@@ -20,11 +21,12 @@ if TYPE_CHECKING:
     from src.models.war.Season import Season
 
 
-class WarFightRecordImport(UUIDBase, SeasonFk, AllianceFk, ChampionFk, TimestampMixin, table=True):
+class WarFightRecordImport(
+    UUIDBase, DefenderChampionFk, SeasonFk, AllianceFk, ChampionFk, TimestampMixin, table=True
+):
     __tablename__ = "war_fight_record_import"
 
     node_number: NodeNumber
-    defender_champion_id: uuid.UUID = Field(foreign_key="champion.id")
     ko_count: KoCount = 0
     imported_by_id: uuid.UUID = Field(foreign_key="game_account.id")
 

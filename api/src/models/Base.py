@@ -95,6 +95,16 @@ class ChampionFk(SQLModel):
     champion_id: uuid.UUID = Field(foreign_key="champion.id")
 
 
+class DefenderChampionFk(SQLModel):
+    """Adds the FK to the champion that was defending.
+
+    Pairs with :class:`ChampionFk` on the fight records, where the attacker column is
+    the plain ``champion_id``. MatchupRating keeps its own nullable version.
+    """
+
+    defender_champion_id: uuid.UUID = Field(foreign_key="champion.id")
+
+
 class ChampionUserFk(SQLModel):
     """Adds the FK to a roster entry — a champion owned by a game account.
 

@@ -8,6 +8,7 @@ from src.models.Base import (
     Ascension,
     Battlegroup,
     ChampionFk,
+    DefenderChampionFk,
     GameAccountFk,
     KoCount,
     NodeNumber,
@@ -29,7 +30,14 @@ if TYPE_CHECKING:
 
 
 class WarFightRecord(
-    UUIDBase, SeasonFk, AllianceFk, ChampionFk, TimestampMixin, GameAccountFk, table=True
+    UUIDBase,
+    DefenderChampionFk,
+    SeasonFk,
+    AllianceFk,
+    ChampionFk,
+    TimestampMixin,
+    GameAccountFk,
+    table=True,
 ):
     __tablename__ = "war_fight_record"
 
@@ -41,7 +49,6 @@ class WarFightRecord(
     rank: Rank
     ascension: Ascension
     is_saga_attacker: bool
-    defender_champion_id: uuid.UUID = Field(foreign_key="champion.id")
     defender_stars: int
     defender_rank: int
     defender_ascension: int
