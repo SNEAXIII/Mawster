@@ -104,11 +104,34 @@ Project agents live in `.claude/agents/`. They are **not auto-dispatched** — c
 ## Key Conventions
 
 - **Language**: English (code, comments, variables)
-- **Commits**: `feat:` `fix:` `refactor:` `test:` `docs:`
+- **Commits**: see the commit types section below
 - **i18n**: `useI18n()` always — never hardcode strings; add keys to both `en.ts` and `fr.ts`
 - **Icons**: `lucide-react` general / `react-icons/fi` action buttons
 - **Styling**: Tailwind semantic tokens (`bg-card`, `text-muted-foreground`), dark mode first
 - **Explain changes**: After every Edit/Write, briefly explain what changed, why, and the expected effect
+
+### Commit types
+
+release-please reads these to decide the version bump and to write `CHANGELOG.md`, so the type is
+a decision, not a label. **Pick it by what a player sees, never by which files you touched.**
+
+| Type | Bump | In the changelog | Use for |
+| --- | --- | --- | --- |
+| `feat:` | minor | yes | something a player can now do |
+| `fix:` | patch | yes | something a player saw broken |
+| `feat!:` / `BREAKING CHANGE:` | **major** | yes | see below |
+| `ci:` `chore:` `build:` `refactor:` `test:` `docs:` `style:` | none | hidden | everything else |
+
+**Never write `feat(ci):` or `fix(docker):`.** A scope does not downgrade a type: release-please
+sections by type alone, so those land in the changelog and bump the version. Pipelines, Docker,
+lockfiles, tooling, fixtures, E2E selectors and lint config are `ci:` or `chore:`, full stop.
+
+Reserve the major bump for what actually breaks a user: an irreversible migration, or data loss.
+Not API signature changes — the front deploys in lockstep with the API, so no external consumer
+exists to break.
+
+Prefer squash merge on pull requests. A merge commit carries the PR title into its body, which
+release-please then counts a second time alongside the real commits, duplicating every entry.
 
 ---
 
