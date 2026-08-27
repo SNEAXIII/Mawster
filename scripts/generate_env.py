@@ -11,11 +11,14 @@ Run:
     python generate_env.py
 """
 
+import base64
+import getpass
 import secrets
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+# scripts/ -> repo root: the .env files this writes belong next to the compose files.
+ROOT = Path(__file__).resolve().parent.parent
 
 # ─── Colours ──────────────────────────────────────────────────────────────────
 
@@ -40,8 +43,6 @@ def prompt(label: str, default: str = "", secret: bool = False) -> str:
     hint = f" [{c(DIM, default)}]" if default else ""
     if secret and default:
         hint = f" [{c(DIM, '(generated)')}]"
-
-    import getpass
 
     try:
         raw = getpass.getpass(f"  {label}{hint}: ") if secret else input(f"  {label}{hint}: ")
@@ -89,8 +90,6 @@ def gen_hex(length: int = 64) -> str:
 
 def gen_base64(length: int = 32) -> str:
     """URL-safe base64 secret (used by NextAuth)."""
-    import base64
-
     return base64.urlsafe_b64encode(secrets.token_bytes(length)).rstrip(b"=").decode()
 
 
