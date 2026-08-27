@@ -4,7 +4,7 @@ from datetime import datetime
 import sqlalchemy as sa
 from sqlmodel import Field
 
-from src.models.Base import TimestampMixin, UserFk, UUIDBase
+from src.models.Base import FK_USER, TimestampMixin, UserFk, UUIDBase
 
 
 class UserMute(UUIDBase, UserFk, TimestampMixin, table=True):
@@ -13,7 +13,7 @@ class UserMute(UUIDBase, UserFk, TimestampMixin, table=True):
     __tablename__ = "user_mute"
 
     reason: str = Field(sa_column=sa.Column(sa.Text, nullable=False))
-    muted_by_id: uuid.UUID = Field(foreign_key="user.id")
+    muted_by_id: uuid.UUID = Field(foreign_key=FK_USER)
     expires_at: datetime | None = Field(default=None)
     lifted_at: datetime | None = Field(default=None)
-    lifted_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
+    lifted_by_id: uuid.UUID | None = Field(default=None, foreign_key=FK_USER)

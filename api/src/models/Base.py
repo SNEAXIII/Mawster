@@ -18,6 +18,25 @@ Ascension = Annotated[int, Field(ge=0, le=2)]
 KoCount = Annotated[int, Field(ge=0)]
 
 
+# Foreign-key targets, spelled once each. A table rename otherwise leaves stale strings
+# scattered across the models, and SQLModel only notices at mapper configuration time.
+FK_ALLIANCE = "alliance.id"
+FK_CHAMPION = "champion.id"
+FK_CHAMPION_USER = "champion_user.id"
+FK_GAME_ACCOUNT = "game_account.id"
+FK_MASTERY = "mastery.id"
+FK_MATCHUP_RATING = "matchup_rating.id"
+FK_SEASON = "season.id"
+FK_USER = "user.id"
+FK_VISION_IMPORT = "vision_import.id"
+FK_VISION_JOB = "vision_job.id"
+FK_VISION_PREDICTION = "vision_prediction.id"
+FK_WAR = "war.id"
+FK_WAR_DEFENSE_PLACEMENT = "war_defense_placement.id"
+FK_WAR_FIGHT_NOTE = "war_fight_note.id"
+FK_WAR_FIGHT_RECORD = "war_fight_record.id"
+
+
 def utcnow() -> datetime:
     """Timezone-aware UTC timestamp.
 
@@ -43,7 +62,7 @@ class UserFk(SQLModel):
     renaming it would cost a migration for no behaviour change.
     """
 
-    user_id: uuid.UUID = Field(foreign_key="user.id")
+    user_id: uuid.UUID = Field(foreign_key=FK_USER)
 
 
 class GameAccountFk(SQLModel):
@@ -53,7 +72,7 @@ class GameAccountFk(SQLModel):
     account declares the column here rather than restating it.
     """
 
-    game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
+    game_account_id: uuid.UUID = Field(foreign_key=FK_GAME_ACCOUNT)
 
 
 class AuthorshipFk(SQLModel):
@@ -63,8 +82,8 @@ class AuthorshipFk(SQLModel):
     ``created_by``.
     """
 
-    created_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
-    updated_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
+    created_by_game_account_id: uuid.UUID = Field(foreign_key=FK_GAME_ACCOUNT)
+    updated_by_game_account_id: uuid.UUID = Field(foreign_key=FK_GAME_ACCOUNT)
 
 
 class PlacedByFk(SQLModel):
@@ -73,7 +92,7 @@ class PlacedByFk(SQLModel):
     Nullable: rows imported or created before the column existed have no known author.
     """
 
-    placed_by_id: uuid.UUID | None = Field(default=None, foreign_key="game_account.id")
+    placed_by_id: uuid.UUID | None = Field(default=None, foreign_key=FK_GAME_ACCOUNT)
 
 
 class AllianceFk(SQLModel):
@@ -82,7 +101,7 @@ class AllianceFk(SQLModel):
     Same single-source-of-truth intent as :class:`GameAccountFk`.
     """
 
-    alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
+    alliance_id: uuid.UUID = Field(foreign_key=FK_ALLIANCE)
 
 
 class ChampionFk(SQLModel):
@@ -92,7 +111,7 @@ class ChampionFk(SQLModel):
     points at a champion declares the column identically.
     """
 
-    champion_id: uuid.UUID = Field(foreign_key="champion.id")
+    champion_id: uuid.UUID = Field(foreign_key=FK_CHAMPION)
 
 
 class DefenderChampionFk(SQLModel):
@@ -102,7 +121,7 @@ class DefenderChampionFk(SQLModel):
     the plain ``champion_id``. MatchupRating keeps its own nullable version.
     """
 
-    defender_champion_id: uuid.UUID = Field(foreign_key="champion.id")
+    defender_champion_id: uuid.UUID = Field(foreign_key=FK_CHAMPION)
 
 
 class ChampionUserFk(SQLModel):
@@ -112,7 +131,7 @@ class ChampionUserFk(SQLModel):
     designates one player's copy, with its stars, rank and signature.
     """
 
-    champion_user_id: uuid.UUID = Field(foreign_key="champion_user.id")
+    champion_user_id: uuid.UUID = Field(foreign_key=FK_CHAMPION_USER)
 
 
 class WarFightRecordFk(SQLModel):
@@ -122,7 +141,7 @@ class WarFightRecordFk(SQLModel):
     WarFightNote keeps its own nullable column — a note can stand without a record.
     """
 
-    war_fight_record_id: uuid.UUID = Field(foreign_key="war_fight_record.id")
+    war_fight_record_id: uuid.UUID = Field(foreign_key=FK_WAR_FIGHT_RECORD)
 
 
 class SeasonFk(SQLModel):
@@ -131,7 +150,7 @@ class SeasonFk(SQLModel):
     Nullable on purpose: rows created outside a running season carry no season.
     """
 
-    season_id: uuid.UUID | None = Field(default=None, foreign_key="season.id")
+    season_id: uuid.UUID | None = Field(default=None, foreign_key=FK_SEASON)
 
 
 class TimestampMixin(SQLModel):

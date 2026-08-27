@@ -8,6 +8,7 @@ from sqlmodel import Field, Relationship
 from src.enums.MatchupTargetType import MatchupTargetType
 from src.enums.MatchupVerdict import MatchupVerdict
 from src.models.Base import (
+    FK_CHAMPION,
     AllianceFk,
     AuthorshipFk,
     ChampionFk,
@@ -49,12 +50,12 @@ class MatchupRating(
     )
 
     target_type: MatchupTargetType
-    defender_champion_id: uuid.UUID | None = Field(default=None, foreign_key="champion.id")
+    defender_champion_id: uuid.UUID | None = Field(default=None, foreign_key=FK_CHAMPION)
     node_number: NodeNumber | None = Field(default=None)
     # Denormalised target discriminant — see services/alliance/matchup_scoring.build_target_key.
     target_key: str = Field(max_length=64)
     verdict: MatchupVerdict
-    prefight_champion_id: uuid.UUID | None = Field(default=None, foreign_key="champion.id")
+    prefight_champion_id: uuid.UUID | None = Field(default=None, foreign_key=FK_CHAMPION)
     # Never written in v1. NULL means "applies to every season".
     updated_at: datetime = Field(default_factory=utcnow)
 

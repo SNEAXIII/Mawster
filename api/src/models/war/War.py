@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlmodel import Field, Relationship
 
 from src.enums.WarStatus import WarStatus
-from src.models.Base import AllianceFk, SeasonFk, TimestampMixin, UUIDBase
+from src.models.Base import FK_GAME_ACCOUNT, AllianceFk, SeasonFk, TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.alliance.Alliance import Alliance
@@ -20,7 +20,7 @@ class War(UUIDBase, SeasonFk, AllianceFk, TimestampMixin, table=True):
 
     opponent_name: str = Field(max_length=100)
     status: WarStatus = Field(default=WarStatus.active)
-    created_by_id: uuid.UUID = Field(foreign_key="game_account.id")
+    created_by_id: uuid.UUID = Field(foreign_key=FK_GAME_ACCOUNT)
     win: bool | None = Field(default=None)
     elo_change: int | None = Field(default=None)
     tier: int | None = Field(default=None)

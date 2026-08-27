@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 import sqlalchemy as sa
 from sqlmodel import Field, Relationship
 
-from src.models.Base import ChampionFk, UUIDBase
+from src.models.Base import FK_MATCHUP_RATING, ChampionFk, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.champion.Champion import Champion
@@ -24,7 +24,7 @@ class MatchupSynergy(UUIDBase, ChampionFk, table=True):
         sa.UniqueConstraint("matchup_rating_id", "champion_id", name="uq_matchup_synergy_champion"),
     )
 
-    matchup_rating_id: uuid.UUID = Field(foreign_key="matchup_rating.id", ondelete="CASCADE")
+    matchup_rating_id: uuid.UUID = Field(foreign_key=FK_MATCHUP_RATING, ondelete="CASCADE")
     is_required: bool = Field(default=True)
 
     rating: "MatchupRating" = Relationship(back_populates="synergies")

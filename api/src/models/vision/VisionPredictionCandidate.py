@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship
 
-from src.models.Base import UUIDBase
+from src.models.Base import FK_VISION_PREDICTION, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.vision.VisionPrediction import VisionPrediction
@@ -25,7 +25,7 @@ class VisionPredictionCandidate(UUIDBase, table=True):
     __tablename__ = "vision_prediction_candidate"
 
     prediction_id: uuid.UUID = Field(
-        foreign_key="vision_prediction.id", ondelete="CASCADE", index=True
+        foreign_key=FK_VISION_PREDICTION, ondelete="CASCADE", index=True
     )
     name: str = Field(max_length=100)
     score: float = Field(default=0.0)

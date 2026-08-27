@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlmodel import Field, Relationship
 
 from src.models.Base import (
+    FK_GAME_ACCOUNT,
     AllianceFk,
     ChampionFk,
     DefenderChampionFk,
@@ -28,7 +29,7 @@ class WarFightRecordImport(
 
     node_number: NodeNumber
     ko_count: KoCount = 0
-    imported_by_id: uuid.UUID = Field(foreign_key="game_account.id")
+    imported_by_id: uuid.UUID = Field(foreign_key=FK_GAME_ACCOUNT)
 
     alliance: "Alliance" = Relationship(
         sa_relationship_kwargs={"foreign_keys": "[WarFightRecordImport.alliance_id]"}

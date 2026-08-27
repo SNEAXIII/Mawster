@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from sqlmodel import Field, Relationship
 
 from src.enums.VisionJobStatus import VisionJobStatus
-from src.models.Base import TimestampMixin, UUIDBase
+from src.models.Base import FK_VISION_IMPORT, TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.vision.VisionImport import VisionImport
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class VisionJob(UUIDBase, TimestampMixin, table=True):
     __tablename__ = "vision_job"
 
-    import_id: uuid.UUID = Field(foreign_key="vision_import.id")
+    import_id: uuid.UUID = Field(foreign_key=FK_VISION_IMPORT)
     status: VisionJobStatus = Field(default=VisionJobStatus.PENDING)
     object_key: str = Field(max_length=255)
     # The client's own name for the screenshot, kept only so an upload error can

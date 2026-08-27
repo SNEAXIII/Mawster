@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlmodel import Field, Relationship
 
 from src.models.Base import (
+    FK_WAR,
     AllianceFk,
     Ascension,
     Battlegroup,
@@ -41,7 +42,7 @@ class WarFightRecord(
 ):
     __tablename__ = "war_fight_record"
 
-    war_id: uuid.UUID = Field(foreign_key="war.id")
+    war_id: uuid.UUID = Field(foreign_key=FK_WAR)
     battlegroup: Battlegroup
     node_number: NodeNumber
     tier: int

@@ -6,6 +6,10 @@ import sqlalchemy as sa
 from sqlmodel import Field, Relationship
 
 from src.models.Base import (
+    FK_USER,
+    FK_WAR,
+    FK_WAR_DEFENSE_PLACEMENT,
+    FK_WAR_FIGHT_RECORD,
     AllianceFk,
     AuthorshipFk,
     Battlegroup,
@@ -32,18 +36,18 @@ class WarFightNote(UUIDBase, AuthorshipFk, AllianceFk, TimestampMixin, table=Tru
     # This column is provenance only (written once at creation, never read back), so losing
     # the link when the placement is deleted is safe; the note stays keyed on its node.
     war_defense_placement_id: uuid.UUID | None = Field(
-        default=None, foreign_key="war_defense_placement.id", ondelete="SET NULL"
+        default=None, foreign_key=FK_WAR_DEFENSE_PLACEMENT, ondelete="SET NULL"
     )
-    war_id: uuid.UUID = Field(foreign_key="war.id")
+    war_id: uuid.UUID = Field(foreign_key=FK_WAR)
     battlegroup: Battlegroup
     node_number: NodeNumber
     content: str = Field(sa_column=sa.Column(sa.Text, nullable=False))
     updated_at: datetime = Field(default_factory=utcnow)
-    war_fight_record_id: uuid.UUID | None = Field(default=None, foreign_key="war_fight_record.id")
+    war_fight_record_id: uuid.UUID | None = Field(default=None, foreign_key=FK_WAR_FIGHT_RECORD)
     # Moderation columns (used by a later plan; created now to avoid a second migration churn).
     whitelisted_at: datetime | None = Field(default=None)
-    whitelisted_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
+    whitelisted_by_id: uuid.UUID | None = Field(default=None, foreign_key=FK_USER)
     deleted_at: datetime | None = Field(default=None)
-    deleted_by_id: uuid.UUID | None = Field(default=None, foreign_key="user.id")
+    deleted_by_id: uuid.UUID | None = Field(default=None, foreign_key=FK_USER)
 
     revisions: list["WarFightNoteRevision"] = Relationship(back_populates="note")

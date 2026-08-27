@@ -5,6 +5,8 @@ import sqlalchemy as sa
 from sqlmodel import Field, Relationship
 
 from src.models.Base import (
+    FK_CHAMPION_USER,
+    FK_WAR,
     Ascension,
     Battlegroup,
     ChampionFk,
@@ -30,16 +32,14 @@ class WarDefensePlacement(UUIDBase, PlacedByFk, ChampionFk, TimestampMixin, tabl
         sa.UniqueConstraint("war_id", "battlegroup", "node_number", name="uq_war_defense_node"),
     )
 
-    war_id: uuid.UUID = Field(foreign_key="war.id")
+    war_id: uuid.UUID = Field(foreign_key=FK_WAR)
     battlegroup: Battlegroup
     node_number: NodeNumber
     stars: Stars
     rank: Rank
     ascension: Ascension = 0
-    attacker_champion_user_id: uuid.UUID | None = Field(
-        default=None, foreign_key="champion_user.id"
-    )
-    assist_champion_user_id: uuid.UUID | None = Field(default=None, foreign_key="champion_user.id")
+    attacker_champion_user_id: uuid.UUID | None = Field(default=None, foreign_key=FK_CHAMPION_USER)
+    assist_champion_user_id: uuid.UUID | None = Field(default=None, foreign_key=FK_CHAMPION_USER)
     ko_count: KoCount = 0
     is_combat_completed: bool = Field(default=False)
     is_fight_not_done: bool = Field(default=False)

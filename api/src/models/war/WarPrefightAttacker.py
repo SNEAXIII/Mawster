@@ -5,6 +5,7 @@ import sqlalchemy as sa
 from sqlmodel import Field, Relationship
 
 from src.models.Base import (
+    FK_WAR,
     Battlegroup,
     ChampionUserFk,
     GameAccountFk,
@@ -31,7 +32,7 @@ class WarPrefightAttacker(UUIDBase, ChampionUserFk, TimestampMixin, GameAccountF
         ),
     )
 
-    war_id: uuid.UUID = Field(foreign_key="war.id")
+    war_id: uuid.UUID = Field(foreign_key=FK_WAR)
     battlegroup: Battlegroup
     target_node_number: NodeNumber
 
