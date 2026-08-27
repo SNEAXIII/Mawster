@@ -6,10 +6,9 @@ from sqlmodel import Field, Relationship
 from src.models.Base import Ascension, GameAccountFk, Rank, Stars, UUIDBase
 
 if TYPE_CHECKING:
-    from src.models.GameAccount import GameAccount
-
     from src.models.champion.Champion import Champion
     from src.models.champion.RequestedUpgrade import RequestedUpgrade
+    from src.models.user.GameAccount import GameAccount
 
 
 class ChampionUser(UUIDBase, GameAccountFk, table=True):
