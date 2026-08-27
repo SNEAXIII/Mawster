@@ -1,6 +1,9 @@
 ---
 name: resolve-local-imports
-description: Use when ruff reports PLC0415 "`import` should be at the top-level of a file", when `make check` or `make fix` fails on an import nested inside a function or a method, when adding a `# noqa: PLC0415` or a per-file-ignore for it, or when the user asks to remonter / hoister / sortir des imports locaux dans `api/`.
+description: >
+  Use when ruff reports PLC0415 ("`import` should be at the top-level of a file"), when `make
+  check` / `make fix` fails on an import nested in a function, when adding a `# noqa: PLC0415`, or
+  to remonter / hoister des imports locaux dans `api/`.
 ---
 
 # Resolve Local Imports

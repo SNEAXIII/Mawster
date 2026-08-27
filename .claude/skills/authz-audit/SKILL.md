@@ -1,13 +1,10 @@
 ---
 name: authz-audit
 description: >
-  Mini-audit sécurité + tests d'un lot controller/service backend, centré sur les
-  accès non autorisés (authn manquante, élévation de privilège, IDOR cross-alliance)
-  et la couverture de tests correspondante. Use whenever the user wants to "check
-  unauthorized access", "audit sécu d'un endpoint/service", "vérifier les droits /
-  rôles", "IDOR", "accès non souhaité", "qui peut faire quoi", or before shipping a
-  new alliance/war endpoint and worrying about who can call it — even without the
-  word "audit". Reports findings; the user approves before any fix.
+  Audit sécurité + tests d'un lot controller/service backend — authn manquante, élévation de
+  privilège, IDOR cross-alliance. Déclencheurs — "unauthorized access", "audit sécu d'un
+  endpoint/service", "vérifier les droits / rôles", "IDOR", "accès non souhaité", "qui peut faire
+  quoi", ou avant de livrer un endpoint alliance/war.
 user-invocable: true
 ---
 

@@ -1,13 +1,9 @@
 ---
 name: component-dedup-audit
 description: >
-  Find duplicated or behaviourally-similar frontend components/hooks and propose
-  mutualising them into a shared component or custom hook. Use whenever the user
-  wants to "mutualiser les composants", "factoriser le front", reduce copy-paste
-  in `front/`, spot repeated JSX/logic across pages, or clean up before adding a
-  component and worrying about drift — even without the word "audit". Triggers on
-  "mutualiser", "composants en double", "duplication front", "factoriser",
-  "trucs en double", "dedup components".
+  Find duplicated or behaviourally-similar components/hooks in `front/` and propose a shared
+  component or custom hook. Déclencheurs — "mutualiser les composants", "factoriser le front",
+  "duplication front", "composants en double", "trucs en double", "dedup components".
 user-invocable: true
 ---
 

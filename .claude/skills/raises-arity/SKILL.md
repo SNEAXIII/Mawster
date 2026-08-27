@@ -1,6 +1,10 @@
 ---
 name: raises-arity
-description: Vérifie qu'un bloc `pytest.raises` ne contient qu'un seul appel susceptible de lever, et remonte les appels de setup au-dessus du bloc. Use when a test asserts an exception and the `with pytest.raises(...)` block also builds its own fixture inline, when ruff's PT012 passes but the block still calls a helper (`_declaration(...)`, `_champion_ref()`, `_defender_target(...)`) inside the asserted statement, when the user asks to "refactor this exception test to have only one invocation possibly throwing", or before adding a new `pytest.raises` test in `api/tests/`.
+description: >
+  Vérifie qu'un bloc `pytest.raises` ne contient qu'un seul appel susceptible de lever, et remonte
+  les appels de setup au-dessus du bloc. Use when ruff PT012 passes but the block still builds its
+  fixture inline (`_declaration(...)`, `_champion_ref()`), or before adding a `pytest.raises` test
+  in `api/tests/`.
 ---
 
 # Raises Arity

@@ -1,6 +1,9 @@
 ---
 name: qa
-description: Interactive QA session where user reports bugs or issues conversationally, and the agent files GitHub issues. Explores the codebase in the background for context and domain language. Use when user wants to report bugs, do QA, file issues conversationally, or mentions "QA session".
+description: >
+  Interactive QA session — the user reports bugs conversationally, the agent explores the codebase
+  for context and files GitHub issues. Use to report bugs, do QA, file issues conversationally, or
+  on "QA session".
 ---
 
 # QA Session

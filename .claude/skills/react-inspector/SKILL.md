@@ -1,6 +1,10 @@
 ---
 name: react-inspector
-description: Installer ou retirer react-dev-inspector dans front/ — le mode "clic sur un élément de la page → ouverture du composant dans VS Code". Use whenever the user wants to inspect/jump to a React component from the browser, says "installe react dev inspector", "je veux cliquer sur un composant pour l'ouvrir", "remets l'inspector", "enlève l'inspector", or complains that the front build is slow because of babel.config.js. Also use before touching app/_components/dev-inspector.tsx, front/babel.config.js, or app/api/dev/open-editor/.
+description: >
+  Installer ou retirer react-dev-inspector dans `front/` — cliquer un élément de la page pour
+  ouvrir le composant dans VS Code. Déclencheurs — "installe / remets / enlève l'inspector", build
+  front lent à cause de babel.config.js, ou avant de toucher `front/babel.config.js`,
+  `app/_components/dev-inspector.tsx` ou `app/api/dev/open-editor/`.
 ---
 
 # React Dev Inspector
