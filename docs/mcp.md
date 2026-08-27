@@ -11,11 +11,11 @@ commandes normales, documentées ici et exposées via les skills de `.claude/ski
 | Server | Source | Purpose |
 |--------|--------|---------|
 | `context-mode` | Plugin (Claude Code) | Garde la sortie des commandes hors du contexte |
-| `github` | `@modelcontextprotocol/server-github` | API GitHub (issues, PRs, fichiers) |
+| `github` | HTTP — `api.githubcopilot.com/mcp/` | API GitHub (issues, PRs, fichiers) |
 
-> Les serveurs `server-runner`, `pytest-runner` et `db-manager` ont été retirés : le dossier
-> `mcp/` n'existe plus et ils n'étaient plus déclarés dans `.mcp.json`. Leurs skills pointent
-> désormais sur les commandes réelles ci-dessous.
+> Les serveurs `server-runner`, `cypress-runner`, `pytest-runner` et `db-manager` ont été
+> retirés : le dossier `mcp/` n'existe plus. Leurs skills pointent désormais sur les commandes
+> réelles ci-dessous.
 
 ---
 
@@ -41,9 +41,9 @@ juste avant un `Edit` ; pas d'agents Explore (utiliser `ctx_batch_execute`) ; pa
 
 ## github
 
-Package standard `@modelcontextprotocol/server-github`. Nécessite `GITHUB_PERSONAL_ACCESS_TOKEN`
-dans l'environnement. Couvre issues, pull requests, branches, fichiers, recherche, commentaires,
-reviews, merges.
+Serveur distant maintenu par GitHub, en transport HTTP (aucun exécutable local, donc identique
+sous Windows et Linux). Nécessite `GITHUB_PERSONAL_ACCESS_TOKEN` dans l'environnement.
+Couvre issues, pull requests, branches, fichiers, recherche, commentaires, reviews, merges.
 
 ```bash
 export GITHUB_PERSONAL_ACCESS_TOKEN=ghp_...
