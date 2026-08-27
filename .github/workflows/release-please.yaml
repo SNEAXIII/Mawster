@@ -25,39 +25,3 @@ jobs:
           token: ${{ secrets.BOT_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-
-      # release-please bumps the version in api/pyproject.toml, and api/uv.lock mirrors that
-      # field, so the release pull request would otherwise fail `uv sync --locked`. The lock
-      # cannot carry a release-please annotation: uv drops comments when it rewrites the file.
-      # `prs_created` is true when the pull request was created *or* updated.
-      - name: Check out the release pull request
-        if: steps.release.outputs.prs_created == 'true'
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          ref: ${{ fromJson(steps.release.outputs.pr).headBranchName }}
-          token: ${{ secrets.BOT_TOKEN }}
-
-      - name: Install uv
-        if: steps.release.outputs.prs_created == 'true'
-        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
-        with:
-          python-version: ${{ vars.PYTHON_VERSION }}
-          # No cache: this job publishes releases, so a poisoned cache entry would reach a
-          # release artifact. `uv lock` resolves from the index in seconds anyway.
-          enable-cache: false
-
-      - name: Refresh the lockfile
-        if: steps.release.outputs.prs_created == 'true'
-        working-directory: ./api
-        run: |
-          set -euo pipefail
-          uv lock
-          if git diff --quiet -- uv.lock; then
-            echo "uv.lock already matches the bumped version."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add uv.lock
-          git commit -m "chore: sync uv.lock with the release version"
-          git push

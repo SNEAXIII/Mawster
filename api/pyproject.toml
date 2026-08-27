@@ -1,8 +1,9 @@
 [project]
 name = "mawster-api"
-# Bumped by release-please. uv.lock mirrors this field, so the release workflow refreshes the
-# lock on the release pull request - otherwise `uv sync --locked` fails there.
-version = "1.6.0"
+# Static on purpose. The project is never installed (--no-install-project everywhere) nor
+# published, and uv.lock mirrors this field: bumping it would break `uv sync --locked` on the
+# release pull request. The version users see lives in api/main.py.
+version = "0.0.0"
 description = "Mawster API - MCOC Alliance Management"
 license = "AGPL-3.0-or-later"
 requires-python = ">=3.12"
