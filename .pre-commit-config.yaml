@@ -32,7 +32,7 @@ repos:
       # --min-severity low: informational findings should not block a commit.
       - id: zizmor
         name: GitHub Actions audit
-        entry: uvx zizmor --config .github/zizmor.yml --min-severity low .github/workflows/
+        entry: uvx --no-build zizmor --config .github/zizmor.yml --min-severity low .github/workflows/
         language: system
         pass_filenames: false
         files: ^\.github/(workflows/.*|zizmor\.yml)$
