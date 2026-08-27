@@ -17,6 +17,7 @@ rules:
       - api_front__test_lint_build.yaml
       - assets-refresh.yaml
       - notify-vision.yaml
+      - release-please.yaml
       - security.yml
       - sonar.yaml
       - vision-gate.yaml

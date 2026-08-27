@@ -199,6 +199,8 @@ jobs:
     outputs:
       moving_tag: ${{ steps.meta.outputs.moving_tag }}
       tag_prefix: ${{ steps.meta.outputs.tag_prefix }}
+      version: ${{ steps.version.outputs.version }}
+      released: ${{ steps.version.outputs.released }}
       also_staging: ${{ github.event_name == 'push' && github.ref_name == 'release' }}
     steps:
       - name: Compute deploy metadata
@@ -216,6 +218,35 @@ jobs:
             echo "moving_tag=staging" >> "$GITHUB_OUTPUT"
             echo "tag_prefix=staging-" >> "$GITHUB_OUTPUT"
           fi
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # Full history and tags: git describe needs both.
+          fetch-depth: 0
+      # Resolved once here, then passed to the five image jobs. Each of them used to call `date`
+      # on its own, so a run straddling a minute produced images tagged inconsistently.
+      - name: Resolve the version
+        id: version
+        run: |
+          set -euo pipefail
+          if ! LAST_TAG=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null); then
+            echo "::error::no v* tag found - the first release has not been published yet."
+            exit 1
+          fi
+          # Trees are compared, not commits: promoting main to release creates a merge commit, so
+          # HEAD is never *on* the tag even when the content is identical.
+          if git diff --quiet "$LAST_TAG" HEAD; then
+            VERSION="${LAST_TAG#v}"
+            RELEASED=true
+          else
+            VERSION="$(git describe --tags --match 'v*' | sed 's/^v//')"
+            RELEASED=false
+          fi
+          {
+            echo "version=$VERSION"
+            echo "released=$RELEASED"
+          } >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION (released content: $RELEASED)"
 
   docker-api:
     permissions:
@@ -236,8 +267,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-      - name: Generate timestamp tag
-        run: echo "TAG=$(date +'${{ vars.TIME_TAG_FORMAT }}')" >> $GITHUB_ENV
       - name: Build and push Docker image for the api
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
@@ -246,7 +275,7 @@ jobs:
           push: true
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-api:${{ needs.changes.outputs.moving_tag }}
-            ${{ vars.DOCKERHUB_USERNAME }}/mawster-api:${{ needs.changes.outputs.tag_prefix }}${{ env.TAG }}
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-api:${{ needs.changes.outputs.tag_prefix }}${{ needs.changes.outputs.version }}
             ${{ needs.changes.outputs.also_staging == 'true' && format('{0}/mawster-api:staging', vars.DOCKERHUB_USERNAME) || '' }}
           cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-api:buildcache
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-api:buildcache,mode=max
@@ -270,8 +299,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-      - name: Generate timestamp tag
-        run: echo "TAG=$(date +'${{ vars.TIME_TAG_FORMAT }}')" >> $GITHUB_ENV
       - name: Build and push Docker image for the front
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
@@ -281,7 +308,7 @@ jobs:
           # Host-agnostic image: NEXT_PUBLIC_API_CLIENT_HOST is applied at runtime by run.sh (stack env).
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:${{ needs.changes.outputs.moving_tag }}
-            ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:${{ needs.changes.outputs.tag_prefix }}${{ env.TAG }}
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:${{ needs.changes.outputs.tag_prefix }}${{ needs.changes.outputs.version }}
             ${{ needs.changes.outputs.also_staging == 'true' && format('{0}/mawster-front:staging', vars.DOCKERHUB_USERNAME) || '' }}
           cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-front:buildcache
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-front:buildcache,mode=max
@@ -305,8 +332,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-      - name: Generate timestamp tag
-        run: echo "TAG=$(date +'${{ vars.TIME_TAG_FORMAT }}')" >> $GITHUB_ENV
       - name: Build and push Docker image for migrate
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
@@ -315,7 +340,7 @@ jobs:
           push: true
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:${{ needs.changes.outputs.moving_tag }}
-            ${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:${{ needs.changes.outputs.tag_prefix }}${{ env.TAG }}
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:${{ needs.changes.outputs.tag_prefix }}${{ needs.changes.outputs.version }}
             ${{ needs.changes.outputs.also_staging == 'true' && format('{0}/mawster-migrate:staging', vars.DOCKERHUB_USERNAME) || '' }}
           cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:buildcache
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-migrate:buildcache,mode=max
@@ -339,8 +364,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-      - name: Generate timestamp tag
-        run: echo "TAG=$(date +'${{ vars.TIME_TAG_FORMAT }}')" >> $GITHUB_ENV
       - name: Build and push Docker image for backup
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
@@ -349,7 +372,7 @@ jobs:
           push: true
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:${{ needs.changes.outputs.moving_tag }}
-            ${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:${{ needs.changes.outputs.tag_prefix }}${{ env.TAG }}
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:${{ needs.changes.outputs.tag_prefix }}${{ needs.changes.outputs.version }}
             ${{ needs.changes.outputs.also_staging == 'true' && format('{0}/mawster-backup:staging', vars.DOCKERHUB_USERNAME) || '' }}
           cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:buildcache
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-backup:buildcache,mode=max
@@ -373,8 +396,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-      - name: Generate timestamp tag
-        run: echo "TAG=$(date +'${{ vars.TIME_TAG_FORMAT }}')" >> $GITHUB_ENV
       - name: Build and push Docker image for static
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
@@ -383,7 +404,7 @@ jobs:
           push: true
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-static:${{ needs.changes.outputs.moving_tag }}
-            ${{ vars.DOCKERHUB_USERNAME }}/mawster-static:${{ needs.changes.outputs.tag_prefix }}${{ env.TAG }}
+            ${{ vars.DOCKERHUB_USERNAME }}/mawster-static:${{ needs.changes.outputs.tag_prefix }}${{ needs.changes.outputs.version }}
             ${{ needs.changes.outputs.also_staging == 'true' && format('{0}/mawster-static:staging', vars.DOCKERHUB_USERNAME) || '' }}
           cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-static:buildcache
           cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/mawster-static:buildcache,mode=max
@@ -408,6 +429,19 @@ jobs:
       needs.docker-backup.result != 'failure' &&
       needs.docker-static.result != 'failure'
     steps:
+      # The release PR must be merged before promoting: otherwise the promoted content is not the
+      # one behind the latest tag, and the images would ship under the previous version number.
+      - name: Require released content
+        if: needs.changes.outputs.released != 'true'
+        # Through `env:` rather than `${{ }}` inside `run:`, like the metadata job above: the
+        # version comes from a git tag, and a tag is a name someone can choose.
+        env:
+          VERSION: ${{ needs.changes.outputs.version }}
+        run: |
+          echo "::error::the content promoted to release does not match the latest tag" \
+               "($VERSION). Merge the 'chore(main): release' pull request on main," \
+               "then promote again."
+          exit 1
       - name: Deploy via SSH
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
         with:
@@ -459,6 +493,35 @@ jobs:
               --resolve-image always \
               -c stack-app.yaml \
               mawster
+
+      # After the deploy, not on release creation: what players care about is the moment the
+      # version is actually live.
+      - name: Announce the deploy on Discord
+        env:
+          VERSION: ${{ needs.changes.outputs.version }}
+          RELEASE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.changes.outputs.version }}
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          set -euo pipefail
+          # The secrets context is not readable from a step-level `if:`, hence the test here.
+          if [ -z "${WEBHOOK:-}" ]; then
+            echo "DISCORD_WEBHOOK is not configured - announcement skipped."
+            exit 0
+          fi
+          # jq builds the JSON: a release title containing a quote would break a hand-assembled
+          # payload.
+          payload=$(jq -n \
+            --arg version "$VERSION" \
+            --arg url "$RELEASE_URL" \
+            '{
+              embeds: [{
+                title: "Mawster \($version) est en ligne",
+                description: "Les nouveautés de cette version : [notes de release](\($url))",
+                url: $url,
+                color: 5793266
+              }]
+            }')
+          curl -sS -f -X POST -H "Content-Type: application/json" -d "$payload" "$WEBHOOK"
 
   deploy-staging:
     name: Deploy to staging
