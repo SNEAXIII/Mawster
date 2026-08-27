@@ -17,6 +17,7 @@ from src.dto.alliance.war.dto_war import (
     WarResponse,
     WarSynergyResponse,
 )
+from src.enums.WarStatus import WarStatus
 from src.Messages.war_messages import (
     ACTIVE_WAR_ALREADY_EXISTS,
     ASSIST_NO_ATTACKER_ASSIGNED,
@@ -59,7 +60,7 @@ from src.models.alliance.DefensePlacement import DefensePlacement
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.user.GameAccount import GameAccount
-from src.models.war.War import War, WarStatus
+from src.models.war.War import War
 from src.models.war.WarBan import WarBan
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.models.war.WarFightNote import WarFightNote

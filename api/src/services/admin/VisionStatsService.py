@@ -28,11 +28,13 @@ from src.dto.admin.dto_vision_stats import (
     VisionStatsResponse,
     VisionUserStat,
 )
+from src.enums.VisionImportStatus import VisionImportStatus
+from src.enums.VisionJobStatus import VisionJobStatus
 from src.models.Base import utcnow
 from src.models.user.GameAccount import GameAccount
 from src.models.user.User import User
-from src.models.vision.VisionImport import VisionImport, VisionImportStatus
-from src.models.vision.VisionJob import VisionJob, VisionJobStatus
+from src.models.vision.VisionImport import VisionImport
+from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
 
 # The leaderboard columns an admin may sort on. A whitelist rather than a

@@ -10,7 +10,7 @@ from src.dto.admin.dto_vision_stats import (
     PaginatedVisionUserStats,
     VisionStatsResponse,
 )
-from src.models.vision.VisionImport import VisionImportStatus
+from src.enums.VisionImportStatus import VisionImportStatus
 from src.services.admin.VisionStatsService import VisionStatsService
 from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep

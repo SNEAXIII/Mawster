@@ -5,9 +5,11 @@ from fastapi import HTTPException
 from sqlmodel import select
 
 from src.dto.account.game.dto_vision_result import VisionPredictionMessage, VisionResultMessage
+from src.enums.VisionImportStatus import VisionImportStatus
+from src.enums.VisionJobStatus import VisionJobStatus
 from src.Messages.vision_messages import JOB_NEVER_QUEUED
-from src.models.vision.VisionImport import VisionImport, VisionImportStatus
-from src.models.vision.VisionJob import VisionJob, VisionJobStatus
+from src.models.vision.VisionImport import VisionImport
+from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 from src.services.account.game.VisionResultService import VisionResultService
 

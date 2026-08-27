@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship, UniqueConstraint
 
-from src.models.Base import UUIDBase
+from src.models.Base import FK_CHAMPION, FK_SEASON, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.champion.Champion import Champion
@@ -14,8 +14,8 @@ class ChampionSagaRole(UUIDBase, table=True):
     __tablename__ = "champion_saga_role"
     __table_args__ = (UniqueConstraint("season_id", "champion_id", name="uq_saga_season_champion"),)
 
-    season_id: uuid.UUID = Field(foreign_key="season.id", index=True, ondelete="CASCADE")
-    champion_id: uuid.UUID = Field(foreign_key="champion.id", index=True, ondelete="CASCADE")
+    season_id: uuid.UUID = Field(foreign_key=FK_SEASON, index=True, ondelete="CASCADE")
+    champion_id: uuid.UUID = Field(foreign_key=FK_CHAMPION, index=True, ondelete="CASCADE")
     is_saga_attacker: bool = Field(default=False)
     is_saga_defender: bool = Field(default=False)
 

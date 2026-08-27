@@ -17,8 +17,10 @@ import pytest
 from fastapi import HTTPException
 
 from src.dto.account.game.dto_vision_upload import VisionScreenDeclaration
-from src.models.vision.VisionImport import VisionImport, VisionImportStatus
-from src.models.vision.VisionJob import VisionJob, VisionJobStatus
+from src.enums.VisionImportStatus import VisionImportStatus
+from src.enums.VisionJobStatus import VisionJobStatus
+from src.models.vision.VisionImport import VisionImport
+from src.models.vision.VisionJob import VisionJob
 from src.services.account.game.VisionImportService import (
     MAX_SCREEN_BYTES,
     MAX_SCREENS_PER_IMPORT,

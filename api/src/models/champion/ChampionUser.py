@@ -1,22 +1,18 @@
-import uuid
 from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship
 
-from src.models.Base import Ascension, Rank, Stars, UUIDBase
+from src.models.Base import Ascension, ChampionFk, GameAccountFk, Rank, Stars, UUIDBase
 
 if TYPE_CHECKING:
-    from src.models.GameAccount import GameAccount
-
     from src.models.champion.Champion import Champion
     from src.models.champion.RequestedUpgrade import RequestedUpgrade
+    from src.models.user.GameAccount import GameAccount
 
 
-class ChampionUser(UUIDBase, table=True):
+class ChampionUser(UUIDBase, ChampionFk, GameAccountFk, table=True):
     __tablename__ = "champion_user"
 
-    game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
-    champion_id: uuid.UUID = Field(foreign_key="champion.id")
     stars: Stars = 7
     rank: Rank = 1
     signature: int = Field(default=0, ge=0, le=200)

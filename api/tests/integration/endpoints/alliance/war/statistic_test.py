@@ -7,9 +7,10 @@ import pytest
 from main import app
 from src.enums.Roles import Roles
 from src.enums.SeasonStatus import SeasonStatus
+from src.enums.WarStatus import WarStatus
 from src.models.user.GameAccount import GameAccount
 from src.models.war.Season import Season
-from src.models.war.War import War, WarStatus
+from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.models.war.WarFightRecord import WarFightRecord
 from src.utils.db import get_session

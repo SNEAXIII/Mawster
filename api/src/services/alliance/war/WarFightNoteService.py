@@ -5,8 +5,9 @@ from sqlmodel import and_, select
 from starlette import status
 
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
+from src.enums.WarStatus import WarStatus
 from src.models.Base import utcnow
-from src.models.war.War import War, WarStatus
+from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.models.war.WarFightNote import WarFightNote
 from src.models.war.WarFightNoteRevision import WarFightNoteRevision

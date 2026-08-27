@@ -14,13 +14,14 @@ from src.dto.player.dto_player_stats import (
     RatioEvolutionPoint,
 )
 from src.enums.SeasonStatus import SeasonStatus
+from src.enums.WarStatus import WarStatus
 from src.models.alliance.Alliance import Alliance
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.user.GameAccount import GameAccount
 from src.models.user.User import User
 from src.models.war.Season import Season
-from src.models.war.War import War, WarStatus
+from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.models.war.WarFightRecord import WarFightRecord
 from src.services.alliance.war._stat_expressions import (

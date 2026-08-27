@@ -10,10 +10,10 @@ from src.dto.alliance.war.dto_statistic import (
     ChampionUsageResponse,
     PlayerSeasonStatsResponse,
 )
+from src.enums.WarStatus import WarStatus
 from src.models import ChampionUser, GameAccount, User, War, WarDefensePlacement
 from src.models.alliance.Alliance import Alliance
 from src.models.champion.Champion import Champion
-from src.models.war.War import WarStatus
 from src.models.war.WarFightRecord import WarFightRecord
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.war._stat_expressions import (

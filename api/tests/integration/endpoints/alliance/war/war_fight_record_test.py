@@ -9,11 +9,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
 from src.enums.Roles import Roles
 from src.enums.SeasonStatus import SeasonStatus
+from src.enums.WarStatus import WarStatus
 from src.models import User
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.war.Season import Season
-from src.models.war.War import War, WarStatus
+from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.models.war.WarFightNote import WarFightNote
 from src.models.war.WarFightPrefight import WarFightPrefight

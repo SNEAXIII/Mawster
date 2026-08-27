@@ -8,8 +8,9 @@ from fastapi import HTTPException
 
 from main import app
 from src.enums.SeasonStatus import SeasonStatus
+from src.enums.WarStatus import WarStatus
 from src.models.war.Season import Season
-from src.models.war.War import War, WarStatus
+from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.models.war.WarFightRecord import WarFightRecord as _WFR
 from src.services.PlayerStatsService import PlayerStatsService

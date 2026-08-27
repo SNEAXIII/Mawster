@@ -4,7 +4,15 @@ from typing import TYPE_CHECKING
 import sqlalchemy as sa
 from sqlmodel import Field, Relationship
 
-from src.models.Base import Battlegroup, NodeNumber, TimestampMixin, UUIDBase
+from src.models.Base import (
+    FK_WAR,
+    Battlegroup,
+    ChampionUserFk,
+    GameAccountFk,
+    NodeNumber,
+    TimestampMixin,
+    UUIDBase,
+)
 
 if TYPE_CHECKING:
     from src.models.champion.ChampionUser import ChampionUser
@@ -12,7 +20,7 @@ if TYPE_CHECKING:
     from src.models.war.War import War
 
 
-class WarPrefightAttacker(UUIDBase, TimestampMixin, table=True):
+class WarPrefightAttacker(UUIDBase, ChampionUserFk, TimestampMixin, GameAccountFk, table=True):
     __tablename__ = "war_prefight_attacker"
     __table_args__ = (
         sa.UniqueConstraint(
@@ -24,10 +32,8 @@ class WarPrefightAttacker(UUIDBase, TimestampMixin, table=True):
         ),
     )
 
-    war_id: uuid.UUID = Field(foreign_key="war.id")
+    war_id: uuid.UUID = Field(foreign_key=FK_WAR)
     battlegroup: Battlegroup
-    game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
-    champion_user_id: uuid.UUID = Field(foreign_key="champion_user.id")
     target_node_number: NodeNumber
 
     # Relations
