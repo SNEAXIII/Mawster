@@ -21,6 +21,7 @@ FLAGS = ("is_ascendable", "has_prefight", "is_saga_attacker", "is_saga_defender"
 ALLOWED_ROOT = Path(__file__).resolve().parents[2]
 
 
+# TODO reduce complexity
 def _split_rows(seg: str):
     rows, i, n = [], 0, len(seg)
     while i < n:

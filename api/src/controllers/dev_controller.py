@@ -283,31 +283,33 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
             )
             account_id = str(acc.id)
 
-            # 5a. Create alliance
-            if spec.create_alliance:
-                alliance = await AllianceService.create_alliance(
-                    session,
-                    name=spec.create_alliance.name,
-                    tag=spec.create_alliance.tag,
-                    owner_id=acc.id,
-                    current_user_id=user.id,
-                )
-                alliance_id = str(alliance.id)
+        # This step depends on step 4, flattened to reduce cognitive complexity
+        # 5a. Create alliance
+        if spec.create_alliance:
+            alliance = await AllianceService.create_alliance(
+                session,
+                name=spec.create_alliance.name,
+                tag=spec.create_alliance.tag,
+                owner_id=acc.id,
+                current_user_id=user.id,
+            )
+            alliance_id = str(alliance.id)
 
-            # 5b. Force-join another user's alliance
-            elif spec.join_alliance_token:
-                ref = results.get(spec.join_alliance_token)
-                if ref and ref.alliance_id:
-                    acc.alliance_id = uuid.UUID(ref.alliance_id)
-                    session.add(acc)
-                    await session.commit()
-                    alliance_id = ref.alliance_id
+        # 5b. Force-join another user's alliance
+        elif spec.join_alliance_token:
+            ref = results.get(spec.join_alliance_token)
+            if ref and ref.alliance_id:
+                acc.alliance_id = uuid.UUID(ref.alliance_id)
+                session.add(acc)
+                await session.commit()
+                alliance_id = ref.alliance_id
 
-            # 6. Assign battlegroup
-            if spec.battlegroup is not None and alliance_id:
-                await AllianceService.set_member_group(
-                    session, uuid.UUID(alliance_id), acc.id, spec.battlegroup
-                )
+        # This step depends on step 4, flattened to reduce cognitive complexity
+        # 6. Assign battlegroup
+        if spec.battlegroup is not None and alliance_id:
+            await AllianceService.set_member_group(
+                session, uuid.UUID(alliance_id), acc.id, spec.battlegroup
+            )
 
         results[spec.discord_token] = SetupUserResult(
             access_token=access_token,
@@ -489,6 +491,8 @@ async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session
 # scripts/e2e_parallel.py slices backend.log on these markers, so a newline in a title
 # would forge a second marker and mis-attribute every line after it.
 MAX_LOG_TITLE = 200
+# C0, DEL and C1 — everything a terminal treats as an instruction rather than text.
+_CONTROL_CHARS = dict.fromkeys(list(range(32)) + list(range(127, 160)))
 
 
 class LogMarkerRequest(BaseModel):
@@ -498,17 +502,25 @@ class LogMarkerRequest(BaseModel):
 
     @field_validator("title")
     @classmethod
-    def keep_title_on_one_line(cls, value: str) -> str:
-        """Collapse every run of whitespace — newlines included — and cap the length."""
-        return " ".join(value.split())[:MAX_LOG_TITLE]
+    def keep_title_printable_and_on_one_line(cls, value: str) -> str:
+        """Collapse whitespace runs, drop control characters, cap the length.
+
+        split() handles the newline that would forge a marker, but ESC and BEL are not
+        whitespace to Python: left in, they reach whoever tails backend.log and drive
+        their terminal.
+        """
+        collapsed = " ".join(value.split())
+        return collapsed.translate(_CONTROL_CHARS)[:MAX_LOG_TITLE]
 
 
 @dev_controller.post("/log-marker", status_code=200)
 async def log_test_marker(body: LogMarkerRequest):
     """Write a test boundary marker into the backend log. Testing only."""
     if body.event == "start":
-        logger.info("===TEST_START=== %s", body.title)
+        # NOSONAR S5145 — title is sanitised by the field validator above; Sonar's
+        # taint engine does not recognise a Pydantic validator as a sanitiser.
+        logger.info("===TEST_START=== %s", body.title)  # NOSONAR
     else:
         state = "PASS" if body.passed else "FAIL"
-        logger.info("===TEST_END=== %s %s", body.title, state)
+        logger.info("===TEST_END=== %s %s", body.title, state)  # NOSONAR
     return {"ok": True}
