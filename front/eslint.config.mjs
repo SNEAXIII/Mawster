@@ -8,11 +8,7 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   prettierConfig,
-  // Accessibility. Without this, a mouse-only control reaches production and comes back
-  // as a Sonar finding days later; here it fails the pre-commit hook instead.
-  // Installed with --legacy-peer-deps: 6.10.2 caps its peer range at eslint 9 and no
-  // release supports 10 yet. Verified to run and to flag the real cases under eslint 10 —
-  // drop the override once upstream widens the range.
+  // jsx-a11y peers on eslint <=9; the package.json override reconciles it with our 10.
   jsxA11y.flatConfigs.recommended,
   {
     plugins: {
