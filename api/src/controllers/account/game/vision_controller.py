@@ -22,6 +22,7 @@ from src.Messages.vision_messages import (
     JOB_NOT_RETRYABLE,
     NOT_YOUR_VISION_IMPORT,
     VISION_CROP_NOT_FOUND,
+    VISION_DISABLED,
     VISION_IMPORT_NOT_FOUND,
     VISION_JOB_NOT_FOUND,
 )
@@ -31,7 +32,7 @@ from src.models import User
 from src.models.user.GameAccount import GameAccount
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
-from src.security.secrets import SECRET
+from src.security.secrets import SECRET, VISION_ENABLED
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.account.game.VisionDatasetService import ConfirmedRow
 from src.services.account.game.VisionImportService import VisionImportService
@@ -41,10 +42,22 @@ from src.storage import get_storage
 from src.storage.base import Storage, sprite_key
 from src.utils.db import SessionDep
 
+VISION_DISABLED_EXCEPTION = HTTPException(
+    status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=VISION_DISABLED
+)
+
+
+def _require_vision_enabled() -> None:
+    """Sur un déploiement sans RustFS ni broker, un 503 franc vaut mieux que des
+    URLs présignées vers un endpoint qui n'existe pas."""
+    if not VISION_ENABLED:
+        raise VISION_DISABLED_EXCEPTION
+
+
 vision_controller = APIRouter(
     prefix="/vision",
     tags=["Vision"],
-    dependencies=[Depends(AuthService.get_current_user_in_jwt)],
+    dependencies=[Depends(AuthService.get_current_user_in_jwt), Depends(_require_vision_enabled)],
 )
 
 MAX_IMPORTS_PER_HOUR = 10
