@@ -12,8 +12,9 @@ from src.dto.account.game.dto_vision_result import (
     VisionPredictionMessage,
     VisionResultMessage,
 )
+from src.enums.VisionImportStatus import VisionImportStatus
 from src.messaging import get_publisher
-from src.models.vision.VisionImport import VisionImport, VisionImportStatus
+from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.security.secrets import SECRET
 from src.services.account.game.VisionImportService import UPLOAD_URL_TTL_SECONDS

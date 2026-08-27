@@ -18,6 +18,8 @@ from src.dto.account.game.dto_vision_upload import (
     VisionScreenDeclaration,
     VisionUploadTarget,
 )
+from src.enums.VisionImportStatus import VisionImportStatus
+from src.enums.VisionJobStatus import VisionJobStatus
 from src.Messages.vision_messages import (
     BROKER_UNAVAILABLE,
     JOB_NEVER_QUEUED,
@@ -32,8 +34,8 @@ from src.Messages.vision_messages import (
 )
 from src.messaging.publisher import VisionPublisher
 from src.models.user.GameAccount import GameAccount
-from src.models.vision.VisionImport import VisionImport, VisionImportStatus
-from src.models.vision.VisionJob import VisionJob, VisionJobStatus
+from src.models.vision.VisionImport import VisionImport
+from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
 from src.security.secrets import SECRET
 from src.services.account.game.VisionDatasetService import ConfirmedRow, VisionDatasetService

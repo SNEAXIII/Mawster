@@ -3,8 +3,10 @@ import uuid
 import pytest
 from sqlmodel import select
 
-from src.models.vision.VisionImport import VisionImport, VisionImportStatus
-from src.models.vision.VisionJob import VisionJob, VisionJobStatus
+from src.enums.VisionImportStatus import VisionImportStatus
+from src.enums.VisionJobStatus import VisionJobStatus
+from src.models.vision.VisionImport import VisionImport
+from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
 from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 from src.models.vision.VisionSample import VisionSample

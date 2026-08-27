@@ -2,7 +2,8 @@
 
 import uuid
 
-from src.models.war.War import War, WarStatus
+from src.enums.WarStatus import WarStatus
+from src.models.war.War import War
 from src.services.alliance.RankingHistoryService import RankingHistoryService
 
 

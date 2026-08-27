@@ -6,9 +6,11 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from main import app
+from src.enums.VisionImportStatus import VisionImportStatus
+from src.enums.VisionJobStatus import VisionJobStatus
 from src.models.Base import utcnow
-from src.models.vision.VisionImport import VisionImport, VisionImportStatus
-from src.models.vision.VisionJob import VisionJob, VisionJobStatus
+from src.models.vision.VisionImport import VisionImport
+from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import push_game_account

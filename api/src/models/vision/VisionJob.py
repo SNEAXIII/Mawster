@@ -1,27 +1,14 @@
 import uuid
-from enum import Enum
 from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship
 
+from src.enums.VisionJobStatus import VisionJobStatus
 from src.models.Base import TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.vision.VisionImport import VisionImport
     from src.models.vision.VisionPrediction import VisionPrediction
-
-
-class VisionJobStatus(str, Enum):
-    # The row exists, the browser has not uploaded its screenshot yet. Distinct
-    # from PENDING on purpose: PENDING means "queued, object is in the bucket",
-    # and VisionReaperService republishes every PENDING job at startup. Reusing
-    # PENDING here would make the reaper queue jobs whose object does not exist,
-    # and the worker would fail every one of them.
-    AWAITING_UPLOAD = "awaiting_upload"
-    PENDING = "pending"
-    RUNNING = "running"
-    DONE = "done"
-    FAILED = "failed"
 
 
 class VisionJob(UUIDBase, TimestampMixin, table=True):

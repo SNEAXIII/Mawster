@@ -1,17 +1,11 @@
 import uuid
 from datetime import datetime
-from enum import Enum
 from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship
 
+from src.enums.WarStatus import WarStatus
 from src.models.Base import AllianceFk, SeasonFk, TimestampMixin, UUIDBase
-
-
-class WarStatus(str, Enum):
-    active = "active"
-    ended = "ended"
-
 
 if TYPE_CHECKING:
     from src.models.alliance.Alliance import Alliance

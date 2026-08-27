@@ -2,8 +2,9 @@ import uuid
 
 import pytest
 
+from src.enums.VisionJobStatus import VisionJobStatus
 from src.messaging.topology import MAX_ATTEMPTS
-from src.models.vision.VisionJob import VisionJob, VisionJobStatus
+from src.models.vision.VisionJob import VisionJob
 from src.services.account.game.VisionReaperService import VisionReaperService
 
 

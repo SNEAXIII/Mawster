@@ -1,8 +1,9 @@
 from sqlalchemy import func
 from sqlmodel import select
 
+from src.enums.WarStatus import WarStatus
 from src.models.alliance.Alliance import Alliance
-from src.models.war.War import War, WarStatus
+from src.models.war.War import War
 from src.services.knowledge.FightRecordService import FightRecordService
 from src.utils.db import SessionDep
 

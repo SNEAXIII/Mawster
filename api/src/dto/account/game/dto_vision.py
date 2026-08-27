@@ -3,8 +3,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from src.models.vision.VisionImport import VisionImportStatus
-from src.models.vision.VisionJob import VisionJobStatus
+from src.enums.VisionImportStatus import VisionImportStatus
+from src.enums.VisionJobStatus import VisionJobStatus
 
 
 class VisionJobResponse(BaseModel):

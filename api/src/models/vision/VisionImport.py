@@ -1,25 +1,13 @@
-from enum import Enum
 from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship
 
+from src.enums.VisionImportStatus import VisionImportStatus
 from src.models.Base import GameAccountFk, TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.user.GameAccount import GameAccount
     from src.models.vision.VisionJob import VisionJob
-
-
-class VisionImportStatus(str, Enum):
-    # Presigned URLs handed out, screenshots not uploaded yet. The import is not
-    # runnable and not reviewable — only `commit` moves it to PENDING.
-    AWAITING_UPLOAD = "awaiting_upload"
-    PENDING = "pending"
-    RUNNING = "running"
-    DONE = "done"
-    FAILED = "failed"
-    CONFIRMED = "confirmed"
-    CANCELLED = "cancelled"
 
 
 class VisionImport(UUIDBase, TimestampMixin, GameAccountFk, table=True):

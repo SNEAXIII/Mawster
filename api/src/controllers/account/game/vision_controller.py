@@ -14,6 +14,7 @@ from src.dto.account.game.dto_vision import (
 from src.dto.account.game.dto_vision_current import CurrentVisionImportResponse
 from src.dto.account.game.dto_vision_predictions import VisionPredictionsResponse
 from src.dto.account.game.dto_vision_upload import VisionInitRequest, VisionInitResponse
+from src.enums.VisionJobStatus import VisionJobStatus
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND, NOT_YOUR_GAME_ACCOUNT
 from src.Messages.vision_messages import (
     IMPORT_ALREADY_PENDING,
@@ -29,7 +30,7 @@ from src.messaging.publisher import VisionPublisher
 from src.models import User
 from src.models.user.GameAccount import GameAccount
 from src.models.vision.VisionImport import VisionImport
-from src.models.vision.VisionJob import VisionJob, VisionJobStatus
+from src.models.vision.VisionJob import VisionJob
 from src.security.secrets import SECRET
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.account.game.VisionDatasetService import ConfirmedRow
