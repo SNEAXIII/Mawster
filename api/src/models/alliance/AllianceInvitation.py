@@ -6,20 +6,19 @@ from sqlmodel import Field, Relationship
 
 from src.enums.InvitationStatus import InvitationStatus
 from src.enums.InvitationType import InvitationType
-from src.models.Base import TimestampMixin, UUIDBase
+from src.models.Base import GameAccountFk, TimestampMixin, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.alliance.Alliance import Alliance
     from src.models.user.GameAccount import GameAccount
 
 
-class AllianceInvitation(UUIDBase, TimestampMixin, table=True):
+class AllianceInvitation(UUIDBase, TimestampMixin, GameAccountFk, table=True):
     """An invitation for a game account to join or visit an alliance."""
 
     __tablename__ = "alliance_invitation"
 
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
-    game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     invited_by_game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     status: InvitationStatus = Field(default=InvitationStatus.PENDING)
     type: InvitationType = Field(default=InvitationType.MEMBER)

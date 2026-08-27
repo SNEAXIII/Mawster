@@ -6,6 +6,7 @@ from sqlmodel import Field, Relationship
 from src.models.Base import (
     Ascension,
     Battlegroup,
+    GameAccountFk,
     KoCount,
     NodeNumber,
     Rank,
@@ -24,13 +25,12 @@ if TYPE_CHECKING:
     from src.models.war.WarFightSynergy import WarFightSynergy
 
 
-class WarFightRecord(UUIDBase, TimestampMixin, table=True):
+class WarFightRecord(UUIDBase, TimestampMixin, GameAccountFk, table=True):
     __tablename__ = "war_fight_record"
 
     war_id: uuid.UUID = Field(foreign_key="war.id")
     alliance_id: uuid.UUID = Field(foreign_key="alliance.id")
     season_id: uuid.UUID | None = Field(default=None, foreign_key="season.id")
-    game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
     battlegroup: Battlegroup
     node_number: NodeNumber
     tier: int

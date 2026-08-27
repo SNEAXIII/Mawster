@@ -36,6 +36,10 @@ class UUIDBase(SQLModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
 
 
+class GameAccountFk(SQLModel):
+    game_account_id: uuid.UUID = Field(foreign_key="game_account.id")
+
+
 class TimestampMixin(SQLModel):
     """Adds a timezone-aware UTC ``created_at`` column.
 
