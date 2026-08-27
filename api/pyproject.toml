@@ -2,7 +2,7 @@
 name = "mawster-api"
 # Bumped by release-please. uv.lock mirrors this field, so the release workflow refreshes the
 # lock on the release pull request - otherwise `uv sync --locked` fails there.
-version = "1.5.0"
+version = "1.6.0"
 description = "Mawster API - MCOC Alliance Management"
 license = "AGPL-3.0-or-later"
 requires-python = ">=3.12"
