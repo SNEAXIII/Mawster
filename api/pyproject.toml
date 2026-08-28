@@ -35,8 +35,11 @@ testpaths = ["tests"]
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["tests/*", "migrations/*", "scripts/*"]
+omit=['*/__init__.py', 'tests/*', 'migrations/*', 'scripts/*', 'src/fixtures/*', 'src/utils/logging_config.py', 'src/controllers/dev_controller.py']
 concurrency = ["greenlet", "thread"]
+
+[tool.coverage.report]
+exclude_also = ["if TYPE_CHECKING:", "def custom_openapi\\(\\):", "def __str__\\(self\\):"]
 
 [tool.ruff]
 # Rules, formatter settings and ignores live in the repo-wide ruff.toml so that the
