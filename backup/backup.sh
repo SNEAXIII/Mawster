@@ -51,9 +51,9 @@ echo "[backup] Local: purged files older than ${RETENTION_DAYS} days"
 # ── 3. Local purge: by size ───────────────────────────────────────────────────
 while true; do
   TOTAL=$(du -sb "${BACKUP_DIR}" 2>/dev/null | cut -f1)
-  [ "${TOTAL:-0}" -le "$MAX_LOCAL_BYTES" ] && break
+  [[ "${TOTAL:-0}" -le "$MAX_LOCAL_BYTES" ]] && break
   OLDEST=$(ls -t "${BACKUP_DIR}"/${BACKUP_PREFIX}_*.sql.gz 2>/dev/null | tail -1)
-  [ -z "$OLDEST" ] && break
+  [[ -z "$OLDEST" ]] && break
   echo "[backup] Local over limit ($(( TOTAL / 1024 / 1024 )) MB), deleting: $(basename "$OLDEST")"
   rm "$OLDEST"
 done
@@ -70,10 +70,10 @@ if [[ "$BACKUP_REMOTE_ENABLED" = "true" ]]; then
 
   # ── 6. Remote purge: by size ────────────────────────────────────────────────
   REMOTE_SIZE=$(rclone size "${RCLONE_REMOTE}/" --json 2>/dev/null | grep -o '"bytes":[0-9]*' | cut -d: -f2)
-  while [ "${REMOTE_SIZE:-0}" -gt "$MAX_REMOTE_BYTES" ]; do
+  while [[ "${REMOTE_SIZE:-0}" -gt "$MAX_REMOTE_BYTES" ]]; do
     OLDEST_REMOTE=$(rclone lsf "${RCLONE_REMOTE}/" --format "tp" --separator "|" --files-only 2>/dev/null \
       | sort | head -1 | cut -d'|' -f2)
-    [ -z "$OLDEST_REMOTE" ] && break
+    [[ -z "$OLDEST_REMOTE" ]] && break
     echo "[backup] Remote over limit ($(( REMOTE_SIZE / 1024 / 1024 )) MB), deleting: $OLDEST_REMOTE"
     rclone deletefile "${RCLONE_REMOTE}/${OLDEST_REMOTE}" --drive-use-trash=false
     REMOTE_SIZE=$(rclone size "${RCLONE_REMOTE}/" --json 2>/dev/null | grep -o '"bytes":[0-9]*' | cut -d: -f2)
