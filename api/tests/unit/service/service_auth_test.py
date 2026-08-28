@@ -6,8 +6,8 @@ from src.Messages.jwt_messages import (
     JwtError,
 )
 from src.models import User
+from src.services.auth import JWTService
 from src.services.auth.AuthService import AuthService
-from tests.unit.service.mocks.jwt_mock import decode_service_mock
 from tests.unit.service.mocks.session_mock import session_mock
 from tests.unit.service.mocks.users_mock import get_user_with_validity_check_mock
 from tests.utils.utils_constant import (
@@ -18,6 +18,14 @@ from tests.utils.utils_constant import (
     UNKNOWN_ROLE,
     USER_ID,
 )
+
+
+def decode_service_mock(mocker, return_value: dict[str, str] | None):
+    return mocker.patch.object(
+        JWTService,
+        "decode_jwt",
+        return_value=return_value,
+    )
 
 
 @pytest.mark.asyncio
