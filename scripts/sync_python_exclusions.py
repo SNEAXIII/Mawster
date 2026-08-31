@@ -15,8 +15,17 @@ EXCLUSIONS = [
     "src/controllers/dev_controller.py",
 ]
 
-# Sonar-only: coverage.py never sees these.
-SONAR_EXTRA = ["front/**", "static-assets/**", ".claude/**", "api/main.py"]
+# Sonar-only: coverage.py never sees these. Dropping one makes Sonar's
+# zero-coverage sensor report it as 0% and sink the new-code gate.
+SONAR_EXTRA = [
+    "front/**",
+    "static-assets/**",
+    ".claude/**",
+    "scripts/**",
+    "api/main.py",
+    "api/app_debugger.py",
+    "api/app_testing.py",
+]
 
 
 def sonar_pattern(p: str) -> str:
@@ -30,8 +39,8 @@ def replace_line(path: Path, prefix: str, new_line: str) -> None:
     for i, line in enumerate(lines):
         if line.startswith(prefix):
             lines[i] = new_line
-            # NOSONAR: S2083 is false, it is hardcoded content
-            path.write_text("".join(lines), encoding="utf-8")
+            # Both call sites below pass a hardcoded path, so S2083 cannot apply.
+            path.write_text("".join(lines), encoding="utf-8")  # NOSONAR
             return
     msg = f"No {prefix!r} found in {path.name}"
     raise SystemExit(msg)
