@@ -1,0 +1,3322 @@
+[
+  {
+    "id": "abomination",
+    "name": "Abomination",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/abomination.png",
+    "alias": "abo",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "abomination-immortal",
+    "name": "Abomination (Immortal)",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/abomination_immortal.png",
+    "alias": "abo immo",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "absorbing-man",
+    "name": "Absorbing Man",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/absorbing_man.png",
+    "alias": "absman;ab",
+    "isAscendable": false,
+    "hasPrefight": true,
+    "isSevenStar": true
+  },
+  {
+    "id": "adam-warlock",
+    "name": "Adam Warlock",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/adam_warlock.png",
+    "alias": "AW",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "aegon",
+    "name": "Ægon",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/gon.png",
+    "alias": "aegon",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "agatha-harkness",
+    "name": "Agatha Harkness",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/agatha_harkness.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "agent-venom",
+    "name": "Agent Venom",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/agent_venom.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "air-walker",
+    "name": "Air-Walker",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/air-walker.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "america-chavez",
+    "name": "America Chavez",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/america_chavez.png",
+    "alias": "AC",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "angela",
+    "name": "Angela",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/angela.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "annihilus",
+    "name": "Annihilus",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/annihilus.png",
+    "alias": "anni",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "ant-man",
+    "name": "Ant-Man",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/ant-man.png",
+    "alias": "AntMan;Ant Man",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "ant-man-future",
+    "name": "Ant-Man (Future)",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/ant-man_future.png",
+    "alias": "fantman;AntMan;Ant Man;fam",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "anti-venom",
+    "name": "Anti-Venom",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/anti-venom.png",
+    "alias": "AntiVenom;Anti Venom;AV",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "anti-venomoid",
+    "name": "Anti-Venomoid",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/anti-venomoid.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "apocalypse",
+    "name": "Apocalypse",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/apocalypse.png",
+    "alias": "apo",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "arcade",
+    "name": "Arcade",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/arcade.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "archangel",
+    "name": "Archangel",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/archangel.png",
+    "alias": "aa",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "arnim-zola",
+    "name": "Arnim Zola",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/arnim_zola.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": true,
+    "isSevenStar": true
+  },
+  {
+    "id": "attuma",
+    "name": "Attuma",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/attuma.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "baron-zemo",
+    "name": "Baron Zemo",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/baron_zemo.png",
+    "alias": "zemo",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "bastion",
+    "name": "Bastion",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/bastion.png",
+    "alias": "bast",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "beast",
+    "name": "Beast",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/beast.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "beta-ray-bill",
+    "name": "Beta Ray Bill",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/beta_ray_bill.png",
+    "alias": "brb",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "bishop",
+    "name": "Bishop",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/bishop.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "black-bolt",
+    "name": "Black Bolt",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/black_bolt.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "black-cat",
+    "name": "Black Cat",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/black_cat.png",
+    "alias": "bc",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "black-panther",
+    "name": "Black Panther",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/black_panther.png",
+    "alias": "bp",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "black-panther-civil-war",
+    "name": "Black Panther (Civil War)",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/black_panther_civil_war.png",
+    "alias": "bpcw",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "black-tarantula",
+    "name": "Black Tarantula",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/black_tarantula.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "black-widow",
+    "name": "Black Widow",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/black_widow.png",
+    "alias": "bw",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "black-widow-claire-voyant",
+    "name": "Black Widow (Claire Voyant)",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/black_widow_claire_voyant.png",
+    "alias": "bwcv",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "black-widow-deadly-origin",
+    "name": "Black Widow (Deadly Origin)",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/black_widow_deadly_origin.png",
+    "alias": "bwdo",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "blade",
+    "name": "Blade",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/blade.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "blade-stellar-forged",
+    "name": "Blade (Stellar-Forged)",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/blade_stellar-forged.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "blue-marvel",
+    "name": "Blue Marvel",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/blue_marvel.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "bullseye",
+    "name": "Bullseye",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/bullseye.png",
+    "alias": "bull",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "cable",
+    "name": "Cable",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/cable.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "captain-america",
+    "name": "Captain America",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/captain_america.png",
+    "alias": "cap",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "captain-america-infinity-war",
+    "name": "Captain America (Infinity War)",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/captain_america_infinity_war.png",
+    "alias": "cap iw",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "captain-america-sam-wilson",
+    "name": "Captain America (Sam Wilson)",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/captain_america_sam_wilson.png",
+    "alias": "cap sw",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "captain-america-wwii",
+    "name": "Captain America (WWII)",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/captain_america_wwii.png",
+    "alias": "cap ww",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "captain-britain",
+    "name": "Captain Britain",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/captain_britain.png",
+    "alias": "cbr",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "captain-marvel",
+    "name": "Captain Marvel",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/captain_marvel.png",
+    "alias": "cm",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "captain-marvel-classic",
+    "name": "Captain Marvel (Classic)",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/captain_marvel_classic.png",
+    "alias": "cmc",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "carnage",
+    "name": "Carnage",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/carnage.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "cassandra-nova",
+    "name": "Cassandra Nova",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/cassandra_nova.png",
+    "alias": "cn",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "cassie-lang",
+    "name": "Cassie Lang",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/cassie_lang.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "chee-ilth",
+    "name": "Chee'ilth",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/chee_ilth.png",
+    "alias": "chee",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "civil-warrior",
+    "name": "Civil Warrior",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/civil_warrior.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "colossus",
+    "name": "Colossus",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/colossus.png",
+    "alias": "colo",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "corvus-glaive",
+    "name": "Corvus Glaive",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/corvus_glaive.png",
+    "alias": "corvus",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "cosmic-ghost-rider",
+    "name": "Cosmic Ghost Rider",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/cosmic_ghost_rider.png",
+    "alias": "CGR",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "count-nefaria",
+    "name": "Count Nefaria",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/count_nefaria.png",
+    "alias": "cnf",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "crossbones",
+    "name": "Crossbones",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/crossbones.png",
+    "alias": "xbones;cross",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "cull-obsidian",
+    "name": "Cull Obsidian",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/cull_obsidian.png",
+    "alias": "cull",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "cyclops-blue-team",
+    "name": "Cyclops (Blue Team)",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/cyclops_blue_team.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "cyclops-new-xavier-school",
+    "name": "Cyclops (New Xavier School)",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/cyclops_new_xavier_school.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "dani-moonstar",
+    "name": "Dani Moonstar",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/dani_moonstar.png",
+    "alias": "dani;danimidstar",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "daredevil-classic",
+    "name": "Daredevil (Classic)",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/daredevil_classic.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "daredevil-hell-s-kitchen",
+    "name": "Daredevil (Hell's Kitchen)",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/daredevil_hell_s_kitchen.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "dark-phoenix",
+    "name": "Dark Phoenix",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/dark_phoenix.png",
+    "alias": "dp",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "darkhawk",
+    "name": "Darkhawk",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/darkhawk.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "dazzler",
+    "name": "Dazzler",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/dazzler.png",
+    "alias": "piou;dazzgoat",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "deadpool",
+    "name": "Deadpool",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/deadpool.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "deadpool-x-force",
+    "name": "Deadpool (X-Force)",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/deadpool_x-force.png",
+    "alias": "dpxf",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "diablo",
+    "name": "Diablo",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/diablo.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "doctor-bong",
+    "name": "Doctor Bong",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/doctor_bong.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "doctor-doom",
+    "name": "Doctor Doom",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/doctor_doom.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "doctor-octopus",
+    "name": "Doctor Octopus",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/doctor_octopus.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "doctor-strange",
+    "name": "Doctor Strange",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/doctor_strange.png",
+    "alias": "strange",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "doctor-voodoo",
+    "name": "Doctor Voodoo",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/doctor_voodoo.png",
+    "alias": "vodoo",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "domino",
+    "name": "Domino",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/domino.png",
+    "alias": "domi",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "doombot",
+    "name": "Doombot",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/doombot.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "dormammu",
+    "name": "Dormammu",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/dormammu.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "dracula",
+    "name": "Dracula",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/dracula.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "dragon-man",
+    "name": "Dragon Man",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/dragon_man.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "drax",
+    "name": "Drax",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/drax.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "dust",
+    "name": "Dust",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/dust.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "ebony-maw",
+    "name": "Ebony Maw",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/ebony_maw.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "electro",
+    "name": "Electro",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/electro.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "elektra",
+    "name": "Elektra",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/elektra.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "elsa-bloodstone",
+    "name": "Elsa Bloodstone",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/elsa_bloodstone.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "emma-frost",
+    "name": "Emma Frost",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/emma_frost.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "enchantress",
+    "name": "Enchantress",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/enchantress.png",
+    "alias": "amora",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "falcon",
+    "name": "Falcon",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/falcon.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "falcon-joaquin-torres",
+    "name": "Falcon (Joaquín Torres)",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/falcon_joaqu_n_torres.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "franken-castle",
+    "name": "Franken-Castle",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/franken-castle.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "galan",
+    "name": "Galan",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/galan.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": true,
+    "isSevenStar": true
+  },
+  {
+    "id": "gambit",
+    "name": "Gambit",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/gambit.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "gamora",
+    "name": "Gamora",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/gamora.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "gentle",
+    "name": "Gentle",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/gentle.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "ghost",
+    "name": "Ghost",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/ghost.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "ghost-rider",
+    "name": "Ghost Rider",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/ghost_rider.png",
+    "alias": "gr",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "gladiator",
+    "name": "Gladiator",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/gladiator.png",
+    "alias": "glad",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "goldpool",
+    "name": "Goldpool",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/goldpool.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "gorr",
+    "name": "Gorr",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/gorr.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "green-goblin",
+    "name": "Green Goblin",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/green_goblin.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "groot",
+    "name": "Groot",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/groot.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "guardian",
+    "name": "Guardian",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/guardian.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "guillotine",
+    "name": "Guillotine",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/guillotine.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "guillotine-deathless",
+    "name": "Guillotine (Deathless)",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/guillotine_deathless.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "guillotine-2099",
+    "name": "Guillotine 2099",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/guillotine_2099.png",
+    "alias": "g99",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "gwenpool",
+    "name": "Gwenpool",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/gwenpool.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "havok",
+    "name": "Havok",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/havok.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "hawkeye",
+    "name": "Hawkeye",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/hawkeye.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "heimdall",
+    "name": "Heimdall",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/heimdall.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "hela",
+    "name": "Hela",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/hela.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "henchpool",
+    "name": "Henchpool",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/henchpool.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "hercules",
+    "name": "Hercules",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/hercules.png",
+    "alias": "hc",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "high-evolutionary",
+    "name": "High Evolutionary",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/high_evolutionary.png",
+    "alias": "he",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "hit-monkey",
+    "name": "Hit-Monkey",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/hit-monkey.png",
+    "alias": "HitMonkey;Hit Monkey",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "hobgoblin-phil-urich",
+    "name": "Hobgoblin (Phil Urich)",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/hobgoblin_phil_urich.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "howard-the-duck",
+    "name": "Howard the Duck",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/howard_the_duck.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "hulk",
+    "name": "Hulk",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/hulk.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "hulk-immortal",
+    "name": "Hulk (Immortal)",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/hulk_immortal.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "hulk-ragnarok",
+    "name": "Hulk (Ragnarok)",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/hulk_ragnarok.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "hulkbuster",
+    "name": "Hulkbuster",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/hulkbuster.png",
+    "alias": "hb",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "hulkling",
+    "name": "Hulkling",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/hulkling.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "human-torch",
+    "name": "Human Torch",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/human_torch.png",
+    "alias": "torch",
+    "isAscendable": false,
+    "hasPrefight": true,
+    "isSevenStar": true
+  },
+  {
+    "id": "hyperion",
+    "name": "Hyperion",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/hyperion.png",
+    "alias": "hyp",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "iceman",
+    "name": "Iceman",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/iceman.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "ikaris",
+    "name": "Ikaris",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/ikaris.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "imperiosa",
+    "name": "Imperiosa",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/imperiosa.png",
+    "alias": "impe",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "invisible-woman",
+    "name": "Invisible Woman",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/invisible_woman.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "iron-fist",
+    "name": "Iron Fist",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/iron_fist.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "iron-fist-immortal",
+    "name": "Iron Fist (Immortal)",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/iron_fist_immortal.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "iron-man",
+    "name": "Iron Man",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/iron_man.png",
+    "alias": "im",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "iron-man-infamous",
+    "name": "Iron Man (Infamous)",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/iron_man_infamous.png",
+    "alias": "idoom",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "iron-man-infinity-war",
+    "name": "Iron Man (Infinity War)",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/iron_man_infinity_war.png",
+    "alias": "imiw",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "iron-patriot",
+    "name": "Iron Patriot",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/iron_patriot.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "ironheart",
+    "name": "Ironheart",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/ironheart.png",
+    "alias": "ih",
+    "isAscendable": false,
+    "hasPrefight": true,
+    "isSevenStar": true
+  },
+  {
+    "id": "isophyne",
+    "name": "Isophyne",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/isophyne.png",
+    "alias": "iso",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "jabari-panther",
+    "name": "Jabari Panther",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/jabari_panther.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "jack-o-lantern",
+    "name": "Jack O'Lantern",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/jack_o_lantern.png",
+    "alias": "jack",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "jean-grey",
+    "name": "Jean Grey",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/jean_grey.png",
+    "alias": "jean",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "jessica-jones",
+    "name": "Jessica Jones",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/jessica_jones.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "joe-fixit",
+    "name": "Joe Fixit",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/joe_fixit.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "jubilee",
+    "name": "Jubilee",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/jubilee.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "juggernaut",
+    "name": "Juggernaut",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/juggernaut.png",
+    "alias": "juggs;jugg",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "kang-the-conqueror",
+    "name": "Kang the Conqueror",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/kang_the_conqueror.png",
+    "alias": "kang",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "karnak",
+    "name": "Karnak",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/karnak.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "karolina-dean",
+    "name": "Karolina Dean",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/karolina_dean.png",
+    "alias": "karo",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "kate-bishop",
+    "name": "Kate Bishop",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/kate_bishop.png",
+    "alias": "kate",
+    "isAscendable": false,
+    "hasPrefight": true,
+    "isSevenStar": true
+  },
+  {
+    "id": "killmonger",
+    "name": "Killmonger",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/killmonger.png",
+    "alias": "km",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "kindred",
+    "name": "Kindred",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/kindred.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "king-groot",
+    "name": "King Groot",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/king_groot.png",
+    "alias": "kg",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "king-groot-deathless",
+    "name": "King Groot (Deathless)",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/king_groot_deathless.png",
+    "alias": "kgd",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "kingpin",
+    "name": "Kingpin",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/kingpin.png",
+    "alias": "kp",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "kitty-pryde",
+    "name": "Kitty Pryde",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/kitty_pryde.png",
+    "alias": "kitty",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "knull",
+    "name": "Knull",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/knull.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "korg",
+    "name": "Korg",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/korg.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "kraven",
+    "name": "Kraven",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/kraven.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "kushala",
+    "name": "Kushala",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/kushala.png",
+    "alias": "midshala",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "lady-deathstrike",
+    "name": "Lady Deathstrike",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/lady_deathstrike.png",
+    "alias": "lady",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "lizard",
+    "name": "Lizard",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/lizard.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "loki",
+    "name": "Loki",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/loki.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "longshot",
+    "name": "Longshot",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/longshot.png",
+    "alias": "long",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "luke-cage",
+    "name": "Luke Cage",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/luke_cage.png",
+    "alias": "cage",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "lumatrix",
+    "name": "Lumatrix",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/lumatrix.png",
+    "alias": "luma",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "m-o-d-o-k",
+    "name": "M.O.D.O.K.",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/m_o_d_o_k.png",
+    "alias": "modok",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "m-baku",
+    "name": "M'Baku",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/m_baku.png",
+    "alias": "mbaku",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "madelyne-pryor",
+    "name": "Madelyne Pryor",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/madelyne_pryor.png",
+    "alias": "madelyne",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "maestro-cosmic",
+    "name": "Maestro (Cosmic)",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/maestro_cosmic.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "magik",
+    "name": "Magik",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/magik.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "magneto",
+    "name": "Magneto",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/magneto.png",
+    "alias": "mag;red mag",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "magneto-house-of-x",
+    "name": "Magneto (House of X)",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/magneto_house_of_x.png",
+    "alias": "wags",
+    "isAscendable": false,
+    "hasPrefight": true,
+    "isSevenStar": true
+  },
+  {
+    "id": "man-thing",
+    "name": "Man-Thing",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/man-thing.png",
+    "alias": "man thing",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "mangog",
+    "name": "Mangog",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/mangog.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "mantis",
+    "name": "Mantis",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/mantis.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "masacre",
+    "name": "Masacre",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/masacre.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "medusa",
+    "name": "Medusa",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/medusa.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "mephisto",
+    "name": "Mephisto",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/mephisto.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "mister-fantastic",
+    "name": "Mister Fantastic",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/mister_fantastic.png",
+    "alias": "fanta",
+    "isAscendable": true,
+    "hasPrefight": true,
+    "isSevenStar": true
+  },
+  {
+    "id": "mister-negative",
+    "name": "Mister Negative",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/mister_negative.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "mister-sinister",
+    "name": "Mister Sinister",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/mister_sinister.png",
+    "alias": "sinister",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "misty-knight",
+    "name": "Misty Knight",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/misty_knight.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "mojo",
+    "name": "Mojo",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/mojo.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "mole-man",
+    "name": "Mole Man",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/mole_man.png",
+    "alias": "fraudman",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "moon-knight",
+    "name": "Moon Knight",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/moon_knight.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "moondragon",
+    "name": "Moondragon",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/moondragon.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": true,
+    "isSevenStar": true
+  },
+  {
+    "id": "morbius",
+    "name": "Morbius",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/morbius.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "mordo",
+    "name": "Mordo",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/mordo.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "morningstar",
+    "name": "Morningstar",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/morningstar.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "mr-knight",
+    "name": "Mr. Knight",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/mr_knight.png",
+    "alias": "mk",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "ms-marvel",
+    "name": "Ms. Marvel",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/ms_marvel.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "ms-marvel-kamala-khan",
+    "name": "Ms. Marvel (Kamala Khan)",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/ms_marvel_kamala_khan.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "mysterio",
+    "name": "Mysterio",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/mysterio.png",
+    "alias": "myst",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "namor",
+    "name": "Namor",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/namor.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "nebula",
+    "name": "Nebula",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/nebula.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "negasonic-teenage-warhead",
+    "name": "Negasonic Teenage Warhead",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/negasonic_teenage_warhead.png",
+    "alias": "ntw",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "nick-fury",
+    "name": "Nick Fury",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/nick_fury.png",
+    "alias": "fury;nf",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "nico-minoru",
+    "name": "Nico Minoru",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/nico_minoru.png",
+    "alias": "nico",
+    "isAscendable": false,
+    "hasPrefight": true,
+    "isSevenStar": true
+  },
+  {
+    "id": "night-thrasher",
+    "name": "Night Thrasher",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/night_thrasher.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "nightcrawler",
+    "name": "Nightcrawler",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/nightcrawler.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "nimrod",
+    "name": "Nimrod",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/nimrod.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "northstar",
+    "name": "Northstar",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/northstar.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "nova",
+    "name": "Nova",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/nova.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "odin",
+    "name": "Odin",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/odin.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": true,
+    "isSevenStar": true
+  },
+  {
+    "id": "okoye",
+    "name": "Okoye",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/okoye.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "old-man-logan",
+    "name": "Old Man Logan",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/old_man_logan.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "omega-red",
+    "name": "Omega Red",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/omega_red.png",
+    "alias": "or",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "omega-sentinel",
+    "name": "Omega Sentinel",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/omega_sentinel.png",
+    "alias": "os",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "onslaught",
+    "name": "Onslaught",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/onslaught.png",
+    "alias": "ons",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "patriot",
+    "name": "Patriot",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/patriot.png",
+    "alias": "patrigoat",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "peni-parker",
+    "name": "Peni Parker",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/peni_parker.png",
+    "alias": "peni",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "phoenix",
+    "name": "Phoenix",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/phoenix.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "photon",
+    "name": "Photon",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/photon.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "phyla-vell",
+    "name": "Phyla-Vell",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/phyla-vell.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "pixie",
+    "name": "Pixie",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/pixie.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "platinumpool",
+    "name": "Platinumpool",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/platinumpool.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "professor-x",
+    "name": "Professor X",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/professor_x.png",
+    "alias": "prof x;prof",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "prowler",
+    "name": "Prowler",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/prowler.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "proxima-midnight",
+    "name": "Proxima Midnight",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/proxima_midnight.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "psycho-man",
+    "name": "Psycho-Man",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/psycho-man.png",
+    "alias": "psycho man",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "psylocke",
+    "name": "Psylocke",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/psylocke.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "punisher",
+    "name": "Punisher",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/punisher.png",
+    "alias": "pun",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "punisher-2099",
+    "name": "Punisher 2099",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/punisher_2099.png",
+    "alias": "pun 99;pun 2099",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "purgatory",
+    "name": "Purgatory",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/purgatory.png",
+    "alias": "purga",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "quake",
+    "name": "Quake",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/quake.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "quicksilver",
+    "name": "Quicksilver",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/quicksilver.png",
+    "alias": "qs",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "red-goblin",
+    "name": "Red Goblin",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/red_goblin.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "red-guardian",
+    "name": "Red Guardian",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/red_guardian.png",
+    "alias": "rg",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "red-hulk",
+    "name": "Red Hulk",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/red_hulk.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "red-skull",
+    "name": "Red Skull",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/red_skull.png",
+    "alias": "rs",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "rhino",
+    "name": "Rhino",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/rhino.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "rintrah",
+    "name": "Rintrah",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/rintrah.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "rocket-raccoon",
+    "name": "Rocket Raccoon",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/rocket_raccoon.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "rogue",
+    "name": "Rogue",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/rogue.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "ronan",
+    "name": "Ronan",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/ronan.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "ronin",
+    "name": "Ronin",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/ronin.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "ruby-thursday",
+    "name": "Ruby Thursday",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/ruby_thursday.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "sabretooth",
+    "name": "Sabretooth",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/sabretooth.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "sandman",
+    "name": "Sandman",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/sandman.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "sasquatch",
+    "name": "Sasquatch",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/sasquatch.png",
+    "alias": "sassy",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "sauron",
+    "name": "Sauron",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/sauron.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "scarlet-witch",
+    "name": "Scarlet Witch",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/scarlet_witch.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "scarlet-witch-classic",
+    "name": "Scarlet Witch (Classic)",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/scarlet_witch_classic.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "scorpion",
+    "name": "Scorpion",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/scorpion.png",
+    "alias": "scp",
+    "isAscendable": false,
+    "hasPrefight": true,
+    "isSevenStar": true
+  },
+  {
+    "id": "scream",
+    "name": "Scream",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/scream.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "sentinel",
+    "name": "Sentinel",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/sentinel.png",
+    "alias": "senti",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "sentinelbot",
+    "name": "Sentinelbot",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/sentinelbot.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "sentry",
+    "name": "Sentry",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/sentry.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "sersi",
+    "name": "Sersi",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/sersi.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "shang-chi",
+    "name": "Shang-Chi",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/shang-chi.png",
+    "alias": "shangshi;shang shi",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "shathra",
+    "name": "Shathra",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/shathra.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": true,
+    "isSevenStar": true
+  },
+  {
+    "id": "shatterstar",
+    "name": "Shatterstar",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/shatterstar.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "she-hulk",
+    "name": "She-Hulk",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/she-hulk.png",
+    "alias": "shehulk;she hulk",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "she-hulk-deathless",
+    "name": "She-Hulk (Deathless)",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/she-hulk_deathless.png",
+    "alias": "shehulk;she hulk;shd",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "shocker",
+    "name": "Shocker",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/shocker.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "shuri",
+    "name": "Shuri",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/shuri.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "silk",
+    "name": "Silk",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/silk.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "silver-centurion",
+    "name": "Silver Centurion",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/silver_centurion.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "silver-sable",
+    "name": "Silver Sable",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/silver_sable.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "silver-samurai",
+    "name": "Silver Samurai",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/silver_samurai.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "silver-surfer",
+    "name": "Silver Surfer",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/silver_surfer.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "solvarch",
+    "name": "Solvarch",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/solvarch.png",
+    "alias": "solv",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "sorcerer-supreme",
+    "name": "Sorcerer Supreme",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/sorcerer_supreme.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "spider-gwen",
+    "name": "Spider-Gwen",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/spider-gwen.png",
+    "alias": "spider gwen;gwen",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "spider-ham",
+    "name": "Spider-Ham",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/spider-ham.png",
+    "alias": "SpiderHam;Spider Ham",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "spider-man-classic",
+    "name": "Spider-Man (Classic)",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/spider-man_classic.png",
+    "alias": "SpiderMan;Spider Man",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "spider-man-miles-morales",
+    "name": "Spider-Man (Miles Morales)",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/spider-man_miles_morales.png",
+    "alias": "SpiderMan;Spider Man",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "spider-man-pavitr-prabhakar",
+    "name": "Spider-Man (Pavitr Prabhakar)",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/spider-man_pavitr_prabhakar.png",
+    "alias": "SpiderMan;Spider Man;pav;pavitr",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "spider-man-stark-enhanced",
+    "name": "Spider-Man (Stark Enhanced)",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/spider-man_stark_enhanced.png",
+    "alias": "SpiderMan;Spider Man;sparky;starky",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "spider-man-stealth-suit",
+    "name": "Spider-Man (Stealth Suit)",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/spider-man_stealth_suit.png",
+    "alias": "SpiderMan;Spider Man stealth",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "spider-man-supreme",
+    "name": "Spider-Man (Supreme)",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/spider-man_supreme.png",
+    "alias": "SpiderMan;Spider Man",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "spider-man-symbiote",
+    "name": "Spider-Man (Symbiote)",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/spider-man_symbiote.png",
+    "alias": "SpiderMan;Spider Man",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "spider-man-2099",
+    "name": "Spider-Man 2099",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/spider-man_2099.png",
+    "alias": "SpiderMan;Spider Man",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "spider-punk",
+    "name": "Spider-Punk",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/spider-punk.png",
+    "alias": "SpiderMan;Spider Man punk;punk",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "spider-slayer-j-jonah-jameson",
+    "name": "Spider-Slayer (J. Jonah Jameson)",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/spider-slayer_j_jonah_jameson.png",
+    "alias": "SpiderSlayer;Spider Slayer;jjj",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "spider-woman-jessica-drew",
+    "name": "Spider-Woman (Jessica Drew)",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/spider-woman_jessica_drew.png",
+    "alias": "sw;SpiderWoman;Spider Woman",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "spiral",
+    "name": "Spiral",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/spiral.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "spot",
+    "name": "Spot",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/spot.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "squirrel-girl",
+    "name": "Squirrel Girl",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/squirrel_girl.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "star-lord",
+    "name": "Star-Lord",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/star-lord.png",
+    "alias": "star lord",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "star-lord-stellar-forged",
+    "name": "Star-Lord (Stellar-Forged)",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/star-lord_stellar-forged.png",
+    "alias": "star lord stellar",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "storm",
+    "name": "Storm",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/storm.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "storm-pyramid-x",
+    "name": "Storm (Pyramid X)",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/storm_pyramid_x.png",
+    "alias": "strom x;pyra",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "stryfe",
+    "name": "Stryfe",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/stryfe.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "sunspot",
+    "name": "Sunspot",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/sunspot.png",
+    "alias": "suns",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "super-skrull",
+    "name": "Super-Skrull",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/super-skrull.png",
+    "alias": "super skrull;skrull",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "superior-iron-man",
+    "name": "Superior Iron Man",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/superior_iron_man.png",
+    "alias": "sim;ims",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "symbioid",
+    "name": "Symbioid",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/symbioid.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "symbiote-supreme",
+    "name": "Symbiote Supreme",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/symbiote_supreme.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "taskmaster",
+    "name": "Taskmaster",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/taskmaster.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "terrax",
+    "name": "Terrax",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/terrax.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "thanos",
+    "name": "Thanos",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/thanos.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "thanos-deathless",
+    "name": "Thanos (Deathless)",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/thanos_deathless.png",
+    "alias": "Danos;dangoat",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "the-champion",
+    "name": "The Champion",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/the_champion.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "the-destroyer",
+    "name": "The Destroyer",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/the_destroyer.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "the-hood",
+    "name": "The Hood",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/the_hood.png",
+    "alias": "hood",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "the-leader",
+    "name": "The Leader",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/the_leader.png",
+    "alias": "leader",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "the-maker",
+    "name": "The Maker",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/the_maker.png",
+    "alias": "maker",
+    "isAscendable": false,
+    "hasPrefight": true,
+    "isSevenStar": true
+  },
+  {
+    "id": "the-overseer",
+    "name": "The Overseer",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/the_overseer.png",
+    "alias": "over",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "the-serpent",
+    "name": "The Serpent",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/the_serpent.png",
+    "alias": "serpent",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "thing",
+    "name": "Thing",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/thing.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "thor",
+    "name": "Thor",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/thor.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "thor-jane-foster",
+    "name": "Thor (Jane Foster)",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/thor_jane_foster.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "thor-ragnarok",
+    "name": "Thor (Ragnarok)",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/thor_ragnarok.png",
+    "alias": "thor ragna",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "tigra",
+    "name": "Tigra",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/tigra.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "titania",
+    "name": "Titania",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/titania.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "toad",
+    "name": "Toad",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/toad.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "ultron",
+    "name": "Ultron",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/ultron.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "ultron-classic",
+    "name": "Ultron (Classic)",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/ultron_classic.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "unstoppable-colossus",
+    "name": "Unstoppable Colossus",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/unstoppable_colossus.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "valkyrie",
+    "name": "Valkyrie",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/valkyrie.png",
+    "alias": "valky",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "venom",
+    "name": "Venom",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/venom.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "venom-the-duck",
+    "name": "Venom the Duck",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/venom_the_duck.png",
+    "alias": "vtd",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "venompool",
+    "name": "Venompool",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/venompool.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "vision",
+    "name": "Vision",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/vision.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "vision-aarkus",
+    "name": "Vision (Aarkus)",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/vision_aarkus.png",
+    "alias": "aarkus",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "vision-age-of-ultron",
+    "name": "Vision (Age of Ultron)",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/vision_age_of_ultron.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "vision-deathless",
+    "name": "Vision (Deathless)",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/vision_deathless.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "viv-vision",
+    "name": "Viv Vision",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/viv_vision.png",
+    "alias": "viv",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "void",
+    "name": "Void",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/void.png",
+    "alias": "fraud",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "vox",
+    "name": "Vox",
+    "championClass": "Cosmic",
+    "imageUrl": "/static/champions/vox.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "vulture",
+    "name": "Vulture",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/vulture.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "war-machine",
+    "name": "War Machine",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/war_machine.png",
+    "alias": "warma",
+    "isAscendable": false,
+    "hasPrefight": true,
+    "isSevenStar": true
+  },
+  {
+    "id": "warlock",
+    "name": "Warlock",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/warlock.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "wasp",
+    "name": "Wasp",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/wasp.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "wave",
+    "name": "Wave",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/wave.png",
+    "alias": "",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "werewolf-by-night",
+    "name": "Werewolf By Night",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/werewolf_by_night.png",
+    "alias": "wolfy;wbn",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "white-tiger",
+    "name": "White Tiger",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/white_tiger.png",
+    "alias": "wt",
+    "isAscendable": true,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "wiccan",
+    "name": "Wiccan",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/wiccan.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "winter-soldier",
+    "name": "Winter Soldier",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/winter_soldier.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "wolverine",
+    "name": "Wolverine",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/wolverine.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "wolverine-weapon-x",
+    "name": "Wolverine (Weapon X)",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/wolverine_weapon_x.png",
+    "alias": "weapon x",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "wolverine-x-23",
+    "name": "Wolverine (X-23)",
+    "championClass": "Mutant",
+    "imageUrl": "/static/champions/wolverine_x-23.png",
+    "alias": "x23",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "wong",
+    "name": "Wong",
+    "championClass": "Mystic",
+    "imageUrl": "/static/champions/wong.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "yelena-belova",
+    "name": "Yelena Belova",
+    "championClass": "Skill",
+    "imageUrl": "/static/champions/yelena_belova.png",
+    "alias": "yelena",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "yellowjacket",
+    "name": "Yellowjacket",
+    "championClass": "Science",
+    "imageUrl": "/static/champions/yellowjacket.png",
+    "alias": "yj",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  },
+  {
+    "id": "yondu",
+    "name": "Yondu",
+    "championClass": "Tech",
+    "imageUrl": "/static/champions/yondu.png",
+    "alias": "",
+    "isAscendable": false,
+    "hasPrefight": false,
+    "isSevenStar": true
+  }
+]
