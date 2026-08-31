@@ -1,5 +1,55 @@
 import { setupDefenseOwner, setupDefenseOwnerAndMember } from '../../support/e2e';
 
+interface Owner {
+  tok: string;
+  acc: string;
+  rarity?: string;
+  preferred?: boolean;
+}
+
+// Load a champion once (as admin) and add it to each owner's roster — the two-step
+// dance every test in this file repeats to build its fixtures.
+function giveChampion(adminToken: string, name: string, cls: string, owners: Owner | Owner[], saga = false) {
+  const load = saga
+    ? cy.apiLoadChampionWithSaga(adminToken, name, cls, { is_saga_defender: true })
+    : cy.apiLoadChampion(adminToken, name, cls);
+
+  return load.then((champs: { id: string }[]) => {
+    [owners]
+      .flat()
+      .forEach((o) =>
+        cy.apiAddChampionToRoster(
+          o.tok,
+          o.acc,
+          champs[0].id,
+          o.rarity ?? '7r3',
+          o.preferred === undefined ? undefined : { is_preferred_attacker: o.preferred },
+        ),
+      );
+  });
+}
+
+// Same, then place that champion on a defense node for its owner.
+function giveChampionAndPlace(
+  adminToken: string,
+  name: string,
+  cls: string,
+  o: Owner,
+  allianceId: string,
+  node: number,
+) {
+  return cy.apiLoadChampion(adminToken, name, cls).then((champs: { id: string }[]) => {
+    cy.apiAddChampionToRoster(o.tok, o.acc, champs[0].id, o.rarity ?? '7r3').then((cu: { id: string }) => {
+      cy.apiPlaceDefender(o.tok, allianceId, 1, node, cu.id, o.acc);
+    });
+  });
+}
+
+// The champion selector is a dialog opened by clicking a node on the defense map.
+function openSelectorOnNode1() {
+  cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+}
+
 describe('Defense – AllianceDefenseSelector filters', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -11,16 +61,14 @@ describe('Defense – AllianceDefenseSelector filters', () => {
 
   it('class filter shows only champions of the selected class', () => {
     setupDefenseOwner('def-flt-cls', 'ClsFilterPlyr', 'ClassAll', 'CF').then(({ adminData, ownerData, ownerAccId }) => {
-      cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
-        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-      });
-      cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-      });
+      const admin = adminData.access_token;
+      const owner = { tok: ownerData.access_token, acc: ownerAccId };
+      giveChampion(admin, 'Spider-Man', 'Cosmic', owner);
+      giveChampion(admin, 'Wolverine', 'Mutant', owner);
 
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openSelectorOnNode1();
       cy.getByCy('champion-card-Spider-Man').should('be.visible');
       cy.getByCy('champion-card-Wolverine').should('be.visible');
 
@@ -38,16 +86,13 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   it('player filter shows only champions owned by the selected player', () => {
     setupDefenseOwnerAndMember('def-flt-plyr', 'PlyrFltOwn', 'PlyrFltMem', 'PlyrAll', 'PF').then(
       ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3');
-        });
+        const admin = adminData.access_token;
+        giveChampion(admin, 'Spider-Man', 'Cosmic', { tok: ownerData.access_token, acc: ownerAccId });
+        giveChampion(admin, 'Wolverine', 'Mutant', { tok: memberData.access_token, acc: memberAccId });
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openSelectorOnNode1();
         cy.getByCy('champion-card-Spider-Man').should('be.visible');
         cy.getByCy('champion-card-Wolverine').should('be.visible');
 
@@ -65,18 +110,14 @@ describe('Defense – AllianceDefenseSelector filters', () => {
 
   it('saga defender toggle shows only saga defenders', () => {
     setupDefenseOwner('def-flt-saga', 'SagaFltPlyr', 'SagaAll', 'SF').then(({ adminData, ownerData, ownerAccId }) => {
-      cy.apiLoadChampionWithSaga(adminData.access_token, 'Spider-Man', 'Cosmic', { is_saga_defender: true }).then(
-        (champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        },
-      );
-      cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-      });
+      const admin = adminData.access_token;
+      const owner = { tok: ownerData.access_token, acc: ownerAccId };
+      giveChampion(admin, 'Spider-Man', 'Cosmic', owner, true);
+      giveChampion(admin, 'Wolverine', 'Mutant', owner);
 
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openSelectorOnNode1();
       cy.getByCy('champion-card-Spider-Man').should('be.visible');
       cy.getByCy('champion-card-Wolverine').should('be.visible');
 
@@ -94,19 +135,15 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   it('not preferred toggle hides champion only when all its owners are preferred attackers', () => {
     setupDefenseOwnerAndMember('def-flt-npref-multi', 'NPrefMultiOwn', 'NPrefMultiMem', 'NPrefMultiAll', 'NM').then(
       ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
-          // owner: preferred, member: not preferred → champion stays visible (at least one non-preferred owner)
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3', {
-            is_preferred_attacker: true,
-          });
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
-            is_preferred_attacker: false,
-          });
-        });
+        // owner: preferred, member: not preferred → champion stays visible (at least one non-preferred owner)
+        giveChampion(adminData.access_token, 'Spider-Man', 'Cosmic', [
+          { tok: ownerData.access_token, acc: ownerAccId, preferred: true },
+          { tok: memberData.access_token, acc: memberAccId, preferred: false },
+        ]);
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openSelectorOnNode1();
         cy.getByCy('champion-card-Spider-Man').should('be.visible');
 
         cy.getByCy('selector-toggle-notPreferred').click();
@@ -119,20 +156,14 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   it('not preferred toggle shows only champions whose owners are not preferred attackers', () => {
     setupDefenseOwner('def-flt-npref', 'NPrefFltPlyr', 'NPrefAll', 'NP').then(
       ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3', {
-            is_preferred_attacker: false,
-          });
-        });
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3', {
-            is_preferred_attacker: true,
-          });
-        });
+        const admin = adminData.access_token;
+        const owner = { tok: ownerData.access_token, acc: ownerAccId };
+        giveChampion(admin, 'Spider-Man', 'Cosmic', { ...owner, preferred: false });
+        giveChampion(admin, 'Wolverine', 'Mutant', { ...owner, preferred: true });
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openSelectorOnNode1();
         cy.getByCy('champion-card-Spider-Man').should('be.visible');
         cy.getByCy('champion-card-Wolverine').should('be.visible');
 
@@ -151,18 +182,14 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   it('reset button clears all active filters and restores all champions', () => {
     setupDefenseOwner('def-flt-reset', 'ResetFltPlyr', 'ResetAll', 'RF').then(
       ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampionWithSaga(adminData.access_token, 'Spider-Man', 'Cosmic', { is_saga_defender: true }).then(
-          (champs) => {
-            cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-          },
-        );
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
+        const admin = adminData.access_token;
+        const owner = { tok: ownerData.access_token, acc: ownerAccId };
+        giveChampion(admin, 'Spider-Man', 'Cosmic', owner, true);
+        giveChampion(admin, 'Wolverine', 'Mutant', owner);
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openSelectorOnNode1();
 
         // Activate saga filter → only Spider-Man visible
         cy.getByCy('selector-toggle-saga').click();
@@ -184,16 +211,11 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   it('defense-player-filter hides other member cards and dims their nodes on the map', () => {
     setupDefenseOwnerAndMember('def-mpflt', 'MPFltOwner', 'MPFltMember', 'MPFltAll', 'MPF').then(
       ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3').then((cu) => {
-            cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId);
-          });
-        });
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3').then((cu) => {
-            cy.apiPlaceDefender(memberData.access_token, allianceId, 1, 2, cu.id, memberAccId);
-          });
-        });
+        const admin = adminData.access_token;
+        const owner = { tok: ownerData.access_token, acc: ownerAccId };
+        const member = { tok: memberData.access_token, acc: memberAccId };
+        giveChampionAndPlace(admin, 'Spider-Man', 'Cosmic', owner, allianceId, 1);
+        giveChampionAndPlace(admin, 'Wolverine', 'Mutant', member, allianceId, 2);
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -213,12 +235,9 @@ describe('Defense – AllianceDefenseSelector filters', () => {
 
   it('defense-player-filter restores all members when reset to All', () => {
     setupDefenseOwnerAndMember('def-mpflt-r', 'MPFROwner', 'MPFRMember', 'MPFRAll', 'MFR').then(
-      ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3').then((cu) => {
-            cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId);
-          });
-        });
+      ({ adminData, ownerData, allianceId, ownerAccId }) => {
+        const owner = { tok: ownerData.access_token, acc: ownerAccId };
+        giveChampionAndPlace(adminData.access_token, 'Spider-Man', 'Cosmic', owner, allianceId, 1);
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -239,23 +258,15 @@ describe('Defense – AllianceDefenseSelector filters', () => {
 
   it('class and saga filters combine to narrow results', () => {
     setupDefenseOwner('def-flt-comb', 'CombFltPlyr', 'CombAll', 'CB').then(({ adminData, ownerData, ownerAccId }) => {
-      cy.apiLoadChampionWithSaga(adminData.access_token, 'Spider-Man', 'Cosmic', { is_saga_defender: true }).then(
-        (champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        },
-      );
-      cy.apiLoadChampionWithSaga(adminData.access_token, 'Iron Man', 'Tech', { is_saga_defender: true }).then(
-        (champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        },
-      );
-      cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-      });
+      const admin = adminData.access_token;
+      const owner = { tok: ownerData.access_token, acc: ownerAccId };
+      giveChampion(admin, 'Spider-Man', 'Cosmic', owner, true);
+      giveChampion(admin, 'Iron Man', 'Tech', owner, true);
+      giveChampion(admin, 'Wolverine', 'Mutant', owner);
 
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openSelectorOnNode1();
 
       // Saga filter → Spider-Man + Iron Man visible
       cy.getByCy('selector-toggle-saga').click();
@@ -282,16 +293,14 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
 
   it('hides 6-star champions by default and reveals them via the 6-star toggle', () => {
     setupDefenseOwner('def-rar-def', 'RarDefPlyr', 'RarDefAll', 'RD').then(({ adminData, ownerData, ownerAccId }) => {
-      cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
-        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-      });
-      cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '6r5');
-      });
+      const admin = adminData.access_token;
+      const owner = { tok: ownerData.access_token, acc: ownerAccId };
+      giveChampion(admin, 'Spider-Man', 'Cosmic', owner);
+      giveChampion(admin, 'Wolverine', 'Mutant', { ...owner, rarity: '6r5' });
 
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openSelectorOnNode1();
 
       // 7★ Spider-Man visible, 6★ Wolverine hidden by default
       cy.getByCy('champion-card-Spider-Man').should('be.visible');
@@ -313,16 +322,14 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
   it('deactivating a 7-star tier hides champions of that exact tier', () => {
     setupDefenseOwner('def-rar-tier', 'RarTierPlyr', 'RarTierAll', 'RT').then(
       ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5');
-        });
+        const admin = adminData.access_token;
+        const owner = { tok: ownerData.access_token, acc: ownerAccId };
+        giveChampion(admin, 'Spider-Man', 'Cosmic', owner);
+        giveChampion(admin, 'Wolverine', 'Mutant', { ...owner, rarity: '7r5' });
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openSelectorOnNode1();
         cy.getByCy('champion-card-Spider-Man').should('be.visible');
         cy.getByCy('champion-card-Wolverine').should('be.visible');
 
@@ -342,18 +349,14 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
     setupDefenseOwner('def-rar-persist', 'RarPersPlyr', 'RarPersAll', 'RP').then(
       ({ adminData, ownerData, ownerAccId }) => {
         // Spider-Man 7r3 and Wolverine 7r5 (saga defender)
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
-        cy.apiLoadChampionWithSaga(adminData.access_token, 'Wolverine', 'Mutant', { is_saga_defender: true }).then(
-          (champs) => {
-            cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5');
-          },
-        );
+        const admin = adminData.access_token;
+        const owner = { tok: ownerData.access_token, acc: ownerAccId };
+        giveChampion(admin, 'Spider-Man', 'Cosmic', owner);
+        giveChampion(admin, 'Wolverine', 'Mutant', { ...owner, rarity: '7r5' }, true);
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openSelectorOnNode1();
 
         // Turn 7r3 off → Spider-Man (7r3) hidden, Wolverine (7r5) stays
         cy.getByCy('defense-rarity-7r3').click();
@@ -369,7 +372,7 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
         // Close and reopen the dialog — preference persisted via localStorage
         cy.get('body').type('{esc}');
         cy.getByCy('champion-card-Wolverine').should('not.exist');
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openSelectorOnNode1();
         cy.getByCy('champion-card-Spider-Man').should('not.exist');
         cy.getByCy('champion-card-Wolverine').should('be.visible');
       },
@@ -383,21 +386,15 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
   it('orders champions preferred-first then by descending rank', () => {
     setupDefenseOwner('def-rar-sort', 'RarSortPlyr', 'RarSortAll', 'RS').then(
       ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5');
-        });
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
-        cy.apiLoadChampion(adminData.access_token, 'Iron Man', 'Tech').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r1', {
-            is_preferred_attacker: true,
-          });
-        });
+        const admin = adminData.access_token;
+        const owner = { tok: ownerData.access_token, acc: ownerAccId };
+        giveChampion(admin, 'Spider-Man', 'Cosmic', { ...owner, rarity: '7r5' });
+        giveChampion(admin, 'Wolverine', 'Mutant', owner);
+        giveChampion(admin, 'Iron Man', 'Tech', { ...owner, rarity: '7r1', preferred: true });
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openSelectorOnNode1();
 
         // Expected order: Iron Man (preferred) → Spider-Man (7r5) → Wolverine (7r3)
         cy.get('[data-cy^="champion-card-"]').then(($cards) => {

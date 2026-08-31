@@ -1,5 +1,8 @@
 import {
   addStatsForPlayer,
+  openStatsAs,
+  setupStatsOwner,
+  setupStatsOwnerAndMember,
   withWarScenario,
   withWarScenarioTwoPlayers,
   withWarScenarioDiffChampsPlayers,
@@ -16,25 +19,11 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
   // ── Ratio filter ──────────────────────────────────────────────────────────
 
   it('hides players below ratio threshold and shows empty-filtered state', () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-rf-admin', role: 'admin' },
-      {
-        discord_token: 'stat-rf-owner',
-        game_pseudo: 'RfOwner',
-        create_alliance: { name: 'RfAlliance', tag: 'RF1' },
-        battlegroup: 1,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-rf-admin'].access_token;
-      const ownerToken = users['stat-rf-owner'].access_token;
-      const allianceId = users['stat-rf-owner'].alliance_id!;
-      const ownerAccId = users['stat-rf-owner'].account_id!;
-
+    setupStatsOwner('stat-rf').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
       withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Enemy', ({ champId, cuId, warId }) => {
         addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, 1);
         cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        cy.apiLogin(users['stat-rf-owner'].user_id);
-        cy.goToAllianceStatsTab();
+        openStatsAs(ownerUserId);
         cy.getByCy('statistics-table').should('be.visible');
         cy.getByCy('statistics-ratio-filter').click();
         cy.contains('Minimum ratio ≥ 50%').click();
@@ -44,25 +33,11 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
   });
 
   it('reset button appears when filter active and restores all rows', () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-rst-admin', role: 'admin' },
-      {
-        discord_token: 'stat-rst-owner',
-        game_pseudo: 'RstOwner',
-        create_alliance: { name: 'RstAlliance', tag: 'RST' },
-        battlegroup: 1,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-rst-admin'].access_token;
-      const ownerToken = users['stat-rst-owner'].access_token;
-      const allianceId = users['stat-rst-owner'].alliance_id!;
-      const ownerAccId = users['stat-rst-owner'].account_id!;
-
+    setupStatsOwner('stat-rst').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
       withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Enemy', ({ champId, cuId, warId }) => {
         addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, 1);
         cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        cy.apiLogin(users['stat-rst-owner'].user_id);
-        cy.goToAllianceStatsTab();
+        openStatsAs(ownerUserId);
         cy.getByCy('statistics-reset-filters').should('not.exist');
         cy.getByCy('statistics-ratio-filter').click();
         cy.contains('Minimum ratio ≥ 50%').click();
@@ -76,25 +51,11 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
   // ── Champion chart ───────────────────────────────────────────────────────
 
   it('clicking a row highlights the player and shows reset button', () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-click-admin', role: 'admin' },
-      {
-        discord_token: 'stat-click-owner',
-        game_pseudo: 'ClickOwner',
-        create_alliance: { name: 'ClickAlliance', tag: 'CLK' },
-        battlegroup: 1,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-click-admin'].access_token;
-      const ownerToken = users['stat-click-owner'].access_token;
-      const allianceId = users['stat-click-owner'].alliance_id!;
-      const ownerAccId = users['stat-click-owner'].account_id!;
-
+    setupStatsOwner('stat-click').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
       withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Enemy', ({ champId, cuId, warId }) => {
         addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10);
         cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        cy.apiLogin(users['stat-click-owner'].user_id);
-        cy.goToAllianceStatsTab();
+        openStatsAs(ownerUserId);
         cy.getByCy('statistics-reset-filters').should('not.exist');
         cy.getByCy(`statistics-row-${ownerAccId}`).click();
         cy.getByCy(`statistics-row-${ownerAccId}`).should('have.class', 'bg-muted');
@@ -107,27 +68,13 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
   });
 
   it('war filter shows only ended wars and filters the chart', () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-wf-admin', role: 'admin' },
-      {
-        discord_token: 'stat-wf-owner',
-        game_pseudo: 'WfOwner',
-        create_alliance: { name: 'WfAlliance', tag: 'WF1' },
-        battlegroup: 1,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-wf-admin'].access_token;
-      const ownerToken = users['stat-wf-owner'].access_token;
-      const allianceId = users['stat-wf-owner'].alliance_id!;
-      const ownerAccId = users['stat-wf-owner'].account_id!;
-
+    setupStatsOwner('stat-wf').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
       withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Ended Enemy', ({ champId, cuId, warId }) => {
         addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10);
         cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
         cy.apiCreateWar(ownerToken, allianceId, 'Active Enemy');
         // active war — not ended, should NOT appear in war filter
-        cy.apiLogin(users['stat-wf-owner'].user_id);
-        cy.goToAllianceStatsTab();
+        openStatsAs(ownerUserId);
         cy.getByCy('statistics-war-filter').click();
         cy.contains('Ended Enemy').should('be.visible');
         cy.contains('Active Enemy').should('not.exist');
@@ -136,152 +83,100 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
   });
 
   it('war filter re-scopes the stats table, not only the chart', () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-wft-admin', role: 'admin' },
-      {
-        discord_token: 'stat-wft-owner',
-        game_pseudo: 'WftOwner',
-        create_alliance: { name: 'WftAlliance', tag: 'WFT' },
-        battlegroup: 1,
+    setupStatsOwnerAndMember('stat-wft').then(
+      ({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId, memberToken, memberAccId }) => {
+        const ownerRow = `statistics-row-${ownerAccId}`;
+        const memberRow = `statistics-row-${memberAccId}`;
+
+        withTwoEndedWarsTwoPlayers(
+          adminToken,
+          ownerToken,
+          ownerAccId,
+          memberToken,
+          memberAccId,
+          allianceId,
+          ({ warOneId, warTwoId }) => {
+            openStatsAs(ownerUserId);
+
+            // All wars → both players, each with their single fight.
+            cy.getByCy('statistics-table').find('tbody tr').should('have.length', 2);
+            cy.getByCy(ownerRow).should('exist');
+            cy.getByCy(memberRow).should('exist');
+
+            // WarOne → only the owner fought there.
+            cy.getByCy('statistics-war-filter').click();
+            cy.getByCy(`statistics-war-${warOneId}`).click();
+            cy.getByCy('statistics-table').find('tbody tr').should('have.length', 1);
+            cy.getByCy(ownerRow).should('exist');
+            cy.getByCy(memberRow).should('not.exist');
+
+            // WarTwo → only the member fought there, with the 2 KOs of that war.
+            cy.getByCy('statistics-war-filter').click();
+            cy.getByCy(`statistics-war-${warTwoId}`).click();
+            cy.getByCy('statistics-table').find('tbody tr').should('have.length', 1);
+            cy.getByCy(memberRow).should('exist');
+            cy.getByCy(ownerRow).should('not.exist');
+
+            // Back to all wars → the table widens again.
+            cy.getByCy('statistics-war-filter').click();
+            cy.getByCy('statistics-war-all').click();
+            cy.getByCy('statistics-table').find('tbody tr').should('have.length', 2);
+          },
+        );
       },
-      {
-        discord_token: 'stat-wft-member',
-        game_pseudo: 'WftMember',
-        join_alliance_token: 'stat-wft-owner',
-        battlegroup: 1,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-wft-admin'].access_token;
-      const ownerToken = users['stat-wft-owner'].access_token;
-      const allianceId = users['stat-wft-owner'].alliance_id!;
-      const ownerAccId = users['stat-wft-owner'].account_id!;
-      const memberToken = users['stat-wft-member'].access_token;
-      const memberAccId = users['stat-wft-member'].account_id!;
-      const ownerRow = `statistics-row-${ownerAccId}`;
-      const memberRow = `statistics-row-${memberAccId}`;
-
-      withTwoEndedWarsTwoPlayers(
-        adminToken,
-        ownerToken,
-        ownerAccId,
-        memberToken,
-        memberAccId,
-        allianceId,
-        ({ warOneId, warTwoId }) => {
-          cy.apiLogin(users['stat-wft-owner'].user_id);
-          cy.goToAllianceStatsTab();
-
-          // All wars → both players, each with their single fight.
-          cy.getByCy('statistics-table').find('tbody tr').should('have.length', 2);
-          cy.getByCy(ownerRow).should('exist');
-          cy.getByCy(memberRow).should('exist');
-
-          // WarOne → only the owner fought there.
-          cy.getByCy('statistics-war-filter').click();
-          cy.getByCy(`statistics-war-${warOneId}`).click();
-          cy.getByCy('statistics-table').find('tbody tr').should('have.length', 1);
-          cy.getByCy(ownerRow).should('exist');
-          cy.getByCy(memberRow).should('not.exist');
-
-          // WarTwo → only the member fought there, with the 2 KOs of that war.
-          cy.getByCy('statistics-war-filter').click();
-          cy.getByCy(`statistics-war-${warTwoId}`).click();
-          cy.getByCy('statistics-table').find('tbody tr').should('have.length', 1);
-          cy.getByCy(memberRow).should('exist');
-          cy.getByCy(ownerRow).should('not.exist');
-
-          // Back to all wars → the table widens again.
-          cy.getByCy('statistics-war-filter').click();
-          cy.getByCy('statistics-war-all').click();
-          cy.getByCy('statistics-table').find('tbody tr').should('have.length', 2);
-        },
-      );
-    });
+    );
   });
 
   it('season filter switches the table to a past season and rescopes the wars', () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-sf-admin', role: 'admin' },
-      {
-        discord_token: 'stat-sf-owner',
-        game_pseudo: 'SfOwner',
-        create_alliance: { name: 'SfAlliance', tag: 'SF1' },
-        battlegroup: 1,
+    setupStatsOwnerAndMember('stat-sf').then(
+      ({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId, memberToken, memberAccId }) => {
+        const ownerRow = `statistics-row-${ownerAccId}`;
+        const memberRow = `statistics-row-${memberAccId}`;
+
+        withTwoSeasonsOneWarEach(
+          adminToken,
+          ownerToken,
+          ownerAccId,
+          memberToken,
+          memberAccId,
+          allianceId,
+          ({ pastSeasonId, currentSeasonId }) => {
+            openStatsAs(ownerUserId);
+
+            // Defaults to the newest season with data — only the member fought there.
+            cy.getByCy('statistics-season-filter').should('contain', 'Season 64');
+            cy.getByCy(memberRow).should('exist');
+            cy.getByCy(ownerRow).should('not.exist');
+
+            // Both seasons are offered, newest first.
+            cy.getByCy('statistics-season-filter').click();
+            cy.getByCy(`statistics-season-${currentSeasonId}`).should('be.visible');
+            cy.getByCy(`statistics-season-${pastSeasonId}`).click();
+
+            // Season 63 → the other player, with the KOs of that season's war.
+            cy.getByCy('statistics-season-filter').should('contain', 'Season 63');
+            cy.getByCy(ownerRow).should('exist');
+            cy.getByCy(memberRow).should('not.exist');
+
+            // The war dropdown follows the season: only that season's war is listed.
+            cy.getByCy('statistics-war-filter').click();
+            cy.contains('OldWar').should('be.visible');
+            cy.contains('NewWar').should('not.exist');
+          },
+        );
       },
-      {
-        discord_token: 'stat-sf-member',
-        game_pseudo: 'SfMember',
-        join_alliance_token: 'stat-sf-owner',
-        battlegroup: 1,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-sf-admin'].access_token;
-      const ownerToken = users['stat-sf-owner'].access_token;
-      const allianceId = users['stat-sf-owner'].alliance_id!;
-      const ownerAccId = users['stat-sf-owner'].account_id!;
-      const memberToken = users['stat-sf-member'].access_token;
-      const memberAccId = users['stat-sf-member'].account_id!;
-      const ownerRow = `statistics-row-${ownerAccId}`;
-      const memberRow = `statistics-row-${memberAccId}`;
-
-      withTwoSeasonsOneWarEach(
-        adminToken,
-        ownerToken,
-        ownerAccId,
-        memberToken,
-        memberAccId,
-        allianceId,
-        ({ pastSeasonId, currentSeasonId }) => {
-          cy.apiLogin(users['stat-sf-owner'].user_id);
-          cy.goToAllianceStatsTab();
-
-          // Defaults to the newest season with data — only the member fought there.
-          cy.getByCy('statistics-season-filter').should('contain', 'Season 64');
-          cy.getByCy(memberRow).should('exist');
-          cy.getByCy(ownerRow).should('not.exist');
-
-          // Both seasons are offered, newest first.
-          cy.getByCy('statistics-season-filter').click();
-          cy.getByCy(`statistics-season-${currentSeasonId}`).should('be.visible');
-          cy.getByCy(`statistics-season-${pastSeasonId}`).click();
-
-          // Season 63 → the other player, with the KOs of that season's war.
-          cy.getByCy('statistics-season-filter').should('contain', 'Season 63');
-          cy.getByCy(ownerRow).should('exist');
-          cy.getByCy(memberRow).should('not.exist');
-
-          // The war dropdown follows the season: only that season's war is listed.
-          cy.getByCy('statistics-war-filter').click();
-          cy.contains('OldWar').should('be.visible');
-          cy.contains('NewWar').should('not.exist');
-        },
-      );
-    });
+    );
   });
 
   it('keeps the filter bar reachable when a war filter empties the table', () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-wfe-admin', role: 'admin' },
-      {
-        discord_token: 'stat-wfe-owner',
-        game_pseudo: 'WfeOwner',
-        create_alliance: { name: 'WfeAlliance', tag: 'WFE' },
-        battlegroup: 1,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-wfe-admin'].access_token;
-      const ownerToken = users['stat-wfe-owner'].access_token;
-      const allianceId = users['stat-wfe-owner'].alliance_id!;
-      const ownerAccId = users['stat-wfe-owner'].account_id!;
-
+    setupStatsOwner('stat-wfe').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
       withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Fought', ({ champId, cuId, warId }) => {
         addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, 0);
         cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
         // A second ended war nobody fought in: filtering on it yields zero rows.
         cy.apiCreateWar(ownerToken, allianceId, 'Empty').then((emptyWar: { id: string }) => {
           cy.apiEndWar(ownerToken, allianceId, emptyWar.id, true, 10);
-          cy.apiLogin(users['stat-wfe-owner'].user_id);
-          cy.goToAllianceStatsTab();
+          openStatsAs(ownerUserId);
           cy.getByCy('statistics-table').should('be.visible');
 
           cy.getByCy('statistics-war-filter').click();
@@ -298,25 +193,11 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
   });
 
   it('chart metric toggle switches between deathless, all and kos', () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-cm-admin', role: 'admin' },
-      {
-        discord_token: 'stat-cm-owner',
-        game_pseudo: 'CmOwner',
-        create_alliance: { name: 'CmAlliance', tag: 'CM1' },
-        battlegroup: 1,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-cm-admin'].access_token;
-      const ownerToken = users['stat-cm-owner'].access_token;
-      const allianceId = users['stat-cm-owner'].alliance_id!;
-      const ownerAccId = users['stat-cm-owner'].account_id!;
-
+    setupStatsOwner('stat-cm').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
       withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Enemy', ({ champId, cuId, warId }) => {
         addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, 1);
         cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        cy.apiLogin(users['stat-cm-owner'].user_id);
-        cy.goToAllianceStatsTab();
+        openStatsAs(ownerUserId);
         cy.getByCy('chart-metric-deathless').should('not.have.attr', 'data-variant', 'outline');
         cy.getByCy('chart-metric-kos').click();
         cy.getByCy('chart-metric-kos').should('not.have.attr', 'data-variant', 'outline');
@@ -327,25 +208,11 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
   });
 
   it('see detail button opens the champion detail modal', () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-modal-admin', role: 'admin' },
-      {
-        discord_token: 'stat-modal-owner',
-        game_pseudo: 'ModalOwner',
-        create_alliance: { name: 'ModalAlliance', tag: 'MDL' },
-        battlegroup: 1,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-modal-admin'].access_token;
-      const ownerToken = users['stat-modal-owner'].access_token;
-      const allianceId = users['stat-modal-owner'].alliance_id!;
-      const ownerAccId = users['stat-modal-owner'].account_id!;
-
+    setupStatsOwner('stat-modal').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
       withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Enemy', ({ champId, cuId, warId }) => {
         addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10);
         cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        cy.apiLogin(users['stat-modal-owner'].user_id);
-        cy.goToAllianceStatsTab();
+        openStatsAs(ownerUserId);
         cy.getByCy('champion-detail-modal').should('not.exist');
         cy.getByCy('chart-see-detail').click();
         cy.getByCy('champion-detail-modal').should('be.visible');
@@ -355,25 +222,11 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
   });
 
   it('clicking the same row again deselects the player', () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-tog-admin', role: 'admin' },
-      {
-        discord_token: 'stat-tog-owner',
-        game_pseudo: 'TogOwner',
-        create_alliance: { name: 'TogAlliance', tag: 'TOG' },
-        battlegroup: 1,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-tog-admin'].access_token;
-      const ownerToken = users['stat-tog-owner'].access_token;
-      const allianceId = users['stat-tog-owner'].alliance_id!;
-      const ownerAccId = users['stat-tog-owner'].account_id!;
-
+    setupStatsOwner('stat-tog').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
       withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Enemy', ({ champId, cuId, warId }) => {
         addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10);
         cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        cy.apiLogin(users['stat-tog-owner'].user_id);
-        cy.goToAllianceStatsTab();
+        openStatsAs(ownerUserId);
         cy.getByCy(`statistics-row-${ownerAccId}`).click();
         cy.getByCy(`statistics-row-${ownerAccId}`).should('have.class', 'bg-muted');
         cy.getByCy(`statistics-row-${ownerAccId}`).click();
@@ -384,25 +237,11 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
   });
 
   it('reset button resets war filter back to all wars', () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-wfr-admin', role: 'admin' },
-      {
-        discord_token: 'stat-wfr-owner',
-        game_pseudo: 'WfrOwner',
-        create_alliance: { name: 'WfrAlliance', tag: 'WFR' },
-        battlegroup: 1,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-wfr-admin'].access_token;
-      const ownerToken = users['stat-wfr-owner'].access_token;
-      const allianceId = users['stat-wfr-owner'].alliance_id!;
-      const ownerAccId = users['stat-wfr-owner'].account_id!;
-
+    setupStatsOwner('stat-wfr').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
       withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'War1', ({ champId, cuId, warId }) => {
         addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10);
         cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        cy.apiLogin(users['stat-wfr-owner'].user_id);
-        cy.goToAllianceStatsTab();
+        openStatsAs(ownerUserId);
         cy.getByCy('statistics-war-filter').click();
         cy.getByCy(`statistics-war-${warId}`).click();
         cy.getByCy('statistics-reset-filters').should('be.visible').click();
@@ -412,69 +251,35 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
   });
 
   it('clicking a row shows that player name in the chart area', () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-pname-admin', role: 'admin' },
-      {
-        discord_token: 'stat-pname-owner',
-        game_pseudo: 'PnameOwner',
-        create_alliance: { name: 'PnameAlliance', tag: 'PNM' },
-        battlegroup: 1,
+    setupStatsOwnerAndMember('stat-pname').then(
+      ({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId, memberToken, memberAccId, memberPseudo }) => {
+        withWarScenarioTwoPlayers(
+          adminToken,
+          ownerToken,
+          ownerAccId,
+          memberToken,
+          memberAccId,
+          allianceId,
+          'Enemy',
+          ({ champId, cuOwnerId, cuMemberId, warId }) => {
+            addStatsForPlayer(ownerToken, allianceId, warId, champId, cuOwnerId, 10);
+            addStatsForPlayer(ownerToken, allianceId, warId, champId, cuMemberId, 20);
+            cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
+            openStatsAs(ownerUserId);
+            cy.getByCy(`statistics-row-${memberAccId}`).click();
+            cy.contains(memberPseudo).should('be.visible');
+          },
+        );
       },
-      {
-        discord_token: 'stat-pname-member',
-        game_pseudo: 'PnameMember',
-        join_alliance_token: 'stat-pname-owner',
-        battlegroup: 1,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-pname-admin'].access_token;
-      const ownerToken = users['stat-pname-owner'].access_token;
-      const allianceId = users['stat-pname-owner'].alliance_id!;
-      const ownerAccId = users['stat-pname-owner'].account_id!;
-      const memberAccId = users['stat-pname-member'].account_id!;
-      const memberToken = users['stat-pname-member'].access_token;
-
-      withWarScenarioTwoPlayers(
-        adminToken,
-        ownerToken,
-        ownerAccId,
-        memberToken,
-        memberAccId,
-        allianceId,
-        'Enemy',
-        ({ champId, cuOwnerId, cuMemberId, warId }) => {
-          addStatsForPlayer(ownerToken, allianceId, warId, champId, cuOwnerId, 10);
-          addStatsForPlayer(ownerToken, allianceId, warId, champId, cuMemberId, 20);
-          cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-          cy.apiLogin(users['stat-pname-owner'].user_id);
-          cy.goToAllianceStatsTab();
-          cy.getByCy(`statistics-row-${memberAccId}`).click();
-          cy.contains('PnameMember').should('be.visible');
-        },
-      );
-    });
+    );
   });
 
   it('champion detail modal closes and can sort by KOs', () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-mds-admin', role: 'admin' },
-      {
-        discord_token: 'stat-mds-owner',
-        game_pseudo: 'MdsOwner',
-        create_alliance: { name: 'MdsAlliance', tag: 'MDS' },
-        battlegroup: 1,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-mds-admin'].access_token;
-      const ownerToken = users['stat-mds-owner'].access_token;
-      const allianceId = users['stat-mds-owner'].alliance_id!;
-      const ownerAccId = users['stat-mds-owner'].account_id!;
-
+    setupStatsOwner('stat-mds').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
       withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Enemy', ({ champId, cuId, warId }) => {
         addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, 1);
         cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        cy.apiLogin(users['stat-mds-owner'].user_id);
-        cy.goToAllianceStatsTab();
+        openStatsAs(ownerUserId);
         cy.getByCy('chart-metric-all').click();
         cy.getByCy('chart-see-detail').click();
         cy.getByCy('champion-detail-modal').should('be.visible');
@@ -491,81 +296,49 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
   // ── Group filter ──────────────────────────────────────────────────────────
 
   it("group filter updates the champion chart to show only that group's champions", () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-grc-admin', role: 'admin' },
-      {
-        discord_token: 'stat-grc-owner',
-        game_pseudo: 'GrcOwner',
-        create_alliance: { name: 'GrcAlliance', tag: 'GRC' },
-        battlegroup: 1,
+    // owner → G1 (battlegroup 1), member → G2 (battlegroup 2)
+    setupStatsOwnerAndMember('stat-grc', 2).then(
+      ({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId, memberToken, memberAccId }) => {
+        withWarScenarioDiffChampsPlayers(
+          adminToken,
+          ownerToken,
+          ownerAccId,
+          memberToken,
+          memberAccId,
+          allianceId,
+          'Enemy',
+          ({ champ1Id, champ2Id, cuOwnerId, cuMemberId, warId }) => {
+            addStatsForPlayer(ownerToken, allianceId, warId, champ1Id, cuOwnerId, 10, 0, 1);
+            addStatsForPlayer(ownerToken, allianceId, warId, champ2Id, cuMemberId, 10, 0, 2);
+            cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
+
+            openStatsAs(ownerUserId);
+
+            // no group filter: both champions visible in chart legend
+            cy.contains('Iron Man').should('exist');
+            cy.contains('Wolverine').should('exist');
+
+            // G1 → only Iron Man (owner) in chart
+            cy.getByCy('statistics-group-filter').click();
+            cy.contains('G1').click();
+            cy.contains('Iron Man').should('exist');
+            cy.contains('Wolverine').should('not.exist');
+
+            // G2 → only Wolverine (member) in chart
+            cy.getByCy('statistics-group-filter').click();
+            cy.contains('G2').click();
+            cy.contains('Wolverine').should('exist');
+            cy.contains('Iron Man').should('not.exist');
+          },
+        );
       },
-      {
-        discord_token: 'stat-grc-member',
-        game_pseudo: 'GrcMember',
-        join_alliance_token: 'stat-grc-owner',
-        battlegroup: 2,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-grc-admin'].access_token;
-      const ownerToken = users['stat-grc-owner'].access_token;
-      const allianceId = users['stat-grc-owner'].alliance_id!;
-      const ownerAccId = users['stat-grc-owner'].account_id!;
-      const memberAccId = users['stat-grc-member'].account_id!;
-      const memberToken = users['stat-grc-member'].access_token;
-
-      withWarScenarioDiffChampsPlayers(
-        adminToken,
-        ownerToken,
-        ownerAccId,
-        memberToken,
-        memberAccId,
-        allianceId,
-        'Enemy',
-        ({ champ1Id, champ2Id, cuOwnerId, cuMemberId, warId }) => {
-          addStatsForPlayer(ownerToken, allianceId, warId, champ1Id, cuOwnerId, 10, 0, 1);
-          addStatsForPlayer(ownerToken, allianceId, warId, champ2Id, cuMemberId, 10, 0, 2);
-          cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-
-          cy.apiLogin(users['stat-grc-owner'].user_id);
-          cy.goToAllianceStatsTab();
-
-          // no group filter: both champions visible in chart legend
-          cy.contains('Iron Man').should('exist');
-          cy.contains('Wolverine').should('exist');
-
-          // G1 → only Iron Man (owner) in chart
-          cy.getByCy('statistics-group-filter').click();
-          cy.contains('G1').click();
-          cy.contains('Iron Man').should('exist');
-          cy.contains('Wolverine').should('not.exist');
-
-          // G2 → only Wolverine (member) in chart
-          cy.getByCy('statistics-group-filter').click();
-          cy.contains('G2').click();
-          cy.contains('Wolverine').should('exist');
-          cy.contains('Iron Man').should('not.exist');
-        },
-      );
-    });
+    );
   });
 
   // ── Deathless filter ─────────────────────────────────────────────────────
 
   it('deathless metric shows only ko_count=0 fights by default, all shows both', () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-dl-admin', role: 'admin' },
-      {
-        discord_token: 'stat-dl-owner',
-        game_pseudo: 'DlOwner',
-        create_alliance: { name: 'DlAlliance', tag: 'DL1' },
-        battlegroup: 1,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-dl-admin'].access_token;
-      const ownerToken = users['stat-dl-owner'].access_token;
-      const allianceId = users['stat-dl-owner'].alliance_id!;
-      const ownerAccId = users['stat-dl-owner'].account_id!;
-
+    setupStatsOwner('stat-dl').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
       withWarScenarioTwoOwnerChamps(
         adminToken,
         ownerToken,
@@ -579,8 +352,7 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
           addStatsForPlayer(ownerToken, allianceId, warId, champ2Id, cu2Id, 11, 1);
           cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
 
-          cy.apiLogin(users['stat-dl-owner'].user_id);
-          cy.goToAllianceStatsTab();
+          openStatsAs(ownerUserId);
 
           // default metric is deathless → only Iron Man visible
           cy.getByCy('chart-metric-deathless').should('be.visible');
@@ -597,59 +369,49 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
   });
 
   it('filters by group — shows G1 player and G2 player in their respective filters', () => {
-    cy.apiBatchSetup([
-      { discord_token: 'stat-grp-admin', role: 'admin' },
-      {
-        discord_token: 'stat-grp-owner',
-        game_pseudo: 'GrpOwner',
-        create_alliance: { name: 'GrpAlliance', tag: 'GRP' },
-        battlegroup: 1,
-      },
-      {
-        discord_token: 'stat-grp-member',
-        game_pseudo: 'GrpMember',
-        join_alliance_token: 'stat-grp-owner',
-        battlegroup: 2,
-      },
-    ]).then((users) => {
-      const adminToken = users['stat-grp-admin'].access_token;
-      const ownerToken = users['stat-grp-owner'].access_token;
-      const allianceId = users['stat-grp-owner'].alliance_id!;
-      const ownerAccId = users['stat-grp-owner'].account_id!;
-      const memberAccId = users['stat-grp-member'].account_id!;
-      const memberToken = users['stat-grp-member'].access_token;
-      // owner → G1 (battlegroup:1), member → G2 (battlegroup:2)
-
-      withWarScenarioDiffChampsPlayers(
+    // owner → G1 (battlegroup 1), member → G2 (battlegroup 2)
+    setupStatsOwnerAndMember('stat-grp', 2).then(
+      ({
         adminToken,
         ownerToken,
+        ownerUserId,
         ownerAccId,
+        ownerPseudo,
+        allianceId,
         memberToken,
         memberAccId,
-        allianceId,
-        'Enemy',
-        ({ champ1Id, champ2Id, cuOwnerId, cuMemberId, warId }) => {
-          addStatsForPlayer(ownerToken, allianceId, warId, champ1Id, cuOwnerId, 10, 0, 1);
-          addStatsForPlayer(ownerToken, allianceId, warId, champ2Id, cuMemberId, 10, 0, 2);
-          cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
+        memberPseudo,
+      }) => {
+        withWarScenarioDiffChampsPlayers(
+          adminToken,
+          ownerToken,
+          ownerAccId,
+          memberToken,
+          memberAccId,
+          allianceId,
+          'Enemy',
+          ({ champ1Id, champ2Id, cuOwnerId, cuMemberId, warId }) => {
+            addStatsForPlayer(ownerToken, allianceId, warId, champ1Id, cuOwnerId, 10, 0, 1);
+            addStatsForPlayer(ownerToken, allianceId, warId, champ2Id, cuMemberId, 10, 0, 2);
+            cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
 
-          cy.apiLogin(users['stat-grp-owner'].user_id);
-          cy.goToAllianceStatsTab();
-          cy.getByCy('statistics-table').find('tbody tr').should('have.length', 2);
+            openStatsAs(ownerUserId);
+            cy.getByCy('statistics-table').find('tbody tr').should('have.length', 2);
 
-          // filter to G1 → only owner visible
-          cy.getByCy('statistics-group-filter').click();
-          cy.contains('G1').click();
-          cy.getByCy('statistics-table').find('tbody tr').should('have.length', 1);
-          cy.contains('GrpOwner').should('exist');
+            // filter to G1 → only owner visible
+            cy.getByCy('statistics-group-filter').click();
+            cy.contains('G1').click();
+            cy.getByCy('statistics-table').find('tbody tr').should('have.length', 1);
+            cy.contains(ownerPseudo).should('exist');
 
-          // filter to G2 → only member visible
-          cy.getByCy('statistics-group-filter').click();
-          cy.contains('G2').click();
-          cy.getByCy('statistics-table').find('tbody tr').should('have.length', 1);
-          cy.contains('GrpMember').should('exist');
-        },
-      );
-    });
+            // filter to G2 → only member visible
+            cy.getByCy('statistics-group-filter').click();
+            cy.contains('G2').click();
+            cy.getByCy('statistics-table').find('tbody tr').should('have.length', 1);
+            cy.contains(memberPseudo).should('exist');
+          },
+        );
+      },
+    );
   });
 });

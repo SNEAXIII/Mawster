@@ -386,6 +386,9 @@ declare global {
       /** Login as userId, navigate to war page, and click the given mode tab. */
       goToWarMode(userId: string, mode: 'defenders' | 'attackers'): Chainable<void>;
 
+      /** Login as userId on the war page and wait for the attacker panel to be visible. */
+      openWarAttackerPanel(userId: string): Chainable<void>;
+
       /** Navigate to alliances page and open the statistics tab. */
       goToAllianceStatsTab(): Chainable<void>;
 

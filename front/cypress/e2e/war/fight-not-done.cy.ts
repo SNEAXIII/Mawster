@@ -1,4 +1,4 @@
-import { setupAttackerScenario } from '../../support/e2e';
+import { setupAssignedAttacker, setupAttackerScenario } from '../../support/e2e';
 
 describe('War – Fight Not Done', () => {
   beforeEach(() => {
@@ -16,16 +16,14 @@ describe('War – Fight Not Done', () => {
   });
 
   it('fight-not-done button appears for officer after attacker is assigned', () => {
-    setupAttackerScenario('fnd-appears').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+    setupAssignedAttacker('fnd-appears').then(({ ownerData }) => {
       cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('fight-not-done-node-10').should('be.visible');
     });
   });
 
   it('fight-not-done button is hidden for regular member', () => {
-    setupAttackerScenario('fnd-member').then(({ memberData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+    setupAssignedAttacker('fnd-member').then(({ memberData }) => {
       cy.apiLogin(memberData.user_id, 'war');
       cy.getByCy('fight-not-done-node-10').should('not.exist');
     });
@@ -34,8 +32,7 @@ describe('War – Fight Not Done', () => {
   // ── Fight Not Done: toggle ───────────────────────────────────────────────
 
   it('clicking fight-not-done button marks node as not done', () => {
-    setupAttackerScenario('fnd-toggle-on').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+    setupAssignedAttacker('fnd-toggle-on').then(({ ownerData }) => {
       cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('fight-not-done-node-10').click();
       cy.getByCy('fight-not-done-node-10').should('have.class', 'bg-amber-500');
@@ -43,8 +40,7 @@ describe('War – Fight Not Done', () => {
   });
 
   it('clicking fight-not-done button again unmarks the node', () => {
-    setupAttackerScenario('fnd-toggle-off').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+    setupAssignedAttacker('fnd-toggle-off').then(({ ownerData, allianceId, warId }) => {
       cy.apiToggleFightNotDone(ownerData.access_token, allianceId, warId, 1, 10);
       cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('fight-not-done-node-10').click();
@@ -53,13 +49,10 @@ describe('War – Fight Not Done', () => {
   });
 
   it('fight-not-done button is hidden after combat is completed', () => {
-    setupAttackerScenario('fnd-hidden-completed').then(
-      ({ memberData, ownerData, allianceId, warId, championUserId }) => {
-        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-        cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
-        cy.goToWarMode(ownerData.user_id, 'attackers');
-        cy.getByCy('fight-not-done-node-10').should('not.exist');
-      },
-    );
+    setupAssignedAttacker('fnd-hidden-completed').then(({ memberData, ownerData, allianceId, warId }) => {
+      cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
+      cy.getByCy('fight-not-done-node-10').should('not.exist');
+    });
   });
 });
