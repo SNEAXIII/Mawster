@@ -1,5 +1,18 @@
 import { setupAdmin } from '../../support/e2e';
 
+type Flag = 'prefight' | 'ascendable';
+
+const flagToggle = (flag: Flag, champion: string) => cy.getByCy(`toggle-${flag}-${champion}`);
+
+const expectFlag = (flag: Flag, champion: string, value: 'Yes' | 'No') =>
+  flagToggle(flag, champion).should('contain.text', value);
+
+/** Full page reload, then land back on the champions tab. */
+function reloadChampionsTab() {
+  cy.reload();
+  cy.getByCy('tab-champions').click();
+}
+
 describe('Admin — champion flag toggles', () => {
   let adminToken: string;
 
@@ -11,47 +24,49 @@ describe('Admin — champion flag toggles', () => {
     });
   });
 
+  /** Load one champion as admin, then open the champions tab. */
+  function openChampionsTabWith(name: string, cls: string, options?: { is_ascendable?: boolean }) {
+    cy.apiLoadChampion(adminToken, name, cls, options);
+    cy.goToAdminChampionsTab();
+  }
+
   it('toggle prefight off→on shows Yes, persists on reload', () => {
-    cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then(() => {
-      cy.goToAdminChampionsTab();
-      cy.getByCy('toggle-prefight-Iron Man').should('contain.text', 'No');
-      cy.getByCy('toggle-prefight-Iron Man').click();
-      cy.getByCy('toggle-prefight-Iron Man').should('contain.text', 'Yes');
-      cy.reload();
-      cy.getByCy('tab-champions').click();
-      cy.getByCy('toggle-prefight-Iron Man').should('contain.text', 'Yes');
-    });
+    openChampionsTabWith('Iron Man', 'Tech');
+
+    expectFlag('prefight', 'Iron Man', 'No');
+    flagToggle('prefight', 'Iron Man').click();
+    expectFlag('prefight', 'Iron Man', 'Yes');
+
+    reloadChampionsTab();
+    expectFlag('prefight', 'Iron Man', 'Yes');
   });
 
   it('toggle prefight on→off shows No', () => {
-    cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then(() => {
-      cy.goToAdminChampionsTab();
-      cy.getByCy('toggle-prefight-Iron Man').click();
-      cy.getByCy('toggle-prefight-Iron Man').should('contain.text', 'Yes');
-      cy.getByCy('toggle-prefight-Iron Man').click();
-      cy.getByCy('toggle-prefight-Iron Man').should('contain.text', 'No');
-    });
+    openChampionsTabWith('Iron Man', 'Tech');
+
+    flagToggle('prefight', 'Iron Man').click();
+    expectFlag('prefight', 'Iron Man', 'Yes');
+    flagToggle('prefight', 'Iron Man').click();
+    expectFlag('prefight', 'Iron Man', 'No');
   });
 
   it('toggle ascendable off→on shows Yes, persists on reload', () => {
-    cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then(() => {
-      cy.goToAdminChampionsTab();
-      cy.getByCy('toggle-ascendable-Wolverine').should('contain.text', 'No');
-      cy.getByCy('toggle-ascendable-Wolverine').click();
-      cy.getByCy('toggle-ascendable-Wolverine').should('contain.text', 'Yes');
-      cy.reload();
-      cy.getByCy('tab-champions').click();
-      cy.getByCy('toggle-ascendable-Wolverine').should('contain.text', 'Yes');
-    });
+    openChampionsTabWith('Wolverine', 'Mutant');
+
+    expectFlag('ascendable', 'Wolverine', 'No');
+    flagToggle('ascendable', 'Wolverine').click();
+    expectFlag('ascendable', 'Wolverine', 'Yes');
+
+    reloadChampionsTab();
+    expectFlag('ascendable', 'Wolverine', 'Yes');
   });
 
   it('toggle ascendable on→off shows No', () => {
-    cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant', { is_ascendable: true }).then(() => {
-      cy.goToAdminChampionsTab();
-      cy.getByCy('toggle-ascendable-Wolverine').should('contain.text', 'Yes');
-      cy.getByCy('toggle-ascendable-Wolverine').click();
-      cy.getByCy('toggle-ascendable-Wolverine').should('contain.text', 'No');
-    });
+    openChampionsTabWith('Wolverine', 'Mutant', { is_ascendable: true });
+
+    expectFlag('ascendable', 'Wolverine', 'Yes');
+    flagToggle('ascendable', 'Wolverine').click();
+    expectFlag('ascendable', 'Wolverine', 'No');
   });
 
   // Saga attacker/defender toggles are now scoped to a selected season
