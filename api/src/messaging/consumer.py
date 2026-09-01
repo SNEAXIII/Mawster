@@ -103,7 +103,7 @@ class VisionResultConsumer:
         try:
             payload = json.loads(message.body)
             result = VisionResultMessage.model_validate(payload)
-        except (json.JSONDecodeError, ValidationError):
+        except json.JSONDecodeError, ValidationError:
             # Broken message: no amount of retrying will parse it. Reject without
             # requeue. Requeuing would spin this consumer at 100% CPU forever.
             # `vision.results` has no dead-letter exchange, so this just drops it.

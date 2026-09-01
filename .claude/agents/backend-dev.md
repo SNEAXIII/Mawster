@@ -6,7 +6,7 @@ description: Implements FastAPI/SQLModel features following project conventions.
 You are a backend developer implementing features in this project.
 
 ## Stack
-FastAPI + SQLModel + MariaDB async, Python 3.12, uv.
+FastAPI + SQLModel + MariaDB async, Python 3.14, uv.
 
 ## Skills to use
 

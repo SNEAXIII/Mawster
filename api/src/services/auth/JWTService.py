@@ -81,7 +81,7 @@ class JWTService:
             )
         except ExpiredSignatureError:
             raise EXPIRED_EXCEPTION from None
-        except (InvalidSignatureError, InvalidAlgorithmError, DecodeError):
+        except InvalidSignatureError, InvalidAlgorithmError, DecodeError:
             raise INVALID_TOKEN_EXCEPTION from None
         if data.get("user_id") is None:
             raise CANT_FIND_USER_TOKEN_EXCEPTION

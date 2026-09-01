@@ -254,7 +254,7 @@ class AllianceService:
         session: SessionDep,
         alliance_id: uuid.UUID,
         user_id: uuid.UUID,
-    ) -> "GameAccount":
+    ) -> GameAccount:
         """Raise 403 if user is not an officer or owner. Returns their GameAccount in this alliance."""
         alliance = await cls._load_alliance_with_relations(session, alliance_id)
         if alliance is None:
@@ -949,7 +949,7 @@ class AllianceService:
         session: SessionDep,
         alliance_id: uuid.UUID,
         user_id: uuid.UUID,
-    ) -> "GameAccount":
+    ) -> GameAccount:
         """Return the user's game account that is a visitor of this alliance. Raises 403 if not found."""
 
         user_accounts = await cls._get_user_accounts(session, user_id)

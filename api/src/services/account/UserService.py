@@ -44,7 +44,7 @@ class UserService:
     ) -> User | None:
         try:
             uid = uuid.UUID(user_id)
-        except (ValueError, AttributeError):
+        except ValueError, AttributeError:
             raise USER_DOESNT_EXISTS from None
         user = await UserService.get_user(session, uid)
         if user is None:

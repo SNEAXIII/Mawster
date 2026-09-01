@@ -76,7 +76,7 @@ class VisionResultService:
     async def retry_job(
         cls,
         session: SessionDep,
-        publisher: "VisionPublisher",
+        publisher: VisionPublisher,
         job: VisionJob,
         vision_import: VisionImport,
     ) -> None:

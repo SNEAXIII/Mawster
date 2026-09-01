@@ -1,4 +1,4 @@
-FROM python:3.12-alpine AS builder
+FROM python:3.14-alpine AS builder
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ RUN uv sync --no-dev --frozen --no-build --no-install-project
 
 # ---
 
-FROM python:3.12-alpine
+FROM python:3.14-alpine
 
 LABEL maintainer="SNEAXIII <misterbalise2@gmail.com>"
 
