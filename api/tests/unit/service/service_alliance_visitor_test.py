@@ -5,7 +5,8 @@ import uuid
 import pytest
 from fastapi import HTTPException
 
-from src.models.AllianceVisitor import AllianceVisitor
+from src.models.alliance.AllianceVisitor import AllianceVisitor
+from src.models.user.GameAccount import GameAccount
 from src.services.alliance.AllianceVisitorService import AllianceVisitorService
 
 # ---------------------------------------------------------------------------
@@ -95,8 +96,11 @@ class TestCreateVisitor:
         result_mock.first.return_value = visitor
         session.exec.return_value = result_mock
 
+        alliance_id = uuid.uuid4()
+        game_account_id = uuid.uuid4()
+
         with pytest.raises(HTTPException) as exc:
-            await AllianceVisitorService.create_visitor(session, uuid.uuid4(), uuid.uuid4())
+            await AllianceVisitorService.create_visitor(session, alliance_id, game_account_id)
         assert exc.value.status_code == 409
 
     @pytest.mark.asyncio
@@ -134,8 +138,11 @@ class TestCreateVisitor:
 
         session.exec = mocker.AsyncMock(side_effect=[find_result_mock, count_result_mock])
 
+        alliance_id = uuid.uuid4()
+        game_account_id = uuid.uuid4()
+
         with pytest.raises(HTTPException) as exc:
-            await AllianceVisitorService.create_visitor(session, uuid.uuid4(), uuid.uuid4())
+            await AllianceVisitorService.create_visitor(session, alliance_id, game_account_id)
         assert exc.value.status_code == 409
 
 
@@ -152,8 +159,11 @@ class TestRemoveVisitor:
         result_mock.first.return_value = None
         session.exec.return_value = result_mock
 
+        alliance_id = uuid.uuid4()
+        game_account_id = uuid.uuid4()
+
         with pytest.raises(HTTPException) as exc:
-            await AllianceVisitorService.remove_visitor(session, uuid.uuid4(), uuid.uuid4())
+            await AllianceVisitorService.remove_visitor(session, alliance_id, game_account_id)
         assert exc.value.status_code == 404
 
     @pytest.mark.asyncio
@@ -246,7 +256,6 @@ class TestGetVisitedAlliances:
 
     @pytest.mark.asyncio
     async def test_returns_visited_alliances(self, mocker):
-        from src.models.GameAccount import GameAccount
 
         session = _mock_session(mocker)
         user_id = uuid.uuid4()

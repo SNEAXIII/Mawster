@@ -10,6 +10,25 @@ from src.Messages.war_messages import BANNED_CHAMPION_LIST_TOO_LONG
 MAX_BANNED_CHAMPIONS = 7
 
 
+def _champion_user_fields(champion_user: Any, prefix: str) -> dict[str, Any]:
+    """Flatten a ChampionUser into ``{prefix}_*`` keys, or nothing when it is not set.
+
+    Missing keys fall back to the model defaults (``None``), which keeps the
+    caller free of one ternary per field.
+    """
+    if champion_user is None:
+        return {}
+    return {
+        f"{prefix}_game_account_id": champion_user.game_account_id,
+        f"{prefix}_pseudo": champion_user.game_account.game_pseudo,
+        f"{prefix}_champion_name": champion_user.champion.name,
+        f"{prefix}_champion_class": champion_user.champion.champion_class,
+        f"{prefix}_image_url": champion_user.champion.image_url,
+        f"{prefix}_rarity": f"{champion_user.stars}r{champion_user.rank}",
+        f"{prefix}_ascension": champion_user.ascension,
+    }
+
+
 class WarCreateRequest(BaseModel):
     opponent_name: str = Field(..., max_length=100, min_length=1)
     banned_champion_ids: list[uuid.UUID] = Field(
@@ -115,7 +134,6 @@ class WarPlacementResponse(BaseModel):
         if isinstance(data, dict):
             return data
         attacker = data.attacker_champion_user
-        assistor = data.assist_champion_user
         return {
             "id": data.id,
             "war_id": data.war_id,
@@ -137,23 +155,11 @@ class WarPlacementResponse(BaseModel):
             "is_fight_not_done": data.is_fight_not_done,
             "is_planning_error": data.is_planning_error,
             "attacker_champion_user_id": data.attacker_champion_user_id,
-            "attacker_game_account_id": attacker.game_account_id if attacker else None,
-            "attacker_pseudo": attacker.game_account.game_pseudo if attacker else None,
-            "attacker_champion_name": attacker.champion.name if attacker else None,
-            "attacker_champion_class": attacker.champion.champion_class if attacker else None,
-            "attacker_image_url": attacker.champion.image_url if attacker else None,
-            "attacker_rarity": f"{attacker.stars}r{attacker.rank}" if attacker else None,
             "attacker_is_preferred_attacker": attacker.is_preferred_attacker if attacker else None,
-            "attacker_ascension": attacker.ascension if attacker else None,
             "is_assisted": data.assist_champion_user_id is not None,
             "assistor_champion_user_id": data.assist_champion_user_id,
-            "assistor_game_account_id": assistor.game_account_id if assistor else None,
-            "assistor_pseudo": assistor.game_account.game_pseudo if assistor else None,
-            "assistor_champion_name": assistor.champion.name if assistor else None,
-            "assistor_champion_class": assistor.champion.champion_class if assistor else None,
-            "assistor_image_url": assistor.champion.image_url if assistor else None,
-            "assistor_rarity": f"{assistor.stars}r{assistor.rank}" if assistor else None,
-            "assistor_ascension": assistor.ascension if assistor else None,
+            **_champion_user_fields(attacker, "attacker"),
+            **_champion_user_fields(data.assist_champion_user, "assistor"),
         }
 
 

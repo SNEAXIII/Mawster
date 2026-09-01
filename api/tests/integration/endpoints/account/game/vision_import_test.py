@@ -2,14 +2,25 @@
 
 import io
 import uuid
-from datetime import UTC
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from botocore.exceptions import ClientError
 
 from main import app
+from src.dto.account.game.dto_vision_result import (
+    VisionPredictionMessage,
+    VisionResultMessage,
+)
+from src.enums.VisionImportStatus import VisionImportStatus
 from src.messaging import get_publisher
+from src.models.vision.VisionImport import VisionImport
+from src.models.vision.VisionJob import VisionJob
+from src.security.secrets import SECRET
+from src.services.account.game.VisionImportService import UPLOAD_URL_TTL_SECONDS
+from src.services.account.game.VisionResultService import VisionResultService
 from src.storage import get_storage
+from src.storage.base import ObjectStat, screen_key, sprite_key
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import push_game_account
 from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2
@@ -20,14 +31,39 @@ from tests.utils.utils_db import get_test_session
 app.dependency_overrides[get_session] = get_test_session
 
 
+PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"0" * 64
+
+
 class FakeStorage:
     """In-memory Storage: the tests never talk to RustFS."""
 
     def __init__(self):
         self.objects: dict[str, bytes] = {}
+        self.content_types: dict[str, str] = {}
 
     async def put_bytes(self, bucket: str, key: str, data: bytes, content_type: str) -> None:
         self.objects[key] = data
+        self.content_types[key] = content_type
+
+    async def presigned_put_url(
+        self, bucket: str, key: str, content_type: str, expires_in: int
+    ) -> str:
+        return f"https://s3.test/{bucket}/{key}?exp={expires_in}"
+
+    async def stat_object(self, bucket: str, key: str):
+
+        if key not in self.objects:
+            return None
+        return ObjectStat(size=len(self.objects[key]), content_type=self.content_types[key])
+
+    async def get_head_bytes(self, bucket: str, key: str, length: int) -> bytes:
+        return self.objects[key][:length]
+
+    def browser_put(self, key: str, data: bytes = PNG_BYTES, content_type: str = "image/png"):
+        """What the browser does against a presigned URL — bytes appear in the
+        bucket without the API seeing them, which is the whole point of the flow."""
+        self.objects[key] = data
+        self.content_types[key] = content_type
 
     async def get_bytes(self, bucket: str, key: str) -> bytes:
         if key not in self.objects:
@@ -43,6 +79,7 @@ class FakeStorage:
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
         for key in [key for key in self.objects if key.startswith(prefix)]:
             del self.objects[key]
+            self.content_types.pop(key, None)
 
 
 class FakePublisher:
@@ -55,7 +92,8 @@ class FakePublisher:
     async def publish_job(self, job_id, import_id, bucket, object_key) -> None:
         if self.fail_next:
             self.fail_next = False
-            raise RuntimeError("broker unavailable")
+            msg = "broker unavailable"
+            raise RuntimeError(msg)
         self.published.append(
             {
                 "job_id": job_id,
@@ -100,10 +138,6 @@ async def _get_import(headers, import_id) -> dict:
 async def _fail_job(job_id: str) -> None:
     """Drive a job into FAILED through the real service, exactly as a worker
     failure would — rather than poking the row by hand."""
-    from src.dto.account.game.dto_vision_result import VisionResultMessage
-    from src.models.VisionJob import VisionJob
-    from src.services.account.game.VisionResultService import VisionResultService
-    from tests.utils.utils_db import get_test_session
 
     async for session in get_test_session():
         job = await session.get(VisionJob, uuid.UUID(job_id))
@@ -276,9 +310,6 @@ async def test_cancel_keeps_the_row_so_the_quota_still_counts_it(fake_infra):
 
     assert response.status_code == 204
 
-    from src.models.VisionImport import VisionImport, VisionImportStatus
-    from tests.utils.utils_db import get_test_session
-
     async for session in get_test_session():
         row = await session.get(VisionImport, uuid.UUID(import_id))
         assert row is not None, "cancelling must NOT delete the row"
@@ -397,12 +428,6 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
     job_id = detail["jobs"][0]["id"]
 
     # Drive the job to done with one prediction through the real service.
-    from src.dto.account.game.dto_vision_result import (
-        VisionPredictionMessage,
-        VisionResultMessage,
-    )
-    from src.models.VisionJob import VisionJob
-    from src.services.account.game.VisionResultService import VisionResultService
 
     async for session in get_test_session():
         job = await session.get(VisionJob, uuid.UUID(job_id))
@@ -422,12 +447,30 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
                         signature=200,
                         ascension=1,
                         confidence=0.9,
-                        crop_key="imports/a/b/crops/0.png",
+                        crop_key="imports/a/b/crops/sprite_v1.webp#0",
                         candidates=[
                             {"name": "Hulk", "score": 0.90},
                             {"name": "Red Hulk", "score": 0.62},
                         ],
-                    )
+                    ),
+                    # A card the pixel second pass corrected: the winner keeps its
+                    # own lower CLIP cosine, so the stored order is inverted and
+                    # the derived margin comes out negative.
+                    VisionPredictionMessage(
+                        champion_name="Spider-Man (Stark Enhanced)",
+                        champion_class="Science",
+                        stars=7,
+                        rank=5,
+                        signature=200,
+                        ascension=0,
+                        confidence=0.8528,
+                        reranked=True,
+                        crop_key="imports/a/b/crops/sprite_v1.webp#1",
+                        candidates=[
+                            {"name": "Spider-Man (Stark Enhanced)", "score": 0.8528},
+                            {"name": "Spider-Man (Classic)", "score": 0.8561},
+                        ],
+                    ),
                 ],
             ),
         )
@@ -438,19 +481,32 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
 
     assert response.status_code == 200
     body = response.json()
-    assert len(body["predictions"]) == 1
-    assert body["predictions"][0]["champion_name"] == "Hulk"
-    assert body["predictions"][0]["crop_index"] == 0
+    assert len(body["predictions"]) == 2
+    # Rows come back ordered by a uuid4 primary key, so index by name, not position.
+    by_name = {p["champion_name"]: p for p in body["predictions"]}
+    assert by_name["Hulk"]["crop_index"] == 0
 
     # The candidates survive the whole round trip — worker message, child table,
     # eager load, response — and come back best first. The unit test for _margin
     # proves the arithmetic; only this proves the wiring under it.
-    row = body["predictions"][0]
+    row = by_name["Hulk"]
     assert [(c["name"], c["score"]) for c in row["candidates"]] == [
         ("Hulk", 0.90),
         ("Red Hulk", 0.62),
     ]
     assert row["margin"] == pytest.approx(0.28)
+    assert row["reranked"] is False
+
+    # The corrected card: `position` preserved the inverted order the second pass
+    # produced, so the margin is negative and the flag says why.
+    fixed = by_name["Spider-Man (Stark Enhanced)"]
+    assert fixed["reranked"] is True
+    assert fixed["crop_index"] == 1
+    assert [c["name"] for c in fixed["candidates"]] == [
+        "Spider-Man (Stark Enhanced)",
+        "Spider-Man (Classic)",
+    ]
+    assert fixed["margin"] == pytest.approx(-0.0033)
 
 
 @pytest.mark.asyncio
@@ -475,7 +531,7 @@ async def test_predictions_endpoint_of_another_user_is_forbidden(fake_infra):
 
 
 @pytest.mark.asyncio
-async def test_crop_bytes_for_owner(fake_infra):
+async def test_sprite_bytes_for_owner(fake_infra):
     storage, _ = fake_infra
     await push_one_user()
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -485,23 +541,21 @@ async def test_crop_bytes_for_owner(fake_infra):
     detail = await _get_import(headers, import_id)
     job_id = detail["jobs"][0]["id"]
 
-    from src.storage.base import crop_key
-
-    crop_bytes = b"\x89PNG\r\n\x1a\n" + b"crop-bytes"
-    storage.objects[crop_key(uuid.UUID(import_id), uuid.UUID(job_id), 0)] = crop_bytes
+    sheet = b"RIFF____WEBPVP8 sheet-bytes"
+    storage.objects[sprite_key(uuid.UUID(import_id), uuid.UUID(job_id))] = sheet
 
     async with get_test_client() as client:
         response = await client.get(
-            f"/vision/imports/{import_id}/jobs/{job_id}/crops/0", headers=headers
+            f"/vision/imports/{import_id}/jobs/{job_id}/crops/sprite", headers=headers
         )
 
     assert response.status_code == 200
-    assert response.headers["content-type"] == "image/png"
-    assert response.content == crop_bytes
+    assert response.headers["content-type"] == "image/webp"
+    assert response.content == sheet
 
 
 @pytest.mark.asyncio
-async def test_crop_bytes_forbidden_for_non_owner(fake_infra):
+async def test_sprite_bytes_forbidden_for_non_owner(fake_infra):
     await push_one_user()
     await push_user2()
     owner_account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -515,7 +569,7 @@ async def test_crop_bytes_forbidden_for_non_owner(fake_infra):
 
     async with get_test_client() as client:
         response = await client.get(
-            f"/vision/imports/{import_id}/jobs/{job_id}/crops/0",
+            f"/vision/imports/{import_id}/jobs/{job_id}/crops/sprite",
             headers=create_auth_headers(str(USER2_ID)),
         )
 
@@ -523,7 +577,7 @@ async def test_crop_bytes_forbidden_for_non_owner(fake_infra):
 
 
 @pytest.mark.asyncio
-async def test_crop_bytes_missing_object_is_404(fake_infra):
+async def test_sprite_missing_object_is_404(fake_infra):
     await push_one_user()
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
     headers = create_auth_headers(str(USER_ID))
@@ -532,10 +586,9 @@ async def test_crop_bytes_missing_object_is_404(fake_infra):
     detail = await _get_import(headers, import_id)
     job_id = detail["jobs"][0]["id"]
 
-    # No crop was ever written to storage for this job/index.
     async with get_test_client() as client:
         response = await client.get(
-            f"/vision/imports/{import_id}/jobs/{job_id}/crops/0", headers=headers
+            f"/vision/imports/{import_id}/jobs/{job_id}/crops/sprite", headers=headers
         )
 
     assert response.status_code == 404
@@ -544,12 +597,6 @@ async def test_crop_bytes_missing_object_is_404(fake_infra):
 async def _drive_job_done_with_prediction(job_id: str) -> None:
     """Drive a job to DONE with one prediction through the real service, exactly
     as the vision worker would report a successful read."""
-    from src.dto.account.game.dto_vision_result import (
-        VisionPredictionMessage,
-        VisionResultMessage,
-    )
-    from src.models.VisionJob import VisionJob
-    from src.services.account.game.VisionResultService import VisionResultService
 
     async for session in get_test_session():
         job = await session.get(VisionJob, uuid.UUID(job_id))
@@ -569,7 +616,7 @@ async def _drive_job_done_with_prediction(job_id: str) -> None:
                         signature=200,
                         ascension=1,
                         confidence=0.9,
-                        crop_key="imports/a/b/crops/0.png",
+                        crop_key="imports/a/b/crops/sprite_v1.webp#0",
                     )
                 ],
             ),
@@ -766,11 +813,6 @@ async def test_current_returns_204_when_nothing_awaits(fake_infra):
 async def test_current_excludes_an_import_whose_images_expired(fake_infra):
     """Past the retention window the screenshots and crops are gone, so there is
     nothing left to check the predictions against."""
-    from datetime import datetime, timedelta
-
-    from src.models.VisionImport import VisionImport
-    from src.security.secrets import SECRET
-    from tests.utils.utils_db import get_test_session
 
     await push_one_user()
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -855,8 +897,6 @@ async def test_current_returns_the_most_recent_candidate(fake_infra):
     the second row is inserted directly. The two rows get distinct timestamps,
     so this covers the created_at ordering only — the id tie-break is covered
     by the test below."""
-    from src.models.VisionImport import VisionImport
-    from tests.utils.utils_db import get_test_session
 
     await push_one_user()
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -880,10 +920,6 @@ async def test_current_breaks_a_timestamp_tie_on_id(fake_infra):
     """Identical created_at is possible under a bulk insert, and without the id
     tie-break the winner would vary between requests. Both rows are inserted with
     the same timestamp so only the secondary sort can decide."""
-    from datetime import datetime
-
-    from src.models.VisionImport import VisionImport
-    from tests.utils.utils_db import get_test_session
 
     await push_one_user()
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -958,6 +994,175 @@ async def test_second_import_while_one_is_pending_is_409(fake_infra):
     # The blocking id must come back, so the UI can offer to cancel it instead
     # of just showing a wall.
     assert first.json()["id"] in second.text
+
+
+async def _post_init(headers, game_account_id, filenames: list[str]):
+    async with get_test_client() as client:
+        return await client.post(
+            "/vision/imports/init",
+            headers=headers,
+            json={
+                "game_account_id": str(game_account_id),
+                "share_dataset": False,
+                "screens": [
+                    {"filename": name, "content_type": "image/png", "size": len(PNG_BYTES)}
+                    for name in filenames
+                ],
+            },
+        )
+
+
+async def _post_commit_screen(headers, import_id, job_id):
+    async with get_test_client() as client:
+        return await client.post(
+            f"/vision/imports/{import_id}/screens/{job_id}/commit", headers=headers
+        )
+
+
+async def _post_commit(headers, import_id):
+    async with get_test_client() as client:
+        return await client.post(f"/vision/imports/{import_id}/commit", headers=headers)
+
+
+def _screen_key(import_id: str, job_id: str) -> str:
+
+    return screen_key(uuid.UUID(import_id), uuid.UUID(job_id))
+
+
+@pytest.mark.asyncio
+async def test_commit_screen_queues_one_screenshot_while_the_others_upload(fake_infra):
+    """The reason the endpoint exists: the worker starts on screenshot 1 without
+    waiting for screenshot 2 to finish climbing the user's uplink."""
+    storage, publisher = fake_infra
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    init = await _post_init(headers, account.id, ["a.png", "b.png"])
+    assert init.status_code == 201
+    body = init.json()
+    import_id, first = body["import_id"], body["uploads"][0]
+    storage.browser_put(_screen_key(import_id, first["job_id"]))
+
+    response = await _post_commit_screen(headers, import_id, first["job_id"])
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "pending"
+    assert [job["job_id"] for job in publisher.published] == [uuid.UUID(first["job_id"])]
+    detail = await _get_import(headers, import_id)
+    assert detail["status"] == "pending"
+    assert sorted(job["status"] for job in detail["jobs"]) == ["awaiting_upload", "pending"]
+
+
+@pytest.mark.asyncio
+async def test_commit_screen_of_another_users_import_is_forbidden(fake_infra):
+    storage, publisher = fake_infra
+    await push_one_user()
+    await push_user2()
+    owner_account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+    init = await _post_init(create_auth_headers(str(USER_ID)), owner_account.id, ["a.png"])
+    body = init.json()
+    import_id, job_id = body["import_id"], body["uploads"][0]["job_id"]
+    storage.browser_put(_screen_key(import_id, job_id))
+
+    response = await _post_commit_screen(create_auth_headers(str(USER2_ID)), import_id, job_id)
+
+    assert response.status_code == 403
+    assert publisher.published == []
+
+
+@pytest.mark.asyncio
+async def test_commit_seals_the_batch_and_fails_the_screenshot_that_never_uploaded(fake_infra):
+    """One PUT died. The screenshot that did upload is already running and cannot
+    be recalled, so the import completes around the hole instead of refusing."""
+    storage, publisher = fake_infra
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    body = (await _post_init(headers, account.id, ["ok.png", "lost.png"])).json()
+    import_id, uploaded, lost = body["import_id"], body["uploads"][0], body["uploads"][1]
+    storage.browser_put(_screen_key(import_id, uploaded["job_id"]))
+    await _post_commit_screen(headers, import_id, uploaded["job_id"])
+
+    response = await _post_commit(headers, import_id)
+
+    assert response.status_code == 200
+    assert response.json()["screens_done"] == 1
+    detail = await _get_import(headers, import_id)
+    statuses = {job["id"]: job["status"] for job in detail["jobs"]}
+    assert statuses[uploaded["job_id"]] == "pending"
+    assert statuses[lost["job_id"]] == "failed"
+    # Only the screenshot that actually arrived was ever queued.
+    assert [job["job_id"] for job in publisher.published] == [uuid.UUID(uploaded["job_id"])]
+
+
+@pytest.mark.asyncio
+async def test_commit_does_not_requeue_screenshots_already_queued_one_by_one(fake_infra):
+    """The normal path leaves the seal nothing to do. Re-publishing here would
+    run the whole roster through the worker twice and double every prediction."""
+    storage, publisher = fake_infra
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    body = (await _post_init(headers, account.id, ["a.png", "b.png"])).json()
+    import_id = body["import_id"]
+    for upload in body["uploads"]:
+        storage.browser_put(_screen_key(import_id, upload["job_id"]))
+        await _post_commit_screen(headers, import_id, upload["job_id"])
+
+    response = await _post_commit(headers, import_id)
+
+    assert response.status_code == 200
+    assert len(publisher.published) == 2
+
+
+@pytest.mark.asyncio
+async def test_current_ignores_an_import_stuck_mid_upload_past_the_url_ttl(fake_infra):
+    """The tab closed after the first screenshot was queued. Its result moved the
+    import to RUNNING, but the second screenshot can never be uploaded now that
+    the URLs are dead, so the import can never finish. Left blocking, it would
+    lock the game account out of importing for the whole retention window."""
+
+    storage, _ = fake_infra
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    body = (await _post_init(headers, account.id, ["a.png", "b.png"])).json()
+    import_id, first = body["import_id"], body["uploads"][0]
+    storage.browser_put(_screen_key(import_id, first["job_id"]))
+    await _post_commit_screen(headers, import_id, first["job_id"])
+    await _drive_job_done_with_prediction(first["job_id"])
+
+    async for session in get_test_session():
+        row = await session.get(VisionImport, uuid.UUID(import_id))
+        assert row.status.value == "running"
+        row.created_at = datetime.now(UTC) - timedelta(seconds=UPLOAD_URL_TTL_SECONDS + 60)
+        session.add(row)
+        await session.commit()
+        break
+
+    response = await _get_current(headers, account.id)
+
+    assert response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_current_still_returns_an_import_whose_uploads_are_in_flight(fake_infra):
+    """The mirror of the test above: while the URLs are alive the import is very
+    much the user's business, and a second import must stay refused."""
+    storage, _ = fake_infra
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    body = (await _post_init(headers, account.id, ["a.png", "b.png"])).json()
+    import_id, first = body["import_id"], body["uploads"][0]
+    storage.browser_put(_screen_key(import_id, first["job_id"]))
+    await _post_commit_screen(headers, import_id, first["job_id"])
+
+    response = await _get_current(headers, account.id)
+
+    assert response.status_code == 200
+    assert response.json()["id"] == import_id
 
 
 @pytest.mark.asyncio

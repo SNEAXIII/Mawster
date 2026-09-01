@@ -79,6 +79,10 @@ services:
       ALLOWED_ORIGINS: https://www.staging.mawster.app
       API_PORT: '8000'
       EMAIL_PEPPER_VERSION: '1'
+      # Le staging n'a ni RustFS ni RabbitMQ, et c'est assumé : l'import IA y est
+      # coupé (503 sur /vision), les réglages RUSTFS_*/RABBITMQ_URL deviennent
+      # optionnels et le consumer AMQP ne démarre pas.
+      VISION_ENABLED: '0'
     secrets:
       - source: mawster_secret_key_staging
         target: mawster_secret_key

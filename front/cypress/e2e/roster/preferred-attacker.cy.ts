@@ -10,8 +10,7 @@ describe('Roster – Preferred Attacker', () => {
       cy.apiLoadChampion(adminData.access_token, 'Blade', 'Skill').then((champs) => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r2');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         // Champion should NOT be a preferred attacker initially
         cy.getByCy('preferred-attacker-name').should('not.exist');
@@ -33,8 +32,7 @@ describe('Roster – Preferred Attacker', () => {
           is_preferred_attacker: true,
         });
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         // Should initially show ⚔ yellow name
         cy.getByCy('preferred-attacker-name').should('be.visible');
@@ -52,8 +50,7 @@ describe('Roster – Preferred Attacker', () => {
     setupRosterUser('pref-form', 'CorvusPlayer').then(({ adminData, userData }) => {
       cy.apiLoadChampion(adminData.access_token, 'Corvus', 'Cosmic');
 
-      cy.apiLogin(userData.user_id);
-      cy.navTo('roster');
+      cy.apiLogin(userData.user_id, 'roster');
 
       cy.contains('Add / Update a Champion').click();
       cy.getByCy('champion-search').type('Corvus');
@@ -82,8 +79,7 @@ describe('Roster – Preferred Attacker', () => {
             is_preferred_attacker: true,
           });
 
-          cy.apiLogin(userData.user_id);
-          cy.navTo('roster');
+          cy.apiLogin(userData.user_id, 'roster');
 
           // Both should show ⚔ prefix yellow name
           cy.getByCy('preferred-attacker-name').should('have.length', 2);

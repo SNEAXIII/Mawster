@@ -6,10 +6,10 @@ import pytest
 from fastapi import HTTPException
 
 from src.models.Base import utcnow
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.GameAccount import GameAccount
-from src.models.RequestedUpgrade import RequestedUpgrade
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.champion.RequestedUpgrade import RequestedUpgrade
+from src.models.user.GameAccount import GameAccount
 from src.services.alliance.UpgradeRequestService import UpgradeRequestService
 from tests.utils.utils_constant import GAME_PSEUDO_2, USER_ID
 
@@ -44,7 +44,7 @@ def _make_champion_user(
 ) -> ChampionUser:
     stars = int(rarity.split("r")[0])
     rank = int(rarity.split("r")[1])
-    cu = ChampionUser(
+    return ChampionUser(
         id=CHAMPION_USER_ID,
         game_account_id=game_account_id,
         champion_id=champion_id,
@@ -52,7 +52,6 @@ def _make_champion_user(
         rank=rank,
         signature=0,
     )
-    return cu
 
 
 def _make_game_account(
@@ -242,8 +241,10 @@ class TestCancelUpgradeRequest:
         session = _mock_session(mocker)
         session.get.return_value = None
 
+        missing_request_id = uuid.uuid4()
+
         with pytest.raises(HTTPException) as exc:
-            await UpgradeRequestService.cancel_upgrade_request(session, uuid.uuid4())
+            await UpgradeRequestService.cancel_upgrade_request(session, missing_request_id)
         assert exc.value.status_code == 404
 
     @pytest.mark.asyncio
@@ -255,6 +256,54 @@ class TestCancelUpgradeRequest:
         await UpgradeRequestService.cancel_upgrade_request(session, req.id)
         session.delete.assert_called_once_with(req)
         session.commit.assert_called()
+
+
+# =========================================================================
+# cancel_pending_for_member
+# =========================================================================
+
+
+class TestCancelPendingForMember:
+    @pytest.mark.asyncio
+    async def test_deletes_every_pending_request(self, mocker):
+        session = _mock_session(mocker)
+        req1 = _make_upgrade_request(rarity="7r2")
+        req2 = _make_upgrade_request(rarity="7r3")
+
+        mock_result = mocker.MagicMock()
+        mock_result.all.return_value = [req1, req2]
+        session.exec.return_value = mock_result
+
+        deleted = await UpgradeRequestService.cancel_pending_for_member(session, GAME_ACCOUNT_ID)
+
+        assert deleted == 2
+        assert session.delete.await_count == 2
+        session.flush.assert_awaited()
+
+    @pytest.mark.asyncio
+    async def test_no_pending_request_deletes_nothing(self, mocker):
+        session = _mock_session(mocker)
+
+        mock_result = mocker.MagicMock()
+        mock_result.all.return_value = []
+        session.exec.return_value = mock_result
+
+        deleted = await UpgradeRequestService.cancel_pending_for_member(session, GAME_ACCOUNT_ID)
+
+        assert deleted == 0
+        assert not session.delete.called
+
+    @pytest.mark.asyncio
+    async def test_does_not_commit(self, mocker):
+        """The caller (member removal) owns the transaction."""
+        session = _mock_session(mocker)
+        mock_result = mocker.MagicMock()
+        mock_result.all.return_value = [_make_upgrade_request()]
+        session.exec.return_value = mock_result
+
+        await UpgradeRequestService.cancel_pending_for_member(session, GAME_ACCOUNT_ID)
+
+        assert not session.commit.called
 
 
 # =========================================================================

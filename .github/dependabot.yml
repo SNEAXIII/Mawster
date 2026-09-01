@@ -6,12 +6,22 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Une dépendance ne rejoint que le PREMIER groupe qui la matche : les
+    # groupes ciblés restent donc avant le fourre-tout.
     groups:
       fastapi:
         patterns:
           - fastapi*
           - starlette*
           - uvicorn*
+      # Un seul PR relisible pour tout le reste ; les majors, elles, gardent
+      # leur PR dédiée avec le changelog.
+      minor-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
 
   # Dépendances Node.js (npm)
   - package-ecosystem: npm
@@ -27,6 +37,15 @@ updates:
       nextjs:
         patterns:
           - next*
+      # Idem : un PR groupé plutôt que cinq. Ne couvre que les dépendances
+      # directes — les transitives ne bougent que par ricochet ou sur alerte
+      # de sécurité, d'où le `npm update` périodique à côté.
+      minor-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
 
   # Actions GitHub
   - package-ecosystem: github-actions

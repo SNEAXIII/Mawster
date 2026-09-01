@@ -5,11 +5,13 @@ from fastapi import HTTPException
 from starlette import status
 
 from src.dto.account.game.dto_vision_result import VisionResultMessage
+from src.enums.VisionImportStatus import VisionImportStatus
+from src.enums.VisionJobStatus import VisionJobStatus
 from src.Messages.vision_messages import BROKER_UNAVAILABLE, JOB_NEVER_QUEUED
-from src.models.VisionImport import VisionImport, VisionImportStatus
-from src.models.VisionJob import VisionJob, VisionJobStatus
-from src.models.VisionPrediction import VisionPrediction
-from src.models.VisionPredictionCandidate import VisionPredictionCandidate
+from src.models.vision.VisionImport import VisionImport
+from src.models.vision.VisionJob import VisionJob
+from src.models.vision.VisionPrediction import VisionPrediction
+from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 from src.security.secrets import SECRET
 from src.utils.db import SessionDep
 
@@ -114,7 +116,7 @@ class VisionResultService:
             job.status = VisionJobStatus.FAILED
             job.error = JOB_NEVER_QUEUED
             vision_import.screens_done += 1
-            vision_import.status = cls._status_for_progress(vision_import)
+            vision_import.status = vision_import.status_for_progress()
             await session.commit()
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=BROKER_UNAVAILABLE
@@ -135,6 +137,7 @@ class VisionResultService:
                     signature=predicted.signature,
                     ascension=predicted.ascension,
                     confidence=predicted.confidence,
+                    reranked=predicted.reranked,
                     crop_key=predicted.crop_key,
                     candidates=[
                         VisionPredictionCandidate(
@@ -166,11 +169,4 @@ class VisionResultService:
         """A failed screenshot still counts as a finished one — otherwise the
         import never reaches `done` and the user watches a spinner forever."""
         vision_import.screens_done += 1
-        vision_import.status = cls._status_for_progress(vision_import)
-
-    @classmethod
-    def _status_for_progress(cls, vision_import: VisionImport) -> VisionImportStatus:
-        """DONE once every screenshot has landed (success or failure), RUNNING otherwise."""
-        if vision_import.screens_done >= vision_import.screens_total:
-            return VisionImportStatus.DONE
-        return VisionImportStatus.RUNNING
+        vision_import.status = vision_import.status_for_progress()

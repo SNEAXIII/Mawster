@@ -28,9 +28,13 @@ async def get_current_season_statistics(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     alliance_id: uuid.UUID,
+    season_id: Annotated[uuid.UUID | None, Query()] = None,
+    war_id: Annotated[uuid.UUID | None, Query()] = None,
 ):
-    """Get the current season statistics."""
-    return await StatisticService.get_display_season_statistics(session, current_user, alliance_id)
+    """Season statistics, defaulting to the display season, optionally one war."""
+    return await StatisticService.get_display_season_statistics(
+        session, current_user, alliance_id, season_id, war_id
+    )
 
 
 @statistics_controller.get(
@@ -41,13 +45,14 @@ async def get_champion_usage(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     alliance_id: uuid.UUID,
-    game_account_id: uuid.UUID | None = Query(default=None),
-    war_id: uuid.UUID | None = Query(default=None),
-    alliance_group: int | None = Query(default=None),
-    deathless: bool | None = Query(default=None),
-    perspective: str = Query(default="attacker", pattern="^(attacker|defender)$"),
+    game_account_id: Annotated[uuid.UUID | None, Query()] = None,
+    war_id: Annotated[uuid.UUID | None, Query()] = None,
+    alliance_group: Annotated[int | None, Query()] = None,
+    deathless: Annotated[bool | None, Query()] = None,
+    perspective: Annotated[str, Query(pattern="^(attacker|defender)$")] = "attacker",
+    season_id: Annotated[uuid.UUID | None, Query()] = None,
 ):
-    """Get champion usage aggregated for an alliance in the active season."""
+    """Get champion usage aggregated for an alliance in one season."""
     return await StatisticService.get_champion_usage(
         session,
         current_user,
@@ -57,6 +62,7 @@ async def get_champion_usage(
         alliance_group,
         deathless,
         perspective,
+        season_id,
     )
 
 
@@ -65,7 +71,7 @@ async def get_player_stats(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     game_account_id: uuid.UUID,
-    season_id: uuid.UUID | None = Query(default=None),
+    season_id: Annotated[uuid.UUID | None, Query()] = None,
 ):
     """Composite personal stats for one game account (owner only)."""
     return await PlayerStatsService.get_player_stats(
@@ -81,9 +87,9 @@ async def get_player_champion_usage(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     game_account_id: uuid.UUID,
-    season_id: uuid.UUID | None = Query(default=None),
-    deathless: bool | None = Query(default=None),
-    perspective: str = Query(default="attacker", pattern="^(attacker|defender)$"),
+    season_id: Annotated[uuid.UUID | None, Query()] = None,
+    deathless: Annotated[bool | None, Query()] = None,
+    perspective: Annotated[str, Query(pattern="^(attacker|defender)$")] = "attacker",
 ):
     """Champion usage for one game account (owner only)."""
     return await PlayerStatsService.get_player_champion_usage(

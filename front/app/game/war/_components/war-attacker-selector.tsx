@@ -90,6 +90,9 @@ export default function WarAttackerSelector({
     }
   }, [allianceId, warId, battlegroup, nodeNumber])
 
+  const currentPlacement = placements.find((p) => p.node_number === nodeNumber)
+  const existingNote = currentPlacement?.note
+
   useEffect(() => {
     if (open) {
       fetchAvailable()
@@ -99,11 +102,16 @@ export default function WarAttackerSelector({
       setSagaFilter(false)
       setPreferredFilter(false)
       // Unfold the note when one already exists, fold it otherwise.
-      const existingNote = placements.find((p) => p.node_number === nodeNumber)?.note
       setShowNote(!!existingNote)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, fetchAvailable])
+
+  // A note saved just before reopening can land after the effect above ran, which
+  // would leave the editor folded for good. Unfold as soon as the note shows up.
+  useEffect(() => {
+    if (open && existingNote) setShowNote(true)
+  }, [open, existingNote])
 
   // Count already-assigned attackers per pseudo from current placements
   const assignedByPseudo = new Map<string, number>()
@@ -251,8 +259,6 @@ export default function WarAttackerSelector({
       </div>
     ))
   }
-
-  const currentPlacement = placements.find((p) => p.node_number === nodeNumber)
 
   return (
     <Dialog

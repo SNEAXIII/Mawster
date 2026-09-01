@@ -1,11 +1,5 @@
 import { Perspective } from '@/app/components/statistics/member-champion-chart'
-
-const PROXY = '/api/back'
-
-const jsonHeaders: HeadersInit = {
-  Accept: 'application/json',
-  'Content-Type': 'application/json',
-}
+import { PROXY, jsonHeaders } from '@/app/services/utils'
 
 async function throwOnError(response: Response, fallback: string) {
   if (response.ok) return
@@ -29,15 +23,22 @@ export interface PlayerSeasonStats {
   total_boss: number
   total_not_fought: number
   ratio: number
-  score: number
   wars_participated: number
   avg_fights_per_war: number
   avg_boss_miniboss_per_war: number
   is_current_member: boolean
 }
 
-export async function getCurrentSeasonStatistics(allianceId: string): Promise<PlayerSeasonStats[]> {
-  const response = await fetch(`${PROXY}/statistics/current_season/${allianceId}`, {
+export async function getCurrentSeasonStatistics(
+  allianceId: string,
+  warId?: string,
+  seasonId?: string
+): Promise<PlayerSeasonStats[]> {
+  const params = new URLSearchParams()
+  if (seasonId) params.set('season_id', seasonId)
+  if (warId) params.set('war_id', warId)
+  const query = params.toString() ? `?${params.toString()}` : ''
+  const response = await fetch(`${PROXY}/statistics/current_season/${allianceId}${query}`, {
     headers: jsonHeaders,
   })
   await throwOnError(response, 'Failed to load season statistics')
@@ -58,9 +59,11 @@ export async function getChampionUsage(
   warId?: string,
   allianceGroup?: number,
   deathless?: boolean,
-  perspective?: Perspective
+  perspective?: Perspective,
+  seasonId?: string
 ): Promise<ChampionUsageItem[]> {
   const params = new URLSearchParams()
+  if (seasonId) params.set('season_id', seasonId)
   if (gameAccountId) params.set('game_account_id', gameAccountId)
   if (warId) params.set('war_id', warId)
   if (allianceGroup !== undefined) params.set('alliance_group', String(allianceGroup))

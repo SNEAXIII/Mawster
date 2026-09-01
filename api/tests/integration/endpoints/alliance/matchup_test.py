@@ -7,7 +7,7 @@ import pytest
 from main import app
 from src.enums.MatchupTargetType import MatchupTargetType
 from src.enums.MatchupVerdict import MatchupVerdict
-from src.models.DefensePlacement import DefensePlacement
+from src.models.alliance.DefensePlacement import DefensePlacement
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,

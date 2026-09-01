@@ -5,9 +5,9 @@ import uuid
 import pytest
 from fastapi import HTTPException
 
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.GameAccount import GameAccount
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.user.GameAccount import GameAccount
 from src.services.account.game.ChampionUserService import VALID_RARITIES, ChampionUserService
 from tests.utils.utils_constant import GAME_PSEUDO, USER_ID
 
@@ -353,7 +353,7 @@ class TestGetRosterByGameAccount:
 class TestGetChampionUser:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "return_value, expected_none",
+        ("return_value", "expected_none"),
         [
             (_make_champion_user(), False),
             (None, True),
@@ -460,7 +460,7 @@ class TestDeleteRoster:
 class TestUpgradeChampionRank:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "before,after",
+        ("before", "after"),
         [
             ("6r4", "6r5"),
             ("7r1", "7r2"),

@@ -22,8 +22,7 @@ describe('War Assist', () => {
     setupAssistScenario('wa1').then(({ memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-      cy.apiLogin(memberData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(memberData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
       cy.getByCy('node-actions-trigger-node-10').click();
@@ -47,8 +46,7 @@ describe('War Assist', () => {
         body: { champion_user_id: assistorChampionUserId },
       });
 
-      cy.apiLogin(memberData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(memberData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('assisted-badge-node-10').scrollIntoView().should('be.visible');
 
@@ -63,8 +61,7 @@ describe('War Assist', () => {
     setupAssistScenario('wa3').then(({ memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-      cy.apiLogin(memberData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(memberData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
       cy.getByCy('node-actions-trigger-node-10').click();

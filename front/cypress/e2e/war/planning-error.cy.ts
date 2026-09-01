@@ -1,55 +1,22 @@
-import { setupAttackerScenario } from '../../support/e2e';
+import { nodeFlagButtonBehaviour } from './node-flag-button';
 
-describe('War – Fight Not Done', () => {
+const behaviour = nodeFlagButtonBehaviour('planning-error', 'pe', (token, allianceId, warId, bg, node) => {
+  cy.apiTogglePlanningError(token, allianceId, warId, bg, node);
+});
+
+describe('War – Planning Error', () => {
   beforeEach(() => {
     cy.truncateDb();
   });
 
   // ── Planning Error: visibility ───────────────────────────────────────────
 
-  it('planning-error button is hidden when no attacker is assigned', () => {
-    setupAttackerScenario('pe-no-atk').then(({ ownerData }) => {
-      cy.goToWarMode(ownerData.user_id, 'attackers');
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
-      cy.getByCy('planning-error-node-10').should('not.exist');
-    });
-  });
-
-  it('planning-error button appears for officer after attacker is assigned', () => {
-    setupAttackerScenario('pe-appears').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      cy.goToWarMode(ownerData.user_id, 'attackers');
-      cy.getByCy('planning-error-node-10').should('be.visible');
-    });
-  });
-
-  it('planning-error button is hidden for regular member', () => {
-    setupAttackerScenario('pe-member').then(({ memberData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      cy.apiLogin(memberData.user_id);
-      cy.navTo('war');
-      cy.getByCy('planning-error-node-10').should('not.exist');
-    });
-  });
+  it('planning-error button is hidden when no attacker is assigned', behaviour.hiddenWithoutAttacker);
+  it('planning-error button appears for officer after attacker is assigned', behaviour.visibleForOfficer);
+  it('planning-error button is hidden for regular member', behaviour.hiddenForMember);
 
   // ── Planning Error: toggle ───────────────────────────────────────────────
 
-  it('clicking planning-error button marks node as planning error', () => {
-    setupAttackerScenario('pe-toggle-on').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      cy.goToWarMode(ownerData.user_id, 'attackers');
-      cy.getByCy('planning-error-node-10').click();
-      cy.getByCy('planning-error-node-10').should('have.class', 'bg-amber-500');
-    });
-  });
-
-  it('clicking planning-error button again unmarks the node', () => {
-    setupAttackerScenario('pe-toggle-off').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      cy.apiTogglePlanningError(ownerData.access_token, allianceId, warId, 1, 10);
-      cy.goToWarMode(ownerData.user_id, 'attackers');
-      cy.getByCy('planning-error-node-10').click();
-      cy.getByCy('planning-error-node-10').should('not.have.class', 'bg-amber-500');
-    });
-  });
+  it('clicking planning-error button marks node as planning error', behaviour.marksNode);
+  it('clicking planning-error button again unmarks the node', behaviour.unmarksNode);
 });

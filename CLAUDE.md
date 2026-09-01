@@ -19,11 +19,11 @@ Format: `uvx ruff format`
 
 **Frontend** (`front/`): `npm run dev` / `npm run build` (run build to catch TS errors)
 
-**E2E**: Always use the `/test-e2e` skill — **never** call `mcp__server-runner__run_e2e` directly. Pass `spec_files=["roster/foo.cy.ts"]` for targeted runs. Requires Docker (mariadb-test on port 3307).
+**E2E**: Always use the `/test-e2e` skill — **never** call `npx cypress run` directly. It wraps `scripts/e2e_parallel.py` (the CI runner); targeted runs via `--spec "roster/foo.cy.ts"`. Requires Docker (mariadb-test on port 3307).
 
 **Migrations**: use `/db-migrate` skill — never touch dev DB directly.
 
-**Servers**: use `mcp__server-runner__start_dev` / `mcp__server-runner__stop` / `mcp__server-runner__status`.
+**Servers**: use the `/server-dev` / `/server-stop` / `/server-status` skills (Docker compose + `make run-dev` + `npm run dev`).
 
 ---
 
@@ -97,18 +97,41 @@ Project agents live in `.claude/agents/`. They are **not auto-dispatched** — c
 - Admin endpoints → always `adminData.access_token` / `adminToken`, never `ownerData.access_token`
 - Load champions: `cy.apiLoadChampion(adminToken, name, class)` → returns array, chain `.then(champs => ...)`
 - Assign attacker: `cy.apiAssignWarAttacker(token, allianceId, warId, battlegroup, nodeNumber, championUserId)`
-- After fixes: re-run only failing specs with `mcp__server-runner__run_e2e spec_files=[...]`
+- After fixes: re-run only failing specs with `python3 scripts/e2e_parallel.py --spec "war/basic.cy.ts"`
 
 ---
 
 ## Key Conventions
 
 - **Language**: English (code, comments, variables)
-- **Commits**: `feat:` `fix:` `refactor:` `test:` `docs:`
+- **Commits**: see the commit types section below
 - **i18n**: `useI18n()` always — never hardcode strings; add keys to both `en.ts` and `fr.ts`
 - **Icons**: `lucide-react` general / `react-icons/fi` action buttons
 - **Styling**: Tailwind semantic tokens (`bg-card`, `text-muted-foreground`), dark mode first
 - **Explain changes**: After every Edit/Write, briefly explain what changed, why, and the expected effect
+
+### Commit types
+
+release-please reads these to decide the version bump and to write `CHANGELOG.md`, so the type is
+a decision, not a label. **Pick it by what a player sees, never by which files you touched.**
+
+| Type | Bump | In the changelog | Use for |
+| --- | --- | --- | --- |
+| `feat:` | minor | yes | something a player can now do |
+| `fix:` | patch | yes | something a player saw broken |
+| `feat!:` / `BREAKING CHANGE:` | **major** | yes | see below |
+| `ci:` `chore:` `build:` `refactor:` `test:` `docs:` `style:` | none | hidden | everything else |
+
+**Never write `feat(ci):` or `fix(docker):`.** A scope does not downgrade a type: release-please
+sections by type alone, so those land in the changelog and bump the version. Pipelines, Docker,
+lockfiles, tooling, fixtures, E2E selectors and lint config are `ci:` or `chore:`, full stop.
+
+Reserve the major bump for what actually breaks a user: an irreversible migration, or data loss.
+Not API signature changes — the front deploys in lockstep with the API, so no external consumer
+exists to break.
+
+Prefer squash merge on pull requests. A merge commit carries the PR title into its body, which
+release-please then counts a second time alongside the real commits, duplicating every entry.
 
 ---
 
@@ -138,10 +161,12 @@ Tools: `ctx_batch_execute` (research) → `ctx_search` (follow-up) → `ctx_exec
 
 > After any MCP server modification (new tool, param, schema): tell user to **restart Claude Code**.
 
+Declared in `.mcp.json` — there is no other project MCP server:
+
 - **context-mode**: keeps output out of context window
-- **pytest-runner**: `mcp__pytest-runner__run_all_tests` / `mcp__pytest-runner__run_failing_tests`
-- **server-runner**: `start_dev` / `start_test` / `stop` / `status` / `run_e2e`
 - **github**: `mcp__github__*` — requires `GITHUB_PERSONAL_ACCESS_TOKEN`
+
+Backend tests, servers and E2E run as plain commands (`make`, `docker compose`, `scripts/e2e_parallel.py`) — see `docs/mcp.md`.
 
 ---
 

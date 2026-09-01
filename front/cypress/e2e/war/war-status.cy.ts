@@ -10,8 +10,7 @@ describe('War – Ended war status', () => {
       cy.apiCreateWar(ownerData.access_token, allianceId, 'StatusEnemy').then((war) => {
         cy.apiEndWar(ownerData.access_token, allianceId, war.id, true, 10);
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
 
         // After ending, getCurrentWar returns 404 → currentWar = null
         cy.contains('No war declared').should('be.visible');

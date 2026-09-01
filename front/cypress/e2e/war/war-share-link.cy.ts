@@ -10,8 +10,7 @@ describe('War share link', () => {
       // WarTab (and its BG picker / share button) only renders when the
       // alliance has an active war — create one first.
       cy.apiCreateWar(ownerData.access_token, allianceId, 'ShareEnemy');
-      cy.apiLogin(ownerData.user_id);
-      cy.visit(`/game/war?alliance=${allianceId}&bg=2`);
+      cy.apiLogin(ownerData.user_id, `/game/war?alliance=${allianceId}&bg=2`);
 
       // BG2 is selected from the URL, not the default BG1.
       cy.getByCy('bg-btn-2').should('have.class', 'bg-primary');
@@ -21,8 +20,7 @@ describe('War share link', () => {
   it('copies a share link containing the alliance id and current bg', () => {
     setupWarOwner('share', 'ShareOwner', 'Share Alliance', 'SHR').then(({ ownerData, allianceId }) => {
       cy.apiCreateWar(ownerData.access_token, allianceId, 'ShareEnemy');
-      cy.apiLogin(ownerData.user_id);
-      cy.visit(`/game/war?alliance=${allianceId}&bg=2`);
+      cy.apiLogin(ownerData.user_id, `/game/war?alliance=${allianceId}&bg=2`);
 
       cy.window().then((win) => {
         cy.stub(win.navigator.clipboard, 'writeText').as('writeText').resolves();
@@ -39,8 +37,7 @@ describe('War share link', () => {
   it('updates the URL when the battlegroup is changed', () => {
     setupWarOwner('share', 'ShareOwner', 'Share Alliance', 'SHR').then(({ ownerData, allianceId }) => {
       cy.apiCreateWar(ownerData.access_token, allianceId, 'ShareEnemy');
-      cy.apiLogin(ownerData.user_id);
-      cy.visit(`/game/war?alliance=${allianceId}&bg=1`);
+      cy.apiLogin(ownerData.user_id, `/game/war?alliance=${allianceId}&bg=1`);
 
       cy.getByCy('bg-btn-2').click();
       cy.location('search').should('contain', 'bg=2');

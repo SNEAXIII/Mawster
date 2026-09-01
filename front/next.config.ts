@@ -6,7 +6,18 @@ const STATIC_PORT = process.env.STATIC_PORT ?? '8002'
 const NEXT_PUBLIC_API_CLIENT_HOST = process.env.NEXT_PUBLIC_API_CLIENT_HOST ?? 'localhost'
 const API_CLIENT_END_PART = process.env.NODE_ENV === 'production' ? '/api/back' : `:${API_PORT}`
 const port = process.env.PORT ?? '3000'
+// Dev-only: origins allowed to hit the dev server assets (phone over SSH tunnel / LAN).
+// Extend with NEXT_ALLOWED_DEV_ORIGINS="192.168.1.42,mon-tunnel.example.com"
+const allowedDevOrigins = [
+  '127.0.0.1',
+  'localhost',
+  ...(process.env.NEXT_ALLOWED_DEV_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+]
 const nextConfig: NextConfig = {
+  allowedDevOrigins,
   output: process.env.NEXT_E2E_BUILD ? undefined : 'standalone',
   distDir: process.env.NEXT_DIST_DIR ?? (port !== '3000' ? `.next-${port}` : '.next'),
   async rewrites() {

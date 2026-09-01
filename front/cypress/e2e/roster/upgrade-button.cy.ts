@@ -14,8 +14,7 @@ describe('Roster – Champion Upgrade', () => {
       cy.apiLoadChampion(adminData.access_token, 'Hercules', 'Cosmic').then((champs) => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r1');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         // Champion should start in the 7r1 group
         cy.getByCy('rarity-group-7r1').should('exist');
@@ -42,8 +41,7 @@ describe('Roster – Champion Upgrade', () => {
       cy.apiLoadChampion(adminData.access_token, 'DoctorDoom', 'Mystic').then((champs) => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r2');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
         cy.getByCy('champion-upgrade').should('exist');
       });
     });
@@ -54,8 +52,7 @@ describe('Roster – Champion Upgrade', () => {
       cy.apiLoadChampion(adminData.access_token, 'MaxRankHero', 'Tech').then((champs) => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r6');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
         cy.getByCy('champion-upgrade').should('not.exist');
       });
     });
@@ -87,8 +84,7 @@ describe('Roster – Champion Upgrade', () => {
       cy.apiLoadChampion(adminData.access_token, 'MultUpHero', 'Mutant').then((champs) => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r1');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         // Verify starting group
         cy.getByCy('rarity-group-7r1').contains('MultUpHero').should('be.visible');

@@ -12,8 +12,7 @@ describe('Roster – Saga Badge (sagaMode all)', () => {
       }).then((champs: { id: string }[]) => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r3');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         cy.getByCy('champion-card-SagaAttacker').find('[data-cy="saga-badge"]').should('exist');
       });
@@ -27,8 +26,7 @@ describe('Roster – Saga Badge (sagaMode all)', () => {
       }).then((champs: { id: string }[]) => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r3');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         cy.getByCy('champion-card-SagaDefender').find('[data-cy="saga-badge"]').should('exist');
       });
@@ -40,8 +38,7 @@ describe('Roster – Saga Badge (sagaMode all)', () => {
       cy.apiLoadChampion(adminData.access_token, 'PlainHero', 'Tech').then((champs: { id: string }[]) => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r3');
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         cy.getByCy('champion-card-PlainHero').find('[data-cy="saga-badge"]').should('not.exist');
       });
@@ -57,8 +54,7 @@ describe('Roster – Saga Badge (sagaMode all)', () => {
           ascension: 1,
         });
 
-        cy.apiLogin(userData.user_id);
-        cy.navTo('roster');
+        cy.apiLogin(userData.user_id, 'roster');
 
         cy.getByCy('champion-card-AscBadgeHero').find('[data-cy="ascension-badge-1"]').should('exist');
       });

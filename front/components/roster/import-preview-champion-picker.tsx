@@ -65,7 +65,7 @@ export default function ImportPreviewChampionPicker({
       <PopoverTrigger asChild>
         <button
           type='button'
-          className='group flex items-center gap-1 text-sm font-semibold text-left hover:underline'
+          className='group flex min-w-0 max-w-full items-center gap-1 text-sm font-semibold text-left hover:underline'
           title={championName}
           data-cy={`preview-row-champion-trigger-${index}`}
         >

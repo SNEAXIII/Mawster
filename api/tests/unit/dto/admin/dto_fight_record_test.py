@@ -48,6 +48,7 @@ def test_fight_record_response_flattens_all():
     record.war_id = uuid.uuid4()
     record.alliance_id = uuid.uuid4()
     record.alliance.name = "Alliance X"
+    record.alliance.tag = "AX"
     record.season_id = None
     record.game_account.game_pseudo = "PlayerOne"
     record.battlegroup = 1
@@ -75,3 +76,5 @@ def test_fight_record_response_flattens_all():
     assert result.champion_name == "Spider-Man"
     assert result.defender_champion_name == "Thanos"
     assert result.tier == 5
+    assert result.alliance_name == "Alliance X"
+    assert result.alliance_tag == "AX"

@@ -3,13 +3,16 @@
 import uuid
 
 import pytest
+from fastapi import HTTPException
 from sqlmodel import select
 
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
-from src.models.War import War, WarStatus
-from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.WarFightNote import WarFightNote
-from src.models.WarFightNoteRevision import WarFightNoteRevision
+from src.enums.WarStatus import WarStatus
+from src.models.user.UserMute import UserMute
+from src.models.war.War import War
+from src.models.war.WarDefensePlacement import WarDefensePlacement
+from src.models.war.WarFightNote import WarFightNote
+from src.models.war.WarFightNoteRevision import WarFightNoteRevision
 from src.services.alliance.war.WarFightNoteService import WarFightNoteService
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
@@ -194,9 +197,6 @@ async def test_delete_soft_deletes_note_and_keeps_history(session):
 
 @pytest.mark.asyncio
 async def test_delete_by_muted_officer_raises_403(session):
-    from fastapi import HTTPException
-
-    from src.models.UserMute import UserMute
 
     data = await _setup_war_with_placement()
     war = data["war"]
@@ -232,7 +232,6 @@ async def test_delete_by_muted_officer_raises_403(session):
 
 @pytest.mark.asyncio
 async def test_delete_missing_note_raises_404(session):
-    from fastapi import HTTPException
 
     data = await _setup_war_with_placement()
 
@@ -249,11 +248,12 @@ async def test_delete_missing_note_raises_404(session):
 
 @pytest.mark.asyncio
 async def test_upsert_on_ended_war_raises_409(session):
-    from fastapi import HTTPException
 
     data = await _setup_war_with_placement()
     war = data["war"]
     war.status = WarStatus.ended
+
+    body = WarFightNoteUpsertRequest(content="too late")
 
     with pytest.raises(HTTPException) as exc_info:
         await WarFightNoteService.upsert_note(
@@ -261,7 +261,7 @@ async def test_upsert_on_ended_war_raises_409(session):
             war=war,
             battlegroup=BG,
             node_number=NODE,
-            body=WarFightNoteUpsertRequest(content="too late"),
+            body=body,
             editor_account_id=data["owner"].id,
             editor_user_id=data["owner"].user_id,
         )

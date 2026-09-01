@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
 from src.dto.account.game.dto_game_account import (
+    DeletedGameAccountResponse,
     GameAccountCreateRequest,
     GameAccountResponse,
 )
@@ -14,7 +15,8 @@ from src.dto.account.game.dto_mastery import (
 )
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND, NOT_YOUR_GAME_ACCOUNT
 from src.models import User
-from src.models.GameAccount import GameAccount
+from src.models.Base import as_utc
+from src.models.user.GameAccount import GameAccount
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.account.MasteryService import MasteryService
 from src.services.alliance.AllianceService import AllianceService
@@ -35,6 +37,19 @@ def _to_response(account: GameAccount) -> GameAccountResponse:
     return GameAccountResponse.model_validate(account)
 
 
+def _to_deleted_response(account: GameAccount) -> DeletedGameAccountResponse:
+    """Convert a deleted GameAccount to a response DTO carrying its restore deadline."""
+    # Timestamps read back from the DB are naive: normalize them so the client
+    # always gets UTC instants it can compare with its own clock.
+    return DeletedGameAccountResponse(
+        id=account.id,
+        game_pseudo=account.game_pseudo,
+        created_at=as_utc(account.created_at),
+        deleted_at=as_utc(account.deleted_at),
+        restorable_until=GameAccountService.restorable_until(account),
+    )
+
+
 @game_account_controller.post(
     "",
     response_model=GameAccountResponse,
@@ -47,13 +62,12 @@ async def create_game_account(
 ):
     """Create a new game account for the current user.
     Only a game pseudo is required. The ID is auto-generated."""
-    result = await GameAccountService.create_game_account(
+    return await GameAccountService.create_game_account(
         session=session,
         user_id=current_user.id,
         game_pseudo=body.game_pseudo,
         is_primary=body.is_primary,
     )
-    return result
 
 
 @game_account_controller.get(
@@ -71,6 +85,25 @@ async def get_my_game_accounts(
         load_alliance=True,
     )
     return [_to_response(acc) for acc in accounts]
+
+
+@game_account_controller.get(
+    "/deleted",
+    response_model=list[DeletedGameAccountResponse],
+)
+async def get_my_deleted_game_accounts(
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """List the current user's deleted game accounts that can still be restored.
+
+    Accounts whose restore window has elapsed are never listed: they are lost
+    for good as far as the player is concerned."""
+    accounts = await GameAccountService.get_restorable_game_accounts(
+        session=session,
+        user_id=current_user.id,
+    )
+    return [_to_deleted_response(acc) for acc in accounts]
 
 
 @game_account_controller.get(
@@ -107,13 +140,12 @@ async def update_game_account(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
     if game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_GAME_ACCOUNT)
-    result = await GameAccountService.update_game_account(
+    return await GameAccountService.update_game_account(
         session=session,
         game_account=game_account,
         game_pseudo=body.game_pseudo,
         is_primary=body.is_primary,
     )
-    return result
 
 
 @game_account_controller.delete(
@@ -125,13 +157,37 @@ async def delete_game_account(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Delete a game account. Must belong to the current user."""
+    """Logically delete a game account. Must belong to the current user and must not
+    belong to an alliance. The account can be restored for a few days, and keeps
+    counting against the account quota until that window closes."""
     game_account = await GameAccountService.get_game_account(session, game_account_id)
     if game_account is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
     if game_account.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_GAME_ACCOUNT)
     await GameAccountService.delete_game_account(session, game_account)
+
+
+@game_account_controller.post(
+    "/{game_account_id}/restore",
+    response_model=GameAccountResponse,
+)
+async def restore_game_account(
+    game_account_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Restore a deleted game account. Must belong to the current user and still
+    be inside the restore window."""
+    game_account = await GameAccountService.get_game_account(
+        session, game_account_id, include_deleted=True
+    )
+    if game_account is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_FOUND)
+    if game_account.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=NOT_YOUR_GAME_ACCOUNT)
+    restored = await GameAccountService.restore_game_account(session, game_account)
+    return _to_response(restored)
 
 
 @game_account_controller.get(

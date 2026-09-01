@@ -26,8 +26,7 @@ describe('Defense – Saga & Ascension Badges (sagaMode defender)', () => {
           }).then((cu: { id: string }) => {
             cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId);
 
-            cy.apiLogin(ownerData.user_id);
-            cy.navTo('defense');
+            cy.apiLogin(ownerData.user_id, 'defense');
           });
         });
       },

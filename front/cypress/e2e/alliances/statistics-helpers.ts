@@ -159,6 +159,77 @@ export function withWarScenarioTwoPlayers(
   });
 }
 
+// Two ended wars in the same season, each fought by a different player:
+// the owner fights in war one only, the member in war two only. Lets a spec
+// assert that the war filter actually re-scopes the stats table, not just the chart.
+export function withTwoEndedWarsTwoPlayers(
+  adminToken: string,
+  ownerToken: string,
+  ownerAccId: string,
+  memberToken: string,
+  memberAccId: string,
+  allianceId: string,
+  cb: (args: { warOneId: string; warTwoId: string }) => void,
+) {
+  createAndActivateSeason(adminToken).then(() => {
+    loadChampAndAddToTwoRosters(
+      adminToken,
+      ownerToken,
+      ownerAccId,
+      memberToken,
+      memberAccId,
+      ({ champId, cuOwnerId, cuMemberId }) => {
+        cy.apiCreateWar(ownerToken, allianceId, 'WarOne').then((warOne: { id: string }) => {
+          addStatsForPlayer(ownerToken, allianceId, warOne.id, champId, cuOwnerId, 10, 0);
+          cy.apiEndWar(ownerToken, allianceId, warOne.id, true, 10);
+          cy.apiCreateWar(ownerToken, allianceId, 'WarTwo').then((warTwo: { id: string }) => {
+            addStatsForPlayer(ownerToken, allianceId, warTwo.id, champId, cuMemberId, 11, 2);
+            cy.apiEndWar(ownerToken, allianceId, warTwo.id, true, 10);
+            cb({ warOneId: warOne.id, warTwoId: warTwo.id });
+          });
+        });
+      },
+    );
+  });
+}
+
+// Two seasons, one ended war each, fought by a different player. Season 63 is
+// closed before 64 opens because a war is stamped with whichever season is
+// active when it is created, and only one season may be current at a time.
+export function withTwoSeasonsOneWarEach(
+  adminToken: string,
+  ownerToken: string,
+  ownerAccId: string,
+  memberToken: string,
+  memberAccId: string,
+  allianceId: string,
+  cb: (args: { pastSeasonId: string; currentSeasonId: string }) => void,
+) {
+  createOpenSeason(adminToken, 63).then((pastSeasonId) => {
+    loadChampAndAddToTwoRosters(
+      adminToken,
+      ownerToken,
+      ownerAccId,
+      memberToken,
+      memberAccId,
+      ({ champId, cuOwnerId, cuMemberId }) => {
+        cy.apiCreateWar(ownerToken, allianceId, 'OldWar').then((oldWar: { id: string }) => {
+          addStatsForPlayer(ownerToken, allianceId, oldWar.id, champId, cuOwnerId, 10, 3);
+          cy.apiEndWar(ownerToken, allianceId, oldWar.id, true, 10);
+          closeSeason(adminToken, pastSeasonId);
+          createOpenSeason(adminToken, 64).then((currentSeasonId) => {
+            cy.apiCreateWar(ownerToken, allianceId, 'NewWar').then((newWar: { id: string }) => {
+              addStatsForPlayer(ownerToken, allianceId, newWar.id, champId, cuMemberId, 11, 0);
+              cy.apiEndWar(ownerToken, allianceId, newWar.id, true, 10);
+              cb({ pastSeasonId, currentSeasonId });
+            });
+          });
+        });
+      },
+    );
+  });
+}
+
 function loadTwoChampsAddToRosters(
   adminToken: string,
   ownerToken: string,
@@ -266,6 +337,148 @@ export function withWarScenarioDefender(
       cy.apiCreateWar(ownerToken, allianceId, warName).then((war: { id: string }) => {
         cb({ champ1Id, champ2Id, cuId, warId: war.id });
       });
+    });
+  });
+}
+
+// ── Alliance setup preamble ───────────────────────────────────────────────────
+// Every statistics spec opens with the same admin + owner (+ member) batch setup.
+// Names are derived from the spec prefix; the DB is truncated between tests, so
+// derived alliance names and tags never collide.
+
+export interface StatsOwnerSetup {
+  adminToken: string;
+  ownerToken: string;
+  ownerUserId: string;
+  ownerAccId: string;
+  ownerPseudo: string;
+  allianceId: string;
+}
+
+export interface StatsOwnerMemberSetup extends StatsOwnerSetup {
+  memberToken: string;
+  memberUserId: string;
+  memberAccId: string;
+  memberPseudo: string;
+}
+
+function statsBase(prefix: string): string {
+  const cleaned = prefix.replace(/^stat-/, '').replace(/[^A-Za-z0-9]/g, '') || 'stat';
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1, 8);
+}
+
+function allianceSpec(base: string) {
+  return { name: `${base}Alliance`, tag: base.toUpperCase().slice(0, 5) };
+}
+
+export function setupStatsOwner(prefix: string): Cypress.Chainable<StatsOwnerSetup> {
+  const base = statsBase(prefix);
+  const adminTok = `${prefix}-admin`;
+  const ownerTok = `${prefix}-owner`;
+
+  return cy
+    .apiBatchSetup([
+      { discord_token: adminTok, role: 'admin' },
+      {
+        discord_token: ownerTok,
+        game_pseudo: `${base}Owner`,
+        create_alliance: allianceSpec(base),
+        battlegroup: 1,
+      },
+    ])
+    .then((users) => ({
+      adminToken: users[adminTok].access_token,
+      ownerToken: users[ownerTok].access_token,
+      ownerUserId: users[ownerTok].user_id,
+      ownerAccId: users[ownerTok].account_id!,
+      ownerPseudo: `${base}Owner`,
+      allianceId: users[ownerTok].alliance_id!,
+    }));
+}
+
+export function setupStatsOwnerAndMember(
+  prefix: string,
+  memberBattlegroup = 1,
+): Cypress.Chainable<StatsOwnerMemberSetup> {
+  const base = statsBase(prefix);
+  const adminTok = `${prefix}-admin`;
+  const ownerTok = `${prefix}-owner`;
+  const memberTok = `${prefix}-member`;
+
+  return cy
+    .apiBatchSetup([
+      { discord_token: adminTok, role: 'admin' },
+      {
+        discord_token: ownerTok,
+        game_pseudo: `${base}Owner`,
+        create_alliance: allianceSpec(base),
+        battlegroup: 1,
+      },
+      {
+        discord_token: memberTok,
+        game_pseudo: `${base}Member`,
+        join_alliance_token: ownerTok,
+        battlegroup: memberBattlegroup,
+      },
+    ])
+    .then((users) => ({
+      adminToken: users[adminTok].access_token,
+      ownerToken: users[ownerTok].access_token,
+      ownerUserId: users[ownerTok].user_id,
+      ownerAccId: users[ownerTok].account_id!,
+      ownerPseudo: `${base}Owner`,
+      allianceId: users[ownerTok].alliance_id!,
+      memberToken: users[memberTok].access_token,
+      memberUserId: users[memberTok].user_id,
+      memberAccId: users[memberTok].account_id!,
+      memberPseudo: `${base}Member`,
+    }));
+}
+
+// Remove a member from the alliance — used to turn them into a "former member".
+export function removeAllianceMember(ownerToken: string, allianceId: string, gameAccountId: string) {
+  return cy.request({
+    method: 'DELETE',
+    url: `${BACKEND}/alliances/${allianceId}/members/${gameAccountId}`,
+    headers: { Authorization: `Bearer ${ownerToken}` },
+  });
+}
+
+// Open the statistics tab as the given user and pick a member-filter option.
+export function openStatsAs(userId: string) {
+  cy.apiLogin(userId);
+  cy.goToAllianceStatsTab();
+}
+
+export function selectMemberFilter(label: 'All members' | 'Former members') {
+  cy.getByCy('statistics-member-filter').click();
+  cy.contains(label).click();
+}
+
+export interface EndedWarStats extends StatsOwnerSetup {
+  champId: string;
+  cuId: string;
+  warId: string;
+}
+
+// The five-line preamble most statistics tests open with: an owner, one war where
+// they fought node 10, the war ended, and the statistics tab already open.
+// `koCount` drives the ratio; `endWar: false` leaves the war active, which is what
+// the "only an ongoing war" empty state needs.
+export function withEndedWarStats(
+  prefix: string,
+  cb: (ctx: EndedWarStats) => void,
+  options: { koCount?: number; endWar?: boolean; warName?: string } = {},
+) {
+  const { koCount = 0, endWar = true, warName = 'Enemy' } = options;
+
+  return setupStatsOwner(prefix).then((setup) => {
+    const { adminToken, ownerToken, ownerUserId, ownerAccId, allianceId } = setup;
+    withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, warName, ({ champId, cuId, warId }) => {
+      addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, koCount);
+      if (endWar) cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
+      openStatsAs(ownerUserId);
+      cb({ ...setup, champId, cuId, warId });
     });
   });
 }

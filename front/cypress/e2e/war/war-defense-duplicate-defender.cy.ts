@@ -14,8 +14,7 @@ describe('War – Duplicate defender placement', () => {
 
         cy.apiCreateWar(ownerData.access_token, allianceId, 'DupEnemy');
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
         cy.getByCy('war-mode-defenders').click();
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -48,8 +47,7 @@ describe('War – Duplicate defender placement', () => {
 
         cy.apiCreateWar(ownerData.access_token, allianceId, 'DupVisEnemy');
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
         cy.getByCy('war-mode-defenders').click();
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });

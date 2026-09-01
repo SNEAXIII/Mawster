@@ -12,8 +12,7 @@ describe('War – prefight highlight on map', () => {
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
         cy.apiAddWarPrefight(memberData.access_token, allianceId, warId, 1, prefightChampionUserId, 10);
 
-        cy.apiLogin(memberData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(memberData.user_id, 'war');
 
         cy.getByCy('war-node-10').should('have.class', 'ring-foreground');
       },
@@ -22,8 +21,7 @@ describe('War – prefight highlight on map', () => {
 
   it('node without prefight has no cyan ring', () => {
     setupPrefightScenario('pf-no-ring').then(({ memberData }) => {
-      cy.apiLogin(memberData.user_id);
-      cy.navTo('war');
+      cy.apiLogin(memberData.user_id, 'war');
 
       cy.getByCy('war-node-10').should('not.have.class', 'ring-cyan-400');
     });
@@ -55,12 +53,10 @@ describe('War – prefight highlight on map', () => {
           });
         });
 
-        cy.apiLogin(memberData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(memberData.user_id, 'war');
 
         // filter by member: node 10 (owner attacker + member prefight) must NOT be dimmed
-        cy.getByCy('war-player-filter').click();
-        cy.contains('[role="option"]', 'pfltMember').click();
+        cy.selectOption('war-player-filter', 'pfltMember');
 
         cy.getByCy('war-node-1').should('not.have.class', 'opacity-25');
         cy.getByCy('war-node-10').should('not.have.class', 'opacity-25');
@@ -92,12 +88,10 @@ describe('War – prefight highlight on map', () => {
           });
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('war');
+        cy.apiLogin(ownerData.user_id, 'war');
 
         // filter by owner: node 1 (owner attacker) not dimmed, node 10 (member only) dimmed
-        cy.getByCy('war-player-filter').click();
-        cy.contains('[role="option"]', 'pflt2Owner').click();
+        cy.selectOption('war-player-filter', 'pflt2Owner');
 
         cy.getByCy('war-node-1').should('not.have.class', 'opacity-25');
         cy.getByCy('war-node-10').should('have.class', 'opacity-25');

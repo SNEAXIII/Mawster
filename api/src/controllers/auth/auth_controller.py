@@ -57,7 +57,6 @@ async def discord_login(
     refresh_token = JWTService.create_refresh_token(user)
     audit_log("auth.login", user_id=str(user.id), detail="method=discord")
     return LoginResponse(
-        token_type="bearer",
         access_token=access_token,
         refresh_token=refresh_token,
     )
@@ -80,7 +79,6 @@ async def google_login(
     refresh_token = JWTService.create_refresh_token(user)
     audit_log("auth.login", user_id=str(user.id), detail="method=google")
     return LoginResponse(
-        token_type="bearer",
         access_token=access_token,
         refresh_token=refresh_token,
     )
@@ -99,7 +97,6 @@ async def refresh_access_token(
     new_refresh_token = JWTService.create_refresh_token(user)
     audit_log("auth.refresh", user_id=str(user.id), detail="method=refresh_token")
     return LoginResponse(
-        token_type="bearer",
         access_token=new_access_token,
         refresh_token=new_refresh_token,
     )

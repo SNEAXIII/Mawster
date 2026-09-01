@@ -7,8 +7,7 @@ describe('Profile statistics tab', () => {
 
   it('shows the empty state for a user with no game account', () => {
     cy.apiBatchSetup([{ discord_token: 'prof-bare', role: 'user' }]).then((users) => {
-      cy.apiLogin(users['prof-bare'].user_id);
-      cy.visit('/profile');
+      cy.apiLogin(users['prof-bare'].user_id, 'profile');
       cy.getByCy('profile-tab-stats').click();
       cy.getByCy('profile-stats-empty').should('exist');
     });
@@ -33,8 +32,7 @@ describe('Profile statistics tab', () => {
         addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, 1);
         cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
 
-        cy.apiLogin(users['prof-owner'].user_id);
-        cy.visit('/profile');
+        cy.apiLogin(users['prof-owner'].user_id, 'profile');
         cy.getByCy('profile-tab-stats').click();
 
         cy.getByCy('profile-stats-tab').should('exist');
@@ -50,8 +48,7 @@ describe('Profile statistics tab', () => {
 
   it('switches back to the info tab', () => {
     cy.apiBatchSetup([{ discord_token: 'prof-nav', role: 'user' }]).then((users) => {
-      cy.apiLogin(users['prof-nav'].user_id);
-      cy.visit('/profile');
+      cy.apiLogin(users['prof-nav'].user_id, 'profile');
       cy.getByCy('profile-tab-stats').click();
       // bare user (no game account) → stats tab renders the empty state
       cy.getByCy('profile-stats-empty').should('exist');
@@ -63,8 +60,7 @@ describe('Profile statistics tab', () => {
 
   it('deep-links to the stats tab via ?tab=stats', () => {
     cy.apiBatchSetup([{ discord_token: 'prof-url', role: 'user' }]).then((users) => {
-      cy.apiLogin(users['prof-url'].user_id);
-      cy.visit('/profile?tab=stats');
+      cy.apiLogin(users['prof-url'].user_id, '/profile?tab=stats');
       // stats tab active on load without any click (bare user → empty state)
       cy.getByCy('profile-stats-empty').should('exist');
       cy.getByCy('username-row').should('not.exist');
@@ -73,8 +69,7 @@ describe('Profile statistics tab', () => {
 
   it('reflects the active tab in the URL when switching', () => {
     cy.apiBatchSetup([{ discord_token: 'prof-url2', role: 'user' }]).then((users) => {
-      cy.apiLogin(users['prof-url2'].user_id);
-      cy.visit('/profile');
+      cy.apiLogin(users['prof-url2'].user_id, 'profile');
       cy.getByCy('profile-tab-stats').click();
       cy.location('search').should('include', 'tab=stats');
       cy.getByCy('profile-tab-infos').click();
@@ -84,8 +79,7 @@ describe('Profile statistics tab', () => {
 
   it('falls back to the info tab for an unknown ?tab value', () => {
     cy.apiBatchSetup([{ discord_token: 'prof-url3', role: 'user' }]).then((users) => {
-      cy.apiLogin(users['prof-url3'].user_id);
-      cy.visit('/profile?tab=bogus');
+      cy.apiLogin(users['prof-url3'].user_id, '/profile?tab=bogus');
       cy.getByCy('username-row').should('exist');
       cy.getByCy('profile-stats-empty').should('not.exist');
     });

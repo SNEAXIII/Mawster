@@ -6,18 +6,22 @@ import { toast } from 'sonner'
 import {
   type GameAccount,
   type AllianceRoleEntry,
+  type DeletedGameAccount,
   getMyGameAccounts,
   getMyAllianceRoles,
+  getDeletedGameAccounts,
   createGameAccount,
   updateGameAccount,
   deleteGameAccount,
+  restoreGameAccount,
 } from '@/app/services/game'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ConfirmationDialog } from '@/components/confirmation-dialog'
+import { TextConfirmationDialog } from '@/components/text-confirmation-dialog'
+import DeletedAccountsList from '@/components/profile/deleted-accounts-list'
 import { CollapsibleSection } from '@/components/collapsible-section'
 import {
   Loader,
@@ -33,6 +37,10 @@ import {
   ShieldCheck,
   Eye,
 } from 'lucide-react'
+
+const MAX_ACCOUNTS = 10
+/** Mirrors RESTORE_WINDOW_DAYS in GameAccountService — how long a deleted account lives on. */
+const RESTORE_WINDOW_DAYS = 7
 
 type RoleKey = 'owner' | 'officer' | 'member' | 'visitor'
 
@@ -67,10 +75,13 @@ export default function GameAccountsSection({
   const { t } = useI18n()
 
   const [accounts, setAccounts] = useState<GameAccount[]>([])
+  const [deletedAccounts, setDeletedAccounts] = useState<DeletedGameAccount[]>([])
   const [rolesByAccount, setRolesByAccount] = useState<Record<string, AllianceRoleEntry>>({})
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [restoringId, setRestoringId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<GameAccount | null>(null)
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -81,12 +92,14 @@ export default function GameAccountsSection({
 
   const fetchAccounts = async () => {
     try {
-      const [data, rolesData] = await Promise.all([
+      const [data, rolesData, deletedData] = await Promise.all([
         getMyGameAccounts(),
         getMyAllianceRoles().catch(() => ({ roles: {}, roles_by_account: {}, my_account_ids: [] })),
+        getDeletedGameAccounts().catch(() => [] as DeletedGameAccount[]),
       ])
       setAccounts(data)
       setRolesByAccount(rolesData.roles_by_account)
+      setDeletedAccounts(deletedData)
     } catch (err) {
       console.error(err)
     } finally {
@@ -125,15 +138,38 @@ export default function GameAccountsSection({
 
   const handleDelete = async () => {
     if (!deleteTarget) return
+    setDeleting(true)
     try {
-      await deleteGameAccount(deleteTarget)
+      await deleteGameAccount(deleteTarget.id)
       toast.success(t.game.accounts.deleteSuccess)
       setDeleteTarget(null)
       await fetchAccounts()
       onAccountsChange?.()
     } catch (err) {
       console.error(err)
-      toast.error(t.game.accounts.deleteError)
+      const status = (err as Error & { status?: number }).status
+      // 409 is the backend refusing to delete an account still tied to an alliance.
+      toast.error(status === 409 ? t.game.accounts.deleteInAlliance : t.game.accounts.deleteError)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleRestore = async (account: DeletedGameAccount) => {
+    setRestoringId(account.id)
+    try {
+      await restoreGameAccount(account.id)
+      toast.success(t.game.accounts.restoreSuccess)
+      await fetchAccounts()
+      onAccountsChange?.()
+    } catch (err) {
+      console.error(err)
+      const status = (err as Error & { status?: number }).status
+      // 410 means the restore window closed while the page was open.
+      toast.error(status === 410 ? t.game.accounts.restoreExpired : t.game.accounts.restoreError)
+      await fetchAccounts()
+    } finally {
+      setRestoringId(null)
     }
   }
 
@@ -179,6 +215,10 @@ export default function GameAccountsSection({
     }
   }
 
+  // A deleted account keeps its slot until its restore window closes, exactly
+  // like the backend counts it — so the quota shown here matches the API's.
+  const usedSlots = accounts.length + deletedAccounts.length
+
   if (loading) {
     return (
       <Card>
@@ -199,7 +239,7 @@ export default function GameAccountsSection({
             {t.game.accounts.title}
           </CardTitle>
           <p className='text-sm text-muted-foreground'>
-            {t.game.accounts.accountCount.replace('{count}', String(accounts.length))}
+            {t.game.accounts.accountCount.replace('{count}', String(usedSlots))}
           </p>
         </CardHeader>
         <CardContent className='space-y-4'>
@@ -208,7 +248,7 @@ export default function GameAccountsSection({
             title={t.game.accounts.createTitle}
             defaultOpen={accounts.length === 0}
           >
-            {accounts.length >= 10 ? (
+            {usedSlots >= MAX_ACCOUNTS ? (
               <p className='text-sm text-amber-600 font-medium'>
                 {t.game.accounts.accountLimitReached}
               </p>
@@ -360,7 +400,7 @@ export default function GameAccountsSection({
                           variant='ghost'
                           size='icon'
                           className='text-red-500 hover:text-red-700 hover:bg-red-500/10'
-                          onClick={() => setDeleteTarget(account.id)}
+                          onClick={() => setDeleteTarget(account)}
                           data-cy='account-delete-btn'
                         >
                           <Trash2 className='h-4' />
@@ -372,20 +412,31 @@ export default function GameAccountsSection({
               })}
             </div>
           )}
+          <DeletedAccountsList
+            accounts={deletedAccounts}
+            restoreWindowDays={RESTORE_WINDOW_DAYS}
+            restoringId={restoringId}
+            onRestore={handleRestore}
+          />
         </CardContent>
       </Card>
 
-      {/* Delete confirmation dialog */}
-      <ConfirmationDialog
+      {/* Delete confirmation dialog: the pseudo must be typed back */}
+      <TextConfirmationDialog
         open={!!deleteTarget}
         onOpenChange={(open) => {
           if (!open) setDeleteTarget(null)
         }}
         title={t.common.confirm}
-        description={t.game.accounts.deleteConfirm}
+        description={t.game.accounts.deleteConfirm
+          .replace('{pseudo}', deleteTarget?.game_pseudo ?? '')
+          .replace('{days}', String(RESTORE_WINDOW_DAYS))}
         onConfirm={handleDelete}
+        confirmationWord={deleteTarget?.game_pseudo ?? ''}
+        inputLabel={t.game.accounts.deleteTypeConfirm}
         variant='destructive'
         confirmText={t.common.delete}
+        isLoading={deleting}
       />
     </>
   )

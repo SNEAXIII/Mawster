@@ -1,4 +1,4 @@
-import { setupAttackerScenario } from '../../support/e2e';
+import { selectCombatFilter, setupAttackerScenario } from '../../support/e2e';
 
 describe('War – Combat completion', () => {
   beforeEach(() => {
@@ -76,8 +76,7 @@ describe('War – Combat completion', () => {
       cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
       cy.goToWarMode(ownerData.user_id, 'attackers');
 
-      cy.getByCy('war-combat-filter').click({ force: true });
-      cy.contains('Done').click({ force: true });
+      selectCombatFilter('Done');
 
       cy.getByCy('attacker-entry-node-10').should('be.visible');
     });
@@ -91,8 +90,7 @@ describe('War – Combat completion', () => {
       cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
       cy.goToWarMode(ownerData.user_id, 'attackers');
 
-      cy.getByCy('war-combat-filter').click({ force: true });
-      cy.contains('To do').click({ force: true });
+      selectCombatFilter('To do');
 
       cy.getByCy('attacker-entry-node-10').should('be.visible');
       cy.getByCy('attacker-entry-node-10').parent().should('have.class', 'opacity-60');
@@ -105,8 +103,7 @@ describe('War – Combat completion', () => {
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
         cy.goToWarMode(ownerData.user_id, 'attackers');
 
-        cy.getByCy('war-combat-filter').click({ force: true });
-        cy.contains('To do').click({ force: true });
+        selectCombatFilter('To do');
 
         cy.getByCy('attacker-entry-node-10').should('be.visible');
       },
@@ -118,8 +115,7 @@ describe('War – Combat completion', () => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.goToWarMode(ownerData.user_id, 'attackers');
 
-      cy.getByCy('war-combat-filter').click({ force: true });
-      cy.contains('To do').click({ force: true });
+      selectCombatFilter('To do');
 
       cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-60');
     });
@@ -130,8 +126,7 @@ describe('War – Combat completion', () => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.goToWarMode(ownerData.user_id, 'attackers');
 
-      cy.getByCy('war-combat-filter').click({ force: true });
-      cy.contains('Done').click({ force: true });
+      selectCombatFilter('Done');
 
       cy.getByCy('attacker-entry-node-10').parent().should('have.class', 'opacity-60');
     });
@@ -143,8 +138,7 @@ describe('War – Combat completion', () => {
       cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
       cy.goToWarMode(ownerData.user_id, 'attackers');
 
-      cy.getByCy('war-combat-filter').click({ force: true });
-      cy.contains('Done').click({ force: true });
+      selectCombatFilter('Done');
 
       cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-60');
     });
@@ -156,8 +150,7 @@ describe('War – Combat completion', () => {
       cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
       cy.goToWarMode(ownerData.user_id, 'attackers');
 
-      cy.getByCy('war-combat-filter').click({ force: true });
-      cy.contains('[role="option"]', 'All').click({ force: true });
+      selectCombatFilter('All');
 
       cy.getByCy('attacker-entry-node-10').parent().should('not.have.class', 'opacity-60');
     });

@@ -9,6 +9,8 @@ from starlette import status
 from src.enums.InvitationStatus import InvitationStatus
 from src.enums.InvitationType import InvitationType
 from src.Messages.alliance_messages import (
+    ALLIANCE_NAME_CONFIRMATION_MISMATCH,
+    ALLIANCE_NOT_EMPTY,
     ALLIANCE_NOT_FOUND,
     CANNOT_REMOVE_OWNER,
     GAME_ACCOUNT_ALREADY_IN_ALLIANCE,
@@ -27,13 +29,16 @@ from src.Messages.alliance_messages import (
     alliance_max_members_reached,
     group_max_members_reached,
 )
-from src.models.Alliance import Alliance
-from src.models.AllianceInvitation import AllianceInvitation
-from src.models.AllianceOfficer import AllianceOfficer
-from src.models.AllianceVisitor import AllianceVisitor
-from src.models.GameAccount import GameAccount
-from src.models.User import User
+from src.models.alliance.Alliance import Alliance
+from src.models.alliance.AllianceInvitation import AllianceInvitation
+from src.models.alliance.AllianceOfficer import AllianceOfficer
+from src.models.alliance.AllianceVisitor import AllianceVisitor
+from src.models.Base import utcnow
+from src.models.user.GameAccount import GameAccount
+from src.models.user.User import User
 from src.services.alliance.AllianceVisitorService import AllianceVisitorService
+from src.services.alliance.UpgradeRequestService import UpgradeRequestService
+from src.services.alliance.war.DefensePlacementService import DefensePlacementService
 from src.utils.db import SessionDep
 
 MAX_MEMBERS_PER_GROUP = 10
@@ -43,8 +48,13 @@ MAX_MEMBERS_PER_ALLIANCE = 30
 class AllianceService:
     @staticmethod
     async def _get_user_accounts(session: SessionDep, user_id: uuid.UUID) -> list[GameAccount]:
-        """Get all game accounts belonging to a user."""
-        result = await session.exec(select(GameAccount).where(GameAccount.user_id == user_id))
+        """Get all live game accounts belonging to a user."""
+        result = await session.exec(
+            select(GameAccount).where(
+                GameAccount.user_id == user_id,
+                GameAccount.deleted_at.is_(None),
+            )
+        )
         return result.all()
 
     @classmethod
@@ -125,10 +135,15 @@ class AllianceService:
     async def _load_alliance_with_relations(
         cls, session: SessionDep, alliance_id: uuid.UUID
     ) -> Alliance | None:
-        """Load an alliance with owner, members and officers eagerly loaded."""
+        """Load an alliance with owner, members and officers eagerly loaded.
+
+        A soft-deleted alliance is never returned, so every caller that goes
+        through this loader 404s on a disbanded alliance without its own check.
+        """
         sql = (
             select(Alliance)
             .where(Alliance.id == alliance_id)
+            .where(Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
             .options(
                 selectinload(Alliance.owner),  # type: ignore[arg-type]
                 selectinload(Alliance.members),  # type: ignore[arg-type]
@@ -196,7 +211,6 @@ class AllianceService:
         """True if the user is a member, officer, owner, OR has a visitor account in the alliance."""
         if await cls.is_member(session, user_id, alliance_id):
             return True
-        from src.services.alliance.AllianceVisitorService import AllianceVisitorService
 
         user_accounts = await cls._get_user_accounts(session, user_id)
         for acc in user_accounts:
@@ -345,9 +359,16 @@ class AllianceService:
         target_game_account_id: uuid.UUID,
     ) -> None:
         """Check that the current user can remove the target member.
+        - Anyone can remove their own game account (leave the alliance).
         - The owner can remove anyone (except themselves, handled elsewhere).
         - An officer can remove regular members but NOT other officers."""
         user_account_ids = await cls._get_user_account_ids(session, current_user_id)
+
+        # Leaving: a user can always pull out one of their own game accounts,
+        # whatever their rank. The owner case is rejected by remove_member
+        # (CANNOT_REMOVE_OWNER) — they must transfer ownership first.
+        if target_game_account_id in user_account_ids:
+            return
 
         # Owner can remove anyone
         if alliance.owner_id in user_account_ids:
@@ -380,7 +401,7 @@ class AllianceService:
         """Create a new alliance. The owner game account must belong to the current user
         and must not already be in an alliance."""
         owner = await session.get(GameAccount, owner_id)
-        if owner is None:
+        if owner is None or owner.deleted_at is not None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=OWNER_GAME_ACCOUNT_NOT_FOUND,
@@ -413,29 +434,10 @@ class AllianceService:
 
     @classmethod
     async def get_all_alliances(cls, session: SessionDep) -> list[Alliance]:
-        sql = select(Alliance).options(
-            selectinload(Alliance.owner),  # type: ignore[arg-type]
-            selectinload(Alliance.members),  # type: ignore[arg-type]
-            selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
-        )
-        result = await session.exec(sql)
-        return result.all()
-
-    @classmethod
-    async def get_my_alliances(cls, session: SessionDep, user_id: uuid.UUID) -> list[Alliance]:
-        """Return only alliances where the user has at least one game account as member."""
-        user_accounts = await session.exec(
-            select(GameAccount.alliance_id)
-            .where(GameAccount.user_id == user_id)
-            .where(GameAccount.alliance_id.isnot(None))  # type: ignore[union-attr]
-        )
-        alliance_ids = {aid for aid in user_accounts.all() if aid is not None}
-        if not alliance_ids:
-            return []
         sql = (
             select(Alliance)
-            .where(Alliance.id.in_(alliance_ids))  # type: ignore[union-attr]
-            .options(
+            .where(Alliance.deleted_at.is_(None))
+            .options(  # type: ignore[union-attr]
                 selectinload(Alliance.owner),  # type: ignore[arg-type]
                 selectinload(Alliance.members),  # type: ignore[arg-type]
                 selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
@@ -443,6 +445,48 @@ class AllianceService:
         )
         result = await session.exec(sql)
         return result.all()
+
+    @classmethod
+    async def _member_alliance_ids(cls, session: SessionDep, user_id: uuid.UUID) -> set[uuid.UUID]:
+        """The alliances the user belongs to, as ids only — one cheap query."""
+        user_accounts = await session.exec(
+            select(GameAccount.alliance_id)
+            .where(GameAccount.user_id == user_id)
+            .where(GameAccount.alliance_id.isnot(None))  # type: ignore[union-attr]
+        )
+        return {aid for aid in user_accounts.all() if aid is not None}
+
+    @classmethod
+    async def _load_alliances_with_relations(
+        cls, session: SessionDep, alliance_ids: set[uuid.UUID]
+    ) -> list[Alliance]:
+        """Load a set of alliances with owner, members and officers eagerly loaded.
+
+        Each `selectinload` costs one query, so the cascade is worth paying
+        once. Callers that need two groups of alliances must therefore union
+        their ids and come here a single time, never call this twice.
+        """
+        if not alliance_ids:
+            return []
+        sql = (
+            select(Alliance)
+            .where(Alliance.id.in_(alliance_ids))  # type: ignore[union-attr]
+            .where(Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
+            .options(
+                selectinload(Alliance.owner),  # type: ignore[arg-type]
+                selectinload(Alliance.members),  # type: ignore[arg-type]
+                selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
+            )
+        )
+        result = await session.exec(sql)
+        return list(result.all())
+
+    @classmethod
+    async def get_my_alliances(cls, session: SessionDep, user_id: uuid.UUID) -> list[Alliance]:
+        """Return only alliances where the user has at least one game account as member."""
+        return await cls._load_alliances_with_relations(
+            session, await cls._member_alliance_ids(session, user_id)
+        )
 
     @classmethod
     async def get_my_roles(cls, session: SessionDep, user_id: uuid.UUID) -> dict:
@@ -453,7 +497,12 @@ class AllianceService:
           - my_account_ids: [ str(account_id), ... ]
         """
         # 1. Get all game accounts for this user
-        accs_result = await session.exec(select(GameAccount).where(GameAccount.user_id == user_id))
+        accs_result = await session.exec(
+            select(GameAccount).where(
+                GameAccount.user_id == user_id,
+                GameAccount.deleted_at.is_(None),
+            )
+        )
         user_accounts = accs_result.all()
         user_account_ids = {acc.id for acc in user_accounts}
         my_account_ids = [str(aid) for aid in user_account_ids]
@@ -467,6 +516,7 @@ class AllianceService:
         sql = (
             select(Alliance)
             .where(Alliance.id.in_(alliance_ids))  # type: ignore[union-attr]
+            .where(Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
             .options(
                 selectinload(Alliance.officers),  # type: ignore[arg-type]
             )
@@ -548,8 +598,46 @@ class AllianceService:
         return await cls._load_alliance_with_relations(session, alliance.id)
 
     @classmethod
-    async def delete_alliance(cls, session: SessionDep, alliance: Alliance) -> None:
-        # Remove all members from the alliance first
+    def _assert_delete_confirmation(cls, alliance: Alliance, confirmation_name: str) -> None:
+        """Raise 400 unless the caller retyped the alliance name exactly."""
+        if confirmation_name.strip() != alliance.name:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ALLIANCE_NAME_CONFIRMATION_MISMATCH,
+            )
+
+    @classmethod
+    async def _assert_owner_is_last_member(cls, session: SessionDep, alliance: Alliance) -> None:
+        """Raise 409 if anyone but the owner is still a member of the alliance."""
+        others = await session.exec(
+            select(func.count())
+            .select_from(GameAccount)
+            .where(GameAccount.alliance_id == alliance.id)
+            .where(GameAccount.id != alliance.owner_id)
+        )
+        if (others.one() or 0) > 0:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=ALLIANCE_NOT_EMPTY,
+            )
+
+    @classmethod
+    async def delete_alliance(
+        cls, session: SessionDep, alliance: Alliance, confirmation_name: str
+    ) -> None:
+        """Soft-delete an alliance the owner is alone in.
+
+        The row itself survives — wars, defense placements and season statistics
+        keep pointing at it, so past seasons stay readable. What goes away is the
+        live membership: the owner is freed to create or join another alliance,
+        and the alliance disappears from every listing (see the ``deleted_at``
+        filter in the loaders above).
+        """
+        cls._assert_delete_confirmation(alliance, confirmation_name)
+        await cls._assert_owner_is_last_member(session, alliance)
+
+        # Free the owner: their game account must leave so it can create or join
+        # another alliance (see `_assert_not_in_alliance`).
         members_result = await session.exec(
             select(GameAccount).where(GameAccount.alliance_id == alliance.id)
         )
@@ -565,7 +653,28 @@ class AllianceService:
         for off in officers_result.all():
             await session.delete(off)
 
-        await session.delete(alliance)
+        # Visitors are not members, so an alliance can be "owner only" and still
+        # have spectators — drop their access along with the alliance.
+        visitors_result = await session.exec(
+            select(AllianceVisitor).where(AllianceVisitor.alliance_id == alliance.id)
+        )
+        for visitor in visitors_result.all():
+            await session.delete(visitor)
+
+        # Pending invitations would otherwise point at an alliance nobody can see.
+        invitations_result = await session.exec(
+            select(AllianceInvitation)
+            .where(AllianceInvitation.alliance_id == alliance.id)
+            .where(AllianceInvitation.status == InvitationStatus.PENDING)
+        )
+        now = utcnow()
+        for invitation in invitations_result.all():
+            invitation.status = InvitationStatus.DECLINED
+            invitation.responded_at = now
+            session.add(invitation)
+
+        alliance.deleted_at = now
+        session.add(alliance)
         await session.commit()
 
     # ---- Member management ----
@@ -633,6 +742,14 @@ class AllianceService:
         officer = officer_result.first()
         if officer:
             await session.delete(officer)
+
+        # Their champions leave with them: free the defense nodes they occupied
+        await DefensePlacementService.remove_placements_for_member(
+            session, alliance_id, game_account_id
+        )
+        # Same for the rank-ups the alliance was waiting on: the roster is out of
+        # reach, and once out of the alliance nobody can even cancel those rows.
+        await UpgradeRequestService.cancel_pending_for_member(session, game_account_id)
 
         game_account.alliance_id = None
         game_account.alliance_group = None
@@ -788,6 +905,14 @@ class AllianceService:
                     status_code=status.HTTP_409_CONFLICT,
                     detail=group_max_members_reached(group, MAX_MEMBERS_PER_GROUP),
                 )
+        # A defender only exists on the battlegroup its owner belongs to. Moving
+        # the member (or pulling them out of every group) would strand their
+        # defenders on a map they can no longer be placed on, so free those nodes.
+        if group != game_account.alliance_group:
+            await DefensePlacementService.remove_placements_for_member(
+                session, alliance_id, game_account_id
+            )
+
         game_account.alliance_group = group
         session.add(game_account)
         await session.commit()
@@ -843,35 +968,28 @@ class AllianceService:
         """Return alliances where the user has a game account currently visiting (as visitor)."""
 
         visits = await AllianceVisitorService.get_visited_alliances(session, user_id)
-        if not visits:
-            return []
-        alliance_ids = {v.alliance_id for v in visits}
-        sql = (
-            select(Alliance)
-            .where(Alliance.id.in_(alliance_ids))  # type: ignore[union-attr]
-            .options(
-                selectinload(Alliance.owner),  # type: ignore[arg-type]
-                selectinload(Alliance.members),  # type: ignore[arg-type]
-                selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
-            )
-        )
-        result = await session.exec(sql)
-        return result.all()
+        return await cls._load_alliances_with_relations(session, {v.alliance_id for v in visits})
 
     @classmethod
     async def get_accessible_alliances(
         cls, session: SessionDep, user_id: uuid.UUID
     ) -> list[Alliance]:
-        """Return alliances the user can access: member alliances + visited alliances, deduplicated."""
-        mine = await cls.get_my_alliances(session, user_id)
-        visited = await cls.get_my_visited_alliances(session, user_id)
-        seen: set[uuid.UUID] = set()
-        result: list[Alliance] = []
-        for a in mine + visited:
-            if a.id not in seen:
-                seen.add(a.id)
-                result.append(a)
-        return result
+        """Return alliances the user can access: member alliances + visited alliances, deduplicated.
+
+        The ids are unioned *before* loading, so the owner, members and officers
+        of an alliance the user both belongs to and visits are fetched once
+        instead of twice and thrown away. Calling the two loaders and
+        deduplicating afterwards paid the whole eager-loading cascade twice.
+        """
+        member_ids = await cls._member_alliance_ids(session, user_id)
+        visits = await AllianceVisitorService.get_visited_alliances(session, user_id)
+        visited_ids = {v.alliance_id for v in visits}
+
+        alliances = await cls._load_alliances_with_relations(session, member_ids | visited_ids)
+        # Membership first, then visits, as the concatenation used to yield —
+        # and by name inside each group, which it never guaranteed.
+        alliances.sort(key=lambda alliance: (alliance.id not in member_ids, alliance.name))
+        return alliances
 
     # ---- Eligibility queries ----
 
@@ -883,6 +1001,7 @@ class AllianceService:
         sql = select(GameAccount).where(
             GameAccount.user_id == user_id,
             GameAccount.alliance_id.is_(None),
+            GameAccount.deleted_at.is_(None),
         )
         result = await session.exec(sql)
         return result.all()

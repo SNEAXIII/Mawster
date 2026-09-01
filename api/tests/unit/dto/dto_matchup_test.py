@@ -38,8 +38,10 @@ def test_node_target_accepts_a_node_number():
 
 
 def test_target_rejects_both_defender_and_node():
+    payload = _defender_target(node_number=23)
+
     with pytest.raises(ValidationError):
-        MatchupTargetInput(**_defender_target(node_number=23))
+        MatchupTargetInput(**payload)
 
 
 def test_target_rejects_neither_defender_nor_node():
@@ -49,19 +51,21 @@ def test_target_rejects_neither_defender_nor_node():
 
 def test_target_rejects_more_than_two_synergies():
     synergies = [{"champion_id": uuid.uuid4()} for _ in range(3)]
+    payload = _defender_target(synergies=synergies)
+
     with pytest.raises(ValidationError):
-        MatchupTargetInput(**_defender_target(synergies=synergies))
+        MatchupTargetInput(**payload)
 
 
 def test_upsert_rejects_two_targets_of_the_same_type():
+    targets = [
+        MatchupTargetInput(**_defender_target()),
+        MatchupTargetInput(**_defender_target()),
+    ]
+    champion_id = uuid.uuid4()
+
     with pytest.raises(ValidationError):
-        MatchupUpsertRequest(
-            champion_id=uuid.uuid4(),
-            targets=[
-                MatchupTargetInput(**_defender_target()),
-                MatchupTargetInput(**_defender_target()),
-            ],
-        )
+        MatchupUpsertRequest(champion_id=champion_id, targets=targets)
 
 
 def test_upsert_accepts_one_defender_and_one_node():
@@ -79,14 +83,14 @@ def test_upsert_accepts_one_defender_and_one_node():
 
 def test_upsert_rejects_two_node_targets():
     node = {"target_type": MatchupTargetType.NODE, "verdict": MatchupVerdict.OK}
+    targets = [
+        MatchupTargetInput(**node, node_number=1),
+        MatchupTargetInput(**node, node_number=2),
+    ]
+    champion_id = uuid.uuid4()
+
     with pytest.raises(ValidationError):
-        MatchupUpsertRequest(
-            champion_id=uuid.uuid4(),
-            targets=[
-                MatchupTargetInput(**node, node_number=1),
-                MatchupTargetInput(**node, node_number=2),
-            ],
-        )
+        MatchupUpsertRequest(champion_id=champion_id, targets=targets)
 
 
 def _champion_ref() -> dict:
@@ -98,13 +102,17 @@ def _champion_ref() -> dict:
 
 
 def test_evaluation_row_rejects_a_score_on_a_discouraged_fight():
+    champion = _champion_ref()
+
     with pytest.raises(ValidationError):
-        MatchupEvaluationRow(champion=_champion_ref(), is_discouraged=True, score=4)
+        MatchupEvaluationRow(champion=champion, is_discouraged=True, score=4)
 
 
 def test_evaluation_row_rejects_a_missing_score_when_not_discouraged():
+    champion = _champion_ref()
+
     with pytest.raises(ValidationError):
-        MatchupEvaluationRow(champion=_champion_ref(), is_discouraged=False, score=None)
+        MatchupEvaluationRow(champion=champion, is_discouraged=False, score=None)
 
 
 def test_evaluation_row_accepts_discouraged_without_a_score():
@@ -136,8 +144,10 @@ def _defender_grid_cell(**overrides) -> dict:
 def test_defender_grid_cell_rejects_a_node_detail_from_another_node():
     """The coordinate and the detail are two views of one node; a mismatch would open the
     detail of a fight the user never clicked."""
+    payload = _defender_grid_cell(node=_node_side(8))
+
     with pytest.raises(ValidationError):
-        MatchupDefenderGridCell(**_defender_grid_cell(node=_node_side(8)))
+        MatchupDefenderGridCell(**payload)
 
 
 def test_defender_grid_cell_accepts_a_node_detail_on_the_same_node():

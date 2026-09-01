@@ -53,8 +53,7 @@ describe('Mobile Settings Sheet', () => {
 
   it('signs out and lands on the home page', () => {
     setupUser('modal-settings-signout').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
 
       cy.getByCy('modal-settings-trigger').click();
       cy.getByCy('modal-settings-content').should('be.visible');

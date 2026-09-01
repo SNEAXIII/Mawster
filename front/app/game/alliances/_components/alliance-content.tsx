@@ -111,8 +111,13 @@ export default function AllianceContent() {
             onAllianceChange={vm.handleStatsAllianceChange}
             seasonStats={vm.seasonStats}
             statsLoading={vm.statsLoading}
+            statsRefreshing={vm.statsRefreshing}
             statsError={vm.statsError}
             onRetry={vm.handleRefreshStatistics}
+            selectedWarId={vm.statsWarId}
+            onWarChange={vm.handleStatsWarChange}
+            selectedSeasonId={vm.statsSeasonId}
+            onSeasonChange={vm.handleStatsSeasonChange}
           />
         )}
 

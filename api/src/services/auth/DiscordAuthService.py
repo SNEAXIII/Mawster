@@ -1,27 +1,13 @@
 import httpx
 from fastapi import HTTPException
-from sqlmodel import select
 from starlette import status
 
-from src.enums.Roles import Roles
-from src.Messages.discord_auth_messages import (
-    DISCORD_API_ERROR,
-    DISCORD_TOKEN_INVALID,
-    EMAIL_CONFLICT,
-)
-from src.models import LoginLog, User
-from src.models.Base import utcnow
-from src.security.secrets import SECRET
+from src.Messages.discord_auth_messages import DISCORD_API_ERROR, DISCORD_TOKEN_INVALID
+from src.models import User
 from src.services.auth.OAuthService import OAuthService
 from src.utils.db import SessionDep
-from src.utils.email_hash import hash_email
 
 DISCORD_API_URL = "https://discord.com/api/v10"
-
-EMAIL_CONFLICT_EXCEPTION = HTTPException(
-    status_code=status.HTTP_409_CONFLICT,
-    detail=EMAIL_CONFLICT,
-)
 
 DISCORD_TOKEN_INVALID_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -63,57 +49,12 @@ class DiscordAuthService(OAuthService):
         return response.json()
 
     @classmethod
-    async def _get_user_by_discord_id(cls, session: SessionDep, discord_id: str) -> User | None:
-        sql = select(User).where(User.discord_id == discord_id)
-        result = await session.exec(sql)
-        return result.first()
-
-    @classmethod
     async def get_or_create_user(cls, session: SessionDep, profile: dict) -> User:
-        """Trouve ou crée un utilisateur à partir du profil Discord vérifié.
-
-        Flow:
-        1. Cherche par discord_id → si trouvé, retourne l'utilisateur existant
-        2. Vérifie que l'email n'est pas déjà utilisé
-        3. Si email libre → crée un nouveau compte Discord
-        4. Si email pris → 409 Conflict
-        """
-        discord_id = str(profile["id"])
-        email = profile.get("email") or f"{discord_id}@discord.placeholder"
-        username = cls._random_base_login()
-        # 1. Recherche par discord_id
-        existing_user = await cls._get_user_by_discord_id(session, discord_id)
-        if existing_user:
-            existing_user.set_last_login_date(utcnow())
-            if existing_user.email_hash_version != SECRET.EMAIL_PEPPER_VERSION:
-                existing_user.email_hash = hash_email(email)
-                existing_user.email_hash_version = SECRET.EMAIL_PEPPER_VERSION
-            login_log = LoginLog(user=existing_user)
-            session.add(login_log)
-            await session.commit()
-            await session.refresh(existing_user)
-            return existing_user
-
-        # 2. Vérifier conflit email
-        email_hash = hash_email(email)
-        sql = select(User).where(User.email_hash == email_hash)
-        result = await session.exec(sql)
-        if result.first():
-            raise EMAIL_CONFLICT_EXCEPTION
-
-        # 3. Créer un nouveau compte Discord
-        unique_login = await cls._generate_unique_login(session, username)
-
-        new_user = User(
-            login=unique_login,
-            email_hash=email_hash,
-            discord_id=discord_id,
-            role=Roles.USER,
+        """Log in, create, or link the account matching this verified Discord profile."""
+        return await cls.resolve_user(
+            session,
+            provider_field="discord_id",
+            provider_id=str(profile["id"]),
+            email=profile.get("email"),
+            email_verified=bool(profile.get("verified")),
         )
-        new_user.set_last_login_date(utcnow())
-        login_log = LoginLog(user=new_user)
-        session.add(new_user)
-        session.add(login_log)
-        await session.commit()
-        await session.refresh(new_user)
-        return new_user

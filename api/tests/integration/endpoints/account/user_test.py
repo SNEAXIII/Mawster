@@ -38,7 +38,7 @@ class TestSelfDeleteUser:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "confirmation, expected_status",
+        ("confirmation", "expected_status"),
         [
             ("WRONG", 400),
             ("supprimer", 400),  # case-sensitive
@@ -87,7 +87,7 @@ class TestUpdateLogin:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "login, expected_status",
+        ("login", "expected_status"),
         [
             ("ab", 422),
             ("a" * 31, 422),

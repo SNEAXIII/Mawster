@@ -7,8 +7,7 @@ describe('Knowledge Base – CSV Import', () => {
 
   it('shows champion resolution UI for unknown names', () => {
     setupWarOwner('csv-res', 'ResUser', 'ResAlliance', 'RES').then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.visit('/game/knowledge-base/import');
+      cy.apiLogin(ownerData.user_id, 'knowledge-base-import');
 
       const csv = `attacker,defender,node,season,ko_count\nUnknownHero,AnotherHero,15,S1,0\n`;
       cy.getByCy('csv-file-input').selectFile({
@@ -27,8 +26,7 @@ describe('Knowledge Base – CSV Import', () => {
       cy.apiCreateSeason(adminData.access_token, 1).then(() => {
         cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic').then(() => {
           cy.apiLoadChampion(adminData.access_token, 'Serpent', 'Cosmic').then(() => {
-            cy.apiLogin(ownerData.user_id);
-            cy.visit('/game/knowledge-base/import');
+            cy.apiLogin(ownerData.user_id, 'knowledge-base-import');
 
             const csv = `attacker,defender,node,season,ko_count\nMagik,Serpent,15,S1,2\n`;
             cy.getByCy('csv-file-input').selectFile({
@@ -85,8 +83,7 @@ describe('Knowledge Base – CSV Import', () => {
                 ko_count: 2,
               },
             ]).then(() => {
-              cy.apiLogin(ownerData.user_id);
-              cy.visit('/game/knowledge-base');
+              cy.apiLogin(ownerData.user_id, 'knowledge-base');
               cy.getByCy('filter-source-trigger').click();
               cy.getByCy('filter-source-imported').click();
               cy.contains('Magik').should('be.visible');

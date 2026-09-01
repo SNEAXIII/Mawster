@@ -8,9 +8,11 @@ from fastapi import HTTPException
 
 from main import app
 from src.enums.SeasonStatus import SeasonStatus
-from src.models.Season import Season
-from src.models.War import War, WarStatus
-from src.models.WarDefensePlacement import WarDefensePlacement
+from src.enums.WarStatus import WarStatus
+from src.models.war.Season import Season
+from src.models.war.War import War
+from src.models.war.WarDefensePlacement import WarDefensePlacement
+from src.models.war.WarFightRecord import WarFightRecord as _WFR
 from src.services.PlayerStatsService import PlayerStatsService
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
@@ -211,8 +213,10 @@ class TestGetPlayerSeasons:
         owner_user = get_generic_user(is_base_id=True)
 
         async for session in get_test_session():
+            missing_account_id = uuid.uuid4()
+
             with pytest.raises(HTTPException) as exc:
-                await PlayerStatsService.get_player_seasons(session, owner_user, uuid.uuid4())
+                await PlayerStatsService.get_player_seasons(session, owner_user, missing_account_id)
             assert exc.value.status_code == 404
 
 
@@ -366,7 +370,6 @@ async def _push_fight_record(
     ko_count=0,
     is_planning_error=False,
 ):
-    from src.models.WarFightRecord import WarFightRecord as _WFR
 
     record = _WFR(
         war_id=war.id,

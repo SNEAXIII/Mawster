@@ -153,3 +153,13 @@ class AllianceUpdateEloRequest(BaseModel):
 
 class AllianceUpdateTierRequest(BaseModel):
     tier: int = Field(..., ge=1, le=20)
+
+
+class AllianceDeleteRequest(BaseModel):
+    """DTO to delete (disband) an alliance.
+
+    The caller must retype the alliance name: the confirmation travels with the
+    request so the guard holds for any client, not just the web UI.
+    """
+
+    name: str = Field(..., min_length=3, max_length=50, examples=["My Alliance"])

@@ -86,7 +86,7 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
           break
         case AllianceMemberAction.LEAVE:
           await removeMember(allianceId, member.id)
-          toast.success(t.game.alliances.memberRemoveSuccess)
+          toast.success(t.game.alliances.leaveSuccess)
           setIsLeaveDialogOpen(false)
           break
         case AllianceMemberAction.TRANSFER_OWNER:
@@ -107,7 +107,9 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
             ? t.game.alliances.officerRemoveError
             : action === AllianceMemberAction.TRANSFER_OWNER
               ? t.game.alliances.transferOwnerError
-              : t.game.alliances.memberRemoveError
+              : action === AllianceMemberAction.LEAVE
+                ? t.game.alliances.leaveError
+                : t.game.alliances.memberRemoveError
       const errMessage = err instanceof Error ? err.message : undefined
       toast.error(errMessage || errorMsg)
     } finally {

@@ -10,7 +10,11 @@ import pytest
 from main import app
 from src.enums.Roles import Roles
 from src.utils.db import get_session
-from tests.integration.endpoints.setup.game_setup import push_champion, push_game_account
+from tests.integration.endpoints.setup.game_setup import (
+    push_champion,
+    push_champion_user,
+    push_game_account,
+)
 from tests.integration.endpoints.setup.user_setup import push_one_user
 from tests.utils.utils_client import (
     create_auth_headers,
@@ -40,8 +44,6 @@ async def test_roster_reflects_current_season_saga():
     assert season_resp.status_code == 201
     season_id = season_resp.json()["id"]
 
-    from tests.integration.endpoints.setup.game_setup import push_champion_user
-
     await push_champion_user(acc, champ, stars=7, rank=3)
 
     saga_resp = await execute_put_request(
@@ -66,8 +68,6 @@ async def test_roster_defaults_false_without_saga_role():
     await push_one_user()
     acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
     champ = await push_champion("Storm", "Mutant")
-
-    from tests.integration.endpoints.setup.game_setup import push_champion_user
 
     await push_champion_user(acc, champ, stars=6, rank=4)
 

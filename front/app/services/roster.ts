@@ -1,4 +1,5 @@
 import { Champion } from './champions'
+import { PROXY, jsonHeaders } from '@/app/services/utils'
 
 // ─── Types ───────────────────────────────────────────────
 export enum ChampionRarity {
@@ -148,14 +149,6 @@ interface ApiError {
   detail?: string
   message?: string
   statusCode?: number
-}
-
-// ─── Helpers ─────────────────────────────────────────────
-const PROXY = '/api/back'
-
-const jsonHeaders: HeadersInit = {
-  Accept: 'application/json',
-  'Content-Type': 'application/json',
 }
 
 async function throwOnError(response: Response, fallback: string) {

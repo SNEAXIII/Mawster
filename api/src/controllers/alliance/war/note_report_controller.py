@@ -7,8 +7,8 @@ from starlette import status
 
 from src.dto.admin.dto_moderation import NoteReportCreateRequest, NoteReportResponse
 from src.models import User
-from src.models.GameAccount import GameAccount
-from src.models.WarFightNote import WarFightNote
+from src.models.user.GameAccount import GameAccount
+from src.models.war.WarFightNote import WarFightNote
 from src.services.admin.ModerationService import ModerationService
 from src.services.alliance.AllianceService import AllianceService
 from src.services.auth.AuthService import AuthService

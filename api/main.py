@@ -50,11 +50,21 @@ async def lifespan(_: FastAPI):
         except Exception:
             logger.exception("vision reaper failed at startup")
 
+        # Its own try: this one never touches the broker, and a cold stack where
+        # RabbitMQ is not up yet must not cost us the bookkeeping pass too.
+        try:
+            from src.storage import get_storage
+
+            async with Session() as session:
+                await VisionReaperService.cancel_stale_uploads(session, get_storage())
+        except Exception:
+            logger.exception("vision stale-upload sweep failed at startup")
+
     yield
     await consumer.stop()
 
 
-app = FastAPI(title="Mawster", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="Mawster", version="1.6.2", lifespan=lifespan)  # x-release-please-version
 Instrumentator().instrument(app)
 
 # Rate limiter (utilise l'IP du client — X-Forwarded-For si disponible, sinon connexion directe)
@@ -87,6 +97,7 @@ if IS_TESTING:
         DiscordAuthService,
     )
 
+    # NOSONAR S7503
     async def _fake_verify(cls, access_token: str) -> dict:
         if not access_token:
             raise DISCORD_TOKEN_INVALID_EXCEPTION
@@ -181,7 +192,8 @@ async def validation_exception_handler(request, exc):
     for error in exc.errors():
         location_list = error.get("loc")
         if not location_list:
-            raise ValueError(f"loc parameter is not correct:\n {error}")
+            msg = f"loc parameter is not correct:\n {error}"
+            raise ValueError(msg)
         location = location_list[-1]
         error_type = error.get("type").capitalize().replace("_", " ")
         error_message = error.get("msg").removeprefix(f"{error_type}, ")

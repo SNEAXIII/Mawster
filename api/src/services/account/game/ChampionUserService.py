@@ -18,9 +18,9 @@ from src.Messages.champion_user_messages import (
     invalid_rarity,
     invalid_rarity_format,
 )
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.GameAccount import GameAccount
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.user.GameAccount import GameAccount
 from src.services.admin.ChampionService import ChampionService
 from src.services.alliance.UpgradeRequestService import UpgradeRequestService
 from src.utils.db import SessionDep

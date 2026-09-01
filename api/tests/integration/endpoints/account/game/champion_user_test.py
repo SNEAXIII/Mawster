@@ -6,8 +6,8 @@ import pytest
 
 from main import app
 from src.enums.Roles import Roles
-from src.models.AllianceVisitor import AllianceVisitor
-from src.models.ChampionUser import ChampionUser
+from src.models.alliance.AllianceVisitor import AllianceVisitor
+from src.models.champion.ChampionUser import ChampionUser
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
@@ -104,7 +104,7 @@ class TestChampionUserAccessControl:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "method, url, payload",
+        ("method", "url", "payload"),
         [(action, route, payload) for action, route, payload, _ in _CHAMPION_USER_ROUTES_NO_AUTH],
         ids=[name for _, _, _, name in _CHAMPION_USER_ROUTES_NO_AUTH],
     )
