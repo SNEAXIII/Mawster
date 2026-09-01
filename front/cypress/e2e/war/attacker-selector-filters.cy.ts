@@ -1,9 +1,55 @@
 import { setupAttackerScenario } from '../../support/e2e';
 
-function goToAttackersMode(userId: string) {
-  cy.apiLogin(userId, 'war');
-  cy.getByCy('war-mode-attackers').click();
+/** Pseudos built by setupAttackerScenario — mirrors its `${prefix}Owner`.slice(0, 16). */
+const ownerPseudo = (prefix: string) => `${prefix}Owner`.slice(0, 16);
+const memberPseudo = (prefix: string) => `${prefix}Member`.slice(0, 16);
+
+/** Log in, switch to attackers mode and open the selector on BG1 node 10. */
+function openAttackerSelector(userId: string) {
+  cy.goToWarMode(userId, 'attackers');
+  cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+  cy.getByCy('war-attacker-search').should('be.visible');
 }
+
+interface RosterChampion {
+  name: string;
+  cls?: string;
+  rarity?: string;
+  saga?: boolean;
+  preferred?: boolean;
+}
+
+/** Load a champion as admin and put it on the given account's roster. */
+function giveChampion(
+  adminToken: string,
+  token: string,
+  accountId: string,
+  { name, cls = 'Mutant', rarity = '7r3', saga = false, preferred }: RosterChampion,
+) {
+  const load = saga
+    ? cy.apiLoadChampionWithSaga(adminToken, name, cls, { is_saga_attacker: true })
+    : cy.apiLoadChampion(adminToken, name, cls);
+
+  load.then((champs: { id: string }[]) => {
+    cy.apiAddChampionToRoster(
+      token,
+      accountId,
+      champs[0].id,
+      rarity,
+      preferred === undefined ? undefined : { is_preferred_attacker: preferred },
+    );
+  });
+}
+
+const expectVisible = (...names: string[]) =>
+  names.forEach((name) => cy.getByCy(`attacker-card-${name}`).should('be.visible'));
+
+const expectHidden = (...names: string[]) =>
+  names.forEach((name) => cy.getByCy(`attacker-card-${name}`).should('not.exist'));
+
+/** Two member groups overflow the dialog's scrollable list — scroll before asserting. */
+const expectVisibleInList = (...names: string[]) =>
+  names.forEach((name) => cy.getByCy(`attacker-card-${name}`).scrollIntoView().should('be.visible'));
 
 describe('War – WarAttackerSelector filters', () => {
   beforeEach(() => {
@@ -17,27 +63,22 @@ describe('War – WarAttackerSelector filters', () => {
   it('class filter shows only attackers of the selected class', () => {
     setupAttackerScenario('atk-flt-cls').then(({ adminToken, ownerData, memberData, memberAccId }) => {
       // Add a Tech champion to the member roster alongside existing Wolverine (Mutant)
-      cy.apiLoadChampion(adminToken, 'Vision', 'Tech').then((champs) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3');
-      });
+      giveChampion(adminToken, memberData.access_token, memberAccId, { name: 'Vision', cls: 'Tech' });
 
-      goToAttackersMode(ownerData.user_id);
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
-      cy.getByCy('war-attacker-search').should('be.visible');
+      openAttackerSelector(ownerData.user_id);
 
       // Both attackers visible initially
-      cy.getByCy('attacker-card-Wolverine').should('be.visible');
-      cy.getByCy('attacker-card-Vision').should('be.visible');
+      expectVisible('Wolverine', 'Vision');
 
       // Filter by Tech → only Vision
       cy.selectOption('selector-class-filter', 'Tech');
-      cy.getByCy('attacker-card-Vision').should('be.visible');
-      cy.getByCy('attacker-card-Wolverine').should('not.exist');
+      expectVisible('Vision');
+      expectHidden('Wolverine');
 
       // Filter by Mutant → only Wolverine
       cy.selectOption('selector-class-filter', 'Mutant');
-      cy.getByCy('attacker-card-Wolverine').should('be.visible');
-      cy.getByCy('attacker-card-Vision').should('not.exist');
+      expectVisible('Wolverine');
+      expectHidden('Vision');
     });
   });
 
@@ -47,22 +88,17 @@ describe('War – WarAttackerSelector filters', () => {
 
   it('saga attacker toggle shows only saga attackers', () => {
     setupAttackerScenario('atk-flt-saga').then(({ adminToken, ownerData, memberData, memberAccId }) => {
-      cy.apiLoadChampionWithSaga(adminToken, 'Storm', 'Mutant', { is_saga_attacker: true }).then((champs) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3');
-      });
+      giveChampion(adminToken, memberData.access_token, memberAccId, { name: 'Storm', saga: true });
 
-      goToAttackersMode(ownerData.user_id);
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
-      cy.getByCy('war-attacker-search').should('be.visible');
+      openAttackerSelector(ownerData.user_id);
 
       // Both visible initially (Wolverine = non-saga, Storm = saga)
-      cy.getByCy('attacker-card-Wolverine').should('be.visible');
-      cy.getByCy('attacker-card-Storm').should('be.visible');
+      expectVisible('Wolverine', 'Storm');
 
       cy.getByCy('selector-toggle-saga').click();
 
-      cy.getByCy('attacker-card-Storm').should('be.visible');
-      cy.getByCy('attacker-card-Wolverine').should('not.exist');
+      expectVisible('Storm');
+      expectHidden('Wolverine');
     });
   });
 
@@ -72,25 +108,18 @@ describe('War – WarAttackerSelector filters', () => {
 
   it('preferred attacker toggle shows only preferred attackers', () => {
     setupAttackerScenario('atk-flt-pref').then(({ adminToken, ownerData, memberData, memberAccId }) => {
-      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
-          is_preferred_attacker: true,
-        });
-      });
+      giveChampion(adminToken, memberData.access_token, memberAccId, { name: 'Storm', preferred: true });
 
-      goToAttackersMode(ownerData.user_id);
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
-      cy.getByCy('war-attacker-search').should('be.visible');
+      openAttackerSelector(ownerData.user_id);
 
       // Both visible initially
-      cy.getByCy('attacker-card-Wolverine').should('be.visible');
-      cy.getByCy('attacker-card-Storm').should('be.visible');
+      expectVisible('Wolverine', 'Storm');
 
       cy.getByCy('selector-toggle-preferred').click();
 
       // Only Storm (preferred) visible
-      cy.getByCy('attacker-card-Storm').should('be.visible');
-      cy.getByCy('attacker-card-Wolverine').should('not.exist');
+      expectVisible('Storm');
+      expectHidden('Wolverine');
     });
   });
 
@@ -100,83 +129,61 @@ describe('War – WarAttackerSelector filters', () => {
 
   it('player filter shows only the selected player attackers', () => {
     const prefix = 'atk';
-    const ownerPseudo = `${prefix}Owner`.slice(0, 16);
-    const memberPseudo = `${prefix}Member`.slice(0, 16);
 
     setupAttackerScenario(prefix).then(({ adminToken, ownerData, ownerAccId }) => {
       // Owner gets Storm; member already has Wolverine
-      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
-        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-      });
+      giveChampion(adminToken, ownerData.access_token, ownerAccId, { name: 'Storm' });
 
-      goToAttackersMode(ownerData.user_id);
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
-      cy.getByCy('war-attacker-search').should('be.visible');
+      openAttackerSelector(ownerData.user_id);
 
-      // Both attackers visible initially (two member groups overflow the
-      // dialog's scrollable list, so scroll each card into view before asserting)
-      cy.getByCy('attacker-card-Storm').scrollIntoView().should('be.visible');
-      cy.getByCy('attacker-card-Wolverine').scrollIntoView().should('be.visible');
+      // Both attackers visible initially
+      expectVisibleInList('Storm', 'Wolverine');
 
       // Filter by member → only Wolverine
-      cy.selectOption('selector-player-filter', memberPseudo);
-      cy.getByCy('attacker-card-Wolverine').should('be.visible');
-      cy.getByCy('attacker-card-Storm').should('not.exist');
+      cy.selectOption('selector-player-filter', memberPseudo(prefix));
+      expectVisible('Wolverine');
+      expectHidden('Storm');
 
       // Switch to owner → only Storm
-      cy.selectOption('selector-player-filter', ownerPseudo);
-      cy.getByCy('attacker-card-Storm').should('be.visible');
-      cy.getByCy('attacker-card-Wolverine').should('not.exist');
+      cy.selectOption('selector-player-filter', ownerPseudo(prefix));
+      expectVisible('Storm');
+      expectHidden('Wolverine');
     });
   });
 
   it('player filter combines with class filter', () => {
     const prefix = 'atk';
-    const ownerPseudo = `${prefix}Owner`.slice(0, 16);
 
     setupAttackerScenario(prefix).then(({ adminToken, ownerData, ownerAccId }) => {
       // Owner gets Storm (Mutant) and Vision (Tech); member already has Wolverine (Mutant)
-      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
-        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-      });
-      cy.apiLoadChampion(adminToken, 'Vision', 'Tech').then((champs) => {
-        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-      });
+      giveChampion(adminToken, ownerData.access_token, ownerAccId, { name: 'Storm' });
+      giveChampion(adminToken, ownerData.access_token, ownerAccId, { name: 'Vision', cls: 'Tech' });
 
-      goToAttackersMode(ownerData.user_id);
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
-      cy.getByCy('war-attacker-search').should('be.visible');
+      openAttackerSelector(ownerData.user_id);
 
       // Filter by owner + Mutant → only Storm (Vision excluded by class, Wolverine excluded by player)
-      cy.selectOption('selector-player-filter', ownerPseudo);
+      cy.selectOption('selector-player-filter', ownerPseudo(prefix));
       cy.selectOption('selector-class-filter', 'Mutant');
 
-      cy.getByCy('attacker-card-Storm').should('be.visible');
-      cy.getByCy('attacker-card-Vision').should('not.exist');
-      cy.getByCy('attacker-card-Wolverine').should('not.exist');
+      expectVisible('Storm');
+      expectHidden('Vision', 'Wolverine');
     });
   });
 
   it('reset button clears player filter and restores all players attackers', () => {
     const prefix = 'atk';
-    const ownerPseudo = `${prefix}Owner`.slice(0, 16);
 
     setupAttackerScenario(prefix).then(({ adminToken, ownerData, ownerAccId }) => {
-      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
-        cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-      });
+      giveChampion(adminToken, ownerData.access_token, ownerAccId, { name: 'Storm' });
 
-      goToAttackersMode(ownerData.user_id);
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
-      cy.getByCy('war-attacker-search').should('be.visible');
+      openAttackerSelector(ownerData.user_id);
 
-      cy.selectOption('selector-player-filter', ownerPseudo);
-      cy.getByCy('attacker-card-Wolverine').should('not.exist');
+      cy.selectOption('selector-player-filter', ownerPseudo(prefix));
+      expectHidden('Wolverine');
 
       cy.getByCy('selector-reset-filters').click();
-      // Both groups are restored and overflow the list — scroll into view first
-      cy.getByCy('attacker-card-Storm').scrollIntoView().should('be.visible');
-      cy.getByCy('attacker-card-Wolverine').scrollIntoView().should('be.visible');
+      // Both groups are restored and overflow the list
+      expectVisibleInList('Storm', 'Wolverine');
       cy.getByCy('selector-reset-filters').should('not.exist');
     });
   });
@@ -187,22 +194,17 @@ describe('War – WarAttackerSelector filters', () => {
 
   it('reset button clears all active filters and restores all attackers', () => {
     setupAttackerScenario('atk-flt-reset').then(({ adminToken, ownerData, memberData, memberAccId }) => {
-      cy.apiLoadChampionWithSaga(adminToken, 'Storm', 'Mutant', { is_saga_attacker: true }).then((champs) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3');
-      });
+      giveChampion(adminToken, memberData.access_token, memberAccId, { name: 'Storm', saga: true });
 
-      goToAttackersMode(ownerData.user_id);
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
-      cy.getByCy('war-attacker-search').should('be.visible');
+      openAttackerSelector(ownerData.user_id);
 
       // Activate saga filter → only Storm
       cy.getByCy('selector-toggle-saga').click();
-      cy.getByCy('attacker-card-Wolverine').should('not.exist');
+      expectHidden('Wolverine');
 
       // Reset → all attackers back, reset button disappears
       cy.getByCy('selector-reset-filters').should('be.visible').click();
-      cy.getByCy('attacker-card-Wolverine').should('be.visible');
-      cy.getByCy('attacker-card-Storm').should('be.visible');
+      expectVisible('Wolverine', 'Storm');
       cy.getByCy('selector-reset-filters').should('not.exist');
     });
   });
@@ -213,31 +215,28 @@ describe('War – WarAttackerSelector filters', () => {
 
   it('saga and preferred filters combine to narrow results', () => {
     setupAttackerScenario('atk-flt-comb').then(({ adminToken, ownerData, memberData, memberAccId }) => {
-      cy.apiLoadChampionWithSaga(adminToken, 'Storm', 'Mutant', { is_saga_attacker: true }).then((champs) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
-          is_preferred_attacker: true,
-        });
+      giveChampion(adminToken, memberData.access_token, memberAccId, {
+        name: 'Storm',
+        saga: true,
+        preferred: true,
       });
-      cy.apiLoadChampionWithSaga(adminToken, 'Deadpool', 'Mutant', { is_saga_attacker: true }).then((champs) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
-          is_preferred_attacker: false,
-        });
+      giveChampion(adminToken, memberData.access_token, memberAccId, {
+        name: 'Deadpool',
+        saga: true,
+        preferred: false,
       });
 
-      goToAttackersMode(ownerData.user_id);
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
-      cy.getByCy('war-attacker-search').should('be.visible');
+      openAttackerSelector(ownerData.user_id);
 
       // Saga filter → Storm + Deadpool (both saga), not Wolverine
       cy.getByCy('selector-toggle-saga').click();
-      cy.getByCy('attacker-card-Storm').should('be.visible');
-      cy.getByCy('attacker-card-Deadpool').should('be.visible');
-      cy.getByCy('attacker-card-Wolverine').should('not.exist');
+      expectVisible('Storm', 'Deadpool');
+      expectHidden('Wolverine');
 
       // Add preferred filter → only Storm (saga + preferred)
       cy.getByCy('selector-toggle-preferred').click();
-      cy.getByCy('attacker-card-Storm').should('be.visible');
-      cy.getByCy('attacker-card-Deadpool').should('not.exist');
+      expectVisible('Storm');
+      expectHidden('Deadpool');
     });
   });
 });
@@ -254,24 +253,19 @@ describe('War – WarAttackerSelector rarity filter', () => {
   it('hides 6-star attackers by default and reveals them via the 6-star toggle', () => {
     setupAttackerScenario('atk-rar-def').then(({ adminToken, memberData, ownerData, memberAccId }) => {
       // Member already has Wolverine 7r3; add a 6r5 champion
-      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '6r5');
-      });
+      giveChampion(adminToken, memberData.access_token, memberAccId, { name: 'Storm', rarity: '6r5' });
 
-      goToAttackersMode(ownerData.user_id);
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
-      cy.getByCy('war-attacker-search').should('be.visible');
+      openAttackerSelector(ownerData.user_id);
 
       // 7★ Wolverine visible, 6★ Storm hidden by default
-      cy.getByCy('attacker-card-Wolverine').should('be.visible');
-      cy.getByCy('attacker-card-Storm').should('not.exist');
+      expectVisible('Wolverine');
+      expectHidden('Storm');
 
       // The rarity filter exposes 6★ tiers too — enabling 6r5 reveals the attacker.
       cy.getByCy('war-attacker-rarity-6r4').should('be.visible');
       cy.getByCy('war-attacker-rarity-7r3').should('be.visible');
       cy.getByCy('war-attacker-rarity-6r5').click();
-      cy.getByCy('attacker-card-Storm').should('be.visible');
-      cy.getByCy('attacker-card-Wolverine').should('be.visible');
+      expectVisible('Storm', 'Wolverine');
     });
   });
 
@@ -282,22 +276,17 @@ describe('War – WarAttackerSelector rarity filter', () => {
   it('deactivating a 7-star tier hides attackers of that exact tier', () => {
     setupAttackerScenario('atk-rar-tier').then(({ adminToken, memberData, ownerData, memberAccId }) => {
       // Member has Wolverine 7r3; add Storm at 7r5
-      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r5');
-      });
+      giveChampion(adminToken, memberData.access_token, memberAccId, { name: 'Storm', rarity: '7r5' });
 
-      goToAttackersMode(ownerData.user_id);
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
-      cy.getByCy('war-attacker-search').should('be.visible');
+      openAttackerSelector(ownerData.user_id);
 
       // Both 7★ visible by default
-      cy.getByCy('attacker-card-Wolverine').should('be.visible');
-      cy.getByCy('attacker-card-Storm').should('be.visible');
+      expectVisible('Wolverine', 'Storm');
 
       // Turn 7r3 off → Wolverine (7r3) hidden, Storm (7r5) stays
       cy.getByCy('war-attacker-rarity-7r3').click();
-      cy.getByCy('attacker-card-Wolverine').should('not.exist');
-      cy.getByCy('attacker-card-Storm').should('be.visible');
+      expectHidden('Wolverine');
+      expectVisible('Storm');
     });
   });
 
@@ -308,32 +297,28 @@ describe('War – WarAttackerSelector rarity filter', () => {
   it('persists the rarity preference across reopen and is untouched by Reset', () => {
     setupAttackerScenario('atk-rar-persist').then(({ adminToken, memberData, ownerData, memberAccId }) => {
       // Member has Wolverine 7r3; add Storm at 7r5
-      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r5');
-      });
+      giveChampion(adminToken, memberData.access_token, memberAccId, { name: 'Storm', rarity: '7r5' });
 
-      goToAttackersMode(ownerData.user_id);
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
-      cy.getByCy('war-attacker-search').should('be.visible');
+      openAttackerSelector(ownerData.user_id);
 
       // Turn 7r3 off → Wolverine (7r3) hidden, Storm (7r5) stays
       cy.getByCy('war-attacker-rarity-7r3').click();
-      cy.getByCy('attacker-card-Wolverine').should('not.exist');
-      cy.getByCy('attacker-card-Storm').should('be.visible');
+      expectHidden('Wolverine');
+      expectVisible('Storm');
 
       // Activate then Reset a normal filter — rarity must survive
       cy.getByCy('selector-toggle-saga').click();
       cy.getByCy('selector-reset-filters').click();
-      cy.getByCy('attacker-card-Wolverine').should('not.exist');
-      cy.getByCy('attacker-card-Storm').should('be.visible');
+      expectHidden('Wolverine');
+      expectVisible('Storm');
 
       // Close and reopen the dialog — preference persisted via localStorage
       cy.get('body').type('{esc}');
       cy.getByCy('war-attacker-search').should('not.exist');
       cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
       cy.getByCy('war-attacker-search').should('be.visible');
-      cy.getByCy('attacker-card-Wolverine').should('not.exist');
-      cy.getByCy('attacker-card-Storm').should('be.visible');
+      expectHidden('Wolverine');
+      expectVisible('Storm');
     });
   });
 
@@ -345,18 +330,14 @@ describe('War – WarAttackerSelector rarity filter', () => {
     setupAttackerScenario('atk-rar-sort').then(({ adminToken, memberData, ownerData, memberAccId }) => {
       // Member has Wolverine 7r3 (not preferred); add Storm 7r5 (not preferred)
       // and Deadpool 7r1 (preferred).
-      cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r5');
-      });
-      cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
-        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r1', {
-          is_preferred_attacker: true,
-        });
+      giveChampion(adminToken, memberData.access_token, memberAccId, { name: 'Storm', rarity: '7r5' });
+      giveChampion(adminToken, memberData.access_token, memberAccId, {
+        name: 'Deadpool',
+        rarity: '7r1',
+        preferred: true,
       });
 
-      goToAttackersMode(ownerData.user_id);
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
-      cy.getByCy('war-attacker-search').should('be.visible');
+      openAttackerSelector(ownerData.user_id);
 
       // Expected order: Deadpool (preferred) → Storm (7r5) → Wolverine (7r3)
       cy.get('[data-cy^="attacker-card-"]').then(($cards) => {
