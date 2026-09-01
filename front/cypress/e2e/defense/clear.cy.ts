@@ -1,4 +1,4 @@
-import { setupDefenseOwner } from '../../support/e2e';
+import { setupDefenseOwner, seedDefender } from '../../support/e2e';
 
 describe('Defense – Clear All', () => {
   beforeEach(() => {
@@ -57,11 +57,14 @@ describe('Defense – Clear All', () => {
   it("Clear All shows 'No defenders placed.' in side panel", () => {
     setupDefenseOwner('def-op-clrempty', 'ClrEmptyPlyr', 'ClrEmptyAll', 'CE').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy
-            .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
-        );
+        seedDefender({
+          adminToken: adminData.access_token,
+          ownerToken: ownerData.access_token,
+          allianceId,
+          gameAccountId: ownerAccId,
+          name: 'Spider-Man',
+          championClass: 'Cosmic',
+        });
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -76,11 +79,14 @@ describe('Defense – Clear All', () => {
   it('Clear All confirmation dialog can be cancelled', () => {
     setupDefenseOwner('def-op-clrcancel', 'ClrCancelPlyr', 'ClrCancelAll', 'CC').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy
-            .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
-        );
+        seedDefender({
+          adminToken: adminData.access_token,
+          ownerToken: ownerData.access_token,
+          allianceId,
+          gameAccountId: ownerAccId,
+          name: 'Spider-Man',
+          championClass: 'Cosmic',
+        });
 
         cy.apiLogin(ownerData.user_id, 'defense');
 

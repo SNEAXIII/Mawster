@@ -1,4 +1,4 @@
-import { setupAttackerScenario, setupPrefightScenario, BACKEND } from '../../support/e2e';
+import { setupAttackerScenario, setupPrefightScenario, confirmAction, openWarNode } from '../../support/e2e';
 function goToAttackersMode(userId: string) {
   cy.apiLogin(userId, 'war');
   cy.getByCy('war-mode-attackers').click();
@@ -53,8 +53,7 @@ describe('War – Attackers mode', () => {
       goToAttackersMode(ownerData.user_id);
 
       cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
-      cy.getByCy('remove-attacker-node-10').click();
-      cy.getByCy('confirmation-dialog-confirm').click();
+      confirmAction('remove-attacker-node-10');
       cy.getByCy('attacker-entry-node-10').should('not.exist');
     });
   });
@@ -69,8 +68,7 @@ describe('War – Attackers mode', () => {
       cy.getByCy('ko-inc-node-10').click();
       cy.getByCy('ko-value-node-10').should('have.text', '2');
 
-      cy.getByCy('remove-attacker-node-10').click();
-      cy.getByCy('confirmation-dialog-confirm').click();
+      confirmAction('remove-attacker-node-10');
       cy.getByCy('attacker-entry-node-10').should('not.exist');
 
       // Re-assign and verify KO is reset
@@ -87,7 +85,7 @@ describe('War – Attackers mode', () => {
     setupAttackerScenario('atk-ui').then(({ ownerData }) => {
       goToAttackersMode(ownerData.user_id);
 
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      openWarNode(10);
       cy.getByCy('war-attacker-search').should('be.visible');
       cy.getByCy('attacker-card-Wolverine').should('be.visible').click();
       cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
@@ -100,7 +98,7 @@ describe('War – Attackers mode', () => {
     setupAttackerScenario('atk-warn').then(({ ownerData }) => {
       goToAttackersMode(ownerData.user_id);
 
-      cy.getByCy('war-node-20').scrollIntoView().click({ force: true });
+      openWarNode(20);
       cy.getByCy('war-attacker-search').should('not.exist');
     });
   });
@@ -111,7 +109,7 @@ describe('War – Attackers mode', () => {
     setupAttackerScenario('atk-no-attacker-btns').then(({ ownerData }) => {
       goToAttackersMode(ownerData.user_id);
 
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      openWarNode(10);
       cy.getByCy('war-attacker-search').should('be.visible');
       cy.getByCy('attacker-entry-node-10').should('be.visible');
       cy.getByCy('ko-counter-node-10').should('not.exist');
@@ -146,7 +144,7 @@ describe('War – Attackers mode', () => {
     setupAttackerScenario('atk-dialog-close').then(({ ownerData }) => {
       goToAttackersMode(ownerData.user_id);
 
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      openWarNode(10);
       cy.getByCy('war-attacker-search').should('be.visible');
 
       // Close via Escape — regression: used to crash during close animation
@@ -154,7 +152,7 @@ describe('War – Attackers mode', () => {
       cy.getByCy('war-attacker-search').should('not.exist');
 
       // Page should still be functional — reopen the dialog
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      openWarNode(10);
       cy.getByCy('war-attacker-search').should('be.visible');
     });
   });
@@ -164,7 +162,7 @@ describe('War – Attackers mode', () => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       goToAttackersMode(ownerData.user_id);
 
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      openWarNode(10);
       cy.getByCy('war-attacker-search').should('be.visible');
       cy.getByCy('war-attacker-search').find('[data-cy="attacker-entry-node-10"]').should('be.visible');
     });

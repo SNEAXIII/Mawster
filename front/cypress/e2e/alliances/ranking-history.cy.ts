@@ -1,21 +1,5 @@
-import { setupWarOwner, BACKEND } from '../../support/e2e';
-
-function createAndActivateSeason(adminToken: string) {
-  return cy
-    .request({
-      method: 'POST',
-      url: `${BACKEND}/admin/seasons`,
-      body: { number: 64 },
-      headers: { Authorization: `Bearer ${adminToken}` },
-    })
-    .then((res) =>
-      cy.request({
-        method: 'PATCH',
-        url: `${BACKEND}/admin/seasons/${res.body.id}/open`,
-        headers: { Authorization: `Bearer ${adminToken}` },
-      }),
-    );
-}
+import { setupWarOwner } from '../../support/e2e';
+import { createAndActivateSeason } from './statistics-helpers';
 
 function goToStatsTab() {
   cy.navTo('alliances');

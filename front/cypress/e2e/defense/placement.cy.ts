@@ -1,4 +1,4 @@
-import { setupDefenseScenario } from '../../support/e2e';
+import { setupDefenseScenario, openWarNode } from '../../support/e2e';
 
 describe('Defense – Placement via UI', () => {
   beforeEach(() => {
@@ -15,7 +15,7 @@ describe('Defense – Placement via UI', () => {
     ]).then(({ ownerData }) => {
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.contains('Select Champion').should('be.visible');
       cy.contains('Node #1').should('be.visible');
 
@@ -90,7 +90,7 @@ describe('Defense – Placement via UI', () => {
       setupDefenseScenario(prefix, pseudo, tag, [champ]).then(({ ownerData }) => {
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy(`war-node-${node}`).scrollIntoView().click({ force: true });
+        openWarNode(node);
         cy.getByCy(`champion-card-${champ.name.replace(/ /g, '-')}`).click();
 
         cy.getByCy(`war-node-${node}`).should('contain', expected);
@@ -110,13 +110,13 @@ describe('Defense – Placement via UI', () => {
     ]).then(({ ownerData }) => {
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-20').scrollIntoView().click({ force: true });
+      openWarNode(20);
       cy.getByCy('champion-card-Iron-Man').click();
       cy.getByCy('war-node-20').find('[data-cy="preferred-badge"]').should('exist');
       cy.getByCy('war-node-20').should('contain', 'R5·200');
       cy.getByCy('defender-card-20').find('[data-cy="preferred-badge"]').should('exist');
 
-      cy.getByCy('war-node-15').scrollIntoView().click({ force: true });
+      openWarNode(15);
       cy.getByCy('champion-card-Wolverine').click();
       cy.getByCy('war-node-15').find('[data-cy="preferred-badge"]').should('not.exist');
       cy.getByCy('defender-card-15').find('[data-cy="preferred-badge"]').should('not.exist');
@@ -134,7 +134,7 @@ describe('Defense – Placement via UI', () => {
     ]).then(({ ownerData }) => {
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.contains('Select Champion').should('be.visible');
 
       cy.getByCy('champion-card-Captain-America').find('[data-cy="preferred-badge"]').should('exist');
@@ -159,17 +159,17 @@ describe('Defense – Placement via UI', () => {
     ]).then(({ ownerData }) => {
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-50').scrollIntoView().click({ force: true });
+      openWarNode(50);
       cy.getByCy('champion-card-Spider-Man').click();
       cy.contains('Spider-Man placed on node #50').should('be.visible');
       cy.getByCy('defender-count-SeqPlyr').should('contain', '1/5');
 
-      cy.getByCy('war-node-40').scrollIntoView().click({ force: true });
+      openWarNode(40);
       cy.getByCy('champion-card-Wolverine').click();
       cy.contains('Wolverine placed on node #40').should('be.visible');
       cy.getByCy('defender-count-SeqPlyr').should('contain', '2/5');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.getByCy('champion-card-Iron-Man').click();
       cy.contains('Iron Man placed on node #1').should('be.visible');
       cy.getByCy('defender-count-SeqPlyr').should('contain', '3/5');
@@ -207,23 +207,23 @@ describe('Defense – Placement via UI', () => {
     ]).then(({ ownerData }) => {
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.getByCy('champion-card-Spider-Man').click();
       cy.getByCy('defender-count-FivePlyr').should('contain', '1/5');
 
-      cy.getByCy('war-node-2').scrollIntoView().click({ force: true });
+      openWarNode(2);
       cy.getByCy('champion-card-Wolverine').click();
       cy.getByCy('defender-count-FivePlyr').should('contain', '2/5');
 
-      cy.getByCy('war-node-3').scrollIntoView().click({ force: true });
+      openWarNode(3);
       cy.getByCy('champion-card-Iron-Man').click();
       cy.getByCy('defender-count-FivePlyr').should('contain', '3/5');
 
-      cy.getByCy('war-node-4').scrollIntoView().click({ force: true });
+      openWarNode(4);
       cy.getByCy('champion-card-Doctor-Doom').click();
       cy.getByCy('defender-count-FivePlyr').should('contain', '4/5');
 
-      cy.getByCy('war-node-5').scrollIntoView().click({ force: true });
+      openWarNode(5);
       cy.getByCy('champion-card-Blade').click();
       cy.getByCy('defender-count-FivePlyr').should('contain', '5/5');
 

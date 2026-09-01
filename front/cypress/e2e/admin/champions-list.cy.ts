@@ -1,4 +1,4 @@
-import { setupAdmin, BACKEND } from '../../support/e2e';
+import { setupAdmin } from '../../support/e2e';
 
 describe('Admin — champions list & filters', () => {
   let adminToken: string;

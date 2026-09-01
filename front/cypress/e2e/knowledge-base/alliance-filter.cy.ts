@@ -1,4 +1,4 @@
-import { BACKEND, setupKnowledgeBaseFast, setupUser } from '../../support/e2e';
+import { setupKnowledgeBaseFast, setupUser } from '../../support/e2e';
 
 // The alliance column renders the tag (`[KBA]`), the same text as the filter's
 // dropdown options — so every alliance lookup here must be scoped to
@@ -22,21 +22,14 @@ function setupMemberOfAVisitorOfB(prefixA: string, prefixB: string) {
         const ownerBData = users[`${prefixB}-owner`];
 
         return cy
-          .request({
-            method: 'POST',
-            url: `${BACKEND}/alliances/${ownerBData.alliance_id!}/invitations`,
-            headers: { Authorization: `Bearer ${ownerBData.access_token}` },
-            body: { game_account_id: accAId, type: 'visitor' },
+          .apiRequest(ownerBData.access_token, 'POST', `/alliances/${ownerBData.alliance_id!}/invitations`, {
+            game_account_id: accAId,
+            type: 'visitor',
           })
           .then((invResp) => {
             const invId = (invResp.body as { id: string }).id;
             return cy
-              .request({
-                method: 'POST',
-                url: `${BACKEND}/alliances/invitations/${invId}/accept`,
-                headers: { Authorization: `Bearer ${userA.access_token}` },
-                body: {},
-              })
+              .apiRequest(userA.access_token, 'POST', `/alliances/invitations/${invId}/accept`, {})
               .then(() => cy.apiLogin(userA.user_id, 'knowledge-base'));
           });
       });

@@ -1,4 +1,4 @@
-import { setupAdmin, BACKEND } from '../../support/e2e';
+import { setupAdmin, confirmAction } from '../../support/e2e';
 
 describe('Admin — seasons panel', () => {
   beforeEach(() => {
@@ -26,8 +26,7 @@ describe('Admin — seasons panel', () => {
         cy.getByCy('season-status-upcoming').should('be.visible');
       });
       // Open it (confirmation dialog)
-      cy.getByCy('open-season-99').click();
-      cy.getByCy('confirmation-dialog-confirm').click();
+      confirmAction('open-season-99');
       cy.getByCy('season-row-99').within(() => {
         cy.getByCy('season-status-active').should('be.visible');
       });
@@ -37,32 +36,24 @@ describe('Admin — seasons panel', () => {
 
   it('admin can close a season then reopen it (recover a mistaken close)', () => {
     setupAdmin('season-close-token').then(({ access_token, user_id }) => {
-      cy.request({
-        method: 'POST',
-        url: `${BACKEND}/admin/seasons`,
-        body: { number: 55 },
-        headers: { Authorization: `Bearer ${access_token}` },
-      });
+      cy.apiRequest(access_token, 'POST', '/admin/seasons', { number: 55 });
       cy.apiLogin(user_id, 'admin');
       cy.getByCy('tab-seasons').click();
 
       // Open
-      cy.getByCy('open-season-55').click();
-      cy.getByCy('confirmation-dialog-confirm').click();
+      confirmAction('open-season-55');
       cy.getByCy('season-row-55').within(() => {
         cy.getByCy('season-status-active').should('be.visible');
       });
 
       // Close
-      cy.getByCy('close-season-55').click();
-      cy.getByCy('confirmation-dialog-confirm').click();
+      confirmAction('close-season-55');
       cy.getByCy('season-row-55').within(() => {
         cy.getByCy('season-status-ended').should('be.visible');
       });
 
       // Reopen via the same Open action
-      cy.getByCy('open-season-55').click();
-      cy.getByCy('confirmation-dialog-confirm').click();
+      confirmAction('open-season-55');
       cy.getByCy('season-row-55').within(() => {
         cy.getByCy('season-status-active').should('be.visible');
       });
@@ -71,27 +62,19 @@ describe('Admin — seasons panel', () => {
 
   it('admin can revert a closed season back to pre-season (recover a mistaken close)', () => {
     setupAdmin('season-revert-token').then(({ access_token, user_id }) => {
-      cy.request({
-        method: 'POST',
-        url: `${BACKEND}/admin/seasons`,
-        body: { number: 56 },
-        headers: { Authorization: `Bearer ${access_token}` },
-      });
+      cy.apiRequest(access_token, 'POST', '/admin/seasons', { number: 56 });
       cy.apiLogin(user_id, 'admin');
       cy.getByCy('tab-seasons').click();
 
       // Open then close to reach the ended state
-      cy.getByCy('open-season-56').click();
-      cy.getByCy('confirmation-dialog-confirm').click();
-      cy.getByCy('close-season-56').click();
-      cy.getByCy('confirmation-dialog-confirm').click();
+      confirmAction('open-season-56');
+      confirmAction('close-season-56');
       cy.getByCy('season-row-56').within(() => {
         cy.getByCy('season-status-ended').should('be.visible');
       });
 
       // Revert back to pre-season
-      cy.getByCy('revert-season-56').click();
-      cy.getByCy('confirmation-dialog-confirm').click();
+      confirmAction('revert-season-56');
       cy.getByCy('season-row-56').within(() => {
         cy.getByCy('season-status-upcoming').should('be.visible');
       });

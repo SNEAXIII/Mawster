@@ -1,4 +1,4 @@
-import { setupDefenseOwner, setupDefenseOwnerAndMember } from '../../support/e2e';
+import { setupDefenseOwner, setupDefenseOwnerAndMember, openWarNode } from '../../support/e2e';
 
 describe('Defense – Preferred Attacker Badge in selector', () => {
   beforeEach(() => {
@@ -8,15 +8,13 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
   it('shows preferred badge when the single owner is a preferred attacker', () => {
     setupDefenseOwner('def-pref-show', 'PrefBadgePlyr', 'PrefAll', 'PB').then(
       ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3', {
-            is_preferred_attacker: true,
-          });
+        cy.apiGiveChampion(adminData.access_token, ownerData.access_token, ownerAccId, 'Spider-Man', 'Cosmic', '7r3', {
+          is_preferred_attacker: true,
         });
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
         cy.getByCy('champion-card-Spider-Man').find('[data-cy="preferred-badge"]').should('exist');
       },
     );
@@ -25,15 +23,13 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
   it('does not show preferred badge when the single owner is not a preferred attacker', () => {
     setupDefenseOwner('def-pref-hide', 'NoPrefBadgePlyr', 'NoPrefAll', 'NB').then(
       ({ adminData, ownerData, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3', {
-            is_preferred_attacker: false,
-          });
+        cy.apiGiveChampion(adminData.access_token, ownerData.access_token, ownerAccId, 'Wolverine', 'Mutant', '7r3', {
+          is_preferred_attacker: false,
         });
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
         cy.getByCy('champion-card-Wolverine').find('[data-cy="preferred-badge"]').should('not.exist');
       },
     );
@@ -54,7 +50,7 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
         cy.getByCy('champion-card-Spider-Man').find('[data-cy="preferred-badge"]').should('not.exist');
       },
     );
@@ -74,7 +70,7 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
         cy.getByCy('champion-card-Spider-Man').find('[data-cy="preferred-badge"]').should('exist');
       },
     );

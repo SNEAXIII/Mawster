@@ -1,4 +1,4 @@
-import { setupDefenseOwner, setupDefenseScenario, setupDefenseOwnerAndMember } from '../../support/e2e';
+import { setupDefenseOwner, setupDefenseScenario, setupDefenseOwnerAndMember, openWarNode } from '../../support/e2e';
 
 describe('Defense – Champion Selector & Owner Picker', () => {
   beforeEach(() => {
@@ -17,7 +17,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
     ]).then(({ ownerData }) => {
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.contains('Select Champion').should('be.visible');
 
       cy.getByCy('champion-card-Spider-Man').should('be.visible');
@@ -38,7 +38,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
     ]).then(({ ownerData }) => {
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.get('input[placeholder]').type('mutant');
       cy.getByCy('champion-card-Wolverine').should('be.visible');
       cy.getByCy('champion-card-Spider-Man').should('not.exist');
@@ -51,13 +51,11 @@ describe('Defense – Champion Selector & Owner Picker', () => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic', { alias: 'spidey;peter' }).then((champs) => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
         });
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
+        cy.apiGiveChampion(adminData.access_token, ownerData.access_token, ownerAccId, 'Wolverine', 'Mutant', '7r3');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
         cy.contains('Select Champion').should('be.visible');
 
         // Search by alias — "spidey" should surface Spider-Man only
@@ -79,7 +77,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
     ]).then(({ ownerData }) => {
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
 
       cy.getByCy('champion-card-Spider-Man').should('contain', 'R5').and('contain', 'A1');
       cy.getByCy('champion-card-Wolverine').should('contain', 'R3').and('not.contain', '· A');
@@ -97,11 +95,11 @@ describe('Defense – Champion Selector & Owner Picker', () => {
     ]).then(({ ownerData }) => {
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.getByCy('champion-card-Spider-Man').click();
       cy.contains('Spider-Man placed on node #1').should('be.visible');
 
-      cy.getByCy('war-node-2').scrollIntoView().click({ force: true });
+      openWarNode(2);
       cy.contains('Select Champion').should('be.visible');
       cy.getByCy('champion-card-Spider-Man').should('not.exist');
       cy.getByCy('champion-card-Wolverine').should('be.visible');
@@ -119,11 +117,11 @@ describe('Defense – Champion Selector & Owner Picker', () => {
     ]).then(({ ownerData }) => {
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.getByCy('champion-card-Spider-Man').click();
       cy.getByCy('war-node-1').should('contain', 'R3·200');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.contains('Select Champion').should('be.visible');
       cy.getByCy('champion-card-Wolverine').click();
 
@@ -146,7 +144,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
         cy.getByCy('champion-card-Spider-Man').click();
         cy.contains('Select Player').should('be.visible');
 
@@ -184,7 +182,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
         cy.getByCy('champion-card-Wolverine').click();
         cy.contains('Select Player').should('be.visible');
 
@@ -211,7 +209,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
         cy.getByCy('champion-card-Doctor-Doom').click();
         cy.contains('Select Player').should('be.visible');
 
@@ -237,11 +235,11 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
         cy.getByCy('champion-card-Spider-Man').should('be.visible').click();
         cy.contains('Spider-Man placed on node #1').should('be.visible');
 
-        cy.getByCy('war-node-2').scrollIntoView().click({ force: true });
+        openWarNode(2);
         cy.getByCy('champion-card-Wolverine').should('be.visible').click();
 
         cy.getByCy('member-section-IsoOwner').find('[title*="Spider-Man"]').should('exist');
@@ -265,7 +263,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
     ]).then(({ ownerData }) => {
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.getByCy('defense-current-placement').should('contain', 'Empty');
     });
   });
@@ -278,11 +276,11 @@ describe('Defense – Champion Selector & Owner Picker', () => {
       cy.apiLogin(ownerData.user_id, 'defense');
 
       // Place Spider-Man on node 1
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.getByCy('champion-card-Spider-Man').click();
 
       // Reopen node 1 — should show Spider-Man as current placement
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.getByCy('defense-current-placement').should('contain', 'Spider-Man').and('contain', 'EntryFilledPlyr');
     });
   });
@@ -299,7 +297,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
       cy.getByCy('war-node-1').should('have.attr', 'title').and('include', 'Empty');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.getByCy('champion-card-Spider-Man').click();
 
       cy.getByCy('war-node-1').should('have.attr', 'title').and('include', 'Spider-Man').and('include', 'TitlePlyr');

@@ -1586,3 +1586,94 @@ export function selectCombatFilter(label: string): void {
   cy.get('[role="listbox"]').should('be.visible');
   cy.contains('[role="option"]', label).click({ force: true });
 }
+
+// ── Generic authed backend call ──────────────────────────────────────────────
+// Most specs re-declared the same { method, url, Authorization header } object.
+Cypress.Commands.add(
+  'apiRequest',
+  (token: string, method: string, path: string, body?: object, options: { failOnStatusCode?: boolean } = {}) => {
+    return cy.request({
+      method,
+      url: `${BACKEND}${path}`,
+      headers: { Authorization: `Bearer ${token}` },
+      ...(body !== undefined ? { body } : {}),
+      ...(options.failOnStatusCode === false ? { failOnStatusCode: false } : {}),
+    });
+  },
+);
+
+// ── Season lifecycle (admin) ─────────────────────────────────────────────────
+
+Cypress.Commands.add('apiOpenSeason', (token: string, seasonId: string) => {
+  return cy.apiRequest(token, 'PATCH', `/admin/seasons/${seasonId}/open`);
+});
+
+Cypress.Commands.add('apiCloseSeason', (token: string, seasonId: string) => {
+  return cy.apiRequest(token, 'PATCH', `/admin/seasons/${seasonId}/close`);
+});
+
+// Create a season and immediately open it — yields the season id.
+Cypress.Commands.add('apiCreateOpenSeason', (token: string, number: number) => {
+  return cy.apiCreateSeason(token, number).then((res) => {
+    const seasonId = res.body.id as string;
+    return cy.apiOpenSeason(token, seasonId).then(() => seasonId);
+  });
+});
+
+// ── Champion on a roster ─────────────────────────────────────────────────────
+// Load the champion catalogue entry then add it to a game account in one step.
+Cypress.Commands.add(
+  'apiGiveChampion',
+  (
+    adminToken: string,
+    ownerToken: string,
+    gameAccountId: string,
+    name: string,
+    championClass: string,
+    rarity = '7r3',
+    options: { signature?: number; is_preferred_attacker?: boolean; ascension?: number } = {},
+  ) => {
+    return cy.apiLoadChampion(adminToken, name, championClass).then((champs) => {
+      return cy
+        .apiAddChampionToRoster(ownerToken, gameAccountId, champs[0].id, rarity, options)
+        .then((championUser: { id: string }) => ({ championId: champs[0].id as string, championUser }));
+    });
+  },
+);
+
+// ── UI micro-flows ───────────────────────────────────────────────────────────
+
+// Click an action then confirm it in the shared ConfirmationDialog.
+export function confirmAction(selector: string): void {
+  cy.getByCy(selector).click();
+  cy.getByCy('confirmation-dialog-confirm').click();
+}
+
+// War/defense map nodes sit inside a scroll container and can be overlapped.
+export function openWarNode(node: number): void {
+  cy.getByCy(`war-node-${node}`).scrollIntoView().click({ force: true });
+}
+
+export function expectSeasonStatus(number: number, status: 'upcoming' | 'active' | 'ended'): void {
+  cy.getByCy(`season-row-${number}`).within(() => {
+    cy.getByCy(`season-status-${status}`).should('be.visible');
+  });
+}
+
+// Give a champion to a game account and place it as a defender in one step —
+// the usual "one defender is already placed" precondition of the defense specs.
+export function seedDefender(opts: {
+  adminToken: string;
+  ownerToken: string;
+  allianceId: string;
+  gameAccountId: string;
+  name: string;
+  championClass: string;
+  battlegroup?: number;
+  node?: number;
+}): void {
+  const { adminToken, ownerToken, allianceId, gameAccountId, name, championClass } = opts;
+  cy.apiGiveChampion(adminToken, ownerToken, gameAccountId, name, championClass).then(({ championUser }) => {
+    cy.apiPlaceDefender(ownerToken, allianceId, opts.battlegroup ?? 1, opts.node ?? 1, championUser.id, gameAccountId);
+  });
+}

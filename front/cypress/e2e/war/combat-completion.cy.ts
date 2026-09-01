@@ -1,4 +1,4 @@
-import { selectCombatFilter, setupAttackerScenario } from '../../support/e2e';
+import { selectCombatFilter, setupAttackerScenario, openWarNode } from '../../support/e2e';
 
 describe('War – Combat completion', () => {
   beforeEach(() => {
@@ -11,7 +11,7 @@ describe('War – Combat completion', () => {
     setupAttackerScenario('cc-no-attacker').then(({ ownerData }) => {
       cy.goToWarMode(ownerData.user_id, 'attackers');
 
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      openWarNode(10);
       cy.getByCy('attacker-entry-node-10').should('be.visible');
       cy.getByCy('combat-complete-node-10').should('not.exist');
     });

@@ -1,4 +1,4 @@
-import { setupWarOwner } from '../../support/e2e';
+import { setupWarOwner, openWarNode } from '../../support/e2e';
 
 describe('War – Duplicate defender placement', () => {
   beforeEach(() => {
@@ -8,21 +8,19 @@ describe('War – Duplicate defender placement', () => {
   it('same champion can be placed as defender on two different nodes', () => {
     setupWarOwner('war-dup-def', 'DupDefPlayer', 'DupDefAlliance', 'DD').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
+        cy.apiGiveChampion(adminData.access_token, ownerData.access_token, ownerAccId, 'Spider-Man', 'Cosmic', '7r3');
 
         cy.apiCreateWar(ownerData.access_token, allianceId, 'DupEnemy');
 
         cy.apiLogin(ownerData.user_id, 'war');
         cy.getByCy('war-mode-defenders').click();
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
         cy.getByCy('war-champion-card-Spider-Man').click();
         cy.getByCy('war-confirm-place').click();
         cy.contains('Spider-Man placed on node #1').should('be.visible');
 
-        cy.getByCy('war-node-2').scrollIntoView().click({ force: true });
+        openWarNode(2);
         cy.getByCy('war-champion-card-Spider-Man').should('be.visible');
         cy.getByCy('war-champion-card-Spider-Man').click();
         cy.getByCy('war-confirm-place').click();
@@ -50,12 +48,12 @@ describe('War – Duplicate defender placement', () => {
         cy.apiLogin(ownerData.user_id, 'war');
         cy.getByCy('war-mode-defenders').click();
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
         cy.getByCy('war-champion-card-Spider-Man').click();
         cy.getByCy('war-confirm-place').click();
         cy.contains('Spider-Man placed on node #1').should('be.visible');
 
-        cy.getByCy('war-node-2').scrollIntoView().click({ force: true });
+        openWarNode(2);
         cy.getByCy('war-champion-card-Spider-Man').should('be.visible');
         cy.getByCy('war-champion-card-Wolverine').should('be.visible');
       },
