@@ -52,7 +52,7 @@ export function ChampionCell({
         <ChampionPortrait
           imageUrl={imageUrl}
           name={name}
-          rarity={String(stars ?? 6)}
+          rarity={String(stars ?? 7)}
           size={exporting ? EXPORT_PORTRAIT_SIZE : PORTRAIT_SIZE}
           box='frame'
           ascension={ascension ?? 0}

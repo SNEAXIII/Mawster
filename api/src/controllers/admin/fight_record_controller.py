@@ -20,6 +20,18 @@ fight_record_controller = APIRouter(
     ],
 )
 
+sort_literal = Literal[
+    "created_at",
+    "season_number",
+    "ko_count",
+    "tier",
+    "node_number",
+    "battlegroup",
+    "champion_name",
+    "defender_champion_name",
+    "alliance_name",
+]
+
 
 @fight_record_controller.get("", response_model=PaginatedFightRecordsResponse)
 async def list_fight_records(
@@ -39,17 +51,7 @@ async def list_fight_records(
     size: Annotated[int, Query(ge=1, le=100)] = 20,
     source: Annotated[FightRecordSource, Query()] = FightRecordSource.All,
     sort_by: Annotated[
-        Literal[
-            "created_at",
-            "season_number",
-            "ko_count",
-            "tier",
-            "node_number",
-            "battlegroup",
-            "champion_name",
-            "defender_champion_name",
-            "alliance_name",
-        ],
+        sort_literal,
         Query(),
     ] = "created_at",
     sort_order: Annotated[str, Query(pattern="^(asc|desc)$")] = "desc",

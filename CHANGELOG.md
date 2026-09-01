@@ -3,6 +3,48 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.6.3](https://github.com/SNEAXIII/Mawster/compare/v1.6.2...v1.6.3) (2026-09-01)
+
+
+### Corrigé
+
+* default knowledge base imports to 7 stars ([5fec26b](https://github.com/SNEAXIII/Mawster/commit/5fec26bbe0af8f8d1a01bf5804ebd01225fb61d5))
+* remove double scroll on mobile layout ([84cc743](https://github.com/SNEAXIII/Mawster/commit/84cc7435fe3e2d02410751ca4f3d893b356fb47f))
+* remove double scroll on mobile layout ([7dd31dc](https://github.com/SNEAXIII/Mawster/commit/7dd31dc7d268fb43ae21f37b50e07f841cb0fc19))
+
+
+### Modifié
+
+* extract the fight-record sort literal to a module constant ([7034a01](https://github.com/SNEAXIII/Mawster/commit/7034a01bcfcf022f04ffb8982baaa18707df70e1))
+* move decode_service_mock function to improve test organization ([c108ff6](https://github.com/SNEAXIII/Mawster/commit/c108ff6b0078ea3bc98f38afd34cdec192922969))
+* use double brackets for conditional expressions in backup script ([8a92031](https://github.com/SNEAXIII/Mawster/commit/8a92031f6c3134145d88cef7bf503d53c1e14e31))
+
+## [1.6.2](https://github.com/SNEAXIII/Mawster/compare/v1.6.1...v1.6.2) (2026-08-27)
+
+
+### Corrigé
+
+* update datas ([6938362](https://github.com/SNEAXIII/Mawster/commit/6938362d5ab81a172671ca30ed71cb6a958a1d4c))
+
+## [1.6.1](https://github.com/SNEAXIII/Mawster/compare/v1.6.0...v1.6.1) (2026-08-27)
+
+
+### Corrigé
+
+* **auth:** secrets has no choices(), OAuth login generation was broken ([045b52f](https://github.com/SNEAXIII/Mawster/commit/045b52f9289c5171d23c7a40b8d5f74e8df342cb))
+
+
+### Modifié
+
+* **enums:** move WarStatus and the vision statuses to src/enums ([60df1ea](https://github.com/SNEAXIII/Mawster/commit/60df1eafdcfda5347ee5df50a161f0ef9c8d72db))
+* **models:** add DefenderChampionFk mixin ([1079026](https://github.com/SNEAXIII/Mawster/commit/1079026c196d8c0bbff55f6742f84d180007e86b))
+* **models:** add WarFightRecordFk mixin ([92d960f](https://github.com/SNEAXIII/Mawster/commit/92d960f33a88bab7a3fee72fb5d891e4829bccaf))
+* **models:** extend Base mixins to user, roster and placement FKs ([4f23f02](https://github.com/SNEAXIII/Mawster/commit/4f23f024b515ffe2d0e6ad753f76d4b7ff39a343))
+* **models:** factor shared FK columns into Base mixins ([0e2c071](https://github.com/SNEAXIII/Mawster/commit/0e2c071def95f03df504641d576799503686a9a4))
+* **models:** fix GameAccount import path in ChampionUser ([5342e66](https://github.com/SNEAXIII/Mawster/commit/5342e6622732b0c3308dc027ca47a8e93620d3c9))
+* **models:** rename login_log.id_user to user_id ([5890162](https://github.com/SNEAXIII/Mawster/commit/58901629a125bca7ae76185ecf40ebdc780d0348))
+* **models:** spell each foreign-key target once ([7286922](https://github.com/SNEAXIII/Mawster/commit/72869221026911837ed97b9fa95f4ca2df867f5c))
+
 ## [1.6.0](https://github.com/SNEAXIII/Mawster/compare/v1.5.0...v1.6.0) (2026-08-27)
 
 
