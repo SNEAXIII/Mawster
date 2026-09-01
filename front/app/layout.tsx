@@ -30,12 +30,12 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <body className={`${inter.className} antialiased`}>
         <TestModeBanner />
         <Providers>
-          <div className='flex h-screen flex-col md:flex-row md:overflow-hidden'>
+          <div className='flex min-h-dvh flex-col md:h-dvh md:flex-row md:overflow-hidden'>
             <div className='w-full flex-none md:w-42'>
               <SideNavBar />
             </div>
             <Toaster />
-            <div className='grow overflow-y-auto p-3'>
+            <div className='grow p-3 md:overflow-y-auto'>
               <MyModerationProvider>{children}</MyModerationProvider>
             </div>
           </div>
