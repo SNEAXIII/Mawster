@@ -39,18 +39,15 @@ juste avant un `Edit` ; pas d'agents Explore (utiliser `ctx_batch_execute`) ; pa
 
 ---
 
-## github
+## GitHub — CLI `gh`
 
-Serveur distant maintenu par GitHub, en transport HTTP (aucun exécutable local, donc identique
-sous Windows et Linux). Nécessite `GITHUB_PERSONAL_ACCESS_TOKEN` dans l'environnement.
-Couvre issues, pull requests, branches, fichiers, recherche, commentaires, reviews, merges.
+Pas de serveur MCP : les opérations GitHub (PR, issues, reviews, merges) passent par le CLI
+`gh`, authentifié une fois via `gh auth login`. Utilisé par `/open-pr`.
 
 ```bash
-export GITHUB_PERSONAL_ACCESS_TOKEN=ghp_...
+gh auth status                                    # vérifier l'auth
+gh pr create --base main --title "..." --body ""  # ouvrir une PR
 ```
-
-Préfixe des outils : `mcp__github__*` (ex : `mcp__github__create_pull_request`, utilisé par
-`/open-pr`).
 
 ---
 
