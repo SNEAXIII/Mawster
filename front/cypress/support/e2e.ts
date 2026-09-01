@@ -10,7 +10,7 @@ Cypress.Commands.overwrite<'type', 'element'>('type', (originalFn, subject, text
   return originalFn(subject, text, { delay: 0, ...options });
 });
 
-export const BACKEND: string = (Cypress.config('env').backendUrl as string | undefined) ?? 'http://localhost:8001';
+export const BACKEND: string = (Cypress.expose('backendUrl') as string | undefined) ?? 'http://localhost:8001';
 
 // Return a short alphanumeric prefix safe to use in generated names/tags.
 function safePrefix(raw: string | undefined | null): string {
