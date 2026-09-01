@@ -1,5 +1,3 @@
-import {} from '../../support/e2e';
-
 function setupSeasonFilter(prefix: string) {
   const adminToken = `${prefix}-adm`;
   const ownerToken = `${prefix}-own`;
@@ -118,7 +116,7 @@ describe('Knowledge Base - Season Filter', () => {
           cy.apiLogin(userId, 'knowledge-base');
 
           cy.selectOption('filter-season-selector-trigger', 'Current Season');
-          cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
+          expectRecordRows(1);
         });
       });
     });
@@ -138,10 +136,10 @@ describe('Knowledge Base - Season Filter', () => {
           cy.selectOption('filter-season-selector-trigger', 'Specific Season');
 
           cy.selectOption('filter-season-id-trigger', 'Season 1');
-          cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
+          expectRecordRows(1);
 
           cy.selectOption('filter-season-id-trigger', 'Season 2');
-          cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
+          expectRecordRows(2);
         });
       });
     });
