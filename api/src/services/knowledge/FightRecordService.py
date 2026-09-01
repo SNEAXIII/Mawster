@@ -16,22 +16,22 @@ from src.dto.admin.dto_fight_record import (
 from src.enums.FightRecordSource import FightRecordSource
 from src.enums.SeasonSelectorType import SeasonSelectorType
 from src.enums.SeasonStatus import SeasonStatus
-from src.models.Alliance import Alliance
-from src.models.AllianceVisitor import AllianceVisitor
+from src.models.alliance.Alliance import Alliance
+from src.models.alliance.AllianceVisitor import AllianceVisitor
 from src.models.Base import utcnow
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.GameAccount import GameAccount
-from src.models.Season import Season
-from src.models.War import War
-from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.WarFightNote import WarFightNote
-from src.models.WarFightPrefight import WarFightPrefight
-from src.models.WarFightRecord import WarFightRecord
-from src.models.WarFightRecordImport import WarFightRecordImport
-from src.models.WarFightSynergy import WarFightSynergy
-from src.models.WarPrefightAttacker import WarPrefightAttacker
-from src.models.WarSynergyAttacker import WarSynergyAttacker
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.user.GameAccount import GameAccount
+from src.models.war.Season import Season
+from src.models.war.War import War
+from src.models.war.WarDefensePlacement import WarDefensePlacement
+from src.models.war.WarFightNote import WarFightNote
+from src.models.war.WarFightPrefight import WarFightPrefight
+from src.models.war.WarFightRecord import WarFightRecord
+from src.models.war.WarFightRecordImport import WarFightRecordImport
+from src.models.war.WarFightSynergy import WarFightSynergy
+from src.models.war.WarPrefightAttacker import WarPrefightAttacker
+from src.models.war.WarSynergyAttacker import WarSynergyAttacker
 from src.services.admin.ModerationService import AUTO_BLOCK_THRESHOLD, ModerationService
 from src.services.admin.SagaService import SagaService
 from src.utils.db import SessionDep
@@ -228,7 +228,9 @@ class FightRecordService:
         return []
 
     @classmethod
-    async def get_fight_records(
+    # Refactor candidate, the worst in the codebase: 27 complexity, 27 branches, 84
+    # statements. Filter building and result shaping are two jobs in one function.
+    async def get_fight_records(  # noqa: C901, PLR0912, PLR0915
         cls,
         session: SessionDep,
         accessible_alliance_ids: list[uuid.UUID],
@@ -259,6 +261,8 @@ class FightRecordService:
         RegDefender = aliased(Champion)
         ImpAttacker = aliased(Champion)
         ImpDefender = aliased(Champion)
+        RegSeason = aliased(Season)
+        ImpSeason = aliased(Season)
 
         sub_queries = []
 
@@ -287,6 +291,7 @@ class FightRecordService:
                     WarFightRecord.id.label("id"),
                     WarFightRecord.alliance_id.label("alliance_id"),
                     WarFightRecord.season_id.label("season_id"),
+                    RegSeason.number.label("season_number"),
                     WarFightRecord.node_number.label("node_number"),
                     WarFightRecord.champion_id.label("champion_id"),
                     WarFightRecord.defender_champion_id.label("defender_champion_id"),
@@ -307,6 +312,7 @@ class FightRecordService:
                     WarFightRecord.assisted.label("assisted"),
                     literal(False).label("is_imported"),
                     Alliance.name.label("alliance_name"),
+                    Alliance.tag.label("alliance_tag"),
                     RegAttacker.name.label("champion_name"),
                     RegAttacker.champion_class.label("champion_class"),
                     RegAttacker.image_url.label("image_url"),
@@ -319,6 +325,7 @@ class FightRecordService:
                 .join(RegAttacker, WarFightRecord.champion_id == RegAttacker.id)
                 .join(RegDefender, WarFightRecord.defender_champion_id == RegDefender.id)
                 .join(GameAccount, WarFightRecord.game_account_id == GameAccount.id)
+                .outerjoin(RegSeason, WarFightRecord.season_id == RegSeason.id)
                 .where(and_(*reg_conds))
             )
             sub_queries.append(reg_sub)
@@ -343,6 +350,7 @@ class FightRecordService:
                     WarFightRecordImport.id.label("id"),
                     WarFightRecordImport.alliance_id.label("alliance_id"),
                     WarFightRecordImport.season_id.label("season_id"),
+                    ImpSeason.number.label("season_number"),
                     WarFightRecordImport.node_number.label("node_number"),
                     WarFightRecordImport.champion_id.label("champion_id"),
                     WarFightRecordImport.defender_champion_id.label("defender_champion_id"),
@@ -363,6 +371,7 @@ class FightRecordService:
                     literal(False).label("assisted"),
                     literal(True).label("is_imported"),
                     Alliance.name.label("alliance_name"),
+                    Alliance.tag.label("alliance_tag"),
                     ImpAttacker.name.label("champion_name"),
                     ImpAttacker.champion_class.label("champion_class"),
                     ImpAttacker.image_url.label("image_url"),
@@ -374,6 +383,7 @@ class FightRecordService:
                 .join(Alliance, WarFightRecordImport.alliance_id == Alliance.id)
                 .join(ImpAttacker, WarFightRecordImport.champion_id == ImpAttacker.id)
                 .join(ImpDefender, WarFightRecordImport.defender_champion_id == ImpDefender.id)
+                .outerjoin(ImpSeason, WarFightRecordImport.season_id == ImpSeason.id)
                 .where(and_(*imp_conds))
             )
             sub_queries.append(imp_sub)
@@ -384,7 +394,7 @@ class FightRecordService:
         base = (union_all(*sub_queries) if len(sub_queries) > 1 else sub_queries[0]).subquery()
 
         # COUNT
-        total = (await session.execute(select(func.count()).select_from(base))).scalar_one()
+        total = (await session.exec(select(func.count()).select_from(base))).one()
 
         # SORT — all labeled columns are directly accessible on the subquery
         sort_col_map = {
@@ -393,6 +403,7 @@ class FightRecordService:
             "node_number": base.c.node_number,
             "battlegroup": base.c.battlegroup,
             "created_at": base.c.created_at,
+            "season_number": base.c.season_number,
             "champion_name": base.c.champion_name,
             "defender_champion_name": base.c.defender_champion_name,
             "alliance_name": base.c.alliance_name,
@@ -402,8 +413,8 @@ class FightRecordService:
 
         rows = (
             (
-                await session.execute(
-                    select(base).order_by(sort_expr).offset((page - 1) * size).limit(size)
+                await session.exec(
+                    select(*base.c).order_by(sort_expr).offset((page - 1) * size).limit(size)
                 )
             )
             .mappings()
@@ -418,7 +429,9 @@ class FightRecordService:
                 war_id=row["war_id"],
                 alliance_id=row["alliance_id"],
                 alliance_name=row["alliance_name"],
+                alliance_tag=row["alliance_tag"],
                 season_id=row["season_id"],
+                season_number=row["season_number"],
                 game_account_pseudo=row["game_account_pseudo"],
                 battlegroup=row["battlegroup"],
                 node_number=row["node_number"],

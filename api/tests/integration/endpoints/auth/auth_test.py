@@ -11,12 +11,15 @@ import re
 
 import jwt as pyjwt
 import pytest
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from main import app
 from src.enums.Roles import Roles
 from src.models import User
 from src.models.Base import utcnow
 from src.security.secrets import SECRET
+from src.services.auth.DiscordAuthService import DiscordAuthService
+from src.services.auth.GoogleAuthService import GoogleAuthService
 from src.services.auth.JWTService import JWTService
 from src.utils.db import get_session
 from src.utils.email_hash import hash_email
@@ -30,7 +33,7 @@ from tests.utils.utils_client import (
     execute_post_request,
 )
 from tests.utils.utils_constant import USER_ID, USER_LOGIN
-from tests.utils.utils_db import get_test_session, load_objects
+from tests.utils.utils_db import get_test_session, load_objects, sqlite_async_engine
 
 app.dependency_overrides[get_session] = get_test_session
 
@@ -227,10 +230,153 @@ class TestDiscordLogin:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
+    async def test_login_does_not_rehash_unverified_email_even_with_stale_pepper(self, monkeypatch):
+        """A stale pepper version must never be the reason an unverified address gets hashed."""
+
+        async def _fake_verify_unverified(cls, access_token):
+            return {
+                "id": 1,
+                "username": "testuser",
+                "email": "test@example.com",
+                "verified": False,
+            }
+
+        monkeypatch.setattr(
+            DiscordAuthService, "verify_token", classmethod(_fake_verify_unverified)
+        )
+
+        stale_hash = hash_email("test@example.com")
+        existing = User(
+            login="oldpepperuser",
+            email_hash=stale_hash,
+            email_hash_version=0,
+            discord_id="1",
+            role=Roles.USER,
+        )
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert response.status_code == 200
+
+        async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
+            refreshed = await session.get(User, existing.id)
+            assert refreshed.email_hash == stale_hash
+            assert refreshed.email_hash_version == 0
+
+    @pytest.mark.asyncio
+    async def test_links_discord_to_existing_google_account(self):
+        """A Discord login on an address already held by a Google account links instead of failing."""
+        existing = User(
+            login="googleonlyuser",
+            email_hash=hash_email("test@example.com"),
+            google_id="google_abc",
+            role=Roles.USER,
+        )
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert response.status_code == 200
+        decoded = pyjwt.decode(
+            response.json()["access_token"], SECRET.SECRET_KEY, algorithms=[SECRET.ALGORITHM]
+        )
+        assert decoded["user_id"] == str(existing.id)
+
+    @pytest.mark.asyncio
+    async def test_link_refused_when_account_disabled(self):
+        """Linking never writes onto a disabled account."""
+        existing = User(
+            login="disableduser",
+            email_hash=hash_email("test@example.com"),
+            google_id="google_disabled",
+            disabled_at=utcnow(),
+            role=Roles.USER,
+        )
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert response.status_code == 409
+        assert response.json()["message"]["code"] == "ACCOUNT_UNAVAILABLE"
+
+    @pytest.mark.asyncio
+    async def test_link_refused_when_account_deleted(self):
+        """Linking never writes onto a deleted account."""
+        existing = User(
+            login="deleteduser",
+            email_hash=hash_email("test@example.com"),
+            google_id="google_deleted",
+            deleted_at=utcnow(),
+            role=Roles.USER,
+        )
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert response.status_code == 409
+        assert response.json()["message"]["code"] == "ACCOUNT_UNAVAILABLE"
+
+    @pytest.mark.asyncio
+    async def test_unverified_email_creates_separate_account_without_hash(self, monkeypatch):
+        """An unverified address is never hashed, so it can never be used to reach another account."""
+
+        async def _fake_verify(cls, access_token):
+            return {
+                "id": 999,
+                "username": "unverified",
+                "email": "test@example.com",
+                "verified": False,
+            }
+
+        monkeypatch.setattr(DiscordAuthService, "verify_token", classmethod(_fake_verify))
+
+        victim = User(
+            login="victimuser",
+            email_hash=hash_email("test@example.com"),
+            google_id="google_victim",
+            role=Roles.USER,
+        )
+        await load_objects([victim])
+
+        response = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert response.status_code == 200
+        decoded = pyjwt.decode(
+            response.json()["access_token"], SECRET.SECRET_KEY, algorithms=[SECRET.ALGORITHM]
+        )
+        assert decoded["user_id"] != str(victim.id)
+
+        # A second unverified login on the same address must also succeed. It can
+        # only do so if neither account stored a hash — two equal hashes would
+        # collide on the unique constraint.
+        async def _fake_verify_other(cls, access_token):
+            return {
+                "id": 1000,
+                "username": "unverified2",
+                "email": "test@example.com",
+                "verified": False,
+            }
+
+        monkeypatch.setattr(DiscordAuthService, "verify_token", classmethod(_fake_verify_other))
+
+        second = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert second.status_code == 200
+        second_decoded = pyjwt.decode(
+            second.json()["access_token"], SECRET.SECRET_KEY, algorithms=[SECRET.ALGORITHM]
+        )
+        assert second_decoded["user_id"] not in (str(victim.id), decoded["user_id"])
+
+    @pytest.mark.asyncio
     async def test_duplicate_email_hash_returns_409(self):
-        """A Discord login whose email is already used by another account returns 409."""
-        # The mock always returns email="test@example.com" with discord_id=1.
-        # Pre-insert a user with the same email but a different discord_id.
+        """The address is held by an account that already has a different Discord id."""
         existing = User(
             login="otheruser",
             email_hash=hash_email("test@example.com"),
@@ -243,6 +389,7 @@ class TestDiscordLogin:
             ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
         )
         assert response.status_code == 409
+        assert response.json()["message"]["code"] == "PROVIDER_ALREADY_LINKED"
 
 
 # =========================================================================
@@ -253,7 +400,6 @@ class TestDiscordLogin:
 class TestGoogleLogin:
     @pytest.mark.asyncio
     async def test_login_rehashes_email_when_pepper_version_outdated(self, monkeypatch):
-        from src.services.auth.GoogleAuthService import GoogleAuthService
 
         async def _fake_verify(cls, access_token):
             return {"sub": "google_123", "email": "google@example.com"}
@@ -273,6 +419,63 @@ class TestGoogleLogin:
             ENDPOINT_GOOGLE, payload={"access_token": "any-google-token"}
         )
         assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_links_google_to_existing_discord_account(self, monkeypatch):
+        """The mirror case: a Google login lands on the account created via Discord."""
+
+        async def _fake_verify(cls, access_token):
+            return {
+                "sub": "google_new",
+                "email": "discorduser@example.com",
+                "email_verified": True,
+            }
+
+        monkeypatch.setattr(GoogleAuthService, "verify_token", classmethod(_fake_verify))
+
+        existing = User(
+            login="discordonlyuser",
+            email_hash=hash_email("discorduser@example.com"),
+            discord_id="discord_xyz",
+            role=Roles.USER,
+        )
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_GOOGLE, payload={"access_token": "any-google-token"}
+        )
+        assert response.status_code == 200
+        decoded = pyjwt.decode(
+            response.json()["access_token"], SECRET.SECRET_KEY, algorithms=[SECRET.ALGORITHM]
+        )
+        assert decoded["user_id"] == str(existing.id)
+
+    @pytest.mark.asyncio
+    async def test_google_link_refused_when_provider_slot_taken(self, monkeypatch):
+        """The matched account already has a different Google id — no link."""
+
+        async def _fake_verify(cls, access_token):
+            return {
+                "sub": "google_new",
+                "email": "taken@example.com",
+                "email_verified": True,
+            }
+
+        monkeypatch.setattr(GoogleAuthService, "verify_token", classmethod(_fake_verify))
+
+        existing = User(
+            login="takenuser",
+            email_hash=hash_email("taken@example.com"),
+            google_id="google_original",
+            role=Roles.USER,
+        )
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_GOOGLE, payload={"access_token": "any-google-token"}
+        )
+        assert response.status_code == 409
+        assert response.json()["message"]["code"] == "PROVIDER_ALREADY_LINKED"
 
 
 # =========================================================================

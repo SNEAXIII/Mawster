@@ -25,7 +25,7 @@ def _placement_fk_name() -> str:
     (`war_fight_note_ibfk_N` in prod/dev, a bare number on freshly-built DBs),
     so it is not portable across environments and must be looked up."""
     conn = op.get_bind()
-    name = conn.execute(
+    return conn.execute(
         sa.text(
             "SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE "
             "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'war_fight_note' "
@@ -33,7 +33,6 @@ def _placement_fk_name() -> str:
             "AND REFERENCED_TABLE_NAME = 'war_defense_placement'"
         )
     ).scalar_one()
-    return name
 
 
 def upgrade() -> None:

@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from src.models.War import War
+from src.models.war.War import War
 from src.services.alliance.war.WarService import WarService
 from src.utils.db import SessionDep
 

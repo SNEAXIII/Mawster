@@ -2,7 +2,7 @@ import uuid
 
 from sqlmodel import select
 
-from src.models.ChampionSagaRole import ChampionSagaRole
+from src.models.champion.ChampionSagaRole import ChampionSagaRole
 from src.services.admin.SeasonService import SeasonService
 from src.utils.db import SessionDep
 

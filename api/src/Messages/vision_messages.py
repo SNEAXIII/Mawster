@@ -5,9 +5,17 @@ TOO_MANY_SCREENS = "Too many screenshots: {count} provided, {maximum} allowed"
 SCREEN_TOO_LARGE = "Screenshot '{filename}' is too large ({size} bytes, max {maximum})"
 UNSUPPORTED_SCREEN_TYPE = "Screenshot '{filename}' has unsupported type '{content_type}'"
 BROKER_UNAVAILABLE = "The vision service is unavailable, please retry in a moment"
+VISION_DISABLED = "The AI roster import is not available on this environment"
 JOB_NEVER_QUEUED = "This job was never queued: publishing failed for the batch"
 VISION_JOB_NOT_FOUND = "Vision job not found"
 JOB_NOT_RETRYABLE = "Only a failed screenshot can be relaunched"
 VISION_CROP_NOT_FOUND = "Crop not found"
 IMPORT_ALREADY_PENDING = "An import is already awaiting your attention on this game account"
 IMPORT_QUOTA_EXCEEDED = "Too many imports in the last hour, try again later"
+# --- Direct-to-storage upload (presigned) ---------------------------------
+IMPORT_NOT_AWAITING_UPLOAD = "This import is not awaiting an upload"
+SCREEN_NOT_UPLOADED = "Screenshot '{filename}' was never uploaded"
+SCREEN_TYPE_MISMATCH = (
+    "Screenshot '{filename}' was uploaded as '{actual}' but declared as '{declared}'"
+)
+SCREEN_NOT_AN_IMAGE = "Screenshot '{filename}' is not a valid PNG, JPEG or WebP image"

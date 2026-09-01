@@ -8,6 +8,10 @@ api_file = "api.env"
 
 IS_PROD = os.getenv("MODE") == "prod"
 IS_TESTING = os.getenv("MODE") == "testing"
+# Le staging tourne sans RustFS ni RabbitMQ : VISION_ENABLED=0 y rend les
+# réglages vision optionnels et coupe la feature, au lieu de refuser de booter.
+VISION_ENABLED = os.getenv("VISION_ENABLED", "1").strip().lower() not in {"0", "false", "no"}
+_VISION_REQUIRED = IS_PROD and VISION_ENABLED
 
 _log = logging.getLogger(__name__)
 
@@ -35,15 +39,24 @@ class Settings(BaseSettings):
     EMAIL_PEPPER: str = Field(... if IS_PROD else "dev-email-pepper")
     EMAIL_PEPPER_VERSION: int = Field(default=1)
     # --- Vision (roster import) ---------------------------------------------
-    RABBITMQ_URL: str = Field(... if IS_PROD else "amqp://mawster:mawster@localhost:5672/")
-    RUSTFS_ENDPOINT: str = Field(... if IS_PROD else "http://localhost:9000")
-    RUSTFS_ACCESS_KEY: str = Field(... if IS_PROD else "mawster")
-    RUSTFS_SECRET_KEY: str = Field(... if IS_PROD else "mawsterpassword")
+    RABBITMQ_URL: str = Field(... if _VISION_REQUIRED else "amqp://mawster:mawster@localhost:5672/")
+    RUSTFS_ENDPOINT: str = Field(... if _VISION_REQUIRED else "http://localhost:9000")
+    # Endpoint que le NAVIGATEUR appelle pour uploader en direct (URL présignée).
+    # Distinct de RUSTFS_ENDPOINT, qui reste l'adresse interne serveur→RustFS :
+    # SigV4 signe l'en-tête Host, donc une URL signée pour `http://rustfs:9000`
+    # est refusée (SignatureDoesNotMatch) dès qu'un navigateur l'envoie au nom
+    # public. Obligatoire en prod — sans ça la feature ne peut que produire des
+    # URLs mortes, et un boot qui échoue vaut mieux qu'un upload cassé.
+    # En dev les deux coïncident : RustFS publie 9000 sur l'hôte.
+    RUSTFS_PUBLIC_ENDPOINT: str = Field(... if _VISION_REQUIRED else "http://localhost:9000")
+    RUSTFS_ACCESS_KEY: str = Field(... if _VISION_REQUIRED else "mawster")
+    RUSTFS_SECRET_KEY: str = Field(... if _VISION_REQUIRED else "mawsterpassword")
     RUSTFS_BUCKET_VISION: str = Field("vision")
     RUSTFS_BUCKET_DATASET: str = Field("dataset")
-    # Le consumer AMQP tourne en dev et en prod ; désactivé uniquement en MODE=testing
-    # pour que la CI et la suite de tests ne dépendent jamais d'un broker.
-    VISION_CONSUMER_ENABLED: bool = Field(default=not IS_TESTING)
+    # Le consumer AMQP tourne en dev et en prod ; désactivé en MODE=testing pour
+    # que la CI et la suite de tests ne dépendent jamais d'un broker, et sur les
+    # déploiements sans vision, où il n'y a aucun broker à joindre.
+    VISION_CONSUMER_ENABLED: bool = Field(default=not IS_TESTING and VISION_ENABLED)
     # Fenêtre de rétention des objets d'import. DOIT rester alignée sur la règle
     # de lifecycle posée sur le bucket vision par rustfs-init : au-delà, les
     # images n'existent plus et un import ne peut plus être validé honnêtement.

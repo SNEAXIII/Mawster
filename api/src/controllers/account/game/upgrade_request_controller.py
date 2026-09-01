@@ -10,9 +10,9 @@ from src.dto.account.game.dto_upgrade_request import UpgradeRequestCreate, Upgra
 from src.Messages.champion_user_messages import CHAMPION_USER_NOT_FOUND
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND
 from src.models import User
-from src.models.ChampionUser import ChampionUser
-from src.models.GameAccount import GameAccount
-from src.models.RequestedUpgrade import RequestedUpgrade
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.champion.RequestedUpgrade import RequestedUpgrade
+from src.models.user.GameAccount import GameAccount
 from src.services.account.game.ChampionUserService import ChampionUserService
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.alliance.AllianceService import AllianceService

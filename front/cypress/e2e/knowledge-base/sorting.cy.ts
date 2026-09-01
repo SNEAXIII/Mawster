@@ -1,7 +1,7 @@
 import { setupKnowledgeBaseFast, setupKnowledgeBase } from '../../support/e2e';
 
 // Column indices (0-based):
-// 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: Tier | 7: KO | 8: Alliance | 9: Date
+// 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: KO | 7: Alliance | 8: Season | 9: Tier | 10: Date | 11: Note
 //
 // Dev endpoint alternates champions per node:
 //   odd  nodes: attacker=Iron Man,       defender=Captain America
@@ -14,8 +14,7 @@ describe('Knowledge Base', () => {
 
   it('sorts by KO count descending then ascending', () => {
     setupKnowledgeBaseFast('kb-sort').then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
 
@@ -23,7 +22,9 @@ describe('Knowledge Base', () => {
       cy.getByCy('fight-records-table')
         .find('tbody tr')
         .then(($rows) => {
-          const kos = [...$rows].map((r) => Number(r.querySelectorAll('td')[7]?.textContent?.trim() ?? '0'));
+          const kos = [...$rows].map((r) =>
+            Number(r.querySelector('[data-cy="fight-record-ko"]')?.textContent?.trim() ?? '0'),
+          );
           expect(kos[0]).to.be.at.least(kos[1]);
         });
 
@@ -31,7 +32,9 @@ describe('Knowledge Base', () => {
       cy.getByCy('fight-records-table')
         .find('tbody tr')
         .then(($rows) => {
-          const kos = [...$rows].map((r) => Number(r.querySelectorAll('td')[7]?.textContent?.trim() ?? '0'));
+          const kos = [...$rows].map((r) =>
+            Number(r.querySelector('[data-cy="fight-record-ko"]')?.textContent?.trim() ?? '0'),
+          );
           expect(kos[0]).to.be.at.most(kos[1]);
         });
     });
@@ -39,8 +42,7 @@ describe('Knowledge Base', () => {
 
   it('sorts by node number descending then ascending', () => {
     setupKnowledgeBaseFast('kb-sortnode').then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       cy.contains('th', 'Node').click();
       cy.getByCy('fight-records-table')

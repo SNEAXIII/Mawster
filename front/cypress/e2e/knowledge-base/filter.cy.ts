@@ -8,8 +8,7 @@ describe('Knowledge Base', () => {
   it('filters by player name — exact, partial lowercase, no match, clear', () => {
     const prefix = 'kb-fp';
     setupKnowledgeBaseFast(prefix).then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       const pseudo = `${prefix}Own`.slice(0, 16);
 
@@ -36,15 +35,14 @@ describe('Knowledge Base', () => {
 
   it('filters by attacker champion — Captain America is attacker on node 2', () => {
     setupKnowledgeBaseFast('kb-fatk').then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
 
       cy.getByCy('filter-attacker').click();
       cy.get('[role="dialog"]').should('be.visible');
       cy.get('[role="dialog"]').find('input').type('Captain America');
-      cy.contains('[role="option"]', 'Captain America').click();
+      cy.contains('[role="option"]', 'Captain America').should('be.visible').click();
       cy.intercept('GET', '**/fight-records**');
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
 
@@ -56,8 +54,7 @@ describe('Knowledge Base', () => {
 
   it('filters by defender champion — Iron Man is defender on node 2', () => {
     setupKnowledgeBaseFast('kb-fdef').then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
 
@@ -65,7 +62,7 @@ describe('Knowledge Base', () => {
       cy.get('[role="dialog"]').should('be.visible');
       cy.get('[role="dialog"]').find('input').clear();
       cy.get('[role="dialog"]').find('input').type('Iron Man');
-      cy.contains('[role="option"]', 'Iron Man').click();
+      cy.contains('[role="option"]', 'Iron Man').should('be.visible').click();
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
 
       cy.getByCy('filter-clear').click();
@@ -75,8 +72,7 @@ describe('Knowledge Base', () => {
 
   it('filters by node number', () => {
     setupKnowledgeBaseFast('kb-fnode').then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
 
@@ -94,8 +90,7 @@ describe('Knowledge Base', () => {
     // setupKnowledgeBase places attackers deterministically on nodes 1 and 2,
     // avoiding the substring-match flakiness of the bulk endpoint
     setupKnowledgeBase(prefix).then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       const attackerPseudo = `${prefix}Atk`.slice(0, 16);
       cy.getByCy('filter-player').should('be.visible').clear();
@@ -122,8 +117,7 @@ describe('Knowledge Base', () => {
 
   it('shows empty state and resets with clear when filter matches nothing', () => {
     setupKnowledgeBaseFast('kb-fempty').then(({ userData }) => {
-      cy.apiLogin(userData.user_id);
-      cy.visit('/game/knowledge-base');
+      cy.apiLogin(userData.user_id, 'knowledge-base');
 
       cy.getByCy('filter-node').should('be.visible').clear();
       cy.getByCy('filter-node').type('50');

@@ -10,12 +10,12 @@ Usage:
 """
 
 import json
-import sys
 from pathlib import Path
 
 from sqlmodel import Session, create_engine, select
 
-from src.models.Mastery import Mastery
+from src.fixtures.paths import json_path_from_argv
+from src.models.user.Mastery import Mastery
 from src.security.secrets import SECRET
 
 sync_engine = create_engine(
@@ -85,7 +85,7 @@ def load_masteries(json_path: Path = DEFAULT_JSON_PATH):
 
     try:
         with Session(sync_engine) as session:
-            with open(json_path, encoding="utf-8") as f:
+            with json_path.open(encoding="utf-8") as f:
                 masteries_data = json.load(f)
 
             if not isinstance(masteries_data, list):
@@ -114,8 +114,4 @@ def load_masteries(json_path: Path = DEFAULT_JSON_PATH):
 
 
 if __name__ == "__main__":
-    json_file = DEFAULT_JSON_PATH
-    if len(sys.argv) > 2 and sys.argv[1] == "--json":
-        json_file = Path(sys.argv[2])
-
-    load_masteries(json_file)
+    load_masteries(json_path_from_argv(DEFAULT_JSON_PATH))

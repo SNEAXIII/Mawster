@@ -13,8 +13,7 @@ describe('Defense – Placement via UI', () => {
     setupDefenseScenario('def-pl-single', 'PlacePlyr', 'PS', [
       { name: 'Spider-Man', cls: 'Cosmic', rarity: '7r3', options: { signature: 200 } },
     ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.contains('Select Champion').should('be.visible');
@@ -89,8 +88,7 @@ describe('Defense – Placement via UI', () => {
   ).forEach(({ prefix, pseudo, tag, node, expected, champ }) => {
     it(`shows correct rarity label ${expected} on war map and side panel`, () => {
       setupDefenseScenario(prefix, pseudo, tag, [champ]).then(({ ownerData }) => {
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy(`war-node-${node}`).scrollIntoView().click({ force: true });
         cy.getByCy(`champion-card-${champ.name.replace(/ /g, '-')}`).click();
@@ -110,8 +108,7 @@ describe('Defense – Placement via UI', () => {
       { name: 'Iron Man', cls: 'Tech', rarity: '7r5', options: { signature: 200, is_preferred_attacker: true } },
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r3', options: { signature: 100, is_preferred_attacker: false } },
     ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-20').scrollIntoView().click({ force: true });
       cy.getByCy('champion-card-Iron-Man').click();
@@ -135,8 +132,7 @@ describe('Defense – Placement via UI', () => {
       { name: 'Captain America', cls: 'Science', rarity: '7r3', options: { is_preferred_attacker: true } },
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r3', options: { is_preferred_attacker: false } },
     ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.contains('Select Champion').should('be.visible');
@@ -161,8 +157,7 @@ describe('Defense – Placement via UI', () => {
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r4', options: { signature: 100 } },
       { name: 'Iron Man', cls: 'Tech', rarity: '7r3', options: { signature: 20 } },
     ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-50').scrollIntoView().click({ force: true });
       cy.getByCy('champion-card-Spider-Man').click();
@@ -210,8 +205,7 @@ describe('Defense – Placement via UI', () => {
       },
       { name: 'Blade', cls: 'Skill', rarity: '7r3', options: { signature: 0 } },
     ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.getByCy('champion-card-Spider-Man').click();

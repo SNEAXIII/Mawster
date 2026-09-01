@@ -36,10 +36,9 @@ async def get_users(
     role: Roles | None = None,
     search: str | None = None,
 ):
-    result = await UserAdminService.get_users_with_pagination_role_search(
+    return await UserAdminService.get_users_with_pagination_role_search(
         session, page, size, status, role, search
     )
-    return result
 
 
 @user_admin_controller.patch("/users/disable/{user_uuid_to_disable}", status_code=200)

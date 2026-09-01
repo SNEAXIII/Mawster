@@ -1,8 +1,4 @@
-const PROXY = '/api/back'
-
-const jsonHeaders: HeadersInit = {
-  Accept: 'application/json',
-}
+import { PROXY, jsonHeaders } from '@/app/services/utils'
 
 export interface PublicStats {
   active_alliances: number

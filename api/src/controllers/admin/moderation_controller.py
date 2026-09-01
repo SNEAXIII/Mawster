@@ -1,4 +1,5 @@
 import uuid
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 from starlette import status
@@ -13,6 +14,7 @@ from src.dto.admin.dto_moderation import (
     WarnResponse,
 )
 from src.enums.NoteReportStatus import NoteReportStatus
+from src.models import User
 from src.services.admin.ModerationService import ModerationService
 from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
@@ -27,7 +29,7 @@ moderation_controller = APIRouter(
 @moderation_controller.get("/note-reports", response_model=PaginatedNoteReports)
 async def list_note_reports(
     session: SessionDep,
-    status_filter: NoteReportStatus | None = Query(default=None, alias="status"),
+    status_filter: Annotated[NoteReportStatus | None, Query(alias="status")] = None,
     alliance_id: uuid.UUID | None = None,
     page: int = 1,
     size: int = 20,
@@ -42,7 +44,7 @@ async def resolve_note_report(
     report_id: uuid.UUID,
     body: ReportResolveRequest,
     session: SessionDep,
-    current_user=Depends(AuthService.get_current_user_in_jwt),
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     await ModerationService.resolve_report(
         session, report_id=report_id, admin_user_id=current_user.id, body=body
@@ -60,7 +62,7 @@ async def mute_user(
     user_id: uuid.UUID,
     body: MuteCreateRequest,
     session: SessionDep,
-    current_user=Depends(AuthService.get_current_user_in_jwt),
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     return await ModerationService.mute_user(
         session, user_id=user_id, admin_user_id=current_user.id, body=body
@@ -71,7 +73,7 @@ async def mute_user(
 async def lift_user_mute(
     user_id: uuid.UUID,
     session: SessionDep,
-    current_user=Depends(AuthService.get_current_user_in_jwt),
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     await ModerationService.lift_mute(session, user_id=user_id, admin_user_id=current_user.id)
     return {"ok": True}
@@ -82,7 +84,7 @@ async def warn_user(
     user_id: uuid.UUID,
     body: WarnCreateRequest,
     session: SessionDep,
-    current_user=Depends(AuthService.get_current_user_in_jwt),
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
     return await ModerationService.warn_user(
         session, user_id=user_id, admin_user_id=current_user.id, body=body

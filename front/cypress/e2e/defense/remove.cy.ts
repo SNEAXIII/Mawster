@@ -19,13 +19,12 @@ describe('Defense – Remove defender', () => {
         }).then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 2, cu.id, ownerAccId));
       });
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('defender-count-RmPlyr').should('contain', '2/5');
 
-      // Click remove on the side panel (force click because button is hidden until hover)
-      cy.getByCy('member-section-RmPlyr').find('button').first().click({ force: true });
+      // force: the X only appears on hover
+      cy.getByCy('remove-defender-1').click({ force: true });
 
       cy.getByCy('defender-count-RmPlyr').should('contain', '1/5');
       cy.contains('Defender removed').should('be.visible');
@@ -43,8 +42,7 @@ describe('Defense – Remove defender', () => {
             .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 5, cu.id, ownerAccId)),
         );
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('defender-count-RmMapPlyr').should('contain', '1/5');
 
@@ -65,8 +63,7 @@ describe('Defense – Remove defender', () => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
         );
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         // Place via UI
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
@@ -79,7 +76,7 @@ describe('Defense – Remove defender', () => {
         cy.get('body').type('{esc}');
 
         // Remove Spider-Man via side panel
-        cy.getByCy('member-section-RmReappPlyr').find('button').first().click({ force: true });
+        cy.getByCy('remove-defender-1').click({ force: true });
         cy.getByCy('defender-count-RmReappPlyr').should('contain', '0/5');
 
         // Spider-Man should reappear in selector

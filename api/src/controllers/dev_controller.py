@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Form, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import text
 from sqlmodel import SQLModel, select
 from starlette import status as http_status
@@ -17,11 +17,11 @@ from src.dto.auth.dto_token import LoginResponse, TokenBody
 from src.dto.auth.dto_utilisateurs import UserProfile
 from src.enums.Roles import Roles
 from src.models import GameAccount, User
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.Mastery import Mastery
-from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.WarFightRecord import WarFightRecord
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.user.Mastery import Mastery
+from src.models.war.WarDefensePlacement import WarDefensePlacement
+from src.models.war.WarFightRecord import WarFightRecord
 from src.security.secrets import SECRET
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.account.UserService import UserService
@@ -114,8 +114,7 @@ async def read_users_me_with_token(body: TokenBody, session: SessionDep):
     """
     data = JWTService.decode_jwt(body.token)
     user_id = data.get("user_id")
-    user = await UserService.get_user_by_id_with_validity_check(session, user_id)
-    return user
+    return await UserService.get_user_by_id_with_validity_check(session, user_id)
 
 
 @dev_controller.get("/users", response_model=list[DevUser])
@@ -138,7 +137,6 @@ async def dev_login(body: DevLoginRequest, session: SessionDep) -> LoginResponse
     logger.warning("DEV LOGIN — user: %s", user.login)
 
     return LoginResponse(
-        token_type="bearer",
         access_token=access_token,
         refresh_token=refresh_token,
     )
@@ -162,7 +160,6 @@ async def dev_token(username: Annotated[str, Form()], session: SessionDep) -> Lo
             )
     logger.warning("DEV TOKEN — username: %s / user: %s", username, user.login)
     return LoginResponse(
-        token_type="bearer",
         access_token=JWTService.create_access_token(user),
         refresh_token=JWTService.create_refresh_token(user),
     )
@@ -182,18 +179,16 @@ async def dev_login_by_pseudo(body: DevLoginByPseudoRequest, session: SessionDep
     access_token = JWTService.create_access_token(user)
     refresh_token = JWTService.create_refresh_token(user)
     logger.warning("DEV LOGIN BY PSEUDO — pseudo: %s / user: %s", body.game_pseudo, user.login)
-    return LoginResponse(
-        token_type="bearer", access_token=access_token, refresh_token=refresh_token
-    )
+    return LoginResponse(access_token=access_token, refresh_token=refresh_token)
 
 
 @dev_controller.post("/truncate", status_code=200)
 async def truncate_database(session: SessionDep):
     """Truncate all tables in the database. For testing purposes only."""
-    await session.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+    await session.exec(text("SET FOREIGN_KEY_CHECKS = 0"))
     for table in reversed(SQLModel.metadata.sorted_tables):
-        await session.execute(text(f"TRUNCATE TABLE `{table.name}`"))
-    await session.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+        await session.exec(text(f"TRUNCATE TABLE `{table.name}`"))
+    await session.exec(text("SET FOREIGN_KEY_CHECKS = 1"))
     await session.commit()
     return {"message": "All tables truncated"}
 
@@ -201,13 +196,14 @@ async def truncate_database(session: SessionDep):
 @dev_controller.post("/fixtures", status_code=200)
 async def run_fixtures(session: SessionDep):
     """Truncate all tables then run every fixture script in /fixtures/. Testing only."""
-    await session.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+    await session.exec(text("SET FOREIGN_KEY_CHECKS = 0"))
     for table in reversed(SQLModel.metadata.sorted_tables):
-        await session.execute(text(f"TRUNCATE TABLE `{table.name}`"))
-    await session.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+        await session.exec(text(f"TRUNCATE TABLE `{table.name}`"))
+    await session.exec(text("SET FOREIGN_KEY_CHECKS = 1"))
     await session.commit()
 
-    fixtures_dir = Path(__file__).resolve().parent.parent.parent / "fixtures"
+    # ASYNC240: testing-only route that already blocks on exec_module below.
+    fixtures_dir = Path(__file__).resolve().parent.parent.parent / "fixtures"  # noqa: ASYNC240
     results = {}
     for fixture_file in sorted(fixtures_dir.glob("*.py")):
         if fixture_file.stem.startswith("_"):
@@ -287,31 +283,33 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
             )
             account_id = str(acc.id)
 
-            # 5a. Create alliance
-            if spec.create_alliance:
-                alliance = await AllianceService.create_alliance(
-                    session,
-                    name=spec.create_alliance.name,
-                    tag=spec.create_alliance.tag,
-                    owner_id=acc.id,
-                    current_user_id=user.id,
-                )
-                alliance_id = str(alliance.id)
+        # This step depends on step 4, flattened to reduce cognitive complexity
+        # 5a. Create alliance
+        if spec.create_alliance:
+            alliance = await AllianceService.create_alliance(
+                session,
+                name=spec.create_alliance.name,
+                tag=spec.create_alliance.tag,
+                owner_id=acc.id,
+                current_user_id=user.id,
+            )
+            alliance_id = str(alliance.id)
 
-            # 5b. Force-join another user's alliance
-            elif spec.join_alliance_token:
-                ref = results.get(spec.join_alliance_token)
-                if ref and ref.alliance_id:
-                    acc.alliance_id = uuid.UUID(ref.alliance_id)
-                    session.add(acc)
-                    await session.commit()
-                    alliance_id = ref.alliance_id
+        # 5b. Force-join another user's alliance
+        elif spec.join_alliance_token:
+            ref = results.get(spec.join_alliance_token)
+            if ref and ref.alliance_id:
+                acc.alliance_id = uuid.UUID(ref.alliance_id)
+                session.add(acc)
+                await session.commit()
+                alliance_id = ref.alliance_id
 
-            # 6. Assign battlegroup
-            if spec.battlegroup is not None and alliance_id:
-                await AllianceService.set_member_group(
-                    session, uuid.UUID(alliance_id), acc.id, spec.battlegroup
-                )
+        # This step depends on step 4, flattened to reduce cognitive complexity
+        # 6. Assign battlegroup
+        if spec.battlegroup is not None and alliance_id:
+            await AllianceService.set_member_group(
+                session, uuid.UUID(alliance_id), acc.id, spec.battlegroup
+            )
 
         results[spec.discord_token] = SetupUserResult(
             access_token=access_token,
@@ -371,11 +369,14 @@ async def dev_create_mastery(body: DevCreateMasteryRequest, session: SessionDep)
     }
 
 
+MAX_BULK_ROWS = 1000
+
+
 class BulkFillWarAttackersRequest(BaseModel):
     war_id: uuid.UUID
     battlegroup: int
     game_account_id: uuid.UUID
-    count: int = Field(ge=1, le=50)
+    count: int = Field(ge=1, le=MAX_BULK_ROWS)
 
 
 @dev_controller.post("/bulk-fill-war-attackers", status_code=200)
@@ -389,7 +390,9 @@ async def bulk_fill_war_attackers(body: BulkFillWarAttackersRequest, session: Se
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="No champion found")
 
     created = 0
-    for node in range(1, body.count + 1):
+    # Clamp outside Pydantic too: the loop bound must not come straight from the payload
+    row_count = min(body.count, MAX_BULK_ROWS)
+    for node in range(1, row_count + 1):
         existing = (
             await session.exec(
                 select(WarDefensePlacement).where(
@@ -433,7 +436,7 @@ class BulkCreateFightRecordsRequest(BaseModel):
     war_id: uuid.UUID
     alliance_id: uuid.UUID
     game_account_id: uuid.UUID
-    count: int = Field(ge=1, le=50)
+    count: int = Field(ge=1, le=MAX_BULK_ROWS)
     tier: int = 1
     season_id: uuid.UUID | None = None
 
@@ -452,7 +455,8 @@ async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session
 
     saga = await SagaService.get_roles_for_season(session, body.season_id) if body.season_id else {}
 
-    for node in range(1, body.count + 1):
+    row_count = min(body.count, MAX_BULK_ROWS)
+    for node in range(1, row_count + 1):
         # Alternate attacker/defender so champion filters return subsets
         if node % 2 == 1:
             atk, dfn = attacker_champ, defender_champ
@@ -484,18 +488,39 @@ async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session
     return {"created": body.count}
 
 
+# scripts/e2e_parallel.py slices backend.log on these markers, so a newline in a title
+# would forge a second marker and mis-attribute every line after it.
+MAX_LOG_TITLE = 200
+# C0, DEL and C1 — everything a terminal treats as an instruction rather than text.
+_CONTROL_CHARS = dict.fromkeys(list(range(32)) + list(range(127, 160)))
+
+
 class LogMarkerRequest(BaseModel):
     event: Literal["start", "end"]
     title: str  # full test title, e.g. "war > place defender > node 1"
     passed: bool | None = None  # None for start, True/False for end
+
+    @field_validator("title")
+    @classmethod
+    def keep_title_printable_and_on_one_line(cls, value: str) -> str:
+        """Collapse whitespace runs, drop control characters, cap the length.
+
+        split() handles the newline that would forge a marker, but ESC and BEL are not
+        whitespace to Python: left in, they reach whoever tails backend.log and drive
+        their terminal.
+        """
+        collapsed = " ".join(value.split())
+        return collapsed.translate(_CONTROL_CHARS)[:MAX_LOG_TITLE]
 
 
 @dev_controller.post("/log-marker", status_code=200)
 async def log_test_marker(body: LogMarkerRequest):
     """Write a test boundary marker into the backend log. Testing only."""
     if body.event == "start":
-        logger.info("===TEST_START=== %s", body.title)
+        # NOSONAR S5145 — title is sanitised by the field validator above; Sonar's
+        # taint engine does not recognise a Pydantic validator as a sanitiser.
+        logger.info("===TEST_START=== %s", body.title)  # NOSONAR
     else:
         state = "PASS" if body.passed else "FAIL"
-        logger.info("===TEST_END=== %s %s", body.title, state)
+        logger.info("===TEST_END=== %s %s", body.title, state)  # NOSONAR
     return {"ok": True}

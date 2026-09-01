@@ -12,6 +12,7 @@ from src.controllers.admin.season_controller import (
     season_public_controller,
 )
 from src.controllers.admin.user_admin_controller import user_admin_controller
+from src.controllers.admin.vision_stats_controller import vision_stats_controller
 from src.controllers.admin.war_admin_controller import war_admin_controller
 from src.controllers.alliance.alliance_core_controller import alliance_core_controller
 from src.controllers.alliance.alliance_invitation_controller import alliance_invitation_controller
@@ -69,4 +70,5 @@ routers = [
     fight_record_controller,
     ranking_history_controller,
     stats_controller,
+    vision_stats_controller,
 ]

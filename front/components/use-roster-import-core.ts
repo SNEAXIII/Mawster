@@ -153,7 +153,8 @@ export function rediffRow(
   return {
     ...rebuilt,
     confidence: row.confidence,
-    cropUrl: row.cropUrl,
+    spriteUrl: row.spriteUrl,
+    cropIndex: row.cropIndex,
     prediction_id: row.prediction_id,
     editable: row.editable,
     candidates: row.candidates,
@@ -245,6 +246,8 @@ export function useRosterImportCore({
             newSignature: row.newSignature,
             oldRarity: row.oldRarity,
             oldSignature: row.oldSignature,
+            newAscension: row.ascension ?? 0,
+            oldAscension: row.oldAscension ?? null,
           })
         }
 
@@ -261,6 +264,8 @@ export function useRosterImportCore({
             newSignature: row.newSignature,
             oldRarity: row.oldRarity,
             oldSignature: row.oldSignature,
+            newAscension: row.ascension ?? 0,
+            oldAscension: row.oldAscension ?? null,
           })
         }
       } catch (err) {
@@ -278,6 +283,8 @@ export function useRosterImportCore({
             newSignature: row.newSignature,
             oldRarity: row.oldRarity,
             oldSignature: row.oldSignature,
+            newAscension: row.ascension ?? 0,
+            oldAscension: row.oldAscension ?? null,
             error:
               (err instanceof Error ? err.message : undefined) || t.roster.importExport.serverError,
           })

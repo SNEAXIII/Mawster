@@ -1,13 +1,10 @@
 ---
 name: model-dto-audit
 description: >
-  Audit SQLModel models and Pydantic DTOs for duplicated/inconsistent field
-  definitions and propose DRY refactors (shared mixins, base classes, aligned
-  constraints). Use this whenever the user wants to "keep the backend clean",
-  reduce duplication between models, fix model/DTO inconsistency, factor repeated
-  fields into a mixin, or before adding a model/DTO and worrying about drift —
-  even if they don't say the word "audit". The whole point is single source of
-  truth: a field defined once can't drift out of sync.
+  Audit SQLModel models and Pydantic DTOs for duplicated or inconsistent fields, and propose DRY
+  refactors — shared mixins, base classes, aligned constraints. Déclencheurs — "keep the backend
+  clean", duplication entre models, incohérence model/DTO, factoriser des champs dans un mixin, ou
+  avant d'ajouter un model/DTO.
 user-invocable: true
 ---
 

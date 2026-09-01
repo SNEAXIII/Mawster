@@ -1,6 +1,10 @@
 ---
 name: split-e2e-tests
-description: Use when Cypress E2E spec files have grown too big (many it() blocks mixing several concerns) and need splitting into smaller, purpose-focused files — and when you need to verify a split stayed coherent (no test lost, no duplicate, setup preserved). Triggers on "split the e2e tests", "this cy.ts file is too big", "which specs are the largest", "découper les tests e2e", "vérifier la cohérence des tests".
+description: >
+  Découper un spec Cypress devenu trop gros en fichiers ciblés, et vérifier que le découpage n'a
+  rien perdu (aucun test manquant ou dupliqué, setup préservé). Déclencheurs — "split the e2e
+  tests", "ce fichier cy.ts est trop gros", "découper les tests e2e", "which specs are the
+  largest".
 user-invocable: true
 ---
 

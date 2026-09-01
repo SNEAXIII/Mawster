@@ -8,27 +8,19 @@ import { SearchInput } from '@/components/search-input'
 import ChampionPortrait from '@/components/champion-portrait'
 import { cn } from '@/app/lib/utils'
 import { getClassColors, shortenChampionName } from '@/app/services/roster'
+import { type Champion, getChampions } from '@/app/services/champions'
 import { type WarPlacement } from '@/app/services/war'
 import { Separator } from '@/components/ui/separator'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import AttackerEntryRow from './attacker-entry-row'
 
-const PROXY = '/api/back'
-
-interface ChampionEntry {
-  id: string
-  name: string
-  champion_class: string
-  image_url: string | null
-  is_ascendable: boolean
-  is_saga_attacker: boolean
-  is_saga_defender: boolean
-}
-
 interface SelectedRarity {
   stars: number
   rank: number
 }
+
+/** Champions fetched per page by the grid's "load more". */
+const PAGE_SIZE = 60
 
 const WAR_RARITIES: { label: string; stars: number; rank: number }[] = [
   { label: '6R4', stars: 6, rank: 4 },
@@ -63,14 +55,14 @@ export default function WarDefenderSelector({
   onSelect,
 }: Readonly<WarDefenderSelectorProps>) {
   const { t } = useI18n()
-  const [champions, setChampions] = useState<ChampionEntry[]>([])
+  const [champions, setChampions] = useState<Champion[]>([])
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(false)
 
   // Selection state
-  const [selected, setSelected] = useState<ChampionEntry | null>(null)
+  const [selected, setSelected] = useState<Champion | null>(null)
   const [selectedRarity, setSelectedRarity] = useState<SelectedRarity>({ stars: 7, rank: 3 })
   const [ascension, setAscension] = useState(0)
   const [showReplaceConfirm, setShowReplaceConfirm] = useState(false)
@@ -79,16 +71,12 @@ export default function WarDefenderSelector({
   const fetchChampions = useCallback(async (q: string, p: number) => {
     setLoading(true)
     try {
-      const params = new URLSearchParams({ page: String(p), size: '60' })
-      if (q) params.set('search', q)
-      const res = await fetch(`${PROXY}/champions?${params}`, {
-        headers: { Accept: 'application/json' },
-      })
-      if (!res.ok) return
-      const data = await res.json()
+      const data = await getChampions(p, PAGE_SIZE, null, q)
       setChampions(p === 1 ? data.champions : (prev) => [...prev, ...data.champions])
       setTotalPages(data.total_pages)
       setPage(p)
+    } catch {
+      // Keep whatever is already listed; reopening the dialog retries.
     } finally {
       setLoading(false)
     }
@@ -108,7 +96,7 @@ export default function WarDefenderSelector({
     }
   }, [open])
 
-  const handleChampionClick = (champ: ChampionEntry) => {
+  const handleChampionClick = (champ: Champion) => {
     setSelected(champ)
     setAscension(0)
   }
@@ -147,9 +135,6 @@ export default function WarDefenderSelector({
                 name={selected.name}
                 rarity={`${selectedRarity.stars}r${selectedRarity.rank}`}
                 size={48}
-                is_saga_attacker={selected.is_saga_attacker}
-                is_saga_defender={selected.is_saga_defender}
-                sagaMode='defender'
               />
               <div>
                 <div className='text-sm font-semibold'>{selected.name}</div>
@@ -242,9 +227,6 @@ export default function WarDefenderSelector({
                               name={champ.name}
                               rarity='7r3'
                               size={48}
-                              is_saga_attacker={champ.is_saga_attacker}
-                              is_saga_defender={champ.is_saga_defender}
-                              sagaMode='defender'
                             />
                             <span className='text-[10px] text-center truncate w-full leading-tight'>
                               {shortenChampionName(champ.name)}
@@ -280,9 +262,6 @@ export default function WarDefenderSelector({
                   name={selected.name}
                   rarity={`${selectedRarity.stars}r${selectedRarity.rank}`}
                   size={56}
-                  is_saga_attacker={selected.is_saga_attacker}
-                  is_saga_defender={selected.is_saga_defender}
-                  sagaMode='defender'
                 />
                 <div>
                   <div className='font-semibold'>{selected.name}</div>

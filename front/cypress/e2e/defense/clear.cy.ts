@@ -20,8 +20,7 @@ describe('Defense – Clear All', () => {
           );
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('defender-count-ClearPlyr').should('contain', '2/5');
 
@@ -43,8 +42,7 @@ describe('Defense – Clear All', () => {
             .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 10, cu.id, ownerAccId)),
         );
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-10').should('contain', 'ClrMapPlyr');
 
@@ -65,8 +63,7 @@ describe('Defense – Clear All', () => {
             .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('defense-clear-all').click();
         cy.contains('button', 'Confirm').click();
@@ -85,8 +82,7 @@ describe('Defense – Clear All', () => {
             .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('defender-count-ClrCancelPlyr').should('contain', '1/5');
 

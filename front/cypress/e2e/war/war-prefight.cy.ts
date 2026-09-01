@@ -49,8 +49,7 @@ describe('War Prefight', () => {
     setupPrefightScenario('pf1').then(({ memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-      cy.apiLogin(memberData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(memberData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
       cy.getByCy('node-actions-trigger-node-10').click();
@@ -71,8 +70,7 @@ describe('War Prefight', () => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.apiAddWarPrefight(memberData.access_token, allianceId, warId, 1, prefightChampionUserId, 10);
 
-      cy.apiLogin(memberData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(memberData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
       cy.getByCy('node-actions-trigger-node-10').click();
@@ -225,8 +223,7 @@ describe('War Prefight', () => {
             is_preferred_attacker: true,
           });
 
-          cy.apiLogin(memberData.user_id);
-          cy.visit('/game/war');
+          cy.apiLogin(memberData.user_id, 'war');
           cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
           cy.getByCy('node-actions-trigger-node-10').click();
@@ -244,8 +241,7 @@ describe('War Prefight', () => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
       cy.apiAddWarPrefight(memberData.access_token, allianceId, warId, 1, prefightChampionUserId, 10);
 
-      cy.apiLogin(memberData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(memberData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('prefight-entry-node-10').should('be.visible');
     });

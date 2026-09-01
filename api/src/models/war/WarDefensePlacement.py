@@ -1,0 +1,61 @@
+import uuid
+from typing import TYPE_CHECKING, Optional
+
+import sqlalchemy as sa
+from sqlmodel import Field, Relationship
+
+from src.models.Base import (
+    FK_CHAMPION_USER,
+    FK_WAR,
+    Ascension,
+    Battlegroup,
+    ChampionFk,
+    KoCount,
+    NodeNumber,
+    PlacedByFk,
+    Rank,
+    Stars,
+    TimestampMixin,
+    UUIDBase,
+)
+
+if TYPE_CHECKING:
+    from src.models.champion.Champion import Champion
+    from src.models.champion.ChampionUser import ChampionUser
+    from src.models.user.GameAccount import GameAccount
+    from src.models.war.War import War
+
+
+class WarDefensePlacement(UUIDBase, PlacedByFk, ChampionFk, TimestampMixin, table=True):
+    __tablename__ = "war_defense_placement"
+    __table_args__ = (
+        sa.UniqueConstraint("war_id", "battlegroup", "node_number", name="uq_war_defense_node"),
+    )
+
+    war_id: uuid.UUID = Field(foreign_key=FK_WAR)
+    battlegroup: Battlegroup
+    node_number: NodeNumber
+    stars: Stars
+    rank: Rank
+    ascension: Ascension = 0
+    attacker_champion_user_id: uuid.UUID | None = Field(default=None, foreign_key=FK_CHAMPION_USER)
+    assist_champion_user_id: uuid.UUID | None = Field(default=None, foreign_key=FK_CHAMPION_USER)
+    ko_count: KoCount = 0
+    is_combat_completed: bool = Field(default=False)
+    is_fight_not_done: bool = Field(default=False)
+    is_planning_error: bool = Field(default=False)
+
+    # Relations
+    war: "War" = Relationship(back_populates="placements")
+    champion: "Champion" = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[WarDefensePlacement.champion_id]"},
+    )
+    placed_by: Optional["GameAccount"] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[WarDefensePlacement.placed_by_id]"},
+    )
+    attacker_champion_user: Optional["ChampionUser"] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[WarDefensePlacement.attacker_champion_user_id]"},
+    )
+    assist_champion_user: Optional["ChampionUser"] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[WarDefensePlacement.assist_champion_user_id]"},
+    )

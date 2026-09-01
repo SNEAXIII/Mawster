@@ -14,8 +14,7 @@ describe('War note – input limit and save guard', () => {
       // The note popover only renders on nodes with an assigned attacker.
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-      cy.apiLogin(ownerData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
       cy.getByCy('node-actions-trigger-node-10').click();
 

@@ -9,8 +9,7 @@ describe('Alliance ownership transfer', () => {
     setupOwnerMemberAlliance('transfer-vis', 'TransferOwner', 'PlainMember', 'TransferAlliance', 'TRA').then(
       ({ ownerData, allianceId, memberAccId }) => {
         // plain member — button must NOT appear
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
         cy.getByCy('alliance-card-TransferAlliance')
           .should('be.visible')
           .within(() => {
@@ -37,8 +36,7 @@ describe('Alliance ownership transfer', () => {
       ({ ownerData, allianceId, memberAccId }) => {
         cy.apiAddOfficer(ownerData.access_token, allianceId, memberAccId);
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         cy.getByCy('alliance-card-InputAlliance')
           .should('be.visible')
@@ -63,8 +61,7 @@ describe('Alliance ownership transfer', () => {
       ({ ownerData, allianceId, memberAccId }) => {
         cy.apiAddOfficer(ownerData.access_token, allianceId, memberAccId);
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(ownerData.user_id, 'alliances');
 
         cy.getByCy('alliance-card-SwapAlliance')
           .should('be.visible')
@@ -93,8 +90,7 @@ describe('Alliance ownership transfer', () => {
       ({ ownerData, allianceId, memberData, memberAccId }) => {
         cy.apiAddOfficer(ownerData.access_token, allianceId, memberAccId);
 
-        cy.apiLogin(memberData.user_id);
-        cy.navTo('alliances');
+        cy.apiLogin(memberData.user_id, 'alliances');
 
         cy.getByCy('alliance-card-OfficerAlliance')
           .should('be.visible')

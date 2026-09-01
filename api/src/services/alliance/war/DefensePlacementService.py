@@ -16,11 +16,11 @@ from src.Messages.defense_messages import (
     node_exceeds_map,
     player_max_defenders_reached,
 )
-from src.models.Alliance import Alliance
-from src.models.AllianceOfficer import AllianceOfficer
-from src.models.ChampionUser import ChampionUser
-from src.models.DefensePlacement import DefensePlacement
-from src.models.GameAccount import GameAccount
+from src.models.alliance.Alliance import Alliance
+from src.models.alliance.AllianceOfficer import AllianceOfficer
+from src.models.alliance.DefensePlacement import DefensePlacement
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.user.GameAccount import GameAccount
 from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
 from src.services.alliance.war.WarFormatConfig import for_format
@@ -215,6 +215,32 @@ class DefensePlacementService:
         await session.commit()
 
     @classmethod
+    async def remove_placements_for_member(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        game_account_id: uuid.UUID,
+    ) -> int:
+        """Remove every defender placed by a member on the alliance defense.
+
+        Called when a member leaves or is kicked: their roster is no longer
+        available to the alliance, so the nodes they occupied must be freed.
+        Flushes but does not commit — the caller owns the transaction.
+        Returns the number of placements deleted."""
+        stmt = select(DefensePlacement).where(
+            and_(
+                DefensePlacement.alliance_id == alliance_id,
+                DefensePlacement.game_account_id == game_account_id,
+            )
+        )
+        result = await session.exec(stmt)
+        placements = result.all()
+        for p in placements:
+            await session.delete(p)
+        await session.flush()
+        return len(placements)
+
+    @classmethod
     async def clear_defense(
         cls,
         session: SessionDep,
@@ -356,8 +382,7 @@ class DefensePlacementService:
             group["owners"].sort(key=lambda o: (-o["stars"], -o["rank"], o["defender_count"]))
 
         # Sort champions alphabetically
-        result = sorted(champion_groups.values(), key=lambda g: g["champion_name"])
-        return result
+        return sorted(champion_groups.values(), key=lambda g: g["champion_name"])
 
     @classmethod
     async def get_bg_members_with_counts(

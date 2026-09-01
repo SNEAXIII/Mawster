@@ -13,7 +13,7 @@ import uuid
 import pytest
 
 from src.enums.SeasonFormat import SeasonFormat
-from src.models.Season import Season
+from src.models.war.Season import Season
 from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
 

@@ -1,0 +1,27 @@
+name: Release Please
+
+# Keeps a standing "chore(main): release X.Y.Z" pull request carrying the CHANGELOG entry and the
+# bumped version. Merging it tags the release; nothing is published before that.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  release-please:
+    name: Maintain the release pull request
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          # BOT_TOKEN, not GITHUB_TOKEN: a pull request opened by the latter triggers no
+          # workflow, so the release PR would never get a CI run.
+          token: ${{ secrets.BOT_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

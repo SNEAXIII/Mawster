@@ -10,6 +10,6 @@ class RefreshTokenRequest(BaseModel):
 
 
 class LoginResponse(BaseModel):
-    token_type: str = Field(examples=["bearer"])
+    token_type: str = Field(default="bearer", examples=["bearer"])
     access_token: str = Field(examples=["access_token"])
     refresh_token: str = Field(examples=["refresh_token"])

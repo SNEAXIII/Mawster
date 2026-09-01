@@ -1,4 +1,5 @@
-from src.models.ChampionSagaRole import ChampionSagaRole
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionSagaRole import ChampionSagaRole
 
 
 def test_champion_saga_role_defaults():
@@ -8,7 +9,6 @@ def test_champion_saga_role_defaults():
 
 
 def test_champion_has_no_global_saga_fields():
-    from src.models.Champion import Champion
 
     assert not hasattr(Champion(name="x", champion_class="Cosmic"), "is_saga_attacker")
     assert not hasattr(Champion(name="x", champion_class="Cosmic"), "is_saga_defender")

@@ -67,8 +67,7 @@ function openSynergyWithDeadpoolAndStorm(
 ) {
   cy.apiAssignWarAttacker(memberToken, allianceId, warId, 1, 10, championUserId);
   loadTwoChampsAddToRoster(adminToken, memberToken, memberAccId, 'Deadpool', 'Mutant', 'Storm', 'Mutant', () => {
-    cy.apiLogin(memberUserId);
-    cy.visit('/game/war');
+    cy.apiLogin(memberUserId, 'war');
     cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
     cy.getByCy('synergy-trigger-Wolverine').click();
     cy.getByCy('synergy-add-Wolverine').click();
@@ -93,8 +92,7 @@ describe('War Synergy', () => {
           const synChamp = champs[0];
           cy.apiAddChampionToRoster(memberData.access_token, memberAccId, synChamp.id, '7r3').then((synCu) => {
             // Visit war page
-            cy.apiLogin(memberData.user_id);
-            cy.visit('/game/war');
+            cy.apiLogin(memberData.user_id, 'war');
             cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
             // Click the attacker portrait to open synergy popover
@@ -128,8 +126,7 @@ describe('War Synergy', () => {
           cy.apiAddChampionToRoster(memberData.access_token, memberAccId, synChamp.id, '7r3').then((synCu) => {
             cy.apiAddWarSynergy(memberData.access_token, allianceId, warId, 1, synCu.id, championUserId);
 
-            cy.apiLogin(memberData.user_id);
-            cy.visit('/game/war');
+            cy.apiLogin(memberData.user_id, 'war');
             cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
             // Open popover on the node attacker
@@ -289,8 +286,7 @@ describe('War Synergy', () => {
           });
         });
 
-        cy.apiLogin(memberData.user_id);
-        cy.visit('/game/war');
+        cy.apiLogin(memberData.user_id, 'war');
         cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
         cy.getByCy('synergy-trigger-Wolverine').click();
@@ -329,8 +325,7 @@ describe('War Synergy', () => {
     setupAttackerScenario('syn8').then(({ memberData, allianceId, warId, championUserId }) => {
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-      cy.apiLogin(memberData.user_id);
-      cy.visit('/game/war');
+      cy.apiLogin(memberData.user_id, 'war');
       cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
       cy.getByCy('synergy-trigger-Wolverine').click();

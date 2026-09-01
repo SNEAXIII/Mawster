@@ -29,25 +29,26 @@ from src.enums.InvitationStatus import InvitationStatus
 from src.enums.Roles import Roles
 from src.enums.SeasonFormat import SeasonFormat
 from src.enums.SeasonStatus import SeasonStatus
+from src.enums.WarStatus import WarStatus
 from src.fixtures import sync_engine
 from src.models import LoginLog, User
-from src.models.Alliance import Alliance
-from src.models.AllianceInvitation import AllianceInvitation
-from src.models.AllianceOfficer import AllianceOfficer
-from src.models.AllianceVisitor import AllianceVisitor
+from src.models.alliance.Alliance import Alliance
+from src.models.alliance.AllianceInvitation import AllianceInvitation
+from src.models.alliance.AllianceOfficer import AllianceOfficer
+from src.models.alliance.AllianceVisitor import AllianceVisitor
 from src.models.Base import utcnow
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.GameAccount import GameAccount
-from src.models.GameAccountMastery import GameAccountMastery
-from src.models.Mastery import Mastery
-from src.models.RequestedUpgrade import RequestedUpgrade
-from src.models.Season import Season
-from src.models.War import War, WarStatus
-from src.models.WarBan import WarBan
-from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.WarPrefightAttacker import WarPrefightAttacker
-from src.models.WarSynergyAttacker import WarSynergyAttacker
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.champion.RequestedUpgrade import RequestedUpgrade
+from src.models.user.GameAccount import GameAccount
+from src.models.user.GameAccountMastery import GameAccountMastery
+from src.models.user.Mastery import Mastery
+from src.models.war.Season import Season
+from src.models.war.War import War
+from src.models.war.WarBan import WarBan
+from src.models.war.WarDefensePlacement import WarDefensePlacement
+from src.models.war.WarPrefightAttacker import WarPrefightAttacker
+from src.models.war.WarSynergyAttacker import WarSynergyAttacker
 from src.utils.email_hash import hash_email
 
 fake = Faker(locale="en")
@@ -276,7 +277,9 @@ def _build_roster(
     return entries
 
 
-def load_sample_data(engine=sync_engine):
+# Refactor candidate: one long linear seed script (26 complexity, 165 statements).
+# Splitting it per entity would make it readable, but nothing depends on that today.
+def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
     try:
         with Session(engine) as session:
             # ── Champion catalogue ────────────────────────────────────────────────
@@ -393,7 +396,7 @@ def load_sample_data(engine=sync_engine):
 
                 session.add(
                     LoginLog(
-                        id_user=user.id,
+                        user_id=user.id,
                         date_connexion=fake.date_time_between(start_date="-30d", end_date=NOW),
                     )
                 )

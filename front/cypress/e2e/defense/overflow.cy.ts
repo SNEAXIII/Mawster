@@ -39,8 +39,7 @@ describe('Defense – Overflow & Error Cases', () => {
               cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, i + 1, cuId, ownerAccId);
             });
 
-            cy.apiLogin(ownerData.user_id);
-            cy.navTo('defense');
+            cy.apiLogin(ownerData.user_id, 'defense');
 
             // Verify counter shows 5/5
             cy.getByCy('defender-count-FullOwn').scrollIntoView().should('contain', '5/5');
@@ -83,8 +82,7 @@ describe('Defense – Overflow & Error Cases', () => {
             });
           })
           .then(() => {
-            cy.apiLogin(ownerData.user_id);
-            cy.navTo('defense');
+            cy.apiLogin(ownerData.user_id, 'defense');
 
             // Counter should be red (text-destructive CSS class)
             cy.getByCy('defender-count-RedCntPlyr').should('contain', '5/5').and('have.class', 'text-destructive');
@@ -102,8 +100,7 @@ describe('Defense – Overflow & Error Cases', () => {
             .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('defender-count-NormCntPlyr').should('contain', '1/5').and('not.have.class', 'text-red-400');
       },
@@ -120,8 +117,7 @@ describe('Defense – Overflow & Error Cases', () => {
         cy.apiCreateAlliance(access_token, 'EmptyRosterAll', 'ER', acc.id).then((alliance) => {
           cy.apiSetMemberGroup(access_token, alliance.id, acc.id, 1);
 
-          cy.apiLogin(user_id);
-          cy.navTo('defense');
+          cy.apiLogin(user_id, 'defense');
 
           cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
           cy.contains('No champions available').should('be.visible');
@@ -139,8 +135,7 @@ describe('Defense – Overflow & Error Cases', () => {
             .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
         );
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         // Open selector for a different node — only champion is already placed
         cy.getByCy('war-node-2').scrollIntoView().click({ force: true });
@@ -161,8 +156,7 @@ describe('Defense – Overflow & Error Cases', () => {
           return cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r4');
         });
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
         cy.contains('Select Champion').should('be.visible');
@@ -189,8 +183,7 @@ describe('Defense – Overflow & Error Cases', () => {
         cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
       );
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.contains('Select Champion').should('be.visible');
@@ -217,8 +210,7 @@ describe('Defense – Overflow & Error Cases', () => {
         }),
       );
 
-      cy.apiLogin(ownerData.user_id);
-      cy.navTo('defense');
+      cy.apiLogin(ownerData.user_id, 'defense');
 
       cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
       cy.getByCy('champion-card-Spider-Man').click();
@@ -245,8 +237,7 @@ describe('Defense – Overflow & Error Cases', () => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
         );
 
-        cy.apiLogin(ownerData.user_id);
-        cy.navTo('defense');
+        cy.apiLogin(ownerData.user_id, 'defense');
 
         cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
 

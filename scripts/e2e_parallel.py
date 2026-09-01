@@ -172,7 +172,8 @@ def create_db(worker: int) -> None:
     )
     result = _run_sql(sql)
     if result.returncode != 0:
-        raise RuntimeError(f"Failed to create DB {db}: {result.stderr}")
+        msg = f"Failed to create DB {db}: {result.stderr}"
+        raise RuntimeError(msg)
     log(f"Worker {worker}: database {db} created.")
 
 
@@ -190,7 +191,8 @@ def wait_for_http(url: str, label: str, timeout: int = HEALTH_TIMEOUT) -> None:
             return
         except Exception:
             time.sleep(0.5)
-    raise TimeoutError(f"{label} at {url} did not become ready within {timeout}s")
+    msg = f"{label} at {url} did not become ready within {timeout}s"
+    raise TimeoutError(msg)
 
 
 def parse_cypress_failures(cypress_log: Path) -> list[dict]:
@@ -458,7 +460,8 @@ def build_frontend(base_env: dict) -> None:
         check=False,  # the returncode is checked right below, with a clearer message
     )
     if result.returncode != 0:
-        raise RuntimeError("next build failed")
+        msg = "next build failed"
+        raise RuntimeError(msg)
     log("Frontend build complete.")
 
 

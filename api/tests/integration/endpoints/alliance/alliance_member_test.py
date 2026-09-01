@@ -3,11 +3,18 @@
 import uuid
 
 import pytest
+from sqlmodel import select
 
 from main import app
+from src.models.alliance.DefensePlacement import DefensePlacement
+from src.models.Base import utcnow
+from src.models.champion.RequestedUpgrade import RequestedUpgrade
+from src.models.user.GameAccount import GameAccount
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
+    push_champion,
+    push_champion_user,
     push_game_account,
     push_member,
     push_officer,
@@ -52,6 +59,55 @@ async def _setup_2_users():
     u2.id = USER2_ID
     u2.discord_id = DISCORD_ID_2
     await load_objects([u1, u2])
+
+
+async def _push_placement(alliance, account, node_number, champion_name, battlegroup=1):
+    """Put one of the account's champions on a defense node. Returns the placement."""
+    champion = await push_champion(name=champion_name, champion_class="Science")
+    champion_user = await push_champion_user(account, champion)
+    placement = DefensePlacement(
+        alliance_id=alliance.id,
+        battlegroup=battlegroup,
+        node_number=node_number,
+        champion_user_id=champion_user.id,
+        game_account_id=account.id,
+    )
+    await load_objects([placement])
+    return placement
+
+
+async def _push_member_in_group(alliance, user_id, game_pseudo, group):
+    """Add a member to the alliance, already assigned to a battlegroup."""
+    member = await push_member(alliance, user_id=user_id, game_pseudo=game_pseudo)
+    member.alliance_group = group
+    await load_objects([member])
+    return member
+
+
+async def _push_upgrade_request(account, champion_name, requester, rarity="7r5", done_at=None):
+    """Ask for a rank-up on one of the account's champions. Returns the request."""
+    champion = await push_champion(name=champion_name, champion_class="Science")
+    champion_user = await push_champion_user(account, champion)
+    request = RequestedUpgrade(
+        champion_user_id=champion_user.id,
+        requester_game_account_id=requester.id,
+        requested_rarity=rarity,
+        done_at=done_at,
+    )
+    await load_objects([request])
+    return request
+
+
+async def _upgrade_request_ids(session):
+    result = await session.exec(select(RequestedUpgrade))
+    return {r.id for r in result.all()}
+
+
+async def _placement_ids(session, alliance_id):
+    result = await session.exec(
+        select(DefensePlacement).where(DefensePlacement.alliance_id == alliance_id)
+    )
+    return {p.id for p in result.all()}
 
 
 # =========================================================================
@@ -159,6 +215,187 @@ class TestRemoveMember:
             headers=HEADERS_USER1,
         )
         assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_regular_member_can_leave(self):
+        """A member can always pull out their own game account."""
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER2,
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_officer_can_leave(self):
+        """An officer is not blocked by the officer-vs-officer rule on their own account."""
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        officer_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        await push_officer(alliance, officer_acc)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{officer_acc.id}",
+            headers=HEADERS_USER2,
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_owner_cannot_leave_without_transferring(self):
+        """The owner must transfer ownership first — leaving is still rejected."""
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{owner.id}",
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 400
+
+
+# =========================================================================
+# Leaving / being kicked frees the defense nodes
+# =========================================================================
+
+
+class TestRemoveMemberClearsDefense:
+    """A departed member's champions are gone from the alliance, so their
+    defense placements must not stay on the war map."""
+
+    @pytest.mark.asyncio
+    async def test_kicked_member_defense_is_cleared(self, session):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        owner_placement = await _push_placement(alliance, owner, 1, "Spider-Man")
+        await _push_placement(alliance, member, 2, "Wolverine")
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _placement_ids(session, alliance.id) == {owner_placement.id}
+
+    @pytest.mark.asyncio
+    async def test_member_leaving_clears_own_defense(self, session):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        owner_placement = await _push_placement(alliance, owner, 1, "Spider-Man")
+        await _push_placement(alliance, member, 2, "Wolverine")
+        await _push_placement(alliance, member, 3, "Iron Man", battlegroup=2)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER2,
+        )
+        assert response.status_code == 200
+        # Every battlegroup is cleaned, not just the one they were placed in
+        assert await _placement_ids(session, alliance.id) == {owner_placement.id}
+
+    @pytest.mark.asyncio
+    async def test_other_alliance_defense_is_untouched(self, session):
+        """The member is only cleaned out of the alliance they are leaving."""
+        await _setup_2_users()
+        alliance, _owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        other_alliance, other_owner = await push_alliance_with_owner(
+            user_id=USER_ID,
+            game_pseudo=GAME_PSEUDO_3,
+            alliance_name="OtherAlliance",
+            alliance_tag="OTHR",
+        )
+        await _push_placement(alliance, member, 1, "Spider-Man")
+        other_placement = await _push_placement(other_alliance, other_owner, 1, "Wolverine")
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _placement_ids(session, alliance.id) == set()
+        assert await _placement_ids(session, other_alliance.id) == {other_placement.id}
+
+
+# =========================================================================
+# Leaving / being kicked cancels the pending upgrade requests
+# =========================================================================
+
+
+class TestRemoveMemberCancelsUpgradeRequests:
+    """A rank-up request is the alliance asking a member for a champion. Once
+    the member is out, the request is moot — and unreachable, since cancelling
+    it goes through an officer of the champion owner's alliance."""
+
+    @pytest.mark.asyncio
+    async def test_kicked_member_pending_requests_are_cancelled(self, session):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        owner_request = await _push_upgrade_request(owner, "Spider-Man", requester=owner)
+        await _push_upgrade_request(member, "Wolverine", requester=owner)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _upgrade_request_ids(session) == {owner_request.id}
+
+    @pytest.mark.asyncio
+    async def test_member_leaving_cancels_own_pending_requests(self, session):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        owner_request = await _push_upgrade_request(owner, "Spider-Man", requester=owner)
+        await _push_upgrade_request(member, "Wolverine", requester=owner)
+        await _push_upgrade_request(member, "Iron Man", requester=member)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER2,
+        )
+        assert response.status_code == 200
+        # Their own self-request goes too — it was an alliance-visible ask
+        assert await _upgrade_request_ids(session) == {owner_request.id}
+
+    @pytest.mark.asyncio
+    async def test_completed_requests_are_kept(self, session):
+        """A request already marked done is history, not a pending ask."""
+        await _setup_2_users()
+        alliance, _owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        done_request = await _push_upgrade_request(
+            member, "Spider-Man", requester=_owner, done_at=utcnow()
+        )
+        await _push_upgrade_request(member, "Wolverine", requester=_owner)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _upgrade_request_ids(session) == {done_request.id}
+
+    @pytest.mark.asyncio
+    async def test_requests_the_member_made_for_others_are_kept(self, session):
+        """The alliance still wants that rank-up: only the requester left, not
+        the champion."""
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        owner_request = await _push_upgrade_request(owner, "Spider-Man", requester=member)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}",
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _upgrade_request_ids(session) == {owner_request.id}
 
 
 # =========================================================================
@@ -316,7 +553,6 @@ class TestSetMemberGroup:
     async def test_group_over_capacity_returns_409(self):
         """T3: a group is capped at MAX_MEMBERS_PER_GROUP (10). Adding one more past
         the cap must be rejected with 409."""
-        from src.models.GameAccount import GameAccount
 
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
@@ -345,6 +581,69 @@ class TestSetMemberGroup:
             headers=HEADERS_USER1,
         )
         assert response.status_code == 409
+
+
+# =========================================================================
+# Changing battlegroup frees the defense nodes of the old one
+# =========================================================================
+
+
+class TestSetMemberGroupClearsDefense:
+    """A defender only exists on its owner's battlegroup, so moving a member out
+    of a battlegroup must take their defenders off that map."""
+
+    @pytest.mark.asyncio
+    async def test_moving_to_another_group_clears_defense(self, session):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        owner.alliance_group = 1
+        await load_objects([owner])
+        member = await _push_member_in_group(alliance, USER2_ID, GAME_PSEUDO_2, group=1)
+        owner_placement = await _push_placement(alliance, owner, 1, "Spider-Man")
+        await _push_placement(alliance, member, 2, "Wolverine")
+
+        response = await execute_patch_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}/group",
+            {"group": 2},
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _placement_ids(session, alliance.id) == {owner_placement.id}
+
+    @pytest.mark.asyncio
+    async def test_removing_from_group_clears_defense(self, session):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        owner.alliance_group = 1
+        await load_objects([owner])
+        member = await _push_member_in_group(alliance, USER2_ID, GAME_PSEUDO_2, group=1)
+        owner_placement = await _push_placement(alliance, owner, 1, "Spider-Man")
+        await _push_placement(alliance, member, 2, "Wolverine")
+
+        response = await execute_patch_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}/group",
+            {"group": None},
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _placement_ids(session, alliance.id) == {owner_placement.id}
+
+    @pytest.mark.asyncio
+    async def test_setting_the_same_group_keeps_defense(self, session):
+        """Re-sending the group the member already has is a no-op — their
+        defenders are still on the right map and must survive."""
+        await _setup_2_users()
+        alliance, _owner = await push_alliance_with_owner(user_id=USER_ID)
+        member = await _push_member_in_group(alliance, USER2_ID, GAME_PSEUDO_2, group=1)
+        placement = await _push_placement(alliance, member, 2, "Wolverine")
+
+        response = await execute_patch_request(
+            f"{ENDPOINT}/{alliance.id}/members/{member.id}/group",
+            {"group": 1},
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 200
+        assert await _placement_ids(session, alliance.id) == {placement.id}
 
 
 # =========================================================================

@@ -10,8 +10,7 @@ describe('Roster – Vision import how-to dialog', () => {
 
   function visitRoster(prefix: string, pseudo: string) {
     return setupRosterUser(prefix, pseudo).then((data) => {
-      cy.apiLogin(data.userData.user_id);
-      cy.navTo('roster');
+      cy.apiLogin(data.userData.user_id, 'roster');
       return cy.wrap(data);
     });
   }

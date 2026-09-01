@@ -13,7 +13,7 @@ from src.enums.ChampionClass import ChampionClass
 from src.Messages.champion_messages import (
     CHAMPION_NOT_FOUND,
 )
-from src.models.Champion import Champion
+from src.models.champion.Champion import Champion
 from src.utils.db import SessionDep
 
 VALID_CLASSES = {c.value for c in ChampionClass}

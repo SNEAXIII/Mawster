@@ -11,16 +11,14 @@ describe('Game Accounts – UI', () => {
 
   it('shows the game accounts section on the profile page', () => {
     setupUser('ga-section-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
       cy.contains('Game Accounts').should('be.visible');
     });
   });
 
   it('shows empty state when no accounts exist', () => {
     setupUser('ga-empty-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
       cy.contains('No game accounts yet').scrollIntoView().should('be.visible');
     });
   });
@@ -31,8 +29,7 @@ describe('Game Accounts – UI', () => {
 
   it('creates a game account via the profile form', () => {
     setupUser('ga-create-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
 
       cy.getByCy('account-pseudo-input').scrollIntoView().type('MyGamePseudo');
       cy.getByCy('account-create-btn').click();
@@ -44,8 +41,7 @@ describe('Game Accounts – UI', () => {
 
   it('shows the Primary badge on the first created account', () => {
     setupUser('ga-primary-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
 
       cy.getByCy('account-pseudo-input').scrollIntoView().type('PrimaryPlayer');
       cy.getByCy('account-create-btn').click();
@@ -60,8 +56,7 @@ describe('Game Accounts – UI', () => {
       cy.apiCreateGameAccount(access_token, 'Account1', true);
       cy.apiCreateGameAccount(access_token, 'Account2', false);
 
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
       cy.contains('2/10 accounts').scrollIntoView().should('be.visible');
     });
   });
@@ -72,8 +67,7 @@ describe('Game Accounts – UI', () => {
 
   it('shows validation error when pseudo contains invalid characters', () => {
     setupUser('ga-invalid-token').then(({ user_id }) => {
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
 
       cy.getByCy('account-pseudo-input').scrollIntoView().type('bad-pseudo!');
       cy.getByCy('account-create-btn').click();
@@ -87,8 +81,7 @@ describe('Game Accounts – UI', () => {
     setupUser('ga-edit-invalid-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'ValidPseudo', true);
 
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
 
       cy.getByCy('account-row-ValidPseudo').find('[data-cy="account-edit-btn-0"]').click({ force: true });
       cy.get('input[maxlength="16"]').clear().type('bad-name!');
@@ -107,8 +100,7 @@ describe('Game Accounts – UI', () => {
     setupUser('ga-edit-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'OldPseudo', true);
 
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
       cy.contains('OldPseudo').scrollIntoView().should('be.visible');
 
       cy.getByCy('account-row-OldPseudo').find('[data-cy="account-edit-btn-0"]').click({ force: true });
@@ -125,21 +117,21 @@ describe('Game Accounts – UI', () => {
   // Delete
   // =========================================================================
 
-  it('deletes a game account with confirmation dialog', () => {
+  it('deletes a game account after typing its name in the confirmation dialog', () => {
     setupUser('ga-delete-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'ToDelete', true);
 
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
       cy.contains('ToDelete').scrollIntoView().should('be.visible');
 
       cy.getByCy('account-row-ToDelete').find('[data-cy="account-delete-btn"]').click({ force: true });
 
       cy.get('[role="alertdialog"]').should('be.visible');
-      cy.get('[role="alertdialog"]').contains('button', 'Delete').click();
+      cy.getByCy('confirm-text-input').type('ToDelete');
+      cy.getByCy('confirmation-dialog-confirm').click();
 
       cy.contains('Game account deleted successfully').should('be.visible');
-      cy.contains('ToDelete').should('not.exist');
+      cy.getByCy('account-row-ToDelete').should('not.exist');
     });
   });
 
@@ -152,8 +144,7 @@ describe('Game Accounts – UI', () => {
       cy.apiCreateGameAccount(access_token, 'Account1', true);
       cy.apiCreateGameAccount(access_token, 'Account2', false);
 
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
       cy.getByCy('account-row-Account1').scrollIntoView().find('[data-cy^="account-star-btn"]').should('be.disabled');
       cy.getByCy('account-row-Account2')
         .scrollIntoView()
@@ -174,8 +165,7 @@ describe('Game Accounts – UI', () => {
     setupUser('ga-newprim-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'MainAccount', true);
 
-      cy.apiLogin(user_id);
-      cy.navTo('profile');
+      cy.apiLogin(user_id, 'profile');
 
       cy.getByCy('collapsible-add-a-game-account').scrollIntoView().click();
       cy.getByCy('account-pseudo-input').scrollIntoView().type('SecondAccount');

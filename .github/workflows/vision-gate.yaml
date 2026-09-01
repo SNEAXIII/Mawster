@@ -1,0 +1,99 @@
+name: Vision gate
+
+on:
+  pull_request:
+    paths:
+      - 'static-assets/static/champions/**'
+      - 'api/src/fixtures/champions.json'
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: 'ref to compare against'
+        default: 'main'
+        required: false
+      image_tag:
+        description: 'mawster-vision-worker tag to measure against'
+        default: 'latest'
+        required: false
+
+jobs:
+  naming-diff:
+    name: Naming regression report
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    environment: vision
+    env:
+      IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/mawster-vision-worker:${{ inputs.image_tag || 'latest' }}
+    steps:
+      - name: Checkout the pull request
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: mawster-pr
+
+      - name: Checkout the base branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.base_ref || inputs.base_ref }}
+          path: mawster-base
+
+      # Private repo: the default GITHUB_TOKEN cannot read it.
+      - name: Checkout mcoc-vision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: SNEAXIII/mcoc-vision
+          token: ${{ secrets.BOT_TOKEN }}
+          path: mcoc-vision
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # One pull, reused by both runs: the image already carries the venv,
+      # the system libs and the model weights - nothing to install or cache.
+      - name: Pull the worker image
+        run: docker pull "$IMAGE"
+
+      - name: Run the pipeline on both sides
+        run: |
+          set -euo pipefail
+          for side in base pr; do
+            docker run --name "gate-$side" \
+              -v "$PWD/mcoc-vision/data:/app/data:ro" \
+              -v "$PWD/mawster-$side:/mawster:ro" \
+              -e MAWSTER_REPO=/mawster \
+              "$IMAGE" sh -c "
+                python -m src.naming.embed build &&
+                python -m src.pipeline data/real \
+                  --weights out/runs/card_detector/weights/best.onnx --debug &&
+                # eval exits non-zero on a naming regression; tolerated so only
+                # a pipeline crash can fail this job.
+                (python -m src.eval --all --dir data/real || true)" | tee "eval-$side.txt"
+            mkdir -p "gate-out/$side"
+            docker cp "gate-$side:/app/out/debug/." "gate-out/$side/"
+            docker rm "gate-$side"
+          done
+
+      - name: Build the naming diff
+        run: python3 mcoc-vision/src/eval_diff.py gate-out/base gate-out/pr > report.md
+
+      - name: Comment on the pull request
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+        with:
+          header: vision-gate
+          path: report.md
+
+      - name: Upload the before/after runs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: vision-gate-${{ github.run_id }}
+          path: |
+            gate-out/
+            eval-base.txt
+            eval-pr.txt
+          retention-days: 30

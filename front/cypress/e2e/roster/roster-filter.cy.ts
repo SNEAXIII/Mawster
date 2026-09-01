@@ -25,8 +25,7 @@ function seedMixedRoster() {
     cy.apiLoadChampion(adminData.access_token, 'Hyperion', 'Cosmic');
     cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic');
 
-    cy.apiLogin(userData.user_id);
-    cy.navTo('roster');
+    cy.apiLogin(userData.user_id, 'roster');
 
     cy.contains('Add / Update a Champion').click();
     addChampion('Hercules', '7r5', 200);

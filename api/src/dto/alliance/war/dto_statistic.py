@@ -1,14 +1,9 @@
 import uuid
 
-from pydantic import BaseModel, ConfigDict, computed_field
+from pydantic import BaseModel, ConfigDict
 
-KO = -10
-FIGHT = 2
-MINIBOSS = 4
-BOSS = 5
+# Each not-done fight is counted as a fight carrying this many KOs in the ratio.
 NOT_FOUGHT_KOS = 3
-HELPED = -2
-ASSIST = 2
 
 
 class PlayerSeasonStatsResponse(BaseModel):
@@ -30,20 +25,6 @@ class PlayerSeasonStatsResponse(BaseModel):
     avg_fights_per_war: float
     avg_boss_miniboss_per_war: float
     is_current_member: bool
-
-    @computed_field
-    @property
-    def score(self) -> float:
-        fights = self.total_fights - self.total_miniboss - self.total_boss
-        return (
-            self.total_kos * KO
-            + fights * FIGHT
-            + self.total_miniboss * MINIBOSS
-            + self.total_boss * BOSS
-            + self.total_not_fought * NOT_FOUGHT_KOS * KO
-            + self.total_times_helped * HELPED
-            + self.total_assists * ASSIST
-        )
 
 
 class ChampionUsageResponse(BaseModel):

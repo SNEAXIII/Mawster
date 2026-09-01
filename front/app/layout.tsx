@@ -4,7 +4,6 @@ import SideNavBar from '@/components/left-nav-bar/sidenav'
 import TestModeBanner from '@/components/test-mode-banner'
 import { Providers } from './providers'
 import { Toaster } from '@/components/ui/sonner'
-import { DevInspector } from './_components/dev-inspector'
 import MyModerationProvider from './contexts/moderation-context'
 import type { Metadata } from 'next'
 
@@ -30,14 +29,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
     >
       <body className={`${inter.className} antialiased`}>
         <TestModeBanner />
-        <DevInspector />
         <Providers>
-          <div className='flex h-screen flex-col md:flex-row md:overflow-hidden'>
+          <div className='flex min-h-dvh flex-col md:h-dvh md:flex-row md:overflow-hidden'>
             <div className='w-full flex-none md:w-42'>
               <SideNavBar />
             </div>
             <Toaster />
-            <div className='grow overflow-y-auto p-3'>
+            <div className='grow p-3 md:overflow-y-auto'>
               <MyModerationProvider>{children}</MyModerationProvider>
             </div>
           </div>

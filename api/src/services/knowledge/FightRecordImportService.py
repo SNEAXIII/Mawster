@@ -6,8 +6,8 @@ from sqlalchemy import tuple_
 from sqlmodel import select
 from starlette import status
 
-from src.models.Season import Season
-from src.models.WarFightRecordImport import WarFightRecordImport
+from src.models.war.Season import Season
+from src.models.war.WarFightRecordImport import WarFightRecordImport
 from src.services.alliance.AllianceService import AllianceService
 from src.utils.db import SessionDep
 

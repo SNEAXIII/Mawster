@@ -6,18 +6,26 @@ import pytest
 from sqlmodel import and_, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
 from src.enums.Roles import Roles
 from src.enums.SeasonStatus import SeasonStatus
-from src.models.Champion import Champion
-from src.models.ChampionUser import ChampionUser
-from src.models.Season import Season
-from src.models.War import War
-from src.models.WarDefensePlacement import WarDefensePlacement
-from src.models.WarFightPrefight import WarFightPrefight
-from src.models.WarFightRecord import WarFightRecord
-from src.models.WarFightSynergy import WarFightSynergy
-from src.models.WarPrefightAttacker import WarPrefightAttacker
-from src.models.WarSynergyAttacker import WarSynergyAttacker
+from src.enums.WarStatus import WarStatus
+from src.models import User
+from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
+from src.models.war.Season import Season
+from src.models.war.War import War
+from src.models.war.WarDefensePlacement import WarDefensePlacement
+from src.models.war.WarFightNote import WarFightNote
+from src.models.war.WarFightPrefight import WarFightPrefight
+from src.models.war.WarFightRecord import WarFightRecord
+from src.models.war.WarFightSynergy import WarFightSynergy
+from src.models.war.WarPrefightAttacker import WarPrefightAttacker
+from src.models.war.WarSynergyAttacker import WarSynergyAttacker
+from src.services.admin.SagaService import SagaService
+from src.services.alliance.war.WarFightNoteService import WarFightNoteService
+from src.services.knowledge.FightRecordService import FightRecordService
+from src.utils.email_hash import hash_email
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -151,8 +159,6 @@ class TestWarFightRecordSnapshot:
         """WarFightRecord.is_saga_attacker/defender_is_saga_defender must be sourced from the
         ChampionSagaRole set for the WAR'S OWN season — not any other season, and not a
         champion-level attribute."""
-        from src.models.Season import Season
-        from src.services.admin.SagaService import SagaService
 
         data = await _setup_war_with_fight()
 
@@ -235,10 +241,6 @@ class TestWarFightRecordSnapshot:
     @pytest.mark.asyncio
     async def test_snapshot_links_note_to_fight_record(self, session):
         """A WarFightNote on a snapshotted node must be linked to its WarFightRecord."""
-        from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
-        from src.models.WarFightNote import WarFightNote
-        from src.services.alliance.war.WarFightNoteService import WarFightNoteService
-        from src.services.knowledge.FightRecordService import FightRecordService
 
         data = await _setup_war_with_fight()
 
@@ -279,9 +281,6 @@ class TestWarFightRecordSnapshot:
     @pytest.mark.asyncio
     async def test_fight_record_row_includes_note(self, session):
         """A knowledge-base fight-record row must surface the linked note content."""
-        from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
-        from src.services.alliance.war.WarFightNoteService import WarFightNoteService
-        from src.services.knowledge.FightRecordService import FightRecordService
 
         data = await _setup_war_with_fight()
 
@@ -681,6 +680,7 @@ class TestListFightRecords:
         )
         assert resp.status_code == 200
         assert len(resp.json()["items"]) == 1
+        assert resp.json()["items"][0]["season_number"] == 64
 
         resp_no_match = await execute_get_request(
             f"/fight-records?season_selector=specific&season_id={uuid.uuid4()}", headers=headers
@@ -783,6 +783,51 @@ class TestListFightRecords:
         assert resp.json()["items"][0]["champion_name"] == "Spider-Man"
 
     @pytest.mark.asyncio
+    async def test_sort_by_season_number(self):
+        """sort_by=season_number must order items by the season number of each record."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        older_season = Season(number=70, status=SeasonStatus.ended)
+        newer_season = Season(number=71, status=SeasonStatus.ended)
+        await load_objects([older_season, newer_season])
+
+        def _record(node_number: int, season_id):
+            return WarFightRecord(
+                war_id=data["war"].id,
+                alliance_id=data["alliance"].id,
+                game_account_id=data["member"].id,
+                battlegroup=1,
+                node_number=node_number,
+                tier=1,
+                season_id=season_id,
+                champion_id=data["attacker_champ"].id,
+                stars=7,
+                rank=4,
+                ascension=0,
+                is_saga_attacker=True,
+                defender_champion_id=data["defender_champ"].id,
+                defender_stars=6,
+                defender_rank=3,
+                defender_ascension=0,
+                defender_is_saga_defender=False,
+            )
+
+        await load_objects([_record(10, older_season.id), _record(11, newer_season.id)])
+
+        resp = await execute_get_request(
+            "/fight-records?sort_by=season_number&sort_order=asc", headers=headers
+        )
+        assert resp.status_code == 200
+        assert [item["season_number"] for item in resp.json()["items"]] == [70, 71]
+
+        resp_desc = await execute_get_request(
+            "/fight-records?sort_by=season_number&sort_order=desc", headers=headers
+        )
+        assert resp_desc.status_code == 200
+        assert [item["season_number"] for item in resp_desc.json()["items"]] == [71, 70]
+
+    @pytest.mark.asyncio
     async def test_sort_by_defender_champion_name(self):
         """sort_by=defender_champion_name must join DefenderChampion and order by name (lines 239-242)."""
         data = await _setup_war_with_fight()
@@ -858,6 +903,7 @@ class TestListFightRecords:
         assert resp.status_code == 200
         assert resp.json()["total"] == 1
         assert resp.json()["items"][0]["node_number"] == 10
+        assert resp.json()["items"][0]["season_number"] == 65
 
     @pytest.mark.asyncio
     async def test_filter_by_season_selector_off_season(self):
@@ -914,6 +960,7 @@ class TestListFightRecords:
         assert resp.status_code == 200
         assert resp.json()["total"] == 1
         assert resp.json()["items"][0]["node_number"] == 11
+        assert resp.json()["items"][0]["season_number"] is None
 
     @pytest.mark.asyncio
     async def test_filter_by_season_selector_current(self):
@@ -1183,8 +1230,6 @@ class TestFightRecordScoping:
         )
 
         visitor_user_id = uuid.uuid4()
-        from src.models import User
-        from src.utils.email_hash import hash_email
 
         visitor_user = User(
             id=visitor_user_id,
@@ -1231,7 +1276,6 @@ class TestAdminSnapshotEndpoints:
         data = await _setup_war_with_fight()
         # End the war via the API so it has status=ended but snapshotted_at is set by end_war.
         # Instead, directly set war status to ended without calling snapshot_war.
-        from src.models.War import WarStatus
 
         war = await session.get(War, data["war"].id)
         war.status = WarStatus.ended
