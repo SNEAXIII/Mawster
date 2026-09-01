@@ -7,7 +7,7 @@ describe('War – Combat filter map dimming', () => {
 
   function selectCombatFilter(label: string) {
     cy.getByCy('war-combat-filter').click({ force: true });
-    cy.contains(label).click({ force: true });
+    cy.contains(label).click();
   }
 
   // Node 10 carries the assigned attacker; `completed` decides which side of the
