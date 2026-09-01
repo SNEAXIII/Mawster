@@ -1,14 +1,9 @@
-import { setupAssignedAttacker } from '../../support/e2e';
+import { selectCombatFilter, setupAssignedAttacker } from '../../support/e2e';
 
 describe('War – Combat filter map dimming', () => {
   beforeEach(() => {
     cy.truncateDb();
   });
-
-  function selectCombatFilter(label: string) {
-    cy.getByCy('war-combat-filter').click({ force: true });
-    cy.contains(label).click();
-  }
 
   // Node 10 carries the assigned attacker; `completed` decides which side of the
   // todo/done filter it falls on.
@@ -49,9 +44,7 @@ describe('War – Combat filter map dimming', () => {
 
   it('filter "all" does not dim any node on map', () => {
     openAttackersView('map-all-no-dim', true).then(() => {
-      cy.getByCy('war-combat-filter').click({ force: true });
-      cy.get('[role="listbox"]').should('be.visible');
-      cy.contains('[role="option"]', 'All').click({ force: true });
+      selectCombatFilter('All');
       cy.getByCy('war-node-10').should('not.have.class', 'opacity-25');
     });
   });

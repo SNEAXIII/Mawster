@@ -1577,3 +1577,12 @@ export function setupPrefightScenario(prefix: string): Cypress.Chainable<{
     });
   });
 }
+
+// The trigger renders the active filter's own label ('To do' by default), so an
+// unscoped cy.contains(label) matches the button instead of the option — and the
+// open Radix popper locks the body with pointer-events: none.
+export function selectCombatFilter(label: string): void {
+  cy.getByCy('war-combat-filter').click({ force: true });
+  cy.get('[role="listbox"]').should('be.visible');
+  cy.contains('[role="option"]', label).click({ force: true });
+}
