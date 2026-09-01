@@ -4,6 +4,9 @@ server {
     location /static/ {
         root /usr/share/nginx/html;
         add_header Cache-Control "public, max-age=2592000";
+        # Public artwork, read cross-origin by the GitHub-Pages tier list: without
+        # this header its PNG export taints the canvas and cannot be saved.
+        add_header Access-Control-Allow-Origin "*";
         expires 30d;
     }
 }

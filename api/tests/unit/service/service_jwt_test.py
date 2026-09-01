@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
+import jwt
 import pytest
 from jwt import ExpiredSignatureError
 
@@ -16,12 +17,23 @@ from src.Messages.jwt_messages import (
 from src.models import User
 from src.security.secrets import SECRET
 from src.services.auth.JWTService import JWTService
-from tests.unit.service.mocks.jwt_mock import (
-    create_token_mock,
-    decode_module_mock,
-    encode_mock,
-)
 from tests.utils.utils_constant import DISCORD_ID, EMAIL, FAKE_TOKEN, LOGIN
+
+
+def decode_module_mock(mocker, return_value: dict[str, str] | None):
+    return mocker.patch.object(
+        jwt,
+        "decode",
+        return_value=return_value,
+    )
+
+
+def decode_service_mock(mocker, return_value: dict[str, str] | None):
+    return mocker.patch.object(
+        JWTService,
+        "decode_jwt",
+        return_value=return_value,
+    )
 
 
 def get_user():
@@ -102,7 +114,10 @@ def test_decode_jwt_token_wrong_role(mocker, data):
 def test_create_access_token_success(mocker):
     # Arrange
     user = get_user()
-    mock_create_token = create_token_mock(mocker)
+    mock_create_token = mocker.patch.object(
+        JWTService,
+        "create_token",
+    )
     expected_data = {
         "user_id": str(user.id),
         "role": user.role,
@@ -148,16 +163,27 @@ def test_create_refresh_token_no_user():
     assert error.value.detail == str(CREDENTIALS_EXCEPTION)
 
 
-def test_create_token_success(mocker, use_time_machine):
+@pytest.mark.parametrize(
+    ("duration_minutes"),
+    [SECRET.ACCESS_TOKEN_EXPIRE_MINUTES, None, 121],
+    ids=["default_secret", "no_duration", "121_minutes"],
+)
+def test_create_token_success(mocker, duration_minutes, use_time_machine):
     # Arrange
     input_data = {"user_id": "some-uuid", "role": Roles.USER.value, "type": "access"}
-    mock_encode_mock = encode_mock(mocker)
-    expected_expires_delta = timedelta(minutes=SECRET.ACCESS_TOKEN_EXPIRE_MINUTES)
+    mock_encode_mock = mocker.patch.object(
+        jwt,
+        "encode",
+    )
+    minutes = duration_minutes or SECRET.ACCESS_TOKEN_EXPIRE_MINUTES
+    expected_expires_delta = timedelta(minutes=minutes)
     expected_expires_date_time = datetime.now(tz=UTC) + expected_expires_delta
     expected_data = {**input_data, "exp": expected_expires_date_time}
 
     # Act
-    JWTService.create_token(input_data, expected_expires_delta)
+    JWTService.create_token(
+        input_data, expected_expires_delta if duration_minutes else duration_minutes
+    )
 
     # Assert
     mock_encode_mock.assert_called_once_with(

@@ -164,9 +164,8 @@ Tools: `ctx_batch_execute` (research) → `ctx_search` (follow-up) → `ctx_exec
 Declared in `.mcp.json` — there is no other project MCP server:
 
 - **context-mode**: keeps output out of context window
-- **github**: `mcp__github__*` — requires `GITHUB_PERSONAL_ACCESS_TOKEN`
 
-Backend tests, servers and E2E run as plain commands (`make`, `docker compose`, `scripts/e2e_parallel.py`) — see `docs/mcp.md`.
+GitHub operations (PRs, issues, reviews) go through the `gh` CLI. Backend tests, servers and E2E run as plain commands (`make`, `docker compose`, `scripts/e2e_parallel.py`) — see `docs/mcp.md`.
 
 ---
 
