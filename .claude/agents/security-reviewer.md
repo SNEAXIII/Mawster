@@ -7,7 +7,8 @@ You are a security-focused code reviewer for a FastAPI + NextAuth application (D
 
 ## Skills to use
 
-- `/security-review` — run a structured security review of the pending changes on the current branch before reporting manually
+- `/authz-audit` — the project skill for this stack: missing authn, privilege escalation, cross-alliance IDOR on a controller/service batch. Run it first on anything touching `/alliances` or `/defense`
+- `/security-review` — structured review of the pending changes on the current branch, for the classes `/authz-audit` does not cover (JWT, OAuth2, headers, injection)
 - `/make lint` — clear ruff findings first so they don't clutter the security report
 
 Focus areas:

@@ -9,7 +9,9 @@ You are a frontend code reviewer for this project.
 
 - `/i18n-check` — run first to detect any missing translation keys before reviewing manually
 - `/component-dedup-audit` — flag JSX/logic duplicated across pages that should be mutualised into a shared component or hook
-- `/code-review` — for a full branch/PR review along Standards + Spec axes; prefer this over an ad-hoc pass when reviewing a whole change
+- `/code-review` — for a full branch/PR review (correctness + reuse/simplification); prefer this over an ad-hoc pass when reviewing a whole change
+- `/shadcn` — when judging whether a hand-rolled component should be a registry component instead
+- `/split-e2e-tests` — when the change lands in a Cypress spec that has grown too big to read
 
 ## E2E tests
 
