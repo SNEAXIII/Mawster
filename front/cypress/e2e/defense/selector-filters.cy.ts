@@ -50,6 +50,29 @@ function openSelectorOnNode1() {
   cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
 }
 
+// What a filter left on screen and what it removed — the two assertions every
+// test here makes, before and after acting on a filter.
+function expectCards(visible: string[], hidden: string[] = []) {
+  visible.forEach((name) => cy.getByCy(`champion-card-${name}`).should('be.visible'));
+  hidden.forEach((name) => cy.getByCy(`champion-card-${name}`).should('not.exist'));
+}
+
+// Owner + their roster + the defense page with the selector open on node 1 —
+// the preamble every single-player selector test repeats.
+function openSelectorWithRoster(
+  prefix: string,
+  pseudo: string,
+  allianceName: string,
+  tag: string,
+  roster: (admin: string, owner: Owner) => void,
+) {
+  return setupDefenseOwner(prefix, pseudo, allianceName, tag).then(({ adminData, ownerData, ownerAccId }) => {
+    roster(adminData.access_token, { tok: ownerData.access_token, acc: ownerAccId });
+    cy.apiLogin(ownerData.user_id, 'defense');
+    openSelectorOnNode1();
+  });
+}
+
 describe('Defense – AllianceDefenseSelector filters', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -60,22 +83,15 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   // =========================================================================
 
   it('class filter shows only champions of the selected class', () => {
-    setupDefenseOwner('def-flt-cls', 'ClsFilterPlyr', 'ClassAll', 'CF').then(({ adminData, ownerData, ownerAccId }) => {
-      const admin = adminData.access_token;
-      const owner = { tok: ownerData.access_token, acc: ownerAccId };
+    openSelectorWithRoster('def-flt-cls', 'ClsFilterPlyr', 'ClassAll', 'CF', (admin, owner) => {
       giveChampion(admin, 'Spider-Man', 'Cosmic', owner);
       giveChampion(admin, 'Wolverine', 'Mutant', owner);
-
-      cy.apiLogin(ownerData.user_id, 'defense');
-
-      openSelectorOnNode1();
-      cy.getByCy('champion-card-Spider-Man').should('be.visible');
-      cy.getByCy('champion-card-Wolverine').should('be.visible');
+    }).then(() => {
+      expectCards(['Spider-Man', 'Wolverine']);
 
       cy.selectOption('selector-class-filter', 'Cosmic');
 
-      cy.getByCy('champion-card-Spider-Man').should('be.visible');
-      cy.getByCy('champion-card-Wolverine').should('not.exist');
+      expectCards(['Spider-Man'], ['Wolverine']);
     });
   });
 
@@ -93,13 +109,11 @@ describe('Defense – AllianceDefenseSelector filters', () => {
         cy.apiLogin(ownerData.user_id, 'defense');
 
         openSelectorOnNode1();
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
-        cy.getByCy('champion-card-Wolverine').should('be.visible');
+        expectCards(['Spider-Man', 'Wolverine']);
 
         cy.selectOption('selector-player-filter', 'PlyrFltOwn');
 
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
-        cy.getByCy('champion-card-Wolverine').should('not.exist');
+        expectCards(['Spider-Man'], ['Wolverine']);
       },
     );
   });
@@ -109,22 +123,15 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   // =========================================================================
 
   it('saga defender toggle shows only saga defenders', () => {
-    setupDefenseOwner('def-flt-saga', 'SagaFltPlyr', 'SagaAll', 'SF').then(({ adminData, ownerData, ownerAccId }) => {
-      const admin = adminData.access_token;
-      const owner = { tok: ownerData.access_token, acc: ownerAccId };
+    openSelectorWithRoster('def-flt-saga', 'SagaFltPlyr', 'SagaAll', 'SF', (admin, owner) => {
       giveChampion(admin, 'Spider-Man', 'Cosmic', owner, true);
       giveChampion(admin, 'Wolverine', 'Mutant', owner);
-
-      cy.apiLogin(ownerData.user_id, 'defense');
-
-      openSelectorOnNode1();
-      cy.getByCy('champion-card-Spider-Man').should('be.visible');
-      cy.getByCy('champion-card-Wolverine').should('be.visible');
+    }).then(() => {
+      expectCards(['Spider-Man', 'Wolverine']);
 
       cy.getByCy('selector-toggle-saga').click();
 
-      cy.getByCy('champion-card-Spider-Man').should('be.visible');
-      cy.getByCy('champion-card-Wolverine').should('not.exist');
+      expectCards(['Spider-Man'], ['Wolverine']);
     });
   });
 
@@ -144,35 +151,26 @@ describe('Defense – AllianceDefenseSelector filters', () => {
         cy.apiLogin(ownerData.user_id, 'defense');
 
         openSelectorOnNode1();
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
+        expectCards(['Spider-Man']);
 
         cy.getByCy('selector-toggle-notPreferred').click();
 
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
+        expectCards(['Spider-Man']);
       },
     );
   });
 
   it('not preferred toggle shows only champions whose owners are not preferred attackers', () => {
-    setupDefenseOwner('def-flt-npref', 'NPrefFltPlyr', 'NPrefAll', 'NP').then(
-      ({ adminData, ownerData, ownerAccId }) => {
-        const admin = adminData.access_token;
-        const owner = { tok: ownerData.access_token, acc: ownerAccId };
-        giveChampion(admin, 'Spider-Man', 'Cosmic', { ...owner, preferred: false });
-        giveChampion(admin, 'Wolverine', 'Mutant', { ...owner, preferred: true });
+    openSelectorWithRoster('def-flt-npref', 'NPrefFltPlyr', 'NPrefAll', 'NP', (admin, owner) => {
+      giveChampion(admin, 'Spider-Man', 'Cosmic', { ...owner, preferred: false });
+      giveChampion(admin, 'Wolverine', 'Mutant', { ...owner, preferred: true });
+    }).then(() => {
+      expectCards(['Spider-Man', 'Wolverine']);
 
-        cy.apiLogin(ownerData.user_id, 'defense');
+      cy.getByCy('selector-toggle-notPreferred').click();
 
-        openSelectorOnNode1();
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
-        cy.getByCy('champion-card-Wolverine').should('be.visible');
-
-        cy.getByCy('selector-toggle-notPreferred').click();
-
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
-        cy.getByCy('champion-card-Wolverine').should('not.exist');
-      },
-    );
+      expectCards(['Spider-Man'], ['Wolverine']);
+    });
   });
 
   // =========================================================================
@@ -180,28 +178,19 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   // =========================================================================
 
   it('reset button clears all active filters and restores all champions', () => {
-    setupDefenseOwner('def-flt-reset', 'ResetFltPlyr', 'ResetAll', 'RF').then(
-      ({ adminData, ownerData, ownerAccId }) => {
-        const admin = adminData.access_token;
-        const owner = { tok: ownerData.access_token, acc: ownerAccId };
-        giveChampion(admin, 'Spider-Man', 'Cosmic', owner, true);
-        giveChampion(admin, 'Wolverine', 'Mutant', owner);
+    openSelectorWithRoster('def-flt-reset', 'ResetFltPlyr', 'ResetAll', 'RF', (admin, owner) => {
+      giveChampion(admin, 'Spider-Man', 'Cosmic', owner, true);
+      giveChampion(admin, 'Wolverine', 'Mutant', owner);
+    }).then(() => {
+      // Activate saga filter → only Spider-Man visible
+      cy.getByCy('selector-toggle-saga').click();
+      expectCards([], ['Wolverine']);
 
-        cy.apiLogin(ownerData.user_id, 'defense');
-
-        openSelectorOnNode1();
-
-        // Activate saga filter → only Spider-Man visible
-        cy.getByCy('selector-toggle-saga').click();
-        cy.getByCy('champion-card-Wolverine').should('not.exist');
-
-        // Reset button appears and restores all champions
-        cy.getByCy('selector-reset-filters').should('be.visible').click();
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
-        cy.getByCy('champion-card-Wolverine').should('be.visible');
-        cy.getByCy('selector-reset-filters').should('not.exist');
-      },
-    );
+      // Reset button appears and restores all champions
+      cy.getByCy('selector-reset-filters').should('be.visible').click();
+      expectCards(['Spider-Man', 'Wolverine']);
+      cy.getByCy('selector-reset-filters').should('not.exist');
+    });
   });
 
   // =========================================================================
@@ -257,27 +246,18 @@ describe('Defense – AllianceDefenseSelector filters', () => {
   // =========================================================================
 
   it('class and saga filters combine to narrow results', () => {
-    setupDefenseOwner('def-flt-comb', 'CombFltPlyr', 'CombAll', 'CB').then(({ adminData, ownerData, ownerAccId }) => {
-      const admin = adminData.access_token;
-      const owner = { tok: ownerData.access_token, acc: ownerAccId };
+    openSelectorWithRoster('def-flt-comb', 'CombFltPlyr', 'CombAll', 'CB', (admin, owner) => {
       giveChampion(admin, 'Spider-Man', 'Cosmic', owner, true);
       giveChampion(admin, 'Iron Man', 'Tech', owner, true);
       giveChampion(admin, 'Wolverine', 'Mutant', owner);
-
-      cy.apiLogin(ownerData.user_id, 'defense');
-
-      openSelectorOnNode1();
-
+    }).then(() => {
       // Saga filter → Spider-Man + Iron Man visible
       cy.getByCy('selector-toggle-saga').click();
-      cy.getByCy('champion-card-Spider-Man').should('be.visible');
-      cy.getByCy('champion-card-Iron-Man').should('be.visible');
-      cy.getByCy('champion-card-Wolverine').should('not.exist');
+      expectCards(['Spider-Man', 'Iron-Man'], ['Wolverine']);
 
       // Add class filter Cosmic → only Spider-Man
       cy.selectOption('selector-class-filter', 'Cosmic');
-      cy.getByCy('champion-card-Spider-Man').should('be.visible');
-      cy.getByCy('champion-card-Iron-Man').should('not.exist');
+      expectCards(['Spider-Man'], ['Iron-Man']);
     });
   });
 });
@@ -292,26 +272,18 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
   // =========================================================================
 
   it('hides 6-star champions by default and reveals them via the 6-star toggle', () => {
-    setupDefenseOwner('def-rar-def', 'RarDefPlyr', 'RarDefAll', 'RD').then(({ adminData, ownerData, ownerAccId }) => {
-      const admin = adminData.access_token;
-      const owner = { tok: ownerData.access_token, acc: ownerAccId };
+    openSelectorWithRoster('def-rar-def', 'RarDefPlyr', 'RarDefAll', 'RD', (admin, owner) => {
       giveChampion(admin, 'Spider-Man', 'Cosmic', owner);
       giveChampion(admin, 'Wolverine', 'Mutant', { ...owner, rarity: '6r5' });
-
-      cy.apiLogin(ownerData.user_id, 'defense');
-
-      openSelectorOnNode1();
-
+    }).then(() => {
       // 7★ Spider-Man visible, 6★ Wolverine hidden by default
-      cy.getByCy('champion-card-Spider-Man').should('be.visible');
-      cy.getByCy('champion-card-Wolverine').should('not.exist');
+      expectCards(['Spider-Man'], ['Wolverine']);
 
       // The rarity filter exposes 6★ tiers too — enabling 6r5 reveals the champion.
       cy.getByCy('defense-rarity-6r4').should('be.visible');
       cy.getByCy('defense-rarity-7r3').should('be.visible');
       cy.getByCy('defense-rarity-6r5').click();
-      cy.getByCy('champion-card-Wolverine').should('be.visible');
-      cy.getByCy('champion-card-Spider-Man').should('be.visible');
+      expectCards(['Wolverine', 'Spider-Man']);
     });
   });
 
@@ -320,25 +292,16 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
   // =========================================================================
 
   it('deactivating a 7-star tier hides champions of that exact tier', () => {
-    setupDefenseOwner('def-rar-tier', 'RarTierPlyr', 'RarTierAll', 'RT').then(
-      ({ adminData, ownerData, ownerAccId }) => {
-        const admin = adminData.access_token;
-        const owner = { tok: ownerData.access_token, acc: ownerAccId };
-        giveChampion(admin, 'Spider-Man', 'Cosmic', owner);
-        giveChampion(admin, 'Wolverine', 'Mutant', { ...owner, rarity: '7r5' });
+    openSelectorWithRoster('def-rar-tier', 'RarTierPlyr', 'RarTierAll', 'RT', (admin, owner) => {
+      giveChampion(admin, 'Spider-Man', 'Cosmic', owner);
+      giveChampion(admin, 'Wolverine', 'Mutant', { ...owner, rarity: '7r5' });
+    }).then(() => {
+      expectCards(['Spider-Man', 'Wolverine']);
 
-        cy.apiLogin(ownerData.user_id, 'defense');
-
-        openSelectorOnNode1();
-        cy.getByCy('champion-card-Spider-Man').should('be.visible');
-        cy.getByCy('champion-card-Wolverine').should('be.visible');
-
-        // Turn 7r3 off → Spider-Man (7r3) hidden, Wolverine (7r5) stays
-        cy.getByCy('defense-rarity-7r3').click();
-        cy.getByCy('champion-card-Spider-Man').should('not.exist');
-        cy.getByCy('champion-card-Wolverine').should('be.visible');
-      },
-    );
+      // Turn 7r3 off → Spider-Man (7r3) hidden, Wolverine (7r5) stays
+      cy.getByCy('defense-rarity-7r3').click();
+      expectCards(['Wolverine'], ['Spider-Man']);
+    });
   });
 
   // =========================================================================
@@ -346,37 +309,26 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
   // =========================================================================
 
   it('persists the rarity preference across reopen and is untouched by Reset', () => {
-    setupDefenseOwner('def-rar-persist', 'RarPersPlyr', 'RarPersAll', 'RP').then(
-      ({ adminData, ownerData, ownerAccId }) => {
-        // Spider-Man 7r3 and Wolverine 7r5 (saga defender)
-        const admin = adminData.access_token;
-        const owner = { tok: ownerData.access_token, acc: ownerAccId };
-        giveChampion(admin, 'Spider-Man', 'Cosmic', owner);
-        giveChampion(admin, 'Wolverine', 'Mutant', { ...owner, rarity: '7r5' }, true);
+    // Spider-Man 7r3 and Wolverine 7r5 (saga defender)
+    openSelectorWithRoster('def-rar-persist', 'RarPersPlyr', 'RarPersAll', 'RP', (admin, owner) => {
+      giveChampion(admin, 'Spider-Man', 'Cosmic', owner);
+      giveChampion(admin, 'Wolverine', 'Mutant', { ...owner, rarity: '7r5' }, true);
+    }).then(() => {
+      // Turn 7r3 off → Spider-Man (7r3) hidden, Wolverine (7r5) stays
+      cy.getByCy('defense-rarity-7r3').click();
+      expectCards(['Wolverine'], ['Spider-Man']);
 
-        cy.apiLogin(ownerData.user_id, 'defense');
+      // Activate then Reset a normal filter — rarity must survive
+      cy.getByCy('selector-toggle-saga').click();
+      cy.getByCy('selector-reset-filters').click();
+      expectCards(['Wolverine'], ['Spider-Man']);
 
-        openSelectorOnNode1();
-
-        // Turn 7r3 off → Spider-Man (7r3) hidden, Wolverine (7r5) stays
-        cy.getByCy('defense-rarity-7r3').click();
-        cy.getByCy('champion-card-Spider-Man').should('not.exist');
-        cy.getByCy('champion-card-Wolverine').should('be.visible');
-
-        // Activate then Reset a normal filter — rarity must survive
-        cy.getByCy('selector-toggle-saga').click();
-        cy.getByCy('selector-reset-filters').click();
-        cy.getByCy('champion-card-Spider-Man').should('not.exist');
-        cy.getByCy('champion-card-Wolverine').should('be.visible');
-
-        // Close and reopen the dialog — preference persisted via localStorage
-        cy.get('body').type('{esc}');
-        cy.getByCy('champion-card-Wolverine').should('not.exist');
-        openSelectorOnNode1();
-        cy.getByCy('champion-card-Spider-Man').should('not.exist');
-        cy.getByCy('champion-card-Wolverine').should('be.visible');
-      },
-    );
+      // Close and reopen the dialog — preference persisted via localStorage
+      cy.get('body').type('{esc}');
+      expectCards([], ['Wolverine']);
+      openSelectorOnNode1();
+      expectCards(['Wolverine'], ['Spider-Man']);
+    });
   });
 
   // =========================================================================
@@ -384,28 +336,16 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
   // =========================================================================
 
   it('orders champions preferred-first then by descending rank', () => {
-    setupDefenseOwner('def-rar-sort', 'RarSortPlyr', 'RarSortAll', 'RS').then(
-      ({ adminData, ownerData, ownerAccId }) => {
-        const admin = adminData.access_token;
-        const owner = { tok: ownerData.access_token, acc: ownerAccId };
-        giveChampion(admin, 'Spider-Man', 'Cosmic', { ...owner, rarity: '7r5' });
-        giveChampion(admin, 'Wolverine', 'Mutant', owner);
-        giveChampion(admin, 'Iron Man', 'Tech', { ...owner, rarity: '7r1', preferred: true });
-
-        cy.apiLogin(ownerData.user_id, 'defense');
-
-        openSelectorOnNode1();
-
-        // Expected order: Iron Man (preferred) → Spider-Man (7r5) → Wolverine (7r3)
-        cy.get('[data-cy^="champion-card-"]').then(($cards) => {
-          const order = [...$cards].map((el) => el.getAttribute('data-cy'));
-          expect(order).to.deep.equal([
-            'champion-card-Iron-Man',
-            'champion-card-Spider-Man',
-            'champion-card-Wolverine',
-          ]);
-        });
-      },
-    );
+    openSelectorWithRoster('def-rar-sort', 'RarSortPlyr', 'RarSortAll', 'RS', (admin, owner) => {
+      giveChampion(admin, 'Spider-Man', 'Cosmic', { ...owner, rarity: '7r5' });
+      giveChampion(admin, 'Wolverine', 'Mutant', owner);
+      giveChampion(admin, 'Iron Man', 'Tech', { ...owner, rarity: '7r1', preferred: true });
+    }).then(() => {
+      // Expected order: Iron Man (preferred) → Spider-Man (7r5) → Wolverine (7r3)
+      cy.get('[data-cy^="champion-card-"]').then(($cards) => {
+        const order = [...$cards].map((el) => el.getAttribute('data-cy'));
+        expect(order).to.deep.equal(['champion-card-Iron-Man', 'champion-card-Spider-Man', 'champion-card-Wolverine']);
+      });
+    });
   });
 });

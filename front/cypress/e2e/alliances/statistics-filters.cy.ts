@@ -3,6 +3,7 @@ import {
   openStatsAs,
   setupStatsOwner,
   setupStatsOwnerAndMember,
+  withEndedWarStats,
   withWarScenario,
   withWarScenarioTwoPlayers,
   withWarScenarioDiffChampsPlayers,
@@ -19,51 +20,44 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
   // ── Ratio filter ──────────────────────────────────────────────────────────
 
   it('hides players below ratio threshold and shows empty-filtered state', () => {
-    setupStatsOwner('stat-rf').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
-      withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Enemy', ({ champId, cuId, warId }) => {
-        addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, 1);
-        cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        openStatsAs(ownerUserId);
+    withEndedWarStats(
+      'stat-rf',
+      () => {
         cy.getByCy('statistics-table').should('be.visible');
         cy.getByCy('statistics-ratio-filter').click();
         cy.contains('Minimum ratio ≥ 50%').click();
         cy.getByCy('statistics-empty-filtered').should('be.visible');
-      });
-    });
+      },
+      { koCount: 1 },
+    );
   });
 
   it('reset button appears when filter active and restores all rows', () => {
-    setupStatsOwner('stat-rst').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
-      withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Enemy', ({ champId, cuId, warId }) => {
-        addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, 1);
-        cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        openStatsAs(ownerUserId);
+    withEndedWarStats(
+      'stat-rst',
+      () => {
         cy.getByCy('statistics-reset-filters').should('not.exist');
         cy.getByCy('statistics-ratio-filter').click();
         cy.contains('Minimum ratio ≥ 50%').click();
         cy.getByCy('statistics-reset-filters').should('be.visible').click();
         cy.getByCy('statistics-table').should('be.visible');
         cy.getByCy('statistics-reset-filters').should('not.exist');
-      });
-    });
+      },
+      { koCount: 1 },
+    );
   });
 
   // ── Champion chart ───────────────────────────────────────────────────────
 
   it('clicking a row highlights the player and shows reset button', () => {
-    setupStatsOwner('stat-click').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
-      withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Enemy', ({ champId, cuId, warId }) => {
-        addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10);
-        cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        openStatsAs(ownerUserId);
-        cy.getByCy('statistics-reset-filters').should('not.exist');
-        cy.getByCy(`statistics-row-${ownerAccId}`).click();
-        cy.getByCy(`statistics-row-${ownerAccId}`).should('have.class', 'bg-muted');
-        cy.getByCy('statistics-reset-filters').should('be.visible');
-        cy.getByCy('statistics-reset-filters').click();
-        cy.getByCy(`statistics-row-${ownerAccId}`).should('not.have.class', 'bg-muted');
-        cy.getByCy('statistics-reset-filters').should('not.exist');
-      });
+    withEndedWarStats('stat-click', ({ ownerAccId }) => {
+      cy.getByCy('statistics-reset-filters').should('not.exist');
+      cy.getByCy(`statistics-row-${ownerAccId}`).click();
+      cy.getByCy(`statistics-row-${ownerAccId}`).should('have.class', 'bg-muted');
+      cy.getByCy('statistics-reset-filters').should('be.visible');
+      cy.getByCy('statistics-reset-filters').click();
+      cy.getByCy(`statistics-row-${ownerAccId}`).should('not.have.class', 'bg-muted');
+      cy.getByCy('statistics-reset-filters').should('not.exist');
     });
   });
 
@@ -193,61 +187,49 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
   });
 
   it('chart metric toggle switches between deathless, all and kos', () => {
-    setupStatsOwner('stat-cm').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
-      withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Enemy', ({ champId, cuId, warId }) => {
-        addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, 1);
-        cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        openStatsAs(ownerUserId);
+    withEndedWarStats(
+      'stat-cm',
+      () => {
         cy.getByCy('chart-metric-deathless').should('not.have.attr', 'data-variant', 'outline');
         cy.getByCy('chart-metric-kos').click();
         cy.getByCy('chart-metric-kos').should('not.have.attr', 'data-variant', 'outline');
         cy.getByCy('chart-metric-all').click();
         cy.getByCy('chart-metric-all').should('not.have.attr', 'data-variant', 'outline');
-      });
-    });
+      },
+      { koCount: 1 },
+    );
   });
 
   it('see detail button opens the champion detail modal', () => {
-    setupStatsOwner('stat-modal').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
-      withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Enemy', ({ champId, cuId, warId }) => {
-        addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10);
-        cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        openStatsAs(ownerUserId);
-        cy.getByCy('champion-detail-modal').should('not.exist');
-        cy.getByCy('chart-see-detail').click();
-        cy.getByCy('champion-detail-modal').should('be.visible');
-        cy.getByCy('champion-detail-modal').contains('Iron Man').should('exist');
-      });
+    withEndedWarStats('stat-modal', () => {
+      cy.getByCy('champion-detail-modal').should('not.exist');
+      cy.getByCy('chart-see-detail').click();
+      cy.getByCy('champion-detail-modal').should('be.visible');
+      cy.getByCy('champion-detail-modal').contains('Iron Man').should('exist');
     });
   });
 
   it('clicking the same row again deselects the player', () => {
-    setupStatsOwner('stat-tog').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
-      withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Enemy', ({ champId, cuId, warId }) => {
-        addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10);
-        cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        openStatsAs(ownerUserId);
-        cy.getByCy(`statistics-row-${ownerAccId}`).click();
-        cy.getByCy(`statistics-row-${ownerAccId}`).should('have.class', 'bg-muted');
-        cy.getByCy(`statistics-row-${ownerAccId}`).click();
-        cy.getByCy(`statistics-row-${ownerAccId}`).should('not.have.class', 'bg-muted');
-        cy.getByCy('statistics-reset-filters').should('not.exist');
-      });
+    withEndedWarStats('stat-tog', ({ ownerAccId }) => {
+      cy.getByCy(`statistics-row-${ownerAccId}`).click();
+      cy.getByCy(`statistics-row-${ownerAccId}`).should('have.class', 'bg-muted');
+      cy.getByCy(`statistics-row-${ownerAccId}`).click();
+      cy.getByCy(`statistics-row-${ownerAccId}`).should('not.have.class', 'bg-muted');
+      cy.getByCy('statistics-reset-filters').should('not.exist');
     });
   });
 
   it('reset button resets war filter back to all wars', () => {
-    setupStatsOwner('stat-wfr').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
-      withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'War1', ({ champId, cuId, warId }) => {
-        addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10);
-        cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        openStatsAs(ownerUserId);
+    withEndedWarStats(
+      'stat-wfr',
+      ({ warId }) => {
         cy.getByCy('statistics-war-filter').click();
         cy.getByCy(`statistics-war-${warId}`).click();
         cy.getByCy('statistics-reset-filters').should('be.visible').click();
         cy.getByCy('statistics-war-filter').should('contain', 'All wars');
-      });
-    });
+      },
+      { warName: 'War1' },
+    );
   });
 
   it('clicking a row shows that player name in the chart area', () => {
@@ -275,11 +257,9 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
   });
 
   it('champion detail modal closes and can sort by KOs', () => {
-    setupStatsOwner('stat-mds').then(({ adminToken, ownerToken, ownerUserId, ownerAccId, allianceId }) => {
-      withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, 'Enemy', ({ champId, cuId, warId }) => {
-        addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, 1);
-        cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-        openStatsAs(ownerUserId);
+    withEndedWarStats(
+      'stat-mds',
+      () => {
         cy.getByCy('chart-metric-all').click();
         cy.getByCy('chart-see-detail').click();
         cy.getByCy('champion-detail-modal').should('be.visible');
@@ -289,8 +269,9 @@ describe('Alliance Statistics – Filters & Champion chart', () => {
         // close modal
         cy.get('body').type('{esc}');
         cy.getByCy('champion-detail-modal').should('not.exist');
-      });
-    });
+      },
+      { koCount: 1 },
+    );
   });
 
   // ── Group filter ──────────────────────────────────────────────────────────

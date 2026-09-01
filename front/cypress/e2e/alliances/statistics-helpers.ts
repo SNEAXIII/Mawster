@@ -454,3 +454,31 @@ export function selectMemberFilter(label: 'All members' | 'Former members') {
   cy.getByCy('statistics-member-filter').click();
   cy.contains(label).click();
 }
+
+export interface EndedWarStats extends StatsOwnerSetup {
+  champId: string;
+  cuId: string;
+  warId: string;
+}
+
+// The five-line preamble most statistics tests open with: an owner, one war where
+// they fought node 10, the war ended, and the statistics tab already open.
+// `koCount` drives the ratio; `endWar: false` leaves the war active, which is what
+// the "only an ongoing war" empty state needs.
+export function withEndedWarStats(
+  prefix: string,
+  cb: (ctx: EndedWarStats) => void,
+  options: { koCount?: number; endWar?: boolean; warName?: string } = {},
+) {
+  const { koCount = 0, endWar = true, warName = 'Enemy' } = options;
+
+  return setupStatsOwner(prefix).then((setup) => {
+    const { adminToken, ownerToken, ownerUserId, ownerAccId, allianceId } = setup;
+    withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, warName, ({ champId, cuId, warId }) => {
+      addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, koCount);
+      if (endWar) cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
+      openStatsAs(ownerUserId);
+      cb({ ...setup, champId, cuId, warId });
+    });
+  });
+}

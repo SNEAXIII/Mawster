@@ -3,6 +3,12 @@ import { setupWarOwner } from '../../support/e2e';
 // Column indices (0-based) — see display.cy.ts:
 // 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: KO | 7: Alliance | 8: Season | 9: Tier | 10: Date | 11: Note
 
+// The attacker/defender pair the CSV rows reference in most of these tests.
+const MAGIK_AND_SERPENT: Array<[string, string]> = [
+  ['Magik', 'Mystic'],
+  ['Serpent', 'Cosmic'],
+];
+
 describe('Knowledge Base – CSV Import combined records', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -29,7 +35,10 @@ describe('Knowledge Base – CSV Import combined records', () => {
     });
   }
 
-  function importCsv(csv: string) {
+  // Log in on the import page, push the CSV through, then land on the knowledge
+  // base — every import test asserts on the records from there.
+  function importCsvAs(userId: string, csv: string) {
+    cy.apiLogin(userId, 'knowledge-base-import');
     cy.getByCy('csv-file-input').selectFile({
       contents: Cypress.Buffer.from(csv),
       fileName: 'fights.csv',
@@ -37,19 +46,14 @@ describe('Knowledge Base – CSV Import combined records', () => {
     });
     cy.getByCy('import-confirm-btn').should('not.be.disabled').click();
     cy.contains('fight records').should('be.visible');
+    cy.visit('/game/knowledge-base');
   }
 
   it('imports a CSV without header row and shows the record in the knowledge base', () => {
-    setupImportScenario('csv-nohdr', 'NoHdrUser', 'NoHdrAlliance', 'NHD', [
-      ['Magik', 'Mystic'],
-      ['Serpent', 'Cosmic'],
-    ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id, 'knowledge-base-import');
-
+    setupImportScenario('csv-nohdr', 'NoHdrUser', 'NoHdrAlliance', 'NHD', MAGIK_AND_SERPENT).then(({ ownerData }) => {
       // No header line, ko_count present
-      importCsv(`Magik,Serpent,15,S1,2\n`);
+      importCsvAs(ownerData.user_id, `Magik,Serpent,15,S1,2\n`);
 
-      cy.visit('/game/knowledge-base');
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
       cy.getByCy('fight-records-table').within(() => {
         cy.get('tbody tr')
@@ -65,24 +69,20 @@ describe('Knowledge Base – CSV Import combined records', () => {
   });
 
   it('defaults ko_count to 0 when the column is left empty', () => {
-    setupImportScenario('csv-emptyko', 'EmptyKoUser', 'EmptyKoAlliance', 'EKO', [
-      ['Magik', 'Mystic'],
-      ['Serpent', 'Cosmic'],
-    ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id, 'knowledge-base-import');
+    setupImportScenario('csv-emptyko', 'EmptyKoUser', 'EmptyKoAlliance', 'EKO', MAGIK_AND_SERPENT).then(
+      ({ ownerData }) => {
+        // Header present, trailing empty ko_count
+        importCsvAs(ownerData.user_id, `attacker,defender,node,season,ko_count\nMagik,Serpent,20,S1,\n`);
 
-      // Header present, trailing empty ko_count
-      importCsv(`attacker,defender,node,season,ko_count\nMagik,Serpent,20,S1,\n`);
-
-      cy.visit('/game/knowledge-base');
-      cy.getByCy('fight-records-table')
-        .find('tbody tr')
-        .first()
-        .within(() => {
-          cy.get('td').eq(5).should('contain.text', '20');
-          cy.getByCy('fight-record-ko').should('have.text', '0');
-        });
-    });
+        cy.getByCy('fight-records-table')
+          .find('tbody tr')
+          .first()
+          .within(() => {
+            cy.get('td').eq(5).should('contain.text', '20');
+            cy.getByCy('fight-record-ko').should('have.text', '0');
+          });
+      },
+    );
   });
 
   it('combines multiple imported rows from one CSV in the knowledge base', () => {
@@ -91,12 +91,9 @@ describe('Knowledge Base – CSV Import combined records', () => {
       ['Serpent', 'Cosmic'],
       ['Doom', 'Mystic'],
     ]).then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id, 'knowledge-base-import');
-
       // Mixed: one row with ko_count, one with empty ko_count, no header
-      importCsv(`Magik,Serpent,15,S1,2\nDoom,Serpent,16,S1,\n`);
+      importCsvAs(ownerData.user_id, `Magik,Serpent,15,S1,2\nDoom,Serpent,16,S1,\n`);
 
-      cy.visit('/game/knowledge-base');
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
       cy.getByCy('fight-records-table').should('contain.text', 'Magik');
       cy.getByCy('fight-records-table').should('contain.text', 'Doom');
@@ -113,27 +110,26 @@ describe('Knowledge Base – CSV Import combined records', () => {
   });
 
   it('excludes imported records when filtering by player pseudo', () => {
-    setupImportScenario('csv-player', 'PlayerUser', 'PlayerAlliance', 'PLY', [
-      ['Magik', 'Mystic'],
-      ['Serpent', 'Cosmic'],
-    ]).then(({ ownerData, allianceId, champions }) => {
-      cy.apiImportFightRecords(ownerData.access_token, allianceId, [
-        {
-          champion_id: champions['Magik'].id,
-          defender_champion_id: champions['Serpent'].id,
-          node_number: 15,
-          season_name: 'S1',
-          ko_count: 2,
-        },
-      ]);
-      cy.apiLogin(ownerData.user_id, 'knowledge-base');
+    setupImportScenario('csv-player', 'PlayerUser', 'PlayerAlliance', 'PLY', MAGIK_AND_SERPENT).then(
+      ({ ownerData, allianceId, champions }) => {
+        cy.apiImportFightRecords(ownerData.access_token, allianceId, [
+          {
+            champion_id: champions['Magik'].id,
+            defender_champion_id: champions['Serpent'].id,
+            node_number: 15,
+            season_name: 'S1',
+            ko_count: 2,
+          },
+        ]);
+        cy.apiLogin(ownerData.user_id, 'knowledge-base');
 
-      // Imported record is visible with no player filter
-      cy.getByCy('fight-records-table').should('contain.text', 'Magik');
+        // Imported record is visible with no player filter
+        cy.getByCy('fight-records-table').should('contain.text', 'Magik');
 
-      // Imported records have no game account → a player filter must exclude them
-      cy.getByCy('filter-player').type('Player');
-      cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
-    });
+        // Imported records have no game account → a player filter must exclude them
+        cy.getByCy('filter-player').type('Player');
+        cy.getByCy('fight-records-table').should('contain.text', 'No fight records found.');
+      },
+    );
   });
 });
