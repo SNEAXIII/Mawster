@@ -4,6 +4,7 @@ import {
   setupDefenseOwnerAndMember,
   setupOwnerMemberAlliance,
   openWarNode,
+  seedDefender,
 } from '../../support/e2e';
 
 describe('Defense – Permissions', () => {
@@ -28,11 +29,7 @@ describe('Defense – Permissions', () => {
   it('clear all button is visible when defenders are placed (owner)', () => {
     setupDefenseOwner('def-perm-clr', 'ClrOwnPlyr', 'ClrOwnAll', 'CO').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy
-            .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
-        );
+        seedDefender(adminData.access_token, ownerData.access_token, allianceId, ownerAccId, 'Spider-Man', 'Cosmic');
 
         cy.apiLogin(ownerData.user_id, 'defense');
         cy.getByCy('defense-clear-all').should('be.visible');
@@ -43,11 +40,7 @@ describe('Defense – Permissions', () => {
   it('clear all button is hidden from a regular member even with placements', () => {
     setupDefenseOwnerAndMember('def-perm-clr-mem', 'ClrMemOwn', 'ClrMember', 'ClrMemAll', 'CM').then(
       ({ adminData, ownerData, memberData, allianceId, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy
-            .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
-        );
+        seedDefender(adminData.access_token, ownerData.access_token, allianceId, ownerAccId, 'Spider-Man', 'Cosmic');
 
         cy.apiLogin(memberData.user_id, 'defense');
         cy.getByCy('defense-clear-all').should('not.exist');

@@ -53,47 +53,54 @@ function closeSeason(adminAT: string, seasonId: string) {
   return cy.apiCloseSeason(adminAT, seasonId);
 }
 
+type FilterSetup = {
+  adminAT: string;
+  ownerAccId: string;
+  allianceId: string;
+  warId: string;
+  userId: string;
+};
+
+/** 2 records inside season 1, 1 record with no season, then open the page. */
+function seedMixedRecords(s: FilterSetup, then: () => void) {
+  createSeason(s.adminAT, 1).then((season) => {
+    cy.apiDevBulkCreateFightRecords(s.warId, s.allianceId, s.ownerAccId, 2, season.id);
+    cy.apiDevBulkCreateFightRecords(s.warId, s.allianceId, s.ownerAccId, 1);
+
+    cy.apiLogin(s.userId, 'knowledge-base');
+    then();
+  });
+}
+
+function expectRecordRows(count: number) {
+  cy.getByCy('fight-records-table').find('tbody tr').should('have.length', count);
+}
+
 describe('Knowledge Base - Season Filter', () => {
   beforeEach(() => {
     cy.truncateDb();
   });
 
   it('default shows only seasonal records (all_seasons)', () => {
-    setupSeasonFilter('kb-sf-def').then(({ adminAT, ownerAccId, allianceId, warId, userId }) => {
-      createSeason(adminAT, 1).then((season) => {
-        cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 2, season.id);
-        cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 1);
-
-        cy.apiLogin(userId, 'knowledge-base');
-        cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
-      });
+    setupSeasonFilter('kb-sf-def').then((s) => {
+      seedMixedRecords(s, () => expectRecordRows(2));
     });
   });
 
   it('"All" shows every record regardless of season', () => {
-    setupSeasonFilter('kb-sf-all').then(({ adminAT, ownerAccId, allianceId, warId, userId }) => {
-      createSeason(adminAT, 1).then((season) => {
-        cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 2, season.id);
-        cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 1);
-
-        cy.apiLogin(userId, 'knowledge-base');
-
+    setupSeasonFilter('kb-sf-all').then((s) => {
+      seedMixedRecords(s, () => {
         cy.selectOption('filter-season-selector-trigger', 'All');
-        cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 3);
+        expectRecordRows(3);
       });
     });
   });
 
   it('"Pre-season" shows only records without a season', () => {
-    setupSeasonFilter('kb-sf-off').then(({ adminAT, ownerAccId, allianceId, warId, userId }) => {
-      createSeason(adminAT, 1).then((season) => {
-        cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 2, season.id);
-        cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 1);
-
-        cy.apiLogin(userId, 'knowledge-base');
-
+    setupSeasonFilter('kb-sf-off').then((s) => {
+      seedMixedRecords(s, () => {
         cy.selectOption('filter-season-selector-trigger', 'Pre-season');
-        cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
+        expectRecordRows(1);
       });
     });
   });
@@ -141,18 +148,13 @@ describe('Knowledge Base - Season Filter', () => {
   });
 
   it('clear filter resets to all_seasons default', () => {
-    setupSeasonFilter('kb-sf-clr').then(({ adminAT, ownerAccId, allianceId, warId, userId }) => {
-      createSeason(adminAT, 1).then((season) => {
-        cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 2, season.id);
-        cy.apiDevBulkCreateFightRecords(warId, allianceId, ownerAccId, 1);
-
-        cy.apiLogin(userId, 'knowledge-base');
-
+    setupSeasonFilter('kb-sf-clr').then((s) => {
+      seedMixedRecords(s, () => {
         cy.selectOption('filter-season-selector-trigger', 'All');
-        cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 3);
+        expectRecordRows(3);
 
         cy.getByCy('filter-clear').click();
-        cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
+        expectRecordRows(2);
       });
     });
   });

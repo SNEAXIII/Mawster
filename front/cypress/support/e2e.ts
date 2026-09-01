@@ -1659,3 +1659,20 @@ export function expectSeasonStatus(number: number, status: 'upcoming' | 'active'
     cy.getByCy(`season-status-${status}`).should('be.visible');
   });
 }
+
+// Give a champion to a game account and place it as a defender in one step —
+// the usual "one defender is already placed" precondition of the defense specs.
+export function seedDefender(
+  adminToken: string,
+  ownerToken: string,
+  allianceId: string,
+  gameAccountId: string,
+  name: string,
+  championClass: string,
+  battlegroup = 1,
+  node = 1,
+): void {
+  cy.apiGiveChampion(adminToken, ownerToken, gameAccountId, name, championClass).then(({ championUser }) => {
+    cy.apiPlaceDefender(ownerToken, allianceId, battlegroup, node, championUser.id, gameAccountId);
+  });
+}

@@ -1,4 +1,4 @@
-import { setupUser, setupDefenseOwner, setupDefenseOwnerAndMember, openWarNode } from '../../support/e2e';
+import { setupUser, setupDefenseOwner, setupDefenseOwnerAndMember, openWarNode, seedDefender } from '../../support/e2e';
 
 describe('Defense – Overflow & Error Cases', () => {
   beforeEach(() => {
@@ -94,11 +94,7 @@ describe('Defense – Overflow & Error Cases', () => {
   it('counter is NOT red when player has fewer than 5/5 defenders', () => {
     setupDefenseOwner('def-ov-norm', 'NormCntPlyr', 'NormCntAll', 'NC').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy
-            .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
-        );
+        seedDefender(adminData.access_token, ownerData.access_token, allianceId, ownerAccId, 'Spider-Man', 'Cosmic');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -129,11 +125,7 @@ describe('Defense – Overflow & Error Cases', () => {
   it("shows 'No champions available' after all champions have been placed", () => {
     setupDefenseOwner('def-ov-allplc', 'AllPlcPlyr', 'AllPlcAll', 'AP').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy
-            .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
-        );
+        seedDefender(adminData.access_token, ownerData.access_token, allianceId, ownerAccId, 'Spider-Man', 'Cosmic');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 

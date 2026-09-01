@@ -13,6 +13,19 @@ function setupAssistScenario(prefix: string) {
   });
 }
 
+/** Assign the member's attacker on node 10, then land on the attacker panel. */
+function assignAttackerAndOpenPanel(
+  memberData: { access_token: string; user_id: string },
+  allianceId: string,
+  warId: string,
+  championUserId: string,
+) {
+  cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+
+  cy.apiLogin(memberData.user_id, 'war');
+  cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+}
+
 describe('War Assist', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -20,10 +33,7 @@ describe('War Assist', () => {
 
   it('adds assist via popover and shows assisted badge on node', () => {
     setupAssistScenario('wa1').then(({ memberData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-
-      cy.apiLogin(memberData.user_id, 'war');
-      cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+      assignAttackerAndOpenPanel(memberData, allianceId, warId, championUserId);
 
       cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('assist-add-node-10').click();
@@ -56,10 +66,7 @@ describe('War Assist', () => {
 
   it('attacker own champion is excluded from the assist selector', () => {
     setupAssistScenario('wa3').then(({ memberData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-
-      cy.apiLogin(memberData.user_id, 'war');
-      cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+      assignAttackerAndOpenPanel(memberData, allianceId, warId, championUserId);
 
       cy.getByCy('node-actions-trigger-node-10').click();
       cy.getByCy('assist-add-node-10').click();
