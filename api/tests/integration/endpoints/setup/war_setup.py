@@ -4,10 +4,16 @@ from src.models.war.War import War
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
+    push_champion_user,
     push_member,
     push_officer,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
+from tests.utils.utils_client import (
+    create_auth_headers,
+    execute_patch_request,
+    execute_post_request,
+)
 from tests.utils.utils_constant import (
     ALLIANCE_NAME,
     ALLIANCE_TAG,
@@ -67,3 +73,61 @@ async def _setup_war(
     await load_objects([war])
 
     return {**data, "war": war}
+
+
+async def _setup_attacker_scenario():
+    """
+    Create alliance + owner (officer, BG1) + member (BG1) + champion + war + defender on node 10.
+    Returns dict with all objects needed for attacker tests.
+    """
+    data = await _setup_alliance()
+    alliance = data["alliance"]
+    owner = data["owner"]
+    member = data["member"]
+    champ = data["champ"]
+
+    # Assign owner and member to BG1 via API
+    headers_owner = create_auth_headers(user_id=str(USER_ID))
+    await execute_patch_request(
+        f"/alliances/{alliance.id}/members/{owner.id}/group",
+        payload={"group": 1},
+        headers=headers_owner,
+    )
+    await execute_patch_request(
+        f"/alliances/{alliance.id}/members/{member.id}/group",
+        payload={"group": 1},
+        headers=headers_owner,
+    )
+
+    # Declare war
+    war = War(
+        id=uuid.uuid4(),
+        alliance_id=alliance.id,
+        opponent_name=OPPONENT,
+        created_by_id=owner.id,
+    )
+    await load_objects([war])
+
+    # Place defender on node 10
+    await execute_post_request(
+        f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
+        payload={
+            "node_number": 10,
+            "champion_id": str(champ.id),
+            "stars": 7,
+            "rank": 3,
+            "ascension": 0,
+        },
+        headers=headers_owner,
+    )
+
+    # Add champion to member's roster
+    champ2 = await push_champion(name="Wolverine", champion_class="Mutant")
+    cu = await push_champion_user(member, champ2, stars=7, rank=3)
+
+    return {
+        **data,
+        "war": war,
+        "champ2": champ2,
+        "champion_user": cu,
+    }

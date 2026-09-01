@@ -123,26 +123,86 @@ async def _setup_war_with_fight():
     }
 
 
+async def _end_war(alliance_id, war_id, *, headers, win=True, elo_change=50, expected_status=200):
+    """POST the end-war route, which is what triggers the fight-record snapshot."""
+    response = await execute_post_request(
+        f"/alliances/{alliance_id}/wars/{war_id}/end",
+        payload={"win": win, "elo_change": elo_change},
+        headers=headers,
+    )
+    assert response.status_code == expected_status
+    return response
+
+
+async def _fetch_records(session, war_id):
+    """Every WarFightRecord snapshotted for one war."""
+    return (await session.exec(select(WarFightRecord).where(WarFightRecord.war_id == war_id))).all()
+
+
+async def _fetch_single_record(session, war_id):
+    """The one record a war is expected to have snapshotted."""
+    records = await _fetch_records(session, war_id)
+    assert len(records) == 1
+    return records[0]
+
+
+async def _snapshot_war_with_note(data, *, content="frozen note", battlegroup=1, node_number=10):
+    """Attach a note to a node, then snapshot the war from its own session.
+
+    The snapshot must run in a separate session so the note is already committed,
+    which is what links WarFightNote to the WarFightRecord.
+    """
+    async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as s:
+        war = await s.get(War, data["war"].id)
+        war.tier = 1
+        s.add(war)
+        await s.commit()
+        await WarFightNoteService.upsert_note(
+            s,
+            war=war,
+            battlegroup=battlegroup,
+            node_number=node_number,
+            body=WarFightNoteUpsertRequest(content=content),
+            editor_account_id=data["owner"].id,
+            editor_user_id=data["owner"].user_id,
+        )
+        await FightRecordService.snapshot_war(s, war)
+
+
+async def _push_extra_ended_war(data, *, headers, ko_count=1, node_number=10, elo_change=10):
+    """One more war on the same alliance, ended so it snapshots an extra fight record."""
+    war = War(
+        id=uuid.uuid4(),
+        alliance_id=data["alliance"].id,
+        opponent_name=OPPONENT,
+        created_by_id=data["owner"].id,
+    )
+    placement = WarDefensePlacement(
+        war_id=war.id,
+        battlegroup=1,
+        node_number=node_number,
+        champion_id=data["defender_champ"].id,
+        stars=6,
+        rank=3,
+        ascension=0,
+        attacker_champion_user_id=data["attacker_cu"].id,
+        ko_count=ko_count,
+        is_combat_completed=False,
+    )
+    await load_objects([war, placement])
+    await _end_war(data["alliance"].id, war.id, headers=headers, elo_change=elo_change)
+    return war
+
+
 class TestWarFightRecordSnapshot:
     @pytest.mark.asyncio
     async def test_end_war_creates_fight_record(self, session):
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        response = await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 50},
-            headers=headers,
-        )
-        assert response.status_code == 200
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
 
-        records = (
-            await session.exec(
-                select(WarFightRecord).where(WarFightRecord.war_id == data["war"].id)
-            )
-        ).all()
-        assert len(records) == 1
-        r = records[0]
+        r = await _fetch_single_record(session, data["war"].id)
         assert r.node_number == 10
         assert r.battlegroup == 1
         assert r.champion_id == data["attacker_champ"].id
@@ -179,20 +239,9 @@ class TestWarFightRecordSnapshot:
         )
 
         headers = create_auth_headers(user_id=str(USER_ID))
-        response = await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 50},
-            headers=headers,
-        )
-        assert response.status_code == 200
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
 
-        records = (
-            await session.exec(
-                select(WarFightRecord).where(WarFightRecord.war_id == data["war"].id)
-            )
-        ).all()
-        assert len(records) == 1
-        r = records[0]
+        r = await _fetch_single_record(session, data["war"].id)
         assert r.is_saga_attacker is True
         assert r.defender_is_saga_defender is False
 
@@ -226,16 +275,9 @@ class TestWarFightRecordSnapshot:
         await load_objects([war, placement])
 
         headers = create_auth_headers(user_id=str(USER_ID))
-        response = await execute_post_request(
-            f"/alliances/{alliance.id}/wars/{war.id}/end",
-            payload={"win": False, "elo_change": None},
-            headers=headers,
-        )
-        assert response.status_code == 200
+        await _end_war(alliance.id, war.id, headers=headers, win=False, elo_change=None)
 
-        records = (
-            await session.exec(select(WarFightRecord).where(WarFightRecord.war_id == war.id))
-        ).all()
+        records = await _fetch_records(session, war.id)
         assert len(records) == 0
 
     @pytest.mark.asyncio
@@ -244,21 +286,7 @@ class TestWarFightRecordSnapshot:
 
         data = await _setup_war_with_fight()
 
-        async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as s:
-            war = await s.get(War, data["war"].id)
-            war.tier = 1
-            s.add(war)
-            await s.commit()
-            await WarFightNoteService.upsert_note(
-                s,
-                war=war,
-                battlegroup=1,
-                node_number=10,
-                body=WarFightNoteUpsertRequest(content="frozen note"),
-                editor_account_id=data["owner"].id,
-                editor_user_id=data["owner"].user_id,
-            )
-            await FightRecordService.snapshot_war(s, war)
+        await _snapshot_war_with_note(data)
 
         record = (
             await session.exec(
@@ -284,21 +312,7 @@ class TestWarFightRecordSnapshot:
 
         data = await _setup_war_with_fight()
 
-        async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as s:
-            war = await s.get(War, data["war"].id)
-            war.tier = 1
-            s.add(war)
-            await s.commit()
-            await WarFightNoteService.upsert_note(
-                s,
-                war=war,
-                battlegroup=1,
-                node_number=10,
-                body=WarFightNoteUpsertRequest(content="frozen note"),
-                editor_account_id=data["owner"].id,
-                editor_user_id=data["owner"].user_id,
-            )
-            await FightRecordService.snapshot_war(s, war)
+        await _snapshot_war_with_note(data)
 
         result = await FightRecordService.get_fight_records(
             session,
@@ -314,25 +328,11 @@ class TestWarFightRecordSnapshot:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        response1 = await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 50},
-            headers=headers,
-        )
-        assert response1.status_code == 200
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
 
-        response2 = await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 50},
-            headers=headers,
-        )
-        assert response2.status_code == 200
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
 
-        records = (
-            await session.exec(
-                select(WarFightRecord).where(WarFightRecord.war_id == data["war"].id)
-            )
-        ).all()
+        records = await _fetch_records(session, data["war"].id)
         assert len(records) == 1
 
         war = await session.get(War, data["war"].id)
@@ -345,11 +345,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers_owner = create_auth_headers(user_id=str(USER_ID))
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 50},
-            headers=headers_owner,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers_owner)
 
         response = await execute_get_request("/fight-records", headers=headers_owner)
         assert response.status_code == 200
@@ -372,11 +368,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers_owner = create_auth_headers(user_id=str(USER_ID))
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 50},
-            headers=headers_owner,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers_owner)
 
         response = await execute_get_request(
             f"/fight-records?champion_id={data['attacker_champ'].id}",
@@ -407,63 +399,13 @@ class TestListFightRecords:
         headers_owner = create_auth_headers(user_id=str(USER_ID))
 
         # End war 1
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers_owner,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers_owner, elo_change=10)
 
         # War 2
-        war2 = War(
-            id=uuid.uuid4(),
-            alliance_id=data["alliance"].id,
-            opponent_name=OPPONENT,
-            created_by_id=data["owner"].id,
-        )
-        placement2 = WarDefensePlacement(
-            war_id=war2.id,
-            battlegroup=1,
-            node_number=10,
-            champion_id=data["defender_champ"].id,
-            stars=6,
-            rank=3,
-            ascension=0,
-            attacker_champion_user_id=data["attacker_cu"].id,
-            ko_count=1,
-            is_combat_completed=False,
-        )
-        await load_objects([war2, placement2])
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{war2.id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers_owner,
-        )
+        await _push_extra_ended_war(data, headers=headers_owner)
 
         # War 3
-        war3 = War(
-            id=uuid.uuid4(),
-            alliance_id=data["alliance"].id,
-            opponent_name=OPPONENT,
-            created_by_id=data["owner"].id,
-        )
-        placement3 = WarDefensePlacement(
-            war_id=war3.id,
-            battlegroup=1,
-            node_number=10,
-            champion_id=data["defender_champ"].id,
-            stars=6,
-            rank=3,
-            ascension=0,
-            attacker_champion_user_id=data["attacker_cu"].id,
-            ko_count=1,
-            is_combat_completed=False,
-        )
-        await load_objects([war3, placement3])
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{war3.id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers_owner,
-        )
+        await _push_extra_ended_war(data, headers=headers_owner)
 
         # Page 1: size=2
         resp1 = await execute_get_request("/fight-records?page=1&size=2", headers=headers_owner)
@@ -484,11 +426,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers_owner = create_auth_headers(user_id=str(USER_ID))
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 50},
-            headers=headers_owner,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers_owner)
 
         # Exact match
         resp = await execute_get_request(
@@ -522,37 +460,10 @@ class TestListFightRecords:
         headers_owner = create_auth_headers(user_id=str(USER_ID))
 
         # End war 1 (ko_count=1 set in placement by _setup_war_with_fight)
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers_owner,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers_owner, elo_change=10)
 
         # War 2 with ko_count=3
-        war2 = War(
-            id=uuid.uuid4(),
-            alliance_id=data["alliance"].id,
-            opponent_name=OPPONENT,
-            created_by_id=data["owner"].id,
-        )
-        placement2 = WarDefensePlacement(
-            war_id=war2.id,
-            battlegroup=1,
-            node_number=10,
-            champion_id=data["defender_champ"].id,
-            stars=6,
-            rank=3,
-            ascension=0,
-            attacker_champion_user_id=data["attacker_cu"].id,
-            ko_count=3,
-            is_combat_completed=False,
-        )
-        await load_objects([war2, placement2])
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{war2.id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers_owner,
-        )
+        await _push_extra_ended_war(data, headers=headers_owner, ko_count=3)
 
         # ASC: first item should have lower ko_count
         resp_asc = await execute_get_request(
@@ -580,11 +491,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers, elo_change=10)
 
         resp = await execute_get_request(
             f"/fight-records?defender_champion_id={data['defender_champ'].id}",
@@ -606,11 +513,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers, elo_change=10)
 
         resp = await execute_get_request("/fight-records?node_number=10", headers=headers)
         assert resp.status_code == 200
@@ -669,11 +572,7 @@ class TestListFightRecords:
             session.add(war)
             await session.commit()
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers, elo_change=10)
 
         resp = await execute_get_request(
             f"/fight-records?season_selector=specific&season_id={season.id}", headers=headers
@@ -694,11 +593,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers, elo_change=10)
 
         resp = await execute_get_request(
             f"/fight-records?alliance_id={data['alliance'].id}", headers=headers
@@ -718,11 +613,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers, elo_change=10)
 
         resp = await execute_get_request("/fight-records?battlegroup=1", headers=headers)
         assert resp.status_code == 200
@@ -745,11 +636,7 @@ class TestListFightRecords:
             session.add(placement)
             await session.commit()
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers, elo_change=10)
 
         resp_true = await execute_get_request(
             "/fight-records?planning_error_only=true", headers=headers
@@ -769,11 +656,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers, elo_change=10)
 
         resp = await execute_get_request(
             "/fight-records?sort_by=champion_name&sort_order=asc", headers=headers
@@ -833,11 +716,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers, elo_change=10)
 
         resp = await execute_get_request(
             "/fight-records?sort_by=defender_champion_name&sort_order=desc", headers=headers
@@ -1076,11 +955,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers, elo_change=10)
 
         resp = await execute_get_request(
             "/fight-records?sort_by=alliance_name&sort_order=asc", headers=headers
@@ -1117,17 +992,9 @@ class TestSnapshotWithPrefightsAndSynergies:
         )
         await load_objects([prefight])
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers, elo_change=10)
 
-        records = (
-            await session.exec(
-                select(WarFightRecord).where(WarFightRecord.war_id == data["war"].id)
-            )
-        ).all()
+        records = await _fetch_records(session, data["war"].id)
         assert len(records) == 1
 
         prefights = (
@@ -1166,17 +1033,9 @@ class TestSnapshotWithPrefightsAndSynergies:
         )
         await load_objects([synergy])
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 10},
-            headers=headers,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers, elo_change=10)
 
-        records = (
-            await session.exec(
-                select(WarFightRecord).where(WarFightRecord.war_id == data["war"].id)
-            )
-        ).all()
+        records = await _fetch_records(session, data["war"].id)
         assert len(records) == 1
 
         synergies = (
@@ -1195,11 +1054,7 @@ class TestFightRecordScoping:
         data = await _setup_war_with_fight()
         headers_owner = create_auth_headers(user_id=str(USER_ID))
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 50},
-            headers=headers_owner,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers_owner)
 
         resp = await execute_get_request("/fight-records", headers=headers_owner)
         assert resp.status_code == 200
@@ -1223,11 +1078,7 @@ class TestFightRecordScoping:
         data = await _setup_war_with_fight()
         headers_owner = create_auth_headers(user_id=str(USER_ID))
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 50},
-            headers=headers_owner,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers_owner)
 
         visitor_user_id = uuid.uuid4()
 
@@ -1255,11 +1106,7 @@ class TestFightRecordScoping:
         data = await _setup_war_with_fight()
         headers_owner = create_auth_headers(user_id=str(USER_ID))
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 50},
-            headers=headers_owner,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers_owner)
 
         other_id = uuid.uuid4()
         resp = await execute_get_request(
@@ -1303,11 +1150,7 @@ class TestAdminSnapshotEndpoints:
         data = await _setup_war_with_fight()
         # End the war normally (triggers auto-snapshot via end_war endpoint).
         owner_headers = create_auth_headers(user_id=str(USER_ID))
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 50},
-            headers=owner_headers,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=owner_headers)
 
         admin_headers = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
         response = await execute_post_request(
@@ -1325,11 +1168,7 @@ class TestAdminSnapshotEndpoints:
         """After ending a war, snapshot-stats must show alliance with war_count=1."""
         data = await _setup_war_with_fight()
         owner_headers = create_auth_headers(user_id=str(USER_ID))
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
-            payload={"win": True, "elo_change": 50},
-            headers=owner_headers,
-        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=owner_headers)
 
         admin_headers = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
         response = await execute_get_request("/admin/wars/snapshot-stats", headers=admin_headers)

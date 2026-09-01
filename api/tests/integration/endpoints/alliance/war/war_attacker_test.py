@@ -13,7 +13,11 @@ from tests.integration.endpoints.setup.game_setup import (
     push_champion,
     push_champion_user,
 )
-from tests.integration.endpoints.setup.war_setup import OPPONENT, USER3_ID, _setup_alliance
+from tests.integration.endpoints.setup.war_setup import (
+    USER3_ID,
+    _setup_alliance,
+    _setup_attacker_scenario,
+)
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_delete_request,
@@ -28,60 +32,6 @@ from tests.utils.utils_constant import (
 from tests.utils.utils_db import load_objects
 
 # ─── Attacker helpers ─────────────────────────────────────
-
-
-async def _setup_attacker_scenario():
-    """
-    Create alliance + owner (officer, BG1) + member (BG1) + champion + war + defender on node 10.
-    Returns dict with all objects needed for attacker tests.
-    """
-    data = await _setup_alliance()
-    alliance = data["alliance"]
-    owner = data["owner"]
-    member = data["member"]
-    champ = data["champ"]
-
-    headers_owner = create_auth_headers(user_id=str(USER_ID))
-    await execute_patch_request(
-        f"/alliances/{alliance.id}/members/{owner.id}/group",
-        payload={"group": 1},
-        headers=headers_owner,
-    )
-    await execute_patch_request(
-        f"/alliances/{alliance.id}/members/{member.id}/group",
-        payload={"group": 1},
-        headers=headers_owner,
-    )
-
-    war = War(
-        id=uuid.uuid4(),
-        alliance_id=alliance.id,
-        opponent_name=OPPONENT,
-        created_by_id=owner.id,
-    )
-    await load_objects([war])
-
-    await execute_post_request(
-        f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
-        payload={
-            "node_number": 10,
-            "champion_id": str(champ.id),
-            "stars": 7,
-            "rank": 3,
-            "ascension": 0,
-        },
-        headers=headers_owner,
-    )
-
-    champ2 = await push_champion(name="Wolverine", champion_class="Mutant")
-    cu = await push_champion_user(member, champ2, stars=7, rank=3)
-
-    return {
-        **data,
-        "war": war,
-        "champ2": champ2,
-        "champion_user": cu,
-    }
 
 
 class TestAvailableAttackers:
