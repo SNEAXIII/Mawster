@@ -1,6 +1,6 @@
 ---
 name: open-pr
-description: Use when ready to open a pull request — runs ruff lint/format, commits, pushes, and creates the PR via GitHub MCP
+description: Use when ready to open a pull request — runs ruff lint/format, commits, pushes, and creates the PR via the gh CLI
 user-invocable: true
 ---
 
@@ -28,11 +28,13 @@ Workflow complet pour ouvrir une PR sur `main` depuis la branche courante.
    git push -u origin <branch>
    ```
 
-5. **Créer la PR** via `mcp__github__create_pull_request` :
-   - `owner` et `repo` : extraits depuis `git remote get-url origin` (ex: `git@github.com:OWNER/REPO.git` ou `https://github.com/OWNER/REPO`)
-   - `head` : branche courante
-   - `base` : `main`
-   - Body en markdown avec sections **Summary** (bullets) et **Test plan** (checklist).
+5. **Créer la PR** via le CLI `gh` :
+   ```bash
+   gh pr create --base main --head <branch> --title "<titre>" --body ""
+   ```
+   - Body vide ou minimal — pas de sections Summary / Test plan.
+   - Si `gh` répond `HTTP 401: Bad credentials`, demander à l'utilisateur de lancer
+     `gh auth login` puis relancer la commande.
 
 ## Args
 
