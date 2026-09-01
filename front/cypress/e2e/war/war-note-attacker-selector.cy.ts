@@ -1,4 +1,4 @@
-import { setupAttackerScenario } from '../../support/e2e';
+import { setupAttackerScenario, openWarNode } from '../../support/e2e';
 
 const NOTE = 'Selector note content';
 
@@ -18,7 +18,7 @@ describe('War note – attacker selector', () => {
       cy.getByCy('war-mode-attackers').click();
 
       // Open the selector on node 10 and write a note via the embedded editor.
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      openWarNode(10);
       cy.getByCy('war-attacker-search').should('be.visible');
       cy.getByCy('war-attacker-selector-note').within(() => {
         // Note section is folded by default — expand it before editing.
@@ -37,7 +37,7 @@ describe('War note – attacker selector', () => {
 
       // Reopen the selector — the note persisted.
       cy.get('body').type('{esc}');
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      openWarNode(10);
       cy.getByCy('war-attacker-selector-note').within(() => {
         // A saved note is unfolded automatically on reopen — no toggle needed.
         cy.getByCy('war-note-input').should('have.value', NOTE);
@@ -50,7 +50,7 @@ describe('War note – attacker selector', () => {
       cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('war-mode-attackers').click();
 
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      openWarNode(10);
       cy.getByCy('war-attacker-search').should('be.visible');
       cy.getByCy('war-attacker-selector-note').within(() => {
         // Folded by default: editor not rendered until the toggle is clicked.

@@ -1,4 +1,4 @@
-import { BACKEND, setupVisitorScenario } from '../../support/e2e';
+import { setupVisitorScenario, confirmAction, openWarNode } from '../../support/e2e';
 
 describe('Visitor system', () => {
   beforeEach(() => {
@@ -30,8 +30,7 @@ describe('Visitor system', () => {
       setupVisitorScenario('vis-kick').then(({ ownerData, visitorAccId }) => {
         cy.apiLogin(ownerData.user_id, 'alliances');
 
-        cy.getByCy(`kick-visitor-${visitorAccId}`).click();
-        cy.getByCy('confirmation-dialog-confirm').click();
+        confirmAction(`kick-visitor-${visitorAccId}`);
 
         cy.getByCy(`visitor-row-${visitorAccId}`).should('not.exist');
       });
@@ -170,8 +169,7 @@ describe('Visitor system', () => {
         cy.apiLogin(visitorData.user_id, 'alliances');
 
         cy.getByCy('alliance-visitor-badge').should('be.visible');
-        cy.getByCy('leave-visit-button').click();
-        cy.getByCy('confirmation-dialog-confirm').click();
+        confirmAction('leave-visit-button');
 
         // The visitor has no other alliance: the page falls back to the empty state
         cy.getByCy('alliance-empty-state').should('be.visible');
@@ -250,21 +248,14 @@ function setupVisitorWarScene(prefix: string) {
       const allianceId = users[ownerTok].alliance_id!;
 
       return cy
-        .request({
-          method: 'POST',
-          url: `${BACKEND}/alliances/${allianceId}/invitations`,
-          headers: { Authorization: `Bearer ${ownerAT}` },
-          body: { game_account_id: visitorAccId, type: 'visitor' },
+        .apiRequest(ownerAT, 'POST', `/alliances/${allianceId}/invitations`, {
+          game_account_id: visitorAccId,
+          type: 'visitor',
         })
         .then((invResp) => {
           const invId = (invResp.body as { id: string }).id;
           return cy
-            .request({
-              method: 'POST',
-              url: `${BACKEND}/alliances/invitations/${invId}/accept`,
-              headers: { Authorization: `Bearer ${visitorAT}` },
-              body: {},
-            })
+            .apiRequest(visitorAT, 'POST', `/alliances/invitations/${invId}/accept`, {})
             .then(() => setupWarForVisitor(adminAT, ownerAT, ownerAccId, allianceId, visitorUserId));
         });
     });
@@ -278,7 +269,7 @@ describe('Visitor — defense page', () => {
   it('cannot place a defender (clicking node does not open selector)', () => {
     setupVisitorScenario('vis-def').then(({ visitorData }) => {
       cy.apiLogin(visitorData.user_id, 'defense');
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.contains('Select Champion').should('not.exist');
     });
   });

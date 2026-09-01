@@ -1,4 +1,4 @@
-import { setupAttackerScenario, setupPrefightScenario, BACKEND } from '../../support/e2e';
+import { setupAttackerScenario, setupPrefightScenario, confirmAction, openWarNode } from '../../support/e2e';
 
 function goToAttackersMode(userId: string) {
   cy.apiLogin(userId, 'war');
@@ -40,13 +40,13 @@ describe('War – Attackers mode (advanced)', () => {
         });
 
         cy.then(() => {
-          cy.request({
-            method: 'POST',
-            url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/node/13/attacker`,
-            headers: { Authorization: `Bearer ${memberData.access_token}` },
-            body: { champion_user_id: cuIds[3] },
-            failOnStatusCode: false,
-          }).then((res) => {
+          cy.apiRequest(
+            memberData.access_token,
+            'POST',
+            `/alliances/${allianceId}/wars/${warId}/bg/1/node/13/attacker`,
+            { champion_user_id: cuIds[3] },
+            { failOnStatusCode: false },
+          ).then((res) => {
             expect(res.status).to.eq(409);
           });
         });
@@ -86,7 +86,7 @@ describe('War – Attackers mode (advanced)', () => {
 
           cy.then(() => {
             cy.apiLogin(memberData.user_id, 'war');
-            cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+            openWarNode(10);
             cy.getByCy('war-attacker-search').should('be.visible');
             cy.getByCy('attacker-card-Vision').should('be.visible').click();
             cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
@@ -105,20 +105,15 @@ describe('War – Attackers mode (advanced)', () => {
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
         cy.apiAddWarPrefight(memberData.access_token, allianceId, warId, 1, prefightChampionUserId, 10);
 
-        cy.request({
-          method: 'GET',
-          url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/prefight`,
-          headers: { Authorization: `Bearer ${memberData.access_token}` },
-        }).then((res) => expect(res.body).to.have.length(1));
+        cy.apiRequest(memberData.access_token, 'GET', `/alliances/${allianceId}/wars/${warId}/bg/1/prefight`).then(
+          (res) => expect(res.body).to.have.length(1),
+        );
 
         goToAttackersMode(ownerData.user_id);
-        cy.getByCy('remove-attacker-node-10').click();
-        cy.getByCy('confirmation-dialog-confirm').click();
-        cy.request({
-          method: 'GET',
-          url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/prefight`,
-          headers: { Authorization: `Bearer ${memberData.access_token}` },
-        }).then((res) => expect(res.body).to.have.length(0));
+        confirmAction('remove-attacker-node-10');
+        cy.apiRequest(memberData.access_token, 'GET', `/alliances/${allianceId}/wars/${warId}/bg/1/prefight`).then(
+          (res) => expect(res.body).to.have.length(0),
+        );
       },
     );
   });
@@ -132,7 +127,7 @@ describe('War – Attackers mode (advanced)', () => {
           is_preferred_attacker: true,
         }).then(() => {
           goToAttackersMode(ownerData.user_id);
-          cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+          openWarNode(10);
           cy.getByCy('war-attacker-search').should('be.visible');
           cy.getByCy('attacker-card-Deadpool').find('[data-cy="preferred-badge"]').should('exist');
           cy.getByCy('attacker-card-Wolverine').find('[data-cy="preferred-badge"]').should('not.exist');

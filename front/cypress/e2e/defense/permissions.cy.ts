@@ -1,4 +1,10 @@
-import { setupUser, setupDefenseOwner, setupDefenseOwnerAndMember, setupOwnerMemberAlliance } from '../../support/e2e';
+import {
+  setupUser,
+  setupDefenseOwner,
+  setupDefenseOwnerAndMember,
+  setupOwnerMemberAlliance,
+  openWarNode,
+} from '../../support/e2e';
 
 describe('Defense – Permissions', () => {
   beforeEach(() => {
@@ -70,7 +76,7 @@ describe('Defense – Permissions', () => {
     setupOwnerMemberAlliance('def-perm-click', 'ClickOwn', 'ClickMem', 'ClickAll', 'CK').then(({ memberData }) => {
       cy.apiLogin(memberData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       // Selector dialog should NOT appear
       cy.contains('Select Champion').should('not.exist');
     });

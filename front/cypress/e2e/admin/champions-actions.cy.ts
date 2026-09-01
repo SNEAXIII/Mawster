@@ -1,4 +1,4 @@
-import { setupAdmin } from '../../support/e2e';
+import { setupAdmin, confirmAction } from '../../support/e2e';
 
 const CHAMPION = 'Iron Man';
 
@@ -40,8 +40,7 @@ describe('Admin — champion alias & delete actions', () => {
   });
 
   it('confirm delete → champion removed from list', () => {
-    cy.getByCy(`delete-champion-${CHAMPION}`).click();
-    cy.getByCy('confirmation-dialog-confirm').click();
+    confirmAction(`delete-champion-${CHAMPION}`);
     cy.getByCy(`champion-row-${CHAMPION}`).should('not.exist');
   });
 });

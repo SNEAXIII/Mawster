@@ -1,4 +1,4 @@
-import { BACKEND } from '../../support/e2e';
+import {} from '../../support/e2e';
 
 function setupSeasonFilter(prefix: string) {
   const adminToken = `${prefix}-adm`;
@@ -40,32 +40,17 @@ function setupSeasonFilter(prefix: string) {
 
 function createSeason(adminAT: string, number: number) {
   return cy
-    .request({
-      method: 'POST',
-      url: `${BACKEND}/admin/seasons`,
-      headers: { Authorization: `Bearer ${adminAT}` },
-      body: { number },
-    })
+    .apiRequest(adminAT, 'POST', `/admin/seasons`, { number })
     .then((res) => res.body as { id: string; number: number });
 }
 
 function openSeason(adminAT: string, seasonId: string) {
-  return cy.request({
-    method: 'PATCH',
-    url: `${BACKEND}/admin/seasons/${seasonId}/open`,
-    headers: { Authorization: `Bearer ${adminAT}` },
-    body: {},
-  });
+  return cy.apiOpenSeason(adminAT, seasonId);
 }
 
 // Closing a season frees the single-current slot so the next season can be created.
 function closeSeason(adminAT: string, seasonId: string) {
-  return cy.request({
-    method: 'PATCH',
-    url: `${BACKEND}/admin/seasons/${seasonId}/close`,
-    headers: { Authorization: `Bearer ${adminAT}` },
-    body: {},
-  });
+  return cy.apiCloseSeason(adminAT, seasonId);
 }
 
 describe('Knowledge Base - Season Filter', () => {

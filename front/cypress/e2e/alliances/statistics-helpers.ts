@@ -1,50 +1,17 @@
-import { BACKEND } from '../../support/e2e';
+import {} from '../../support/e2e';
 
 export function createAndActivateSeason(adminToken: string) {
-  return cy
-    .request({
-      method: 'POST',
-      url: `${BACKEND}/admin/seasons`,
-      body: { number: 64 },
-      headers: { Authorization: `Bearer ${adminToken}` },
-    })
-    .then((res) =>
-      cy.request({
-        method: 'PATCH',
-        url: `${BACKEND}/admin/seasons/${res.body.id}/open`,
-        headers: { Authorization: `Bearer ${adminToken}` },
-      }),
-    );
+  return cy.apiCreateOpenSeason(adminToken, 64);
 }
 
 // Create + open a season and yield its id (needed to close it later).
 export function createOpenSeason(adminToken: string, number = 64): Cypress.Chainable<string> {
-  return cy
-    .request({
-      method: 'POST',
-      url: `${BACKEND}/admin/seasons`,
-      body: { number },
-      headers: { Authorization: `Bearer ${adminToken}` },
-    })
-    .then((res) => {
-      const seasonId = (res.body as { id: string }).id;
-      return cy
-        .request({
-          method: 'PATCH',
-          url: `${BACKEND}/admin/seasons/${seasonId}/open`,
-          headers: { Authorization: `Bearer ${adminToken}` },
-        })
-        .then(() => seasonId);
-    });
+  return cy.apiCreateOpenSeason(adminToken, number);
 }
 
 // Close a season (active -> ended), leaving no active season (pre-season state).
 export function closeSeason(adminToken: string, seasonId: string) {
-  return cy.request({
-    method: 'PATCH',
-    url: `${BACKEND}/admin/seasons/${seasonId}/close`,
-    headers: { Authorization: `Bearer ${adminToken}` },
-  });
+  return cy.apiCloseSeason(adminToken, seasonId);
 }
 
 export function setupEndedAssistWar(opts: {
@@ -68,11 +35,8 @@ export function setupEndedAssistWar(opts: {
               return cy.apiCreateWar(ownerToken, allianceId, 'AstEnemy').then((war: { id: string }) => {
                 cy.apiPlaceWarDefender(ownerToken, allianceId, war.id, 1, 10, ironManChamps[0].id, 7, 3, 0);
                 cy.apiAssignWarAttacker(ownerToken, allianceId, war.id, 1, 10, cuOwner.id);
-                cy.request({
-                  method: 'POST',
-                  url: `${BACKEND}/alliances/${allianceId}/wars/${war.id}/bg/1/node/10/assist`,
-                  headers: { Authorization: `Bearer ${memberToken}` },
-                  body: { champion_user_id: cuMember.id },
+                cy.apiRequest(memberToken, 'POST', `/alliances/${allianceId}/wars/${war.id}/bg/1/node/10/assist`, {
+                  champion_user_id: cuMember.id,
                 });
                 cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
               });
@@ -437,11 +401,7 @@ export function setupStatsOwnerAndMember(
 
 // Remove a member from the alliance — used to turn them into a "former member".
 export function removeAllianceMember(ownerToken: string, allianceId: string, gameAccountId: string) {
-  return cy.request({
-    method: 'DELETE',
-    url: `${BACKEND}/alliances/${allianceId}/members/${gameAccountId}`,
-    headers: { Authorization: `Bearer ${ownerToken}` },
-  });
+  return cy.apiRequest(ownerToken, 'DELETE', `/alliances/${allianceId}/members/${gameAccountId}`);
 }
 
 // Open the statistics tab as the given user and pick a member-filter option.

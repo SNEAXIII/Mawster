@@ -1,4 +1,4 @@
-import { setupAssignedAttacker, setupAttackerScenario } from '../../support/e2e';
+import { setupAssignedAttacker, setupAttackerScenario, openWarNode } from '../../support/e2e';
 
 type ToggleViaApi = (token: string, allianceId: string, warId: string, battlegroup: number, nodeNumber: number) => void;
 
@@ -13,7 +13,7 @@ export function nodeFlagButtonBehaviour(flag: string, prefix: string, toggleViaA
     hiddenWithoutAttacker: () => {
       setupAttackerScenario(`${prefix}-no-atk`).then(({ ownerData }) => {
         cy.goToWarMode(ownerData.user_id, 'attackers');
-        cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+        openWarNode(10);
         cy.getByCy(button).should('not.exist');
       });
     },

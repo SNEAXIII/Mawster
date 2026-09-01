@@ -183,14 +183,11 @@ describe('Alliances – Edge Cases', () => {
 
   it('returns 404 when getting a non-existent alliance', () => {
     setupUser('ally-get404-token').then(({ access_token }) => {
-      cy.request({
-        method: 'GET',
-        url: `${BACKEND}/alliances/${NIL_UUID}`,
-        headers: { Authorization: `Bearer ${access_token}` },
-        failOnStatusCode: false,
-      }).then((res) => {
-        expect(res.status).to.eq(404);
-      });
+      cy.apiRequest(access_token, 'GET', `/alliances/${NIL_UUID}`, undefined, { failOnStatusCode: false }).then(
+        (res) => {
+          expect(res.status).to.eq(404);
+        },
+      );
     });
   });
 });

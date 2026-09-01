@@ -1,4 +1,4 @@
-import { setupUser, setupDefenseOwner, setupDefenseOwnerAndMember } from '../../support/e2e';
+import { setupUser, setupDefenseOwner, setupDefenseOwnerAndMember, openWarNode } from '../../support/e2e';
 
 describe('Defense – Overflow & Error Cases', () => {
   beforeEach(() => {
@@ -45,7 +45,7 @@ describe('Defense – Overflow & Error Cases', () => {
             cy.getByCy('defender-count-FullOwn').scrollIntoView().should('contain', '5/5');
 
             // Click an empty node — only Hulk should be available (first 5 already placed)
-            cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+            openWarNode(10);
             cy.contains('Select Champion').should('be.visible');
 
             // Click Hulk — owner (5/5) is filtered out by backend, so only member remains
@@ -119,7 +119,7 @@ describe('Defense – Overflow & Error Cases', () => {
 
           cy.apiLogin(user_id, 'defense');
 
-          cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+          openWarNode(1);
           cy.contains('No champions available').should('be.visible');
         });
       });
@@ -138,7 +138,7 @@ describe('Defense – Overflow & Error Cases', () => {
         cy.apiLogin(ownerData.user_id, 'defense');
 
         // Open selector for a different node — only champion is already placed
-        cy.getByCy('war-node-2').scrollIntoView().click({ force: true });
+        openWarNode(2);
         cy.contains('No champions available').should('be.visible');
       },
     );
@@ -158,7 +158,7 @@ describe('Defense – Overflow & Error Cases', () => {
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
         cy.contains('Select Champion').should('be.visible');
         cy.getByCy('champion-card-Spider-Man').click();
         cy.contains('Select Player').should('be.visible');
@@ -185,7 +185,7 @@ describe('Defense – Overflow & Error Cases', () => {
 
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.contains('Select Champion').should('be.visible');
 
       // Close the dialog by pressing Escape
@@ -212,7 +212,7 @@ describe('Defense – Overflow & Error Cases', () => {
 
       cy.apiLogin(ownerData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.getByCy('champion-card-Spider-Man').click();
 
       // Should directly place without showing "Select Player"
@@ -239,7 +239,7 @@ describe('Defense – Overflow & Error Cases', () => {
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
 
         // Spider-Man has 2 owners → shows "2 owners"
         cy.getByCy('champion-card-Spider-Man').should('contain', '2 owners');

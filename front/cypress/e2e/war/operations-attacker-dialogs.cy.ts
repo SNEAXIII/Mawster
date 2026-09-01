@@ -1,4 +1,4 @@
-import { setupAttackerScenario } from '../../support/e2e';
+import { setupAttackerScenario, confirmAction, openWarNode } from '../../support/e2e';
 
 describe('War – Operations (attacker-linked confirmations)', () => {
   beforeEach(() => {
@@ -90,14 +90,12 @@ describe('War – Operations (attacker-linked confirmations)', () => {
     setupAttackerScenario('war-op-replace-atk').then(
       ({ adminToken, ownerData, memberData, allianceId, warId, ownerAccId, championUserId }) => {
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-        cy.apiLoadChampion(adminToken, 'Thor', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
+        cy.apiGiveChampion(adminToken, ownerData.access_token, ownerAccId, 'Thor', 'Cosmic', '7r3');
 
         cy.apiLogin(ownerData.user_id, 'war');
         cy.getByCy('war-mode-defenders').click();
 
-        cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+        openWarNode(10);
         cy.getByCy('war-champion-card-Thor').click();
         cy.getByCy('war-confirm-place').click();
 
@@ -110,14 +108,12 @@ describe('War – Operations (attacker-linked confirmations)', () => {
     setupAttackerScenario('war-op-replace-show').then(
       ({ adminToken, ownerData, memberData, allianceId, warId, ownerAccId, championUserId }) => {
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-        cy.apiLoadChampion(adminToken, 'Thor', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
+        cy.apiGiveChampion(adminToken, ownerData.access_token, ownerAccId, 'Thor', 'Cosmic', '7r3');
 
         cy.apiLogin(ownerData.user_id, 'war');
         cy.getByCy('war-mode-defenders').click();
 
-        cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+        openWarNode(10);
         cy.getByCy('war-champion-card-Thor').click();
         cy.getByCy('war-confirm-place').click();
 
@@ -131,14 +127,12 @@ describe('War – Operations (attacker-linked confirmations)', () => {
     setupAttackerScenario('war-op-replace-cancel').then(
       ({ adminToken, ownerData, memberData, allianceId, warId, ownerAccId, championUserId }) => {
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-        cy.apiLoadChampion(adminToken, 'Thor', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
+        cy.apiGiveChampion(adminToken, ownerData.access_token, ownerAccId, 'Thor', 'Cosmic', '7r3');
 
         cy.apiLogin(ownerData.user_id, 'war');
         cy.getByCy('war-mode-defenders').click();
 
-        cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+        openWarNode(10);
         cy.getByCy('war-champion-card-Thor').click();
         cy.getByCy('war-confirm-place').click();
         cy.getByCy('confirmation-dialog-cancel').click({ force: true });
@@ -153,17 +147,14 @@ describe('War – Operations (attacker-linked confirmations)', () => {
     setupAttackerScenario('war-op-replace-confirm').then(
       ({ adminToken, ownerData, memberData, allianceId, warId, ownerAccId, championUserId }) => {
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-        cy.apiLoadChampion(adminToken, 'Thor', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-        });
+        cy.apiGiveChampion(adminToken, ownerData.access_token, ownerAccId, 'Thor', 'Cosmic', '7r3');
 
         cy.apiLogin(ownerData.user_id, 'war');
         cy.getByCy('war-mode-defenders').click();
 
-        cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+        openWarNode(10);
         cy.getByCy('war-champion-card-Thor').click();
-        cy.getByCy('war-confirm-place').click();
-        cy.getByCy('confirmation-dialog-confirm').click();
+        confirmAction('war-confirm-place');
 
         cy.contains('placed on node #10').should('be.visible');
         cy.getByCy('war-node-10').should('not.contain', '+');

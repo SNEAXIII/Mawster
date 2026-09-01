@@ -1,4 +1,4 @@
-import { setupRosterUser } from '../../support/e2e';
+import { setupRosterUser, confirmAction } from '../../support/e2e';
 
 // The how-to dialog is pure frontend behaviour, and this project has no
 // frontend unit tests by design — this spec is the only thing keeping the
@@ -36,8 +36,7 @@ describe('Roster – Vision import how-to dialog', () => {
     visitRoster('vision-howto-optout', 'OptoutPlayer');
 
     cy.getByCy('import-vision-button').click();
-    cy.getByCy('vision-howto-dont-show').click();
-    cy.getByCy('confirmation-dialog-confirm').click();
+    confirmAction('vision-howto-dont-show');
     cy.getByCy('vision-import-howto-dialog').should('not.exist');
 
     // Second click goes straight to the (native, invisible) file picker.
@@ -54,8 +53,7 @@ describe('Roster – Vision import how-to dialog', () => {
     visitRoster('vision-howto-help', 'HelpPlayer');
 
     cy.getByCy('import-vision-button').click();
-    cy.getByCy('vision-howto-dont-show').click();
-    cy.getByCy('confirmation-dialog-confirm').click();
+    confirmAction('vision-howto-dont-show');
 
     // Spy installed after the first (real) import, so it isolates whether
     // the help-icon dismiss path below triggers the picker.
@@ -76,8 +74,7 @@ describe('Roster – Vision import how-to dialog', () => {
       cy.apiLoadChampion(adminData.access_token, 'Hulk', 'Science');
       cy.apiLoadChampion(adminData.access_token, 'Iron Man', 'Tech');
 
-      cy.getByCy('import-vision-button').click();
-      cy.getByCy('confirmation-dialog-confirm').click();
+      confirmAction('import-vision-button');
 
       cy.get('[data-cy="vision-input"]').selectFile('cypress/fixtures/vision/sample-roster.png', {
         force: true,
