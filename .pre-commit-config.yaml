@@ -24,7 +24,7 @@ repos:
       - id: raises-arity
         name: one throwing call per pytest.raises
         # uv run, not python3: no python3 on Windows. --no-project skips resolving api/.
-        entry: uv run --no-project python .claude/skills/raises-arity/scripts/check_raises_arity.py
+        entry: uv run --no-project python scripts/check_raises_arity.py
         language: system
         files: ^api/tests/.*\.py$
 

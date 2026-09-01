@@ -54,7 +54,7 @@ Cas qui passent, pour référence :
 
 1. **Constater**
    ```bash
-   uv run --no-project python .claude/skills/raises-arity/scripts/check_raises_arity.py
+   uv run --no-project python scripts/check_raises_arity.py
    ```
    Sans argument il balaie `api/tests`. Accepte aussi des chemins précis (fichiers ou dossiers).
 
@@ -64,7 +64,7 @@ Cas qui passent, pour référence :
 
 4. **Vérifier**
    ```bash
-   uv run --no-project python .claude/skills/raises-arity/scripts/check_raises_arity.py   # 0 restant
+   uv run --no-project python scripts/check_raises_arity.py   # 0 restant
    cd api && uvx ruff check && uv run pytest tests/unit -q
    ```
    Le script vert ne suffit pas : il ne fait qu'analyser l'AST. Seuls les tests prouvent que le hoist n'a rien cassé.
