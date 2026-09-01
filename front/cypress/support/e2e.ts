@@ -1358,6 +1358,13 @@ Cypress.Commands.add('goToWarMode', (userId: string, mode: 'defenders' | 'attack
   cy.getByCy(`war-mode-${mode}`).click();
 });
 
+// Log in on the war page and wait for the attacker panel — the panel is lazy, so
+// asserting on it first is what makes the node-level assertions that follow stable.
+Cypress.Commands.add('openWarAttackerPanel', (userId: string) => {
+  cy.apiLogin(userId, 'war');
+  cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+});
+
 Cypress.Commands.add('goToAllianceStatsTab', () => {
   cy.navTo('alliances');
   cy.getByCy('tab-statistics').click();
@@ -1395,7 +1402,7 @@ export function setupWarOwner(
     }));
 }
 
-export function setupAttackerScenario(prefix: string): Cypress.Chainable<{
+export interface AttackerScenario {
   adminToken: string;
   ownerData: UserSetupData;
   memberData: UserSetupData;
@@ -1404,7 +1411,9 @@ export function setupAttackerScenario(prefix: string): Cypress.Chainable<{
   memberAccId: string;
   warId: string;
   championUserId: string;
-}> {
+}
+
+export function setupAttackerScenario(prefix: string): Cypress.Chainable<AttackerScenario> {
   const adminToken = `${prefix}-admin`;
   const ownerToken = `${prefix}-owner`;
   const memberToken = `${prefix}-member`;
@@ -1458,6 +1467,26 @@ export function setupAttackerScenario(prefix: string): Cypress.Chainable<{
             }));
         });
     });
+}
+
+// setupAttackerScenario plus the attacker every node-level war spec assigns first:
+// the member's champion on BG1 node 10, which is where the defender is placed.
+export function setupAssignedAttacker(
+  prefix: string,
+  battlegroup = 1,
+  nodeNumber = 10,
+): Cypress.Chainable<AttackerScenario> {
+  return setupAttackerScenario(prefix).then((scenario) => {
+    cy.apiAssignWarAttacker(
+      scenario.memberData.access_token,
+      scenario.allianceId,
+      scenario.warId,
+      battlegroup,
+      nodeNumber,
+      scenario.championUserId,
+    );
+    return cy.wrap(scenario, { log: false });
+  });
 }
 
 export function setupVisitorScenario(prefix: string): Cypress.Chainable<{
@@ -1547,4 +1576,13 @@ export function setupPrefightScenario(prefix: string): Cypress.Chainable<{
         }));
     });
   });
+}
+
+// The trigger renders the active filter's own label ('To do' by default), so an
+// unscoped cy.contains(label) matches the button instead of the option — and the
+// open Radix popper locks the body with pointer-events: none.
+export function selectCombatFilter(label: string): void {
+  cy.getByCy('war-combat-filter').click({ force: true });
+  cy.get('[role="listbox"]').should('be.visible');
+  cy.contains('[role="option"]', label).click({ force: true });
 }
