@@ -94,7 +94,14 @@ describe('Defense – Overflow & Error Cases', () => {
   it('counter is NOT red when player has fewer than 5/5 defenders', () => {
     setupDefenseOwner('def-ov-norm', 'NormCntPlyr', 'NormCntAll', 'NC').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        seedDefender(adminData.access_token, ownerData.access_token, allianceId, ownerAccId, 'Spider-Man', 'Cosmic');
+        seedDefender({
+          adminToken: adminData.access_token,
+          ownerToken: ownerData.access_token,
+          allianceId,
+          gameAccountId: ownerAccId,
+          name: 'Spider-Man',
+          championClass: 'Cosmic',
+        });
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -125,7 +132,14 @@ describe('Defense – Overflow & Error Cases', () => {
   it("shows 'No champions available' after all champions have been placed", () => {
     setupDefenseOwner('def-ov-allplc', 'AllPlcPlyr', 'AllPlcAll', 'AP').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        seedDefender(adminData.access_token, ownerData.access_token, allianceId, ownerAccId, 'Spider-Man', 'Cosmic');
+        seedDefender({
+          adminToken: adminData.access_token,
+          ownerToken: ownerData.access_token,
+          allianceId,
+          gameAccountId: ownerAccId,
+          name: 'Spider-Man',
+          championClass: 'Cosmic',
+        });
 
         cy.apiLogin(ownerData.user_id, 'defense');
 

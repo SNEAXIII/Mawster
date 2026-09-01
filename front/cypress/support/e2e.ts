@@ -1662,17 +1662,18 @@ export function expectSeasonStatus(number: number, status: 'upcoming' | 'active'
 
 // Give a champion to a game account and place it as a defender in one step —
 // the usual "one defender is already placed" precondition of the defense specs.
-export function seedDefender(
-  adminToken: string,
-  ownerToken: string,
-  allianceId: string,
-  gameAccountId: string,
-  name: string,
-  championClass: string,
-  battlegroup = 1,
-  node = 1,
-): void {
+export function seedDefender(opts: {
+  adminToken: string;
+  ownerToken: string;
+  allianceId: string;
+  gameAccountId: string;
+  name: string;
+  championClass: string;
+  battlegroup?: number;
+  node?: number;
+}): void {
+  const { adminToken, ownerToken, allianceId, gameAccountId, name, championClass } = opts;
   cy.apiGiveChampion(adminToken, ownerToken, gameAccountId, name, championClass).then(({ championUser }) => {
-    cy.apiPlaceDefender(ownerToken, allianceId, battlegroup, node, championUser.id, gameAccountId);
+    cy.apiPlaceDefender(ownerToken, allianceId, opts.battlegroup ?? 1, opts.node ?? 1, championUser.id, gameAccountId);
   });
 }

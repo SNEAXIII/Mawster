@@ -57,7 +57,14 @@ describe('Defense – Clear All', () => {
   it("Clear All shows 'No defenders placed.' in side panel", () => {
     setupDefenseOwner('def-op-clrempty', 'ClrEmptyPlyr', 'ClrEmptyAll', 'CE').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        seedDefender(adminData.access_token, ownerData.access_token, allianceId, ownerAccId, 'Spider-Man', 'Cosmic');
+        seedDefender({
+          adminToken: adminData.access_token,
+          ownerToken: ownerData.access_token,
+          allianceId,
+          gameAccountId: ownerAccId,
+          name: 'Spider-Man',
+          championClass: 'Cosmic',
+        });
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -72,7 +79,14 @@ describe('Defense – Clear All', () => {
   it('Clear All confirmation dialog can be cancelled', () => {
     setupDefenseOwner('def-op-clrcancel', 'ClrCancelPlyr', 'ClrCancelAll', 'CC').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        seedDefender(adminData.access_token, ownerData.access_token, allianceId, ownerAccId, 'Spider-Man', 'Cosmic');
+        seedDefender({
+          adminToken: adminData.access_token,
+          ownerToken: ownerData.access_token,
+          allianceId,
+          gameAccountId: ownerAccId,
+          name: 'Spider-Man',
+          championClass: 'Cosmic',
+        });
 
         cy.apiLogin(ownerData.user_id, 'defense');
 

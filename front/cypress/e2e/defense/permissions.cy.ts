@@ -29,7 +29,14 @@ describe('Defense – Permissions', () => {
   it('clear all button is visible when defenders are placed (owner)', () => {
     setupDefenseOwner('def-perm-clr', 'ClrOwnPlyr', 'ClrOwnAll', 'CO').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        seedDefender(adminData.access_token, ownerData.access_token, allianceId, ownerAccId, 'Spider-Man', 'Cosmic');
+        seedDefender({
+          adminToken: adminData.access_token,
+          ownerToken: ownerData.access_token,
+          allianceId,
+          gameAccountId: ownerAccId,
+          name: 'Spider-Man',
+          championClass: 'Cosmic',
+        });
 
         cy.apiLogin(ownerData.user_id, 'defense');
         cy.getByCy('defense-clear-all').should('be.visible');
@@ -40,7 +47,14 @@ describe('Defense – Permissions', () => {
   it('clear all button is hidden from a regular member even with placements', () => {
     setupDefenseOwnerAndMember('def-perm-clr-mem', 'ClrMemOwn', 'ClrMember', 'ClrMemAll', 'CM').then(
       ({ adminData, ownerData, memberData, allianceId, ownerAccId }) => {
-        seedDefender(adminData.access_token, ownerData.access_token, allianceId, ownerAccId, 'Spider-Man', 'Cosmic');
+        seedDefender({
+          adminToken: adminData.access_token,
+          ownerToken: ownerData.access_token,
+          allianceId,
+          gameAccountId: ownerAccId,
+          name: 'Spider-Man',
+          championClass: 'Cosmic',
+        });
 
         cy.apiLogin(memberData.user_id, 'defense');
         cy.getByCy('defense-clear-all').should('not.exist');

@@ -1,5 +1,3 @@
-import {} from '../../support/e2e';
-
 export function createAndActivateSeason(adminToken: string) {
   return cy.apiCreateOpenSeason(adminToken, 64);
 }
