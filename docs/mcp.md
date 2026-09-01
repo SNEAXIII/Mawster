@@ -1,8 +1,8 @@
 # MCP Servers & tooling
 
-Mawster déclare ses serveurs MCP dans `.mcp.json`. Ils étendent Claude Code avec des outils
-transverses ; tout ce qui est spécifique au projet (serveurs, tests, DB) passe par des
-commandes normales, documentées ici et exposées via les skills de `.claude/skills/`.
+Mawster ne déclare **aucun** serveur MCP : il n'y a pas de `.mcp.json`. Tout ce qui est
+spécifique au projet (serveurs, tests, DB) passe par des commandes normales, documentées ici
+et exposées via les skills de `.claude/skills/`.
 
 ---
 
@@ -10,12 +10,15 @@ commandes normales, documentées ici et exposées via les skills de `.claude/ski
 
 | Server | Source | Purpose |
 |--------|--------|---------|
-| `context-mode` | Plugin (Claude Code) | Garde la sortie des commandes hors du contexte |
-| `github` | HTTP — `api.githubcopilot.com/mcp/` | API GitHub (issues, PRs, fichiers) |
+| `context-mode` | Plugin (`.claude/settings.json`) | Garde la sortie des commandes hors du contexte |
 
-> Les serveurs `server-runner`, `cypress-runner`, `pytest-runner` et `db-manager` ont été
-> retirés : le dossier `mcp/` n'existe plus. Leurs skills pointent désormais sur les commandes
-> réelles ci-dessous.
+> Les serveurs `server-runner`, `cypress-runner`, `pytest-runner`, `db-manager` et `github` ont
+> été retirés : le dossier `mcp/` n'existe plus. Leurs skills pointent désormais sur les
+> commandes réelles ci-dessous, et GitHub passe par le CLI `gh`.
+>
+> `context-mode` était **aussi** déclaré dans un `.mcp.json` local en plus du plugin : Claude
+> chargeait deux exemplaires de chaque outil (`mcp__context-mode__*` et
+> `mcp__plugin_context-mode_context-mode__*`). Le `.mcp.json` a été supprimé.
 
 ---
 
