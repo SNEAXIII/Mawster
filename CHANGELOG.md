@@ -3,6 +3,22 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.6.3](https://github.com/SNEAXIII/Mawster/compare/v1.6.2...v1.6.3) (2026-09-01)
+
+
+### Corrigé
+
+* default knowledge base imports to 7 stars ([5fec26b](https://github.com/SNEAXIII/Mawster/commit/5fec26bbe0af8f8d1a01bf5804ebd01225fb61d5))
+* remove double scroll on mobile layout ([84cc743](https://github.com/SNEAXIII/Mawster/commit/84cc7435fe3e2d02410751ca4f3d893b356fb47f))
+* remove double scroll on mobile layout ([7dd31dc](https://github.com/SNEAXIII/Mawster/commit/7dd31dc7d268fb43ae21f37b50e07f841cb0fc19))
+
+
+### Modifié
+
+* extract the fight-record sort literal to a module constant ([7034a01](https://github.com/SNEAXIII/Mawster/commit/7034a01bcfcf022f04ffb8982baaa18707df70e1))
+* move decode_service_mock function to improve test organization ([c108ff6](https://github.com/SNEAXIII/Mawster/commit/c108ff6b0078ea3bc98f38afd34cdec192922969))
+* use double brackets for conditional expressions in backup script ([8a92031](https://github.com/SNEAXIII/Mawster/commit/8a92031f6c3134145d88cef7bf503d53c1e14e31))
+
 ## [1.6.2](https://github.com/SNEAXIII/Mawster/compare/v1.6.1...v1.6.2) (2026-08-27)
 
 
