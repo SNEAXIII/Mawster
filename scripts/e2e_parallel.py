@@ -94,6 +94,8 @@ OS = _get_os_model()
 NPM = OS.npm
 NPX = OS.npx
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[mKHFABCDJG]")
+# Mirrors specPattern in front/cypress.config.ts.
+SPEC_GLOB = "*.cy.ts"
 
 
 def worker_log_dir(worker: int) -> Path:
@@ -523,7 +525,7 @@ def get_spec_files(include_vision: bool = False) -> list[Path]:
 
     Vision specs are excluded unless asked for: see VISION_SPEC_MARKER.
     """
-    specs = sorted((FRONT_DIR / "cypress" / "e2e").rglob("*.cy.ts"))
+    specs = sorted((FRONT_DIR / "cypress" / "e2e").rglob(SPEC_GLOB))
     if include_vision:
         return specs
     return [s for s in specs if not is_vision_spec(s)]
@@ -639,7 +641,7 @@ def resolve_spec_paths(raw_specs: str) -> set[Path]:
         if not spec_path.exists():
             available = sorted(
                 p.relative_to(FRONT_DIR / "cypress" / "e2e")
-                for p in (FRONT_DIR / "cypress" / "e2e").rglob("*.cy.ts")
+                for p in (FRONT_DIR / "cypress" / "e2e").rglob(SPEC_GLOB)
             )
             log(f"ERROR: spec not found: {raw}")
             log("Available specs:")
@@ -647,7 +649,7 @@ def resolve_spec_paths(raw_specs: str) -> set[Path]:
                 log(f"  {s}")
             sys.exit(1)
         if spec_path.is_dir():
-            resolved_specs.update(spec_path.rglob("*.cy.ts"))
+            resolved_specs.update(spec_path.rglob(SPEC_GLOB))
         else:
             resolved_specs.add(spec_path)
     return resolved_specs
