@@ -200,16 +200,16 @@ export default function AllianceChampionSearchTab({
         showCount={false}
       />
 
-      {loading ? (
-        <FullPageSpinner />
-      ) : groups.length === 0 ? (
+      {loading && <FullPageSpinner />}
+      {!loading && groups.length === 0 && (
         <p
           className='text-muted-foreground py-8 text-center'
           data-cy='champion-search-empty'
         >
           {isFilterActive(filters) ? cs.noResults : cs.empty}
         </p>
-      ) : (
+      )}
+      {!loading && groups.length > 0 && (
         <div
           className='columns-3xs gap-3'
           data-cy='champion-search-results'

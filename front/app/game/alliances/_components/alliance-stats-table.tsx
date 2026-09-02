@@ -61,7 +61,8 @@ function StatCell({
 
 function SortableHead({ label, field, sortField, sortDir, onSort }: Readonly<SortableHeadProps>) {
   const active = sortField === field
-  const Icon = active ? (sortDir === 'asc' ? ChevronUp : ChevronDown) : ChevronsUpDown
+  const DirectionIcon = sortDir === 'asc' ? ChevronUp : ChevronDown
+  const Icon = active ? DirectionIcon : ChevronsUpDown
   return (
     <TableHead className='text-right'>
       <button

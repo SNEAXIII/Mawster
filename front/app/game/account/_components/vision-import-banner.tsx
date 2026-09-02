@@ -31,18 +31,19 @@ export default function VisionImportBanner({
   if (current == null) return null
 
   const vision = t.roster.importExport.vision
-  const title =
-    current.status === 'failed'
-      ? vision.bannerFailedTitle
-      : current.status === 'done'
-        ? vision.bannerDoneTitle.replace('{count}', String(current.predictions_count))
-        : current.status === 'running'
-          ? vision.bannerRunningTitle
-              .replace('{done}', String(current.screens_done))
-              .replace('{total}', String(current.screens_total))
-          : vision.bannerPendingTitle
-              .replace('{done}', String(current.screens_done))
-              .replace('{total}', String(current.screens_total))
+  const withProgress = (label: string) =>
+    label
+      .replace('{done}', String(current.screens_done))
+      .replace('{total}', String(current.screens_total))
+
+  const bannerTitle = () => {
+    if (current.status === 'failed') return vision.bannerFailedTitle
+    if (current.status === 'done')
+      return vision.bannerDoneTitle.replace('{count}', String(current.predictions_count))
+    if (current.status === 'running') return withProgress(vision.bannerRunningTitle)
+    return withProgress(vision.bannerPendingTitle)
+  }
+  const title = bannerTitle()
 
   return (
     <div

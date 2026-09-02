@@ -34,6 +34,29 @@ export default function SeasonsPanel() {
     action: 'open' | 'close' | 'revert'
   } | null>(null)
 
+  const statusLabel = (status: Season['status']) => {
+    if (status === 'active') return t.game.season.admin.statusActive
+    if (status === 'ended') return t.game.season.admin.statusEnded
+    return t.game.season.admin.statusUpcoming
+  }
+
+  // Keyed by the pending action, with 'open' doubling as the closed-dialog default.
+  const confirmCopy = {
+    open: {
+      title: t.game.season.admin.confirmOpenTitle,
+      body: t.game.season.admin.confirmOpenBody,
+    },
+    close: {
+      title: t.game.season.admin.confirmCloseTitle,
+      body: t.game.season.admin.confirmCloseBody,
+    },
+    revert: {
+      title: t.game.season.admin.confirmRevertTitle,
+      body: t.game.season.admin.confirmRevertBody,
+    },
+  }
+  const pendingCopy = confirmCopy[confirm?.action ?? 'open']
+
   const load = async () => {
     try {
       setSeasons(await listSeasons())
@@ -161,11 +184,7 @@ export default function SeasonsPanel() {
                 }
                 data-cy={`season-status-${s.status}`}
               >
-                {s.status === 'active'
-                  ? t.game.season.admin.statusActive
-                  : s.status === 'ended'
-                    ? t.game.season.admin.statusEnded
-                    : t.game.season.admin.statusUpcoming}
+                {statusLabel(s.status)}
               </Badge>
               <Badge
                 variant='outline'
@@ -216,20 +235,8 @@ export default function SeasonsPanel() {
         onOpenChange={(next) => {
           if (!next) setConfirm(null)
         }}
-        title={
-          confirm?.action === 'close'
-            ? t.game.season.admin.confirmCloseTitle
-            : confirm?.action === 'revert'
-              ? t.game.season.admin.confirmRevertTitle
-              : t.game.season.admin.confirmOpenTitle
-        }
-        description={
-          confirm?.action === 'close'
-            ? t.game.season.admin.confirmCloseBody
-            : confirm?.action === 'revert'
-              ? t.game.season.admin.confirmRevertBody
-              : t.game.season.admin.confirmOpenBody
-        }
+        title={pendingCopy.title}
+        description={pendingCopy.body}
         onConfirm={runConfirm}
       />
     </div>

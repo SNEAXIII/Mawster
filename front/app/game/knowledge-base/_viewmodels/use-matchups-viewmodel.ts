@@ -130,6 +130,14 @@ export function useMatchupsViewModel() {
   // showing them a form that the API answers with 403 would be a lie.
   const canEdit = Boolean(selectedAllianceId && roles[selectedAllianceId]?.can_manage)
 
+  // The three views (attacker grid, defender grid, flat rows) each own their fetch state;
+  // the page only ever shows one at a time.
+  const pickActiveView = <T>(gridValue: T, defenderGridValue: T, rowsValue: T): T => {
+    if (showGrid) return gridValue
+    if (showDefenderGrid) return defenderGridValue
+    return rowsValue
+  }
+
   return {
     alliances,
     allianceId: selectedAllianceId,
@@ -144,8 +152,8 @@ export function useMatchupsViewModel() {
     grid,
     defenderGrid,
     rows,
-    loading: showGrid ? gridLoading : showDefenderGrid ? defenderGridLoading : loading,
-    error: showGrid ? gridError : showDefenderGrid ? defenderGridError : error,
+    loading: pickActiveView(gridLoading, defenderGridLoading, loading),
+    error: pickActiveView(gridError, defenderGridError, error),
     reload,
     canEdit,
     similarRatings,

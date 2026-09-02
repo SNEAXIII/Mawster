@@ -121,6 +121,7 @@ export default function WarFormDialog({
 
   const isCreate = mode === 'create'
   const title = isCreate ? t.game.war.declareWar : t.game.war.editWar
+  const submitLabel = isCreate ? t.game.war.declareWar : t.common.save
 
   return (
     <>
@@ -248,7 +249,7 @@ export default function WarFormDialog({
                 disabled={!opponentName.trim() || loading}
                 data-cy={isCreate ? 'create-war-confirm' : 'edit-war-confirm'}
               >
-                {loading ? '...' : isCreate ? t.game.war.declareWar : t.common.save}
+                {loading ? '...' : submitLabel}
               </Button>
             </DialogFooter>
           </form>

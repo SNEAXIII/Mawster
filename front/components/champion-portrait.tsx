@@ -134,12 +134,12 @@ export default function ChampionPortrait({
   box = 'square',
   dataCy,
 }: Readonly<ChampionPortraitProps>) {
-  const showSaga =
-    sagaMode === 'attacker'
-      ? is_saga_attacker
-      : sagaMode === 'defender'
-        ? is_saga_defender
-        : is_saga_attacker || is_saga_defender
+  const sagaByMode: Record<typeof sagaMode, boolean> = {
+    attacker: is_saga_attacker,
+    defender: is_saga_defender,
+    all: is_saga_attacker || is_saga_defender,
+  }
+  const showSaga = sagaByMode[sagaMode]
   const exporting = useExportMode()
   const frameUrl = getStarFrameUrl(rarity)
   const windowRect = getFrameWindowRect(size, rarity, frameWindow, box)

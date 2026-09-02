@@ -67,11 +67,12 @@ export function MemberChampionChart({
   const top5 = sorted.slice(0, topN)
   const othersValue = sorted.slice(topN).reduce((sum, c) => sum + getValue(c), 0)
 
-  const chartLabel = isKos
-    ? stat.chartByKos
-    : metric === 'deathless'
-      ? stat.chartByDeathless
-      : stat.chartByAll
+  const metricLabels: Record<typeof metric, string> = {
+    kos: stat.chartByKos,
+    deathless: stat.chartByDeathless,
+    all: stat.chartByAll,
+  }
+  const chartLabel = metricLabels[metric]
   const chartConfig = { value: { label: chartLabel } }
 
   const othersEntry =
@@ -143,7 +144,7 @@ export function MemberChampionChart({
         </div>
       </div>
 
-      {loading ? (
+      {loading && (
         <div className='flex flex-col items-center gap-3'>
           <Skeleton className='size-36 rounded-full' />
           <div className='w-full flex flex-col gap-2'>
@@ -159,9 +160,11 @@ export function MemberChampionChart({
             ))}
           </div>
         </div>
-      ) : chartData.length === 0 ? (
+      )}
+      {!loading && chartData.length === 0 && (
         <p className='text-sm text-muted-foreground text-center py-8'>{stat.empty}</p>
-      ) : (
+      )}
+      {!loading && chartData.length > 0 && (
         <>
           <ChartContainer
             config={chartConfig}

@@ -19,6 +19,12 @@ function SortIcon({ col, sortBy, sortOrder }: SortState & Readonly<{ col: string
 
 const TH_BASE = 'py-2 text-xs font-semibold text-muted-foreground'
 
+function columnWidth(compact?: boolean, grow?: boolean) {
+  if (compact) return COMPACT_COL
+  if (grow) return GROW_COL
+  return 'px-3'
+}
+
 type KnowledgeBaseTableHeadProps = Readonly<{
   columns: ReadonlyArray<KnowledgeBaseColumn>
   sortBy: string
@@ -39,7 +45,7 @@ export default function KnowledgeBaseTableHead({
     <thead className='bg-muted/50'>
       <tr>
         {columns.map(({ id, col, label, compact, grow }) => {
-          const width = compact ? COMPACT_COL : grow ? GROW_COL : 'px-3'
+          const width = columnWidth(compact, grow)
           return col && !exporting ? (
             <th
               key={id}

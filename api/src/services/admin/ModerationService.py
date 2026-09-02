@@ -29,6 +29,18 @@ from src.utils.db import SessionDep
 AUTO_BLOCK_THRESHOLD = 3
 
 
+def _revision_pseudo(
+    revision: WarFightNoteRevision, account: GameAccount | None, admin: User | None
+) -> str | None:
+    """Who is shown as the author of a revision: the acting admin on a deletion,
+    otherwise the contributor's game account."""
+    if revision.is_deletion and admin:
+        return admin.login
+    if account:
+        return account.game_pseudo
+    return None
+
+
 class ModerationService:
     @classmethod
     async def is_user_muted(cls, session: SessionDep, user_id: uuid.UUID) -> bool:
@@ -282,10 +294,8 @@ class ModerationService:
                 id=rev.id,
                 content=rev.content,
                 # Deletion entries are admin actions with no contributor to mute/warn.
-                edited_by_user_id=None if rev.is_deletion else (acc.user_id if acc else None),
-                edited_by_pseudo=(
-                    adm.login if rev.is_deletion and adm else (acc.game_pseudo if acc else None)
-                ),
+                edited_by_user_id=None if rev.is_deletion or acc is None else acc.user_id,
+                edited_by_pseudo=_revision_pseudo(rev, acc, adm),
                 is_deletion=rev.is_deletion,
                 edited_at=rev.edited_at,
             )

@@ -70,11 +70,11 @@ export default function RevisionHistoryDialog({
         <DialogHeader>
           <DialogTitle>{m.revisionsTitle}</DialogTitle>
         </DialogHeader>
-        {loading ? (
-          <p className='text-sm text-muted-foreground'>{t.common.loading}</p>
-        ) : revisions.length === 0 ? (
+        {loading && <p className='text-sm text-muted-foreground'>{t.common.loading}</p>}
+        {!loading && revisions.length === 0 && (
           <p className='text-sm text-muted-foreground'>{m.noRevisions}</p>
-        ) : (
+        )}
+        {!loading && revisions.length > 0 && (
           <ul className='flex flex-col gap-3 max-h-96 overflow-y-auto'>
             {revisions.map((rev) => {
               if (rev.is_deletion) {

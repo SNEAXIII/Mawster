@@ -26,6 +26,10 @@ export default tseslint.config(
           varsIgnorePattern: '^_',
         },
       ],
+      // A ternary inside a ternary hides the branch order it depends on. Use a lookup
+      // record, or a small function with early returns, and in JSX separate `{cond && …}`
+      // blocks — every one of these was refactored that way, so the rule starts clean.
+      'no-nested-ternary': 'error',
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/ban-ts-comment': 'warn',
       // Every autoFocus in this codebase is on an input inside a dialog or an inline

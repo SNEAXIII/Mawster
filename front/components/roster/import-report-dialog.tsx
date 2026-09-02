@@ -32,6 +32,23 @@ export interface ImportResult {
   error?: string
 }
 
+// What happened to one champion during the import — drives both the row tint and the badge.
+type ImportRowState = 'error' | 'added' | 'skipped' | 'updated'
+
+const ROW_BACKGROUND: Record<ImportRowState, string> = {
+  error: 'bg-red-50 dark:bg-red-950/30',
+  added: 'bg-green-50 dark:bg-green-950/30',
+  skipped: '',
+  updated: 'bg-blue-50 dark:bg-blue-950/30',
+}
+
+function rowState(result: ImportResult): ImportRowState {
+  if (!result.success) return 'error'
+  if (result.isNew) return 'added'
+  if (result.isSkipped) return 'skipped'
+  return 'updated'
+}
+
 interface ImportReportDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -95,19 +112,12 @@ export default function ImportReportDialog({
               result.oldSignature !== null && result.oldSignature !== result.newSignature
             const hasAscChange =
               result.oldAscension !== null && result.oldAscension !== result.newAscension
+            const state = rowState(result)
 
             return (
               <div
                 key={idx}
-                className={`py-2.5 flex items-center gap-3 ${
-                  !result.success
-                    ? 'bg-red-50 dark:bg-red-950/30'
-                    : result.isNew
-                      ? 'bg-green-50 dark:bg-green-950/30'
-                      : result.isSkipped
-                        ? ''
-                        : 'bg-blue-50 dark:bg-blue-950/30'
-                }`}
+                className={`py-2.5 flex items-center gap-3 ${ROW_BACKGROUND[state]}`}
               >
                 {/* Champion portrait */}
                 <div className='shrink-0'>
@@ -142,11 +152,12 @@ export default function ImportReportDialog({
 
                 {/* Status badge + diff */}
                 <div className='shrink-0 text-right text-xs whitespace-nowrap'>
-                  {!result.success ? (
+                  {state === 'error' && (
                     <span className='text-[10px] font-bold bg-red-600 text-white px-1.5 py-0.5 rounded-full flex items-center gap-0.5'>
                       <AlertTriangle className='h-2.5 w-2.5' /> {t.roster.importExport.badgeError}
                     </span>
-                  ) : result.isNew ? (
+                  )}
+                  {state === 'added' && (
                     <div>
                       <span className='inline-flex items-center gap-1 bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-0.5'>
                         {t.roster.importExport.badgeAdded}
@@ -157,11 +168,13 @@ export default function ImportReportDialog({
                         {result.newAscension > 0 && ` · ${ascLabel} ${result.newAscension}`}
                       </div>
                     </div>
-                  ) : result.isSkipped ? (
+                  )}
+                  {state === 'skipped' && (
                     <span className='inline-flex items-center gap-1 bg-gray-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full'>
                       {t.roster.importExport.badgeSkipped}
                     </span>
-                  ) : (
+                  )}
+                  {state === 'updated' && (
                     <div className='space-y-0.5'>
                       <span className='inline-flex items-center gap-1 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-0.5'>
                         {t.roster.importExport.badgeUpdated}

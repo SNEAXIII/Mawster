@@ -393,11 +393,11 @@ export default function ChampionsPanel() {
         />
       )}
 
-      {isLoading ? (
-        <div className='text-center py-8'>{t.common.loading}</div>
-      ) : champions.length === 0 ? (
+      {isLoading && <div className='text-center py-8'>{t.common.loading}</div>}
+      {!isLoading && champions.length === 0 && (
         <div className='text-center py-8 text-muted-foreground'>{t.champions.empty}</div>
-      ) : (
+      )}
+      {!isLoading && champions.length > 0 && (
         <div
           className='overflow-x-auto'
           data-cy='champions-list'
