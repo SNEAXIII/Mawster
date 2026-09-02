@@ -11,6 +11,8 @@ from datetime import date, datetime
 
 from pydantic import BaseModel
 
+from src.dto.mixins import PlayerIdentity
+
 
 class VisionStatsOverview(BaseModel):
     """Headline counters for one time window."""
@@ -93,14 +95,12 @@ class PaginatedVisionUserStats(BaseModel):
     pages: int
 
 
-class VisionImportRow(BaseModel):
+class VisionImportRow(PlayerIdentity):
     id: uuid.UUID
     created_at: datetime
     status: str
     user_id: uuid.UUID
     login: str
-    game_account_id: uuid.UUID
-    game_pseudo: str
     screens_total: int = 0
     screens_done: int = 0
     jobs_failed: int = 0

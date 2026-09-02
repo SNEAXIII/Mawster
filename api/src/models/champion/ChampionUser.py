@@ -2,7 +2,15 @@ from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship
 
-from src.models.Base import Ascension, ChampionFk, GameAccountFk, Rank, Stars, UUIDBase
+from src.models.Base import (
+    Ascension,
+    ChampionFk,
+    GameAccountFk,
+    Rank,
+    Signature,
+    Stars,
+    UUIDBase,
+)
 
 if TYPE_CHECKING:
     from src.models.champion.Champion import Champion
@@ -15,7 +23,7 @@ class ChampionUser(UUIDBase, ChampionFk, GameAccountFk, table=True):
 
     stars: Stars = 7
     rank: Rank = 1
-    signature: int = Field(default=0, ge=0, le=200)
+    signature: Signature = 0
     is_preferred_attacker: bool = Field(default=False)
     ascension: Ascension = 0
 

@@ -3,6 +3,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from src.game_types import Ascension, Signature
+
 
 class ChampionUserCreateRequest(BaseModel):
     """DTO to add a champion to a game account roster."""
@@ -10,9 +12,9 @@ class ChampionUserCreateRequest(BaseModel):
     game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
     champion_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440001"])
     rarity: str = Field(..., examples=["6r4"])
-    signature: int = Field(default=0, ge=0, le=200, examples=[200])
+    signature: Signature = Field(default=0, examples=[200])
     is_preferred_attacker: bool = Field(default=False)
-    ascension: int = Field(default=0, ge=0, le=2, examples=[0])
+    ascension: Ascension = Field(default=0, examples=[0])
 
 
 class ChampionUserBulkEntry(BaseModel):
@@ -20,9 +22,9 @@ class ChampionUserBulkEntry(BaseModel):
 
     champion_name: str = Field(..., examples=["Spider-Man"])
     rarity: str = Field(..., examples=["6r4"])
-    signature: int = Field(default=0, ge=0, le=200, examples=[200])
+    signature: Signature = Field(default=0, examples=[200])
     is_preferred_attacker: bool = Field(default=False)
-    ascension: int = Field(default=0, ge=0, le=2, examples=[0])
+    ascension: Ascension = Field(default=0, examples=[0])
 
 
 class ChampionUserBulkRequest(BaseModel):

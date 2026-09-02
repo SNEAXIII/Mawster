@@ -105,8 +105,11 @@ An Alliance's war rating. It moves only on Wars fought inside a Season
 The difficulty bracket an Alliance wars in, derived from its Elo — 1 is the top, 20
 the bottom and the starting point. It sets how hard the nodes hit, so two fights are
 only comparable at equal Tier; that is why every War and every Fight Record carries
-the Tier it was fought at. A War always has a Tier.
-_Debt_: `War.tier` is nullable in the schema although the domain has no tierless War.
+the Tier it was fought at.
+
+A running War carries no Tier yet: it is stamped when the War is closed, on purpose,
+so an Alliance Tier corrected late — after someone noticed it was stale mid-war — still
+lands on the War and on the Elo it moves.
 
 **Fight Record**:
 A frozen record of one fight that actually happened: attacker and defender with the

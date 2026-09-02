@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.enums.MatchupTargetType import MatchupTargetType
 from src.enums.MatchupVerdict import MatchupVerdict
+from src.game_types import NodeNumber
 from src.Messages.matchup_messages import (
     DISCOURAGED_HAS_NO_SCORE,
     DUPLICATE_TARGET_TYPE,
@@ -24,7 +25,7 @@ class MatchupTargetInput(BaseModel):
 
     target_type: MatchupTargetType
     defender_champion_id: uuid.UUID | None = None
-    node_number: int | None = Field(default=None, ge=1, le=50)
+    node_number: NodeNumber | None = None
     verdict: MatchupVerdict
     prefight_champion_id: uuid.UUID | None = None
     synergies: list[MatchupSynergyInput] = Field(default_factory=list, max_length=2)

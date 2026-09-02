@@ -1,10 +1,15 @@
 import uuid
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship
 
-from src.models.Base import FK_ALLIANCE, TimestampMixin, UserFk, UUIDBase
+from src.models.Base import (
+    FK_ALLIANCE,
+    SoftDelete,
+    TimestampMixin,
+    UserFk,
+    UUIDBase,
+)
 
 if TYPE_CHECKING:
     from src.models.alliance.Alliance import Alliance
@@ -16,7 +21,7 @@ if TYPE_CHECKING:
     from src.models.user.User import User
 
 
-class GameAccount(UUIDBase, UserFk, TimestampMixin, table=True):
+class GameAccount(UUIDBase, UserFk, TimestampMixin, SoftDelete, table=True):
     __tablename__ = "game_account"
 
     alliance_id: uuid.UUID | None = Field(default=None, foreign_key=FK_ALLIANCE)
@@ -27,7 +32,6 @@ class GameAccount(UUIDBase, UserFk, TimestampMixin, table=True):
     # It can be restored for RESTORE_WINDOW_DAYS (see GameAccountService), after
     # which it is unreachable — while still counting against the account quota
     # until then.
-    deleted_at: datetime | None = Field(default=None)
 
     # Relations
     user: "User" = Relationship(back_populates="game_accounts")
