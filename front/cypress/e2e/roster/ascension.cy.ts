@@ -99,7 +99,7 @@ describe('Roster – Ascension', () => {
         cy.getByCy('champion-ascension').should('not.exist');
 
         // Click ascend button (FiStar) on the card via title attribute
-        cy.getByCy('champion-card-AscCardHero').find('[title="Ascension"]').click({ force: true });
+        cy.getByCy('champion-card-AscCardHero').find('[title="Ascension"]').focus().click();
 
         // Confirm ascension in dialog
         cy.get('[role="alertdialog"]').should('be.visible');

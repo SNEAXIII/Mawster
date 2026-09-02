@@ -1579,12 +1579,11 @@ export function setupPrefightScenario(prefix: string): Cypress.Chainable<{
 }
 
 // The trigger renders the active filter's own label ('To do' by default), so an
-// unscoped cy.contains(label) matches the button instead of the option — and the
-// open Radix popper locks the body with pointer-events: none.
+// unscoped cy.contains(label) matches the button instead of the option.
 export function selectCombatFilter(label: string): void {
-  cy.getByCy('war-combat-filter').click({ force: true });
+  cy.getByCy('war-combat-filter').should('be.visible').click();
   cy.get('[role="listbox"]').should('be.visible');
-  cy.contains('[role="option"]', label).click({ force: true });
+  cy.contains('[role="option"]', label).should('be.visible').click();
 }
 
 // ── Generic authed backend call ──────────────────────────────────────────────
@@ -1649,9 +1648,10 @@ export function confirmAction(selector: string): void {
   cy.getByCy('confirmation-dialog-confirm').click();
 }
 
-// War/defense map nodes sit inside a scroll container and can be overlapped.
+// War/defense map nodes sit inside a scroll container, so scroll them into
+// view first and let the click wait for the node to be actionable.
 export function openWarNode(node: number): void {
-  cy.getByCy(`war-node-${node}`).scrollIntoView().click({ force: true });
+  cy.getByCy(`war-node-${node}`).scrollIntoView().should('be.visible').click();
 }
 
 export function expectSeasonStatus(number: number, status: 'upcoming' | 'active' | 'ended'): void {

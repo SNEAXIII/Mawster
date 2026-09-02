@@ -6,7 +6,7 @@ describe('Game Accounts – soft delete & restore', () => {
   });
 
   const openDeleteDialog = (pseudo: string) => {
-    cy.getByCy(`account-row-${pseudo}`).find('[data-cy="account-delete-btn"]').click({ force: true });
+    cy.getByCy(`account-row-${pseudo}`).find('[data-cy="account-delete-btn"]').should('be.visible').click();
     cy.get('[role="alertdialog"]').should('be.visible');
   };
 
@@ -59,7 +59,7 @@ describe('Game Accounts – soft delete & restore', () => {
       cy.getByCy('confirmation-dialog-confirm').click();
       cy.getByCy('deleted-account-row-BackSoon').should('be.visible');
 
-      cy.getByCy('account-restore-btn-BackSoon').click({ force: true });
+      cy.getByCy('account-restore-btn-BackSoon').should('be.visible').click();
 
       cy.contains('Game account restored').should('be.visible');
       cy.getByCy('account-row-BackSoon').should('be.visible');

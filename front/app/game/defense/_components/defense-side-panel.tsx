@@ -165,7 +165,7 @@ export default function DefenseSidePanel({
                           <button
                             type='button'
                             data-cy={`remove-defender-${p.node_number}`}
-                            className='absolute -top-1 -right-1 z-10 hidden group-hover:flex bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full size-4 items-center justify-center'
+                            className='absolute -top-1 -right-1 z-10 flex opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full size-4 items-center justify-center'
                             onClick={() => onRemoveDefender(p.node_number)}
                             title={t.game.defense.removeDefender}
                           >

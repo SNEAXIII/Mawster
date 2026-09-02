@@ -16,7 +16,7 @@ describe('Roster – Preferred Attacker', () => {
         cy.getByCy('preferred-attacker-name').should('not.exist');
 
         // Click the ⚔ toggle button (force: action buttons are hover-visible)
-        cy.getByCy('preferred-attacker-toggle').first().click({ force: true });
+        cy.getByCy('preferred-attacker-toggle').first().focus().click();
 
         // Now the champion name should show the ⚔ prefix (yellow)
         cy.getByCy('preferred-attacker-name').should('be.visible');
@@ -38,7 +38,7 @@ describe('Roster – Preferred Attacker', () => {
         cy.getByCy('preferred-attacker-name').should('be.visible');
 
         // Click the ⚔ toggle to turn it OFF
-        cy.getByCy('preferred-attacker-toggle').first().click({ force: true });
+        cy.getByCy('preferred-attacker-toggle').first().focus().click();
 
         // ⚔ prefix should be gone from the champion name
         cy.getByCy('preferred-attacker-name').should('not.exist');

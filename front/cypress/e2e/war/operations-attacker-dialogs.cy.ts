@@ -39,7 +39,7 @@ describe('War – Operations (attacker-linked confirmations)', () => {
       cy.goToWarMode(ownerData.user_id, 'defenders');
 
       cy.getByCy('war-node-10').scrollIntoView().should('not.contain', '+');
-      cy.getByCy('war-node-10').find('button').click({ force: true });
+      cy.getByCy('war-node-10').find('button').focus().click();
 
       cy.getByCy('confirmation-dialog-confirm').should('be.visible');
     });
@@ -51,10 +51,10 @@ describe('War – Operations (attacker-linked confirmations)', () => {
 
       cy.goToWarMode(ownerData.user_id, 'defenders');
 
-      cy.getByCy('war-node-10').scrollIntoView().find('button').click({ force: true });
+      cy.getByCy('war-node-10').scrollIntoView().find('button').focus().click();
       cy.getByCy('confirmation-dialog-confirm').should('be.visible');
 
-      cy.getByCy('confirmation-dialog-cancel').click({ force: true });
+      cy.getByCy('confirmation-dialog-cancel').should('be.visible').click();
 
       cy.getByCy('war-node-10').should('not.contain', '+');
     });
@@ -66,7 +66,7 @@ describe('War – Operations (attacker-linked confirmations)', () => {
 
       cy.goToWarMode(ownerData.user_id, 'defenders');
 
-      cy.getByCy('war-node-10').scrollIntoView().find('button').click({ force: true });
+      cy.getByCy('war-node-10').scrollIntoView().find('button').focus().click();
 
       cy.getByCy('attacker-entry-node-10').should('be.visible');
       cy.getByCy('ko-counter-node-10').should('not.exist');
@@ -89,7 +89,7 @@ describe('War – Operations (attacker-linked confirmations)', () => {
       cy.getByCy('ko-counter-node-10').should('contain', '2');
 
       cy.getByCy('war-mode-defenders').click();
-      cy.getByCy('war-node-10').scrollIntoView().find('button').click({ force: true });
+      cy.getByCy('war-node-10').scrollIntoView().find('button').focus().click();
 
       cy.getByCy('attacker-entry-node-10').should('contain', '2 KO');
     });
@@ -101,7 +101,7 @@ describe('War – Operations (attacker-linked confirmations)', () => {
 
       cy.goToWarMode(ownerData.user_id, 'defenders');
 
-      cy.getByCy('war-node-10').scrollIntoView().find('button').click({ force: true });
+      cy.getByCy('war-node-10').scrollIntoView().find('button').focus().click();
       cy.getByCy('confirmation-dialog-confirm').click();
 
       cy.contains('Defender removed').should('be.visible');
@@ -134,7 +134,7 @@ describe('War – Operations (attacker-linked confirmations)', () => {
     setupAttackerScenario('war-op-replace-cancel').then((s) => {
       pickThorOverAssignedNode10(s);
       cy.getByCy('war-confirm-place').click();
-      cy.getByCy('confirmation-dialog-cancel').click({ force: true });
+      cy.getByCy('confirmation-dialog-cancel').should('be.visible').click();
 
       cy.getByCy('war-node-10').should('not.contain', '+');
       cy.getByCy('war-node-10').should('not.contain', 'Thor');
