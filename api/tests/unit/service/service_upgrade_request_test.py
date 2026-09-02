@@ -76,7 +76,8 @@ def _make_upgrade_request(
         id=uuid.uuid4(),
         champion_user_id=champion_user_id,
         requester_game_account_id=requester_id,
-        requested_rarity=rarity,
+        requested_stars=int(rarity.split("r")[0]),
+        requested_rank=int(rarity.split("r")[1]),
         created_at=utcnow(),
         done_at=done_at,
     )
@@ -197,6 +198,53 @@ class TestCreateUpgradeRequest:
         )
         assert session.add.called
         assert session.commit.called
+
+    @pytest.mark.asyncio
+    async def test_create_stores_stars_and_rank(self, mocker):
+        """The rarity code is parsed once and stored as the two typed columns."""
+        session = _mock_session(mocker)
+        created = await self._create(mocker, session, current="7r1", requested="7r3")
+
+        assert created.requested_stars == 7
+        assert created.requested_rank == 3
+        assert created.requested_rarity == "7r3"
+
+    @pytest.mark.asyncio
+    async def test_rarity_code_is_case_insensitive(self, mocker):
+        session = _mock_session(mocker)
+        created = await self._create(mocker, session, current="7r1", requested="7R3")
+
+        assert created.requested_rarity == "7r3"
+
+    @pytest.mark.asyncio
+    async def test_fewer_stars_is_not_higher(self, mocker):
+        """A 7r1 champion cannot be asked to go to 6r5: stars outrank rank."""
+        session = _mock_session(mocker)
+        cu = _make_champion_user(rarity="7r1")
+
+        mock_result = mocker.MagicMock()
+        mock_result.first.return_value = cu
+        session.exec.return_value = mock_result
+
+        with pytest.raises(HTTPException) as exc:
+            await UpgradeRequestService.create_upgrade_request(
+                session, CHAMPION_USER_ID, REQUESTER_ACCOUNT_ID, "6r5"
+            )
+        assert exc.value.status_code == 400
+
+    @staticmethod
+    async def _create(mocker, session, current: str, requested: str) -> RequestedUpgrade:
+        """Run a create with no pending request, and return the row handed to the session."""
+        mock_result_cu = mocker.MagicMock()
+        mock_result_cu.first.return_value = _make_champion_user(rarity=current)
+        mock_result_no_dup = mocker.MagicMock()
+        mock_result_no_dup.all.return_value = []
+        session.exec.side_effect = [mock_result_cu, mock_result_no_dup]
+
+        await UpgradeRequestService.create_upgrade_request(
+            session, CHAMPION_USER_ID, REQUESTER_ACCOUNT_ID, requested
+        )
+        return session.add.call_args.args[0]
 
 
 # =========================================================================

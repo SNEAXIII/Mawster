@@ -91,7 +91,8 @@ async def _push_upgrade_request(account, champion_name, requester, rarity="7r5",
     request = RequestedUpgrade(
         champion_user_id=champion_user.id,
         requester_game_account_id=requester.id,
-        requested_rarity=rarity,
+        requested_stars=int(rarity[0]),
+        requested_rank=int(rarity[2]),
         done_at=done_at,
     )
     await load_objects([request])

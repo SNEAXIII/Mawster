@@ -221,8 +221,13 @@ An Officer asking a Player — another Officer included — to take one of their
 Entries up to a given rank, so it can be used in war. Marked done when the Player has
 ranked it.
 _Table_: `requested_upgrade`.
-_Debt_: `requested_rarity` stores "7r3" as free text, while stars and rank are typed
-integers everywhere else. Unvalidated and case-sensitive — acknowledged debt.
+
+**Rarity**:
+A Roster Entry's stars and rank taken together, written the way the game does: "7r3".
+A wire and display format only — stored as the typed `stars`/`rank` pair on both sides
+(`ChampionUser`, `RequestedUpgrade`), parsed and compared through `ChampionRarity`.
+Ordered on the (stars, rank) pair, never on the code — a star level outranks a rank.
+_Avoid_: rarity string, rank code.
 
 ### Masteries
 
