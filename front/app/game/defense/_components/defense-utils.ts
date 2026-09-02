@@ -10,7 +10,7 @@ import type { BgMember } from '@/app/services/defense'
 export function parseRarity(rarity: string): { stars: number; rank: number } {
   const m = rarity.match(/^(\d+)r(\d+)$/i)
   if (!m) return { stars: 0, rank: 0 }
-  return { stars: parseInt(m[1], 10), rank: parseInt(m[2], 10) }
+  return { stars: Number.parseInt(m[1], 10), rank: Number.parseInt(m[2], 10) }
 }
 
 /**

@@ -201,7 +201,7 @@ export default function AddChampionForm({
               className='w-24'
               value={signatureValue}
               onChange={(e) =>
-                setSignatureValue(Math.min(200, Math.max(0, parseInt(e.target.value) || 0)))
+                setSignatureValue(Math.min(200, Math.max(0, Number.parseInt(e.target.value) || 0)))
               }
               data-cy='sig-input'
             />

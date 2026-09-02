@@ -105,7 +105,7 @@ export default function MasteryTab({
                             value={formItem[field]}
                             onChange={(e) => {
                               const digits = e.target.value.replace(/\D/g, '')
-                              const val = digits === '' ? 0 : parseInt(digits.slice(-1), 10)
+                              const val = digits === '' ? 0 : Number.parseInt(digits.slice(-1), 10)
                               onFieldChange(
                                 mastery.mastery_id,
                                 field,

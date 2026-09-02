@@ -116,7 +116,7 @@ export function shortenChampionName(name: string): string {
 export function raritySortValue(rarity: string): number {
   const parts = rarity.match(/(\d+)r(\d+)/)
   if (!parts) return 0
-  return parseInt(parts[1]) * 10 + parseInt(parts[2])
+  return Number.parseInt(parts[1]) * 10 + Number.parseInt(parts[2])
 }
 
 export interface RosterEntry {
@@ -238,7 +238,7 @@ export function getNextRarity(rarity: string): string | null {
   const parts = rarity.match(/^(\d+)r(\d+)$/)
   if (!parts) return null
   const stars = parts[1]
-  const rank = parseInt(parts[2])
+  const rank = Number.parseInt(parts[2])
   const nextRarity = `${stars}r${rank + 1}` as ChampionRarity
   if (!RARITIES.includes(nextRarity)) return null
   return nextRarity
