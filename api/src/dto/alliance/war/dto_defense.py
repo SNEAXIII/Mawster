@@ -4,11 +4,14 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from src.dto.mixins import PlayerIdentity, WarCoords
+from src.game_types import NodeNumber
+
 
 class DefensePlacementCreateRequest(BaseModel):
     """Place a champion on a defense node."""
 
-    node_number: int = Field(..., ge=1, le=50)
+    node_number: NodeNumber
     champion_user_id: uuid.UUID
     game_account_id: uuid.UUID
 
@@ -19,18 +22,14 @@ class DefensePlacementBulkRequest(BaseModel):
     placements: list[DefensePlacementCreateRequest] = Field(..., min_length=1)
 
 
-class DefensePlacementResponse(BaseModel):
+class DefensePlacementResponse(PlayerIdentity, WarCoords):
     """DTO for a defense placement with resolved relations."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     alliance_id: uuid.UUID
-    battlegroup: int
-    node_number: int
     champion_user_id: uuid.UUID
-    game_account_id: uuid.UUID
-    game_pseudo: str
     champion_name: str
     champion_alias: str | None = None
     champion_class: str
@@ -89,10 +88,8 @@ class DefenderAssignmentRequest(BaseModel):
     game_account_id: uuid.UUID
 
 
-class DefenderAssignmentResponse(BaseModel):
+class DefenderAssignmentResponse(PlayerIdentity):
     champion_id: uuid.UUID
     champion_name: str
     champion_class: str
     champion_image_url: str | None = None
-    game_account_id: uuid.UUID
-    game_pseudo: str

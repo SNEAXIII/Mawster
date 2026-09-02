@@ -2,18 +2,18 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import ConfigDict, model_validator
+
+from src.dto.mixins import PlayerIdentity
 
 
-class AllianceVisitorResponse(BaseModel):
+class AllianceVisitorResponse(PlayerIdentity):
     """Response DTO for an alliance visitor."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     alliance_id: uuid.UUID
-    game_account_id: uuid.UUID
-    game_pseudo: str
     visited_at: datetime
 
     @model_validator(mode="before")
