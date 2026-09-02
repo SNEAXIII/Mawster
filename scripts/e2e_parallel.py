@@ -573,7 +573,7 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
         "run",
         "--spec",
         spec_arg,
-        "--env",
+        "--expose",
         f"backendUrl=http://localhost:{api_port}",
         "--config",
         (
