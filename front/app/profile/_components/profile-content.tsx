@@ -13,7 +13,7 @@ import { SignOutButton } from './sign-out-button'
 import { ProfileStatsTab } from './statistics/profile-stats-tab'
 
 type ProfileTab = 'infos' | 'stats'
-const PROFILE_TABS: ProfileTab[] = ['infos', 'stats']
+const PROFILE_TABS = new Set<ProfileTab>(['infos', 'stats'])
 
 export default function ProfileContent() {
   const { data: session, status } = useRequiredSession()
@@ -24,7 +24,7 @@ export default function ProfileContent() {
 
   const initialTab = searchParams.get('tab') as ProfileTab
   const [activeTab, setActiveTab] = useState<ProfileTab>(
-    PROFILE_TABS.includes(initialTab) ? initialTab : 'infos'
+    PROFILE_TABS.has(initialTab) ? initialTab : 'infos'
   )
 
   const isFirstRender = useRef(true)
