@@ -12,9 +12,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { AlertTriangle } from 'lucide-react'
 import { RARITIES, RARITY_LABELS, shortenChampionName, getClassColors } from '@/app/services/roster'
 import { SPRITE_COLS, SPRITE_DISPLAY } from '@/app/services/vision'
 import type { PreviewRow, PreviewRowPatch } from './import-preview-row'
+import { rowIssues } from './import-row-validation'
 import ImportPreviewChampionPicker from './import-preview-champion-picker'
 
 interface ImportPreviewRowEditProps {
@@ -67,6 +70,12 @@ function rowStatus(row: PreviewRow): 'new' | 'updated' | 'unchanged' {
   return row.hasChanges ? 'updated' : 'unchanged'
 }
 
+function rowStateClass(ignored: boolean, invalid: boolean): string {
+  if (ignored) return 'opacity-50'
+  if (invalid) return '-mx-1 rounded-md border border-red-500/60 bg-red-50 px-1 dark:bg-red-950/30'
+  return ''
+}
+
 const STATUS_CLASSES: Record<'new' | 'updated' | 'unchanged', string> = {
   new: 'bg-green-600 text-white border-transparent',
   updated: 'bg-blue-600 text-white border-transparent',
@@ -101,8 +110,21 @@ export default function ImportPreviewRowEdit({
     unchanged: t.roster.importExport.badgeUnchanged,
   }
 
+  // An ignored row is out of the import, so its own problems no longer block
+  // anything — showing them would just be noise on a row the user parked.
+  const issues = row.ignored ? [] : rowIssues(row)
+  const issueLabels: Record<'missingName' | 'invalidRarity', string> = {
+    missingName: t.roster.importExport.issueMissingName,
+    invalidRarity: t.roster.importExport.issueInvalidRarity.replace('{rarity}', row.newRarity),
+  }
+
   return (
-    <div className='flex flex-col gap-2 py-3'>
+    <div
+      className={`flex flex-col gap-2 py-3 ${rowStateClass(row.ignored === true, issues.length > 0)}`}
+      data-cy={`preview-row-${index}`}
+      data-invalid={issues.length > 0}
+      data-ignored={row.ignored === true}
+    >
       <div className='flex gap-3'>
         <div className='shrink-0'>
           {row.spriteUrl && row.cropIndex != null && !spriteFailed ? (
@@ -193,10 +215,15 @@ export default function ImportPreviewRowEdit({
                 onValueChange={(value) => emit({ newRarity: value })}
               >
                 <SelectTrigger
-                  className='h-8 w-full text-xs px-2 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:shrink-0'
+                  className={`h-8 w-full text-xs px-2 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:shrink-0 ${
+                    issues.includes('invalidRarity') ? 'border-red-500 text-red-600' : ''
+                  }`}
                   data-cy={`preview-row-rarity-select-${index}`}
                 >
-                  <SelectValue />
+                  {/* A rank the model misread (`7r0`) matches no item, and Radix
+                      then renders an empty trigger — the silent state that let a
+                      bad row reach the atomic bulk endpoint. */}
+                  <SelectValue placeholder={t.roster.importExport.rarityUnread} />
                 </SelectTrigger>
                 <SelectContent>
                   {RARITIES.map((rarity) => (
@@ -243,6 +270,42 @@ export default function ImportPreviewRowEdit({
           </div>
         </div>
       </div>
+
+      {/* Why this row blocks the import, and the way out for one no correction
+          can rescue — a false detection has no right answer to pick. */}
+      {issues.length > 0 && (
+        <div
+          className='flex items-start gap-2 text-xs text-red-600 dark:text-red-400'
+          data-cy={`preview-row-issues-${index}`}
+        >
+          <AlertTriangle className='mt-0.5 h-3.5 w-3.5 shrink-0' />
+          <span className='min-w-0 flex-1'>{issues.map((i) => issueLabels[i]).join(' · ')}</span>
+          <Button
+            variant='outline'
+            size='sm'
+            className='h-6 shrink-0 px-2 text-[11px]'
+            onClick={() => emit({ ignored: true })}
+            data-cy={`preview-row-ignore-button-${index}`}
+          >
+            {t.roster.importExport.ignoreRow}
+          </Button>
+        </div>
+      )}
+
+      {row.ignored && (
+        <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+          <span className='min-w-0 flex-1'>{t.roster.importExport.rowIgnored}</span>
+          <Button
+            variant='outline'
+            size='sm'
+            className='h-6 shrink-0 px-2 text-[11px]'
+            onClick={() => emit({ ignored: false })}
+            data-cy={`preview-row-restore-button-${index}`}
+          >
+            {t.roster.importExport.restoreRow}
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

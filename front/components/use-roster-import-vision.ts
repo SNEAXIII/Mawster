@@ -12,6 +12,7 @@ import {
   type ConfirmedRow,
 } from '@/app/services/vision'
 import { type PreviewRow, type PreviewRowPatch } from '@/components/roster/import-preview-row'
+import { isValidRarity } from '@/components/roster/import-row-validation'
 import {
   useRosterImportCore,
   buildPreviewRow,
@@ -41,7 +42,7 @@ function predictionToEntry(prediction: VisionPrediction): {
       // this champion a preferred attacker, so the import must not claim it is
       // `false` — that claim would erase the flag on every updated champion.
     },
-    rarityValid: /^[67]r[1-5]$/.test(rarity),
+    rarityValid: isValidRarity(rarity),
   }
 }
 
@@ -254,14 +255,18 @@ export function useRosterImportVision({
   // ── Archive the confirmed dataset (best-effort) ─────────
   const onConfirmed = useCallback(async () => {
     if (importId == null) return
-    const rows: ConfirmedRow[] = core.previewRows.map((row) => ({
-      champion_name: row.champion_name,
-      rarity: row.newRarity,
-      signature: row.newSignature,
-      ascension: row.ascension ?? 0,
-      is_preferred_attacker: row.is_preferred_attacker ?? false,
-      prediction_id: row.prediction_id ?? null,
-    }))
+    // Rows the user threw out never reached the roster, and a false detection is
+    // not ground truth — archiving it would poison the training dataset.
+    const rows: ConfirmedRow[] = core.previewRows
+      .filter((row) => !row.ignored)
+      .map((row) => ({
+        champion_name: row.champion_name,
+        rarity: row.newRarity,
+        signature: row.newSignature,
+        ascension: row.ascension ?? 0,
+        is_preferred_attacker: row.is_preferred_attacker ?? false,
+        prediction_id: row.prediction_id ?? null,
+      }))
 
     try {
       await confirmVisionImport(importId, rows, shareDataset)
