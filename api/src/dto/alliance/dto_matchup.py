@@ -30,7 +30,7 @@ class MatchupTargetInput(BaseModel):
     synergies: list[MatchupSynergyInput] = Field(default_factory=list, max_length=2)
 
     @model_validator(mode="after")
-    def exactly_one_target(self) -> "MatchupTargetInput":
+    def exactly_one_target(self) -> MatchupTargetInput:
         is_defender = self.target_type is MatchupTargetType.DEFENDER
         has_defender = self.defender_champion_id is not None
         has_node = self.node_number is not None
@@ -48,7 +48,7 @@ class MatchupUpsertRequest(BaseModel):
     targets: list[MatchupTargetInput] = Field(min_length=1, max_length=2)
 
     @model_validator(mode="after")
-    def distinct_target_types(self) -> "MatchupUpsertRequest":
+    def distinct_target_types(self) -> MatchupUpsertRequest:
         types = [target.target_type for target in self.targets]
         if len(set(types)) != len(types):
             raise ValueError(DUPLICATE_TARGET_TYPE)
@@ -108,7 +108,7 @@ class MatchupScoredFight(BaseModel):
     score: int | None = None
 
     @model_validator(mode="after")
-    def score_absent_iff_discouraged(self) -> "MatchupScoredFight":
+    def score_absent_iff_discouraged(self) -> MatchupScoredFight:
         if self.is_discouraged and self.score is not None:
             raise ValueError(DISCOURAGED_HAS_NO_SCORE)
         if not self.is_discouraged and self.score is None:
@@ -196,7 +196,7 @@ class MatchupDefenderGridCell(MatchupScoredFight):
     node: MatchupGridAxisEntry
 
     @model_validator(mode="after")
-    def node_detail_matches_coordinate(self) -> "MatchupDefenderGridCell":
+    def node_detail_matches_coordinate(self) -> MatchupDefenderGridCell:
         """``node_number`` is the cell's coordinate and ``node.node_number`` its detail.
 
         They are two representations of the same node, so a mismatch would put the dialog on a

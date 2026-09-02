@@ -6,7 +6,7 @@ name = "mawster-api"
 version = "0.0.0"
 description = "Mawster API - MCOC Alliance Management"
 license = "AGPL-3.0-or-later"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 dependencies = [
     "fastapi[standard]",
     "pyjwt",
@@ -47,6 +47,11 @@ exclude_also = ["if TYPE_CHECKING:", "def custom_openapi\\(\\):", "def __str__\\
 extend = "../ruff.toml"
 
 [tool.ruff.lint.per-file-ignores]
+# UP037/UP045: SQLModel relationship targets are imported under TYPE_CHECKING only, so the
+# annotation must stay a string. Unquoting them (what py314 + PEP 649 lets ruff propose)
+# makes SQLAlchemy fail at mapper configuration: "expression 'Alliance | None' failed to
+# locate a name".
+"src/models/**" = ["UP037", "UP045"]
 # S101: `assert` *is* the test framework. S105: constants named FAKE_TOKEN / TOKEN_TYPE
 # hold fixture strings, not credentials. S106 likewise for the token_type kwarg.
 "tests/**" = ["S101", "S105", "S106"]
