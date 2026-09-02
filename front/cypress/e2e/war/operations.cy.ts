@@ -55,7 +55,7 @@ describe('War – Operations (declare, place, remove)', () => {
             cy.getByCy('war-mode-defenders').click();
 
             cy.getByCy('war-node-5').scrollIntoView().should('not.contain', '+');
-            cy.getByCy('war-node-5').find('button').click({ force: true });
+            cy.getByCy('war-node-5').find('button').focus().click();
 
             cy.contains('Defender removed').should('be.visible');
             cy.getByCy('war-node-5').should('contain', '+');

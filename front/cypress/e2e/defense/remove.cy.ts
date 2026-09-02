@@ -24,7 +24,7 @@ describe('Defense – Remove defender', () => {
       cy.getByCy('defender-count-RmPlyr').should('contain', '2/5');
 
       // force: the X only appears on hover
-      cy.getByCy('remove-defender-1').click({ force: true });
+      cy.getByCy('remove-defender-1').focus().click();
 
       cy.getByCy('defender-count-RmPlyr').should('contain', '1/5');
       cy.contains('Defender removed').should('be.visible');
@@ -47,7 +47,7 @@ describe('Defense – Remove defender', () => {
         cy.getByCy('defender-count-RmMapPlyr').should('contain', '1/5');
 
         // Remove via the war map X button (force because hidden until hover)
-        cy.getByCy('war-node-5').find('button').click({ force: true });
+        cy.getByCy('war-node-5').find('button').focus().click();
 
         cy.getByCy('defender-count-RmMapPlyr').should('contain', '0/5');
         cy.getByCy('war-node-5').should('contain', '+');
@@ -76,7 +76,7 @@ describe('Defense – Remove defender', () => {
         cy.get('body').type('{esc}');
 
         // Remove Spider-Man via side panel
-        cy.getByCy('remove-defender-1').click({ force: true });
+        cy.getByCy('remove-defender-1').focus().click();
         cy.getByCy('defender-count-RmReappPlyr').should('contain', '0/5');
 
         // Spider-Man should reappear in selector

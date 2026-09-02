@@ -34,7 +34,7 @@ describe('War – Fight Not Done & Planning Error', () => {
         cy.getByCy('fight-not-done-node-10')
           .should('have.class', 'opacity-40')
           .should('not.have.class', 'bg-amber-500');
-        cy.getByCy('fight-not-done-node-10').click({ force: true });
+        cy.getByCy('fight-not-done-node-10').should('be.visible').click();
         cy.getByCy('fight-not-done-node-10')
           .should('have.class', 'opacity-40')
           .should('not.have.class', 'bg-amber-500');
@@ -48,7 +48,7 @@ describe('War – Fight Not Done & Planning Error', () => {
       cy.apiToggleFightNotDone(ownerData.access_token, allianceId, warId, 1, 10);
       cy.goToWarMode(ownerData.user_id, 'attackers');
       cy.getByCy('planning-error-node-10').should('have.class', 'opacity-40').should('not.have.class', 'bg-amber-500');
-      cy.getByCy('planning-error-node-10').click({ force: true });
+      cy.getByCy('planning-error-node-10').should('be.visible').click();
       cy.getByCy('planning-error-node-10').should('have.class', 'opacity-40').should('not.have.class', 'bg-amber-500');
     });
   });

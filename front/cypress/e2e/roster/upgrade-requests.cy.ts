@@ -16,7 +16,7 @@ describe('Roster – Upgrade Requests', () => {
       cy.getByCy('view-roster-URMember').click();
 
       // Click the upgrade button on the first champion card
-      cy.getByCy('champion-upgrade').first().click({ force: true });
+      cy.getByCy('champion-upgrade').first().focus().click();
 
       // Select 7r3 in the rarity dropdown
       cy.selectOption('upgrade-rarity-select', '7R3');

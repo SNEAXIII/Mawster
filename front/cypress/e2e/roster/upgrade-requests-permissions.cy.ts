@@ -79,7 +79,7 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
       cy.getByCy('view-roster-URMember').click();
 
       cy.getByCy('cancel-pending-request').should('exist');
-      cy.getByCy('cancel-pending-request').first().click({ force: true });
+      cy.getByCy('cancel-pending-request').first().focus().click();
 
       cy.get('[role="alertdialog"]').contains('button', 'Cancel request').click();
 

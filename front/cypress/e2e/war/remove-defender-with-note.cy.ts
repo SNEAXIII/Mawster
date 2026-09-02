@@ -17,7 +17,7 @@ describe('War – Remove defender that has a fight note', () => {
       cy.goToWarMode(ownerData.user_id, 'defenders');
 
       cy.intercept('DELETE', '**/bg/1/node/10').as('removeDefender');
-      cy.getByCy('war-node-10').scrollIntoView().find('button').click({ force: true });
+      cy.getByCy('war-node-10').scrollIntoView().find('button').focus().click();
       cy.getByCy('confirmation-dialog-confirm').click();
 
       // Previously this responded 500 (FK constraint); it must now succeed.

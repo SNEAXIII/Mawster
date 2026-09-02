@@ -83,9 +83,9 @@ describe('Game Accounts – UI', () => {
 
       cy.apiLogin(user_id, 'profile');
 
-      cy.getByCy('account-row-ValidPseudo').find('[data-cy="account-edit-btn-0"]').click({ force: true });
+      cy.getByCy('account-row-ValidPseudo').find('[data-cy="account-edit-btn-0"]').should('be.visible').click();
       cy.get('input[maxlength="16"]').clear().type('bad-name!');
-      cy.getByCy('account-edit-confirm').first().click({ force: true });
+      cy.getByCy('account-edit-confirm').first().should('be.enabled').click();
 
       cy.contains('2-16 characters, letters, numbers and spaces only').should('be.visible');
       cy.contains('Game account renamed').should('not.exist');
@@ -103,10 +103,10 @@ describe('Game Accounts – UI', () => {
       cy.apiLogin(user_id, 'profile');
       cy.contains('OldPseudo').scrollIntoView().should('be.visible');
 
-      cy.getByCy('account-row-OldPseudo').find('[data-cy="account-edit-btn-0"]').click({ force: true });
+      cy.getByCy('account-row-OldPseudo').find('[data-cy="account-edit-btn-0"]').should('be.visible').click();
 
       cy.get('input[maxlength="16"]').clear().type('NewPseudo');
-      cy.getByCy('account-edit-confirm').first().click({ force: true });
+      cy.getByCy('account-edit-confirm').first().should('be.enabled').click();
 
       cy.contains('Game account renamed successfully').should('be.visible');
       cy.contains('NewPseudo').scrollIntoView().should('be.visible');
@@ -124,7 +124,7 @@ describe('Game Accounts – UI', () => {
       cy.apiLogin(user_id, 'profile');
       cy.contains('ToDelete').scrollIntoView().should('be.visible');
 
-      cy.getByCy('account-row-ToDelete').find('[data-cy="account-delete-btn"]').click({ force: true });
+      cy.getByCy('account-row-ToDelete').find('[data-cy="account-delete-btn"]').should('be.visible').click();
 
       cy.get('[role="alertdialog"]').should('be.visible');
       cy.getByCy('confirm-text-input').type('ToDelete');
