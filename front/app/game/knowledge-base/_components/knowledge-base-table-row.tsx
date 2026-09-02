@@ -58,9 +58,9 @@ export default function KnowledgeBaseTableRow({
         isSaga={r.defender_is_saga_defender}
         sagaMode='defender'
       />
+      <td className={cn(COMPACT_COL, 'py-2')}>{r.node_number}</td>
       <ChampionIconList champions={r.synergies} />
       <ChampionIconList champions={r.prefights} />
-      <td className={cn(COMPACT_COL, 'py-2')}>{r.node_number}</td>
       <td
         className={cn(COMPACT_COL, 'py-2', r.ko_count ? 'text-red-500' : 'text-green-500')}
         data-cy='fight-record-ko'
