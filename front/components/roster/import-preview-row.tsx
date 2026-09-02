@@ -36,10 +36,13 @@ export interface PreviewRow {
   // Set once the user picks a champion by hand. The model's margin no longer
   // describes this row, so the badge stops showing it.
   corrected?: boolean
+  // Excluded from the import by the user. The only way out for a row the model
+  // read as garbage and that no correction can rescue (a false detection).
+  ignored?: boolean
 }
 
 export type PreviewRowPatch = Partial<
-  Pick<PreviewRow, 'newRarity' | 'newSignature' | 'ascension' | 'champion_name'>
+  Pick<PreviewRow, 'newRarity' | 'newSignature' | 'ascension' | 'champion_name' | 'ignored'>
 >
 
 interface ImportPreviewRowProps {

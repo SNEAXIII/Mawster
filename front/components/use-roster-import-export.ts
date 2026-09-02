@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
 import { RosterEntry, raritySortValue } from '@/app/services/roster'
 import { type PreviewRow } from '@/components/roster/import-preview-row'
+import { isValidRarity } from '@/components/roster/import-row-validation'
 import {
   useRosterImportCore,
   buildPreviewRow,
@@ -28,7 +29,7 @@ function validateEntry(
   if (!obj.rarity || typeof obj.rarity !== 'string') {
     return { error: t.roster.importExport.missingRarity.replace('{idx}', String(idx)) }
   }
-  if (!/^[67]r[1-5]$/.exec(obj.rarity)) {
+  if (!isValidRarity(obj.rarity)) {
     return {
       error: t.roster.importExport.invalidRarity
         .replace('{idx}', String(idx))

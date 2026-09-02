@@ -13,10 +13,11 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { ChevronDown } from 'lucide-react'
+import { AlertTriangle, ChevronDown } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import ImportPreviewRow, { type PreviewRow, type PreviewRowPatch } from './import-preview-row'
 import { marginLevel, type MarginLevel } from './import-preview-row-edit'
+import { blockingRows } from './import-row-validation'
 
 // Most ambiguous first: the rows most likely misread lead, the clean matches
 // sink to the bottom. Ambiguous and uncertain open by default; clear matches
@@ -53,9 +54,18 @@ export default function ImportPreviewDialog({
 }: ImportPreviewDialogProps) {
   const { t } = useI18n()
 
-  const newCount = previewRows.filter((r) => r.isNew).length
-  const changeCount = previewRows.filter((r) => !r.isNew && r.hasChanges).length
-  const unchangedCount = previewRows.filter((r) => !r.isNew && !r.hasChanges).length
+  // Ignored rows are out of the import, so they must not inflate the counts the
+  // Import button promises to write.
+  const kept = previewRows.filter((r) => !r.ignored)
+  const newCount = kept.filter((r) => r.isNew).length
+  const changeCount = kept.filter((r) => !r.isNew && r.hasChanges).length
+  const unchangedCount = kept.filter((r) => !r.isNew && !r.hasChanges).length
+  const ignoredCount = previewRows.length - kept.length
+
+  // The bulk endpoint is atomic, so one row the API would reject fails the whole
+  // import and reports every champion as an error. Blocking here is what turns
+  // that into a fixable row instead of a 400.
+  const blockedCount = blockingRows(previewRows).length
 
   return (
     <Dialog
@@ -80,11 +90,34 @@ export default function ImportPreviewDialog({
             <span className='text-gray-500'>
               {t.roster.importExport.unchangedCount.replace('{count}', String(unchangedCount))}
             </span>
+            {ignoredCount > 0 && (
+              <>
+                {', '}
+                <span
+                  className='text-gray-500'
+                  data-cy='import-preview-ignored-count'
+                >
+                  {t.roster.importExport.ignoredCount.replace('{count}', String(ignoredCount))}
+                </span>
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
 
         {editable && (
           <p className='text-xs text-muted-foreground'>{t.roster.importExport.editHint}</p>
+        )}
+
+        {blockedCount > 0 && (
+          <div
+            className='flex items-start gap-2 rounded-md border border-red-500/60 bg-red-50 p-2 text-xs text-red-600 dark:bg-red-950/30 dark:text-red-400'
+            data-cy='import-preview-blocked-banner'
+          >
+            <AlertTriangle className='mt-0.5 h-4 w-4 shrink-0' />
+            <span>
+              {t.roster.importExport.blockedBanner.replace('{count}', String(blockedCount))}
+            </span>
+          </div>
         )}
 
         {/* Scrollable list */}
@@ -135,7 +168,7 @@ export default function ImportPreviewDialog({
           </Button>
           <Button
             onClick={onImport}
-            disabled={importing || newCount + changeCount === 0}
+            disabled={importing || blockedCount > 0 || newCount + changeCount === 0}
             data-cy='import-preview-confirm-button'
           >
             {importing

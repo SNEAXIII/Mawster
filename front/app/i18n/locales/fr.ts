@@ -1120,6 +1120,18 @@ const fr: Translations = {
       unchangedCount: '{count} inchangé(s)',
       badgeNew: 'NOUVEAU',
       badgeUnchanged: 'inchangé',
+      badgeIgnored: 'IGNORÉ',
+      ignoredCount: '{count} ignoré(s)',
+      issueMissingName: 'Champion non identifié — choisis-le dans la liste.',
+      issueInvalidRarity: 'Rareté « {rarity} » illisible — choisis la bonne.',
+      rarityUnread: 'Non lue',
+      ignoreRow: 'Ignorer',
+      restoreRow: 'Restaurer',
+      rowIgnored: 'Exclu de cet import.',
+      blockedBanner:
+        '{count} champion(s) ne peuvent pas être importés tels quels. Corrige-les, ou ignore-les pour continuer.',
+      blockedRows:
+        '{count} champion(s) sont encore invalides — corrige-les ou ignore-les avant d’importer.',
       cancel: 'Annuler',
       importing: 'Import en cours…',
       importButton: 'Importer {count} champion(s)',

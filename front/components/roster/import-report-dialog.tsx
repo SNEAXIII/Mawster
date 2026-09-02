@@ -20,6 +20,10 @@ export interface ImportResult {
   success: boolean
   isNew: boolean
   isSkipped: boolean
+  // Skipped because the user excluded it in the review, not because it was
+  // unchanged. Worth distinguishing: an excluded champion is missing from the
+  // roster on purpose, and the report is the only place that says so.
+  isIgnored?: boolean
   champion_class: string | null
   image_url: string | null
   newRarity: string
@@ -33,20 +37,36 @@ export interface ImportResult {
 }
 
 // What happened to one champion during the import — drives both the row tint and the badge.
-type ImportRowState = 'error' | 'added' | 'skipped' | 'updated'
+// `ignored` is a skip the user asked for, so it shares the neutral tint but
+// carries its own badge: an excluded champion is absent from the roster on
+// purpose, and this report is the only place that says so.
+type ImportRowState = 'error' | 'added' | 'skipped' | 'ignored' | 'updated'
 
 const ROW_BACKGROUND: Record<ImportRowState, string> = {
   error: 'bg-red-50 dark:bg-red-950/30',
   added: 'bg-green-50 dark:bg-green-950/30',
   skipped: '',
+  ignored: '',
   updated: 'bg-blue-50 dark:bg-blue-950/30',
 }
 
 function rowState(result: ImportResult): ImportRowState {
   if (!result.success) return 'error'
   if (result.isNew) return 'added'
+  if (result.isIgnored) return 'ignored'
   if (result.isSkipped) return 'skipped'
   return 'updated'
+}
+
+function SkippedBadge({ idx, label }: Readonly<{ idx: number; label: string }>) {
+  return (
+    <span
+      className='inline-flex items-center gap-1 bg-gray-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full'
+      data-cy={`import-report-skipped-badge-${idx}`}
+    >
+      {label}
+    </span>
+  )
 }
 
 interface ImportReportDialogProps {
@@ -170,9 +190,16 @@ export default function ImportReportDialog({
                     </div>
                   )}
                   {state === 'skipped' && (
-                    <span className='inline-flex items-center gap-1 bg-gray-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full'>
-                      {t.roster.importExport.badgeSkipped}
-                    </span>
+                    <SkippedBadge
+                      idx={idx}
+                      label={t.roster.importExport.badgeSkipped}
+                    />
+                  )}
+                  {state === 'ignored' && (
+                    <SkippedBadge
+                      idx={idx}
+                      label={t.roster.importExport.badgeIgnored}
+                    />
                   )}
                   {state === 'updated' && (
                     <div className='space-y-0.5'>
